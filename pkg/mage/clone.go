@@ -8,6 +8,9 @@ import (
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
+// For cloning UUID maps with generic
+type UUIDMap[V any] map[uuid.UUID]V
+
 // Clone creates a deep copy of the game state for AI search.
 // Card objects and Effect interfaces are shared (immutable during play).
 // All mutable state (permanents, players, maps, slices) is deep-copied.
@@ -137,28 +140,22 @@ func (g *Game) Clone() *Game {
 		}
 		c.combatDamageSourcesThisStep[k] = dst
 	}
-	c.artifactManaOnly = cloneUUIDBoolMap(g.artifactManaOnly)
-	c.creatureManaOnly = cloneUUIDBoolMap(g.creatureManaOnly)
 	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
 	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
 	c.sorceriesCastThisTurn = cloneUUIDIntMap(g.sorceriesCastThisTurn)
-	c.timesTargetedThisTurn = cloneUUIDIntMap(g.timesTargetedThisTurn)
-	c.discardCountThisTurn = cloneUUIDIntMap(g.discardCountThisTurn)
-	c.lifeGainedThisTurn = cloneUUIDIntMap(g.lifeGainedThisTurn)
-	c.permDamageReceivedThisTurn = cloneUUIDIntMap(g.permDamageReceivedThisTurn)
-	c.attackedOrBlockedThisTurn = cloneUUIDBoolMap(g.attackedOrBlockedThisTurn)
-	c.playerCastSpellThisTurn = cloneUUIDBoolMap(g.playerCastSpellThisTurn)
-	c.playerAttackedThisTurn = cloneUUIDBoolMap(g.playerAttackedThisTurn)
-	c.cardsDrawnThisTurn = cloneUUIDIntMap(g.cardsDrawnThisTurn)
-	c.cardsLeftGraveyardThisTurn = cloneUUIDIntMap(g.cardsLeftGraveyardThisTurn)
-	c.exileZoneChangesPending = cloneUUIDIntMap(g.exileZoneChangesPending)
+	c.timesTargetedThisTurn = cloneUUIDMap(g.timesTargetedThisTurn)
+	c.discardCountThisTurn = cloneUUIDMap(g.discardCountThisTurn)
+	c.lifeGainedThisTurn = cloneUUIDMap(g.lifeGainedThisTurn)
+	c.permDamageReceivedThisTurn = cloneUUIDMap(g.permDamageReceivedThisTurn)
+	c.attackedOrBlockedThisTurn = cloneUUIDMap(g.attackedOrBlockedThisTurn)
+	c.playerCastSpellThisTurn = cloneUUIDMap(g.playerCastSpellThisTurn)
+	c.playerAttackedThisTurn = cloneUUIDMap(g.playerAttackedThisTurn)
+	c.cardsDrawnThisTurn = cloneUUIDMap(g.cardsDrawnThisTurn)
+	c.cardsLeftGraveyardThisTurn = cloneUUIDMap(g.cardsLeftGraveyardThisTurn)
+	c.exileZoneChangesPending = cloneUUIDMap(g.exileZoneChangesPending)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
-	if g.extraLandPlaysThisTurn != nil {
-		c.extraLandPlaysThisTurn = cloneUUIDIntMap(g.extraLandPlaysThisTurn)
-	}
-	if g.optionalCostPaid != nil {
-		c.optionalCostPaid = cloneUUIDBoolMap(g.optionalCostPaid)
-	}
+	c.extraLandPlaysThisTurn = cloneUUIDMap(g.extraLandPlaysThisTurn)
+	c.optionalCostPaid = cloneUUIDMap(g.optionalCostPaid)
 	c.customState = cloneCustomState(g.customState)
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
@@ -497,6 +494,18 @@ func cloneUUIDBoolMap(src map[uuid.UUID]bool) map[uuid.UUID]bool {
 		return make(map[uuid.UUID]bool)
 	}
 	dst := make(map[uuid.UUID]bool, len(src))
+	maps.Copy(dst, src)
+	return dst
+}
+
+// cloneUUIDMap returns nil for nil or empty input, avoiding the
+// per-Clone allocation of an empty map header. Use this for fields whose
+// write paths lazy-initialize the map on first write.
+func cloneUUIDMap[V any](src UUIDMap[V]) UUIDMap[V] {
+	if len(src) == 0 {
+		return nil
+	}
+	dst := make(UUIDMap[V], len(src))
 	maps.Copy(dst, src)
 	return dst
 }

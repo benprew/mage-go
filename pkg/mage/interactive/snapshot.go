@@ -326,7 +326,7 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 		}
 		if mc.HasX {
 			opt.NeedsX = true
-			opt.MaxXValue = g.MaxXValue(playerID, mc)
+			opt.MaxXValue = g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
 		}
 		options = append(options, opt)
 	}

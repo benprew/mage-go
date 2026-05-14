@@ -111,18 +111,31 @@ func TestMishrasWorkshop(t *testing.T) {
 		}
 	})
 
-	t.Run("mana can only be spent on artifact spells", func(t *testing.T) {
+	t.Run("workshop mana pays for artifact spell", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Workshop")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant") // non-artifact creature
-		// Workshop mana shouldn't be usable for Hill Giant
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Amulet of Kroog") // {2}, artifact
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Workshop")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Amulet of Kroog")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Amulet of Kroog", 1)
+	})
+
+	// Regression: previously the restriction was implemented as a player-wide
+	// flag, so tapping Workshop blocked any non-artifact cast for the rest of
+	// the turn — even when other unrestricted mana was available. With per-
+	// mana restrictions, only Workshop's three colorless are restricted; the
+	// rest of the player's mana remains free.
+	t.Run("non-artifact spell still castable after workshop taps", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Workshop")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant") // {3}{R}, non-artifact
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Workshop")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Hill Giant")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// If restriction works, Hill Giant should not be on battlefield
-		// (This test will pass when restriction is implemented)
-		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
 	})
 }
 

@@ -746,16 +746,19 @@ const (
 
 // Type aliases for core value types named in card signatures.
 type (
-	Color       = core.Color
-	CardType    = core.CardType
-	Attr        = core.Attr // Keyword is an alias for Attr in core
-	Layer       = core.Layer
-	Duration    = core.Duration
-	AttachType  = core.AttachType
-	PhaseStep   = core.PhaseStep
-	EventType   = core.EventType
-	CounterType = core.CounterType
-	SuperType   = core.SuperType
+	Color              = core.Color
+	CardType           = core.CardType
+	Attr               = core.Attr // Keyword is an alias for Attr in core
+	Layer              = core.Layer
+	Duration           = core.Duration
+	AttachType         = core.AttachType
+	PhaseStep          = core.PhaseStep
+	EventType          = core.EventType
+	CounterType        = core.CounterType
+	SuperType          = core.SuperType
+	ManaRestriction    = core.ManaRestriction
+	ArtifactSpellsOnly = core.ArtifactSpellsOnly
+	CreatureSpellsOnly = core.CreatureSpellsOnly
 )
 
 // =============================================================================

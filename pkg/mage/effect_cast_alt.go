@@ -178,11 +178,12 @@ func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targe
 	p.ManaPool().ResetLastDrained()
 
 	// Pay the alternate mana cost if specified.
+	spellCtx := SpellContextForCard(card)
 	if alternateMC != nil && !alternateMC.IsZero() {
-		if !p.ManaPool().CanPay(*alternateMC) {
+		if !p.ManaPool().CanPay(*alternateMC, spellCtx) {
 			return fmt.Errorf("cannot pay alternate cost %s for %s", alternateMC, card.Name())
 		}
-		if err := p.ManaPool().Pay(*alternateMC); err != nil {
+		if err := p.ManaPool().Pay(*alternateMC, spellCtx); err != nil {
 			return err
 		}
 	}
@@ -292,6 +293,7 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 		mc.Generic += xValue * mc.XCount
 	}
 
+	spellCtx := SpellContextForCard(card)
 	if perm.AnyColorMana {
 		// CR 609.4b: spend any-color mana for colored pips. Implement by
 		// summing colored requirements into generic and using only the
@@ -300,19 +302,19 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 		totalColored := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
 		flat := ManaCost{Generic: mc.Generic + totalColored}
 		p := g.GetPlayer(playerID)
-		if !p.ManaPool().CanPay(flat) {
+		if !p.ManaPool().CanPay(flat, spellCtx) {
 			return fmt.Errorf("cannot pay %s for %s", flat, card.Name())
 		}
-		if err := p.ManaPool().Pay(flat); err != nil {
+		if err := p.ManaPool().Pay(flat, spellCtx); err != nil {
 			return err
 		}
 	} else {
 		p := g.GetPlayer(playerID)
 		if !mc.IsZero() {
-			if !p.ManaPool().CanPay(mc) {
+			if !p.ManaPool().CanPay(mc, spellCtx) {
 				return fmt.Errorf("cannot pay %s for %s", mc, card.Name())
 			}
-			if err := p.ManaPool().Pay(mc); err != nil {
+			if err := p.ManaPool().Pay(mc, spellCtx); err != nil {
 				return err
 			}
 		}

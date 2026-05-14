@@ -70,7 +70,7 @@ func TestCanAfford_UsesManaPool(t *testing.T) {
 	perm.RevokeBaseAttr(AttrSummonSick)
 
 	// Without pool mana, can only afford {G} or {1}
-	if g.CanAfford(pid, ManaCost{Green: 1, Red: 1}) {
+	if g.CanAfford(pid, ManaCost{Green: 1, Red: 1}, nil) {
 		t.Error("should not afford {G}{R} with only a Forest")
 	}
 
@@ -78,7 +78,7 @@ func TestCanAfford_UsesManaPool(t *testing.T) {
 	g.players[0].ManaPool().Add(Red, 1)
 
 	// Now can afford {G}{R}
-	if !g.CanAfford(pid, ManaCost{Green: 1, Red: 1}) {
+	if !g.CanAfford(pid, ManaCost{Green: 1, Red: 1}, nil) {
 		t.Error("should afford {G}{R} with Forest + {R} in pool")
 	}
 }
@@ -90,7 +90,7 @@ func TestCanAfford_PoolCoversEntireCost(t *testing.T) {
 	// No lands, just pool mana
 	g.players[0].ManaPool().Add(Blue, 2)
 
-	if !g.CanAfford(pid, ManaCost{Blue: 1, Generic: 1}) {
+	if !g.CanAfford(pid, ManaCost{Blue: 1, Generic: 1}, nil) {
 		t.Error("should afford {1}{U} with {U}{U} in pool")
 	}
 }
@@ -165,12 +165,12 @@ func TestCanAfford_RespectsManaConversions(t *testing.T) {
 	g.players[0].ManaPool().ManaConversions = map[Color]Color{Red: White}
 
 	// Should be able to afford {W} because Mountain produces {R} which converts to {W}
-	if !g.CanAfford(pid, ManaCost{White: 1}) {
+	if !g.CanAfford(pid, ManaCost{White: 1}, nil) {
 		t.Error("should afford {W} with Mountain + Red→White conversion")
 	}
 
 	// Should NOT be able to afford {R}{W} — only one source, conversion makes it {W} not both
-	if g.CanAfford(pid, ManaCost{Red: 1, White: 1}) {
+	if g.CanAfford(pid, ManaCost{Red: 1, White: 1}, nil) {
 		t.Error("should not afford {R}{W} with only one Mountain")
 	}
 }
@@ -225,7 +225,7 @@ func TestMaxXValue_BasicLands(t *testing.T) {
 
 	// Fireball {X}{R}: fixed cost is {R}, so maxX = 3 - 1 = 2
 	mc := ParseManaCost("{X}{R}")
-	if got := g.MaxXValue(pid, mc); got != 2 {
+	if got := g.MaxXValue(pid, mc, nil); got != 2 {
 		t.Errorf("MaxXValue for {X}{R} with 3 Mountains = %d, want 2", got)
 	}
 }
@@ -243,7 +243,7 @@ func TestMaxXValue_WithPoolMana(t *testing.T) {
 
 	// {X}{R}: pool has 2 colorless, Mountain gives R for the colored cost, so maxX = 2
 	mc := ParseManaCost("{X}{R}")
-	if got := g.MaxXValue(pid, mc); got != 2 {
+	if got := g.MaxXValue(pid, mc, nil); got != 2 {
 		t.Errorf("MaxXValue = %d, want 2", got)
 	}
 }
@@ -262,7 +262,7 @@ func TestMaxXValue_DoubleX(t *testing.T) {
 
 	// {X}{X}{R}: fixed cost {R}, 4 mana left, divided by 2 X's = maxX 2
 	mc := ParseManaCost("{X}{X}{R}")
-	if got := g.MaxXValue(pid, mc); got != 2 {
+	if got := g.MaxXValue(pid, mc, nil); got != 2 {
 		t.Errorf("MaxXValue for {X}{X}{R} with 5 Mountains = %d, want 2", got)
 	}
 }
@@ -272,7 +272,7 @@ func TestMaxXValue_NoXInCost(t *testing.T) {
 	pid := g.players[0].PlayerID()
 
 	mc := ParseManaCost("{2}{R}")
-	if got := g.MaxXValue(pid, mc); got != 0 {
+	if got := g.MaxXValue(pid, mc, nil); got != 0 {
 		t.Errorf("MaxXValue for non-X spell = %d, want 0", got)
 	}
 }
@@ -283,7 +283,7 @@ func TestMaxXValue_CantAffordBase(t *testing.T) {
 
 	// No mana sources at all
 	mc := ParseManaCost("{X}{R}")
-	if got := g.MaxXValue(pid, mc); got != 0 {
+	if got := g.MaxXValue(pid, mc, nil); got != 0 {
 		t.Errorf("MaxXValue with no mana = %d, want 0", got)
 	}
 }
@@ -307,7 +307,7 @@ func TestMaxXValue_WithManaBonus(t *testing.T) {
 
 	// 2 Mountains each producing 2 = 4 total. {X}{R}: maxX = 4 - 1 = 3
 	mc := ParseManaCost("{X}{R}")
-	if got := g.MaxXValue(pid, mc); got != 3 {
+	if got := g.MaxXValue(pid, mc, nil); got != 3 {
 		t.Errorf("MaxXValue with Mana Flare = %d, want 3", got)
 	}
 }
@@ -330,7 +330,7 @@ func TestCanAfford_AccountsForManaBonus(t *testing.T) {
 	g.PutOnBattlefield(flare, pid)
 
 	// Should afford {2} with one Mountain + Mana Flare (produces {R}{R})
-	if !g.CanAfford(pid, ManaCost{Generic: 2}) {
+	if !g.CanAfford(pid, ManaCost{Generic: 2}, nil) {
 		t.Error("should afford {2} with one Mountain + Mana Flare")
 	}
 }
@@ -439,10 +439,10 @@ func TestCanAfford_ActivatedManaAbility(t *testing.T) {
 	perm := g.PutOnBattlefield(vault, pid)
 	perm.RevokeBaseAttr(AttrSummonSick)
 
-	if !g.CanAfford(pid, ManaCost{Generic: 3}) {
+	if !g.CanAfford(pid, ManaCost{Generic: 3}, nil) {
 		t.Error("should afford {3} with untapped Mana Vault")
 	}
-	if g.CanAfford(pid, ManaCost{Generic: 4}) {
+	if g.CanAfford(pid, ManaCost{Generic: 4}, nil) {
 		t.Error("should not afford {4} with only Mana Vault")
 	}
 }
@@ -478,12 +478,12 @@ func TestCanAfford_MultiMana(t *testing.T) {
 	perm := g.PutOnBattlefield(ring, pid)
 	perm.RevokeBaseAttr(AttrSummonSick)
 
-	if !g.CanAfford(pid, ManaCost{Generic: 2}) {
+	if !g.CanAfford(pid, ManaCost{Generic: 2}, nil) {
 		t.Error("should afford {2} with Sol Ring")
 	}
 
 	// Should not afford {3} with just Sol Ring
-	if g.CanAfford(pid, ManaCost{Generic: 3}) {
+	if g.CanAfford(pid, ManaCost{Generic: 3}, nil) {
 		t.Error("should not afford {3} with only Sol Ring (produces 2)")
 	}
 

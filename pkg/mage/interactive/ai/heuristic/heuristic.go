@@ -154,7 +154,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			if !card.HasType(core.TypeInstant) {
 				continue
 			}
-			if !g.CanAfford(playerID, card.ManaCost()) {
+			if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 				continue
 			}
 			// Hold combat-eligible instants for the post-blockers response
@@ -198,7 +198,7 @@ func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.Pri
 	}
 
 	for _, card := range p.Hand() {
-		if !g.CanAfford(playerID, card.ManaCost()) {
+		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
 		for _, a := range card.Abilities() {

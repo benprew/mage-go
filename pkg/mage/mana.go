@@ -49,6 +49,45 @@ func (mp *ManaPool) Add(c Color, amount int) {
 	}
 }
 
+// SpellContextForCard builds a SpellPaymentContext for the spell being cast.
+// Pass this into ManaPool.CanPay / ManaPool.Pay (and Game.CanAfford /
+// Game.MaxXValue) at every spell-cast site so restricted mana (Mishra's
+// Workshop, Metamorphosis) can be spent on eligible spells.
+func SpellContextForCard(c Card) *SpellPaymentContext {
+	if c == nil {
+		return nil
+	}
+	return &SpellPaymentContext{
+		IsArtifact: c.HasType(TypeArtifact),
+		IsCreature: c.HasType(TypeCreature),
+		CardName:   c.Name(),
+	}
+}
+
+// AddRestricted adds mana that may only be spent on spells satisfying r
+// (e.g. Mishra's Workshop's "Spend this mana only to cast artifact spells").
+// Restriction lives on each Mana entry, so it survives in the pool but
+// vanishes when the pool is cleared at end-of-step (CR 500.5).
+func (mp *ManaPool) AddRestricted(c Color, amount int, r ManaRestriction) {
+	for range amount {
+		mp.pool = append(mp.pool, Mana{Color: c, Restriction: r})
+		mp.ProducedThisTurn = append(mp.ProducedThisTurn, Mana{Color: c, Restriction: r})
+	}
+}
+
+// usable reports whether a mana entry can be spent given the spell context.
+// Unrestricted mana is always usable. Restricted mana requires a non-nil
+// context that its restriction predicate accepts.
+func manaUsable(m Mana, spellCtx *SpellPaymentContext) bool {
+	if m.Restriction == nil {
+		return true
+	}
+	if spellCtx == nil {
+		return false
+	}
+	return m.Restriction.IsSatisfiedBy(*spellCtx)
+}
+
 // Empties every player's mana pool. Called at the end of every step and phase per
 // CR 500.5.
 func (g *Game) emptyManaPools() {
@@ -121,9 +160,14 @@ func (mp *ManaPool) recordDrain(c Color) {
 }
 
 // CanPay returns true if the pool can pay the given mana cost.
-func (mp *ManaPool) CanPay(mc ManaCost) bool {
+// spellCtx is non-nil when paying for a spell cast; pass nil for ability
+// activations and other non-spell costs (restricted mana is excluded then).
+func (mp *ManaPool) CanPay(mc ManaCost, spellCtx *SpellPaymentContext) bool {
 	avail := map[Color]int{}
 	for _, m := range mp.pool {
+		if !manaUsable(m, spellCtx) {
+			continue
+		}
 		avail[m.Color]++
 	}
 
@@ -218,17 +262,20 @@ func allocateHybrids(syms []HybridSymbol, avail map[Color]int) bool {
 }
 
 // Surplus returns how much mana would remain after paying the given cost,
-// or -1 if the cost cannot be paid.
-func (mp *ManaPool) Surplus(mc ManaCost) int {
-	if !mp.CanPay(mc) {
+// or -1 if the cost cannot be paid. spellCtx semantics match CanPay.
+func (mp *ManaPool) Surplus(mc ManaCost, spellCtx *SpellPaymentContext) int {
+	if !mp.CanPay(mc, spellCtx) {
 		return -1
 	}
 	return len(mp.pool) - mc.CMC()
 }
 
 // Pay removes mana from the pool to pay a cost. Returns error if insufficient.
-func (mp *ManaPool) Pay(mc ManaCost) error {
-	if !mp.CanPay(mc) {
+// spellCtx semantics match CanPay. When non-nil, eligible restricted mana is
+// spent preferentially (it would otherwise be wasted at end-of-step per
+// CR 500.5).
+func (mp *ManaPool) Pay(mc ManaCost, spellCtx *SpellPaymentContext) error {
+	if !mp.CanPay(mc, spellCtx) {
 		return fmt.Errorf("insufficient mana to pay %s", mc)
 	}
 	type colorReq struct {
@@ -244,12 +291,12 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 	}
 	for _, r := range reqs {
 		need := r.needed
-		removed := mp.removeUpTo(r.color, need)
+		removed := mp.removeUpTo(r.color, need, spellCtx)
 		need = removed
 		if need > 0 {
 			for from, to := range mp.ManaConversions {
 				if to == r.color && from != r.color {
-					need = mp.removeUpTo(from, need)
+					need = mp.removeUpTo(from, need, spellCtx)
 					if need <= 0 {
 						break
 					}
@@ -258,38 +305,65 @@ func (mp *ManaPool) Pay(mc ManaCost) error {
 		}
 	}
 	for _, h := range mc.Hybrid {
-		a, b := mp.Count(h.A), mp.Count(h.B)
+		a, b := mp.usableCount(h.A, spellCtx), mp.usableCount(h.B, spellCtx)
 		if a >= b && a > 0 {
-			mp.removeUpTo(h.A, 1)
+			mp.removeUpTo(h.A, 1, spellCtx)
 		} else if b > 0 {
-			mp.removeUpTo(h.B, 1)
+			mp.removeUpTo(h.B, 1, spellCtx)
 		}
 	}
 	generic := mc.Generic
-	generic = mp.removeUpTo(Colorless, generic)
+	generic = mp.removeUpTo(Colorless, generic, spellCtx)
 	for _, c := range []Color{White, Blue, Black, Red, Green} {
 		if generic <= 0 {
 			break
 		}
-		generic = mp.removeUpTo(c, generic)
+		generic = mp.removeUpTo(c, generic, spellCtx)
 	}
 	return nil
 }
 
-func (mp *ManaPool) removeUpTo(c Color, n int) int {
-	for n > 0 {
-		found := false
-		for j, m := range mp.pool {
-			if m.Color == c {
-				mp.pool = append(mp.pool[:j], mp.pool[j+1:]...)
-				n--
-				found = true
-				mp.recordDrain(c)
+// usableCount returns the number of pool entries of color c that may be
+// spent given the spell context. Used during hybrid allocation.
+func (mp *ManaPool) usableCount(c Color, spellCtx *SpellPaymentContext) int {
+	n := 0
+	for _, m := range mp.pool {
+		if m.Color == c && manaUsable(m, spellCtx) {
+			n++
+		}
+	}
+	return n
+}
+
+// removeUpTo consumes up to n mana of color c, preferring restricted-but-
+// eligible entries first (so they aren't wasted at end-of-step) and falling
+// back to unrestricted. Returns the remaining unmet count.
+func (mp *ManaPool) removeUpTo(c Color, n int, spellCtx *SpellPaymentContext) int {
+	for _, restrictedFirst := range []bool{true, false} {
+		for n > 0 {
+			idx := -1
+			for j, m := range mp.pool {
+				if m.Color != c {
+					continue
+				}
+				if !manaUsable(m, spellCtx) {
+					continue
+				}
+				if restrictedFirst && m.Restriction == nil {
+					continue
+				}
+				if !restrictedFirst && m.Restriction != nil {
+					continue
+				}
+				idx = j
 				break
 			}
-		}
-		if !found {
-			break
+			if idx < 0 {
+				break
+			}
+			mp.pool = append(mp.pool[:idx], mp.pool[idx+1:]...)
+			n--
+			mp.recordDrain(c)
 		}
 	}
 	return n

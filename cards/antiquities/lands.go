@@ -61,13 +61,12 @@ func registerLands() {
 		return NewLand("Mishra's Workshop",
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs "add restricted mana" step
-				FuncEffect("add {C}{C}{C} for artifacts only",
+				FuncEffect("add {C}{C}{C} (spend only to cast artifact spells)",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p != nil {
-							p.ManaPool().Add(Colorless, 3)
-							g.SetArtifactManaOnly(controller)
+							p.ManaPool().AddRestricted(Colorless, 3, ArtifactSpellsOnly{})
 						}
 						return nil
 					}),

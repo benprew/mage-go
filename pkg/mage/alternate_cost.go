@@ -141,7 +141,7 @@ func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int,
 		return fmt.Errorf("alt-cost condition not met for %s", card.Name())
 	}
 
-	if !alt.Mana.IsZero() && !p.ManaPool().CanPay(alt.Mana) {
+	if !alt.Mana.IsZero() && !p.ManaPool().CanPay(alt.Mana, SpellContextForCard(card)) {
 		if err := g.AutoTapForCost(playerID, alt.Mana); err != nil {
 			return fmt.Errorf("cannot pay alt-cost mana %s for %s: %w", alt.Mana, card.Name(), err)
 		}

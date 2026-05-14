@@ -34,7 +34,10 @@ func GenericCost(n int) Cost {
 
 func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	mc := c.reducedCost(sourceID, g)
-	return g.CanAfford(controller, mc)
+	// TODO: action costs paid mid-cast (game.go:2855+) flow through here and
+	// should see the spell context per CR 601.2f. Workshop/Metamorphosis don't
+	// exercise this path, so nil is fine for now.
+	return g.CanAfford(controller, mc, nil)
 }
 
 func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
@@ -43,7 +46,7 @@ func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		return ErrPlayerNotFound
 	}
 	mc := c.reducedCost(sourceID, g)
-	return p.ManaPool().Pay(mc)
+	return p.ManaPool().Pay(mc, nil)
 }
 
 // reducedCost applies activation cost reductions (e.g. Power Artifact) to the mana cost.
@@ -773,10 +776,10 @@ func (c *xManaCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		return ErrPlayerNotFound
 	}
 	mc := ManaCost{Generic: x}
-	if !p.ManaPool().CanPay(mc) {
+	if !p.ManaPool().CanPay(mc, nil) {
 		return fmt.Errorf("cannot pay {%d}", x)
 	}
-	return p.ManaPool().Pay(mc)
+	return p.ManaPool().Pay(mc, nil)
 }
 
 func (c *xManaCost) Text() string { return "{X}" }

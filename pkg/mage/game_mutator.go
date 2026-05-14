@@ -529,22 +529,6 @@ func (g *Game) AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType, extr
 	})
 }
 
-// SetArtifactManaOnly marks a player as having artifact-only mana restriction active.
-func (g *Game) SetArtifactManaOnly(playerID uuid.UUID) {
-	if g.artifactManaOnly == nil {
-		g.artifactManaOnly = make(map[uuid.UUID]bool)
-	}
-	g.artifactManaOnly[playerID] = true
-}
-
-// SetCreatureManaOnly marks a player as having creature-only mana restriction active.
-func (g *Game) SetCreatureManaOnly(playerID uuid.UUID) {
-	if g.creatureManaOnly == nil {
-		g.creatureManaOnly = make(map[uuid.UUID]bool)
-	}
-	g.creatureManaOnly[playerID] = true
-}
-
 // GetArtifactDamageTaken returns the artifact damage the player has taken this turn.
 func (g *Game) GetArtifactDamageTaken(playerID uuid.UUID) int {
 	return g.artifactDamageTakenThisTurn[playerID]

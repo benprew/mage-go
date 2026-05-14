@@ -116,7 +116,7 @@ func registerSpells() {
 	Register("Metamorphosis", func() Card {
 		return NewSorcery("Metamorphosis", "{G}",
 			// TODO: convert to pipeline — needs dynamic mana addition + color choice + creature-mana-only primitives
-			NewSpellAbility(FuncEffect("add mana equal to 1 + sacrificed creature's CMC",
+			NewSpellAbility(FuncEffect("add mana equal to 1 + sacrificed creature's CMC (spend only to cast creature spells)",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					cmc := g.XValue() // captured by sacrificeCreatureCaptureCMCCost
@@ -125,8 +125,7 @@ func registerSpells() {
 					if p != nil && amount > 0 {
 						// "Add X mana of any one color" — player chooses
 						color := p.ChooseManaColor("Metamorphosis: choose a color")
-						p.ManaPool().Add(color, amount)
-						g.SetCreatureManaOnly(controller)
+						p.ManaPool().AddRestricted(color, amount, CreatureSpellsOnly{})
 					}
 					return nil
 				})),

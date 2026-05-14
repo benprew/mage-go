@@ -142,12 +142,6 @@ type Game struct {
 	// end of flushCombatDamageAggregator.
 	combatDamageSourcesThisStep map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
 
-	// Artifact mana restriction: players who have activated artifact-only mana sources
-	artifactManaOnly map[uuid.UUID]bool
-
-	// Creature mana restriction: players who have creature-only mana (Metamorphosis)
-	creatureManaOnly map[uuid.UUID]bool
-
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	attackedThisTurn map[uuid.UUID]bool
 
@@ -334,8 +328,6 @@ func NewGame(playerA, playerB Player) *Game {
 		instantsCastThisTurn:        make(map[uuid.UUID]int),
 		sorceriesCastThisTurn:       make(map[uuid.UUID]int),
 		timesTargetedThisTurn:       make(map[uuid.UUID]int),
-		artifactManaOnly:            make(map[uuid.UUID]bool),
-		creatureManaOnly:            make(map[uuid.UUID]bool),
 		armedStateTriggers:          make(map[stateTriggerKey]bool),
 		schedule:                    newTurnSchedule(),
 		exileInsteadCards:           make(map[uuid.UUID]uuid.UUID),
@@ -2727,15 +2719,6 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if g.effects.Rules.PlayerCantCastSpells(playerID) {
 		return fmt.Errorf("can't cast %s: a continuous effect prevents this player from casting spells", card.Name())
 	}
-	// Check artifact mana restriction (Mishra's Workshop)
-	if g.artifactManaOnly[playerID] && !card.HasType(TypeArtifact) {
-		return fmt.Errorf("can't cast %s: restricted mana pool may only pay for artifact spells", name)
-	}
-	// Check creature mana restriction (Metamorphosis)
-	if g.creatureManaOnly[playerID] && !card.HasType(TypeCreature) {
-		return fmt.Errorf("can't cast %s: restricted mana pool may only pay for creature spells", name)
-	}
-
 	// Determine X value
 	xValue := 0
 	if len(xValues) > 0 {
@@ -2790,6 +2773,8 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// cast it").
 	p.ManaPool().ResetLastDrained()
 
+	spellCtx := SpellContextForCard(card)
+
 	// Channel: pay life for generic/X costs instead of mana
 	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
 		// Pay colored portion from pool
@@ -2797,10 +2782,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		colorMC.Generic = 0
 		colorMC.HasX = false
 		if !colorMC.IsZero() {
-			if !p.ManaPool().CanPay(colorMC) {
+			if !p.ManaPool().CanPay(colorMC, spellCtx) {
 				return fmt.Errorf("cannot pay mana cost %s for %s", colorMC, name)
 			}
-			if err := p.ManaPool().Pay(colorMC); err != nil {
+			if err := p.ManaPool().Pay(colorMC, spellCtx); err != nil {
 				return err
 			}
 		}
@@ -2817,10 +2802,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 			payMC.Generic += xValue * mc.XCount
 		}
 		if !payMC.IsZero() {
-			if !p.ManaPool().CanPay(payMC) {
+			if !p.ManaPool().CanPay(payMC, spellCtx) {
 				return fmt.Errorf("cannot pay mana cost %s for %s", payMC, name)
 			}
-			if err := p.ManaPool().Pay(payMC); err != nil {
+			if err := p.ManaPool().Pay(payMC, spellCtx); err != nil {
 				return err
 			}
 		}
@@ -3620,9 +3605,6 @@ func (g *Game) doCleanupActions() bool {
 	g.creatureDeathsThisTurn = 0
 	g.clearLKI()
 	g.resetPerTurnTrackers()
-	// Clear mana restrictions
-	g.artifactManaOnly = make(map[uuid.UUID]bool)
-	g.creatureManaOnly = make(map[uuid.UUID]bool)
 	// Clear last-drawn-card tracking for all players
 	for _, p := range g.players {
 		p.ClearLastDrawnCard()
@@ -4115,21 +4097,23 @@ func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
 
 func (g *Game) HypotheticalMana(playerID uuid.UUID) int {
 	p := g.buildHypotheticalPool(playerID)
-	return p.Surplus(ManaCost{})
+	return p.Surplus(ManaCost{}, nil)
 }
 
-// CanAfford returns true if a player has enough mana (pool + untapped sources) to pay a cost.
-func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
+// CanAfford returns true if a player has enough mana (pool + untapped sources)
+// to pay a cost. spellCtx is non-nil when checking affordability for casting
+// a specific spell (so restricted mana can count); nil for ability costs.
+func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPaymentContext) bool {
 	hypothetical := g.buildHypotheticalPool(playerID)
 	if hypothetical == nil {
 		return false
 	}
-	return hypothetical.CanPay(mc)
+	return hypothetical.CanPay(mc, spellCtx)
 }
 
 // MaxXValue returns the maximum X value a player can pay for a spell with cost mc,
-// considering mana in pool plus untapped sources.
-func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost) int {
+// considering mana in pool plus untapped sources. spellCtx semantics match CanAfford.
+func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPaymentContext) int {
 	if !mc.HasX || mc.XCount == 0 {
 		return 0
 	}
@@ -4144,7 +4128,7 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost) int {
 		Black:   mc.Black,
 		Red:     mc.Red,
 		Green:   mc.Green,
-	})
+	}, spellCtx)
 	if surplus < 0 {
 		return 0
 	}
@@ -4433,7 +4417,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 	if mc.HasX {
 		payMC.Generic += xValue * mc.XCount
 	}
-	if !payMC.IsZero() && !p.ManaPool().CanPay(payMC) {
+	if !payMC.IsZero() && !p.ManaPool().CanPay(payMC, SpellContextForCard(card)) {
 		if err := g.AutoTapForCost(playerID, payMC); err != nil {
 			return fmt.Errorf("cannot pay for %s: %w", card.Name(), err)
 		}

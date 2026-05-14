@@ -58,7 +58,7 @@ func (g *Game) Playable(playerIdx int) []PlayableAction {
 		// both X and non-X spells — X effectively just bumps the generic
 		// portion, and we don't enumerate X choices here.
 		mc := c.ManaCost()
-		if mc.IsZero() || p.ManaPool().CanPay(mc) || g.canAutoTapForCost(p.PlayerID(), mc) {
+		if mc.IsZero() || p.ManaPool().CanPay(mc, SpellContextForCard(c)) || g.canAutoTapForCost(p.PlayerID(), mc) {
 			out = append(out, PlayableAction{Kind: "cast", SourceName: c.Name()})
 		}
 	}

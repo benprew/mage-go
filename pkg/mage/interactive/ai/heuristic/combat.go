@@ -556,7 +556,7 @@ func holdBackValue(p mage.Player, g *mage.Game, w ai.WeightedPersonality) float6
 		if !card.HasType(core.TypeInstant) {
 			continue
 		}
-		if !g.CanAfford(playerID, card.ManaCost()) {
+		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
 		hasUsableEffect := false
@@ -638,7 +638,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 		if !card.HasType(core.TypeInstant) {
 			continue
 		}
-		if !g.CanAfford(playerID, card.ManaCost()) {
+		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
 
