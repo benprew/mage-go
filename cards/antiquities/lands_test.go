@@ -78,6 +78,24 @@ func TestMishrasFactory(t *testing.T) {
 			t.Error("Mishra's Factory should be able to attack after animating")
 		}
 	})
+
+	t.Run("opponent cannot activate it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+
+		factory := g.FindPermanentByName("Mishra's Factory", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if factory == nil {
+			t.Fatal("Mishra's Factory not found on battlefield")
+		}
+
+		err := g.Game.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerB).PlayerID(), factory.ID(), 1, nil)
+		if err == nil {
+			t.Fatal("PlayerB activated PlayerA's Mishra's Factory")
+		}
+	})
 }
 
 func TestMishrasWorkshop(t *testing.T) {

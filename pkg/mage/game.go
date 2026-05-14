@@ -4455,6 +4455,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	// Handle mana abilities (don't use the stack)
 	if ma, ok := inner.(*ManaAbility); ok {
+		if perm.Controller != playerID {
+			return fmt.Errorf("only the controller may activate mana abilities")
+		}
 		if perm.HasAttr(AttrCantActivate) {
 			return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
 		}
@@ -4478,16 +4481,20 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if !ok {
 		return fmt.Errorf("not an activated ability")
 	}
+	saa, isSAA := inner.(*SimpleActivatedAbility)
+	if perm.Controller != playerID {
+		if !isSAA || !saa.IsAnyPlayerAbility() {
+			return fmt.Errorf("only the controller may activate this ability")
+		}
+	}
+	if perm.Controller == playerID && isSAA && saa.IsOpponentOnlyAbility() {
+		return fmt.Errorf("only opponents may activate this ability")
+	}
 	if perm.HasAttr(AttrCantActivateNonManaAbilities) {
 		return fmt.Errorf("non-mana activated abilities of %s are prevented", perm.Name())
 	}
 	if !aa.CanActivate(playerID, g) {
 		return fmt.Errorf("cannot activate ability")
-	}
-	if saa, isSAA := inner.(*SimpleActivatedAbility); isSAA && saa.IsOpponentOnlyAbility() {
-		if perm.Controller == playerID {
-			return fmt.Errorf("only opponents may activate this ability")
-		}
 	}
 
 	if err := g.validateActionTargets(playerID, perm.Card, aa.Targets(), targets, "ability"); err != nil {

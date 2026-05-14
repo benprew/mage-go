@@ -260,6 +260,12 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		if perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities) {
 			return false
 		}
+		if perm.Controller != controller && !a.permission.AnyPlayerMayUse {
+			return false
+		}
+		if perm.Controller == controller && a.permission.OpponentOnlyMayUse {
+			return false
+		}
 	}
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
