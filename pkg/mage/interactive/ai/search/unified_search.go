@@ -200,9 +200,15 @@ func searchInstantResponse(g *mage.Game, rootPlayerID uuid.UUID, trace func(stri
 	}
 
 	var chain []ChainStep
-	if bestMove != nil && bestMove.Type != interactive.ActionPass {
+	if bestMove != nil {
 		mCopy := *bestMove
-		chain = []ChainStep{{Phase: step, Player: root.Name(), Move: &mCopy}}
+		chain = []ChainStep{{
+			Phase:    step,
+			Player:   root.Name(),
+			PlayerID: rootPlayerID,
+			StateKey: turnPlanDecisionKey(z, g, rootPlayerID, rootPlayerID, turnPlanPriority),
+			Move:     &mCopy,
+		}}
 	}
 	return Result{Chain: chain, Score: bestScore, Nodes: totalNodes, TTHits: ttHits, TTStores: ttStores}
 }
@@ -291,7 +297,6 @@ func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bo
 		m := &moves[i]
 		var subChain []ChainStep
 		var subScore float64
-		var record *ChainStep
 
 		if m.Type == interactive.ActionPass {
 			if prevPass {
@@ -306,14 +311,7 @@ func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bo
 		} else {
 			clone := g.Clone()
 			applyMove(clone, priorityID, m)
-			mCopy := *m
-			record = &ChainStep{Phase: step, Player: actor.Name(), Move: &mCopy}
 			subChain, subScore = s.search(clone, priorityID, false, alpha, beta)
-		}
-
-		combined := subChain
-		if record != nil {
-			combined = append([]ChainStep{*record}, subChain...)
 		}
 
 		better := false
@@ -333,8 +331,16 @@ func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bo
 			}
 		}
 		if better {
+			mCopy := *m
+			record := ChainStep{
+				Phase:    step,
+				Player:   actor.Name(),
+				PlayerID: priorityID,
+				StateKey: s.planDecisionKey(g, priorityID, turnPlanPriority),
+				Move:     &mCopy,
+			}
 			bestScore = subScore
-			bestChain = combined
+			bestChain = append([]ChainStep{record}, subChain...)
 			bestMove = m
 		}
 		if alpha >= beta {
@@ -390,12 +396,6 @@ func (s *searcher) branchAttackers(g *mage.Game, alpha, beta float64) ([]ChainSt
 			s.trace(fmt.Sprintf("    attackers=%s score=%.2f", attackerSubsetName(g, atk), subScore))
 		}
 
-		combined := subChain
-		if len(atk) > 0 {
-			record := ChainStep{Phase: core.DeclareAttackers, Player: activePlayer.Name(), Attackers: atk}
-			combined = append([]ChainStep{record}, subChain...)
-		}
-
 		better := false
 		if isMax {
 			if subScore > bestScore || (subScore == bestScore && (!bestSet || attackerSubsetLess(atk, bestSubset))) {
@@ -413,8 +413,16 @@ func (s *searcher) branchAttackers(g *mage.Game, alpha, beta float64) ([]ChainSt
 			}
 		}
 		if better {
+			attackers := append([]uuid.UUID{}, atk...)
+			record := ChainStep{
+				Phase:     core.DeclareAttackers,
+				Player:    activePlayer.Name(),
+				PlayerID:  activePlayerID,
+				StateKey:  s.planDecisionKey(g, activePlayerID, turnPlanAttackers),
+				Attackers: attackers,
+			}
 			bestScore = subScore
-			bestChain = combined
+			bestChain = append([]ChainStep{record}, subChain...)
 			bestSubset = atk
 			bestSet = true
 		}
@@ -471,12 +479,6 @@ func (s *searcher) branchBlockers(g *mage.Game, alpha, beta float64) ([]ChainSte
 			s.trace(fmt.Sprintf("      blockers=%s score=%.2f", blockerSubsetName(g, blk), subScore))
 		}
 
-		combined := subChain
-		if len(blk) > 0 {
-			record := ChainStep{Phase: core.DeclareBlockers, Player: defender.Name(), Blocks: blk}
-			combined = append([]ChainStep{record}, subChain...)
-		}
-
 		better := false
 		if isMax {
 			if subScore > bestScore || (subScore == bestScore && (!bestSet || blockerSubsetLess(blk, bestSubset))) {
@@ -494,8 +496,16 @@ func (s *searcher) branchBlockers(g *mage.Game, alpha, beta float64) ([]ChainSte
 			}
 		}
 		if better {
+			blocks := append([]mage.BlockAssignment{}, blk...)
+			record := ChainStep{
+				Phase:    core.DeclareBlockers,
+				Player:   defender.Name(),
+				PlayerID: defenderID,
+				StateKey: s.planDecisionKey(g, defenderID, turnPlanBlockers),
+				Blocks:   blocks,
+			}
 			bestScore = subScore
-			bestChain = combined
+			bestChain = append([]ChainStep{record}, subChain...)
 			bestSubset = blk
 			bestSet = true
 		}

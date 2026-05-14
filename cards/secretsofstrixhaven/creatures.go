@@ -3463,10 +3463,10 @@ func registerCreatures() {
 						lib := p.Library()
 						milledCount := min(7, len(lib))
 						var milled []Card
-						for i := 0; i < milledCount; i++ {
+						for i := range milledCount {
 							milled = append(milled, lib[i])
 						}
-						for i := 0; i < milledCount; i++ {
+						for i := range milledCount {
 							p.AddToGraveyard(lib[i])
 						}
 						p.SetLibrary(lib[milledCount:])

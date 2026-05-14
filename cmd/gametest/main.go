@@ -11,10 +11,12 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
 
+	"git.sr.ht/~cdcarter/mage-go/internal/scenario"
 	"git.sr.ht/~cdcarter/mage-go/internal/tui"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -30,6 +32,9 @@ func main() {
 	maxTurns := flag.Int("turns", 50, "maximum number of turns")
 	deckA := flag.Int("deck-a", -1, "deck index for player A (0-based, -1 = random)")
 	deckB := flag.Int("deck-b", -1, "deck index for player B (0-based, -1 = random)")
+	rogueDecks := flag.Bool("rogue-decks", false, "select decks from Rogue .dck files instead of built-in archetypes")
+	rogueDir := flag.String("rogue-dir", "rogue_dck", "path to Rogue .dck deck directory")
+	minCards := flag.Int("min-cards", 25, "minimum playable cards for a Rogue deck to be eligible")
 	games := flag.Int("games", 1, "number of games to play in sequence (useful for profiling)")
 	seed := flag.Int64("seed", 0, "RNG seed for deck selection (0 = nondeterministic)")
 	persA := flag.String("ai-a", "aggro", "AI personality for player A (aggro, control, midrange, tempo, burn)")
@@ -38,10 +43,12 @@ func main() {
 	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, search, adaptive)")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	memProfile := flag.String("memprofile", "", "write memory profile to file")
+	timeout := flag.Duration("timeout", 0, "wall clock timeout for the whole run (0 disables)")
 	loopTiming := flag.Bool("loop-timing", false, "write aggregate main game-loop timing to stderr")
 	quiet := flag.Bool("quiet", false, "suppress per-action game log output")
 	flag.Parse()
 
+	profiles := &profileRun{memPath: *memProfile}
 	if *cpuProfile != "" {
 		f, err := os.Create(*cpuProfile)
 		if err != nil {
@@ -54,22 +61,13 @@ func main() {
 			f.Close()
 			os.Exit(1)
 		}
-		defer pprof.StopCPUProfile()
+		profiles.cpuFile = f
+		profiles.cpuActive = true
 	}
+	defer profiles.finish()
 
-	if *memProfile != "" {
-		defer func() {
-			f, err := os.Create(*memProfile)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "could not create mem profile: %v\n", err)
-				return
-			}
-			defer f.Close()
-			runtime.GC()
-			if err := pprof.WriteHeapProfile(f); err != nil {
-				fmt.Fprintf(os.Stderr, "could not write mem profile: %v\n", err)
-			}
-		}()
+	if *timeout > 0 {
+		startWallclockTimeout(*timeout, profiles)
 	}
 
 	if *quiet {
@@ -81,8 +79,13 @@ func main() {
 		os.Stdout = devnull
 	}
 
-	if *deckA >= len(tui.Archetypes) || *deckB >= len(tui.Archetypes) {
-		fmt.Fprintf(os.Stderr, "invalid deck index (max %d)\n", len(tui.Archetypes)-1)
+	deckPool, err := loadDeckPool(*rogueDecks, *rogueDir, *minCards)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not load decks: %v\n", err)
+		os.Exit(1)
+	}
+	if *deckA >= len(deckPool) || *deckB >= len(deckPool) {
+		fmt.Fprintf(os.Stderr, "invalid deck index (max %d)\n", len(deckPool)-1)
 		os.Exit(1)
 	}
 
@@ -100,18 +103,20 @@ func main() {
 	for gameNum := 1; gameNum <= *games; gameNum++ {
 		dA := *deckA
 		if dA < 0 {
-			dA = rng.Intn(len(tui.Archetypes))
+			dA = rng.Intn(len(deckPool))
 		}
 		dB := *deckB
 		if dB < 0 {
-			dB = rng.Intn(len(tui.Archetypes))
+			dB = rng.Intn(len(deckPool))
 		}
+		selectedA := deckPool[dA]
+		selectedB := deckPool[dB]
 
 		playerA := createAI("Alice", wpA, *modeA)
 		playerB := createAI("Bob", wpB, *modeB)
 
-		cardsA := tui.BuildDeck(tui.Archetypes[dA].Entries, playerA.PlayerID())
-		cardsB := tui.BuildDeck(tui.Archetypes[dB].Entries, playerB.PlayerID())
+		cardsA := tui.BuildDeck(selectedA.Entries, playerA.PlayerID())
+		cardsB := tui.BuildDeck(selectedB.Entries, playerB.PlayerID())
 		for _, c := range cardsA {
 			playerA.AddToLibrary(c)
 		}
@@ -126,8 +131,10 @@ func main() {
 		ai.MulliganAI(playerB)
 
 		fmt.Printf("=== Game %d Start ===\n", gameNum)
-		fmt.Printf("Alice (%s/%s) deck: %s (%d cards)\n", *persA, *modeA, tui.Archetypes[dA].Name, len(playerA.Library())+len(playerA.Hand()))
-		fmt.Printf("Bob   (%s/%s) deck: %s (%d cards)\n", *persB, *modeB, tui.Archetypes[dB].Name, len(playerB.Library())+len(playerB.Hand()))
+		fmt.Printf("Alice (%s/%s) deck: %s (%d cards)\n", *persA, *modeA, selectedA.Name, len(playerA.Library())+len(playerA.Hand()))
+		printSkippedCards("Alice", selectedA.Skipped)
+		fmt.Printf("Bob   (%s/%s) deck: %s (%d cards)\n", *persB, *modeB, selectedB.Name, len(playerB.Library())+len(playerB.Hand()))
+		printSkippedCards("Bob", selectedB.Skipped)
 		fmt.Printf("Alice hand (%d): %s\n", len(playerA.Hand()), handStr(playerA.Hand()))
 		fmt.Printf("Bob   hand (%d): %s\n\n", len(playerB.Hand()), handStr(playerB.Hand()))
 
@@ -142,6 +149,153 @@ func main() {
 			float64(*games)/max(totalLoop.Seconds(), 1e-9),
 		)
 	}
+}
+
+type profileRun struct {
+	cpuFile   *os.File
+	cpuActive bool
+	memPath   string
+	once      sync.Once
+}
+
+func (p *profileRun) finish() {
+	p.once.Do(func() {
+		if p.cpuActive {
+			pprof.StopCPUProfile()
+			p.cpuActive = false
+		}
+		if p.cpuFile != nil {
+			if err := p.cpuFile.Close(); err != nil {
+				fmt.Fprintf(os.Stderr, "could not close cpu profile: %v\n", err)
+			}
+			p.cpuFile = nil
+		}
+		if p.memPath == "" {
+			return
+		}
+		f, err := os.Create(p.memPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "could not create mem profile: %v\n", err)
+			return
+		}
+		defer f.Close()
+		runtime.GC()
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			fmt.Fprintf(os.Stderr, "could not write mem profile: %v\n", err)
+		}
+	})
+}
+
+func startWallclockTimeout(d time.Duration, profiles *profileRun) {
+	go func() {
+		<-time.After(d)
+		fmt.Fprintf(os.Stderr, "gametest wall clock timeout after %s; writing profiles and exiting\n", d)
+		profiles.finish()
+		os.Exit(124)
+	}()
+}
+
+type selectableDeck struct {
+	Name    string
+	Entries []tui.DeckEntry
+	Skipped []string
+}
+
+func loadDeckPool(useRogue bool, rogueDir string, minCards int) ([]selectableDeck, error) {
+	if !useRogue {
+		decks := make([]selectableDeck, 0, len(tui.Archetypes))
+		for _, archetype := range tui.Archetypes {
+			decks = append(decks, selectableDeck{Name: archetype.Name, Entries: archetype.Entries})
+		}
+		return decks, nil
+	}
+
+	rogueDecks, err := scenario.LoadAllDCKDecks(rogueDir)
+	if err != nil {
+		return nil, err
+	}
+	decks := make([]selectableDeck, 0, len(rogueDecks))
+	for _, deck := range rogueDecks {
+		entries, skipped := filterRogueDeck(deck)
+		total := countDeckCards(entries)
+		if total < minCards {
+			fmt.Fprintf(os.Stderr, "skipping %s: only %d playable cards (need %d)\n", deck.Name, total, minCards)
+			continue
+		}
+		decks = append(decks, selectableDeck{
+			Name:    fmt.Sprintf("%s (%s)", deck.Name, deck.SourceFile),
+			Entries: entries,
+			Skipped: skipped,
+		})
+	}
+	if len(decks) == 0 {
+		return nil, fmt.Errorf("no eligible Rogue decks found in %s", rogueDir)
+	}
+	fmt.Fprintf(os.Stderr, "loaded %d eligible Rogue decks from %s\n", len(decks), rogueDir)
+	return decks, nil
+}
+
+func filterRogueDeck(deck *scenario.RogueDeck) (entries []tui.DeckEntry, skipped []string) {
+	primaryBasic := primaryBasicLand(deck.MainCards)
+	backfill := 0
+	for _, entry := range deck.MainCards {
+		if cardAvailable(entry.Name) {
+			entries = append(entries, tui.DeckEntry{Name: entry.Name, Count: entry.Count})
+		} else {
+			skipped = append(skipped, entry.Name)
+			backfill += entry.Count
+		}
+	}
+	if backfill > 0 {
+		for i, entry := range entries {
+			if entry.Name == primaryBasic {
+				entries[i].Count += backfill
+				return entries, skipped
+			}
+		}
+		entries = append(entries, tui.DeckEntry{Name: primaryBasic, Count: backfill})
+	}
+	return entries, skipped
+}
+
+func primaryBasicLand(entries []scenario.DeckEntry) string {
+	basics := map[string]int{}
+	for _, entry := range entries {
+		switch entry.Name {
+		case "Plains", "Island", "Swamp", "Mountain", "Forest":
+			basics[entry.Name] += entry.Count
+		}
+	}
+	primary := "Plains"
+	maxCount := 0
+	for name, count := range basics {
+		if count > maxCount {
+			primary = name
+			maxCount = count
+		}
+	}
+	return primary
+}
+
+func cardAvailable(name string) bool {
+	_, err := mage.CreateCard(name)
+	return err == nil
+}
+
+func countDeckCards(entries []tui.DeckEntry) int {
+	total := 0
+	for _, entry := range entries {
+		total += entry.Count
+	}
+	return total
+}
+
+func printSkippedCards(playerName string, skipped []string) {
+	if len(skipped) == 0 {
+		return
+	}
+	fmt.Printf("%s replacements: %d unsupported card names replaced with basics: %s\n",
+		playerName, len(skipped), strings.Join(skipped, ", "))
 }
 
 func runGame(g *mage.Game, maxTurns int) time.Duration {

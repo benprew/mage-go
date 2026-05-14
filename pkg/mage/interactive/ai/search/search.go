@@ -48,6 +48,8 @@ type Strategy struct {
 	tt      *TranspositionTable
 	zobrist *ZobristTables
 
+	turnPlan *turnPlan
+
 	TTHits    uint64
 	TTStores  uint64
 	LastNodes uint64
@@ -111,8 +113,17 @@ func (s *adaptiveStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAss
 
 func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, _ int, _ bool) interactive.PriorityAction {
 	start := time.Now()
+	if action, ok := s.replayPriorityAction(p, g); ok {
+		if DebugStats {
+			fmt.Printf("[SEARCH] player=%s nodes=0 tt=0/0 elapsed=%s action=%s:%s score=plan\n",
+				p.Name(), time.Since(start).Round(time.Millisecond), action.Type, action.CardName)
+		}
+		return action
+	}
+
 	res := s.searchAs(g, p.PlayerID(), nil)
 	s.recordStats(res)
+	s.storeTurnPlan(g, p.PlayerID(), res)
 
 	action := interactive.PriorityAction{Type: interactive.ActionPass}
 	step := g.GetStep()
@@ -141,8 +152,13 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, _ int, _ bool) in
 }
 
 func (s *Strategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
+	if attackers, ok := s.replayAttackers(p, g); ok {
+		return attackers
+	}
+
 	res := s.searchAs(g, p.PlayerID(), nil)
 	s.recordStats(res)
+	s.storeTurnPlan(g, p.PlayerID(), res)
 	for _, step := range res.Chain {
 		if step.Attackers != nil {
 			return step.Attackers
@@ -160,8 +176,13 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 		searchGame = g.Clone()
 		searchGame.SetStep(core.DeclareBlockers)
 	}
+	if blocks, ok := s.replayBlockers(p, searchGame); ok {
+		return blocks
+	}
+
 	res := s.searchAs(searchGame, p.PlayerID(), nil)
 	s.recordStats(res)
+	s.storeTurnPlan(searchGame, p.PlayerID(), res)
 	for _, step := range res.Chain {
 		if step.Blocks != nil {
 			return step.Blocks

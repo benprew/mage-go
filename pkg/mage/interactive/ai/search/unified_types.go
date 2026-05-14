@@ -20,6 +20,9 @@ type ChainStep struct {
 	Phase  core.PhaseStep
 	Player string
 
+	PlayerID uuid.UUID
+	StateKey uint64
+
 	Move      *Move
 	Attackers []uuid.UUID
 	Blocks    []mage.BlockAssignment

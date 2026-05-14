@@ -695,6 +695,82 @@ func TestSearch_RecordsNodesAfterDecision(t *testing.T) {
 	}
 }
 
+func TestSearch_TurnPlanReplaysIdenticalPriorityDecision(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+
+	strategy := makeSearchAI(Config{MaxDepth: 3, MaxNodes: 500, TimeLimit: time.Second})
+
+	first := strategy.PriorityAction(pa, g, 0, true)
+	if first.Type != interactive.ActionPass {
+		t.Fatalf("first action = %v, want pass", first.Type)
+	}
+	if strategy.LastNodes == 0 {
+		t.Fatalf("first search should visit nodes")
+	}
+
+	second := strategy.PriorityAction(pa, g, 0, true)
+	if second.Type != interactive.ActionPass {
+		t.Fatalf("second action = %v, want replayed pass", second.Type)
+	}
+	if strategy.LastNodes != 0 {
+		t.Fatalf("replayed plan should not run search, LastNodes=%d", strategy.LastNodes)
+	}
+}
+
+func TestSearch_TurnPlanReplaysIdenticalCastDecision(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+
+	bolt := mage.NewInstant("Lightning Bolt", "{R}",
+		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+	)
+	bolt.SetOwner(pa.PlayerID())
+	pa.AddToHand(bolt)
+	addLands(g, pa, "Mountain", 1)
+	g.SetStep(core.PrecombatMain)
+
+	strategy := makeSearchAI(Config{MaxDepth: 3, MaxNodes: 500, TimeLimit: time.Second})
+
+	first := strategy.PriorityAction(pa, g, 0, true)
+	if first.Type != interactive.ActionCastSpell || first.CardName != "Lightning Bolt" {
+		t.Fatalf("first action = %v %q, want Lightning Bolt cast", first.Type, first.CardName)
+	}
+	if strategy.LastNodes == 0 {
+		t.Fatalf("first search should visit nodes")
+	}
+
+	second := strategy.PriorityAction(pa, g, 0, true)
+	if second.Type != first.Type || second.CardID != first.CardID || len(second.Targets) != len(first.Targets) {
+		t.Fatalf("second action = %+v, want replay of %+v", second, first)
+	}
+	if strategy.LastNodes != 0 {
+		t.Fatalf("replayed cast should not run search, LastNodes=%d", strategy.LastNodes)
+	}
+}
+
+func TestSearch_TurnPlanInvalidatesWhenStateChanges(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+
+	strategy := makeSearchAI(Config{MaxDepth: 3, MaxNodes: 500, TimeLimit: time.Second})
+	_ = strategy.PriorityAction(pa, g, 0, true)
+	_ = strategy.PriorityAction(pa, g, 0, true)
+	if strategy.LastNodes != 0 {
+		t.Fatalf("expected identical prompt to replay before mutation")
+	}
+
+	bear := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+	bear.SetOwner(pa.PlayerID())
+	pa.AddToHand(bear)
+	addLands(g, pa, "Forest", 2)
+
+	_ = strategy.PriorityAction(pa, g, 0, true)
+	if strategy.LastNodes == 0 {
+		t.Fatalf("changed state should invalidate the stored turn plan")
+	}
+}
+
 // ── Attacker Generation ──────────────────────────────────────────────────────
 
 func TestGenerateAttackerSets_IncludesAllButOne(t *testing.T) {

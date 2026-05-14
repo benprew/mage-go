@@ -91,7 +91,7 @@ func TestMishrasFactory(t *testing.T) {
 			t.Fatal("Mishra's Factory not found on battlefield")
 		}
 
-		err := g.Game.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerB).PlayerID(), factory.ID(), 1, nil)
+		err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerB).PlayerID(), factory.ID(), 1, nil)
 		if err == nil {
 			t.Fatal("PlayerB activated PlayerA's Mishra's Factory")
 		}
