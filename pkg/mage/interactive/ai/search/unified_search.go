@@ -16,6 +16,17 @@ func uuidLess(a, b uuid.UUID) bool { return bytes.Compare(a[:], b[:]) < 0 }
 
 func moveLess(a, b *Move) bool {
 	if a.Type != b.Type {
+		// On tied scores, prefer doing something over passing. Without this,
+		// "cast bolt for lethal now" and "pass, then cast bolt for lethal in
+		// postcombat" both score terminalScore and the lower-Type pass wins —
+		// the chain then records the lethal move in a later phase and the
+		// Strategy adapter, which filters by current step, returns Pass.
+		if a.Type == interactive.ActionPass {
+			return false
+		}
+		if b.Type == interactive.ActionPass {
+			return true
+		}
 		return a.Type < b.Type
 	}
 	if a.CardID != b.CardID {
