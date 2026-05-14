@@ -102,6 +102,9 @@ func NewZobristTables() *ZobristTables {
 // node. It XORs the state hash with side-to-move and chain-count keys so that
 // two nodes on the same game state but different mover/chain position produce
 // distinct TT keys.
+// SearchKey is retained for callers of the older TT API. The unified minimax
+// also mixes a supplemental structural key so duplicate permanents, attachments,
+// and combat groups remain distinct.
 func (z *ZobristTables) SearchKey(g *mage.Game, maximizing bool, chainCount int) uint64 {
 	h := z.Hash(g)
 	idx := 0
@@ -187,7 +190,7 @@ func (z *ZobristTables) nameIdx(name string) int {
 //     unimplemented)
 //   - g.CreatureDeathsThisTurn (matters for death-counting triggers —
 //     unimplemented)
-//   - Turn number, mana pool, combat tracking maps, targets on stack objects
+//   - Turn number, mana pool, targets on stack objects
 func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 	if g == nil {
 		return 0

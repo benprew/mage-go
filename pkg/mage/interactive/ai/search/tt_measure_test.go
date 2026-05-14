@@ -6,8 +6,6 @@ import (
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -64,7 +62,6 @@ func TestMeasure_TTImpact(t *testing.T) {
 	noTT := &Strategy{
 		Config:    cfg,
 		Evaluator: eval.DefaultEvaluator,
-		Fallback:  heuristic.New(ai.MidrangeWeighted),
 	}
 	start := time.Now()
 	actionNoTT := noTT.PriorityAction(pa1, g1, 0, true)
@@ -76,7 +73,6 @@ func TestMeasure_TTImpact(t *testing.T) {
 	withTT := &Strategy{
 		Config:    cfg,
 		Evaluator: eval.DefaultEvaluator,
-		Fallback:  heuristic.New(ai.MidrangeWeighted),
 		tt:        NewTranspositionTable(DefaultTTSizeMB),
 		zobrist:   NewZobristTables(),
 	}

@@ -32,10 +32,9 @@ type Move struct {
 // priority window, sorted by heuristic value (descending).
 func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPhase bool) []Move {
 	playerID := p.PlayerID()
-	var moves []Move
+	moves := make([]Move, 0, 16)
 
-	if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
-		c := lands[0]
+	for _, c := range g.GetPlayableLands(playerID) {
 		moves = append(moves, Move{
 			Type:      interactive.ActionPlayLand,
 			CardID:    c.ID(),
@@ -45,17 +44,11 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 	}
 
 	for _, card := range g.GetCastableSpells(playerID) {
-		if eval.SpellIsWorthless(card, p, g) {
-			continue
-		}
 		moves = append(moves, expandSpellMoves(p, g, card)...)
 	}
 
 	for _, info := range g.GetActivatableAbilities(playerID) {
 		q := abilityQualityFromInfo(g, info)
-		if q < 3 {
-			continue
-		}
 		moves = append(moves, Move{
 			Type:         interactive.ActionActivateAbility,
 			PermanentID:  info.PermanentID,
@@ -341,12 +334,6 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 
 	var moves []Move
 	for _, tid := range firstPossible {
-		// Skip own creatures for detriment spells (don't Terror your own guys).
-		if outcome == mage.OutcomeDetriment {
-			if perm := g.FindPermanent(tid); perm != nil && perm.Controller == playerID {
-				continue
-			}
-		}
 		h := sv
 		if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID {
 			for _, a := range card.Abilities() {

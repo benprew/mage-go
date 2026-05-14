@@ -9,8 +9,6 @@ import (
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -20,7 +18,6 @@ func makeSearchAI(config Config) *Strategy {
 	return &Strategy{
 		Config:    config,
 		Evaluator: eval.DefaultEvaluator,
-		Fallback:  heuristic.New(ai.MidrangeWeighted),
 	}
 }
 
@@ -334,7 +331,7 @@ func TestCloneGameForSearch_PreservesHand(t *testing.T) {
 
 // ── Move Application ────────────────────────────────────────────────────────
 
-func TestApplyMoveToClone_LandPlay(t *testing.T) {
+func TestApplyMove_LandPlay(t *testing.T) {
 	g, pa, _ := makeGame()
 	g.SetStep(core.PrecombatMain)
 	g.SetActivePlayerIndex(0)
@@ -348,7 +345,7 @@ func TestApplyMoveToClone_LandPlay(t *testing.T) {
 		Type:   interactive.ActionPlayLand,
 		CardID: land.ID(),
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePA := clone.GetPlayer(pa.PlayerID())
 	if len(clonePA.Hand()) != 0 {
@@ -368,7 +365,7 @@ func TestApplyMoveToClone_LandPlay(t *testing.T) {
 	}
 }
 
-func TestApplyMoveToClone_CreatureCast(t *testing.T) {
+func TestApplyMove_CreatureCast(t *testing.T) {
 	g, pa, _ := makeGame()
 	g.SetStep(core.PrecombatMain)
 	g.SetActivePlayerIndex(0)
@@ -384,7 +381,7 @@ func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 		CardID:   creature.ID(),
 		CardName: "Bear",
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePA := clone.GetPlayer(pa.PlayerID())
 	if len(clonePA.Hand()) != 0 {
@@ -401,7 +398,7 @@ func TestApplyMoveToClone_CreatureCast(t *testing.T) {
 	}
 }
 
-func TestApplyMoveToClone_DamageSpell(t *testing.T) {
+func TestApplyMove_DamageSpell(t *testing.T) {
 	g, pa, pb := makeGame()
 	g.SetStep(core.PrecombatMain)
 	g.SetActivePlayerIndex(0)
@@ -420,7 +417,7 @@ func TestApplyMoveToClone_DamageSpell(t *testing.T) {
 		CardName: "Lightning Bolt",
 		Targets:  []uuid.UUID{pb.PlayerID()},
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePB := clone.GetPlayer(pb.PlayerID())
 	if clonePB.Life() != 17 {
@@ -644,7 +641,7 @@ func TestXSpell_ApplySpellCast_UsesXValue(t *testing.T) {
 		Targets:  []uuid.UUID{pb.PlayerID()},
 		XValue:   3,
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePB := clone.GetPlayer(pb.PlayerID())
 	if clonePB.Life() != 17 {
@@ -672,9 +669,9 @@ func TestXSpell_NoVariantsIfCantAfford(t *testing.T) {
 	}
 }
 
-// ── History Heuristic ────────────────────────────────────────────────────────
+// ── Unified Search Stats ────────────────────────────────────────────────────
 
-func TestSearch_HistoryHeuristicPersists(t *testing.T) {
+func TestSearch_RecordsNodesAfterDecision(t *testing.T) {
 	g, pa, pb := makeGame()
 	pb.SetLife(15)
 
@@ -684,22 +681,17 @@ func TestSearch_HistoryHeuristicPersists(t *testing.T) {
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
 
-	creature := mage.NewCreature("Bear", "{1}{G}", 2, 2)
-	creature.SetOwner(pa.PlayerID())
-	pa.AddToHand(creature)
-
 	opp := makePerm("Ogre", "{2}{R}", 3, 3, pb.PlayerID())
 	g.AddToBattlefield(opp)
 
 	addLands(g, pa, "Mountain", 2)
-	addLands(g, pa, "Forest", 2)
 	g.SetStep(core.PrecombatMain)
 
 	strategy := makeSearchAI(Config{MaxDepth: 4, MaxNodes: 5000, TimeLimit: 1 * time.Second})
 	_ = strategy.PriorityAction(pa, g, 0, true)
 
-	if strategy.history == nil {
-		t.Error("history heuristic should be initialized after search")
+	if strategy.LastNodes == 0 {
+		t.Error("search should record visited nodes after a decision")
 	}
 }
 
@@ -780,7 +772,7 @@ func TestGeneratePriorityMoves_NonModalSpellNoModeIndex(t *testing.T) {
 	}
 }
 
-// ── applyMoveToClone for various spell effects (moved from modal_test.go) ───
+// ── applyMove for various spell effects (moved from modal_test.go) ──────────
 
 func TestApplySpellCast_LifeGain(t *testing.T) {
 	g, pa, _ := makeGame()
@@ -801,7 +793,7 @@ func TestApplySpellCast_LifeGain(t *testing.T) {
 		CardID:   lifeSpell.ID(),
 		CardName: "Healing Touch",
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePA := clone.GetPlayer(pa.PlayerID())
 	if clonePA.Life() != 20 {
@@ -831,7 +823,7 @@ func TestApplySpellCast_BuffEffect(t *testing.T) {
 		CardName: "Giant Growth",
 		Targets:  []uuid.UUID{creature.ID()},
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	perm := clone.FindPermanent(creature.ID())
 	if perm == nil {
@@ -875,7 +867,7 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 		CardName: "Arcane Blast",
 		Targets:  []uuid.UUID{pb.PlayerID()},
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePB := clone.GetPlayer(pb.PlayerID())
 	if clonePB.Life() != 17 {
@@ -910,7 +902,7 @@ func TestApplySpellCast_BounceEffect(t *testing.T) {
 		CardName: "Unsummon",
 		Targets:  []uuid.UUID{target.ID()},
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	perm := clone.FindPermanent(target.ID())
 	if perm != nil {
@@ -939,7 +931,7 @@ func TestApplySpellCast_XSpellDamage(t *testing.T) {
 		Targets:  []uuid.UUID{pb.PlayerID()},
 		XValue:   4,
 	}
-	applyMoveToClone(clone, pa.PlayerID(), m, 0)
+	applyMove(clone, pa.PlayerID(), m)
 
 	clonePB := clone.GetPlayer(pb.PlayerID())
 	if clonePB.Life() != 16 {
