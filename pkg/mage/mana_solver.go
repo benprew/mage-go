@@ -23,12 +23,15 @@ import (
 //     preservationScore so the solver stays caller-agnostic.
 //   - BonusFor: returns the additional mana (from Mana Flare-style abilities
 //     elsewhere on the battlefield) produced when the given permanent taps.
+//   - Conversions: one-way mana conversions (Sunglasses of Urza style:
+//     Red→White lets red mana / red sources pay white slots). Optional.
 type ManaSolverInputs struct {
-	Pool     *ManaPool
-	Cost     ManaCost
-	Sources  []manaSourceInfo
-	Scores   []int
-	BonusFor func(uuid.UUID) int
+	Pool        *ManaPool
+	Cost        ManaCost
+	Sources     []manaSourceInfo
+	Scores      []int
+	BonusFor    func(uuid.UUID) int
+	Conversions map[Color]Color
 }
 
 // ManaSolution describes the result of solving a mana payment: an ordered
@@ -69,6 +72,16 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 	scores := in.Scores
 
 	pool := in.Pool
+	conv := in.Conversions
+
+	// Track pool availability per color across the run; consume*ForColor
+	// debits both exact and conversion-eligible entries.
+	avail := map[Color]int{}
+	for _, color := range manaPoolColors {
+		if c := pool.Count(color); c > 0 {
+			avail[color] = c
+		}
+	}
 
 	// Subtract floating mana for colored requirements.
 	colorNeeds := [...]struct {
@@ -82,40 +95,27 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 		{Green, mc.Green},
 	}
 	needed := map[Color]int{}
-	poolUsedForColor := 0
-	poolByColor := map[Color]int{}
 	for _, cn := range colorNeeds {
-		poolByColor[cn.color] = pool.Count(cn.color)
-	}
-	for _, cn := range colorNeeds {
-		have := poolByColor[cn.color]
-		used := min(have, cn.need)
-		poolByColor[cn.color] -= used
-		poolUsedForColor += used
-		needed[cn.color] = cn.need - used
+		consumed := consumePoolForColor(avail, cn.color, cn.need, conv)
+		needed[cn.color] = cn.need - consumed
 	}
 
 	// Hybrid resolution: try to satisfy from pool, otherwise commit a
 	// concrete color requirement that the colored pass will satisfy.
-	// XXX: undercounts dual lands — sourceBucketColor uses only the first
-	// declared color, so a Tundra contributes to {W/x} availability but not
-	// {U/x}. Driving hybrid choice off Colors[] would be correct but the
-	// pre-multi-color heuristic is preserved here to avoid behavior drift in
-	// CanAfford / GetCastableSpells paths.
+	// XXX: source-side hybrid choice still uses sourceBucketColor (single
+	// declared color), so a Tundra is counted toward {W/x} availability but
+	// not {U/x}. Driving the source pre-check off Colors[] would be more
+	// accurate; the colored pass below handles correlation correctly via
+	// sourceProducesAny.
 	availableForHybridFromSources := map[Color]int{}
 	for _, src := range sources {
 		availableForHybridFromSources[sourceBucketColor(src)] += src.Amount
 	}
 	for _, h := range mc.Hybrid {
-		pa, pb := poolByColor[h.A], poolByColor[h.B]
-		if pa >= pb && pa > 0 {
-			poolByColor[h.A] = pa - 1
-			poolUsedForColor++
+		if consumePoolForColor(avail, h.A, 1, conv) > 0 {
 			continue
 		}
-		if pb > 0 {
-			poolByColor[h.B] = pb - 1
-			poolUsedForColor++
+		if consumePoolForColor(avail, h.B, 1, conv) > 0 {
 			continue
 		}
 		sa, sb := availableForHybridFromSources[h.A], availableForHybridFromSources[h.B]
@@ -130,7 +130,10 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 		}
 	}
 
-	poolRemaining := pool.TotalMana() - poolUsedForColor
+	poolRemaining := 0
+	for _, n := range avail {
+		poolRemaining += n
+	}
 	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
 
 	bonusFor := in.BonusFor
@@ -159,7 +162,7 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 			}
 			idx := -1
 			for j, src := range sources {
-				if src.PermanentID == uuid.Nil || !sourceProduces(src, cn.color) {
+				if src.PermanentID == uuid.Nil || !sourceProducesAny(src, cn.color, conv) {
 					continue
 				}
 				if idx == -1 || scores[j] < scores[idx] {
@@ -177,16 +180,26 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 			if len(src.PerTapOutput) > 0 {
 				// Dual-emit: route every produced color to its surplus
 				// bucket (minus the one unit we just consumed for cn.color).
+				// Conversions translate the output color into the pool color
+				// it will arrive as, then debit one unit of the matched color.
 				total := 0
+				consumed := false
 				for c, amt := range src.PerTapOutput {
 					total += amt
-					if c == cn.color {
-						amt--
+					effC := c
+					if conv != nil {
+						if to, ok := conv[c]; ok {
+							effC = to
+						}
 					}
-					if c == Colorless {
+					if !consumed && effC == cn.color {
+						amt--
+						consumed = true
+					}
+					if effC == Colorless {
 						surplusMana += amt
 					} else {
-						coloredSurplus[c] += amt
+						coloredSurplus[effC] += amt
 					}
 				}
 				surplusMana += bonus
@@ -252,4 +265,57 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 	}
 
 	return &ManaSolution{SourcesToTap: toTap}, nil
+}
+
+// consumePoolForColor debits up to `need` mana of color `c` from `avail`,
+// first using exact-color entries, then any color X whose conv[X] == c
+// (one-way conversions like Sunglasses of Urza's Red→White). Returns the
+// amount actually consumed (≤ need).
+func consumePoolForColor(avail map[Color]int, c Color, need int, conv map[Color]Color) int {
+	if need == 0 {
+		return 0
+	}
+	consumed := 0
+	if avail[c] > 0 {
+		use := min(avail[c], need)
+		avail[c] -= use
+		consumed += use
+		need -= use
+	}
+	if need == 0 || conv == nil {
+		return consumed
+	}
+	for from, to := range conv {
+		if to != c || from == c {
+			continue
+		}
+		if avail[from] > 0 {
+			use := min(avail[from], need)
+			avail[from] -= use
+			consumed += use
+			need -= use
+			if need == 0 {
+				break
+			}
+		}
+	}
+	return consumed
+}
+
+// sourceProducesAny reports whether src can produce color c, accounting for
+// one-way conversions: a source whose declared color X satisfies c if
+// conv[X] == c.
+func sourceProducesAny(src manaSourceInfo, c Color, conv map[Color]Color) bool {
+	if sourceProduces(src, c) {
+		return true
+	}
+	if conv == nil {
+		return false
+	}
+	for _, sc := range src.Colors {
+		if conv[sc] == c {
+			return true
+		}
+	}
+	return false
 }

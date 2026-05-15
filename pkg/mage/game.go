@@ -4095,15 +4095,12 @@ func sourceProduces(src manaSourceInfo, c Color) bool {
 	return slices.Contains(src.Colors, c)
 }
 
-// sourceBucketColor returns the color used for legacy single-color bucketing
-// (hypothetical pool, hybrid affordability heuristic). Multi-color sources
-// pick their first color — preserves pre-multi-color behavior for these
-// affordability paths without overcounting dual-land contributions.
-//
-// XXX: this undercounts dual lands in CanAfford / GetCastableSpells /
-// HypotheticalMana / MaxXValue — a Tundra registers only as W, never U.
-// Fixing requires those paths to use SolveMana (or an equivalent multi-color
-// availability check) instead of the single-color bucketed pool.
+// sourceBucketColor returns the color used for the single-color bucketing
+// still used by GetCastableSpells and the hybrid pre-check in SolveMana.
+// Multi-color sources pick their first color — this undercounts dual lands
+// in those two paths (a Tundra registers only as W, never U). CanAfford,
+// MaxXValue, HypotheticalMana, and AutoTapForCost route through SolveMana
+// directly and don't suffer from this.
 func sourceBucketColor(src manaSourceInfo) Color {
 	if len(src.Colors) == 0 {
 		return Colorless
@@ -4150,11 +4147,12 @@ func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint Auto
 	}
 
 	solution, err := SolveMana(ManaSolverInputs{
-		Pool:     p.ManaPool(),
-		Cost:     mc,
-		Sources:  sources,
-		Scores:   scores,
-		BonusFor: g.countManaBonuses,
+		Pool:        p.ManaPool(),
+		Cost:        mc,
+		Sources:     sources,
+		Scores:      scores,
+		BonusFor:    g.countManaBonuses,
+		Conversions: p.ManaPool().ManaConversions,
 	})
 	if err != nil {
 		return err
@@ -4251,65 +4249,105 @@ func (g *Game) utilityAbilityCount(permID uuid.UUID) int {
 	return count
 }
 
+// HypotheticalMana returns the total mana a player could produce right now:
+// floating pool plus the per-tap output (and Mana Flare-style bonuses) of
+// every untapped mana source. Used by spell-evaluation heuristics that just
+// want a count, not an affordability decision — for color-aware checks use
+// CanAfford/MaxXValue, which route through SolveMana.
 func (g *Game) HypotheticalMana(playerID uuid.UUID) int {
-	p := g.buildHypotheticalPool(playerID)
-	return p.Surplus(ManaCost{})
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return 0
+	}
+	total := p.ManaPool().TotalMana()
+	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
+	g.manaScratch = sources
+	for _, src := range sources {
+		total += src.Amount
+		total += g.countManaBonuses(src.PermanentID)
+	}
+	return total
 }
 
 // CanAfford returns true if a player has enough mana (pool + untapped sources) to pay a cost.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost) bool {
-	hypothetical := g.buildHypotheticalPool(playerID)
-	if hypothetical == nil {
+	p := g.GetPlayer(playerID)
+	if p == nil {
 		return false
 	}
-	return hypothetical.CanPay(mc)
+	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
+	g.manaScratch = sources
+	_, err := SolveMana(ManaSolverInputs{
+		Pool:        p.ManaPool(),
+		Cost:        mc,
+		Sources:     sources,
+		Scores:      make([]int, len(sources)),
+		BonusFor:    g.countManaBonuses,
+		Conversions: p.ManaPool().ManaConversions,
+	})
+	return err == nil
 }
 
 // MaxXValue returns the maximum X value a player can pay for a spell with cost mc,
-// considering mana in pool plus untapped sources.
+// considering mana in pool plus untapped sources. Binary-searches via SolveMana
+// so dual lands and conversions are honored.
 func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost) int {
 	if !mc.HasX || mc.XCount == 0 {
 		return 0
 	}
-	hypothetical := g.buildHypotheticalPool(playerID)
-	if hypothetical == nil {
-		return 0
-	}
-	surplus := hypothetical.Surplus(ManaCost{
-		Generic: mc.Generic,
-		White:   mc.White,
-		Blue:    mc.Blue,
-		Black:   mc.Black,
-		Red:     mc.Red,
-		Green:   mc.Green,
-	})
-	if surplus < 0 {
-		return 0
-	}
-	return surplus / mc.XCount
-}
-
-// buildHypotheticalPool creates a mana pool representing all mana a player
-// could produce (current pool + untapped sources).
-func (g *Game) buildHypotheticalPool(playerID uuid.UUID) *ManaPool {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return nil
-	}
-	hypothetical := NewManaPool()
-	pool := p.ManaPool()
-	for _, color := range []Color{White, Blue, Black, Red, Green, Colorless} {
-		hypothetical.Add(color, pool.Count(color))
+		return 0
 	}
 	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
 	g.manaScratch = sources
+	scores := make([]int, len(sources))
+	bonusFor := g.countManaBonuses
+	conv := p.ManaPool().ManaConversions
+	pool := p.ManaPool()
+
+	// Upper bound: every source taps for its full Amount + bonus, plus pool.
+	upperMana := pool.TotalMana()
 	for _, src := range sources {
-		c := sourceBucketColor(src)
-		hypothetical.Add(c, src.Amount)
-		hypothetical.Add(c, g.countManaBonuses(src.PermanentID))
+		upperMana += src.Amount + bonusFor(src.PermanentID)
 	}
-	hypothetical.ManaConversions = pool.ManaConversions
-	return hypothetical
+	tryX := func(x int) bool {
+		cost := ManaCost{
+			Generic: mc.Generic + x*mc.XCount,
+			White:   mc.White,
+			Blue:    mc.Blue,
+			Black:   mc.Black,
+			Red:     mc.Red,
+			Green:   mc.Green,
+			Hybrid:  mc.Hybrid,
+		}
+		_, err := SolveMana(ManaSolverInputs{
+			Pool:        pool,
+			Cost:        cost,
+			Sources:     sources,
+			Scores:      scores,
+			BonusFor:    bonusFor,
+			Conversions: conv,
+		})
+		return err == nil
+	}
+	if !tryX(0) {
+		return 0
+	}
+	hi := upperMana / mc.XCount
+	if hi == 0 {
+		return 0
+	}
+	lo := 0
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if tryX(mid) {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	return lo
 }
 
 func allocateHybridsFromAvailability(syms []HybridSymbol, avail *manaAvailability) bool {
