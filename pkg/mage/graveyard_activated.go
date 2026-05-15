@@ -112,7 +112,8 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		}
 	}
 
-	// Auto-tap mana sources for ManaCostPayment costs.
+	// No hint needed: the card is in the graveyard (not the hand or
+	// battlefield), so neither hand-demand nor activation-source biases apply.
 	for _, c := range gaa.Costs() {
 		if mc, ok := c.(*ManaCostPayment); ok {
 			if !mc.MC.IsZero() {

@@ -48,8 +48,8 @@ type replay struct {
 	gameErr    error
 
 	// warnings accumulate non-fatal diffs (currently: playable-action
-	// mismatches from mage-go's approximate Playable() stub). Reported
-	// at end of run.
+	// mismatches between GetPlayableLands+GetCastableSpells and XMage's
+	// recorded set). Reported at end of run.
 	warnings []string
 
 	// attackersByTurn[turn] = ordered list of creature names declared
@@ -394,10 +394,11 @@ func (r *replay) onPriority(g *mage.Game, playerIdx int, mainPhase bool) mage.Pr
 	}
 
 	if mismatches := r.diffPlayableActions(g, playerIdx, ev.Snapshot.PlayableActions); len(mismatches) > 0 {
-		// Warning, not failure: mage-go's Playable() stub is approximate
-		// (no target-legality check, no activated abilities). Real engine
-		// bugs surface as state divergences; action-set drift is mostly
-		// stub-vs-reality and noisy. Track for reporting; keep going.
+		// Warning, not failure: the playable list comes straight from the
+		// engine (GetPlayableLands + GetCastableSpells), but activated
+		// abilities aren't enumerated yet and XMage's exact filter for
+		// "show this in legal actions" doesn't have to match ours
+		// step-for-step. Track for reporting; keep going.
 		r.warnings = append(r.warnings, fmt.Sprintf(
 			"playable-action diff seq=%d T%d %s:\n    %s",
 			ev.Seq, ev.Snapshot.Turn, ev.Snapshot.Step, strings.Join(mismatches, "\n    ")))
@@ -994,9 +995,9 @@ func (r *replay) diffPlayableActions(g *mage.Game, playerIdx int, want []playabl
 
 // loosePairsFromXMage extracts (kind, sourceName) pairs and normalizes
 // kinds to mage-go names (CAST_SPELL → cast, PLAY_LAND → land, etc.).
-// Filters down to the kinds mage-go's Game.Playable currently enumerates
-// (lands + castable spells) — comparing on activated/mana abilities would
-// always fail until those are added to the v1 stub.
+// Filters down to lands + castable spells, since mage-go's playable list is
+// built from GetPlayableLands + GetCastableSpells today — activated/mana
+// abilities aren't enumerated and would always diverge.
 func loosePairsFromXMage(actions []playableAction) []string {
 	pairs := make([]string, 0, len(actions))
 	for _, a := range actions {
@@ -1210,17 +1211,25 @@ func (p *replayPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Gam
 }
 
 // mageGoPlayableActions returns mage-go's (kind, sourceName) pairs for the
-// given player at the current priority point. Wraps Game.Playable; loose
-// match in diffPlayableActions ignores anything beyond kind+sourceName.
+// given player at the current priority point. Calls the real engine APIs
+// (GetPlayableLands + GetCastableSpells) so the diff against XMage exercises
+// the actual castability/playability logic — short-circuiting through a
+// separate stub would invalidate the cross-validation goal.
 //
-// Scope (matches mage.Game.Playable's v1 stub): lands in hand + castable
-// spells in hand. Activated abilities aren't enumerated, so XMage's
-// ACTIVATE_MANA / ACTIVATE entries get filtered out before the diff.
+// Activated abilities aren't enumerated yet, so XMage's ACTIVATE_MANA /
+// ACTIVATE entries are filtered out in loosePairsFromXMage before the diff.
 func mageGoPlayableActions(g *mage.Game, playerIdx int) []string {
-	actions := g.Playable(playerIdx)
-	pairs := make([]string, 0, len(actions))
-	for _, a := range actions {
-		pairs = append(pairs, looseKey(strings.ToUpper(a.Kind), a.SourceName))
+	players := g.AllPlayers()
+	if playerIdx < 0 || playerIdx >= len(players) {
+		return nil
+	}
+	pid := players[playerIdx].PlayerID()
+	var pairs []string
+	for _, c := range g.GetPlayableLands(pid) {
+		pairs = append(pairs, looseKey("LAND", c.Name()))
+	}
+	for _, c := range g.GetCastableSpells(pid) {
+		pairs = append(pairs, looseKey("CAST", c.Name()))
 	}
 	return pairs
 }

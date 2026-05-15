@@ -2630,12 +2630,12 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, spec
 	return nil
 }
 
-func (g *Game) autoTapForManaCosts(controller, sourceID uuid.UUID, costs []Cost) error {
+func (g *Game) autoTapForManaCosts(controller, sourceID uuid.UUID, costs []Cost, hint AutoTapHint) error {
 	for _, cost := range costs {
 		if mc, ok := cost.(*ManaCostPayment); ok {
 			reduced := mc.reducedCost(sourceID, g)
 			if !reduced.IsZero() {
-				if err := g.AutoTapForCost(controller, reduced); err != nil {
+				if err := g.AutoTapForCostWithHint(controller, reduced, hint); err != nil {
 					return err
 				}
 			}
@@ -2834,7 +2834,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 			actionCosts = append(actionCosts, sa.Costs()...)
 		}
 	}
-	if err := g.autoTapForManaCosts(playerID, card.ID(), actionCosts); err != nil {
+	if err := g.autoTapForManaCosts(playerID, card.ID(), actionCosts, AutoTapHint{CastingCard: card.ID()}); err != nil {
 		return err
 	}
 	for _, cost := range actionCosts {
@@ -3887,12 +3887,43 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 	return productions
 }
 
-// manaSourceInfo describes a mana source available for tapping.
+// manaSourceInfo describes a mana source available for tapping. A source may
+// produce mana of multiple colors (dual lands, AnyColor sources like Birds of
+// Paradise/Mox Diamond), in which case Colors lists each color it can produce
+// for a single tap (the player picks one at tap time). Colorless-only sources
+// have Colors = []Color{Colorless}.
+//
+// When tapping the source emits multiple specific colors at once (e.g. a card
+// with "{T}: Add {G}{W}"), PerTapOutput is non-nil and lists the per-tap
+// amount of each color. The solver uses it to apportion the extra colored
+// mana to other slots instead of dropping it into the generic surplus. Pick-
+// one-color sources (Tundra, Birds of Paradise) leave PerTapOutput nil.
 type manaSourceInfo struct {
-	PermanentID uuid.UUID
-	Name        string
-	Color       Color
-	Amount      int // total mana produced (including all productions)
+	PermanentID  uuid.UUID
+	Name         string
+	Colors       []Color       // colors this source can produce (one is chosen per tap)
+	Amount       int           // max mana produced per tap (across abilities/productions)
+	PerTapOutput map[Color]int // dual-emit only; nil for pick-one sources
+}
+
+// AutoTapHint informs the smart auto-tap algorithm about the action being paid
+// for. Callers pass a hint so the algorithm can deprioritize tapping the
+// permanent that is activating an ability and weight color preferences by
+// other spells the player still wants to cast.
+type AutoTapHint struct {
+	// ActivationSource is the permanent whose activated ability is being paid
+	// for (zero UUID if not applicable, e.g. when casting a spell). Sources
+	// matching this id are penalized so we only tap them as a last resort.
+	ActivationSource uuid.UUID
+	// ActivationTapsSource is true when the ability being activated includes
+	// a {T} cost on its source. In that case the source will be tapped during
+	// cost payment anyway, so it must be hard-excluded from auto-tap to avoid
+	// a "source already tapped" failure later.
+	ActivationTapsSource bool
+	// CastingCard is the card currently being cast (zero UUID if not casting).
+	// Its colored pips are excluded from the hand-demand calculation so we
+	// don't count the cost we're paying for against itself.
+	CastingCard uuid.UUID
 }
 
 type manaAvailability [AnyColor + 1]int
@@ -3942,28 +3973,91 @@ func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourc
 		if !perm.CanTapForEffect(g) {
 			continue
 		}
+		var colors []Color
+		seen := [AnyColor + 1]bool{}
+		maxAmount := 0
+		hasMana := false
+		var perTap map[Color]int
+		perTapTotal := 0
 		for _, a := range perm.RuntimeAbilities {
 			productions := abilityManaProductions(a)
 			if productions == nil {
 				continue
 			}
-			sources = append(sources, manaSourceInfo{
-				PermanentID: perm.ID(),
-				Name:        perm.Name(),
-				Color:       productionsPrimaryColor(productions),
-				Amount:      productionsTotalAmount(productions),
-			})
-			break // one entry per permanent even if it has multiple mana abilities
+			hasMana = true
+			amt := productionsTotalAmount(productions)
+			if amt > maxAmount {
+				maxAmount = amt
+			}
+			for _, p := range productions {
+				for _, c := range expandProductionColor(p.Color) {
+					if !seen[c] {
+						seen[c] = true
+						colors = append(colors, c)
+					}
+				}
+			}
+			// Dual-emit detection: a single ability with 2+ distinct concrete
+			// colors emits all of them per tap (e.g. "{T}: Add {G}{W}"). Pick
+			// the highest-amount ability across the permanent in case there
+			// are multiple options.
+			if cand := dualEmitOutput(productions); cand != nil && amt > perTapTotal {
+				perTap = cand
+				perTapTotal = amt
+			}
 		}
+		if !hasMana {
+			continue
+		}
+		if len(colors) == 0 {
+			colors = []Color{Colorless}
+		}
+		sources = append(sources, manaSourceInfo{
+			PermanentID:  perm.ID(),
+			Name:         perm.Name(),
+			Colors:       colors,
+			Amount:       maxAmount,
+			PerTapOutput: perTap,
+		})
 	}
 	return sources
 }
 
-func productionsPrimaryColor(productions []ManaProduction) Color {
-	if len(productions) > 0 {
-		return productions[0].Color
+// dualEmitOutput returns the per-tap colored output for an ability that emits
+// 2+ distinct concrete colors at once (e.g. "{T}: Add {G}{W}"). Returns nil
+// for single-color abilities and AnyColor/AnyCombination abilities (those let
+// the player pick colors at tap time, so they're modeled as pick-one
+// sources). Colorless is included if the ability also produces colorless.
+func dualEmitOutput(productions []ManaProduction) map[Color]int {
+	out := map[Color]int{}
+	distinctColored := 0
+	for _, p := range productions {
+		if p.Color == AnyColor || p.AnyCombination {
+			return nil
+		}
+		amt := p.Amount
+		if amt <= 0 {
+			amt = 1
+		}
+		if out[p.Color] == 0 && p.Color != Colorless {
+			distinctColored++
+		}
+		out[p.Color] += amt
 	}
-	return Colorless
+	if distinctColored < 2 {
+		return nil
+	}
+	return out
+}
+
+// expandProductionColor returns the concrete colors a ManaProduction can
+// produce. AnyColor expands to the five colored colors; everything else
+// maps to itself.
+func expandProductionColor(c Color) []Color {
+	if c == AnyColor {
+		return []Color{White, Blue, Black, Red, Green}
+	}
+	return []Color{c}
 }
 
 func productionsTotalAmount(productions []ManaProduction) int {
@@ -3978,183 +4072,266 @@ func productionsTotalAmount(productions []ManaProduction) int {
 	return total
 }
 
+// sourceProduces reports whether the source can produce mana of color c.
+func sourceProduces(src manaSourceInfo, c Color) bool {
+	return slices.Contains(src.Colors, c)
+}
+
+// sourceBucketColor returns the color used for the single-color bucketing
+// still used by GetCastableSpells and the hybrid pre-check in SolveMana.
+// Multi-color sources pick their first color — this undercounts dual lands
+// in those two paths (a Tundra registers only as W, never U). CanAfford,
+// MaxXValue, HypotheticalMana, and AutoTapForCost route through SolveMana
+// directly and don't suffer from this.
+func sourceBucketColor(src manaSourceInfo) Color {
+	if len(src.Colors) == 0 {
+		return Colorless
+	}
+	return src.Colors[0]
+}
+
 // AutoTapForCost taps untapped lands/mana sources to pay a mana cost,
-// accounting for mana already in the player's pool.
+// accounting for mana already in the player's pool. Equivalent to
+// AutoTapForCostWithHint with a zero hint; smart-tap heuristics only kick in
+// when callers pass an AutoTapHint via AutoTapForCostWithHint.
 func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
+	return g.AutoTapForCostWithHint(playerID, mc, AutoTapHint{})
+}
+
+// AutoTapForCostWithHint taps untapped lands/mana sources to pay a mana cost,
+// using the hint to deprioritize the activated-ability source and to weight
+// color preferences by other castable spells in hand. See AutoTapHint for
+// hint semantics. Gathers solver inputs from Game state, delegates the
+// decision to the pure SolveMana, and applies the result via TapForMana.
+func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint AutoTapHint) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return ErrPlayerNotFound
 	}
-	pool := p.ManaPool()
 	sources := g.getUntappedManaSources(playerID)
 
-	// Subtract mana already in pool from what we need to tap
-	colorNeeds := []struct {
-		color Color
-		need  int
-	}{
-		{White, mc.White},
-		{Blue, mc.Blue},
-		{Black, mc.Black},
-		{Red, mc.Red},
-		{Green, mc.Green},
-	}
-	needed := map[Color]int{}
-	poolUsedForColor := 0
-	poolByColor := map[Color]int{}
-	for _, cn := range colorNeeds {
-		poolByColor[cn.color] = pool.Count(cn.color)
-	}
-	for _, cn := range colorNeeds {
-		have := poolByColor[cn.color]
-		used := min(have, cn.need)
-		poolByColor[cn.color] -= used
-		poolUsedForColor += used
-		needed[cn.color] = cn.need - used
-	}
-	availableForHybridFromSources := map[Color]int{}
-	for _, src := range sources {
-		availableForHybridFromSources[src.Color] += src.Amount
-	}
-	for _, h := range mc.Hybrid {
-		pa, pb := poolByColor[h.A], poolByColor[h.B]
-		if pa >= pb && pa > 0 {
-			poolByColor[h.A] = pa - 1
-			poolUsedForColor++
-			continue
-		}
-		if pb > 0 {
-			poolByColor[h.B] = pb - 1
-			poolUsedForColor++
-			continue
-		}
-		sa, sb := availableForHybridFromSources[h.A], availableForHybridFromSources[h.B]
-		if sa >= sb && sa > 0 {
-			availableForHybridFromSources[h.A] = sa - 1
-			needed[h.A]++
-		} else if sb > 0 {
-			availableForHybridFromSources[h.B] = sb - 1
-			needed[h.B]++
-		} else {
-			return fmt.Errorf("insufficient mana for hybrid %s", h)
-		}
-	}
-	poolRemaining := pool.TotalMana() - poolUsedForColor
-	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
-
-	var toTap []uuid.UUID
-	surplusMana := 0
-
-	// First pass: tap sources for exact color requirements
-	for color, count := range needed {
-		for range count {
-			found := false
-			for j, src := range sources {
-				if src.Color == color && src.PermanentID != uuid.Nil {
-					toTap = append(toTap, src.PermanentID)
-					surplusMana += g.countManaBonuses(src.PermanentID)
-					sources[j].PermanentID = uuid.Nil // mark as used
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("cannot pay %s for cost %s: no untapped %s source available", color, mc, color)
+	// {T} on the source means the cost-payment step will tap it; remove it
+	// from auto-tap candidates so we don't fail later with "already tapped".
+	if hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil {
+		filtered := sources[:0]
+		for _, src := range sources {
+			if src.PermanentID != hint.ActivationSource {
+				filtered = append(filtered, src)
 			}
 		}
+		sources = filtered
 	}
 
-	// Surplus mana from bonuses on color-tapped sources reduces generic need
-	genericNeeded -= min(genericNeeded, surplusMana)
-
-	// Second pass: tap remaining sources for generic mana
-	for genericNeeded > 0 {
-		found := false
-		for j, src := range sources {
-			if src.PermanentID != uuid.Nil {
-				toTap = append(toTap, src.PermanentID)
-				produced := src.Amount + g.countManaBonuses(src.PermanentID)
-				genericNeeded -= produced
-				sources[j].PermanentID = uuid.Nil
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("cannot pay cost %s: %d generic mana still needed, no untapped sources remain", mc, genericNeeded)
-		}
+	handDemand := g.computeHandDemand(playerID, hint.CastingCard)
+	scores := make([]int, len(sources))
+	for i, src := range sources {
+		scores[i] = g.preservationScore(src, hint, handDemand)
 	}
 
-	// Actually tap all selected sources
-	for _, id := range toTap {
+	solution, err := SolveMana(ManaSolverInputs{
+		Pool:        p.ManaPool(),
+		Cost:        mc,
+		Sources:     sources,
+		Scores:      scores,
+		BonusFor:    g.countManaBonuses,
+		Conversions: p.ManaPool().ManaConversions,
+	})
+	if err != nil {
+		return err
+	}
+	for _, id := range solution.SourcesToTap {
 		if err := g.TapForMana(playerID, id); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
+// preservationScore returns the score for a mana source under the smart-tap
+// heuristic. Higher = prefer to keep untapped (tap last). See AutoTapHint.
+func (g *Game) preservationScore(src manaSourceInfo, hint AutoTapHint, handDemand [AnyColor + 1]int) int {
+	score := 0
+	// Heavy penalty for the activated-ability's own source, so it only taps
+	// as a last resort. (When ActivationTapsSource is true the source has
+	// already been filtered out.)
+	if hint.ActivationSource != uuid.Nil && src.PermanentID == hint.ActivationSource {
+		score += 1000
+	}
+	// Each non-mana activated ability on the permanent adds utility — prefer
+	// to keep utility lands like Strip Mine and Mishra's Factory untapped.
+	score += 10 * g.utilityAbilityCount(src.PermanentID)
+	// Color flexibility: colorless-only sources (Sol Ring, Wastes) are least
+	// flexible and tap first. Each colored option adds +1 — duals are
+	// preserved more than basics, AnyColor sources more than duals.
+	for _, c := range src.Colors {
+		if c == Colorless {
+			continue
+		}
+		score++
+		// Demand from other castable hand spells — preserve sources whose
+		// color is still needed for unplayed cards.
+		if c >= 0 && int(c) <= int(AnyColor) {
+			score += handDemand[c]
+		}
+	}
+	return score
+}
+
+// computeHandDemand sums colored pip demand across spells in the player's
+// hand, excluding the card identified by `exclude` (the spell we're currently
+// paying for). Hybrid pips count toward both their colors. Used to bias
+// auto-tap toward preserving lands whose color matches still-castable spells.
+func (g *Game) computeHandDemand(playerID, exclude uuid.UUID) [AnyColor + 1]int {
+	var demand [AnyColor + 1]int
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return demand
+	}
+	for _, c := range p.Hand() {
+		if c.ID() == exclude {
+			continue
+		}
+		if c.HasType(TypeLand) {
+			continue
+		}
+		mc := c.ManaCost()
+		demand[White] += mc.White
+		demand[Blue] += mc.Blue
+		demand[Black] += mc.Black
+		demand[Red] += mc.Red
+		demand[Green] += mc.Green
+		for _, h := range mc.Hybrid {
+			demand[h.A]++
+			demand[h.B]++
+		}
+	}
+	return demand
+}
+
+// utilityAbilityCount returns the number of activated abilities on a permanent
+// that are NOT tap-for-mana abilities. Mana-producing abilities (both
+// *ManaAbility and the SimpleActivatedAbility {T}: Add X form) are skipped so
+// Mana Vault and similar cost-laden mana sources don't get a utility penalty.
+func (g *Game) utilityAbilityCount(permID uuid.UUID) int {
+	perm := g.FindPermanent(permID)
+	if perm == nil {
+		return 0
+	}
+	count := 0
+	for _, a := range perm.RuntimeAbilities {
+		inner := UnwrapAbility(a)
+		if _, ok := inner.(ActivatedAbility); !ok {
+			continue
+		}
+		if abilityManaProductions(inner) != nil {
+			continue
+		}
+		count++
+	}
+	return count
+}
+
+// HypotheticalMana returns the total mana a player could produce right now:
+// floating pool plus the per-tap output (and Mana Flare-style bonuses) of
+// every untapped mana source. Used by spell-evaluation heuristics that just
+// want a count, not an affordability decision — for color-aware checks use
+// CanAfford/MaxXValue, which route through SolveMana.
 func (g *Game) HypotheticalMana(playerID uuid.UUID) int {
-	p := g.buildHypotheticalPool(playerID)
-	return p.Surplus(ManaCost{}, nil)
+	p := g.GetPlayer(playerID)
+	if p == nil {
+		return 0
+	}
+	total := p.ManaPool().TotalMana()
+	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
+	g.manaScratch = sources
+	for _, src := range sources {
+		total += src.Amount
+		total += g.countManaBonuses(src.PermanentID)
+	}
+	return total
 }
 
 // CanAfford returns true if a player has enough mana (pool + untapped sources)
 // to pay a cost. spellCtx is non-nil when checking affordability for casting
 // a specific spell (so restricted mana can count); nil for ability costs.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPaymentContext) bool {
-	hypothetical := g.buildHypotheticalPool(playerID)
-	if hypothetical == nil {
+	p := g.GetPlayer(playerID)
+	if p == nil {
 		return false
 	}
-	return hypothetical.CanPay(mc, spellCtx)
+	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
+	g.manaScratch = sources
+	_, err := SolveMana(ManaSolverInputs{
+		Pool:        p.ManaPool(),
+		Cost:        mc,
+		Sources:     sources,
+		Scores:      make([]int, len(sources)),
+		BonusFor:    g.countManaBonuses,
+		Conversions: p.ManaPool().ManaConversions,
+	})
+	return err == nil
 }
 
 // MaxXValue returns the maximum X value a player can pay for a spell with cost mc,
-// considering mana in pool plus untapped sources. spellCtx semantics match CanAfford.
+// considering mana in pool plus untapped sources. Binary-searches via SolveMana
+// so dual lands and conversions are honored.
 func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPaymentContext) int {
 	if !mc.HasX || mc.XCount == 0 {
 		return 0
 	}
-	hypothetical := g.buildHypotheticalPool(playerID)
-	if hypothetical == nil {
-		return 0
-	}
-	surplus := hypothetical.Surplus(ManaCost{
-		Generic: mc.Generic,
-		White:   mc.White,
-		Blue:    mc.Blue,
-		Black:   mc.Black,
-		Red:     mc.Red,
-		Green:   mc.Green,
-	}, spellCtx)
-	if surplus < 0 {
-		return 0
-	}
-	return surplus / mc.XCount
-}
-
-// buildHypotheticalPool creates a mana pool representing all mana a player
-// could produce (current pool + untapped sources).
-func (g *Game) buildHypotheticalPool(playerID uuid.UUID) *ManaPool {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return nil
-	}
-	hypothetical := NewManaPool()
-	pool := p.ManaPool()
-	for _, color := range []Color{White, Blue, Black, Red, Green, Colorless} {
-		hypothetical.Add(color, pool.Count(color))
+		return 0
 	}
 	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
 	g.manaScratch = sources
+	scores := make([]int, len(sources))
+	bonusFor := g.countManaBonuses
+	conv := p.ManaPool().ManaConversions
+	pool := p.ManaPool()
+
+	// Upper bound: every source taps for its full Amount + bonus, plus pool.
+	upperMana := pool.TotalMana()
 	for _, src := range sources {
-		hypothetical.Add(src.Color, src.Amount)
-		hypothetical.Add(src.Color, g.countManaBonuses(src.PermanentID))
+		upperMana += src.Amount + bonusFor(src.PermanentID)
 	}
-	hypothetical.ManaConversions = pool.ManaConversions
-	return hypothetical
+	tryX := func(x int) bool {
+		cost := ManaCost{
+			Generic: mc.Generic + x*mc.XCount,
+			White:   mc.White,
+			Blue:    mc.Blue,
+			Black:   mc.Black,
+			Red:     mc.Red,
+			Green:   mc.Green,
+			Hybrid:  mc.Hybrid,
+		}
+		_, err := SolveMana(ManaSolverInputs{
+			Pool:        pool,
+			Cost:        cost,
+			Sources:     sources,
+			Scores:      scores,
+			BonusFor:    bonusFor,
+			Conversions: conv,
+		})
+		return err == nil
+	}
+	if !tryX(0) {
+		return 0
+	}
+	hi := upperMana / mc.XCount
+	if hi == 0 {
+		return 0
+	}
+	lo := 0
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if tryX(mid) {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+	return lo
 }
 
 func allocateHybridsFromAvailability(syms []HybridSymbol, avail *manaAvailability) bool {
@@ -4247,8 +4424,9 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
 	g.manaScratch = sources
 	for _, src := range sources {
-		availableMana[src.Color] += src.Amount
-		availableMana[src.Color] += g.countManaBonuses(src.PermanentID)
+		c := sourceBucketColor(src)
+		availableMana[c] += src.Amount
+		availableMana[c] += g.countManaBonuses(src.PermanentID)
 	}
 	manaConversions := pool.ManaConversions
 
@@ -4418,7 +4596,7 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 		payMC.Generic += xValue * mc.XCount
 	}
 	if !payMC.IsZero() && !p.ManaPool().CanPay(payMC, SpellContextForCard(card)) {
-		if err := g.AutoTapForCost(playerID, payMC); err != nil {
+		if err := g.AutoTapForCostWithHint(playerID, payMC, AutoTapHint{CastingCard: card.ID()}); err != nil {
 			return fmt.Errorf("cannot pay for %s: %w", card.Name(), err)
 		}
 	}
@@ -4485,8 +4663,19 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return err
 	}
 
-	// Auto-tap lands to pay mana costs, then pay all costs
-	if err := g.autoTapForManaCosts(playerID, perm.ID(), aa.Costs()); err != nil {
+	// Auto-tap lands to pay mana costs, then pay all costs. Build a hint so
+	// the algorithm deprioritizes tapping the source itself; if the ability
+	// already has a {T} cost, hard-exclude the source so we don't try to use
+	// it as both tap-cost payer and mana source (which would conflict).
+	hasTapCost := false
+	for _, c := range aa.Costs() {
+		if _, ok := c.(*tap); ok {
+			hasTapCost = true
+			break
+		}
+	}
+	hint := AutoTapHint{ActivationSource: perm.ID(), ActivationTapsSource: hasTapCost}
+	if err := g.autoTapForManaCosts(playerID, perm.ID(), aa.Costs(), hint); err != nil {
 		return err
 	}
 	if err := g.payActionCosts(playerID, perm.ID(), aa.Costs()); err != nil {
@@ -4520,14 +4709,6 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	g.stack.Push(obj)
 
-	// Fire EvtAbilityActivated
-	hasTapCost := false
-	for _, c := range aa.Costs() {
-		if _, ok := c.(*tap); ok {
-			hasTapCost = true
-			break
-		}
-	}
 	g.FireEvent(GameEvent{
 		Type:     EvtAbilityActivated,
 		SourceID: perm.ID(),
