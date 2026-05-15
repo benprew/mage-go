@@ -71,11 +71,11 @@ type pointerAnchor struct {
 // region; anchors[:anchorsLen] are the live anchors. nBlockers / nAttackers
 // shape legalEdgeBitmap (row-major bool, 0/1).
 type specEmitterOut struct {
-	tokens         []int32
-	tokensLen      int32
-	anchors        []pointerAnchor
-	anchorsLen     int32
-	maxValueDigits []int32 // BPE digit-id table provided by Python; see below
+	tokens               []int32
+	tokensLen            int32
+	anchors              []pointerAnchor
+	anchorsLen           int32
+	maxValueDigits       []int32 // BPE digit-id table provided by Python; see below
 	maxValueDigitOffsets []int32
 	maxValueDigitMax     int32
 	// Output side-tensor (DECLARE_BLOCKERS only).
@@ -174,7 +174,7 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 			out.anchor(anchorLegalAttacker, int32(optIdx), int32(optIdx))
 			out.emit(ids.legalAttacker)
 		}
-		for playerIdx := int32(0); playerIdx < 2; playerIdx++ {
+		for playerIdx := range int32(2) {
 			out.anchor(anchorDefender, playerIdx, playerIdx)
 			if playerIdx == 0 {
 				out.emit(ids.playerRef0)
@@ -265,7 +265,7 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 	return nil
 }
 
-// emitDigits writes the BPE token id sequence for the integer ``value`` by
+// emitDigits writes the BPE token id sequence for the integer “value“ by
 // indexing into the precomputed digit-id table that Python uploads via
 // MageRegisterTokenTables (see MaxValueDigitTokenIDsBuf). Values out of
 // range fall back to a single digit-zero emission to preserve grammar

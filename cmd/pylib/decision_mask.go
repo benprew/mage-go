@@ -70,16 +70,13 @@ func setVocab(out *decisionMaskOutput, ids ...int32) {
 }
 
 func setPointersAll(out *decisionMaskOutput, n int32) {
-	limit := int(n)
-	if limit > len(out.pointerMask) {
-		limit = len(out.pointerMask)
-	}
+	limit := min(int(n), len(out.pointerMask))
 	for i := 0; i < limit; i++ {
 		out.pointerMask[i] = 1
 	}
 }
 
-// nextMask is the Go mirror of grammar.py::next_mask. ``out`` must be pre-
+// nextMask is the Go mirror of grammar.py::next_mask. “out“ must be pre-
 // cleared; this function only sets bits, never resets them across the call.
 // Returns an error on prefixes inconsistent with the grammar (the decoder
 // should never produce these on the live path).
@@ -149,10 +146,7 @@ func maskDeclareAttackers(in *decisionMaskInput, out *decisionMaskOutput) error 
 		}
 		if i+1 >= int32(len(body)) {
 			// Need attacker pointer.
-			limit := int(in.nLegalAttackers)
-			if limit > len(out.pointerMask) {
-				limit = len(out.pointerMask)
-			}
+			limit := min(int(in.nLegalAttackers), len(out.pointerMask))
 			for k := 0; k < limit; k++ {
 				if _, taken := chosen[int32(k)]; !taken {
 					out.pointerMask[k] = 1
@@ -203,10 +197,7 @@ func maskDeclareBlockers(in *decisionMaskInput, out *decisionMaskOutput) error {
 			return errMask("DECLARE_BLOCKERS: expected BLOCK in body")
 		}
 		if i+1 >= int32(len(body)) {
-			limit := int(in.nLegalBlockers)
-			if limit > len(out.pointerMask) {
-				limit = len(out.pointerMask)
-			}
+			limit := min(int(in.nLegalBlockers), len(out.pointerMask))
 			for k := 0; k < limit; k++ {
 				if _, taken := chosenBlockers[int32(k)]; !taken {
 					out.pointerMask[k] = 1
@@ -233,10 +224,7 @@ func maskDeclareBlockers(in *decisionMaskInput, out *decisionMaskOutput) error {
 				return nil
 			}
 			rowStart := blkPtr * in.nLegalAttackers
-			limit := int(in.nLegalAttackers)
-			if limit > len(out.pointerMask) {
-				limit = len(out.pointerMask)
-			}
+			limit := min(int(in.nLegalAttackers), len(out.pointerMask))
 			for k := 0; k < limit; k++ {
 				out.pointerMask[k] = in.legalEdgeBitmap[rowStart+int32(k)]
 			}

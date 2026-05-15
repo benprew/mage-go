@@ -70,7 +70,7 @@ func TestDecisionSpecFFI_BatchStateRoundtrip(t *testing.T) {
 	vocabMask := make([]byte, 2*v)
 	pointerMask := make([]byte, 2*na)
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		row := &state.rows[i]
 		in := decisionMaskInput{
 			decType:         row.decType,
@@ -128,7 +128,7 @@ func TestDecisionSpecFFI_BatchStateRoundtrip(t *testing.T) {
 	if err := nextMask(&in, &out); err != nil {
 		t.Fatalf("PRIORITY prefix=1 nextMask: %v", err)
 	}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if out.pointerMask[i] != 1 {
 			t.Fatalf("PRIORITY pointer[%d] should be 1; got %d", i, out.pointerMask[i])
 		}

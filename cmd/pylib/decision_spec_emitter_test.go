@@ -154,12 +154,12 @@ func TestEmitDecisionSpec_DeclareAttackers(t *testing.T) {
 	if len(anchors) != 4 {
 		t.Fatalf("anchor count: got %d want 4", len(anchors))
 	}
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		if anchors[i].kind != anchorLegalAttacker || anchors[i].subjectIndex != int32(i) {
 			t.Fatalf("attacker anchor[%d]: %+v", i, anchors[i])
 		}
 	}
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		a := anchors[2+i]
 		if a.kind != anchorDefender || a.subjectIndex != int32(i) {
 			t.Fatalf("defender anchor[%d]: %+v", i, a)
