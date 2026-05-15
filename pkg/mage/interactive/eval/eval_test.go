@@ -232,7 +232,7 @@ func TestAbilityBonus_AnyColorMana(t *testing.T) {
 func TestAbilityBonus_ActivatedAbility(t *testing.T) {
 	p := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-			mage.WithTarget(mage.TargetAnyTarget())),
+			mage.WithTarget(mage.TargetDamageAnyTarget())),
 	)
 	// Phase 0D: tap-to-damage scores 4 (up from flat 1)
 	if got := abilityBonus(p); got != 4 {
@@ -374,7 +374,7 @@ func TestSpellValue_DrawSpell(t *testing.T) {
 func TestSpellValue_DamageSpell(t *testing.T) {
 	g, pa, pb := makeGame()
 	card := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	card.SetOwner(pa.PlayerID())
 	// Base damage: 3. Bear (2/2) EvalCreature=6, lethal bonus=6/2=3. Total=6.
@@ -389,7 +389,7 @@ func TestSpellValue_DamageSpell(t *testing.T) {
 func TestSpellValue_DamageSpellNoLethal(t *testing.T) {
 	g, pa, pb := makeGame()
 	card := mage.NewInstant("Shock", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(2))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(2))),
 	)
 	card.SetOwner(pa.PlayerID())
 	// Opponent has a 5/5 — not lethal
@@ -702,7 +702,7 @@ func TestAbilityQuality_DrawAbility(t *testing.T) {
 func TestAbilityQuality_DamageAbility(t *testing.T) {
 	p := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-			mage.WithTarget(mage.TargetAnyTarget())),
+			mage.WithTarget(mage.TargetDamageAnyTarget())),
 	)
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
@@ -720,7 +720,7 @@ func TestAbilityQuality_DamageAbility(t *testing.T) {
 func TestAbilityQuality_PingerHigherThanPump(t *testing.T) {
 	pinger := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-			mage.WithTarget(mage.TargetAnyTarget())),
+			mage.WithTarget(mage.TargetDamageAnyTarget())),
 	)
 	pumper := makePerm("Pump", "{2}{G}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()), mage.Tap()),
@@ -1012,14 +1012,14 @@ func TestDefaultEvaluate_HandQualityPrefersCastable(t *testing.T) {
 	g1, pa1, _ := makeGame()
 	addLands(g1, pa1, "Mountain", 3)
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))))
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))))
 	bolt.SetOwner(pa1.PlayerID())
 	pa1.AddToHand(bolt)
 
 	g2, pa2, _ := makeGame()
 	addLands(g2, pa2, "Mountain", 3)
 	fireball := mage.NewInstant("Fireball", "{8}{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(8))))
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(8))))
 	fireball.SetOwner(pa2.PlayerID())
 	pa2.AddToHand(fireball)
 

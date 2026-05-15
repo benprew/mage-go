@@ -54,7 +54,7 @@ func registerSpells() {
 	// TODO: convert to pipeline — needs ModalEffect with XValue-based GainLifeTarget and PreventDamageToTarget
 	Register("Alabaster Potion", func() Card {
 		c := NewInstant("Alabaster Potion", "{X}{W}{W}",
-			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
+			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"target player gains X life or prevent the next X damage to any target",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -167,7 +167,7 @@ func registerSpells() {
 	// XXX: chain copy mechanic not implemented — just deals 3 damage
 	Register("Chain Lightning", func() Card {
 		return NewSorcery("Chain Lightning", "{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 		)
 	})
 
@@ -814,7 +814,7 @@ func registerSpells() {
 	// XXX: discard trigger not implemented — just deals 1 damage
 	Register("Psychic Purge", func() Card {
 		return NewSorcery("Psychic Purge", "{U}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(1))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(1))),
 		)
 	})
 
@@ -824,7 +824,7 @@ func registerSpells() {
 	// XXX: divided damage among multiple targets not supported — deals 4 to single target
 	Register("Pyrotechnics", func() Card {
 		return NewSorcery("Pyrotechnics", "{4}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(4))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(4))),
 		)
 	})
 

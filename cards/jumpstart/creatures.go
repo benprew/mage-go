@@ -3832,7 +3832,7 @@ func registerCreatures() {
 				ManaCostOf("{X}{R}"),
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -3968,7 +3968,7 @@ func registerCreatures() {
 				DealDamage(Fixed(1)),
 				Tap(),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -4106,7 +4106,7 @@ func registerCreatures() {
 				ManaCostOf("{R}"),
 				WithCost(Tap()),
 				WithCost(ExileFromGraveyardCost(2)),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -4696,7 +4696,7 @@ func registerCreatures() {
 				DealDamage(Fixed(1)),
 				false,
 				AnyPermanent,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(TargetPlayerOrPlaneswalker())),
 		)
 	})
 
@@ -4743,7 +4743,7 @@ func registerCreatures() {
 			WithAbility(DiesTrigger(
 				DealDamage(Fixed(1)),
 				false,
-			).AddTarget(TargetAnyTarget())),
+			).AddTarget(TargetDamageAnyTarget())),
 			WithActivatedAbility(
 				Boost(Fixed(2), Fixed(0)).Targeting(ToSource()),
 				ManaCostOf("{1}{R}"),
@@ -4774,8 +4774,11 @@ func registerCreatures() {
 	Register("Volley Veteran", func() Card {
 		return NewCreature("Volley Veteran", "{3}{R}", 4, 2,
 			WithSubTypes("Goblin", "Warrior"),
-			WithETBEffect(DealDamage(CountBattlefield(SelectController(),
-				And(IsCreature, HasSubType("Goblin"))))),
+			WithAbility(EntersBattlefieldTrigger(
+				DealDamage(CountBattlefield(SelectController(),
+					And(IsCreature, HasSubType("Goblin")))),
+				false,
+			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
@@ -4786,10 +4789,13 @@ func registerCreatures() {
 	Register("Warfire Javelineer", func() Card {
 		return NewCreature("Warfire Javelineer", "{3}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Warrior"),
-			WithETBEffect(DealDamage(CountZone(ZoneGraveyard, SelectController(),
-				NewCardFilter("instant or sorcery", func(c Card) bool {
-					return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-				})))),
+			WithAbility(EntersBattlefieldTrigger(
+				DealDamage(CountZone(ZoneGraveyard, SelectController(),
+					NewCardFilter("instant or sorcery", func(c Card) bool {
+						return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
+					}))),
+				false,
+			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
@@ -4890,7 +4896,7 @@ func registerCreatures() {
 						[]CardType{TypeCreature}, []string{"Devil"}),
 					PutIntoGraveyardFromBattlefieldTrigger(
 						DealDamage(Fixed(1)), false,
-					).AddTarget(TargetAnyTarget()),
+					).AddTarget(TargetDamageAnyTarget()),
 				),
 			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				if evt.PlayerID == controllerID {
@@ -4960,31 +4966,30 @@ func registerCreatures() {
 	Register("Affectionate Indrik", func() Card {
 		return NewCreature("Affectionate Indrik", "{5}{G}", 4, 4,
 			WithSubTypes("Beast"),
-			WithETBEffect(FuncEffect("fight target creature you don't control",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
+			WithAbility(EntersBattlefieldTrigger(
+				FuncEffect("fight target creature you don't control",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						src := g.FindPermanent(sourceID)
+						tgt := g.FindPermanent(targets[0])
+						if src == nil || tgt == nil {
+							return nil
+						}
+						srcPower := src.CurrentPower(g)
+						tgtPower := tgt.CurrentPower(g)
+						if tgtPower > 0 {
+							g.DealDamageToPermanent(src, tgtPower, tgt.ID())
+						}
+						if srcPower > 0 {
+							g.DealDamageToPermanent(tgt, srcPower, sourceID)
+						}
 						return nil
-					}
-					src := g.FindPermanent(sourceID)
-					tgt := g.FindPermanent(targets[0])
-					if src == nil || tgt == nil {
-						return nil
-					}
-					p := g.GetPlayer(controller)
-					if p != nil && !p.ChooseMayAbility("fight target creature") {
-						return nil
-					}
-					srcPower := src.CurrentPower(g)
-					tgtPower := tgt.CurrentPower(g)
-					if tgtPower > 0 {
-						g.DealDamageToPermanent(src, tgtPower, tgt.ID())
-					}
-					if srcPower > 0 {
-						g.DealDamageToPermanent(tgt, srcPower, sourceID)
-					}
-					return nil
-				})),
+					}),
+				true,
+			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
 	})
 
@@ -6347,7 +6352,7 @@ func registerCreatures() {
 		return NewCreature("Raging Regisaur", "{2}{R}{G}", 4, 4,
 			WithSubTypes("Dinosaur"),
 			WithAbility(AttacksTrigger(DealDamage(Fixed(1)), false).
-				AddTarget(TargetAnyTarget())),
+				AddTarget(TargetDamageAnyTarget())),
 		)
 	})
 
@@ -6422,7 +6427,7 @@ func registerCreatures() {
 				XManaCost(),
 				WithCost(Tap()),
 				WithCost(RemoveXCountersFromSourceCost(P1P1)),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 			WithGraveyardActivatedAbility(
 				ReturnSourceToHand(),
@@ -6548,7 +6553,7 @@ func registerCreatures() {
 				ManaCostOf("{5}"),
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	})
@@ -6590,7 +6595,7 @@ func registerCreatures() {
 			WithSubTypes("Phyrexian", "Myr"),
 			WithCardType(TypeArtifact),
 			WithAbility(DiesTrigger(DealDamage(Fixed(2)), false).
-				AddTarget(TargetAnyTarget())),
+				AddTarget(TargetDamageAnyTarget())),
 		)
 	})
 

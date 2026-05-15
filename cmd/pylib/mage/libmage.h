@@ -12,6 +12,8 @@
 
 #ifndef GO_CGO_GOSTRING_TYPEDEF
 typedef struct { const char *p; ptrdiff_t n; } _GoString_;
+extern size_t _GoStringLen(_GoString_ s);
+extern const char *_GoStringPtr(_GoString_ s);
 #endif
 
 #endif
@@ -19,7 +21,21 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 /* Start of preamble from import "C" comments.  */
 
 
+#line 3 "decision_spec_ffi.go"
+
+#include <stdlib.h>
+#include "abi.h"
+
+#line 1 "cgo-generated-wrapper"
+
 #line 15 "main.go"
+
+#include <stdlib.h>
+#include "abi.h"
+
+#line 1 "cgo-generated-wrapper"
+
+#line 3 "text_rollout.go"
 
 #include <stdlib.h>
 #include "abi.h"
@@ -50,9 +66,15 @@ typedef size_t GoUintptr;
 typedef float GoFloat32;
 typedef double GoFloat64;
 #ifdef _MSC_VER
+#if !defined(__cplusplus) || _MSVC_LANG <= 201402L
 #include <complex.h>
 typedef _Fcomplex GoComplex64;
 typedef _Dcomplex GoComplex128;
+#else
+#include <complex>
+typedef std::complex<float> GoComplex64;
+typedef std::complex<double> GoComplex128;
+#endif
 #else
 typedef float _Complex GoComplex64;
 typedef double _Complex GoComplex128;
@@ -80,6 +102,11 @@ typedef struct { void *data; GoInt len; GoInt cap; } GoSlice;
 extern "C" {
 #endif
 
+extern int32_t MageRegisterDecisionSpecTokens(MageDecisionSpecTokens* tables);
+extern void MageReleaseBatchHandle(int64_t handle);
+extern MageEncodeResult MageEncodeDecisionSpec(MageBatchRequest* req, int32_t* stateTokenLensPtr, MagePackedSpecOutputs* specOut, int64_t* handleOut);
+extern int32_t MageDecisionMaskNext(int64_t batchHandle, int32_t* prefixTokensPtr, int32_t* prefixPointersPtr, int32_t* prefixLensPtr, int32_t batchSize, int32_t prefixLenMax, int32_t grammarVocabSizeArg, int32_t nAnchorsMax, uint8_t* outVocabMaskPtr, uint8_t* outPointerMaskPtr);
+extern int32_t MagePackCombinedTokens(int32_t n, int32_t tokenCapacity, int32_t maxCardRefs, MagePackedTokenAssemblerOutputs* packed, MagePackedSpecOutputs* spec);
 
 /* Return type for MageNewGame */
 struct MageNewGame_return {
@@ -92,41 +119,27 @@ extern char* MageLegal(int64_t id);
 extern char* MageStep(int64_t id, char* actionJSON);
 extern void MageFree(int64_t id);
 extern void MageFreeString(char* s);
-extern char* MageRegisteredCards();
-extern char* MageRegisteredManaCosts();
+extern char* MageRegisteredCards(void);
+extern char* MageRegisteredManaCosts(void);
 extern char* MageSetCardNameRows(char* cardNameRowsJSON);
 extern MageEncodeResult MageBatchPoll(MageBatchRequest* req, MageBatchPollOutputs* out);
 extern MageEncodeResult MageBatchStepByChoice(MageStepChoiceRequest* req);
+extern MageEncodeResult MageBatchStepByDecoderAction(MageDecoderStepRequest* req);
 extern MageEncodeResult MageEncodeBatch(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out);
-
-// Stores the borrowed pointers in “tokenTables“ for use by the future
-// native text-encoder assembler. Returns 0 on success or a positive error
-// code on a wire-format inconsistency. Calling with a nil pointer clears
-// the registration.
-//
+extern char* MageNativeTimingSummary(int32_t reset);
 extern int32_t MageRegisterTokenTables(MageTokenTables* tables);
-
-// Returns a JSON summary of the currently registered token tables (sizes
-// per category). Used by the Phase-3 round-trip parity test to verify the
-// wire format unpacks correctly. Returns "null" if no tables registered.
-//
-extern char* MageTokenTableSummary();
-
-// Test/debug accessor: returns the JSON-encoded token-id list for a single
-// (kind, key) pair. “kind“ is one of:
-//
-//	0=fragment, 1=turn_step, 2=life_owner, 3=ability, 4=count,
-//	5=zone_open, 6=zone_close, 7=action_verb, 8=mana_glyph,
-//	9=card_body, 10=card_name, 11=card_ref (single id list).
-//
-// Two key fields cover all (zero or one used).
-//
+extern char* MageTokenTableSummary(void);
 extern char* MageTokenTableLookup(int32_t kind, int32_t k0, int32_t k1);
 extern char* MageEncodeTimingSummary(int32_t reset);
-extern MageEncodeResult MageEncodeTokensPacked(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out, MageTokenAssemblerConfig* tokCfg, MagePackedTokenAssemblerOutputs* packedOut, MageBlankAssemblerConfig* blankCfg, MagePackedBlankOutputs* blankOut);
+extern MageEncodeResult MageEncodeTokensPacked(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out, MageTokenAssemblerConfig* tokCfg, MagePackedTokenAssemblerOutputs* packedOut);
 extern int64_t MagePendingPlayer(int64_t id);
 extern int64_t MageIsOver(int64_t id);
 extern char* MageWinner(int64_t id);
+extern MageEncodeResult MageStartTextRollout(MageTextRolloutStartRequest* req);
+extern MageEncodeResult MageAddTextRolloutGames(MageTextRolloutStartRequest* req);
+extern MageTextReadyBatchResult MageNextTextInferenceBatch(int64_t maxRows, int64_t timeoutMS, MageTextReadyBatchOutputs* out);
+extern MageEncodeResult MageSubmitTextChoices(MageTextChoiceSubmitRequest* req);
+extern int32_t MageStopTextRollout(int32_t waitForActive);
 
 #ifdef __cplusplus
 }

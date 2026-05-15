@@ -283,7 +283,7 @@ func TestHoldBackValue_ControlHoldsInstant(t *testing.T) {
 	g, pa, pb := makeGame()
 
 	bolt := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -303,7 +303,7 @@ func TestHoldBackValue_AggroDoesNotHold(t *testing.T) {
 	g, pa, pb := makeGame()
 
 	bolt := mage.NewInstant("Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -325,7 +325,7 @@ func TestEvaluateResponse_CastsRemovalOnOpponentTurn(t *testing.T) {
 	g, pa, pb := makeGame()
 
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
@@ -434,7 +434,7 @@ func TestPriorityAction_ResponseOnOpponentTurn(t *testing.T) {
 	g, pa, pb := makeGame()
 
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)

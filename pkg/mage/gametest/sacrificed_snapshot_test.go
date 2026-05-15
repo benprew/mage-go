@@ -19,7 +19,7 @@ func registerSacrificedSnapshotCards() {
 		if !mage.CardRegistered("Test Fling") {
 			mage.Register("Test Fling", func() mage.Card {
 				return mage.NewInstant("Test Fling", "{1}{R}",
-					mage.NewTargetedSpell(mage.TargetAnyTarget(),
+					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 						mage.FuncEffect(
 							"deal damage equal to sacrificed creature's power",
 							mage.EffectProperties{},

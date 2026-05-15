@@ -52,7 +52,7 @@ func registerCh06Cards() {
 		// Spells
 		reg("Ch06 Bolt", func() mage.Card {
 			return mage.NewInstant("Ch06 Bolt", "{R}",
-				mage.NewTargetedSpell(mage.TargetAnyTarget(),
+				mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 					mage.DealDamage(mage.Fixed(3))))
 		})
 		reg("Ch06 Counter", func() mage.Card {
@@ -172,7 +172,7 @@ func registerCh06Cards() {
 				mage.WithActivatedAbility(
 					mage.DealDamage(mage.Fixed(1)),
 					mage.Tap(),
-					mage.WithTarget(mage.TargetAnyTarget())))
+					mage.WithTarget(mage.TargetDamageAnyTarget())))
 		})
 		reg("Ch06 Pinger", func() mage.Card {
 			return mage.NewCreature("Ch06 Pinger", "{2}{U}", 1, 1,
@@ -180,7 +180,7 @@ func registerCh06Cards() {
 				mage.WithActivatedAbility(
 					mage.DealDamage(mage.Fixed(1)),
 					mage.Tap(),
-					mage.WithTarget(mage.TargetAnyTarget())))
+					mage.WithTarget(mage.TargetDamageAnyTarget())))
 		})
 		reg("Ch06 Damage Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 Damage Watcher", "{2}{U}", 0, 4,

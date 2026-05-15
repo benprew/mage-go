@@ -365,17 +365,17 @@ func (e *directTokenEmitter) emitPlaceCard(row, status, uuidIdx int32) {
 	e.writeSpan(e.tables.cardCloser)
 }
 
-// emitPlaceCardRef writes a placement that points back at a per-snapshot
-// dict slot rather than at a stable card-row id. slot is the position the
-// card was assigned in renderPlanIndex.dictRowOrder during this snapshot;
-// the model sees the slot id and must reach into the dict prologue to
-// recover any card-specific tokens.
-func (e *directTokenEmitter) emitPlaceCardRef(slot, status, uuidIdx int32) {
+// emitPlaceCardRef writes a placement that points back at the dict prologue.
+// Prefer per-snapshot slot ids when present; older Python token-table ABIs
+// only provide row-keyed dict-entry ids, so fall back to those.
+func (e *directTokenEmitter) emitPlaceCardRef(slot, row, status, uuidIdx int32) {
 	e.closeScalarOwner()
 	e.emitCardRef(uuidIdx)
 	e.writeSingle(e.tables.cardOpenID)
 	if slot >= 0 && slot < int32(len(e.tables.dictSlotIDs)) {
 		e.writeSingle(e.tables.dictSlotIDs[slot])
+	} else if row >= 0 && row < int32(len(e.tables.dictEntryIDs)) {
+		e.writeSingle(e.tables.dictEntryIDs[row])
 	}
 	e.emitStatus(status)
 	e.writeSpan(e.tables.cardCloser)
@@ -391,41 +391,6 @@ func (e *directTokenEmitter) emitStatus(status int32) {
 	} else if status&statusTapped != 0 {
 		e.writeSpan(e.tables.statusTapped)
 	}
-}
-
-func (e *directTokenEmitter) emitBlank(kindID, optionIndex int32) error {
-	tables := e.tables
-	if tables == nil {
-		return nil
-	}
-	return e.emitBlankLegal(kindID, optionIndex, blankGroupCrossBlank, []int32{tables.chosenID})
-}
-
-func (e *directTokenEmitter) emitBlankLegal(kindID, optionIndex, groupKind int32, legalIDs []int32) error {
-	tables := e.tables
-	if tables == nil || len(legalIDs) == 0 {
-		return nil
-	}
-	pos := e.writeSingle(kindID)
-	if pos < 0 || e.out.blank == nil {
-		return nil
-	}
-	if err := e.out.blank.recordBlank(
-		pos+e.out.cursorBase,
-		kindID,
-		0,
-		groupKind,
-		optionIndex,
-		int32(len(legalIDs)),
-	); err != nil {
-		return err
-	}
-	for _, legalID := range legalIDs {
-		if err := e.out.blank.recordLegal(legalID); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (e *directTokenEmitter) emitOpenDict() {
@@ -445,6 +410,8 @@ func (e *directTokenEmitter) emitDictEntry(slot, row int32) {
 	e.closeScalarOwner()
 	if slot >= 0 && slot < int32(len(e.tables.dictSlotIDs)) {
 		e.writeSingle(e.tables.dictSlotIDs[slot])
+	} else if row >= 0 && row < int32(len(e.tables.dictEntryIDs)) {
+		e.writeSingle(e.tables.dictEntryIDs[row])
 	}
 	if row >= 0 && row < e.tables.cardRowCount {
 		e.writeSpan(e.tables.cardBodySpan(row))

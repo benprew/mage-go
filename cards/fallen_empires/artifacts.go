@@ -24,7 +24,7 @@ func registerArtifacts() {
 				GenericCost(1),
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 	}))
@@ -47,7 +47,7 @@ func registerArtifacts() {
 				GenericCost(1),
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetAnyTarget()),
+				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
 		c.SetModes([]string{

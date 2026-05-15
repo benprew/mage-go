@@ -98,6 +98,7 @@ extern char* MageSetCardNameRows(char* cardNameRowsJSON);
 extern MageEncodeResult MageBatchPoll(MageBatchRequest* req, MageBatchPollOutputs* out);
 extern MageEncodeResult MageBatchStepByChoice(MageStepChoiceRequest* req);
 extern MageEncodeResult MageEncodeBatch(MageBatchRequest* req, MageEncodeConfig* cfg, MageEncodeOutputs* out);
+extern char* MageNativeTimingSummary(int32_t reset);
 extern int64_t MagePendingPlayer(int64_t id);
 extern int64_t MageIsOver(int64_t id);
 extern char* MageWinner(int64_t id);

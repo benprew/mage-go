@@ -146,7 +146,7 @@ func registerSpells() {
 	// Agonizing Syphon deals 3 damage to any target and you gain 3 life.
 	Register("Agonizing Syphon", func() Card {
 		return NewSorcery("Agonizing Syphon", "{3}{B}",
-			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 3 damage and gain 3 life",
 				DealDamage(Fixed(3)),
 				GainLife(3),
@@ -392,7 +392,7 @@ func registerSpells() {
 	// Collateral Damage deals 3 damage to any target.
 	Register("Collateral Damage", func() Card {
 		return NewInstant("Collateral Damage", "{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 			WithAdditionalCost(SacrificeCreatureCost()),
 		)
 	})
@@ -473,7 +473,7 @@ func registerSpells() {
 					[]string{"Devil"}),
 				PutIntoGraveyardFromBattlefieldTrigger(
 					DealDamage(Fixed(1)), false,
-				).AddTarget(TargetAnyTarget()),
+				).AddTarget(TargetDamageAnyTarget()),
 			)),
 		)
 	})
@@ -729,7 +729,7 @@ func registerSpells() {
 	// Flame Lash deals 4 damage to any target.
 	Register("Flame Lash", func() Card {
 		return NewInstant("Flame Lash", "{3}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(4))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(4))),
 		)
 	})
 
@@ -788,7 +788,7 @@ func registerSpells() {
 	// Fling deals damage equal to the sacrificed creature's power to any target.
 	Register("Fling", func() Card {
 		return NewInstant("Fling", "{1}{R}",
-			NewTargetedSpell(TargetAnyTarget(),
+			NewTargetedSpell(TargetDamageAnyTarget(),
 				FuncEffect("Fling deals damage equal to the sacrificed creature's power to any target",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -911,8 +911,8 @@ func registerSpells() {
 	// Heartfire deals 4 damage to any target.
 	Register("Heartfire", func() Card {
 		return NewInstant("Heartfire", "{1}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(4))),
-			WithAdditionalCost(SacrificeCreatureCost()),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(4))),
+			WithAdditionalCost(SacrificeMatchingCost(Or(IsCreature, IsPlaneswalker), "Sacrifice a creature or planeswalker")),
 		)
 	})
 
@@ -948,9 +948,9 @@ func registerSpells() {
 	Register("Hungry Flames", func() Card {
 		return NewInstant("Hungry Flames", "{2}{R}",
 			NewMultiTargetSpell(
-				[]Target{TargetCreature(), TargetPlayer()},
+				[]Target{TargetCreature(), TargetPlayerOrPlaneswalker()},
 				FuncEffect(
-					"3 damage to target creature, 2 damage to target player",
+					"3 damage to target creature, 2 damage to target player or planeswalker",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) >= 1 && targets[0] != uuid.Nil {
@@ -959,10 +959,14 @@ func registerSpells() {
 							}
 						}
 						if len(targets) >= 2 && targets[1] != uuid.Nil {
-							for _, pl := range g.AllPlayers() {
-								if pl.PlayerID() == targets[1] {
-									g.DealDamageToPlayer(pl, 2, sourceID)
-									break
+							if perm := g.FindPermanent(targets[1]); perm != nil {
+								g.DealDamageToPermanent(perm, 2, sourceID)
+							} else {
+								for _, pl := range g.AllPlayers() {
+									if pl.PlayerID() == targets[1] {
+										g.DealDamageToPlayer(pl, 2, sourceID)
+										break
+									}
 								}
 							}
 						}
@@ -1007,7 +1011,7 @@ func registerSpells() {
 	Register("Immolating Gyre", func() Card {
 		return NewSorcery("Immolating Gyre", "{4}{R}{R}",
 			NewSpellAbility(FuncEffect(
-				"X damage to each creature you don't control",
+				"X damage to each creature and planeswalker you don't control",
 				EffectProperties{Outcome: OutcomeDetriment, Mass: true},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					p := g.GetPlayer(controller)
@@ -1023,7 +1027,7 @@ func registerSpells() {
 					if x <= 0 {
 						return nil
 					}
-					for _, perm := range g.FilterBattlefield(And(IsCreature, NotControlledBy(controller))) {
+					for _, perm := range g.FilterBattlefield(And(Or(IsCreature, IsPlaneswalker), NotControlledBy(controller))) {
 						g.DealDamageToPermanent(perm, x, sourceID)
 					}
 					return nil
@@ -1255,7 +1259,7 @@ func registerSpells() {
 	// Magma Jet deals 2 damage to any target. Scry 2.
 	Register("Magma Jet", func() Card {
 		return NewInstant("Magma Jet", "{1}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2)), Scry(Fixed(2))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(2)), Scry(Fixed(2))),
 		)
 	})
 
@@ -1463,7 +1467,7 @@ func registerSpells() {
 	// Pillar of Flame deals 2 damage to any target. If a creature dealt damage this way would die this turn, exile it instead.
 	Register("Pillar of Flame", func() Card {
 		return NewSorcery("Pillar of Flame", "{R}",
-			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 2 damage; if a creature, exile it if it would die this turn",
 				FuncEffect(
 					"exile-if-would-die marker",
@@ -1597,7 +1601,7 @@ func registerSpells() {
 	// Choose any target. Scry 3, then reveal the top card of your library. Riddle of Lightning deals damage equal to that card's mana value to that permanent or player.
 	Register("Riddle of Lightning", func() Card {
 		return NewInstant("Riddle of Lightning", "{3}{R}{R}",
-			NewTargetedSpell(TargetAnyTarget(), CompositeEffects(
+			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"scry 3, reveal top, deal damage equal to its mana value",
 				Scry(Fixed(3)),
 				DealDamage(TopOfLibraryManaValue(SelectController())),
@@ -1638,7 +1642,7 @@ func registerSpells() {
 	// Sarkhan's Rage deals 5 damage to any target. If you control no Dragons, Sarkhan's Rage deals 2 damage to you.
 	Register("Sarkhan's Rage", func() Card {
 		return NewInstant("Sarkhan's Rage", "{4}{R}",
-			NewTargetedSpell(TargetAnyTarget(), FuncEffect(
+			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
 				"5 damage; if no Dragons, 2 to you",
 				EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(5)},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {

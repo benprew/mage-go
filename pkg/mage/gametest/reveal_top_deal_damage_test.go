@@ -16,7 +16,7 @@ func TestRevealTopAndDealDamage(t *testing.T) {
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewInstant(cardName, "{3}{R}{R}",
-				mage.NewTargetedSpell(mage.TargetAnyTarget(),
+				mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 					mage.DealDamage(mage.TopOfLibraryManaValue(mage.SelectController()))),
 			)
 		})

@@ -27,6 +27,47 @@ typedef struct {
     const int64_t* may_selected;
 } MageStepChoiceRequest;
 
+/*
+ * Decoder-pipeline batched engine step. Each env's action is encoded as the
+ * raw autoregressive decoder output (token ids + per-step pointer subjects +
+ * is_pointer mask) plus the per-env pointer-anchor handle table.
+ *
+ * Per env:
+ *   - decision_type[i]   : DecisionType enum (0=PRIORITY, 1=DECLARE_ATTACKERS,
+ *                          2=DECLARE_BLOCKERS, 3=CHOOSE_TARGETS, 4=MAY,
+ *                          5=CHOOSE_MODE, 6=CHOOSE_X, -1 = no-op).
+ *   - output_token_ids[i, :output_lens[i]]
+ *                        : grammar-vocab ids (see decision_mask.go).
+ *   - output_is_pointer[i, :output_lens[i]]
+ *                        : 1 = step is a pointer step (token id is ignored;
+ *                          subject_index is used instead), 0 = vocab step.
+ *   - output_pointer_subjects[i, :output_lens[i]]
+ *                        : per-step subject_index into the anchor table; -1
+ *                          on vocab steps.
+ *   - pointer_anchor_handles[i, :pointer_anchor_count[i]]
+ *                        : engine handle (option index for PRIORITY /
+ *                          ATTACKERS / TARGETS, attacker-order index for
+ *                          BLOCKERS' attacker side, defender player_idx for
+ *                          ATTACKERS' defender side). Indexed by subject_index.
+ *
+ * Errors are handled per env: a malformed decoder action logs and is skipped,
+ * the rest of the batch advances. Mirrors MageBatchStepByChoice's overall
+ * shape and return semantics.
+ */
+typedef struct {
+    int64_t n;
+    int64_t max_decode_len;
+    int64_t max_anchors;
+    const int64_t* handles;                    /* [n] */
+    const int32_t* decision_type;              /* [n] */
+    const int32_t* output_token_ids;           /* [n, max_decode_len] */
+    const int32_t* output_pointer_subjects;    /* [n, max_decode_len] */
+    const uint8_t* output_is_pointer;          /* [n, max_decode_len] */
+    const int32_t* output_lens;                /* [n] */
+    const int32_t* pointer_anchor_handles;     /* [n, max_anchors] */
+    const int32_t* pointer_anchor_count;       /* [n] */
+} MageDecoderStepRequest;
+
 typedef struct {
     int64_t max_options;
     int64_t max_targets_per_option;
@@ -83,6 +124,43 @@ typedef struct {
     int64_t error_code;
     char* error_message;
 } MageEncodeResult;
+
+typedef struct {
+    int64_t n;
+    const int64_t* handles;
+    const int64_t* slot_ids;
+    const int64_t* episode_ids;
+    int64_t max_steps_per_game;
+    int64_t max_options;
+    int64_t max_targets_per_option;
+    int64_t max_cached_choices;
+    int64_t zone_slot_count;
+    int64_t game_info_dim;
+    int64_t option_scalar_dim;
+    int64_t target_scalar_dim;
+    int64_t render_plan_capacity;
+    int64_t dedup_card_bodies;
+    int64_t max_tokens;
+    int64_t max_card_refs;
+    int64_t ready_queue_capacity;
+    int64_t terminal_queue_capacity;
+} MageTextRolloutStartRequest;
+
+typedef struct {
+    int64_t rows_written;
+    int64_t terminal_events_written;
+    int64_t decision_rows_written;
+    int64_t error_code;
+    char* error_message;
+} MageTextReadyBatchResult;
+
+typedef struct {
+    int64_t n;
+    const int64_t* request_ids;
+    const int64_t* decision_count;
+    const int64_t* selected_choice_cols;
+    const int64_t* may_selected;
+} MageTextChoiceSubmitRequest;
 
 /*
  * Token-table registration: Python ships the closed-vocabulary token tables
@@ -199,35 +277,6 @@ typedef struct {
     int32_t stack_close_id;
     int32_t command_open_id;
     int32_t command_close_id;
-
-    /* Inline-blank singletons. Each ``<choose-*>`` token is emitted at the
-       cursor position recorded by an EMIT_BLANK opcode; ``chosen_id`` /
-       ``yes_id`` / ``no_id`` / ``none_id`` / ``x_end_id`` may appear in legal-
-       id lists or as bookkeeping markers in the token stream. ``use_ability``
-       is the ability-action variant of ``<choose-play>``. All are independent
-       of the cardrow / ability tables — they are pure singletons. */
-    int32_t choose_target_id;
-    int32_t choose_block_id;
-    int32_t choose_damage_order_id;
-    int32_t choose_mode_id;
-    int32_t choose_may_id;
-    int32_t choose_x_digit_id;
-    int32_t choose_mana_source_id;
-    int32_t choose_play_id;
-    int32_t use_ability_id;
-    int32_t chosen_id;
-    int32_t yes_id;
-    int32_t no_id;
-    int32_t none_id;
-    int32_t x_end_id;
-    int32_t mulligan_id;
-    int32_t keep_id;
-
-    /* Digit tokens for inline X-cost blanks: ``num_ids[k]`` is the token id
-       for digit ``k`` (typically 0..15). Length is given by ``num_count``;
-       the count is authoritative and the array may be NULL when count==0. */
-    int32_t num_count;
-    const int32_t* num_ids;
 } MageTokenTables;
 
 /* Token-assembler dimensions shared by packed token outputs. */
@@ -237,11 +286,6 @@ typedef struct {
     int32_t max_targets;
     int32_t max_card_refs;
 } MageTokenAssemblerConfig;
-
-typedef struct {
-    int32_t max_blanks;
-    int32_t max_legal_per_blank;
-} MageBlankAssemblerConfig;
 
 /*
  * Packed (varlen) token-assembler outputs. Caller allocates the token-
@@ -263,19 +307,84 @@ typedef struct {
     int32_t* token_overflow;     /* [B] int32 (1 = row truncated) */
 } MagePackedTokenAssemblerOutputs;
 
+/*
+ * Per-row decision-spec outputs emitted alongside the packed token stream.
+ * The caller pre-allocates buffers at capacity ``B * T_spec_max`` (and
+ * similarly for anchors and the legal-edge bitmap). The native side packs
+ * each row's emitted spec tokens into the row's slice (0-padded), with
+ * pointer_anchor_positions already shifted by the row's emitted state-token
+ * length so they reference the combined ``[state_tokens] + [spec_tokens]``
+ * stream. ``spec_overflow`` is set to a nonzero value if any per-row cap
+ * was exceeded.
+ */
 typedef struct {
-    int32_t k_max;
-    int32_t v_max;
-    int32_t* blank_positions;    /* [B, K] int32, absolute, -1 absent */
-    int32_t* blank_kind;         /* [B, K] int32, 0 absent */
-    int32_t* blank_group;        /* [B, K] int32, -1 absent */
-    int32_t* blank_group_kind;   /* [B, K] int32 */
-    int32_t* blank_option_index; /* [B, K] int32, engine option index, -1 absent */
-    int32_t* blank_legal_ids;    /* [B, K, V] int32, 0 pad */
-    uint8_t* blank_legal_mask;   /* [B, K, V] uint8 */
-    int32_t* blank_overflow;     /* [B] int32, count of dropped blanks */
-    int32_t* blank_count;        /* [B] int32, live blanks per row */
-    int32_t* blank_legal_count;  /* [B, K] int32, live legal ids per blank */
-} MagePackedBlankOutputs;
+    int32_t* spec_tokens;             /* [B, T_spec_max] int32, 0 = pad */
+    int32_t* spec_lens;               /* [B] int32 */
+    int32_t* decision_type;           /* [B] int32, -1 = no pending */
+    int32_t* pointer_anchor_positions;/* [B, N_anchors_max] int32, -1 = pad */
+    int32_t* pointer_anchor_kinds;    /* [B, N_anchors_max] int32, -1 = pad */
+    int32_t* pointer_anchor_subjects; /* [B, N_anchors_max] int32 */
+    int32_t* pointer_anchor_handles;  /* [B, N_anchors_max] int32 */
+    int32_t* pointer_anchor_counts;   /* [B] int32 */
+    uint8_t* legal_edge_bitmap;       /* [B, N_blockers_max, N_attackers_max] */
+    int32_t* legal_edge_n_blockers;   /* [B] int32 */
+    int32_t* legal_edge_n_attackers;  /* [B] int32 */
+    int32_t  T_spec_max;
+    int32_t  N_anchors_max;
+    int32_t  N_blockers_max;
+    int32_t  N_attackers_max;
+    int32_t  spec_overflow;
+} MagePackedSpecOutputs;
+
+/*
+ * Decision-spec tag tokens + digit-token lookup table. Caller passes the
+ * 12 fixed structural tag ids, the 7 decision-type-name ids, the 16
+ * stack-ref ids, and the BPE digit-id table indexed by integer value.
+ * Pointers are borrowed; tensors must outlive the registration.
+ */
+typedef struct {
+    int32_t spec_open_id;
+    int32_t spec_close_id;
+    int32_t decision_type_id;
+    int32_t legal_attacker_id;
+    int32_t legal_blocker_id;
+    int32_t legal_target_id;
+    int32_t legal_action_id;
+    int32_t for_action_id;
+    int32_t max_value_open_id;
+    int32_t max_value_close_id;
+    int32_t player_ref0_id;
+    int32_t player_ref1_id;
+
+    /* dt_name_ids[k] = id for `<dt-{name}>` for decisionType k.
+       k in [0..6] (priority, declare_attackers, declare_blockers,
+       choose_targets, may, choose_mode, choose_x). */
+    const int32_t* dt_name_ids;       /* length 7 */
+
+    /* stack_ref_ids[k] = id for `<stack-ref:k>`. length 16. */
+    const int32_t* stack_ref_ids;     /* length 16 */
+
+    /* Digit lookup: value v in [0, max_value_digit_max] maps to the
+       int32 sequence at digits[offsets[v]:offsets[v+1]]. */
+    int32_t max_value_digit_max;
+    const int32_t* max_value_digits;
+    const int32_t* max_value_digit_offsets; /* length max_value_digit_max + 2 */
+} MageDecisionSpecTokens;
+
+typedef struct {
+    int64_t* request_ids;
+    int64_t* slot_ids;
+    int64_t* episode_ids;
+    int64_t* step_indices;
+    int64_t* perspective_player_idx;
+    int64_t* terminal_slot_ids;
+    int64_t* terminal_episode_ids;
+    int64_t* terminal_winner_idx;
+    int64_t* terminal_is_timeout;
+    int64_t* terminal_life_p0;
+    int64_t* terminal_life_p1;
+    MageEncodeOutputs encode;
+    MagePackedTokenAssemblerOutputs packed_tokens;
+} MageTextReadyBatchOutputs;
 
 #endif

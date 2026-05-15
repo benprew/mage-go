@@ -32,7 +32,7 @@ func TestCopySpellOnStack_SameTargets(t *testing.T) {
 	g, a, b := newSpellCopyGame()
 
 	bolt := NewInstant("Bolt", "{R}",
-		NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+		NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 	)
 	bolt.SetOwner(a.PlayerID())
 	a.AddToHand(bolt)
@@ -82,7 +82,7 @@ func TestCopySpellOnStack_NewTargets(t *testing.T) {
 	g, a, b := newSpellCopyGame()
 
 	bolt := NewInstant("Bolt", "{R}",
-		NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+		NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 	)
 	bolt.SetOwner(a.PlayerID())
 	a.AddToHand(bolt)
@@ -127,7 +127,7 @@ func TestCopySpellOnStack_CopyDoesNotEnterAnyZone(t *testing.T) {
 	g, a, b := newSpellCopyGame()
 
 	bolt := NewInstant("Bolt", "{R}",
-		NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+		NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 	)
 	bolt.SetOwner(a.PlayerID())
 	a.AddToHand(bolt)
@@ -206,7 +206,7 @@ func TestCopySpellOnStack_FizzledCopyCeases(t *testing.T) {
 	perm := g.PutOnBattlefield(target, b.PlayerID())
 
 	dmg := NewInstant("Dmg", "{R}",
-		NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+		NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 	)
 	dmg.SetOwner(a.PlayerID())
 	a.AddToHand(dmg)

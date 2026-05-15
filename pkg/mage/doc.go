@@ -108,7 +108,7 @@ Examples:
 	// Lightning Bolt: deal 3 damage to any target
 	mage.NewInstant("Lightning Bolt", "{R}",
 	    mage.DealDamage(mage.Fixed(3)),
-	    mage.WithTarget(mage.TargetAnyTarget()),
+	    mage.WithTarget(mage.TargetDamageAnyTarget()),
 	)
 
 	// Wrath of God: destroy all creatures (no target)
@@ -408,7 +408,7 @@ Player targets:
 
 	[TargetPlayer]()                    // any player
 	[TargetOpponent]()                  // opponent only
-	[TargetAnyTarget]()                 // creature or player ("any target")
+	[TargetDamageAnyTarget]()                 // creature or player ("any target")
 
 Stack targets:
 
@@ -670,7 +670,7 @@ Prefer [NewActivated] with [WithAction]:
 	mage.WithAction(mage.NewActivated(
 	    mage.Tap(),
 	    mage.DealDamage(mage.Fixed(1)),
-	    mage.WithTarget(mage.TargetAnyTarget()),
+	    mage.WithTarget(mage.TargetDamageAnyTarget()),
 	))
 
 [NewActivatedAbility] and [WithActivatedAbility] remain as compatibility
@@ -706,7 +706,7 @@ Attach to a card with [WithActivatedAbility] or [WithAbility]:
 	mage.WithActivatedAbility(
 	    mage.DealDamage(mage.Fixed(1)),
 	    mage.Tap(),
-	    mage.WithTarget(mage.TargetAnyTarget()),
+	    mage.WithTarget(mage.TargetDamageAnyTarget()),
 	)
 
 	// Regeneration: {B}: Regenerate self
@@ -1821,7 +1821,7 @@ Creature with activated ability:
 	        mage.WithActivatedAbility(
 	            mage.DealDamage(mage.Fixed(1)),
 	            mage.Tap(),
-	            mage.WithTarget(mage.TargetAnyTarget()),
+	            mage.WithTarget(mage.TargetDamageAnyTarget()),
 	        ),
 	    )
 	})
@@ -1858,7 +1858,7 @@ Targeted instant:
 	mage.Register("Lightning Bolt", func() mage.Card {
 	    return mage.NewInstant("Lightning Bolt", "{R}",
 	        mage.DealDamage(mage.Fixed(3)),
-	        mage.WithTarget(mage.TargetAnyTarget()),
+	        mage.WithTarget(mage.TargetDamageAnyTarget()),
 	    )
 	})
 
@@ -1875,7 +1875,7 @@ X spell:
 	mage.Register("Fireball", func() mage.Card {
 	    return mage.NewSorcery("Fireball", "{X}{R}",
 	        mage.DealDamage(mage.XValue()),
-	        mage.WithTarget(mage.TargetAnyTarget()),
+	        mage.WithTarget(mage.TargetDamageAnyTarget()),
 	    )
 	})
 

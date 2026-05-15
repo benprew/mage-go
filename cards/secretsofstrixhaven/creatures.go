@@ -2365,7 +2365,7 @@ func registerCreatures() {
 	Register("Emeritus of Conflict // Lightning Bolt", func() Card {
 		spellFactory := func() Card {
 			return NewInstant("Lightning Bolt", "{R}",
-				NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+				NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 			)
 		}
 		// XXX: "Whenever you cast your third spell each turn, this creature becomes

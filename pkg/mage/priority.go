@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -83,10 +84,17 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		g.ResolveStack()
 		return
 	}
+	if EngineTimingEnabled() {
+		addEnginePriorityRound()
+	}
 
 	iterations := 0
 	for {
 		iterations++
+		timingEnabled := EngineTimingEnabled()
+		if timingEnabled {
+			addEnginePriorityIteration()
+		}
 		if DebugPriority && iterations%50 == 0 {
 			fmt.Printf("[PRIORITY] WARNING: %d iterations in RunPriorityRound turn=%d step=%s mainPhase=%v stackSize=%d\n",
 				iterations, g.turn, g.step, mainPhase, g.stack.Size())
@@ -102,19 +110,36 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		}
 
 		// 1. Check state-based actions (includes lethal damage, 0-toughness, etc.)
+		phaseStart := time.Time{}
+		if timingEnabled {
+			phaseStart = time.Now()
+		}
 		g.CheckStateBasedActions()
+		if timingEnabled {
+			addEngineTiming(&engineTimingSBANs, time.Since(phaseStart))
+			phaseStart = time.Now()
+		}
 
 		// 2. Evaluate state triggers (CR 603.8) — they're checked alongside SBA.
 		g.CheckStateTriggers()
 
 		// 3. Put pending triggers on stack
 		g.PutTriggersOnStack()
+		if timingEnabled {
+			addEngineTiming(&engineTimingTriggersNs, time.Since(phaseStart))
+		}
 
 		// 3. Cycle through players starting from active player
 		allPassed := true
 		for i := 0; i < len(g.players); i++ {
 			playerIdx := (g.activePlayer + i) % len(g.players)
+			if timingEnabled {
+				phaseStart = time.Now()
+			}
 			action := g.onPriority(g, playerIdx, mainPhase)
+			if timingEnabled {
+				addEngineTiming(&engineTimingOnPriorityNs, time.Since(phaseStart))
+			}
 			if action.Type != PriorityPass {
 				if DebugPriority {
 					actionName := "unknown"
@@ -143,9 +168,23 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 					fmt.Printf("[PRIORITY] player=%s action=%s card=%q targets=%v iter=%d\n",
 						g.players[playerIdx].Name(), actionName, cardName, action.Targets, iterations)
 				}
-				if g.executePriorityAction(playerIdx, action) {
+				if timingEnabled {
+					phaseStart = time.Now()
+				}
+				executed := g.executePriorityAction(playerIdx, action)
+				if timingEnabled {
+					addEngineTiming(&engineTimingExecuteNs, time.Since(phaseStart))
+					addEngineExecutedAction()
+				}
+				if executed {
 					if g.afterPriorityAction != nil {
+						if timingEnabled {
+							phaseStart = time.Now()
+						}
 						g.afterPriorityAction(g, playerIdx, action)
+						if timingEnabled {
+							addEngineTiming(&engineTimingAfterNs, time.Since(phaseStart))
+						}
 					}
 					allPassed = false
 					break // restart loop from SBA check
@@ -167,6 +206,12 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		if g.beforeStackResolve != nil {
 			g.beforeStackResolve(g)
 		}
+		if timingEnabled {
+			phaseStart = time.Now()
+		}
 		g.ResolveTopOfStack()
+		if timingEnabled {
+			addEngineTiming(&engineTimingResolveNs, time.Since(phaseStart))
+		}
 	}
 }

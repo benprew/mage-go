@@ -99,7 +99,7 @@ func TestClassifyPermanent_Pinger_Utility(t *testing.T) {
 	owner := uuid.New()
 	perm := makePerm("Prodigal Sorcerer", "{2}{U}", 1, 1, owner,
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
-			mage.WithTarget(mage.TargetAnyTarget())),
+			mage.WithTarget(mage.TargetDamageAnyTarget())),
 	)
 	if role := ClassifyPermanent(perm); role != RoleUtility {
 		t.Errorf("ClassifyPermanent(pinger) = %v, want RoleUtility", role)

@@ -26,6 +26,7 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	"github.com/google/uuid"
@@ -1113,7 +1114,7 @@ func MageNewGame(cfgJSON *C.char) (id C.int64_t, resp *C.char) {
 
 	go func() {
 		defer func() { _ = recover() }()
-		interactive.RunMultiplayerGameLoop(g, channels)
+		interactive.RunNativeMultiplayerGameLoop(g, channels)
 	}()
 
 	ev := waitForNext(h)
@@ -1352,6 +1353,14 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "handles, decision_start, decision_count, and may_selected must be non-nil")
 	}
 
+	timingEnabled := nativeLoopTimingEnabled()
+	callStart := time.Time{}
+	phaseStart := time.Time{}
+	var prepareTiming, pendingActionTiming, routeTiming, waitTiming time.Duration
+	if timingEnabled {
+		callStart = time.Now()
+		phaseStart = callStart
+	}
 	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
 	decisionStart := unsafe.Slice((*int64)(unsafe.Pointer(req.decision_start)), n)
 	decisionCount := unsafe.Slice((*int64)(unsafe.Pointer(req.decision_count)), n)
@@ -1373,6 +1382,9 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		}
 		selectedChoiceCols = unsafe.Slice((*int64)(unsafe.Pointer(req.selected_choice_cols)), maxSelected)
 	}
+	if timingEnabled {
+		prepareTiming = time.Since(phaseStart)
+	}
 
 	for i, handleID := range handles {
 		h := getHandle(handleID)
@@ -1383,6 +1395,9 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 		if h.done {
 			h.mu.Unlock()
 			return newEncodeResult(0, mageEncodeErrGameOver, fmt.Sprintf("handle %d is over", handleID))
+		}
+		if timingEnabled {
+			phaseStart = time.Now()
 		}
 		pending := buildPending(h.current)
 		count := decisionCount[i]
@@ -1400,9 +1415,135 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 			h.mu.Unlock()
 			return newEncodeResult(0, mageEncodeErrInvalidArgument, fmt.Sprintf("handle %d: %v", handleID, err))
 		}
+		if timingEnabled {
+			pendingActionTiming += time.Since(phaseStart)
+			phaseStart = time.Now()
+		}
 		if err := routeAction(h, action); err != nil {
 			h.mu.Unlock()
 			return newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("handle %d: %v", handleID, err))
+		}
+		if timingEnabled {
+			routeTiming += time.Since(phaseStart)
+			phaseStart = time.Now()
+		}
+		ev := waitForNext(h)
+		if timingEnabled {
+			waitTiming += time.Since(phaseStart)
+		}
+		h.current = ev
+		h.done = ev.Over
+		h.stateBuf = nil
+		h.mu.Unlock()
+	}
+	if timingEnabled {
+		addNativeStepTiming(n, time.Since(callStart), prepareTiming, pendingActionTiming, routeTiming, waitTiming)
+	}
+	return newEncodeResult(0, mageEncodeErrOK, "")
+}
+
+// MageBatchStepByDecoderAction applies a batch of decoder-shaped actions to
+// the engine. See abi.h::MageDecoderStepRequest for the wire layout. Per-env
+// errors are logged and skipped (the rest of the batch advances) — matching
+// MageBatchStepByChoice's semantics for a malformed env.
+//
+//export MageBatchStepByDecoderAction
+func MageBatchStepByDecoderAction(req *C.MageDecoderStepRequest) (res C.MageEncodeResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			res = newEncodeResult(
+				0,
+				mageEncodeErrEncodeFailure,
+				fmt.Sprintf("panic: %v\n%s", r, debug.Stack()),
+			)
+		}
+	}()
+	if req == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req must be non-nil")
+	}
+	n := int64(req.n)
+	if n < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "req.n must be non-negative")
+	}
+	if n == 0 {
+		return newEncodeResult(0, mageEncodeErrOK, "")
+	}
+	maxLen := int64(req.max_decode_len)
+	maxAnchors := int64(req.max_anchors)
+	if maxLen < 0 || maxAnchors < 0 {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "max_decode_len and max_anchors must be non-negative")
+	}
+	if req.handles == nil || req.decision_type == nil || req.output_lens == nil ||
+		req.pointer_anchor_count == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "handles, decision_type, output_lens, pointer_anchor_count must be non-nil")
+	}
+	if maxLen > 0 && (req.output_token_ids == nil || req.output_pointer_subjects == nil || req.output_is_pointer == nil) {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "output_token_ids, output_pointer_subjects, output_is_pointer must be non-nil when max_decode_len > 0")
+	}
+	if maxAnchors > 0 && req.pointer_anchor_handles == nil {
+		return newEncodeResult(0, mageEncodeErrInvalidArgument, "pointer_anchor_handles must be non-nil when max_anchors > 0")
+	}
+
+	handles := unsafe.Slice((*int64)(unsafe.Pointer(req.handles)), n)
+	decisionTypes := unsafe.Slice((*int32)(unsafe.Pointer(req.decision_type)), n)
+	outputLens := unsafe.Slice((*int32)(unsafe.Pointer(req.output_lens)), n)
+	anchorCounts := unsafe.Slice((*int32)(unsafe.Pointer(req.pointer_anchor_count)), n)
+	var tokens, ptrSubjects []int32
+	var isPointer []uint8
+	var anchorHandles []int32
+	if maxLen > 0 {
+		tokens = unsafe.Slice((*int32)(unsafe.Pointer(req.output_token_ids)), n*maxLen)
+		ptrSubjects = unsafe.Slice((*int32)(unsafe.Pointer(req.output_pointer_subjects)), n*maxLen)
+		isPointer = unsafe.Slice((*uint8)(unsafe.Pointer(req.output_is_pointer)), n*maxLen)
+	}
+	if maxAnchors > 0 {
+		anchorHandles = unsafe.Slice((*int32)(unsafe.Pointer(req.pointer_anchor_handles)), n*maxAnchors)
+	}
+
+	for i, handleID := range handles {
+		dt := decisionType(decisionTypes[i])
+		if dt == decTypeNone {
+			continue
+		}
+		h := getHandle(handleID)
+		if h == nil {
+			fmt.Printf("MageBatchStepByDecoderAction: unknown handle %d (env %d), skipping\n", handleID, i)
+			continue
+		}
+		h.mu.Lock()
+		if h.done {
+			h.mu.Unlock()
+			continue
+		}
+		ln := int64(outputLens[i])
+		if ln < 0 || ln > maxLen {
+			h.mu.Unlock()
+			fmt.Printf("MageBatchStepByDecoderAction: env %d output_lens=%d out of range [0,%d], skipping\n", i, ln, maxLen)
+			continue
+		}
+		ac := int64(anchorCounts[i])
+		if ac < 0 || ac > maxAnchors {
+			h.mu.Unlock()
+			fmt.Printf("MageBatchStepByDecoderAction: env %d pointer_anchor_count=%d out of range [0,%d], skipping\n", i, ac, maxAnchors)
+			continue
+		}
+		var tokSlice, ptrSlice []int32
+		var isPtrSlice []uint8
+		var anchorSlice []int32
+		if ln > 0 {
+			rowStart := int64(i) * maxLen
+			tokSlice = tokens[rowStart : rowStart+ln]
+			ptrSlice = ptrSubjects[rowStart : rowStart+ln]
+			isPtrSlice = isPointer[rowStart : rowStart+ln]
+		}
+		if ac > 0 {
+			rowStart := int64(i) * maxAnchors
+			anchorSlice = anchorHandles[rowStart : rowStart+ac]
+		}
+		if err := applyDecoderAction(dt, tokSlice, ptrSlice, isPtrSlice, anchorSlice, h); err != nil {
+			h.mu.Unlock()
+			fmt.Printf("MageBatchStepByDecoderAction: env %d apply failed: %v, skipping\n", i, err)
+			continue
 		}
 		ev := waitForNext(h)
 		h.current = ev
@@ -1417,7 +1558,7 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.MageEncodeOutputs) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
-			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))
+			res = newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v\n%s", r, debug.Stack()))
 		}
 	}()
 	if req == nil || cfg == nil || out == nil {
@@ -1452,6 +1593,16 @@ func MageEncodeBatch(req *C.MageBatchRequest, cfg *C.MageEncodeConfig, out *C.Ma
 		return newEncodeResult(rowsWritten, err.code, err.message)
 	}
 	return newEncodeResult(rowsWritten, mageEncodeErrOK, "")
+}
+
+//export MageNativeTimingSummary
+func MageNativeTimingSummary(reset C.int32_t) *C.char {
+	summary := nativeLoopTimingTakeSnapshot(reset != 0)
+	b, err := json.Marshal(summary)
+	if err != nil {
+		return errResponse("marshal native timing summary: %v", err)
+	}
+	return C.CString(string(b))
 }
 
 // Stores the borrowed pointers in “tokenTables“ for use by the future
@@ -1518,25 +1669,6 @@ func MageTokenTableSummary() *C.char {
 		"target_close_id":    t.targetCloseID,
 		"tapped_id":          t.tappedID,
 		"untapped_id":        t.untappedID,
-		// Inline-blank singletons + digit table (Step 1 plumb-through).
-		"choose_target_id":       t.chooseTargetID,
-		"choose_block_id":        t.chooseBlockID,
-		"choose_damage_order_id": t.chooseDamageOrderID,
-		"choose_mode_id":         t.chooseModeID,
-		"choose_may_id":          t.chooseMayID,
-		"choose_x_digit_id":      t.chooseXDigitID,
-		"choose_mana_source_id":  t.chooseManaSourceID,
-		"choose_play_id":         t.choosePlayID,
-		"use_ability_id":         t.useAbilityID,
-		"chosen_id":              t.chosenID,
-		"yes_id":                 t.yesID,
-		"no_id":                  t.noID,
-		"none_id":                t.noneID,
-		"x_end_id":               t.xEndID,
-		"mulligan_id":            t.mulliganID,
-		"keep_id":                t.keepID,
-		"num_count":              t.numCount,
-		"num_ids":                t.numIDs,
 	}
 	b, err := json.Marshal(summary)
 	if err != nil {
@@ -1592,20 +1724,6 @@ func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
 		} else {
 			span = []int32{t.cardRefIDs[idx]}
 		}
-	case 12:
-		// Inline-blank singletons keyed by index (see blankSingletonAt).
-		// Indices 0..13 cover the 14 named singletons in abi.h order.
-		if id, ok := t.blankSingletonAt(int32(k0)); ok {
-			span = []int32{id}
-		}
-	case 13:
-		// Digit token id for num_ids[k0].
-		idx := int32(k0)
-		if idx < 0 || idx >= t.numCount || int(idx) >= len(t.numIDs) {
-			span = nil
-		} else {
-			span = []int32{t.numIDs[idx]}
-		}
 	default:
 		return C.CString("null")
 	}
@@ -1635,8 +1753,6 @@ func MageEncodeTokensPacked(
 	out *C.MageEncodeOutputs,
 	tokCfg *C.MageTokenAssemblerConfig,
 	packedOut *C.MagePackedTokenAssemblerOutputs,
-	blankCfg *C.MageBlankAssemblerConfig,
-	blankOut *C.MagePackedBlankOutputs,
 ) (res C.MageEncodeResult) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1663,19 +1779,9 @@ func MageEncodeTokensPacked(
 	cfgGo.tokenMaxOptions = int32(tokCfg.max_options)
 	cfgGo.tokenMaxTargets = int32(tokCfg.max_targets)
 	cfgGo.tokenMaxCardRefs = int32(tokCfg.max_card_refs)
-	if blankCfg != nil || blankOut != nil {
-		if blankCfg == nil || blankOut == nil {
-			return newEncodeResult(0, mageEncodeErrInvalidArgument, "blank_cfg and blank_out must be both nil or both non-nil")
-		}
-		cfgGo.blankMaxBlanks = int32(blankCfg.max_blanks)
-		cfgGo.blankMaxLegal = int32(blankCfg.max_legal_per_blank)
-	}
 	if cfgGo.tokenMaxTokens <= 0 || cfgGo.tokenMaxOptions <= 0 ||
 		cfgGo.tokenMaxTargets < 0 || cfgGo.tokenMaxCardRefs <= 0 {
 		return newEncodeResult(0, mageEncodeErrInvalidArgument, "token assembler config has non-positive dimension")
-	}
-	if (blankCfg != nil || blankOut != nil) && (cfgGo.blankMaxBlanks < 0 || cfgGo.blankMaxLegal < 0) {
-		return newEncodeResult(0, mageEncodeErrInvalidArgument, "blank assembler config has negative dimension")
 	}
 	if err := validateEncodeConfig(cfgGo); err != nil {
 		return newEncodeResult(0, err.code, err.message)
@@ -1698,11 +1804,6 @@ func MageEncodeTokensPacked(
 	}
 	if err := attachPackedTokenViews(n, cfgGo, packedOut, &views); err != nil {
 		return newEncodeResult(0, err.code, err.message)
-	}
-	if blankOut != nil {
-		if err := attachPackedBlankViews(n, cfgGo, blankOut, &views); err != nil {
-			return newEncodeResult(0, err.code, err.message)
-		}
 	}
 	rowsWritten, err := encodeBatchGo(reqGo, cfgGo, views)
 	if err != nil {
@@ -1739,46 +1840,6 @@ func attachPackedTokenViews(
 	views.packedStatePositions = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.state_positions)), n)
 	views.packedCardRefPos = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.card_ref_positions)), totalCardRefs)
 	views.packedTokenOverflow = unsafe.Slice((*int32)(unsafe.Pointer(packedOut.token_overflow)), n)
-	return nil
-}
-
-func attachPackedBlankViews(
-	n int64,
-	cfg encodeConfig,
-	blankOut *C.MagePackedBlankOutputs,
-	views *outputViews,
-) *encodeError {
-	if cfg.blankMaxBlanks <= 0 || cfg.blankMaxLegal <= 0 {
-		return nil
-	}
-	if int32(blankOut.k_max) != cfg.blankMaxBlanks || int32(blankOut.v_max) != cfg.blankMaxLegal {
-		return &encodeError{code: mageEncodeErrInvalidArgument, message: "blank output dimensions must match blank assembler config"}
-	}
-	totalBlanks := n * int64(cfg.blankMaxBlanks)
-	totalLegal := totalBlanks * int64(cfg.blankMaxLegal)
-	if blankOut.blank_positions == nil ||
-		blankOut.blank_kind == nil ||
-		blankOut.blank_group == nil ||
-		blankOut.blank_group_kind == nil ||
-		blankOut.blank_option_index == nil ||
-		blankOut.blank_legal_ids == nil ||
-		blankOut.blank_legal_mask == nil ||
-		blankOut.blank_overflow == nil ||
-		blankOut.blank_count == nil ||
-		blankOut.blank_legal_count == nil {
-		return &encodeError{code: mageEncodeErrInvalidArgument, message: "packed blank outputs must be non-nil"}
-	}
-
-	views.packedBlankPos = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_positions)), totalBlanks)
-	views.packedBlankKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_kind)), totalBlanks)
-	views.packedBlankGroup = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group)), totalBlanks)
-	views.packedBlankGroupKind = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_group_kind)), totalBlanks)
-	views.packedBlankOptionIdx = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_option_index)), totalBlanks)
-	views.packedBlankLegalIDs = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_ids)), totalLegal)
-	views.packedBlankLegalMask = unsafe.Slice((*byte)(unsafe.Pointer(blankOut.blank_legal_mask)), totalLegal)
-	views.packedBlankOverflow = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_overflow)), n)
-	views.packedBlankCount = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_count)), n)
-	views.packedBlankLegalCount = unsafe.Slice((*int32)(unsafe.Pointer(blankOut.blank_legal_count)), totalBlanks)
 	return nil
 }
 

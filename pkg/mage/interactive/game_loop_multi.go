@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"fmt"
+	"time"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
@@ -11,6 +12,16 @@ import (
 // player's TUI independently via their PlayerChannels. It mirrors RunGameLoop
 // but has no AI logic and no undo system.
 func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
+	runMultiplayerGameLoop(g, channels, true)
+}
+
+// RunNativeMultiplayerGameLoop is a lean two-human loop for native bindings.
+// It sends only decision prompts; callers read state directly from the game.
+func RunNativeMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
+	runMultiplayerGameLoop(g, channels, false)
+}
+
+func runMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels, sendSnapshots bool) {
 	defer close(channels[0].ToPlayer)
 	defer close(channels[1].ToPlayer)
 	// Also close each player's choice request channel so their TUI can exit cleanly.
@@ -32,7 +43,15 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 
 	// sendTo sends a game state snapshot from idx's perspective to that player.
 	sendTo := func(idx int, prompt PromptType, options []ActionOption) {
-		state := SnapshotGameState(g, idx)
+		start := time.Time{}
+		timingEnabled := LoopTimingEnabled()
+		if timingEnabled {
+			start = time.Now()
+		}
+		var state *GameState
+		if sendSnapshots {
+			state = SnapshotGameState(g, idx)
+		}
 		msg := GameMsg{
 			State:    state,
 			Prompt:   prompt,
@@ -43,10 +62,16 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 		}
 		defer func() { _ = recover() }() // guard against send on closed channel
 		channels[idx].ToPlayer <- msg
+		if timingEnabled && prompt == PromptNone {
+			AddLoopGetActionTiming(0, time.Since(start), 0, false, prompt)
+		}
 	}
 
 	// broadcast sends PromptNone to both players so they see the current board.
 	broadcast := func() {
+		if !sendSnapshots {
+			return
+		}
 		sendTo(0, PromptNone, nil)
 		sendTo(1, PromptNone, nil)
 	}
@@ -77,16 +102,44 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 
 	getAction := func(idx int, mainPhase bool) (PriorityAction, bool) {
 		playerID := g.PlayerAt(idx).PlayerID()
+		start := time.Time{}
+		timingEnabled := LoopTimingEnabled()
+		if timingEnabled {
+			start = time.Now()
+		}
 		options := GetAvailableActions(g, playerID)
+		getAvailableTiming := time.Duration(0)
+		if timingEnabled {
+			getAvailableTiming = time.Since(start)
+		}
 		if len(options) == 1 && options[0].Type == ActionPass {
+			if timingEnabled {
+				AddLoopGetActionTiming(getAvailableTiming, 0, 0, true, 0)
+			}
 			return PriorityAction{Type: ActionPass}, true
+		}
+		prompt := PromptPriority
+		if mainPhase {
+			prompt = PromptMainPhaseAction
+		}
+		if timingEnabled {
+			start = time.Now()
 		}
 		if mainPhase {
 			sendTo(idx, PromptMainPhaseAction, options)
 		} else {
 			sendTo(idx, PromptPriority, options)
 		}
-		return readFrom(idx)
+		sendTiming := time.Duration(0)
+		if timingEnabled {
+			sendTiming = time.Since(start)
+			start = time.Now()
+		}
+		action, ok := readFrom(idx)
+		if timingEnabled {
+			AddLoopGetActionTiming(getAvailableTiming, sendTiming, time.Since(start), false, prompt)
+		}
+		return action, ok
 	}
 
 	// --- Install priority handler on the engine ---
@@ -165,7 +218,15 @@ func RunMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels) {
 				}
 			}
 
+			start := time.Time{}
+			timingEnabled := LoopTimingEnabled()
+			if timingEnabled {
+				start = time.Now()
+			}
 			g.RunStepWithPriority(step)
+			if timingEnabled {
+				AddLoopStepTiming(time.Since(start))
+			}
 
 			// Post-step logging and display
 			switch step {

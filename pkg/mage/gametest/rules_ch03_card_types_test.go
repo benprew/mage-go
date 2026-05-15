@@ -54,7 +54,7 @@ func ch03RegisterCards() {
 		}},
 		{"Lightning Bolt", func() mage.Card {
 			return mage.NewInstant("Lightning Bolt", "{R}",
-				mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+				mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 			)
 		}},
 		{"Giant Growth", func() mage.Card {

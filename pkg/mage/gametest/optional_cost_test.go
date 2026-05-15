@@ -49,7 +49,7 @@ func registerOptionalCostCards() {
 		if !mage.CardRegistered("Test Optional Roar") {
 			mage.Register("Test Optional Roar", func() mage.Card {
 				return mage.NewInstant("Test Optional Roar", "{1}{R}",
-					mage.NewTargetedSpell(mage.TargetAnyTarget(), damageEffect),
+					mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), damageEffect),
 					mage.WithAdditionalCost(mage.OptionalCost(
 						mage.RevealFromHandCost(dragonCardFilter, "Reveal a Dragon card"),
 						"Reveal a Dragon card to deal 3 additional damage?",

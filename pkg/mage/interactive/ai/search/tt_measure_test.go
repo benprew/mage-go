@@ -35,7 +35,7 @@ func buildMeasureState() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 	}
 	for range 2 {
 		bolt := mage.NewInstant("Lightning Bolt", "{R}",
-			mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))))
+			mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))))
 		bolt.SetOwner(pa.PlayerID())
 		pa.AddToHand(bolt)
 	}

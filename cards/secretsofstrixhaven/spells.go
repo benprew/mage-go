@@ -3375,7 +3375,7 @@ func registerSpells() {
 	Register("Together as One", func() Card {
 		return NewSorcery("Together as One", "{6}",
 			NewMultiTargetSpell(
-				[]Target{TargetPlayer(), TargetAnyTarget()},
+				[]Target{TargetPlayer(), TargetDamageAnyTarget()},
 				FuncEffect(
 					"converge: target player draws X, deal X damage to any target, gain X life",
 					EffectProperties{Outcome: OutcomeUnknown},
@@ -3429,7 +3429,7 @@ func registerSpells() {
 	// Flashback {4}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)
 	Register("Tome Blast", func() Card {
 		return NewSorcery("Tome Blast", "{1}{R}",
-			NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(2))),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(2))),
 			WithFlashback(ParseManaCost("{4}{R}")),
 		)
 	})
@@ -3440,7 +3440,7 @@ func registerSpells() {
 	Register("Traumatic Critique", func() Card {
 		return NewInstant("Traumatic Critique", "{X}{U}{R}",
 			NewTargetedSpell(
-				TargetAnyTarget(),
+				TargetDamageAnyTarget(),
 				CompositeEffects(
 					"deal X damage; draw 2 then discard 1",
 					DealDamage(XValue()),
@@ -3486,7 +3486,7 @@ func registerSpells() {
 		return NewInstant("Vibrant Outburst", "{U}{R}",
 			NewMultiTargetSpell(
 				[]Target{
-					TargetAnyTarget(),
+					TargetDamageAnyTarget(),
 					TargetUpToOneCreature(),
 				},
 				FuncEffect(

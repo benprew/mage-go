@@ -268,7 +268,7 @@ func TestRepartee_TriggersWhenInstantTargetsCreature(t *testing.T) {
 
 	// Cast a fake "instant targeting a creature" by pushing a stack object.
 	bolt := NewInstant("Bolt", "{R}",
-		NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+		NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 	)
 	bolt.SetOwner(a.PlayerID())
 	obj := &StackObject{
@@ -312,7 +312,7 @@ func TestRepartee_DoesNotTriggerWhenSpellTargetsPlayer(t *testing.T) {
 	g.ResolveStack()
 
 	bolt := NewInstant("Bolt", "{R}",
-		NewTargetedSpell(TargetAnyTarget(), DealDamage(Fixed(3))),
+		NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
 	)
 	bolt.SetOwner(a.PlayerID())
 	obj := &StackObject{

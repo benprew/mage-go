@@ -28,7 +28,7 @@ func TestPreventAttachedFromActivatingNonManaAbilities(t *testing.T) {
 					mage.DealDamage(mage.Fixed(1)),
 					mage.ManaCostOf("{0}"),
 					mage.WithCost(mage.Tap()),
-					mage.WithTarget(mage.TargetAnyTarget()),
+					mage.WithTarget(mage.TargetDamageAnyTarget()),
 				),
 			)
 		})

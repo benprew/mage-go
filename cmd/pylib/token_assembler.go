@@ -98,8 +98,6 @@ var opcodeArityArr = [...]int8{
 	opStackClose:     0,
 	opCommandOpen:    0,
 	opCommandClose:   0,
-	opEmitBlank:      4, // [kind_id, group_id, group_kind, legal_count]
-	opEmitBlankLegal: 1, // [token_id]
 }
 
 // opcodeArityLookup returns (arity, true) for known opcodes and (0, false)
@@ -137,7 +135,6 @@ type tokenAssemblerOut struct {
 	// offset before it is written. Packed mode passes the row's start offset
 	// into the shared packed buffer so anchors land as absolute offsets.
 	cursorBase int32
-	blank      *blankCollector
 }
 
 // assembleTokensFromPlan walks “plan“ (an int32 render-plan stream) and
@@ -552,34 +549,6 @@ func assembleTokensFromPlan(
 				writeSingle(tables.commandCloseID)
 				i++
 				continue
-			case opEmitBlank:
-				kindID := plan[i+1]
-				groupID := plan[i+2]
-				groupKind := plan[i+3]
-				legalCount := plan[i+4]
-				pos := writeSingle(kindID)
-				if pos >= 0 && out.blank != nil {
-					if err := out.blank.recordBlank(
-						pos+out.cursorBase,
-						kindID,
-						groupID,
-						groupKind,
-						-1,
-						legalCount,
-					); err != nil {
-						return 0, false, err
-					}
-				}
-				i += 1 + arity
-				continue
-			case opEmitBlankLegal:
-				if out.blank != nil {
-					if err := out.blank.recordLegal(plan[i+1]); err != nil {
-						return 0, false, err
-					}
-				}
-				i += 1 + arity
-				continue
 			}
 		}
 
@@ -659,34 +628,6 @@ func assembleTokensFromPlan(
 			writeSpan(tables.cardCloser)
 			i += 1 + arity
 			continue
-		case opEmitBlank:
-			kindID := plan[i+1]
-			groupID := plan[i+2]
-			groupKind := plan[i+3]
-			legalCount := plan[i+4]
-			pos := writeSingle(kindID)
-			if pos >= 0 && out.blank != nil {
-				if err := out.blank.recordBlank(
-					pos+out.cursorBase,
-					kindID,
-					groupID,
-					groupKind,
-					-1,
-					legalCount,
-				); err != nil {
-					return 0, false, err
-				}
-			}
-			i += 1 + arity
-			continue
-		case opEmitBlankLegal:
-			if out.blank != nil {
-				if err := out.blank.recordLegal(plan[i+1]); err != nil {
-					return 0, false, err
-				}
-			}
-			i += 1 + arity
-			continue
 		}
 
 		// Bookkeeping-only opcodes — skip over header + payload.
@@ -696,8 +637,7 @@ func assembleTokensFromPlan(
 			opCounter, opAttachedTo, opOption, opTarget, opTurn, opLife,
 			opMana, opCloseRawCard, opOpenDict, opCloseDict, opDictEntry,
 			opPlaceCardRef, opCount, opStackOpen, opStackClose,
-			opCommandOpen, opCommandClose,
-			opEmitBlank, opEmitBlankLegal:
+			opCommandOpen, opCommandClose:
 			i += 1 + arity
 			continue
 		}
@@ -733,12 +673,6 @@ func assembleTokensFromPlan(
 			if out.cardRefPos[k] >= endAbs {
 				out.cardRefPos[k] = -1
 			}
-		}
-	}
-
-	if out.blank != nil {
-		if err := out.blank.finalize(); err != nil {
-			return 0, false, err
 		}
 	}
 

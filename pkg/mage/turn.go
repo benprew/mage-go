@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"time"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -49,7 +51,15 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 
 	// Apply at start so the step's case body reads fresh continuous-effect
 	// state (in case anything mutated effects between calls).
+	timingEnabled := EngineTimingEnabled()
+	phaseStart := time.Time{}
+	if timingEnabled {
+		phaseStart = time.Now()
+	}
 	g.effects.Apply(g)
+	if timingEnabled {
+		addEngineTiming(&engineTimingApplyEffectsNs, time.Since(phaseStart))
+	}
 
 	switch step {
 	case Untap:

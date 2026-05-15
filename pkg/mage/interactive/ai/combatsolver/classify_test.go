@@ -19,7 +19,7 @@ func TestClassifyCombat_Pump(t *testing.T) {
 func TestClassifyCombat_Damage(t *testing.T) {
 	// Lightning Bolt: deal 3 damage to any target.
 	card := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	if got := ClassifyCombat(card); got != RoleDamage {
 		t.Errorf("Lightning Bolt = %v, want Damage", got)
