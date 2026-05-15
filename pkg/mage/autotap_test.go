@@ -3,6 +3,8 @@ package mage
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
@@ -513,5 +515,291 @@ func TestProducedAmount(t *testing.T) {
 				t.Errorf("ProducedAmount() = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+// addLand puts a basic-style land on the battlefield, returns the permanent.
+func addLand(t *testing.T, g *Game, pid uuid.UUID, name string, color Color) *Permanent {
+	t.Helper()
+	land := NewLand(name, WithManaAbility(color))
+	land.SetOwner(pid)
+	perm := g.PutOnBattlefield(land, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+	return perm
+}
+
+// Atog example: Mountain + Mountain + Forest in play, Atog and Lightning Bolt
+// in hand. Casting Atog ({1}{R}) should prefer to tap a Mountain for the {R}
+// and the Forest for the {1}, leaving a Mountain untapped for the Bolt's {R}.
+func TestAutoTapForCost_AtogPreservesRedForBolt(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	m1 := addLand(t, g, pid, "Mountain", Red)
+	m2 := addLand(t, g, pid, "Mountain", Red)
+	forest := addLand(t, g, pid, "Forest", Green)
+
+	bolt := NewCreature("Lightning Bolt", "{R}", 0, 0) // shape doesn't matter, only cost
+	bolt.SetOwner(pid)
+	g.players[0].AddToHand(bolt)
+	// "Atog" stand-in is the one being cast; only Bolt should contribute to
+	// hand-demand. Atog isn't an actual card here, so pass a fresh ID as the
+	// excluded "casting card" (it won't match anything in hand → Bolt counts).
+	atogCost := ManaCost{Generic: 1, Red: 1}
+	if err := g.AutoTapForCostWithHint(pid, atogCost, AutoTapHint{CastingCard: uuid.New()}); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+
+	if !forest.Tapped {
+		t.Error("expected Forest tapped (non-cost color, low score)")
+	}
+	tappedMountains := 0
+	if m1.Tapped {
+		tappedMountains++
+	}
+	if m2.Tapped {
+		tappedMountains++
+	}
+	if tappedMountains != 1 {
+		t.Errorf("expected exactly 1 Mountain tapped, got %d", tappedMountains)
+	}
+}
+
+// Mishra's Factory animate ability costs {1} (no {T}). When activated, the
+// algorithm should not tap the Factory itself for its own {1} cost — it
+// should pick the Mountain instead.
+func TestAutoTapForCost_FactoryNotTappedForOwnAbility(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// Stand-in Factory: colorless mana + an unrelated {1}-cost activated
+	// ability. Avoids importing the cards package into engine tests.
+	factory := NewLand("Mishra's Factory",
+		WithManaAbility(Colorless),
+		WithActivatedAbility(GainLife(1), GenericCost(1)),
+	)
+	factory.SetOwner(pid)
+	fperm := g.PutOnBattlefield(factory, pid)
+	fperm.RevokeBaseAttr(AttrSummonSick)
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+
+	hint := AutoTapHint{ActivationSource: fperm.ID(), ActivationTapsSource: false}
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 1}, hint); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+
+	if fperm.Tapped {
+		t.Error("expected Factory to stay untapped")
+	}
+	if !mountain.Tapped {
+		t.Error("expected Mountain to be tapped for the {1}")
+	}
+}
+
+// Casting an unrelated spell with a utility land in play: prefer to tap the
+// basic, leaving the utility land available.
+func TestAutoTapForCost_PrefersBasicOverFactory(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	factory := NewLand("Mishra's Factory",
+		WithManaAbility(Colorless),
+		WithActivatedAbility(GainLife(1), GenericCost(1)),
+	)
+	factory.SetOwner(pid)
+	fperm := g.PutOnBattlefield(factory, pid)
+	fperm.RevokeBaseAttr(AttrSummonSick)
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+
+	// Pay {1} for a generic cost — should pick Mountain (basic, no utility).
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 1}, AutoTapHint{}); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if fperm.Tapped {
+		t.Error("expected Factory to stay untapped (utility penalty)")
+	}
+	if !mountain.Tapped {
+		t.Error("expected Mountain to be tapped")
+	}
+}
+
+// Strip Mine has a utility ability; pay {1} should tap the Mountain.
+func TestAutoTapForCost_StripMinePreservedForGeneric(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	strip := NewLand("Strip Mine",
+		WithManaAbility(Colorless),
+		WithActivatedAbility(GainLife(1), Tap()), // stand-in utility ability
+	)
+	strip.SetOwner(pid)
+	sperm := g.PutOnBattlefield(strip, pid)
+	sperm.RevokeBaseAttr(AttrSummonSick)
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 1}, AutoTapHint{}); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if sperm.Tapped {
+		t.Error("expected Strip Mine to stay untapped (utility penalty)")
+	}
+	if !mountain.Tapped {
+		t.Error("expected Mountain to be tapped")
+	}
+}
+
+// If the only mana source is the activated permanent itself, the penalty
+// shouldn't prevent tapping it — fallback must still succeed.
+func TestAutoTapForCost_FallsBackWhenSourceIsOnlyOption(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	factory := NewLand("Mishra's Factory",
+		WithManaAbility(Colorless),
+		WithActivatedAbility(GainLife(1), GenericCost(1)),
+	)
+	factory.SetOwner(pid)
+	fperm := g.PutOnBattlefield(factory, pid)
+	fperm.RevokeBaseAttr(AttrSummonSick)
+
+	hint := AutoTapHint{ActivationSource: fperm.ID(), ActivationTapsSource: false}
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 1}, hint); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if !fperm.Tapped {
+		t.Error("expected Factory to be tapped as last-resort fallback")
+	}
+}
+
+// Sol Ring + Mountain, pay {2}: Sol Ring should be picked (colorless, no
+// color-flex penalty) and its Amount=2 covers the full cost in one tap.
+func TestAutoTapForCost_PrefersColorlessForGeneric(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	ring := NewArtifact("Sol Ring", "{1}", WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}))
+	ring.SetOwner(pid)
+	rperm := g.PutOnBattlefield(ring, pid)
+	rperm.RevokeBaseAttr(AttrSummonSick)
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 2}, AutoTapHint{}); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if !rperm.Tapped {
+		t.Error("expected Sol Ring tapped (colorless preferred for generic)")
+	}
+	if mountain.Tapped {
+		t.Error("expected Mountain untapped")
+	}
+}
+
+// Urza's Mine (colorless) + Forest, pay {1}{G}: Forest pays {G}, Mine pays {1}.
+func TestAutoTapForCost_UrzaLandPreferredOverColoredForGeneric(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	mine := NewLand("Urza's Mine", WithManaAbility(Colorless))
+	mine.SetOwner(pid)
+	mperm := g.PutOnBattlefield(mine, pid)
+	mperm.RevokeBaseAttr(AttrSummonSick)
+
+	forest := addLand(t, g, pid, "Forest", Green)
+
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 1, Green: 1}, AutoTapHint{}); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if !mperm.Tapped {
+		t.Error("expected Urza's Mine tapped for the {1}")
+	}
+	if !forest.Tapped {
+		t.Error("expected Forest tapped for the {G}")
+	}
+}
+
+// A single-tap dual-emit land ("{T}: Add {G}{W}") should pay both {G} and
+// {W} with one tap. Before per-tap output tracking, the solver picked the
+// source for {G}, marked it unavailable, and then failed to find a {W}
+// source even though the same tap produced one.
+func TestAutoTapForCost_DualEmitSingleTapPaysTwoColors(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	dual := NewLand("Savannah",
+		WithMultiManaAbility(
+			ManaProduction{Color: Green, Amount: 1},
+			ManaProduction{Color: White, Amount: 1},
+		),
+	)
+	dual.SetOwner(pid)
+	perm := g.PutOnBattlefield(dual, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if err := g.AutoTapForCost(pid, ManaCost{Green: 1, White: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({G}{W}) failed on dual-emit land: %v", err)
+	}
+	if !perm.Tapped {
+		t.Error("expected dual-emit land to be tapped")
+	}
+}
+
+// Dual-emit land tapped for one color, with the other color showing up in
+// the floating pool — verify the surplus actually reached the pool via
+// TapForMana, not just the solver bookkeeping.
+func TestAutoTapForCost_DualEmitSurplusGoesToPool(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	dual := NewLand("Savannah",
+		WithMultiManaAbility(
+			ManaProduction{Color: Green, Amount: 1},
+			ManaProduction{Color: White, Amount: 1},
+		),
+	)
+	dual.SetOwner(pid)
+	perm := g.PutOnBattlefield(dual, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	// Pay only {G}; the {W} from the same tap should float in the pool.
+	if err := g.AutoTapForCost(pid, ManaCost{Green: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({G}) failed: %v", err)
+	}
+	if got := g.players[0].ManaPool().Count(White); got != 1 {
+		t.Errorf("expected {W} in pool from dual-emit surplus, got %d", got)
+	}
+}
+
+// When the ability cost includes {T} on the source, the source must be hard-
+// excluded from auto-tap (cost payment will tap it). Pay the mana portion
+// from the other land; the source remains untapped at this point so that the
+// later {T} cost can pay it.
+func TestAutoTapForCost_TapCostHardExcludesSource(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	// Land with {T}, {1}: gain 1 — when activated, both {T} and {1} are paid.
+	utility := NewLand("Utility Land",
+		WithManaAbility(Colorless),
+		WithActivatedAbility(GainLife(1), Tap(), WithCost(GenericCost(1))),
+	)
+	utility.SetOwner(pid)
+	uperm := g.PutOnBattlefield(utility, pid)
+	uperm.RevokeBaseAttr(AttrSummonSick)
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+
+	hint := AutoTapHint{ActivationSource: uperm.ID(), ActivationTapsSource: true}
+	if err := g.AutoTapForCostWithHint(pid, ManaCost{Generic: 1}, hint); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if uperm.Tapped {
+		t.Error("expected source land to remain untapped after auto-tap (its {T} cost pays later)")
+	}
+	if !mountain.Tapped {
+		t.Error("expected Mountain to pay the {1}")
 	}
 }
