@@ -90,7 +90,9 @@ func gameMiddleware(lobby *Lobby) wish.Middleware {
 				playerSess.ChoiceResps,
 			)
 			gameProgram := tea.NewProgram(gameMdl, opts...)
-			runProgram(sess, gameProgram)
+			if _, err := runProgram(sess, gameProgram); err != nil {
+				fmt.Fprintf(os.Stderr, "game program: %v\n", err)
+			}
 
 			// Signal the game loop that this player has disconnected by closing
 			// the TUI→game channel. The game loop's readFrom detects ok=false.

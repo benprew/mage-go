@@ -16,7 +16,7 @@ func randomTestGame() (*Game, *BasePlayer, *BasePlayer) {
 }
 
 func TestDiscardAtRandom_DiscardsRequestedCount(t *testing.T) {
-	rand.Seed(1)
+	rand.Seed(1) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g, a, _ := randomTestGame()
 	for _, n := range []string{"Forest", "Plains", "Mountain", "Island", "Swamp"} {
 		a.AddToHand(NewLand(n))
@@ -61,7 +61,7 @@ func TestDiscardAtRandom_NilAndZero(t *testing.T) {
 }
 
 func TestRandomCardFromGraveyard_FiltersAndDoesNotRemove(t *testing.T) {
-	rand.Seed(2)
+	rand.Seed(2) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g, a, _ := randomTestGame()
 	a.AddToGraveyard(NewLand("Forest"))
 	zombie := NewCreature("Zombie A", "{1}{B}", 2, 2, WithSubTypes("Zombie"))
@@ -98,7 +98,7 @@ func TestRandomCardFromGraveyard_NoMatchReturnsNil(t *testing.T) {
 }
 
 func TestRandomCardFromGraveyard_AnyCardWithZeroFilter(t *testing.T) {
-	rand.Seed(3)
+	rand.Seed(3) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g, a, _ := randomTestGame()
 	a.AddToGraveyard(NewLand("Forest"))
 	a.AddToGraveyard(NewLand("Plains"))
@@ -122,7 +122,7 @@ func TestRandomCardFromGraveyard_AnyCardWithZeroFilter(t *testing.T) {
 }
 
 func TestRandomCardFromGraveyard_UniformDistribution(t *testing.T) {
-	rand.Seed(42)
+	rand.Seed(42) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g, a, _ := randomTestGame()
 	a.AddToGraveyard(NewLand("Forest"))
 	a.AddToGraveyard(NewLand("Plains"))
@@ -141,7 +141,7 @@ func TestRandomCardFromGraveyard_UniformDistribution(t *testing.T) {
 }
 
 func TestRandomCardFromHand_FiltersAndDoesNotRemove(t *testing.T) {
-	rand.Seed(4)
+	rand.Seed(4) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g, a, _ := randomTestGame()
 	a.AddToHand(NewLand("Forest"))
 	creature := NewCreature("Goblin", "{R}", 1, 1)

@@ -865,7 +865,7 @@ func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index ren
 }
 
 func renderSlotIndex(owner int32, zone int32, cardIdx int) int32 {
-	slotZone := -1
+	var slotZone int
 	switch {
 	case owner == renderOwnerSelf && zone == renderZoneHand:
 		slotZone = 0

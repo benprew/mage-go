@@ -40,7 +40,7 @@ func (m Model) View() string {
 	// ── Title bar ──
 	stepName := m.state.Step
 	youAreActive := m.state.ActivePlayer == m.state.You.Name
-	activeMarker := ""
+	var activeMarker string
 	switch m.state.Step {
 	case "Declare Blockers":
 		if youAreActive {

@@ -805,7 +805,9 @@ func registerCreatures() {
 							return nil
 						}
 						targetID := targets[0]
-						ApplyEffect(g, GrantKeyword(MustAttack), sourceID, controller, targets)
+						if err := ApplyEffect(g, GrantKeyword(MustAttack), sourceID, controller, targets); err != nil {
+							return err
+						}
 						g.RegisterDelayedTrigger(&DelayedTrigger{
 							EventType:  EvtEndStep,
 							SourceID:   sourceID,

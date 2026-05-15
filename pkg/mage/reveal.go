@@ -92,9 +92,7 @@ func (g *Game) RevealAndPickFromTop(chooser Player, owner Player, n int, filter 
 	if chosen == nil && !mayDecline {
 		chosen = candidates[0]
 	}
-	if mayDecline {
-		// chooser may legitimately return nil to decline.
-	}
+	// If mayDecline is true, chooser may legitimately return nil to decline.
 	return chosen, revealed
 }
 

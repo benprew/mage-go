@@ -721,11 +721,10 @@ func clearOutputViews(view outputViews, cfg encodeConfig) {
 	fillInt32(view.renderPlan, 0)
 	fillInt64(view.renderPlanLengths, 0)
 	fillInt64(view.renderPlanOverflow, 0)
-	if cfg.emitTokensPacked {
-		// Packed token outputs are reset by the Python wrapper before
-		// every reuse. Avoid clearing these large slabs a second time here;
-		// the assembler only writes the live token region and active anchors.
-	}
+	// Packed token outputs (when cfg.emitTokensPacked) are reset by the
+	// Python wrapper before every reuse. Avoid clearing these large slabs
+	// a second time here; the assembler only writes the live token region
+	// and active anchors.
 }
 
 // fillTokenAssemblyPacked writes one row's worth of tokens into the

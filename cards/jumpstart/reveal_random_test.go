@@ -71,7 +71,7 @@ func TestSilhanaWayfinder_PutsCreatureOnTop(t *testing.T) {
 }
 
 func TestMuxus_PutsGoblinsOntoBattlefield(t *testing.T) {
-	rand.Seed(1)
+	rand.Seed(1) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneHand, gametest.PlayerA, "Muxus, Goblin Grandee")
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 6)
@@ -153,7 +153,7 @@ func TestEntomberExarch_Mode2OpponentDiscardsNoncreature(t *testing.T) {
 }
 
 func TestGoblinLore_DrawFourDiscardThreeAtRandom(t *testing.T) {
-	rand.Seed(42)
+	rand.Seed(42) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneHand, gametest.PlayerA, "Goblin Lore")
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Mountain", 2)
@@ -169,7 +169,7 @@ func TestGoblinLore_DrawFourDiscardThreeAtRandom(t *testing.T) {
 }
 
 func TestCharmbreakerDevils_RandomReturnFromGraveyard(t *testing.T) {
-	rand.Seed(7)
+	rand.Seed(7) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Charmbreaker Devils")
 	g.AddCard(ZoneGraveyard, gametest.PlayerA, "Lightning Bolt")

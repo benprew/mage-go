@@ -151,7 +151,6 @@ func ensureRemovalDensity(cards []GeneratedCard, rng *RNG) []GeneratedCard {
 			continue
 		}
 
-		var colorIndices []int
 		removalCount := 0
 		var replaceableIndices []int
 
@@ -159,7 +158,6 @@ func ensureRemovalDensity(cards []GeneratedCard, rng *RNG) []GeneratedCard {
 			if gc.Color != color {
 				continue
 			}
-			colorIndices = append(colorIndices, i)
 			if removalTemplates[gc.Template] {
 				removalCount++
 			}

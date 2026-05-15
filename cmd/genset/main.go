@@ -455,10 +455,12 @@ func writeCreatures(dir, pkg string, groups []colorGroup) {
 	path := filepath.Join(dir, "creatures.go")
 	f, _ := os.Create(path)
 	defer f.Close()
-	creaturesFileTmpl.Execute(f, struct {
+	if err := creaturesFileTmpl.Execute(f, struct {
 		Pkg    string
 		Groups []groupData
-	}{pkg, gd})
+	}{pkg, gd}); err != nil {
+		fmt.Fprintf(os.Stderr, "writeCreatures: template execute: %v\n", err)
+	}
 }
 
 // needsCoreImport checks if any card in the list uses core types (SuperTypes, CardTypes, etc.)

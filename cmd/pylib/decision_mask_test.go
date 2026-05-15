@@ -55,11 +55,11 @@ func step(t *testing.T, in *decisionMaskInput, nAnchors int) ([]int32, []int32) 
 
 func TestNextMask_Priority(t *testing.T) {
 	in := &decisionMaskInput{
-		decType:       decTypePriority,
-		nLegalActions: 3,
-		prefixTokens:  []int32{},
+		decType:        decTypePriority,
+		nLegalActions:  3,
+		prefixTokens:   []int32{},
 		prefixPointers: []int32{},
-		prefixLen:     0,
+		prefixLen:      0,
 	}
 	v, p := step(t, in, 8)
 	if !equalI32(v, []int32{gPriorityOpen}) || len(p) != 0 {

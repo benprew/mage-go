@@ -58,7 +58,7 @@ func directTestSetUp(t *testing.T) func() {
 }
 
 // directTestState builds a simple priority-pending snapshot whose
-// renderPlanIndex assigns ``cardCount`` distinct uuid indices (one per
+// renderPlanIndex assigns “cardCount“ distinct uuid indices (one per
 // battlefield permanent) starting at 0.
 func directTestState(cardCount int, name string) (*apiGameState, *apiPending) {
 	mkPerm := func(_ int) interactive.PermanentState {
@@ -130,8 +130,8 @@ func directTestAllocOutputs(cfg encodeConfig) outputViews {
 }
 
 // runRotation invokes fillTokenAssemblyDirectPacked three times against
-// the SAME row 0 in ``view``, alternating two scratches and two card
-// rosters. ``dirtyForCall`` lets the caller decide whether each call gets
+// the SAME row 0 in “view“, alternating two scratches and two card
+// rosters. “dirtyForCall“ lets the caller decide whether each call gets
 // a per-scratch record (the broken design) or a single shared per-buffer
 // record (the fix).
 func runRotation(

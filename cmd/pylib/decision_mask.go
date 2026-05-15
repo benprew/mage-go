@@ -71,7 +71,7 @@ func setVocab(out *decisionMaskOutput, ids ...int32) {
 
 func setPointersAll(out *decisionMaskOutput, n int32) {
 	limit := min(int(n), len(out.pointerMask))
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		out.pointerMask[i] = 1
 	}
 }
@@ -147,7 +147,7 @@ func maskDeclareAttackers(in *decisionMaskInput, out *decisionMaskOutput) error 
 		if i+1 >= int32(len(body)) {
 			// Need attacker pointer.
 			limit := min(int(in.nLegalAttackers), len(out.pointerMask))
-			for k := 0; k < limit; k++ {
+			for k := range limit {
 				if _, taken := chosen[int32(k)]; !taken {
 					out.pointerMask[k] = 1
 				}
@@ -198,7 +198,7 @@ func maskDeclareBlockers(in *decisionMaskInput, out *decisionMaskOutput) error {
 		}
 		if i+1 >= int32(len(body)) {
 			limit := min(int(in.nLegalBlockers), len(out.pointerMask))
-			for k := 0; k < limit; k++ {
+			for k := range limit {
 				if _, taken := chosenBlockers[int32(k)]; !taken {
 					out.pointerMask[k] = 1
 				}
@@ -225,7 +225,7 @@ func maskDeclareBlockers(in *decisionMaskInput, out *decisionMaskOutput) error {
 			}
 			rowStart := blkPtr * in.nLegalAttackers
 			limit := min(int(in.nLegalAttackers), len(out.pointerMask))
-			for k := 0; k < limit; k++ {
+			for k := range limit {
 				out.pointerMask[k] = in.legalEdgeBitmap[rowStart+int32(k)]
 			}
 			return nil

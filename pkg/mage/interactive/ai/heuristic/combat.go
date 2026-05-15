@@ -95,7 +95,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 			blockerIDs, isBlocked := blockerMap[atkID]
 			if !isBlocked || len(blockerIDs) == 0 {
 				// Unblocked attacker.
-				atkDealsThisStep := false
+				var atkDealsThisStep bool
 				if isFirstStrikeStep {
 					atkDealsThisStep = atkHasFS || atkHasDS
 				} else {
@@ -115,7 +115,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 			}
 
 			// Determine if attacker deals damage this step.
-			atkDealsThisStep := false
+			var atkDealsThisStep bool
 			if isFirstStrikeStep {
 				atkDealsThisStep = atkHasFS || atkHasDS
 			} else {
@@ -193,7 +193,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 					continue
 				}
 
-				blkDealsThisStep := false
+				var blkDealsThisStep bool
 				if isFirstStrikeStep {
 					blkDealsThisStep = blkHasFS || blkHasDS
 				} else {

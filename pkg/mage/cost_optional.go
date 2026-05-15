@@ -42,7 +42,7 @@ func (c *optionalCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		return nil
 	}
 	if err := c.inner.Pay(sourceID, controller, g); err != nil {
-		return nil
+		return err
 	}
 	g.setOptionalCostPaid(sourceID, true)
 	return nil

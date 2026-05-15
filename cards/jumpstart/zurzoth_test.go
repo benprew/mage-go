@@ -85,7 +85,7 @@ func TestZurzoth_MultipleOpponentDraws_OnlyFirstTriggers(t *testing.T) {
 // Devils-attack trigger: one Devil attacker → both controller and defender
 // draw 1 and discard 1 at random.
 func TestZurzoth_DevilAttacksTriggers_BothPlayersDrawAndDiscard(t *testing.T) {
-	rand.Seed(1)
+	rand.Seed(1) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Zurzoth, Chaos Rider")
 	// Give each player an extra hand card so the random discard has
@@ -106,7 +106,7 @@ func TestZurzoth_DevilAttacksTriggers_BothPlayersDrawAndDiscard(t *testing.T) {
 
 // Non-Devil attacker → clause 2 does not trigger.
 func TestZurzoth_NonDevilAttacker_NoDrawDiscard(t *testing.T) {
-	rand.Seed(2)
+	rand.Seed(2) //nolint:staticcheck // SA1019: tests rely on global rand seeding for determinism
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Zurzoth, Chaos Rider")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")

@@ -63,10 +63,9 @@ func TestMirrodinsCore(t *testing.T) {
 		// Charge counter ability should be the second ability — verify counter exists.
 		// Since ActivateAbility picks the first valid ability, we can at least confirm
 		// the card has 3 activated abilities and the test is a smoke test.
-		if len(perm.Counters) == 0 {
-			// Counter may or may not exist depending on which ability was picked first.
-			// This is a smoke check; real coverage in counter test below.
-		}
+		// Counter may or may not exist depending on which ability was picked first;
+		// real coverage is in the counter test below.
+		_ = perm
 	})
 }
 

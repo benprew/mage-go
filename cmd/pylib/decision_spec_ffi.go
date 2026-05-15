@@ -129,7 +129,7 @@ func MageReleaseBatchHandle(handle C.int64_t) {
 }
 
 // MageEncodeDecisionSpec emits decision-spec tokens, anchors, and side
-// tensors for each row in ``req``. Returns a batch handle (via ``handleOut``)
+// tensors for each row in “req“. Returns a batch handle (via “handleOut“)
 // that subsequent MageDecisionMaskNext calls can reference.
 //
 // This is a sibling of MageEncodeTokensPacked: it does not touch the
@@ -355,7 +355,7 @@ func MageEncodeDecisionSpec(
 
 // MageDecisionMaskNext computes per-row vocab + pointer masks for one
 // decoder step. Reads the per-row state captured by the most recent
-// MageEncodeDecisionSpec call referenced by ``batch_handle``.
+// MageEncodeDecisionSpec call referenced by “batch_handle“.
 //
 //export MageDecisionMaskNext
 func MageDecisionMaskNext(
@@ -441,8 +441,8 @@ func MageDecisionMaskNext(
 // MagePackCombinedTokens rewrites the packed token stream produced by
 // MageEncodeTokensPacked so that each row's spec tokens (emitted into a side
 // buffer by MageEncodeDecisionSpec) are concatenated immediately after that
-// row's state tokens. After this call, ``packed.token_ids[0:cu_seqlens[B]]``
-// holds ``state || spec`` for every row in row-major packed layout, with all
+// row's state tokens. After this call, “packed.token_ids[0:cu_seqlens[B]]“
+// holds “state || spec“ for every row in row-major packed layout, with all
 // supporting outputs (cu_seqlens, seq_lengths, state_positions,
 // card_ref_positions, spec.pointer_anchor_positions) updated to the new
 // combined-stream coordinates.
@@ -455,7 +455,7 @@ func MageDecisionMaskNext(
 // start added so they share the card-ref convention.
 //
 // Returns 0 on success, -1 if the combined stream would exceed
-// ``token_capacity`` (caller must allocate ``B * max_tokens`` large enough to
+// “token_capacity“ (caller must allocate “B * max_tokens“ large enough to
 // hold state + spec for every row).
 //
 //export MagePackCombinedTokens

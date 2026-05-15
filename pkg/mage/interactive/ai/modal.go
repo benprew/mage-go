@@ -97,7 +97,7 @@ func ChooseModeWithContext(modes []string, g *mage.Game, playerID uuid.UUID) int
 
 // scoreModeText scores a mode based on text content and basic game state.
 func scoreModeText(lower string, life, handSize int) int {
-	score := 0
+	var score int
 
 	switch {
 	case strings.Contains(lower, "destroy") || strings.Contains(lower, "exile"):
