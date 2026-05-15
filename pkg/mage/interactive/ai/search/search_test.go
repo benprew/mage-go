@@ -723,7 +723,7 @@ func TestSearch_TurnPlanReplaysIdenticalCastDecision(t *testing.T) {
 	pb.SetLife(3)
 
 	bolt := mage.NewInstant("Lightning Bolt", "{R}",
-		mage.NewTargetedSpell(mage.TargetAnyTarget(), mage.DealDamage(mage.Fixed(3))),
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.Fixed(3))),
 	)
 	bolt.SetOwner(pa.PlayerID())
 	pa.AddToHand(bolt)
