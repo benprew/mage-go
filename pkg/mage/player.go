@@ -204,6 +204,16 @@ func (p *BasePlayer) LoseLife(n int) {
 	p.life -= n
 }
 
+// removeAt returns a fresh slice with the element at index i removed.
+// Used by RemoveFromHand/Graveyard/Ante to avoid mutating a backing array
+// that may be shared with a parent game state (see cloneCardSlice).
+func removeAt(s []Card, i int) []Card {
+	out := make([]Card, len(s)-1)
+	copy(out, s[:i])
+	copy(out[i:], s[i+1:])
+	return out
+}
+
 func (p *BasePlayer) Hand() []Card { return p.hand }
 
 func (p *BasePlayer) AddToHand(c Card) {
@@ -218,7 +228,7 @@ func (p *BasePlayer) SetHand(cards []Card) {
 func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
 	for i, c := range p.hand {
 		if c.ID() == id {
-			p.hand = append(p.hand[:i], p.hand[i+1:]...)
+			p.hand = removeAt(p.hand, i)
 			return c, true
 		}
 	}
@@ -244,7 +254,7 @@ func (p *BasePlayer) AddToGraveyard(c Card) {
 func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {
 	for i, c := range p.graveyard {
 		if c.ID() == id {
-			p.graveyard = append(p.graveyard[:i], p.graveyard[i+1:]...)
+			p.graveyard = removeAt(p.graveyard, i)
 			return c, true
 		}
 	}
@@ -272,7 +282,7 @@ func (p *BasePlayer) AddToAnte(c Card) {
 func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (Card, bool) {
 	for i, c := range p.ante {
 		if c.ID() == id {
-			p.ante = append(p.ante[:i], p.ante[i+1:]...)
+			p.ante = removeAt(p.ante, i)
 			return c, true
 		}
 	}
@@ -280,6 +290,11 @@ func (p *BasePlayer) RemoveFromAnte(id uuid.UUID) (Card, bool) {
 }
 
 func (p *BasePlayer) ShuffleLibrary() {
+	// Library backing arrays are shared across game clones (see cloneCardSlice).
+	// Copy into a fresh array before shuffling so we don't mutate the parent's view.
+	fresh := make([]Card, len(p.library))
+	copy(fresh, p.library)
+	p.library = fresh
 	rand.Shuffle(len(p.library), func(i, j int) {
 		p.library[i], p.library[j] = p.library[j], p.library[i]
 	})

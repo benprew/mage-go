@@ -480,13 +480,16 @@ func cloneDamageSystem(ds *DamageSystem) *DamageSystem {
 
 // --- Map clone helpers ---
 
+// cloneCardSlice shares the backing array with the source but forces cap == len
+// so any subsequent append on either side allocates a new backing array.
+// Mutation paths that would otherwise touch shared memory (middle-element
+// removal in RemoveFromHand/Graveyard/Ante, ShuffleLibrary) are required to
+// allocate fresh slices — see player.go.
 func cloneCardSlice(src []Card) []Card {
-	if src == nil {
+	if len(src) == 0 {
 		return nil
 	}
-	dst := make([]Card, len(src))
-	copy(dst, src) // Card refs are shared (immutable)
-	return dst
+	return src[:len(src):len(src)]
 }
 
 func cloneUUIDBoolMap(src map[uuid.UUID]bool) map[uuid.UUID]bool {
