@@ -55,11 +55,16 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 type Game struct {
 	players     []Player
 	battlefield []*Permanent
-	exile       []ExiledCard // exile zone with metadata
-	stack       *Stack
-	combat      *Combat
-	effects     *EffectManager
-	manaScratch []manaSourceInfo
+	// Search clones share battlefield permanent pointers until a branch writes
+	// to a permanent. ownedPermanents contains IDs whose pointers are private to
+	// this Game after sharing began.
+	battlefieldShared bool
+	ownedPermanents   map[uuid.UUID]struct{}
+	exile             []ExiledCard // exile zone with metadata
+	stack             *Stack
+	combat            *Combat
+	effects           *EffectManager
+	manaScratch       []manaSourceInfo
 
 	turn         int
 	step         PhaseStep
@@ -392,6 +397,77 @@ func (g *Game) FindPermanentIncludingPhased(id uuid.UUID) *Permanent {
 	return nil
 }
 
+// MutablePermanent returns an owned battlefield permanent pointer suitable for
+// mutation. Search clones initially share permanent pointers; the first write
+// to a shared permanent clones that permanent and replaces the battlefield
+// entry in this Game only. Phased-out permanents are invisible.
+func (g *Game) MutablePermanent(id uuid.UUID) *Permanent {
+	for i, p := range g.battlefield {
+		if p.PhasedOut {
+			continue
+		}
+		if p.ID() == id {
+			return g.mutablePermanentAt(i)
+		}
+	}
+	if g.enteringPermanent != nil && g.enteringPermanent.ID() == id {
+		return g.enteringPermanent
+	}
+	return nil
+}
+
+// mutablePermanentIncludingPhased is the mutable counterpart to
+// FindPermanentIncludingPhased.
+func (g *Game) mutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
+	for i, p := range g.battlefield {
+		if p.ID() == id {
+			return g.mutablePermanentAt(i)
+		}
+	}
+	return nil
+}
+
+func (g *Game) mutablePermanentAt(i int) *Permanent {
+	p := g.battlefield[i]
+	if !g.battlefieldShared {
+		return p
+	}
+	if g.ownedPermanents != nil {
+		if _, ok := g.ownedPermanents[p.ID()]; ok {
+			return p
+		}
+	}
+	g.ensureBattlefieldSliceOwned()
+	cp := new(Permanent)
+	clonePermanentInto(cp, p)
+	g.battlefield[i] = cp
+	g.addOwnedPermanent(cp)
+	return cp
+}
+
+func (g *Game) ensureBattlefieldSliceOwned() {
+	if !g.battlefieldShared {
+		return
+	}
+	if len(g.battlefield) == 0 {
+		g.battlefield = nil
+		return
+	}
+	cp := make([]*Permanent, len(g.battlefield))
+	copy(cp, g.battlefield)
+	g.battlefield = cp
+}
+
+func (g *Game) addOwnedPermanent(p *Permanent) {
+	if p == nil || !g.battlefieldShared {
+		return
+	}
+	if g.ownedPermanents == nil {
+		g.ownedPermanents = make(map[uuid.UUID]struct{})
+	}
+	g.ownedPermanents[p.ID()] = struct{}{}
+}
+
 // FindPermanentByName finds a permanent by name on the battlefield (first match).
 // Phased-out permanents are invisible.
 func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent {
@@ -622,6 +698,7 @@ func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	perm := NewPermanent(card, controller)
+	g.addOwnedPermanent(perm)
 	perm.TurnControlGained = g.turn
 
 	// Set ability sources and controllers
@@ -708,6 +785,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 		}
 	}
 
+	g.ensureBattlefieldSliceOwned()
 	g.battlefield = append(g.battlefield, perm)
 
 	// Register continuous effects from static abilities
@@ -802,6 +880,10 @@ func (g *Game) setEffectSource(e ContinuousEffect, id uuid.UUID) {
 
 // turnFaceUp flips a face-down permanent face up, restoring its original characteristics.
 func (g *Game) turnFaceUp(perm *Permanent) {
+	perm = g.MutablePermanent(perm.ID())
+	if perm == nil {
+		return
+	}
 	if !perm.FaceDown {
 		return
 	}
@@ -832,6 +914,13 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 
 // RemoveFromBattlefield removes a permanent and handles cleanup.
 func (g *Game) RemoveFromBattlefield(perm *Permanent) {
+	if perm == nil {
+		return
+	}
+	perm = g.mutablePermanentIncludingPhased(perm.ID())
+	if perm == nil {
+		return
+	}
 	// Snapshot LKI before any state mutation so death/leave-triggers can
 	// read the dying permanent's controller, types, and P/T after the move.
 	g.captureLKI(perm)
@@ -841,7 +930,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 
 	// If this was attached to something, remove it from that thing's attachments
 	if perm.IsAttached() {
-		host := g.FindPermanent(perm.AttachedTo)
+		host := g.MutablePermanent(perm.AttachedTo)
 		if host != nil {
 			filtered := host.Attachments[:0]
 			for _, id := range host.Attachments {
@@ -858,9 +947,13 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	copy(attachments, perm.Attachments)
 
 	// Remove from battlefield
+	g.ensureBattlefieldSliceOwned()
 	for i, p := range g.battlefield {
 		if p.ID() == perm.ID() {
 			g.battlefield = append(g.battlefield[:i], g.battlefield[i+1:]...)
+			if g.ownedPermanents != nil {
+				delete(g.ownedPermanents, perm.ID())
+			}
 			break
 		}
 	}
@@ -876,7 +969,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// graveyard so that "when enchanted creature dies" triggers can still see
 	// the attachment relationship when the host's death events fire.
 	for _, attID := range attachments {
-		att := g.FindPermanent(attID)
+		att := g.MutablePermanent(attID)
 		if att == nil {
 			continue
 		}
@@ -936,6 +1029,13 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 
 // TapPermanent taps a permanent and fires the EvtTapped event.
 func (g *Game) TapPermanent(perm *Permanent) {
+	if perm == nil {
+		return
+	}
+	perm = g.MutablePermanent(perm.ID())
+	if perm == nil {
+		return
+	}
 	perm.Tapped = true
 	g.FireEvent(GameEvent{
 		Type:     EvtTapped,
@@ -1720,7 +1820,7 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 
 // executeDamageToCreature applies damage to a creature after all replacements have been applied.
 func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
-	perm := g.FindPermanent(a.PermanentID())
+	perm := g.MutablePermanent(a.PermanentID())
 	if perm == nil {
 		return
 	}
@@ -1812,8 +1912,8 @@ func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
 
 // Attach attaches source to target (for auras and equipment).
 func (g *Game) Attach(sourceID, targetID uuid.UUID) {
-	src := g.FindPermanent(sourceID)
-	target := g.FindPermanent(targetID)
+	src := g.MutablePermanent(sourceID)
+	target := g.MutablePermanent(targetID)
 	if src == nil || target == nil {
 		return
 	}
@@ -1825,7 +1925,7 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 
 	// Detach from current host if any
 	if src.IsAttached() {
-		oldHost := g.FindPermanent(src.AttachedTo)
+		oldHost := g.MutablePermanent(src.AttachedTo)
 		if oldHost != nil {
 			filtered := oldHost.Attachments[:0]
 			for _, id := range oldHost.Attachments {
@@ -2973,6 +3073,10 @@ func (g *Game) CheckStateBasedActions() {
 			minus := p.Counters[M1M1]
 			if plus > 0 && minus > 0 {
 				remove := min(minus, plus)
+				p = g.MutablePermanent(p.ID())
+				if p == nil {
+					continue
+				}
 				p.Counters[P1P1] -= remove
 				p.Counters[M1M1] -= remove
 				actions = true
@@ -3005,6 +3109,10 @@ func (g *Game) CheckStateBasedActions() {
 			if p.HasSubType("Equipment") && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
 				if host == nil || !host.HasType(TypeCreature) {
+					p = g.MutablePermanent(p.ID())
+					if p == nil {
+						continue
+					}
 					p.AttachedTo = uuid.Nil
 					actions = true
 				}
@@ -3128,6 +3236,10 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 	if p == nil {
 		return false
 	}
+	p = g.MutablePermanent(p.ID())
+	if p == nil {
+		return false
+	}
 	if p.Counters[Stun] > 0 {
 		p.RemoveCounter(Stun, 1)
 		return false
@@ -3200,7 +3312,9 @@ func (g *Game) doUntap() {
 			} else if p.Tapped {
 				g.UntapPermanent(p)
 			}
-			p.RevokeBaseAttr(AttrSummonSick)
+			if mp := g.MutablePermanent(p.ID()); mp != nil {
+				mp.RevokeBaseAttr(AttrSummonSick)
+			}
 		}
 	}
 	g.landsPlayedThisTurn = 0
@@ -3573,6 +3687,13 @@ func (g *Game) doCleanupActions() bool {
 	}
 	// Clear damage from all creatures
 	for _, p := range g.battlefield {
+		if p.Damage == 0 {
+			continue
+		}
+		p = g.MutablePermanent(p.ID())
+		if p == nil {
+			continue
+		}
 		p.Damage = 0
 	}
 	// Clear mana pools

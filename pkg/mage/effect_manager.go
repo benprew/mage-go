@@ -139,7 +139,7 @@ func (e *attachedEffect) Apply(g *Game) error {
 	if src == nil || !src.IsAttached() {
 		return nil
 	}
-	target := g.FindPermanent(src.AttachedTo)
+	target := g.MutablePermanent(src.AttachedTo)
 	if target == nil {
 		return nil
 	}
@@ -177,7 +177,7 @@ func (e *targetEffect) IsActive(g *Game) bool {
 }
 
 func (e *targetEffect) Apply(g *Game) error {
-	target := g.FindPermanent(e.targetID)
+	target := g.MutablePermanent(e.targetID)
 	if target == nil {
 		return nil
 	}
@@ -320,6 +320,34 @@ func (em *EffectManager) Apply(g *Game) {
 			// Face-down permanents keep their overrides and empty abilities
 			continue
 		}
+		needsReset := p.Controller != p.Card.Owner() ||
+			len(p.SubTypeOverride) > 0 ||
+			len(p.SubTypeAdditions) > 0 ||
+			p.BasePTOverride != nil ||
+			p.ColorOverride != nil ||
+			p.powerBonus != 0 ||
+			p.toughBonus != 0
+		for _, v := range p.grantedAttrs {
+			if v != 0 {
+				needsReset = true
+				break
+			}
+		}
+		if !needsReset {
+			for _, a := range p.RuntimeAbilities {
+				if _, ok := a.(*grantedByEffect); ok {
+					needsReset = true
+					break
+				}
+			}
+		}
+		if !needsReset {
+			continue
+		}
+		p = g.MutablePermanent(p.ID())
+		if p == nil {
+			continue
+		}
 		base := p.RuntimeAbilities[:0]
 		for _, a := range p.RuntimeAbilities {
 			if _, ok := a.(*grantedByEffect); !ok {
@@ -366,7 +394,7 @@ func (em *EffectManager) Apply(g *Game) {
 	// Write attrDeltas accumulated by GrantAttr/RevokeAttr calls during this cycle
 	// into each permanent's grantedAttrs.
 	for permID, deltas := range em.attrDeltas {
-		perm := g.FindPermanent(permID)
+		perm := g.MutablePermanent(permID)
 		if perm == nil {
 			continue
 		}
@@ -382,6 +410,10 @@ func (em *EffectManager) Apply(g *Game) {
 	// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
 	for _, p := range g.battlefield {
 		if p.HasAttr(AttrCantChangeControl) && p.Controller != p.Card.Owner() {
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.Controller = p.Card.Owner()
 		}
 	}

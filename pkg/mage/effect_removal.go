@@ -245,6 +245,10 @@ func execDestroyAllMatching(ctx *EffectContext, e *destroyAllMatchingEffect) err
 func execDestroyAllMatchingNoRegen(ctx *EffectContext, e *destroyAllMatchingNoRegenEffect) error {
 	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
+		p = ctx.Game.MutablePermanent(p.ID())
+		if p == nil {
+			continue
+		}
 		p.GrantBaseAttr(CantRegenerate)
 		ctx.Game.DestroyPermanent(p)
 	}
@@ -255,7 +259,7 @@ func execDestroyTargetNoRegen(ctx *EffectContext, _ *destroyTargetNoRegenEffect)
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	perm := ctx.Game.MutablePermanent(ctx.Targets[0])
 	if perm == nil {
 		return nil
 	}
@@ -327,6 +331,10 @@ func ExileTargetReturnAtEndStep(onReturn ReturnedPermanentModifier) Effect {
 func ReturnWithCounter(counter CounterType, amount int) ReturnedPermanentModifier {
 	return func(g *Game, perm *Permanent) {
 		if amount <= 0 {
+			return
+		}
+		perm = g.MutablePermanent(perm.ID())
+		if perm == nil {
 			return
 		}
 		perm.AddCounter(counter, amount)

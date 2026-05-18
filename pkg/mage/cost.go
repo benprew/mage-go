@@ -132,7 +132,7 @@ func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) boo
 }
 
 func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	p := g.FindPermanent(sourceID)
+	p := g.MutablePermanent(sourceID)
 	if p == nil {
 		return ErrSourceNotFound
 	}
@@ -176,7 +176,7 @@ func (c *removeXCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error
 	if x <= 0 {
 		return nil
 	}
-	p := g.FindPermanent(sourceID)
+	p := g.MutablePermanent(sourceID)
 	if p == nil {
 		return ErrSourceNotFound
 	}

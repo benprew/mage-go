@@ -13,7 +13,8 @@ type UUIDMap[V any] map[uuid.UUID]V
 
 // Clone creates a deep copy of the game state for AI search.
 // Card objects and Effect interfaces are shared (immutable during play).
-// All mutable state (permanents, players, maps, slices) is deep-copied.
+// Battlefield permanents are shared copy-on-write; other mutable state is
+// deep-copied.
 // Interactive callbacks (OnPriority, etc.) are nil'd in the clone.
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
@@ -40,19 +41,14 @@ func (g *Game) Clone() *Game {
 		c.players[i] = clonePlayer(p)
 	}
 
-	// Deep copy battlefield. Permanents are slab-allocated in one make() so
-	// the N individual heap allocations (and their GC mark cost) collapse into
-	// one contiguous allocation. Pointers into the slab are stable for its
-	// lifetime; new permanents added later to c.battlefield escape the slab
-	// and allocate individually, which is fine.
-	c.battlefield = make([]*Permanent, len(g.battlefield))
+	// Share battlefield permanents copy-on-write. Cap-limiting forces appends in
+	// either branch to allocate a distinct slice header/backing array.
 	if len(g.battlefield) > 0 {
-		slab := make([]Permanent, len(g.battlefield))
-		for i, p := range g.battlefield {
-			clonePermanentInto(&slab[i], p)
-			c.battlefield[i] = &slab[i]
-		}
+		c.battlefield = g.battlefield[:len(g.battlefield):len(g.battlefield)]
 	}
+	g.battlefieldShared = true
+	g.ownedPermanents = nil
+	c.battlefieldShared = true
 
 	// Deep copy exile zone.
 	c.exile = make([]ExiledCard, len(g.exile))

@@ -8,6 +8,8 @@ import (
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 )
 
+var cloneCardSliceSink []Card
+
 // setupTestGame creates a mid-game state with permanents, hand cards, and various state.
 func setupTestGame() *Game {
 	pA := NewBasePlayer("Alice")
@@ -189,10 +191,11 @@ func TestCloneIsolation(t *testing.T) {
 		t.Errorf("Original player life modified: got %d, want 15", g.players[0].Life())
 	}
 
-	// Mutate clone permanent.
-	c.battlefield[1].Tapped = false
-	c.battlefield[1].Damage = 0
-	c.battlefield[1].Counters[P1P1] = 99
+	// Mutate clone permanent through the engine write API.
+	clonePerm := c.MutablePermanent(c.battlefield[1].ID())
+	clonePerm.Tapped = false
+	clonePerm.Damage = 0
+	clonePerm.Counters[P1P1] = 99
 	if !g.battlefield[1].Tapped {
 		t.Error("Original perm Tapped should still be true")
 	}
@@ -237,6 +240,227 @@ func TestCloneIsolation(t *testing.T) {
 	}
 }
 
+func TestCloneSharesPermanentsUntilMutation(t *testing.T) {
+	g := setupTestGame()
+	c := g.Clone()
+
+	if !g.battlefieldShared || !c.battlefieldShared {
+		t.Fatal("clone should mark both branches as sharing battlefield permanents")
+	}
+	if g.battlefield[1] != c.battlefield[1] {
+		t.Fatal("clone should initially share permanent pointers")
+	}
+
+	clonePerm := c.MutablePermanent(g.battlefield[1].ID())
+	if clonePerm == nil {
+		t.Fatal("expected mutable clone permanent")
+	}
+	if g.battlefield[1] == c.battlefield[1] {
+		t.Fatal("first clone mutation should detach that permanent pointer")
+	}
+	clonePerm.Tapped = false
+	clonePerm.Damage = 0
+	clonePerm.Counters[P1P1] = 7
+
+	if !g.battlefield[1].Tapped || g.battlefield[1].Damage != 1 || g.battlefield[1].Counters[P1P1] != 2 {
+		t.Fatalf("clone mutation leaked to original: tapped=%v damage=%d counters=%d",
+			g.battlefield[1].Tapped, g.battlefield[1].Damage, g.battlefield[1].Counters[P1P1])
+	}
+}
+
+func TestCloneMutablePermanentFieldIsolation(t *testing.T) {
+	pA := NewBasePlayer("Alice")
+	pB := NewBasePlayer("Bob")
+	g := NewGame(pA, pB)
+
+	hostCard := NewCreature("Clone Host", "{1}{W}", 2, 2)
+	hostCard.SetOwner(pA.PlayerID())
+	host := NewPermanent(hostCard, pA.PlayerID())
+
+	auraCard := NewAura("Clone Aura", "{W}")
+	auraCard.SetOwner(pA.PlayerID())
+	aura := NewPermanent(auraCard, pA.PlayerID())
+
+	g.AddToBattlefield(host, aura)
+	c := g.Clone()
+
+	cloneHost := c.MutablePermanent(host.ID())
+	cloneAura := c.MutablePermanent(aura.ID())
+	if cloneHost == nil || cloneAura == nil {
+		t.Fatal("expected clone permanents")
+	}
+
+	cloneHost.Tapped = true
+	cloneHost.Damage = 3
+	cloneHost.Counters[P1P1] = 2
+	cloneHost.Attachments = append(cloneHost.Attachments, aura.ID())
+	cloneHost.Controller = pB.PlayerID()
+	cloneHost.RuntimeAbilities = append(cloneHost.RuntimeAbilities, NewManaAbility(Blue))
+	cloneHost.SubTypeOverride = []string{"Rogue"}
+	cloneHost.SubTypeAdditions = []string{"Wizard"}
+	cloneHost.BasePTOverride = &[2]int{5, 6}
+	colors := []Color{Black}
+	cloneHost.ColorOverride = &colors
+	cloneAura.AttachedTo = host.ID()
+
+	if host.Tapped || host.Damage != 0 || host.Counters[P1P1] != 0 {
+		t.Fatalf("basic clone field mutation leaked to original: tapped=%v damage=%d counters=%d", host.Tapped, host.Damage, host.Counters[P1P1])
+	}
+	if len(host.Attachments) != 0 || aura.AttachedTo != uuid.Nil {
+		t.Fatalf("attachment mutation leaked to original: host attachments=%d aura attachedTo=%s", len(host.Attachments), aura.AttachedTo)
+	}
+	if host.Controller != pA.PlayerID() {
+		t.Fatalf("controller mutation leaked to original: got %s", host.Controller)
+	}
+	if len(host.RuntimeAbilities) != len(hostCard.Abilities()) {
+		t.Fatalf("runtime ability mutation leaked to original: got %d abilities", len(host.RuntimeAbilities))
+	}
+	if len(host.SubTypeOverride) != 0 || len(host.SubTypeAdditions) != 0 || host.BasePTOverride != nil || host.ColorOverride != nil {
+		t.Fatal("continuous projection field mutation leaked to original")
+	}
+}
+
+func TestCloneOriginalMutationDoesNotAffectClone(t *testing.T) {
+	g := setupTestGame()
+	c := g.Clone()
+
+	origPerm := g.MutablePermanent(g.battlefield[1].ID())
+	origPerm.Tapped = false
+	origPerm.Damage = 0
+
+	if !c.battlefield[1].Tapped {
+		t.Fatal("original mutation leaked tapped state to clone")
+	}
+	if c.battlefield[1].Damage != 1 {
+		t.Fatalf("original mutation leaked damage to clone: got %d", c.battlefield[1].Damage)
+	}
+}
+
+func TestCloneOfCloneIsolatesBranches(t *testing.T) {
+	g := setupTestGame()
+	c1 := g.Clone()
+	c2 := c1.Clone()
+
+	p1 := c1.MutablePermanent(c1.battlefield[1].ID())
+	p2 := c2.MutablePermanent(c2.battlefield[2].ID())
+	p1.Damage = 4
+	p2.Tapped = true
+
+	if g.battlefield[1].Damage != 1 || c2.battlefield[1].Damage != 1 {
+		t.Fatal("c1 mutation leaked to original or sibling clone")
+	}
+	if g.battlefield[2].Tapped || c1.battlefield[2].Tapped {
+		t.Fatal("c2 mutation leaked to original or sibling clone")
+	}
+}
+
+func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
+	pA := NewBasePlayer("Alice")
+	pB := NewBasePlayer("Bob")
+	g := NewGame(pA, pB)
+
+	sourceCard := NewArtifact("Effect Source", "{2}")
+	sourceCard.SetOwner(pA.PlayerID())
+	source := NewPermanent(sourceCard, pA.PlayerID())
+
+	targetCard := NewCreature("Effect Target", "{1}{G}", 2, 2)
+	targetCard.SetOwner(pA.PlayerID())
+	target := NewPermanent(targetCard, pA.PlayerID())
+
+	landCard := NewLand("Forest")
+	landCard.SetOwner(pA.PlayerID())
+	land := NewPermanent(landCard, pA.PlayerID())
+
+	auraCard := NewAura("Effect Aura", "{W}")
+	auraCard.SetOwner(pA.PlayerID())
+	aura := NewPermanent(auraCard, pA.PlayerID())
+	aura.AttachedTo = target.ID()
+	target.Attachments = append(target.Attachments, aura.ID())
+
+	copyTargetCard := NewCreature("Copy Target", "{3}{W}", 4, 4, WithKeyword(Flying))
+	copyTargetCard.SetOwner(pA.PlayerID())
+	copyTarget := NewPermanent(copyTargetCard, pA.PlayerID())
+
+	doppelCard := NewCreature("Doppelganger", "{3}{U}", 0, 0)
+	doppelCard.SetOwner(pA.PlayerID())
+	doppel := NewPermanent(doppelCard, pA.PlayerID())
+
+	g.AddToBattlefield(source, target, land, aura, copyTarget, doppel)
+
+	landOnly := NewPermanentFilter("test land", func(p *Permanent, _ *Game) bool {
+		return p.ID() == land.ID()
+	})
+	for _, eff := range []ContinuousEffect{
+		TemporaryBoost(target.ID(), 3, 3),
+		TargetEffect(LayerControl, Indefinite, target.ID(), func(_ *Game, target *Permanent) error {
+			target.Controller = pB.PlayerID()
+			return nil
+		}),
+		GrantSubTypeToTarget(target.ID(), "Rogue", EndOfTurn),
+		BecomesColor(target.ID(), Blue, EndOfTurn),
+	} {
+		g.effects.Add(eff)
+	}
+	landEffect := AnimateLands(landOnly, 1, 1)
+	landEffect.SetSourceID(source.ID())
+	g.effects.Add(landEffect)
+	for _, eff := range []ContinuousEffect{
+		BoostAttached(1, 1, AttachAura),
+		GrantProtectionToAttached(Red, AttachAura),
+	} {
+		eff.SetSourceID(aura.ID())
+		g.effects.Add(eff)
+	}
+	g.effects.AddCopyEffect(doppel.ID(), copyTarget)
+
+	c := g.Clone()
+	c.effects.Apply(c)
+
+	cloneTarget := c.FindPermanent(target.ID())
+	cloneLand := c.FindPermanent(land.ID())
+	cloneDoppel := c.FindPermanent(doppel.ID())
+	if cloneTarget == nil || cloneLand == nil || cloneDoppel == nil {
+		t.Fatal("expected clone permanents after continuous effect apply")
+	}
+	if cloneTarget.Controller != pB.PlayerID() {
+		t.Fatalf("clone control effect not applied: got controller %s", cloneTarget.Controller)
+	}
+	if cloneTarget.powerBonus != 4 || cloneTarget.toughBonus != 4 {
+		t.Fatalf("clone P/T bonuses not applied: got +%d/+%d", cloneTarget.powerBonus, cloneTarget.toughBonus)
+	}
+	if !cloneTarget.HasSubType("Rogue") {
+		t.Fatal("clone subtype effect not applied")
+	}
+	if cloneTarget.ColorOverride == nil || len(*cloneTarget.ColorOverride) != 1 || (*cloneTarget.ColorOverride)[0] != Blue {
+		t.Fatalf("clone color override not applied: %#v", cloneTarget.ColorOverride)
+	}
+	if len(cloneTarget.RuntimeAbilities) <= len(target.RuntimeAbilities) {
+		t.Fatal("clone granted runtime ability not applied")
+	}
+	if cloneLand.BasePTOverride == nil || cloneLand.BasePTOverride[0] != 1 || cloneLand.BasePTOverride[1] != 1 || !cloneLand.HasType(TypeCreature) {
+		t.Fatal("clone land animation not applied")
+	}
+	if cloneDoppel.BasePTOverride == nil || cloneDoppel.BasePTOverride[0] != 4 || cloneDoppel.BasePTOverride[1] != 4 {
+		t.Fatal("clone copy effect not applied")
+	}
+
+	if target.Controller != pA.PlayerID() || target.powerBonus != 0 || target.toughBonus != 0 {
+		t.Fatalf("continuous effect leaked to original target: controller=%s +%d/+%d", target.Controller, target.powerBonus, target.toughBonus)
+	}
+	if len(target.SubTypeOverride) != 0 || len(target.SubTypeAdditions) != 0 || target.ColorOverride != nil {
+		t.Fatal("type/color continuous effect leaked to original target")
+	}
+	if len(target.RuntimeAbilities) != len(targetCard.Abilities()) {
+		t.Fatal("granted runtime ability leaked to original target")
+	}
+	if land.BasePTOverride != nil || land.HasType(TypeCreature) {
+		t.Fatal("land animation leaked to original")
+	}
+	if doppel.BasePTOverride != nil {
+		t.Fatal("copy effect leaked to original")
+	}
+}
+
 func TestCloneWithContinuousEffects(t *testing.T) {
 	pA := NewBasePlayer("Alice")
 	pB := NewBasePlayer("Bob")
@@ -252,6 +476,10 @@ func TestCloneWithContinuousEffects(t *testing.T) {
 	eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(game *Game, srcID uuid.UUID) error {
 		for _, p := range game.battlefield {
 			if p.ID() == srcID {
+				p = game.MutablePermanent(p.ID())
+				if p == nil {
+					continue
+				}
 				p.powerBonus++
 				p.toughBonus++
 			}
@@ -659,6 +887,17 @@ func TestCloneNestedUUIDMapIsolation(t *testing.T) {
 	}
 }
 
+func TestCloneCardSliceAllocFree(t *testing.T) {
+	card := NewCreature("Alloc Bear", "{1}{G}", 2, 2)
+	cards := []Card{card, card, card}
+	allocs := testing.AllocsPerRun(1000, func() {
+		cloneCardSliceSink = cloneCardSlice(cards)
+	})
+	if allocs != 0 {
+		t.Fatalf("cloneCardSlice allocated: got %.2f allocs/run, want 0", allocs)
+	}
+}
+
 func BenchmarkClone(b *testing.B) {
 	g := setupTestGame()
 
@@ -694,6 +933,89 @@ func BenchmarkClone(b *testing.B) {
 	}
 	g.stack.Push(obj)
 
+	b.ReportAllocs()
+	for b.Loop() {
+		_ = g.Clone()
+	}
+}
+
+func setupRogueBoardCloneBenchmarkGame() *Game {
+	g := setupTestGame()
+	owners := []uuid.UUID{g.players[0].PlayerID(), g.players[1].PlayerID()}
+
+	var lastEquipment *Permanent
+	for i := range 96 {
+		owner := owners[i%len(owners)]
+		var card Card
+		switch i % 4 {
+		case 0:
+			card = NewCreature("Rogue Board Creature", "{2}{B}", 2+i%4, 2+i%5, WithSubTypes("Human", "Rogue"))
+		case 1:
+			card = NewLand("Swamp")
+		case 2:
+			card = NewArtifact("Rogue Board Artifact", "{2}")
+		default:
+			card = NewEquipment("Rogue Board Equipment", "{1}")
+		}
+		card.SetOwner(owner)
+		perm := NewPermanent(card, owner)
+		if i%3 == 0 {
+			perm.Tapped = true
+		}
+		if i%5 == 0 {
+			perm.Damage = i % 4
+		}
+		perm.Counters[P1P1] = uint8(i % 3)
+		perm.Counters[Charge] = uint8(i % 4)
+		if i%7 == 0 {
+			perm.RuntimeAbilities = append(perm.RuntimeAbilities, NewManaAbility(Black))
+		}
+		if i%11 == 0 {
+			perm.SubTypeAdditions = []string{"Wizard"}
+		}
+		if i%13 == 0 {
+			perm.BasePTOverride = &[2]int{3, 3}
+		}
+		if i%17 == 0 {
+			colors := []Color{Blue}
+			perm.ColorOverride = &colors
+		}
+		g.battlefield = append(g.battlefield, perm)
+		if lastEquipment != nil && perm.HasType(TypeCreature) {
+			lastEquipment.AttachedTo = perm.ID()
+			perm.Attachments = append(perm.Attachments, lastEquipment.ID())
+			lastEquipment = nil
+		}
+		if perm.HasSubType("Equipment") {
+			lastEquipment = perm
+		}
+	}
+
+	for i := range 12 {
+		g.AddPreventionShield(owners[i%2], 1+i%3)
+		g.AddRegenerationShield(g.battlefield[i+1].ID())
+	}
+	for i := range 8 {
+		target := g.battlefield[3+i].ID()
+		eff := TemporaryBoost(target, i%3, i%2)
+		eff.SetSourceID(g.battlefield[0].ID())
+		g.effects.Add(eff)
+	}
+	for i := range 6 {
+		obj := &StackObject{
+			ID:         uuid.New(),
+			Controller: owners[i%2],
+			SourceID:   uuid.New(),
+			Targets:    []uuid.UUID{owners[(i+1)%2], g.battlefield[i+2].ID()},
+			XValue:     i,
+		}
+		g.stack.Push(obj)
+	}
+	return g
+}
+
+func BenchmarkCloneRogueBoard(b *testing.B) {
+	g := setupRogueBoardCloneBenchmarkGame()
 	b.ReportAllocs()
 	for b.Loop() {
 		_ = g.Clone()

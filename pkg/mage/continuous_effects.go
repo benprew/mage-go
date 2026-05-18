@@ -368,6 +368,10 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 			ab := NewActivatedAbility(effect, cost)
 			ab.source = p.ID()
 			ab.controller = p.Controller
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{ab})
 		}
 		return nil
@@ -408,6 +412,10 @@ func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond Trigger
 			if cond != nil {
 				trig.SetConditionData(cond)
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{trig})
 		}
 		return nil
@@ -441,6 +449,10 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousE
 			if !filter.Match(p, g) {
 				continue
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.powerBonus += power
 			p.toughBonus += toughness
 		}
@@ -459,6 +471,10 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 			if !filter.Match(p, g) {
 				continue
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.powerBonus += power
 			p.toughBonus += toughness
 		}
@@ -471,7 +487,7 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 // Used for Plague Rats, etc.
 func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.FindPermanent(sourceID)
+		src := g.MutablePermanent(sourceID)
 		if src == nil {
 			return nil
 		}
@@ -486,7 +502,7 @@ func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
 // +N/+N where N is the count of permanents matching countFilter that you control.
 func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.FindPermanent(sourceID)
+		src := g.MutablePermanent(sourceID)
 		if src == nil {
 			return nil
 		}
@@ -573,6 +589,10 @@ func BoostOtherControlledCreatures(power, toughness int, filter PermanentFilter)
 			if !filter.Match(p, g) {
 				continue
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.powerBonus += power
 			p.toughBonus += toughness
 		}
@@ -639,6 +659,10 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 			if !filter.Match(p, g) {
 				continue
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.powerBonus += power
 			p.toughBonus += toughness
 		}
@@ -695,6 +719,10 @@ func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 		}
 		for _, p := range g.battlefield {
 			if slices.ContainsFunc(fromSubTypes, p.HasSubType) {
+				p = g.MutablePermanent(p.ID())
+				if p == nil {
+					continue
+				}
 				p.SubTypeOverride = toSubTypes
 				if hasNewColor && p.HasType(TypeLand) {
 					var filtered []Ability
@@ -718,6 +746,10 @@ func CyclopeanTombEffect() ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.battlefield {
 			if p.HasType(TypeLand) && p.Counters[Mire] > 0 {
+				p = g.MutablePermanent(p.ID())
+				if p == nil {
+					continue
+				}
 				p.SubTypeOverride = []string{"Swamp"}
 				var filtered []Ability
 				for _, a := range p.RuntimeAbilities {
@@ -751,7 +783,7 @@ func BoostSelf(power, toughness int, condition SourceCondition) ContinuousEffect
 		opts = append(opts, WithSourceCondition(condition))
 	}
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		src := g.FindPermanent(sourceID)
+		src := g.MutablePermanent(sourceID)
 		if src == nil {
 			return nil
 		}
@@ -792,6 +824,10 @@ func AnimateLands(filter PermanentFilter, power, toughness int) ContinuousEffect
 			g.effects.GrantAttr(p.ID(), AttrCanAttack)
 			g.effects.GrantAttr(p.ID(), AttrCanBlock)
 			g.effects.GrantAttr(p.ID(), AttrHasPowerToughness)
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.BasePTOverride = &[2]int{power, toughness}
 		}
 		return nil
@@ -1018,6 +1054,10 @@ func AnimateArtifact(scope AnimateArtifactScope) []ContinuousEffect {
 				for _, perm := range g.AllBattlefield() {
 					if isNoncreatureArtifactByPrint(perm) {
 						cmc := perm.Card.ManaCost().CMC()
+						perm = g.MutablePermanent(perm.ID())
+						if perm == nil {
+							continue
+						}
 						perm.BasePTOverride = &[2]int{cmc, cmc}
 					}
 				}
@@ -1053,6 +1093,10 @@ func GrantColorToAll(color Color, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerColor, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		colors := []Color{color}
 		for _, p := range g.FilterBattlefield(filter) {
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			p.ColorOverride = &colors
 		}
 		return nil
@@ -1263,7 +1307,7 @@ func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
 }
 
 func (e *doppelgangerCopyEffect) Apply(g *Game) error {
-	perm := g.FindPermanent(e.doppelgangerID)
+	perm := g.MutablePermanent(e.doppelgangerID)
 	if perm == nil {
 		return nil
 	}
@@ -1363,6 +1407,10 @@ func GrantSubTypeToControlled(subtype string, filter PermanentFilter) Continuous
 			if !filter.Match(p, g) {
 				continue
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			addSubTypeAddition(p, subtype)
 		}
 		return nil
@@ -1374,6 +1422,10 @@ func GrantSubTypeToControlled(subtype string, filter PermanentFilter) Continuous
 func GrantSubTypeToAll(subtype string, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.FilterBattlefield(filter) {
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
 			addSubTypeAddition(p, subtype)
 		}
 		return nil

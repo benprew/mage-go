@@ -123,6 +123,10 @@ func (e *removeCountersEffect) Properties() EffectProperties { return EffectProp
 func execRemoveCounters(ctx *EffectContext, e *removeCountersEffect) error {
 	perms := resolvePermanents(ctx, e.selector)
 	for _, p := range perms {
+		p = ctx.Game.MutablePermanent(p.ID())
+		if p == nil {
+			continue
+		}
 		p.RemoveCounter(e.ct, e.amount)
 	}
 	return nil
@@ -163,6 +167,11 @@ func MoveCountersFromSourceToTarget(ct CounterType) Effect {
 			}
 			if n > available {
 				n = available
+			}
+			source = g.MutablePermanent(sourceID)
+			target = g.MutablePermanent(targets[0])
+			if source == nil || target == nil {
+				return nil
 			}
 			source.RemoveCounter(ct, n)
 			target.AddCounter(ct, n)

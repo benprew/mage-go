@@ -187,7 +187,7 @@ func execGrantAttrToGathered(ctx *EffectContext, e *GrantAttrToGatheredData) err
 	if id == uuid.Nil {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(id)
+	perm := ctx.Game.MutablePermanent(id)
 	if perm != nil {
 		perm.GrantBaseAttr(e.Attr)
 	}

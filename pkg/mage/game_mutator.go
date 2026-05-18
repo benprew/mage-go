@@ -484,7 +484,7 @@ func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int
 	if !ok {
 		return
 	}
-	target := g.FindPermanent(aca.PermanentID())
+	target := g.MutablePermanent(aca.PermanentID())
 	if target == nil {
 		// During PutOnBattlefield the permanent isn't yet on the
 		// battlefield slice; fall back to the caller-supplied pointer when
@@ -548,7 +548,12 @@ func (g *Game) UpdateCopyEffect(permID uuid.UUID, target *Permanent) {
 // --- New Phase 1 proxy methods ---
 
 // AllBattlefield returns all permanents on the battlefield.
-func (g *Game) AllBattlefield() []*Permanent { return g.battlefield }
+func (g *Game) AllBattlefield() []*Permanent {
+	if len(g.battlefield) == 0 {
+		return nil
+	}
+	return g.battlefield[:len(g.battlefield):len(g.battlefield)]
+}
 
 // GetResolvingTargets returns the targets of the spell currently being resolved.
 func (g *Game) GetResolvingTargets() []uuid.UUID { return g.resolvingTargets }
@@ -710,6 +715,10 @@ func (g *Game) GetSchedule() *TurnSchedule {
 // AddToBattlefield appends permanents directly to the battlefield without ETB processing.
 // Used by tests that construct permanents manually.
 func (g *Game) AddToBattlefield(perms ...*Permanent) {
+	g.ensureBattlefieldSliceOwned()
+	for _, p := range perms {
+		g.addOwnedPermanent(p)
+	}
 	g.battlefield = append(g.battlefield, perms...)
 }
 
@@ -717,7 +726,15 @@ func (g *Game) AddToBattlefield(perms ...*Permanent) {
 func (g *Game) SetLandsPlayedThisTurn(n int) { g.landsPlayedThisTurn = n }
 
 // TruncateBattlefield truncates the battlefield to the given length (for undo snapshots).
-func (g *Game) TruncateBattlefield(n int) { g.battlefield = g.battlefield[:n] }
+func (g *Game) TruncateBattlefield(n int) {
+	g.ensureBattlefieldSliceOwned()
+	if g.ownedPermanents != nil {
+		for _, p := range g.battlefield[n:] {
+			delete(g.ownedPermanents, p.ID())
+		}
+	}
+	g.battlefield = g.battlefield[:n]
+}
 
 // SetPlayerAt replaces the player at the given index.
 func (g *Game) SetPlayerAt(idx int, p Player) { g.players[idx] = p }

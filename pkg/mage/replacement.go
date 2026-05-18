@@ -35,7 +35,7 @@ func (r *regenerationReplacement) Matches(a Action, g GameReader) bool {
 
 func (r *regenerationReplacement) Replace(a Action, g *Game) Action {
 	r.shields--
-	perm := g.FindPermanent(r.permanentID)
+	perm := g.MutablePermanent(r.permanentID)
 	if perm != nil {
 		g.TapPermanent(perm)
 		perm.Damage = 0
