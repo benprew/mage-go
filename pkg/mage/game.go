@@ -4438,26 +4438,34 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	for _, perm := range g.battlefield {
 		isOwner := perm.Controller == playerID
 		for i, a := range perm.RuntimeAbilities {
-			aa, ok := UnwrapAbility(a).(ActivatedAbility)
+			inner := UnwrapAbility(a)
+			aa, ok := inner.(ActivatedAbility)
 			if !ok {
+				continue
+			}
+			// An ActionDefinition implements ActivatedAbility regardless of kind.
+			// Spell-kind actions are the resolution effect of a cast spell, not
+			// something a player activates from the battlefield — surfacing them
+			// would let the search re-fire an aura's ETB effect indefinitely.
+			if def, ok := inner.(*ActionDefinition); ok && def.Kind() != ActionActivated {
 				continue
 			}
 			// Check if this ability can be used by non-controllers
 			if !isOwner {
-				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
+				saa, isSAA := inner.(*SimpleActivatedAbility)
 				if !isSAA || !saa.IsAnyPlayerAbility() {
 					continue
 				}
 			}
 			// If opponent-only, the controller cannot activate it
 			if isOwner {
-				saa, isSAA := UnwrapAbility(a).(*SimpleActivatedAbility)
+				saa, isSAA := inner.(*SimpleActivatedAbility)
 				if isSAA && saa.IsOpponentOnlyAbility() {
 					continue
 				}
 			}
 			// Skip mana abilities - those are handled separately
-			if _, isMana := UnwrapAbility(a).(*ManaAbility); isMana {
+			if _, isMana := inner.(*ManaAbility); isMana {
 				continue
 			}
 			if !aa.CanActivate(playerID, g) {
@@ -4562,6 +4570,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	aa, ok := inner.(ActivatedAbility)
 	if !ok {
+		return fmt.Errorf("not an activated ability")
+	}
+	if def, ok := inner.(*ActionDefinition); ok && def.Kind() != ActionActivated {
 		return fmt.Errorf("not an activated ability")
 	}
 	saa, isSAA := inner.(*SimpleActivatedAbility)
