@@ -286,15 +286,29 @@ func snapshotStack(g *mage.Game) []StackItemState {
 
 // GetAvailableActions returns the actions available to a player right now.
 func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
+	return getAvailableActions(g, playerID, true)
+}
+
+// GetAvailableActionsWithoutLabels returns legal actions without UI-only label
+// strings. It is intended for non-interactive callers that only need action
+// metadata.
+func GetAvailableActionsWithoutLabels(g *mage.Game, playerID uuid.UUID) []ActionOption {
+	return getAvailableActions(g, playerID, false)
+}
+
+func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) []ActionOption {
 	var options []ActionOption
 
 	for _, c := range g.GetPlayableLands(playerID) {
-		options = append(options, ActionOption{
+		opt := ActionOption{
 			Type:     ActionPlayLand,
-			Label:    fmt.Sprintf("Play %s", c.Name()),
 			CardID:   c.ID(),
 			CardName: c.Name(),
-		})
+		}
+		if includeLabels {
+			opt.Label = fmt.Sprintf("Play %s", c.Name())
+		}
+		options = append(options, opt)
 	}
 
 	for _, card := range g.GetCastableSpells(playerID) {
@@ -310,19 +324,23 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 				// MTG 601.2c: can't begin to cast a spell with no legal targets.
 				continue
 			}
-			validLabels = buildTargetLabels(g, validTargets)
+			if includeLabels {
+				validLabels = buildTargetLabels(g, validTargets)
+			}
 		}
 		mc := card.ManaCost()
 		opt := ActionOption{
 			Type:              ActionCastSpell,
-			Label:             fmt.Sprintf("Cast %s %s", card.Name(), mc),
 			CardID:            card.ID(),
 			CardName:          card.Name(),
 			NeedsTarget:       needsTarget,
 			TargetType:        targetType,
-			ManaCost:          mc.String(),
 			ValidTargets:      validTargets,
 			ValidTargetLabels: validLabels,
+		}
+		if includeLabels {
+			opt.Label = fmt.Sprintf("Cast %s %s", card.Name(), mc)
+			opt.ManaCost = mc.String()
 		}
 		if mc.HasX {
 			opt.NeedsX = true
@@ -334,9 +352,11 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	for _, info := range g.GetActivatableAbilities(playerID) {
 		opt := ActionOption{
 			Type:         ActionActivateAbility,
-			Label:        fmt.Sprintf("Activate %s: %s", info.PermanentName, info.Description),
 			PermanentID:  info.PermanentID,
 			AbilityIndex: info.AbilityIndex,
+		}
+		if includeLabels {
+			opt.Label = fmt.Sprintf("Activate %s: %s", info.PermanentName, info.Description)
 		}
 		perm := g.FindPermanent(info.PermanentID)
 		if perm != nil {
@@ -350,7 +370,9 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 						// MTG 602.5b: can't begin to activate an ability with no legal targets.
 						continue
 					}
-					opt.ValidTargetLabels = buildTargetLabels(g, opt.ValidTargets)
+					if includeLabels {
+						opt.ValidTargetLabels = buildTargetLabels(g, opt.ValidTargets)
+					}
 				}
 			}
 		}
@@ -358,9 +380,11 @@ func GetAvailableActions(g *mage.Game, playerID uuid.UUID) []ActionOption {
 	}
 
 	options = append(options, ActionOption{
-		Type:  ActionPass,
-		Label: "Pass",
+		Type: ActionPass,
 	})
+	if includeLabels {
+		options[len(options)-1].Label = "Pass"
+	}
 
 	return options
 }

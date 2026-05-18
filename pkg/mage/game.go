@@ -58,13 +58,14 @@ type Game struct {
 	// Search clones share battlefield permanent pointers until a branch writes
 	// to a permanent. ownedPermanents contains IDs whose pointers are private to
 	// this Game after sharing began.
-	battlefieldShared bool
-	ownedPermanents   map[uuid.UUID]struct{}
-	exile             []ExiledCard // exile zone with metadata
-	stack             *Stack
-	combat            *Combat
-	effects           *EffectManager
-	manaScratch       []manaSourceInfo
+	battlefieldShared      bool
+	battlefieldSliceShared bool
+	ownedPermanents        map[uuid.UUID]struct{}
+	exile                  []ExiledCard // exile zone with metadata
+	stack                  *Stack
+	combat                 *Combat
+	effects                *EffectManager
+	manaScratch            []manaSourceInfo
 
 	turn         int
 	step         PhaseStep
@@ -446,16 +447,18 @@ func (g *Game) mutablePermanentAt(i int) *Permanent {
 }
 
 func (g *Game) ensureBattlefieldSliceOwned() {
-	if !g.battlefieldShared {
+	if !g.battlefieldSliceShared {
 		return
 	}
 	if len(g.battlefield) == 0 {
 		g.battlefield = nil
+		g.battlefieldSliceShared = false
 		return
 	}
 	cp := make([]*Permanent, len(g.battlefield))
 	copy(cp, g.battlefield)
 	g.battlefield = cp
+	g.battlefieldSliceShared = false
 }
 
 func (g *Game) addOwnedPermanent(p *Permanent) {
@@ -4047,9 +4050,6 @@ type AutoTapHint struct {
 	CastingCard uuid.UUID
 }
 
-type manaAvailability [AnyColor + 1]int
-
-var paymentColors = [...]Color{White, Blue, Black, Red, Green}
 var manaPoolColors = [...]Color{White, Blue, Black, Red, Green, Colorless}
 
 // countManaBonuses returns how many bonus mana a permanent would produce when tapped.
@@ -4150,7 +4150,7 @@ func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourc
 // the player pick colors at tap time, so they're modeled as pick-one
 // sources). Colorless is included if the ability also produces colorless.
 func dualEmitOutput(productions []ManaProduction) map[Color]int {
-	out := map[Color]int{}
+	var counts [AnyColor + 1]int
 	distinctColored := 0
 	for _, p := range productions {
 		if p.Color == AnyColor || p.AnyCombination {
@@ -4160,13 +4160,19 @@ func dualEmitOutput(productions []ManaProduction) map[Color]int {
 		if amt <= 0 {
 			amt = 1
 		}
-		if out[p.Color] == 0 && p.Color != Colorless {
+		if counts[p.Color] == 0 && p.Color != Colorless {
 			distinctColored++
 		}
-		out[p.Color] += amt
+		counts[p.Color] += amt
 	}
 	if distinctColored < 2 {
 		return nil
+	}
+	out := make(map[Color]int, distinctColored)
+	for c := Colorless; c <= Green; c++ {
+		if counts[c] > 0 {
+			out[c] = counts[c]
+		}
 	}
 	return out
 }
@@ -4382,15 +4388,13 @@ func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 	}
 	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
 	g.manaScratch = sources
-	_, err := SolveMana(ManaSolverInputs{
+	return CanSolveMana(ManaSolverInputs{
 		Pool:        p.ManaPool(),
 		Cost:        mc,
 		Sources:     sources,
-		Scores:      make([]int, len(sources)),
 		BonusFor:    g.countManaBonuses,
 		Conversions: p.ManaPool().ManaConversions,
 	})
-	return err == nil
 }
 
 // MaxXValue returns the maximum X value a player can pay for a spell with cost mc,

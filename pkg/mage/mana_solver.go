@@ -67,8 +67,24 @@ const efficiencyBonusPerSavedTap = 25
 // Gauntlet of Might) and the extra mana from multi-mana sources tapped in the
 // colored pass flow into a shared surplus counter that reduces generic need.
 func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
-	mc := in.Cost
 	sources := append([]manaSourceInfo(nil), in.Sources...)
+	sol, ok, err := solveMana(in, sources, true)
+	if !ok {
+		return nil, err
+	}
+	return sol, nil
+}
+
+// CanSolveMana reports whether the given mana inputs can pay the cost without
+// allocating a solution. It may mark entries in in.Sources as used; callers
+// should pass disposable scratch storage.
+func CanSolveMana(in ManaSolverInputs) bool {
+	_, ok, _ := solveMana(in, in.Sources, false)
+	return ok
+}
+
+func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bool) (*ManaSolution, bool, error) {
+	mc := in.Cost
 	scores := in.Scores
 
 	pool := in.Pool
@@ -76,7 +92,7 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 
 	// Track pool availability per color across the run; consume*ForColor
 	// debits both exact and conversion-eligible entries.
-	avail := map[Color]int{}
+	var avail [AnyColor + 1]int
 	for _, color := range manaPoolColors {
 		if c := pool.Count(color); c > 0 {
 			avail[color] = c
@@ -94,9 +110,9 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 		{Red, mc.Red},
 		{Green, mc.Green},
 	}
-	needed := map[Color]int{}
+	var needed [AnyColor + 1]int
 	for _, cn := range colorNeeds {
-		consumed := consumePoolForColor(avail, cn.color, cn.need, conv)
+		consumed := consumePoolForColor(&avail, cn.color, cn.need, conv)
 		needed[cn.color] = cn.need - consumed
 	}
 
@@ -107,15 +123,15 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 	// not {U/x}. Driving the source pre-check off Colors[] would be more
 	// accurate; the colored pass below handles correlation correctly via
 	// sourceProducesAny.
-	availableForHybridFromSources := map[Color]int{}
+	var availableForHybridFromSources [AnyColor + 1]int
 	for _, src := range sources {
 		availableForHybridFromSources[sourceBucketColor(src)] += src.Amount
 	}
 	for _, h := range mc.Hybrid {
-		if consumePoolForColor(avail, h.A, 1, conv) > 0 {
+		if consumePoolForColor(&avail, h.A, 1, conv) > 0 {
 			continue
 		}
-		if consumePoolForColor(avail, h.B, 1, conv) > 0 {
+		if consumePoolForColor(&avail, h.B, 1, conv) > 0 {
 			continue
 		}
 		sa, sb := availableForHybridFromSources[h.A], availableForHybridFromSources[h.B]
@@ -126,7 +142,7 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 			availableForHybridFromSources[h.B] = sb - 1
 			needed[h.B]++
 		} else {
-			return nil, fmt.Errorf("insufficient mana for hybrid %s", h)
+			return nil, false, solveManaError(collectSolution, "insufficient mana for hybrid %s", h)
 		}
 	}
 
@@ -146,7 +162,7 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 	// coloredSurplus tracks colored mana left over from dual-emit sources
 	// after their "trigger" color slot is satisfied. A future slot of the
 	// same color drains the surplus before reaching for another source.
-	coloredSurplus := map[Color]int{}
+	var coloredSurplus [AnyColor + 1]int
 
 	// Colored pass: per slot, pick lowest-score source that can produce the
 	// required color. Multi-mana sources contribute their excess (Amount - 1)
@@ -165,16 +181,18 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 				if src.PermanentID == uuid.Nil || !sourceProducesAny(src, cn.color, conv) {
 					continue
 				}
-				if idx == -1 || scores[j] < scores[idx] {
+				if idx == -1 || scoreAt(scores, j) < scoreAt(scores, idx) {
 					idx = j
 				}
 			}
 			if idx == -1 {
-				return nil, fmt.Errorf("cannot pay %s for cost %s: no untapped %s source available", cn.color, mc, cn.color)
+				return nil, false, solveManaError(collectSolution, "cannot pay %s for cost %s: no untapped %s source available", cn.color, mc, cn.color)
 			}
 			src := sources[idx]
 			sources[idx].PermanentID = uuid.Nil
-			toTap = append(toTap, src.PermanentID)
+			if collectSolution {
+				toTap = append(toTap, src.PermanentID)
+			}
 			needed[cn.color]--
 			bonus := bonusFor(src.PermanentID)
 			if len(src.PerTapOutput) > 0 {
@@ -242,7 +260,7 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 			if src.PermanentID == uuid.Nil {
 				continue
 			}
-			s := scores[j]
+			s := scoreAt(scores, j)
 			if needEfficiency {
 				produced := src.Amount + bonusFor(src.PermanentID)
 				saved := min(produced, genericNeeded) - 1
@@ -256,22 +274,41 @@ func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 			}
 		}
 		if idx == -1 {
-			return nil, fmt.Errorf("cannot pay cost %s: %d generic mana still needed, no untapped sources remain", mc, genericNeeded)
+			return nil, false, solveManaError(collectSolution, "cannot pay cost %s: %d generic mana still needed, no untapped sources remain", mc, genericNeeded)
 		}
-		toTap = append(toTap, sources[idx].PermanentID)
+		if collectSolution {
+			toTap = append(toTap, sources[idx].PermanentID)
+		}
 		produced := sources[idx].Amount + bonusFor(sources[idx].PermanentID)
 		genericNeeded -= produced
 		sources[idx].PermanentID = uuid.Nil
 	}
 
-	return &ManaSolution{SourcesToTap: toTap}, nil
+	if !collectSolution {
+		return nil, true, nil
+	}
+	return &ManaSolution{SourcesToTap: toTap}, true, nil
+}
+
+func scoreAt(scores []int, i int) int {
+	if i < len(scores) {
+		return scores[i]
+	}
+	return 0
+}
+
+func solveManaError(needed bool, format string, args ...any) error {
+	if !needed {
+		return nil
+	}
+	return fmt.Errorf(format, args...)
 }
 
 // consumePoolForColor debits up to `need` mana of color `c` from `avail`,
 // first using exact-color entries, then any color X whose conv[X] == c
 // (one-way conversions like Sunglasses of Urza's Red→White). Returns the
 // amount actually consumed (≤ need).
-func consumePoolForColor(avail map[Color]int, c Color, need int, conv map[Color]Color) int {
+func consumePoolForColor(avail *[AnyColor + 1]int, c Color, need int, conv map[Color]Color) int {
 	if need == 0 {
 		return 0
 	}

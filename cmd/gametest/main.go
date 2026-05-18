@@ -141,7 +141,7 @@ func main() {
 		fmt.Printf("Alice hand (%d): %s\n", len(playerA.Hand()), handStr(playerA.Hand()))
 		fmt.Printf("Bob   hand (%d): %s\n\n", len(playerB.Hand()), handStr(playerB.Hand()))
 
-		totalLoop += runGame(g, *maxTurns)
+		totalLoop += runGame(g, *maxTurns, *quiet)
 	}
 	if *loopTiming {
 		fmt.Fprintf(
@@ -301,7 +301,7 @@ func printSkippedCards(playerName string, skipped []string) {
 		playerName, len(skipped), strings.Join(skipped, ", "))
 }
 
-func runGame(g *mage.Game, maxTurns int) time.Duration {
+func runGame(g *mage.Game, maxTurns int, quiet bool) time.Duration {
 
 	// Track last printed turn so we print the header once.
 	lastTurn := -1
@@ -312,7 +312,7 @@ func runGame(g *mage.Game, maxTurns int) time.Duration {
 		aiPlayer := p.(interactive.AutoPlayer)
 
 		// Print turn header on first priority of a new turn.
-		if g.CurrentTurn() != lastTurn {
+		if !quiet && g.CurrentTurn() != lastTurn {
 			lastTurn = g.CurrentTurn()
 			printTurnHeader(g)
 		}
@@ -321,11 +321,15 @@ func runGame(g *mage.Game, maxTurns int) time.Duration {
 		isActive := playerIdx == g.ActivePlayerIndex()
 		effectiveMainPhase := mainPhase && isActive
 
-		// Get available actions for display.
-		options := interactive.GetAvailableActions(g, p.PlayerID())
-
 		// Get the AI's decision.
 		action := aiPlayer.GetPriorityAction(g, g.GetLandsPlayedThisTurn(), effectiveMainPhase)
+
+		if quiet {
+			return convertAction(action)
+		}
+
+		// Get available actions for display.
+		options := interactive.GetAvailableActions(g, p.PlayerID())
 
 		// Only print non-pass actions (or pass when there were real choices).
 		hasRealChoice := len(options) > 1 || (len(options) == 1 && options[0].Type != interactive.ActionPass)
@@ -344,53 +348,55 @@ func runGame(g *mage.Game, maxTurns int) time.Duration {
 		return convertAction(action)
 	})
 
-	// Log actions after execution.
-	g.SetAfterPriorityAction(func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
-		p := g.PlayerAt(playerIdx)
-		switch action.Type {
-		case mage.PriorityPlayLand:
-			perm := g.FindPermanent(action.CardID)
-			name := "a land"
-			if perm != nil {
-				name = perm.Name()
+	if !quiet {
+		// Log actions after execution.
+		g.SetAfterPriorityAction(func(g *mage.Game, playerIdx int, action mage.PriorityAction) {
+			p := g.PlayerAt(playerIdx)
+			switch action.Type {
+			case mage.PriorityPlayLand:
+				perm := g.FindPermanent(action.CardID)
+				name := "a land"
+				if perm != nil {
+					name = perm.Name()
+				}
+				fmt.Printf("    ✓ %s plays %s\n", p.Name(), name)
+			case mage.PriorityCastSpell:
+				obj := g.StackPeek()
+				name := "a spell"
+				if obj != nil && obj.Card != nil {
+					name = obj.Card.Name()
+				}
+				fmt.Printf("    ✓ %s casts %s%s\n", p.Name(), name, targetSuffix(g, action.Targets))
+			case mage.PriorityActivateAbility:
+				perm := g.FindPermanent(action.PermanentID)
+				name := "permanent"
+				if perm != nil {
+					name = perm.Name()
+				}
+				fmt.Printf("    ✓ Activated %s%s\n", name, targetSuffix(g, action.Targets))
 			}
-			fmt.Printf("    ✓ %s plays %s\n", p.Name(), name)
-		case mage.PriorityCastSpell:
-			obj := g.StackPeek()
-			name := "a spell"
-			if obj != nil && obj.Card != nil {
-				name = obj.Card.Name()
-			}
-			fmt.Printf("    ✓ %s casts %s%s\n", p.Name(), name, targetSuffix(g, action.Targets))
-		case mage.PriorityActivateAbility:
-			perm := g.FindPermanent(action.PermanentID)
-			name := "permanent"
-			if perm != nil {
-				name = perm.Name()
-			}
-			fmt.Printf("    ✓ Activated %s%s\n", name, targetSuffix(g, action.Targets))
-		}
-	})
+		})
 
-	// Log stack resolution.
-	g.SetBeforeStackResolve(func(g *mage.Game) {
-		top := g.StackPeek()
-		if top == nil {
-			return
-		}
-		name := "ability"
-		if top.Card != nil {
-			name = top.Card.Name()
-		}
-		fmt.Printf("  ⟳ Resolving %s%s\n", name, targetSuffix(g, top.Targets))
-	})
+		// Log stack resolution.
+		g.SetBeforeStackResolve(func(g *mage.Game) {
+			top := g.StackPeek()
+			if top == nil {
+				return
+			}
+			name := "ability"
+			if top.Card != nil {
+				name = top.Card.Name()
+			}
+			fmt.Printf("  ⟳ Resolving %s%s\n", name, targetSuffix(g, top.Targets))
+		})
+	}
 
 	// Main turn loop.
 	loopStart := time.Now()
 	for g.CurrentTurn() <= maxTurns {
 		for _, step := range core.AllSteps() {
 			// Combat preview.
-			if step == core.CombatDamage && len(g.CombatGroups()) > 0 {
+			if !quiet && step == core.CombatDamage && len(g.CombatGroups()) > 0 {
 				fmt.Printf("  ── Combat damage ──\n")
 				printCombatPreview(g)
 			}
@@ -398,21 +404,25 @@ func runGame(g *mage.Game, maxTurns int) time.Duration {
 			g.RunStepWithPriority(step)
 
 			// Post-step info.
-			switch step {
-			case core.Draw:
-				fmt.Printf("  %s draws a card\n", g.ActivePlayerObj().Name())
-			case core.CombatDamage:
-				if len(g.CombatGroups()) > 0 {
-					for _, p := range g.AllPlayers() {
-						fmt.Printf("  %s: %d life\n", p.Name(), p.Life())
+			if !quiet {
+				switch step {
+				case core.Draw:
+					fmt.Printf("  %s draws a card\n", g.ActivePlayerObj().Name())
+				case core.CombatDamage:
+					if len(g.CombatGroups()) > 0 {
+						for _, p := range g.AllPlayers() {
+							fmt.Printf("  %s: %d life\n", p.Name(), p.Life())
+						}
 					}
 				}
 			}
 
 			if g.IsGameOver() {
-				fmt.Printf("\n=== Game Over ===\n")
-				fmt.Printf("Winner: %s\n", g.Winner())
-				printFinalState(g)
+				if !quiet {
+					fmt.Printf("\n=== Game Over ===\n")
+					fmt.Printf("Winner: %s\n", g.Winner())
+					printFinalState(g)
+				}
 				return time.Since(loopStart)
 			}
 		}
@@ -430,8 +440,10 @@ func runGame(g *mage.Game, maxTurns int) time.Duration {
 		}
 		g.SetTurn(g.CurrentTurn() + 1)
 	}
-	fmt.Printf("\n=== Game ended after %d turns (no winner) ===\n", maxTurns)
-	printFinalState(g)
+	if !quiet {
+		fmt.Printf("\n=== Game ended after %d turns (no winner) ===\n", maxTurns)
+		printFinalState(g)
+	}
 	return time.Since(loopStart)
 }
 

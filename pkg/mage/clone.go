@@ -45,6 +45,8 @@ func (g *Game) Clone() *Game {
 	// either branch to allocate a distinct slice header/backing array.
 	if len(g.battlefield) > 0 {
 		c.battlefield = g.battlefield[:len(g.battlefield):len(g.battlefield)]
+		g.battlefieldSliceShared = true
+		c.battlefieldSliceShared = true
 	}
 	g.battlefieldShared = true
 	g.ownedPermanents = nil
