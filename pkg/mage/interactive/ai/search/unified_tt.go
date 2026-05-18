@@ -126,6 +126,7 @@ func (s *searcher) probeTT(key uint64, alpha, beta float64) (simpleTTEntry, bool
 	if s.tt == nil {
 		return simpleTTEntry{}, false
 	}
+	s.ttProbes++
 	entry, ok := s.tt[key]
 	if !ok || entry.key != key {
 		return simpleTTEntry{}, false

@@ -45,8 +45,11 @@ func main() {
 	memProfile := flag.String("memprofile", "", "write memory profile to file")
 	timeout := flag.Duration("timeout", 0, "wall clock timeout for the whole run (0 disables)")
 	loopTiming := flag.Bool("loop-timing", false, "write aggregate main game-loop timing to stderr")
+	verbose := flag.Bool("verbose", false, "write per-search priority telemetry to stderr")
 	quiet := flag.Bool("quiet", false, "suppress per-action game log output")
 	flag.Parse()
+
+	search.DebugStats = *verbose
 
 	profiles := &profileRun{memPath: *memProfile}
 	if *cpuProfile != "" {

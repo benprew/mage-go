@@ -81,6 +81,8 @@ type Result struct {
 	Chain    []ChainStep
 	Score    float64
 	Nodes    int
+	MaxDepth int
+	TTProbes int
 	TTHits   int
 	TTStores int
 }

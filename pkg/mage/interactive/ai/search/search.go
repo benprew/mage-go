@@ -3,6 +3,7 @@ package search
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,8 +52,10 @@ type Strategy struct {
 	turnPlan *turnPlan
 
 	TTHits    uint64
+	TTProbes  uint64
 	TTStores  uint64
 	LastNodes uint64
+	LastDepth uint64
 }
 
 // New creates a search-based Strategy.
@@ -115,15 +118,18 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, _ int, _ bool) in
 	start := time.Now()
 	if skipEarlyStepSearch(g) {
 		s.LastNodes = 0
+		s.LastDepth = 0
 		if DebugStats {
-			fmt.Printf("[SEARCH] player=%s nodes=0 tt=0/0 elapsed=%s action=%s:%s score=skip\n",
+			fmt.Fprintf(os.Stderr, "[SEARCH] player=%s nodes=0 depth=0 tt=0/0 hit=0.0%% elapsed=%s action=%s:%s score=skip\n",
 				p.Name(), time.Since(start).Round(time.Millisecond), interactive.ActionPass, "")
 		}
 		return interactive.PriorityAction{Type: interactive.ActionPass}
 	}
 	if action, ok := s.replayPriorityAction(p, g); ok {
+		s.LastNodes = 0
+		s.LastDepth = 0
 		if DebugStats {
-			fmt.Printf("[SEARCH] player=%s nodes=0 tt=0/0 elapsed=%s action=%s:%s score=plan\n",
+			fmt.Fprintf(os.Stderr, "[SEARCH] player=%s nodes=0 depth=0 tt=0/0 hit=0.0%% elapsed=%s action=%s:%s score=plan\n",
 				p.Name(), time.Since(start).Round(time.Millisecond), action.Type, action.CardName)
 		}
 		return action
@@ -151,8 +157,8 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, _ int, _ bool) in
 	}
 
 	if DebugStats {
-		fmt.Printf("[SEARCH] player=%s nodes=%d tt=%d/%d elapsed=%s action=%s:%s score=%.2f\n",
-			p.Name(), res.Nodes, res.TTHits, res.TTStores, time.Since(start).Round(time.Millisecond),
+		fmt.Fprintf(os.Stderr, "[SEARCH] player=%s nodes=%d depth=%d tt=%d/%d hit=%.1f%% elapsed=%s action=%s:%s score=%.2f\n",
+			p.Name(), res.Nodes, res.MaxDepth, res.TTHits, res.TTProbes, ttHitRate(res), time.Since(start).Round(time.Millisecond),
 			action.Type, action.CardName, res.Score)
 	}
 
@@ -221,8 +227,17 @@ func (s *Strategy) searchAs(g *mage.Game, rootPlayerID uuid.UUID, trace func(str
 
 func (s *Strategy) recordStats(res Result) {
 	s.LastNodes = uint64(res.Nodes)
+	s.LastDepth = uint64(res.MaxDepth)
+	s.TTProbes += uint64(res.TTProbes)
 	s.TTHits += uint64(res.TTHits)
 	s.TTStores += uint64(res.TTStores)
+}
+
+func ttHitRate(res Result) float64 {
+	if res.TTProbes == 0 {
+		return 0
+	}
+	return 100 * float64(res.TTHits) / float64(res.TTProbes)
 }
 
 func moveToAction(m *Move) interactive.PriorityAction {

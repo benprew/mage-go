@@ -4334,71 +4334,6 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 	return lo
 }
 
-func allocateHybridsFromAvailability(syms []HybridSymbol, avail *manaAvailability) bool {
-	for _, h := range syms {
-		a, b := avail[h.A], avail[h.B]
-		switch {
-		case a >= b && a > 0:
-			avail[h.A] = a - 1
-		case b > 0:
-			avail[h.B] = b - 1
-		default:
-			return false
-		}
-	}
-	return true
-}
-
-func canPayFromAvailability(mc ManaCost, avail manaAvailability, conversions map[Color]Color) bool {
-	needs := [...]int{mc.White, mc.Blue, mc.Black, mc.Red, mc.Green}
-	if len(conversions) == 0 {
-		for idx, color := range paymentColors {
-			if avail[color] < needs[idx] {
-				return false
-			}
-			avail[color] -= needs[idx]
-		}
-		if !allocateHybridsFromAvailability(mc.Hybrid, &avail) {
-			return false
-		}
-		remaining := 0
-		for _, color := range manaPoolColors {
-			remaining += avail[color]
-		}
-		return remaining >= mc.Generic
-	}
-
-	for idx, color := range paymentColors {
-		need := needs[idx]
-		exact := min(avail[color], need)
-		avail[color] -= exact
-		need -= exact
-		if need > 0 {
-			for from, to := range conversions {
-				if to == color && from != color {
-					converted := min(avail[from], need)
-					avail[from] -= converted
-					need -= converted
-					if need <= 0 {
-						break
-					}
-				}
-			}
-		}
-		if need > 0 {
-			return false
-		}
-	}
-	if !allocateHybridsFromAvailability(mc.Hybrid, &avail) {
-		return false
-	}
-	remaining := 0
-	for _, color := range manaPoolColors {
-		remaining += avail[color]
-	}
-	return remaining >= mc.Generic
-}
-
 // ActivatableInfo describes an activated ability on a permanent that can currently be used.
 type ActivatableInfo struct {
 	PermanentID   uuid.UUID
@@ -4415,20 +4350,6 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 	}
 	isMainPhase := g.step.IsMainPhase()
 	isActive := g.ActivePlayerObj().PlayerID() == playerID
-
-	var availableMana manaAvailability
-	pool := p.ManaPool()
-	for _, color := range manaPoolColors {
-		availableMana[color] = pool.Count(color)
-	}
-	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
-	g.manaScratch = sources
-	for _, src := range sources {
-		c := sourceBucketColor(src)
-		availableMana[c] += src.Amount
-		availableMana[c] += g.countManaBonuses(src.PermanentID)
-	}
-	manaConversions := pool.ManaConversions
 
 	var castable []Card
 	for _, card := range p.Hand() {
@@ -4464,7 +4385,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 				Green:   mc.Green,
 			}
 		}
-		if !canPayFromAvailability(checkMC, availableMana, manaConversions) {
+		if !g.CanAfford(playerID, checkMC, SpellContextForCard(card)) {
 			continue
 		}
 		// Spells with targets (e.g. auras) can't be cast if no legal targets exist

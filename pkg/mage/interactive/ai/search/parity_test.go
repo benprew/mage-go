@@ -72,7 +72,7 @@ func searchActiveRootForTest(g *mage.Game, rootPlayerID uuid.UUID, useTT bool) R
 	}
 	s := &searcher{rootPlayer: rootPlayer, tt: tt, zobrist: DefaultZobrist}
 	chain, score := s.search(root, rootPlayerID, false, negInf, posInf)
-	return Result{Chain: chain, Score: score, Nodes: s.nodes, TTHits: s.ttHits, TTStores: s.ttStores}
+	return Result{Chain: chain, Score: score, Nodes: s.nodes, MaxDepth: s.maxDepth, TTProbes: s.ttProbes, TTHits: s.ttHits, TTStores: s.ttStores}
 }
 
 func ttLabel(useTT bool) string {

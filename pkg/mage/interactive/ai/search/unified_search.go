@@ -150,7 +150,7 @@ func searchActiveRoot(g *mage.Game, rootPlayerID uuid.UUID, trace func(string), 
 	}
 	s := &searcher{rootPlayer: rootPlayer, trace: trace, tt: tt, zobrist: z}
 	chain, score := s.search(root, root.ActivePlayerObj().PlayerID(), false, negInf, posInf)
-	return Result{Chain: chain, Score: score, Nodes: s.nodes, TTHits: s.ttHits, TTStores: s.ttStores}
+	return Result{Chain: chain, Score: score, Nodes: s.nodes, MaxDepth: s.maxDepth, TTProbes: s.ttProbes, TTHits: s.ttHits, TTStores: s.ttStores}
 }
 
 func searchInstantResponse(g *mage.Game, rootPlayerID uuid.UUID, trace func(string), useTT bool, z *ZobristTables) Result {
@@ -167,6 +167,8 @@ func searchInstantResponse(g *mage.Game, rootPlayerID uuid.UUID, trace func(stri
 	bestScore := negInf
 	var bestMove *Move
 	totalNodes := 0
+	maxDepth := 0
+	ttProbes := 0
 	ttHits := 0
 	ttStores := 0
 
@@ -174,7 +176,9 @@ func searchInstantResponse(g *mage.Game, rootPlayerID uuid.UUID, trace func(stri
 		m := &moves[i]
 		clone := g.Clone()
 		if m.Type != interactive.ActionPass {
-			applyMove(clone, rootPlayerID, m)
+			if err := applyMove(clone, rootPlayerID, m); err != nil {
+				continue
+			}
 		}
 		var subScore float64
 		if clone.IsGameOver() {
@@ -182,6 +186,8 @@ func searchInstantResponse(g *mage.Game, rootPlayerID uuid.UUID, trace func(stri
 		} else {
 			res := searchActiveRoot(clone, clone.ActivePlayerObj().PlayerID(), nil, useTT, z)
 			totalNodes += res.Nodes
+			maxDepth = max(maxDepth, res.MaxDepth)
+			ttProbes += res.TTProbes
 			ttHits += res.TTHits
 			ttStores += res.TTStores
 			subScore = -res.Score
@@ -210,7 +216,7 @@ func searchInstantResponse(g *mage.Game, rootPlayerID uuid.UUID, trace func(stri
 			Move:     &mCopy,
 		}}
 	}
-	return Result{Chain: chain, Score: bestScore, Nodes: totalNodes, TTHits: ttHits, TTStores: ttStores}
+	return Result{Chain: chain, Score: bestScore, Nodes: totalNodes, MaxDepth: maxDepth, TTProbes: ttProbes, TTHits: ttHits, TTStores: ttStores}
 }
 
 type searcher struct {
@@ -219,12 +225,22 @@ type searcher struct {
 	trace      func(string)
 	tt         map[uint64]simpleTTEntry
 	zobrist    *ZobristTables
+	depth      int
+	maxDepth   int
+	ttProbes   int
 	ttHits     int
 	ttStores   int
 }
 
 func (s *searcher) search(g *mage.Game, priorityID uuid.UUID, prevPass bool, alpha, beta float64) (chain []ChainStep, score float64) {
 	s.nodes++
+	s.depth++
+	if s.depth > s.maxDepth {
+		s.maxDepth = s.depth
+	}
+	defer func() {
+		s.depth--
+	}()
 	key := s.ttKey(g, priorityID, prevPass)
 	if entry, ok := s.probeTT(key, alpha, beta); ok {
 		s.ttHits++
@@ -310,7 +326,9 @@ func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bo
 			}
 		} else {
 			clone := g.Clone()
-			applyMove(clone, priorityID, m)
+			if err := applyMove(clone, priorityID, m); err != nil {
+				continue
+			}
 			subChain, subScore = s.search(clone, priorityID, false, alpha, beta)
 		}
 

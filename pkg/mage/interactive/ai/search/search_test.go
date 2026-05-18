@@ -398,6 +398,36 @@ func TestApplyMove_CreatureCast(t *testing.T) {
 	}
 }
 
+func TestApplyMove_InvalidCastReturnsError(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
+	creature := mage.NewCreature("Bear", "{1}{G}", 2, 2)
+	creature.SetOwner(pa.PlayerID())
+	pa.AddToHand(creature)
+
+	clone := g.Clone()
+
+	m := &Move{
+		Type:     interactive.ActionCastSpell,
+		CardID:   creature.ID(),
+		CardName: "Bear",
+	}
+	if err := applyMove(clone, pa.PlayerID(), m); err == nil {
+		t.Fatal("applyMove should report an unpayable cast")
+	}
+
+	clonePA := clone.GetPlayer(pa.PlayerID())
+	if len(clonePA.Hand()) != 1 {
+		t.Fatalf("failed cast should leave card in hand, got hand count %d", len(clonePA.Hand()))
+	}
+	for _, perm := range clone.AllBattlefield() {
+		if perm.Name() == "Bear" {
+			t.Fatal("failed cast should not put Bear onto the battlefield")
+		}
+	}
+}
+
 func TestApplyMove_DamageSpell(t *testing.T) {
 	g, pa, pb := makeGame()
 	g.SetStep(core.PrecombatMain)

@@ -207,9 +207,7 @@ func expandModalSpellMoves(p mage.Player, g *mage.Game, card mage.Card, modes []
 func expandXSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {
 	playerID := p.PlayerID()
 	mc := card.ManaCost()
-	fixedCost := mc.CMC() // colored + generic (excluding X)
-	availMana := eval.CountAvailableMana(g, playerID)
-	maxX := availMana - fixedCost
+	maxX := g.MaxXValue(playerID, mc, mage.SpellContextForCard(card))
 	if maxX < 1 {
 		return nil
 	}
