@@ -718,6 +718,66 @@ func TestSearch_TurnPlanReplaysIdenticalPriorityDecision(t *testing.T) {
 	}
 }
 
+func TestSearch_SkipsEmptyUpkeepAndDrawPriority(t *testing.T) {
+	for _, step := range []core.PhaseStep{core.Upkeep, core.Draw} {
+		for _, tc := range []struct {
+			name      string
+			activeIdx int
+		}{
+			{name: "own turn", activeIdx: 0},
+			{name: "opponent turn", activeIdx: 1},
+		} {
+			t.Run(step.String()+"/"+tc.name, func(t *testing.T) {
+				g, pa, _ := makeGame()
+				g.SetStep(step)
+				g.SetActivePlayerIndex(tc.activeIdx)
+
+				strategy := makeSearchAI(DefaultConfig())
+				strategy.LastNodes = 99
+				action := strategy.PriorityAction(pa, g, 0, false)
+
+				if action.Type != interactive.ActionPass {
+					t.Fatalf("action = %v, want pass", action.Type)
+				}
+				if strategy.LastNodes != 0 {
+					t.Fatalf("empty %s priority should not search, LastNodes=%d", step, strategy.LastNodes)
+				}
+			})
+		}
+	}
+}
+
+func TestSearch_SearchesUpkeepAndDrawWhenStackIsNotEmpty(t *testing.T) {
+	for _, step := range []core.PhaseStep{core.Upkeep, core.Draw} {
+		for _, tc := range []struct {
+			name      string
+			activeIdx int
+		}{
+			{name: "own turn", activeIdx: 0},
+			{name: "opponent turn", activeIdx: 1},
+		} {
+			t.Run(step.String()+"/"+tc.name, func(t *testing.T) {
+				g, pa, _ := makeGame()
+				g.SetStep(step)
+				g.SetActivePlayerIndex(tc.activeIdx)
+				g.GetStack().Push(&mage.StackObject{
+					ID:         uuid.New(),
+					Controller: pa.PlayerID(),
+					SourceID:   uuid.New(),
+					IsAbility:  true,
+				})
+
+				strategy := makeSearchAI(DefaultConfig())
+				_ = strategy.PriorityAction(pa, g, 0, false)
+
+				if strategy.LastNodes == 0 {
+					t.Fatalf("non-empty %s stack should still search", step)
+				}
+			})
+		}
+	}
+}
+
 func TestSearch_TurnPlanReplaysIdenticalCastDecision(t *testing.T) {
 	g, pa, pb := makeGame()
 	pb.SetLife(3)

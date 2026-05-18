@@ -113,6 +113,14 @@ func (s *adaptiveStrategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAss
 
 func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, _ int, _ bool) interactive.PriorityAction {
 	start := time.Now()
+	if skipEarlyStepSearch(g) {
+		s.LastNodes = 0
+		if DebugStats {
+			fmt.Printf("[SEARCH] player=%s nodes=0 tt=0/0 elapsed=%s action=%s:%s score=skip\n",
+				p.Name(), time.Since(start).Round(time.Millisecond), interactive.ActionPass, "")
+		}
+		return interactive.PriorityAction{Type: interactive.ActionPass}
+	}
 	if action, ok := s.replayPriorityAction(p, g); ok {
 		if DebugStats {
 			fmt.Printf("[SEARCH] player=%s nodes=0 tt=0/0 elapsed=%s action=%s:%s score=plan\n",
@@ -149,6 +157,14 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, _ int, _ bool) in
 	}
 
 	return action
+}
+
+func skipEarlyStepSearch(g *mage.Game) bool {
+	if g == nil || g.StackSize() != 0 {
+		return false
+	}
+	step := g.GetStep()
+	return step == core.Upkeep || step == core.Draw
 }
 
 func (s *Strategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
