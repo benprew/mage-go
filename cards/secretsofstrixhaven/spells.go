@@ -2109,6 +2109,10 @@ func registerSpells() {
 						}
 						// Untap all creatures you control.
 						for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
+							perm = g.MutablePermanent(perm.ID())
+							if perm == nil {
+								continue
+							}
 							if perm.Tapped {
 								perm.Tapped = false
 								g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: perm.ID()})

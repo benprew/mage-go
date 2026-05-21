@@ -155,6 +155,10 @@ func registerEnchantments() {
 						EffectProperties{Outcome: OutcomeBenefit, Mass: true},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+								p = g.MutablePermanent(p.ID())
+								if p == nil {
+									continue
+								}
 								p.AddCounter(P1P1, 1)
 							}
 							return nil
@@ -683,6 +687,10 @@ func registerEnchantments() {
 						return nil
 					}
 					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+						p = g.MutablePermanent(p.ID())
+						if p == nil {
+							continue
+						}
 						p.BoostPT(1, 1)
 					}
 					return nil

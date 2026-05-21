@@ -721,6 +721,10 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, p := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, NotID(sourceID))) {
+							p = g.MutablePermanent(p.ID())
+							if p == nil {
+								continue
+							}
 							p.AddCounter(P1P1, 1)
 						}
 						return nil
@@ -747,6 +751,10 @@ func registerCreatures() {
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					for _, p := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
 						if p.Counters[P1P1] > 0 {
+							p = g.MutablePermanent(p.ID())
+							if p == nil {
+								continue
+							}
 							p.AddCounter(P1P1, 1)
 						}
 					}
@@ -841,6 +849,10 @@ func registerCreatures() {
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					for _, p := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature, NotID(sourceID))) {
+						p = g.MutablePermanent(p.ID())
+						if p == nil {
+							continue
+						}
 						p.AddCounter(P1P1, 1)
 					}
 					return nil
@@ -954,6 +966,10 @@ func registerCreatures() {
 					for _, p := range g.FilterBattlefield(And(
 						ControlledBy(src.Controller), IsCreature, HasSubType("Spirit"), NotID(sourceID),
 					)) {
+						p = g.MutablePermanent(p.ID())
+						if p == nil {
+							continue
+						}
 						p.BoostPT(1, 0)
 					}
 					return nil
@@ -1050,6 +1066,10 @@ func registerCreatures() {
 					for _, p := range g.FilterBattlefield(And(
 						ControlledBy(src.Controller), HasSubType("Pirate"), NotID(sourceID),
 					)) {
+						p = g.MutablePermanent(p.ID())
+						if p == nil {
+							continue
+						}
 						p.BoostPT(1, 1)
 					}
 					return nil
@@ -1868,6 +1888,10 @@ func registerCreatures() {
 					if p.ID() == sourceID {
 						continue
 					}
+					p = g.MutablePermanent(p.ID())
+					if p == nil {
+						continue
+					}
 					p.BoostPT(1, 0)
 				}
 				return nil
@@ -2339,6 +2363,10 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, p := range g.FilterBattlefield(And(IsCreature, IsAttacking, ControlledBy(controller))) {
+							p = g.MutablePermanent(p.ID())
+							if p == nil {
+								continue
+							}
 							p.AddCounter(P1P1, 1)
 						}
 						return nil
@@ -5792,6 +5820,10 @@ func registerCreatures() {
 							continue
 						}
 						if !hasAnyCounter(p) {
+							continue
+						}
+						p = g.MutablePermanent(p.ID())
+						if p == nil {
 							continue
 						}
 						ab := NewActivatedAbility(AddMana(Green, 1), Tap())

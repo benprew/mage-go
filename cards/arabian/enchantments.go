@@ -106,7 +106,9 @@ func registerEnchantments() {
 							}
 							if target != nil {
 								// Can't be regenerated
-								target.GrantBaseAttr(CantRegenerate)
+								if mt := g.MutablePermanent(target.ID()); mt != nil {
+									mt.GrantBaseAttr(CantRegenerate)
+								}
 								g.DestroyPermanent(target)
 							}
 							return nil
@@ -176,7 +178,11 @@ func registerEnchantments() {
 					// Boost all white creatures +2/+1
 					for _, p := range g.AllBattlefield() {
 						if p.HasType(TypeCreature) && HasColorFilter(White).Match(p, g) {
-							p.BoostPT(2, 1)
+							mp := g.MutablePermanent(p.ID())
+							if mp == nil {
+								continue
+							}
+							mp.BoostPT(2, 1)
 						}
 					}
 					return nil

@@ -758,6 +758,10 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
+							perm = g.MutablePermanent(perm.ID())
+							if perm == nil {
+								continue
+							}
 							perm.AddCounter(P1P1, 1)
 						}
 						g.ApplyContinuousEffects()
@@ -871,6 +875,10 @@ func registerCreatures() {
 							return nil
 						}
 						g.TapPermanent(chosen)
+						chosen = g.MutablePermanent(chosen.ID())
+						if chosen == nil {
+							return nil
+						}
 						chosen.AddCounter(Stun, 1)
 						return nil
 					},
@@ -1178,6 +1186,10 @@ func registerCreatures() {
 						}
 						if x > 0 {
 							for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), fractalFilter)) {
+								perm = g.MutablePermanent(perm.ID())
+								if perm == nil {
+									continue
+								}
 								perm.AddCounter(P1P1, x)
 							}
 							g.ApplyContinuousEffects()
@@ -1513,6 +1525,10 @@ func registerCreatures() {
 							return nil
 						}
 						target := player.ChoosePermanent(candidates, "move counters to another target creature", g)
+						if target == nil {
+							return nil
+						}
+						target = g.MutablePermanent(target.ID())
 						if target == nil {
 							return nil
 						}
@@ -3378,6 +3394,10 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+						p = g.MutablePermanent(p.ID())
+						if p == nil {
+							continue
+						}
 						p.BoostPT(1, 0)
 					}
 					return nil
@@ -4044,6 +4064,10 @@ func registerCreatures() {
 							return nil
 						}
 						g.TapPermanent(chosen)
+						chosen = g.MutablePermanent(chosen.ID())
+						if chosen == nil {
+							return nil
+						}
 						chosen.AddCounter(Stun, 1)
 						return nil
 					},

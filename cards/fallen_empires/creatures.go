@@ -574,6 +574,10 @@ func registerCreatures() {
 							return nil
 						}
 						g.Sacrifice(src)
+						chosen = g.MutablePermanent(chosen.ID())
+						if chosen == nil {
+							return nil
+						}
 						chosen.GrantBaseAttr(CantRegenerate)
 						g.DestroyPermanent(chosen)
 						return nil

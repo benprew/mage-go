@@ -177,7 +177,11 @@ func registerCreatures() {
 					// Boost all creatures named Ivory Guardians (including self)
 					for _, p := range g.AllBattlefield() {
 						if p.HasType(TypeCreature) && p.Card.Name() == "Ivory Guardians" {
-							p.BoostPT(1, 1)
+							m := g.MutablePermanent(p.ID())
+							if m == nil {
+								continue
+							}
+							m.BoostPT(1, 1)
 						}
 					}
 					return nil
@@ -2113,7 +2117,11 @@ func registerCreatures() {
 							continue
 						}
 						if !p.Tapped && !g.IsAttackingInCombat(p.ID()) {
-							p.BoostPT(0, 2)
+							m := g.MutablePermanent(p.ID())
+							if m == nil {
+								continue
+							}
+							m.BoostPT(0, 2)
 						}
 					}
 					return nil
@@ -2921,7 +2929,11 @@ func registerCreatures() {
 						// Change controller of all Kobolds of Kher Keep
 						for _, p := range g.AllBattlefield() {
 							if p.Name() == "Kobolds of Kher Keep" && p.Card.Owner() == controller {
-								p.Controller = oppID
+								m := g.MutablePermanent(p.ID())
+								if m == nil {
+									continue
+								}
+								m.Controller = oppID
 							}
 						}
 						return nil

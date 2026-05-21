@@ -604,6 +604,10 @@ func registerEnchantments() {
 						blues := g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(activePlayer), IsTapped))
 						for _, blue := range blues {
 							if g.TryPayCostFromLands(activePlayer, "{4}") {
+								blue = g.MutablePermanent(blue.ID())
+								if blue == nil {
+									continue
+								}
 								blue.Tapped = false
 							}
 						}

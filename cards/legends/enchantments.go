@@ -38,7 +38,11 @@ func registerEnchantments() {
 					}
 					// Boost all creatures you control +1/+1
 					for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
-						perm.BoostPT(1, 1)
+						m := g.MutablePermanent(perm.ID())
+						if m == nil {
+							continue
+						}
+						m.BoostPT(1, 1)
 					}
 					return nil
 				}),
@@ -1104,7 +1108,9 @@ func registerEnchantments() {
 							}
 							chosen := activePlayer.ChoosePermanent(creatures, "destroy", g)
 							if chosen != nil {
-								chosen.GrantBaseAttr(CantRegenerate)
+								if m := g.MutablePermanent(chosen.ID()); m != nil {
+									m.GrantBaseAttr(CantRegenerate)
+								}
 								g.DestroyPermanent(chosen)
 							}
 							return nil

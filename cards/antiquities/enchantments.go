@@ -251,7 +251,11 @@ func registerEnchantments() {
 	titaniasSongAbility := func(g *Game, _ uuid.UUID) error {
 		for _, perm := range g.AllBattlefield() {
 			if perm.HasType(TypeArtifact) && !perm.Card.HasType(TypeCreature) {
-				perm.RuntimeAbilities = nil
+				mp := g.MutablePermanent(perm.ID())
+				if mp == nil {
+					continue
+				}
+				mp.RuntimeAbilities = nil
 			}
 		}
 		return nil

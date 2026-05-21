@@ -160,7 +160,11 @@ func registerArtifacts() {
 							if chosen == nil {
 								break
 							}
-							chosen.Tapped = false
+							mp := g.MutablePermanent(chosen.ID())
+							if mp == nil {
+								continue
+							}
+							mp.Tapped = false
 						}
 						return nil
 					}),

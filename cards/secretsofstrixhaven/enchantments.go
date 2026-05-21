@@ -65,6 +65,10 @@ func registerEnchantments() {
 					return nil
 				}
 				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+					p = g.MutablePermanent(p.ID())
+					if p == nil {
+						continue
+					}
 					p.BoostPT(3, 3)
 				}
 				return nil
