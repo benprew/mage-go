@@ -64,7 +64,7 @@ var (
 	packedTimingAssemblyNs int64
 	packedTimingMetadataNs int64
 
-	nativeTimingEnabledFlag int64
+	nativeTimingEnabledFlag atomic.Int64
 	nativeEncodeCalls       int64
 	nativeEncodeRows        int64
 	nativeEncodeTotalNs     int64
@@ -130,7 +130,7 @@ func packedEncodeTimingSnapshot(reset bool) encodeTimingSnapshot {
 }
 
 func nativeLoopTimingEnabled() bool {
-	return atomic.LoadInt64(&nativeTimingEnabledFlag) != 0
+	return nativeTimingEnabledFlag.Load() != 0
 }
 
 func addNativeEncodeTiming(rows int64, total, view, clear, stateAction, decision time.Duration) {
@@ -170,7 +170,7 @@ func nativeLoopTimingTakeSnapshot(reset bool) nativeLoopTimingSnapshot {
 	stepRoute := load(&nativeStepRouteNs)
 	stepWait := load(&nativeStepWaitNs)
 	if reset {
-		atomic.StoreInt64(&nativeTimingEnabledFlag, 1)
+		nativeTimingEnabledFlag.Store(1)
 		interactive.EnableLoopTiming(true)
 		mage.EnableEngineTiming(true)
 		atomic.StoreInt64(&nativeEncodeCalls, 0)

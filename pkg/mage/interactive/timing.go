@@ -23,7 +23,7 @@ type LoopTimingSnapshot struct {
 }
 
 var (
-	loopTimingEnabled        int64
+	loopTimingEnabled        atomic.Int64
 	loopTimingStepCalls      int64
 	loopTimingStepNs         int64
 	loopTimingGetCalls       int64
@@ -36,11 +36,11 @@ var (
 )
 
 func LoopTimingEnabled() bool {
-	return atomic.LoadInt64(&loopTimingEnabled) != 0
+	return loopTimingEnabled.Load() != 0
 }
 
 func EnableLoopTiming(reset bool) {
-	atomic.StoreInt64(&loopTimingEnabled, 1)
+	loopTimingEnabled.Store(1)
 	if reset {
 		atomic.StoreInt64(&loopTimingStepCalls, 0)
 		atomic.StoreInt64(&loopTimingStepNs, 0)

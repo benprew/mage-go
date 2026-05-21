@@ -23,7 +23,7 @@ type EngineTimingSnapshot struct {
 }
 
 var (
-	engineTimingEnabled            int64
+	engineTimingEnabled            atomic.Int64
 	engineTimingPriorityRounds     int64
 	engineTimingPriorityIterations int64
 	engineTimingSBANs              int64
@@ -37,11 +37,11 @@ var (
 )
 
 func EngineTimingEnabled() bool {
-	return atomic.LoadInt64(&engineTimingEnabled) != 0
+	return engineTimingEnabled.Load() != 0
 }
 
 func EnableEngineTiming(reset bool) {
-	atomic.StoreInt64(&engineTimingEnabled, 1)
+	engineTimingEnabled.Store(1)
 	if reset {
 		atomic.StoreInt64(&engineTimingPriorityRounds, 0)
 		atomic.StoreInt64(&engineTimingPriorityIterations, 0)

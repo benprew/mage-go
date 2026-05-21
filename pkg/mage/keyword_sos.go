@@ -28,6 +28,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -303,8 +304,8 @@ func OpusEffect(text string, fn func(g *Game, sourceID, controller uuid.UUID, ma
 // the first SpellCast object below.
 func opusManaSpentForResolvingTrigger(g *Game) int {
 	objs := g.stack.Objects()
-	for i := len(objs) - 1; i >= 0; i-- {
-		obj := objs[i]
+	for _, obj := range slices.Backward(objs) {
+
 		if obj.IsAbility {
 			continue
 		}

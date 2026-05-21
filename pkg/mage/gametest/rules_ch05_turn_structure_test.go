@@ -20,7 +20,7 @@ import (
 
 // TestCR500_8_ExtraPhaseInsertedAfterSpecified verifies CR 500.8.
 func TestCR500_8_ExtraPhaseInsertedAfterSpecified(t *testing.T) {
-	var beginCombatFires int32
+	var beginCombatFires atomic.Int32
 	watchName := "CR500.8 BeginCombat Watcher"
 	if !mage.CardRegistered(watchName) {
 		mage.Register(watchName, func() mage.Card {
@@ -29,13 +29,13 @@ func TestCR500_8_ExtraPhaseInsertedAfterSpecified(t *testing.T) {
 				mage.WithAbility(mage.NewTriggered(core.EvtBeginCombat, false,
 					mage.FuncEffect("count begin-combat", mage.EffectProperties{},
 						func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-							atomic.AddInt32(&beginCombatFires, 1)
+							beginCombatFires.Add(1)
 							return nil
 						}))))
 		})
 	}
 
-	atomic.StoreInt32(&beginCombatFires, 0)
+	beginCombatFires.Store(0)
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, watchName)
 	tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
@@ -52,7 +52,7 @@ func TestCR500_8_ExtraPhaseInsertedAfterSpecified(t *testing.T) {
 		tg.Step = step
 		tg.RunStepWithPriority(step)
 	}
-	got := atomic.LoadInt32(&beginCombatFires)
+	got := beginCombatFires.Load()
 	if got < 2 {
 		t.Errorf("CR 500.8: EvtBeginCombat fired %d time(s); want >= 2", got)
 	}
@@ -351,7 +351,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 	}
 
 	triggerName := "CR508.4 Trigger Beast"
-	var attacksFires int32
+	var attacksFires atomic.Int32
 	if !mage.CardRegistered(triggerName) {
 		mage.Register(triggerName, func() mage.Card {
 			return mage.NewCreature(triggerName, "{2}{R}", 2, 2,
@@ -359,7 +359,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 				mage.WithAbility(mage.AttacksTrigger(
 					mage.FuncEffect("count attacks fires", mage.EffectProperties{},
 						func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-							atomic.AddInt32(&attacksFires, 1)
+							attacksFires.Add(1)
 							return nil
 						}), false)))
 		})
@@ -399,7 +399,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 
 	// Part 2: AttacksTrigger must NOT fire when a creature with that trigger
 	// is put onto the battlefield attacking (CR 508.3a).
-	atomic.StoreInt32(&attacksFires, 0)
+	attacksFires.Store(0)
 	tg2 := NewTestGame(t)
 	tg2.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
 	tg2.AddCard(core.ZoneHand, PlayerA, putAttackingName)
@@ -409,7 +409,7 @@ func TestCR508_4_DeclareAttackersETBAttacking(t *testing.T) {
 	tg2.AssertGraveyardCount(PlayerA, putAttackingName, 1)
 	tg2.AssertPermanentCount(PlayerA, triggerName, 1)
 	tg2.AssertLife(PlayerB, 18) // 2 damage from the 2/2, no trigger damage
-	if got := atomic.LoadInt32(&attacksFires); got != 0 {
+	if got := attacksFires.Load(); got != 0 {
 		t.Fatalf("CR 508.3a: AttacksTrigger fired %d time(s); must not fire for a creature put into play attacking", got)
 	}
 }
@@ -527,7 +527,7 @@ func TestCR509_1c_DeclareBlockersBlockRequirementObeyed(t *testing.T) {
 // times for N attackers blocked. This test documents the engine gap.
 func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 	const multiBlockName = "CR509.3a Multi-Blocker"
-	var blockTriggerCount int32
+	var blockTriggerCount atomic.Int32
 
 	if !mage.CardRegistered(multiBlockName) {
 		mage.Register(multiBlockName, func() mage.Card {
@@ -537,7 +537,7 @@ func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 				mage.WithAbility(mage.BlocksTrigger(
 					mage.FuncEffect("count blocks", mage.EffectProperties{},
 						func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-							atomic.AddInt32(&blockTriggerCount, 1)
+							blockTriggerCount.Add(1)
 							return nil
 						}), false)))
 		})
@@ -554,7 +554,7 @@ func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 			return mage.NewCreature(atk2, "{1}{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
-	atomic.StoreInt32(&blockTriggerCount, 0)
+	blockTriggerCount.Store(0)
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, atk1)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, atk2)
@@ -564,7 +564,7 @@ func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 	tg.Block(1, PlayerB, multiBlockName, atk2)
 	tg.StopAt(1, core.PostcombatMain)
 	tg.Execute()
-	got := atomic.LoadInt32(&blockTriggerCount)
+	got := blockTriggerCount.Load()
 	if got != 1 {
 		t.Errorf("CR 509.3a: 'whenever blocks' trigger fired %d time(s); CR requires exactly 1 per combat", got)
 	}
@@ -578,7 +578,7 @@ func TestCR509_3a_BlocksOnceTriggerMultipleAttackers(t *testing.T) {
 // per creature blocked.
 func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 	const perBlockName = "CR509.3b Per-Attacker Blocker"
-	var perBlockCount int32
+	var perBlockCount atomic.Int32
 
 	if !mage.CardRegistered(perBlockName) {
 		mage.Register(perBlockName, func() mage.Card {
@@ -589,7 +589,7 @@ func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 					mage.NewTriggered(core.EvtDeclaredBlocker, false,
 						mage.FuncEffect("count per-attacker block", mage.EffectProperties{},
 							func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-								atomic.AddInt32(&perBlockCount, 1)
+								perBlockCount.Add(1)
 								return nil
 							})).
 						SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
@@ -609,7 +609,7 @@ func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 			return mage.NewCreature(batk2, "{R}", 1, 1, mage.WithSubTypes("Goblin"))
 		})
 	}
-	atomic.StoreInt32(&perBlockCount, 0)
+	perBlockCount.Store(0)
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, batk1)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, batk2)
@@ -619,7 +619,7 @@ func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 	tg.Block(1, PlayerB, perBlockName, batk2)
 	tg.StopAt(1, core.PostcombatMain)
 	tg.Execute()
-	if got := atomic.LoadInt32(&perBlockCount); got != 2 {
+	if got := perBlockCount.Load(); got != 2 {
 		t.Errorf("CR 509.3b: per-attacker block trigger fired %d time(s); want 2", got)
 	}
 }
@@ -632,7 +632,7 @@ func TestCR509_3b_BlocksACreatureTrigger(t *testing.T) {
 // once per combat even when two creatures block.
 func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 	const becomeBlockedAtkName = "CR509.3c Becomes-Blocked Attacker"
-	var becomeBlockedCount int32
+	var becomeBlockedCount atomic.Int32
 
 	if !mage.CardRegistered(becomeBlockedAtkName) {
 		mage.Register(becomeBlockedAtkName, func() mage.Card {
@@ -644,7 +644,7 @@ func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 							func(gr *mage.Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
 								cg := gr.CombatGroupFor(sourceID)
 								if cg != nil && len(cg.BlockerIDs) > 0 {
-									atomic.AddInt32(&becomeBlockedCount, 1)
+									becomeBlockedCount.Add(1)
 								}
 								return nil
 							}),
@@ -665,7 +665,7 @@ func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 			return mage.NewCreature(blkB, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
-	atomic.StoreInt32(&becomeBlockedCount, 0)
+	becomeBlockedCount.Store(0)
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, becomeBlockedAtkName)
 	tg.AddCard(core.ZoneBattlefield, PlayerB, blkA)
@@ -675,7 +675,7 @@ func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 	tg.Block(1, PlayerB, blkB, becomeBlockedAtkName)
 	tg.StopAt(1, core.PostcombatMain)
 	tg.Execute()
-	if got := atomic.LoadInt32(&becomeBlockedCount); got != 1 {
+	if got := becomeBlockedCount.Load(); got != 1 {
 		t.Errorf("CR 509.3c: 'becomes blocked' trigger fired %d time(s); want 1", got)
 	}
 }
@@ -688,7 +688,7 @@ func TestCR509_3c_BecomesBlockedOnce(t *testing.T) {
 // fires once per blocking creature.
 func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 	const blockedByAtkName = "CR509.3d Blocked-By Attacker"
-	var blockedByCount int32
+	var blockedByCount atomic.Int32
 
 	if !mage.CardRegistered(blockedByAtkName) {
 		mage.Register(blockedByAtkName, func() mage.Card {
@@ -698,7 +698,7 @@ func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 					mage.NewTriggered(core.EvtDeclaredBlocker, false,
 						mage.FuncEffect("count blocked-by", mage.EffectProperties{},
 							func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-								atomic.AddInt32(&blockedByCount, 1)
+								blockedByCount.Add(1)
 								return nil
 							})).
 						SetCondition(func(evt *core.GameEvent, _ mage.GameReader, sourceID, _ uuid.UUID) bool {
@@ -718,7 +718,7 @@ func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 			return mage.NewCreature(bblkB, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 		})
 	}
-	atomic.StoreInt32(&blockedByCount, 0)
+	blockedByCount.Store(0)
 	tg := NewTestGame(t)
 	tg.AddCard(core.ZoneBattlefield, PlayerA, blockedByAtkName)
 	tg.AddCard(core.ZoneBattlefield, PlayerB, bblkA)
@@ -728,7 +728,7 @@ func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 	tg.Block(1, PlayerB, bblkB, blockedByAtkName)
 	tg.StopAt(1, core.PostcombatMain)
 	tg.Execute()
-	if got := atomic.LoadInt32(&blockedByCount); got != 2 {
+	if got := blockedByCount.Load(); got != 2 {
 		t.Errorf("CR 509.3d: 'blocked by a creature' trigger fired %d time(s); want 2", got)
 	}
 }
@@ -740,7 +740,7 @@ func TestCR509_3d_BecomesBlockedByCreatureTrigger(t *testing.T) {
 // TestCR509_3e_BlockerCountThresholdTrigger verifies CR 509.3e.
 func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 	const threshAtkName = "CR509.3e Threshold Attacker"
-	var threshFired int32
+	var threshFired atomic.Int32
 
 	if !mage.CardRegistered(threshAtkName) {
 		mage.Register(threshAtkName, func() mage.Card {
@@ -750,7 +750,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 					mage.NewTriggered(core.EvtBlockersDecl, false,
 						mage.FuncEffect("threshold fires", mage.EffectProperties{},
 							func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-								atomic.AddInt32(&threshFired, 1)
+								threshFired.Add(1)
 								return nil
 							})).
 						SetCondition(func(_ *core.GameEvent, gr mage.GameReader, sourceID, _ uuid.UUID) bool {
@@ -772,7 +772,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 		})
 	}
 	t.Run("fires when blocked by two", func(t *testing.T) {
-		atomic.StoreInt32(&threshFired, 0)
+		threshFired.Store(0)
 		tg := NewTestGame(t)
 		tg.AddCard(core.ZoneBattlefield, PlayerA, threshAtkName)
 		tg.AddCard(core.ZoneBattlefield, PlayerB, th1)
@@ -782,7 +782,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 		tg.Block(1, PlayerB, th2, threshAtkName)
 		tg.StopAt(1, core.PostcombatMain)
 		tg.Execute()
-		if atomic.LoadInt32(&threshFired) != 1 {
+		if threshFired.Load() != 1 {
 			t.Errorf("CR 509.3e: threshold trigger did not fire when blocked by 2")
 		}
 	})
@@ -793,7 +793,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 				return mage.NewCreature(thOnly, "{1}{G}", 1, 2, mage.WithSubTypes("Bear"))
 			})
 		}
-		atomic.StoreInt32(&threshFired, 0)
+		threshFired.Store(0)
 		tg := NewTestGame(t)
 		tg.AddCard(core.ZoneBattlefield, PlayerA, threshAtkName)
 		tg.AddCard(core.ZoneBattlefield, PlayerB, thOnly)
@@ -801,7 +801,7 @@ func TestCR509_3e_BlockerCountThresholdTrigger(t *testing.T) {
 		tg.Block(1, PlayerB, thOnly, threshAtkName)
 		tg.StopAt(1, core.PostcombatMain)
 		tg.Execute()
-		if atomic.LoadInt32(&threshFired) != 0 {
+		if threshFired.Load() != 0 {
 			t.Errorf("CR 509.3e: threshold trigger fired with only 1 blocker; want 0")
 		}
 	})
@@ -938,7 +938,7 @@ func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 	}
 
 	blockTriggerName := "CR509.4 Trigger Wall"
-	var blocksFires int32
+	var blocksFires atomic.Int32
 	if !mage.CardRegistered(blockTriggerName) {
 		mage.Register(blockTriggerName, func() mage.Card {
 			return mage.NewCreature(blockTriggerName, "{1}{W}", 0, 4,
@@ -947,7 +947,7 @@ func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 				mage.WithAbility(mage.BlocksTrigger(
 					mage.FuncEffect("count blocks fires", mage.EffectProperties{},
 						func(_ *mage.Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-							atomic.AddInt32(&blocksFires, 1)
+							blocksFires.Add(1)
 							return nil
 						}), false)))
 		})
@@ -987,7 +987,7 @@ func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 
 	// Part 2: BlocksTrigger must NOT fire when a creature with that trigger
 	// is put onto the battlefield blocking (CR 509.4).
-	atomic.StoreInt32(&blocksFires, 0)
+	blocksFires.Store(0)
 	tg2 := NewTestGame(t)
 	tg2.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
 	tg2.AddCard(core.ZoneBattlefield, PlayerB, "Plains")
@@ -998,7 +998,7 @@ func TestCR509_4_DeclareBlockersETBBlocking(t *testing.T) {
 	tg2.Execute()
 	tg2.AssertPermanentCount(PlayerB, blockTriggerName, 1)
 	tg2.AssertLife(PlayerB, 20)
-	if got := atomic.LoadInt32(&blocksFires); got != 0 {
+	if got := blocksFires.Load(); got != 0 {
 		t.Fatalf("CR 509.4: BlocksTrigger fired %d time(s); must not fire for a creature put into play blocking", got)
 	}
 }

@@ -159,7 +159,7 @@ func analyze(results []scenario.GameResult, verbose bool) {
 		anomalyCounts := map[string]int{}
 		for _, g := range withAnomalies {
 			for _, a := range g.Anomalies {
-				key := strings.SplitN(a, ":", 2)[0]
+				key, _, _ := strings.Cut(a, ":")
 				anomalyCounts[key]++
 			}
 		}

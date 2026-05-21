@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -106,8 +107,8 @@ func (m Model) View() string {
 	if len(m.state.StackItems) > 0 {
 		b.WriteString(labelStyle.Render("Stack"))
 		b.WriteString("\n")
-		for i := len(m.state.StackItems) - 1; i >= 0; i-- {
-			item := m.state.StackItems[i]
+		for _, item := range slices.Backward(m.state.StackItems) {
+
 			kind := "spell"
 			if item.IsAbility {
 				kind = "ability"

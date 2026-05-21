@@ -2,6 +2,7 @@ package combatsolver
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -315,16 +316,16 @@ func enumerateBlockerPermutations(attackers, blockers []*mage.Permanent,
 		}
 		if len(current) > 0 {
 			set := make([]mage.BlockAssignment, len(current))
-			key := ""
+			var key strings.Builder
 			for i, p := range current {
 				set[i] = mage.BlockAssignment{
 					BlockerID:  blockers[p.blkIdx].ID(),
 					AttackerID: attackers[p.atkIdx].ID(),
 				}
-				key += blockers[p.blkIdx].ID().String() + ">" + attackers[p.atkIdx].ID().String() + ","
+				key.WriteString(blockers[p.blkIdx].ID().String() + ">" + attackers[p.atkIdx].ID().String() + ",")
 			}
-			if !seen[key] {
-				seen[key] = true
+			if !seen[key.String()] {
+				seen[key.String()] = true
 				*sets = append(*sets, set)
 			}
 		}
@@ -350,12 +351,12 @@ func dedupeIDSets(sets [][]uuid.UUID) [][]uuid.UUID {
 		sorted := make([]uuid.UUID, len(s))
 		copy(sorted, s)
 		sort.Slice(sorted, func(i, j int) bool { return sorted[i].String() < sorted[j].String() })
-		key := ""
+		var key strings.Builder
 		for _, id := range sorted {
-			key += id.String() + ","
+			key.WriteString(id.String() + ",")
 		}
-		if !seen[key] {
-			seen[key] = true
+		if !seen[key.String()] {
+			seen[key.String()] = true
 			out = append(out, s)
 		}
 	}
@@ -371,12 +372,12 @@ func dedupeBlockSets(sets [][]mage.BlockAssignment) [][]mage.BlockAssignment {
 			pairs[i] = a.BlockerID.String() + ">" + a.AttackerID.String()
 		}
 		sort.Strings(pairs)
-		key := ""
+		var key strings.Builder
 		for _, p := range pairs {
-			key += p + ","
+			key.WriteString(p + ",")
 		}
-		if !seen[key] {
-			seen[key] = true
+		if !seen[key.String()] {
+			seen[key.String()] = true
 			out = append(out, s)
 		}
 	}
