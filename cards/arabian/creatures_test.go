@@ -913,6 +913,41 @@ func TestKhabalGhoul(t *testing.T) {
 		// 1 creature died → 1 counter → 2/2
 		g.AssertPowerToughness(gametest.PlayerA, "Khabál Ghoul", 2, 2)
 	})
+
+	// Regression: AI search clones the game and resolves end-step triggers on
+	// the clone. The trigger's effect must use MutablePermanent (copy-on-write)
+	// rather than FindPermanent, or it mutates the shared Khabál Ghoul that
+	// also lives on the parent battlefield.
+	t.Run("clone_end_step_does_not_leak_to_parent", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Khabál Ghoul")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+
+		var parentGhoul *mage.Permanent
+		for _, p := range g.AllBattlefield() {
+			if p.Name() == "Khabál Ghoul" {
+				parentGhoul = p
+				break
+			}
+		}
+		if parentGhoul == nil {
+			t.Fatal("no Khabál Ghoul on parent battlefield")
+		}
+		before := parentGhoul.Counters[core.P1P1]
+
+		for range 3 {
+			clone := g.Clone()
+			clone.RunStepWithPriority(core.EndStep)
+		}
+
+		if got := parentGhoul.Counters[core.P1P1]; got != before {
+			t.Errorf("clone trigger leaked counters to parent: got %d, want %d", got, before)
+		}
+	})
 }
 
 func TestAliFromCairo(t *testing.T) {

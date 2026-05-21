@@ -64,7 +64,7 @@ func (r *pyramidsDestructionReplacement) Matches(a Action, g GameReader) bool {
 func (r *pyramidsDestructionReplacement) Replace(a Action, g *Game) Action {
 	r.consumed = true
 	// Remove all damage marked on the land
-	perm := g.FindPermanent(r.permanentID)
+	perm := g.MutablePermanent(r.permanentID)
 	if perm != nil {
 		perm.Damage = 0
 	}

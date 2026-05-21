@@ -129,7 +129,7 @@ func registerEnchantments() {
 				FuncEffect("tap enchanted creature and add pupa counters",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
 						}
@@ -532,7 +532,7 @@ func registerEnchantments() {
 														destroyed := g.FindPermanent(targetID)
 														if destroyed == nil {
 															// Not on battlefield = was destroyed, add counter
-															perm := g.FindPermanent(targets[0])
+															perm := g.MutablePermanent(targets[0])
 															if perm != nil {
 																perm.AddCounter(P1P1, 1)
 															}
@@ -571,7 +571,7 @@ func registerEnchantments() {
 														}
 														destroyed := g.FindPermanent(targetID)
 														if destroyed == nil {
-															perm := g.FindPermanent(targets[0])
+															perm := g.MutablePermanent(targets[0])
 															if perm != nil {
 																perm.AddCounter(P1P1, 1)
 															}
@@ -1171,7 +1171,7 @@ func registerEnchantments() {
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
 						}
-						target := g.FindPermanent(src.AttachedTo)
+						target := g.MutablePermanent(src.AttachedTo)
 						if target != nil {
 							g.TapPermanent(target)
 							x := g.XValue()
@@ -1198,7 +1198,7 @@ func registerEnchantments() {
 						if src == nil || src.AttachedTo == uuid.Nil {
 							return nil
 						}
-						target := g.FindPermanent(src.AttachedTo)
+						target := g.MutablePermanent(src.AttachedTo)
 						if target != nil && target.Counters[Sleep] > 0 {
 							target.RemoveCounter(Sleep, 1)
 						}

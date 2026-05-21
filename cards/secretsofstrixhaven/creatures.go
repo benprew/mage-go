@@ -279,7 +279,7 @@ func registerCreatures() {
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 							if len(targets) > 0 {
-								perm := g.FindPermanent(targets[0])
+								perm := g.MutablePermanent(targets[0])
 								if perm != nil {
 									p := g.GetPlayer(controller)
 									if p != nil && p.ChooseMayAbility("tap or untap target creature") {
@@ -1021,9 +1021,9 @@ func registerCreatures() {
 						}
 						var manaSpent int
 						objs := g.GetStack().Objects()
-						for i := len(objs) - 1; i >= 0; i-- {
-							if !objs[i].IsAbility {
-								manaSpent = ManaSpentToCast(objs[i])
+						for _, obj := range slices.Backward(objs) {
+							if !obj.IsAbility {
+								manaSpent = ManaSpentToCast(obj)
 								break
 							}
 						}
@@ -1485,7 +1485,7 @@ func registerCreatures() {
 					"you may pay {X}; if you do, move X +1/+1 counters onto another target creature",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						self := g.FindPermanent(sourceID)
+						self := g.MutablePermanent(sourceID)
 						if self == nil {
 							return nil
 						}
@@ -2289,7 +2289,7 @@ func registerCreatures() {
 			WithKeyword(Menace),
 			// Infusion — This creature gets +2/+0 as long as you gained life this turn.
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
+				src := g.MutablePermanent(sourceID)
 				if src == nil {
 					return nil
 				}
@@ -2517,7 +2517,7 @@ func registerCreatures() {
 						if colors <= 0 {
 							return nil
 						}
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -2537,8 +2537,8 @@ func registerCreatures() {
 						// Walk the stack to find the spell that triggered this.
 						var numColors int
 						objs := g.GetStack().Objects()
-						for i := len(objs) - 1; i >= 0; i-- {
-							obj := objs[i]
+						for _, obj := range slices.Backward(objs) {
+
 							if !obj.IsAbility && obj.CastContext != nil {
 								numColors = obj.CastContext.DistinctColorsSpent()
 								break
@@ -2612,9 +2612,9 @@ func registerCreatures() {
 						// Find the triggering spell on the stack.
 						var spellSourceID uuid.UUID
 						objs := g.GetStack().Objects()
-						for i := len(objs) - 1; i >= 0; i-- {
-							if !objs[i].IsAbility {
-								spellSourceID = objs[i].SourceID
+						for _, obj := range slices.Backward(objs) {
+							if !obj.IsAbility {
+								spellSourceID = obj.SourceID
 								break
 							}
 						}
@@ -2651,7 +2651,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				OpusEffect("put a +1/+1 counter; if 5+ mana spent, add {R} equal to power",
 					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -2812,7 +2812,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				OpusEffect("put +1/+1 counters; 2 if 5+ mana spent",
 					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -3240,7 +3240,7 @@ func registerCreatures() {
 					"if entered with X ≤ 2, tap this creature",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -3303,7 +3303,7 @@ func registerCreatures() {
 			}})),
 			// Infusion — This creature gets +2/+0 as long as you gained life this turn.
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
+				src := g.MutablePermanent(sourceID)
 				if src == nil {
 					return nil
 				}
@@ -3651,9 +3651,9 @@ func registerCreatures() {
 						// Find the triggering spell on the stack (topmost non-ability).
 						var spellSourceID uuid.UUID
 						objs := g.GetStack().Objects()
-						for i := len(objs) - 1; i >= 0; i-- {
-							if !objs[i].IsAbility {
-								spellSourceID = objs[i].SourceID
+						for _, obj := range slices.Backward(objs) {
+							if !obj.IsAbility {
+								spellSourceID = obj.SourceID
 								break
 							}
 						}
@@ -4068,7 +4068,7 @@ func registerCreatures() {
 		incrementAndFlagEffect := OpusEffect(
 			"if mana spent > this creature's power or toughness, put a +1/+1 counter on this; mark flag",
 			func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
-				perm := g.FindPermanent(sourceID)
+				perm := g.MutablePermanent(sourceID)
 				if perm == nil {
 					return nil
 				}
@@ -4086,7 +4086,7 @@ func registerCreatures() {
 			"if counter placed this turn: create 0/0 green and blue Fractal token with three +1/+1 counters",
 			EffectProperties{Outcome: OutcomeBenefit},
 			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-				perm := g.FindPermanent(sourceID)
+				perm := g.MutablePermanent(sourceID)
 				if perm == nil {
 					return nil
 				}
@@ -4131,9 +4131,9 @@ func registerCreatures() {
 						// Find the triggering spell on the stack to get its X value.
 						var x int
 						objs := g.GetStack().Objects()
-						for i := len(objs) - 1; i >= 0; i-- {
-							if !objs[i].IsAbility {
-								x = objs[i].XValue
+						for _, obj := range slices.Backward(objs) {
+							if !obj.IsAbility {
+								x = obj.XValue
 								break
 							}
 						}
@@ -4471,7 +4471,7 @@ func registerCreatures() {
 					FuncEffect("put two +1/+1 counters on this creature",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
+							perm := g.MutablePermanent(sourceID)
 							if perm == nil {
 								return nil
 							}
@@ -4853,7 +4853,7 @@ func registerCreatures() {
 			WithAbility(WheneverYouCastSpellTrigger(
 				OpusEffect("this creature gets +3/+0 until EOT; or three +1/+1 counters if 5+ mana spent",
 					func(g *Game, sourceID, controller uuid.UUID, manaSpent int) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -5375,7 +5375,7 @@ func registerCreatures() {
 						if len(targets) == 0 || targets[0] == uuid.Nil {
 							return nil
 						}
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if src == nil {
 							return nil
 						}

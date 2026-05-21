@@ -428,6 +428,13 @@ func (g *Game) mutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
 	return nil
 }
 
+// MutablePermanentIncludingPhased is the exported mutable counterpart to
+// FindPermanentIncludingPhased. Returns an owned battlefield permanent
+// pointer suitable for mutation (triggers copy-on-write under search).
+func (g *Game) MutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
+	return g.mutablePermanentIncludingPhased(id)
+}
+
 func (g *Game) mutablePermanentAt(i int) *Permanent {
 	p := g.battlefield[i]
 	if !g.battlefieldShared {

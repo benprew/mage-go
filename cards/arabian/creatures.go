@@ -168,7 +168,7 @@ func registerCreatures() {
 						if len(targets) == 0 {
 							return nil
 						}
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						target := g.FindPermanent(targets[0])
 						if src == nil || target == nil {
 							return nil
@@ -185,11 +185,11 @@ func registerCreatures() {
 			),
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil || src.ControlledPermanent == uuid.Nil {
 						return nil
 					}
-					target := g.FindPermanent(src.ControlledPermanent)
+					target := g.MutablePermanent(src.ControlledPermanent)
 					if target == nil {
 						src.ControlledPermanent = uuid.Nil
 						return nil
@@ -450,7 +450,7 @@ func registerCreatures() {
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 							count := g.CreatureDeaths()
 							if count > 0 {
-								perm := g.FindPermanent(sourceID)
+								perm := g.MutablePermanent(sourceID)
 								if perm != nil {
 									perm.AddCounter(P1P1, count)
 								}
@@ -498,7 +498,7 @@ func registerCreatures() {
 						if len(targets) == 0 {
 							return nil
 						}
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if src == nil {
 							return nil
 						}
@@ -511,11 +511,11 @@ func registerCreatures() {
 			),
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil || src.ControlledPermanent == uuid.Nil {
 						return nil
 					}
-					target := g.FindPermanent(src.ControlledPermanent)
+					target := g.MutablePermanent(src.ControlledPermanent)
 					if target == nil {
 						src.ControlledPermanent = uuid.Nil
 						return nil
@@ -713,7 +713,7 @@ func registerCreatures() {
 				FuncEffect("check life totals for control change",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -742,7 +742,7 @@ func registerCreatures() {
 			// Continuous effect: maintain control based on ChosenPlayer
 			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
+					perm := g.MutablePermanent(sourceID)
 					if perm == nil || perm.ChosenPlayer == uuid.Nil {
 						return nil
 					}

@@ -93,7 +93,7 @@ func registerArtifacts() {
 								if src == nil {
 									return nil
 								}
-								target := g.FindPermanent(targetID)
+								target := g.MutablePermanent(targetID)
 								if target == nil {
 									return nil
 								}
@@ -580,7 +580,7 @@ func registerArtifacts() {
 								if src == nil {
 									return nil
 								}
-								target := g.FindPermanent(targetID)
+								target := g.MutablePermanent(targetID)
 								if target == nil {
 									return nil
 								}

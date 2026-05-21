@@ -41,7 +41,7 @@ func storageLandFactory(name string, color Color) func() Card {
 					FuncEffect("add storage counter if tapped",
 						EffectProperties{Outcome: OutcomeBenefit},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
+							perm := g.MutablePermanent(sourceID)
 							if perm == nil || !perm.Tapped {
 								return nil
 							}
@@ -57,7 +57,7 @@ func storageLandFactory(name string, color Color) func() Card {
 				FuncEffect("add mana for each storage counter removed",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}

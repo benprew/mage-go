@@ -20,7 +20,7 @@ func slowLand(name string, color1, color2 Color) Card {
 			"enter tapped unless you control two or more other lands",
 			EffectProperties{},
 			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-				perm := g.FindPermanent(sourceID)
+				perm := g.MutablePermanent(sourceID)
 				if perm == nil {
 					return nil
 				}
@@ -171,7 +171,7 @@ func registerLands() {
 			"choose a land card name",
 			EffectProperties{},
 			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-				perm := g.FindPermanent(sourceID)
+				perm := g.MutablePermanent(sourceID)
 				if perm == nil {
 					return nil
 				}

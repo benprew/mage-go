@@ -519,7 +519,7 @@ func registerCreatures() {
 			WithSubTypes("Kor", "Wizard"),
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -866,7 +866,7 @@ func registerCreatures() {
 					{
 						Label: "Put a +1/+1 counter on this creature",
 						Resolve: func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							if perm := g.FindPermanent(sourceID); perm != nil {
+							if perm := g.MutablePermanent(sourceID); perm != nil {
 								perm.AddCounter(P1P1, 1)
 								g.ApplyContinuousEffects()
 							}
@@ -2792,7 +2792,7 @@ func registerCreatures() {
 		return NewCreature("Liliana's Elite", "{2}{B}", 1, 1,
 			WithSubTypes("Zombie"),
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
+				src := g.MutablePermanent(sourceID)
 				if src == nil {
 					return nil
 				}
@@ -2997,7 +2997,7 @@ func registerCreatures() {
 			WithAbility(ETBChooseOpponent()),
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield,
 				func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -3536,7 +3536,7 @@ func registerCreatures() {
 		return NewCreature("Wight of Precinct Six", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie"),
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
+				src := g.MutablePermanent(sourceID)
 				if src == nil {
 					return nil
 				}
@@ -4126,7 +4126,7 @@ func registerCreatures() {
 							return nil
 						}
 						entered := g.FindPermanent(targets[0])
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if entered == nil || src == nil {
 							return nil
 						}
@@ -4718,7 +4718,7 @@ func registerCreatures() {
 				FuncEffect("untap this creature",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm != nil {
 							perm.Tapped = false
 						}
@@ -6184,7 +6184,7 @@ func registerCreatures() {
 			WithSubTypes("Elemental"),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -6288,7 +6288,7 @@ func registerCreatures() {
 			WithSubTypes("Treefolk", "Soldier"),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}

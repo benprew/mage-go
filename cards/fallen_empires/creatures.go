@@ -298,7 +298,7 @@ func registerCreatures() {
 				FuncEffect("put a tide counter on Homarid and check for reset",
 					EffectProperties{Outcome: OutcomeUnknown},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if src == nil {
 							return nil
 						}
@@ -314,7 +314,7 @@ func registerCreatures() {
 			// As long as there is exactly one tide counter, -1/-1
 			// As long as there are exactly three tide counters, +1/+1
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
+				src := g.MutablePermanent(sourceID)
 				if src == nil {
 					return nil
 				}

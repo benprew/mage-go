@@ -363,7 +363,7 @@ func registerCreatures() {
 							if perm != nil && perm.HasType(TypeCreature) {
 								permID := perm.ID()
 								ce := FuncContinuousEffect(LayerPT, Indefinite, func(g *Game, _ uuid.UUID) error {
-									p := g.FindPermanent(permID)
+									p := g.MutablePermanent(permID)
 									if p != nil {
 										p.BasePTOverride = &[2]int{0, 2}
 									}
@@ -905,7 +905,7 @@ func registerCreatures() {
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 						// Put -0/-1 counter on target
-						target := g.FindPermanent(targetID)
+						target := g.MutablePermanent(targetID)
 						if target != nil {
 							target.AddCounter(M0M1, 1)
 						}
@@ -1038,7 +1038,7 @@ func registerCreatures() {
 											if src == nil {
 												return nil
 											}
-											target := g.FindPermanent(blockerID)
+											target := g.MutablePermanent(blockerID)
 											if target != nil {
 												target.Controller = src.Controller
 											}
@@ -1214,7 +1214,7 @@ func registerCreatures() {
 			WithAbility(ProtectionFromColor(Red)),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -1423,7 +1423,7 @@ func registerCreatures() {
 				FuncEffect("add +1/+1 counter, pay or tap and deal damage",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -1916,7 +1916,7 @@ func registerCreatures() {
 			WithKeyword(Vigilance),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -2013,7 +2013,7 @@ func registerCreatures() {
 								cancelled = true
 								return nil
 							}
-							perm := g.FindPermanent(targetID)
+							perm := g.MutablePermanent(targetID)
 							if perm != nil {
 								perm.Controller = src.Controller
 							}
@@ -2284,7 +2284,7 @@ func registerCreatures() {
 						g.AddContinuousEffect(ce)
 					case 3: // Rampage 3
 						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							p := g.FindPermanent(sourceID)
+							p := g.MutablePermanent(sourceID)
 							if p == nil {
 								return nil
 							}
@@ -2373,7 +2373,7 @@ func registerCreatures() {
 					// Apply until next upkeep (~2 turns)
 					expiryTurn := g.CurrentTurn() + 2
 					ce := FuncContinuousEffect(LayerPT, Indefinite, func(g *Game, _ uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm != nil {
 							perm.BasePTOverride = &[2]int{power, toughness}
 						}
@@ -2850,7 +2850,7 @@ func registerCreatures() {
 				"put a dream counter on Rasputin",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
+					perm := g.MutablePermanent(sourceID)
 					if perm == nil {
 						return nil
 					}
@@ -2914,7 +2914,7 @@ func registerCreatures() {
 					// (direct assignment gets reset each Apply cycle)
 					eff := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
 						// Change controller of Rohgahh
-						rohgahh := g.FindPermanent(sourceID)
+						rohgahh := g.MutablePermanent(sourceID)
 						if rohgahh != nil {
 							rohgahh.Controller = oppID
 						}
@@ -2962,7 +2962,7 @@ func registerCreatures() {
 								cancelled = true
 								return nil
 							}
-							perm := g.FindPermanent(targetID)
+							perm := g.MutablePermanent(targetID)
 							if perm != nil {
 								perm.Controller = src.Controller
 							}
@@ -3341,7 +3341,7 @@ func registerCreatures() {
 						newToughness := 1 + target.CurrentPower(g)
 						sentinelID := sourceID
 						ce := FuncContinuousEffect(LayerPT, Indefinite, func(g *Game, _ uuid.UUID) error {
-							p := g.FindPermanent(sentinelID)
+							p := g.MutablePermanent(sentinelID)
 							if p != nil {
 								pw := p.Card.Power()
 								if p.BasePTOverride != nil {

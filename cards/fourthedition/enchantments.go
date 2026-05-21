@@ -108,7 +108,7 @@ func registerEnchantments() {
 				"remove a vitality counter from Living Artifact; if you do, gain 1 life",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
+					perm := g.MutablePermanent(sourceID)
 					if perm == nil {
 						return nil
 					}

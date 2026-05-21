@@ -407,7 +407,7 @@ func registerCreatures() {
 			WithSubTypes("Treefolk"),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -625,7 +625,7 @@ func registerCreatures() {
 			WithAbility(ETBEffect(FuncEffect("choose form on ETB",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
+					perm := g.MutablePermanent(sourceID)
 					if perm == nil {
 						return nil
 					}
@@ -665,7 +665,7 @@ func registerCreatures() {
 			WithAbility(ETBEffect(FuncEffect("choose a number between 0 and 7",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.FindPermanent(sourceID)
+					perm := g.MutablePermanent(sourceID)
 					if perm == nil {
 						return nil
 					}
@@ -683,7 +683,7 @@ func registerCreatures() {
 				FuncEffect("you may choose a new number between 0 and 7",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -701,7 +701,7 @@ func registerCreatures() {
 			// Static: P/T = chosen / (7 - chosen)
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -749,7 +749,7 @@ func registerCreatures() {
 				FuncEffect("remove +1/+1 counters and create Tetravite tokens",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if src == nil {
 							return nil
 						}
@@ -783,7 +783,7 @@ func registerCreatures() {
 				FuncEffect("exile Tetravite tokens and add +1/+1 counters",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
+						src := g.MutablePermanent(sourceID)
 						if src == nil {
 							return nil
 						}

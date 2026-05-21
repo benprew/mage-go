@@ -70,7 +70,7 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -376,7 +376,7 @@ func registerCreatures() {
 			WithSubTypes("Avatar"),
 			WithStaticAbility(
 				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
+					src := g.MutablePermanent(sourceID)
 					if src == nil {
 						return nil
 					}
@@ -401,7 +401,7 @@ func registerCreatures() {
 						}
 						targetID := targets[0]
 						ce := FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-							perm := g.FindPermanent(targetID)
+							perm := g.MutablePermanent(targetID)
 							if perm == nil {
 								return nil
 							}

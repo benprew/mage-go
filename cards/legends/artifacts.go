@@ -2,6 +2,7 @@ package legends
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -29,7 +30,7 @@ func manaBattery(name string, color Color) Card {
 				"add mana equal to charge counters removed plus one",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.FindPermanent(sourceID)
+					p := g.MutablePermanent(sourceID)
 					if p == nil {
 						return nil
 					}
@@ -270,9 +271,9 @@ func registerArtifacts() {
 							return nil
 						}
 						gy := p.Graveyard()
-						for i := len(gy) - 1; i >= 0; i-- {
-							if gy[i].HasType(TypeCreature) {
-								toughness := gy[i].Toughness()
+						for _, g := range slices.Backward(gy) {
+							if g.HasType(TypeCreature) {
+								toughness := g.Toughness()
 								p.GainLife(toughness)
 								return nil
 							}

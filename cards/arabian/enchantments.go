@@ -32,7 +32,7 @@ func registerEnchantments() {
 					FuncEffect("add wind counter, pay or sacrifice, deal damage",
 						EffectProperties{Outcome: OutcomeDetriment},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
+							perm := g.MutablePermanent(sourceID)
 							if perm == nil {
 								return nil
 							}
@@ -131,7 +131,7 @@ func registerEnchantments() {
 					FuncEffect("choose color and opponent",
 						EffectProperties{},
 						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
+							perm := g.MutablePermanent(sourceID)
 							if perm == nil {
 								return nil
 							}
@@ -220,8 +220,8 @@ func registerEnchantments() {
 					if len(targets) == 0 {
 						return nil
 					}
-					src := g.FindPermanent(sourceID)
-					target := g.FindPermanent(targets[0])
+					src := g.MutablePermanent(sourceID)
+					target := g.MutablePermanent(targets[0])
 					if src == nil || target == nil {
 						return nil
 					}
@@ -240,7 +240,7 @@ func registerEnchantments() {
 						Effects: []Effect{FuncEffect("phase in creature",
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-								perm := g.FindPermanentIncludingPhased(targetID)
+								perm := g.MutablePermanentIncludingPhased(targetID)
 								if perm != nil && perm.PhasedOut {
 									perm.PhasedOut = false
 									perm.Tapped = true

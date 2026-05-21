@@ -284,7 +284,7 @@ func registerCreatures() {
 					"if activated 4+ times, sacrifice at end of turn",
 					EffectProperties{},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
+						perm := g.MutablePermanent(sourceID)
 						if perm == nil {
 							return nil
 						}
@@ -848,7 +848,7 @@ func registerCreatures() {
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						deaths := g.CreatureDeaths()
 						if deaths > 0 {
-							perm := g.FindPermanent(sourceID)
+							perm := g.MutablePermanent(sourceID)
 							if perm != nil {
 								perm.AddCounter(Corpse, deaths)
 							}

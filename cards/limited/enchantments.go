@@ -170,7 +170,7 @@ func registerEnchantments() {
 					if aura == nil {
 						return nil
 					}
-					attached := g.FindPermanent(aura.AttachedTo)
+					attached := g.MutablePermanent(aura.AttachedTo)
 					if attached == nil {
 						return nil
 					}
@@ -644,11 +644,11 @@ func registerEnchantments() {
 				"destroy enchanted land; its controller picks another land to attach Kudzu to",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					kudzu := g.FindPermanent(sourceID)
+					kudzu := g.MutablePermanent(sourceID)
 					if kudzu == nil {
 						return nil
 					}
-					attached := g.FindPermanent(kudzu.AttachedTo)
+					attached := g.MutablePermanent(kudzu.AttachedTo)
 					if attached == nil {
 						return nil
 					}
