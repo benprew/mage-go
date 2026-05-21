@@ -63,7 +63,7 @@ func newLobbyModel(lobby *Lobby, username string) lobbyModel {
 		state:            lobbyBrowsing,
 		archetypes:       tui.Archetypes,
 		slots:            lobby.ListSlots(),
-		personalityNames: []string{"Aggro", "Control", "Midrange", "Tempo", "Burn"},
+		personalityNames: []string{"Auto", "Aggro", "Control", "Midrange", "Tempo", "Burn"},
 		modeNames:        []string{"Heuristic (fast)", "Search (minimax)", "Adaptive (auto-switch)"},
 	}
 }
@@ -220,7 +220,7 @@ func (m lobbyModel) handleDeckSelectKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			// Transition to personality selection.
 			m.session = sess
 			m.state = lobbySelectPersonality
-			m.personalityCursor = 2 // default to Midrange
+			m.personalityCursor = 0
 			return m, nil
 		}
 

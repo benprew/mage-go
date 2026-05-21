@@ -283,17 +283,8 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		sv += xValue
 	}
 
-	// Collect all target requirements for the spell.
 	allTargetReqs := card.CastTargets()
-	var outcome mage.Outcome
-	for _, a := range card.Abilities() {
-		sa, ok := a.(*mage.SpellAbility)
-		if !ok || sa.Kind() != mage.ActionSpell {
-			continue
-		}
-		outcome = mage.SpellOutcome(sa.Effects())
-		break
-	}
+	purpose, damage, outcome := targetPurposeForCard(g, playerID, card, xValue)
 
 	// A spell is tactical if it has detriment or benefit effects (damage, removal,
 	// combat tricks, draw). Used by quiescence search to extend at leaf nodes.
@@ -312,9 +303,8 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		}}
 	}
 
-	// First target: enumerate all possibilities to generate move variants.
-	firstPossible := allTargetReqs[0].Possible(playerID, card, g)
-	if len(firstPossible) == 0 {
+	combos := topTargetCombinations(g, playerID, card, allTargetReqs, purpose, damage)
+	if len(combos) == 0 {
 		return []Move{{
 			Type:       interactive.ActionCastSpell,
 			CardID:     card.ID(),
@@ -327,35 +317,16 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		}}
 	}
 
-	// For additional targets (2nd, 3rd, etc.), pick the best candidate based on outcome.
-	additionalTargets := pickAdditionalTargets(g, playerID, card, allTargetReqs[1:], outcome)
-
-	var moves []Move
-	for _, tid := range firstPossible {
-		h := sv
-		if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID {
-			for _, a := range card.Abilities() {
-				sa, ok := a.(*mage.SpellAbility)
-				if !ok || sa.Kind() != mage.ActionSpell {
-					continue
-				}
-				for _, e := range sa.Effects() {
-					if dv := e.Properties().DamageValue; dv != nil {
-						dmg := dv.Resolve(g, card.ID(), playerID, nil)
-						// For X spells, use the X value as estimated damage
-						if xValue > 0 {
-							dmg = xValue
-						}
-						if dmg >= tp.Life() {
-							h += 100
-						}
-					}
+	moves := make([]Move, 0, len(combos))
+	for _, targets := range combos {
+		h := sv + targetComboScore(g, playerID, targets, purpose, damage)
+		if purpose == eval.TargetBurn {
+			for _, tid := range targets {
+				if tp := g.GetPlayer(tid); tp != nil && tp.PlayerID() != playerID && damage >= tp.Life() {
+					h += 100
 				}
 			}
 		}
-		targets := make([]uuid.UUID, 0, 1+len(additionalTargets))
-		targets = append(targets, tid)
-		targets = append(targets, additionalTargets...)
 		moves = append(moves, Move{
 			Type:       interactive.ActionCastSpell,
 			CardID:     card.ID(),
@@ -368,54 +339,4 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		})
 	}
 	return moves
-}
-
-// pickAdditionalTargets selects the best target for each target requirement
-// beyond the first. For detriment spells, it picks the best opponent creature;
-// for benefit spells, it picks the best own creature. Falls back to the first
-// available candidate.
-func pickAdditionalTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, reqs []mage.Target, outcome mage.Outcome) []uuid.UUID {
-	if len(reqs) == 0 {
-		return nil
-	}
-	result := make([]uuid.UUID, 0, len(reqs))
-	for _, req := range reqs {
-		possible := req.Possible(playerID, card, g)
-		if len(possible) == 0 {
-			continue
-		}
-		best := possible[0]
-		bestScore := -1
-		for _, id := range possible {
-			perm := g.FindPermanent(id)
-			if perm == nil {
-				continue
-			}
-			if !perm.HasType(core.TypeCreature) {
-				continue
-			}
-			score := eval.EvalCreature(perm)
-			switch outcome {
-			case mage.OutcomeDetriment:
-				// Pick the best opponent creature.
-				if perm.Controller != playerID && score > bestScore {
-					bestScore = score
-					best = id
-				}
-			case mage.OutcomeBenefit:
-				// Pick the best own creature.
-				if perm.Controller == playerID && score > bestScore {
-					bestScore = score
-					best = id
-				}
-			default:
-				if score > bestScore {
-					bestScore = score
-					best = id
-				}
-			}
-		}
-		result = append(result, best)
-	}
-	return result
 }

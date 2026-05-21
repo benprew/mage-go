@@ -327,7 +327,7 @@ func TestAutoSelectTargets_AnyTargetDetriment_OpponentCreature(t *testing.T) {
 	}
 }
 
-func TestAutoSelectTargets_BurnTargetsFace(t *testing.T) {
+func TestAutoSelectTargets_BurnKillsCreatureBeforeFace(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.AddToBattlefield(oppCreature)
@@ -340,8 +340,8 @@ func TestAutoSelectTargets_BurnTargetsFace(t *testing.T) {
 
 	start := &Strategy{Personality: ai.BurnPersonality}
 	targets := start.autoSelectTargets(pa, g, card)
-	if len(targets) != 1 || targets[0] != pb.PlayerID() {
-		t.Errorf("burn should target opponent face, got %v", targets)
+	if len(targets) != 1 || targets[0] != oppCreature.ID() {
+		t.Errorf("burn should kill a valuable creature before going face, got %v", targets)
 	}
 }
 
@@ -444,6 +444,84 @@ func TestAutoSelectTargets_FallbackToOpponentFace(t *testing.T) {
 	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != pb.PlayerID() {
 		t.Errorf("with no creatures, should target opponent player, got %v", targets)
+	}
+}
+
+func TestChooseBestLandUnlocksHighestValueSpell(t *testing.T) {
+	g, pa, _ := makeGame()
+	island := mage.NewLand("Island", mage.WithManaAbility(core.Blue))
+	island.SetOwner(pa.PlayerID())
+	swamp := mage.NewLand("Swamp", mage.WithManaAbility(core.Black))
+	swamp.SetOwner(pa.PlayerID())
+	pa.AddToHand(island)
+	pa.AddToHand(swamp)
+
+	dragon := mage.NewCreature("Blue Dragon", "{U}", 5, 5)
+	dragon.SetOwner(pa.PlayerID())
+	rat := mage.NewCreature("Black Rat", "{B}", 1, 1)
+	rat.SetOwner(pa.PlayerID())
+	pa.AddToHand(dragon)
+	pa.AddToHand(rat)
+
+	best := chooseBestLand(pa, g)
+	if best == nil || best.Name() != "Island" {
+		t.Fatalf("expected Island to unlock the higher-value spell, got %v", best)
+	}
+}
+
+func TestAutoSelectTargets_BeneficialAuraDoesNotEnchantOpponentCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	oppCreature := makePerm("Ornithopter", "{0}", 0, 2, pb.PlayerID())
+	g.AddToBattlefield(oppCreature)
+
+	card := mage.NewBoostAura("Holy Strength", "{W}", 1, 2)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := &Strategy{Personality: ai.MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
+	if targets != nil {
+		t.Fatalf("beneficial aura should be held with only opponent targets, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_GenericRemovalPrefersCreatureOverLand(t *testing.T) {
+	g, pa, pb := makeGame()
+	forest := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
+	forest.SetOwner(pb.PlayerID())
+	forestPerm := mage.NewPermanent(forest, pb.PlayerID())
+	forestPerm.RevokeBaseAttr(core.AttrSummonSick)
+	threat := makePerm("Zephyr Falcon", "{1}{U}", 1, 1, pb.PlayerID(), mage.WithKeyword(core.Flying))
+	g.AddToBattlefield(forestPerm, threat)
+
+	card := mage.NewSorcery("Desert Twister", "{4}{G}{G}",
+		mage.NewTargetedSpell(mage.TargetPermanent(), mage.DestroyTargetPermanent()),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := &Strategy{Personality: ai.MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != threat.ID() {
+		t.Fatalf("generic removal should target the creature threat, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_TemporaryPumpSkipsSummoningSickCreature(t *testing.T) {
+	g, pa, _ := makeGame()
+	creature := mage.NewPermanent(mage.NewCreature("Timber Wolves", "{G}", 1, 1), pa.PlayerID())
+	g.AddToBattlefield(creature)
+
+	card := mage.NewInstant("Giant Growth", "{G}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.Boost(mage.Fixed(3), mage.Fixed(3))),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := &Strategy{Personality: ai.MidrangePersonality}
+	targets := start.autoSelectTargets(pa, g, card)
+	if targets != nil {
+		t.Fatalf("temporary pump should be held for summoning-sick-only board, got %v", targets)
 	}
 }
 
@@ -559,5 +637,66 @@ func TestPriorityAction_ActivatesAbility(t *testing.T) {
 		if action.PermanentID != pinger.ID() {
 			t.Error("should activate the pinger's ability")
 		}
+	}
+}
+
+func TestPriorityAction_ProdigalSorcererTargetsKillableCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	pingerCard := mage.NewCreature("Prodigal Sorcerer", "{2}{U}", 1, 1,
+		mage.WithActivatedAbility(
+			mage.DealDamage(mage.Fixed(1)),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetDamageAnyTarget()),
+		),
+	)
+	pingerCard.SetOwner(pa.PlayerID())
+	pinger := g.PutOnBattlefield(pingerCard, pa.PlayerID())
+	pinger.RevokeBaseAttr(core.AttrSummonSick)
+	olderBear := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	killable := makePerm("Merfolk", "{U}", 1, 1, pb.PlayerID())
+	g.AddToBattlefield(olderBear, killable)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionActivateAbility {
+		t.Fatalf("expected activated ability, got %v", action.Type)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != killable.ID() {
+		t.Fatalf("expected pinger to target killable creature, got %v want %s", action.Targets, killable.ID())
+	}
+}
+
+func TestPriorityAction_RodOfRuinTargetsKillableCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	for range 3 {
+		land := mage.NewLand("Mountain", mage.WithManaAbility(core.Red))
+		land.SetOwner(pa.PlayerID())
+		perm := g.PutOnBattlefield(land, pa.PlayerID())
+		perm.RevokeBaseAttr(core.AttrSummonSick)
+	}
+	rodCard := mage.NewArtifact("Rod of Ruin", "{4}",
+		mage.WithActivatedAbility(
+			mage.DealDamage(mage.Fixed(1)),
+			mage.GenericCost(3),
+			mage.WithCost(mage.Tap()),
+			mage.WithTarget(mage.TargetDamageAnyTarget()),
+		),
+	)
+	rodCard.SetOwner(pa.PlayerID())
+	rod := g.PutOnBattlefield(rodCard, pa.PlayerID())
+	rod.RevokeBaseAttr(core.AttrSummonSick)
+	olderBear := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	killable := makePerm("Scryb Sprite", "{G}", 1, 1, pb.PlayerID(), mage.WithKeyword(core.Flying))
+	g.AddToBattlefield(olderBear, killable)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionActivateAbility {
+		t.Fatalf("expected activated ability, got %v", action.Type)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != killable.ID() {
+		t.Fatalf("expected Rod of Ruin to target killable creature, got %v want %s", action.Targets, killable.ID())
 	}
 }

@@ -3,6 +3,8 @@
 package heuristic
 
 import (
+	"maps"
+
 	"github.com/google/uuid"
 
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
@@ -123,6 +125,9 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		}
 		if bestCard != nil && !eval.SpellIsWorthless(bestCard, p, g) {
 			targets := s.autoSelectTargets(p, g, bestCard)
+			if requiresTargets(bestCard) && len(targets) == 0 {
+				return interactive.PriorityAction{Type: interactive.ActionPass}
+			}
 			return interactive.PriorityAction{
 				Type:     interactive.ActionCastSpell,
 				CardID:   bestCard.ID(),
@@ -173,7 +178,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			}
 			if hasUsableEffect {
 				targets := s.autoSelectTargets(p, g, card)
-				if len(targets) > 0 {
+				if !requiresTargets(card) || len(targets) > 0 {
 					return interactive.PriorityAction{
 						Type:     interactive.ActionCastSpell,
 						CardID:   card.ID(),
@@ -269,37 +274,9 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 			return nil
 		}
 
-		// Pick the friendliness of the desired target from the ability's
-		// dominant outcome: detrimental abilities should hit opponents,
-		// beneficial ones should hit our own permanents.
-		preferOwn := mage.SpellOutcome(ab.Effects()) == mage.OutcomeBenefit
-
-		var targets []uuid.UUID
-		for _, t := range ab.Targets() {
-			possible := t.Possible(playerID, perm.Card, g)
-			if len(possible) == 0 {
-				return nil
-			}
-			opponent := g.GetOpponent(playerID)
-			bestTarget := possible[0]
-			if preferOwn {
-				for _, id := range possible {
-					p := g.FindPermanent(id)
-					if p != nil && p.Controller == playerID {
-						bestTarget = id
-						break
-					}
-				}
-			} else if opponent != nil {
-				for _, id := range possible {
-					p := g.FindPermanent(id)
-					if p != nil && p.Controller == opponent.PlayerID() {
-						bestTarget = id
-						break
-					}
-				}
-			}
-			targets = append(targets, bestTarget)
+		targets, ok := s.autoSelectAbilityTargets(p, g, perm, ab)
+		if !ok {
+			return nil
 		}
 
 		return &interactive.PriorityAction{
@@ -311,6 +288,93 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 	}
 
 	return nil
+}
+
+func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *mage.Permanent, ab mage.ActivatedAbility) ([]uuid.UUID, bool) {
+	playerID := p.PlayerID()
+	purpose := eval.TargetPurposeForEffects(ab.Effects())
+	damage := abilityDamageForTargets(g, playerID, perm.ID(), ab.Effects(), nil)
+	outcome := mage.SpellOutcome(ab.Effects())
+
+	var targets []uuid.UUID
+	for _, t := range ab.Targets() {
+		possible := t.Possible(playerID, perm.Card, g)
+		if len(possible) == 0 {
+			return nil, false
+		}
+
+		switch t.(type) {
+		case *mage.DamageAnyTarget:
+			if outcome == mage.OutcomeBenefit {
+				chosen := bestTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false)
+				if len(chosen) == 0 {
+					return nil, false
+				}
+				targets = append(targets, chosen[0])
+				continue
+			}
+			opponent := g.GetOpponent(playerID)
+			if s.weights().TargetFace >= 0.5 && opponent != nil {
+				aimedAtFace := false
+				for _, id := range possible {
+					if id == opponent.PlayerID() && shouldAimBurnAtFace(g, playerID, damage) {
+						targets = append(targets, id)
+						aimedAtFace = true
+						break
+					}
+				}
+				if aimedAtFace {
+					continue
+				}
+			}
+			if chosen := bestTargetsForRequirement(g, playerID, possible, eval.TargetBurn, damage, false, true); len(chosen) > 0 {
+				targets = append(targets, chosen[0])
+				continue
+			}
+			if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) {
+				targets = append(targets, opponent.PlayerID())
+				continue
+			}
+			return nil, false
+
+		case *mage.CreatureTarget:
+			if outcome == mage.OutcomeBenefit {
+				chosen := bestTargetsForRequirement(g, playerID, possible, purpose, damage, true, false)
+				if len(chosen) == 0 {
+					return nil, false
+				}
+				targets = append(targets, chosen[0])
+				continue
+			}
+			if chosen := bestTargetsForRequirement(g, playerID, possible, purpose, damage, false, true); len(chosen) > 0 {
+				targets = append(targets, chosen[0])
+				continue
+			}
+			return nil, false
+
+		case *mage.PlayerTarget, *mage.OpponentTarget:
+			opponent := g.GetOpponent(playerID)
+			if opponent == nil {
+				return nil, false
+			}
+			targets = append(targets, opponent.PlayerID())
+
+		default:
+			preferOwn := outcome == mage.OutcomeBenefit
+			preferOpponent := outcome == mage.OutcomeDetriment
+			chosen := bestTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, preferOpponent)
+			if len(chosen) == 0 {
+				if preferOpponent {
+					return nil, false
+				}
+				targets = append(targets, possible[0])
+				continue
+			}
+			targets = append(targets, chosen[0])
+		}
+	}
+
+	return targets, true
 }
 
 func (s *Strategy) Attackers(p mage.Player, g *mage.Game) []uuid.UUID {
@@ -342,6 +406,8 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
+		purpose := eval.TargetPurposeForEffects(sa.Effects())
+		damage := spellDamageForTargets(g, playerID, card, nil)
 		for _, t := range sa.Targets() {
 			possible := t.Possible(playerID, card, g)
 			if len(possible) == 0 {
@@ -352,125 +418,34 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 			switch t.(type) {
 			case *mage.DamageAnyTarget:
 				if outcome == mage.OutcomeBenefit {
-					var ownBest uuid.UUID
-					ownBestScore := -1
-					for _, id := range possible {
-						perm := g.FindPermanent(id)
-						if perm != nil && perm.Controller == playerID && perm.HasType(core.TypeCreature) {
-							score := eval.EvalCreatureInGame(perm, g)
-							if score > ownBestScore {
-								ownBestScore = score
-								ownBest = id
-							}
-						}
-					}
-					if ownBest != uuid.Nil {
-						return []uuid.UUID{ownBest}
-					}
-					for _, id := range possible {
-						if id == playerID {
-							return []uuid.UUID{id}
-						}
-					}
+					return bestTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false)
 				}
 				opponent := g.GetOpponent(playerID)
 				if s.weights().TargetFace >= 0.5 && opponent != nil {
 					for _, id := range possible {
-						if id == opponent.PlayerID() {
+						if id == opponent.PlayerID() && shouldAimBurnAtFace(g, playerID, damage) {
 							return []uuid.UUID{id}
 						}
 					}
 				}
-				spellDamage := 0
-				for _, ab := range card.Abilities() {
-					if sa, ok := ab.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
-						for _, e := range sa.Effects() {
-							if dv := e.Properties().DamageValue; dv != nil {
-								spellDamage = dv.Resolve(g, card.ID(), playerID, nil)
-							}
-						}
-					}
+				if targets := bestTargetsForRequirement(g, playerID, possible, eval.TargetBurn, damage, false, true); len(targets) > 0 {
+					return targets
 				}
-				if spellDamage > 0 && opponent != nil {
-					var bestLethalID uuid.UUID
-					bestLethalTPM := -1.0
-					for _, id := range possible {
-						perm := g.FindPermanent(id)
-						if perm != nil && perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) {
-							if spellDamage >= perm.CurrentToughness(g) {
-								tpm := eval.ThreatPerManaInGame(perm, g)
-								if tpm > bestLethalTPM {
-									bestLethalTPM = tpm
-									bestLethalID = id
-								}
-							}
-						}
-					}
-					if bestLethalID != uuid.Nil {
-						return []uuid.UUID{bestLethalID}
-					}
-				}
-				var bestID uuid.UUID
-				bestScore := -1
-				for _, id := range possible {
-					perm := g.FindPermanent(id)
-					if perm != nil && perm.Controller != playerID && perm.HasType(core.TypeCreature) {
-						score := eval.EvalCreatureInGame(perm, g)
-						if score > bestScore {
-							bestScore = score
-							bestID = id
-						}
-					}
-				}
-				if bestID != uuid.Nil {
-					return []uuid.UUID{bestID}
-				}
-				if opponent != nil {
+				if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) {
 					return []uuid.UUID{opponent.PlayerID()}
 				}
 
 			case *mage.CreatureTarget:
 				if outcome == mage.OutcomeBenefit {
-					var ownBest uuid.UUID
-					ownBestScore := -1
-					for _, id := range possible {
-						perm := g.FindPermanent(id)
-						if perm != nil && perm.Controller == playerID {
-							score := eval.EvalCreatureInGame(perm, g)
-							if score > ownBestScore {
-								ownBestScore = score
-								ownBest = id
-							}
-						}
-					}
-					if ownBest != uuid.Nil {
-						return []uuid.UUID{ownBest}
-					}
+					return bestTargetsForRequirement(g, playerID, possible, purpose, damage, true, false)
 				}
-				var bestID uuid.UUID
-				bestScore := -1
-				for _, id := range possible {
-					perm := g.FindPermanent(id)
-					if perm != nil && perm.Controller != playerID {
-						score := eval.EvalCreatureInGame(perm, g)
-						if score > bestScore {
-							bestScore = score
-							bestID = id
-						}
-					}
-				}
-				if bestID != uuid.Nil {
-					return []uuid.UUID{bestID}
+				if targets := bestTargetsForRequirement(g, playerID, possible, purpose, damage, false, true); len(targets) > 0 {
+					return targets
 				}
 				// Only fall back to own creatures for beneficial spells;
 				// never target your own creature with removal.
 				if outcome == mage.OutcomeBenefit {
-					for _, id := range possible {
-						perm := g.FindPermanent(id)
-						if perm != nil && perm.Controller == playerID {
-							return []uuid.UUID{id}
-						}
-					}
+					return bestTargetsForRequirement(g, playerID, possible, purpose, damage, true, false)
 				}
 
 			case *mage.PlayerTarget, *mage.OpponentTarget:
@@ -480,7 +455,12 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 				}
 
 			default:
-				if len(possible) > 0 {
+				preferOwn := outcome == mage.OutcomeBenefit
+				preferOpponent := outcome == mage.OutcomeDetriment
+				if targets := bestTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, preferOpponent); len(targets) > 0 {
+					return targets
+				}
+				if !preferOpponent && len(possible) > 0 {
 					return []uuid.UUID{possible[0]}
 				}
 			}
@@ -495,26 +475,8 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		}
 		switch t.(type) {
 		case *mage.CreatureTarget:
-			var ownBest uuid.UUID
-			ownBestScore := -1
-			for _, id := range possible {
-				perm := g.FindPermanent(id)
-				if perm != nil && perm.Controller == playerID {
-					score := eval.EvalCreatureInGame(perm, g)
-					if score > ownBestScore {
-						ownBestScore = score
-						ownBest = id
-					}
-				}
-			}
-			if ownBest != uuid.Nil {
-				return []uuid.UUID{ownBest}
-			}
-			for _, id := range possible {
-				perm := g.FindPermanent(id)
-				if perm != nil {
-					return []uuid.UUID{id}
-				}
+			if targets := bestTargetsForRequirement(g, playerID, possible, eval.TargetAura, 0, true, false); len(targets) > 0 {
+				return targets
 			}
 		default:
 			if len(possible) > 0 {
@@ -524,6 +486,94 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 	}
 
 	return nil
+}
+
+func hasOpponentPermanentTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID) bool {
+	for _, id := range possible {
+		if perm := g.FindPermanent(id); perm != nil && perm.Controller != playerID {
+			return true
+		}
+	}
+	return false
+}
+
+func requiresTargets(card mage.Card) bool {
+	if len(card.CastTargets()) > 0 {
+		return true
+	}
+	for _, a := range card.Abilities() {
+		sa, ok := a.(*mage.SpellAbility)
+		if ok && sa.Kind() == mage.ActionSpell && len(sa.Targets()) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool) []uuid.UUID {
+	bestID := uuid.Nil
+	bestScore := -10000
+	for _, id := range possible {
+		perm := g.FindPermanent(id)
+		if perm == nil {
+			continue
+		}
+		if preferOwn && perm.Controller != playerID {
+			continue
+		}
+		if preferOpponent && perm.Controller == playerID {
+			continue
+		}
+		score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
+		if score > bestScore {
+			bestScore = score
+			bestID = id
+		}
+	}
+	if bestID == uuid.Nil || bestScore < 1 {
+		return nil
+	}
+	return []uuid.UUID{bestID}
+}
+
+func shouldAimBurnAtFace(g *mage.Game, playerID uuid.UUID, damage int) bool {
+	opponent := g.GetOpponent(playerID)
+	if opponent == nil || damage <= 0 {
+		return false
+	}
+	if damage >= opponent.Life() {
+		return true
+	}
+	lethal := eval.CalculateLethal(g, playerID)
+	if lethal.MyBoardDamage+damage >= opponent.Life() {
+		return true
+	}
+	race := eval.CalculateRace(g, playerID)
+	return race.Racing && race.MyClock <= race.TheirClock && opponent.Life() <= 10
+}
+
+func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+	damage := 0
+	for _, ab := range card.Abilities() {
+		if sa, ok := ab.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			for _, e := range sa.Effects() {
+				if dv := e.Properties().DamageValue; dv != nil {
+					damage = dv.Resolve(g, card.ID(), playerID, targets)
+				}
+			}
+		}
+	}
+	return damage
+}
+
+func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects []mage.Effect, targets []uuid.UUID) int {
+	damage := 0
+	for _, e := range effects {
+		if dv := e.Properties().DamageValue; dv != nil {
+			damage = dv.Resolve(g, sourceID, playerID, targets)
+		}
+	}
+	return damage
 }
 
 // bestXValue picks the best X value for an X-cost spell.
@@ -572,13 +622,15 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 	return maxX
 }
 
-// chooseBestLand selects the best land to play from hand. Prefers lands that
-// produce colors needed by spells in hand.
-func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
+// chooseBestLand selects the best land to play from hand. It prefers lands that
+// make the highest-value currently stranded spells castable.
+func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
 	hand := p.Hand()
 
 	var lands []mage.Card
 	neededColors := make(map[core.Color]int)
+	baseColors := availableManaColors(g, p.PlayerID())
+	baseTotal := eval.CountAvailableMana(g, p.PlayerID())
 
 	for _, c := range hand {
 		if c.HasType(core.TypeLand) {
@@ -606,17 +658,38 @@ func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
 
 	for _, land := range lands {
 		score := 0
-		for _, a := range land.Abilities() {
-			ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
-			if !ok {
+		landColors, anyColor := landManaColors(land)
+		nextColors := copyColorCounts(baseColors)
+		if anyColor {
+			for _, color := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {
+				nextColors[color]++
+			}
+		}
+		for _, color := range landColors {
+			nextColors[color]++
+		}
+		nextTotal := baseTotal + 1
+
+		for _, spell := range hand {
+			if spell.HasType(core.TypeLand) {
 				continue
 			}
-			if ma.HasAnyColor() {
-				for _, need := range neededColors {
-					score += need
-				}
-			} else if ma.PrimaryColor() != core.Colorless {
-				score += neededColors[ma.PrimaryColor()] * 2
+			if manaCanCast(spell.ManaCost(), baseColors, baseTotal) {
+				continue
+			}
+			if manaCanCast(spell.ManaCost(), nextColors, nextTotal) {
+				score += eval.SpellValue(spell, p, g) * 4
+			} else if coloredManaProgress(spell.ManaCost(), nextColors) > coloredManaProgress(spell.ManaCost(), baseColors) {
+				score += eval.SpellValue(spell, p, g)
+			}
+		}
+
+		for _, color := range landColors {
+			score += neededColors[color] * 2
+		}
+		if anyColor {
+			for _, need := range neededColors {
+				score += need
 			}
 		}
 		if score > bestScore {
@@ -629,4 +702,71 @@ func chooseBestLand(p mage.Player, _ *mage.Game) mage.Card {
 		return bestLand
 	}
 	return lands[0]
+}
+
+func availableManaColors(g *mage.Game, playerID uuid.UUID) map[core.Color]int {
+	colors := make(map[core.Color]int)
+	for _, perm := range g.FilterBattlefield(mage.And(mage.ControlledBy(playerID), mage.IsUntapped)) {
+		for _, a := range perm.RuntimeAbilities {
+			ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
+			if !ok {
+				continue
+			}
+			if ma.HasAnyColor() {
+				for _, color := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {
+					colors[color]++
+				}
+			} else if ma.PrimaryColor() != core.Colorless {
+				colors[ma.PrimaryColor()]++
+			}
+		}
+	}
+	return colors
+}
+
+func landManaColors(card mage.Card) ([]core.Color, bool) {
+	var colors []core.Color
+	anyColor := false
+	for _, a := range card.Abilities() {
+		ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
+		if !ok {
+			continue
+		}
+		if ma.HasAnyColor() {
+			anyColor = true
+			continue
+		}
+		if ma.PrimaryColor() != core.Colorless {
+			colors = append(colors, ma.PrimaryColor())
+		}
+	}
+	return colors, anyColor
+}
+
+func copyColorCounts(src map[core.Color]int) map[core.Color]int {
+	dst := make(map[core.Color]int, len(src))
+	maps.Copy(dst, src)
+	return dst
+}
+
+func manaCanCast(mc core.ManaCost, colors map[core.Color]int, total int) bool {
+	required := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green
+	if colors[core.White] < mc.White ||
+		colors[core.Blue] < mc.Blue ||
+		colors[core.Black] < mc.Black ||
+		colors[core.Red] < mc.Red ||
+		colors[core.Green] < mc.Green {
+		return false
+	}
+	return total >= required+mc.Generic
+}
+
+func coloredManaProgress(mc core.ManaCost, colors map[core.Color]int) int {
+	score := 0
+	score += min(colors[core.White], mc.White)
+	score += min(colors[core.Blue], mc.Blue)
+	score += min(colors[core.Black], mc.Black)
+	score += min(colors[core.Red], mc.Red)
+	score += min(colors[core.Green], mc.Green)
+	return score
 }

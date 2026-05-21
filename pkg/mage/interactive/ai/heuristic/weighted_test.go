@@ -80,7 +80,7 @@ func TestWeightedPresets_ControlOnlyProfitable(t *testing.T) {
 	}
 }
 
-func TestWeightedPresets_BurnTargetsFace(t *testing.T) {
+func TestWeightedPresets_BurnKillsCreatureBeforeFace(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
 	g.AddToBattlefield(oppCreature)
@@ -93,8 +93,8 @@ func TestWeightedPresets_BurnTargetsFace(t *testing.T) {
 
 	start := New(ai.BurnWeighted)
 	targets := start.autoSelectTargets(pa, g, card)
-	if len(targets) != 1 || targets[0] != pb.PlayerID() {
-		t.Errorf("BurnWeighted should target face, got %v", targets)
+	if len(targets) != 1 || targets[0] != oppCreature.ID() {
+		t.Errorf("BurnWeighted should kill a valuable creature before going face, got %v", targets)
 	}
 }
 
@@ -169,8 +169,8 @@ func TestIntermediateTargetFace(t *testing.T) {
 
 	faceFace := New(ai.WeightedPersonality{TargetFace: 1.0})
 	targets = faceFace.autoSelectTargets(pa, g, card)
-	if len(targets) != 1 || targets[0] != pb.PlayerID() {
-		t.Error("TargetFace 1.0 should target face")
+	if len(targets) != 1 || targets[0] != oppCreature.ID() {
+		t.Error("TargetFace 1.0 should still target a valuable creature when face is not lethal or race-positive")
 	}
 
 	midFace := New(ai.WeightedPersonality{TargetFace: 0.4})

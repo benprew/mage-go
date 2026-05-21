@@ -142,10 +142,13 @@ var weightedPersonalities = map[string]ai.WeightedPersonality{
 	"Burn":     ai.BurnWeighted,
 }
 
-// createAIPlayer builds an AI player from a personality name and mode name.
-func createAIPlayer(name, personality, mode string) *ai.AIPlayer {
+// createAIPlayer builds an AI player from a personality name, mode name, and
+// AI deck list.
+func createAIPlayer(name, personality, mode string, deckEntries []tui.DeckEntry) *ai.AIPlayer {
 	wp := ai.MidrangeWeighted
-	if w, ok := weightedPersonalities[personality]; ok {
+	if personality == "Auto" {
+		wp = ai.InferPersonalityFromDeck(aiDeckEntries(deckEntries))
+	} else if w, ok := weightedPersonalities[personality]; ok {
 		wp = w
 	}
 	switch mode {
@@ -164,13 +167,13 @@ func createAIPlayer(name, personality, mode string) *ai.AIPlayer {
 func (l *Lobby) StartAIGame(sess *PlayerSession, personality, mode string) {
 	go func() {
 		human := interactive.NewHumanPlayerWithChannels(sess.Name, sess.FromGame, sess.ToGame, sess.ChoiceReqs, sess.ChoiceResps)
-		aiPlayer := createAIPlayer("AI", personality, mode)
+		aiEntries := tui.Archetypes[1].Entries
+		aiPlayer := createAIPlayer("AI", personality, mode, aiEntries)
 
 		humanCards := tui.BuildDeck(sess.DeckEntries, human.PlayerID())
 		for _, c := range humanCards {
 			human.AddToLibrary(c)
 		}
-		aiEntries := tui.Archetypes[1].Entries
 		aiCards := tui.BuildDeck(aiEntries, aiPlayer.PlayerID())
 		for _, c := range aiCards {
 			aiPlayer.AddToLibrary(c)
@@ -184,6 +187,14 @@ func (l *Lobby) StartAIGame(sess *PlayerSession, personality, mode string) {
 		const aiPause = 400 * time.Millisecond
 		interactive.RunGameLoop(g, 0, aiPause)
 	}()
+}
+
+func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
+	deck := make([]ai.DeckCard, 0, len(entries))
+	for _, entry := range entries {
+		deck = append(deck, ai.DeckCard{Name: entry.Name, Count: entry.Count})
+	}
+	return deck
 }
 
 // startPvPGame is called in a goroutine once both players have joined.

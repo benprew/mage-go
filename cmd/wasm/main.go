@@ -59,9 +59,11 @@ var wasmPersonalities = map[string]ai.WeightedPersonality{
 }
 
 // createWasmAI builds an AI player from personality and mode strings.
-func createWasmAI(name, personality, mode string) *ai.AIPlayer {
+func createWasmAI(name, personality, mode string, deckNames []string) *ai.AIPlayer {
 	wp := ai.MidrangeWeighted
-	if w, ok := wasmPersonalities[personality]; ok {
+	if personality == "" || personality == "auto" || personality == "deck" {
+		wp = ai.InferPersonalityFromDeck(aiDeckEntries(deckNames))
+	} else if w, ok := wasmPersonalities[personality]; ok {
 		wp = w
 	}
 	switch mode {
@@ -119,9 +121,6 @@ func startGame(this js.Value, args []js.Value) any {
 
 	human := interactive.NewHumanPlayerWithChannels("You", toTUI, fromTUI, choiceReqs, choiceResps)
 
-	// Create AI with selected personality and mode.
-	aiPlayer := createWasmAI("AI", aiPersonality, aiMode)
-
 	// Build human deck.
 	humanDeck := buildDeck(deckNames, human.PlayerID())
 	if humanDeck == nil {
@@ -156,6 +155,7 @@ func startGame(this js.Value, args []js.Value) any {
 			}
 		}
 	}
+	aiPlayer := createWasmAI("AI", aiPersonality, aiMode, aiDeckNames)
 	aiDeck := buildDeck(aiDeckNames, aiPlayer.PlayerID())
 
 	// Load libraries.
@@ -202,6 +202,18 @@ func startGame(this js.Value, args []js.Value) any {
 	go interactive.RunGameLoop(g, 0, 0)
 
 	return nil
+}
+
+func aiDeckEntries(names []string) []ai.DeckCard {
+	counts := map[string]int{}
+	for _, name := range names {
+		counts[name]++
+	}
+	entries := make([]ai.DeckCard, 0, len(counts))
+	for name, count := range counts {
+		entries = append(entries, ai.DeckCard{Name: name, Count: count})
+	}
+	return entries
 }
 
 // sendAction sends a PriorityAction from JS to the game loop.

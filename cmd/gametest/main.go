@@ -37,8 +37,8 @@ func main() {
 	minCards := flag.Int("min-cards", 25, "minimum playable cards for a Rogue deck to be eligible")
 	games := flag.Int("games", 1, "number of games to play in sequence (useful for profiling)")
 	seed := flag.Int64("seed", 0, "RNG seed for deck selection (0 = nondeterministic)")
-	persA := flag.String("ai-a", "aggro", "AI personality for player A (aggro, control, midrange, tempo, burn)")
-	persB := flag.String("ai-b", "control", "AI personality for player B (aggro, control, midrange, tempo, burn)")
+	persA := flag.String("ai-a", "auto", "AI personality for player A (auto, aggro, control, midrange, tempo, burn)")
+	persB := flag.String("ai-b", "auto", "AI personality for player B (auto, aggro, control, midrange, tempo, burn)")
 	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, search, adaptive)")
 	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, search, adaptive)")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
@@ -99,8 +99,6 @@ func main() {
 		rng = rand.New(rand.NewSource(rand.Int63()))
 	}
 
-	wpA := parsePersonality(*persA)
-	wpB := parsePersonality(*persB)
 	totalLoop := time.Duration(0)
 
 	for gameNum := 1; gameNum <= *games; gameNum++ {
@@ -114,6 +112,8 @@ func main() {
 		}
 		selectedA := deckPool[dA]
 		selectedB := deckPool[dB]
+		wpA := resolvePersonality(*persA, selectedA.Entries)
+		wpB := resolvePersonality(*persB, selectedB.Entries)
 
 		playerA := createAI("Alice", wpA, *modeA)
 		playerB := createAI("Bob", wpB, *modeB)
@@ -134,9 +134,9 @@ func main() {
 		ai.MulliganAI(playerB)
 
 		fmt.Printf("=== Game %d Start ===\n", gameNum)
-		fmt.Printf("Alice (%s/%s) deck: %s (%d cards)\n", *persA, *modeA, selectedA.Name, len(playerA.Library())+len(playerA.Hand()))
+		fmt.Printf("Alice (%s/%s) deck: %s (%d cards)\n", personalityLabel(*persA, wpA), *modeA, selectedA.Name, len(playerA.Library())+len(playerA.Hand()))
 		printSkippedCards("Alice", selectedA.Skipped)
-		fmt.Printf("Bob   (%s/%s) deck: %s (%d cards)\n", *persB, *modeB, selectedB.Name, len(playerB.Library())+len(playerB.Hand()))
+		fmt.Printf("Bob   (%s/%s) deck: %s (%d cards)\n", personalityLabel(*persB, wpB), *modeB, selectedB.Name, len(playerB.Library())+len(playerB.Hand()))
 		printSkippedCards("Bob", selectedB.Skipped)
 		fmt.Printf("Alice hand (%d): %s\n", len(playerA.Hand()), handStr(playerA.Hand()))
 		fmt.Printf("Bob   hand (%d): %s\n\n", len(playerB.Hand()), handStr(playerB.Hand()))
@@ -474,6 +474,28 @@ func parsePersonality(s string) ai.WeightedPersonality {
 		fmt.Fprintf(os.Stderr, "unknown personality %q, using midrange\n", s)
 		return ai.MidrangeWeighted
 	}
+}
+
+func resolvePersonality(s string, entries []tui.DeckEntry) ai.WeightedPersonality {
+	if strings.EqualFold(s, "auto") || strings.EqualFold(s, "deck") {
+		return ai.InferPersonalityFromDeck(aiDeckEntries(entries))
+	}
+	return parsePersonality(s)
+}
+
+func personalityLabel(requested string, wp ai.WeightedPersonality) string {
+	if strings.EqualFold(requested, "auto") || strings.EqualFold(requested, "deck") {
+		return "auto:" + strings.ToLower(wp.Name)
+	}
+	return requested
+}
+
+func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
+	deck := make([]ai.DeckCard, 0, len(entries))
+	for _, entry := range entries {
+		deck = append(deck, ai.DeckCard{Name: entry.Name, Count: entry.Count})
+	}
+	return deck
 }
 
 func handStr(hand []mage.Card) string {

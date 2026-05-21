@@ -404,7 +404,7 @@ func evalCreatureInGame(perm *mage.Permanent, g *mage.Game, applyTapPenalty bool
 	if perm.HasAttr(core.AttrSummonSick) && !perm.HasAttr(core.Haste) {
 		score /= 2
 	}
-	score += keywordBonus(perm)
+	score += keywordBonusInGame(perm, g)
 	score += abilityBonus(perm)
 	// SBAs destroy lethally-damaged creatures before eval runs, so only
 	// sub-lethal damage reaches here. A mild penalty reflects vulnerability
@@ -445,6 +445,99 @@ func permToughness(p *mage.Permanent) int {
 	return tg
 }
 
+func keywordBonusInGame(perm *mage.Permanent, g *mage.Game) int {
+	power := max(perm.CurrentPower(g), 0)
+	toughness := max(perm.CurrentToughness(g), 0)
+	combatSize := max(power+toughness, 1)
+	score := 0
+
+	if perm.HasKeyword(core.UnblockableKW) {
+		score += 3 + power
+	}
+	if perm.HasKeyword(core.Flying) {
+		score += 2 + power
+	}
+	if perm.HasKeyword(core.Fear) {
+		score += 1 + power
+	}
+	if perm.HasKeyword(core.Menace) {
+		score += max(2, power/2+1)
+	}
+	if perm.HasKeyword(core.Trample) {
+		score += max(1, power-1)
+	}
+	for _, kw := range []core.Attr{
+		core.Islandwalk, core.Swampwalk, core.Forestwalk,
+		core.Mountainwalk, core.Plainswalk,
+	} {
+		if perm.HasKeyword(kw) {
+			score += max(2, power)
+		}
+	}
+	if perm.HasKeyword(core.CantBeBlockedByWalls) {
+		score++
+	}
+	if perm.HasKeyword(core.CantBeBlockedExceptByWalls) {
+		score -= max(2, power)
+	}
+	if perm.HasKeyword(core.DoubleStrike) {
+		score += max(4, power*2)
+	}
+	if perm.HasKeyword(core.FirstStrike) {
+		score += max(2, power)
+	}
+	if perm.HasKeyword(core.Haste) {
+		score += max(1, power/2+1)
+	}
+	if perm.HasKeyword(core.Indestructible) {
+		score += max(4, combatSize/2)
+	}
+	if perm.HasKeyword(core.Hexproof) {
+		score += max(2, combatSize/3)
+	}
+	if perm.HasKeyword(core.Shroud) {
+		score += max(2, combatSize/4)
+	}
+	if perm.HasKeyword(core.BasiliskTouch) {
+		score += max(2, toughness/2+1)
+	}
+	if perm.HasKeyword(core.Deathtouch) {
+		score += max(3, toughness/2+1)
+	}
+	if perm.HasKeyword(core.Lifelink) {
+		score += max(2, power)
+	}
+	if perm.HasKeyword(core.Vigilance) {
+		score += max(1, power/2+toughness/3)
+	}
+	if perm.HasKeyword(core.Reach) {
+		score += max(1, toughness/3)
+	}
+	if perm.HasKeyword(core.CanBlockAdditional) {
+		score += max(1, toughness/3)
+	}
+	if perm.HasKeyword(core.CanBlockAny) {
+		score += max(1, toughness/3)
+	}
+	if perm.HasKeyword(core.MustBeBlocked) {
+		score += max(1, power/2)
+	}
+	if perm.HasKeyword(core.Banding) {
+		score += max(1, combatSize/4)
+	}
+	if perm.HasKeyword(core.Defender) {
+		score -= max(2, power+1)
+	}
+	if perm.HasKeyword(core.DoesNotUntapKW) {
+		score -= max(2, combatSize/3)
+	}
+	if perm.HasKeyword(core.MustAttack) {
+		score -= max(1, toughness/3)
+	}
+
+	return score
+}
+
 func keywordBonus(perm *mage.Permanent) int {
 	score := 0
 
@@ -463,7 +556,7 @@ func keywordBonus(perm *mage.Permanent) int {
 	if perm.HasKeyword(core.Trample) {
 		score += 2
 	}
-	for _, kw := range []core.Keyword{
+	for _, kw := range []core.Attr{
 		core.Islandwalk, core.Swampwalk, core.Forestwalk,
 		core.Mountainwalk, core.Plainswalk,
 	} {

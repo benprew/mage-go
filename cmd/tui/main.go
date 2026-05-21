@@ -23,6 +23,7 @@ type aiPersonality struct {
 }
 
 var personalities = []aiPersonality{
+	{"Auto (deck-based)", ai.WeightedPersonality{}},
 	{"Aggro", ai.AggroWeighted},
 	{"Control", ai.ControlWeighted},
 	{"Midrange", ai.MidrangeWeighted},
@@ -40,8 +41,11 @@ var modes = []aiMode{
 	{"Adaptive (switches aggro/control)"},
 }
 
-func createAI(name string, persIdx, modeIdx int) *ai.AIPlayer {
+func createAI(name string, persIdx, modeIdx int, deckEntries []tui.DeckEntry) *ai.AIPlayer {
 	wp := personalities[persIdx].WP
+	if persIdx == 0 {
+		wp = ai.InferPersonalityFromDeck(aiDeckEntries(deckEntries))
+	}
 	switch modeIdx {
 	case 1: // Search
 		return ai.NewAIPlayer(name, search.New(search.DefaultConfig(), wp))
@@ -83,7 +87,7 @@ func main() {
 
 	// Create players
 	human := interactive.NewHumanPlayer("You")
-	aiPlayer := createAI("AI", aiPers, aiMode)
+	aiPlayer := createAI("AI", aiPers, aiMode, tui.Archetypes[aiDeck].Entries)
 
 	// Build decks
 	humanCards := tui.BuildDeck(tui.Archetypes[humanDeck].Entries, human.PlayerID())
@@ -114,6 +118,14 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
+	deck := make([]ai.DeckCard, 0, len(entries))
+	for _, entry := range entries {
+		deck = append(deck, ai.DeckCard{Name: entry.Name, Count: entry.Count})
+	}
+	return deck
 }
 
 func promptChoice(label string, max int) int {

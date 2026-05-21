@@ -83,24 +83,21 @@ func expandTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, mode, x int
 			ModeIndex: mode,
 		}}
 	}
-	firstCandidates := targets[0].Possible(playerID, card, g)
-	if len(firstCandidates) == 0 {
+	purpose, damage, _ := targetPurposeForCard(g, playerID, card, x)
+	combos := topTargetCombinations(g, playerID, card, targets, purpose, damage)
+	if len(combos) == 0 {
 		return nil
 	}
-	extra, ok := pickGreedy(g, playerID, card, targets[1:])
-	if !ok {
-		return nil
-	}
-	out := make([]Move, 0, len(firstCandidates))
-	for _, tid := range firstCandidates {
-		combined := append([]uuid.UUID{tid}, extra...)
+	out := make([]Move, 0, len(combos))
+	for _, combo := range combos {
 		out = append(out, Move{
 			Type:      interactive.ActionCastSpell,
 			CardID:    card.ID(),
 			CardName:  card.Name(),
-			Targets:   combined,
+			Targets:   combo,
 			XValue:    x,
 			ModeIndex: mode,
+			heuristic: targetComboScore(g, playerID, combo, purpose, damage),
 		})
 	}
 	return out
@@ -125,39 +122,22 @@ func expandAbility(g *mage.Game, p mage.Player, info mage.ActivatableInfo) []Mov
 			CardName:     info.PermanentName,
 		}}
 	}
-	firstCandidates := targets[0].Possible(playerID, perm.Card, g)
-	if len(firstCandidates) == 0 {
+	purpose := eval.TargetPurposeForEffects(aa.Effects())
+	damage := abilityDamageForTargets(g, playerID, perm.ID(), aa.Effects(), nil)
+	combos := topTargetCombinations(g, playerID, perm.Card, targets, purpose, damage)
+	if len(combos) == 0 {
 		return nil
 	}
-	extra, hasAll := pickGreedy(g, playerID, perm.Card, targets[1:])
-	if !hasAll {
-		return nil
-	}
-	out := make([]Move, 0, len(firstCandidates))
-	for _, tid := range firstCandidates {
-		combined := append([]uuid.UUID{tid}, extra...)
+	out := make([]Move, 0, len(combos))
+	for _, combo := range combos {
 		out = append(out, Move{
 			Type:         interactive.ActionActivateAbility,
 			PermanentID:  info.PermanentID,
 			AbilityIndex: info.AbilityIndex,
 			CardName:     info.PermanentName,
-			Targets:      combined,
+			Targets:      combo,
+			heuristic:    targetComboScore(g, playerID, combo, purpose, damage),
 		})
 	}
 	return out
-}
-
-func pickGreedy(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target) ([]uuid.UUID, bool) {
-	if len(reqs) == 0 {
-		return nil, true
-	}
-	out := make([]uuid.UUID, 0, len(reqs))
-	for _, t := range reqs {
-		cands := t.Possible(playerID, source, g)
-		if len(cands) == 0 {
-			return nil, false
-		}
-		out = append(out, cands[0])
-	}
-	return out, true
 }
