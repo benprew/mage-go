@@ -39,6 +39,11 @@ func (ai *AIPlayer) ChooseMode(modes []string, reason string) int {
 	return mage.ChooseModeHeuristic(modes, ai.Life(), len(ai.Hand()))
 }
 
+// ChooseModeWithEffects uses effect metadata when modal spell modes expose it.
+func (ai *AIPlayer) ChooseModeWithEffects(modes []mage.Mode, reason string, g *mage.Game) int {
+	return ChooseModeWithEffects(modes, g, ai.PlayerID())
+}
+
 // GetPriorityAction decides what the AI should do when it has priority.
 func (ai *AIPlayer) GetPriorityAction(g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
 	return ai.Strategy.PriorityAction(ai.BasePlayer, g, landsPlayed, mainPhase)

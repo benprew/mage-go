@@ -672,8 +672,17 @@ func AbilityQuality(ab mage.ActivatedAbility) int {
 	}
 
 	bestScore := 0
+	if ad, ok := ab.(*mage.ActionDefinition); ok {
+		for _, hint := range ad.AIHints() {
+			bestScore = max(bestScore, abilityHintQuality(hint))
+		}
+	}
 	for _, e := range ab.Effects() {
 		props := e.Properties()
+		bestScore = max(bestScore, abilityHintQuality(mage.AIHint{
+			Roles:     props.AIRoles,
+			ValueBias: props.ValueBias,
+		}))
 
 		if props.DrawCount > 0 {
 			s := 5
@@ -736,6 +745,25 @@ func AbilityQuality(ab mage.ActivatedAbility) int {
 	}
 
 	return bestScore
+}
+
+func abilityHintQuality(hint mage.AIHint) int {
+	score := hint.ValueBias
+	for _, role := range hint.Roles {
+		switch role {
+		case mage.AIRoleCardDraw, mage.AIRoleEngine:
+			score = max(score, 5)
+		case mage.AIRoleRemoval, mage.AIRoleBurn:
+			score = max(score, 4)
+		case mage.AIRolePump, mage.AIRoleProtection, mage.AIRoleCombatTrick:
+			score = max(score, 3)
+		case mage.AIRoleManaSink:
+			score = max(score, 2)
+		case mage.AIRoleFinisher:
+			score = max(score, 6)
+		}
+	}
+	return score
 }
 
 // evalNonCreaturePermanent scores a non-creature, non-land permanent (enchantment,

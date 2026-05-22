@@ -213,6 +213,23 @@ func TestKeywordBonus_NoKeywords(t *testing.T) {
 	}
 }
 
+func TestSpellValue_UsesAIRoleAndBiasHints(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewSorcery("Opaque Draw Engine", "{2}{U}",
+		mage.NewSpellAbility(mage.FuncEffect("contextual advantage", mage.EffectProperties{
+			AIRoles:   []mage.AIRole{mage.AIRoleCardDraw, mage.AIRoleEngine},
+			ValueBias: 2,
+		}, func(*mage.Game, uuid.UUID, uuid.UUID, []uuid.UUID) error { return nil })),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	got := SpellValue(card, pa, g)
+	if got <= card.ManaCost().CMC() {
+		t.Fatalf("AI hints should make opaque spell worth more than fallback CMC, got %d", got)
+	}
+}
+
 // ── abilityBonus ────────────────────────────────────────────────────────────
 
 func TestAbilityBonus_ManaAbility(t *testing.T) {

@@ -3,6 +3,8 @@ package ai
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 )
 
@@ -50,6 +52,31 @@ func TestAIChooseMode_FallbackToZero(t *testing.T) {
 	got := ai.ChooseMode([]string{"Unknown A", "Unknown B"}, "Mystery Card")
 	if got != 0 {
 		t.Errorf("ChooseMode should fall back to mode 0, got %d", got)
+	}
+}
+
+func TestAIChooseModeWithEffects_UsesAIHints(t *testing.T) {
+	pa := NewAIPlayer("Bot", &dummyStrategy{})
+	pb := mage.NewBasePlayer("Opponent")
+	g := mage.NewGame(pa, pb)
+
+	modes := []mage.Mode{
+		{
+			Label:   "Unknown A",
+			Effects: []mage.Effect{mage.FuncEffect("opaque", mage.EffectProperties{}, func(*mage.Game, uuid.UUID, uuid.UUID, []uuid.UUID) error { return nil })},
+		},
+		{
+			Label: "Unknown B",
+			Effects: []mage.Effect{mage.FuncEffect("engine", mage.EffectProperties{
+				AIRoles:   []mage.AIRole{mage.AIRoleEngine},
+				ValueBias: 2,
+			}, func(*mage.Game, uuid.UUID, uuid.UUID, []uuid.UUID) error { return nil })},
+		},
+	}
+
+	got := pa.ChooseModeWithEffects(modes, "Mystery Charm", g)
+	if got != 1 {
+		t.Fatalf("mode effect hints should choose mode 1, got %d", got)
 	}
 }
 

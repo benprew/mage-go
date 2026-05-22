@@ -26,6 +26,9 @@ func TargetPurposeForEffects(effects []mage.Effect) TargetPurpose {
 	purpose := TargetGeneric
 	for _, e := range effects {
 		props := e.Properties()
+		if override := TargetPurposeFromAI(props.TargetPurposeOverride); override != TargetGeneric {
+			return override
+		}
 		if props.IsBounce {
 			return TargetBounce
 		}
@@ -46,6 +49,27 @@ func TargetPurposeForEffects(effects []mage.Effect) TargetPurpose {
 		}
 	}
 	return purpose
+}
+
+func TargetPurposeFromAI(p mage.AITargetPurpose) TargetPurpose {
+	switch p {
+	case mage.AITargetRemoval:
+		return TargetRemoval
+	case mage.AITargetBurn:
+		return TargetBurn
+	case mage.AITargetTap:
+		return TargetTap
+	case mage.AITargetPump:
+		return TargetPump
+	case mage.AITargetBounce:
+		return TargetBounce
+	case mage.AITargetAura:
+		return TargetAura
+	case mage.AITargetCounters:
+		return TargetCounters
+	default:
+		return TargetGeneric
+	}
 }
 
 // PermanentValueForTargeting scores a permanent as a target for the given

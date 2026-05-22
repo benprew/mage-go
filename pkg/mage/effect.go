@@ -53,8 +53,46 @@ func CompositeEffects(text string, effects ...Effect) Effect {
 	return &compositeEffect{effects: effects, text: text}
 }
 
-func (e *compositeEffect) Text() string                 { return e.text }
-func (e *compositeEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *compositeEffect) Text() string { return e.text }
+func (e *compositeEffect) Properties() EffectProperties {
+	var out EffectProperties
+	for _, effect := range e.effects {
+		mergeEffectProperties(&out, effect.Properties())
+	}
+	return out
+}
+
+func mergeEffectProperties(dst *EffectProperties, src EffectProperties) {
+	if dst.Outcome == OutcomeUnknown && src.Outcome != OutcomeUnknown {
+		dst.Outcome = src.Outcome
+	}
+	if dst.DamageValue == nil {
+		dst.DamageValue = src.DamageValue
+	}
+	dst.DrawCount += src.DrawCount
+	dst.Mass = dst.Mass || src.Mass
+	dst.LifeGain += src.LifeGain
+	dst.PowerBoost += src.PowerBoost
+	dst.ToughnessBoost += src.ToughnessBoost
+	dst.IsBounce = dst.IsBounce || src.IsBounce
+	dst.Taps = dst.Taps || src.Taps
+	dst.TokenPower += src.TokenPower
+	dst.TokenToughness += src.TokenToughness
+	if dst.GrantedKeyword == 0 {
+		dst.GrantedKeyword = src.GrantedKeyword
+	}
+	dst.AIRoles = append(dst.AIRoles, src.AIRoles...)
+	if src.Timing != AITimingAny {
+		dst.Timing = src.Timing
+	}
+	if src.TargetPurposeOverride != AITargetGeneric {
+		dst.TargetPurposeOverride = src.TargetPurposeOverride
+	}
+	if src.PreferTarget != PreferNoTarget {
+		dst.PreferTarget = src.PreferTarget
+	}
+	dst.ValueBias += src.ValueBias
+}
 
 // ApplyEffect runs an Effect by constructing an EffectContext and dispatching
 // through the executor. This is the canonical entry point for Effect resolution
@@ -80,6 +118,71 @@ const (
 	OutcomeDetriment                // bad for the target (damage, destroy, discard, steal)
 )
 
+// AIRole describes the strategic job an effect or action performs.
+type AIRole int
+
+const (
+	AIRoleRemoval AIRole = iota + 1
+	AIRoleBurn
+	AIRolePump
+	AIRoleProtection
+	AIRoleCardDraw
+	AIRoleManaSink
+	AIRoleCombatTrick
+	AIRoleFinisher
+	AIRoleEngine
+)
+
+// AITiming hints when an otherwise legal action is strategically preferred.
+type AITiming int
+
+const (
+	AITimingAny AITiming = iota
+	AITimingMainPhase
+	AITimingPostCombat
+	AITimingCombatOnly
+	AITimingResponseOnly
+	AITimingEndStep
+)
+
+// AITargetPurpose can override the target purpose inferred from effects.
+type AITargetPurpose int
+
+const (
+	AITargetGeneric AITargetPurpose = iota
+	AITargetRemoval
+	AITargetBurn
+	AITargetTap
+	AITargetPump
+	AITargetBounce
+	AITargetAura
+	AITargetCounters
+)
+
+// AITargetPreference refines which legal target is strategically preferred.
+type AITargetPreference int
+
+const (
+	PreferNoTarget AITargetPreference = iota
+	PreferOpponentCreature
+	PreferOwnCreature
+	PreferLethalCreature
+	PreferOpponentFaceIfLethal
+	PreferEvasiveCreature
+	PreferLargestThreat
+	PreferSmallestOwnCreature
+)
+
+// AIHint provides optional explicit strategy metadata for effects or actions
+// whose rules text is too contextual for EffectProperties inference alone.
+type AIHint struct {
+	Roles         []AIRole
+	Timing        AITiming
+	TargetPurpose AITargetPurpose
+	PreferTarget  AITargetPreference
+	ValueBias     int
+}
+
 // EffectProperties describes the AI-visible shape of an Effect.
 // Effects declare their own properties at construction time; the AI reads
 // them without type-switching.
@@ -98,6 +201,12 @@ type EffectProperties struct {
 	TokenPower     int     // token creature power; 0 if not a token-creation effect
 	TokenToughness int     // token creature toughness; 0 if not a token-creation effect
 	GrantedKeyword Keyword // non-zero when effect grants a keyword to a creature
+
+	AIRoles               []AIRole           // strategic roles for otherwise opaque effects
+	Timing                AITiming           // preferred strategic timing
+	TargetPurposeOverride AITargetPurpose    // overrides inferred targeting purpose when non-zero
+	PreferTarget          AITargetPreference // preferred target shape when non-zero
+	ValueBias             int                // additive spell/ability score adjustment
 }
 
 // IsDamageEffect returns true if the given effect is a damage-dealing effect.

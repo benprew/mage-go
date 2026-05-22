@@ -49,8 +49,13 @@ func (s *Strategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
 // solverProfile translates a WeightedPersonality into a combatsolver.Profile.
 func (s *Strategy) solverProfile() combatsolver.Profile {
 	w := s.weights()
+	weights := w.Weights
+	if !s.Legacy {
+		weights.Life += 1.0
+		weights.Board *= 0.85
+	}
 	return combatsolver.Profile{
-		Weights:        w.Weights,
+		Weights:        weights,
 		Aggression:     w.Aggression,
 		BlockThreshold: w.BlockThreshold,
 	}
@@ -61,11 +66,17 @@ type Strategy struct {
 	Personality ai.Personality
 	Weights     ai.WeightedPersonality
 	weightsInit bool
+	Legacy      bool
 }
 
 // New creates a Strategy from a WeightedPersonality.
 func New(w ai.WeightedPersonality) *Strategy {
 	return &Strategy{Weights: w, weightsInit: true}
+}
+
+// NewLegacy creates a Strategy using the previous priority heuristic.
+func NewLegacy(w ai.WeightedPersonality) *Strategy {
+	return &Strategy{Weights: w, weightsInit: true, Legacy: true}
 }
 
 // NewFromOld creates a Strategy from a legacy boolean Personality.
@@ -82,6 +93,108 @@ func (s *Strategy) weights() ai.WeightedPersonality {
 }
 
 func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
+	if s.Legacy {
+		return s.priorityActionLegacy(p, g, landsPlayed, mainPhase)
+	}
+
+	playerID := p.PlayerID()
+
+	lethal := eval.CalculateLethal(g, playerID)
+	if lethal.TheyHaveLethal {
+		if removal := s.findBestRemoval(p, g); removal != nil {
+			return *removal
+		}
+	}
+
+	if mainPhase {
+		if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
+			if bestLand := chooseBestLand(p, g); bestLand != nil {
+				return interactive.PriorityAction{
+					Type:     interactive.ActionPlayLand,
+					CardID:   bestLand.ID(),
+					CardName: bestLand.Name(),
+				}
+			}
+		}
+
+		if holdBackValue(p, g, s.weights()) > 0 {
+			return interactive.PriorityAction{Type: interactive.ActionPass}
+		}
+
+		availMana := eval.CountAvailableMana(g, playerID)
+		cmcs := eval.HandCMCs(p.Hand())
+
+		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card mage.Card) (int, bool) {
+			if card.HasType(core.TypeInstant) {
+				return 0, false
+			}
+			score := eval.SpellValue(card, p, g)
+			score += int(eval.ManaCurveBonus(card.ManaCost().CMC(), availMana, cmcs))
+			return score, true
+		}); action != nil {
+			return *action
+		}
+	}
+
+	if action := s.considerAbilityActivation(p, g); action != nil {
+		return *action
+	}
+
+	// Stack-threat exception: if an opponent's spell or ability is on the
+	// stack (e.g., a kill spell targeting one of our creatures), evaluate a
+	// response immediately — even during our main phase — so a held protection
+	// or pump trick can save the targeted creature instead of being suppressed
+	// by the combat-trick hold logic below.
+	if !mainPhase || stackHasOpponentThreat(g, playerID) {
+		if response := s.evaluateResponse(p, g); response != nil {
+			return *response
+		}
+	}
+
+	if mainPhase {
+		holdCombatTricks := s.shouldHoldForCombat(g, playerID)
+		for _, card := range p.Hand() {
+			if !card.HasType(core.TypeInstant) {
+				continue
+			}
+			if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
+				continue
+			}
+			if holdCombatTricks && combatsolver.ClassifyCombat(card) != combatsolver.RoleNone {
+				continue
+			}
+			if !aiHintAllowsTiming(cardAIHint(card), g, mainPhase) {
+				continue
+			}
+			hasUsableEffect := false
+			for _, a := range card.Abilities() {
+				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+					if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
+						hasUsableEffect = true
+						break
+					}
+				}
+			}
+			if hasUsableEffect {
+				targets := s.autoSelectTargets(p, g, card)
+				if !requiresTargets(card) || len(targets) > 0 {
+					return interactive.PriorityAction{
+						Type:     interactive.ActionCastSpell,
+						CardID:   card.ID(),
+						CardName: card.Name(),
+						Targets:  targets,
+						XValue:   bestXValue(g, playerID, card, targets),
+					}
+				}
+			}
+		}
+	}
+
+	_ = landsPlayed
+	return interactive.PriorityAction{Type: interactive.ActionPass}
+}
+
+func (s *Strategy) priorityActionLegacy(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
 	playerID := p.PlayerID()
 
 	lethal := eval.CalculateLethal(g, playerID)
@@ -116,8 +229,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 				continue
 			}
 			score := eval.SpellValue(card, p, g)
-			curveBonus := eval.ManaCurveBonus(card.ManaCost().CMC(), availMana, cmcs)
-			score += int(curveBonus)
+			score += int(eval.ManaCurveBonus(card.ManaCost().CMC(), availMana, cmcs))
 			if score > bestScore {
 				bestScore = score
 				bestCard = card
@@ -142,13 +254,8 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		return *action
 	}
 
-	// Stack-threat exception: if an opponent's spell or ability is on the
-	// stack (e.g., a kill spell targeting one of our creatures), evaluate a
-	// response immediately — even during our main phase — so a held protection
-	// or pump trick can save the targeted creature instead of being suppressed
-	// by the combat-trick hold logic below.
 	if !mainPhase || stackHasOpponentThreat(g, playerID) {
-		if response := s.evaluateResponse(p, g); response != nil {
+		if response := s.evaluateResponseLegacy(p, g); response != nil {
 			return *response
 		}
 	}
@@ -162,8 +269,6 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 				continue
 			}
-			// Hold combat-eligible instants for the post-blockers response
-			// window when we're pre-combat and have attackable creatures.
 			if holdCombatTricks && combatsolver.ClassifyCombat(card) != combatsolver.RoleNone {
 				continue
 			}
@@ -193,6 +298,39 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 
 	_ = landsPlayed
 	return interactive.PriorityAction{Type: interactive.ActionPass}
+}
+
+func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []mage.Card, scoreCard func(mage.Card) (int, bool)) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+	var bestAction *interactive.PriorityAction
+	bestScore := 0
+
+	for _, card := range cards {
+		score, ok := scoreCard(card)
+		if !ok || score <= 0 || eval.SpellIsWorthless(card, p, g) {
+			continue
+		}
+		if !aiHintAllowsTiming(cardAIHint(card), g, g.GetStep().IsMainPhase()) {
+			continue
+		}
+		targets := s.autoSelectTargets(p, g, card)
+		if requiresTargets(card) && len(targets) == 0 {
+			continue
+		}
+		if score <= bestScore {
+			continue
+		}
+		bestScore = score
+		bestAction = &interactive.PriorityAction{
+			Type:     interactive.ActionCastSpell,
+			CardID:   card.ID(),
+			CardName: card.Name(),
+			Targets:  targets,
+			XValue:   bestXValue(g, playerID, card, targets),
+		}
+	}
+
+	return bestAction
 }
 
 func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.PriorityAction {
@@ -293,6 +431,10 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *mage.Permanent, ab mage.ActivatedAbility) ([]uuid.UUID, bool) {
 	playerID := p.PlayerID()
 	purpose := eval.TargetPurposeForEffects(ab.Effects())
+	hint := abilityAIHint(ab)
+	if hintedPurpose := eval.TargetPurposeFromAI(hint.TargetPurpose); hintedPurpose != eval.TargetGeneric {
+		purpose = hintedPurpose
+	}
 	damage := abilityDamageForTargets(g, playerID, perm.ID(), ab.Effects(), nil)
 	outcome := mage.SpellOutcome(ab.Effects())
 
@@ -306,7 +448,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 		switch t.(type) {
 		case *mage.DamageAnyTarget:
 			if outcome == mage.OutcomeBenefit {
-				chosen := bestTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false)
+				chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget)
 				if len(chosen) == 0 {
 					return nil, false
 				}
@@ -327,7 +469,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 					continue
 				}
 			}
-			if chosen := bestTargetsForRequirement(g, playerID, possible, eval.TargetBurn, damage, false, true); len(chosen) > 0 {
+			if chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetBurn, damage, false, true, hint.PreferTarget); len(chosen) > 0 {
 				targets = append(targets, chosen[0])
 				continue
 			}
@@ -339,14 +481,14 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 
 		case *mage.CreatureTarget:
 			if outcome == mage.OutcomeBenefit {
-				chosen := bestTargetsForRequirement(g, playerID, possible, purpose, damage, true, false)
+				chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
 				if len(chosen) == 0 {
 					return nil, false
 				}
 				targets = append(targets, chosen[0])
 				continue
 			}
-			if chosen := bestTargetsForRequirement(g, playerID, possible, purpose, damage, false, true); len(chosen) > 0 {
+			if chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, false, true, hint.PreferTarget); len(chosen) > 0 {
 				targets = append(targets, chosen[0])
 				continue
 			}
@@ -362,7 +504,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 		default:
 			preferOwn := outcome == mage.OutcomeBenefit
 			preferOpponent := outcome == mage.OutcomeDetriment
-			chosen := bestTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, preferOpponent)
+			chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, hint.PreferTarget)
 			if len(chosen) == 0 {
 				if preferOpponent {
 					return nil, false
@@ -407,6 +549,10 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 			continue
 		}
 		purpose := eval.TargetPurposeForEffects(sa.Effects())
+		hint := actionAIHint(sa.Effects(), sa.AIHints())
+		if hintedPurpose := eval.TargetPurposeFromAI(hint.TargetPurpose); hintedPurpose != eval.TargetGeneric {
+			purpose = hintedPurpose
+		}
 		damage := spellDamageForTargets(g, playerID, card, nil)
 		for _, t := range sa.Targets() {
 			possible := t.Possible(playerID, card, g)
@@ -418,7 +564,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 			switch t.(type) {
 			case *mage.DamageAnyTarget:
 				if outcome == mage.OutcomeBenefit {
-					return bestTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false)
+					return bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget)
 				}
 				opponent := g.GetOpponent(playerID)
 				if s.weights().TargetFace >= 0.5 && opponent != nil {
@@ -428,7 +574,10 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 						}
 					}
 				}
-				if targets := bestTargetsForRequirement(g, playerID, possible, eval.TargetBurn, damage, false, true); len(targets) > 0 {
+				if hint.PreferTarget == mage.PreferOpponentFaceIfLethal && opponent != nil && damage >= opponent.Life() {
+					return []uuid.UUID{opponent.PlayerID()}
+				}
+				if targets := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetBurn, damage, false, true, hint.PreferTarget); len(targets) > 0 {
 					return targets
 				}
 				if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) {
@@ -437,15 +586,15 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 
 			case *mage.CreatureTarget:
 				if outcome == mage.OutcomeBenefit {
-					return bestTargetsForRequirement(g, playerID, possible, purpose, damage, true, false)
+					return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
 				}
-				if targets := bestTargetsForRequirement(g, playerID, possible, purpose, damage, false, true); len(targets) > 0 {
+				if targets := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, false, true, hint.PreferTarget); len(targets) > 0 {
 					return targets
 				}
 				// Only fall back to own creatures for beneficial spells;
 				// never target your own creature with removal.
 				if outcome == mage.OutcomeBenefit {
-					return bestTargetsForRequirement(g, playerID, possible, purpose, damage, true, false)
+					return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
 				}
 
 			case *mage.PlayerTarget, *mage.OpponentTarget:
@@ -457,7 +606,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 			default:
 				preferOwn := outcome == mage.OutcomeBenefit
 				preferOpponent := outcome == mage.OutcomeDetriment
-				if targets := bestTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, preferOpponent); len(targets) > 0 {
+				if targets := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, hint.PreferTarget); len(targets) > 0 {
 					return targets
 				}
 				if !preferOpponent && len(possible) > 0 {
@@ -511,6 +660,16 @@ func requiresTargets(card mage.Card) bool {
 }
 
 func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool) []uuid.UUID {
+	return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, mage.PreferNoTarget)
+}
+
+func bestTargetsForRequirementWithPreference(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool, preference mage.AITargetPreference) []uuid.UUID {
+	if preference == mage.PreferSmallestOwnCreature {
+		if target := smallestOwnCreatureTarget(g, playerID, possible); target != uuid.Nil {
+			return []uuid.UUID{target}
+		}
+	}
+
 	bestID := uuid.Nil
 	bestScore := -10000
 	for _, id := range possible {
@@ -525,6 +684,7 @@ func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid
 			continue
 		}
 		score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
+		score += targetPreferenceBonus(g, playerID, perm, preference, damage)
 		if score > bestScore {
 			bestScore = score
 			bestID = id
@@ -534,6 +694,64 @@ func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid
 		return nil
 	}
 	return []uuid.UUID{bestID}
+}
+
+func smallestOwnCreatureTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID) uuid.UUID {
+	bestID := uuid.Nil
+	bestScore := 1 << 30
+	for _, id := range possible {
+		perm := g.FindPermanent(id)
+		if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+			continue
+		}
+		score := eval.PermanentValueForTargeting(g, perm, eval.TargetGeneric)
+		if score < bestScore {
+			bestScore = score
+			bestID = id
+		}
+	}
+	return bestID
+}
+
+func targetPreferenceBonus(g *mage.Game, playerID uuid.UUID, perm *mage.Permanent, preference mage.AITargetPreference, damage int) int {
+	switch preference {
+	case mage.PreferOpponentCreature:
+		if perm.Controller != playerID && perm.HasType(core.TypeCreature) {
+			return 40
+		}
+	case mage.PreferOwnCreature:
+		if perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+			return 40
+		}
+	case mage.PreferLethalCreature:
+		if perm.Controller != playerID && perm.HasType(core.TypeCreature) && damage >= perm.CurrentToughness(g)-perm.Damage {
+			return 50
+		}
+	case mage.PreferEvasiveCreature:
+		if perm.HasType(core.TypeCreature) && hasAITargetingEvasion(perm) {
+			return 35
+		}
+	case mage.PreferLargestThreat:
+		return eval.PermanentValueForTargeting(g, perm, eval.TargetRemoval)
+	case mage.PreferSmallestOwnCreature:
+		if perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+			return 1000 - eval.PermanentValueForTargeting(g, perm, eval.TargetGeneric)
+		}
+		return -100
+	}
+	return 0
+}
+
+func hasAITargetingEvasion(perm *mage.Permanent) bool {
+	return perm.HasKeyword(core.UnblockableKW) ||
+		perm.HasKeyword(core.Flying) ||
+		perm.HasKeyword(core.Fear) ||
+		perm.HasKeyword(core.Menace) ||
+		perm.HasKeyword(core.Islandwalk) ||
+		perm.HasKeyword(core.Swampwalk) ||
+		perm.HasKeyword(core.Forestwalk) ||
+		perm.HasKeyword(core.Mountainwalk) ||
+		perm.HasKeyword(core.Plainswalk)
 }
 
 func shouldAimBurnAtFace(g *mage.Game, playerID uuid.UUID, damage int) bool {
@@ -564,6 +782,76 @@ func spellDamageForTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, tar
 		}
 	}
 	return damage
+}
+
+func cardAIHint(card mage.Card) mage.AIHint {
+	for _, a := range card.Abilities() {
+		sa, ok := a.(*mage.SpellAbility)
+		if !ok || sa.Kind() != mage.ActionSpell {
+			continue
+		}
+		return actionAIHint(sa.Effects(), sa.AIHints())
+	}
+	return mage.AIHint{}
+}
+
+func abilityAIHint(ab mage.ActivatedAbility) mage.AIHint {
+	if ad, ok := ab.(*mage.ActionDefinition); ok {
+		return actionAIHint(ad.Effects(), ad.AIHints())
+	}
+	return actionAIHint(ab.Effects(), nil)
+}
+
+func actionAIHint(effects []mage.Effect, hints []mage.AIHint) mage.AIHint {
+	var out mage.AIHint
+	for _, e := range effects {
+		props := e.Properties()
+		mergeAIHint(&out, mage.AIHint{
+			Roles:         props.AIRoles,
+			Timing:        props.Timing,
+			TargetPurpose: props.TargetPurposeOverride,
+			PreferTarget:  props.PreferTarget,
+			ValueBias:     props.ValueBias,
+		})
+	}
+	for _, hint := range hints {
+		mergeAIHint(&out, hint)
+	}
+	return out
+}
+
+func mergeAIHint(dst *mage.AIHint, src mage.AIHint) {
+	if len(src.Roles) > 0 {
+		dst.Roles = append(dst.Roles, src.Roles...)
+	}
+	if src.Timing != mage.AITimingAny {
+		dst.Timing = src.Timing
+	}
+	if src.TargetPurpose != mage.AITargetGeneric {
+		dst.TargetPurpose = src.TargetPurpose
+	}
+	if src.PreferTarget != mage.PreferNoTarget {
+		dst.PreferTarget = src.PreferTarget
+	}
+	dst.ValueBias += src.ValueBias
+}
+
+func aiHintAllowsTiming(hint mage.AIHint, g *mage.Game, mainPhase bool) bool {
+	switch hint.Timing {
+	case mage.AITimingMainPhase:
+		return mainPhase
+	case mage.AITimingPostCombat:
+		return g.GetStep() == core.PostcombatMain
+	case mage.AITimingCombatOnly:
+		return g.GetStep() == core.DeclareAttackers || g.GetStep() == core.DeclareBlockers ||
+			g.GetStep() == core.CombatDamage || g.GetStep() == core.FirstStrikeDamage
+	case mage.AITimingResponseOnly:
+		return len(g.StackObjects()) > 0
+	case mage.AITimingEndStep:
+		return g.GetStep() == core.EndStep
+	default:
+		return true
+	}
 }
 
 func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects []mage.Effect, targets []uuid.UUID) int {

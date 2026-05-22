@@ -78,7 +78,11 @@ func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid
 		if modePrompt == "" {
 			modePrompt = card.Name()
 		}
-		modeChoice = caster.ChooseMode(modalLabels(ms), modePrompt)
+		if chooser, ok := caster.(EffectModeChooser); ok {
+			modeChoice = chooser.ChooseModeWithEffects(ms.modes, modePrompt, g)
+		} else {
+			modeChoice = caster.ChooseMode(modalLabels(ms), modePrompt)
+		}
 		if modeChoice < 0 || modeChoice >= len(ms.modes) {
 			modeChoice = 0
 		}

@@ -83,6 +83,13 @@ func WithEffects(effects ...Effect) ActionOption {
 	}
 }
 
+// WithAIHint attaches explicit strategy metadata to a spell or activated ability.
+func WithAIHint(hint AIHint) ActionOption {
+	return func(a *ActionDefinition) {
+		a.aiHints = append(a.aiHints, hint)
+	}
+}
+
 // WithTiming sets the timing rule for an action.
 func WithTiming(rule TimingRule) ActionOption {
 	return func(a *ActionDefinition) { a.timing = rule }
@@ -189,6 +196,7 @@ type ActionDefinition struct {
 	activatedThisTurn   bool // Tracks whether this ability has been activated this turn
 	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
 	activationConds     []ActivationCondition
+	aiHints             []AIHint
 }
 
 // SimpleActivatedAbility is kept as a compatibility name for activated actions.
@@ -348,6 +356,7 @@ func (a *ActionDefinition) Effects() []Effect  { return a.effects }
 func (a *ActionDefinition) Costs() []Cost      { return a.costs }
 func (a *ActionDefinition) Targets() []Target  { return a.targets }
 func (a *ActionDefinition) SorcerySpeed() bool { return a.timing == TimingSorcery }
+func (a *ActionDefinition) AIHints() []AIHint  { return a.aiHints }
 
 // EquipAbility is an activated ability for equipment (sorcery speed, targets creature you control).
 type EquipAbility struct {

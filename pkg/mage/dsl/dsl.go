@@ -60,6 +60,11 @@ type (
 	BaseCard               = mage.BaseCard
 	Effect                 = mage.Effect
 	EffectProperties       = mage.EffectProperties
+	AIHint                 = mage.AIHint
+	AIRole                 = mage.AIRole
+	AITiming               = mage.AITiming
+	AITargetPurpose        = mage.AITargetPurpose
+	AITargetPreference     = mage.AITargetPreference
 	PipelineData           = mage.PipelineData
 	PermanentFilter        = mage.PermanentFilter
 	TriggeredAbility       = mage.TriggeredAbility
@@ -169,6 +174,7 @@ var (
 	WithCastTarget               = mage.WithCastTarget
 	WithOncePerTurn              = mage.WithOncePerTurn
 	WithEffect                   = mage.WithEffect
+	WithAIHint                   = mage.WithAIHint
 	WithUpkeepOnly               = mage.WithUpkeepOnly
 	WithControlledSinceTurnStart = mage.WithControlledSinceTurnStart
 	WithOpponentOnlyMay          = mage.WithOpponentOnlyMay
@@ -565,6 +571,40 @@ const (
 	OutcomeDetriment = mage.OutcomeDetriment
 	OutcomeBenefit   = mage.OutcomeBenefit
 	OutcomeUnknown   = mage.OutcomeUnknown
+)
+
+const (
+	AIRoleRemoval              = mage.AIRoleRemoval
+	AIRoleBurn                 = mage.AIRoleBurn
+	AIRolePump                 = mage.AIRolePump
+	AIRoleProtection           = mage.AIRoleProtection
+	AIRoleCardDraw             = mage.AIRoleCardDraw
+	AIRoleManaSink             = mage.AIRoleManaSink
+	AIRoleCombatTrick          = mage.AIRoleCombatTrick
+	AIRoleFinisher             = mage.AIRoleFinisher
+	AIRoleEngine               = mage.AIRoleEngine
+	AITimingAny                = mage.AITimingAny
+	AITimingMainPhase          = mage.AITimingMainPhase
+	AITimingPostCombat         = mage.AITimingPostCombat
+	AITimingCombatOnly         = mage.AITimingCombatOnly
+	AITimingResponseOnly       = mage.AITimingResponseOnly
+	AITimingEndStep            = mage.AITimingEndStep
+	AITargetGeneric            = mage.AITargetGeneric
+	AITargetRemoval            = mage.AITargetRemoval
+	AITargetBurn               = mage.AITargetBurn
+	AITargetTap                = mage.AITargetTap
+	AITargetPump               = mage.AITargetPump
+	AITargetBounce             = mage.AITargetBounce
+	AITargetAura               = mage.AITargetAura
+	AITargetCounters           = mage.AITargetCounters
+	PreferNoTarget             = mage.PreferNoTarget
+	PreferOpponentCreature     = mage.PreferOpponentCreature
+	PreferOwnCreature          = mage.PreferOwnCreature
+	PreferLethalCreature       = mage.PreferLethalCreature
+	PreferOpponentFaceIfLethal = mage.PreferOpponentFaceIfLethal
+	PreferEvasiveCreature      = mage.PreferEvasiveCreature
+	PreferLargestThreat        = mage.PreferLargestThreat
+	PreferSmallestOwnCreature  = mage.PreferSmallestOwnCreature
 )
 
 // =============================================================================

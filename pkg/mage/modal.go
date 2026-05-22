@@ -44,6 +44,11 @@ type Mode struct {
 	Effects []Effect
 }
 
+// EffectModeChooser can choose modal options using full mode metadata.
+type EffectModeChooser interface {
+	ChooseModeWithEffects(modes []Mode, reason string, g *Game) int
+}
+
 // ModalSpellAbility extends SpellAbility with a list of modes. At cast time
 // the engine prompts ChooseMode, gathers targets for the chosen mode only,
 // and resolves only that mode's effects.

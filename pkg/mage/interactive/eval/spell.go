@@ -100,8 +100,18 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 		if !ok || sa.Kind() != mage.ActionSpell {
 			continue
 		}
+		for _, hint := range sa.AIHints() {
+			if hintScore := aiActionHintScore(hint, card, p, g); hintScore != 0 {
+				score += hintScore
+				found = true
+			}
+		}
 		for _, e := range sa.Effects() {
 			props := e.Properties()
+			if hintScore := aiHintScore(props, card, p, g); hintScore != 0 {
+				score += hintScore
+				found = true
+			}
 
 			if props.DrawCount > 0 {
 				drawScore := props.DrawCount * 3
@@ -205,6 +215,56 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 		return score
 	}
 	return cmc
+}
+
+func aiHintScore(props mage.EffectProperties, card mage.Card, p mage.Player, g *mage.Game) int {
+	score := props.ValueBias
+	for _, role := range props.AIRoles {
+		score += aiRoleScore(role, props, card, p, g)
+	}
+	return score
+}
+
+func aiActionHintScore(hint mage.AIHint, card mage.Card, p mage.Player, g *mage.Game) int {
+	props := mage.EffectProperties{AIRoles: hint.Roles, ValueBias: hint.ValueBias}
+	return aiHintScore(props, card, p, g)
+}
+
+func aiRoleScore(role mage.AIRole, props mage.EffectProperties, card mage.Card, p mage.Player, g *mage.Game) int {
+	switch role {
+	case mage.AIRoleRemoval:
+		return 7
+	case mage.AIRoleBurn:
+		if props.DamageValue != nil {
+			return props.DamageValue.Resolve(g, card.ID(), p.PlayerID(), nil)
+		}
+		return 5
+	case mage.AIRolePump, mage.AIRoleCombatTrick:
+		return 4
+	case mage.AIRoleProtection:
+		return 3
+	case mage.AIRoleCardDraw:
+		handSize := len(p.Hand())
+		if handSize <= 2 {
+			return 8
+		}
+		if handSize <= 4 {
+			return 6
+		}
+		return 4
+	case mage.AIRoleManaSink:
+		return max(2, evalAvailableMana(g, p.PlayerID())-card.ManaCost().CMC())
+	case mage.AIRoleFinisher:
+		return 8
+	case mage.AIRoleEngine:
+		return 6
+	default:
+		return 0
+	}
+}
+
+func evalAvailableMana(g mage.GameReader, playerID uuid.UUID) int {
+	return CountAvailableMana(g, playerID)
 }
 
 // CountAvailableMana counts the total mana available from untapped sources a player controls.

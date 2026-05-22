@@ -381,10 +381,25 @@ The [EffectProperties] struct declares metadata for the AI:
 	    DamageValue ValueSource // non-nil if this deals damage
 	    DrawCount   int         // fixed cards drawn (0 for X or non-draw)
 	    Mass        bool        // true for board-wide effects
+	    AIRoles     []AIRole    // optional explicit strategic roles
+	    Timing      AITiming    // optional preferred AI timing
+	    TargetPurposeOverride AITargetPurpose
+	    PreferTarget          AITargetPreference
+	    ValueBias             int
 	}
 
 Always set Outcome so the AI targets correctly: OutcomeDetriment effects target
 opponents/their creatures; OutcomeBenefit effects target yourself/your creatures.
+For unusual cards whose tactical purpose is not clear from the normal fields,
+attach explicit hints to the effect or to the spell/ability action:
+
+	mage.NewInstant("Careful Study Later", "{2}{U}",
+	    mage.DrawCards(mage.Fixed(2)),
+	    mage.WithAIHint(mage.AIHint{
+	        Roles:  []mage.AIRole{mage.AIRoleCardDraw},
+	        Timing: mage.AITimingEndStep,
+	    }),
+	)
 
 # Targets
 

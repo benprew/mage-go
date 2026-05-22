@@ -324,6 +324,29 @@ func TestPriorityAction_PassOnNonMainEmptyHand(t *testing.T) {
 	}
 }
 
+func TestPriorityAction_SkipsInvalidHighValueSpellForPlayableSpell(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Island", 2)
+	addLands(g, pa, "Forest", 1)
+
+	drawOnCreature := mage.NewSorcery("Need a Creature", "{1}{U}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.DrawCards(mage.Fixed(2))),
+	)
+	drawOnCreature.SetOwner(pa.PlayerID())
+	pa.AddToHand(drawOnCreature)
+
+	bear := mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2)
+	bear.SetOwner(pa.PlayerID())
+	pa.AddToHand(bear)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 1, true)
+	if action.Type != interactive.ActionCastSpell || action.CardName != "Grizzly Bears" {
+		t.Fatalf("expected playable creature after invalid target spell, got %v", action)
+	}
+}
+
 func TestPriorityAction_HoldsCombatTrickPrecombat(t *testing.T) {
 	g, pa, pb := makeGame()
 	g.SetActivePlayerIndex(0)
@@ -593,6 +616,55 @@ func TestAutoSelectTargets_GenericRemovalPrefersCreatureOverLand(t *testing.T) {
 	targets := start.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != threat.ID() {
 		t.Fatalf("generic removal should target the creature threat, got %v", targets)
+	}
+}
+
+func TestAutoSelectTargets_AIHintPrefersSmallestOwnCreature(t *testing.T) {
+	g, pa, _ := makeGame()
+	small := makePerm("Young Hero", "{W}", 1, 1, pa.PlayerID())
+	large := makePerm("Veteran", "{3}{W}", 4, 4, pa.PlayerID())
+	g.AddToBattlefield(small, large)
+
+	card := mage.NewInstant("Odd Blessing", "{W}",
+		mage.NewSpell(
+			mage.FuncEffect("put a quest counter on target creature", mage.EffectProperties{
+				Outcome: mage.OutcomeBenefit,
+			}, func(*mage.Game, uuid.UUID, uuid.UUID, []uuid.UUID) error { return nil }),
+			mage.WithTarget(mage.TargetCreature()),
+			mage.WithAIHint(mage.AIHint{
+				TargetPurpose: mage.AITargetCounters,
+				PreferTarget:  mage.PreferSmallestOwnCreature,
+			}),
+		),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := New(ai.MidrangeWeighted)
+	targets := start.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != small.ID() {
+		t.Fatalf("AI hint should prefer smallest own creature, got %v", targets)
+	}
+}
+
+func TestPriorityAction_HoldsEndStepHintedInstantInMainPhase(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Island", 3)
+
+	card := mage.NewInstant("Careful Study Later", "{2}{U}",
+		mage.NewSpell(
+			mage.DrawCards(mage.Fixed(2)),
+			mage.WithAIHint(mage.AIHint{Timing: mage.AITimingEndStep}),
+		),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 1, true)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected end-step hinted instant to be held in main phase, got %v", action)
 	}
 }
 
