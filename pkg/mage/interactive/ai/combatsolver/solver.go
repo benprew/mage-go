@@ -118,6 +118,7 @@ func SolveDefense(g *mage.Game, playerID uuid.UUID, opts Options) Result {
 			continue
 		}
 		clone.ExecuteBlockers(blockSet)
+		applyCombatSelfPump(clone, playerID, blockSet)
 		clone.ExecuteCombatDamage()
 		clone.CheckStateBasedActions()
 		score := leaf(clone, playerID)
@@ -170,6 +171,7 @@ func worstBlockingResponse(g *mage.Game, playerID, oppID uuid.UUID,
 		}
 		clone := postAttack.Clone()
 		clone.ExecuteBlockers(blockSet)
+		applyCombatSelfPump(clone, oppID, blockSet)
 		clone.ExecuteCombatDamage()
 		clone.CheckStateBasedActions()
 		score := leaf(clone, playerID)
