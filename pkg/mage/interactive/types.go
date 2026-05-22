@@ -35,6 +35,7 @@ const (
 	ActionSelectAttackers
 	ActionSelectBlockers
 	ActionUndo
+	ActionAssignCombatDamage
 )
 
 // PriorityAction is a decision sent from the TUI (or AI) to the game loop.
@@ -48,6 +49,8 @@ type PriorityAction struct {
 	XValue       int
 	Attackers    []uuid.UUID
 	Blockers     []mage.BlockAssignment
+	DamageOrder  []uuid.UUID
+	Damage       map[uuid.UUID]int
 }
 
 // PromptType tells the TUI what kind of input is needed.
@@ -60,6 +63,7 @@ const (
 	PromptDeclareAttackers
 	PromptDeclareBlockers
 	PromptChooseTargets
+	PromptAssignCombatDamage
 )
 
 func (pt PromptType) String() string {
@@ -74,6 +78,8 @@ func (pt PromptType) String() string {
 		return "Declare Blockers"
 	case PromptChooseTargets:
 		return "Choose Targets"
+	case PromptAssignCombatDamage:
+		return "Assign Combat Damage"
 	default:
 		return ""
 	}
@@ -151,6 +157,7 @@ type PermanentState struct {
 	Name        string
 	Power       int
 	Toughness   int
+	Damage      int
 	Tapped      bool
 	SummonSick  bool
 	FaceDown    bool

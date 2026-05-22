@@ -190,6 +190,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 			Name:       perm.Name(),
 			Power:      perm.CurrentPower(g),
 			Toughness:  perm.CurrentToughness(g),
+			Damage:     perm.Damage,
 			Tapped:     perm.Tapped,
 			SummonSick: perm.HasAttr(core.AttrSummonSick),
 			FaceDown:   perm.FaceDown,

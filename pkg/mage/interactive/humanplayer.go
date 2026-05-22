@@ -18,16 +18,19 @@ type HumanPlayer struct {
 	gameLog     []string // kept in sync by RunGameLoop; used when building GameMsg
 	choiceReqs  chan ChoiceRequest
 	choiceResps chan ChoiceResponse
+
+	combatDamageAssignments map[uuid.UUID]map[uuid.UUID]int
 }
 
 // NewHumanPlayer creates a new human player for the TUI.
 func NewHumanPlayer(name string) *HumanPlayer {
 	return &HumanPlayer{
-		BasePlayer:  mage.NewBasePlayer(name),
-		toTUI:       make(chan GameMsg, 1),
-		fromTUI:     make(chan PriorityAction, 1),
-		choiceReqs:  make(chan ChoiceRequest, 1),
-		choiceResps: make(chan ChoiceResponse, 1),
+		BasePlayer:              mage.NewBasePlayer(name),
+		toTUI:                   make(chan GameMsg, 1),
+		fromTUI:                 make(chan PriorityAction, 1),
+		choiceReqs:              make(chan ChoiceRequest, 1),
+		choiceResps:             make(chan ChoiceResponse, 1),
+		combatDamageAssignments: make(map[uuid.UUID]map[uuid.UUID]int),
 	}
 }
 
@@ -35,11 +38,12 @@ func NewHumanPlayer(name string) *HumanPlayer {
 // Used by the SSH lobby so the TUI model can be wired before the game starts.
 func NewHumanPlayerWithChannels(name string, toTUI chan GameMsg, fromTUI chan PriorityAction, choiceReqs chan ChoiceRequest, choiceResps chan ChoiceResponse) *HumanPlayer {
 	return &HumanPlayer{
-		BasePlayer:  mage.NewBasePlayer(name),
-		toTUI:       toTUI,
-		fromTUI:     fromTUI,
-		choiceReqs:  choiceReqs,
-		choiceResps: choiceResps,
+		BasePlayer:              mage.NewBasePlayer(name),
+		toTUI:                   toTUI,
+		fromTUI:                 fromTUI,
+		choiceReqs:              choiceReqs,
+		choiceResps:             choiceResps,
+		combatDamageAssignments: make(map[uuid.UUID]map[uuid.UUID]int),
 	}
 }
 
@@ -91,6 +95,50 @@ func (p *HumanPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 		return action.Blockers
 	}
 	return nil
+}
+
+func (p *HumanPlayer) GetBlockerOrder(g *mage.Game, attacker *mage.Permanent, blockers []*mage.Permanent, totalPower int) []uuid.UUID {
+	if attacker == nil || len(blockers) < 2 || totalPower <= 0 {
+		return nil
+	}
+	idx := findPlayerIndex(g, p.PlayerID())
+	state := SnapshotGameState(g, idx)
+	p.toTUI <- GameMsg{
+		State:   state,
+		Prompt:  PromptAssignCombatDamage,
+		Options: combatDamageOptions(g, attacker, blockers, totalPower),
+		Log:     append([]string(nil), p.gameLog...),
+	}
+	action := <-p.fromTUI
+	if action.Type != ActionAssignCombatDamage {
+		return nil
+	}
+	p.combatDamageAssignments[attacker.ID()] = action.Damage
+	return action.DamageOrder
+}
+
+func (p *HumanPlayer) GetCombatDamageAssignment(g *mage.Game, attacker *mage.Permanent, blockers []*mage.Permanent, totalPower int) map[uuid.UUID]int {
+	if attacker == nil || len(blockers) < 2 || totalPower <= 0 {
+		return nil
+	}
+	if assignment, ok := p.combatDamageAssignments[attacker.ID()]; ok {
+		delete(p.combatDamageAssignments, attacker.ID())
+		return assignment
+	}
+
+	idx := findPlayerIndex(g, p.PlayerID())
+	state := SnapshotGameState(g, idx)
+	p.toTUI <- GameMsg{
+		State:   state,
+		Prompt:  PromptAssignCombatDamage,
+		Options: combatDamageOptions(g, attacker, blockers, totalPower),
+		Log:     append([]string(nil), p.gameLog...),
+	}
+	action := <-p.fromTUI
+	if action.Type != ActionAssignCombatDamage {
+		return nil
+	}
+	return action.Damage
 }
 
 // ChoiceRequests returns a channel the TUI should read for incoming choice requests.

@@ -147,6 +147,22 @@ func blockerOptions(g *mage.Game, defenderID uuid.UUID, eligible []*mage.Permane
 	return options
 }
 
+func combatDamageOptions(g *mage.Game, attacker *mage.Permanent, blockers []*mage.Permanent, totalPower int) []ActionOption {
+	opt := ActionOption{
+		Type:        ActionAssignCombatDamage,
+		Label:       fmt.Sprintf("%s assigns %d damage", attacker.Name(), totalPower),
+		CardName:    attacker.Name(),
+		PermanentID: attacker.ID(),
+		MaxXValue:   totalPower,
+	}
+	for _, blocker := range blockers {
+		opt.ValidTargets = append(opt.ValidTargets, blocker.ID())
+		opt.ValidTargetLabels = append(opt.ValidTargetLabels,
+			fmt.Sprintf("%s %d/%d", blocker.Name(), blocker.CurrentPower(g), blocker.CurrentToughness(g)))
+	}
+	return []ActionOption{opt}
+}
+
 func reportCombatResults(g *mage.Game, addLog func(string)) {
 	for _, p := range g.AllPlayers() {
 		addLog(fmt.Sprintf("%s: %d life", p.Name(), p.Life()))

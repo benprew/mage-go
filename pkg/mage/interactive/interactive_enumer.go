@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ActionTypeName = "PassPlayLandCastSpellActivateAbilitySelectAttackersSelectBlockersUndo"
+const _ActionTypeName = "PassPlayLandCastSpellActivateAbilitySelectAttackersSelectBlockersUndoAssignCombatDamage"
 
-var _ActionTypeIndex = [...]uint8{0, 4, 12, 21, 36, 51, 65, 69}
+var _ActionTypeIndex = [...]uint8{0, 4, 12, 21, 36, 51, 65, 69, 87}
 
-const _ActionTypeLowerName = "passplaylandcastspellactivateabilityselectattackersselectblockersundo"
+const _ActionTypeLowerName = "passplaylandcastspellactivateabilityselectattackersselectblockersundoassigncombatdamage"
 
 func (i ActionType) String() string {
 	if i < 0 || i >= ActionType(len(_ActionTypeIndex)-1) {
@@ -29,9 +29,10 @@ func _ActionTypeNoOp() {
 	_ = x[ActionSelectAttackers-(4)]
 	_ = x[ActionSelectBlockers-(5)]
 	_ = x[ActionUndo-(6)]
+	_ = x[ActionAssignCombatDamage-(7)]
 }
 
-var _ActionTypeValues = []ActionType{ActionPass, ActionPlayLand, ActionCastSpell, ActionActivateAbility, ActionSelectAttackers, ActionSelectBlockers, ActionUndo}
+var _ActionTypeValues = []ActionType{ActionPass, ActionPlayLand, ActionCastSpell, ActionActivateAbility, ActionSelectAttackers, ActionSelectBlockers, ActionUndo, ActionAssignCombatDamage}
 
 var _ActionTypeNameToValueMap = map[string]ActionType{
 	_ActionTypeName[0:4]:        ActionPass,
@@ -48,6 +49,8 @@ var _ActionTypeNameToValueMap = map[string]ActionType{
 	_ActionTypeLowerName[51:65]: ActionSelectBlockers,
 	_ActionTypeName[65:69]:      ActionUndo,
 	_ActionTypeLowerName[65:69]: ActionUndo,
+	_ActionTypeName[69:87]:      ActionAssignCombatDamage,
+	_ActionTypeLowerName[69:87]: ActionAssignCombatDamage,
 }
 
 var _ActionTypeNames = []string{
@@ -58,6 +61,7 @@ var _ActionTypeNames = []string{
 	_ActionTypeName[36:51],
 	_ActionTypeName[51:65],
 	_ActionTypeName[65:69],
+	_ActionTypeName[69:87],
 }
 
 // ActionTypeString retrieves an enum value from the enum constants string name.
