@@ -3,6 +3,8 @@ package limited
 import (
 	"github.com/google/uuid"
 
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
 )
 
@@ -790,12 +792,21 @@ func registerCreatures() {
 		)
 	})
 
+	// {T}: Choose target non-Wall creature the active player has controlled continuously since the beginning of the turn. That creature attacks this turn if able. Destroy it at the beginning of the next end step if it didn't attack this turn. Activate only during an opponent's turn, before attackers are declared.
 	Register("Nettling Imp", func() Card {
-		// XXX: missing timing restriction (opponent's turn, before attackers) and continuous-control check
+		validTarget := And(
+			Not(HasSubType("Wall")),
+			NewPermanentFilter("active player has controlled continuously since the beginning of the turn", func(p *Permanent, g *Game) bool {
+				active := g.ActivePlayerObj()
+				return active != nil && p.Controller == active.PlayerID() && p.TurnControlGained < g.CurrentTurn()
+			}),
+			NewPermanentFilter("creature without summoning sickness", func(p *Permanent, _ *Game) bool {
+				return !p.HasAttr(core.AttrSummonSick) || p.HasAttr(core.Haste)
+			}),
+		)
+
 		return NewCreature("Nettling Imp", "{2}{B}", 1, 1,
 			WithSubTypes("Imp"),
-			// {T}: Target non-Wall creature the active player controls attacks this
-			// turn if able. Destroy it at end of turn if it didn't attack.
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs delayed trigger registration + closure over targetID
 				FuncEffect("force creature to attack or destroy at EOT",
@@ -829,7 +840,12 @@ func registerCreatures() {
 						return nil
 					}),
 				Tap(),
-				WithTarget(TargetCreature(Not(HasSubType("Wall")))),
+				WithTarget(TargetCreature(validTarget)),
+				mage.WithActivationCondition(func(g *Game, _ *Permanent, controller uuid.UUID) bool {
+					step := g.GetStep()
+					return g.ActivePlayerObj().PlayerID() != controller &&
+						step != core.Untap && step < core.DeclareAttackers
+				}),
 			),
 		)
 	})

@@ -3,6 +3,8 @@ package limited
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	_ "git.sr.ht/~cdcarter/mage-go/cards/arabian"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
@@ -772,6 +774,39 @@ func TestNettlingImpForceAttack(t *testing.T) {
 		g.Execute()
 		// Hill Giant was tapped and couldn't attack, so it should be destroyed at end of turn
 		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	})
+
+	t.Run("cannot_activate_on_controllers_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nettling Imp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Nettling Imp", "Hill Giant")
+		g.StopAt(1, core.Cleanup)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Nettling Imp", false)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
+
+	t.Run("cannot_target_summoning_sick_creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nettling Imp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		hillGiant := g.FindPermanentByName("Hill Giant", g.AllPlayers()[1].PlayerID())
+		if hillGiant == nil {
+			t.Fatal("Hill Giant not found")
+		}
+		hillGiant.GrantBaseAttr(core.AttrSummonSick)
+		imp := g.FindPermanentByName("Nettling Imp", g.AllPlayers()[0].PlayerID())
+		if imp == nil {
+			t.Fatal("Nettling Imp not found")
+		}
+		if err := g.ActivateAbilityByIndex(g.AllPlayers()[0].PlayerID(), imp.ID(), 0, []uuid.UUID{hillGiant.ID()}); err == nil {
+			t.Fatal("expected Nettling Imp activation to reject summoning-sick target")
+		}
+		g.AssertTapped(gametest.PlayerA, "Nettling Imp", false)
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
 	})
 }
 
