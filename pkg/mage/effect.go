@@ -94,6 +94,7 @@ type EffectProperties struct {
 	PowerBoost     int     // power boost for target; 0 if not a boost effect
 	ToughnessBoost int     // toughness boost for target; 0 if not a boost effect
 	IsBounce       bool    // true if this effect bounces a permanent to hand
+	Taps           bool    // true if this effect taps a permanent as a detrimental/beneficial action
 	TokenPower     int     // token creature power; 0 if not a token-creation effect
 	TokenToughness int     // token creature toughness; 0 if not a token-creation effect
 	GrantedKeyword Keyword // non-zero when effect grants a keyword to a creature

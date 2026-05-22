@@ -421,7 +421,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			}
 		}
 		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
-			if reordered := assigner.GetBlockerOrder(atk, blockerPerms); reordered != nil {
+			if reordered := assigner.GetBlockerOrder(g, atk, blockerPerms, atkPower); reordered != nil {
 				orderedIDs = mergeBlockerOrder(reordered, group.BlockerIDs)
 			}
 		}
@@ -439,7 +439,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 					orderedPerms = append(orderedPerms, blk)
 				}
 			}
-			assignment = assigner.GetCombatDamageAssignment(atk, orderedPerms, atkPower)
+			assignment = assigner.GetCombatDamageAssignment(g, atk, orderedPerms, atkPower)
 			if assignment != nil && !validateBlockerAssignment(g, atk, orderedIDs, assignment, atkPower) {
 				assignment = nil
 			}
@@ -765,7 +765,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 		attackingPlayer := g.GetPlayer(primaryAttacker.Controller)
 		var assignment map[uuid.UUID]int
 		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
-			assignment = assigner.GetCombatDamageAssignment(primaryAttacker, blockerPerms, totalBandPower)
+			assignment = assigner.GetCombatDamageAssignment(g, primaryAttacker, blockerPerms, totalBandPower)
 			if assignment != nil && !validateBandedBlockerAssignment(g, blockerPerms, assignment, totalBandPower, hasTrample) {
 				assignment = nil
 			}

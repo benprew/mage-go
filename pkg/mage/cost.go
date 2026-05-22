@@ -112,7 +112,7 @@ func (c *tap) Text() string { return "{T}" }
 // --- Effect interface ---
 
 func (c *tap) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, Taps: true}
 }
 
 // removeCountersCost requires removing counters from the source.

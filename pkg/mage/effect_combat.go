@@ -45,7 +45,7 @@ func TapAttachedCreature() Effect {
 
 func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }
 func (e *tapAttachedCreatureEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, Taps: true}
 }
 
 // tapOrUntapTargetEffect lets you tap or untap a target permanent.

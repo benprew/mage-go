@@ -100,7 +100,7 @@ func (tp *TestPlayer) SetCombatDamageAssignment(attackerName string, distributio
 }
 
 // GetBlockerOrder implements CombatDamageAssigner.
-func (tp *TestPlayer) GetBlockerOrder(attacker *mage.Permanent, blockers []*mage.Permanent) []uuid.UUID {
+func (tp *TestPlayer) GetBlockerOrder(_ *mage.Game, attacker *mage.Permanent, blockers []*mage.Permanent, _ int) []uuid.UUID {
 	names, ok := tp.combatBlockerOrder[attacker.Name()]
 	if !ok {
 		return nil
@@ -122,7 +122,7 @@ func (tp *TestPlayer) GetBlockerOrder(attacker *mage.Permanent, blockers []*mage
 }
 
 // GetCombatDamageAssignment implements CombatDamageAssigner.
-func (tp *TestPlayer) GetCombatDamageAssignment(attacker *mage.Permanent, blockers []*mage.Permanent, totalPower int) map[uuid.UUID]int {
+func (tp *TestPlayer) GetCombatDamageAssignment(_ *mage.Game, attacker *mage.Permanent, blockers []*mage.Permanent, totalPower int) map[uuid.UUID]int {
 	dist, ok := tp.combatDamageAssignment[attacker.Name()]
 	if !ok {
 		return nil

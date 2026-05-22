@@ -30,8 +30,8 @@ type BandingDamageDistributor interface {
 // nil order or distribution falls back to the engine default (BlockerIDs
 // order, lethal-first greedy).
 type CombatDamageAssigner interface {
-	GetBlockerOrder(attacker *Permanent, blockers []*Permanent) []uuid.UUID
-	GetCombatDamageAssignment(attacker *Permanent, blockers []*Permanent, totalPower int) map[uuid.UUID]int
+	GetBlockerOrder(g *Game, attacker *Permanent, blockers []*Permanent, totalPower int) []uuid.UUID
+	GetCombatDamageAssignment(g *Game, attacker *Permanent, blockers []*Permanent, totalPower int) map[uuid.UUID]int
 }
 
 // BlockAssignment represents a single blocker-attacker pair.
