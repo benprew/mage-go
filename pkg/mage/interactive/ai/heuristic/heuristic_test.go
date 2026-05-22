@@ -3,6 +3,8 @@ package heuristic
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
 	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
@@ -184,6 +186,93 @@ func TestBlockers_CantBlockFlying(t *testing.T) {
 	blocks := start.Blockers(pb, g)
 	if len(blocks) != 0 {
 		t.Errorf("ground blocker can't block flying, got %d blocks", len(blocks))
+	}
+}
+
+func TestBlockers_AccountsForSelfPumpCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pb, "Swamp", 1)
+	atk := makePerm("Savannah Lions", "{W}", 1, 1, pa.PlayerID())
+	shade := makePerm("Frozen Shade", "{2}{B}", 0, 1, pb.PlayerID(),
+		mage.WithActivatedAbility(
+			mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()),
+			mage.ManaCostOf("{B}"),
+		),
+	)
+	g.AddToBattlefield(atk, shade)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	blocks := start.Blockers(pb, g)
+	if len(blocks) != 1 || blocks[0].BlockerID != shade.ID() {
+		t.Fatalf("expected Frozen Shade to block using pump potential, got %v", blocks)
+	}
+}
+
+func TestBlockers_AccountsForCarrionAntsPump(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pb, "Swamp", 1)
+	atk := makePerm("Savannah Lions", "{W}", 1, 1, pa.PlayerID())
+	ants := makePerm("Carrion Ants", "{2}{B}{B}", 0, 1, pb.PlayerID(),
+		mage.WithActivatedAbility(
+			mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()),
+			mage.GenericCost(1),
+		),
+	)
+	g.AddToBattlefield(atk, ants)
+	g.GetCombat().AddAttacker(atk.ID(), pb.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	blocks := start.Blockers(pb, g)
+	if len(blocks) != 1 || blocks[0].BlockerID != ants.ID() {
+		t.Fatalf("expected Carrion Ants to block using pump potential, got %v", blocks)
+	}
+}
+
+func TestPriorityAction_HoldsWinterBlastWithOnlyOwnCreatures(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Forest", 4)
+	own := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(own)
+	card := mage.NewSorcery("Winter Blast", "{X}{G}",
+		mage.NewSpellAbility(mage.FuncEffect("tap X target creatures", mage.EffectProperties{
+			Outcome: mage.OutcomeDetriment,
+			Mass:    true,
+			Taps:    true,
+		}, func(*mage.Game, uuid.UUID, uuid.UUID, []uuid.UUID) error { return nil })),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected Winter Blast to be held with only own creatures, got %v", action)
+	}
+}
+
+func TestPriorityAction_WinterBlastXOnlyCountsOpponentCreatures(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Forest", 5)
+	own := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pa.PlayerID())
+	opp := makePerm("Hill Giant", "{3}{R}", 3, 3, pb.PlayerID())
+	g.AddToBattlefield(own, opp)
+	card := mage.NewSorcery("Winter Blast", "{X}{G}",
+		mage.NewSpellAbility(mage.FuncEffect("tap X target creatures", mage.EffectProperties{
+			Outcome: mage.OutcomeDetriment,
+			Mass:    true,
+			Taps:    true,
+		}, func(*mage.Game, uuid.UUID, uuid.UUID, []uuid.UUID) error { return nil })),
+	)
+	card.SetOwner(pa.PlayerID())
+	pa.AddToHand(card)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionCastSpell || action.XValue != 1 {
+		t.Fatalf("expected Winter Blast with X=1 for one opposing creature, got %v", action)
 	}
 }
 

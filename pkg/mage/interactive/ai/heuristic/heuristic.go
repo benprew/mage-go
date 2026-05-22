@@ -123,7 +123,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 				bestCard = card
 			}
 		}
-		if bestCard != nil && !eval.SpellIsWorthless(bestCard, p, g) {
+		if bestCard != nil && bestScore > 0 && !eval.SpellIsWorthless(bestCard, p, g) {
 			targets := s.autoSelectTargets(p, g, bestCard)
 			if requiresTargets(bestCard) && len(targets) == 0 {
 				return interactive.PriorityAction{Type: interactive.ActionPass}
@@ -618,8 +618,39 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 		}
 	}
 
+	if isDetrimentalTapXSpell(card) {
+		opponent := g.GetOpponent(playerID)
+		if opponent == nil {
+			return 0
+		}
+		count := 0
+		for _, perm := range g.AllBattlefield() {
+			if perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) && !perm.Tapped {
+				count++
+			}
+		}
+		if count == 0 {
+			return 0
+		}
+		return min(maxX, count)
+	}
+
 	// Default: spend all available mana.
 	return maxX
+}
+
+func isDetrimentalTapXSpell(card mage.Card) bool {
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			for _, e := range sa.Effects() {
+				props := e.Properties()
+				if props.Taps && props.Outcome == mage.OutcomeDetriment {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // chooseBestLand selects the best land to play from hand. It prefers lands that

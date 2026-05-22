@@ -201,7 +201,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 		}
 	}
 
-	if found && score > 0 {
+	if found {
 		return score
 	}
 	return cmc

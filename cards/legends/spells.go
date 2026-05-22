@@ -1303,7 +1303,7 @@ func registerSpells() {
 		return NewSorcery("Winter Blast", "{X}{G}",
 			NewSpellAbility(FuncEffect(
 				"tap X target creatures; deal 2 damage to each with flying",
-				EffectProperties{Outcome: OutcomeDetriment},
+				EffectProperties{Outcome: OutcomeDetriment, Mass: true, Taps: true},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					x := g.XValue()
 					if x <= 0 {

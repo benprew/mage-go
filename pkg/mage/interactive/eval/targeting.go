@@ -14,6 +14,7 @@ const (
 	TargetGeneric TargetPurpose = iota
 	TargetRemoval
 	TargetBurn
+	TargetTap
 	TargetPump
 	TargetBounce
 	TargetAura
@@ -31,7 +32,10 @@ func TargetPurposeForEffects(effects []mage.Effect) TargetPurpose {
 		if props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment {
 			return TargetBurn
 		}
-		if props.Outcome == mage.OutcomeDetriment {
+		if props.Taps && props.Outcome == mage.OutcomeDetriment {
+			purpose = TargetTap
+		}
+		if props.Outcome == mage.OutcomeDetriment && purpose == TargetGeneric {
 			purpose = TargetRemoval
 		}
 		if props.PowerBoost != 0 || props.ToughnessBoost != 0 || props.GrantedKeyword != 0 {
@@ -74,6 +78,21 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 			value += 3
 		}
 		return value * 3 / 4
+	case TargetTap:
+		if !perm.HasType(core.TypeCreature) {
+			return value / 3
+		}
+		if perm.Tapped {
+			return -8
+		}
+		score := value
+		if perm.CanDeclareAsAttacker(g) || perm.CanDeclareAsBlocker(g) {
+			score += 5
+		}
+		if hasTargetingEvasion(perm) {
+			score += 3
+		}
+		return score
 	case TargetPump, TargetAura, TargetCounters:
 		if !perm.HasType(core.TypeCreature) {
 			return value / 2
