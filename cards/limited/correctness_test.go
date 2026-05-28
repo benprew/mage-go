@@ -218,6 +218,26 @@ func TestEarthbind(t *testing.T) {
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerB, "Hill Giant", core.Flying, false)
 	})
+
+	t.Run("deals 2 damage to flying creature before removing flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Phantasmal Forces") // 4/1 Flying
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Phantasmal Forces")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Phantasmal Forces", 0)
+	})
+
+	t.Run("deals no damage to creature without flying", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3 no Flying
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Earthbind")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Earthbind", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 1)
+	})
 }
 
 func TestParalyze(t *testing.T) {

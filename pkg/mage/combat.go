@@ -466,7 +466,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 				if blk == nil {
 					continue
 				}
-				needed := blk.CurrentToughness(g) - blk.Damage
+				needed := lethalCombatDamageRequired(atk, blk, g)
 				if needed <= 0 {
 					continue
 				}
@@ -527,7 +527,7 @@ func mergeBlockerOrder(preferred, original []uuid.UUID) []uuid.UUID {
 // lethal-first ordering of CR 510.1c does not apply. Total must equal the
 // attacker's power; with trample, total may be less only if every blocker
 // has been assigned at least lethal damage.
-func validateBandedBlockerAssignment(g *Game, blockers []*Permanent, assignment map[uuid.UUID]int, totalPower int, hasTrample bool) bool {
+func validateBandedBlockerAssignment(g *Game, source *Permanent, blockers []*Permanent, assignment map[uuid.UUID]int, totalPower int, hasTrample bool) bool {
 	total := 0
 	allLethal := true
 	for _, blk := range blockers {
@@ -539,7 +539,7 @@ func validateBandedBlockerAssignment(g *Game, blockers []*Permanent, assignment 
 			return false
 		}
 		total += dmg
-		needed := max(blk.CurrentToughness(g)-blk.Damage, 0)
+		needed := lethalCombatDamageRequired(source, blk, g)
 		if dmg < needed {
 			allLethal = false
 		}
@@ -568,7 +568,7 @@ func validateBlockerAssignment(g *Game, atk *Permanent, orderedIDs []uuid.UUID, 
 		if blk == nil {
 			continue
 		}
-		needed := max(blk.CurrentToughness(g)-blk.Damage, 0)
+		needed := lethalCombatDamageRequired(atk, blk, g)
 		dmg := assignment[bid]
 		if dmg < 0 {
 			return false
@@ -591,6 +591,17 @@ func validateBlockerAssignment(g *Game, atk *Permanent, orderedIDs []uuid.UUID, 
 		}
 	}
 	return true
+}
+
+func lethalCombatDamageRequired(source, target *Permanent, g *Game) int {
+	if source == nil || target == nil {
+		return 0
+	}
+	needed := max(target.CurrentToughness(g)-target.Damage, 0)
+	if source.HasKeyword(Deathtouch) && needed > 0 {
+		return 1
+	}
+	return needed
 }
 
 // doBlockingBandDamage handles combat where multiple blockers with banding block
@@ -643,7 +654,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 			// Default: normal distribution (no banding benefit).
 			remainingDmg := atkPower
 			for _, blk := range blockerPerms {
-				needed := blk.CurrentToughness(g) - blk.Damage
+				needed := lethalCombatDamageRequired(atk, blk, g)
 				if needed <= 0 {
 					continue
 				}
@@ -766,7 +777,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 		var assignment map[uuid.UUID]int
 		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
 			assignment = assigner.GetCombatDamageAssignment(g, primaryAttacker, blockerPerms, totalBandPower)
-			if assignment != nil && !validateBandedBlockerAssignment(g, blockerPerms, assignment, totalBandPower, hasTrample) {
+			if assignment != nil && !validateBandedBlockerAssignment(g, primaryAttacker, blockerPerms, assignment, totalBandPower, hasTrample) {
 				assignment = nil
 			}
 		}
@@ -783,7 +794,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			remainingDmg = totalBandPower - usedDmg
 		} else {
 			for _, blk := range blockerPerms {
-				needed := blk.CurrentToughness(g) - blk.Damage
+				needed := lethalCombatDamageRequired(primaryAttacker, blk, g)
 				if needed <= 0 {
 					continue
 				}

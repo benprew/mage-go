@@ -419,6 +419,37 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 }
 
+// HasKeywordIgnoringSource reports whether the permanent with the given ID would
+// have keyword kw if continuous effects originating from ignoreSourceID were not
+// applied.
+//
+// Earthbind needs this: its enters-the-battlefield ability deals 2 damage to the
+// enchanted creature "if [it] has flying," but Earthbind's own static ability
+// removes flying from that same creature. By the time the trigger resolves the
+// creature has already lost flying, so a plain HasKeyword check would never see
+// it. CR 603.4 reads the condition against the creature's flying before Earthbind
+// strips it — i.e. ignoring Earthbind's own effect.
+func (g *Game) HasKeywordIgnoringSource(permID uuid.UUID, kw Keyword, ignoreSourceID uuid.UUID) bool {
+	saved := g.effects.effects
+	filtered := make([]ContinuousEffect, 0, len(saved))
+	for _, e := range saved {
+		if e.SourceID() != ignoreSourceID {
+			filtered = append(filtered, e)
+		}
+	}
+	g.effects.effects = filtered
+	g.effects.Apply(g)
+
+	has := false
+	if p := g.FindPermanent(permID); p != nil {
+		has = p.HasKeyword(kw)
+	}
+
+	g.effects.effects = saved
+	g.effects.Apply(g)
+	return has
+}
+
 // ---------------------------------------------------------------------------
 // Replacement effect management
 // ---------------------------------------------------------------------------

@@ -184,7 +184,6 @@ func registerEnchantments() {
 
 	Register("Earthbind", func() Card {
 		return NewAura("Earthbind", "{R}",
-			// TODO: convert to pipeline — needs SnapshotAttached + conditional on keyword
 			WithAbility(EntersBattlefieldTrigger(FuncEffect(
 				"if enchanted creature has flying, deal 2 damage",
 				EffectProperties{},
@@ -194,7 +193,10 @@ func registerEnchantments() {
 						return nil
 					}
 					attached := g.FindPermanent(aura.AttachedTo)
-					if attached != nil && attached.HasKeyword(Flying) {
+					// Damage is dealt before flying is removed (CR 603.4): check
+					// the creature's flying ignoring Earthbind's own loses-flying
+					// static ability, which has already stripped it by resolution.
+					if attached != nil && g.HasKeywordIgnoringSource(attached.ID(), Flying, sourceID) {
 						g.DealDamageToPermanent(attached, 2, sourceID)
 					}
 					return nil
