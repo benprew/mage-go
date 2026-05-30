@@ -3,11 +3,11 @@ package gametest_test
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 
 	// Register card definitions used in these tests.
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
+	_ "github.com/benprew/mage-go/cards/limited"
 )
 
 // TestSummonSickness_CreatureCannotAttackTurnPlayed verifies that a creature

@@ -3,7 +3,7 @@ package ai
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage"
 )
 
 // ── Mulligan ─────────────────────────────────────────────────────────────────

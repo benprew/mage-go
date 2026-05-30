@@ -5,14 +5,14 @@ import (
 	"sync"
 	"time"
 
-	"git.sr.ht/~cdcarter/mage-go/internal/tui"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/search"
+	"github.com/benprew/mage-go/internal/tui"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai/heuristic"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai/search"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards" // register all card sets
+	_ "github.com/benprew/mage-go/cards" // register all card sets
 )
 
 // PlayerSession holds the channels used to wire a player's TUI to the game loop.

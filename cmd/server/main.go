@@ -14,8 +14,8 @@ import (
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 
-	"git.sr.ht/~cdcarter/mage-go/internal/tui"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/internal/tui"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package mage
 import (
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // TestStunCounter_RemovedInsteadOfUntapping verifies CR 122.1g: a tapped

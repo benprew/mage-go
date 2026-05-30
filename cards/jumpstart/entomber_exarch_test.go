@@ -3,8 +3,8 @@ package jumpstart
 import (
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 // Mode 0: pick a creature in your graveyard and return it to your hand.

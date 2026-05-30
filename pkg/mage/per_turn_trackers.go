@@ -3,7 +3,7 @@ package mage
 import (
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // Per-turn tracking state. These maps live on *Game and are reset by

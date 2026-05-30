@@ -10,8 +10,8 @@ package gametest
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // registerRemovalBolt registers an instant that deals 3 damage to a target

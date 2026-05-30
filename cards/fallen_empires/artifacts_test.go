@@ -3,9 +3,9 @@ package fallen_empires
 import (
 	"testing"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	_ "github.com/benprew/mage-go/cards/limited" // register base cards
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 func TestDraconianCylix_Regenerates(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // ManaSolverInputs is the input bundle for SolveMana. The solver is pure —
@@ -34,12 +34,26 @@ type ManaSolverInputs struct {
 	Conversions map[Color]Color
 }
 
+// ManaTap describes one source the caller should tap and the color slot the
+// solver picked it for. Color is the colored requirement (White/Blue/Black/
+// Red/Green) the tap is satisfying; Colorless means the tap was picked in
+// the generic pass and any color the source produces is acceptable.
+//
+// The color matters for sources that have multiple separate mana abilities
+// (e.g. Underground Sea: "{T}: Add {U}" and "{T}: Add {B}"). The caller
+// (TapForManaWithColor) uses Color to select the matching ability instead of
+// just running the first one.
+type ManaTap struct {
+	PermanentID uuid.UUID
+	Color       Color
+}
+
 // ManaSolution describes the result of solving a mana payment: an ordered
-// list of permanent IDs the caller should tap (via TapForMana) to produce the
-// mana for the cost. The solver doesn't mutate state, so the caller is
-// responsible for applying the solution.
+// list of taps (permanent + chosen color) the caller should apply (via
+// TapForManaWithColor) to produce the mana for the cost. The solver doesn't
+// mutate state, so the caller is responsible for applying the solution.
 type ManaSolution struct {
-	SourcesToTap []uuid.UUID
+	SourcesToTap []ManaTap
 }
 
 // efficiencyBonusPerSavedTap is the score reduction applied per "saved tap"
@@ -157,7 +171,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 		bonusFor = func(uuid.UUID) int { return 0 }
 	}
 
-	var toTap []uuid.UUID
+	var toTap []ManaTap
 	surplusMana := 0
 	// coloredSurplus tracks colored mana left over from dual-emit sources
 	// after their "trigger" color slot is satisfied. A future slot of the
@@ -191,7 +205,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			src := sources[idx]
 			sources[idx].PermanentID = uuid.Nil
 			if collectSolution {
-				toTap = append(toTap, src.PermanentID)
+				toTap = append(toTap, ManaTap{PermanentID: src.PermanentID, Color: cn.color})
 			}
 			needed[cn.color]--
 			bonus := bonusFor(src.PermanentID)
@@ -277,7 +291,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			return nil, false, solveManaError(collectSolution, "cannot pay cost %s: %d generic mana still needed, no untapped sources remain", mc, genericNeeded)
 		}
 		if collectSolution {
-			toTap = append(toTap, sources[idx].PermanentID)
+			toTap = append(toTap, ManaTap{PermanentID: sources[idx].PermanentID, Color: Colorless})
 		}
 		produced := sources[idx].Amount + bonusFor(sources[idx].PermanentID)
 		genericNeeded -= produced

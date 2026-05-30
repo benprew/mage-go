@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"git.sr.ht/~cdcarter/mage-go/internal/scenario"
+	"github.com/benprew/mage-go/internal/scenario"
 )
 
 func main() {

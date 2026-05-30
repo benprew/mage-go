@@ -98,7 +98,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - git.sr.ht/~cdcarter/mage-go
+        - github.com/benprew/mage-go
   exclusions:
     generated: lax
     paths:

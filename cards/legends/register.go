@@ -1,6 +1,6 @@
 package legends
 
-import . "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
 
 // basicLandNames are the five basic land card names.
 var basicLandNames = map[string]bool{

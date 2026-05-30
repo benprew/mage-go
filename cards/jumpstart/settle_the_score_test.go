@@ -4,9 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	. "github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 // Settle the Score {2}{B}{B}

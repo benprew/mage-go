@@ -4,8 +4,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 type encodeTimingSnapshot struct {

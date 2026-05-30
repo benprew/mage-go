@@ -5,7 +5,7 @@ package gametest
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // 605.1a — Activated mana ability doesn't use the stack (CR 605.1a)

@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/arabian"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	_ "github.com/benprew/mage-go/cards/arabian"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 // Tests for cards registered in alpha_artifacts.go (and a few

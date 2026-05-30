@@ -5,7 +5,7 @@ package gametest
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // 613 — Layer 2: Control changes (CR 613)

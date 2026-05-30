@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
 // buildMeasureState builds a moderately complex mid-game state with both

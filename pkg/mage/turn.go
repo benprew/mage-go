@@ -3,7 +3,7 @@ package mage
 import (
 	"time"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // RunTurn executes a complete turn for the active player, reading steps

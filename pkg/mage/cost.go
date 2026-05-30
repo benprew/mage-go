@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // Cost represents a cost to pay for a spell or ability.

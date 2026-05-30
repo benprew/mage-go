@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // chooserPlayer wraps BasePlayer to script ChooseCardFromLibrary returns

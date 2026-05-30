@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // TestTurnPhases covers CR 500 (phases) and CR 501.1 (beginning-phase step

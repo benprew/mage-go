@@ -3,7 +3,7 @@ package fourthedition
 import (
 	_ "embed"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
+	"github.com/benprew/mage-go/pkg/catalog"
 )
 
 //go:embed 4ED.json

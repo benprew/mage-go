@@ -3,7 +3,7 @@ package combatsolver
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage"
 )
 
 func TestClassifyCombat_Pump(t *testing.T) {

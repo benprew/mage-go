@@ -35,7 +35,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // WithWard adds the Ward keyword (CR 702.21) to a permanent. The cost is

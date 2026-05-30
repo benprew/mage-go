@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 // Regression coverage for the buffer/scratch dirty-state bug fixed by

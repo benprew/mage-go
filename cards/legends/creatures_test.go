@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	_ "github.com/benprew/mage-go/cards/limited" // register base cards
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 func TestMain(m *testing.M) {
@@ -536,6 +536,18 @@ func TestBloodLust(t *testing.T) {
 		g.Execute()
 		// 2/2 with +4/-(2-1) = +4/-1 → 6/1
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 6, 1)
+	})
+
+	t.Run("second cast uses toughness modified by first cast", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Blood Lust", 2)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blood Lust", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blood Lust", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 10, 1)
 	})
 }
 

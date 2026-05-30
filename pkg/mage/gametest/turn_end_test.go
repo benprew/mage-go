@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // TestEndStep covers CR 513 (end step) sub-rules. See CR 500.6 for the

@@ -14,15 +14,15 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/search"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai/heuristic"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai/search"
 
 	// Register all card sets.
-	_ "git.sr.ht/~cdcarter/mage-go/cards"
+	_ "github.com/benprew/mage-go/cards"
 )
 
 func main() {

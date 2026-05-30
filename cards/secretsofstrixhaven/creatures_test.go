@@ -5,11 +5,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
+	_ "github.com/benprew/mage-go/cards/limited"
 )
 
 // TestAberrantManawurm_TrampleBase verifies Aberrant Manawurm is a 2/5 with trample.

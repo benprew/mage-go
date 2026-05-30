@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // Dual land (Tundra: W/U) should be usable for either color requirement.
@@ -97,8 +97,8 @@ func TestSolveMana_PureWithoutGame(t *testing.T) {
 		t.Fatalf("expected 2 sources to tap, got %d", len(sol.SourcesToTap))
 	}
 	tappedSet := map[uuid.UUID]bool{}
-	for _, id := range sol.SourcesToTap {
-		tappedSet[id] = true
+	for _, tap := range sol.SourcesToTap {
+		tappedSet[tap.PermanentID] = true
 	}
 	if !tappedSet[mountainID] {
 		t.Error("expected Mountain in tap set (only R source)")

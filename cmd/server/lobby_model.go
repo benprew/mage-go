@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"git.sr.ht/~cdcarter/mage-go/internal/tui"
+	"github.com/benprew/mage-go/internal/tui"
 )
 
 type lobbyState int

@@ -31,11 +31,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards" // register all sets
+	_ "github.com/benprew/mage-go/cards" // register all sets
 )
 
 // ---------------------------------------------------------------------------

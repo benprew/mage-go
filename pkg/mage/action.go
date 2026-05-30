@@ -3,7 +3,7 @@ package mage
 import (
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // Action represents a game mutation flowing through the replacement pipeline.

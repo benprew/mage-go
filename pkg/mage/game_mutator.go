@@ -3,7 +3,7 @@ package mage
 import (
 	"maps"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 )
@@ -250,6 +250,7 @@ func (g *Game) PushStack(obj *StackObject) {
 // AddContinuousEffect registers a continuous effect with the effect manager.
 func (g *Game) AddContinuousEffect(e ContinuousEffect) {
 	g.effects.Add(e)
+	g.effects.Apply(g)
 }
 
 // ApplyContinuousEffects re-applies all continuous effects to current permanents.

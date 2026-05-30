@@ -3,8 +3,8 @@ package ai
 import (
 	"strings"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // DeckCard is the minimal deck-list shape needed for deck-based AI profiling.

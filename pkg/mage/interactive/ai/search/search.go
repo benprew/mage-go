@@ -8,11 +8,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
+	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
 // DebugStats enables one-line per-decision logging of search telemetry.

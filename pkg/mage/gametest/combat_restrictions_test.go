@@ -6,8 +6,8 @@ package gametest
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // registerOnce registers a card factory only on first use. Tests run in a

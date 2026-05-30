@@ -3,8 +3,8 @@ package limited
 import (
 	"testing"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 // CR 509.1h — "An attacking creature is 'blocked' from the time a creature is

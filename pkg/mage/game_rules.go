@@ -3,8 +3,8 @@ package mage
 import (
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/catalog"
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/catalog"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // GameRules manages all game-rule modifier state: spell costs, mana conversion,

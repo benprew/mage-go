@@ -3,10 +3,10 @@ package jumpstart
 import (
 	"testing"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/antiquities"
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	_ "github.com/benprew/mage-go/cards/antiquities"
+	_ "github.com/benprew/mage-go/cards/limited"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 func TestCrowOfDarkTidings_MillsOnETBAndDeath(t *testing.T) {

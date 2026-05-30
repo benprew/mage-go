@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 // Tests for cards wired to the new reveal-and-pick / random primitives

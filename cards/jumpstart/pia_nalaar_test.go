@@ -3,10 +3,10 @@ package jumpstart
 import (
 	"testing"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
+	_ "github.com/benprew/mage-go/cards/limited"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
 // mageCreate is a tiny alias around mage.CreateCard for readable test setup.

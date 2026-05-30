@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards/limited" // register base cards
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/gametest"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	_ "github.com/benprew/mage-go/cards/limited" // register base cards
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/gametest"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 func TestMain(m *testing.M) {

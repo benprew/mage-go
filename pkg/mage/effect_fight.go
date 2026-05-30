@@ -3,7 +3,7 @@ package mage
 import (
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // fightTargetEffect implements CR 701.13 ("X fights Y"): the source permanent

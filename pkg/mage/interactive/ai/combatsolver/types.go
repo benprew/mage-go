@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
 // Profile is the personality input the solver needs. It mirrors the subset of

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/dsl"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // stoneGiantTarget targets a creature its controller controls whose toughness

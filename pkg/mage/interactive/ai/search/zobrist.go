@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"sync"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // ZobristTables holds the per-component random uint64 values used to compute a

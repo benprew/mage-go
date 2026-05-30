@@ -3,7 +3,7 @@ package combatsolver
 import (
 	"github.com/google/uuid"
 
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage"
 )
 
 type selfPumpInfo struct {

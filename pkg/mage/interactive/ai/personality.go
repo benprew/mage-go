@@ -1,7 +1,7 @@
 package ai
 
 import (
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/eval"
+	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
 // SpellOrder controls the order in which the AI evaluates castable spells.

@@ -15,10 +15,10 @@ import (
 
 	"github.com/google/uuid"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
+	_ "github.com/benprew/mage-go/cards"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 // ── Helpers shared across parity tests ──────────────────────────────────────

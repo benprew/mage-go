@@ -12,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"git.sr.ht/~cdcarter/mage-go/internal/scenario"
-	"git.sr.ht/~cdcarter/mage-go/internal/tui"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai"
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage/interactive/ai/heuristic"
+	"github.com/benprew/mage-go/internal/scenario"
+	"github.com/benprew/mage-go/internal/tui"
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai/heuristic"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards"
+	_ "github.com/benprew/mage-go/cards"
 )
 
 func main() {
@@ -30,9 +30,19 @@ func main() {
 	output := flag.String("output", "", "output JSONL file (default: stdout)")
 	seed := flag.Int64("seed", 0, "master RNG seed (0 = time-based)")
 	aiPers := flag.String("ai", "auto", "AI personality (auto, aggro, control, midrange, tempo, burn, adaptive)")
+	aiPersA := flag.String("ai-a", "", "AI personality for player A (default: -ai)")
+	aiPersB := flag.String("ai-b", "", "AI personality for player B (default: -ai)")
+	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, legacy, adaptive)")
+	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, legacy, adaptive)")
 	timeout := flag.Duration("timeout", 30*time.Second, "per-game wall clock timeout")
 	minCards := flag.Int("min-cards", 25, "minimum playable cards for a deck to be eligible")
 	flag.Parse()
+	if *aiPersA == "" {
+		*aiPersA = *aiPers
+	}
+	if *aiPersB == "" {
+		*aiPersB = *aiPers
+	}
 
 	decks, err := scenario.LoadAllRogueDecks(*roguesDir)
 	if err != nil {
@@ -97,7 +107,10 @@ func main() {
 			deckA:    dA,
 			deckB:    dB,
 			maxTurns: *maxTurns,
-			aiPers:   *aiPers,
+			aiPersA:  *aiPersA,
+			aiPersB:  *aiPersB,
+			modeA:    *modeA,
+			modeB:    *modeB,
 			timeout:  *timeout,
 		})
 
@@ -124,7 +137,10 @@ type gameConfig struct {
 		skipped []string
 	}
 	maxTurns int
-	aiPers   string
+	aiPersA  string
+	aiPersB  string
+	modeA    string
+	modeB    string
 	timeout  time.Duration
 }
 
@@ -135,10 +151,10 @@ func runOneGame(cfg gameConfig) (result scenario.GameResult) {
 	result.DeckB = cfg.deckB.deck.Name
 	result.DeckAFile = cfg.deckA.deck.SourceFile
 	result.DeckBFile = cfg.deckB.deck.SourceFile
-	wpA := resolvePersonality(cfg.aiPers, cfg.deckA.entries)
-	wpB := resolvePersonality(cfg.aiPers, cfg.deckB.entries)
-	result.AIPersonalityA = personalityLabel(cfg.aiPers, wpA)
-	result.AIPersonalityB = personalityLabel(cfg.aiPers, wpB)
+	wpA := resolvePersonality(cfg.aiPersA, cfg.deckA.entries)
+	wpB := resolvePersonality(cfg.aiPersB, cfg.deckB.entries)
+	result.AIPersonalityA = personalityLabel(cfg.aiPersA, wpA) + "/" + cfg.modeA
+	result.AIPersonalityB = personalityLabel(cfg.aiPersB, wpB) + "/" + cfg.modeB
 	result.CardsSkippedA = cfg.deckA.skipped
 	result.CardsSkippedB = cfg.deckB.skipped
 
@@ -157,8 +173,8 @@ func runOneGame(cfg gameConfig) (result scenario.GameResult) {
 
 	gameRng := rand.New(rand.NewSource(cfg.seed))
 
-	playerA := createAI("Alice", cfg.aiPers, wpA)
-	playerB := createAI("Bob", cfg.aiPers, wpB)
+	playerA := createAI("Alice", cfg.modeA, wpA)
+	playerB := createAI("Bob", cfg.modeB, wpB)
 
 	cardsA := buildDeckFromEntries(cfg.deckA.entries, playerA.PlayerID(), gameRng)
 	cardsB := buildDeckFromEntries(cfg.deckB.entries, playerB.PlayerID(), gameRng)
@@ -337,9 +353,12 @@ func buildDeckFromEntries(entries []tui.DeckEntry, ownerID [16]byte, rng *rand.R
 	return deck
 }
 
-func createAI(name, personality string, wp ai.WeightedPersonality) *ai.AIPlayer {
-	if strings.EqualFold(personality, "adaptive") {
+func createAI(name, mode string, wp ai.WeightedPersonality) *ai.AIPlayer {
+	if strings.EqualFold(mode, "adaptive") {
 		return ai.NewAIPlayer(name, heuristic.NewAdaptive())
+	}
+	if strings.EqualFold(mode, "legacy") || strings.EqualFold(mode, "old") {
+		return ai.NewAIPlayer(name, heuristic.NewLegacy(wp))
 	}
 	return ai.NewAIPlayer(name, heuristic.New(wp))
 }

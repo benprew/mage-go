@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"slices"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 )
@@ -2986,6 +2986,16 @@ func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) {
 // AnyColor productions prompt the player to choose a color. Used by both the
 // proper *ManaAbility path and the *SimpleActivatedAbility tap-for-mana path.
 func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *Permanent) {
+	g.addManaProductionsForColor(productions, p, perm, Colorless)
+}
+
+// addManaProductionsForColor is the autotap-friendly variant: when
+// preferredColor is non-Colorless, AnyColor productions resolve to
+// preferredColor without prompting the player. Used by TapForManaWithColor
+// so the solver's color choice is honored end-to-end. AnyCombination
+// productions (e.g. "Add X mana in any combination of colors") still
+// prompt — they're a multi-color choice that the solver doesn't model.
+func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) {
 	for _, prod := range productions {
 		amt := prod.Amount
 		if amt <= 0 {
@@ -3003,7 +3013,11 @@ func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *
 		}
 		color := prod.Color
 		if color == AnyColor {
-			color = p.ChooseManaColor("add mana")
+			if preferredColor != Colorless {
+				color = preferredColor
+			} else {
+				color = p.ChooseManaColor("add mana")
+			}
 		}
 		p.ManaPool().Add(color, amt)
 		g.applyManaBonuses(perm, color, p)
@@ -3940,12 +3954,24 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 	return nil
 }
 
-// TapForMana taps a permanent for mana using its mana ability. Recognizes both
+// TapForMana taps a permanent for mana using its first mana ability.
+// Equivalent to TapForManaWithColor with no color preference. Recognizes both
 // *ManaAbility (built via WithManaAbility/WithMultiManaAbility) and
 // *SimpleActivatedAbility whose only cost is tapping and whose effects are
 // mana-producing (built via WithActivatedAbility(AddMana(...), Tap())
 // — e.g. Mana Vault).
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
+	return g.TapForManaWithColor(playerID, permanentID, Colorless)
+}
+
+// TapForManaWithColor taps a permanent for mana, picking the mana ability
+// whose productions match preferredColor when the permanent has more than
+// one mana ability (e.g. Underground Sea, which is registered as separate
+// "{T}: Add {U}" and "{T}: Add {B}" abilities). Pass Colorless to mean
+// "no preference" — the first mana ability is used, matching the prior
+// TapForMana behavior. If no ability matches preferredColor, the first
+// mana ability is used as a fallback.
+func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredColor Color) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
 		return ErrPermanentNotFound
@@ -3960,21 +3986,47 @@ func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
 		return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
 	}
 
+	var chosen []ManaProduction
+	var firstProd []ManaProduction
 	for _, a := range perm.RuntimeAbilities {
 		productions := abilityManaProductions(a)
 		if productions == nil {
 			continue
 		}
-		if !perm.CanTapForEffect(g) {
-			return fmt.Errorf("creature has summoning sickness")
+		if firstProd == nil {
+			firstProd = productions
 		}
-		g.TapPermanent(perm)
-		if p := g.GetPlayer(playerID); p != nil {
-			g.addManaProductions(productions, p, perm)
+		if preferredColor != Colorless && productionsMatchColor(productions, preferredColor) {
+			chosen = productions
+			break
 		}
-		return nil
 	}
-	return fmt.Errorf("permanent has no mana ability")
+	if chosen == nil {
+		chosen = firstProd
+	}
+	if chosen == nil {
+		return fmt.Errorf("permanent has no mana ability")
+	}
+	if !perm.CanTapForEffect(g) {
+		return fmt.Errorf("creature has summoning sickness")
+	}
+	g.TapPermanent(perm)
+	if p := g.GetPlayer(playerID); p != nil {
+		g.addManaProductionsForColor(chosen, p, perm, preferredColor)
+	}
+	return nil
+}
+
+// productionsMatchColor reports whether the production list can satisfy a
+// request for preferredColor. A specific-color production matches its color;
+// an AnyColor production matches every color request.
+func productionsMatchColor(productions []ManaProduction, preferredColor Color) bool {
+	for _, p := range productions {
+		if p.Color == preferredColor || p.Color == AnyColor {
+			return true
+		}
+	}
+	return false
 }
 
 // abilityManaProductions returns the mana productions for an ability that acts
@@ -4273,8 +4325,8 @@ func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint Auto
 	if err != nil {
 		return err
 	}
-	for _, id := range solution.SourcesToTap {
-		if err := g.TapForMana(playerID, id); err != nil {
+	for _, tap := range solution.SourcesToTap {
+		if err := g.TapForManaWithColor(playerID, tap.PermanentID, tap.Color); err != nil {
 			return err
 		}
 	}

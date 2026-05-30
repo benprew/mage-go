@@ -19,8 +19,8 @@ import (
 	"io"
 	"os"
 
-	_ "git.sr.ht/~cdcarter/mage-go/cards" // register all sets
-	"git.sr.ht/~cdcarter/mage-go/pkg/mage"
+	_ "github.com/benprew/mage-go/cards" // register all sets
+	"github.com/benprew/mage-go/pkg/mage"
 )
 
 func main() {

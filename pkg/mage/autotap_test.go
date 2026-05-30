@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "git.sr.ht/~cdcarter/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
 func TestAutoTapForCost_UsesManaPool(t *testing.T) {
@@ -770,6 +770,37 @@ func TestAutoTapForCost_DualEmitSurplusGoesToPool(t *testing.T) {
 	}
 	if got := g.players[0].ManaPool().Count(White); got != 1 {
 		t.Errorf("expected {W} in pool from dual-emit surplus, got %d", got)
+	}
+}
+
+// A dual land registered with two separate mana abilities ("{T}: Add {U}"
+// and "{T}: Add {B}") must add the color the solver picked it for, not the
+// color of whichever ability happens to be listed first. Underground Sea
+// is the canonical example.
+func TestAutoTapForCost_MultiAbilityDualLandRespectsSolverColor(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	dual := NewLand("Underground Sea",
+		WithManaAbility(Blue),
+		WithManaAbility(Black),
+	)
+	dual.SetOwner(pid)
+	perm := g.PutOnBattlefield(dual, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if err := g.AutoTapForCost(pid, ManaCost{Black: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({B}) failed: %v", err)
+	}
+	if !perm.Tapped {
+		t.Fatal("expected Underground Sea to be tapped")
+	}
+	pool := g.players[0].ManaPool()
+	if got := pool.Count(Black); got != 1 {
+		t.Errorf("expected 1 {B} in pool, got %d", got)
+	}
+	if got := pool.Count(Blue); got != 0 {
+		t.Errorf("expected 0 {U} in pool (Sea was tapped for {B}), got %d", got)
 	}
 }
 
