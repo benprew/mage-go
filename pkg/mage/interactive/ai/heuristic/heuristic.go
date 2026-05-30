@@ -106,6 +106,14 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		}
 	}
 
+	// Once blocks are declared, save a creature combat would otherwise kill by
+	// installing a regeneration shield before the damage step.
+	if g.GetStep() == core.DeclareBlockers {
+		if action := s.considerRegeneration(p, g); action != nil {
+			return *action
+		}
+	}
+
 	if mainPhase {
 		if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
 			if bestLand := chooseBestLand(p, g); bestLand != nil {

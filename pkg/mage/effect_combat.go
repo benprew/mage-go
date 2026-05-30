@@ -173,7 +173,7 @@ func RegenerateSource() Effect {
 
 func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
 func (e *regenerateSourceEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
 }
 
 // regenerateTargetEffect sets a regeneration shield on the target.
@@ -186,7 +186,7 @@ func RegenerateTarget() Effect {
 
 func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
 func (e *regenerateTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
 }
 
 // markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge

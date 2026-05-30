@@ -275,6 +275,17 @@ func (g *Game) AddRegenerationShield(id uuid.UUID) {
 	g.effects.AddReplacement(&regenerationReplacement{replacementBase: replacementBase{duration: EndOfTurn}, permanentID: id, shields: 1})
 }
 
+// HasRegenerationShield reports whether the specified permanent currently has at
+// least one active regeneration shield.
+func (g *Game) HasRegenerationShield(id uuid.UUID) bool {
+	for _, r := range g.effects.replacements {
+		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id && regen.shields > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // AddPreventionShield adds a damage prevention shield to the specified permanent or player.
 func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
 	// Find existing prevention shield for this target and add to it

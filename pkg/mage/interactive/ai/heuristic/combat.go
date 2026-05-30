@@ -1,6 +1,10 @@
 package heuristic
 
 import (
+	"maps"
+	"slices"
+	"sort"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -20,17 +24,36 @@ type CombatScore struct {
 	Score              int
 }
 
-func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UUID, blocks []mage.BlockAssignment) CombatScore {
-	opponent := g.GetOpponent(playerID)
-	if opponent == nil {
-		return CombatScore{}
-	}
-	oppID := opponent.PlayerID()
+// combatDamageResult holds the per-creature damage and life totals produced by
+// simulating a combat's damage step(s).
+type combatDamageResult struct {
+	dmgTaken           map[uuid.UUID]int
+	deathtouchMarked   map[uuid.UUID]bool
+	damageToOpponent   int
+	lifeGained         int // life gained by attacking lifelink creatures
+	opponentLifeGained int // life gained by blocking lifelink creatures
+}
 
-	blockerMap := make(map[uuid.UUID][]uuid.UUID)
-	for _, b := range blocks {
-		blockerMap[b.AttackerID] = append(blockerMap[b.AttackerID], b.BlockerID)
+// isDead returns true if a creature has been killed by accumulated damage
+// (including deathtouch marking).
+func (r combatDamageResult) isDead(id uuid.UUID, toughness int) bool {
+	if r.deathtouchMarked[id] && r.dmgTaken[id] > 0 {
+		return true
 	}
+	return r.dmgTaken[id] >= toughness
+}
+
+// simulateCombatDamage resolves the combat damage step(s) for the given
+// attackers and block assignments without mutating game state, returning the
+// damage marked on each creature and the life totals exchanged. initialDamage
+// seeds damage already marked on creatures (e.g. from a burn spell earlier in
+// the turn); pass nil for a fresh prediction.
+func simulateCombatDamage(g *mage.Game, attackers []uuid.UUID, blockerMap map[uuid.UUID][]uuid.UUID, initialDamage map[uuid.UUID]int) combatDamageResult {
+	res := combatDamageResult{
+		dmgTaken:         make(map[uuid.UUID]int),
+		deathtouchMarked: make(map[uuid.UUID]bool),
+	}
+	maps.Copy(res.dmgTaken, initialDamage)
 
 	// Check if any creature in this combat has first strike or double strike.
 	// If so, we need to split into two damage sub-steps.
@@ -56,21 +79,9 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 		}
 	}
 
-	// Track accumulated damage on each creature across sub-steps.
-	dmgTaken := make(map[uuid.UUID]int)
-	// Track which creatures have been hit by deathtouch (any nonzero = lethal).
-	deathtouchMarked := make(map[uuid.UUID]bool)
-
-	var cs CombatScore
-
-	// isDead returns true if a creature has been killed by accumulated damage
-	// (including deathtouch marking from a previous step).
-	isDead := func(id uuid.UUID, toughness int) bool {
-		if deathtouchMarked[id] && dmgTaken[id] > 0 {
-			return true
-		}
-		return dmgTaken[id] >= toughness
-	}
+	dmgTaken := res.dmgTaken
+	deathtouchMarked := res.deathtouchMarked
+	isDead := res.isDead
 
 	// resolveStep applies one damage sub-step. Damage within a step is simultaneous:
 	// creatures that die this step still deal their damage. Only creatures killed
@@ -106,9 +117,9 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 					continue
 				}
 				if atkDealsThisStep && atkPow > 0 {
-					cs.DamageToOpponent += atkPow
+					res.damageToOpponent += atkPow
 					if atkHasLL {
-						cs.LifeGained += atkPow
+						res.lifeGained += atkPow
 					}
 				}
 				continue
@@ -166,12 +177,12 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 
 				// Trample: excess damage goes to opponent.
 				if remainingAtkDmg > 0 && atk.HasKeyword(core.Trample) {
-					cs.DamageToOpponent += remainingAtkDmg
+					res.damageToOpponent += remainingAtkDmg
 				}
 
 				// Lifelink: attacker gains life for all damage dealt.
 				if atkHasLL && atkDmgDealt > 0 {
-					cs.LifeGained += atkDmgDealt
+					res.lifeGained += atkDmgDealt
 				}
 			}
 
@@ -206,7 +217,7 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 						stepDT[atkID] = true
 					}
 					if blkHasLL {
-						cs.OpponentLifeGained += blkPow
+						res.opponentLifeGained += blkPow
 					}
 				}
 			}
@@ -228,33 +239,29 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 		resolveStep(false) // single simultaneous step
 	}
 
-	// Tally kills from accumulated damage (including deathtouch marks).
-	for _, atkID := range attackers {
-		atk := g.FindPermanent(atkID)
-		if atk == nil {
-			continue
-		}
-		blockerIDs := blockerMap[atkID]
-		if len(blockerIDs) == 0 {
-			continue
-		}
-		atkTough := atk.CurrentToughness(g)
-		if isDead(atkID, atkTough) {
-			cs.OurCreaturesLost++
-		}
-		for _, blkID := range blockerIDs {
-			blk := g.FindPermanent(blkID)
-			if blk == nil {
-				continue
-			}
-			blkTough := blk.CurrentToughness(g)
-			if isDead(blkID, blkTough) {
-				cs.TheirCreaturesLost++
-			}
-		}
+	return res
+}
+
+func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UUID, blocks []mage.BlockAssignment) CombatScore {
+	opponent := g.GetOpponent(playerID)
+	if opponent == nil {
+		return CombatScore{}
 	}
 
-	// Compute score using creature values.
+	blockerMap := make(map[uuid.UUID][]uuid.UUID)
+	for _, b := range blocks {
+		blockerMap[b.AttackerID] = append(blockerMap[b.AttackerID], b.BlockerID)
+	}
+
+	res := simulateCombatDamage(g, attackers, blockerMap, nil)
+
+	cs := CombatScore{
+		DamageToOpponent:   res.damageToOpponent,
+		LifeGained:         res.lifeGained,
+		OpponentLifeGained: res.opponentLifeGained,
+	}
+
+	// Tally kills and lost value from accumulated damage (including deathtouch marks).
 	var ourLostValue, theirLostValue int
 	for _, atkID := range attackers {
 		atk := g.FindPermanent(atkID)
@@ -265,8 +272,8 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 		if len(blockerIDs) == 0 {
 			continue
 		}
-		atkTough := atk.CurrentToughness(g)
-		if isDead(atkID, atkTough) {
+		if res.isDead(atkID, atk.CurrentToughness(g)) {
+			cs.OurCreaturesLost++
 			ourLostValue += eval.EvalCreatureInGame(atk, g)
 		}
 		for _, blkID := range blockerIDs {
@@ -274,17 +281,146 @@ func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UU
 			if blk == nil {
 				continue
 			}
-			blkTough := blk.CurrentToughness(g)
-			if isDead(blkID, blkTough) {
+			if res.isDead(blkID, blk.CurrentToughness(g)) {
+				cs.TheirCreaturesLost++
 				theirLostValue += eval.EvalCreatureInGame(blk, g)
 			}
 		}
 	}
 
 	cs.Score = cs.DamageToOpponent + theirLostValue - ourLostValue + cs.LifeGained - cs.OpponentLifeGained
-	_ = oppID
 
 	return cs
+}
+
+// considerRegeneration looks for one of our creatures that the upcoming combat
+// damage will destroy and, if we control an affordable regeneration ability that
+// can save it, returns an action to activate that ability. Regeneration shields
+// must be installed before combat damage is dealt — state-based actions destroy
+// a creature with lethal damage before any player receives priority — so this is
+// evaluated during the declare-blockers step, once blocks are known but before
+// damage. Damage already marked on a creature (e.g. from a burn spell earlier in
+// the turn) is folded into the lethality prediction.
+func (s *Strategy) considerRegeneration(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+	combat := g.GetCombat()
+	if combat == nil {
+		return nil
+	}
+
+	// Act only with an empty stack: blocks and any combat tricks have settled, so
+	// the prediction is final, and we won't stack a second regeneration on a
+	// creature whose shield ability is still resolving.
+	if len(g.StackObjects()) > 0 {
+		return nil
+	}
+
+	attackers := make([]uuid.UUID, 0, len(combat.Groups))
+	blockerMap := make(map[uuid.UUID][]uuid.UUID, len(combat.Groups))
+	initialDamage := make(map[uuid.UUID]int, len(combat.Groups)*2)
+	for _, grp := range combat.Groups {
+		atk := g.FindPermanent(grp.AttackerID)
+		if atk == nil {
+			continue
+		}
+		attackers = append(attackers, grp.AttackerID)
+		blockerMap[grp.AttackerID] = grp.BlockerIDs
+		initialDamage[grp.AttackerID] = atk.Damage
+		for _, bid := range grp.BlockerIDs {
+			if blk := g.FindPermanent(bid); blk != nil {
+				initialDamage[bid] = blk.Damage
+			}
+		}
+	}
+	if len(attackers) == 0 {
+		return nil
+	}
+
+	res := simulateCombatDamage(g, attackers, blockerMap, initialDamage)
+
+	// Collect our creatures combat will destroy, skipping any that already carry
+	// a regeneration shield so we never spend a redundant activation.
+	var doomed []*mage.Permanent
+	seen := make(map[uuid.UUID]bool)
+	consider := func(id uuid.UUID) {
+		if seen[id] {
+			return
+		}
+		seen[id] = true
+		perm := g.FindPermanent(id)
+		if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+			return
+		}
+		if g.HasRegenerationShield(id) {
+			return
+		}
+		if res.isDead(id, perm.CurrentToughness(g)) {
+			doomed = append(doomed, perm)
+		}
+	}
+	for _, atkID := range attackers {
+		consider(atkID)
+		for _, bid := range blockerMap[atkID] {
+			consider(bid)
+		}
+	}
+	if len(doomed) == 0 {
+		return nil
+	}
+	// Save the most valuable creature first.
+	sort.SliceStable(doomed, func(i, j int) bool {
+		return eval.EvalCreatureInGame(doomed[i], g) > eval.EvalCreatureInGame(doomed[j], g)
+	})
+
+	abilities := g.GetActivatableAbilities(playerID)
+	for _, target := range doomed {
+		for i := range abilities {
+			info := &abilities[i]
+			source := g.FindPermanent(info.PermanentID)
+			if source == nil {
+				continue
+			}
+			if info.AbilityIndex < 0 || info.AbilityIndex >= len(source.RuntimeAbilities) {
+				continue
+			}
+			ab, ok := mage.UnwrapAbility(source.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
+			if !ok || !regeneratesCreature(ab) {
+				continue
+			}
+
+			// Source-regeneration: the ability regenerates the permanent it is on.
+			if len(ab.Targets()) == 0 {
+				if info.PermanentID != target.ID() {
+					continue
+				}
+				return &interactive.PriorityAction{
+					Type:         interactive.ActionActivateAbility,
+					PermanentID:  info.PermanentID,
+					AbilityIndex: info.AbilityIndex,
+				}
+			}
+
+			// Target-regeneration (e.g. a regeneration-granting artifact): aim it
+			// at the doomed creature if it is a legal target.
+			tgt := ab.Targets()[0]
+			if !slices.Contains(tgt.Possible(playerID, source.Card, g), target.ID()) {
+				continue
+			}
+			return &interactive.PriorityAction{
+				Type:         interactive.ActionActivateAbility,
+				PermanentID:  info.PermanentID,
+				AbilityIndex: info.AbilityIndex,
+				Targets:      []uuid.UUID{target.ID()},
+			}
+		}
+	}
+
+	return nil
+}
+
+// regeneratesCreature reports whether activating ab sets a regeneration shield.
+func regeneratesCreature(ab mage.ActivatedAbility) bool {
+	return slices.ContainsFunc(ab.Effects(), mage.IsRegenerationEffect)
 }
 
 func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Game, playerID uuid.UUID, theyHaveLethal bool) []*mage.Permanent {

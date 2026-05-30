@@ -198,6 +198,7 @@ type EffectProperties struct {
 	ToughnessBoost int     // toughness boost for target; 0 if not a boost effect
 	IsBounce       bool    // true if this effect bounces a permanent to hand
 	Taps           bool    // true if this effect taps a permanent as a detrimental/beneficial action
+	Regenerates    bool    // true if this effect sets a regeneration shield
 	TokenPower     int     // token creature power; 0 if not a token-creation effect
 	TokenToughness int     // token creature toughness; 0 if not a token-creation effect
 	GrantedKeyword Keyword // non-zero when effect grants a keyword to a creature
@@ -212,6 +213,11 @@ type EffectProperties struct {
 // IsDamageEffect returns true if the given effect is a damage-dealing effect.
 func IsDamageEffect(e Effect) bool {
 	return e.Properties().DamageValue != nil
+}
+
+// IsRegenerationEffect returns true if the given effect sets a regeneration shield.
+func IsRegenerationEffect(e Effect) bool {
+	return e.Properties().Regenerates
 }
 
 // EffectOutcome classifies a single effect from the primary target's perspective.

@@ -497,6 +497,108 @@ func TestEvaluateCombatOutcome_DeathtouchTradesWithBig(t *testing.T) {
 	}
 }
 
+// ── Regeneration during combat ─────────────────────────────────────────────
+
+// regenerator builds a creature with a "{B}: Regenerate" activated ability.
+func regenerator(name string, power, toughness int, owner uuid.UUID) *mage.Permanent {
+	return makePerm(name, "{1}{B}", power, toughness, owner,
+		mage.WithActivatedAbility(
+			mage.RegenerateSource(),
+			mage.ManaCostOf("{B}"),
+		),
+	)
+}
+
+func TestPriorityAction_RegeneratesDoomedBlocker(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Swamp", 1)
+
+	skeleton := regenerator("Drudge Skeletons", 1, 1, pa.PlayerID())
+	bear := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(skeleton, bear)
+
+	g.GetCombat().AddAttacker(bear.ID(), pa.PlayerID())
+	g.GetCombat().AddBlocker(skeleton.ID(), bear.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility {
+		t.Fatalf("expected regeneration activation, got %v", action.Type)
+	}
+	if action.PermanentID != skeleton.ID() {
+		t.Errorf("expected regeneration on the doomed blocker, got %v", action.PermanentID)
+	}
+}
+
+func TestPriorityAction_RegeneratesAttackerWithMarkedDamage(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Swamp", 1)
+
+	// 2/3 attacker already carrying 2 damage from a burn spell this turn; it
+	// will take 1 more from the blocker and reach lethal.
+	troll := regenerator("Regen Troll", 2, 3, pa.PlayerID())
+	troll.Damage = 2
+	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pb.PlayerID())
+	g.AddToBattlefield(troll, elf)
+
+	g.GetCombat().AddAttacker(troll.ID(), pb.PlayerID())
+	g.GetCombat().AddBlocker(elf.ID(), troll.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != troll.ID() {
+		t.Fatalf("expected regeneration on the doomed attacker, got %+v", action)
+	}
+}
+
+func TestPriorityAction_DoesNotRegenerateSurvivingCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Swamp", 1)
+
+	// 3/3 regenerator blocked by a 1/1 — it survives, so no regeneration.
+	troll := regenerator("Regen Troll", 3, 3, pa.PlayerID())
+	elf := makePerm("Llanowar Elves", "{G}", 1, 1, pb.PlayerID())
+	g.AddToBattlefield(troll, elf)
+
+	g.GetCombat().AddAttacker(troll.ID(), pb.PlayerID())
+	g.GetCombat().AddBlocker(elf.ID(), troll.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type == interactive.ActionActivateAbility {
+		t.Fatalf("did not expect regeneration of a surviving creature, got %+v", action)
+	}
+}
+
+func TestPriorityAction_DoesNotDoubleRegenerate(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Swamp", 2)
+
+	skeleton := regenerator("Drudge Skeletons", 1, 1, pa.PlayerID())
+	bear := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(skeleton, bear)
+
+	g.GetCombat().AddAttacker(bear.ID(), pa.PlayerID())
+	g.GetCombat().AddBlocker(skeleton.ID(), bear.ID())
+
+	// A shield is already in place; the AI must not waste a second activation.
+	g.AddRegenerationShield(skeleton.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type == interactive.ActionActivateAbility {
+		t.Fatalf("did not expect a second regeneration activation, got %+v", action)
+	}
+}
+
 func TestEvaluateCombatOutcome_DeathtouchFirstStrikeSurvives(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Stinger", "{1}{B}", 1, 1, pa.PlayerID(),
