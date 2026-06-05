@@ -374,53 +374,119 @@ func (s *Strategy) considerRegeneration(p mage.Player, g *mage.Game) *interactiv
 
 	abilities := g.GetActivatableAbilities(playerID)
 	for _, target := range doomed {
-		for i := range abilities {
-			info := &abilities[i]
-			source := g.FindPermanent(info.PermanentID)
-			if source == nil {
-				continue
-			}
-			if info.AbilityIndex < 0 || info.AbilityIndex >= len(source.RuntimeAbilities) {
-				continue
-			}
-			ab, ok := mage.UnwrapAbility(source.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
-			if !ok || !regeneratesCreature(ab) {
-				continue
-			}
-
-			// Source-regeneration: the ability regenerates the permanent it is on.
-			if len(ab.Targets()) == 0 {
-				if info.PermanentID != target.ID() {
-					continue
-				}
-				return &interactive.PriorityAction{
-					Type:         interactive.ActionActivateAbility,
-					PermanentID:  info.PermanentID,
-					AbilityIndex: info.AbilityIndex,
-				}
-			}
-
-			// Target-regeneration (e.g. a regeneration-granting artifact): aim it
-			// at the doomed creature if it is a legal target.
-			tgt := ab.Targets()[0]
-			if !slices.Contains(tgt.Possible(playerID, source.Card, g), target.ID()) {
-				continue
-			}
-			return &interactive.PriorityAction{
-				Type:         interactive.ActionActivateAbility,
-				PermanentID:  info.PermanentID,
-				AbilityIndex: info.AbilityIndex,
-				Targets:      []uuid.UUID{target.ID()},
-			}
+		if action := s.regenerationAbilityAction(playerID, g, abilities, target); action != nil {
+			return action
+		}
+		if action := s.regenerationSpellAction(p, g, target); action != nil {
+			return action
 		}
 	}
 
 	return nil
 }
 
+func (s *Strategy) regenerationAbilityAction(playerID uuid.UUID, g *mage.Game, abilities []mage.ActivatableInfo, target *mage.Permanent) *interactive.PriorityAction {
+	for i := range abilities {
+		info := &abilities[i]
+		source := g.FindPermanent(info.PermanentID)
+		if source == nil {
+			continue
+		}
+		if info.AbilityIndex < 0 || info.AbilityIndex >= len(source.RuntimeAbilities) {
+			continue
+		}
+		ab, ok := mage.UnwrapAbility(source.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
+		if !ok || !regeneratesCreature(ab) {
+			continue
+		}
+
+		if len(ab.Targets()) == 0 {
+			if info.PermanentID != target.ID() && !regeneratesAttachedTarget(ab, source, target) {
+				continue
+			}
+			return &interactive.PriorityAction{
+				Type:         interactive.ActionActivateAbility,
+				PermanentID:  info.PermanentID,
+				AbilityIndex: info.AbilityIndex,
+			}
+		}
+
+		tgt := ab.Targets()[0]
+		if !slices.Contains(tgt.Possible(playerID, source.Card, g), target.ID()) {
+			continue
+		}
+		return &interactive.PriorityAction{
+			Type:         interactive.ActionActivateAbility,
+			PermanentID:  info.PermanentID,
+			AbilityIndex: info.AbilityIndex,
+			Targets:      []uuid.UUID{target.ID()},
+		}
+	}
+	return nil
+}
+
+func (s *Strategy) regenerationSpellAction(p mage.Player, g *mage.Game, target *mage.Permanent) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+	for _, card := range g.GetCastableSpells(playerID) {
+		for _, ability := range card.Abilities() {
+			sa, ok := ability.(*mage.SpellAbility)
+			if !ok || sa.Kind() != mage.ActionSpell || !regeneratesEffects(sa.Effects()) {
+				continue
+			}
+			targets := sa.Targets()
+			if len(targets) == 0 {
+				continue
+			}
+			if !slices.Contains(targets[0].Possible(playerID, card, g), target.ID()) {
+				continue
+			}
+			return &interactive.PriorityAction{
+				Type:     interactive.ActionCastSpell,
+				CardID:   card.ID(),
+				CardName: card.Name(),
+				Targets:  []uuid.UUID{target.ID()},
+				XValue:   bestXValue(g, playerID, card, []uuid.UUID{target.ID()}),
+			}
+		}
+	}
+	return nil
+}
+
 // regeneratesCreature reports whether activating ab sets a regeneration shield.
 func regeneratesCreature(ab mage.ActivatedAbility) bool {
-	return slices.ContainsFunc(ab.Effects(), mage.IsRegenerationEffect)
+	return regeneratesEffects(ab.Effects())
+}
+
+func regeneratesEffects(effects []mage.Effect) bool {
+	return slices.ContainsFunc(effects, mage.IsRegenerationEffect)
+}
+
+func regeneratesAttachedTarget(ab mage.ActivatedAbility, source *mage.Permanent, target *mage.Permanent) bool {
+	if source.AttachedTo != target.ID() {
+		return false
+	}
+	return effectsRegenerateAttached(ab.Effects(), nil)
+}
+
+func effectsRegenerateAttached(effects []mage.Effect, attachedVars map[string]bool) bool {
+	for _, effect := range effects {
+		switch e := effect.(type) {
+		case *mage.SnapshotAttachedData:
+			if attachedVars == nil {
+				attachedVars = make(map[string]bool)
+			}
+			attachedVars[e.StoreAs] = true
+		case *mage.RegenerateGatheredData:
+			if attachedVars[e.VarName] {
+				return true
+			}
+		case *mage.PipelineData:
+			if effectsRegenerateAttached(e.Steps, maps.Clone(attachedVars)) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func findGangBlocks(atk *mage.Permanent, available []*mage.Permanent, g *mage.Game, playerID uuid.UUID, theyHaveLethal bool) []*mage.Permanent {

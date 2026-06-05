@@ -599,6 +599,77 @@ func TestPriorityAction_DoesNotDoubleRegenerate(t *testing.T) {
 	}
 }
 
+func TestPriorityAction_CastsRegenerationSpellOnDoomedCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Plains", 1)
+
+	ward := mage.NewInstant("Death Ward", "{W}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.RegenerateTarget()),
+	)
+	ward.SetOwner(pa.PlayerID())
+	pa.AddToHand(ward)
+
+	doomed := makePerm("Doomed Guard", "{W}", 1, 1, pa.PlayerID())
+	safe := makePerm("Safe Giant", "{3}{W}", 5, 5, pa.PlayerID())
+	attacker := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(doomed, safe, attacker)
+
+	g.GetCombat().AddAttacker(attacker.ID(), pa.PlayerID())
+	g.GetCombat().AddBlocker(doomed.ID(), attacker.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionCastSpell {
+		t.Fatalf("expected regeneration spell, got %+v", action)
+	}
+	if action.CardName != "Death Ward" {
+		t.Fatalf("expected Death Ward, got %s", action.CardName)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != doomed.ID() {
+		t.Fatalf("expected Death Ward to target doomed creature, got %+v", action.Targets)
+	}
+}
+
+func TestPriorityAction_ActivatesAttachedRegenerationOnDoomedHost(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+
+	host := makePerm("Retained Guard", "{1}{W}", 2, 2, pa.PlayerID())
+	retainerCard := mage.NewAura("Test Retainer", "{B}",
+		mage.WithActivatedAbility(
+			mage.Pipeline("Regenerate enchanted creature",
+				mage.EffectProperties{},
+				mage.SnapshotAttached("attached"),
+				mage.RegenerateGathered("attached"),
+			),
+			mage.SacrificeSourceCost(),
+		),
+	)
+	retainerCard.SetOwner(pa.PlayerID())
+	attacker := makePerm("Hill Giant", "{3}{R}", 3, 3, pb.PlayerID())
+	g.AddToBattlefield(host, attacker)
+	retainer := g.PutOnBattlefield(retainerCard, pa.PlayerID())
+	g.Attach(retainer.ID(), host.ID())
+
+	g.GetCombat().AddAttacker(attacker.ID(), pa.PlayerID())
+	g.GetCombat().AddBlocker(host.ID(), attacker.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility {
+		t.Fatalf("expected attached regeneration activation, got %+v", action)
+	}
+	if action.PermanentID != retainer.ID() {
+		t.Fatalf("expected activation from retainer aura, got %v", action.PermanentID)
+	}
+	if len(action.Targets) != 0 {
+		t.Fatalf("expected no targets for attached regeneration ability, got %+v", action.Targets)
+	}
+}
+
 func TestEvaluateCombatOutcome_DeathtouchFirstStrikeSurvives(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Stinger", "{1}{B}", 1, 1, pa.PlayerID(),
