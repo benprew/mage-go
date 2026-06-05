@@ -217,6 +217,13 @@ func IsDamageEffect(e Effect) bool {
 
 // IsRegenerationEffect returns true if the given effect sets a regeneration shield.
 func IsRegenerationEffect(e Effect) bool {
+	if pipeline, ok := e.(*PipelineData); ok {
+		for _, step := range pipeline.Steps {
+			if IsRegenerationEffect(step) {
+				return true
+			}
+		}
+	}
 	return e.Properties().Regenerates
 }
 

@@ -132,7 +132,7 @@ func RegenerateGathered(v string) Effect { return &RegenerateGatheredData{VarNam
 
 func (e *RegenerateGatheredData) Text() string { return "regenerate" }
 func (e *RegenerateGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
+	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
 }
 
 func execRegenerateGathered(ctx *EffectContext, e *RegenerateGatheredData) error {
