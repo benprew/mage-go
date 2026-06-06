@@ -5,6 +5,8 @@
 package ai
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -30,6 +32,26 @@ func NewAIPlayer(name string, strategy AIStrategy) *AIPlayer {
 	return &AIPlayer{
 		BasePlayer: mage.NewBasePlayer(name),
 		Strategy:   strategy,
+	}
+}
+
+// ChooseMayAbility decides whether the AI accepts an optional ability or
+// optional cost payment. It accepts payments that keep a permanent the AI
+// controls (e.g. paying an upkeep cost on Junun Efreet) and other clearly
+// beneficial optional effects. Affordability is enforced separately by the
+// engine, so accepting a "pay X to keep Y" prompt the AI cannot afford still
+// results in the permanent being sacrificed.
+func (ai *AIPlayer) ChooseMayAbility(description string) bool {
+	lower := strings.ToLower(description)
+	switch {
+	case strings.Contains(lower, "keep"),
+		strings.Contains(lower, "draw"),
+		strings.Contains(lower, "damage"),
+		strings.Contains(lower, "destroy"),
+		strings.Contains(lower, "gain"):
+		return true
+	default:
+		return false
 	}
 }
 

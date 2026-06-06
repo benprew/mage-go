@@ -197,6 +197,22 @@ func TestAIChooseMode_UnknownCard(t *testing.T) {
 	}
 }
 
+// ── ChooseMayAbility ────────────────────────────────────────────────────────
+
+func TestAIChooseMayAbility_PaysToKeepPermanent(t *testing.T) {
+	ai := NewAIPlayer("Bot", &dummyStrategy{})
+	if !ai.ChooseMayAbility("pay {B}{B} to keep Junún Efreet") {
+		t.Error("AI should accept paying an upkeep cost to keep a permanent")
+	}
+}
+
+func TestAIChooseMayAbility_DeclinesUnknown(t *testing.T) {
+	ai := NewAIPlayer("Bot", &dummyStrategy{})
+	if ai.ChooseMayAbility("pay {2} to mill yourself") {
+		t.Error("AI should decline unknown optional abilities")
+	}
+}
+
 // ── NewAIPlayer constructor smoke test ──────────────────────────────────────
 
 func TestNewAIPlayer_StoresStrategy(t *testing.T) {
