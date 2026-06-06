@@ -481,9 +481,23 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 				targets = append(targets, chosen[0])
 				continue
 			}
-			if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) {
-				targets = append(targets, opponent.PlayerID())
-				continue
+			// A free, repeatable ping (no mana cost, paid only by tapping,
+			// e.g. Pirate Ship) always advances the game when aimed at the
+			// opponent's face: it costs nothing and chips their life total.
+			// Fall back to face even when no creature is worth burning, rather
+			// than wasting the activation by passing.
+			if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible) || isFreeRepeatablePing(ab)) {
+				aimedAtFace := false
+				for _, id := range possible {
+					if id == opponent.PlayerID() {
+						targets = append(targets, id)
+						aimedAtFace = true
+						break
+					}
+				}
+				if aimedAtFace {
+					continue
+				}
 			}
 			return nil, false
 
@@ -860,6 +874,29 @@ func aiHintAllowsTiming(hint mage.AIHint, g *mage.Game, mainPhase bool) bool {
 	default:
 		return true
 	}
+}
+
+// isFreeRepeatablePing reports whether an activated ability deals damage and
+// costs no mana (paid only by tapping or other non-mana costs). Such pings can
+// be used every turn at no resource cost, so aiming them at the opponent's face
+// is always a small free gain even when no creature is worth burning.
+func isFreeRepeatablePing(ab mage.ActivatedAbility) bool {
+	dealsDamage := false
+	for _, e := range ab.Effects() {
+		if e.Properties().DamageValue != nil && e.Properties().Outcome == mage.OutcomeDetriment {
+			dealsDamage = true
+			break
+		}
+	}
+	if !dealsDamage {
+		return false
+	}
+	for _, c := range ab.Costs() {
+		if mcp, ok := c.(*mage.ManaCostPayment); ok && mcp.MC.CMC() > 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects []mage.Effect, targets []uuid.UUID) int {
