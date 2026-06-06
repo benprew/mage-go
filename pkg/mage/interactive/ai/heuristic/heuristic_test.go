@@ -276,6 +276,61 @@ func TestPriorityAction_WinterBlastXOnlyCountsOpponentCreatures(t *testing.T) {
 	}
 }
 
+func TestBestXValue_LethalAgainstCreature(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Mountain", 10)
+	opp := makePerm("Hill Giant", "{3}{R}", 3, 3, pb.PlayerID())
+	g.AddToBattlefield(opp)
+
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+
+	x := bestXValue(g, pa.PlayerID(), fireball, []uuid.UUID{opp.ID()})
+	if x != 3 {
+		t.Fatalf("expected X=3 to kill a 3-toughness creature, got %d", x)
+	}
+}
+
+func TestBestXValue_LethalAccountsForExistingDamage(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Mountain", 10)
+	opp := makePerm("Hill Giant", "{3}{R}", 4, 4, pb.PlayerID())
+	opp.Damage = 3
+	g.AddToBattlefield(opp)
+
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+
+	x := bestXValue(g, pa.PlayerID(), fireball, []uuid.UUID{opp.ID()})
+	if x != 1 {
+		t.Fatalf("expected X=1 to finish a 4-toughness creature with 3 damage, got %d", x)
+	}
+}
+
+func TestBestXValue_ClampsToLethalWhenManaAllowsMore(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Mountain", 10)
+	opp := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(opp)
+
+	fireball := mage.NewSorcery("Fireball", "{X}{R}",
+		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(), mage.DealDamage(mage.XValue())),
+	)
+	fireball.SetOwner(pa.PlayerID())
+
+	x := bestXValue(g, pa.PlayerID(), fireball, []uuid.UUID{opp.ID()})
+	if x != 2 {
+		t.Fatalf("expected X=2 (lethal) rather than dumping all mana into a creature, got %d", x)
+	}
+}
+
 func TestBlockers_ReachCanBlockFlying(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Bird", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Flying))

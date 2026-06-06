@@ -906,10 +906,12 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 				return life
 			}
 		}
-		// If targeting a creature, try exact toughness.
+		// If targeting a creature, pay just enough to kill it: lethal damage
+		// is its current toughness minus damage already marked.
 		if perm := g.FindPermanent(targets[0]); perm != nil && perm.Controller != playerID {
-			if tough := perm.CurrentToughness(g); tough > 0 && tough <= maxX {
-				return tough
+			lethal := perm.CurrentToughness(g) - perm.Damage
+			if lethal > 0 && lethal <= maxX {
+				return lethal
 			}
 		}
 	}
