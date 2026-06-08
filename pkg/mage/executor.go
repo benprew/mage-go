@@ -238,6 +238,8 @@ func ExecuteEffect(ctx *EffectContext, data Effect) error {
 		return execSacrificeSourceStep(ctx, e)
 	case *payManaUnlessEffect:
 		return execPayManaUnless(ctx, e)
+	case *sacrificeUnlessPayManaEffect:
+		return execSacrificeUnlessPayMana(ctx, e)
 	case *ShuffleGraveyardIntoLibraryData:
 		return execShuffleGraveyardIntoLibrary(ctx, e)
 
