@@ -409,11 +409,7 @@ func registerCreatures() {
 		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2,
 			WithSubTypes("Ogre"),
 			WithAbility(AttacksTrigger(
-				IfElse("pay {2} or take 3 damage",
-					&TryPayManaCond{Cost: "{2}"},
-					nil,
-					DealDamageToPlayers(Fixed(3), SelectController()),
-				), false,
+				DamageUnlessPayMana("{2}", 3), false,
 			)),
 		)
 	})

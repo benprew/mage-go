@@ -63,6 +63,12 @@ func joinStrings(ss []string) string {
 	return result.String()
 }
 
+// RevealOpponentHand, when true, includes the opponent's hand cards in the
+// snapshot instead of redacting them. It is a debug aid for the test harnesses
+// (e.g. cmd/duel_test, cmd/dungeon_test) and defaults to false so normal play
+// keeps the opponent's hand hidden.
+var RevealOpponentHand bool
+
 // SnapshotGameState creates a read-only snapshot of the game for the TUI.
 func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 	human := g.PlayerAt(humanIndex)
@@ -75,7 +81,7 @@ func SnapshotGameState(g *mage.Game, humanIndex int) *GameState {
 		Step:         g.GetStep().String(),
 		ActivePlayer: g.ActivePlayerObj().Name(),
 		You:          snapshotPlayer(g, human, viewerID, true),
-		Opponent:     snapshotPlayer(g, ai, viewerID, false),
+		Opponent:     snapshotPlayer(g, ai, viewerID, RevealOpponentHand),
 		StackItems:   snapshotStack(g),
 	}
 }

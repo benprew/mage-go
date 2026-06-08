@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 
@@ -218,10 +219,8 @@ func IsDamageEffect(e Effect) bool {
 // IsRegenerationEffect returns true if the given effect sets a regeneration shield.
 func IsRegenerationEffect(e Effect) bool {
 	if pipeline, ok := e.(*PipelineData); ok {
-		for _, step := range pipeline.Steps {
-			if IsRegenerationEffect(step) {
-				return true
-			}
+		if slices.ContainsFunc(pipeline.Steps, IsRegenerationEffect) {
+			return true
 		}
 	}
 	return e.Properties().Regenerates

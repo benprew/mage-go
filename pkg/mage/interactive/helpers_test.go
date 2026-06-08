@@ -483,6 +483,27 @@ func TestSnapshotGameState_OpponentHandHidden(t *testing.T) {
 	}
 }
 
+func TestSnapshotGameState_OpponentHandRevealed(t *testing.T) {
+	g, _, pb := makeGame()
+	card := mage.NewCreature("Secret", "{1}", 1, 1)
+	card.SetOwner(pb.PlayerID())
+	pb.AddToHand(card)
+
+	RevealOpponentHand = true
+	defer func() { RevealOpponentHand = false }()
+
+	snap := SnapshotGameState(g, 0)
+	if len(snap.Opponent.Hand) != 1 {
+		t.Fatalf("opponent hand len = %d, want 1", len(snap.Opponent.Hand))
+	}
+	if snap.Opponent.Hand[0].Name != "Secret" {
+		t.Errorf("opponent hand card = %q, want %q", snap.Opponent.Hand[0].Name, "Secret")
+	}
+	if snap.Opponent.HandCount != 1 {
+		t.Errorf("opponent hand count = %d, want 1", snap.Opponent.HandCount)
+	}
+}
+
 func TestSnapshotGameState_PermanentCounters(t *testing.T) {
 	g, pa, _ := makeGame()
 	perm := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())

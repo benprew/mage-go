@@ -279,6 +279,7 @@ var (
 	ToAllMatching                              = mage.ToAllMatching
 	RegisterDelayedTriggerStep                 = mage.RegisterDelayedTriggerStep
 	SacrificeAtUpkeepUnlessPay                 = mage.SacrificeAtUpkeepUnlessPay
+	DamageUnlessPayMana                        = mage.DamageUnlessPayMana
 )
 
 // =============================================================================

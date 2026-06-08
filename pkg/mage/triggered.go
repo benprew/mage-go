@@ -528,12 +528,7 @@ func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *Gener
 // the beginning of the controller's upkeep unless the mana cost can be paid.
 func SacrificeAtUpkeepUnlessPay(cost string) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, false,
-		IfElse(
-			"Sacrifice unless pay "+cost,
-			&TryPayManaCond{Cost: cost},
-			nil,
-			SacrificeSourceStep(),
-		),
+		SacrificeUnlessPayMana(cost),
 	).SetConditionData(EventPlayerIsController{})
 }
 

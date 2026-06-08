@@ -250,6 +250,28 @@ func TestJununEfreet(t *testing.T) {
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Junún Efreet", 0)
 	})
+
+	t.Run("sacrificed_if_player_declines_to_pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Junún Efreet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Junún Efreet", 0)
+	})
+
+	t.Run("survives_if_player_chooses_to_pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Junún Efreet")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Junún Efreet", 1)
+	})
 }
 
 func TestErgRaiders(t *testing.T) {
@@ -456,6 +478,30 @@ func TestHasranOgress(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertLife(gametest.PlayerA, 17) // took 3 damage
+	})
+
+	t.Run("attacks_declines_to_pay_takes_3", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hasran Ogress")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.Attack(1, gametest.PlayerA, "Hasran Ogress")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 17) // declined to pay, took 3 damage
+	})
+
+	t.Run("attacks_chooses_to_pay_no_damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hasran Ogress")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
+		g.Attack(1, gametest.PlayerA, "Hasran Ogress")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20) // chose to pay {2}, no damage
 	})
 }
 
