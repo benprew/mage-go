@@ -138,10 +138,25 @@ func registerCreatures() {
 	// Leviathan enters the battlefield tapped and doesn't untap during your untap step.
 	// At the beginning of your upkeep, you may sacrifice two Islands. If you do, untap Leviathan.
 	// Leviathan can't attack unless you sacrifice two Islands.
-	// TODO: implement — needs sacrifice-to-untap and sacrifice-to-attack
 	Register("Leviathan", func() Card {
 		return NewCreature("Leviathan", "{5}{U}{U}{U}{U}", 10, 10,
 			WithSubTypes("Leviathan"),
+			WithKeyword(Trample),
+			WithKeyword(EntersTapped),
+			WithKeyword(DoesNotUntapKW),
+			WithStaticAbility(SourceCantAttackUnlessPays(
+				SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands"))),
+			WithAbility(
+				BeginningOfUpkeepTrigger(
+					IfElse(
+						"Only if tapped",
+						SourceIsTapped{},
+						EffectIfPaid(
+							SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands"),
+							UntapSource()),
+						nil),
+					false),
+			),
 		)
 	})
 

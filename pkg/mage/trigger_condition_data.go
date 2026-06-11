@@ -226,6 +226,11 @@ func (SourceIsTapped) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ u
 	return perm != nil && perm.Tapped
 }
 
+func (SourceIsTapped) Check(ctx *EffectContext) bool {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	return perm != nil && perm.Tapped
+}
+
 // SourceIsUntapped checks that the source permanent is untapped.
 type SourceIsUntapped struct{}
 

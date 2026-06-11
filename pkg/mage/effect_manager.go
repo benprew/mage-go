@@ -192,6 +192,7 @@ type EffectManager struct {
 	cantBeBlockedExceptByRules map[uuid.UUID][]PermanentFilter  // attacker -> conjunction of filters blockers must match
 	canBlockOnlyRules          map[uuid.UUID][]PermanentFilter  // blocker -> conjunction of filters attackers must match
 	minBlockers                map[uuid.UUID]int                // attacker -> minimum number of blockers required
+	attackCosts                map[uuid.UUID][]Cost             // creature -> costs its controller must pay to declare it as an attacker (CR 508.1e)
 	replacements               []ReplacementEffect              // persistent: one-shot, turn-scoped, while-on-battlefield
 	cycleReplacements          []ReplacementEffect              // cleared each Apply() cycle, re-registered by continuous effects
 	Damage                     *DamageSystem

@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -60,12 +62,28 @@ func (em *EffectManager) MinBlockers(attackerID uuid.UUID) int {
 	return em.minBlockers[attackerID]
 }
 
+// AddAttackCost registers a cost that permID's controller must pay to declare
+// it as an attacker (CR 508.1e, "can't attack unless you pay/sacrifice ...").
+func (em *EffectManager) AddAttackCost(permID uuid.UUID, cost Cost) {
+	if em.attackCosts == nil {
+		em.attackCosts = make(map[uuid.UUID][]Cost)
+	}
+	em.attackCosts[permID] = append(em.attackCosts[permID], cost)
+}
+
+// AttackCosts returns the costs required to declare permID as an attacker,
+// or nil if attacking it is free.
+func (em *EffectManager) AttackCosts(permID uuid.UUID) []Cost {
+	return em.attackCosts[permID]
+}
+
 // resetCombatRestrictions clears all per-cycle restriction maps. Called from
 // EffectManager.Apply alongside blockPairRestrictions.
 func (em *EffectManager) resetCombatRestrictions() {
 	clear(em.cantBeBlockedExceptByRules)
 	clear(em.canBlockOnlyRules)
 	clear(em.minBlockers)
+	clear(em.attackCosts)
 }
 
 // passesCombatRestrictions returns true if blocker is allowed to block
@@ -122,6 +140,52 @@ func SourceCantBeBlockedByFewerThan(n int) ContinuousEffect {
 		g.effects.AddMinBlockers(sourceID, n)
 		return nil
 	})
+}
+
+// SourceCantAttackUnlessPays creates a continuous effect registering an attack
+// cost on the source (CR 508.1e): the source can't attack unless its controller
+// pays cost as attackers are declared. E.g. Leviathan: "Leviathan can't attack
+// unless you sacrifice two Islands."
+func SourceCantAttackUnlessPays(cost Cost) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		g.effects.AddAttackCost(sourceID, cost)
+		return nil
+	})
+}
+
+// PayAttackCosts pays the CR 508.1e costs registered for atk. When prompt is
+// true the controller is first asked whether to pay (declining is legal — the
+// creature simply isn't declared as an attacker); search clones pass false
+// because passing the attacker to ExecuteAttackers already encodes that
+// decision. Returns false if any cost was declined or could not be paid, in
+// which case the creature must not be declared.
+func (g *Game) PayAttackCosts(atk *Permanent, controller uuid.UUID, prompt bool) bool {
+	costs := g.effects.AttackCosts(atk.ID())
+	if len(costs) == 0 {
+		return true
+	}
+	for _, c := range costs {
+		if !c.CanPay(atk.ID(), controller, g) {
+			return false
+		}
+	}
+	if prompt {
+		p := g.GetPlayer(controller)
+		if p == nil {
+			return false
+		}
+		texts := make([]string, len(costs))
+		for i, c := range costs {
+			texts[i] = c.Text()
+		}
+		if !p.ChooseMayAbility(strings.Join(texts, " and ") + " for " + atk.Name() + " to attack") {
+			return false
+		}
+	}
+	if err := g.autoTapForManaCosts(controller, atk.ID(), costs, AutoTapHint{}); err != nil {
+		return false
+	}
+	return g.payActionCosts(controller, atk.ID(), costs) == nil
 }
 
 // TargetCantBeBlockedExceptBy creates a target-scoped continuous effect that

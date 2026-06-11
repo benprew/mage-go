@@ -77,16 +77,15 @@ func registerArtifacts() {
 				Tap(),
 			),
 			// At the beginning of your upkeep, you may pay {4}. If you do, untap Mana Vault.
-			WithAbility(NewTriggered(EvtUpkeep, false, Pipeline(
-				"pay {4} to untap Mana Vault",
-				EffectProperties{},
-				SnapshotPermanent(SelectSource, "self"),
-				IfElse("pay {4} to untap",
-					&TryPayManaCond{Cost: "{4}"},
-					UntapGathered("self"),
-					nil,
-				),
-			)).SetConditionData(EventPlayerIsController{})),
+			WithAbility(BeginningOfUpkeepTrigger(
+				IfElse(
+					"Only if tapped",
+					SourceIsTapped{},
+					EffectIfPaid(
+						ManaCostOf("{4}"),
+						UntapSource(),
+					), nil),
+				true)),
 			// At the beginning of your draw step, if Mana Vault is tapped, it deals 1 damage to you.
 			WithAbility(NewTriggered(EvtDrawStep, false, DealDamageToPlayers(Fixed(1), SelectController())).
 				SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{EventPlayerIsController{}, SourceIsTapped{}}})),

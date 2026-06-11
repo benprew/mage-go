@@ -48,7 +48,10 @@ func (ai *AIPlayer) ChooseMayAbility(description string) bool {
 		strings.Contains(lower, "draw"),
 		strings.Contains(lower, "damage"),
 		strings.Contains(lower, "destroy"),
-		strings.Contains(lower, "gain"):
+		strings.Contains(lower, "gain"),
+		// Attack-cost confirmation (CR 508.1e): the combat solver already
+		// chose this attacker with the cost applied, so follow through.
+		strings.Contains(lower, "to attack"):
 		return true
 	default:
 		return false

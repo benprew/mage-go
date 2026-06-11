@@ -46,6 +46,7 @@ func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		return ErrPlayerNotFound
 	}
 	mc := c.reducedCost(sourceID, g)
+	g.AutoTapForCost(controller, mc)
 	return p.ManaPool().Pay(mc, nil)
 }
 
@@ -266,16 +267,24 @@ func (c *lifePayCost) Text() string {
 	return fmt.Sprintf("Pay %d life", c.amount)
 }
 
-// sacrificeMatchingCost requires sacrificing a permanent you control matching a filter.
+// sacrificeMatchingCost requires sacrificing count permanents you control matching a filter.
 type sacrificeMatchingCost struct {
 	filter PermanentFilter
 	text   string
+	count  int
 }
 
 // SacrificeMatchingCost creates a cost that requires sacrificing a permanent you control
 // (other than the source) that matches the given filter.
 func SacrificeMatchingCost(filter PermanentFilter, text string) Cost {
-	return &sacrificeMatchingCost{filter: filter, text: text}
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1}
+}
+
+// SacrificeNMatchingCost creates a cost that requires sacrificing n permanents you
+// control (other than the source) that match the given filter (e.g. Leviathan's
+// "sacrifice two Islands").
+func SacrificeNMatchingCost(n int, filter PermanentFilter, text string) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: n}
 }
 
 // SacrificeArtifactCost creates a cost that requires sacrificing an artifact you control (other than the source).
@@ -289,31 +298,40 @@ func SacrificeCreatureCost() Cost {
 }
 
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	found := 0
 	for _, p := range g.battlefield {
 		if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
-			return true
+			found++
+			if found >= c.count {
+				return true
+			}
 		}
 	}
 	return false
 }
 
 func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	var candidates []*Permanent
-	for _, p := range g.battlefield {
-		if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
-			candidates = append(candidates, p)
-		}
-	}
-	if len(candidates) == 0 {
-		return fmt.Errorf("no permanent to sacrifice")
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("not enough permanents to sacrifice")
 	}
 	player := g.GetPlayer(controller)
-	chosen := player.ChoosePermanent(candidates, c.text, g)
-	if chosen == nil {
-		return fmt.Errorf("no permanent chosen")
+	for i := 0; i < c.count; i++ {
+		var candidates []*Permanent
+		for _, p := range g.battlefield {
+			if p.Controller == controller && p.ID() != sourceID && c.filter.Match(p, g) {
+				candidates = append(candidates, p)
+			}
+		}
+		if len(candidates) == 0 {
+			return fmt.Errorf("no permanent to sacrifice")
+		}
+		chosen := player.ChoosePermanent(candidates, c.text, g)
+		if chosen == nil {
+			return fmt.Errorf("no permanent chosen")
+		}
+		g.CaptureSacrificed(chosen)
+		g.Sacrifice(chosen)
 	}
-	g.CaptureSacrificed(chosen)
-	g.Sacrifice(chosen)
 	return nil
 }
 

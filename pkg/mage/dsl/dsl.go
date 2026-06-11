@@ -427,6 +427,9 @@ var (
 	ProtectionFromColor                           = mage.ProtectionFromColor
 	PreventDamageFromTo                           = mage.PreventDamageFromTo
 	PreventFromAttackingIfDefendingPlayerControls = mage.PreventFromAttackingIfDefendingPlayerControls
+	SourceCantAttackUnlessPays                    = mage.SourceCantAttackUnlessPays
+
+	EffectIfPaid = mage.EffectIfPaid
 )
 
 // =============================================================================
@@ -522,23 +525,24 @@ var (
 // =============================================================================
 
 var (
-	SacrificeSourceCost   = mage.SacrificeSourceCost
-	ManaCostOf            = mage.ManaCostOf
-	WithFrom              = mage.WithFrom
-	WithTo                = mage.WithTo
-	WithCombatOnly        = mage.WithCombatOnly
-	WithPlayerOnly        = mage.WithPlayerOnly
-	GenericCost           = mage.GenericCost
-	XManaCost             = mage.XManaCost
-	RemoveCountersCost    = mage.RemoveCountersCost
-	RequireCountersCost   = mage.RequireCountersCost
-	SacrificeCreatureCost = mage.SacrificeCreatureCost
-	DiscardRandomCost     = mage.DiscardRandomCost
-	ExileSourceCost       = mage.ExileSourceCost
-	SacrificeArtifactCost = mage.SacrificeArtifactCost
-	SacrificeMatchingCost = mage.SacrificeMatchingCost
-	LifePayCost           = mage.LifePayCost
-	DiscardCost           = mage.DiscardCost
+	SacrificeSourceCost    = mage.SacrificeSourceCost
+	ManaCostOf             = mage.ManaCostOf
+	WithFrom               = mage.WithFrom
+	WithTo                 = mage.WithTo
+	WithCombatOnly         = mage.WithCombatOnly
+	WithPlayerOnly         = mage.WithPlayerOnly
+	GenericCost            = mage.GenericCost
+	XManaCost              = mage.XManaCost
+	RemoveCountersCost     = mage.RemoveCountersCost
+	RequireCountersCost    = mage.RequireCountersCost
+	SacrificeCreatureCost  = mage.SacrificeCreatureCost
+	DiscardRandomCost      = mage.DiscardRandomCost
+	ExileSourceCost        = mage.ExileSourceCost
+	SacrificeArtifactCost  = mage.SacrificeArtifactCost
+	SacrificeMatchingCost  = mage.SacrificeMatchingCost
+	SacrificeNMatchingCost = mage.SacrificeNMatchingCost
+	LifePayCost            = mage.LifePayCost
+	DiscardCost            = mage.DiscardCost
 )
 
 // =============================================================================

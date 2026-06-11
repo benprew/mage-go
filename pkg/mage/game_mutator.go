@@ -765,9 +765,15 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 	if defender == nil {
 		return
 	}
+	// Fresh search clones haven't run an Apply() cycle yet, so the per-cycle
+	// attack-cost registry may be empty; rebuild it before consulting it.
+	g.effects.Apply(g)
 	for _, id := range attackerIDs {
 		atk := g.FindPermanent(id)
 		if atk == nil || !atk.CanDeclareAsAttacker(g) {
+			continue
+		}
+		if !g.PayAttackCosts(atk, playerID, false) {
 			continue
 		}
 		if !atk.HasKeyword(Vigilance) {

@@ -327,6 +327,8 @@ func ExecuteEffect(ctx *EffectContext, data Effect) error {
 		return execMayPayMana(ctx, e)
 	case *unlessPaysEffect:
 		return execUnlessPays(ctx, e)
+	case *effectIfPaid:
+		return execIfPaid(ctx, e)
 	case *createPredefinedTokenEffect:
 		return e.Apply(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 

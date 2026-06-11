@@ -106,7 +106,11 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		Targets:    targets,
 		Vars:       make(map[string]any),
 	}
-	return ExecuteEffect(ctx, e)
+	err := ExecuteEffect(ctx, e)
+	if err != nil {
+		fmt.Println("ERROR: ExecuteEffect: ", err)
+	}
+	return err
 }
 
 // Outcome describes whether an effect is beneficial or detrimental to its primary target.

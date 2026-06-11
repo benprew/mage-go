@@ -3450,6 +3450,11 @@ func (g *Game) doDeclareAttackers() {
 			}
 		}
 
+		// Attack costs (CR 508.1e): declined or unpayable means not declared.
+		if !g.PayAttackCosts(atk, active.PlayerID(), true) {
+			continue
+		}
+
 		// Tap attacker (unless vigilance)
 		if !atk.HasKeyword(Vigilance) {
 			g.TapPermanent(atk)
