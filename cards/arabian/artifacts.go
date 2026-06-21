@@ -127,7 +127,7 @@ func registerArtifacts() {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
 				IfElse("flip coin: 5/5 Djinn or 5 damage",
-					&FlipCoinCond{},
+					FlipCoinCond{},
 					CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
 					DealDamageToPlayers(Fixed(5), SelectController()),
 				),

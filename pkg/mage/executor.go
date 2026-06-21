@@ -230,6 +230,8 @@ func ExecuteEffect(ctx *EffectContext, data Effect) error {
 		return execForEachPermanent(ctx, e)
 	case *IfElseData:
 		return execIfElse(ctx, e)
+	case *IfVarGTData:
+		return execIfVarGT(ctx, e)
 	case *ModalEffectData:
 		return execModalEffect(ctx, e)
 	case *ChoosePermanentData:

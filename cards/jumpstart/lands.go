@@ -134,12 +134,9 @@ func registerLands() {
 			WithKeyword(EntersTapped),
 			WithAbility(
 				EntersBattlefieldTrigger(
-					IfElse(
-						"sacrifice unless pay {1}",
-						&TryPayManaCond{Cost: "{1}"},
-						nil,
-						SacrificeSourceStep(),
-					),
+					UnlessTargetPays(SelectController(), ManaCostOf("{1}"),
+						"pay {1} or sacrifice Rupture Spire",
+						SacrificeSourceStep()),
 					false,
 				),
 			),

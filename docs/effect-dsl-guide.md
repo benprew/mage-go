@@ -82,19 +82,40 @@ step *before* the earlier step's mutation lands. Snapshots are the typical case
 
 ```go
 IfElse("sacrifice if no creatures",
-    &NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
+    NoBattlefieldPermanentMatching{Filter: IsCreature},
     SacrificeSourceStep(),
     nil,                  // nil else branch is fine
 )
 ```
 
-`cond` is a `ConditionData` value. Common ones:
+`cond` is a `TriggerConditionData` value — the same predicate vocabulary used
+for trigger conditions (see "Trigger conditions" below), evaluated against
+game state at resolution time. The predicate receives a zero-value event, so
+only state predicates make sense here; event predicates like
+`EventSourceIsSelf` always see empty event fields. Common ones:
 
-- `&HasMatchingPermanentCond{Filter: ...}` — any permanent matches.
-- `&VarGTCond{Name: "x", Value: 0}` — context variable comparison.
-- `&TryPayManaCond{Cost: "{2}"}` — try to pay; result is the condition value.
-- `&FlipCoinCond{}` — coin flip.
-- `&NotCond{Inner: ...}` — negation.
+- `SourceIsTapped{}` / `SourceIsUntapped{}` — source tap state.
+- `NoBattlefieldPermanentMatching{Filter: ...}` — no permanent matches.
+- `SourceHasCounterCond{CounterType: ..., MinCount: 1}` — counter check.
+- `FlipCoinCond{}` — coin flip. Resolution-only: each evaluation is a fresh
+  flip, so never use it as a trigger or state-trigger condition.
+- `NotTriggerCond{Inner: ...}`, `AndTriggerCond`, `OrTriggerCond` — combinators.
+
+For branching on a pipeline variable gathered by an earlier step, use
+`IfVarGT(text, name, value, then, else)` instead — variables live in the
+pipeline's `EffectContext`, not in game state:
+
+```go
+IfVarGT("gain life if credits > 0", "credits", 0,
+    GainLifeFromVar("src.controller", "credits"),
+    nil,
+)
+```
+
+"You may pay {cost}. If you do, ..." and "... unless you pay {cost}" clauses
+are not conditions — they prompt the player and pay costs. Use
+`EffectIfPaid(cost, effect)` and `UnlessTargetPays(payer, cost, prompt,
+ifNotPaid)`.
 
 ### 3. `ModalEffect(text, modes...)` — choose-one effects
 
@@ -333,7 +354,7 @@ NewInstant("Swords to Plowshares", "{W}",
 ```go
 WithActivatedAbility(
     IfElse("flip coin: 5/5 Djinn or 5 damage",
-        &FlipCoinCond{},
+        FlipCoinCond{},
         CreateToken("Djinn", 5, 5,
             []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
         DealDamageToPlayers(Fixed(5), SelectController()),
@@ -355,7 +376,7 @@ WithActivatedAbility(
 NewEnchantment("Pestilence", "{2}{B}{B}",
     WithAbility(BeginningOfEachEndStepTrigger(
         IfElse("sacrifice if no creatures",
-            &NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
+            NoBattlefieldPermanentMatching{Filter: IsCreature},
             SacrificeSourceStep(),
             nil,
         ), false,

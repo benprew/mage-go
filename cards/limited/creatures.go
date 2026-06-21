@@ -479,10 +479,9 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			// At the beginning of your upkeep, Force of Nature deals 8 damage to you
 			// unless you pay {G}{G}{G}{G}.
-			WithAbility(NewTriggered(EvtUpkeep, false, IfElse(
-				"deal 8 damage unless you pay {G}{G}{G}{G}",
-				&TryPayManaCond{Cost: "{G}{G}{G}{G}"},
-				nil,
+			WithAbility(NewTriggered(EvtUpkeep, false, UnlessTargetPays(
+				SelectController(), ManaCostOf("{G}{G}{G}{G}"),
+				"pay {G}{G}{G}{G} or Force of Nature deals 8 damage to you",
 				DealDamageToPlayers(Fixed(8), SelectController()),
 			)).SetConditionData(EventPlayerIsController{})),
 		)

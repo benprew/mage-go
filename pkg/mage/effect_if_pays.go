@@ -45,7 +45,9 @@ func execIfPaid(ctx *EffectContext, e *effectIfPaid) error {
 		return nil
 	}
 	if err := e.cost.Pay(ctx.SourceID, pid, g); err != nil {
-		return fmt.Errorf("ERROR: Unable to pay for cost: %v", err)
+		return fmt.Errorf("ERROR: Unable to pay for cost: %w", err)
 	}
-	return ApplyEffect(g, e.effect, ctx.SourceID, ctx.Controller, ctx.Targets)
+	// Run the paid branch in the surrounding EffectContext so pipeline vars
+	// (snapshots) stay visible.
+	return ExecuteEffect(ctx, e.effect)
 }

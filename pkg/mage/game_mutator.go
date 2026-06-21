@@ -56,6 +56,11 @@ type GameReader interface {
 	PlayerCardsLeftGraveyardThisTurn(uuid.UUID) int
 	PlayerHadCardLeaveGraveyardThisTurn(uuid.UUID) bool
 	CardsPutIntoExileThisTurn() int
+	// FlipCoin is NOT a pure query: each call is a fresh flip (and consumes
+	// scripted test results). It exists here so FlipCoinCond can run at effect
+	// resolution; never call it from trigger or state-trigger conditions,
+	// which may be evaluated repeatedly.
+	FlipCoin(uuid.UUID) bool
 }
 
 // Compile-time check that *Game satisfies GameReader.

@@ -371,11 +371,8 @@ func registerEnchantments() {
 		return NewAura("Farmstead", "{W}{W}{W}",
 			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfUpkeepTrigger(
-				IfElse("you may pay {W}{W} to gain 1 life",
-					&TryPayManaCond{Cost: "{W}{W}"},
-					GainLife(1),
-					nil,
-				), false)),
+				EffectIfPaid(ManaCostOf("{W}{W}"), GainLife(1)),
+				false)),
 		)
 	})
 
@@ -765,7 +762,7 @@ func registerEnchantments() {
 			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
 			WithAbility(BeginningOfEachEndStepTrigger(
 				IfElse("sacrifice if no creatures",
-					&NotCond{Inner: &HasMatchingPermanentCond{Filter: IsCreature}},
+					NoBattlefieldPermanentMatching{Filter: IsCreature},
 					SacrificeSourceStep(),
 					nil,
 				), false,

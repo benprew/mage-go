@@ -262,6 +262,31 @@ func TestForceOfNature(t *testing.T) {
 		// Upkeep cost is {G}{G}{G}{G} or take 8 damage
 		g.AssertLife(gametest.PlayerA, 12)
 	})
+
+	t.Run("no damage when upkeep is paid", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Force of Nature")
+		for range 4 {
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		}
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+
+	t.Run("may decline to pay and take 8 damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Force of Nature")
+		for range 4 {
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		}
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 12)
+		// Declining must not tap any lands
+		g.AssertTapped(gametest.PlayerA, "Forest", false)
+	})
 }
 
 func TestLordOfThePit(t *testing.T) {

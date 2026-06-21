@@ -90,4 +90,3 @@ func (ctx *EffectContext) GetBool(name string) bool {
 	}
 	return b
 }
-

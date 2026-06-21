@@ -125,16 +125,11 @@ type (
 	OrTriggerCond                          = mage.OrTriggerCond
 	EventTargetHasSubType                  = mage.EventTargetHasSubType
 
-	// Pipeline conditions
-	TryPayManaCond = mage.TryPayManaCond
-	FlipCoinCond   = mage.FlipCoinCond
-	NotCond        = mage.NotCond
+	FlipCoinCond = mage.FlipCoinCond
 
 	RegisterDelayedTriggerData = mage.RegisterDelayedTriggerData
-	HasMatchingPermanentCond   = mage.HasMatchingPermanentCond
 	SourceHasCounterCond       = mage.SourceHasCounterCond
 	TargetHasRampageCond       = mage.TargetHasRampageCond
-	VarGTCond                  = mage.VarGTCond
 )
 
 // =============================================================================
@@ -429,7 +424,8 @@ var (
 	PreventFromAttackingIfDefendingPlayerControls = mage.PreventFromAttackingIfDefendingPlayerControls
 	SourceCantAttackUnlessPays                    = mage.SourceCantAttackUnlessPays
 
-	EffectIfPaid = mage.EffectIfPaid
+	EffectIfPaid     = mage.EffectIfPaid
+	UnlessTargetPays = mage.UnlessTargetPays
 )
 
 // =============================================================================
@@ -439,6 +435,7 @@ var (
 var (
 	Pipeline      = mage.Pipeline
 	IfElse        = mage.IfElse
+	IfVarGT       = mage.IfVarGT
 	UnwrapAbility = mage.UnwrapAbility
 	ApplyEffect   = mage.ApplyEffect
 )

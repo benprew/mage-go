@@ -9,9 +9,9 @@ import (
 // accept AND the mana can be paid from untapped lands is the ifNotPaid branch
 // skipped. If they decline or cannot pay, ifNotPaid resolves.
 //
-// This differs from a forced TryPayManaCond branch: the player keeps the choice
-// of taking the consequence even when they could afford the cost (e.g. paying
-// Junún Efreet's upkeep, or Hasran Ogress's attack tax).
+// The player keeps the choice of taking the consequence even when they could
+// afford the cost (e.g. paying Junún Efreet's upkeep, or Hasran Ogress's
+// attack tax).
 type payManaUnlessEffect struct {
 	cost       string
 	basePrompt string

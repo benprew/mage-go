@@ -254,11 +254,15 @@ func execRegisterDelayedTrigger(ctx *EffectContext, e *RegisterDelayedTriggerDat
 // FlipCoin condition
 // ---------------------------------------------------------------------------
 
-// FlipCoinCond flips a coin; true = heads (win).
+// FlipCoinCond flips a coin for the controller; true = heads (win).
+//
+// Resolution-only: each evaluation is a fresh flip, so this must never be
+// used in trigger or state-trigger condition slots, which can be evaluated
+// more than once. Use it inside IfElse during effect resolution.
 type FlipCoinCond struct{}
 
-func (c *FlipCoinCond) Check(ctx *EffectContext) bool {
-	return ctx.Game.FlipCoin(ctx.Controller)
+func (c FlipCoinCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	return g.FlipCoin(controllerID)
 }
 
 // ---------------------------------------------------------------------------
@@ -784,15 +788,19 @@ func execRampageEffect(ctx *EffectContext, e *RampageEffectData) error {
 	return nil
 }
 
-// TargetHasRampageCond is true when targets[0] already has a Rampage triggered
-// ability (used by Rapid Fire's "If it doesn't have rampage" clause).
+// TargetHasRampageCond is true when the resolving spell or ability's first
+// target already has a Rampage triggered ability (used by Rapid Fire's "If it
+// doesn't have rampage" clause). It reads GetResolvingTargets(), which is the
+// stack object's chosen targets — note that inside a ForEach pipeline stage
+// the per-iteration rebinding of ctx.Targets is NOT visible here.
 type TargetHasRampageCond struct{}
 
-func (c *TargetHasRampageCond) Check(ctx *EffectContext) bool {
-	if len(ctx.Targets) == 0 {
+func (c TargetHasRampageCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	targets := g.GetResolvingTargets()
+	if len(targets) == 0 {
 		return false
 	}
-	p := ctx.Game.FindPermanent(ctx.Targets[0])
+	p := g.FindPermanent(targets[0])
 	if p == nil {
 		return false
 	}

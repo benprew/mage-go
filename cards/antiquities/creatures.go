@@ -308,7 +308,7 @@ func registerCreatures() {
 				Pipeline("flip coin: win=draw, lose=counter own artifact spell",
 					EffectProperties{},
 					IfElse("flip coin",
-						&FlipCoinCond{},
+						FlipCoinCond{},
 						DrawCards(Fixed(1)),
 						CounterSpell(),
 					),

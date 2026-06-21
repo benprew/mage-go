@@ -215,8 +215,8 @@ type SourceHasCounterCond struct {
 	MinCount    int
 }
 
-func (c *SourceHasCounterCond) Check(ctx *EffectContext) bool {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
+func (c SourceHasCounterCond) CheckTriggerCond(_ *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	perm := g.FindPermanent(sourceID)
 	if perm == nil {
 		return false
 	}

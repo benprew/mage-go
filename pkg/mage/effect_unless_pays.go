@@ -51,9 +51,11 @@ func execUnlessPays(ctx *EffectContext, e *unlessPaysEffect) error {
 	for _, pid := range payerIDs {
 		// If the chosen payer can't pay at all, the cost is unpayable —
 		// CR 118.3 / 118.4 say they "may pay"; an unpayable cost is the
-		// same as declining, so we run ifNotPaid.
+		// same as declining, so we run ifNotPaid. The branch runs in the
+		// surrounding EffectContext so pipeline vars (snapshots) stay
+		// visible.
 		if !e.cost.CanPay(ctx.SourceID, pid, g) {
-			if err := ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets); err != nil {
+			if err := ExecuteEffect(ctx, e.ifNotPaid); err != nil {
 				return err
 			}
 			continue
@@ -63,14 +65,14 @@ func execUnlessPays(ctx *EffectContext, e *unlessPaysEffect) error {
 			continue
 		}
 		if !p.ChooseMayAbility(e.prompt) {
-			if err := ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets); err != nil {
+			if err := ExecuteEffect(ctx, e.ifNotPaid); err != nil {
 				return err
 			}
 			continue
 		}
 		if err := e.cost.Pay(ctx.SourceID, pid, g); err != nil {
 			// Payment unexpectedly failed — fall back to the not-paid branch.
-			if err2 := ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets); err2 != nil {
+			if err2 := ExecuteEffect(ctx, e.ifNotPaid); err2 != nil {
 				return err2
 			}
 		}

@@ -202,7 +202,7 @@ type grantKeywordEffect struct {
 	keyword  Keyword
 	selector TargetSelector
 	dur      Duration
-	unless   ConditionData
+	unless   TriggerConditionData
 }
 
 // GrantKeyword creates a temporary keyword grant effect. Defaults to targeting
@@ -226,7 +226,7 @@ func (e *grantKeywordEffect) Until(d Duration) *grantKeywordEffect {
 }
 
 // Unless suppresses the grant if the given condition is true at execution time.
-func (e *grantKeywordEffect) Unless(cond ConditionData) *grantKeywordEffect {
+func (e *grantKeywordEffect) Unless(cond TriggerConditionData) *grantKeywordEffect {
 	e.unless = cond
 	return e
 }
@@ -250,7 +250,7 @@ func (e *grantKeywordEffect) Properties() EffectProperties {
 }
 
 func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
-	if e.unless != nil && e.unless.Check(ctx) {
+	if e.unless != nil && e.unless.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
 		return nil
 	}
 	perms := resolvePermanents(ctx, e.selector)
@@ -341,7 +341,7 @@ type grantAbilityEffect struct {
 	ability  Ability
 	selector TargetSelector
 	dur      Duration
-	unless   ConditionData
+	unless   TriggerConditionData
 }
 
 // GrantAbility creates a temporary ability grant effect. Defaults to targeting
@@ -364,7 +364,7 @@ func (e *grantAbilityEffect) Until(d Duration) *grantAbilityEffect {
 	return e
 }
 
-func (e *grantAbilityEffect) Unless(cond ConditionData) *grantAbilityEffect {
+func (e *grantAbilityEffect) Unless(cond TriggerConditionData) *grantAbilityEffect {
 	e.unless = cond
 	return e
 }
@@ -375,7 +375,7 @@ func (e *grantAbilityEffect) Properties() EffectProperties {
 }
 
 func execGrantAbility(ctx *EffectContext, e *grantAbilityEffect) error {
-	if e.unless != nil && e.unless.Check(ctx) {
+	if e.unless != nil && e.unless.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
 		return nil
 	}
 	perms := resolvePermanents(ctx, e.selector)

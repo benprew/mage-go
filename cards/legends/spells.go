@@ -839,7 +839,7 @@ func registerSpells() {
 				Pipeline("first strike + rampage 2 unless target already has rampage",
 					EffectProperties{Outcome: OutcomeBenefit},
 					GrantKeyword(FirstStrike),
-					GrantAbility(RampageTrigger(2)).Unless(&TargetHasRampageCond{}),
+					GrantAbility(RampageTrigger(2)).Unless(TargetHasRampageCond{}),
 				),
 			),
 		)

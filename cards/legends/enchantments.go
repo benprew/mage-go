@@ -156,7 +156,7 @@ func registerEnchantments() {
 			),
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("remove pupa counter or sacrifice and boost",
-					&SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
+					SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
 					RemoveCounters(Pupa, 1),
 					&PipelineData{
 						Steps: []Effect{

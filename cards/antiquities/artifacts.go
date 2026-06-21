@@ -398,13 +398,7 @@ func registerArtifacts() {
 		return NewArtifact("Tablet of Epityr", "{1}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, true,
-					Pipeline("you may pay {1}; if you do, gain 1 life",
-						EffectProperties{Outcome: OutcomeBenefit},
-						IfElse("pay {1} to gain 1 life",
-							&TryPayManaCond{Cost: "{1}"},
-							GainLife(1),
-							nil),
-					),
+					EffectIfPaid(ManaCostOf("{1}"), GainLife(1)),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
@@ -622,13 +616,7 @@ func registerArtifacts() {
 		return NewArtifact("Urza's Chalice", "{1}",
 			WithAbility(
 				NewTriggered(EvtSpellCast, true,
-					Pipeline("you may pay {1}; if you do, gain 1 life",
-						EffectProperties{Outcome: OutcomeBenefit},
-						IfElse("pay {1} to gain 1 life",
-							&TryPayManaCond{Cost: "{1}"},
-							GainLife(1),
-							nil),
-					),
+					EffectIfPaid(ManaCostOf("{1}"), GainLife(1)),
 				).
 					SetConditionData(SpellCastIsType{Type: TypeArtifact}),
 			),
@@ -643,13 +631,7 @@ func registerArtifacts() {
 		return NewArtifact("Urza's Miter", "{3}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, true,
-					Pipeline("pay {3} to draw a card",
-						EffectProperties{Outcome: OutcomeBenefit},
-						IfElse("pay {3} to draw",
-							&TryPayManaCond{Cost: "{3}"},
-							DrawCards(Fixed(1)),
-							nil),
-					),
+					EffectIfPaid(ManaCostOf("{3}"), DrawCards(Fixed(1))),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},

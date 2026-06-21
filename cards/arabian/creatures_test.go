@@ -394,6 +394,20 @@ func TestBrassMan(t *testing.T) {
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Brass Man", false)
 	})
+
+	t.Run("may_decline_to_pay_and_stays_tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Brass Man")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		// The single queued decline must survive until turn 3's upkeep:
+		// turn 1's upkeep sees an untapped Brass Man and must not prompt
+		// at all (otherwise it would consume this choice).
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.Attack(1, gametest.PlayerA, "Brass Man")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Brass Man", true)
+	})
 }
 
 func TestIslandFishJasconius(t *testing.T) {

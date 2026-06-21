@@ -426,21 +426,20 @@ func execForEachPermanent(ctx *EffectContext, e *ForEachPermanentData) error {
 // IfElse: conditional branching
 // ---------------------------------------------------------------------------
 
-// ConditionData evaluates a boolean condition against the current game state.
-type ConditionData interface {
-	Check(ctx *EffectContext) bool
-}
-
-// IfElseData branches based on a condition.
+// IfElseData branches based on a TriggerConditionData predicate evaluated at
+// resolution time against the current game state. The predicate receives a
+// zero-value event (there is no triggering event mid-resolution), so only
+// state predicates belong here — event predicates like EventSourceIsSelf
+// always see empty event fields.
 type IfElseData struct {
-	Cond ConditionData
+	Cond TriggerConditionData
 	Then Effect
 	Else Effect // nil = do nothing
 	Txt  string
 }
 
 // IfElse creates a conditional effect.
-func IfElse(text string, cond ConditionData, then, els Effect) Effect {
+func IfElse(text string, cond TriggerConditionData, then, els Effect) Effect {
 	return &IfElseData{Cond: cond, Then: then, Else: els, Txt: text}
 }
 
@@ -448,7 +447,7 @@ func (e *IfElseData) Text() string                 { return e.Txt }
 func (e *IfElseData) Properties() EffectProperties { return EffectProperties{} }
 
 func execIfElse(ctx *EffectContext, e *IfElseData) error {
-	if e.Cond.Check(ctx) {
+	if e.Cond.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
 		return ExecuteEffect(ctx, e.Then)
 	}
 	if e.Else != nil {
@@ -457,51 +456,40 @@ func execIfElse(ctx *EffectContext, e *IfElseData) error {
 	return nil
 }
 
-// --- Condition implementations ---
+// ---------------------------------------------------------------------------
+// IfVarGT: pipeline-local branching on a context variable
+// ---------------------------------------------------------------------------
 
-// HasMatchingPermanentCond checks if any permanents match a filter.
-type HasMatchingPermanentCond struct {
-	Filter PermanentFilter
-}
-
-func (c *HasMatchingPermanentCond) Check(ctx *EffectContext) bool {
-	return ctx.Game.AnyBattlefield(c.Filter)
-}
-
-// VarGTCond checks if a context variable is greater than a value.
-type VarGTCond struct {
+// IfVarGTData branches on an integer pipeline variable. Unlike IfElse, this
+// is control flow over EffectContext.Vars (values gathered by earlier
+// pipeline steps), not a predicate over game state, so it stays outside the
+// shared TriggerConditionData vocabulary.
+type IfVarGTData struct {
 	Name  string
 	Value int
+	Then  Effect
+	Else  Effect // nil = do nothing
+	Txt   string
 }
 
-func (c *VarGTCond) Check(ctx *EffectContext) bool {
-	return ctx.GetInt(c.Name) > c.Value
+// IfVarGT creates an effect that runs then if the named pipeline variable is
+// greater than value, otherwise els.
+func IfVarGT(text, name string, value int, then, els Effect) Effect {
+	return &IfVarGTData{Name: name, Value: value, Then: then, Else: els, Txt: text}
 }
 
-// TryPayManaCond tries to pay a mana cost; returns true if paid.
-type TryPayManaCond struct {
-	Cost string
-}
+func (e *IfVarGTData) Text() string                 { return e.Txt }
+func (e *IfVarGTData) Properties() EffectProperties { return EffectProperties{} }
 
-func (c *TryPayManaCond) Check(ctx *EffectContext) bool {
-	return ctx.Game.TryPayCostFromLands(ctx.Controller, c.Cost)
+func execIfVarGT(ctx *EffectContext, e *IfVarGTData) error {
+	if ctx.GetInt(e.Name) > e.Value {
+		return ExecuteEffect(ctx, e.Then)
+	}
+	if e.Else != nil {
+		return ExecuteEffect(ctx, e.Else)
+	}
+	return nil
 }
-
-// VarMissingCond checks if a snapshot marked the permanent as missing.
-type VarMissingCond struct {
-	Name string
-}
-
-func (c *VarMissingCond) Check(ctx *EffectContext) bool {
-	return ctx.GetBool(c.Name + ".missing")
-}
-
-// NotCond negates a condition.
-type NotCond struct {
-	Inner ConditionData
-}
-
-func (c *NotCond) Check(ctx *EffectContext) bool { return !c.Inner.Check(ctx) }
 
 // ---------------------------------------------------------------------------
 // Modal: branch on g.ModeValue()

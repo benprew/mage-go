@@ -95,6 +95,18 @@ func TestTheTabernacleAtPendrellVale(t *testing.T) {
 		// Bears survive because controller could pay {1}
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
 	})
+
+	t.Run("creature destroyed if controller declines to pay", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "The Tabernacle at Pendrell Vale")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(false)
+		g.StopAt(2, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	})
 }
 
 func TestTolaria(t *testing.T) {

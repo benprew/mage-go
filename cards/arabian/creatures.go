@@ -124,9 +124,11 @@ func registerCreatures() {
 			WithKeyword(DoesNotUntapKW),
 			// "At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it."
 			WithAbility(BeginningOfUpkeepTrigger(
-				IfElse("pay {U}{U}{U} to untap",
-					&TryPayManaCond{Cost: "{U}{U}{U}"},
-					UntapSource(),
+				IfElse("Only if tapped",
+					SourceIsTapped{},
+					EffectIfPaid(
+						ManaCostOf("{U}{U}{U}"),
+						UntapSource()),
 					nil,
 				), false,
 			)),
@@ -602,7 +604,7 @@ func registerCreatures() {
 					EffectProperties{},
 					SnapshotPermanent(SelectSource, "self"),
 					IfElse("remove from combat and tap if lost",
-						&NotCond{Inner: &FlipCoinCond{}},
+						NotTriggerCond{Inner: FlipCoinCond{}},
 						&PipelineData{Steps: []Effect{
 							RemoveFromCombatGathered("self"),
 							TapGathered("self"),
@@ -640,7 +642,7 @@ func registerCreatures() {
 					EffectProperties{},
 					SnapshotPermanent(SelectSource, "self"),
 					IfElse("on lost flip, remove from combat and revoke can-block",
-						&FlipCoinCond{},
+						FlipCoinCond{},
 						nil,
 						Pipeline("remove from combat and revoke can-block",
 							EffectProperties{},
@@ -840,9 +842,11 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(DoesNotUntapKW),
 			WithAbility(BeginningOfUpkeepTrigger(
-				IfElse("pay {1} to untap",
-					&TryPayManaCond{Cost: "{1}"},
-					UntapSource(),
+				IfElse("Only if tapped",
+					SourceIsTapped{},
+					EffectIfPaid(
+						ManaCostOf("{1}"),
+						UntapSource()),
 					nil,
 				), false,
 			)),
