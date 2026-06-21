@@ -64,6 +64,10 @@ func findPlayerIndex(g *mage.Game, id uuid.UUID) int {
 	return 0
 }
 
+func shouldAutoPassPriority(options []ActionOption) bool {
+	return len(options) == 1 && options[0].Type == ActionPass
+}
+
 // resolveTargetName returns a human-readable name for a target UUID (permanent or player).
 func resolveTargetName(g *mage.Game, id uuid.UUID) string {
 	if perm := g.FindPermanent(id); perm != nil {

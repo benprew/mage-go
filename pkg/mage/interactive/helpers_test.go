@@ -59,6 +59,22 @@ func TestGetEligibleAttackers_Empty(t *testing.T) {
 	}
 }
 
+func TestHumanPlayerDeclareAttackers_AutoPassesWithNoEligibleCreatures(t *testing.T) {
+	human := NewHumanPlayer("Alice")
+	opponent := mage.NewBasePlayer("Bob")
+	g := mage.NewGame(human, opponent)
+
+	if attackers := human.DeclareAttackers(g); len(attackers) != 0 {
+		t.Fatalf("DeclareAttackers() returned %d attackers, want none", len(attackers))
+	}
+
+	select {
+	case msg := <-human.ToTUI():
+		t.Fatalf("DeclareAttackers() prompted with %v, want automatic pass", msg.Prompt)
+	default:
+	}
+}
+
 // ── getEligibleBlockers ─────────────────────────────────────────────────────
 
 func TestGetEligibleBlockers_SkipsTapped(t *testing.T) {
@@ -266,6 +282,25 @@ func TestBlockerOptions_EmptyStillHasDone(t *testing.T) {
 }
 
 // ── GetAvailableActions ─────────────────────────────────────────────────────
+
+func TestShouldAutoPassPriority_OnlyPassAvailable(t *testing.T) {
+	options := []ActionOption{{Type: ActionPass}}
+
+	if !shouldAutoPassPriority(options) {
+		t.Fatal("priority should auto-pass when pass is the only available action")
+	}
+}
+
+func TestShouldAutoPassPriority_ActionAvailable(t *testing.T) {
+	options := []ActionOption{
+		{Type: ActionCastSpell},
+		{Type: ActionPass},
+	}
+
+	if shouldAutoPassPriority(options) {
+		t.Fatal("priority should wait for input when a non-pass action is available")
+	}
+}
 
 func TestGetAvailableActions_MainPhaseIncludesLands(t *testing.T) {
 	g, pa, _ := makeGame()

@@ -112,7 +112,7 @@ func runMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels, sendSnapsh
 		if timingEnabled {
 			getAvailableTiming = time.Since(start)
 		}
-		if len(options) == 1 && options[0].Type == ActionPass {
+		if shouldAutoPassPriority(options) {
 			if timingEnabled {
 				AddLoopGetActionTiming(getAvailableTiming, 0, 0, true, 0)
 			}
