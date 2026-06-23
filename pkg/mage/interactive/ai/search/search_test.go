@@ -191,6 +191,59 @@ func TestGeneratePriorityMoves_AlwaysIncludesPass(t *testing.T) {
 	}
 }
 
+func TestLegalPriorityMoves_ExcludesRedundantKeywordGrant(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	wandCard := mage.NewArtifact("Wand", "{2}",
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.UnblockableKW),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetControlledCreature()),
+		),
+	)
+	wandCard.SetOwner(pa.PlayerID())
+	g.PutOnBattlefield(wandCard, pa.PlayerID())
+	target := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	g.AddToBattlefield(target)
+
+	for _, move := range legalPriorityMoves(g, pa, true) {
+		if move.Type == interactive.ActionActivateAbility {
+			t.Fatalf("generated redundant keyword-grant move targeting %v", move.Targets)
+		}
+	}
+}
+
+func TestLegalPriorityMoves_UsesNonRedundantKeywordGrantTarget(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	wandCard := mage.NewArtifact("Wand", "{2}",
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.UnblockableKW),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetControlledCreature()),
+		),
+	)
+	wandCard.SetOwner(pa.PlayerID())
+	g.PutOnBattlefield(wandCard, pa.PlayerID())
+	alreadyUnblockable := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	vanilla := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(alreadyUnblockable, vanilla)
+
+	found := false
+	for _, move := range legalPriorityMoves(g, pa, true) {
+		if move.Type != interactive.ActionActivateAbility {
+			continue
+		}
+		found = true
+		if len(move.Targets) != 1 || move.Targets[0] != vanilla.ID() {
+			t.Fatalf("generated keyword grant for redundant target: %v", move.Targets)
+		}
+	}
+	if !found {
+		t.Fatal("expected a keyword-grant move for the non-redundant target")
+	}
+}
+
 func TestGeneratePriorityMoves_SortedByHeuristic(t *testing.T) {
 	g, pa, _ := makeGame()
 

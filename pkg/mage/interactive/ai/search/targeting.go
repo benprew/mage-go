@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -44,6 +45,27 @@ func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card mage.Card, x in
 }
 
 func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int) [][]uuid.UUID {
+	return topTargetCombinationsFiltered(g, playerID, source, reqs, purpose, damage, nil)
+}
+
+func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage.Permanent, ability mage.ActivatedAbility, purpose eval.TargetPurpose, damage int) [][]uuid.UUID {
+	var allow func(uuid.UUID) bool
+	if len(ability.Targets()) == 1 {
+		allow = func(targetID uuid.UUID) bool {
+			return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), []uuid.UUID{targetID})
+		}
+	}
+	combos := topTargetCombinationsFiltered(g, playerID, source.Card, ability.Targets(), purpose, damage, allow)
+	result := combos[:0]
+	for _, combo := range combos {
+		if !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), combo) {
+			result = append(result, combo)
+		}
+	}
+	return result
+}
+
+func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, allow func(uuid.UUID) bool) [][]uuid.UUID {
 	if len(reqs) == 0 {
 		return [][]uuid.UUID{{}}
 	}
@@ -56,8 +78,14 @@ func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source mage.Card, r
 		}
 		scored := make([]scoredTarget, 0, len(possible))
 		for _, id := range possible {
+			if allow != nil && !allow(id) {
+				continue
+			}
 			score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
 			scored = append(scored, scoredTarget{id: id, score: score})
+		}
+		if len(scored) == 0 {
+			return nil
 		}
 		sort.SliceStable(scored, func(i, j int) bool {
 			return scored[i].score > scored[j].score

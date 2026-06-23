@@ -5,6 +5,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -115,6 +116,9 @@ func expandAbility(g *mage.Game, p mage.Player, info mage.ActivatableInfo) []Mov
 	}
 	targets := aa.Targets()
 	if len(targets) == 0 {
+		if ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), aa.Effects(), nil) {
+			return nil
+		}
 		return []Move{{
 			Type:         interactive.ActionActivateAbility,
 			PermanentID:  info.PermanentID,
@@ -124,7 +128,7 @@ func expandAbility(g *mage.Game, p mage.Player, info mage.ActivatableInfo) []Mov
 	}
 	purpose := eval.TargetPurposeForEffects(aa.Effects())
 	damage := abilityDamageForTargets(g, playerID, perm.ID(), aa.Effects(), nil)
-	combos := topTargetCombinations(g, playerID, perm.Card, targets, purpose, damage)
+	combos := topAbilityTargetCombinations(g, playerID, perm, aa, purpose, damage)
 	if len(combos) == 0 {
 		return nil
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -48,6 +49,14 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 	}
 
 	for _, info := range g.GetActivatableAbilities(playerID) {
+		perm := g.FindPermanent(info.PermanentID)
+		if perm == nil || info.AbilityIndex >= len(perm.RuntimeAbilities) {
+			continue
+		}
+		aa, ok := mage.UnwrapAbility(perm.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
+		if !ok || !abilityHasNonRedundantUse(g, playerID, perm, aa) {
+			continue
+		}
 		q := abilityQualityFromInfo(g, info)
 		moves = append(moves, Move{
 			Type:         interactive.ActionActivateAbility,
@@ -69,6 +78,17 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 	})
 
 	return moves
+}
+
+func abilityHasNonRedundantUse(g *mage.Game, playerID uuid.UUID, source *mage.Permanent, ability mage.ActivatedAbility) bool {
+	if len(ability.Targets()) == 0 {
+		return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), nil)
+	}
+	if len(ability.Targets()) != 1 {
+		return true
+	}
+	possible := ability.Targets()[0].Possible(playerID, source.Card, g)
+	return len(ai.NonRedundantKeywordGrantTargets(g, playerID, source.ID(), ability.Effects(), possible)) > 0
 }
 
 // GenerateAttackerSets produces a pruned set of attacker combinations.
