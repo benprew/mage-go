@@ -309,62 +309,53 @@ func (e *preventAllCombatDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// preventDamageToTargetEffect sets a damage prevention shield on a target.
-type preventDamageToTargetEffect struct {
-	amount ValueSource
+// PreventDamageEffect sets a damage prevention shield on selected permanents
+// or the targeted player.
+type PreventDamageEffect struct {
+	amount   ValueSource
+	selector TargetSelector
 }
 
 // PreventDamageToTarget creates an effect that prevents damage to a target.
-func PreventDamageToTarget(amount ValueSource) Effect {
-	return &preventDamageToTargetEffect{amount: amount}
+// Chain Targeting to select a permanent without adding a rules target.
+func PreventDamageToTarget(amount ValueSource) *PreventDamageEffect {
+	return &PreventDamageEffect{
+		amount:   amount,
+		selector: ToTarget(),
+	}
 }
 
-func (e *preventDamageToTargetEffect) Text() string {
-	if _, ok := e.amount.(xValue); ok {
-		return "Prevent the next X damage to target"
-	}
-	return fmt.Sprintf("Prevent the next %d damage to target", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+func (e *PreventDamageEffect) Targeting(selector TargetSelector) *PreventDamageEffect {
+	e.selector = selector
+	return e
 }
-func (e *preventDamageToTargetEffect) Properties() EffectProperties {
+
+func (e *PreventDamageEffect) Text() string {
+	object := "target"
+	if e.selector.Kind == KindSource {
+		object = "source"
+	}
+	if _, ok := e.amount.(xValue); ok {
+		return "Prevent the next X damage to " + object
+	}
+	return fmt.Sprintf("Prevent the next %d damage to %s", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil), object)
+}
+func (e *PreventDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-type preventDamageToSourceEffect struct {
-	amount ValueSource
-}
-
-func (e *preventDamageToTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
+func (e *PreventDamageEffect) Apply(ctx *EffectContext) error {
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm != nil {
+	for _, perm := range resolvePermanents(ctx, e.selector) {
 		ctx.Game.AddPreventionShield(perm.ID(), amount)
-		return nil
 	}
-	player := ctx.Game.GetPlayer(ctx.Targets[0])
-	if player != nil {
-		ctx.Game.AddPreventionShield(player.PlayerID(), amount)
+	if e.selector.Kind == KindTarget && len(ctx.Targets) > 0 {
+		player := ctx.Game.GetPlayer(ctx.Targets[0])
+		if player != nil {
+			ctx.Game.AddPreventionShield(player.PlayerID(), amount)
+		}
 	}
 	return nil
-}
-
-// PreventDamageToSource creates an effect that prevents the next damage to
-// the permanent that is the source of the resolving ability.
-func PreventDamageToSource(amount ValueSource) Effect {
-	return &preventDamageToSourceEffect{amount: amount}
-}
-
-func (e *preventDamageToSourceEffect) Text() string {
-	if _, ok := e.amount.(xValue); ok {
-		return "Prevent the next X damage to source"
-	}
-	return fmt.Sprintf("Prevent the next %d damage to source", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
-}
-
-func (e *preventDamageToSourceEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
 // sacrificeOrDamageEffect sacrifices a creature you control, or deals damage
@@ -621,15 +612,6 @@ func (e *handSizeDamageEffect) Apply(ctx *EffectContext) error {
 
 func (*preventAllCombatDamageEffect) Apply(ctx *EffectContext) error {
 	ctx.Game.SetPreventCombatDamage()
-	return nil
-}
-
-func (e *preventDamageToSourceEffect) Apply(ctx *EffectContext) error {
-	if ctx.Game.FindPermanent(ctx.SourceID) == nil {
-		return nil
-	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	ctx.Game.AddPreventionShield(ctx.SourceID, amount)
 	return nil
 }
 

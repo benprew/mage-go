@@ -87,7 +87,7 @@ func registerReplacementTestCards() {
 			mage.Register("Self Shield Creature", func() mage.Card {
 				return mage.NewCreature("Self Shield Creature", "{2}{R}", 3, 3,
 					mage.WithActivatedAbility(
-						mage.PreventDamageToSource(mage.Fixed(1)),
+						mage.PreventDamageToTarget(mage.Fixed(1)).Targeting(mage.ToSource()),
 						mage.ManaCostOf("{R}"),
 					),
 				)
@@ -153,7 +153,7 @@ func TestPreventDamageToSourceByRemovingCounters(t *testing.T) {
 	}
 }
 
-func TestPreventDamageToSource(t *testing.T) {
+func TestPreventDamageToTargetTargetingSource(t *testing.T) {
 	registerReplacementTestCards()
 
 	g := NewTestGame(t)

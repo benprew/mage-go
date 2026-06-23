@@ -893,7 +893,7 @@ func registerCreatures() {
 				WithUpkeepOnly(),
 			),
 			WithActivatedAbility(
-				PreventDamageToSource(Fixed(1)),
+				PreventDamageToTarget(Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)

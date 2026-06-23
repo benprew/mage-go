@@ -291,7 +291,6 @@ var (
 	RegenerateTarget                          = mage.RegenerateTarget
 	RegenerateGathered                        = mage.RegenerateGathered
 	PreventDamageToTarget                     = mage.PreventDamageToTarget
-	PreventDamageToSource                     = mage.PreventDamageToSource
 	SacrificeSource                           = mage.SacrificeSource
 	Tap                                       = mage.Tap
 	UntapSource                               = mage.UntapSource
