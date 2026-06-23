@@ -889,6 +889,71 @@ func TestRockHydra(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Rock Hydra", 1)
 		g.AssertPowerToughness(gametest.PlayerA, "Rock Hydra", 4, 4)
 	})
+
+	t.Run("removes counters to prevent damage", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rock Hydra")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Rock Hydra", 4)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rock Hydra")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rock Hydra", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Rock Hydra", core.P1P1, 1)
+		g.AssertPowerToughness(gametest.PlayerA, "Rock Hydra", 1, 1)
+	})
+
+	t.Run("unprevented_damage_is_dealt_after_counters_are_removed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rock Hydra")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Rock Hydra", 2)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rock Hydra")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rock Hydra", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Rock Hydra", 1)
+	})
+
+	t.Run("red_mana_prevents_damage_before_counters_are_removed", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rock Hydra")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Rock Hydra", 3)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rock Hydra")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rock Hydra")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rock Hydra", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Rock Hydra", core.P1P1, 1)
+	})
+
+	t.Run("adds_counter_for_three_red_during_its_controllers_upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rock Hydra")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Rock Hydra", 1)
+		g.ActivateAbility(3, core.Upkeep, gametest.PlayerA, "Rock Hydra")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Rock Hydra", core.P1P1, 2)
+	})
+
+	t.Run("cannot_add_counter_outside_its_controllers_upkeep", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Rock Hydra")
+		g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Rock Hydra", 1)
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		playerID := g.GetPlayer(gametest.PlayerA).PlayerID()
+		hydra := g.FindPermanentByName("Rock Hydra", playerID)
+		if hydra == nil {
+			t.Fatal("Rock Hydra is not on the battlefield")
+		}
+		if err := g.ActivateAbilityByIndex(playerID, hydra.ID(), 0, nil); err == nil {
+			t.Fatal("counter ability should not be activatable outside its controller's upkeep")
+		}
+	})
 }
 
 func TestClockworkBeast(t *testing.T) {
