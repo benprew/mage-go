@@ -51,6 +51,8 @@ func ExecuteEffect(ctx *EffectContext, data Effect) error {
 		return execPreventAllCombatDamage(ctx, e)
 	case *preventDamageToTargetEffect:
 		return execPreventDamageToTarget(ctx, e)
+	case *preventDamageToSourceEffect:
+		return execPreventDamageToSource(ctx, e)
 	case *sacrificeOrDamageEffect:
 		return execSacrificeOrDamage(ctx, e)
 
@@ -594,6 +596,15 @@ func execPreventDamageToTarget(ctx *EffectContext, e *preventDamageToTargetEffec
 	if player != nil {
 		ctx.Game.AddPreventionShield(player.PlayerID(), amount)
 	}
+	return nil
+}
+
+func execPreventDamageToSource(ctx *EffectContext, e *preventDamageToSourceEffect) error {
+	if ctx.Game.FindPermanent(ctx.SourceID) == nil {
+		return nil
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	ctx.Game.AddPreventionShield(ctx.SourceID, amount)
 	return nil
 }
 

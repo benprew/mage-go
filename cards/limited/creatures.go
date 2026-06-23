@@ -12,83 +12,6 @@ func init() {
 	registerCreatures()
 }
 
-type rockHydraDamagePreventionReplacement struct {
-	sourceID uuid.UUID
-}
-
-func (r *rockHydraDamagePreventionReplacement) SourceID() uuid.UUID { return r.sourceID }
-func (r *rockHydraDamagePreventionReplacement) GetDuration() Duration {
-	return WhileOnBattlefield
-}
-
-func (r *rockHydraDamagePreventionReplacement) Matches(a Action, g GameReader) bool {
-	damage, ok := a.(*DamageToCreatureAction)
-	if !ok || damage.PermanentID() != r.sourceID {
-		return false
-	}
-	permanent := g.FindPermanent(r.sourceID)
-	return permanent != nil && permanent.Counters[P1P1] > 0
-}
-
-func (r *rockHydraDamagePreventionReplacement) Replace(a Action, g *Game) Action {
-	damage := a.(*DamageToCreatureAction)
-	permanent := g.MutablePermanent(r.sourceID)
-	if permanent == nil {
-		return a
-	}
-	prevented := min(damage.Amount(), int(permanent.Counters[P1P1]))
-	permanent.RemoveCounter(P1P1, prevented)
-	remaining := damage.Amount() - prevented
-	if remaining == 0 {
-		return nil
-	}
-	return damage.WithAmount(remaining)
-}
-
-func (r *rockHydraDamagePreventionReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
-}
-
-func (r *rockHydraDamagePreventionReplacement) Clone() ReplacementEffect {
-	clone := *r
-	return &clone
-}
-
-func (*rockHydraDamagePreventionReplacement) IsPreventionEffect() bool { return true }
-
-type rockHydraActivatedPreventionReplacement struct {
-	sourceID uuid.UUID
-	used     bool
-}
-
-func (r *rockHydraActivatedPreventionReplacement) SourceID() uuid.UUID { return r.sourceID }
-func (r *rockHydraActivatedPreventionReplacement) GetDuration() Duration {
-	return EndOfTurn
-}
-
-func (r *rockHydraActivatedPreventionReplacement) Matches(a Action, _ GameReader) bool {
-	damage, ok := a.(*DamageToCreatureAction)
-	return !r.used && ok && damage.PermanentID() == r.sourceID
-}
-
-func (r *rockHydraActivatedPreventionReplacement) Replace(a Action, _ *Game) Action {
-	damage := a.(*DamageToCreatureAction)
-	r.used = true
-	if damage.Amount() == 1 {
-		return nil
-	}
-	return damage.WithAmount(damage.Amount() - 1)
-}
-
-func (r *rockHydraActivatedPreventionReplacement) IsActive(g GameReader) bool {
-	return !r.used && g.FindPermanent(r.sourceID) != nil
-}
-
-func (r *rockHydraActivatedPreventionReplacement) Clone() ReplacementEffect {
-	clone := *r
-	return &clone
-}
-
 func registerCreatures() {
 	// ===== WHITE CREATURES =====
 
@@ -963,30 +886,14 @@ func registerCreatures() {
 		return NewCreature("Rock Hydra", "{X}{R}{R}", 0, 0,
 			WithSubTypes("Hydra"),
 			WithAbility(EntersWithXCounters(P1P1)),
-			WithAbility(ETBEffect(FuncEffect(
-				"prevent damage by removing +1/+1 counters",
-				EffectProperties{},
-				func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-					g.AddReplacementEffect(&rockHydraDamagePreventionReplacement{sourceID: sourceID})
-					return nil
-				},
-			))),
+			WithStaticAbility(PreventDamageToSourceByRemovingCounters(P1P1)),
 			WithActivatedAbility(
 				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{R}{R}{R}"),
 				WithUpkeepOnly(),
 			),
 			WithActivatedAbility(
-				FuncEffect(
-					"prevent the next 1 damage that would be dealt to Rock Hydra this turn",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-						// This effect intentionally enters the general replacement pass so it is
-						// applied before Rock Hydra's intrinsic counter-removal prevention.
-						g.AddReplacementEffect(&rockHydraActivatedPreventionReplacement{sourceID: sourceID})
-						return nil
-					},
-				),
+				PreventDamageToSource(Fixed(1)),
 				ManaCostOf("{R}"),
 			),
 		)

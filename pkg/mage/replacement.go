@@ -841,6 +841,48 @@ func (r *damagePreventionRuleReplacement) Clone() ReplacementEffect {
 	return &c
 }
 
+// counterDamagePreventionReplacement prevents damage to its source by
+// removing one counter of the configured type for each damage prevented.
+type counterDamagePreventionReplacement struct {
+	replacementBase
+	counterType CounterType
+}
+
+func (r *counterDamagePreventionReplacement) Matches(a Action, g GameReader) bool {
+	damage, ok := a.(*DamageToCreatureAction)
+	if !ok || damage.PermanentID() != r.sourceID {
+		return false
+	}
+	permanent := g.FindPermanent(r.sourceID)
+	return permanent != nil && permanent.Counters[r.counterType] > 0
+}
+
+func (r *counterDamagePreventionReplacement) Replace(a Action, g *Game) Action {
+	damage := a.(*DamageToCreatureAction)
+	permanent := g.MutablePermanent(r.sourceID)
+	if permanent == nil {
+		return a
+	}
+	prevented := min(damage.Amount(), int(permanent.Counters[r.counterType]))
+	permanent.RemoveCounter(r.counterType, prevented)
+	remaining := damage.Amount() - prevented
+	if remaining == 0 {
+		return nil
+	}
+	return damage.WithAmount(remaining)
+}
+
+func (r *counterDamagePreventionReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *counterDamagePreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+func (*counterDamagePreventionReplacement) IsPreventionEffect() bool { return true }
+
 // ---------------------------------------------------------------------------
 // Prevention effect classification (CR 616.1 ordering helper)
 // ---------------------------------------------------------------------------

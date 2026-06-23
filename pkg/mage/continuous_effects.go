@@ -1239,6 +1239,18 @@ func (e *preventDamageRuleContinuous) Apply(g *Game) error {
 	return nil
 }
 
+// PreventDamageToSourceByRemovingCounters creates a static prevention effect
+// that removes one counter from its source for each 1 damage prevented.
+func PreventDamageToSourceByRemovingCounters(counterType CounterType) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		g.effects.AddCycleReplacement(&counterDamagePreventionReplacement{
+			replacementBase: replacementBase{sourceID: sourceID},
+			counterType:     counterType,
+		})
+		return nil
+	})
+}
+
 // preventNoncombatDamageToControllerContinuous prevents all noncombat damage
 // dealt to the source's controller and to creatures the controller controls.
 // Used by Blessed Sanctuary.

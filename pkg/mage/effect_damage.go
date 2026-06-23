@@ -327,6 +327,27 @@ func (e *preventDamageToTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+type preventDamageToSourceEffect struct {
+	amount ValueSource
+}
+
+// PreventDamageToSource creates an effect that prevents the next damage to
+// the permanent that is the source of the resolving ability.
+func PreventDamageToSource(amount ValueSource) Effect {
+	return &preventDamageToSourceEffect{amount: amount}
+}
+
+func (e *preventDamageToSourceEffect) Text() string {
+	if _, ok := e.amount.(xValue); ok {
+		return "Prevent the next X damage to source"
+	}
+	return fmt.Sprintf("Prevent the next %d damage to source", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+}
+
+func (e *preventDamageToSourceEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
 // sacrificeOrDamageEffect sacrifices a creature you control, or deals damage
 // to the source's controller if no creature is available.
 type sacrificeOrDamageEffect struct {

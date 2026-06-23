@@ -291,6 +291,7 @@ var (
 	RegenerateTarget                          = mage.RegenerateTarget
 	RegenerateGathered                        = mage.RegenerateGathered
 	PreventDamageToTarget                     = mage.PreventDamageToTarget
+	PreventDamageToSource                     = mage.PreventDamageToSource
 	SacrificeSource                           = mage.SacrificeSource
 	Tap                                       = mage.Tap
 	UntapSource                               = mage.UntapSource
@@ -421,6 +422,7 @@ var (
 	// Bundled static abilities
 	ProtectionFromColor                           = mage.ProtectionFromColor
 	PreventDamageFromTo                           = mage.PreventDamageFromTo
+	PreventDamageToSourceByRemovingCounters       = mage.PreventDamageToSourceByRemovingCounters
 	PreventFromAttackingIfDefendingPlayerControls = mage.PreventFromAttackingIfDefendingPlayerControls
 	SourceCantAttackUnlessPays                    = mage.SourceCantAttackUnlessPays
 

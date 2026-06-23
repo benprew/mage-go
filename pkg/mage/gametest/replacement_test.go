@@ -73,6 +73,26 @@ func registerReplacementTestCards() {
 				)
 			})
 		}
+
+		if !mage.CardRegistered("Counter Shield Creature") {
+			mage.Register("Counter Shield Creature", func() mage.Card {
+				return mage.NewCreature("Counter Shield Creature", "{3}{G}", 5, 5,
+					mage.WithAbility(mage.EntersWithNCounters(core.P1P1, 2)),
+					mage.WithStaticAbility(mage.PreventDamageToSourceByRemovingCounters(core.P1P1)),
+				)
+			})
+		}
+
+		if !mage.CardRegistered("Self Shield Creature") {
+			mage.Register("Self Shield Creature", func() mage.Card {
+				return mage.NewCreature("Self Shield Creature", "{2}{R}", 3, 3,
+					mage.WithActivatedAbility(
+						mage.PreventDamageToSource(mage.Fixed(1)),
+						mage.ManaCostOf("{R}"),
+					),
+				)
+			})
+		}
 	})
 }
 
@@ -110,6 +130,48 @@ func TestPreventionShieldPartial(t *testing.T) {
 		// 3 damage fully prevented
 		g.AssertLife(PlayerB, 20)
 	})
+}
+
+func TestPreventDamageToSourceByRemovingCounters(t *testing.T) {
+	registerReplacementTestCards()
+
+	g := NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Counter Shield Creature")
+	g.AddCard(core.ZoneHand, PlayerB, "Big Blast")
+	g.CastSpell(2, core.PrecombatMain, PlayerB, "Big Blast", "Counter Shield Creature")
+	g.StopAt(2, core.BeginCombat)
+	g.Execute()
+
+	g.AssertPermanentCount(PlayerA, "Counter Shield Creature", 1)
+	g.AssertCounterCount(PlayerA, "Counter Shield Creature", core.P1P1, 0)
+	creature := g.FindPermanentByName("Counter Shield Creature", g.GetPlayer(PlayerA).PlayerID())
+	if creature == nil {
+		t.Fatal("Counter Shield Creature is not on the battlefield")
+	}
+	if creature.Damage != 4 {
+		t.Fatalf("damage after preventing two by removing counters = %d, want 4", creature.Damage)
+	}
+}
+
+func TestPreventDamageToSource(t *testing.T) {
+	registerReplacementTestCards()
+
+	g := NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Self Shield Creature")
+	g.AddCard(core.ZoneHand, PlayerB, "Lightning Bolt")
+	g.ActivateAbility(1, core.PrecombatMain, PlayerA, "Self Shield Creature")
+	g.CastSpell(1, core.PrecombatMain, PlayerB, "Lightning Bolt", "Self Shield Creature")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+
+	g.AssertPermanentCount(PlayerA, "Self Shield Creature", 1)
+	creature := g.FindPermanentByName("Self Shield Creature", g.GetPlayer(PlayerA).PlayerID())
+	if creature == nil {
+		t.Fatal("Self Shield Creature is not on the battlefield")
+	}
+	if creature.Damage != 2 {
+		t.Fatalf("damage after source shield = %d, want 2", creature.Damage)
+	}
 }
 
 // TestFogNonCombatPassesThrough verifies that fog only prevents combat damage,
