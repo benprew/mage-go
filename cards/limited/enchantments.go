@@ -716,7 +716,7 @@ func registerEnchantments() {
 	Register("Manabarbs", func() Card {
 		return NewEnchantment("Manabarbs", "{3}{R}",
 			WithAbility(NewTriggered(EvtTapped, false,
-				DealDamageToPlayers(Fixed(1), SelectEventController()),
+				DealDamageToPlayers(Fixed(1), SelectTargetPermanentController()),
 			).SetConditionData(EventSourceHasType{Type: TypeLand})),
 		)
 	})

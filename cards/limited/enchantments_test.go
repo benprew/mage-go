@@ -411,6 +411,19 @@ func TestManaFlare(t *testing.T) {
 	})
 }
 
+func TestManabarbs(t *testing.T) {
+	t.Run("damages_player_who_tapped_land_for_mana", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Manabarbs")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Mountain")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
 func TestRagingRiver(t *testing.T) {
 	t.Run("splits_blockers_into_piles", func(t *testing.T) {
 		// Raging River: Whenever you attack, the defending player divides non-flying
