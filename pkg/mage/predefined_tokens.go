@@ -3,8 +3,6 @@ package mage
 import (
 	"fmt"
 
-	"github.com/google/uuid"
-
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -79,15 +77,15 @@ func CreateFoodTokens(count int) Effect {
 	return &createPredefinedTokenEffect{name: "Food", count: count, build: newFoodToken}
 }
 
-func (e *createPredefinedTokenEffect) Apply(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+func (e *createPredefinedTokenEffect) Apply(ctx *EffectContext) error {
 	count := e.count
 	if count <= 0 {
 		count = 1
 	}
 	for i := 0; i < count; i++ {
 		tok := e.build()
-		tok.SetOwner(controller)
-		g.PutOnBattlefield(tok, controller)
+		tok.SetOwner(ctx.Controller)
+		ctx.Game.PutOnBattlefield(tok, ctx.Controller)
 	}
 	return nil
 }

@@ -109,7 +109,7 @@ func PreventAttackingTargetUntilEndOfTurn() Effect {
 	return &preventAttackingUntilEndOfTurnEffect{}
 }
 
-func execPreventAttackingTargetUntilEndOfTurn(ctx *EffectContext, _ *preventAttackingUntilEndOfTurnEffect) error {
+func (*preventAttackingUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -289,7 +289,7 @@ func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
 
 // --- Combat effect executors ---
 
-func execTap(ctx *EffectContext, _ *tap) error {
+func (*tap) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for tap")
 	}
@@ -301,7 +301,7 @@ func execTap(ctx *EffectContext, _ *tap) error {
 	return nil
 }
 
-func execUntapTarget(ctx *EffectContext, _ *untapTargetEffect) error {
+func (*untapTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for untap")
 	}
@@ -313,7 +313,7 @@ func execUntapTarget(ctx *EffectContext, _ *untapTargetEffect) error {
 	return nil
 }
 
-func execUntapSource(ctx *EffectContext, _ *untapSourceEffect) error {
+func (*untapSourceEffect) Apply(ctx *EffectContext) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm != nil {
 		ctx.Game.UntapPermanent(perm)
@@ -321,7 +321,7 @@ func execUntapSource(ctx *EffectContext, _ *untapSourceEffect) error {
 	return nil
 }
 
-func execTapAttachedCreature(ctx *EffectContext, _ *tapAttachedCreatureEffect) error {
+func (*tapAttachedCreatureEffect) Apply(ctx *EffectContext) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
@@ -333,7 +333,7 @@ func execTapAttachedCreature(ctx *EffectContext, _ *tapAttachedCreatureEffect) e
 	return nil
 }
 
-func execTapOrUntapTarget(ctx *EffectContext, _ *tapOrUntapTargetEffect) error {
+func (*tapOrUntapTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -354,7 +354,7 @@ func execTapOrUntapTarget(ctx *EffectContext, _ *tapOrUntapTargetEffect) error {
 	return nil
 }
 
-func execTapAllLands(ctx *EffectContext, _ *tapAllLandsEffect) error {
+func (*tapAllLandsEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -365,7 +365,7 @@ func execTapAllLands(ctx *EffectContext, _ *tapAllLandsEffect) error {
 	return nil
 }
 
-func execRemoveFromCombat(ctx *EffectContext, _ *removeFromCombatEffect) error {
+func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -377,7 +377,7 @@ func execRemoveFromCombat(ctx *EffectContext, _ *removeFromCombatEffect) error {
 	return nil
 }
 
-func execMakeUnblockableUntilEndOfTurn(ctx *EffectContext, _ *makeUnblockableUntilEndOfTurnEffect) error {
+func (*makeUnblockableUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -392,7 +392,7 @@ func execMakeUnblockableUntilEndOfTurn(ctx *EffectContext, _ *makeUnblockableUnt
 	return nil
 }
 
-func execDoubleTargetPower(ctx *EffectContext, _ *doubleSourcePowerEffect) error {
+func (*doubleSourcePowerEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -408,7 +408,7 @@ func execDoubleTargetPower(ctx *EffectContext, _ *doubleSourcePowerEffect) error
 	return nil
 }
 
-func execReplaceKeyword(ctx *EffectContext, e *replaceKeywordEffect) error {
+func (e *replaceKeywordEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -423,7 +423,7 @@ func execReplaceKeyword(ctx *EffectContext, e *replaceKeywordEffect) error {
 	return nil
 }
 
-func execRegenerateSource(ctx *EffectContext, _ *regenerateSourceEffect) error {
+func (*regenerateSourceEffect) Apply(ctx *EffectContext) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm == nil {
 		return nil
@@ -432,7 +432,7 @@ func execRegenerateSource(ctx *EffectContext, _ *regenerateSourceEffect) error {
 	return nil
 }
 
-func execRegenerateTarget(ctx *EffectContext, _ *regenerateTargetEffect) error {
+func (*regenerateTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -444,7 +444,7 @@ func execRegenerateTarget(ctx *EffectContext, _ *regenerateTargetEffect) error {
 	return nil
 }
 
-func execMarkDestroyAtEOTAfterNActivations(ctx *EffectContext, e *markDestroyAtEOTAfterNActivationsEffect) error {
+func (e *markDestroyAtEOTAfterNActivationsEffect) Apply(ctx *EffectContext) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm == nil {
 		return nil
@@ -462,7 +462,7 @@ func execMarkDestroyAtEOTAfterNActivations(ctx *EffectContext, e *markDestroyAtE
 	return nil
 }
 
-func execStun(ctx *EffectContext, e *stunEffect) error {
+func (e *stunEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
 	if len(perms) == 0 {
 		return nil
@@ -491,7 +491,7 @@ func execStun(ctx *EffectContext, e *stunEffect) error {
 	return nil
 }
 
-func execDestroyTargetAtEndOfTurn(ctx *EffectContext, _ *destroyTargetAtEndOfTurnEffect) error {
+func (*destroyTargetAtEndOfTurnEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -509,7 +509,7 @@ func execDestroyTargetAtEndOfTurn(ctx *EffectContext, _ *destroyTargetAtEndOfTur
 	return nil
 }
 
-func execSetPTUntilEndOfTurn(ctx *EffectContext, e *setBasePTUntilEndOfTurnEffect) error {
+func (e *setBasePTUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for set P/T")
 	}
@@ -524,7 +524,7 @@ func execSetPTUntilEndOfTurn(ctx *EffectContext, e *setBasePTUntilEndOfTurnEffec
 	return nil
 }
 
-func execSetPowerUntilEndOfTurn(ctx *EffectContext, e *setBasePowerUntilEndOfTurnEffect) error {
+func (e *setBasePowerUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for set power")
 	}

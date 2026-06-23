@@ -28,9 +28,9 @@ func Pipeline(text string, props EffectProperties, steps ...Effect) Effect {
 func (e *PipelineData) Text() string                 { return e.Txt }
 func (e *PipelineData) Properties() EffectProperties { return e.Props }
 
-func execPipeline(ctx *EffectContext, e *PipelineData) error {
+func (e *PipelineData) Apply(ctx *EffectContext) error {
 	for _, step := range e.Steps {
-		if err := ExecuteEffect(ctx, step); err != nil {
+		if err := step.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -63,7 +63,7 @@ func SnapshotPermanent(sel PermanentSelector, storeAs string) Effect {
 func (e *SnapshotPermanentData) Text() string                 { return "" }
 func (e *SnapshotPermanentData) Properties() EffectProperties { return EffectProperties{} }
 
-func execSnapshotPermanent(ctx *EffectContext, e *SnapshotPermanentData) error {
+func (e *SnapshotPermanentData) Apply(ctx *EffectContext) error {
 	var perm *Permanent
 	if e.Selector == SelectSource {
 		perm = ctx.Game.FindPermanent(ctx.SourceID)
@@ -100,7 +100,7 @@ func (e *ExileGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execExileGathered(ctx *EffectContext, e *ExileGatheredData) error {
+func (e *ExileGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -131,7 +131,7 @@ func (e *DestroyGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execDestroyGathered(ctx *EffectContext, e *DestroyGatheredData) error {
+func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -158,7 +158,7 @@ func SacrificeGathered(varName string) Effect { return &SacrificeGatheredData{Va
 func (e *SacrificeGatheredData) Text() string                 { return "sacrifice" }
 func (e *SacrificeGatheredData) Properties() EffectProperties { return EffectProperties{} }
 
-func execSacrificeGathered(ctx *EffectContext, e *SacrificeGatheredData) error {
+func (e *SacrificeGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -181,7 +181,7 @@ func (e *BounceGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true}
 }
 
-func execBounceGathered(ctx *EffectContext, e *BounceGatheredData) error {
+func (e *BounceGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -270,7 +270,7 @@ func (e *GainLifeVarData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execGainLifeVar(ctx *EffectContext, e *GainLifeVarData) error {
+func (e *GainLifeVarData) Apply(ctx *EffectContext) error {
 	var playerID uuid.UUID
 	if e.PlayerVar == "" {
 		playerID = ctx.Controller
@@ -309,7 +309,7 @@ func (e *DealDamageVarData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execDealDamageVar(ctx *EffectContext, e *DealDamageVarData) error {
+func (e *DealDamageVarData) Apply(ctx *EffectContext) error {
 	amount := ctx.GetInt(e.AmountVar)
 	if amount <= 0 {
 		return nil
@@ -346,7 +346,7 @@ func (e *DealDamageToPlayersVarData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execDealDamageToPlayersVar(ctx *EffectContext, e *DealDamageToPlayersVarData) error {
+func (e *DealDamageToPlayersVarData) Apply(ctx *EffectContext) error {
 	amount := ctx.GetInt(e.AmountVar)
 	if amount <= 0 {
 		return nil
@@ -395,7 +395,7 @@ func ForEachControlledPermanent(who PlayerSelector, filter PermanentFilter, inne
 func (e *ForEachPermanentData) Text() string                 { return e.Txt }
 func (e *ForEachPermanentData) Properties() EffectProperties { return EffectProperties{Mass: true} }
 
-func execForEachPermanent(ctx *EffectContext, e *ForEachPermanentData) error {
+func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 	perms := ctx.Game.FilterBattlefield(e.Filter)
 	var controllerFilter uuid.UUID
 	if e.Who != nil {
@@ -414,7 +414,7 @@ func execForEachPermanent(ctx *EffectContext, e *ForEachPermanentData) error {
 	savedTargets := ctx.Targets
 	for _, id := range ids {
 		ctx.Targets = []uuid.UUID{id}
-		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -446,12 +446,15 @@ func IfElse(text string, cond TriggerConditionData, then, els Effect) Effect {
 func (e *IfElseData) Text() string                 { return e.Txt }
 func (e *IfElseData) Properties() EffectProperties { return EffectProperties{} }
 
-func execIfElse(ctx *EffectContext, e *IfElseData) error {
+func (e *IfElseData) Apply(ctx *EffectContext) error {
 	if e.Cond.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
-		return ExecuteEffect(ctx, e.Then)
+		if e.Then != nil {
+			return e.Then.Apply(ctx)
+		}
+		return nil
 	}
 	if e.Else != nil {
-		return ExecuteEffect(ctx, e.Else)
+		return e.Else.Apply(ctx)
 	}
 	return nil
 }
@@ -481,12 +484,15 @@ func IfVarGT(text, name string, value int, then, els Effect) Effect {
 func (e *IfVarGTData) Text() string                 { return e.Txt }
 func (e *IfVarGTData) Properties() EffectProperties { return EffectProperties{} }
 
-func execIfVarGT(ctx *EffectContext, e *IfVarGTData) error {
+func (e *IfVarGTData) Apply(ctx *EffectContext) error {
 	if ctx.GetInt(e.Name) > e.Value {
-		return ExecuteEffect(ctx, e.Then)
+		if e.Then != nil {
+			return e.Then.Apply(ctx)
+		}
+		return nil
 	}
 	if e.Else != nil {
-		return ExecuteEffect(ctx, e.Else)
+		return e.Else.Apply(ctx)
 	}
 	return nil
 }
@@ -509,12 +515,12 @@ func ModalEffect(text string, modes ...Effect) Effect {
 func (e *ModalEffectData) Text() string                 { return e.Txt }
 func (e *ModalEffectData) Properties() EffectProperties { return EffectProperties{} }
 
-func execModalEffect(ctx *EffectContext, e *ModalEffectData) error {
+func (e *ModalEffectData) Apply(ctx *EffectContext) error {
 	mode := ctx.Game.ModeValue()
 	if mode < 0 || mode >= len(e.Modes) {
 		return fmt.Errorf("invalid mode %d (have %d modes)", mode, len(e.Modes))
 	}
-	return ExecuteEffect(ctx, e.Modes[mode])
+	return e.Modes[mode].Apply(ctx)
 }
 
 // ---------------------------------------------------------------------------
@@ -538,7 +544,7 @@ func ChoosePermanentStep(player PlayerSelector, filter PermanentFilter, reason, 
 func (e *ChoosePermanentData) Text() string                 { return "" }
 func (e *ChoosePermanentData) Properties() EffectProperties { return EffectProperties{} }
 
-func execChoosePermanent(ctx *EffectContext, e *ChoosePermanentData) error {
+func (e *ChoosePermanentData) Apply(ctx *EffectContext) error {
 	playerIDs := e.Player.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if len(playerIDs) == 0 {
 		return nil
@@ -576,7 +582,7 @@ func SacrificeSourceStep() Effect { return &SacrificeSourceData{} }
 func (e *SacrificeSourceData) Text() string                 { return "sacrifice" }
 func (e *SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
 
-func execSacrificeSourceStep(ctx *EffectContext, _ *SacrificeSourceData) error {
+func (*SacrificeSourceData) Apply(ctx *EffectContext) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm == nil {
 		return nil
@@ -598,7 +604,7 @@ func (e *ShuffleGraveyardIntoLibraryData) Properties() EffectProperties {
 	return EffectProperties{}
 }
 
-func execShuffleGraveyardIntoLibrary(ctx *EffectContext, _ *ShuffleGraveyardIntoLibraryData) error {
+func (*ShuffleGraveyardIntoLibraryData) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return nil

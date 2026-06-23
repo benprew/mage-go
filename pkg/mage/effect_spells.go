@@ -210,7 +210,7 @@ func CreateTokenAttacking(name string, power, toughness int, types []CardType, s
 	}
 }
 
-func execCreateTokenAttacking(ctx *EffectContext, e *createTokenAttackingEffect) error {
+func (e *createTokenAttackingEffect) Apply(ctx *EffectContext) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
 	token.SetOwner(ctx.Controller)
 	var defenderID uuid.UUID
@@ -258,7 +258,7 @@ func CreateTokenBlocking(name string, power, toughness int, types []CardType, su
 	}
 }
 
-func execCreateTokenBlocking(ctx *EffectContext, e *createTokenBlockingEffect) error {
+func (e *createTokenBlockingEffect) Apply(ctx *EffectContext) error {
 	token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
 	token.SetOwner(ctx.Controller)
 	var attackerID uuid.UUID
@@ -397,7 +397,7 @@ func (e *forcefieldEffect) Properties() EffectProperties {
 
 // --- exec functions ---
 
-func execCounterSpell(ctx *EffectContext, _ *counterSpellEffect) error {
+func (*counterSpellEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target spell to counter")
 	}
@@ -405,7 +405,7 @@ func execCounterSpell(ctx *EffectContext, _ *counterSpellEffect) error {
 	return nil
 }
 
-func execCounterSpellIfColor(ctx *EffectContext, e *counterSpellIfColorEffect) error {
+func (e *counterSpellIfColorEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -423,7 +423,7 @@ func execCounterSpellIfColor(ctx *EffectContext, e *counterSpellIfColorEffect) e
 	return nil
 }
 
-func execCounterSpellIfXMeetsCMC(ctx *EffectContext, _ *counterSpellIfXMeetsOrExceedsCMCEffect) error {
+func (*counterSpellIfXMeetsOrExceedsCMCEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -438,7 +438,7 @@ func execCounterSpellIfXMeetsCMC(ctx *EffectContext, _ *counterSpellIfXMeetsOrEx
 	return nil
 }
 
-func execPowerSink(ctx *EffectContext, _ *powerSinkEffect) error {
+func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -464,7 +464,7 @@ func execPowerSink(ctx *EffectContext, _ *powerSinkEffect) error {
 	return nil
 }
 
-func execAddMana(ctx *EffectContext, e *addManaEffect) error {
+func (e *addManaEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -473,7 +473,7 @@ func execAddMana(ctx *EffectContext, e *addManaEffect) error {
 	return nil
 }
 
-func execAddAnyMana(ctx *EffectContext, e *addAnyManaEffect) error {
+func (e *addAnyManaEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -483,7 +483,7 @@ func execAddAnyMana(ctx *EffectContext, e *addAnyManaEffect) error {
 	return nil
 }
 
-func execCreateToken(ctx *EffectContext, e *createTokenEffect) error {
+func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 	count := e.count
 	if count <= 0 {
 		count = 1
@@ -504,7 +504,7 @@ func execCreateToken(ctx *EffectContext, e *createTokenEffect) error {
 	return nil
 }
 
-func execCloneTarget(ctx *EffectContext, e *cloneTargetEffect) error {
+func (e *cloneTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 || ctx.Game.GetResolvingCard() == nil {
 		return nil
 	}
@@ -519,7 +519,7 @@ func execCloneTarget(ctx *EffectContext, e *cloneTargetEffect) error {
 	return nil
 }
 
-func execCopySpellOnStack(ctx *EffectContext, _ *copySpellOnStackEffect) error {
+func (*copySpellOnStackEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -545,7 +545,7 @@ func execCopySpellOnStack(ctx *EffectContext, _ *copySpellOnStackEffect) error {
 	return nil
 }
 
-func execAttachToTarget(ctx *EffectContext, _ *attachToTargetEffect) error {
+func (*attachToTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for attach")
 	}
@@ -553,7 +553,7 @@ func execAttachToTarget(ctx *EffectContext, _ *attachToTargetEffect) error {
 	return nil
 }
 
-func execControlChangeTarget(ctx *EffectContext, _ *controlChangeTargetEffect) error {
+func (*controlChangeTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for control change")
 	}
@@ -565,12 +565,12 @@ func execControlChangeTarget(ctx *EffectContext, _ *controlChangeTargetEffect) e
 	return nil
 }
 
-func execExtraTurn(ctx *EffectContext, _ *extraTurnEffect) error {
+func (*extraTurnEffect) Apply(ctx *EffectContext) error {
 	ctx.Game.GrantExtraTurn(ctx.Controller)
 	return nil
 }
 
-func execChangeColor(ctx *EffectContext, e *changeColorEffect) error {
+func (e *changeColorEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -585,7 +585,7 @@ func execChangeColor(ctx *EffectContext, e *changeColorEffect) error {
 	return nil
 }
 
-func execCounterUnlessPay(ctx *EffectContext, e *counterUnlessPayEffect) error {
+func (e *counterUnlessPayEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -604,7 +604,7 @@ func execCounterUnlessPay(ctx *EffectContext, e *counterUnlessPayEffect) error {
 	return nil
 }
 
-func execForcefield(ctx *EffectContext, _ *forcefieldEffect) error {
+func (*forcefieldEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}

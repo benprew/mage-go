@@ -26,7 +26,7 @@ func SnapshotAttached(storeAs string) Effect {
 func (e *SnapshotAttachedData) Text() string                 { return "" }
 func (e *SnapshotAttachedData) Properties() EffectProperties { return EffectProperties{} }
 
-func execSnapshotAttached(ctx *EffectContext, e *SnapshotAttachedData) error {
+func (e *SnapshotAttachedData) Apply(ctx *EffectContext) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
 	if src == nil || !src.IsAttached() {
 		ctx.SetBool(e.StoreAs+".missing", true)
@@ -60,7 +60,7 @@ func (e *TapGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execTapGathered(ctx *EffectContext, e *TapGatheredData) error {
+func (e *TapGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -82,7 +82,7 @@ func (e *UntapGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execUntapGathered(ctx *EffectContext, e *UntapGatheredData) error {
+func (e *UntapGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -109,7 +109,7 @@ func (e *DealDamageToGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execDealDamageToGathered(ctx *EffectContext, e *DealDamageToGatheredData) error {
+func (e *DealDamageToGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -135,7 +135,7 @@ func (e *RegenerateGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
 }
 
-func execRegenerateGathered(ctx *EffectContext, e *RegenerateGatheredData) error {
+func (e *RegenerateGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -159,7 +159,7 @@ func (e *PreventDamageToGatheredData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execPreventDamageToGathered(ctx *EffectContext, e *PreventDamageToGatheredData) error {
+func (e *PreventDamageToGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -182,7 +182,7 @@ func GrantAttrToGathered(v string, a Attr) Effect {
 func (e *GrantAttrToGatheredData) Text() string                 { return "" }
 func (e *GrantAttrToGatheredData) Properties() EffectProperties { return EffectProperties{} }
 
-func execGrantAttrToGathered(ctx *EffectContext, e *GrantAttrToGatheredData) error {
+func (e *GrantAttrToGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -221,7 +221,7 @@ func RegisterPersistentDelayedTriggerStep(evtType EventType, targetVar string, e
 func (e *RegisterDelayedTriggerData) Text() string                 { return "" }
 func (e *RegisterDelayedTriggerData) Properties() EffectProperties { return EffectProperties{} }
 
-func execRegisterDelayedTrigger(ctx *EffectContext, e *RegisterDelayedTriggerData) error {
+func (e *RegisterDelayedTriggerData) Apply(ctx *EffectContext) error {
 	targetID := ctx.SourceID
 	if e.TargetVar == "_target" {
 		if len(ctx.Targets) > 0 {
@@ -282,7 +282,7 @@ func AddManaFromVar(color Color, amountVar string) Effect {
 func (e *AddManaFromVarData) Text() string                 { return "add mana" }
 func (e *AddManaFromVarData) Properties() EffectProperties { return EffectProperties{} }
 
-func execAddManaFromVar(ctx *EffectContext, e *AddManaFromVarData) error {
+func (e *AddManaFromVarData) Apply(ctx *EffectContext) error {
 	amount := ctx.GetInt(e.AmountVar)
 	if amount <= 0 {
 		return nil
@@ -309,7 +309,7 @@ func (e *PreventAllDamageFromSourceData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execPreventAllDamageFromSource(ctx *EffectContext, _ *PreventAllDamageFromSourceData) error {
+func (*PreventAllDamageFromSourceData) Apply(ctx *EffectContext) error {
 	ctx.Game.PreventAllDamageFrom(ctx.SourceID)
 	return nil
 }
@@ -332,7 +332,7 @@ func (e *AddColorPreventionData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execAddColorPrevention(ctx *EffectContext, e *AddColorPreventionData) error {
+func (e *AddColorPreventionData) Apply(ctx *EffectContext) error {
 	ctx.Game.AddColorPrevention(ctx.Controller, e.Color)
 	return nil
 }
@@ -354,7 +354,7 @@ func (e *AddPreventionShieldToControllerData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execAddPreventionShieldToController(ctx *EffectContext, e *AddPreventionShieldToControllerData) error {
+func (e *AddPreventionShieldToControllerData) Apply(ctx *EffectContext) error {
 	ctx.Game.AddPreventionShield(ctx.Controller, e.Amount)
 	return nil
 }
@@ -371,7 +371,7 @@ func (e *AddReverseDamageShieldData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execAddReverseDamageShield(ctx *EffectContext, _ *AddReverseDamageShieldData) error {
+func (*AddReverseDamageShieldData) Apply(ctx *EffectContext) error {
 	ctx.Game.AddReverseDamageShield(ctx.Controller)
 	return nil
 }
@@ -394,7 +394,7 @@ func SetVarFromHandSize(player PlayerSelector, storeAs string, offset int) Effec
 func (e *SetVarFromHandSizeData) Text() string                 { return "" }
 func (e *SetVarFromHandSizeData) Properties() EffectProperties { return EffectProperties{} }
 
-func execSetVarFromHandSize(ctx *EffectContext, e *SetVarFromHandSizeData) error {
+func (e *SetVarFromHandSizeData) Apply(ctx *EffectContext) error {
 	playerIDs := e.Player.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if len(playerIDs) == 0 {
 		ctx.SetInt(e.StoreAs, 0)
@@ -427,7 +427,7 @@ func ChooseColorStep(reason string) Effect {
 func (e *ChooseColorStepData) Text() string                 { return "choose a color" }
 func (e *ChooseColorStepData) Properties() EffectProperties { return EffectProperties{} }
 
-func execChooseColorStep(ctx *EffectContext, e *ChooseColorStepData) error {
+func (e *ChooseColorStepData) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return nil
@@ -453,7 +453,7 @@ func RemoveFromCombatGathered(v string) Effect {
 func (e *RemoveFromCombatGatheredData) Text() string                 { return "remove from combat" }
 func (e *RemoveFromCombatGatheredData) Properties() EffectProperties { return EffectProperties{} }
 
-func execRemoveFromCombatGathered(ctx *EffectContext, e *RemoveFromCombatGatheredData) error {
+func (e *RemoveFromCombatGatheredData) Apply(ctx *EffectContext) error {
 	id := ctx.TryGetUUID(e.VarName)
 	if id == uuid.Nil {
 		return nil
@@ -476,7 +476,7 @@ func (e *DestroyAttachedData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execDestroyAttached(ctx *EffectContext, _ *DestroyAttachedData) error {
+func (*DestroyAttachedData) Apply(ctx *EffectContext) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
 	if src == nil || src.AttachedTo == uuid.Nil {
 		return nil
@@ -502,7 +502,7 @@ func (e *GrantAttrToAttachedData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execGrantAttrToAttached(ctx *EffectContext, e *GrantAttrToAttachedData) error {
+func (e *GrantAttrToAttachedData) Apply(ctx *EffectContext) error {
 	src := ctx.Game.FindPermanent(ctx.SourceID)
 	if src == nil || src.AttachedTo == uuid.Nil {
 		return nil
@@ -532,7 +532,7 @@ func (e *DealDamageToSourceData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execDealDamageToSource(ctx *EffectContext, e *DealDamageToSourceData) error {
+func (e *DealDamageToSourceData) Apply(ctx *EffectContext) error {
 	self := ctx.Game.FindPermanent(ctx.SourceID)
 	if self == nil {
 		return nil
@@ -568,7 +568,7 @@ func ForEachBlockerOfSourceMatching(filter PermanentFilter, inner Effect, text s
 func (e *ForEachBlockerOfSourceData) Text() string                 { return e.Txt }
 func (e *ForEachBlockerOfSourceData) Properties() EffectProperties { return EffectProperties{} }
 
-func execForEachBlockerOfSource(ctx *EffectContext, e *ForEachBlockerOfSourceData) error {
+func (e *ForEachBlockerOfSourceData) Apply(ctx *EffectContext) error {
 	group := ctx.Game.CombatGroupFor(ctx.SourceID)
 	if group == nil {
 		return nil
@@ -587,7 +587,7 @@ func execForEachBlockerOfSource(ctx *EffectContext, e *ForEachBlockerOfSourceDat
 	savedTargets := ctx.Targets
 	for _, bid := range blockerIDs {
 		ctx.Targets = []uuid.UUID{bid}
-		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -609,7 +609,7 @@ func ForEachAttackerBlockedBySource(inner Effect, text string) Effect {
 func (e *ForEachAttackerBlockedBySourceData) Text() string                 { return e.Txt }
 func (e *ForEachAttackerBlockedBySourceData) Properties() EffectProperties { return EffectProperties{} }
 
-func execForEachAttackerBlockedBySource(ctx *EffectContext, e *ForEachAttackerBlockedBySourceData) error {
+func (e *ForEachAttackerBlockedBySourceData) Apply(ctx *EffectContext) error {
 	var attackerIDs []uuid.UUID
 	for _, group := range ctx.Game.CombatGroups() {
 		if slices.Contains(group.BlockerIDs, ctx.SourceID) {
@@ -619,7 +619,7 @@ func execForEachAttackerBlockedBySource(ctx *EffectContext, e *ForEachAttackerBl
 	savedTargets := ctx.Targets
 	for _, aid := range attackerIDs {
 		ctx.Targets = []uuid.UUID{aid}
-		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -642,7 +642,7 @@ func ForEachCombatOpponent(inner Effect, text string) Effect {
 func (e *ForEachCombatOpponentData) Text() string                 { return e.Txt }
 func (e *ForEachCombatOpponentData) Properties() EffectProperties { return EffectProperties{} }
 
-func execForEachCombatOpponent(ctx *EffectContext, e *ForEachCombatOpponentData) error {
+func (e *ForEachCombatOpponentData) Apply(ctx *EffectContext) error {
 	var opponentIDs []uuid.UUID
 	for _, group := range ctx.Game.CombatGroups() {
 		if group.AttackerID == ctx.SourceID {
@@ -657,7 +657,7 @@ func execForEachCombatOpponent(ctx *EffectContext, e *ForEachCombatOpponentData)
 	savedTargets := ctx.Targets
 	for _, id := range opponentIDs {
 		ctx.Targets = []uuid.UUID{id}
-		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -680,7 +680,7 @@ func ForEachBlockerOfTarget(inner Effect, text string) Effect {
 func (e *ForEachBlockerOfTargetData) Text() string                 { return e.Txt }
 func (e *ForEachBlockerOfTargetData) Properties() EffectProperties { return EffectProperties{} }
 
-func execForEachBlockerOfTarget(ctx *EffectContext, e *ForEachBlockerOfTargetData) error {
+func (e *ForEachBlockerOfTargetData) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -694,7 +694,7 @@ func execForEachBlockerOfTarget(ctx *EffectContext, e *ForEachBlockerOfTargetDat
 	savedTargets := ctx.Targets
 	for _, bid := range blockerIDs {
 		ctx.Targets = []uuid.UUID{bid}
-		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -717,7 +717,7 @@ func ForEachAttackerBlockedByTarget(inner Effect, text string) Effect {
 func (e *ForEachAttackerBlockedByTargetData) Text() string                 { return e.Txt }
 func (e *ForEachAttackerBlockedByTargetData) Properties() EffectProperties { return EffectProperties{} }
 
-func execForEachAttackerBlockedByTarget(ctx *EffectContext, e *ForEachAttackerBlockedByTargetData) error {
+func (e *ForEachAttackerBlockedByTargetData) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -731,7 +731,7 @@ func execForEachAttackerBlockedByTarget(ctx *EffectContext, e *ForEachAttackerBl
 	savedTargets := ctx.Targets
 	for _, aid := range attackerIDs {
 		ctx.Targets = []uuid.UUID{aid}
-		if err := ExecuteEffect(ctx, e.Inner); err != nil {
+		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}
 	}
@@ -752,7 +752,7 @@ func BlockerCountVar(storeAs string) Effect {
 func (e *BlockerCountVarData) Text() string                 { return "count blockers" }
 func (e *BlockerCountVarData) Properties() EffectProperties { return EffectProperties{} }
 
-func execBlockerCountVar(ctx *EffectContext, e *BlockerCountVarData) error {
+func (e *BlockerCountVarData) Apply(ctx *EffectContext) error {
 	group := ctx.Game.CombatGroupFor(ctx.SourceID)
 	if group == nil {
 		ctx.SetInt(e.StoreAs, 0)
@@ -776,7 +776,7 @@ func (e *RampageEffectData) Text() string {
 }
 func (e *RampageEffectData) Properties() EffectProperties { return EffectProperties{} }
 
-func execRampageEffect(ctx *EffectContext, e *RampageEffectData) error {
+func (e *RampageEffectData) Apply(ctx *EffectContext) error {
 	group := ctx.Game.CombatGroupFor(ctx.SourceID)
 	if group == nil || len(group.BlockerIDs) <= 1 {
 		return nil
@@ -837,7 +837,7 @@ func AddContinuousEffectsStep(factory func() []ContinuousEffect) Effect {
 func (e *AddContinuousEffectsData) Text() string                 { return "add continuous effects" }
 func (e *AddContinuousEffectsData) Properties() EffectProperties { return EffectProperties{} }
 
-func execAddContinuousEffects(ctx *EffectContext, e *AddContinuousEffectsData) error {
+func (e *AddContinuousEffectsData) Apply(ctx *EffectContext) error {
 	for _, eff := range e.Factory() {
 		eff.SetSourceID(ctx.SourceID)
 		ctx.Game.AddContinuousEffect(eff)

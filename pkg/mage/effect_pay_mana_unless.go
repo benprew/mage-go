@@ -50,7 +50,7 @@ func (e *payManaUnlessEffect) Properties() EffectProperties {
 	return e.ifNotPaid.Properties()
 }
 
-func execPayManaUnless(ctx *EffectContext, e *payManaUnlessEffect) error {
+func (e *payManaUnlessEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
 	prompt := e.basePrompt
 	if e.keepName {

@@ -67,7 +67,7 @@ func (e *addCountersEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
 
-func execAddCounters(ctx *EffectContext, e *addCountersEffect) error {
+func (e *addCountersEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
 		amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
@@ -120,7 +120,7 @@ func (e *removeCountersEffect) Text() string {
 }
 func (e *removeCountersEffect) Properties() EffectProperties { return EffectProperties{} }
 
-func execRemoveCounters(ctx *EffectContext, e *removeCountersEffect) error {
+func (e *removeCountersEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
 	for _, p := range perms {
 		p = ctx.Game.MutablePermanent(p.ID())
@@ -197,7 +197,7 @@ func SnapshotSourceCounter(ct CounterType, storeAs string) Effect {
 func (e *SnapshotSourceCounterData) Text() string                 { return "" }
 func (e *SnapshotSourceCounterData) Properties() EffectProperties { return EffectProperties{} }
 
-func execSnapshotSourceCounter(ctx *EffectContext, e *SnapshotSourceCounterData) error {
+func (e *SnapshotSourceCounterData) Apply(ctx *EffectContext) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm == nil {
 		ctx.SetInt(e.StoreAs, 0)

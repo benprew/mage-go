@@ -175,7 +175,7 @@ func (e *boostEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit, PowerBoost: pb, ToughnessBoost: tb, Mass: mass}
 }
 
-func execBoost(ctx *EffectContext, e *boostEffect) error {
+func (e *boostEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
 		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
@@ -225,6 +225,12 @@ func (e *grantKeywordEffect) Until(d Duration) *grantKeywordEffect {
 	return e
 }
 
+// KeywordGrantTarget exposes the recipient selector to AI policy without
+// exposing the concrete effect implementation.
+func (e *grantKeywordEffect) KeywordGrantTarget() TargetSelector {
+	return e.selector
+}
+
 // Unless suppresses the grant if the given condition is true at execution time.
 func (e *grantKeywordEffect) Unless(cond TriggerConditionData) *grantKeywordEffect {
 	e.unless = cond
@@ -249,7 +255,7 @@ func (e *grantKeywordEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: outcome, GrantedKeyword: e.keyword}
 }
 
-func execGrantKeyword(ctx *EffectContext, e *grantKeywordEffect) error {
+func (e *grantKeywordEffect) Apply(ctx *EffectContext) error {
 	if e.unless != nil && e.unless.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
 		return nil
 	}
@@ -312,7 +318,7 @@ func (e *revokeKeywordEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execRevokeKeyword(ctx *EffectContext, e *revokeKeywordEffect) error {
+func (e *revokeKeywordEffect) Apply(ctx *EffectContext) error {
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
 		targetID := perm.ID()
@@ -374,7 +380,7 @@ func (e *grantAbilityEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-func execGrantAbility(ctx *EffectContext, e *grantAbilityEffect) error {
+func (e *grantAbilityEffect) Apply(ctx *EffectContext) error {
 	if e.unless != nil && e.unless.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
 		return nil
 	}
@@ -458,7 +464,7 @@ func (e *grantTypeEffect) Properties() EffectProperties {
 	return EffectProperties{}
 }
 
-func execGrantType(ctx *EffectContext, e *grantTypeEffect) error {
+func (e *grantTypeEffect) Apply(ctx *EffectContext) error {
 	attr := CardTypeAttr(e.ct)
 	if attr == 0 {
 		return nil

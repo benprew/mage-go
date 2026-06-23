@@ -192,7 +192,7 @@ func (e *chaosOrbEffect) Properties() EffectProperties {
 
 // --- Executor functions (called from executor.go) ---
 
-func execSacrificeTarget(ctx *EffectContext, _ *sacrificeTargetEffect) error {
+func (*sacrificeTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -204,7 +204,7 @@ func execSacrificeTarget(ctx *EffectContext, _ *sacrificeTargetEffect) error {
 	return nil
 }
 
-func execDestroyTarget(ctx *EffectContext, _ *destroyTargetEffect) error {
+func (*destroyTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -219,7 +219,7 @@ func execDestroyTarget(ctx *EffectContext, _ *destroyTargetEffect) error {
 	return nil
 }
 
-func execDestroyTargetPermanent(ctx *EffectContext, _ *destroyTargetPermanentEffect) error {
+func (*destroyTargetPermanentEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -234,7 +234,7 @@ func execDestroyTargetPermanent(ctx *EffectContext, _ *destroyTargetPermanentEff
 	return nil
 }
 
-func execDestroyAllMatching(ctx *EffectContext, e *destroyAllMatchingEffect) error {
+func (e *destroyAllMatchingEffect) Apply(ctx *EffectContext) error {
 	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
 		ctx.Game.DestroyPermanent(p)
@@ -242,7 +242,7 @@ func execDestroyAllMatching(ctx *EffectContext, e *destroyAllMatchingEffect) err
 	return nil
 }
 
-func execDestroyAllMatchingNoRegen(ctx *EffectContext, e *destroyAllMatchingNoRegenEffect) error {
+func (e *destroyAllMatchingNoRegenEffect) Apply(ctx *EffectContext) error {
 	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
 	for _, p := range toDestroy {
 		p = ctx.Game.MutablePermanent(p.ID())
@@ -255,7 +255,7 @@ func execDestroyAllMatchingNoRegen(ctx *EffectContext, e *destroyAllMatchingNoRe
 	return nil
 }
 
-func execDestroyTargetNoRegen(ctx *EffectContext, _ *destroyTargetNoRegenEffect) error {
+func (*destroyTargetNoRegenEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for destroy")
 	}
@@ -342,7 +342,7 @@ func ReturnWithCounter(counter CounterType, amount int) ReturnedPermanentModifie
 	}
 }
 
-func execExileTarget(ctx *EffectContext, _ *exileTargetEffect) error {
+func (*exileTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for exile")
 	}
@@ -354,7 +354,7 @@ func execExileTarget(ctx *EffectContext, _ *exileTargetEffect) error {
 	return nil
 }
 
-func execSacrificeSource(ctx *EffectContext, _ *sacrificeSourceEffect) error {
+func (*sacrificeSourceEffect) Apply(ctx *EffectContext) error {
 	perm := ctx.Game.FindPermanent(ctx.SourceID)
 	if perm == nil {
 		return nil
@@ -363,7 +363,7 @@ func execSacrificeSource(ctx *EffectContext, _ *sacrificeSourceEffect) error {
 	return nil
 }
 
-func execBalance(ctx *EffectContext, _ *balanceEffect) error {
+func (*balanceEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
 	landCounts := make(map[uuid.UUID]int)
 	creatureCounts := make(map[uuid.UUID]int)
@@ -437,7 +437,7 @@ func execBalance(ctx *EffectContext, _ *balanceEffect) error {
 	return nil
 }
 
-func execChaosOrb(ctx *EffectContext, _ *chaosOrbEffect) error {
+func (*chaosOrbEffect) Apply(ctx *EffectContext) error {
 	var candidates []*Permanent
 	for _, p := range ctx.Game.FilterBattlefield(Not(ControlledBy(ctx.Controller))) {
 		if !p.IsToken {

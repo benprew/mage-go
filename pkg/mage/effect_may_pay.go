@@ -51,7 +51,7 @@ func (e *mayPayManaEffect) Properties() EffectProperties {
 	return e.inner.Properties()
 }
 
-func execMayPayMana(ctx *EffectContext, e *mayPayManaEffect) error {
+func (e *mayPayManaEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return nil

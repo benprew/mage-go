@@ -9,19 +9,13 @@ import (
 	"github.com/google/uuid"
 )
 
-// Effect represents a one-shot effect that resolves. Effects are inert data
-// describing what should happen; the executor (ExecuteEffect) dispatches on
-// the concrete type to perform mutations. Use ApplyEffect to run an Effect
-// against a *Game.
+// Effect represents a one-shot effect that resolves. Each concrete type
+// implements Apply, which performs its mutations against the EffectContext.
+// Use ApplyEffect to run an Effect against a *Game.
 type Effect interface {
 	Text() string
 	Properties() EffectProperties
-}
-
-type TargetedEffect interface {
-	Text() string
-	Properties() EffectProperties
-	Targeting(PlayerSelector) TargetedEffect
+	Apply(*EffectContext) error
 }
 
 // funcEffect wraps an anonymous function as an Effect. Use FuncEffect to create
@@ -42,6 +36,9 @@ func FuncEffect(text string, props EffectProperties, fn func(g *Game, sourceID, 
 
 func (e *funcEffect) Text() string                 { return e.text }
 func (e *funcEffect) Properties() EffectProperties { return e.props }
+func (e *funcEffect) Apply(ctx *EffectContext) error {
+	return e.fn(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+}
 
 // compositeEffect applies multiple effects in sequence.
 type compositeEffect struct {
@@ -55,6 +52,14 @@ func CompositeEffects(text string, effects ...Effect) Effect {
 }
 
 func (e *compositeEffect) Text() string { return e.text }
+func (e *compositeEffect) Apply(ctx *EffectContext) error {
+	for _, sub := range e.effects {
+		if err := sub.Apply(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func (e *compositeEffect) Properties() EffectProperties {
 	var out EffectProperties
 	for _, effect := range e.effects {
@@ -95,10 +100,13 @@ func mergeEffectProperties(dst *EffectProperties, src EffectProperties) {
 	dst.ValueBias += src.ValueBias
 }
 
-// ApplyEffect runs an Effect by constructing an EffectContext and dispatching
-// through the executor. This is the canonical entry point for Effect resolution
+// ApplyEffect runs an Effect by constructing an EffectContext and invoking the
+// effect's Apply method. This is the canonical entry point for Effect resolution
 // from engine code that holds a *Game directly.
 func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	if e == nil {
+		return nil
+	}
 	ctx := &EffectContext{
 		Game:       g,
 		SourceID:   sourceID,
@@ -106,9 +114,9 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		Targets:    targets,
 		Vars:       make(map[string]any),
 	}
-	err := ExecuteEffect(ctx, e)
+	err := e.Apply(ctx)
 	if err != nil {
-		fmt.Println("ERROR: ExecuteEffect: ", err)
+		fmt.Println("ERROR: ApplyEffect: ", err)
 	}
 	return err
 }

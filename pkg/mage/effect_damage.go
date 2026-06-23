@@ -3,6 +3,8 @@ package mage
 import (
 	"fmt"
 
+	. "github.com/benprew/mage-go/pkg/mage/core"
+
 	"github.com/google/uuid"
 )
 
@@ -331,6 +333,23 @@ type preventDamageToSourceEffect struct {
 	amount ValueSource
 }
 
+func (e *preventDamageToTargetEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	perm := ctx.Game.FindPermanent(ctx.Targets[0])
+	if perm != nil {
+		ctx.Game.AddPreventionShield(perm.ID(), amount)
+		return nil
+	}
+	player := ctx.Game.GetPlayer(ctx.Targets[0])
+	if player != nil {
+		ctx.Game.AddPreventionShield(player.PlayerID(), amount)
+	}
+	return nil
+}
+
 // PreventDamageToSource creates an effect that prevents the next damage to
 // the permanent that is the source of the resolving ability.
 func PreventDamageToSource(amount ValueSource) Effect {
@@ -364,3 +383,269 @@ func (e *sacrificeOrDamageEffect) Text() string {
 	return fmt.Sprintf("Sacrifice a creature or take %d damage", e.damage)
 }
 func (e *sacrificeOrDamageEffect) Properties() EffectProperties { return EffectProperties{} }
+
+// --- Apply methods (moved from executor.go) ---
+
+func (e *gainLifeEffect) Apply(ctx *EffectContext) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	ctx.Game.PlayerGainLife(p, e.amount)
+	if !ctx.Game.IsLichActive(ctx.Controller) {
+		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: e.amount})
+	}
+	return nil
+}
+
+func (e *poisonTargetPlayerEffect) Apply(ctx *EffectContext) error {
+	var playerIDs []uuid.UUID
+	switch {
+	case e.sel != nil:
+		playerIDs = e.sel.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	case len(ctx.Targets) > 0:
+		playerIDs = []uuid.UUID{ctx.Targets[0]}
+	}
+
+	for _, pid := range playerIDs {
+		p := ctx.Game.GetPlayer(pid)
+		if p == nil {
+			continue
+		}
+		p.AddPoisonCounters(e.amount)
+	}
+	return nil
+}
+
+func (e *gainLifeDynamicEffect) Apply(ctx *EffectContext) error {
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	ctx.Game.PlayerGainLife(p, amount)
+	if !ctx.Game.IsLichActive(ctx.Controller) {
+		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: amount})
+	}
+	return nil
+}
+
+func (e *gainLifeTargetEffect) Apply(ctx *EffectContext) error {
+	var targetPlayer Player
+	if len(ctx.Targets) > 0 {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Controller)
+	}
+	if targetPlayer == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	ctx.Game.PlayerGainLife(targetPlayer, amount)
+	if !ctx.Game.IsLichActive(targetPlayer.PlayerID()) {
+		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
+	}
+	return nil
+}
+
+func (e *loseLifeDynamicEffect) Apply(ctx *EffectContext) error {
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	ctx.Game.PlayerLoseLife(p, amount)
+	return nil
+}
+
+func (e *loseLifeEffect) Apply(ctx *EffectContext) error {
+	p := ctx.Game.GetPlayer(ctx.Controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	ctx.Game.PlayerLoseLife(p, e.amount)
+	return nil
+}
+
+func (e *loseLifeTargetEffect) Apply(ctx *EffectContext) error {
+	var targetPlayer Player
+	if len(ctx.Targets) > 0 {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
+	}
+	if targetPlayer == nil {
+		targetPlayer = ctx.Game.GetPlayer(ctx.Controller)
+	}
+	if targetPlayer == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	ctx.Game.PlayerLoseLife(targetPlayer, amount)
+	return nil
+}
+
+func (e *dealDamageEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for damage")
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	targetID := ctx.Targets[0]
+
+	for _, pl := range ctx.Game.AllPlayers() {
+		if pl.PlayerID() == targetID {
+			ctx.Game.DealDamageToPlayer(pl, amount, ctx.SourceID)
+			return nil
+		}
+	}
+
+	perm := ctx.Game.FindPermanent(targetID)
+	if perm == nil {
+		return nil
+	}
+
+	sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
+	if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+		return nil
+	}
+
+	ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
+	return nil
+}
+
+// execDealDividedDamage reads the per-target damage distribution chosen at
+// cast/activation time (stored on the StackObject and forwarded into ctx via
+// resolvingDamageDistribution) and applies it. CR 601.2d/609.3.5: a divided-
+// damage spell's distribution is chosen on announcement and is frozen; if a
+// target later becomes illegal, only that target's share is wasted — the
+// remaining targets still take their shares. We honor that by skipping
+// ctx.Targets entries that no longer point at a valid creature/player.
+func (*dealDividedDamageEffect) Apply(ctx *EffectContext) error {
+	dist := ctx.DamageDistribution
+	if dist == nil {
+		dist = ctx.Game.resolvingDamageDistribution
+	}
+	if len(dist) == 0 {
+		return nil
+	}
+	for _, tid := range ctx.Targets {
+		amt, ok := dist[tid]
+		if !ok || amt <= 0 {
+			continue
+		}
+		applied := false
+		for _, pl := range ctx.Game.AllPlayers() {
+			if pl.PlayerID() == tid {
+				ctx.Game.DealDamageToPlayer(pl, amt, ctx.SourceID)
+				applied = true
+				break
+			}
+		}
+		if applied {
+			continue
+		}
+		perm := ctx.Game.FindPermanent(tid)
+		if perm == nil {
+			continue
+		}
+		sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
+		if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+			continue
+		}
+		ctx.Game.DealDamageToPermanent(perm, amt, ctx.SourceID)
+	}
+	return nil
+}
+
+func (e *dealDamageToAllCreaturesEffect) Apply(ctx *EffectContext) error {
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	f := IsCreature
+	if !e.filter.IsZero() {
+		f = And(IsCreature, e.filter)
+	}
+	for _, p := range ctx.Game.FilterBattlefield(f) {
+		ctx.Game.DealDamageToPermanent(p, amount, ctx.SourceID)
+	}
+	return nil
+}
+
+func (e *dealDamageToPlayersEffect) Apply(ctx *EffectContext) error {
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	playerIDs := e.selector.Select(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	for _, pid := range playerIDs {
+		p := ctx.Game.GetPlayer(pid)
+		if p != nil {
+			ctx.Game.DealDamageToPlayer(p, amount, ctx.SourceID)
+		}
+	}
+	return nil
+}
+
+func (e *handSizeDamageEffect) Apply(ctx *EffectContext) error {
+	var p Player
+	if len(ctx.Targets) > 0 {
+		p = ctx.Game.GetPlayer(ctx.Targets[0])
+	}
+	if p == nil {
+		p = ctx.Game.ActivePlayerObj()
+	}
+	handSize := len(p.Hand())
+	var damage int
+	if e.above {
+		damage = handSize - e.threshold
+	} else {
+		damage = e.threshold - handSize
+	}
+	if damage > 0 {
+		ctx.Game.DealDamageToPlayer(p, damage, ctx.SourceID)
+	}
+	return nil
+}
+
+func (*preventAllCombatDamageEffect) Apply(ctx *EffectContext) error {
+	ctx.Game.SetPreventCombatDamage()
+	return nil
+}
+
+func (e *preventDamageToSourceEffect) Apply(ctx *EffectContext) error {
+	if ctx.Game.FindPermanent(ctx.SourceID) == nil {
+		return nil
+	}
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	ctx.Game.AddPreventionShield(ctx.SourceID, amount)
+	return nil
+}
+
+func (e *sacrificeOrDamageEffect) Apply(ctx *EffectContext) error {
+	candidates := ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, NotID(ctx.SourceID)))
+	if len(candidates) > 0 {
+		player := ctx.Game.GetPlayer(ctx.Controller)
+		chosen := player.ChoosePermanent(candidates, "sacrifice", ctx.Game)
+		if chosen != nil {
+			ctx.Game.Sacrifice(chosen)
+			return nil
+		}
+	}
+	player := ctx.Game.GetPlayer(ctx.Controller)
+	if player != nil {
+		ctx.Game.DealDamageToPlayer(player, e.damage, ctx.SourceID)
+	}
+	return nil
+}

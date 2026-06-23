@@ -20,7 +20,7 @@ type drawCardsTargetEffect struct {
 
 // DrawCards creates an effect that draws cards for a target player (or controller
 // as fallback). Chain .Targeting(sel) to pick the player(s) via a PlayerSelector.
-func DrawCards(amount ValueSource) TargetedEffect {
+func DrawCards(amount ValueSource) *drawCardsTargetEffect {
 	drawCount := 0
 	if fv, ok := amount.(fixedValue); ok {
 		drawCount = fv.n
@@ -32,7 +32,7 @@ func DrawCards(amount ValueSource) TargetedEffect {
 }
 
 // Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
-func (e *drawCardsTargetEffect) Targeting(sel PlayerSelector) TargetedEffect {
+func (e *drawCardsTargetEffect) Targeting(sel PlayerSelector) *drawCardsTargetEffect {
 	e.sel = sel
 	return e
 }
@@ -80,12 +80,12 @@ type discardCardsEffect struct {
 // DiscardCards creates an effect that forces a player to discard cards.
 // Without Targeting, it acts on ctx.Targets[0]; chain .Targeting(sel) to pick
 // the player(s) via a PlayerSelector instead.
-func DiscardCards(amount ValueSource) TargetedEffect {
+func DiscardCards(amount ValueSource) *discardCardsEffect {
 	return &discardCardsEffect{amount: amount}
 }
 
 // Targeting overrides the default target (ctx.Targets[0]) with a PlayerSelector.
-func (e *discardCardsEffect) Targeting(sel PlayerSelector) TargetedEffect {
+func (e *discardCardsEffect) Targeting(sel PlayerSelector) *discardCardsEffect {
 	e.sel = sel
 	return e
 }
@@ -107,7 +107,7 @@ type discardRandomEffect struct {
 }
 
 // DiscardRandom creates an effect that forces a target player (or opponent) to discard cards at random.
-func DiscardRandom(amount int) TargetedEffect {
+func DiscardRandom(amount int) *discardRandomEffect {
 	return &discardRandomEffect{amount: amount}
 }
 
@@ -118,7 +118,7 @@ func (e *discardRandomEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func (e *discardRandomEffect) Targeting(sel PlayerSelector) TargetedEffect {
+func (e *discardRandomEffect) Targeting(sel PlayerSelector) *discardRandomEffect {
 	e.sel = sel
 	return e
 }
@@ -416,7 +416,7 @@ func (e *chooseColorEffect) Properties() EffectProperties { return EffectPropert
 
 // --- Executor functions ---
 
-func execDrawCardsTarget(ctx *EffectContext, e *drawCardsTargetEffect) error {
+func (e *drawCardsTargetEffect) Apply(ctx *EffectContext) error {
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 
 	var players []Player
@@ -450,7 +450,7 @@ func execDrawCardsTarget(ctx *EffectContext, e *drawCardsTargetEffect) error {
 	return nil
 }
 
-func execDrawCardsActivePlayer(ctx *EffectContext, e *drawCardsActivePlayerEffect) error {
+func (e *drawCardsActivePlayerEffect) Apply(ctx *EffectContext) error {
 	active := ctx.Game.ActivePlayerObj()
 	if active == nil {
 		return ErrPlayerNotFound
@@ -462,7 +462,7 @@ func execDrawCardsActivePlayer(ctx *EffectContext, e *drawCardsActivePlayerEffec
 	return nil
 }
 
-func execDiscardCards(ctx *EffectContext, e *discardCardsEffect) error {
+func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 
 	var playerIDs []uuid.UUID
@@ -490,7 +490,7 @@ func execDiscardCards(ctx *EffectContext, e *discardCardsEffect) error {
 	return nil
 }
 
-func execDiscardRandom(ctx *EffectContext, e *discardRandomEffect) error {
+func (e *discardRandomEffect) Apply(ctx *EffectContext) error {
 	var targetPlayer Player
 	if len(ctx.Targets) > 0 {
 		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
@@ -512,7 +512,7 @@ func execDiscardRandom(ctx *EffectContext, e *discardRandomEffect) error {
 	return nil
 }
 
-func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGraveyardEffect) error {
+func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
@@ -524,7 +524,7 @@ func execReturnFromGraveyardToBattlefield(ctx *EffectContext, _ *returnFromGrave
 	return nil
 }
 
-func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
+func (e *millTargetPlayerEffect) Apply(ctx *EffectContext) error {
 	baseAmount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 
 	var playerIDs []uuid.UUID
@@ -552,7 +552,7 @@ func execMillTargetPlayer(ctx *EffectContext, e *millTargetPlayerEffect) error {
 	return nil
 }
 
-func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyardEffect) error {
+func (*exileSourceFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.SourceID, ZoneExile)
 	if ok && card != nil {
 		ctx.Game.ExileCard(card, ctx.SourceID)
@@ -560,7 +560,7 @@ func execExileSourceFromGraveyard(ctx *EffectContext, _ *exileSourceFromGraveyar
 	return nil
 }
 
-func execReturnSourceFromGraveyardToBattlefield(ctx *EffectContext, _ *returnSourceFromGraveyardToBattlefieldEffect) error {
+func (*returnSourceFromGraveyardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	// Search every graveyard for the source card; the trigger controller is
 	// usually the owner, but the card may have moved zones since the trigger
 	// was queued.
@@ -573,7 +573,7 @@ func execReturnSourceFromGraveyardToBattlefield(ctx *EffectContext, _ *returnSou
 	return nil
 }
 
-func execReturnSourceToHand(ctx *EffectContext, _ *returnSourceToHandEffect) error {
+func (*returnSourceToHandEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -586,7 +586,7 @@ func execReturnSourceToHand(ctx *EffectContext, _ *returnSourceToHandEffect) err
 	return nil
 }
 
-func execReturnToHandTarget(ctx *EffectContext, _ *returnToHandTargetEffect) error {
+func (*returnToHandTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for bounce")
 	}
@@ -598,7 +598,7 @@ func execReturnToHandTarget(ctx *EffectContext, _ *returnToHandTargetEffect) err
 	return nil
 }
 
-func execReturnFromGraveyardToHandTarget(ctx *EffectContext, _ *returnFromGraveyardToHandTargetEffect) error {
+func (*returnFromGraveyardToHandTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for raise dead")
 	}
@@ -613,7 +613,7 @@ func execReturnFromGraveyardToHandTarget(ctx *EffectContext, _ *returnFromGravey
 	return nil
 }
 
-func execSearchLibraryToHand(ctx *EffectContext, _ *searchLibraryEffect) error {
+func (*searchLibraryEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -639,7 +639,7 @@ func execSearchLibraryToHand(ctx *EffectContext, _ *searchLibraryEffect) error {
 	return nil
 }
 
-func execSearchLibraryToTop(ctx *EffectContext, _ *searchLibraryToTopEffect) error {
+func (*searchLibraryToTopEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -664,7 +664,7 @@ func execSearchLibraryToTop(ctx *EffectContext, _ *searchLibraryToTopEffect) err
 	return nil
 }
 
-func execDiscardHandAndDraw(ctx *EffectContext, e *discardHandAndDrawEffect) error {
+func (e *discardHandAndDrawEffect) Apply(ctx *EffectContext) error {
 	for _, p := range ctx.Game.AllPlayers() {
 		// Discard entire hand
 		hand := p.Hand()
@@ -679,7 +679,7 @@ func execDiscardHandAndDraw(ctx *EffectContext, e *discardHandAndDrawEffect) err
 	return nil
 }
 
-func execShuffleHandAndGraveyardIntoLibraryAndDraw(ctx *EffectContext, e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) error {
+func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Apply(ctx *EffectContext) error {
 	for _, p := range ctx.Game.AllPlayers() {
 		// Move hand into library (copy slice since RemoveFromHand modifies it)
 		hand := append([]Card(nil), p.Hand()...)
@@ -701,7 +701,7 @@ func execShuffleHandAndGraveyardIntoLibraryAndDraw(ctx *EffectContext, e *shuffl
 	return nil
 }
 
-func execShuffleLibrary(ctx *EffectContext, _ *shuffleLibraryEffect) error {
+func (*shuffleLibraryEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -710,7 +710,7 @@ func execShuffleLibrary(ctx *EffectContext, _ *shuffleLibraryEffect) error {
 	return nil
 }
 
-func execPutFromHandOntoBattlefield(ctx *EffectContext, e *putFromHandOntoBattlefieldEffect) error {
+func (e *putFromHandOntoBattlefieldEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -735,7 +735,7 @@ func execPutFromHandOntoBattlefield(ctx *EffectContext, e *putFromHandOntoBattle
 	return nil
 }
 
-func execSearchLibraryToBattlefield(ctx *EffectContext, e *searchLibraryToBattlefieldEffect) error {
+func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -769,7 +769,7 @@ func execSearchLibraryToBattlefield(ctx *EffectContext, e *searchLibraryToBattle
 	return nil
 }
 
-func execScry(ctx *EffectContext, e *scryEffect) error {
+func (e *scryEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -782,7 +782,7 @@ func execScry(ctx *EffectContext, e *scryEffect) error {
 	return nil
 }
 
-func execSurveil(ctx *EffectContext, e *surveilEffect) error {
+func (e *surveilEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -795,7 +795,7 @@ func execSurveil(ctx *EffectContext, e *surveilEffect) error {
 	return nil
 }
 
-func execChooseColor(ctx *EffectContext, e *chooseColorEffect) error {
+func (e *chooseColorEffect) Apply(ctx *EffectContext) error {
 	p := ctx.Game.GetPlayer(ctx.Controller)
 	if p == nil {
 		return ErrPlayerNotFound

@@ -29,7 +29,7 @@ func (e *fightTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func execFightTarget(ctx *EffectContext, _ *fightTargetEffect) error {
+func (*fightTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
@@ -98,7 +98,7 @@ func (e *onPermanentDiesEffect) Text() string {
 }
 func (e *onPermanentDiesEffect) Properties() EffectProperties { return EffectProperties{} }
 
-func execOnPermanentDies(ctx *EffectContext, e *onPermanentDiesEffect) error {
+func (e *onPermanentDiesEffect) Apply(ctx *EffectContext) error {
 	id := e.permID
 	if id == uuid.Nil {
 		if len(ctx.Targets) == 0 {

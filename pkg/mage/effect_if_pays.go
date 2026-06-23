@@ -30,7 +30,7 @@ func (e *effectIfPaid) Properties() EffectProperties {
 	return e.effect.Properties()
 }
 
-func execIfPaid(ctx *EffectContext, e *effectIfPaid) error {
+func (e *effectIfPaid) Apply(ctx *EffectContext) error {
 	g := ctx.Game
 	payerIDs := e.payer.Select(g, ctx.SourceID, ctx.Controller, ctx.Targets)
 	if len(payerIDs) > 1 || len(payerIDs) == 0 {
@@ -49,5 +49,5 @@ func execIfPaid(ctx *EffectContext, e *effectIfPaid) error {
 	}
 	// Run the paid branch in the surrounding EffectContext so pipeline vars
 	// (snapshots) stay visible.
-	return ExecuteEffect(ctx, e.effect)
+	return e.effect.Apply(ctx)
 }

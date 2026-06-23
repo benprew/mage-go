@@ -45,7 +45,7 @@ func (e *unlessPaysEffect) Properties() EffectProperties {
 	return e.ifNotPaid.Properties()
 }
 
-func execUnlessPays(ctx *EffectContext, e *unlessPaysEffect) error {
+func (e *unlessPaysEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
 	payerIDs := e.payer.Select(g, ctx.SourceID, ctx.Controller, ctx.Targets)
 	for _, pid := range payerIDs {
@@ -55,7 +55,7 @@ func execUnlessPays(ctx *EffectContext, e *unlessPaysEffect) error {
 		// surrounding EffectContext so pipeline vars (snapshots) stay
 		// visible.
 		if !e.cost.CanPay(ctx.SourceID, pid, g) {
-			if err := ExecuteEffect(ctx, e.ifNotPaid); err != nil {
+			if err := e.ifNotPaid.Apply(ctx); err != nil {
 				return err
 			}
 			continue
@@ -65,14 +65,14 @@ func execUnlessPays(ctx *EffectContext, e *unlessPaysEffect) error {
 			continue
 		}
 		if !p.ChooseMayAbility(e.prompt) {
-			if err := ExecuteEffect(ctx, e.ifNotPaid); err != nil {
+			if err := e.ifNotPaid.Apply(ctx); err != nil {
 				return err
 			}
 			continue
 		}
 		if err := e.cost.Pay(ctx.SourceID, pid, g); err != nil {
 			// Payment unexpectedly failed — fall back to the not-paid branch.
-			if err2 := ExecuteEffect(ctx, e.ifNotPaid); err2 != nil {
+			if err2 := e.ifNotPaid.Apply(ctx); err2 != nil {
 				return err2
 			}
 		}
