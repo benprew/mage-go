@@ -388,6 +388,7 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 	}
 
 	var bestInfo *mage.ActivatableInfo
+	var bestTargets []uuid.UUID
 	bestScore := 0
 
 	for i := range abilities {
@@ -403,33 +404,24 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 		if !ok {
 			continue
 		}
+		targets, ok := s.autoSelectAbilityTargets(p, g, perm, ab)
+		if !ok || ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), ab.Effects(), targets) {
+			continue
+		}
 		score := eval.AbilityQuality(ab)
 		if score > bestScore {
 			bestScore = score
 			bestInfo = info
+			bestTargets = targets
 		}
 	}
 
 	if bestInfo != nil && bestScore >= 3 {
-		perm := g.FindPermanent(bestInfo.PermanentID)
-		if perm == nil {
-			return nil
-		}
-		ab, ok := mage.UnwrapAbility(perm.RuntimeAbilities[bestInfo.AbilityIndex]).(mage.ActivatedAbility)
-		if !ok {
-			return nil
-		}
-
-		targets, ok := s.autoSelectAbilityTargets(p, g, perm, ab)
-		if !ok {
-			return nil
-		}
-
 		return &interactive.PriorityAction{
 			Type:         interactive.ActionActivateAbility,
 			PermanentID:  bestInfo.PermanentID,
 			AbilityIndex: bestInfo.AbilityIndex,
-			Targets:      targets,
+			Targets:      bestTargets,
 		}
 	}
 
@@ -449,6 +441,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 	var targets []uuid.UUID
 	for _, t := range ab.Targets() {
 		possible := t.Possible(playerID, perm.Card, g)
+		possible = ai.NonRedundantKeywordGrantTargets(g, playerID, perm.ID(), ab.Effects(), possible)
 		if len(possible) == 0 {
 			return nil, false
 		}

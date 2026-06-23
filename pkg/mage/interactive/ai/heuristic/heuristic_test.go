@@ -916,3 +916,110 @@ func TestPriorityAction_RodOfRuinTargetsKillableCreature(t *testing.T) {
 		t.Fatalf("expected Rod of Ruin to target killable creature, got %v want %s", action.Targets, killable.ID())
 	}
 }
+
+func TestPriorityAction_DoesNotGrantSourceKeywordTwice(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	balloonCard := mage.NewCreature("Balloon", "{R}", 1, 1,
+		mage.WithKeyword(core.Flying),
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.Flying).Targeting(mage.ToSource()),
+			mage.ManaCostOf("{0}"),
+		),
+	)
+	balloonCard.SetOwner(pa.PlayerID())
+	balloon := g.PutOnBattlefield(balloonCard, pa.PlayerID())
+	balloon.RevokeBaseAttr(core.AttrSummonSick)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected pass when source already has granted keyword, got %v", action.Type)
+	}
+}
+
+func TestPriorityAction_DoesNotGrantTargetKeywordTwice(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	wandCard := mage.NewArtifact("Wand", "{2}",
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.UnblockableKW),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetControlledCreature()),
+		),
+	)
+	wandCard.SetOwner(pa.PlayerID())
+	g.PutOnBattlefield(wandCard, pa.PlayerID())
+	alreadyUnblockable := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(),
+		mage.WithKeyword(core.UnblockableKW),
+	)
+	g.AddToBattlefield(alreadyUnblockable)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected pass when only target already has granted keyword, got %v", action.Type)
+	}
+}
+
+func TestPriorityAction_GrantsKeywordToDifferentTarget(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	wandCard := mage.NewArtifact("Wand", "{2}",
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.UnblockableKW),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetControlledCreature()),
+		),
+	)
+	wandCard.SetOwner(pa.PlayerID())
+	wand := g.PutOnBattlefield(wandCard, pa.PlayerID())
+	alreadyUnblockable := makePerm("Rogue", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.UnblockableKW))
+	vanilla := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(alreadyUnblockable, vanilla)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != wand.ID() {
+		t.Fatalf("expected Wand activation, got %+v", action)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != vanilla.ID() {
+		t.Fatalf("expected non-redundant target %s, got %v", vanilla.ID(), action.Targets)
+	}
+}
+
+func TestPriorityAction_DoesNotQueueDuplicateKeywordGrant(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	firstCard := mage.NewCreature("First Jackal", "{R}", 1, 1,
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.CantRegenerate),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetCreature()),
+		),
+	)
+	firstCard.SetOwner(pa.PlayerID())
+	first := g.PutOnBattlefield(firstCard, pa.PlayerID())
+	first.RevokeBaseAttr(core.AttrSummonSick)
+	secondCard := mage.NewCreature("Second Jackal", "{R}", 1, 1,
+		mage.WithActivatedAbility(
+			mage.GrantKeyword(core.CantRegenerate),
+			mage.Tap(),
+			mage.WithTarget(mage.TargetCreature()),
+		),
+	)
+	secondCard.SetOwner(pa.PlayerID())
+	second := g.PutOnBattlefield(secondCard, pa.PlayerID())
+	second.RevokeBaseAttr(core.AttrSummonSick)
+	target := makePerm("Skeleton", "{1}{B}", 1, 1, pb.PlayerID())
+	g.AddToBattlefield(target)
+	if err := g.ActivateAbilityByIndex(pa.PlayerID(), first.ID(), 0, []uuid.UUID{target.ID()}); err != nil {
+		t.Fatalf("activate first Jackal: %v", err)
+	}
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected pass when equivalent keyword grant is already on stack, got %v", action.Type)
+	}
+}
