@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	_ "github.com/benprew/mage-go/cards/arabian"
+	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
@@ -303,6 +304,64 @@ func TestTheHive(t *testing.T) {
 		g.StopAt(3, core.EndCombat)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 19)
+	})
+}
+
+func TestConservator(t *testing.T) {
+	t.Run("prevents_2_combat_damage_to_you_without_a_target", func(t *testing.T) {
+		// Conservator: {3}, {T}: Prevent the next 2 damage that would be
+		// dealt to you this turn. The ability is not targeted — it always
+		// applies to "you".
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Conservator")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
+		// PlayerA activates during PlayerB's turn so the prevention applies
+		// to the incoming combat damage. No target argument is passed.
+		g.ActivateAbility(2, core.BeginCombat, gametest.PlayerA, "Conservator")
+		g.Attack(2, gametest.PlayerB, "Hill Giant")
+		g.StopAt(2, core.EndCombat)
+		g.Execute()
+		// 2 of the 3 damage prevented, 1 gets through.
+		g.AssertLife(gametest.PlayerA, 19)
+		g.AssertTapped(gametest.PlayerA, "Conservator", true)
+	})
+}
+
+func TestForcedActivationTargets(t *testing.T) {
+	t.Run("controller_target_is_forced", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		controller := g.AllPlayers()[0].PlayerID()
+		bears := g.FindPermanentByName("Grizzly Bears", controller)
+		forced := mage.ForcedActivationTargets(controller, bears.Card,
+			[]mage.Target{mage.TargetController()}, g.Game)
+		if len(forced) != 1 || forced[0] != controller {
+			t.Fatalf("expected [controller], got %v", forced)
+		}
+	})
+
+	t.Run("single_legal_creature_is_forced", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		controller := g.AllPlayers()[0].PlayerID()
+		bears := g.FindPermanentByName("Grizzly Bears", controller)
+		forced := mage.ForcedActivationTargets(controller, bears.Card,
+			[]mage.Target{mage.TargetCreature()}, g.Game)
+		if len(forced) != 1 || forced[0] != bears.ID() {
+			t.Fatalf("expected [bears], got %v", forced)
+		}
+	})
+
+	t.Run("multiple_legal_creatures_is_a_real_choice", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		controller := g.AllPlayers()[0].PlayerID()
+		bears := g.FindPermanentByName("Grizzly Bears", controller)
+		if forced := mage.ForcedActivationTargets(controller, bears.Card,
+			[]mage.Target{mage.TargetCreature()}, g.Game); forced != nil {
+			t.Fatalf("expected nil (prompt the player), got %v", forced)
+		}
 	})
 }
 

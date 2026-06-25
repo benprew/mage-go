@@ -394,10 +394,9 @@ func registerArtifacts() {
 	Register("Conservator", func() Card {
 		return NewArtifact("Conservator", "{4}",
 			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(2)),
+				AddPreventionShieldToControllerStep(2),
 				GenericCost(3),
 				WithCost(Tap()),
-				WithTarget(TargetController()),
 			),
 		)
 	})

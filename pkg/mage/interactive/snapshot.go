@@ -369,7 +369,10 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 		if perm != nil {
 			aa, ok := perm.RuntimeAbilities[info.AbilityIndex].(mage.ActivatedAbility)
 			if ok {
-				if targets := aa.Targets(); len(targets) > 0 {
+				if targets := aa.Targets(); len(targets) > 0 &&
+					mage.ForcedActivationTargets(perm.Controller, perm.Card, targets, g) == nil {
+					// Only prompt when the targeting offers a real choice;
+					// forced targets (e.g. "you") are auto-filled by the engine.
 					opt.NeedsTarget = true
 					opt.TargetType = targets[0]
 					opt.ValidTargets = targets[0].Possible(perm.Controller, perm.Card, g)
