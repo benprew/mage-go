@@ -271,6 +271,33 @@ func (t *ControllerTarget) Choose(controller uuid.UUID, _ Card, _ *Game, _ []uui
 	return nil
 }
 
+// ForcedActivationTargets returns the auto-chosen targets for an activated
+// ability whose targeting offers no genuine choice — every declared target
+// requires a fixed number of objects (Min == Max > 0) and exactly that many
+// are legal. Examples: ControllerTarget's "you", or a "target creature"
+// ability when only one creature is in play. It returns nil when any target
+// involves a real decision (an optional target, or more candidates than
+// required), so the controller is prompted normally.
+//
+// The interactive layer uses this to suppress pointless "pick a target"
+// prompts, and ActivateAbilityByIndex uses it to fill those targets in, since
+// activated-ability targets are otherwise supplied by the caller.
+func ForcedActivationTargets(controller uuid.UUID, card Card, declared []Target, g *Game) []uuid.UUID {
+	if len(declared) == 0 {
+		return nil
+	}
+	var out []uuid.UUID
+	for _, t := range declared {
+		t.Reset()
+		possible := t.Possible(controller, card, g)
+		if t.Min() <= 0 || t.Min() != t.Max() || len(possible) != t.Min() {
+			return nil
+		}
+		out = append(out, possible...)
+	}
+	return out
+}
+
 // DamageAnyTarget targets "any target" for damage: a creature, planeswalker, or player (CR 115.4).
 type DamageAnyTarget struct {
 	BaseTarget

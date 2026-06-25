@@ -4780,6 +4780,16 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("cannot activate ability")
 	}
 
+	// When the caller supplied no targets but the ability's targeting is
+	// forced (e.g. "you", or a single legal target), fill them in here so the
+	// ability doesn't fizzle. The interactive layer relies on this to skip
+	// prompting for targets that offer no real choice.
+	if len(targets) == 0 {
+		if forced := ForcedActivationTargets(playerID, perm.Card, aa.Targets(), g); forced != nil {
+			targets = forced
+		}
+	}
+
 	if err := g.validateActionTargets(playerID, perm.Card, aa.Targets(), targets, "ability"); err != nil {
 		return err
 	}
