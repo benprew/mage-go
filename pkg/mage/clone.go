@@ -151,6 +151,12 @@ func (g *Game) Clone() *Game {
 	c.cardsDrawnThisTurn = cloneUUIDMap(g.cardsDrawnThisTurn)
 	c.cardsLeftGraveyardThisTurn = cloneUUIDMap(g.cardsLeftGraveyardThisTurn)
 	c.exileZoneChangesPending = cloneUUIDMap(g.exileZoneChangesPending)
+	c.duelLandsPlayed = cloneUUIDMap(g.duelLandsPlayed)
+	c.duelAttackersDeclared = cloneUUIDMap(g.duelAttackersDeclared)
+	c.duelCreatureDeaths = cloneUUIDMap(g.duelCreatureDeaths)
+	c.duelNonCombatDamage = cloneUUIDMap(g.duelNonCombatDamage)
+	c.duelSpellsCastByColor = cloneUUIDColorMap(g.duelSpellsCastByColor)
+	c.duelSpellsCastByType = cloneUUIDCardTypeMap(g.duelSpellsCastByType)
 	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
 	c.extraLandPlaysThisTurn = cloneUUIDMap(g.extraLandPlaysThisTurn)
 	c.optionalCostPaid = cloneUUIDMap(g.optionalCostPaid)
@@ -517,6 +523,35 @@ func cloneStateTriggerMap(src map[stateTriggerKey]bool) map[stateTriggerKey]bool
 	}
 	dst := make(map[stateTriggerKey]bool, len(src))
 	maps.Copy(dst, src)
+	return dst
+}
+
+// cloneUUIDColorMap deep-copies a nested per-player color tally so a search
+// clone can't mutate the real per-duel counters through a shared inner map.
+func cloneUUIDColorMap(src map[uuid.UUID]map[Color]int) map[uuid.UUID]map[Color]int {
+	if len(src) == 0 {
+		return nil
+	}
+	dst := make(map[uuid.UUID]map[Color]int, len(src))
+	for k, inner := range src {
+		ic := make(map[Color]int, len(inner))
+		maps.Copy(ic, inner)
+		dst[k] = ic
+	}
+	return dst
+}
+
+// cloneUUIDCardTypeMap deep-copies a nested per-player card-type tally.
+func cloneUUIDCardTypeMap(src map[uuid.UUID]map[CardType]int) map[uuid.UUID]map[CardType]int {
+	if len(src) == 0 {
+		return nil
+	}
+	dst := make(map[uuid.UUID]map[CardType]int, len(src))
+	for k, inner := range src {
+		ic := make(map[CardType]int, len(inner))
+		maps.Copy(ic, inner)
+		dst[k] = ic
+	}
 	return dst
 }
 
