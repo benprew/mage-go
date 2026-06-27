@@ -3,6 +3,7 @@ package arabian
 import (
 	"testing"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
@@ -248,6 +249,19 @@ func TestOubliette(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Oubliette", 0)
 	})
 
+	t.Run("declares_target_creature_for_casting", func(t *testing.T) {
+		// The phase-out ETB effect reads the spell's resolving targets, so the
+		// card must advertise a "target creature" requirement; otherwise the AI,
+		// UI, and GetCastableSpells treat it as targetless and the effect no-ops.
+		card, err := mage.CreateCard("Oubliette")
+		if err != nil {
+			t.Fatalf("CreateCard: %v", err)
+		}
+		if got := len(card.CastTargets()); got != 1 {
+			t.Fatalf("expected 1 cast target, got %d", got)
+		}
+	})
+
 	t.Run("phasing_preserves_counters", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
@@ -261,5 +275,26 @@ func TestOubliette(t *testing.T) {
 		// Bears return with counters intact (phasing preserves them)
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
 		g.AssertCounterCount(gametest.PlayerB, "Grizzly Bears", core.P1P1, 2)
+	})
+
+	t.Run("phasing_preserves_auras", func(t *testing.T) {
+		// CR 702.26f: Auras attached to a phasing-out permanent phase out
+		// indirectly with it; they must not fall off into the graveyard.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Fishliver Oil")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Oubliette")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Desert Twister")
+		// Resolve each spell in its own turn so the Aura attaches before
+		// Oubliette phases the creature out.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Fishliver Oil", "Grizzly Bears")
+		g.CastSpell(3, core.PrecombatMain, gametest.PlayerA, "Oubliette", "Grizzly Bears")
+		g.CastSpell(4, core.PrecombatMain, gametest.PlayerB, "Desert Twister", "Oubliette")
+		g.StopAt(4, core.BeginCombat)
+		g.Execute()
+		// Bears return with the Aura still attached (phasing preserves it)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Fishliver Oil", 1)
+		g.AssertAttachedTo(gametest.PlayerB, "Fishliver Oil", "Grizzly Bears")
 	})
 }

@@ -219,7 +219,7 @@ func registerEnchantments() {
 	// the battlefield. Tap that creature as it phases in this way."
 	Register("Oubliette", func() Card {
 		return NewEnchantment("Oubliette", "{1}{B}{B}",
-			// TODO: convert to pipeline — needs phase-out + RegisterDelayedTrigger primitives
+			WithCastTarget(TargetCreature()),
 			WithETBEffect(FuncEffect("phase out target creature until Oubliette leaves",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -232,8 +232,9 @@ func registerEnchantments() {
 						return nil
 					}
 					targetID := target.ID()
-					// Phase out the target creature (retains counters, auras, etc.)
-					target.PhasedOut = true
+					// Phase out the target creature along with its Auras and
+					// Equipment (retains counters, attachments, etc.).
+					phased := g.PhaseOut(targetID)
 					src.ControlledPermanent = targetID
 					// Register delayed trigger: when Oubliette leaves, phase creature back in
 					g.RegisterDelayedTrigger(&DelayedTrigger{
@@ -246,9 +247,9 @@ func registerEnchantments() {
 						Effects: []Effect{FuncEffect("phase in creature",
 							EffectProperties{Outcome: OutcomeBenefit},
 							func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-								perm := g.MutablePermanentIncludingPhased(targetID)
-								if perm != nil && perm.PhasedOut {
-									perm.PhasedOut = false
+								g.PhaseIn(phased)
+								// Tap that creature as it phases in this way.
+								if perm := g.MutablePermanentIncludingPhased(targetID); perm != nil {
 									perm.Tapped = true
 								}
 								return nil

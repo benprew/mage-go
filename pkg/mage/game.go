@@ -388,6 +388,47 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 	return nil
 }
 
+// PhaseOut phases the permanent with the given ID out of the battlefield, along
+// with any Auras and Equipment attached to it (CR 702.26f, "phasing out
+// indirectly"). Counters, attachments, and other on-permanent state are
+// retained while phased out (CR 702.26d). It returns the IDs that were phased
+// out — the permanent followed by its attachments — so the caller can later
+// phase exactly that set back in with PhaseIn.
+func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
+	perm := g.MutablePermanent(id)
+	if perm == nil {
+		return nil
+	}
+	perm.PhasedOut = true
+	phased := []uuid.UUID{id}
+	for _, p := range g.battlefield {
+		if p.PhasedOut || p.AttachedTo != id {
+			continue
+		}
+		if !p.HasSubType("Aura") && !p.HasSubType("Equipment") {
+			continue
+		}
+		att := g.MutablePermanent(p.ID())
+		if att == nil {
+			continue
+		}
+		att.PhasedOut = true
+		phased = append(phased, att.ID())
+	}
+	return phased
+}
+
+// PhaseIn phases the given permanents back onto the battlefield. IDs that are
+// not currently phased out are skipped.
+func (g *Game) PhaseIn(ids []uuid.UUID) {
+	for _, id := range ids {
+		perm := g.mutablePermanentIncludingPhased(id)
+		if perm != nil && perm.PhasedOut {
+			perm.PhasedOut = false
+		}
+	}
+}
+
 // FindPermanentIncludingPhased finds a permanent by ID even if phased out.
 func (g *Game) FindPermanentIncludingPhased(id uuid.UUID) *Permanent {
 	for _, p := range g.battlefield {
@@ -3110,6 +3151,9 @@ func (g *Game) CheckStateBasedActions() {
 		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
 		var aurasToDrop []*Permanent
 		for _, p := range g.battlefield {
+			if p.PhasedOut {
+				continue
+			}
 			if p.HasSubType("Aura") && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
 				if host == nil {
@@ -3130,6 +3174,9 @@ func (g *Game) CheckStateBasedActions() {
 
 		// Equipment attached to a non-creature or missing host becomes unattached
 		for _, p := range g.battlefield {
+			if p.PhasedOut {
+				continue
+			}
 			if p.HasSubType("Equipment") && p.IsAttached() {
 				host := g.FindPermanent(p.AttachedTo)
 				if host == nil || !host.HasType(TypeCreature) {
