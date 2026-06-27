@@ -275,6 +275,16 @@ type Game struct {
 	cardsPutIntoExileThisTurn  int                // total cards put into exile this turn
 	exileZoneChangesPending    map[uuid.UUID]int  // cardID -> ZoneExile events already counted, awaiting ExileCard append
 
+	// Per-duel objective counters (see per_duel_trackers.go). Unlike the
+	// per-turn trackers these are NOT reset between turns; they accumulate for
+	// the whole game and are read at game-over (used by the s30 quest system).
+	duelSpellsCastByColor map[uuid.UUID]map[Color]int    // playerID -> color -> spells cast
+	duelSpellsCastByType  map[uuid.UUID]map[CardType]int // playerID -> type -> spells cast
+	duelLandsPlayed       map[uuid.UUID]int              // playerID -> lands played
+	duelAttackersDeclared map[uuid.UUID]int              // playerID -> attackers declared
+	duelCreatureDeaths    map[uuid.UUID]int              // controllerID -> own creatures that died
+	duelNonCombatDamage   map[uuid.UUID]int              // dealerID -> non-combat damage dealt to the opposing player
+
 	// customState is a per-game string-keyed bag for set-specific keyword
 	// support to stash auxiliary state (e.g. Paradigm "have I resolved a
 	// spell with this name yet?" tracking). Populate via paradigmStateOf
@@ -1075,6 +1085,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
+		g.recordCreatureDeath(controller)
 	}
 }
 
@@ -1157,6 +1168,7 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
+		g.recordCreatureDeath(controller)
 	}
 }
 
@@ -1281,6 +1293,7 @@ func (g *Game) Sacrifice(perm *Permanent) {
 
 	if isCreature {
 		g.creatureDeathsThisTurn++
+		g.recordCreatureDeath(controller)
 	}
 }
 
@@ -2053,6 +2066,7 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
 	g.recordPerTurnEvent(&evt)
+	g.recordPerDuelEvent(&evt)
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
