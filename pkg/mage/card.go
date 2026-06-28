@@ -60,6 +60,26 @@ type BaseCard struct {
 	castTargets     []Target        // targeting requirements when casting (auras, targeted ETBs)
 	uncounterable   bool            // intrinsic "can't be countered" flag (set via WithUncounterable)
 	isToken         bool            // true for token cards (created by NewToken)
+	auraAIProfile   *AuraAIProfile  // AI targeting hint for auras (set via WithAuraAIProfile)
+}
+
+// AuraAIProfile tells the AI how an aura affects the creature it enchants so
+// that cast-time target selection can choose own vs. opponent creatures.
+// Boost auras populate PowerBoost/ToughnessBoost; control-stealing auras
+// (e.g. Control Magic) set StealsControl. Continuous effects are opaque
+// functions, so this metadata is recorded on the card at construction time.
+type AuraAIProfile struct {
+	PowerBoost     int
+	ToughnessBoost int
+	StealsControl  bool
+}
+
+// AuraAIProfile returns the AI targeting profile for an aura, if one was set.
+func (c *BaseCard) AuraAIProfile() (AuraAIProfile, bool) {
+	if c.auraAIProfile == nil {
+		return AuraAIProfile{}, false
+	}
+	return *c.auraAIProfile, true
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.
@@ -141,6 +161,7 @@ func (c *BaseCard) CloneFrom(other Card) {
 			maps.Copy(c.attrSeeds, bc.attrSeeds)
 		}
 		c.uncounterable = bc.uncounterable
+		c.auraAIProfile = bc.auraAIProfile
 		if len(bc.alternateCosts) > 0 {
 			c.alternateCosts = append([]AlternateCost(nil), bc.alternateCosts...)
 		}
@@ -194,6 +215,16 @@ func (c *BaseCard) CastTargets() []Target {
 // Used for auras that enchant non-creature permanents (e.g. "enchant land").
 func WithCastTarget(t Target) CardOption {
 	return func(c *BaseCard) { c.castTargets = []Target{t} }
+}
+
+// WithAuraAIProfile records how an aura affects its enchanted creature so the
+// AI can pick appropriate targets (own creatures for buffs, opponent creatures
+// for debuffs/steal effects). See AuraAIProfile.
+func WithAuraAIProfile(profile AuraAIProfile) CardOption {
+	return func(c *BaseCard) {
+		p := profile
+		c.auraAIProfile = &p
+	}
 }
 
 // WithAdditionalCost adds an additional cost that must be paid when casting this spell
@@ -880,5 +911,6 @@ func NewBoostAura(name, cost string, power, toughness int) *BaseCard {
 		WithAbility(StaticAbility(
 			BoostAttached(power, toughness, AttachAura),
 		)),
+		WithAuraAIProfile(AuraAIProfile{PowerBoost: power, ToughnessBoost: toughness}),
 	)
 }

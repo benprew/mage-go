@@ -11,6 +11,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
 	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
+	"github.com/benprew/mage-go/pkg/mage/interactive/ai/combatsolver"
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -844,6 +845,14 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 			continue
 		}
 		if !aiHintAllowsTiming(cardAIHint(card), g, false) {
+			continue
+		}
+		// Pump tricks are most informed once blockers are declared (we know
+		// which attackers are blocked, so we can pump for lethal or to save a
+		// creature). Hold them through the declare-attackers window unless a
+		// threat is already on the stack that we need to respond to.
+		if g.GetStep() == core.DeclareAttackers && !stackHasThreat &&
+			combatsolver.ClassifyCombat(card) == combatsolver.RolePump {
 			continue
 		}
 
