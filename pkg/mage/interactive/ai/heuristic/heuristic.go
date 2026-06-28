@@ -612,11 +612,24 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 					return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
 				}
 
-			case *mage.PlayerTarget, *mage.OpponentTarget:
+			case *mage.OpponentTarget:
 				opponent := g.GetOpponent(playerID)
 				if opponent != nil {
 					return []uuid.UUID{opponent.PlayerID()}
 				}
+
+			case *mage.PlayerTarget:
+				// Beneficial player-targeted spells (e.g. Stream of Life's
+				// life gain) help us, so point them at ourselves; detrimental
+				// ones go at the opponent.
+				if outcome == mage.OutcomeBenefit {
+					return []uuid.UUID{playerID}
+				}
+				opponent := g.GetOpponent(playerID)
+				if opponent != nil {
+					return []uuid.UUID{opponent.PlayerID()}
+				}
+				return []uuid.UUID{playerID}
 
 			default:
 				preferOwn := outcome == mage.OutcomeBenefit
@@ -639,7 +652,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		}
 		switch t.(type) {
 		case *mage.CreatureTarget:
-			if targets := bestTargetsForRequirement(g, playerID, possible, eval.TargetAura, 0, true, false); len(targets) > 0 {
+			if targets := bestAuraTarget(g, playerID, card, possible); len(targets) > 0 {
 				return targets
 			}
 		default:
@@ -672,6 +685,53 @@ func requiresTargets(card mage.Card) bool {
 		}
 	}
 	return false
+}
+
+// auraAIProfile retrieves an aura's AI targeting profile, if the card declares one.
+func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
+	if profiler, ok := card.(interface {
+		AuraAIProfile() (mage.AuraAIProfile, bool)
+	}); ok {
+		return profiler.AuraAIProfile()
+	}
+	return mage.AuraAIProfile{}, false
+}
+
+// bestAuraTarget chooses the enchant target for an aura. Beneficial auras go on
+// our own best creature; detrimental or control-stealing auras (Weakness,
+// Control Magic) go on the opponent's best creature. Auras that raise power but
+// lower toughness (Immolation, +2/-2) only help us when they kill the creature,
+// so they only target an opponent creature whose toughness they would reduce to
+// zero — otherwise they would buff the opponent.
+func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, possible []uuid.UUID) []uuid.UUID {
+	profile, ok := auraAIProfile(card)
+	detrimental := ok && (profile.StealsControl || profile.PowerBoost < 0 || profile.ToughnessBoost < 0)
+	if !detrimental {
+		return bestTargetsForRequirement(g, playerID, possible, eval.TargetAura, 0, true, false)
+	}
+
+	onlyIfLethal := profile.ToughnessBoost < 0 && profile.PowerBoost > 0
+
+	bestID := uuid.Nil
+	bestScore := -10000
+	for _, id := range possible {
+		perm := g.FindPermanent(id)
+		if perm == nil || perm.Controller == playerID || !perm.HasType(core.TypeCreature) {
+			continue
+		}
+		if onlyIfLethal && perm.CurrentToughness(g)+profile.ToughnessBoost-perm.Damage > 0 {
+			continue
+		}
+		score := eval.PermanentValueForTargeting(g, perm, eval.TargetRemoval)
+		if score > bestScore {
+			bestScore = score
+			bestID = id
+		}
+	}
+	if bestID == uuid.Nil {
+		return nil
+	}
+	return []uuid.UUID{bestID}
 }
 
 func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool) []uuid.UUID {

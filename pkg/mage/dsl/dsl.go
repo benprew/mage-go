@@ -44,6 +44,7 @@ import (
 // is done these should point at pkg/mage/domain instead.
 
 type (
+	AuraAIProfile          = mage.AuraAIProfile
 	Card                   = mage.Card
 	Game                   = mage.Game
 	GameReader             = mage.GameReader
@@ -152,6 +153,7 @@ var (
 	NewLandDestruction           = mage.NewLandDestruction
 	NewAura                      = mage.NewAura
 	NewBoostAura                 = mage.NewBoostAura
+	WithAuraAIProfile            = mage.WithAuraAIProfile
 	NewLuckyCharm                = mage.NewLuckyCharm
 	NewToken                     = mage.NewToken
 	WithSubTypes                 = mage.WithSubTypes

@@ -214,7 +214,61 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	if found {
 		return score
 	}
+	if v, ok := auraSpellValue(card, playerID, g, oppBestScore); ok {
+		return v
+	}
 	return cmc
+}
+
+// auraSpellValue scores an aura whose effect comes from continuous static
+// abilities (which carry no EffectProperties for SpellValue to read). It uses
+// the card's AuraAIProfile so the AI values steal/debuff auras like removal and
+// only values toughness-lowering buffs (Immolation) when they can kill.
+func auraSpellValue(card mage.Card, playerID uuid.UUID, g *mage.Game, oppBestScore int) (int, bool) {
+	profile, ok := auraAIProfile(card)
+	if !ok {
+		return 0, false
+	}
+	switch {
+	case profile.StealsControl:
+		// Stealing is removal plus a gained creature.
+		if oppBestScore > 0 {
+			return oppBestScore + oppBestScore/2, true
+		}
+		return 0, true
+	case profile.ToughnessBoost < 0 && profile.PowerBoost > 0:
+		// Immolation-style: only worth casting when it kills something.
+		best := 0
+		for _, perm := range g.AllBattlefield() {
+			if perm.Controller == playerID || !perm.HasType(core.TypeCreature) {
+				continue
+			}
+			if perm.CurrentToughness(g)+profile.ToughnessBoost-perm.Damage <= 0 {
+				if v := EvalCreatureInGame(perm, g); v > best {
+					best = v
+				}
+			}
+		}
+		return best, true
+	case profile.PowerBoost < 0 || profile.ToughnessBoost < 0:
+		// Debuff aura (Weakness): soft removal.
+		if oppBestScore > 0 {
+			return oppBestScore, true
+		}
+		return 0, true
+	case profile.PowerBoost > 0 || profile.ToughnessBoost > 0:
+		return profile.PowerBoost*2 + profile.ToughnessBoost, true
+	}
+	return 0, false
+}
+
+func auraAIProfile(card mage.Card) (mage.AuraAIProfile, bool) {
+	if profiler, ok := card.(interface {
+		AuraAIProfile() (mage.AuraAIProfile, bool)
+	}); ok {
+		return profiler.AuraAIProfile()
+	}
+	return mage.AuraAIProfile{}, false
 }
 
 func aiHintScore(props mage.EffectProperties, card mage.Card, p mage.Player, g *mage.Game) int {

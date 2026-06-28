@@ -210,6 +210,7 @@ func registerEnchantments() {
 	Register("Control Magic", func() Card {
 		return NewAura("Control Magic", "{2}{U}{U}",
 			WithStaticAbility(ControlChangeContinuous()),
+			WithAuraAIProfile(AuraAIProfile{StealsControl: true}),
 		)
 	})
 
