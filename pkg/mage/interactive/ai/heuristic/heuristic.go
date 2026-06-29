@@ -124,9 +124,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			}
 		}
 
-		if holdBackValue(p, g, s.weights()) > 0 {
-			return interactive.PriorityAction{Type: interactive.ActionPass}
-		}
+		heldInstant := instantToHold(p, g, s.weights())
 
 		availMana := eval.CountAvailableMana(g, playerID)
 		cmcs := eval.HandCMCs(p.Hand())
@@ -135,11 +133,26 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			if card.HasType(core.TypeInstant) {
 				return 0, false
 			}
+			// When holding an instant up (combat trick, removal, counter), keep
+			// developing the board — but only with a spell we can pay for while
+			// still affording the held instant afterward. This reserves mana
+			// rather than passing the entire main phase. X-cost spells consume
+			// all available mana, so they can never coexist with a held instant.
+			if heldInstant != nil && (card.ManaCost().HasX || !canCastWhileReserving(g, playerID, card, heldInstant)) {
+				return 0, false
+			}
 			score := eval.SpellValue(card, p, g)
 			score += int(eval.ManaCurveBonus(card.ManaCost().CMC(), availMana, cmcs))
 			return score, true
 		}); action != nil {
 			return *action
+		}
+
+		// We are holding an instant and have no board play that leaves its mana
+		// up: keep the mana available instead of casting the instant proactively
+		// at sorcery speed via the main-phase instant loop below.
+		if heldInstant != nil {
+			return interactive.PriorityAction{Type: interactive.ActionPass}
 		}
 	}
 
@@ -607,6 +620,30 @@ func (s *Strategy) selectSingleBurnTarget(g *mage.Game, playerID uuid.UUID, poss
 		}
 	}
 	return nil
+}
+
+// canCastWhileReserving reports whether the player can pay for `cast` and still
+// have enough mana left to cast `reserve` afterward. It checks affordability of
+// the two costs combined, so the mana solver honors colors, dual lands, and
+// conversions rather than a color-blind mana count.
+func canCastWhileReserving(g *mage.Game, playerID uuid.UUID, cast, reserve mage.Card) bool {
+	combined := combinedManaCost(cast.ManaCost(), reserve.ManaCost())
+	return g.CanAfford(playerID, combined, mage.SpellContextForCard(cast))
+}
+
+// combinedManaCost sums two mana costs. The {X} portion is ignored: X-cost
+// spells consume all remaining mana, so callers exclude them from reservation.
+func combinedManaCost(a, b core.ManaCost) core.ManaCost {
+	a.Generic += b.Generic
+	a.White += b.White
+	a.Blue += b.Blue
+	a.Black += b.Black
+	a.Red += b.Red
+	a.Green += b.Green
+	a.Hybrid = append(append([]core.HybridSymbol{}, a.Hybrid...), b.Hybrid...)
+	a.HasX = false
+	a.XCount = 0
+	return a
 }
 
 func hasOpponentPermanentTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID) bool {

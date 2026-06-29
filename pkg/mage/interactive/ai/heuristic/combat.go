@@ -507,10 +507,15 @@ func effectsRegenerateAttached(effects []mage.Effect, attachedVars map[string]bo
 	return false
 }
 
-func holdBackValue(p mage.Player, g *mage.Game, w ai.WeightedPersonality) float64 {
+// bestHoldableInstant returns the highest-value castable instant in hand worth
+// considering for holding, along with its hold-adjusted value (removal and
+// beneficial tricks are weighted up). Returns nil/0 when no usable instant is
+// affordable.
+func bestHoldableInstant(p mage.Player, g *mage.Game) (mage.Card, float64) {
 	playerID := p.PlayerID()
 
-	bestInstantValue := 0.0
+	var bestCard mage.Card
+	bestValue := 0.0
 	for _, card := range p.Hand() {
 		if !card.HasType(core.TypeInstant) {
 			continue
@@ -533,22 +538,27 @@ func holdBackValue(p mage.Player, g *mage.Game, w ai.WeightedPersonality) float6
 		sv := float64(eval.SpellValue(card, p, g))
 		for _, a := range card.Abilities() {
 			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
-				outcome := mage.SpellOutcome(sa.Effects())
-				if outcome == mage.OutcomeDetriment {
+				switch mage.SpellOutcome(sa.Effects()) {
+				case mage.OutcomeDetriment:
 					sv *= 1.5
-				}
-				if outcome == mage.OutcomeBenefit {
+				case mage.OutcomeBenefit:
 					sv *= 1.3
 				}
 			}
 		}
-		if sv > bestInstantValue {
-			bestInstantValue = sv
+		if sv > bestValue {
+			bestValue = sv
+			bestCard = card
 		}
 	}
+	return bestCard, bestValue
+}
+
+func holdBackValue(p mage.Player, g *mage.Game, w ai.WeightedPersonality) float64 {
+	_, bestInstantValue := bestHoldableInstant(p, g)
 
 	bestSorceryValue := 0.0
-	for _, card := range g.GetCastableSpells(playerID) {
+	for _, card := range g.GetCastableSpells(p.PlayerID()) {
 		if card.HasType(core.TypeInstant) {
 			continue
 		}
@@ -567,6 +577,18 @@ func holdBackValue(p mage.Player, g *mage.Game, w ai.WeightedPersonality) float6
 		return bestInstantValue - threshold
 	}
 	return 0
+}
+
+// instantToHold returns the instant the AI should keep mana up for this main
+// phase, or nil when no instant is worth holding. Callers reserve the returned
+// card's mana when making sorcery-speed plays so the AI develops its board
+// instead of passing the whole main phase to hold a single trick.
+func instantToHold(p mage.Player, g *mage.Game, w ai.WeightedPersonality) mage.Card {
+	if holdBackValue(p, g, w) <= 0 {
+		return nil
+	}
+	card, _ := bestHoldableInstant(p, g)
+	return card
 }
 
 func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.PriorityAction {

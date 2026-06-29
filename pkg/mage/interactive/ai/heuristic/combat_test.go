@@ -243,6 +243,76 @@ func TestHoldBackValue_AggroDoesNotHold(t *testing.T) {
 	}
 }
 
+// Holding an instant should reserve only its mana, not freeze the whole main
+// phase: when the AI can afford both a board-developing spell and the held
+// instant, it develops and keeps the instant's mana up.
+func TestPriorityAction_DevelopsBoardWhileHoldingInstant(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetActivePlayerIndex(0)
+	g.SetStep(core.PrecombatMain)
+
+	dragon := makePerm("Dragon", "{4}{R}{R}", 5, 5, pb.PlayerID())
+	g.AddToBattlefield(dragon)
+
+	terror := mage.NewInstant("Terror", "{1}{B}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()))
+	terror.SetOwner(pa.PlayerID())
+	pa.AddToHand(terror)
+
+	bears := mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2)
+	bears.SetOwner(pa.PlayerID())
+	pa.AddToHand(bears)
+
+	// Enough mana for both Terror ({1}{B}) and Grizzly Bears ({1}{G}).
+	addLands(g, pa, "Swamp", 2)
+	addLands(g, pa, "Forest", 2)
+
+	// Precondition: the AI genuinely wants to hold the removal instant.
+	if holdBackValue(pa, g, ai.ControlWeighted) <= 0 {
+		t.Fatalf("test setup: expected the AI to want to hold Terror")
+	}
+
+	s := New(ai.ControlWeighted)
+	action := s.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionCastSpell || action.CardName != "Grizzly Bears" {
+		t.Fatalf("expected the AI to develop Grizzly Bears while holding Terror, got %+v", action)
+	}
+}
+
+// When the AI cannot afford both the held instant and a development spell, it
+// keeps the instant's mana up and passes rather than tapping out.
+func TestPriorityAction_PassesWhenCannotAffordBothHeldInstantAndSpell(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetActivePlayerIndex(0)
+	g.SetStep(core.PrecombatMain)
+
+	dragon := makePerm("Dragon", "{4}{R}{R}", 5, 5, pb.PlayerID())
+	g.AddToBattlefield(dragon)
+
+	terror := mage.NewInstant("Terror", "{1}{B}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()))
+	terror.SetOwner(pa.PlayerID())
+	pa.AddToHand(terror)
+
+	bears := mage.NewCreature("Grizzly Bears", "{1}{G}", 2, 2)
+	bears.SetOwner(pa.PlayerID())
+	pa.AddToHand(bears)
+
+	// Only enough mana for one of the two spells.
+	addLands(g, pa, "Swamp", 1)
+	addLands(g, pa, "Forest", 1)
+
+	if holdBackValue(pa, g, ai.ControlWeighted) <= 0 {
+		t.Fatalf("test setup: expected the AI to want to hold Terror")
+	}
+
+	s := New(ai.ControlWeighted)
+	action := s.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected the AI to hold mana and pass, got %+v", action)
+	}
+}
+
 // ── evaluateResponse (Phase 5A) ──────────────────────────────────────────────
 
 func TestEvaluateResponse_CastsRemovalOnOpponentTurn(t *testing.T) {
