@@ -142,6 +142,69 @@ func TestSolveAttack_DeadlineHit(t *testing.T) {
 	}
 }
 
+// addUntappedLand puts a single untapped basic land on the battlefield so the
+// player has mana available for combat tricks.
+func addUntappedLand(g *mage.Game, owner uuid.UUID, color core.Color) {
+	land := mage.NewLand("Land", mage.WithManaAbility(color))
+	land.SetOwner(owner)
+	perm := mage.NewPermanent(land, owner)
+	perm.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(perm)
+}
+
+func giantGrowth(owner uuid.UUID) mage.Card {
+	c := mage.NewInstant("Giant Growth", "{G}",
+		mage.NewTargetedSpell(mage.TargetCreature(), mage.Boost(mage.Fixed(3), mage.Fixed(3))))
+	c.SetOwner(owner)
+	return c
+}
+
+// With a pump trick in hand, attacking a 2/2 into a 2/3 becomes profitable: the
+// solver should declare the attack it would otherwise (correctly) refuse.
+func TestSolveAttack_AttacksWhenPumpTrickFlipsCombat(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blk := makePerm("Ogre", "{1}{R}", 2, 3, pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	addUntappedLand(g, pa.PlayerID(), core.Green)
+
+	// Baseline: without the trick the 2/2 should not attack into the 2/3.
+	if r := SolveAttack(g, pa.PlayerID(), defaultOpts()); len(r.Attackers) != 0 {
+		t.Fatalf("baseline: 2/2 should not attack into 2/3 without a trick, got %v", r.Attackers)
+	}
+
+	pa.AddToHand(giantGrowth(pa.PlayerID()))
+	r := SolveAttack(g, pa.PlayerID(), defaultOpts())
+	if len(r.Attackers) != 1 || r.Attackers[0] != atk.ID() {
+		t.Fatalf("with Giant Growth in hand the 2/2 should attack, got %v", r.Attackers)
+	}
+}
+
+// With a pump trick in hand, blocking a 3/3 with a 2/2 becomes a winning trade,
+// so the solver should declare the block it would otherwise refuse.
+func TestSolveDefense_BlocksWhenPumpTrickFlipsCombat(t *testing.T) {
+	g, pa, pb := makeGame()
+	// A 4/1 blocking a 1/5 is a pure loss without help (the 4/1 dies, the 1/5
+	// survives), so the solver should not block. Giant Growth turns the blocker
+	// into a 7/4 that kills the 1/5 and survives, making the block correct.
+	atk := makePerm("Spider", "{3}{G}", 1, 5, pa.PlayerID())
+	blk := makePerm("Brute", "{3}{R}", 4, 1, pb.PlayerID())
+	g.AddToBattlefield(atk, blk)
+	addUntappedLand(g, pb.PlayerID(), core.Green)
+	g.ExecuteAttackers(pa.PlayerID(), []uuid.UUID{atk.ID()})
+
+	// Baseline: without the trick the 4/1 should not block the 1/5.
+	if r := SolveDefense(g, pb.PlayerID(), defaultOpts()); len(r.Blocks) != 0 {
+		t.Fatalf("baseline: 4/1 should not block 1/5 without a trick, got %v", r.Blocks)
+	}
+
+	pb.AddToHand(giantGrowth(pb.PlayerID()))
+	r := SolveDefense(g, pb.PlayerID(), defaultOpts())
+	if len(r.Blocks) != 1 || r.Blocks[0].BlockerID != blk.ID() {
+		t.Fatalf("with Giant Growth in hand the 4/1 should block the 1/5, got %v", r.Blocks)
+	}
+}
+
 // ── SolveDefense ─────────────────────────────────────────────────────────────
 
 func TestSolveDefense_NoAttackers(t *testing.T) {

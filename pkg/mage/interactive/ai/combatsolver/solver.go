@@ -118,7 +118,7 @@ func SolveDefense(g *mage.Game, playerID uuid.UUID, opts Options) Result {
 			continue
 		}
 		clone.ExecuteBlockers(blockSet)
-		applyCombatSelfPump(clone, playerID, blockSet)
+		applyCombatTricks(clone, playerID, defenderPairings(blockSet), true)
 		clone.ExecuteCombatDamage()
 		clone.CheckStateBasedActions()
 		score := leaf(clone, playerID)
@@ -171,7 +171,10 @@ func worstBlockingResponse(g *mage.Game, playerID, oppID uuid.UUID,
 		}
 		clone := postAttack.Clone()
 		clone.ExecuteBlockers(blockSet)
+		// Opponent's on-board self-pump first (no hand modeling), then our
+		// post-blockers trick response on the attackers we declared.
 		applyCombatSelfPump(clone, oppID, blockSet)
+		applyCombatTricks(clone, playerID, attackerPairings(clone, playerID, blockSet), true)
 		clone.ExecuteCombatDamage()
 		clone.CheckStateBasedActions()
 		score := leaf(clone, playerID)

@@ -313,6 +313,30 @@ func TestPriorityAction_PassesWhenCannotAffordBothHeldInstantAndSpell(t *testing
 	}
 }
 
+// End-to-end: a held pump trick should make the Strategy's attack solver
+// declare an attack it would otherwise refuse (2/2 into a 2/3).
+func TestAttackers_AttacksWhenHoldingPumpTrick(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetActivePlayerIndex(0)
+
+	attacker := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	blocker := makePerm("Ogre", "{1}{R}", 2, 3, pb.PlayerID())
+	g.AddToBattlefield(attacker, blocker)
+	addLands(g, pa, "Forest", 1)
+
+	s := New(ai.MidrangeWeighted)
+
+	if atks := s.Attackers(pa, g); len(atks) != 0 {
+		t.Fatalf("baseline: 2/2 should not attack into 2/3 without a trick, got %v", atks)
+	}
+
+	pa.AddToHand(createCard(t, "Giant Growth", pa.PlayerID()))
+	atks := s.Attackers(pa, g)
+	if len(atks) != 1 || atks[0] != attacker.ID() {
+		t.Fatalf("with Giant Growth in hand the 2/2 should attack, got %v", atks)
+	}
+}
+
 // ── evaluateResponse (Phase 5A) ──────────────────────────────────────────────
 
 func TestEvaluateResponse_CastsRemovalOnOpponentTurn(t *testing.T) {
