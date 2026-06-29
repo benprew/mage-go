@@ -523,6 +523,87 @@ func TestPriorityAction_ActivatesAttachedRegenerationOnDoomedHost(t *testing.T) 
 	}
 }
 
+// A creature targeted by a destroy-removal spell on the stack should be saved
+// with a regeneration shield in response, outside of combat.
+func TestPriorityAction_RegeneratesAgainstRemovalSpell(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Swamp", 1)
+
+	skeleton := regenerator("Drudge Skeletons", 1, 1, pa.PlayerID())
+	g.AddToBattlefield(skeleton)
+
+	// Opponent's "destroy target creature" spell targets our skeleton.
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Controller: pb.PlayerID(),
+		Effects:    []mage.Effect{mage.DestroyTarget()},
+		Targets:    []uuid.UUID{skeleton.ID()},
+	})
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != skeleton.ID() {
+		t.Fatalf("expected regeneration in response to removal, got %+v", action)
+	}
+}
+
+// A creature targeted by lethal burn on the stack should be regenerated, since
+// regeneration also replaces destruction from lethal damage.
+func TestPriorityAction_RegeneratesAgainstLethalBurn(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Swamp", 1)
+
+	skeleton := regenerator("Drudge Skeletons", 1, 1, pa.PlayerID())
+	g.AddToBattlefield(skeleton)
+
+	bolt := createCard(t, "Lightning Bolt", pb.PlayerID())
+	var boltEffects []mage.Effect
+	for _, a := range bolt.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			boltEffects = sa.Effects()
+		}
+	}
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Card:       bolt,
+		Controller: pb.PlayerID(),
+		Effects:    boltEffects,
+		Targets:    []uuid.UUID{skeleton.ID()},
+	})
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != skeleton.ID() {
+		t.Fatalf("expected regeneration in response to lethal burn, got %+v", action)
+	}
+}
+
+// Regeneration does not replace exile, so the AI should not waste its shield
+// when the removal on the stack exiles the creature.
+func TestPriorityAction_DoesNotRegenerateAgainstExile(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Swamp", 1)
+
+	skeleton := regenerator("Drudge Skeletons", 1, 1, pa.PlayerID())
+	g.AddToBattlefield(skeleton)
+
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Controller: pb.PlayerID(),
+		Effects:    []mage.Effect{mage.ExileTarget()},
+		Targets:    []uuid.UUID{skeleton.ID()},
+	})
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type == interactive.ActionActivateAbility {
+		t.Fatalf("regeneration cannot stop exile; expected no activation, got %+v", action)
+	}
+}
+
 func TestEvaluateCombatOutcome_DeathtouchFirstStrikeSurvives(t *testing.T) {
 	g, pa, pb := makeGame()
 	atk := makePerm("Stinger", "{1}{B}", 1, 1, pa.PlayerID(),

@@ -325,6 +325,84 @@ func (s *Strategy) considerRegeneration(p mage.Player, g *mage.Game) *interactiv
 	return nil
 }
 
+// considerRegenerationAgainstRemoval looks for an opponent's spell or ability on
+// the stack that would destroy one of our creatures and, if we can, installs a
+// regeneration shield in response so the creature survives. Regeneration
+// replaces destruction (CR 701.15), so this answers "destroy target creature"
+// removal and lethal burn — but not exile, bounce, -X/-X, sacrifice, or
+// "can't be regenerated" destroys, which set no Destroys property and are
+// therefore skipped.
+func (s *Strategy) considerRegenerationAgainstRemoval(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+
+	var doomed []*mage.Permanent
+	seen := make(map[uuid.UUID]bool)
+	addDoomed := func(perm *mage.Permanent) {
+		if perm == nil || seen[perm.ID()] {
+			return
+		}
+		seen[perm.ID()] = true
+		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+			return
+		}
+		if g.HasRegenerationShield(perm.ID()) {
+			return
+		}
+		doomed = append(doomed, perm)
+	}
+
+	for _, obj := range g.StackObjects() {
+		if obj.Controller == playerID {
+			continue
+		}
+		for _, e := range obj.Effects {
+			props := e.Properties()
+			switch {
+			case props.Destroys && props.Mass:
+				for _, perm := range g.AllBattlefield() {
+					if perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+						addDoomed(perm)
+					}
+				}
+			case props.Destroys:
+				for _, tid := range obj.Targets {
+					addDoomed(g.FindPermanent(tid))
+				}
+			case props.DamageValue != nil && props.Outcome == mage.OutcomeDetriment:
+				dmg := props.DamageValue.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
+				for _, tid := range obj.Targets {
+					perm := g.FindPermanent(tid)
+					if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+						continue
+					}
+					if dmg >= perm.CurrentToughness(g)-perm.Damage {
+						addDoomed(perm)
+					}
+				}
+			}
+		}
+	}
+	if len(doomed) == 0 {
+		return nil
+	}
+
+	// Save the most valuable creature first.
+	sort.SliceStable(doomed, func(i, j int) bool {
+		return eval.EvalCreatureInGame(doomed[i], g) > eval.EvalCreatureInGame(doomed[j], g)
+	})
+
+	abilities := g.GetActivatableAbilities(playerID)
+	for _, target := range doomed {
+		if action := s.regenerationAbilityAction(playerID, g, abilities, target); action != nil {
+			return action
+		}
+		if action := s.regenerationSpellAction(p, g, target); action != nil {
+			return action
+		}
+	}
+	return nil
+}
+
 func (s *Strategy) regenerationAbilityAction(playerID uuid.UUID, g *mage.Game, abilities []mage.ActivatableInfo, target *mage.Permanent) *interactive.PriorityAction {
 	for i := range abilities {
 		info := &abilities[i]

@@ -128,6 +128,65 @@ func TestAutoSelectTargets_Immolation_NoTargetWhenNoneKillable(t *testing.T) {
 	}
 }
 
+// A counterspell must recognize an opponent's spell on the stack as a target
+// and be cast in response, picking the opposing spell (never our own).
+func TestPriorityAction_CountersOpponentSpell(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Island", 2)
+
+	counter := createCard(t, "Counterspell", pa.PlayerID())
+	pa.AddToHand(counter)
+
+	// Opponent's creature spell is on the stack.
+	dragon := createCard(t, "Grizzly Bears", pb.PlayerID())
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Card:       dragon,
+		Controller: pb.PlayerID(),
+		SourceID:   dragon.ID(),
+	})
+
+	s := New(ai.ControlWeighted)
+	action := s.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionCastSpell || action.CardName != "Counterspell" {
+		t.Fatalf("expected Counterspell to be cast in response, got %+v", action)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != dragon.ID() {
+		t.Fatalf("expected Counterspell to target the opposing spell %v, got %v", dragon.ID(), action.Targets)
+	}
+}
+
+// A counterspell selects the highest-value opposing spell when several are on
+// the stack, and never targets our own spell.
+func TestAutoSelectTargets_Counterspell_PicksBestOpposingSpell(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Island", 2)
+
+	counter := createCard(t, "Counterspell", pa.PlayerID())
+	pa.AddToHand(counter)
+
+	mine := createCard(t, "Grizzly Bears", pa.PlayerID())
+	cheap := createCard(t, "Grizzly Bears", pb.PlayerID())
+	bomb := createCard(t, "Shivan Dragon", pb.PlayerID())
+	for _, sp := range []struct {
+		card mage.Card
+		ctrl uuid.UUID
+	}{{mine, pa.PlayerID()}, {cheap, pb.PlayerID()}, {bomb, pb.PlayerID()}} {
+		g.PushStack(&mage.StackObject{
+			ID:         uuid.New(),
+			Card:       sp.card,
+			Controller: sp.ctrl,
+			SourceID:   sp.card.ID(),
+		})
+	}
+
+	s := New(ai.ControlWeighted)
+	targets := s.autoSelectTargets(pa, g, counter)
+	if len(targets) != 1 || targets[0] != bomb.ID() {
+		t.Fatalf("Counterspell should target the opponent's highest-value spell (Shivan Dragon), got %v", targets)
+	}
+}
+
 // Giant Growth and other pump tricks should be held through the declare-
 // attackers window and cast after blockers are declared.
 func TestPriorityAction_HoldsGiantGrowthUntilBlockers(t *testing.T) {

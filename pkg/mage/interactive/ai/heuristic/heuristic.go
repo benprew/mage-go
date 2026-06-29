@@ -104,6 +104,15 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		}
 	}
 
+	// Save a creature from a destroy- or lethal-burn removal spell or ability on
+	// the stack by installing a regeneration shield (or casting a regeneration
+	// spell) in response, before the removal resolves.
+	if stackHasOpponentThreat(g, playerID) {
+		if action := s.considerRegenerationAgainstRemoval(p, g); action != nil {
+			return *action
+		}
+	}
+
 	if mainPhase {
 		if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
 			if bestLand := chooseBestLand(p, g); bestLand != nil {
@@ -331,6 +340,14 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 		}
 
 		switch t.(type) {
+		case *mage.SpellOnStackTarget:
+			chosen := bestSpellOnStackTargets(g, playerID, possible, 1)
+			if len(chosen) == 0 {
+				return nil, false
+			}
+			targets = append(targets, chosen...)
+			continue
+
 		case *mage.DamageAnyTarget:
 			if outcome == mage.OutcomeBenefit {
 				chosen := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget)
@@ -511,6 +528,9 @@ func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage
 	opponent := g.GetOpponent(playerID)
 
 	switch t.(type) {
+	case *mage.SpellOnStackTarget:
+		return bestSpellOnStackTargets(g, playerID, possible, n)
+
 	case *mage.DamageAnyTarget:
 		if outcome == mage.OutcomeBenefit {
 			return bestNTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget, n)
@@ -656,6 +676,46 @@ func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, possible [
 		return nil
 	}
 	return []uuid.UUID{bestID}
+}
+
+// bestSpellOnStackTargets chooses which spell(s) on the stack to counter. It
+// only ever targets an opponent's spell (never our own) and prefers the
+// highest-value one, estimated by SpellValue from the caster's perspective so
+// the most threatening spell is countered first. `possible` holds the SourceIDs
+// of legal spell targets as returned by SpellOnStackTarget.Possible.
+func bestSpellOnStackTargets(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, n int) []uuid.UUID {
+	if n < 1 {
+		n = 1
+	}
+	type scoredSpell struct {
+		id    uuid.UUID
+		score int
+	}
+	var ranked []scoredSpell
+	for _, obj := range g.StackObjects() {
+		if obj.IsAbility || obj.Card == nil || obj.Controller == playerID {
+			continue
+		}
+		if !slices.Contains(possible, obj.SourceID) {
+			continue
+		}
+		score := max(
+			// Any opposing spell legal to counter is worth at least a floor value, so
+			// a low-cost spell is still a valid target rather than being skipped.
+			eval.SpellValue(obj.Card, g.GetPlayer(obj.Controller), g), 1)
+		ranked = append(ranked, scoredSpell{obj.SourceID, score})
+	}
+	sort.SliceStable(ranked, func(i, j int) bool {
+		return ranked[i].score > ranked[j].score
+	})
+	if len(ranked) > n {
+		ranked = ranked[:n]
+	}
+	out := make([]uuid.UUID, len(ranked))
+	for i := range ranked {
+		out[i] = ranked[i].id
+	}
+	return out
 }
 
 func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool) []uuid.UUID {

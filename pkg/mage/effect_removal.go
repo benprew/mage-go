@@ -22,7 +22,7 @@ func DestroyTargetStep() Effect { return &destroyTargetEffect{} }
 
 func (e *destroyTargetEffect) Text() string { return "destroy target" }
 func (e *destroyTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
 }
 
 // destroyTargetPermanentEffect destroys a target permanent matching a filter.
@@ -47,7 +47,7 @@ func DestroyTargetArtifact() Effect {
 
 func (e *destroyTargetPermanentEffect) Text() string { return e.text }
 func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
 }
 
 // DestroyAllLands destroys all lands (Armageddon).
@@ -73,7 +73,7 @@ func DestroyAllMatching(filter PermanentFilter, text string) Effect {
 
 func (e *destroyAllMatchingEffect) Text() string { return e.text }
 func (e *destroyAllMatchingEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+	return EffectProperties{Outcome: OutcomeDetriment, Mass: true, Destroys: true}
 }
 
 // DestroyAllCreatures destroys all creatures (board wipe).
