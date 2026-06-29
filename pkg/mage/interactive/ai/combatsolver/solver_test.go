@@ -1,6 +1,7 @@
 package combatsolver
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -202,6 +203,58 @@ func TestSolveDefense_BlocksWhenPumpTrickFlipsCombat(t *testing.T) {
 	r := SolveDefense(g, pb.PlayerID(), defaultOpts())
 	if len(r.Blocks) != 1 || r.Blocks[0].BlockerID != blk.ID() {
 		t.Fatalf("with Giant Growth in hand the 4/1 should block the 1/5, got %v", r.Blocks)
+	}
+}
+
+// battleMage is a 0/1 with a mana-only "{G}: target creature gets +2/+2".
+func battleMage(owner uuid.UUID) *mage.Permanent {
+	return makePerm("Battle Mage", "{1}{G}", 0, 1, owner,
+		mage.WithActivatedAbility(
+			mage.Boost(mage.Fixed(2), mage.Fixed(2)),
+			mage.ManaCostOf("{G}"),
+			mage.WithTarget(mage.TargetCreature()),
+		))
+}
+
+// A targeted pump ability on another creature should let the solver attack a
+// 2/2 into a 2/3: the ability is only usable with mana, so the attack appears
+// only once a land is available.
+func TestSolveAttack_AttacksWhenTargetedPumpAbilityFlipsCombat(t *testing.T) {
+	g, pa, pb := makeGame()
+	bear := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	mage_ := battleMage(pa.PlayerID())
+	blk := makePerm("Ogre", "{1}{R}", 2, 3, pb.PlayerID())
+	g.AddToBattlefield(bear, mage_, blk)
+
+	if r := SolveAttack(g, pa.PlayerID(), defaultOpts()); slices.Contains(r.Attackers, bear.ID()) {
+		t.Fatalf("baseline: bear should not attack without mana to pump, got %v", r.Attackers)
+	}
+
+	addUntappedLand(g, pa.PlayerID(), core.Green)
+	r := SolveAttack(g, pa.PlayerID(), defaultOpts())
+	if !slices.Contains(r.Attackers, bear.ID()) {
+		t.Fatalf("with a targeted pump ability available the bear should attack, got %v", r.Attackers)
+	}
+}
+
+// A targeted pump ability should let the solver block a 1/5 with a 4/1: the
+// 4/1 dies for nothing without help, but the ability pumps it to survive+kill.
+func TestSolveDefense_BlocksWhenTargetedPumpAbilityFlipsCombat(t *testing.T) {
+	g, pa, pb := makeGame()
+	atk := makePerm("Spider", "{3}{G}", 1, 5, pa.PlayerID())
+	blk := makePerm("Brute", "{3}{R}", 4, 1, pb.PlayerID())
+	mage_ := battleMage(pb.PlayerID())
+	g.AddToBattlefield(atk, blk, mage_)
+	g.ExecuteAttackers(pa.PlayerID(), []uuid.UUID{atk.ID()})
+
+	if r := SolveDefense(g, pb.PlayerID(), defaultOpts()); len(r.Blocks) != 0 {
+		t.Fatalf("baseline: 4/1 should not block 1/5 without mana to pump, got %v", r.Blocks)
+	}
+
+	addUntappedLand(g, pb.PlayerID(), core.Green)
+	r := SolveDefense(g, pb.PlayerID(), defaultOpts())
+	if len(r.Blocks) != 1 || r.Blocks[0].BlockerID != blk.ID() {
+		t.Fatalf("with a targeted pump ability the 4/1 should block the 1/5, got %v", r.Blocks)
 	}
 }
 

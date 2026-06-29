@@ -1,6 +1,8 @@
 package combatsolver
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
@@ -24,6 +26,23 @@ type handPump struct {
 	power, toughness, cost int
 }
 
+// abilityPump is a mana-only activated ability that pumps a target creature
+// (e.g. "{G}: target creature gets +2/+2"). Unlike a hand spell it is a
+// repeatable resource — it can fire as many times as mana allows — so it is
+// bounded only by the shared mana budget, never consumed.
+type abilityPump struct {
+	power, toughness, cost int
+	source                 *mage.Permanent
+	target                 mage.Target
+}
+
+// pumpUnit is one repeatable +power/+toughness-for-cost increment applicable to
+// a specific creature (its own self-pump ability, or a targeted pump ability
+// that can legally target it).
+type pumpUnit struct {
+	power, toughness, cost int
+}
+
 // applyCombatTricks models the AI firing combat pump during the post-blockers
 // response window. For each pairing where our creature is fighting an enemy, it
 // applies the cheapest combination of self-pump abilities (mana-only,
@@ -44,6 +63,7 @@ func applyCombatTricks(g *mage.Game, playerID uuid.UUID, pairings []trickPairing
 	if includeHandSpells {
 		handPumps = gatherHandPumps(g, playerID)
 	}
+	abilityPumps := gatherAbilityPumps(g, playerID)
 
 	for _, pr := range pairings {
 		if pr.enemyID == uuid.Nil {
@@ -54,16 +74,17 @@ func applyCombatTricks(g *mage.Game, playerID uuid.UUID, pairings []trickPairing
 		if ours == nil || enemy == nil || ours.Controller != playerID {
 			continue
 		}
-		budget = applyPumpToFlip(g, ours, enemy, &handPumps, budget)
+		budget = applyPumpToFlip(g, playerID, ours, enemy, &handPumps, abilityPumps, budget)
 	}
 }
 
 // applyPumpToFlip pumps `ours` just enough to both kill `enemy` and survive the
-// exchange, drawing on its self-pump ability and the shared one-shot hand-pump
-// pool. It applies the cheapest feasible plan and returns the remaining mana
-// budget; if no plan within budget achieves the flip (or none is needed), it
-// leaves the game unchanged and returns the budget as-is.
-func applyPumpToFlip(g *mage.Game, ours, enemy *mage.Permanent, handPumps *[]handPump, budget int) int {
+// exchange. It draws on the repeatable pump engines applicable to `ours` (its
+// own self-pump ability and any targeted pump ability that can legally target
+// it) plus the shared one-shot hand-pump pool. It applies the cheapest feasible
+// plan and returns the remaining mana budget; if no plan within budget achieves
+// the flip (or none is needed), it leaves the game unchanged.
+func applyPumpToFlip(g *mage.Game, playerID uuid.UUID, ours, enemy *mage.Permanent, handPumps *[]handPump, abilityPumps []abilityPump, budget int) int {
 	oursPow := ours.CurrentPower(g)
 	oursTough := ours.CurrentToughness(g)
 	enemyPow := enemy.CurrentPower(g)
@@ -89,40 +110,54 @@ func applyPumpToFlip(g *mage.Game, ours, enemy *mage.Permanent, handPumps *[]han
 	needP := max(killThreshold-oursPow, 0)
 	needT := max(enemyPow-oursTough+1, 0)
 
-	self, hasSelf := selfPumpAbility(ours)
-	maxUses := 0
-	if hasSelf && self.cost > 0 {
-		maxUses = budget / self.cost
-	}
+	units := applicablePumpUnits(g, playerID, ours, abilityPumps)
 
 	bestCost := -1
 	bestSpell := -1
 	bestAddP, bestAddT := 0, 0
 
+	// Try each repeatable engine on its own (combined with at most one one-shot
+	// hand spell). A single engine plus a spell covers the common cases; mixing
+	// two different repeatable engines on one creature is left unmodeled.
+	unitChoices := []int{-1}
+	for i := range units {
+		unitChoices = append(unitChoices, i)
+	}
 	spellChoices := []int{-1}
 	for i := range *handPumps {
 		spellChoices = append(spellChoices, i)
 	}
-	for _, spellIdx := range spellChoices {
-		spP, spT, spCost := 0, 0, 0
-		if spellIdx >= 0 {
-			sp := (*handPumps)[spellIdx]
-			spP, spT, spCost = sp.power, sp.toughness, sp.cost
-		}
-		for uses := 0; uses <= maxUses; uses++ {
-			cost := uses*self.cost + spCost
-			if cost > budget {
-				break
+
+	for _, unitIdx := range unitChoices {
+		var unit pumpUnit
+		maxUses := 0
+		if unitIdx >= 0 {
+			unit = units[unitIdx]
+			if unit.cost > 0 {
+				maxUses = budget / unit.cost
 			}
-			addP := uses*self.power + spP
-			addT := uses*self.toughness + spT
-			if addP >= needP && addT >= needT {
-				if bestCost < 0 || cost < bestCost {
-					bestCost = cost
-					bestSpell = spellIdx
-					bestAddP, bestAddT = addP, addT
+		}
+		for _, spellIdx := range spellChoices {
+			spP, spT, spCost := 0, 0, 0
+			if spellIdx >= 0 {
+				sp := (*handPumps)[spellIdx]
+				spP, spT, spCost = sp.power, sp.toughness, sp.cost
+			}
+			for uses := 0; uses <= maxUses; uses++ {
+				cost := uses*unit.cost + spCost
+				if cost > budget {
+					break
 				}
-				break
+				addP := uses*unit.power + spP
+				addT := uses*unit.toughness + spT
+				if addP >= needP && addT >= needT {
+					if bestCost < 0 || cost < bestCost {
+						bestCost = cost
+						bestSpell = spellIdx
+						bestAddP, bestAddT = addP, addT
+					}
+					break
+				}
 			}
 		}
 	}
@@ -141,6 +176,88 @@ func applyPumpToFlip(g *mage.Game, ours, enemy *mage.Permanent, handPumps *[]han
 		*handPumps = append(hp[:bestSpell], hp[bestSpell+1:]...)
 	}
 	return budget - bestCost
+}
+
+// applicablePumpUnits returns the repeatable pump increments that can be applied
+// to `ours`: its own self-pump ability (if any) and every targeted pump ability
+// the player controls that can legally target it.
+func applicablePumpUnits(g *mage.Game, playerID uuid.UUID, ours *mage.Permanent, abilityPumps []abilityPump) []pumpUnit {
+	var units []pumpUnit
+	if self, ok := selfPumpAbility(ours); ok {
+		units = append(units, pumpUnit(self))
+	}
+	for _, ap := range abilityPumps {
+		if slices.Contains(ap.target.Possible(playerID, ap.source.Card, g), ours.ID()) {
+			units = append(units, pumpUnit{power: ap.power, toughness: ap.toughness, cost: ap.cost})
+		}
+	}
+	return units
+}
+
+// gatherAbilityPumps collects the player's mana-only activated abilities that
+// pump a single target creature (e.g. "{G}: target creature gets +2/+2").
+// Abilities with non-mana cost components (tap, sacrifice) are excluded — they
+// are one-shot and would need tap/timing modeling, left to a later pass.
+func gatherAbilityPumps(g *mage.Game, playerID uuid.UUID) []abilityPump {
+	var pumps []abilityPump
+	for _, perm := range g.AllBattlefield() {
+		if perm.Controller != playerID {
+			continue
+		}
+		for _, raw := range perm.RuntimeAbilities {
+			ab, ok := mage.UnwrapAbility(raw).(mage.ActivatedAbility)
+			if !ok {
+				continue
+			}
+			targets := ab.Targets()
+			if len(targets) != 1 {
+				continue
+			}
+			if _, ok := targets[0].(*mage.CreatureTarget); !ok {
+				continue
+			}
+			cost := manaOnlyCost(ab)
+			if cost <= 0 {
+				continue
+			}
+			power, toughness := pumpBoost(ab.Effects())
+			if power <= 0 && toughness <= 0 {
+				continue
+			}
+			pumps = append(pumps, abilityPump{
+				power: power, toughness: toughness, cost: cost,
+				source: perm, target: targets[0],
+			})
+		}
+	}
+	return pumps
+}
+
+// manaOnlyCost returns the total mana value of an ability's cost, or 0 if the
+// ability has any non-mana cost component (tap, sacrifice, discard, etc.).
+func manaOnlyCost(ab mage.ActivatedAbility) int {
+	total := 0
+	for _, c := range ab.Costs() {
+		mc, ok := c.(*mage.ManaCostPayment)
+		if !ok {
+			return 0
+		}
+		total += mc.MC.CMC()
+	}
+	return total
+}
+
+// pumpBoost sums the beneficial +power/+toughness an effect list grants.
+func pumpBoost(effects []mage.Effect) (power, toughness int) {
+	for _, e := range effects {
+		props := e.Properties()
+		if props.Outcome != mage.OutcomeBenefit {
+			continue
+		}
+		power += max(props.PowerBoost, 0)
+		toughness += max(props.ToughnessBoost, 0)
+	}
+	return power, toughness
 }
 
 // gatherHandPumps collects affordable "+X/+Y" combat tricks from the player's
