@@ -798,9 +798,6 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 // ExecuteBlockers declares blockers from explicit assignments for AI search clones.
 // It mirrors doDeclareBlockers but accepts explicit block assignments.
 func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
-	if len(assignments) == 0 {
-		return
-	}
 	blockerCount := make(map[uuid.UUID]int)
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
@@ -832,6 +829,17 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		})
 	}
 	g.combat.SnapshotBlockedAlone()
+
+	// Mirror doDeclareBlockers: fire EvtBlockersDecl once after all blockers are
+	// assigned, then resolve the resulting triggers. Without this, combat
+	// abilities that key off the declare-blockers step are invisible to AI
+	// search clones — e.g. Murk Dwellers' "attacks and isn't blocked, it gets
+	// +2/+0" never fires, so the solver evaluates an unblocked Murk Dwellers as
+	// a 2/2 dealing 2 instead of a 4/2 dealing 4. The event is fired even when
+	// no blockers were declared, since "isn't blocked" triggers fire then.
+	g.FireEvent(GameEvent{Type: EvtBlockersDecl})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
 }
 
 // ExecuteCombatDamage resolves first-strike and normal combat damage for AI search clones.
