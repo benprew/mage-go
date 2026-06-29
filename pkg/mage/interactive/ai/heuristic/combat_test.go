@@ -12,6 +12,73 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
+// CombatScore summarizes the outcome of a combat step. It is a test-only
+// scoring view over the production simulateCombatDamage simulator, used to
+// assert that damage, deaths, and life exchange resolve correctly across
+// first strike, deathtouch, trample, and lifelink.
+type CombatScore struct {
+	DamageToOpponent   int
+	OurCreaturesLost   int
+	TheirCreaturesLost int
+	LifeGained         int // life gained by our lifelink attackers
+	OpponentLifeGained int // life gained by opponent's lifelink blockers
+	Score              int
+}
+
+// evaluateCombatOutcome simulates the given attack/block and scores it. Kept as
+// a test helper around the live simulateCombatDamage after the standalone
+// heuristic combat evaluator was superseded by the combatsolver.
+func evaluateCombatOutcome(g *mage.Game, playerID uuid.UUID, attackers []uuid.UUID, blocks []mage.BlockAssignment) CombatScore {
+	opponent := g.GetOpponent(playerID)
+	if opponent == nil {
+		return CombatScore{}
+	}
+
+	blockerMap := make(map[uuid.UUID][]uuid.UUID)
+	for _, b := range blocks {
+		blockerMap[b.AttackerID] = append(blockerMap[b.AttackerID], b.BlockerID)
+	}
+
+	res := simulateCombatDamage(g, attackers, blockerMap, nil)
+
+	cs := CombatScore{
+		DamageToOpponent:   res.damageToOpponent,
+		LifeGained:         res.lifeGained,
+		OpponentLifeGained: res.opponentLifeGained,
+	}
+
+	// Tally kills and lost value from accumulated damage (including deathtouch marks).
+	var ourLostValue, theirLostValue int
+	for _, atkID := range attackers {
+		atk := g.FindPermanent(atkID)
+		if atk == nil {
+			continue
+		}
+		blockerIDs := blockerMap[atkID]
+		if len(blockerIDs) == 0 {
+			continue
+		}
+		if res.isDead(atkID, atk.CurrentToughness(g)) {
+			cs.OurCreaturesLost++
+			ourLostValue += eval.EvalCreatureInGame(atk, g)
+		}
+		for _, blkID := range blockerIDs {
+			blk := g.FindPermanent(blkID)
+			if blk == nil {
+				continue
+			}
+			if res.isDead(blkID, blk.CurrentToughness(g)) {
+				cs.TheirCreaturesLost++
+				theirLostValue += eval.EvalCreatureInGame(blk, g)
+			}
+		}
+	}
+
+	cs.Score = cs.DamageToOpponent + theirLostValue - ourLostValue + cs.LifeGained - cs.OpponentLifeGained
+
+	return cs
+}
+
 // ── evaluateCombatOutcome (Phase 5D) ─────────────────────────────────────────
 
 func TestEvaluateCombatOutcome_UnblockedDamage(t *testing.T) {
@@ -95,149 +162,6 @@ func TestEvaluateCombatOutcome_Trample(t *testing.T) {
 	}
 	if cs.TheirCreaturesLost != 1 {
 		t.Errorf("TheirCreaturesLost = %d, want 1", cs.TheirCreaturesLost)
-	}
-}
-
-// ── findGangBlocks (Phase 5C) ────────────────────────────────────────────────
-
-func TestFindGangBlocks_TwoSmallBlockBig(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Giant", "{3}{G}", 4, 4, pa.PlayerID())
-	b1 := makePerm("Bear1", "{1}{G}", 2, 2, pb.PlayerID())
-	b2 := makePerm("Bear2", "{1}{G}", 2, 2, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2)
-
-	available := []*mage.Permanent{b1, b2}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-
-	if gang == nil {
-		t.Fatal("expected gang block, got nil")
-	}
-	if len(gang) != 2 {
-		t.Fatalf("expected 2 gang blockers, got %d", len(gang))
-	}
-}
-
-func TestFindGangBlocks_NotWorthIt(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	b1 := makePerm("Knight1", "{1}{W}", 2, 2, pb.PlayerID())
-	b2 := makePerm("Knight2", "{1}{W}", 2, 2, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2)
-
-	available := []*mage.Permanent{b1, b2}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-
-	if gang != nil {
-		t.Errorf("expected no gang block (not worthwhile), got %d blockers", len(gang))
-	}
-}
-
-func TestFindGangBlocks_LethalOverridesTradeCheck(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	b1 := makePerm("Elf1", "{G}", 1, 1, pb.PlayerID())
-	b2 := makePerm("Elf2", "{G}", 1, 1, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2)
-
-	available := []*mage.Permanent{b1, b2}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), true)
-
-	if gang == nil {
-		t.Fatal("expected gang block when facing lethal, got nil")
-	}
-}
-
-func TestFindGangBlocks_ThreeBlockersKillBig(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Wurm", "{5}{G}{G}", 7, 7, pa.PlayerID())
-	b1 := makePerm("Soldier1", "{2}{W}", 3, 2, pb.PlayerID())
-	b2 := makePerm("Soldier2", "{2}{W}", 3, 2, pb.PlayerID())
-	b3 := makePerm("Soldier3", "{2}{W}", 3, 2, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2, b3)
-
-	available := []*mage.Permanent{b1, b2, b3}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-
-	if gang == nil {
-		t.Fatal("expected 3-blocker gang block, got nil")
-	}
-	if len(gang) != 3 {
-		t.Fatalf("expected 3 gang blockers, got %d", len(gang))
-	}
-}
-
-func TestFindGangBlocks_ThreeTokensNotWorthIt(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Beast", "{3}{G}{G}", 5, 5, pa.PlayerID())
-	b1 := makePerm("Token1", "{0}", 1, 1, pb.PlayerID())
-	b2 := makePerm("Token2", "{0}", 1, 1, pb.PlayerID())
-	b3 := makePerm("Token3", "{0}", 1, 1, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2, b3)
-
-	available := []*mage.Permanent{b1, b2, b3}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-
-	if gang != nil {
-		t.Errorf("expected no gang block (can't kill 5/5 with three 1/1s), got %d blockers", len(gang))
-	}
-}
-
-func TestFindGangBlocks_ThreeBlockersLethalOverride(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Wurm", "{5}{G}{G}", 7, 7, pa.PlayerID())
-	b1 := makePerm("Knight1", "{2}{W}", 3, 3, pb.PlayerID())
-	b2 := makePerm("Knight2", "{2}{W}", 3, 3, pb.PlayerID())
-	b3 := makePerm("Knight3", "{2}{W}", 3, 3, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2, b3)
-
-	available := []*mage.Permanent{b1, b2, b3}
-
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-	if gang != nil {
-		t.Errorf("expected no gang block without lethal (value-negative), got %d blockers", len(gang))
-	}
-
-	gang = findGangBlocks(atk, available, g, pb.PlayerID(), true)
-	if gang == nil {
-		t.Fatal("expected gang block when facing lethal, got nil")
-	}
-	if len(gang) != 3 {
-		t.Fatalf("expected 3 gang blockers when facing lethal, got %d", len(gang))
-	}
-}
-
-func TestFindGangBlocks_TwoBlockersFail_ThreeSucceed(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Giant", "{4}{G}{G}", 6, 6, pa.PlayerID())
-	b1 := makePerm("Guard1", "{1}{W}", 2, 2, pb.PlayerID())
-	b2 := makePerm("Guard2", "{1}{W}", 2, 2, pb.PlayerID())
-	b3 := makePerm("Knight", "{2}{W}", 3, 3, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2, b3)
-
-	available := []*mage.Permanent{b1, b2, b3}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-
-	if gang == nil {
-		t.Fatal("expected 3-blocker gang block (2 blockers can't kill 6/6), got nil")
-	}
-	if len(gang) != 3 {
-		t.Fatalf("expected 3 gang blockers, got %d", len(gang))
-	}
-}
-
-func TestFindGangBlocks_CantBlock(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Bird", "{1}{U}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Flying))
-	b1 := makePerm("Bear1", "{1}{G}", 2, 2, pb.PlayerID())
-	b2 := makePerm("Bear2", "{1}{G}", 2, 2, pb.PlayerID())
-	g.AddToBattlefield(atk, b1, b2)
-
-	available := []*mage.Permanent{b1, b2}
-	gang := findGangBlocks(atk, available, g, pb.PlayerID(), false)
-
-	if gang != nil {
-		t.Error("ground creatures should not gang-block a flyer")
 	}
 }
 
@@ -354,77 +278,6 @@ func TestEvaluateResponse_PassWithNoInstants(t *testing.T) {
 
 	if response != nil {
 		t.Errorf("expected nil response with empty hand, got %v", response)
-	}
-}
-
-// ── raceInformedAttack (Phase 5E) ────────────────────────────────────────────
-
-func TestRaceInformedAttack_FavorableRaceAttacksAll(t *testing.T) {
-	g, pa, pb := makeGame()
-	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	g.AddToBattlefield(creature)
-
-	race := eval.RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
-	if !raceInformedAttack(creature, g, pb.PlayerID(), race) {
-		t.Error("should attack when racing favorably")
-	}
-}
-
-func TestRaceInformedAttack_UnfavorableOnlyEvasion(t *testing.T) {
-	g, pa, pb := makeGame()
-	ground := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
-	flyer := makePerm("Bird", "{1}{U}", 2, 2, pa.PlayerID(), mage.WithKeyword(core.Flying))
-	g.AddToBattlefield(ground, flyer)
-
-	race := eval.RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
-
-	if raceInformedAttack(ground, g, pb.PlayerID(), race) {
-		t.Error("ground creature should not attack when racing unfavorably")
-	}
-	if !raceInformedAttack(flyer, g, pb.PlayerID(), race) {
-		t.Error("flying creature should attack when racing unfavorably")
-	}
-}
-
-func TestRaceInformedAttack_TiedRaceTradesUp(t *testing.T) {
-	g, pa, pb := makeGame()
-	creature := makePerm("Giant", "{3}{G}", 4, 5, pa.PlayerID())
-	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.AddToBattlefield(creature, blk)
-
-	race := eval.RaceInfo{MyClock: 3, TheirClock: 3, Racing: true}
-
-	if !raceInformedAttack(creature, g, pb.PlayerID(), race) {
-		t.Error("should attack with profitable creature when race is tied")
-	}
-}
-
-// ── raceInformedBlock (Phase 5E) ─────────────────────────────────────────────
-
-func TestRaceInformedBlock_FavorableSkipsSmall(t *testing.T) {
-	g, _, pb := makeGame()
-	pb.SetLife(20)
-	smallAtk := makePerm("Elf", "{G}", 1, 1, uuid.New())
-	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.AddToBattlefield(smallAtk, blk)
-
-	race := eval.RaceInfo{MyClock: 2, TheirClock: 4, Racing: true}
-
-	if raceInformedBlock(smallAtk, blk, g, race) {
-		t.Error("should skip blocking small attacker when racing favorably")
-	}
-}
-
-func TestRaceInformedBlock_UnfavorableBlocksAggressively(t *testing.T) {
-	g, _, pb := makeGame()
-	atk := makePerm("Giant", "{3}{R}", 4, 4, uuid.New())
-	blk := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
-	g.AddToBattlefield(atk, blk)
-
-	race := eval.RaceInfo{MyClock: 4, TheirClock: 2, Racing: true}
-
-	if !raceInformedBlock(atk, blk, g, race) {
-		t.Error("should block aggressively when racing unfavorably")
 	}
 }
 
