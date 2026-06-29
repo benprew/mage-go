@@ -4,6 +4,8 @@ package heuristic
 
 import (
 	"maps"
+	"slices"
+	"sort"
 
 	"github.com/google/uuid"
 
@@ -558,6 +560,8 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
 	playerID := p.PlayerID()
 
+	var targets []uuid.UUID
+
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*mage.SpellAbility)
 		if !ok || sa.Kind() != mage.ActionSpell {
@@ -569,79 +573,31 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 			purpose = hintedPurpose
 		}
 		damage := spellDamageForTargets(g, playerID, card, nil)
+		outcome := mage.SpellOutcome(sa.Effects())
+
+		// Each Target spec is resolved independently and its chosen targets are
+		// accumulated, so spells that target multiple things ("up to two target
+		// creatures", "target player and target creature") are fully populated
+		// rather than only filling the first requirement.
 		for _, t := range sa.Targets() {
 			possible := t.Possible(playerID, card, g)
 			if len(possible) == 0 {
+				if t.Min() > 0 {
+					return nil
+				}
+				continue
+			}
+
+			chosen := s.selectTargetsForSpec(g, playerID, t, possible, purpose, damage, outcome, hint)
+			if len(chosen) < t.Min() {
 				return nil
 			}
-
-			outcome := mage.SpellOutcome(sa.Effects())
-			switch t.(type) {
-			case *mage.DamageAnyTarget:
-				if outcome == mage.OutcomeBenefit {
-					return bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget)
-				}
-				opponent := g.GetOpponent(playerID)
-				if s.weights().TargetFace >= 0.5 && opponent != nil {
-					for _, id := range possible {
-						if id == opponent.PlayerID() && shouldAimBurnAtFace(g, playerID, damage) {
-							return []uuid.UUID{id}
-						}
-					}
-				}
-				if hint.PreferTarget == mage.PreferOpponentFaceIfLethal && opponent != nil && damage >= opponent.Life() {
-					return []uuid.UUID{opponent.PlayerID()}
-				}
-				if targets := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetBurn, damage, false, true, hint.PreferTarget); len(targets) > 0 {
-					return targets
-				}
-				if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) {
-					return []uuid.UUID{opponent.PlayerID()}
-				}
-
-			case *mage.CreatureTarget:
-				if outcome == mage.OutcomeBenefit {
-					return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
-				}
-				if targets := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, false, true, hint.PreferTarget); len(targets) > 0 {
-					return targets
-				}
-				// Only fall back to own creatures for beneficial spells;
-				// never target your own creature with removal.
-				if outcome == mage.OutcomeBenefit {
-					return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, true, false, hint.PreferTarget)
-				}
-
-			case *mage.OpponentTarget:
-				opponent := g.GetOpponent(playerID)
-				if opponent != nil {
-					return []uuid.UUID{opponent.PlayerID()}
-				}
-
-			case *mage.PlayerTarget:
-				// Beneficial player-targeted spells (e.g. Stream of Life's
-				// life gain) help us, so point them at ourselves; detrimental
-				// ones go at the opponent.
-				if outcome == mage.OutcomeBenefit {
-					return []uuid.UUID{playerID}
-				}
-				opponent := g.GetOpponent(playerID)
-				if opponent != nil {
-					return []uuid.UUID{opponent.PlayerID()}
-				}
-				return []uuid.UUID{playerID}
-
-			default:
-				preferOwn := outcome == mage.OutcomeBenefit
-				preferOpponent := outcome == mage.OutcomeDetriment
-				if targets := bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, hint.PreferTarget); len(targets) > 0 {
-					return targets
-				}
-				if !preferOpponent && len(possible) > 0 {
-					return []uuid.UUID{possible[0]}
-				}
-			}
+			targets = append(targets, chosen...)
 		}
+	}
+
+	if len(targets) > 0 {
+		return targets
 	}
 
 	// Check CastTargets for auras and other cards with cast-time targeting
@@ -652,8 +608,8 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		}
 		switch t.(type) {
 		case *mage.CreatureTarget:
-			if targets := bestAuraTarget(g, playerID, card, possible); len(targets) > 0 {
-				return targets
+			if tg := bestAuraTarget(g, playerID, card, possible); len(tg) > 0 {
+				return tg
 			}
 		default:
 			if len(possible) > 0 {
@@ -662,6 +618,95 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		}
 	}
 
+	return targets
+}
+
+// selectTargetsForSpec chooses up to t.Max() targets for a single Target spec.
+// For specs that accept more than one target it returns the best N (distinct);
+// for single-target specs it preserves the original per-type selection logic.
+func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage.Target, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, outcome mage.Outcome, hint mage.AIHint) []uuid.UUID {
+	n := t.Max()
+	if n < 1 {
+		n = 1
+	}
+	opponent := g.GetOpponent(playerID)
+
+	switch t.(type) {
+	case *mage.DamageAnyTarget:
+		if outcome == mage.OutcomeBenefit {
+			return bestNTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget, n)
+		}
+		if n <= 1 {
+			return s.selectSingleBurnTarget(g, playerID, possible, damage, hint, opponent)
+		}
+		chosen := bestNTargetsForRequirement(g, playerID, possible, eval.TargetBurn, damage, false, true, hint.PreferTarget, n)
+		if opponent != nil && len(chosen) < n && shouldAimBurnAtFace(g, playerID, damage) &&
+			slices.Contains(possible, opponent.PlayerID()) && !slices.Contains(chosen, opponent.PlayerID()) {
+			chosen = append(chosen, opponent.PlayerID())
+		}
+		if len(chosen) == 0 && opponent != nil &&
+			(shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) &&
+			slices.Contains(possible, opponent.PlayerID()) {
+			chosen = []uuid.UUID{opponent.PlayerID()}
+		}
+		return chosen
+
+	case *mage.CreatureTarget:
+		preferOwn := outcome == mage.OutcomeBenefit
+		return bestNTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, !preferOwn, hint.PreferTarget, n)
+
+	case *mage.OpponentTarget:
+		if opponent != nil {
+			return []uuid.UUID{opponent.PlayerID()}
+		}
+		return nil
+
+	case *mage.PlayerTarget:
+		// Beneficial player-targeted spells (e.g. Stream of Life's life gain)
+		// help us, so point them at ourselves; detrimental ones go at the opponent.
+		if outcome == mage.OutcomeBenefit {
+			return []uuid.UUID{playerID}
+		}
+		if opponent != nil {
+			return []uuid.UUID{opponent.PlayerID()}
+		}
+		return []uuid.UUID{playerID}
+
+	default:
+		preferOwn := outcome == mage.OutcomeBenefit
+		preferOpponent := outcome == mage.OutcomeDetriment
+		chosen := bestNTargetsForRequirement(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, hint.PreferTarget, n)
+		if len(chosen) == 0 && !preferOpponent && len(possible) > 0 {
+			return []uuid.UUID{possible[0]}
+		}
+		return chosen
+	}
+}
+
+// selectSingleBurnTarget reproduces the original single-target burn selection:
+// aim at the face when that advances the game, otherwise pick the best creature
+// to burn, falling back to the face when no creature is worth it.
+func (s *Strategy) selectSingleBurnTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, damage int, hint mage.AIHint, opponent mage.Player) []uuid.UUID {
+	if s.weights().TargetFace >= 0.5 && opponent != nil {
+		for _, id := range possible {
+			if id == opponent.PlayerID() && shouldAimBurnAtFace(g, playerID, damage) {
+				return []uuid.UUID{id}
+			}
+		}
+	}
+	if hint.PreferTarget == mage.PreferOpponentFaceIfLethal && opponent != nil && damage >= opponent.Life() {
+		return []uuid.UUID{opponent.PlayerID()}
+	}
+	if tg := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetBurn, damage, false, true, hint.PreferTarget); len(tg) > 0 {
+		return tg
+	}
+	if opponent != nil && (shouldAimBurnAtFace(g, playerID, damage) || !hasOpponentPermanentTarget(g, playerID, possible)) {
+		for _, id := range possible {
+			if id == opponent.PlayerID() {
+				return []uuid.UUID{id}
+			}
+		}
+	}
 	return nil
 }
 
@@ -736,6 +781,52 @@ func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, possible [
 
 func bestTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool) []uuid.UUID {
 	return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, mage.PreferNoTarget)
+}
+
+// bestNTargetsForRequirement returns up to n distinct targets (best first) that
+// each score as worthwhile, for target specs that accept more than one target.
+// For n <= 1 it delegates to the single-target selector so existing behavior is
+// preserved exactly.
+func bestNTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool, preference mage.AITargetPreference, n int) []uuid.UUID {
+	if n <= 1 {
+		return bestTargetsForRequirementWithPreference(g, playerID, possible, purpose, damage, preferOwn, preferOpponent, preference)
+	}
+
+	type scoredTarget struct {
+		id    uuid.UUID
+		score int
+	}
+	var scored []scoredTarget
+	for _, id := range possible {
+		perm := g.FindPermanent(id)
+		if perm == nil {
+			continue
+		}
+		if preferOwn && perm.Controller != playerID {
+			continue
+		}
+		if preferOpponent && perm.Controller == playerID {
+			continue
+		}
+		score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
+		score += targetPreferenceBonus(g, playerID, perm, preference, damage)
+		if score < 1 {
+			continue
+		}
+		scored = append(scored, scoredTarget{id, score})
+	}
+
+	sort.SliceStable(scored, func(i, j int) bool {
+		return scored[i].score > scored[j].score
+	})
+	if len(scored) > n {
+		scored = scored[:n]
+	}
+	out := make([]uuid.UUID, len(scored))
+	for i := range scored {
+		out[i] = scored[i].id
+	}
+	return out
 }
 
 func bestTargetsForRequirementWithPreference(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, preferOwn, preferOpponent bool, preference mage.AITargetPreference) []uuid.UUID {

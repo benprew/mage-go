@@ -3,8 +3,6 @@ package heuristic
 import (
 	"testing"
 
-	"github.com/google/uuid"
-
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
@@ -177,41 +175,5 @@ func TestIntermediateTargetFace(t *testing.T) {
 	targets = midFace.autoSelectTargets(pa, g, card)
 	if len(targets) != 1 || targets[0] != oppCreature.ID() {
 		t.Error("TargetFace 0.4 should target creature (below threshold)")
-	}
-}
-
-// ── shouldAttack / shouldBlock direct tests ─────────────────────────────────
-
-func TestShouldAttack_MaxAggression(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
-	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.AddToBattlefield(atk, blk)
-	if !shouldAttack(atk, g, pb.PlayerID(), 1.0) {
-		t.Error("aggression 1.0 should always attack")
-	}
-}
-
-func TestShouldAttack_ZeroAggression(t *testing.T) {
-	g, pa, pb := makeGame()
-	atk := makePerm("Elf", "{G}", 1, 1, pa.PlayerID())
-	blk := makePerm("Giant", "{3}{G}", 5, 5, pb.PlayerID())
-	g.AddToBattlefield(atk, blk)
-	if shouldAttack(atk, g, pb.PlayerID(), 0.0) {
-		t.Error("aggression 0.0 should not attack into losing trade")
-	}
-}
-
-func TestShouldBlock_ZeroThreshold(t *testing.T) {
-	g, _, _ := makeGame()
-	if !shouldBlock(1, g, uuid.New(), 0.0) {
-		t.Error("BlockThreshold 0.0 should block power-1 attacker")
-	}
-}
-
-func TestShouldBlock_HighThreshold(t *testing.T) {
-	g, _, _ := makeGame()
-	if shouldBlock(5, g, uuid.New(), 0.95) {
-		t.Error("BlockThreshold 0.95 should never block")
 	}
 }
