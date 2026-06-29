@@ -19,6 +19,7 @@ const (
 	TargetBounce
 	TargetAura
 	TargetCounters
+	TargetExile
 )
 
 // TargetPurposeForEffects classifies target choice from effect metadata.
@@ -67,6 +68,8 @@ func TargetPurposeFromAI(p mage.AITargetPurpose) TargetPurpose {
 		return TargetAura
 	case mage.AITargetCounters:
 		return TargetCounters
+	case mage.AITargetExile:
+		return TargetExile
 	default:
 		return TargetGeneric
 	}
@@ -85,6 +88,16 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		if perm.HasKeyword(core.Indestructible) {
 			return -20
 		}
+		if perm.HasType(core.TypeCreature) && alreadyLethallyDamaged(g, perm) {
+			return -15
+		}
+		if perm.Tapped && perm.HasAttr(core.AttrDoesNotUntap) {
+			value /= 2
+		}
+		return value
+	case TargetExile:
+		// Exile, sacrifice, and -X/-X remove indestructible creatures, so unlike
+		// TargetRemoval there is no indestructibility penalty.
 		if perm.HasType(core.TypeCreature) && alreadyLethallyDamaged(g, perm) {
 			return -15
 		}

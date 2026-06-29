@@ -602,6 +602,7 @@ const (
 	AITargetBounce             = mage.AITargetBounce
 	AITargetAura               = mage.AITargetAura
 	AITargetCounters           = mage.AITargetCounters
+	AITargetExile              = mage.AITargetExile
 	PreferNoTarget             = mage.PreferNoTarget
 	PreferOpponentCreature     = mage.PreferOpponentCreature
 	PreferOwnCreature          = mage.PreferOwnCreature

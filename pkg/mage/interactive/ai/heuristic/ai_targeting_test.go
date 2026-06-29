@@ -74,6 +74,25 @@ func TestAutoSelectTargets_SwordsToPlowshares_OpponentBest(t *testing.T) {
 	}
 }
 
+// Swords to Plowshares exiles, so it bypasses indestructibility: it must still
+// target the opponent's biggest threat even when that threat is indestructible,
+// unlike destroy-based removal which would avoid it.
+func TestAutoSelectTargets_SwordsToPlowshares_TargetsIndestructible(t *testing.T) {
+	g, pa, pb := makeGame()
+	small := makePerm("Goblin", "{R}", 1, 1, pb.PlayerID())
+	big := makePerm("Avatar", "{4}{R}{R}", 5, 5, pb.PlayerID(), mage.WithKeyword(core.Indestructible))
+	g.AddToBattlefield(small, big)
+
+	card := createCard(t, "Swords to Plowshares", pa.PlayerID())
+	pa.AddToHand(card)
+
+	s := New(ai.MidrangeWeighted)
+	targets := s.autoSelectTargets(pa, g, card)
+	if len(targets) != 1 || targets[0] != big.ID() {
+		t.Fatalf("Swords to Plowshares should exile the opponent's indestructible threat (Avatar), got %v", targets)
+	}
+}
+
 // Weakness (-2/-1) is a debuff and should be aimed at the opponent's creature,
 // not our own.
 func TestAutoSelectTargets_Weakness_OpponentCreature(t *testing.T) {

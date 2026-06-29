@@ -170,6 +170,7 @@ const (
 	AITargetBounce
 	AITargetAura
 	AITargetCounters
+	AITargetExile // removal that bypasses indestructibility (exile, sacrifice/edict, -X/-X)
 )
 
 // AITargetPreference refines which legal target is strategically preferred.

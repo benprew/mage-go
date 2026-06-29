@@ -20,7 +20,7 @@ func registerSpells() {
 		return NewInstant("Swords to Plowshares", "{W}",
 			NewTargetedSpell(TargetCreature(), Pipeline(
 				"exile target creature. Its controller gains life equal to its power",
-				EffectProperties{Outcome: OutcomeDetriment},
+				EffectProperties{Outcome: OutcomeDetriment, TargetPurposeOverride: AITargetExile},
 				SnapshotPermanent(SelectTarget, "victim"),
 				ExileGathered("victim"),
 				GainLifeFromVar("victim.controller", "victim.power"),
