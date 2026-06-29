@@ -52,10 +52,8 @@ func (s *Strategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
 func (s *Strategy) solverProfile() combatsolver.Profile {
 	w := s.weights()
 	weights := w.Weights
-	if !s.Legacy {
-		weights.Life += 1.0
-		weights.Board *= 0.85
-	}
+	weights.Life += 1.0
+	weights.Board *= 0.85
 	return combatsolver.Profile{
 		Weights:        weights,
 		Aggression:     w.Aggression,
@@ -68,17 +66,11 @@ type Strategy struct {
 	Personality ai.Personality
 	Weights     ai.WeightedPersonality
 	weightsInit bool
-	Legacy      bool
 }
 
 // New creates a Strategy from a WeightedPersonality.
 func New(w ai.WeightedPersonality) *Strategy {
 	return &Strategy{Weights: w, weightsInit: true}
-}
-
-// NewLegacy creates a Strategy using the previous priority heuristic.
-func NewLegacy(w ai.WeightedPersonality) *Strategy {
-	return &Strategy{Weights: w, weightsInit: true, Legacy: true}
 }
 
 // NewFromOld creates a Strategy from a legacy boolean Personality.
@@ -95,10 +87,6 @@ func (s *Strategy) weights() ai.WeightedPersonality {
 }
 
 func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
-	if s.Legacy {
-		return s.priorityActionLegacy(p, g, landsPlayed, mainPhase)
-	}
-
 	playerID := p.PlayerID()
 
 	lethal := eval.CalculateLethal(g, playerID)
@@ -174,112 +162,6 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 				continue
 			}
 			if !aiHintAllowsTiming(cardAIHint(card), g, mainPhase) {
-				continue
-			}
-			hasUsableEffect := false
-			for _, a := range card.Abilities() {
-				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
-					if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
-						hasUsableEffect = true
-						break
-					}
-				}
-			}
-			if hasUsableEffect {
-				targets := s.autoSelectTargets(p, g, card)
-				if !requiresTargets(card) || len(targets) > 0 {
-					return interactive.PriorityAction{
-						Type:     interactive.ActionCastSpell,
-						CardID:   card.ID(),
-						CardName: card.Name(),
-						Targets:  targets,
-						XValue:   bestXValue(g, playerID, card, targets),
-					}
-				}
-			}
-		}
-	}
-
-	_ = landsPlayed
-	return interactive.PriorityAction{Type: interactive.ActionPass}
-}
-
-func (s *Strategy) priorityActionLegacy(p mage.Player, g *mage.Game, landsPlayed int, mainPhase bool) interactive.PriorityAction {
-	playerID := p.PlayerID()
-
-	lethal := eval.CalculateLethal(g, playerID)
-	if lethal.TheyHaveLethal {
-		if removal := s.findBestRemoval(p, g); removal != nil {
-			return *removal
-		}
-	}
-
-	if mainPhase {
-		if lands := g.GetPlayableLands(playerID); len(lands) > 0 {
-			if bestLand := chooseBestLand(p, g); bestLand != nil {
-				return interactive.PriorityAction{
-					Type:     interactive.ActionPlayLand,
-					CardID:   bestLand.ID(),
-					CardName: bestLand.Name(),
-				}
-			}
-		}
-
-		if holdBackValue(p, g, s.weights()) > 0 {
-			return interactive.PriorityAction{Type: interactive.ActionPass}
-		}
-
-		availMana := eval.CountAvailableMana(g, playerID)
-		cmcs := eval.HandCMCs(p.Hand())
-
-		var bestCard mage.Card
-		bestScore := -1
-		for _, card := range g.GetCastableSpells(playerID) {
-			if card.HasType(core.TypeInstant) {
-				continue
-			}
-			score := eval.SpellValue(card, p, g)
-			score += int(eval.ManaCurveBonus(card.ManaCost().CMC(), availMana, cmcs))
-			if score > bestScore {
-				bestScore = score
-				bestCard = card
-			}
-		}
-		if bestCard != nil && bestScore > 0 && !eval.SpellIsWorthless(bestCard, p, g) {
-			targets := s.autoSelectTargets(p, g, bestCard)
-			if requiresTargets(bestCard) && len(targets) == 0 {
-				return interactive.PriorityAction{Type: interactive.ActionPass}
-			}
-			return interactive.PriorityAction{
-				Type:     interactive.ActionCastSpell,
-				CardID:   bestCard.ID(),
-				CardName: bestCard.Name(),
-				Targets:  targets,
-				XValue:   bestXValue(g, playerID, bestCard, targets),
-			}
-		}
-	}
-
-	if action := s.considerAbilityActivation(p, g); action != nil {
-		return *action
-	}
-
-	if !mainPhase || stackHasOpponentThreat(g, playerID) {
-		if response := s.evaluateResponseLegacy(p, g); response != nil {
-			return *response
-		}
-	}
-
-	if mainPhase {
-		holdCombatTricks := s.shouldHoldForCombat(g, playerID)
-		for _, card := range p.Hand() {
-			if !card.HasType(core.TypeInstant) {
-				continue
-			}
-			if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
-				continue
-			}
-			if holdCombatTricks && combatsolver.ClassifyCombat(card) != combatsolver.RoleNone {
 				continue
 			}
 			hasUsableEffect := false
@@ -625,10 +507,7 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 // For specs that accept more than one target it returns the best N (distinct);
 // for single-target specs it preserves the original per-type selection logic.
 func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage.Target, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, outcome mage.Outcome, hint mage.AIHint) []uuid.UUID {
-	n := t.Max()
-	if n < 1 {
-		n = 1
-	}
+	n := max(t.Max(), 1)
 	opponent := g.GetOpponent(playerID)
 
 	switch t.(type) {

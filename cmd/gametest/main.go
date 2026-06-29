@@ -39,8 +39,8 @@ func main() {
 	seed := flag.Int64("seed", 0, "RNG seed for deck selection (0 = nondeterministic)")
 	persA := flag.String("ai-a", "auto", "AI personality for player A (auto, aggro, control, midrange, tempo, burn)")
 	persB := flag.String("ai-b", "auto", "AI personality for player B (auto, aggro, control, midrange, tempo, burn)")
-	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, legacy, search, adaptive)")
-	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, legacy, search, adaptive)")
+	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, search, adaptive)")
+	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, search, adaptive)")
 	cpuProfile := flag.String("cpuprofile", "", "write cpu profile to file")
 	memProfile := flag.String("memprofile", "", "write memory profile to file")
 	timeout := flag.Duration("timeout", 0, "wall clock timeout for the whole run (0 disables)")
@@ -453,8 +453,6 @@ func createAI(name string, wp ai.WeightedPersonality, mode string) *ai.AIPlayer 
 		return ai.NewAIPlayer(name, search.New(search.DefaultConfig(), wp))
 	case "adaptive":
 		return ai.NewAIPlayer(name, heuristic.NewAdaptive())
-	case "legacy", "old":
-		return ai.NewAIPlayer(name, heuristic.NewLegacy(wp))
 	default:
 		return ai.NewAIPlayer(name, heuristic.New(wp))
 	}

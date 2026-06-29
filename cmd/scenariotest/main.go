@@ -32,8 +32,8 @@ func main() {
 	aiPers := flag.String("ai", "auto", "AI personality (auto, aggro, control, midrange, tempo, burn, adaptive)")
 	aiPersA := flag.String("ai-a", "", "AI personality for player A (default: -ai)")
 	aiPersB := flag.String("ai-b", "", "AI personality for player B (default: -ai)")
-	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, legacy, adaptive)")
-	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, legacy, adaptive)")
+	modeA := flag.String("mode-a", "heuristic", "AI mode for player A (heuristic, adaptive)")
+	modeB := flag.String("mode-b", "heuristic", "AI mode for player B (heuristic, adaptive)")
 	timeout := flag.Duration("timeout", 30*time.Second, "per-game wall clock timeout")
 	minCards := flag.Int("min-cards", 25, "minimum playable cards for a deck to be eligible")
 	flag.Parse()
@@ -356,9 +356,6 @@ func buildDeckFromEntries(entries []tui.DeckEntry, ownerID [16]byte, rng *rand.R
 func createAI(name, mode string, wp ai.WeightedPersonality) *ai.AIPlayer {
 	if strings.EqualFold(mode, "adaptive") {
 		return ai.NewAIPlayer(name, heuristic.NewAdaptive())
-	}
-	if strings.EqualFold(mode, "legacy") || strings.EqualFold(mode, "old") {
-		return ai.NewAIPlayer(name, heuristic.NewLegacy(wp))
 	}
 	return ai.NewAIPlayer(name, heuristic.New(wp))
 }
