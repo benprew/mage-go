@@ -59,7 +59,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	}
 
 	g.chooseDividedDamageForSpell(obj, card, controller)
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	g.recordSpellCast(card, opts.Controller)
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,

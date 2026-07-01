@@ -571,7 +571,7 @@ func (g *Game) queueParadigmRecurringTriggers(evt *GameEvent) {
 			continue
 		}
 
-		g.stack.Push(&StackObject{
+		g.pushStack(&StackObject{
 			ID:         uuid.New(),
 			Controller: evt.PlayerID,
 			SourceID:   cardID,

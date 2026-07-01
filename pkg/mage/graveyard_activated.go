@@ -140,7 +140,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		XValue:     g.currentX,
 	}
 	obj.Effects = append(obj.Effects, gaa.Effects()...)
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	return nil
 }
 

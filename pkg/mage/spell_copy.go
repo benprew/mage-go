@@ -92,7 +92,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		g.repromptTargetsForCopy(cp, copiedCard)
 	}
 
-	g.stack.Push(cp)
+	g.pushStack(cp)
 	g.fireBecomesTargetEvents(cp, cp.IsAbility)
 	return cp
 }

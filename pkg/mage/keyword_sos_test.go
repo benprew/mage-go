@@ -279,7 +279,7 @@ func TestRepartee_TriggersWhenInstantTargetsCreature(t *testing.T) {
 		Effects:    []Effect{DealDamage(Fixed(3))},
 		Targets:    []uuid.UUID{targetPerm.Card.ID()},
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 
 	g.ResolveStack()
@@ -323,7 +323,7 @@ func TestRepartee_DoesNotTriggerWhenSpellTargetsPlayer(t *testing.T) {
 		Effects:    []Effect{DealDamage(Fixed(3))},
 		Targets:    []uuid.UUID{b.PlayerID()}, // player target
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 	g.ResolveStack()
 
@@ -379,7 +379,7 @@ func TestIncrement_PutsCounterWhenManaSpentExceedsPower(t *testing.T) {
 			ColorsSpent: map[Color]int{Red: 1, Colorless: 1},
 		},
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 	g.ResolveStack()
 
@@ -410,7 +410,7 @@ func TestIncrement_NoCounterWhenManaSpentEqualsPower(t *testing.T) {
 		SourceID:    bolt.ID(),
 		CastContext: &CastContext{ColorsSpent: map[Color]int{Red: 1, Colorless: 1}},
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 	g.ResolveStack()
 
@@ -446,7 +446,7 @@ func TestOpusEffect_RunsWithManaSpent(t *testing.T) {
 		Effects:     []Effect{DealDamage(Fixed(2))},
 		CastContext: &CastContext{ColorsSpent: map[Color]int{Red: 1, Colorless: 4}},
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 	g.FireEvent(GameEvent{Type: EvtSpellCast, SourceID: bolt.ID(), PlayerID: a.PlayerID()})
 	g.ResolveStack()
 

@@ -57,6 +57,11 @@ type StackObject struct {
 	// effects that explicitly send the card to exile after resolving.
 	ExileOnLeaveStack bool
 
+	// TargetZones records, per target ID, the zone that target was in at the
+	// moment it was chosen (CR 608.2b: "A target that's no longer in the zone
+	// it was in when it was targeted is illegal.").
+	TargetZones map[uuid.UUID]Zone
+
 	// CastContext snapshots cast-time state used by effects whose Oracle
 	// text references "as you cast this spell" (CR 608.2g). Populated when
 	// a spell is pushed onto the stack and read during resolution via

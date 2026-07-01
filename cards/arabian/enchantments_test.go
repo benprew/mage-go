@@ -297,4 +297,24 @@ func TestOubliette(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerB, "Fishliver Oil", 1)
 		g.AssertAttachedTo(gametest.PlayerB, "Fishliver Oil", "Grizzly Bears")
 	})
+
+	t.Run("castable_with_opponent_mana_flare", func(t *testing.T) {
+		// Oubliette costs {1}{B}{B}. With only a Swamp and a Forest, the player
+		// has a single black source and cannot normally pay {B}{B}. The
+		// opponent's Mana Flare doubles mana from any land that's tapped, so the
+		// Swamp yields {B}{B} and the Forest yields {G}{G} — enough to pay the
+		// cost. The mana solver must account for the opponent's Mana Flare.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mana Flare")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Oubliette")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Oubliette", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		// Oubliette resolved and phased the creature out.
+		g.AssertPermanentCount(gametest.PlayerA, "Oubliette", 1)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
 }

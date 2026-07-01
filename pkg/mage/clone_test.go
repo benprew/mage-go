@@ -615,7 +615,7 @@ func TestCloneWithStack(t *testing.T) {
 		Targets:    []uuid.UUID{targetID},
 		XValue:     3,
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 
 	// Clone.
 	c := g.Clone()
@@ -931,7 +931,7 @@ func BenchmarkClone(b *testing.B) {
 		SourceID:   uuid.New(),
 		Targets:    []uuid.UUID{g.players[1].PlayerID()},
 	}
-	g.stack.Push(obj)
+	g.pushStack(obj)
 
 	b.ReportAllocs()
 	for b.Loop() {
@@ -1009,7 +1009,7 @@ func setupRogueBoardCloneBenchmarkGame() *Game {
 			Targets:    []uuid.UUID{owners[(i+1)%2], g.battlefield[i+2].ID()},
 			XValue:     i,
 		}
-		g.stack.Push(obj)
+		g.pushStack(obj)
 	}
 	return g
 }

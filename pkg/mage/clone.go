@@ -363,6 +363,10 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		clone.DamageDistribution = make(map[uuid.UUID]int, len(obj.DamageDistribution))
 		maps.Copy(clone.DamageDistribution, obj.DamageDistribution)
 	}
+	if len(obj.TargetZones) > 0 {
+		clone.TargetZones = make(map[uuid.UUID]Zone, len(obj.TargetZones))
+		maps.Copy(clone.TargetZones, obj.TargetZones)
+	}
 	return clone
 }
 

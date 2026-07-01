@@ -249,7 +249,7 @@ func (g *Game) RemoveFromCombat(id uuid.UUID) {
 
 // PushStack pushes a stack object onto the stack.
 func (g *Game) PushStack(obj *StackObject) {
-	g.stack.Push(obj)
+	g.pushStack(obj)
 }
 
 // AddContinuousEffect registers a continuous effect with the effect manager.

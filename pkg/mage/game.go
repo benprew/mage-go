@@ -2214,7 +2214,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 				EventAmount:   evt.Amount,
 				EventSourceID: evt.SourceID,
 			}
-			g.stack.Push(obj)
+			g.pushStack(obj)
 			if dt.Persistent {
 				remaining = append(remaining, dt)
 			}
@@ -2339,7 +2339,7 @@ func (g *Game) PutTriggersOnStack() {
 			if len(chosen.Targets) > 0 {
 				obj.Targets = g.chooseTriggerTargets(pt, chosen.Targets)
 			}
-			g.stack.Push(obj)
+			g.pushStack(obj)
 			continue
 		}
 		obj.Effects = append(obj.Effects, pt.ability.Effects()...)
@@ -2363,7 +2363,7 @@ func (g *Game) PutTriggersOnStack() {
 					}
 				}
 			}
-			g.stack.Push(obj)
+			g.pushStack(obj)
 			continue
 		}
 		// For triggers that need to pass the event's player as a target
@@ -2487,7 +2487,7 @@ func (g *Game) PutTriggersOnStack() {
 				}
 			}
 		}
-		g.stack.Push(obj)
+		g.pushStack(obj)
 	}
 	g.pendingTriggers = nil
 }
@@ -2555,82 +2555,103 @@ func (g *Game) ResolveStack() {
 	}
 }
 
-// isTargetStillLegal checks whether a target is still legal at resolution time.
-func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID) bool {
-	// Players are always legal targets (targeting doesn't check life/loss status)
+// zoneOfTarget reports the zone the given target id currently occupies, or
+// ZoneAny if the id is a player or can't be located in any zone.
+func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
+	if id == uuid.Nil || g.GetPlayer(id) != nil {
+		return ZoneAny
+	}
+	if g.FindPermanent(id) != nil {
+		return ZoneBattlefield
+	}
+	if g.stack.FindBySourceID(id) != nil {
+		return ZoneStack
+	}
+	for _, ec := range g.exile {
+		if ec.Card != nil && ec.Card.ID() == id {
+			return ZoneExile
+		}
+	}
+	for _, p := range g.players {
+		for _, c := range p.Graveyard() {
+			if c.ID() == id {
+				return ZoneGraveyard
+			}
+		}
+		for _, c := range p.Library() {
+			if c.ID() == id {
+				return ZoneLibrary
+			}
+		}
+		for _, c := range p.Hand() {
+			if c.ID() == id {
+				return ZoneHand
+			}
+		}
+	}
+	return ZoneAny
+}
+
+// Used to track game-specific state before pushing object onto stack
+func (g *Game) pushStack(obj *StackObject) {
+	// Track target zone when targeted, needed for CR 608.2b
+	obj.TargetZones = make(map[uuid.UUID]Zone, len(obj.Targets))
+	for _, t := range obj.Targets {
+		obj.TargetZones[t] = g.zoneOfTarget(t)
+	}
+
+	g.stack.Push(obj)
+}
+
+// Check if target is still legal at resolution time. Used in stack responses and
+// resolutions.
+func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone) bool {
 	if g.GetPlayer(targetID) != nil {
 		return true
 	}
-	// Permanents must still be on the battlefield and targetable
+	// CR 608.2b: "A target that's no longer in the zone it was in when it was
+	// targeted is illegal."
+	if g.zoneOfTarget(targetID) != expectedZone {
+		return false
+	}
 	if perm := g.FindPermanent(targetID); perm != nil {
 		return perm.CanBeTargetedBy(sourceCard, controller, g)
 	}
-	// Cards in hand are legal if still in hand
-	for _, p := range g.players {
-		for _, c := range p.Hand() {
-			if c.ID() == targetID {
-				return true
-			}
-		}
-	}
-	// Graveyard cards are legal if still in graveyard
-	for _, p := range g.players {
-		for _, c := range p.Graveyard() {
-			if c.ID() == targetID {
-				return true
-			}
-		}
-	}
-	// Stack spells are legal if still on the stack
-	if g.stack.FindBySourceID(targetID) != nil {
-		return true
-	}
-	// Target no longer exists in any known zone
-	return false
+	return true
 }
 
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
 	// Check for fizzle: if the spell/ability has targets but all are now illegal,
 	// it fails to resolve (MTG rule 608.2b)
-	if len(obj.Targets) > 0 {
-		hasRealTargets := false
-		anyLegal := false
-		for _, t := range obj.Targets {
-			if t == uuid.Nil {
-				continue // skip nil targets (used as data slots, not real targets)
-			}
-			hasRealTargets = true
-			if g.isTargetStillLegal(t, obj.Card, obj.Controller) {
+
+	defer g.CheckStateBasedActions()
+	defer g.ClearSacrificed()
+
+	// CR 608.2b: a spell/ability with target(s) fails to resolve only if ALL of
+	// them are illegal at resolution. uuid.Nil entries are positional
+	// placeholders for target slots that had no legal candidate — not real
+	// targets — so they never count as "has a target", and every slot is kept
+	// in place (illegal ones nulled) so effects that read targets by index
+	// (e.g. Hungry Flames) stay aligned.
+	resolvedTargets := make([]uuid.UUID, len(obj.Targets))
+	hasRealTarget := false
+	anyLegal := false
+	for i, t := range obj.Targets {
+		if t != uuid.Nil {
+			hasRealTarget = true
+			if g.isTargetStillLegal(t, obj.Card, obj.Controller, obj.TargetZones[t]) {
+				resolvedTargets[i] = t
 				anyLegal = true
-				break
+				continue
 			}
 		}
-		if hasRealTargets && !anyLegal {
-			// Spell fizzles — put card in graveyard without resolving effects.
-			// Copies of spells (CR 707.10) cease to exist instead of going to
-			// any zone.
-			if obj.IsCopy {
-				g.CheckStateBasedActions()
-				return
-			}
-			if obj.Card != nil && !obj.IsAbility {
-				owner := obj.Card.Owner()
-				if owner == uuid.Nil {
-					owner = obj.Controller
-				}
-				if obj.ExileOnLeaveStack || g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
-					g.ExileCard(obj.Card, obj.Card.ID())
-				} else {
-					p := g.GetPlayer(owner)
-					if p != nil {
-						p.AddToGraveyard(obj.Card)
-					}
-				}
-			}
-			g.CheckStateBasedActions()
-			return
-		}
+		resolvedTargets[i] = uuid.Nil
+	}
+
+	if hasRealTarget && !anyLegal {
+		g.cleanupSpell(obj)
+		return
 	}
 
 	g.currentX = obj.XValue
@@ -2643,7 +2664,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingCastZone = obj.CastZone
 	g.resolvingCastContext = obj.CastContext
 	for _, eff := range obj.Effects {
-		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, obj.Targets)
+		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, resolvedTargets)
 	}
 	g.resolvingDamageDistribution = nil
 	// Note: g.resolvingCastContext is intentionally NOT cleared here so
@@ -2660,18 +2681,11 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		g.resolvingTargets = nil
 		g.resolvingCastZone = ZoneAny
 		g.resolvingCastContext = nil
-		g.ClearSacrificed()
-		g.CheckStateBasedActions()
 		return
 	}
 
 	// If this was a spell (not an ability), put the card in the graveyard
 	if obj.Card != nil && !obj.IsAbility {
-		owner := obj.Card.Owner()
-		if owner == uuid.Nil {
-			owner = obj.Controller
-		}
-
 		// Permanents go to the battlefield instead
 		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
 			perm := g.PutOnBattlefield(obj.Card, obj.Controller)
@@ -2688,23 +2702,10 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			g.resolvingTargets = nil
 			g.resolvingCastZone = ZoneAny
 			g.resolvingCastContext = nil
-			g.ClearSacrificed()
-			g.CheckStateBasedActions()
 			return
 		}
 
-		// Instants and sorceries go to graveyard, unless an active
-		// "if would be put into a graveyard, exile it instead" rider
-		// applies to this card (e.g. Scholar of the Lost Trove) or this
-		// spell was cast via flashback (CR 702.34).
-		if obj.ExileOnLeaveStack || g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
-			g.ExileCard(obj.Card, obj.Card.ID())
-		} else {
-			p := g.GetPlayer(owner)
-			if p != nil {
-				p.AddToGraveyard(obj.Card)
-			}
-		}
+		g.cleanupSpell(obj)
 	}
 
 	g.currentX = 0
@@ -2713,9 +2714,33 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingTargets = nil
 	g.resolvingCastZone = ZoneAny
 	g.resolvingCastContext = nil
-	g.ClearSacrificed()
+}
 
-	g.CheckStateBasedActions()
+// Move spell to graveyard/exile as appropriate. Used for resolving cast
+// instants/sorceries and fizzled spells
+func (g *Game) cleanupSpell(obj *StackObject) {
+	// do nothing for non-spells
+	if obj.Card == nil || obj.IsAbility {
+		return
+	}
+
+	// Copies of spells cease to exist (CR 707.10) — no graveyard, no exile.
+	if obj.IsCopy {
+		return
+	}
+
+	owner := obj.Card.Owner()
+	if owner == uuid.Nil {
+		owner = obj.Controller
+	}
+	if obj.ExileOnLeaveStack || g.IsCardMarkedExileInsteadOfGraveyard(obj.Card.ID()) {
+		g.ExileCard(obj.Card, obj.Card.ID())
+	} else {
+		p := g.GetPlayer(owner)
+		if p != nil {
+			p.AddToGraveyard(obj.Card)
+		}
+	}
 }
 
 // sanitizeDamageDistribution validates a player-chosen damage division for a
@@ -4899,7 +4924,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		break
 	}
 
-	g.stack.Push(obj)
+	g.pushStack(obj)
 
 	g.FireEvent(GameEvent{
 		Type:     EvtAbilityActivated,

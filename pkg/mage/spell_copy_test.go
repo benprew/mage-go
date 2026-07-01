@@ -47,7 +47,7 @@ func TestCopySpellOnStack_SameTargets(t *testing.T) {
 		Targets:    []uuid.UUID{b.PlayerID()},
 	}
 	a.RemoveFromHand(bolt.ID())
-	g.stack.Push(orig)
+	g.pushStack(orig)
 
 	// Copy the spell, inheriting targets.
 	cp := g.CopySpellOnStack(bolt.ID(), a.PlayerID(), false)
@@ -96,7 +96,7 @@ func TestCopySpellOnStack_NewTargets(t *testing.T) {
 		Targets:    []uuid.UUID{b.PlayerID()},
 	}
 	a.RemoveFromHand(bolt.ID())
-	g.stack.Push(orig)
+	g.pushStack(orig)
 
 	// Script: when reprompted, A picks itself.
 	a.chooseQueue = [][]uuid.UUID{{a.PlayerID()}}
@@ -141,7 +141,7 @@ func TestCopySpellOnStack_CopyDoesNotEnterAnyZone(t *testing.T) {
 		Targets:    []uuid.UUID{b.PlayerID()},
 	}
 	a.RemoveFromHand(bolt.ID())
-	g.stack.Push(orig)
+	g.pushStack(orig)
 
 	cp := g.CopySpellOnStack(bolt.ID(), a.PlayerID(), false)
 	copyCardID := cp.Card.ID()
@@ -220,7 +220,7 @@ func TestCopySpellOnStack_FizzledCopyCeases(t *testing.T) {
 		Targets:    []uuid.UUID{perm.ID()},
 	}
 	a.RemoveFromHand(dmg.ID())
-	g.stack.Push(orig)
+	g.pushStack(orig)
 
 	cp := g.CopySpellOnStack(dmg.ID(), a.PlayerID(), false)
 	copyCardID := cp.Card.ID()

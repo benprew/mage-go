@@ -11,6 +11,37 @@ import (
 
 // Tests for cards registered in alpha_enchantments.go.
 
+func TestHolyStrengthFizzlesWhenTargetDestroyed(t *testing.T) {
+	t.Run("aura_goes_to_graveyard_when_target_removed_in_response", func(t *testing.T) {
+		// Holy Strength is an Aura. While it's on the stack targeting Benalish
+		// Hero, Terror destroys the Hero in response. When Holy Strength tries
+		// to resolve, its only target is illegal, so it's countered by the game
+		// rules (CR 608.2b) and goes to the graveyard — it must NOT end up on
+		// the battlefield attached to nothing.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Benalish Hero")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Holy Strength")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Terror")
+
+		// PlayerB casts Holy Strength on its own Benalish Hero; PlayerA responds
+		// with Terror on the Hero before Holy Strength resolves.
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Holy Strength", "Benalish Hero")
+		g.CastInResponseTo(gametest.PlayerA, "Terror", "Benalish Hero")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+
+		// Terror resolves first and destroys the Hero.
+		g.AssertPermanentCount(gametest.PlayerB, "Benalish Hero", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Benalish Hero", 1)
+		g.AssertGraveyardCount(gametest.PlayerA, "Terror", 1)
+
+		// Holy Strength's target is gone, so it's countered on resolution and
+		// must be in the graveyard, not on the battlefield.
+		g.AssertPermanentCount(gametest.PlayerB, "Holy Strength", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Holy Strength", 1)
+	})
+}
+
 func TestInvisibility(t *testing.T) {
 	t.Run("creature_unblockable_except_walls", func(t *testing.T) {
 		// Invisibility: Enchanted creature can't be blocked except by Walls.
