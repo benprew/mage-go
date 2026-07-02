@@ -102,6 +102,9 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		if action := s.considerRegeneration(p, g); action != nil {
 			return *action
 		}
+		if action := s.considerPumpForCombatKill(p, g); action != nil {
+			return *action
+		}
 	}
 
 	// Save a creature from a destroy- or lethal-burn removal spell or ability on

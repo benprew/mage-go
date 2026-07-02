@@ -963,6 +963,74 @@ func TestEvaluateCombatOutcome_LifelinkTrample(t *testing.T) {
 	}
 }
 
+// ── Pump during combat damage (not against a stacked spell) ─────────────────
+
+// pumper builds a creature with a "{B}: +1/+1 until end of turn" activated
+// ability targeting itself, mirroring Frozen Shade's ability.
+func pumper(name string, power, toughness int, owner uuid.UUID) *mage.Permanent {
+	return makePerm(name, "{1}{B}", power, toughness, owner,
+		mage.WithActivatedAbility(
+			mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()),
+			mage.ManaCostOf("{B}"),
+		),
+	)
+}
+
+// Once blocks are declared, a doomed blocker with only a pump ability (no
+// regeneration) should be pumped enough to survive the upcoming combat
+// damage, the same way considerRegeneration already saves a creature with a
+// regeneration ability. As of this test, considerRegeneration only tries
+// regeneration abilities/spells during the declare-blockers step and never
+// calls the pump-ability path, so this currently fails.
+func TestPriorityAction_PumpsBlockerToSurviveCombatDamage(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Swamp", 2)
+
+	// 0/1 blocker facing 2 combat damage needs +2 toughness (two activations)
+	// to survive.
+	shade := pumper("Shade Blocker", 0, 1, pa.PlayerID())
+	bear := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(shade, bear)
+
+	g.GetCombat().AddAttacker(bear.ID(), pa.PlayerID())
+	g.GetCombat().AddBlocker(shade.ID(), bear.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != shade.ID() {
+		t.Fatalf("expected the AI to pump the doomed blocker to survive combat damage, got %+v", action)
+	}
+}
+
+// Once blocks are declared, a blocker whose power is currently too low to
+// kill the creature it's blocking, but that carries a pump ability, should
+// be pumped enough to kill it in combat. No production code currently
+// considers pumping power for a kill during combat, so this currently fails.
+func TestPriorityAction_PumpsBlockerToKillAttacker(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	addLands(g, pa, "Swamp", 2)
+
+	// 0/4 blocker survives the 2/2 attacker's damage regardless, but deals 0
+	// damage back. Two pump activations (+2/+2) let it deal lethal damage to
+	// the 2-toughness attacker.
+	shade := pumper("Shade Blocker", 0, 4, pa.PlayerID())
+	bear := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(shade, bear)
+
+	g.GetCombat().AddAttacker(bear.ID(), pa.PlayerID())
+	g.GetCombat().AddBlocker(shade.ID(), bear.ID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, false)
+
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != shade.ID() {
+		t.Fatalf("expected the AI to pump the blocker's power to kill the attacker it's blocking, got %+v", action)
+	}
+}
+
 func TestEvaluateCombatOutcome_LifelinkScoreBonus(t *testing.T) {
 	g, pa, _ := makeGame()
 	ll := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))

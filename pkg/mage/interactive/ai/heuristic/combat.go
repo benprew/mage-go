@@ -320,9 +320,159 @@ func (s *Strategy) considerRegeneration(p mage.Player, g *mage.Game) *interactiv
 		if action := s.regenerationSpellAction(p, g, target); action != nil {
 			return action
 		}
+		if action := s.pumpToughnessAction(playerID, g, abilities, target, res, initialDamage[target.ID()]); action != nil {
+			return action
+		}
 	}
 
 	return nil
+}
+
+// pumpToughnessAction looks for an affordable toughness-boost activation that
+// pushes target's toughness out of range of the combat damage res predicts for
+// it, mirroring the regeneration fallback in considerRegeneration for
+// creatures with no regeneration ability. initialDamage is the damage already
+// marked on target when res was simulated, so it can be subtracted back out to
+// isolate the damage this combat step alone will deal — pumping toughness only
+// helps against that, never against damage already marked. A creature marked
+// by deathtouch this step dies regardless of toughness, so pumping can't help.
+func (s *Strategy) pumpToughnessAction(playerID uuid.UUID, g *mage.Game, abilities []mage.ActivatableInfo, target *mage.Permanent, res combatDamageResult, initialDamage int) *interactive.PriorityAction {
+	if res.deathtouchMarked[target.ID()] {
+		return nil
+	}
+	dmg := res.dmgTaken[target.ID()] - initialDamage
+	if dmg <= 0 {
+		return nil
+	}
+	effToughness := target.CurrentToughness(g) - target.Damage
+	return s.pumpAbilityAction(playerID, g, abilities, target, dmg, effToughness)
+}
+
+// considerPumpForCombatKill looks for one of our attackers or blockers that
+// doesn't currently deal enough damage to kill the creature it's fighting and,
+// if we control an affordable power-boost ability, pumps it enough to secure
+// the kill. Only single-attacker/single-blocker pairings are considered — gang
+// blocks split an attacker's damage across multiple blockers, so pumping one
+// combatant's power doesn't reliably determine what the opposing creature
+// takes. Like considerRegeneration, this must act before combat damage is
+// dealt, so it only runs during the declare-blockers step with an empty stack.
+func (s *Strategy) considerPumpForCombatKill(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+	combat := g.GetCombat()
+	if combat == nil {
+		return nil
+	}
+	if len(g.StackObjects()) > 0 {
+		return nil
+	}
+
+	attackers := make([]uuid.UUID, 0, len(combat.Groups))
+	blockerMap := make(map[uuid.UUID][]uuid.UUID, len(combat.Groups))
+	initialDamage := make(map[uuid.UUID]int, len(combat.Groups)*2)
+	for _, grp := range combat.Groups {
+		atk := g.FindPermanent(grp.AttackerID)
+		if atk == nil {
+			continue
+		}
+		attackers = append(attackers, grp.AttackerID)
+		blockerMap[grp.AttackerID] = grp.BlockerIDs
+		initialDamage[grp.AttackerID] = atk.Damage
+		for _, bid := range grp.BlockerIDs {
+			if blk := g.FindPermanent(bid); blk != nil {
+				initialDamage[bid] = blk.Damage
+			}
+		}
+	}
+	if len(attackers) == 0 {
+		return nil
+	}
+
+	res := simulateCombatDamage(g, attackers, blockerMap, initialDamage)
+
+	// Pairs of (our creature, the single creature it's fighting) where our
+	// creature is not already killing its opponent.
+	type pair struct{ mine, theirs *mage.Permanent }
+	var candidates []pair
+	for _, atkID := range attackers {
+		blockerIDs := blockerMap[atkID]
+		if len(blockerIDs) != 1 {
+			continue
+		}
+		atk := g.FindPermanent(atkID)
+		blk := g.FindPermanent(blockerIDs[0])
+		if atk == nil || blk == nil {
+			continue
+		}
+		if atk.Controller == playerID && atk.HasType(core.TypeCreature) && blk.HasType(core.TypeCreature) &&
+			!res.isDead(blk.ID(), blk.CurrentToughness(g)) {
+			candidates = append(candidates, pair{mine: atk, theirs: blk})
+		}
+		if blk.Controller == playerID && blk.HasType(core.TypeCreature) && atk.HasType(core.TypeCreature) &&
+			!res.isDead(atk.ID(), atk.CurrentToughness(g)) {
+			candidates = append(candidates, pair{mine: blk, theirs: atk})
+		}
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+	sort.SliceStable(candidates, func(i, j int) bool {
+		return eval.EvalCreatureInGame(candidates[i].theirs, g) > eval.EvalCreatureInGame(candidates[j].theirs, g)
+	})
+
+	abilities := g.GetActivatableAbilities(playerID)
+	for _, c := range candidates {
+		deficit := c.theirs.CurrentToughness(g) - res.dmgTaken[c.theirs.ID()]
+		if deficit <= 0 {
+			continue
+		}
+		if action := s.pumpPowerAction(playerID, g, abilities, c.mine, deficit); action != nil {
+			return action
+		}
+	}
+	return nil
+}
+
+// pumpPowerAction returns the first affordable power-boost activation on
+// source that raises its power by at least deficit, or nil if none can fully
+// cover it from currently available mana.
+func (s *Strategy) pumpPowerAction(playerID uuid.UUID, g *mage.Game, abilities []mage.ActivatableInfo, source *mage.Permanent, deficit int) *interactive.PriorityAction {
+	for i := range abilities {
+		info := &abilities[i]
+		perm := g.FindPermanent(info.PermanentID)
+		if perm == nil || perm.ID() != source.ID() {
+			continue
+		}
+		if info.AbilityIndex < 0 || info.AbilityIndex >= len(perm.RuntimeAbilities) {
+			continue
+		}
+		ab, ok := mage.UnwrapAbility(perm.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
+		if !ok || len(ab.Targets()) != 0 {
+			continue
+		}
+		boost := abilityPowerBoost(ab)
+		if boost <= 0 {
+			continue
+		}
+		need := (deficit + boost - 1) / boost
+		if affordablePumpCount(ab, g, playerID, need) < need {
+			continue
+		}
+		return &interactive.PriorityAction{
+			Type:         interactive.ActionActivateAbility,
+			PermanentID:  info.PermanentID,
+			AbilityIndex: info.AbilityIndex,
+		}
+	}
+	return nil
+}
+
+// abilityPowerBoost sums the power granted by a single activation of ab.
+func abilityPowerBoost(ab mage.ActivatedAbility) int {
+	boost := 0
+	for _, e := range ab.Effects() {
+		boost += e.Properties().PowerBoost
+	}
+	return boost
 }
 
 // considerRegenerationAgainstRemoval looks for an opponent's spell or ability on

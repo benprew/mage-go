@@ -195,13 +195,14 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 					}
 				}
 				if canBeBlocked {
-					if perm.HasKeyword(core.Trample) && pow > effBlockTough {
-						totalDmg += pow - effBlockTough
+					effPow := pow + maxAffordablePumpBoost(perm, g)
+					if perm.HasKeyword(core.Trample) && effPow > effBlockTough {
+						totalDmg += effPow - effBlockTough
 						attackerIDs = append(attackerIDs, perm.ID())
-					} else if hasFS && pow >= bestBlockerToughness {
+					} else if hasFS && effPow >= bestBlockerToughness {
 						// First strike kills the blocker before it can deal damage.
 						// All damage effectively pushes through.
-						totalDmg += pow
+						totalDmg += effPow
 						attackerIDs = append(attackerIDs, perm.ID())
 					} else if hasDT && hasFS {
 						// Deathtouch first striker kills any blocker before damage.
@@ -220,15 +221,18 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 			totalDmg += pow
 			attackerIDs = append(attackerIDs, perm.ID())
 		} else if perm.HasKeyword(core.Trample) {
-			if pow > effBlockTough {
-				totalDmg += pow - effBlockTough
+			effPow := pow + maxAffordablePumpBoost(perm, g)
+			if effPow > effBlockTough {
+				totalDmg += effPow - effBlockTough
 				attackerIDs = append(attackerIDs, perm.ID())
 			}
-		} else if hasFS && len(blockers) > 0 && pow >= bestBlockerToughness {
-			// First striker that kills the best blocker before taking damage.
-			// Conservatively estimate full power as push-through damage since
-			// the blocker dies before dealing damage back.
-			totalDmg += pow
+		} else if hasFS && len(blockers) > 0 && pow+maxAffordablePumpBoost(perm, g) >= bestBlockerToughness {
+			// First striker that kills the best blocker before taking damage,
+			// pumping its power over the threshold first if needed and
+			// affordable. Conservatively estimate full (pumped) power as
+			// push-through damage since the blocker dies before dealing
+			// damage back.
+			totalDmg += pow + maxAffordablePumpBoost(perm, g)
 			attackerIDs = append(attackerIDs, perm.ID())
 		} else if hasDT && hasFS && len(blockers) > 0 {
 			// Deathtouch + first strike: kills any blocker before damage.
@@ -306,10 +310,11 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 					}
 				}
 				if canBeBlocked {
-					if perm.HasKeyword(core.Trample) && pow > effBlockTough {
-						dmg = pow - effBlockTough
-					} else if hasFS && pow >= bestBlockerToughness {
-						dmg = pow
+					effPow := pow + maxAffordablePumpBoost(perm, g)
+					if perm.HasKeyword(core.Trample) && effPow > effBlockTough {
+						dmg = effPow - effBlockTough
+					} else if hasFS && effPow >= bestBlockerToughness {
+						dmg = effPow
 					} else if hasDT && hasFS {
 						dmg = pow
 					}
@@ -321,10 +326,10 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 			}
 		} else if isProspectivelyUnblockable(perm, defenderPlayerID, g) {
 			dmg = pow
-		} else if perm.HasKeyword(core.Trample) && pow > effBlockTough {
-			dmg = pow - effBlockTough
-		} else if hasFS && blockerCount > 0 && pow >= bestBlockerToughness {
-			dmg = pow
+		} else if perm.HasKeyword(core.Trample) && pow+maxAffordablePumpBoost(perm, g) > effBlockTough {
+			dmg = pow + maxAffordablePumpBoost(perm, g) - effBlockTough
+		} else if hasFS && blockerCount > 0 && pow+maxAffordablePumpBoost(perm, g) >= bestBlockerToughness {
+			dmg = pow + maxAffordablePumpBoost(perm, g)
 		} else if hasDT && hasFS && blockerCount > 0 {
 			dmg = pow
 		} else if perm.HasKeyword(core.Menace) && blockerCount < 2 {
@@ -355,6 +360,76 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 		return nil
 	}
 	return result
+}
+
+// maxAffordablePumpBoost returns the total power perm's controller could add
+// to it this combat via self-targeting activated pump abilities they can
+// currently afford, assuming (as the other lethal-calc heuristics in this
+// file do, e.g. controllerCanGrantEvasionTo) that the mana is payable in
+// isolation from anything else the controller might want to do. Used so
+// push-through estimates account for a creature that can pump over a
+// blocker's toughness (trample) or up to it (killing the blocker with first
+// strike before damage), not just its current power.
+func maxAffordablePumpBoost(perm *mage.Permanent, g *mage.Game) int {
+	total := 0
+	for _, ab := range perm.RuntimeAbilities {
+		act, ok := mage.UnwrapAbility(ab).(mage.ActivatedAbility)
+		if !ok || len(act.Targets()) != 0 {
+			continue
+		}
+		boost := 0
+		for _, e := range act.Effects() {
+			boost += e.Properties().PowerBoost
+		}
+		if boost <= 0 || !act.CanActivate(perm.Controller, g) {
+			continue
+		}
+		total += boost * maxRepeatablePumpActivations(act, g, perm.Controller)
+	}
+	return total
+}
+
+// maxRepeatablePumpActivations returns how many times the controller can pay
+// for ab from currently available mana. Abilities with a non-mana cost (tap,
+// sacrifice) or an {X} cost can be used at most once, since those costs can't
+// be repaid repeatedly this priority pass.
+func maxRepeatablePumpActivations(ab mage.ActivatedAbility, g *mage.Game, controller uuid.UUID) int {
+	per := core.ManaCost{}
+	repeatable := true
+	for _, c := range ab.Costs() {
+		mp, ok := c.(*mage.ManaCostPayment)
+		if !ok || mp.MC.HasX {
+			repeatable = false
+			continue
+		}
+		per = addManaCost(per, mp.MC)
+	}
+	if !repeatable {
+		return 1
+	}
+	combined := core.ManaCost{}
+	count := 0
+	const maxActivations = 20
+	for count < maxActivations {
+		combined = addManaCost(combined, per)
+		if !g.CanAfford(controller, combined, nil) {
+			break
+		}
+		count++
+	}
+	return count
+}
+
+// addManaCost returns the sum of two mana costs (ignoring {X}, handled by callers).
+func addManaCost(a, b core.ManaCost) core.ManaCost {
+	a.Generic += b.Generic
+	a.White += b.White
+	a.Blue += b.Blue
+	a.Black += b.Black
+	a.Red += b.Red
+	a.Green += b.Green
+	a.Hybrid = append(append([]core.HybridSymbol{}, a.Hybrid...), b.Hybrid...)
+	return a
 }
 
 // RaceInfo describes the "clock" (turns to kill) for both players.

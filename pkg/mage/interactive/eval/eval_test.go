@@ -622,6 +622,70 @@ func TestEstimatePushThrough_DeathtouchKillsAnyBlocker(t *testing.T) {
 	}
 }
 
+// A trample attacker whose current power doesn't exceed the best blocker's
+// toughness pushes no damage through today, but if the controller can afford
+// to pump its power over that threshold, the excess should count toward
+// lethal the same way an already-big trampler does. CalculateLethal doesn't
+// yet look at activatable pump abilities when estimating push-through damage,
+// so this currently fails.
+func TestCalculateLethal_TrampleLethalWithAffordablePump(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(1)
+	// 3/3 trampler vs a 6-toughness blocker: 3 power alone can't trample
+	// through. Four "{G}: +1/+1" activations (four available Forests) push
+	// power to 7, clearing the blocker's toughness by 1 - exactly lethal.
+	trampler := makePerm("Wurm", "{4}{G}{G}", 3, 3, pa.PlayerID(),
+		mage.WithKeyword(core.Trample),
+		mage.WithActivatedAbility(mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()), mage.ManaCostOf("{G}")),
+	)
+	blocker := makePerm("Wall", "{1}{W}", 0, 6, pb.PlayerID())
+	g.AddToBattlefield(trampler, blocker)
+
+	for range 4 {
+		land := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
+		land.SetOwner(pa.PlayerID())
+		lp := mage.NewPermanent(land, pa.PlayerID())
+		lp.RevokeBaseAttr(core.AttrSummonSick)
+		g.AddToBattlefield(lp)
+	}
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if !info.IHaveLethal {
+		t.Error("should detect lethal: pumping the trampler +4/+4 clears the 6-toughness blocker by 1")
+	}
+}
+
+// A first striker whose power is below the best blocker's toughness doesn't
+// kill the blocker before taking damage today, so no push-through damage is
+// credited. If the controller can afford to pump its power up to the
+// blocker's toughness, the first striker would kill the blocker before combat
+// damage and its full power should count as pushed through, the same as an
+// already-big first striker. This currently fails.
+func TestEstimatePushThrough_FirstStrikeKillsBlockerWithAffordablePump(t *testing.T) {
+	g, pa, pb := makeGame()
+	pb.SetLife(3)
+	// 3/2 first striker vs 4/4 blocker: 3 power can't kill a 4-toughness
+	// blocker before damage. One "{W}: +1/+1" activation (one available
+	// Plains) raises power to 4, matching the blocker's toughness.
+	fs := makePerm("Knight", "{2}{W}{W}", 3, 2, pa.PlayerID(),
+		mage.WithKeyword(core.FirstStrike),
+		mage.WithActivatedAbility(mage.Boost(mage.Fixed(1), mage.Fixed(1)).Targeting(mage.ToSource()), mage.ManaCostOf("{W}")),
+	)
+	blocker := makePerm("Ogre", "{3}{R}", 4, 4, pb.PlayerID())
+	g.AddToBattlefield(fs, blocker)
+
+	land := mage.NewLand("Plains", mage.WithManaAbility(core.White))
+	land.SetOwner(pa.PlayerID())
+	lp := mage.NewPermanent(land, pa.PlayerID())
+	lp.RevokeBaseAttr(core.AttrSummonSick)
+	g.AddToBattlefield(lp)
+
+	info := CalculateLethal(g, pa.PlayerID())
+	if info.MyBoardDamage < 3 {
+		t.Errorf("MyBoardDamage = %d, want >= 3 (pump lets the first striker kill the blocker before damage)", info.MyBoardDamage)
+	}
+}
+
 // ── CalculateRace (Phase 0B) ────────────────────────────────────────────────
 
 func TestCalculateRace_FavorableRace(t *testing.T) {
