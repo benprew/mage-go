@@ -566,7 +566,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs "add continuous effect while tapped" step
 				FuncEffect("target creature gets +1/+1 while ~ remains tapped",
-					EffectProperties{Outcome: OutcomeBenefit},
+					EffectProperties{Outcome: OutcomeBenefit, PowerBoost: 1, ToughnessBoost: 1},
 					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						if len(targets) == 0 {
 							return nil

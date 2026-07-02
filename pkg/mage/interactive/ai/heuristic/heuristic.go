@@ -111,6 +111,9 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		if action := s.considerRegenerationAgainstRemoval(p, g); action != nil {
 			return *action
 		}
+		if action := s.considerPumpAgainstRemoval(p, g); action != nil {
+			return *action
+		}
 	}
 
 	if mainPhase {

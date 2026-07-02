@@ -470,6 +470,194 @@ func (s *Strategy) regenerationSpellAction(p mage.Player, g *mage.Game, target *
 	return nil
 }
 
+// considerPumpAgainstRemoval saves one of our creatures from lethal burn on the
+// stack by activating a toughness-boost ability enough times to push it out of
+// range. Unlike regeneration (a single shield replaces destruction), pumping
+// pays mana per point of toughness, so the AI commits only when it can afford to
+// fully clear the incoming damage — pumping part-way wastes mana without saving
+// the creature. One activation is returned per call; the engine re-grants
+// priority, so the AI stacks the remaining activations across later passes.
+func (s *Strategy) considerPumpAgainstRemoval(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+
+	// Map each of our creatures to the largest single burn it faces on the stack.
+	burn := make(map[uuid.UUID]int)
+	for _, obj := range g.StackObjects() {
+		if obj.Controller == playerID {
+			continue
+		}
+		for _, e := range obj.Effects {
+			props := e.Properties()
+			if props.DamageValue == nil || props.Outcome != mage.OutcomeDetriment {
+				continue
+			}
+			dmg := props.DamageValue.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
+			for _, tid := range obj.Targets {
+				perm := g.FindPermanent(tid)
+				if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+					continue
+				}
+				if dmg > burn[tid] {
+					burn[tid] = dmg
+				}
+			}
+		}
+	}
+	if len(burn) == 0 {
+		return nil
+	}
+
+	var doomed []*mage.Permanent
+	for id := range burn {
+		if perm := g.FindPermanent(id); perm != nil {
+			doomed = append(doomed, perm)
+		}
+	}
+	// Save the most valuable threatened creature first.
+	sort.SliceStable(doomed, func(i, j int) bool {
+		return eval.EvalCreatureInGame(doomed[i], g) > eval.EvalCreatureInGame(doomed[j], g)
+	})
+
+	abilities := g.GetActivatableAbilities(playerID)
+	for _, target := range doomed {
+		dmg := burn[target.ID()]
+		// Effective toughness left before the burn resolves; a creature survives
+		// only once this exceeds the incoming damage.
+		effToughness := target.CurrentToughness(g) - target.Damage
+		if effToughness > dmg {
+			continue
+		}
+		if action := s.pumpAbilityAction(playerID, g, abilities, target, dmg, effToughness); action != nil {
+			return action
+		}
+	}
+	return nil
+}
+
+// pumpAbilityAction returns the first affordable toughness-boost activation that
+// can lift target out of lethal-burn range, or nil if no such ability can fully
+// save it from its current mana.
+func (s *Strategy) pumpAbilityAction(playerID uuid.UUID, g *mage.Game, abilities []mage.ActivatableInfo, target *mage.Permanent, dmg, effToughness int) *interactive.PriorityAction {
+	for i := range abilities {
+		info := &abilities[i]
+		source := g.FindPermanent(info.PermanentID)
+		if source == nil {
+			continue
+		}
+		if info.AbilityIndex < 0 || info.AbilityIndex >= len(source.RuntimeAbilities) {
+			continue
+		}
+		ab, ok := mage.UnwrapAbility(source.RuntimeAbilities[info.AbilityIndex]).(mage.ActivatedAbility)
+		if !ok {
+			continue
+		}
+		targets, ok := pumpAbilityTargets(ab, source, target, playerID, g)
+		if !ok {
+			continue
+		}
+		boost := abilityToughnessBoost(ab)
+		if boost <= 0 {
+			continue
+		}
+		need := pumpsToSurvive(dmg, effToughness, boost)
+		if need <= 0 {
+			continue
+		}
+		if affordablePumpCount(ab, g, playerID, need) < need {
+			continue
+		}
+		return &interactive.PriorityAction{
+			Type:         interactive.ActionActivateAbility,
+			PermanentID:  info.PermanentID,
+			AbilityIndex: info.AbilityIndex,
+			Targets:      targets,
+		}
+	}
+	return nil
+}
+
+// pumpAbilityTargets reports whether ab can boost target and the targets to pass
+// when activating it. Source-boosting abilities (e.g. "{B}: this creature gets
+// +1/+1") take no targets and only help their own permanent; targeted boosts
+// must be able to legally choose the doomed creature.
+func pumpAbilityTargets(ab mage.ActivatedAbility, source, target *mage.Permanent, playerID uuid.UUID, g *mage.Game) ([]uuid.UUID, bool) {
+	if len(ab.Targets()) == 0 {
+		return nil, source.ID() == target.ID()
+	}
+	tgt := ab.Targets()[0]
+	if !slices.Contains(tgt.Possible(playerID, source.Card, g), target.ID()) {
+		return nil, false
+	}
+	return []uuid.UUID{target.ID()}, true
+}
+
+// abilityToughnessBoost sums the toughness granted by a single activation of ab.
+func abilityToughnessBoost(ab mage.ActivatedAbility) int {
+	boost := 0
+	for _, e := range ab.Effects() {
+		boost += e.Properties().ToughnessBoost
+	}
+	return boost
+}
+
+// pumpsToSurvive returns how many activations granting boost toughness each are
+// needed for a creature with effToughness toughness left to survive dmg damage,
+// or 0 if it is already safe.
+func pumpsToSurvive(dmg, effToughness, boost int) int {
+	if boost <= 0 {
+		return 0
+	}
+	deficit := dmg - effToughness + 1
+	if deficit <= 0 {
+		return 0
+	}
+	return (deficit + boost - 1) / boost
+}
+
+// affordablePumpCount returns how many times (capped at max) the player can pay
+// for ab from currently available mana. Abilities carrying a non-mana cost (a
+// tap or sacrifice) or an {X} cost can be used at most once, since those costs
+// cannot be repaid repeatedly this priority pass.
+func affordablePumpCount(ab mage.ActivatedAbility, g *mage.Game, playerID uuid.UUID, max int) int {
+	per := core.ManaCost{}
+	repeatable := true
+	for _, c := range ab.Costs() {
+		mp, ok := c.(*mage.ManaCostPayment)
+		if !ok || mp.MC.HasX {
+			repeatable = false
+			continue
+		}
+		per = addManaCost(per, mp.MC)
+	}
+	// The ability came from GetActivatableAbilities, so one activation is known
+	// to be affordable already.
+	if !repeatable {
+		return 1
+	}
+	combined := core.ManaCost{}
+	count := 0
+	for count < max {
+		combined = addManaCost(combined, per)
+		if !g.CanAfford(playerID, combined, nil) {
+			break
+		}
+		count++
+	}
+	return count
+}
+
+// addManaCost returns the sum of two mana costs (ignoring {X}, handled by callers).
+func addManaCost(a, b core.ManaCost) core.ManaCost {
+	a.Generic += b.Generic
+	a.White += b.White
+	a.Blue += b.Blue
+	a.Black += b.Black
+	a.Red += b.Red
+	a.Green += b.Green
+	a.Hybrid = append(append([]core.HybridSymbol{}, a.Hybrid...), b.Hybrid...)
+	return a
+}
+
 // regeneratesCreature reports whether activating ab sets a regeneration shield.
 func regeneratesCreature(ab mage.ActivatedAbility) bool {
 	return regeneratesEffects(ab.Effects())

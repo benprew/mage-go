@@ -674,6 +674,153 @@ func TestPriorityAction_RegeneratesAgainstLethalBurn(t *testing.T) {
 	}
 }
 
+func TestPriorityAction_PumpsShadeAgainstLethalBurn(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Swamp", 4)
+
+	shadeCard := createCard(t, "Frozen Shade", pa.PlayerID())
+	shade := g.PutOnBattlefield(shadeCard, pa.PlayerID())
+	shade.RevokeBaseAttr(core.AttrSummonSick)
+
+	const boltDamage = 3 // Lightning Bolt deals 3 damage.
+	bolt := createCard(t, "Lightning Bolt", pb.PlayerID())
+	var boltEffects []mage.Effect
+	for _, a := range bolt.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			boltEffects = sa.Effects()
+		}
+	}
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Card:       bolt,
+		Controller: pb.PlayerID(),
+		Effects:    boltEffects,
+		Targets:    []uuid.UUID{shade.ID()},
+	})
+
+	start := New(ai.MidrangeWeighted)
+
+	// Drive the AI through repeated priority passes until it passes
+	manaSpent := 0
+	for range 6 {
+		action := start.PriorityAction(pa, g, 0, false)
+		if action.Type != interactive.ActionActivateAbility {
+			break
+		}
+		if action.PermanentID != shade.ID() {
+			t.Fatalf("expected the AI to pump Frozen Shade, got activation on %v", action.PermanentID)
+		}
+		if err := g.ActivateAbilityByIndex(pa.PlayerID(), action.PermanentID, action.AbilityIndex, action.Targets); err != nil {
+			t.Fatalf("activating Frozen Shade pump: %v", err)
+		}
+		g.ResolveTopOfStack()
+		manaSpent++
+	}
+
+	if manaSpent != 3 {
+		t.Fatalf("expected the AI to spend exactly 3 mana pumping Frozen Shade out of burn range, spent %d", manaSpent)
+	}
+	if got := shade.CurrentToughness(g); got <= boltDamage {
+		t.Fatalf("Frozen Shade must end with toughness above %d to survive the bolt, got %d", boltDamage, got)
+	}
+}
+
+func TestPriorityAction_DoesNotPumpShadeWhenItCannotSurvive(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Swamp", 2)
+
+	shadeCard := createCard(t, "Frozen Shade", pa.PlayerID())
+	shade := g.PutOnBattlefield(shadeCard, pa.PlayerID())
+	shade.RevokeBaseAttr(core.AttrSummonSick)
+
+	bolt := createCard(t, "Lightning Bolt", pb.PlayerID())
+	var boltEffects []mage.Effect
+	for _, a := range bolt.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			boltEffects = sa.Effects()
+		}
+	}
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Card:       bolt,
+		Controller: pb.PlayerID(),
+		Effects:    boltEffects,
+		Targets:    []uuid.UUID{shade.ID()},
+	})
+
+	start := New(ai.MidrangeWeighted)
+
+	manaSpent := 0
+	for range 6 {
+		action := start.PriorityAction(pa, g, 0, false)
+		if action.Type != interactive.ActionActivateAbility {
+			break
+		}
+		if err := g.ActivateAbilityByIndex(pa.PlayerID(), action.PermanentID, action.AbilityIndex, action.Targets); err != nil {
+			t.Fatalf("activating Frozen Shade pump: %v", err)
+		}
+		g.ResolveTopOfStack()
+		manaSpent++
+	}
+
+	if manaSpent != 0 {
+		t.Fatalf("expected the AI to keep its mana when pumping cannot save Frozen Shade, spent %d", manaSpent)
+	}
+	if got := shade.CurrentToughness(g); got != 1 {
+		t.Fatalf("Frozen Shade should be left unpumped at toughness 1, got %d", got)
+	}
+}
+
+func TestPriorityAction_WeaponrySavesBogWraithAgainstLethalBurn(t *testing.T) {
+	g, pa, pb := makeGame()
+	addLands(g, pa, "Swamp", 2)
+
+	wraithCard := createCard(t, "Bog Wraith", pa.PlayerID())
+	wraith := g.PutOnBattlefield(wraithCard, pa.PlayerID())
+	wraith.RevokeBaseAttr(core.AttrSummonSick)
+
+	weaponryCard := createCard(t, "Tawnos's Weaponry", pa.PlayerID())
+	weaponry := g.PutOnBattlefield(weaponryCard, pa.PlayerID())
+	weaponry.RevokeBaseAttr(core.AttrSummonSick)
+
+	const boltDamage = 3 // Lightning Bolt deals 3 damage; Bog Wraith is a 3/3.
+	bolt := createCard(t, "Lightning Bolt", pb.PlayerID())
+	var boltEffects []mage.Effect
+	for _, a := range bolt.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			boltEffects = sa.Effects()
+		}
+	}
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Card:       bolt,
+		Controller: pb.PlayerID(),
+		Effects:    boltEffects,
+		Targets:    []uuid.UUID{wraith.ID()},
+	})
+
+	start := New(ai.MidrangeWeighted)
+
+	action := start.PriorityAction(pa, g, 0, false)
+	if action.Type != interactive.ActionActivateAbility {
+		t.Fatalf("expected the AI to activate Tawnos's Weaponry, got action type %v", action.Type)
+	}
+	if action.PermanentID != weaponry.ID() {
+		t.Fatalf("expected the AI to activate Tawnos's Weaponry, got activation on %v", action.PermanentID)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != wraith.ID() {
+		t.Fatalf("expected Tawnos's Weaponry to target Bog Wraith, got targets %v", action.Targets)
+	}
+	if err := g.ActivateAbilityByIndex(pa.PlayerID(), action.PermanentID, action.AbilityIndex, action.Targets); err != nil {
+		t.Fatalf("activating Tawnos's Weaponry: %v", err)
+	}
+	g.ResolveTopOfStack()
+
+	if got := wraith.CurrentToughness(g); got <= boltDamage {
+		t.Fatalf("Bog Wraith must end with toughness above %d to survive the bolt, got %d", boltDamage, got)
+	}
+}
+
 // Regeneration does not replace exile, so the AI should not waste its shield
 // when the removal on the stack exiles the creature.
 func TestPriorityAction_DoesNotRegenerateAgainstExile(t *testing.T) {
