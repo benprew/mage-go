@@ -3393,8 +3393,15 @@ func (g *Game) doUntap() {
 			if p.HasAttr(AttrDoesNotUntap) {
 				// Does not untap — skip
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
-				// Player may choose not to untap
-				if !active.ChooseMayAbility("untap " + p.Name()) {
+				// Player may choose not to untap, but only when staying tapped
+				// still maintains a continuous effect on a target that remains
+				// on the battlefield. Once that target is gone (e.g. Tawnos's
+				// Weaponry's boosted creature or Phyrexian Gremlins' tapped
+				// artifact left play), there is nothing left to maintain, so
+				// untap automatically instead of asking.
+				hasTapEffect, targetLives := g.effects.SourceTapMaintainedStatus(g, p.ID())
+				autoUntap := hasTapEffect && !targetLives
+				if !autoUntap && !active.ChooseMayAbility("untap "+p.Name()) {
 					continue
 				}
 				g.UntapPermanent(p)

@@ -723,6 +723,35 @@ func TestTawnossWeaponry(t *testing.T) {
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2) // back to normal
 	})
+
+	t.Run("stays tapped when player declines and creature remains", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Weaponry")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Weaponry", "Grizzly Bears")
+		// Decline the untap so the boost keeps going.
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Tawnos's Weaponry", true)
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
+	})
+
+	t.Run("untaps automatically when the boosted creature has left the battlefield", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tawnos's Weaponry")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2 → 3/3 while boosted
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tawnos's Weaponry", "Grizzly Bears")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
+		// Even if the player would decline to untap, the boosted creature is gone,
+		// so Weaponry untaps automatically without prompting.
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertTapped(gametest.PlayerA, "Tawnos's Weaponry", false)
+	})
 }
 
 func TestTheRack(t *testing.T) {

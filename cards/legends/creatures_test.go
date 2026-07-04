@@ -2512,6 +2512,23 @@ func TestRubiniaSoulsinger(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
 	})
+
+	t.Run("untaps automatically when the stolen creature has left the battlefield", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rubinia Soulsinger")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Rubinia Soulsinger", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Grizzly Bears")
+		// Even if the player would decline to untap, the stolen creature is gone,
+		// so Rubinia untaps automatically without prompting.
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertTapped(gametest.PlayerA, "Rubinia Soulsinger", false)
+	})
 }
 
 func TestVampireBatsActivationLimit(t *testing.T) {

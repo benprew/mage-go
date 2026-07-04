@@ -140,20 +140,15 @@ func registerCreatures() {
 							return nil
 						}
 						g.TapPermanent(target)
-						// Create continuous effect: target doesn't untap while source is tapped
-						eff := FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
-							func(g *Game, srcID uuid.UUID) error {
-								src := g.FindPermanent(srcID)
-								if src == nil || !src.Tapped {
-									return nil
-								}
-								t := g.FindPermanent(targetID)
-								if t == nil {
-									return nil
-								}
-								g.GrantAttr(t.ID(), AttrDoesNotUntap)
+						// Target doesn't untap while the source remains tapped.
+						// Tap-maintained so the untap step untaps Phyrexian
+						// Gremlins automatically once the target artifact leaves
+						// the battlefield.
+						eff := TapMaintainedTargetEffect(LayerAbility, WhileOnBattlefield, targetID,
+							func(g *Game, target *Permanent) error {
+								g.GrantAttr(target.ID(), AttrDoesNotUntap)
 								return nil
-							})
+							}, SourceTapped)
 						eff.SetSourceID(sourceID)
 						g.AddContinuousEffect(eff)
 						g.ApplyContinuousEffects()

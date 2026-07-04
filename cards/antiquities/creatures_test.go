@@ -204,6 +204,22 @@ func TestPhyrexianGremlins(t *testing.T) {
 		g.AssertTapped(gametest.PlayerA, "Phyrexian Gremlins", false)
 		g.AssertTapped(gametest.PlayerB, "Jayemdae Tome", false)
 	})
+
+	t.Run("untaps automatically when the tapped artifact has left the battlefield", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Gremlins")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Jayemdae Tome")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shatter")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Gremlins", "Jayemdae Tome")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shatter", "Jayemdae Tome")
+		// Even if the player would decline to untap, the tapped artifact is gone,
+		// so Gremlins untaps automatically without prompting.
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Jayemdae Tome", 0)
+		g.AssertTapped(gametest.PlayerA, "Phyrexian Gremlins", false)
+	})
 }
 
 func TestPriestOfYawgmoth(t *testing.T) {

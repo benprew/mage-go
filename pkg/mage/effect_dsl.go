@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -117,10 +118,12 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 // boostEffect is a composable Effect that temporarily modifies P/T.
 // Use directly as an Effect.
 type boostEffect struct {
-	power     ValueSource
-	toughness ValueSource
-	selector  TargetSelector
-	dur       Duration
+	power         ValueSource
+	toughness     ValueSource
+	selector      TargetSelector
+	dur           Duration
+	active        ActiveCondition
+	tapMaintained bool
 }
 
 // Boost creates a temporary P/T modification effect. Defaults to targeting
@@ -141,6 +144,21 @@ func (e *boostEffect) Targeting(sel TargetSelector) *boostEffect {
 
 func (e *boostEffect) Until(d Duration) *boostEffect {
 	e.dur = d
+	return e
+}
+
+// While applies the effect only while the source satisfies cond.
+func (e *boostEffect) While(cond ActiveCondition) *boostEffect {
+	e.active = cond
+	return e
+}
+
+// WhileSourceTapped applies the boost only while the source remains tapped and
+// marks it tap-maintained, so the untap step untaps the source automatically
+// once the boosted creature leaves the battlefield (Tawnos's Weaponry).
+func (e *boostEffect) WhileSourceTapped() *boostEffect {
+	e.active = SourceTapped
+	e.tapMaintained = true
 	return e
 }
 
@@ -176,15 +194,24 @@ func (e *boostEffect) Properties() EffectProperties {
 }
 
 func (e *boostEffect) Apply(ctx *EffectContext) error {
+	if !activeConditionStarted(ctx, e.active) {
+		return nil
+	}
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
 		p := e.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 		t := e.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-		eff := TargetEffect(LayerPT, e.dur, perm.ID(), func(g *Game, target *Permanent) error {
+		applyBoost := func(g *Game, target *Permanent) error {
 			target.powerBonus += p
 			target.toughBonus += t
 			return nil
-		})
+		}
+		var eff ContinuousEffect
+		if e.tapMaintained {
+			eff = TapMaintainedTargetEffect(LayerPT, e.dur, perm.ID(), applyBoost, e.active)
+		} else {
+			eff = TargetEffectWhen(LayerPT, e.dur, perm.ID(), applyBoost, e.active)
+		}
 		eff.SetSourceID(ctx.SourceID)
 		ctx.Game.AddContinuousEffect(eff)
 	}
@@ -203,6 +230,7 @@ type grantKeywordEffect struct {
 	selector TargetSelector
 	dur      Duration
 	unless   TriggerConditionData
+	active   ActiveCondition
 }
 
 // GrantKeyword creates a temporary keyword grant effect. Defaults to targeting
@@ -222,6 +250,12 @@ func (e *grantKeywordEffect) Targeting(sel TargetSelector) *grantKeywordEffect {
 
 func (e *grantKeywordEffect) Until(d Duration) *grantKeywordEffect {
 	e.dur = d
+	return e
+}
+
+// While applies the grant only while the source satisfies cond.
+func (e *grantKeywordEffect) While(cond ActiveCondition) *grantKeywordEffect {
+	e.active = cond
 	return e
 }
 
@@ -259,12 +293,15 @@ func (e *grantKeywordEffect) Apply(ctx *EffectContext) error {
 	if e.unless != nil && e.unless.CheckTriggerCond(&GameEvent{}, ctx.Game, ctx.SourceID, ctx.Controller) {
 		return nil
 	}
+	if !activeConditionStarted(ctx, e.active) {
+		return nil
+	}
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
-		eff := TargetEffect(LayerAbility, e.dur, perm.ID(), func(g *Game, target *Permanent) error {
+		eff := TargetEffectWhen(LayerAbility, e.dur, perm.ID(), func(g *Game, target *Permanent) error {
 			g.GrantAttr(target.ID(), e.keyword)
 			return nil
-		})
+		}, e.active)
 		eff.SetSourceID(ctx.SourceID)
 		ctx.Game.AddContinuousEffect(eff)
 	}
@@ -276,58 +313,92 @@ func (e *grantKeywordEffect) Apply(ctx *EffectContext) error {
 
 // --- RevokeKeyword DSL ---
 
-// revokeKeywordEffect is a composable Effect that temporarily removes a
+// RevokeKeywordEffect is a composable Effect that temporarily removes a
 // keyword from a permanent. Mirrors grantKeywordEffect.
-type revokeKeywordEffect struct {
-	keyword  Keyword
+type RevokeKeywordEffect struct {
+	keywords []Keyword
 	selector TargetSelector
 	dur      Duration
+	active   ActiveCondition
 }
 
 // RevokeKeyword creates an effect that removes a keyword from a permanent.
 // Defaults to targeting targets[0] until end of turn. Use .Targeting() and
 // .Until() to override.
-func RevokeKeyword(kw Keyword) *revokeKeywordEffect {
-	return &revokeKeywordEffect{
-		keyword:  kw,
+func RevokeKeyword(kw Keyword) *RevokeKeywordEffect {
+	return RevokeKeywords(kw)
+}
+
+// RevokeKeywords creates an effect that removes one or more keywords from a
+// permanent. Defaults to targeting targets[0] until end of turn.
+func RevokeKeywords(kws ...Keyword) *RevokeKeywordEffect {
+	return &RevokeKeywordEffect{
+		keywords: kws,
 		selector: TargetSelector{Kind: KindTarget},
 		dur:      EndOfTurn,
 	}
 }
 
-func (e *revokeKeywordEffect) Targeting(sel TargetSelector) *revokeKeywordEffect {
+// RevokeLandwalk creates an effect that removes all landwalk abilities from a
+// permanent. Defaults to targeting targets[0] until end of turn.
+func RevokeLandwalk() *RevokeKeywordEffect {
+	keywords := make([]Keyword, 0, len(LandwalkAttrs()))
+	for kw := range LandwalkAttrs() {
+		keywords = append(keywords, kw)
+	}
+	return RevokeKeywords(keywords...)
+}
+
+func (e *RevokeKeywordEffect) Targeting(sel TargetSelector) *RevokeKeywordEffect {
 	e.selector = sel
 	return e
 }
 
-func (e *revokeKeywordEffect) Until(d Duration) *revokeKeywordEffect {
+func (e *RevokeKeywordEffect) Until(d Duration) *RevokeKeywordEffect {
 	e.dur = d
 	return e
 }
 
-func (e *revokeKeywordEffect) Text() string {
+// While applies the revocation only while the source satisfies cond.
+func (e *RevokeKeywordEffect) While(cond ActiveCondition) *RevokeKeywordEffect {
+	e.active = cond
+	return e
+}
+
+func (e *RevokeKeywordEffect) Text() string {
+	if len(e.keywords) != 1 {
+		switch e.selector.Kind {
+		case KindSource:
+			return "~ loses keywords until end of turn"
+		default:
+			return "target creature loses keywords until end of turn"
+		}
+	}
 	switch e.selector.Kind {
 	case KindSource:
-		return fmt.Sprintf("~ loses %s until end of turn", e.keyword)
+		return fmt.Sprintf("~ loses %s until end of turn", e.keywords[0])
 	default:
-		return fmt.Sprintf("target creature loses %s until end of turn", e.keyword)
+		return fmt.Sprintf("target creature loses %s until end of turn", e.keywords[0])
 	}
 }
 
-func (e *revokeKeywordEffect) Properties() EffectProperties {
+func (e *RevokeKeywordEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-func (e *revokeKeywordEffect) Apply(ctx *EffectContext) error {
+func (e *RevokeKeywordEffect) Apply(ctx *EffectContext) error {
+	if !activeConditionStarted(ctx, e.active) {
+		return nil
+	}
 	perms := resolvePermanents(ctx, e.selector)
 	for _, perm := range perms {
-		targetID := perm.ID()
-		eff := FuncContinuousEffect(LayerAbility, e.dur, func(g *Game, _ uuid.UUID) error {
-			if p := g.FindPermanent(targetID); p != nil {
-				g.RevokeAttr(p.ID(), Attr(e.keyword))
+		keywords := slices.Clone(e.keywords)
+		eff := TargetEffectWhen(LayerAbility, e.dur, perm.ID(), func(g *Game, target *Permanent) error {
+			for _, kw := range keywords {
+				g.RevokeAttr(target.ID(), kw)
 			}
 			return nil
-		})
+		}, e.active)
 		eff.SetSourceID(ctx.SourceID)
 		ctx.Game.AddContinuousEffect(eff)
 	}
@@ -335,6 +406,10 @@ func (e *revokeKeywordEffect) Apply(ctx *EffectContext) error {
 		ctx.Game.ApplyContinuousEffects()
 	}
 	return nil
+}
+
+func activeConditionStarted(ctx *EffectContext, condition ActiveCondition) bool {
+	return condition == nil || condition(ctx.Game, ctx.SourceID)
 }
 
 // --- GrantAbility DSL ---

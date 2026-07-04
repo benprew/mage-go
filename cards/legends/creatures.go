@@ -2007,22 +2007,19 @@ func registerCreatures() {
 							return nil
 						}
 						targetID := targets[0]
-						cancelled := false
-						ce := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
-							if cancelled {
-								return nil
-							}
+						// Control lasts only while you control the source and it
+						// remains tapped. Tap-maintained so the untap step untaps
+						// the source automatically once the stolen creature leaves
+						// the battlefield.
+						controlledWhileTapped := func(g *Game, srcID uuid.UUID) bool {
 							src := g.FindPermanent(srcID)
-							if src == nil || !src.Tapped || src.Controller != controller {
-								cancelled = true
+							return src != nil && src.Tapped && src.Controller == controller
+						}
+						ce := TapMaintainedTargetEffect(LayerControl, Indefinite, targetID,
+							func(g *Game, target *Permanent) error {
+								target.Controller = controller
 								return nil
-							}
-							perm := g.MutablePermanent(targetID)
-							if perm != nil {
-								perm.Controller = src.Controller
-							}
-							return nil
-						})
+							}, controlledWhileTapped)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 						return nil
@@ -2964,22 +2961,19 @@ func registerCreatures() {
 							return nil
 						}
 						targetID := targets[0]
-						cancelled := false
-						ce := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
-							if cancelled {
-								return nil
-							}
+						// Control lasts only while you control the source and it
+						// remains tapped. Tap-maintained so the untap step untaps
+						// the source automatically once the stolen creature leaves
+						// the battlefield.
+						controlledWhileTapped := func(g *Game, srcID uuid.UUID) bool {
 							src := g.FindPermanent(srcID)
-							if src == nil || !src.Tapped || src.Controller != controller {
-								cancelled = true
+							return src != nil && src.Tapped && src.Controller == controller
+						}
+						ce := TapMaintainedTargetEffect(LayerControl, Indefinite, targetID,
+							func(g *Game, target *Permanent) error {
+								target.Controller = controller
 								return nil
-							}
-							perm := g.MutablePermanent(targetID)
-							if perm != nil {
-								perm.Controller = src.Controller
-							}
-							return nil
-						})
+							}, controlledWhileTapped)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
 						return nil

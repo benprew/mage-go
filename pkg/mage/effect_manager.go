@@ -151,21 +151,48 @@ type TargetApplyFunc func(g *Game, target *Permanent) error
 
 // targetEffect implements ContinuousEffect for effects targeting a specific permanent.
 type targetEffect struct {
-	layer    Layer
-	duration Duration
-	targetID uuid.UUID
-	apply    TargetApplyFunc
+	layer         Layer
+	duration      Duration
+	targetID      uuid.UUID
+	apply         TargetApplyFunc
+	active        ActiveCondition
+	expired       bool
+	tapMaintained bool
 	effectSource
 }
 
 // TargetEffect creates a ContinuousEffect that applies to a specific permanent by ID.
 // Active while the target permanent exists on the battlefield.
 func TargetEffect(layer Layer, duration Duration, targetID uuid.UUID, apply TargetApplyFunc) ContinuousEffect {
+	return TargetEffectWhen(layer, duration, targetID, apply, nil)
+}
+
+// TargetEffectWhen creates a target effect with an additional source-based
+// active condition, such as SourceTapped.
+func TargetEffectWhen(layer Layer, duration Duration, targetID uuid.UUID, apply TargetApplyFunc, condition ActiveCondition) ContinuousEffect {
 	return &targetEffect{
 		layer:    layer,
 		duration: duration,
 		targetID: targetID,
 		apply:    apply,
+		active:   condition,
+	}
+}
+
+// TapMaintainedTargetEffect creates a target effect whose source keeps it active
+// by remaining tapped (Tawnos's Weaponry, Phyrexian Gremlins, Willow Satyr, ...).
+// condition must encode that dependency (e.g. SourceTapped). The untap step reads
+// the tap-maintained flag: once the target leaves the battlefield the source
+// untaps automatically instead of prompting "you may choose not to untap," since
+// staying tapped no longer maintains anything.
+func TapMaintainedTargetEffect(layer Layer, duration Duration, targetID uuid.UUID, apply TargetApplyFunc, condition ActiveCondition) ContinuousEffect {
+	return &targetEffect{
+		layer:         layer,
+		duration:      duration,
+		targetID:      targetID,
+		apply:         apply,
+		active:        condition,
+		tapMaintained: true,
 	}
 }
 
@@ -173,7 +200,20 @@ func (e *targetEffect) GetLayer() Layer       { return e.layer }
 func (e *targetEffect) GetDuration() Duration { return e.duration }
 
 func (e *targetEffect) IsActive(g *Game) bool {
-	return g.FindPermanent(e.targetID) != nil
+	if g.FindPermanent(e.targetID) == nil {
+		e.expired = true
+		return false
+	}
+	if e.expired {
+		return false
+	}
+	if e.active != nil {
+		if !e.active(g, e.sourceID) {
+			e.expired = true
+			return false
+		}
+	}
+	return true
 }
 
 func (e *targetEffect) Apply(g *Game) error {
@@ -250,6 +290,27 @@ func (em *EffectManager) IsBlockPrevented(blockerID, attackerID uuid.UUID) bool 
 
 func (em *EffectManager) Add(e ContinuousEffect) {
 	em.effects = append(em.effects, e)
+}
+
+// SourceTapMaintainedStatus inspects the tap-maintained continuous effects the
+// given source keeps active by remaining tapped. hasEffect reports whether the
+// source has any such effect at all; targetLives reports whether at least one of
+// their targets is still on the battlefield. The untap step auto-untaps a source
+// with hasEffect && !targetLives (the maintained target is gone), while a source
+// with no tap-maintained effects (storage lands, Tawnos's Coffin) is left to the
+// normal "may choose not to untap" prompt.
+func (em *EffectManager) SourceTapMaintainedStatus(g *Game, sourceID uuid.UUID) (hasEffect, targetLives bool) {
+	for _, e := range em.effects {
+		te, ok := e.(*targetEffect)
+		if !ok || !te.tapMaintained || te.SourceID() != sourceID {
+			continue
+		}
+		hasEffect = true
+		if g.FindPermanent(te.targetID) != nil {
+			targetLives = true
+		}
+	}
+	return hasEffect, targetLives
 }
 
 func (em *EffectManager) Remove(sourceID uuid.UUID) {

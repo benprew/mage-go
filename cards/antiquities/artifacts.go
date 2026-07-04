@@ -86,17 +86,11 @@ func registerArtifacts() {
 							return nil
 						}
 						targetID := targets[0]
-						// Create a continuous effect that boosts while source is tapped
-						eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield,
-							func(g *Game, srcID uuid.UUID) error {
-								src := g.FindPermanent(srcID)
-								if src == nil {
-									return nil
-								}
-								target := g.MutablePermanent(targetID)
-								if target == nil {
-									return nil
-								}
+						// Boost while the source remains tapped. Tap-maintained so
+						// the untap step untaps Ashnod's Battle Gear automatically
+						// once the boosted creature leaves the battlefield.
+						eff := TapMaintainedTargetEffect(LayerPT, WhileOnBattlefield, targetID,
+							func(g *Game, target *Permanent) error {
 								target.BoostPT(2, -2)
 								return nil
 							}, SourceTapped)
@@ -564,32 +558,10 @@ func registerArtifacts() {
 		return NewArtifact("Tawnos's Weaponry", "{2}",
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "add continuous effect while tapped" step
-				FuncEffect("target creature gets +1/+1 while ~ remains tapped",
-					EffectProperties{Outcome: OutcomeBenefit, PowerBoost: 1, ToughnessBoost: 1},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						targetID := targets[0]
-						eff := FuncContinuousEffect(LayerPT, WhileOnBattlefield,
-							func(g *Game, srcID uuid.UUID) error {
-								src := g.FindPermanent(srcID)
-								if src == nil {
-									return nil
-								}
-								target := g.MutablePermanent(targetID)
-								if target == nil {
-									return nil
-								}
-								target.BoostPT(1, 1)
-								return nil
-							}, SourceTapped)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-						g.ApplyContinuousEffects()
-						return nil
-					}),
+				Boost(Fixed(1), Fixed(1)).
+					Targeting(ToTarget()).
+					Until(WhileOnBattlefield).
+					WhileSourceTapped(),
 				GenericCost(2),
 				WithCost(Tap()),
 				WithTarget(TargetCreature()),

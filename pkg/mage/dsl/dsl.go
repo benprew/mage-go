@@ -827,4 +827,9 @@ var (
 	FuncEffect           = mage.FuncEffect           // ESCAPE: arbitrary *Game access in resolution
 	FuncContinuousEffect = mage.FuncContinuousEffect // ESCAPE: arbitrary *Game access in layer apply
 	TargetEffect         = mage.TargetEffect         // ESCAPE: arbitrary per-target *Game access
+	TargetEffectWhen     = mage.TargetEffectWhen     // ESCAPE: arbitrary per-target *Game access with source condition
+
+	// TapMaintainedTargetEffect: target effect the source keeps active by staying
+	// tapped; the untap step auto-untaps the source once the target leaves play.
+	TapMaintainedTargetEffect = mage.TapMaintainedTargetEffect
 )
