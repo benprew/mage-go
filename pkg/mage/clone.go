@@ -417,10 +417,19 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 		// attrDeltas and blockPairRestrictions are recomputed each Apply() cycle.
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
 	}
-	// Copy continuous effects slice (shared interface values — they receive *Game as parameter).
+	// Copy continuous effects slice. Effects are shared interface values (they
+	// receive *Game as a parameter and are otherwise stateless), except those
+	// implementing deepCloneableEffect, which carry mutable per-game state and
+	// must be deep-copied so a search clone can't corrupt the original.
 	if len(em.effects) > 0 {
 		clone.effects = make([]ContinuousEffect, len(em.effects))
-		copy(clone.effects, em.effects)
+		for i, e := range em.effects {
+			if dc, ok := e.(deepCloneableEffect); ok {
+				clone.effects[i] = dc.cloneEffect()
+			} else {
+				clone.effects[i] = e
+			}
+		}
 	}
 	// Deep copy replacement effects (they hold mutable state).
 	clone.replacements = cloneReplacementSlice(em.replacements)

@@ -397,6 +397,8 @@ var (
 	GrantAbility                           = mage.GrantAbility
 	GrantType                              = mage.GrantType
 	RevokeKeyword                          = mage.RevokeKeyword
+	RevokeKeywords                         = mage.RevokeKeywords
+	RevokeLandwalk                         = mage.RevokeLandwalk
 	AddCounters                            = mage.AddCounters
 	RemoveCounters                         = mage.RemoveCounters
 	ToAttached                             = mage.ToAttached

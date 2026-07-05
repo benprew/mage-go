@@ -16,6 +16,15 @@ type ContinuousEffect interface {
 	SetSourceID(uuid.UUID)
 }
 
+// deepCloneableEffect is implemented by continuous effects that carry mutable
+// per-game state. Game.Clone() shares effect interface values by default (they
+// are otherwise stateless), so a stateful effect must deep-copy itself here —
+// otherwise a throwaway AI search clone would corrupt the real effect through
+// the shared pointer.
+type deepCloneableEffect interface {
+	cloneEffect() ContinuousEffect
+}
+
 // effectSource provides SourceID/SetSourceID to all continuous effects.
 type effectSource struct {
 	sourceID uuid.UUID
@@ -199,6 +208,13 @@ func TapMaintainedTargetEffect(layer Layer, duration Duration, targetID uuid.UUI
 func (e *targetEffect) GetLayer() Layer       { return e.layer }
 func (e *targetEffect) GetDuration() Duration { return e.duration }
 
+// cloneEffect deep-copies the effect so its mutable expired latch is isolated
+// from the original when the game is cloned for AI search.
+func (e *targetEffect) cloneEffect() ContinuousEffect {
+	clone := *e
+	return &clone
+}
+
 func (e *targetEffect) IsActive(g *Game) bool {
 	if g.FindPermanent(e.targetID) == nil {
 		e.expired = true
@@ -249,23 +265,33 @@ func NewEffectManager() *EffectManager {
 	return em
 }
 
-// GrantAttr records a positive delta for the given attr on the given permanent.
-// Called by continuous effects during Apply(); the delta is written to
-// perm.grantedAttrs at the end of the Apply() cycle.
+// GrantAttr records that the given attr is added to the given permanent by a
+// continuous effect. Called during Apply() in layer/timestamp order; the result
+// is written to perm.grantedAttrs at the end of the cycle.
+//
+// Ability add/remove is modeled as last-writer-wins, not an additive counter
+// (CR 613.9): applying "has X" and "loses X" to the same object in timestamp
+// order means the effect generated last wins. Because effects are applied in
+// em.effects insertion order (which tracks timestamp; see game.go AddPermanent),
+// assigning (rather than incrementing) makes the latest grant/revoke win.
 func (em *EffectManager) GrantAttr(permID uuid.UUID, a Attr) {
 	if em.attrDeltas[permID] == nil {
 		em.attrDeltas[permID] = make(map[Attr]int)
 	}
-	em.attrDeltas[permID][a]++
+	em.attrDeltas[permID][a] = 1
 }
 
-// RevokeAttr records a negative delta for the given attr on the given permanent.
-// Combined with the permanent's baseAttrs, a net value <= 0 means HasAttr returns false.
+// RevokeAttr records that the given attr is removed from the given permanent by
+// a continuous effect (an ability-removing effect such as Hammerheim's "loses
+// all landwalk"). Per CR 613.9 / 702.14e a removal is not a decrement: it makes
+// the ability absent regardless of how many effects granted it (multiple
+// instances of the same landwalk are redundant, not additive), unless a later
+// grant re-adds it. See GrantAttr for the last-writer-wins model.
 func (em *EffectManager) RevokeAttr(permID uuid.UUID, a Attr) {
 	if em.attrDeltas[permID] == nil {
 		em.attrDeltas[permID] = make(map[Attr]int)
 	}
-	em.attrDeltas[permID][a]--
+	em.attrDeltas[permID][a] = -1
 }
 
 // PreventBlockPair records that the given blocker cannot block the given attacker.
@@ -453,17 +479,25 @@ func (em *EffectManager) Apply(g *Game) {
 	// Sync mana conversions to all player mana pools
 	em.Rules.SyncManaConversions(g.players)
 
-	// Write attrDeltas accumulated by GrantAttr/RevokeAttr calls during this cycle
-	// into each permanent's grantedAttrs.
-	for permID, deltas := range em.attrDeltas {
+	// Write the grant/revoke decisions recorded during this cycle into each
+	// permanent's grantedAttrs. Each entry is the last-writer-wins result (see
+	// GrantAttr/RevokeAttr): +1 means the latest effect granted the attr, -1
+	// means it removed it. A grant forces the attr present; a revoke forces it
+	// absent by fully offsetting the base count, so "loses all landwalk"
+	// removes the ability even when several lords granted it (CR 613.9 /
+	// 702.14e), instead of merely decrementing one instance.
+	for permID, delta := range em.attrDeltas {
 		perm := g.MutablePermanent(permID)
 		if perm == nil {
 			continue
 		}
-		for a, delta := range deltas {
-			// delta is ±1 per GrantAttr/RevokeAttr call; realistic stacking
-			// from continuous effects is well below the int8 range.
-			perm.grantedAttrs[a] += int8(delta)
+		for a, d := range delta {
+			switch {
+			case d > 0:
+				perm.grantedAttrs[a] = 1
+			case d < 0:
+				perm.grantedAttrs[a] = -(perm.baseAttrs[a] + 1)
+			}
 		}
 	}
 

@@ -44,26 +44,8 @@ func registerLands() {
 		return NewLand("Hammerheim",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Red),
-			// TODO: convert to pipeline — needs RevokeAttrUntilEndOfTurn step (iterate LandwalkAttrs)
 			WithActivatedAbility(
-				FuncEffect(
-					"target creature loses all landwalk abilities until end of turn",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						for kw := range LandwalkAttrs() {
-							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-								g.RevokeAttr(target.ID(), kw)
-								return nil
-							})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
-						}
-						return nil
-					},
-				),
+				RevokeLandwalk().Targeting(ToTarget()).Until(EndOfTurn),
 				Tap(),
 				WithTarget(TargetCreature()),
 			),

@@ -252,6 +252,189 @@ func TestSourceTargetUnification(t *testing.T) {
 	})
 }
 
+func TestConditionalTargetContinuousEffects(t *testing.T) {
+	registerCh07bTestCards()
+	for _, reg := range []struct {
+		n string
+		f func() mage.Card
+	}{
+		{"DSL Shatter", func() mage.Card {
+			return mage.NewInstant("DSL Shatter", "{1}{R}",
+				mage.NewTargetedSpell(mage.TargetArtifact(), mage.DestroyTargetArtifact()),
+			)
+		}},
+		{"DSL Terror", func() mage.Card {
+			return mage.NewInstant("DSL Terror", "{1}{B}",
+				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTargetNoRegen()),
+			)
+		}},
+		{"Mountain", func() mage.Card {
+			return mage.NewLand("Mountain",
+				mage.WithManaAbility(core.Red),
+				mage.WithSubTypes("Mountain"),
+			)
+		}},
+	} {
+		if !mage.CardRegistered(reg.n) {
+			mage.Register(reg.n, reg.f)
+		}
+	}
+
+	t.Run("target boost applies only while source is tapped", func(t *testing.T) {
+		name := "DSL Tapped Source Weapon"
+		if !mage.CardRegistered(name) {
+			mage.Register(name, func() mage.Card {
+				return mage.NewArtifact(name, "{2}",
+					mage.WithKeyword(core.AttrMayNotUntap),
+					mage.WithActivatedAbility(
+						mage.Boost(mage.Fixed(1), mage.Fixed(1)).
+							Targeting(mage.ToTarget()).
+							Until(core.WhileOnBattlefield).
+							While(mage.SourceTapped),
+						mage.GenericCost(2),
+						mage.WithCost(mage.Tap()),
+						mage.WithTarget(mage.TargetCreature()),
+					),
+				)
+			})
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, "Grizzly Bears")
+		tg.StopAt(1, core.BeginCombat)
+		tg.Execute()
+
+		tg.AssertPowerToughness(PlayerA, "Grizzly Bears", 3, 3)
+		tg.AssertTapped(PlayerA, name, true)
+	})
+
+	t.Run("target boost ends when source untaps", func(t *testing.T) {
+		name := "DSL Tapped Source Weapon"
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, "Grizzly Bears")
+		tg.StopAt(3, core.PrecombatMain)
+		tg.Execute()
+
+		tg.AssertPowerToughness(PlayerA, "Grizzly Bears", 2, 2)
+	})
+
+	t.Run("ended target boost does not resume if source taps again", func(t *testing.T) {
+		name := "DSL Tapped Source Weapon"
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, "Grizzly Bears")
+		tg.ActivateAbility(3, core.PrecombatMain, PlayerA, name, "Hill Giant")
+		tg.StopAt(3, core.BeginCombat)
+		tg.Execute()
+
+		tg.AssertPowerToughness(PlayerA, "Grizzly Bears", 2, 2)
+		tg.AssertPowerToughness(PlayerA, "Hill Giant", 4, 4)
+	})
+
+	t.Run("target boost ends when source leaves", func(t *testing.T) {
+		name := "DSL Tapped Source Weapon"
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.AddCard(core.ZoneHand, PlayerB, "DSL Shatter")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, "Grizzly Bears")
+		tg.CastSpell(1, core.BeginCombat, PlayerB, "DSL Shatter", name)
+		tg.StopAt(1, core.PostcombatMain)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, name, 0)
+		tg.AssertPowerToughness(PlayerA, "Grizzly Bears", 2, 2)
+	})
+
+	t.Run("target boost ends when target leaves", func(t *testing.T) {
+		name := "DSL Tapped Source Weapon"
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.AddCard(core.ZoneHand, PlayerB, "DSL Terror")
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, "Grizzly Bears")
+		tg.CastSpell(1, core.BeginCombat, PlayerB, "DSL Terror", "Grizzly Bears")
+		tg.StopAt(1, core.PostcombatMain)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerA, "Grizzly Bears", 0)
+	})
+
+	t.Run("revoke landwalk removes all landwalk until end of turn", func(t *testing.T) {
+		name := "DSL Hammerheim Effect"
+		walkerName := "DSL Double Landwalker"
+		for _, reg := range []struct {
+			n string
+			f func() mage.Card
+		}{
+			{name, func() mage.Card {
+				return mage.NewLand(name,
+					mage.WithActivatedAbility(
+						mage.RevokeLandwalk().Targeting(mage.ToTarget()).Until(core.EndOfTurn),
+						mage.Tap(),
+						mage.WithTarget(mage.TargetCreature()),
+					),
+				)
+			}},
+			{walkerName, func() mage.Card {
+				return mage.NewCreature(walkerName, "{3}{B}", 3, 3,
+					mage.WithKeyword(core.Swampwalk),
+					mage.WithKeyword(core.Mountainwalk),
+				)
+			}},
+		} {
+			if !mage.CardRegistered(reg.n) {
+				mage.Register(reg.n, reg.f)
+			}
+		}
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Swamp")
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+		tg.AddCard(core.ZoneBattlefield, PlayerB, walkerName)
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, walkerName)
+		tg.Attack(1, PlayerB, walkerName)
+		tg.Block(1, PlayerA, "Grizzly Bears", walkerName)
+		tg.StopAt(1, core.EndStep)
+		tg.Execute()
+
+		tg.AssertLife(PlayerA, 20)
+	})
+
+	t.Run("revoked landwalk returns after cleanup", func(t *testing.T) {
+		name := "DSL Hammerheim Effect"
+		walkerName := "DSL Double Landwalker"
+
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, name)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Swamp")
+		tg.AddCard(core.ZoneBattlefield, PlayerB, walkerName)
+		tg.ActivateAbility(1, core.PrecombatMain, PlayerA, name, walkerName)
+		tg.StopAt(2, core.PrecombatMain)
+		tg.Execute()
+
+		perm := tg.FindPermanentByName(walkerName, tg.GetPlayer(PlayerB).PlayerID())
+		if perm == nil {
+			t.Fatalf("expected %s on battlefield", walkerName)
+		}
+		if !perm.HasKeyword(core.Swampwalk) {
+			t.Fatalf("expected swampwalk to return after cleanup")
+		}
+	})
+}
+
 func TestValueSource(t *testing.T) {
 	t.Run("Fixed returns constant", func(t *testing.T) {
 		v := mage.Fixed(7)

@@ -461,6 +461,53 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 	}
 }
 
+// A while-conditioned target effect (e.g. Tawnos's Weaponry: "+1/+1 for as long
+// as ~ remains tapped") carries a mutable expired latch. An AI search clone that
+// simulates the source untapping must not corrupt the real effect through a
+// shared pointer.
+func TestCloneWhileConditionedEffectDoesNotLeakExpiry(t *testing.T) {
+	pA := NewBasePlayer("Alice")
+	pB := NewBasePlayer("Bob")
+	g := NewGame(pA, pB)
+
+	sourceCard := NewArtifact("Weapon", "{2}")
+	sourceCard.SetOwner(pA.PlayerID())
+	source := NewPermanent(sourceCard, pA.PlayerID())
+
+	targetCard := NewCreature("Shade", "{1}{B}", 2, 2)
+	targetCard.SetOwner(pA.PlayerID())
+	target := NewPermanent(targetCard, pA.PlayerID())
+
+	g.AddToBattlefield(source, target)
+	source.Tapped = true
+	targetID := target.ID()
+
+	eff := TargetEffectWhen(LayerPT, WhileOnBattlefield, targetID, func(_ *Game, p *Permanent) error {
+		p.powerBonus++
+		p.toughBonus++
+		return nil
+	}, SourceTapped)
+	eff.SetSourceID(source.ID())
+	g.effects.Add(eff)
+
+	g.effects.Apply(g)
+	if p := g.FindPermanent(targetID); p.powerBonus != 1 {
+		t.Fatalf("expected boost active on original, got +%d", p.powerBonus)
+	}
+
+	// Simulate the source untapping in a throwaway clone; IsActive latches
+	// expired on the clone's copy only.
+	c := g.Clone()
+	c.MutablePermanent(source.ID()).Tapped = false
+	c.effects.Apply(c)
+
+	// The real game's source is still tapped; the boost must persist.
+	g.effects.Apply(g)
+	if p := g.FindPermanent(targetID); p.powerBonus != 1 {
+		t.Fatalf("boost leaked expiry from clone: got +%d, want +1", p.powerBonus)
+	}
+}
+
 func TestCloneWithContinuousEffects(t *testing.T) {
 	pA := NewBasePlayer("Alice")
 	pB := NewBasePlayer("Bob")

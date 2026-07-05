@@ -245,11 +245,17 @@ Several effects use a fluent builder. They default sensibly (target =
 ```go
 Boost(Fixed(2), Fixed(2))                                   // +2/+2 to targets[0] until EOT
 Boost(Fixed(1), Fixed(0)).Targeting(ToSource())             // self-pump
+Boost(Fixed(1), Fixed(1)).Until(WhileOnBattlefield).While(SourceTapped)
 GrantKeyword(Flying).Targeting(ToSource()).Until(Indefinite) // permanent flying
+RevokeLandwalk().Targeting(ToTarget()).Until(EndOfTurn)      // loses all landwalk
 GrantType(TypeCreature).Until(EndOfTurn)                    // animate
 AddCounters(Charge, Fixed(1))                               // +1 charge counter on targets[0]
 AddCounters(P1P1, Fixed(1)).Targeting(ToSource()).Max(3)    // up to 3 +1/+1 counters
 ```
+
+`Boost`, `GrantKeyword`, `RevokeKeyword`, `RevokeKeywords`, and
+`RevokeLandwalk` can use `.While(ActiveCondition)` for effects worded "for as
+long as" the source has a state, such as `SourceTapped`.
 
 ### Player-targeting (use `PlayerSelector`)
 
