@@ -78,27 +78,10 @@ func registerArtifacts() {
 		return NewArtifact("Ashnod's Battle Gear", "{2}",
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "add continuous effect while tapped" step
-				FuncEffect("target creature gets +2/-2 while ~ remains tapped",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						targetID := targets[0]
-						// Boost while the source remains tapped. Tap-maintained so
-						// the untap step untaps Ashnod's Battle Gear automatically
-						// once the boosted creature leaves the battlefield.
-						eff := TapMaintainedTargetEffect(LayerPT, WhileOnBattlefield, targetID,
-							func(g *Game, target *Permanent) error {
-								target.BoostPT(2, -2)
-								return nil
-							}, SourceTapped)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-						g.ApplyContinuousEffects()
-						return nil
-					}),
+				Boost(Fixed(2), Fixed(-2)).
+					Targeting(ToTarget()).
+					Until(WhileOnBattlefield).
+					WhileSourceTapped(),
 				GenericCost(2),
 				WithCost(Tap()),
 				WithTarget(TargetControlledCreature()),

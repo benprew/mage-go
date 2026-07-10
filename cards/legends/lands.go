@@ -175,7 +175,6 @@ func registerLands() {
 		return NewLand("Urborg",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Black),
-			// TODO: convert to pipeline — needs ModalEffect + RevokeAttrUntilEndOfTurn step
 			WithActivatedAbility(
 				FuncEffect(
 					"target creature loses first strike or swampwalk until end of turn",
@@ -188,23 +187,9 @@ func registerLands() {
 						p := g.GetPlayer(controller)
 						mode := p.ChooseMode([]string{"First strike", "Swampwalk"}, "Urborg")
 						if mode == 0 {
-							// Remove first strike
-							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-								g.RevokeAttr(target.ID(), FirstStrike)
-								return nil
-							})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
-						} else {
-							// Remove swampwalk
-							eff := TargetEffect(LayerAbility, EndOfTurn, targets[0], func(g *Game, target *Permanent) error {
-								g.RevokeAttr(target.ID(), Swampwalk)
-								return nil
-							})
-							eff.SetSourceID(sourceID)
-							g.AddContinuousEffect(eff)
+							return ApplyEffect(g, RevokeKeyword(FirstStrike).Targeting(ToTarget()).Until(EndOfTurn), sourceID, controller, targets)
 						}
-						return nil
+						return ApplyEffect(g, RevokeKeyword(Swampwalk).Targeting(ToTarget()).Until(EndOfTurn), sourceID, controller, targets)
 					},
 				),
 				Tap(),

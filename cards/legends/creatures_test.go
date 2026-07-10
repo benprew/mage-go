@@ -2886,14 +2886,13 @@ func TestGiantSlug(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Giant Slug")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp")
-		// Turn 1: Activate ability for {5}
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Giant Slug", "choose a basic land type")
-		g.ChooseMode(gametest.PlayerA, 4) // mode 4 = Swamp
-		// Turn 3: Should have swampwalk at upkeep, attack and be unblockable
+		g.ChooseString(gametest.PlayerA, "Swamp")
 		g.Attack(3, gametest.PlayerA, "Giant Slug")
+		g.Block(3, gametest.PlayerB, "Grizzly Bears", "Giant Slug")
 		g.StopAt(3, core.PostcombatMain)
 		g.Execute()
-		// Giant Slug has swampwalk and opponent has Swamp → unblockable
 		g.AssertLife(gametest.PlayerB, 19) // 1 damage from 1/1
 	})
 }

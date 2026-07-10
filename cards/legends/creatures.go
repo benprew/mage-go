@@ -13,6 +13,27 @@ func init() {
 	registerCreatures()
 }
 
+func chooseBasicLandwalk(reason string) Effect {
+	landTypes := []string{"Plains", "Island", "Swamp", "Mountain", "Forest"}
+	return FuncEffect("choose a basic land type and gain landwalk",
+		EffectProperties{Outcome: OutcomeBenefit},
+		func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+			if g.FindPermanent(sourceID) == nil {
+				return nil
+			}
+			p := g.GetPlayer(controller)
+			if p == nil {
+				return nil
+			}
+			attr := LandwalkAttr(p.ChooseString(landTypes, reason))
+			if attr == 0 {
+				return nil
+			}
+			return ApplyEffect(g, GrantKeyword(attr).Targeting(ToSource()).Until(EndOfTurn), sourceID, controller, nil)
+		},
+	)
+}
+
 func registerCreatures() {
 
 	// ===== WHITE CREATURES =====
@@ -752,7 +773,6 @@ func registerCreatures() {
 	// 1/1
 	// {5}: At the beginning of your next upkeep, choose a basic land type. This creature gains landwalk of the chosen type until the end of that turn. (It can't be blocked as long as defending player controls a land of that type.)
 	Register("Giant Slug", func() Card {
-		landTypes := []string{"Plains", "Island", "Swamp", "Mountain", "Forest"}
 		return NewCreature("Giant Slug", "{1}{B}", 1, 1,
 			WithSubTypes("Slug"),
 			WithActivatedAbility(
@@ -764,39 +784,7 @@ func registerCreatures() {
 							SourceID:      sourceID,
 							Controller:    controller,
 							MatchPlayerID: controller,
-							Effects: []Effect{FuncEffect(
-								"choose land type and gain landwalk",
-								EffectProperties{Outcome: OutcomeBenefit},
-								func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
-									perm := g.FindPermanent(srcID)
-									if perm == nil {
-										return nil
-									}
-									p := g.GetPlayer(ctrl)
-									if p == nil {
-										return nil
-									}
-									mode := p.ChooseMode([]string{"Plains", "Island", "Swamp", "Mountain", "Forest"}, "choose a basic land type")
-									if mode < 0 || mode >= len(landTypes) {
-										mode = 0
-									}
-									chosen := landTypes[mode]
-									attr := LandwalkAttr(chosen)
-									if attr == 0 {
-										return nil
-									}
-									ce := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-										p := g.FindPermanent(srcID)
-										if p != nil {
-											g.GrantAttr(p.ID(), attr)
-										}
-										return nil
-									})
-									ce.SetSourceID(srcID)
-									g.AddContinuousEffect(ce)
-									return nil
-								},
-							)},
+							Effects:       []Effect{chooseBasicLandwalk("choose a basic land type")},
 						})
 						return nil
 					},
@@ -2257,54 +2245,20 @@ func registerCreatures() {
 					}
 					modes := []string{"Flying", "First strike", "Trample", "Rampage 3"}
 					choice := p.ChooseMode(modes, "Gabriel Angelfire")
-					// "Until your next upkeep" = active for ~2 turns in 2-player
-					expiryTurn := g.CurrentTurn() + 2
+					var effect Effect
 					switch choice {
 					case 0: // Flying
-						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							g.GrantAttr(sourceID, Flying)
-							return nil
-						}, func(g *Game, _ uuid.UUID) bool {
-							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
-						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						effect = GrantKeyword(Flying).Targeting(ToSource()).Until(UntilYourNextTurn)
 					case 1: // First strike
-						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							g.GrantAttr(sourceID, FirstStrike)
-							return nil
-						}, func(g *Game, _ uuid.UUID) bool {
-							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
-						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						effect = GrantKeyword(FirstStrike).Targeting(ToSource()).Until(UntilYourNextTurn)
 					case 2: // Trample
-						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							g.GrantAttr(sourceID, Trample)
-							return nil
-						}, func(g *Game, _ uuid.UUID) bool {
-							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
-						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						effect = GrantKeyword(Trample).Targeting(ToSource()).Until(UntilYourNextTurn)
 					case 3: // Rampage 3
-						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							p := g.MutablePermanent(sourceID)
-							if p == nil {
-								return nil
-							}
-							rt := RampageTrigger(3)
-							rt.SetSource(sourceID)
-							rt.SetController(p.Controller)
-							p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(rt))
-							return nil
-						}, func(g *Game, _ uuid.UUID) bool {
-							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(sourceID) != nil
-						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
+						effect = GrantAbility(RampageTrigger(3)).Targeting(ToSource()).Until(UntilYourNextTurn)
+					default:
+						return nil
 					}
-					return nil
+					return ApplyEffect(g, effect, sourceID, controller, nil)
 				}), false)),
 		)
 	})

@@ -2600,18 +2600,9 @@ func registerSpells() {
 									evt.ToZone == ZoneGraveyard &&
 									evt.Flag // was a creature
 							})
-							deathDraw.SetSource(permID)
-							deathDraw.SetController(ctrl)
-							g.AddContinuousEffect(FuncContinuousEffect(
-								LayerAbility, EndOfTurn,
-								func(g *Game, _ uuid.UUID) error {
-									p := g.FindPermanent(permID)
-									if p != nil {
-										p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(deathDraw))
-									}
-									return nil
-								},
-							))
+							if err := ApplyEffect(g, GrantAbility(deathDraw).Targeting(ToTarget()).Until(EndOfTurn), sourceID, ctrl, []uuid.UUID{permID}); err != nil {
+								return err
+							}
 						}
 						return nil
 					},
@@ -2811,18 +2802,9 @@ func registerSpells() {
 							attackTrigger.SetCondition(func(evt *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
 								return evt.SourceID == permID
 							})
-							attackTrigger.SetSource(permID)
-							attackTrigger.SetController(ctrl)
-							g.AddContinuousEffect(FuncContinuousEffect(
-								LayerAbility, EndOfTurn,
-								func(g *Game, _ uuid.UUID) error {
-									p := g.FindPermanent(permID)
-									if p != nil {
-										p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(attackTrigger))
-									}
-									return nil
-								},
-							))
+							if err := ApplyEffect(g, GrantAbility(attackTrigger).Targeting(ToTarget()).Until(EndOfTurn), sourceID, ctrl, []uuid.UUID{permID}); err != nil {
+								return err
+							}
 						}
 						return nil
 					},
