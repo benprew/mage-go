@@ -2087,6 +2087,8 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if gt, ok := ta.(*GenericTriggered); ok && !gt.FunctionsInZone(ZoneBattlefield) {
 				continue
 			}
+			ta.SetSource(perm.ID())
+			ta.SetController(perm.Controller)
 			if ta.CheckTrigger(&evt, g) {
 				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
 					ability:    ta,
@@ -2243,6 +2245,8 @@ func (g *Game) CheckStateTriggers() {
 			if !ok || !ta.IsStateTrigger() {
 				continue
 			}
+			ta.SetSource(perm.ID())
+			ta.SetController(perm.Controller)
 			key := stateTriggerKey{sourceID: perm.ID(), abilityID: ta.AbilityID()}
 			seen[key] = true
 			cond := ta.CheckTrigger(nil, g)
