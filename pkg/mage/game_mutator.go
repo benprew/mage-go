@@ -115,7 +115,7 @@ func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 		ControllerSubtypesAtCast: make(map[string]bool),
 	}
 	for _, perm := range g.AllBattlefield() {
-		if perm == nil || perm.Controller != playerID || perm.FaceDown {
+		if perm == nil || perm.ControllerID() != playerID || perm.FaceDown {
 			continue
 		}
 		subs := perm.Card.SubTypes()

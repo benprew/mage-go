@@ -72,7 +72,7 @@ func TestETBChooseColor_DifferentChoiceForNewInstance(t *testing.T) {
 	colors := map[core.Color]int{}
 	pid := tg.GetPlayer(PlayerA).PlayerID()
 	for _, p := range tg.AllBattlefield() {
-		if p.Name() == name && p.Controller == pid {
+		if p.Name() == name && p.ControllerID() == pid {
 			colors[p.ChosenColor]++
 		}
 	}
@@ -188,7 +188,7 @@ func TestETBChooseOpponent_PerInstance(t *testing.T) {
 		if p.Name() != name {
 			continue
 		}
-		switch p.Controller {
+		switch p.ControllerID() {
 		case pidA:
 			if p.ChosenPlayer != pidB {
 				t.Errorf("PlayerA's instance: ChosenPlayer = %v, want %v", p.ChosenPlayer, pidB)

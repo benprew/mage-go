@@ -304,7 +304,7 @@ func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool
 	for kw, subtype := range LandwalkAttrs() {
 		if attacker.HasKeyword(kw) && !g.effects.Rules.IsLandwalkNullified(kw) {
 			for _, p := range g.battlefield {
-				if p.Controller == defenderID && p.HasType(TypeLand) && p.HasSubType(subtype) {
+				if p.ControllerID() == defenderID && p.HasType(TypeLand) && p.HasSubType(subtype) {
 					return true
 				}
 			}
@@ -313,7 +313,7 @@ func HasLandwalkEvasion(attacker *Permanent, defenderID uuid.UUID, g *Game) bool
 	// Check legendary landwalk: unblockable if defender controls a legendary land
 	if attacker.HasKeyword(LegendaryLandwalk) {
 		for _, p := range g.battlefield {
-			if p.Controller == defenderID && p.HasType(TypeLand) && p.Card.HasSuperType(SuperLegendary) {
+			if p.ControllerID() == defenderID && p.HasType(TypeLand) && p.Card.HasSuperType(SuperLegendary) {
 				return true
 			}
 		}
@@ -413,7 +413,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
 		// order. Default is the BlockerIDs order recorded at block declaration.
 		orderedIDs := group.BlockerIDs
-		attackingPlayer := g.GetPlayer(atk.Controller)
+		attackingPlayer := g.GetPlayer(atk.ControllerID())
 		blockerPerms := make([]*Permanent, 0, len(group.BlockerIDs))
 		for _, bid := range group.BlockerIDs {
 			if blk := g.FindPermanent(bid); blk != nil {
@@ -623,7 +623,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 
 		var defendingPlayerID uuid.UUID
 		if len(blockerPerms) > 0 {
-			defendingPlayerID = blockerPerms[0].Controller
+			defendingPlayerID = blockerPerms[0].ControllerID()
 		}
 		defendingPlayer := g.GetPlayer(defendingPlayerID)
 
@@ -773,7 +773,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 				blockerPerms = append(blockerPerms, blk)
 			}
 		}
-		attackingPlayer := g.GetPlayer(primaryAttacker.Controller)
+		attackingPlayer := g.GetPlayer(primaryAttacker.ControllerID())
 		var assignment map[uuid.UUID]int
 		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
 			assignment = assigner.GetCombatDamageAssignment(g, primaryAttacker, blockerPerms, totalBandPower)
@@ -828,7 +828,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 		for _, memberID := range bandMemberIDs {
 			member := g.FindPermanent(memberID)
 			if member != nil {
-				attackingPlayerID = member.Controller
+				attackingPlayerID = member.ControllerID()
 				break
 			}
 		}

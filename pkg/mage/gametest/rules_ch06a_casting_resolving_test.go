@@ -68,7 +68,7 @@ func registerCh06Cards() {
 		reg("Ch06 Destroy Spell", func() mage.Card {
 			return mage.NewInstant("Ch06 Destroy Spell", "{1}{B}",
 				mage.NewTargetedSpell(
-					mage.TargetCreature(mage.Not(mage.HasColorFilter(core.Black))),
+					mage.TargetCreature(),
 					mage.DestroyTarget()))
 		})
 		reg("Ch06 Wrath", func() mage.Card {

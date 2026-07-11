@@ -797,7 +797,7 @@ func registerCreatures() {
 			Not(HasSubType("Wall")),
 			NewPermanentFilter("active player has controlled continuously since the beginning of the turn", func(p *Permanent, g *Game) bool {
 				active := g.ActivePlayerObj()
-				return active != nil && p.Controller == active.PlayerID() && p.TurnControlGained < g.CurrentTurn()
+				return active != nil && p.ControllerID() == active.PlayerID() && p.ControlledSinceTurnStart(g)
 			}),
 			NewPermanentFilter("creature without summoning sickness", func(p *Permanent, _ *Game) bool {
 				return !p.HasAttr(core.AttrSummonSick) || p.HasAttr(core.Haste)

@@ -221,7 +221,7 @@ func PreventBlockByPowerLessThanSource(blockerFilter PermanentFilter) Continuous
 			return nil
 		}
 		threshold := src.CurrentPower(g)
-		controllerID := src.Controller
+		controllerID := src.ControllerID()
 		for _, blocker := range g.battlefield {
 			if !blocker.HasType(TypeCreature) {
 				continue
@@ -233,7 +233,7 @@ func PreventBlockByPowerLessThanSource(blockerFilter PermanentFilter) Continuous
 				continue
 			}
 			for _, atk := range g.battlefield {
-				if atk.Controller != controllerID {
+				if atk.ControllerID() != controllerID {
 					continue
 				}
 				if !atk.HasType(TypeCreature) {
@@ -258,12 +258,12 @@ func PreventAttackingIfDefenderControlsMore(filter PermanentFilter) ContinuousEf
 		if src == nil {
 			return nil
 		}
-		mine := g.CountBattlefield(And(ControlledBy(src.Controller), filter))
+		mine := g.CountBattlefield(And(ControlledBy(src.ControllerID()), filter))
 		other := g.NonActivePlayerObj()
 		// Source's defender (the opposing player from the source controller's POV).
 		var defID uuid.UUID
 		for _, pl := range g.players {
-			if pl.PlayerID() != src.Controller {
+			if pl.PlayerID() != src.ControllerID() {
 				defID = pl.PlayerID()
 				break
 			}
@@ -290,10 +290,10 @@ func PreventAttackingIfDefenderControlsAsManyOrMore(filter PermanentFilter) Cont
 		if src == nil {
 			return nil
 		}
-		mine := g.CountBattlefield(And(ControlledBy(src.Controller), filter))
+		mine := g.CountBattlefield(And(ControlledBy(src.ControllerID()), filter))
 		var defID uuid.UUID
 		for _, pl := range g.players {
-			if pl.PlayerID() != src.Controller {
+			if pl.PlayerID() != src.ControllerID() {
 				defID = pl.PlayerID()
 				break
 			}
@@ -319,10 +319,10 @@ func PreventBlockingIfAttackerControlsAsManyOrMore(filter PermanentFilter) Conti
 		if src == nil {
 			return nil
 		}
-		mine := g.CountBattlefield(And(ControlledBy(src.Controller), filter))
+		mine := g.CountBattlefield(And(ControlledBy(src.ControllerID()), filter))
 		var attID uuid.UUID
 		for _, pl := range g.players {
-			if pl.PlayerID() != src.Controller {
+			if pl.PlayerID() != src.ControllerID() {
 				attID = pl.PlayerID()
 				break
 			}

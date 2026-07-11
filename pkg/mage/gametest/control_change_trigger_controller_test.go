@@ -57,4 +57,21 @@ func TestControlChangeUpdatesSourceTriggeredAbilityController(t *testing.T) {
 		tg.AssertPermanentCount(PlayerB, "Trigger Controller Upkeep Creature", 0)
 		tg.AssertGraveyardCount(PlayerA, "Trigger Controller Upkeep Creature", 1)
 	})
+
+	t.Run("only the new controller's lands pay the upkeep", func(t *testing.T) {
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneHand, PlayerA, "Trigger Controller Upkeep Creature")
+		tg.AddCard(core.ZoneHand, PlayerB, "Trigger Controller Control Aura")
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Island")
+		tg.AddCard(core.ZoneBattlefield, PlayerB, "Island")
+
+		tg.CastSpell(1, core.PrecombatMain, PlayerA, "Trigger Controller Upkeep Creature")
+		tg.CastSpell(2, core.PrecombatMain, PlayerB, "Trigger Controller Control Aura", "Trigger Controller Upkeep Creature")
+		tg.StopAt(4, core.PrecombatMain)
+		tg.Execute()
+
+		tg.AssertPermanentCount(PlayerB, "Trigger Controller Upkeep Creature", 1)
+		tg.AssertTapped(PlayerA, "Island", false)
+		tg.AssertTapped(PlayerB, "Island", true)
+	})
 }

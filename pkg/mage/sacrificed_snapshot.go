@@ -31,7 +31,7 @@ func (g *Game) CaptureSacrificed(p *Permanent) {
 		Name:       p.Name(),
 		Power:      p.CurrentPower(g),
 		Toughness:  p.CurrentToughness(g),
-		Controller: p.Controller,
+		Controller: p.ControllerID(),
 	}
 }
 

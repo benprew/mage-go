@@ -14,7 +14,7 @@ type sacrificeCreatureCaptureCMCCost struct{}
 
 func (c *sacrificeCreatureCaptureCMCCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.AllBattlefield() {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+		if p.ControllerID() == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
 			return true
 		}
 	}
@@ -24,7 +24,7 @@ func (c *sacrificeCreatureCaptureCMCCost) CanPay(sourceID, controller uuid.UUID,
 func (c *sacrificeCreatureCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
 	for _, p := range g.AllBattlefield() {
-		if p.Controller == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+		if p.ControllerID() == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
 			candidates = append(candidates, p)
 		}
 	}

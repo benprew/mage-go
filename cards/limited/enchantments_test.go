@@ -221,7 +221,7 @@ func TestCopyArtifact(t *testing.T) {
 		solCount := 0
 		playerAID := g.AllPlayers()[0].PlayerID()
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerAID && perm.Name() == "Sol Ring" {
+			if perm.ControllerID() == playerAID && perm.Name() == "Sol Ring" {
 				solCount++
 			}
 		}
@@ -242,7 +242,7 @@ func TestCopyArtifact(t *testing.T) {
 		playerAID := g.AllPlayers()[0].PlayerID()
 		found := false
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
+			if perm.ControllerID() == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
 				found = true
 				break
 			}
@@ -263,7 +263,7 @@ func TestCopyArtifact(t *testing.T) {
 		playerAID := g.AllPlayers()[0].PlayerID()
 		found := false
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerAID && perm.Name() == "Sol Ring" &&
+			if perm.ControllerID() == playerAID && perm.Name() == "Sol Ring" &&
 				perm.HasType(core.TypeEnchantment) && perm.HasType(core.TypeArtifact) {
 				found = true
 				break
@@ -286,7 +286,7 @@ func TestCopyArtifact(t *testing.T) {
 		// Find the copy (Sol Ring with Enchantment type) and verify it has abilities
 		playerAID := g.AllPlayers()[0].PlayerID()
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
+			if perm.ControllerID() == playerAID && perm.Name() == "Sol Ring" && perm.HasType(core.TypeEnchantment) {
 				if len(perm.RuntimeAbilities) == 0 {
 					t.Errorf("Copy Artifact should have copied Sol Ring's abilities")
 				}

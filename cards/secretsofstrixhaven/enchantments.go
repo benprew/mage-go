@@ -64,7 +64,7 @@ func registerEnchantments() {
 				if src.Counters[Growth] < 5 {
 					return nil
 				}
-				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.ControllerID()))) {
 					p = g.MutablePermanent(p.ID())
 					if p == nil {
 						continue

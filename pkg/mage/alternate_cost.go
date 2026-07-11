@@ -92,7 +92,7 @@ func validateAlternateAdditionalCosts(g *Game, sourceID, controller uuid.UUID, c
 		need := counts[key]
 		have := 0
 		for _, p := range g.battlefield {
-			if p.Controller == controller && p.ID() != sourceID && sc.filter.Match(p, g) {
+			if p.ControllerID() == controller && p.ID() != sourceID && sc.filter.Match(p, g) {
 				have++
 			}
 		}

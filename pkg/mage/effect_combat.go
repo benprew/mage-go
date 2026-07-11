@@ -473,7 +473,7 @@ func (e *stunEffect) Apply(ctx *EffectContext) error {
 		// next have an untap step. In a 2-player game that's currentTurn+2 if
 		// the permanent's controller is currently active, else currentTurn+1.
 		expiryTurn := ctx.Game.CurrentTurn() + 1
-		if ctx.Game.ActivePlayerObj().PlayerID() == perm.Controller {
+		if ctx.Game.ActivePlayerObj().PlayerID() == perm.ControllerID() {
 			expiryTurn = ctx.Game.CurrentTurn() + 2
 		}
 		ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {

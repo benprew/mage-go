@@ -75,9 +75,9 @@ func IsEvasive(perm *mage.Permanent, defenderID uuid.UUID, g *mage.Game) bool {
 // in isolation. Self-targeting grants (KindSource) only count when the source
 // is perm itself.
 func controllerCanGrantEvasionTo(perm *mage.Permanent, g *mage.Game) core.Attr {
-	controller := perm.Controller
+	controller := perm.ControllerID()
 	for _, src := range g.AllBattlefield() {
-		if src.Controller != controller {
+		if src.ControllerID() != controller {
 			continue
 		}
 		for _, ab := range src.RuntimeAbilities {
@@ -132,7 +132,7 @@ func prospectiveUnblockable(perm *mage.Permanent, blockers []*mage.Permanent, g 
 func isProspectivelyUnblockable(perm *mage.Permanent, defenderID uuid.UUID, g *mage.Game) bool {
 	var blockers []*mage.Permanent
 	for _, b := range g.AllBattlefield() {
-		if b.Controller == defenderID && b.HasType(core.TypeCreature) && !b.Tapped && b.CanDeclareAsBlocker(g) {
+		if b.ControllerID() == defenderID && b.HasType(core.TypeCreature) && !b.Tapped && b.CanDeclareAsBlocker(g) {
 			blockers = append(blockers, b)
 		}
 	}
@@ -145,7 +145,7 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 
 	var blockers []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
+		if perm.ControllerID() == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
 			if perm.CanDeclareAsBlocker(g) {
 				blockers = append(blockers, perm)
 			}
@@ -170,7 +170,7 @@ func estimatePushThroughDamage(g *mage.Game, attackerPlayerID, defenderPlayerID 
 	}
 
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != attackerPlayerID || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != attackerPlayerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if !perm.CanDeclareAsAttacker(g) {
@@ -259,7 +259,7 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 
 	bestBlockerToughness := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
+		if perm.ControllerID() == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
 			if perm.CanDeclareAsBlocker(g) {
 				t := perm.CurrentToughness(g)
 				if t > bestBlockerToughness {
@@ -271,7 +271,7 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 
 	blockerCount := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
+		if perm.ControllerID() == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
 			if perm.CanDeclareAsBlocker(g) {
 				blockerCount++
 			}
@@ -279,7 +279,7 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 	}
 
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != attackerPlayerID || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != attackerPlayerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if !perm.CanDeclareAsAttacker(g) {
@@ -302,7 +302,7 @@ func findMinimalLethalSet(g *mage.Game, attackerPlayerID, defenderPlayerID uuid.
 			if perm.HasKeyword(core.Flying) && !perm.HasKeyword(core.UnblockableKW) {
 				canBeBlocked := false
 				for _, b := range g.AllBattlefield() {
-					if b.Controller == defenderPlayerID && b.HasType(core.TypeCreature) && !b.Tapped {
+					if b.ControllerID() == defenderPlayerID && b.HasType(core.TypeCreature) && !b.Tapped {
 						if mage.CanBlock(b, perm, g) {
 							canBeBlocked = true
 							break
@@ -381,10 +381,10 @@ func maxAffordablePumpBoost(perm *mage.Permanent, g *mage.Game) int {
 		for _, e := range act.Effects() {
 			boost += e.Properties().PowerBoost
 		}
-		if boost <= 0 || !act.CanActivate(perm.Controller, g) {
+		if boost <= 0 || !act.CanActivate(perm.ControllerID(), g) {
 			continue
 		}
-		total += boost * maxRepeatablePumpActivations(act, g, perm.Controller)
+		total += boost * maxRepeatablePumpActivations(act, g, perm.ControllerID())
 	}
 	return total
 }
@@ -485,7 +485,7 @@ func estimateLifelinkGain(g *mage.Game, playerID uuid.UUID) int {
 	evasiveGain := 0
 	nonEvasiveGain := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if !perm.HasKeyword(core.Lifelink) {
@@ -515,7 +515,7 @@ func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uui
 
 	nonEvasivePower := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != attackerPlayerID || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != attackerPlayerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if !perm.CanDeclareAsAttacker(g) {
@@ -533,7 +533,7 @@ func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uui
 
 	blockerCount := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
+		if perm.ControllerID() == defenderPlayerID && perm.HasType(core.TypeCreature) && !perm.Tapped {
 			if perm.CanDeclareAsBlocker(g) {
 				blockerCount++
 			}
@@ -542,7 +542,7 @@ func estimateExpectedDamage(g *mage.Game, attackerPlayerID, defenderPlayerID uui
 
 	nonEvasiveCount := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == attackerPlayerID && perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() == attackerPlayerID && perm.HasType(core.TypeCreature) {
 			if !perm.CanDeclareAsAttacker(g) {
 				continue
 			}

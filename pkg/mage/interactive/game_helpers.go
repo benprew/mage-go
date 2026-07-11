@@ -94,7 +94,7 @@ func targetSuffix(g *mage.Game, targets []uuid.UUID) string {
 func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID || !perm.CanDeclareAsAttacker(g) {
+		if perm.ControllerID() != playerID || !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
 		eligible = append(eligible, perm)
@@ -117,7 +117,7 @@ func attackerOptions(eligible []*mage.Permanent) []ActionOption {
 func getEligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var eligible []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
+		if perm.ControllerID() != playerID || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
 		eligible = append(eligible, perm)

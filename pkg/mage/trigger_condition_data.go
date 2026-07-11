@@ -551,7 +551,7 @@ type ControllerHasNoPermanentMatching struct {
 
 func (c ControllerHasNoPermanentMatching) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 	for _, p := range g.FilterBattlefield(c.Filter) {
-		if p.Controller == controllerID {
+		if p.ControllerID() == controllerID {
 			return false
 		}
 	}
@@ -672,7 +672,7 @@ func (EventIsAttachedControllerUpkeep) CheckTriggerCond(evt *GameEvent, g GameRe
 	if host == nil {
 		return false
 	}
-	return evt.PlayerID == host.Controller
+	return evt.PlayerID == host.ControllerID()
 }
 
 // AttachedToDealsDamageToController checks that the permanent the source is

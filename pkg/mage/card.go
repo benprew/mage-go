@@ -543,11 +543,12 @@ func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 
 // Permanent represents a card on the battlefield.
 type Permanent struct {
-	Card       Card
-	Controller uuid.UUID
-	Tapped     bool
-	PhasedOut  bool // true when phased out (treated as though it doesn't exist)
-	Damage     int
+	Card               Card
+	computedController uuid.UUID
+	baseController     uuid.UUID
+	Tapped             bool
+	PhasedOut          bool // true when phased out (treated as though it doesn't exist)
+	Damage             int
 	// Counters is a fixed-size array indexed by CounterType, so cloning a
 	// Permanent is a memcpy instead of a map allocation. Absent counters are
 	// zero. To iterate, loop over [0, NumCounters) and skip zeros.
@@ -586,10 +587,10 @@ type Permanent struct {
 	// Control-change tracking (e.g. Old Man of the Sea, Aladdin)
 	ControlledPermanent uuid.UUID
 
-	// TurnControlGained records the turn number on which the current controller gained
+	// turnControlGained records the turn number on which the current controller gained
 	// control. Used by cards like Rocket Launcher ("activate only if controlled since
 	// the beginning of your most recent turn").
-	TurnControlGained int
+	turnControlGained int
 
 	// StoredValue holds an arbitrary numeric value chosen at ETB or during upkeep.
 	// Used by cards like Shapeshifter (chosen number 0-7 for dynamic P/T).
@@ -603,9 +604,10 @@ type Permanent struct {
 // NewPermanent creates a permanent from a card.
 func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
-		Card:       card,
-		Controller: controller,
-		IsToken:    card.IsToken(),
+		Card:               card,
+		computedController: controller,
+		baseController:     controller,
+		IsToken:            card.IsToken(),
 	}
 	// Copy base abilities
 	for _, a := range card.Abilities() {
@@ -639,6 +641,15 @@ func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 		p.baseAttrs[a] += int8(count)
 	}
 	return p
+}
+
+// ControllerID returns the permanent's controller after continuous effects.
+func (p *Permanent) ControllerID() uuid.UUID { return p.computedController }
+
+// ControlledSinceTurnStart reports whether the current controller has
+// controlled this permanent continuously since their most recent turn began.
+func (p *Permanent) ControlledSinceTurnStart(g GameReader) bool {
+	return p.turnControlGained < g.CurrentTurn()
 }
 
 // HasAttr returns true if this permanent currently has the given attribute.
@@ -765,7 +776,7 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 	if p.HasKeyword(Shroud) {
 		return false
 	}
-	if p.HasKeyword(Hexproof) && p.Controller != sourceController {
+	if p.HasKeyword(Hexproof) && p.ControllerID() != sourceController {
 		return false
 	}
 	if source != nil && p.HasProtectionFrom(source) {

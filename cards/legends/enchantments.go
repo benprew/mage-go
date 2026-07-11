@@ -29,7 +29,7 @@ func registerEnchantments() {
 					if src == nil {
 						return nil
 					}
-					controller := src.Controller
+					controller := src.ControllerID()
 					// Check if controller controls any nonartifact, nonwhite creature
 					for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
 						if !perm.HasType(TypeArtifact) && !HasColorFilter(White).Match(perm, g) {
@@ -686,9 +686,9 @@ func registerEnchantments() {
 					if src == nil {
 						return nil
 					}
-					controller := src.Controller
+					controller := src.ControllerID()
 					g.AddEntersTappedRule(func(perm *Permanent) bool {
-						if perm.Controller == controller {
+						if perm.ControllerID() == controller {
 							return false
 						}
 						return perm.HasType(TypeArtifact) || perm.HasType(TypeCreature) || perm.HasType(TypeLand)

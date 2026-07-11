@@ -162,50 +162,16 @@ func registerCreatures() {
 	Register("Old Man of the Sea", func() Card {
 		return NewCreature("Old Man of the Sea", "{1}{U}{U}", 2, 3,
 			WithSubTypes("Djinn"),
+			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs ControlledPermanent assignment + power comparison primitives
-				FuncEffect("gain control of target creature",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						src := g.MutablePermanent(sourceID)
-						target := g.FindPermanent(targets[0])
-						if src == nil || target == nil {
-							return nil
-						}
-						// Check power restriction on resolution
-						if target.CurrentPower(g) > src.CurrentPower(g) {
-							return nil
-						}
-						src.ControlledPermanent = targets[0]
-						return nil
-					}),
+				GainControl().While(
+					ControlSourceControlledByEffectController{},
+					ControlSourceTapped{},
+					ControlTargetPowerLESource{},
+				).TapMaintained(),
 				Tap(),
 				WithTarget(TargetCreatureWithPowerLESource()),
 			),
-			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
-				func(g *Game, sourceID uuid.UUID) error {
-					src := g.MutablePermanent(sourceID)
-					if src == nil || src.ControlledPermanent == uuid.Nil {
-						return nil
-					}
-					target := g.MutablePermanent(src.ControlledPermanent)
-					if target == nil {
-						src.ControlledPermanent = uuid.Nil
-						return nil
-					}
-					// Control ends if Old Man is untapped or target's power exceeds
-					if !src.Tapped || target.CurrentPower(g) > src.CurrentPower(g) {
-						src.ControlledPermanent = uuid.Nil
-						return nil
-					}
-					target.Controller = src.Controller
-					// Keep Old Man from untapping while controlling
-					g.GrantAttr(sourceID, AttrDoesNotUntap)
-					return nil
-				})),
 		)
 	})
 
@@ -393,7 +359,7 @@ func registerCreatures() {
 					// may have already changed Controller before this LayerAbility runs.
 					// The post-layer AttrCantChangeControl check reverts any such steal.
 					for _, p := range g.AllBattlefield() {
-						if p.Card.Owner() == src.Controller &&
+						if p.Card.Owner() == src.ControllerID() &&
 							p.HasType(TypeArtifact) && !p.HasType(TypeCreature) &&
 							p.ID() != sourceID {
 							g.GrantAttr(p.ID(), Indestructible)
@@ -489,38 +455,11 @@ func registerCreatures() {
 		return NewCreature("Aladdin", "{2}{R}{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs ControlledPermanent assignment primitive
-				FuncEffect("gain control of target artifact",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						src := g.MutablePermanent(sourceID)
-						if src == nil {
-							return nil
-						}
-						src.ControlledPermanent = targets[0]
-						return nil
-					}),
+				GainControl().While(ControlSourceControlledByEffectController{}),
 				Tap(),
 				WithCost(ManaCostOf("{1}{R}{R}")),
 				WithTarget(TargetArtifact()),
 			),
-			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
-				func(g *Game, sourceID uuid.UUID) error {
-					src := g.MutablePermanent(sourceID)
-					if src == nil || src.ControlledPermanent == uuid.Nil {
-						return nil
-					}
-					target := g.MutablePermanent(src.ControlledPermanent)
-					if target == nil {
-						src.ControlledPermanent = uuid.Nil
-						return nil
-					}
-					target.Controller = src.Controller
-					return nil
-				})),
 		)
 	})
 
@@ -546,7 +485,7 @@ func registerCreatures() {
 					if perm == nil {
 						return nil
 					}
-					g.SetMinimumLife(perm.Controller)
+					g.SetMinimumLife(perm.ControllerID())
 					return nil
 				})),
 		)
@@ -737,16 +676,7 @@ func registerCreatures() {
 						return nil
 					}), false,
 			)),
-			// Continuous effect: maintain control based on ChosenPlayer
-			WithStaticAbility(FuncContinuousEffect(LayerControl, WhileOnBattlefield,
-				func(g *Game, sourceID uuid.UUID) error {
-					perm := g.MutablePermanent(sourceID)
-					if perm == nil || perm.ChosenPlayer == uuid.Nil {
-						return nil
-					}
-					perm.Controller = perm.ChosenPlayer
-					return nil
-				})),
+			WithStaticAbility(ControlSourceByChosenPlayer()),
 		)
 	})
 

@@ -568,7 +568,7 @@ func registerSpells() {
 						card := perm.Card
 						owner := card.Owner()
 						if owner == uuid.Nil {
-							owner = perm.Controller
+							owner = perm.ControllerID()
 						}
 						g.ExilePermanent(perm)
 						newPerm := g.PutOnBattlefield(card, owner)
@@ -1010,7 +1010,7 @@ func registerSpells() {
 						if perm == nil {
 							return nil
 						}
-						permController := perm.Controller
+						permController := perm.ControllerID()
 						g.DestroyPermanent(perm)
 						// Its controller may search for a basic land
 						p := g.GetPlayer(permController)
@@ -1258,7 +1258,7 @@ func registerSpells() {
 							return nil
 						}
 						// Capture the creature's controller before destroying.
-						creatureControllerID := perm.Controller
+						creatureControllerID := perm.ControllerID()
 						g.DestroyPermanent(perm)
 						// Infusion: if controller gained life this turn, that
 						// creature's controller loses 3 life.
@@ -1489,7 +1489,7 @@ func registerSpells() {
 						if perm == nil {
 							return nil
 						}
-						targetController := perm.Controller
+						targetController := perm.ControllerID()
 						g.DestroyPermanent(perm)
 						if p := g.GetPlayer(targetController); p != nil {
 							inklingToken := NewToken("Inkling Token", 1, 1,
@@ -1525,7 +1525,7 @@ func registerSpells() {
 						if perm == nil {
 							return nil
 						}
-						targetController := perm.Controller
+						targetController := perm.ControllerID()
 						g.DealDamageToPermanent(perm, 6, sourceID)
 						p := g.GetPlayer(controller)
 						if p == nil {
@@ -1985,16 +1985,9 @@ func registerSpells() {
 						var landPerms []*Permanent
 						for _, lc := range lands {
 							target.RemoveFromGraveyard(lc.ID())
-							perm := g.PutOnBattlefield(lc, lc.Owner())
+							perm := g.PutOnBattlefield(lc, controller)
 							if perm != nil {
 								g.TapPermanent(perm)
-								permID := perm.ID()
-								ctrl := controller
-								ce := TargetEffect(LayerControl, Indefinite, permID, func(g *Game, p *Permanent) error {
-									p.Controller = ctrl
-									return nil
-								})
-								g.AddContinuousEffect(ce)
 								landPerms = append(landPerms, perm)
 							}
 						}
@@ -2211,7 +2204,7 @@ func registerSpells() {
 						for range 2 {
 							var lands []*Permanent
 							for _, perm := range g.AllBattlefield() {
-								if perm.Controller == controller && perm.HasType(TypeLand) {
+								if perm.ControllerID() == controller && perm.HasType(TypeLand) {
 									lands = append(lands, perm)
 								}
 							}
@@ -2265,7 +2258,7 @@ func registerSpells() {
 						for _, pl := range g.AllPlayers() {
 							var controlled []*Permanent
 							for _, perm := range g.AllBattlefield() {
-								if perm.Controller == pl.PlayerID() {
+								if perm.ControllerID() == pl.PlayerID() {
 									controlled = append(controlled, perm)
 								}
 							}
@@ -2274,7 +2267,7 @@ func registerSpells() {
 								// Rebuild candidates each iteration as prior sacrifices may have removed permanents.
 								var candidates []*Permanent
 								for _, perm := range g.AllBattlefield() {
-									if perm.Controller == pl.PlayerID() {
+									if perm.ControllerID() == pl.PlayerID() {
 										candidates = append(candidates, perm)
 									}
 								}
@@ -2576,13 +2569,13 @@ func registerSpells() {
 								continue
 							}
 							perm := g.FindPermanent(tid)
-							if perm == nil || perm.Controller != controller {
+							if perm == nil || perm.ControllerID() != controller {
 								continue
 							}
 							g.AddContinuousEffect(TemporaryBoost(perm.ID(), 1, 0))
 							// Grant "when this creature dies, draw a card" until end of turn.
 							permID := perm.ID()
-							ctrl := perm.Controller
+							ctrl := perm.ControllerID()
 							deathDraw := NewTriggered(EvtZoneChange, false,
 								FuncEffect("draw a card when this creature dies",
 									EffectProperties{Outcome: OutcomeBenefit, DrawCount: 1},
@@ -2835,14 +2828,14 @@ func registerSpells() {
 						card := perm.Card
 						ownerID := perm.Card.Owner()
 						if ownerID == uuid.Nil {
-							ownerID = perm.Controller
+							ownerID = perm.ControllerID()
 						}
 						ownerPlayer := g.GetPlayer(ownerID)
 						if ownerPlayer == nil {
 							return nil
 						}
 						permID := perm.ID()
-						permController := perm.Controller
+						permController := perm.ControllerID()
 						choice := ownerPlayer.ChooseMode([]string{"top", "bottom"}, "put "+card.Name()+" on top or bottom of your library")
 						g.RemoveFromBattlefield(perm)
 						if choice == 0 {

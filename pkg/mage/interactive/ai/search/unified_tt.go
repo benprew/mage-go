@@ -87,7 +87,7 @@ func ttSupplementalKey(g *mage.Game) uint64 {
 		mixInt(i)
 		mixString(perm.Name())
 		mixUUID(perm.ID())
-		mixUUID(perm.Controller)
+		mixUUID(perm.ControllerID())
 		if perm.Tapped {
 			mix(1)
 		} else {

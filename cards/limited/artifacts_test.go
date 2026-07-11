@@ -37,7 +37,7 @@ func TestWinterOrb(t *testing.T) {
 		tapped := 0
 		playerAID := g.AllPlayers()[0].PlayerID()
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerAID && perm.HasType(core.TypeLand) && perm.Tapped {
+			if perm.ControllerID() == playerAID && perm.HasType(core.TypeLand) && perm.Tapped {
 				tapped++
 			}
 		}
@@ -61,7 +61,7 @@ func TestWinterOrb(t *testing.T) {
 		tapped := 0
 		playerBID := g.AllPlayers()[1].PlayerID()
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerBID && perm.HasType(core.TypeLand) && perm.Tapped {
+			if perm.ControllerID() == playerBID && perm.HasType(core.TypeLand) && perm.Tapped {
 				tapped++
 			}
 		}

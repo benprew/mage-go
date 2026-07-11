@@ -220,7 +220,7 @@ func unholyStrengthTargetOutcomes(t *testing.T, g *mage.Game, aliceID uuid.UUID,
 		controller := "none"
 		if p := g.FindPermanent(targetID); p != nil {
 			target = p.Name()
-			if player := g.GetPlayer(p.Controller); player != nil {
+			if player := g.GetPlayer(p.ControllerID()); player != nil {
 				controller = player.Name()
 			}
 		}

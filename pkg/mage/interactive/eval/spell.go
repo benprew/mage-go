@@ -83,7 +83,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 		if !perm.HasType(core.TypeCreature) {
 			continue
 		}
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			myCreatures++
 		case oppID:
@@ -133,7 +133,7 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 					// Bonus for being able to kill an opponent creature.
 					bestLethalBonus := 0
 					for _, perm := range g.AllBattlefield() {
-						if perm.Controller == oppID && perm.HasType(core.TypeCreature) {
+						if perm.ControllerID() == oppID && perm.HasType(core.TypeCreature) {
 							if dmg >= perm.CurrentToughness(g) {
 								bonus := max(EvalCreatureInGame(perm, g)/2, 2)
 								if bonus > bestLethalBonus {
@@ -240,7 +240,7 @@ func auraSpellValue(card mage.Card, playerID uuid.UUID, g *mage.Game, oppBestSco
 		// Immolation-style: only worth casting when it kills something.
 		best := 0
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerID || !perm.HasType(core.TypeCreature) {
+			if perm.ControllerID() == playerID || !perm.HasType(core.TypeCreature) {
 				continue
 			}
 			if perm.CurrentToughness(g)+profile.ToughnessBoost-perm.Damage <= 0 {

@@ -288,7 +288,7 @@ func (s *Strategy) considerRegeneration(p mage.Player, g *mage.Game) *interactiv
 		}
 		seen[id] = true
 		perm := g.FindPermanent(id)
-		if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+		if perm == nil || perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
 			return
 		}
 		if g.HasRegenerationShield(id) {
@@ -403,11 +403,11 @@ func (s *Strategy) considerPumpForCombatKill(p mage.Player, g *mage.Game) *inter
 		if atk == nil || blk == nil {
 			continue
 		}
-		if atk.Controller == playerID && atk.HasType(core.TypeCreature) && blk.HasType(core.TypeCreature) &&
+		if atk.ControllerID() == playerID && atk.HasType(core.TypeCreature) && blk.HasType(core.TypeCreature) &&
 			!res.isDead(blk.ID(), blk.CurrentToughness(g)) {
 			candidates = append(candidates, pair{mine: atk, theirs: blk})
 		}
-		if blk.Controller == playerID && blk.HasType(core.TypeCreature) && atk.HasType(core.TypeCreature) &&
+		if blk.ControllerID() == playerID && blk.HasType(core.TypeCreature) && atk.HasType(core.TypeCreature) &&
 			!res.isDead(atk.ID(), atk.CurrentToughness(g)) {
 			candidates = append(candidates, pair{mine: blk, theirs: atk})
 		}
@@ -492,7 +492,7 @@ func (s *Strategy) considerRegenerationAgainstRemoval(p mage.Player, g *mage.Gam
 			return
 		}
 		seen[perm.ID()] = true
-		if perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
 			return
 		}
 		if g.HasRegenerationShield(perm.ID()) {
@@ -510,7 +510,7 @@ func (s *Strategy) considerRegenerationAgainstRemoval(p mage.Player, g *mage.Gam
 			switch {
 			case props.Destroys && props.Mass:
 				for _, perm := range g.AllBattlefield() {
-					if perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+					if perm.ControllerID() == playerID && perm.HasType(core.TypeCreature) {
 						addDoomed(perm)
 					}
 				}
@@ -522,7 +522,7 @@ func (s *Strategy) considerRegenerationAgainstRemoval(p mage.Player, g *mage.Gam
 				dmg := props.DamageValue.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
 				for _, tid := range obj.Targets {
 					perm := g.FindPermanent(tid)
-					if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+					if perm == nil || perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
 						continue
 					}
 					if dmg >= perm.CurrentToughness(g)-perm.Damage {
@@ -644,7 +644,7 @@ func (s *Strategy) considerPumpAgainstRemoval(p mage.Player, g *mage.Game) *inte
 			dmg := props.DamageValue.Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
 			for _, tid := range obj.Targets {
 				perm := g.FindPermanent(tid)
-				if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+				if perm == nil || perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
 					continue
 				}
 				if dmg > burn[tid] {

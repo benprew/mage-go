@@ -3,6 +3,8 @@ package limited
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -437,6 +439,66 @@ func TestAnimateDead(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 3, 4) // -1/-0 from Animate Dead
 	})
 
+	t.Run("animates a creature from opponent's graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Serra Angel")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Dead")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Dead", "Serra Angel")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		g.AssertGraveyardCount(gametest.PlayerB, "Serra Angel", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Animate Dead", 1)
+		g.AssertAttachedTo(gametest.PlayerA, "Animate Dead", "Serra Angel")
+		g.AssertPowerToughness(gametest.PlayerA, "Serra Angel", 3, 4)
+		g.ApplyContinuousEffects()
+		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
+	})
+
+	t.Run("temporary control expires back to Animate Dead controller", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Serra Angel")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Dead")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Dead", "Serra Angel")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		creature := g.FindPermanentByName("Serra Angel", g.AllPlayers()[0].PlayerID())
+		if creature == nil {
+			t.Fatal("animated creature not found")
+		}
+		playerB := g.AllPlayers()[1].PlayerID()
+		if err := mage.ApplyEffect(g.Game, mage.GainControl().Until(core.EndOfTurn), uuid.Nil, playerB, []uuid.UUID{creature.ID()}); err != nil {
+			t.Fatal(err)
+		}
+		g.AssertPermanentCount(gametest.PlayerB, "Serra Angel", 1)
+
+		g.Effects.RemoveEndOfTurn()
+		g.ApplyContinuousEffects()
+		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
+	})
+
+	t.Run("Animate Dead leaving sacrifices the animated creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Serra Angel")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Dead")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Animate Dead", "Serra Angel")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+
+		aura := g.FindPermanentByName("Animate Dead", g.AllPlayers()[0].PlayerID())
+		if aura == nil {
+			t.Fatal("Animate Dead not found")
+		}
+		g.DestroyPermanent(aura)
+		g.PutTriggersOnStack()
+		g.ResolveStack()
+
+		g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Serra Angel", 1)
+	})
+
 	t.Run("cannot target living battlefield creature", func(t *testing.T) {
 		// Animate Dead targets a creature card in a graveyard — it must not
 		// be castable on a creature already on the battlefield.
@@ -851,7 +913,7 @@ func TestClone(t *testing.T) {
 		// Should have two 4/4 creatures (original + clone)
 		count44 := 0
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == g.AllPlayers()[0].PlayerID() {
+			if perm.ControllerID() == g.AllPlayers()[0].PlayerID() {
 				if perm.CurrentPower(g.Game) == 4 && perm.CurrentToughness(g.Game) == 4 {
 					count44++
 				}

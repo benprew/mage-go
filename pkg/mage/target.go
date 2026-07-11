@@ -191,10 +191,10 @@ func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game
 		if t.excludeSource && p.ID() == sourceID {
 			continue
 		}
-		if t.controllerOnly && p.Controller != controller {
+		if t.controllerOnly && p.ControllerID() != controller {
 			continue
 		}
-		if t.opponentOnly && p.Controller == controller {
+		if t.opponentOnly && p.ControllerID() == controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -380,7 +380,7 @@ func TargetControlledCreature() Target {
 func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.battlefield {
-		if p.HasType(TypeCreature) && p.Controller == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
+		if p.HasType(TypeCreature) && p.ControllerID() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
 	}
@@ -437,7 +437,7 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.battlefield {
-		if t.opponentOnly && p.Controller == controller {
+		if t.opponentOnly && p.ControllerID() == controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -755,7 +755,7 @@ func TargetControlledPermanent() Target {
 func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.battlefield {
-		if p.Controller == controller && p.Card.Owner() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
+		if p.ControllerID() == controller && p.Card.Owner() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
 	}

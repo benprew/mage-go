@@ -207,7 +207,7 @@ func TestCountRoles(t *testing.T) {
 		makePerm("Bear2", "{1}{G}", 2, 2, owner),
 		makePerm("Wall", "{1}{W}", 0, 5, owner, mage.WithKeyword(core.Defender)),
 	}
-	roles := countRoles(perms, func(p *mage.Permanent) bool { return p.Controller == owner })
+	roles := countRoles(perms, func(p *mage.Permanent) bool { return p.ControllerID() == owner })
 	if roles[RoleThreat] != 2 {
 		t.Errorf("countRoles threats = %d, want 2", roles[RoleThreat])
 	}

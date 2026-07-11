@@ -30,7 +30,7 @@ func combatLeafEval(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 	boardScale := w.Board / 2.0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		var v float64
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			v = float64(eval.EvalCreatureInGameNoTapPenalty(perm, g)) * boardScale
 			score += v
@@ -43,7 +43,7 @@ func combatLeafEval(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := float64(evalNonCreatureValue(perm)) * boardScale
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			score += v
 		case oppID:

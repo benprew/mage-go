@@ -166,7 +166,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					opp := g.GetOpponent(src.Controller)
+					opp := g.GetOpponent(src.ControllerID())
 					if opp == nil {
 						return nil
 					}
@@ -258,7 +258,7 @@ func registerCreatures() {
 					if perm.ID() == sourceID {
 						return true
 					}
-					return perm.Controller == controllerID && perm.HasType(TypeCreature) && perm.HasKeyword(Flying)
+					return perm.ControllerID() == controllerID && perm.HasType(TypeCreature) && perm.HasKeyword(Flying)
 				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
 		)
 	})
@@ -444,7 +444,7 @@ func registerCreatures() {
 						return nil
 					}
 					n := 0
-					for _, p := range g.FilterBattlefield(And(ControlledBy(src.Controller), IsCreature, NotID(sourceID))) {
+					for _, p := range g.FilterBattlefield(And(ControlledBy(src.ControllerID()), IsCreature, NotID(sourceID))) {
 						if p.Counters[P1P1] > 0 {
 							n++
 						}
@@ -642,7 +642,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.AllBattlefield() {
-						if !p.HasType(TypeCreature) || p.Controller == src.Controller {
+						if !p.HasType(TypeCreature) || p.ControllerID() == src.ControllerID() {
 							continue
 						}
 						g.GrantAttr(p.ID(), AttrCantActivate)
@@ -684,7 +684,7 @@ func registerCreatures() {
 					if perm == nil {
 						return false
 					}
-					return perm.Controller == controllerID && perm.HasType(TypeCreature) && perm.CurrentPower(g) <= 2
+					return perm.ControllerID() == controllerID && perm.HasType(TypeCreature) && perm.CurrentPower(g) <= 2
 				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield})),
 		)
 	})
@@ -964,7 +964,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.FilterBattlefield(And(
-						ControlledBy(src.Controller), IsCreature, HasSubType("Spirit"), NotID(sourceID),
+						ControlledBy(src.ControllerID()), IsCreature, HasSubType("Spirit"), NotID(sourceID),
 					)) {
 						p = g.MutablePermanent(p.ID())
 						if p == nil {
@@ -997,7 +997,7 @@ func registerCreatures() {
 						}
 						var damagerController uuid.UUID
 						if perm := g.FindPermanent(damagerID); perm != nil {
-							damagerController = perm.Controller
+							damagerController = perm.ControllerID()
 						} else if obj := g.FindStackObject(damagerID); obj != nil {
 							damagerController = obj.Controller
 						} else if c := g.FindCardAnywhere(damagerID); c != nil {
@@ -1064,7 +1064,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.FilterBattlefield(And(
-						ControlledBy(src.Controller), HasSubType("Pirate"), NotID(sourceID),
+						ControlledBy(src.ControllerID()), HasSubType("Pirate"), NotID(sourceID),
 					)) {
 						p = g.MutablePermanent(p.ID())
 						if p == nil {
@@ -1255,14 +1255,10 @@ func registerCreatures() {
 					if chosen == nil {
 						continue
 					}
-					newController := a.recipientID
-					ce := TargetEffect(LayerControl, Indefinite, chosen.ID(),
-						func(g *Game, target *Permanent) error {
-							target.Controller = newController
-							return nil
-						})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
+					g.AddControlEffect(ControlEffectSpec{
+						SourceID: sourceID, TargetID: chosen.ID(),
+						ControllerID: a.recipientID, Duration: Indefinite,
+					})
 				}
 				return nil
 			},
@@ -1295,7 +1291,7 @@ func registerCreatures() {
 						}
 						count := 0
 						for _, p := range g.FilterBattlefield(IsAttacking) {
-							if p.Controller == controllerID && p.HasKeyword(Flying) {
+							if p.ControllerID() == controllerID && p.HasKeyword(Flying) {
 								count++
 							}
 						}
@@ -1418,7 +1414,7 @@ func registerCreatures() {
 					if perm.ID() == sourceID {
 						return true
 					}
-					return perm.Controller == controllerID && perm.HasSubType("Spirit")
+					return perm.ControllerID() == controllerID && perm.HasSubType("Spirit")
 				}).AndConditionData(EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield}).
 				AddTarget(TargetPermanentOpponentControls(IsCreature))),
 		)
@@ -1884,7 +1880,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller), HasKeywordFilter(Flying))) {
+				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.ControllerID()), HasKeywordFilter(Flying))) {
 					if p.ID() == sourceID {
 						continue
 					}
@@ -2824,7 +2820,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				p := g.GetPlayer(src.Controller)
+				p := g.GetPlayer(src.ControllerID())
 				if p == nil {
 					return nil
 				}
@@ -3101,7 +3097,7 @@ func registerCreatures() {
 						discards := 0
 						for srcID := range sources {
 							src := g.FindPermanent(srcID)
-							if src == nil || src.Controller != controller {
+							if src == nil || src.ControllerID() != controller {
 								continue
 							}
 							if src.Counters[P1P1] == 0 {
@@ -3570,7 +3566,7 @@ func registerCreatures() {
 				}
 				count := 0
 				for _, pl := range g.AllPlayers() {
-					if pl.PlayerID() == src.Controller {
+					if pl.PlayerID() == src.ControllerID() {
 						continue
 					}
 					for _, c := range pl.Graveyard() {
@@ -4715,7 +4711,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				if g.ActivePlayerObj() != nil && g.ActivePlayerObj().PlayerID() == src.Controller {
+				if g.ActivePlayerObj() != nil && g.ActivePlayerObj().PlayerID() == src.ControllerID() {
 					g.GrantAttr(sourceID, FirstStrike)
 				}
 				return nil
@@ -4885,7 +4881,7 @@ func registerCreatures() {
 					if attacker == nil {
 						continue
 					}
-					if attacker.Controller != controller {
+					if attacker.ControllerID() != controller {
 						continue
 					}
 					if !attacker.HasSubType("Devil") {
@@ -4948,7 +4944,7 @@ func registerCreatures() {
 					return false
 				}
 				for _, p := range g.FilterBattlefield(IsAttacking) {
-					if p.Controller == controllerID && p.HasSubType("Devil") {
+					if p.ControllerID() == controllerID && p.HasSubType("Devil") {
 						return true
 					}
 				}
@@ -5596,7 +5592,7 @@ func registerCreatures() {
 					continue
 				}
 				atk := game.FindPermanent(grp.AttackerID)
-				if atk != nil && atk.Controller == controllerID {
+				if atk != nil && atk.ControllerID() == controllerID {
 					return true
 				}
 			}
@@ -5611,7 +5607,7 @@ func registerCreatures() {
 				return false
 			}
 			for _, id := range []uuid.UUID{evt.SourceID, evt.TargetID} {
-				if perm := game.FindPermanent(id); perm != nil && perm.Controller == controllerID {
+				if perm := game.FindPermanent(id); perm != nil && perm.ControllerID() == controllerID {
 					return true
 				}
 			}
@@ -5816,7 +5812,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.FilterBattlefield(IsCreature) {
-						if p.Controller != src.Controller {
+						if p.ControllerID() != src.ControllerID() {
 							continue
 						}
 						if !hasAnyCounter(p) {
@@ -5828,7 +5824,7 @@ func registerCreatures() {
 						}
 						ab := NewActivatedAbility(AddMana(Green, 1), Tap())
 						ab.SetSource(p.ID())
-						ab.SetController(p.Controller)
+						ab.SetController(p.ControllerID())
 						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
 					}
 					return nil
@@ -5890,7 +5886,7 @@ func registerCreatures() {
 				if perm == nil {
 					return nil
 				}
-				p := g.GetPlayer(perm.Controller)
+				p := g.GetPlayer(perm.ControllerID())
 				if p == nil {
 					return nil
 				}
@@ -6112,12 +6108,12 @@ func registerCreatures() {
 			WithSubTypes("Giant"),
 			WithAbility(EntersWithComputedCounters(P1P1, func(g *Game, perm *Permanent) int {
 				total := 0
-				controller := perm.Controller
+				controller := perm.ControllerID()
 				for _, p := range g.FilterBattlefield(IsCreature) {
 					if p.ID() == perm.ID() {
 						continue
 					}
-					if p.Controller != controller {
+					if p.ControllerID() != controller {
 						continue
 					}
 					total += p.CurrentToughness(g)
@@ -6220,7 +6216,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					count := g.CountBattlefield(And(IsLand, ControlledBy(src.Controller)))
+					count := g.CountBattlefield(And(IsLand, ControlledBy(src.ControllerID())))
 					if count >= 8 {
 						src.BoostPT(4, 4)
 					}
@@ -6231,7 +6227,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					count := g.CountBattlefield(And(IsLand, ControlledBy(src.Controller)))
+					count := g.CountBattlefield(And(IsLand, ControlledBy(src.ControllerID())))
 					if count >= 8 {
 						g.GrantAttr(sourceID, Trample)
 					}
@@ -6283,7 +6279,7 @@ func registerCreatures() {
 					card := perm.Card
 					ownerID := card.Owner()
 					if ownerID == uuid.Nil {
-						ownerID = perm.Controller
+						ownerID = perm.ControllerID()
 					}
 					g.RemoveFromBattlefield(perm)
 					ownerP := g.GetPlayer(ownerID)
@@ -6324,7 +6320,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					count := g.CountBattlefield(And(IsCreature, ControlledBy(src.Controller)))
+					count := g.CountBattlefield(And(IsCreature, ControlledBy(src.ControllerID())))
 					src.BoostPT(count, 0)
 					return nil
 				}),
@@ -6429,7 +6425,7 @@ func registerCreatures() {
 					card := chosen.Card
 					ownerID := card.Owner()
 					if ownerID == uuid.Nil {
-						ownerID = chosen.Controller
+						ownerID = chosen.ControllerID()
 					}
 					g.RemoveFromBattlefield(chosen)
 					if owner := g.GetPlayer(ownerID); owner != nil {
@@ -6483,7 +6479,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					if g.AnyBattlefield(And(ControlledBy(src.Controller), HasSubType("Dragon"))) {
+					if g.AnyBattlefield(And(ControlledBy(src.ControllerID()), HasSubType("Dragon"))) {
 						g.GrantAttr(sourceID, Flying)
 						g.GrantAttr(sourceID, Trample)
 					}

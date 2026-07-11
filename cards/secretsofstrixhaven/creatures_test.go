@@ -1,6 +1,7 @@
 package secretsofstrixhaven
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/google/uuid"
@@ -11,6 +12,17 @@ import (
 
 	_ "github.com/benprew/mage-go/cards/limited"
 )
+
+var scoldingDestroyOnce sync.Once
+
+func registerScoldingDestroy() {
+	scoldingDestroyOnce.Do(func() {
+		mage.Register("Scolding Test Destroy", func() mage.Card {
+			return mage.NewInstant("Scolding Test Destroy", "{1}{B}",
+				mage.NewTargetedSpell(mage.TargetCreature(), mage.DestroyTarget()))
+		})
+	})
+}
 
 // TestAberrantManawurm_TrampleBase verifies Aberrant Manawurm is a 2/5 with trample.
 func TestAberrantManawurm_TrampleBase(t *testing.T) {
@@ -2265,15 +2277,16 @@ func TestScoldingAdministrator_ReparteeAddsCounter(t *testing.T) {
 // TestScoldingAdministrator_DeathTransfersCounters verifies that when
 // Scolding Administrator dies with counters, those counters go to a target creature.
 func TestScoldingAdministrator_DeathTransfersCounters(t *testing.T) {
+	registerScoldingDestroy()
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scolding Administrator")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 2)
-	g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Scolding Test Destroy")
 	// Add a counter to Scolding Administrator first.
 	g.AddCounters(1, core.PrecombatMain, gametest.PlayerA, "Scolding Administrator", core.P1P1, 2)
 	// Opponent kills Scolding Administrator.
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Terror", "Scolding Administrator")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Scolding Test Destroy", "Scolding Administrator")
 	// Death trigger targets Grizzly Bears.
 	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
 	g.StopAt(1, core.EndStep)
@@ -2287,12 +2300,13 @@ func TestScoldingAdministrator_DeathTransfersCounters(t *testing.T) {
 // TestScoldingAdministrator_DeathNoTransferWithoutCounters verifies that
 // the death trigger does nothing when the creature had no counters.
 func TestScoldingAdministrator_DeathNoTransferWithoutCounters(t *testing.T) {
+	registerScoldingDestroy()
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Scolding Administrator")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Swamp", 2)
-	g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Terror", "Scolding Administrator")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Scolding Test Destroy")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Scolding Test Destroy", "Scolding Administrator")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	// Scolding Administrator is dead with no counters to transfer.

@@ -135,7 +135,7 @@ func TestCloneBasicFields(t *testing.T) {
 		if cp.Damage != p.Damage {
 			t.Errorf("Perm %d Damage: got %d want %d", i, cp.Damage, p.Damage)
 		}
-		if cp.Controller != p.Controller {
+		if cp.ControllerID() != p.ControllerID() {
 			t.Errorf("Perm %d Controller mismatch", i)
 		}
 	}
@@ -294,7 +294,7 @@ func TestCloneMutablePermanentFieldIsolation(t *testing.T) {
 	cloneHost.Damage = 3
 	cloneHost.Counters[P1P1] = 2
 	cloneHost.Attachments = append(cloneHost.Attachments, aura.ID())
-	cloneHost.Controller = pB.PlayerID()
+	cloneHost.computedController = pB.PlayerID()
 	cloneHost.RuntimeAbilities = append(cloneHost.RuntimeAbilities, NewManaAbility(Blue))
 	cloneHost.SubTypeOverride = []string{"Rogue"}
 	cloneHost.SubTypeAdditions = []string{"Wizard"}
@@ -309,8 +309,8 @@ func TestCloneMutablePermanentFieldIsolation(t *testing.T) {
 	if len(host.Attachments) != 0 || aura.AttachedTo != uuid.Nil {
 		t.Fatalf("attachment mutation leaked to original: host attachments=%d aura attachedTo=%s", len(host.Attachments), aura.AttachedTo)
 	}
-	if host.Controller != pA.PlayerID() {
-		t.Fatalf("controller mutation leaked to original: got %s", host.Controller)
+	if host.ControllerID() != pA.PlayerID() {
+		t.Fatalf("controller mutation leaked to original: got %s", host.ControllerID())
 	}
 	if len(host.RuntimeAbilities) != len(hostCard.Abilities()) {
 		t.Fatalf("runtime ability mutation leaked to original: got %d abilities", len(host.RuntimeAbilities))
@@ -393,7 +393,7 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 	for _, eff := range []ContinuousEffect{
 		TemporaryBoost(target.ID(), 3, 3),
 		TargetEffect(LayerControl, Indefinite, target.ID(), func(_ *Game, target *Permanent) error {
-			target.Controller = pB.PlayerID()
+			target.computedController = pB.PlayerID()
 			return nil
 		}),
 		GrantSubTypeToTarget(target.ID(), "Rogue", EndOfTurn),
@@ -422,8 +422,8 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 	if cloneTarget == nil || cloneLand == nil || cloneDoppel == nil {
 		t.Fatal("expected clone permanents after continuous effect apply")
 	}
-	if cloneTarget.Controller != pB.PlayerID() {
-		t.Fatalf("clone control effect not applied: got controller %s", cloneTarget.Controller)
+	if cloneTarget.ControllerID() != pB.PlayerID() {
+		t.Fatalf("clone control effect not applied: got controller %s", cloneTarget.ControllerID())
 	}
 	if cloneTarget.powerBonus != 4 || cloneTarget.toughBonus != 4 {
 		t.Fatalf("clone P/T bonuses not applied: got +%d/+%d", cloneTarget.powerBonus, cloneTarget.toughBonus)
@@ -444,8 +444,8 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 		t.Fatal("clone copy effect not applied")
 	}
 
-	if target.Controller != pA.PlayerID() || target.powerBonus != 0 || target.toughBonus != 0 {
-		t.Fatalf("continuous effect leaked to original target: controller=%s +%d/+%d", target.Controller, target.powerBonus, target.toughBonus)
+	if target.ControllerID() != pA.PlayerID() || target.powerBonus != 0 || target.toughBonus != 0 {
+		t.Fatalf("continuous effect leaked to original target: controller=%s +%d/+%d", target.ControllerID(), target.powerBonus, target.toughBonus)
 	}
 	if len(target.SubTypeOverride) != 0 || len(target.SubTypeAdditions) != 0 || target.ColorOverride != nil {
 		t.Fatal("type/color continuous effect leaked to original target")

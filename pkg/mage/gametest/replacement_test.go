@@ -345,7 +345,7 @@ func TestMinimumLifeDoesNotGoBelow1(t *testing.T) {
 						if perm == nil {
 							return nil
 						}
-						g.SetMinimumLife(perm.Controller)
+						g.SetMinimumLife(perm.ControllerID())
 						return nil
 					})),
 			)

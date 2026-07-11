@@ -119,9 +119,9 @@ func TestHeuristicAttackers_RealCardLethalScenario(t *testing.T) {
 			}
 			if len(act.Targets) == 0 {
 				t.Errorf("expected Flying Carpet to target a creature, got no target")
-			} else if tgt := g.FindPermanent(act.Targets[0]); tgt == nil || tgt.Controller != pa.PlayerID() {
+			} else if tgt := g.FindPermanent(act.Targets[0]); tgt == nil || tgt.ControllerID() != pa.PlayerID() {
 				t.Errorf("Flying Carpet targeted %s controlled by %v; expected one of AI's own creatures",
-					permName(g, act.Targets[0]), tgt.Controller)
+					permName(g, act.Targets[0]), tgt.ControllerID())
 			}
 		})
 	}

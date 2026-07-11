@@ -513,7 +513,7 @@ func TestCR701_18_PlayLandOncePerTurn(t *testing.T) {
 	playerAID := tg.GetPlayer(PlayerA).PlayerID()
 	total := 0
 	for _, perm := range tg.Battlefield {
-		if perm.Controller == playerAID && (perm.Name() == "Forest" || perm.Name() == "Plains") {
+		if perm.ControllerID() == playerAID && (perm.Name() == "Forest" || perm.Name() == "Plains") {
 			total++
 		}
 	}

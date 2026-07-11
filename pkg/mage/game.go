@@ -65,6 +65,7 @@ type Game struct {
 	stack                  *Stack
 	combat                 *Combat
 	effects                *EffectManager
+	layer2Controllers      map[uuid.UUID]uuid.UUID
 	manaScratch            []manaSourceInfo
 
 	turn         int
@@ -536,7 +537,7 @@ func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent
 		if p.PhasedOut {
 			continue
 		}
-		if p.Name() == name && p.Controller == controller {
+		if p.Name() == name && p.ControllerID() == controller {
 			return p
 		}
 	}
@@ -658,7 +659,7 @@ func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool 
 	// Collect untapped lands controlled by the player
 	var lands []*Permanent
 	for _, p := range g.battlefield {
-		if p.Controller == playerID && !p.Tapped && p.HasType(TypeLand) {
+		if p.ControllerID() == playerID && !p.Tapped && p.HasType(TypeLand) {
 			lands = append(lands, p)
 		}
 	}
@@ -760,13 +761,9 @@ func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool 
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 	perm := NewPermanent(card, controller)
 	g.addOwnedPermanent(perm)
-	perm.TurnControlGained = g.turn
+	perm.turnControlGained = g.turn
 
-	// Set ability sources and controllers
-	for _, a := range perm.RuntimeAbilities {
-		a.SetSource(perm.ID())
-		a.SetController(controller)
-	}
+	g.syncAbilityContext(perm)
 
 	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
 	if perm.HasKeyword(EntersTapped) || g.effects.Rules.ShouldEnterTapped(perm) {
@@ -956,11 +953,7 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 		cp := a
 		perm.RuntimeAbilities = append(perm.RuntimeAbilities, cp)
 	}
-	// Set ability sources
-	for _, a := range perm.RuntimeAbilities {
-		a.SetSource(perm.ID())
-		a.SetController(perm.Controller)
-	}
+	g.syncAbilityContext(perm)
 	// Register continuous effects from static abilities
 	for _, a := range perm.RuntimeAbilities {
 		if sa, ok := a.(*StaticAbilityHolder); ok {
@@ -1051,7 +1044,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	if result == nil {
 		return // regenerated or otherwise replaced
 	}
-	controller := perm.Controller
+	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {
 		panic("DestroyPermanent: Pemanent has no owner")
@@ -1102,17 +1095,19 @@ func (g *Game) TapPermanent(perm *Permanent) {
 	g.FireEvent(GameEvent{
 		Type:     EvtTapped,
 		SourceID: perm.ID(),
-		PlayerID: perm.Controller,
+		PlayerID: perm.ControllerID(),
 	})
 }
 
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
 func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourceID, controller uuid.UUID) {
 	for _, a := range abilities {
-		ta, ok := a.(TriggeredAbility)
+		ta, ok := UnwrapAbility(a).(TriggeredAbility)
 		if !ok {
 			continue
 		}
+		ta.SetSource(sourceID)
+		ta.SetController(controller)
 		if ta.IsStateTrigger() {
 			continue
 		}
@@ -1130,12 +1125,23 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 	}
 }
 
+func (g *Game) syncAbilityContext(perm *Permanent) {
+	if perm == nil {
+		return
+	}
+	for _, ability := range perm.RuntimeAbilities {
+		unwrapped := UnwrapAbility(ability)
+		unwrapped.SetSource(perm.ID())
+		unwrapped.SetController(perm.ControllerID())
+	}
+}
+
 // PutPermanentIntoGraveyard puts a permanent into its owner's graveyard without
 // destroying it. This bypasses indestructible and regeneration. Used by SBAs
 // (e.g., 0-toughness creatures) and other rules that move permanents to the
 // graveyard without destruction.
 func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
-	controller := perm.Controller
+	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {
 		owner = controller
@@ -1207,6 +1213,17 @@ func (g *Game) MoveFromGraveyard(playerID, cardID uuid.UUID, to Zone) (Card, boo
 	return card, true
 }
 
+// MoveFromAnyGraveyard removes a card from whichever player's graveyard
+// contains it and returns that player's ID for zone-change attribution.
+func (g *Game) MoveFromAnyGraveyard(cardID uuid.UUID, to Zone) (Card, uuid.UUID, bool) {
+	for _, player := range g.players {
+		if card, ok := g.MoveFromGraveyard(player.PlayerID(), cardID, to); ok {
+			return card, player.PlayerID(), true
+		}
+	}
+	return nil, uuid.Nil, false
+}
+
 // MoveCardsFromGraveyard removes the listed cards from playerID's graveyard,
 // firing per-card EvtZoneChange events and a SINGLE EvtCardsLeftGraveyard
 // event with Amount = number of cards actually removed (CR 603.10 — multiple
@@ -1248,7 +1265,7 @@ func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, t
 // captured abilities (CR 700.4 / 603.6c: any battlefield → graveyard
 // transition is "put into a graveyard," including sacrifice).
 func (g *Game) Sacrifice(perm *Permanent) {
-	controller := perm.Controller
+	controller := perm.ControllerID()
 	owner := perm.Card.Owner()
 	if owner == uuid.Nil {
 		owner = controller
@@ -1356,7 +1373,7 @@ func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 	for sacrificed < count {
 		var target *Permanent
 		for _, p := range g.battlefield {
-			if p.Controller == playerID {
+			if p.ControllerID() == playerID {
 				target = p
 				break
 			}
@@ -1377,7 +1394,7 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	if perm == nil {
 		return
 	}
-	controller := perm.Controller
+	controller := perm.ControllerID()
 	permID := perm.ID()
 	card := perm.Card
 	isToken := perm.IsToken
@@ -1410,7 +1427,7 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 // an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing leave
 // triggers fire via the LKI snapshot's captured abilities per CR 603.6c.
 func (g *Game) ExilePermanent(perm *Permanent) {
-	controller := perm.Controller
+	controller := perm.ControllerID()
 	permID := perm.ID()
 	card := perm.Card
 	g.RemoveFromBattlefield(perm)
@@ -1799,16 +1816,16 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 	// on the battlefield with a controller.
 	if a.IsCombatDamage() {
 		if srcPerm := g.FindPermanent(sourceID); srcPerm != nil {
-			byCtrl, ok := g.combatDamageThisStep[srcPerm.Controller]
+			byCtrl, ok := g.combatDamageThisStep[srcPerm.ControllerID()]
 			if !ok {
 				byCtrl = make(map[uuid.UUID]int)
-				g.combatDamageThisStep[srcPerm.Controller] = byCtrl
+				g.combatDamageThisStep[srcPerm.ControllerID()] = byCtrl
 			}
 			byCtrl[p.PlayerID()] += amount
-			byCtrlSrcs, ok := g.combatDamageSourcesThisStep[srcPerm.Controller]
+			byCtrlSrcs, ok := g.combatDamageSourcesThisStep[srcPerm.ControllerID()]
 			if !ok {
 				byCtrlSrcs = make(map[uuid.UUID]map[uuid.UUID]int)
-				g.combatDamageSourcesThisStep[srcPerm.Controller] = byCtrlSrcs
+				g.combatDamageSourcesThisStep[srcPerm.ControllerID()] = byCtrlSrcs
 			}
 			bySrc, ok := byCtrlSrcs[p.PlayerID()]
 			if !ok {
@@ -1835,7 +1852,7 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 	// Lifelink
 	src := g.FindPermanent(sourceID)
 	if src != nil && src.HasKeyword(Lifelink) {
-		srcPlayer := g.GetPlayer(src.Controller)
+		srcPlayer := g.GetPlayer(src.ControllerID())
 		if srcPlayer != nil {
 			srcPlayer.GainLife(amount)
 		}
@@ -1921,7 +1938,7 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 	}
 	// Lifelink
 	if src != nil && src.HasKeyword(Lifelink) {
-		srcPlayer := g.GetPlayer(src.Controller)
+		srcPlayer := g.GetPlayer(src.ControllerID())
 		if srcPlayer != nil {
 			g.PlayerGainLife(srcPlayer, amount)
 		}
@@ -2068,6 +2085,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 	g.recordPerTurnEvent(&evt)
 	g.recordPerDuelEvent(&evt)
 	for _, perm := range g.battlefield {
+		g.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
 			if !ok {
@@ -2087,14 +2105,12 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if gt, ok := ta.(*GenericTriggered); ok && !gt.FunctionsInZone(ZoneBattlefield) {
 				continue
 			}
-			ta.SetSource(perm.ID())
-			ta.SetController(perm.Controller)
 			if ta.CheckTrigger(&evt, g) {
 				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
 					ability:    ta,
 					event:      &evt,
 					sourceID:   perm.ID(),
-					controller: perm.Controller,
+					controller: perm.ControllerID(),
 				})
 			}
 		}
@@ -2240,13 +2256,12 @@ func (g *Game) FireEvent(evt GameEvent) {
 func (g *Game) CheckStateTriggers() {
 	seen := make(map[stateTriggerKey]bool)
 	for _, perm := range g.battlefield {
+		g.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
 			if !ok || !ta.IsStateTrigger() {
 				continue
 			}
-			ta.SetSource(perm.ID())
-			ta.SetController(perm.Controller)
 			key := stateTriggerKey{sourceID: perm.ID(), abilityID: ta.AbilityID()}
 			seen[key] = true
 			cond := ta.CheckTrigger(nil, g)
@@ -2261,7 +2276,7 @@ func (g *Game) CheckStateTriggers() {
 			g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
 				ability:    ta,
 				sourceID:   perm.ID(),
-				controller: perm.Controller,
+				controller: perm.ControllerID(),
 			})
 		}
 	}
@@ -3248,7 +3263,7 @@ func (g *Game) CheckStateBasedActions() {
 			}
 			hasLand := false
 			for _, other := range g.battlefield {
-				if other.Controller == p.Controller && other.HasSubType(landSubtype) {
+				if other.ControllerID() == p.ControllerID() && other.HasSubType(landSubtype) {
 					hasLand = true
 					break
 				}
@@ -3270,10 +3285,10 @@ func (g *Game) CheckStateBasedActions() {
 				if legendCounts == nil {
 					legendCounts = make(map[uuid.UUID]map[string][]*Permanent)
 				}
-				if legendCounts[p.Controller] == nil {
-					legendCounts[p.Controller] = make(map[string][]*Permanent)
+				if legendCounts[p.ControllerID()] == nil {
+					legendCounts[p.ControllerID()] = make(map[string][]*Permanent)
 				}
-				legendCounts[p.Controller][p.Name()] = append(legendCounts[p.Controller][p.Name()], p)
+				legendCounts[p.ControllerID()][p.Name()] = append(legendCounts[p.ControllerID()][p.Name()], p)
 			}
 		}
 		for ctrlID, byName := range legendCounts {
@@ -3379,7 +3394,7 @@ func (g *Game) doUntap() {
 	}
 	count := 0
 	for _, p := range g.battlefield {
-		if p.Controller == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
+		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
 			count++
 		}
 	}
@@ -3393,7 +3408,7 @@ func (g *Game) doUntap() {
 	creaturesUntapped := 0
 
 	for _, p := range g.battlefield {
-		if p.Controller == active.PlayerID() {
+		if p.ControllerID() == active.PlayerID() {
 			if p.HasAttr(AttrDoesNotUntap) {
 				// Does not untap — skip
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
@@ -3525,7 +3540,7 @@ func (g *Game) doDeclareAttackers() {
 		declared[id] = true
 	}
 	for _, p := range g.battlefield {
-		if p.Controller == active.PlayerID() && p.HasAttr(AttrMustAttack) && !declared[p.ID()] {
+		if p.ControllerID() == active.PlayerID() && p.HasAttr(AttrMustAttack) && !declared[p.ID()] {
 			if p.CanDeclareAsAttacker(g) {
 				attackerIDs = append(attackerIDs, p.ID())
 			}
@@ -3761,7 +3776,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 		// Find legal blockers controlled by the defender.
 		var candidates []*Permanent
 		for _, p := range g.battlefield {
-			if p.Controller != defenderID {
+			if p.ControllerID() != defenderID {
 				continue
 			}
 			if !p.CanDeclareAsBlocker(g) {
@@ -3828,6 +3843,7 @@ func (g *Game) doCleanupActions() bool {
 	}
 	// Remove end-of-turn effects and clear turn-scoped state
 	g.effects.RemoveEndOfTurn()
+	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()
 	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
 	g.effects.Damage.ClearEndOfTurn()
@@ -4078,7 +4094,7 @@ func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredCol
 	if perm == nil {
 		return ErrPermanentNotFound
 	}
-	if perm.Controller != playerID {
+	if perm.ControllerID() != playerID {
 		return fmt.Errorf("you don't control that permanent")
 	}
 	if perm.Tapped {
@@ -4245,7 +4261,7 @@ func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
 
 func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourceInfo) []manaSourceInfo {
 	for _, perm := range g.battlefield {
-		if perm.Controller != playerID || perm.Tapped {
+		if perm.ControllerID() != playerID || perm.Tapped {
 			continue
 		}
 		if perm.HasAttr(AttrCantActivate) {
@@ -4722,7 +4738,7 @@ func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
 func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	var result []ActivatableInfo
 	for _, perm := range g.battlefield {
-		isOwner := perm.Controller == playerID
+		isOwner := perm.ControllerID() == playerID
 		for i, a := range perm.RuntimeAbilities {
 			inner := UnwrapAbility(a)
 			aa, ok := inner.(ActivatedAbility)
@@ -4832,7 +4848,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	// Handle mana abilities (don't use the stack)
 	if ma, ok := inner.(*ManaAbility); ok {
-		if perm.Controller != playerID {
+		if perm.ControllerID() != playerID {
 			return fmt.Errorf("only the controller may activate mana abilities")
 		}
 		if perm.HasAttr(AttrCantActivate) {
@@ -4862,12 +4878,12 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("not an activated ability")
 	}
 	saa, isSAA := inner.(*SimpleActivatedAbility)
-	if perm.Controller != playerID {
+	if perm.ControllerID() != playerID {
 		if !isSAA || !saa.IsAnyPlayerAbility() {
 			return fmt.Errorf("only the controller may activate this ability")
 		}
 	}
-	if perm.Controller == playerID && isSAA && saa.IsOpponentOnlyAbility() {
+	if perm.ControllerID() == playerID && isSAA && saa.IsOpponentOnlyAbility() {
 		return fmt.Errorf("only opponents may activate this ability")
 	}
 	if perm.HasAttr(AttrCantActivateNonManaAbilities) {

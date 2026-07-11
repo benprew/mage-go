@@ -126,16 +126,31 @@ func (e *discardRandomEffect) Targeting(sel PlayerSelector) *discardRandomEffect
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
 type returnFromGraveyardEffect struct{}
 
+type returnFromAnyGraveyardEffect struct{}
+
 // ReturnFromGraveyardToBattlefield creates an effect that returns a target creature card
 // from the controller's graveyard directly to the battlefield (e.g. Animate Dead, Resurrection).
 func ReturnFromGraveyardToBattlefield() Effect {
 	return &returnFromGraveyardEffect{}
 }
 
+// ReturnTargetFromAnyGraveyardToBattlefield returns the targeted card from
+// either graveyard under the resolving effect controller's control.
+func ReturnTargetFromAnyGraveyardToBattlefield() Effect {
+	return &returnFromAnyGraveyardEffect{}
+}
+
 func (e *returnFromGraveyardEffect) Text() string {
 	return "return target creature card from your graveyard to the battlefield"
 }
 func (e *returnFromGraveyardEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func (e *returnFromAnyGraveyardEffect) Text() string {
+	return "return target creature card from a graveyard to the battlefield under your control"
+}
+func (e *returnFromAnyGraveyardEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
@@ -519,6 +534,18 @@ func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.Targets[0], ZoneBattlefield)
 	if !ok {
 		return nil // target gone
+	}
+	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	return nil
+}
+
+func (*returnFromAnyGraveyardEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for reanimate")
+	}
+	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.Targets[0], ZoneBattlefield)
+	if !ok {
+		return nil
 	}
 	ctx.Game.PutOnBattlefield(card, ctx.Controller)
 	return nil

@@ -571,7 +571,7 @@ func (s selectAttachedController) Select(g GameReader, sourceID, _ uuid.UUID, _ 
 	if target == nil {
 		return nil
 	}
-	return []uuid.UUID{target.Controller}
+	return []uuid.UUID{target.ControllerID()}
 }
 func (s selectAttachedController) Text() string { return "enchanted creature's controller" }
 
@@ -593,7 +593,7 @@ func (s selectDefendingPlayer) Select(g GameReader, sourceID, _ uuid.UUID, _ []u
 		}
 		// Planeswalker defender: return its controller.
 		if perm := g.FindPermanent(group.DefenderID); perm != nil {
-			return []uuid.UUID{perm.Controller}
+			return []uuid.UUID{perm.ControllerID()}
 		}
 	}
 	if nap := g.NonActivePlayerObj(); nap != nil {
@@ -637,7 +637,7 @@ func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, ta
 		}
 	}
 	if perm := g.FindPermanent(targets[0]); perm != nil {
-		return []uuid.UUID{perm.Controller}
+		return []uuid.UUID{perm.ControllerID()}
 	}
 	return nil
 }

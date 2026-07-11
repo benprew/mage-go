@@ -64,7 +64,7 @@ func incomingDamagePenalty(g *mage.Game, defender, attacker mage.Player) float64
 func gatherAttackers(g *mage.Game, attackerID uuid.UUID) []*mage.Permanent {
 	var attackers []*mage.Permanent
 	for _, p := range g.AllBattlefield() {
-		if p.Controller != attackerID || !p.HasType(core.TypeCreature) {
+		if p.ControllerID() != attackerID || !p.HasType(core.TypeCreature) {
 			continue
 		}
 		if !canAttackNextTurn(p) {
@@ -82,7 +82,7 @@ func gatherAttackers(g *mage.Game, attackerID uuid.UUID) []*mage.Permanent {
 func gatherBlockers(g *mage.Game, defenderID uuid.UUID) []*mage.Permanent {
 	var blockers []*mage.Permanent
 	for _, p := range g.AllBattlefield() {
-		if p.Controller != defenderID || !p.HasType(core.TypeCreature) {
+		if p.ControllerID() != defenderID || !p.HasType(core.TypeCreature) {
 			continue
 		}
 		blockers = append(blockers, p)

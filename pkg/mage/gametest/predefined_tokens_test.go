@@ -101,7 +101,7 @@ func assertTokenShape(t *testing.T, tg *TestGame, p PlayerRef, name, subtype str
 	t.Helper()
 	playerID := tg.getPlayerID(p)
 	for _, perm := range tg.AllBattlefield() {
-		if perm.Controller != playerID || perm.Card.Name() != name {
+		if perm.ControllerID() != playerID || perm.Card.Name() != name {
 			continue
 		}
 		if !perm.Card.HasType(core.TypeArtifact) {

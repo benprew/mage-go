@@ -253,7 +253,8 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
 		Card:                src.Card, // shared
-		Controller:          src.Controller,
+		computedController:  src.computedController,
+		baseController:      src.baseController,
 		Tapped:              src.Tapped,
 		PhasedOut:           src.PhasedOut,
 		Damage:              src.Damage,
@@ -264,7 +265,7 @@ func clonePermanentInto(dst, src *Permanent) {
 		ChosenPlayer:        src.ChosenPlayer,
 		ChosenSubtype:       src.ChosenSubtype,
 		ControlledPermanent: src.ControlledPermanent,
-		TurnControlGained:   src.TurnControlGained,
+		turnControlGained:   src.turnControlGained,
 		StoredValue:         src.StoredValue,
 		CreatedBy:           src.CreatedBy,
 		powerBonus:          src.powerBonus,

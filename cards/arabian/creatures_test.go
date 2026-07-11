@@ -670,7 +670,7 @@ func TestMerchantShip(t *testing.T) {
 		playerA := g.GetPlayer(gametest.PlayerA).PlayerID()
 		var eligible []string
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller != playerA {
+			if perm.ControllerID() != playerA {
 				continue
 			}
 			if perm.CanDeclareAsAttacker(g.Game) {

@@ -189,7 +189,7 @@ func CondCardLeftYourGraveyardThisTurn() SpellCondition {
 func CondControlsMatching(f PermanentFilter) SpellCondition {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
 		for _, p := range g.battlefield {
-			if p.Controller != controller {
+			if p.ControllerID() != controller {
 				continue
 			}
 			if f.Match(p, g) {
@@ -245,7 +245,7 @@ func AmountByTotalPower(f PermanentFilter) SpellAmount {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
 		total := 0
 		for _, p := range g.battlefield {
-			if p.Controller != controller {
+			if p.ControllerID() != controller {
 				continue
 			}
 			if !f.Match(p, g) {
@@ -264,7 +264,7 @@ func AmountByPermanentCount(f PermanentFilter) SpellAmount {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
 		n := 0
 		for _, p := range g.battlefield {
-			if p.Controller != controller {
+			if p.ControllerID() != controller {
 				continue
 			}
 			if f.Match(p, g) {
@@ -304,7 +304,7 @@ func ReduceSpellCostStaticLabeled(label string, filter SpellPredicate, amount Sp
 		}
 		g.effects.Rules.AddSpellCostReducer(SpellCostReducer{
 			SourceID:   sourceID,
-			Controller: perm.Controller,
+			Controller: perm.ControllerID(),
 			Filter:     filter,
 			Amount:     amount,
 			Condition:  condition,

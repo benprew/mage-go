@@ -179,7 +179,7 @@ func registerArtifacts() {
 						if src == nil {
 							return nil
 						}
-						opponent := g.GetOpponent(src.Controller)
+						opponent := g.GetOpponent(src.ControllerID())
 						if opponent != nil {
 							g.SetMaxHandSize(opponent.PlayerID(), 4)
 						}
@@ -461,7 +461,7 @@ func registerArtifacts() {
 						}
 						noted[target.Card.ID()] = notedState{
 							counters: target.Counters,
-							owner:    target.Controller,
+							owner:    target.ControllerID(),
 						}
 						card := target.Card
 						// Collect attached Auras before removing creature
@@ -470,7 +470,7 @@ func registerArtifacts() {
 							att := g.FindPermanent(attID)
 							if att != nil && att.Card.HasSubType("Aura") {
 								auraCards = append(auraCards, att.Card)
-								noted[att.Card.ID()] = notedState{owner: att.Controller}
+								noted[att.Card.ID()] = notedState{owner: att.ControllerID()}
 							}
 						}
 						// Remove Auras from battlefield first

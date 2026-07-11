@@ -153,7 +153,7 @@ func removalValueFromTarget(g *mage.Game, owner mage.Player, c mage.Card, t mage
 		if perm == nil {
 			continue
 		}
-		if perm.Controller != opp.PlayerID() || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != opp.PlayerID() || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		pt := float64(perm.CurrentPower(g) + perm.CurrentToughness(g))
@@ -187,7 +187,7 @@ func burnAnyValue(g *mage.Game, owner mage.Player, dmg int) float64 {
 	// take the largest P+T we'd remove.
 	bestKill := 0.0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != opp.PlayerID() || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != opp.PlayerID() || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if perm.CurrentToughness(g) > dmg {
@@ -220,7 +220,7 @@ func burnAnyValue(g *mage.Game, owner mage.Player, dmg int) float64 {
 func globalPumpValue(g *mage.Game, owner mage.Player, p, t int, eligible func(*mage.Permanent) bool) float64 {
 	count := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != owner.PlayerID() || !perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != owner.PlayerID() || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if eligible(perm) {
@@ -288,7 +288,7 @@ func lifeGainValue(p mage.Player, n int) float64 {
 
 func ownerHasCreature(g *mage.Game, owner mage.Player) bool {
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == owner.PlayerID() && perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() == owner.PlayerID() && perm.HasType(core.TypeCreature) {
 			return true
 		}
 	}
@@ -305,7 +305,7 @@ func availableColorMana(g *mage.Game, p mage.Player, color core.Color) int {
 	}
 	n := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != p.PlayerID() || !perm.HasType(core.TypeLand) || perm.Tapped {
+		if perm.ControllerID() != p.PlayerID() || !perm.HasType(core.TypeLand) || perm.Tapped {
 			continue
 		}
 		if perm.Name() == produces {

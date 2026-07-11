@@ -12,7 +12,7 @@ import (
 func controls(g *mage.Game, ids []uuid.UUID, playerID uuid.UUID) bool {
 	for _, id := range ids {
 		perm := g.FindPermanent(id)
-		if perm == nil || perm.Controller != playerID {
+		if perm == nil || perm.ControllerID() != playerID {
 			return false
 		}
 	}

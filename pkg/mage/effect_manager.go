@@ -327,13 +327,23 @@ func (em *EffectManager) Add(e ContinuousEffect) {
 // normal "may choose not to untap" prompt.
 func (em *EffectManager) SourceTapMaintainedStatus(g *Game, sourceID uuid.UUID) (hasEffect, targetLives bool) {
 	for _, e := range em.effects {
-		te, ok := e.(*targetEffect)
-		if !ok || !te.tapMaintained || te.SourceID() != sourceID {
-			continue
-		}
-		hasEffect = true
-		if g.FindPermanent(te.targetID) != nil {
-			targetLives = true
+		switch te := e.(type) {
+		case *targetEffect:
+			if !te.tapMaintained || te.SourceID() != sourceID {
+				continue
+			}
+			hasEffect = true
+			if g.FindPermanent(te.targetID) != nil {
+				targetLives = true
+			}
+		case *controlContinuousEffect:
+			if !te.tapMaintained || te.SourceID() != sourceID {
+				continue
+			}
+			hasEffect = true
+			if g.FindPermanent(te.targetID) != nil {
+				targetLives = true
+			}
 		}
 	}
 	return hasEffect, targetLives
@@ -380,7 +390,7 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 	for _, e := range em.effects {
 		if e.GetDuration() == UntilYourNextTurn {
 			src := g.FindPermanent(e.SourceID())
-			if src != nil && src.Controller == controllerID {
+			if src != nil && src.ControllerID() == controllerID {
 				continue // remove this effect
 			}
 			// Source left battlefield — also remove
@@ -402,14 +412,26 @@ func (em *EffectManager) Apply(g *Game) {
 	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()
 
+	controllersAtCycleStart := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
+	for _, p := range g.battlefield {
+		controllersAtCycleStart[p.ID()] = p.ControllerID()
+	}
+
 	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
 	for _, p := range g.battlefield {
+		controllerNeedsReset := p.computedController != p.baseController
+		if controllerNeedsReset {
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
+			p.computedController = p.baseController
+		}
 		if p.FaceDown {
 			// Face-down permanents keep their overrides and empty abilities
 			continue
 		}
-		needsReset := p.Controller != p.Card.Owner() ||
-			len(p.SubTypeOverride) > 0 ||
+		needsReset := len(p.SubTypeOverride) > 0 ||
 			len(p.SubTypeAdditions) > 0 ||
 			p.BasePTOverride != nil ||
 			p.ColorOverride != nil ||
@@ -443,7 +465,6 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		p.RuntimeAbilities = base
-		p.Controller = p.Card.Owner()
 		p.SubTypeOverride = nil
 		p.SubTypeAdditions = nil
 		p.BasePTOverride = nil
@@ -467,8 +488,18 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 	em.effects = active
 
-	// Apply in layer order (1, 2, 4, 5, 6, 7)
+	for _, effect := range em.effects {
+		if effect.GetLayer() == LayerCopy && effect.IsActive(g) {
+			_ = effect.Apply(g)
+		}
+	}
+	em.applyControlLayer(g)
+
+	// Apply the remaining layers in order. Layers 1 and 2 were applied above.
 	for _, layer := range []Layer{LayerCopy, LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
+		if layer == LayerCopy || layer == LayerControl {
+			continue
+		}
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
 				_ = e.Apply(g)
@@ -505,14 +536,87 @@ func (em *EffectManager) Apply(g *Game) {
 	// applied during LayerControl. This runs after attrs are written so that
 	// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
 	for _, p := range g.battlefield {
-		if p.HasAttr(AttrCantChangeControl) && p.Controller != p.Card.Owner() {
+		priorController := controllersAtCycleStart[p.ID()]
+		if p.HasAttr(AttrCantChangeControl) && p.ControllerID() != priorController {
 			p = g.MutablePermanent(p.ID())
 			if p == nil {
 				continue
 			}
-			p.Controller = p.Card.Owner()
+			p.computedController = priorController
 		}
 	}
+
+	for _, p := range g.battlefield {
+		priorController := controllersAtCycleStart[p.ID()]
+		if p.ControllerID() != priorController {
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
+			p.turnControlGained = g.turn
+			if !p.HasAttr(AttrSummonSick) {
+				p.GrantBaseAttr(AttrSummonSick)
+			}
+		}
+		g.syncAbilityContext(p)
+	}
+}
+
+func (em *EffectManager) applyControlLayer(g *Game) {
+	controllers := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
+	for _, permanent := range g.battlefield {
+		controllers[permanent.ID()] = permanent.baseController
+	}
+
+	for range len(g.battlefield) + 1 {
+		g.layer2Controllers = controllers
+		for _, permanent := range g.battlefield {
+			permanent = g.MutablePermanent(permanent.ID())
+			if permanent != nil {
+				permanent.computedController = permanent.baseController
+			}
+		}
+		for _, effect := range em.effects {
+			if effect.GetLayer() != LayerControl || !controlEffectActive(effect, g, false) {
+				continue
+			}
+			_ = effect.Apply(g)
+		}
+		next := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
+		stable := true
+		for _, permanent := range g.battlefield {
+			next[permanent.ID()] = permanent.ControllerID()
+			if next[permanent.ID()] != controllers[permanent.ID()] {
+				stable = false
+			}
+		}
+		controllers = next
+		if stable {
+			break
+		}
+	}
+
+	g.layer2Controllers = controllers
+	for _, permanent := range g.battlefield {
+		permanent = g.MutablePermanent(permanent.ID())
+		if permanent != nil {
+			permanent.computedController = permanent.baseController
+		}
+	}
+	for _, effect := range em.effects {
+		if effect.GetLayer() != LayerControl || !controlEffectActive(effect, g, true) {
+			continue
+		}
+		_ = effect.Apply(g)
+	}
+	g.layer2Controllers = nil
+}
+
+func controlEffectActive(effect ContinuousEffect, g *Game, latchExpiration bool) bool {
+	if control, ok := effect.(*controlContinuousEffect); ok {
+		return control.isActive(g, latchExpiration)
+	}
+	return effect.IsActive(g)
 }
 
 // HasKeywordIgnoringSource reports whether the permanent with the given ID would

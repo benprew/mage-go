@@ -174,7 +174,7 @@ func registerEnchantments() {
 					if attached == nil {
 						return nil
 					}
-					if g.TryPayCostFromLands(attached.Controller, "{4}") {
+					if g.TryPayCostFromLands(attached.ControllerID(), "{4}") {
 						attached.Tapped = false
 					}
 					return nil
@@ -214,12 +214,26 @@ func registerEnchantments() {
 		)
 	})
 
+	// Oracle: Enchant creature card in a graveyard
+	// When this Aura enters, if it's on the battlefield, it loses "enchant creature card in a graveyard" and gains "enchant creature put onto the battlefield with this Aura." Return enchanted creature card to the battlefield under your control and attach this Aura to it. When this Aura leaves the battlefield, that creature's controller sacrifices it.
+	// Enchanted creature gets -1/-0.
 	Register("Animate Dead", func() Card {
-		// XXX: missing leave-battlefield sacrifice trigger — engine needs last-known-information for attachments
-		// XXX: Oracle says "creature card in a graveyard" (any graveyard); restricted to controller's graveyard for now.
 		return NewAura("Animate Dead", "{1}{B}",
-			WithCastTarget(TargetCreatureInYourGraveyard()),
-			WithAbility(NewSpellAbility(ReturnFromGraveyardToBattlefield())),
+			WithCastTarget(TargetCreatureCardInAnyGraveyard()),
+			WithAbility(NewSpellAbility(ReturnTargetFromAnyGraveyardToBattlefield())),
+			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
+				FuncEffect("that creature's controller sacrifices it", EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+						view := g.LookupObject(sourceID)
+						if view == nil {
+							return nil
+						}
+						animated := g.FindPermanent(view.ViewAttachedTo())
+						if animated != nil {
+							g.Sacrifice(animated)
+						}
+						return nil
+					}), false)),
 			WithStaticAbility(
 				BoostAttached(-1, 0, AttachAura),
 			),
@@ -477,7 +491,7 @@ func registerEnchantments() {
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					var nonFlyers []*Permanent
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller != controller && p.HasType(TypeCreature) &&
+						if p.ControllerID() != controller && p.HasType(TypeCreature) &&
 							!p.HasKeyword(Flying) {
 							nonFlyers = append(nonFlyers, p)
 						}
@@ -657,7 +671,7 @@ func registerEnchantments() {
 						return nil
 					}
 					attachedID := attached.ID()
-					attachedController := attached.Controller
+					attachedController := attached.ControllerID()
 					kudzu.AttachedTo = uuid.Nil
 					filtered := attached.Attachments[:0]
 					for _, id := range attached.Attachments {

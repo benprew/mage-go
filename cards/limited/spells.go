@@ -634,7 +634,7 @@ func registerSpells() {
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller != controller && p.HasType(TypeCreature) {
+						if p.ControllerID() != controller && p.HasType(TypeCreature) {
 							eff := PreventBlockingUntilEndOfCombat(p.ID())
 							eff.SetSourceID(sourceID)
 							g.AddContinuousEffect(eff)
@@ -752,7 +752,7 @@ func registerSpells() {
 							func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
 								var toDestroy []*Permanent
 								for _, p := range g2.FilterBattlefield(AnyPermanent) {
-									if p.Controller == activeID && p.HasType(TypeCreature) &&
+									if p.ControllerID() == activeID && p.HasType(TypeCreature) &&
 										!p.HasSubType("Wall") && !g2.HasAttackedThisTurn(p.ID()) {
 										toDestroy = append(toDestroy, p)
 									}

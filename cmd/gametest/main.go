@@ -525,7 +525,7 @@ func printTurnHeader(g *mage.Game) {
 func battlefieldFor(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var perms []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == playerID {
+		if perm.ControllerID() == playerID {
 			perms = append(perms, perm)
 		}
 	}

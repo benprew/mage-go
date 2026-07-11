@@ -243,7 +243,7 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 		idx := z.nameIdx(perm.Name())
 
 		ctrl := 0
-		if g.PlayerCount() >= 2 && perm.Controller == g.PlayerAt(1).PlayerID() {
+		if g.PlayerCount() >= 2 && perm.ControllerID() == g.PlayerAt(1).PlayerID() {
 			ctrl = 1
 		}
 		tapped := 0

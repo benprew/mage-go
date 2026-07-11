@@ -21,7 +21,7 @@ func CastAsThoughHadFlash(filter CardFilter) ContinuousEffect {
 		if perm == nil {
 			return nil
 		}
-		g.effects.Rules.AddFlashGrant(sourceID, perm.Controller, filter)
+		g.effects.Rules.AddFlashGrant(sourceID, perm.ControllerID(), filter)
 		return nil
 	})
 }

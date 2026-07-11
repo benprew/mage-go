@@ -172,7 +172,7 @@ func TargetValueForPurpose(g *mage.Game, controller uuid.UUID, target uuid.UUID,
 		score := PermanentValueForTargeting(g, perm, purpose)
 		if purpose == TargetBurn && damage > 0 {
 			toughnessLeft := perm.CurrentToughness(g) - perm.Damage
-			if perm.Controller != controller && toughnessLeft > 0 && damage >= toughnessLeft {
+			if perm.ControllerID() != controller && toughnessLeft > 0 && damage >= toughnessLeft {
 				score += 20
 			} else {
 				score = score/2 - 8

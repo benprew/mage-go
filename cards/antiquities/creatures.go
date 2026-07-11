@@ -18,7 +18,7 @@ type sacrificeArtifactCaptureCMCCost struct{}
 
 func (c *sacrificeArtifactCaptureCMCCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.AllBattlefield() {
-		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
+		if p.ControllerID() == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
 			return true
 		}
 	}
@@ -28,7 +28,7 @@ func (c *sacrificeArtifactCaptureCMCCost) CanPay(sourceID, controller uuid.UUID,
 func (c *sacrificeArtifactCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
 	for _, p := range g.AllBattlefield() {
-		if p.Controller == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
+		if p.ControllerID() == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
 			candidates = append(candidates, p)
 		}
 	}
@@ -92,7 +92,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					g.SetArtifactDamageRedirect(src.Controller, src.ID())
+					g.SetArtifactDamageRedirect(src.ControllerID(), src.ID())
 					return nil
 				}, SourceUntapped),
 			),
@@ -406,7 +406,7 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					count := g.CountBattlefield(And(NotControlledBy(src.Controller), IsArtifact))
+					count := g.CountBattlefield(And(NotControlledBy(src.ControllerID()), IsArtifact))
 					src.BoostPT(count, count)
 					return nil
 				}),

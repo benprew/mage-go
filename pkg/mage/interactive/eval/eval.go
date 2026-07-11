@@ -67,7 +67,7 @@ func defaultEvaluate(g *mage.Game, playerID uuid.UUID) int {
 
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		v := EvalCreatureInGame(perm, g)
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			score += v
 		case oppID:
@@ -78,7 +78,7 @@ func defaultEvaluate(g *mage.Game, playerID uuid.UUID) int {
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := evalNonCreaturePermanent(perm)
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			score += v
 		case oppID:
@@ -129,7 +129,7 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 			v := float64(EvalCreatureInGame(perm, g))
 			role := ClassifyPermanent(perm)
 			roleWeight := roleWeightForPersonality(role, w)
-			switch perm.Controller {
+			switch perm.ControllerID() {
 			case playerID:
 				score += v * roleWeight
 			case oppID:
@@ -142,7 +142,7 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 			v := float64(evalNonCreaturePermanent(perm))
 			role := ClassifyPermanent(perm)
 			roleWeight := roleWeightForPersonality(role, w)
-			switch perm.Controller {
+			switch perm.ControllerID() {
 			case playerID:
 				score += v * roleWeight
 			case oppID:
@@ -212,7 +212,7 @@ func NewPersonalityEvaluator(w Weights, aggression float64) StateEvaluator {
 		// Penalty: opponent having untapped creatures means we're not pressuring.
 		aggrBonus := 0.0
 		for _, perm := range g.FilterBattlefield(mage.IsCreature) {
-			switch perm.Controller {
+			switch perm.ControllerID() {
 			case playerID:
 				power := float64(perm.CurrentPower(g))
 				if !perm.Tapped {
@@ -335,7 +335,7 @@ func weightedEvaluate(g *mage.Game, playerID uuid.UUID, w Weights) int {
 	boardScale := w.Board / 2.0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
 		v := float64(EvalCreatureInGame(perm, g)) * boardScale
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			score += v
 		case oppID:
@@ -346,7 +346,7 @@ func weightedEvaluate(g *mage.Game, playerID uuid.UUID, w Weights) int {
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
 		v := float64(evalNonCreaturePermanent(perm)) * boardScale
-		switch perm.Controller {
+		switch perm.ControllerID() {
 		case playerID:
 			score += v
 		case oppID:

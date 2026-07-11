@@ -207,7 +207,7 @@ func combatAttackersForDefender(g *mage.Game, defenderID uuid.UUID) []*mage.Perm
 func legalBlockers(g *mage.Game, defenderID uuid.UUID) []*mage.Permanent {
 	var blockers []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == defenderID && perm.CanDeclareAsBlocker(g) {
+		if perm.ControllerID() == defenderID && perm.CanDeclareAsBlocker(g) {
 			blockers = append(blockers, perm)
 		}
 	}
@@ -457,7 +457,7 @@ func shouldHeuristicAttack(g *mage.Game, atk *mage.Permanent, opponentID uuid.UU
 	var bestBlocker *mage.Permanent
 	bestScore := -1 << 30
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
+		if perm.ControllerID() != opponentID || !perm.HasType(core.TypeCreature) || perm.Tapped {
 			continue
 		}
 		if !mage.CanBlock(perm, atk, g) || mage.HasLandwalkEvasion(atk, opponentID, g) {
@@ -494,7 +494,7 @@ func isEvasiveTo(g *mage.Game, atk *mage.Permanent, defenderID uuid.UUID) bool {
 		return true
 	}
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != defenderID || !perm.HasType(core.TypeCreature) || perm.Tapped {
+		if perm.ControllerID() != defenderID || !perm.HasType(core.TypeCreature) || perm.Tapped {
 			continue
 		}
 		if mage.CanBlock(perm, atk, g) {
@@ -539,13 +539,13 @@ func attackPlanScore(g *mage.Game, playerID uuid.UUID, plan []uuid.UUID) int {
 }
 
 func crackbackBlockerValue(g *mage.Game, atk *mage.Permanent, opponentID uuid.UUID) int {
-	me := g.GetPlayer(atk.Controller)
+	me := g.GetPlayer(atk.ControllerID())
 	if me == nil || me.Life() > 8 {
 		return 0
 	}
 	best := 0
 	for _, opp := range g.AllBattlefield() {
-		if opp.Controller != opponentID || !opp.HasType(core.TypeCreature) {
+		if opp.ControllerID() != opponentID || !opp.HasType(core.TypeCreature) {
 			continue
 		}
 		if mage.CanBlock(atk, opp, g) {
@@ -598,7 +598,7 @@ func exhaustiveBlockPlans(g *mage.Game, attackers, blockers []*mage.Permanent) (
 		choices[i] = append(choices[i], nil)
 		var legal []uuid.UUID
 		for _, attacker := range attackers {
-			if mage.HasLandwalkEvasion(attacker, blocker.Controller, g) {
+			if mage.HasLandwalkEvasion(attacker, blocker.ControllerID(), g) {
 				continue
 			}
 			if mage.CanBlock(blocker, attacker, g) {
@@ -733,7 +733,7 @@ func heuristicBlockPlans(g *mage.Game, defenderID uuid.UUID, attackers, blockers
 
 func findSingleBlocker(g *mage.Game, atk *mage.Permanent, blockers []*mage.Permanent, used map[uuid.UUID]bool, pred func(*mage.Permanent) bool) *mage.Permanent {
 	for _, blocker := range blockers {
-		if used[blocker.ID()] || !mage.CanBlock(blocker, atk, g) || mage.HasLandwalkEvasion(atk, blocker.Controller, g) {
+		if used[blocker.ID()] || !mage.CanBlock(blocker, atk, g) || mage.HasLandwalkEvasion(atk, blocker.ControllerID(), g) {
 			continue
 		}
 		if pred(blocker) {
@@ -746,7 +746,7 @@ func findSingleBlocker(g *mage.Game, atk *mage.Permanent, blockers []*mage.Perma
 func bestGangBlock(g *mage.Game, atk *mage.Permanent, blockers []*mage.Permanent, used map[uuid.UUID]bool) []*mage.Permanent {
 	var legal []*mage.Permanent
 	for _, blocker := range blockers {
-		if used[blocker.ID()] || !mage.CanBlock(blocker, atk, g) || mage.HasLandwalkEvasion(atk, blocker.Controller, g) {
+		if used[blocker.ID()] || !mage.CanBlock(blocker, atk, g) || mage.HasLandwalkEvasion(atk, blocker.ControllerID(), g) {
 			continue
 		}
 		legal = append(legal, blocker)

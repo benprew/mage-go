@@ -84,7 +84,7 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 	if !perm.HasAttr(AttrPrepared) {
 		return fmt.Errorf("permanent is not prepared")
 	}
-	if perm.Controller != playerID {
+	if perm.ControllerID() != playerID {
 		return fmt.Errorf("only the controller may cast the prepared spell")
 	}
 	if spellFactory == nil {

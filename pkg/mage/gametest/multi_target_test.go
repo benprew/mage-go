@@ -88,7 +88,7 @@ func TestMultiTargetDistinctControllers(t *testing.T) {
 								card := perm.Card
 								owner := card.Owner()
 								if owner == uuid.Nil {
-									owner = perm.Controller
+									owner = perm.ControllerID()
 								}
 								g.RemoveFromBattlefield(perm)
 								if pl := g.GetPlayer(owner); pl != nil {

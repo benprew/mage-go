@@ -64,7 +64,7 @@ func AssignsDamageEqualToToughnessForCreaturesYouControl() ContinuousEffect {
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			g.effects.GrantAttr(p.ID(), AttrAssignsDamageEqualToToughness)
@@ -161,7 +161,7 @@ func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond Tr
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 		trig := NewTriggered(eventType, optional, effects...)
 		trig.source = target.ID()
-		trig.controller = target.Controller
+		trig.controller = target.ControllerID()
 		if cond != nil {
 			trig.SetConditionData(cond)
 		}
@@ -182,7 +182,7 @@ func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, op
 			abByTarget[target.ID()] = ab
 		}
 		ab.source = target.ID()
-		ab.controller = target.Controller
+		ab.controller = target.ControllerID()
 		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})
 		return nil
 	})
@@ -206,10 +206,7 @@ func PreventAttachedFromAttacking(at AttachType) ContinuousEffect {
 
 // ControlChangeContinuous creates a continuous control change effect (e.g., Control Magic).
 func ControlChangeContinuous() ContinuousEffect {
-	return AttachedEffect(LayerControl, func(g *Game, source, target *Permanent) error {
-		target.Controller = source.Controller
-		return nil
-	})
+	return ControlAttached()
 }
 
 // BoostAttachedByCount boosts the attached creature based on the count of
@@ -217,7 +214,7 @@ func ControlChangeContinuous() ContinuousEffect {
 // to P/T bonuses (e.g. for Aspect of Wolf: count/2 and (count+1)/2).
 func BoostAttachedByCount(filter PermanentFilter, powerFn, toughFn func(int) int) ContinuousEffect {
 	return AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
-		count := g.CountBattlefield(And(ControlledBy(source.Controller), filter))
+		count := g.CountBattlefield(And(ControlledBy(source.ControllerID()), filter))
 		target.powerBonus += powerFn(count)
 		target.toughBonus += toughFn(count)
 		return nil
@@ -367,7 +364,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 			}
 			ab := NewActivatedAbility(effect, cost)
 			ab.source = p.ID()
-			ab.controller = p.Controller
+			ab.controller = p.ControllerID()
 			p = g.MutablePermanent(p.ID())
 			if p == nil {
 				continue
@@ -408,7 +405,7 @@ func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond Trigger
 			}
 			trig := NewTriggered(eventType, optional, effects...)
 			trig.source = p.ID()
-			trig.controller = p.Controller
+			trig.controller = p.ControllerID()
 			if cond != nil {
 				trig.SetConditionData(cond)
 			}
@@ -506,7 +503,7 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		count := g.CountBattlefield(And(ControlledBy(src.Controller), countFilter))
+		count := g.CountBattlefield(And(ControlledBy(src.ControllerID()), countFilter))
 		src.powerBonus += count
 		src.toughBonus += count
 		return nil
@@ -539,7 +536,7 @@ func GrantKeywordToControlled(kw Keyword, filter PermanentFilter) ContinuousEffe
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -561,7 +558,7 @@ func GrantKeywordToOtherControlled(kw Keyword, filter PermanentFilter) Continuou
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.Controller != src.Controller {
+			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -583,7 +580,7 @@ func BoostOtherControlledCreatures(power, toughness int, filter PermanentFilter)
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.Controller != src.Controller {
+			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -621,7 +618,7 @@ func RevokeAttrFromControlled(attr Attr, filter PermanentFilter) ContinuousEffec
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -653,7 +650,7 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if !p.HasType(TypeCreature) || p.Controller != src.Controller {
+			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -969,7 +966,7 @@ func GrantManaAbilityToAttached(productions ...ManaProduction) ContinuousEffect 
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 		ma := NewMultiManaAbility(productions...)
 		ma.SetSource(target.ID())
-		ma.SetController(target.Controller)
+		ma.SetController(target.ControllerID())
 		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ma))
 		return nil
 	})
@@ -1131,7 +1128,7 @@ func BodyguardContinuous() ContinuousEffect {
 		}
 		g.effects.AddCycleReplacement(&bodyguardReplacement{
 			replacementBase: replacementBase{sourceID: sourceID},
-			controllerID:    src.Controller,
+			controllerID:    src.ControllerID(),
 			bodyguardPermID: src.ID(),
 		})
 		return nil
@@ -1149,7 +1146,7 @@ func PersonalIncarnationRedirect() ContinuousEffect {
 		}
 		g.effects.AddCycleReplacement(&playerDamageRedirectReplacement{
 			replacementBase: replacementBase{sourceID: sourceID},
-			controllerID:    src.Controller,
+			controllerID:    src.ControllerID(),
 			redirectPermID:  src.ID(),
 		})
 		return nil
@@ -1180,7 +1177,7 @@ func WhileSourceUntapped(source *Permanent, g *Game) bool {
 // ensures the source's controller controls a permanent that matches the filter.
 func WhileControlling(filter PermanentFilter) SourceCondition {
 	return func(source *Permanent, g *Game) bool {
-		return g.AnyBattlefield(And(ControlledBy(source.Controller), filter))
+		return g.AnyBattlefield(And(ControlledBy(source.ControllerID()), filter))
 	}
 }
 
@@ -1282,7 +1279,7 @@ func (e *preventNoncombatDamageToControllerContinuous) Apply(g *Game) error {
 	if src == nil {
 		return nil
 	}
-	controller := src.Controller
+	controller := src.ControllerID()
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
 		replacementBase: replacementBase{sourceID: e.sourceID},
 		to:              And(IsCreature, ControlledBy(controller)),
@@ -1413,7 +1410,7 @@ func GrantSubTypeToControlled(subtype string, filter PermanentFilter) Continuous
 			return nil
 		}
 		for _, p := range g.battlefield {
-			if p.Controller != src.Controller {
+			if p.ControllerID() != src.ControllerID() {
 				continue
 			}
 			if !filter.Match(p, g) {

@@ -188,7 +188,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 	}
 
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != p.PlayerID() {
+		if perm.ControllerID() != p.PlayerID() {
 			continue
 		}
 		permState := PermanentState{
@@ -370,12 +370,12 @@ func getAvailableActions(g *mage.Game, playerID uuid.UUID, includeLabels bool) [
 			aa, ok := perm.RuntimeAbilities[info.AbilityIndex].(mage.ActivatedAbility)
 			if ok {
 				if targets := aa.Targets(); len(targets) > 0 &&
-					mage.ForcedActivationTargets(perm.Controller, perm.Card, targets, g) == nil {
+					mage.ForcedActivationTargets(perm.ControllerID(), perm.Card, targets, g) == nil {
 					// Only prompt when the targeting offers a real choice;
 					// forced targets (e.g. "you") are auto-filled by the engine.
 					opt.NeedsTarget = true
 					opt.TargetType = targets[0]
-					opt.ValidTargets = targets[0].Possible(perm.Controller, perm.Card, g)
+					opt.ValidTargets = targets[0].Possible(perm.ControllerID(), perm.Card, g)
 					if len(opt.ValidTargets) == 0 {
 						// MTG 602.5b: can't begin to activate an ability with no legal targets.
 						continue

@@ -477,7 +477,7 @@ func registerCreatures() {
 					// Activated ability: find permanent and get its controller.
 					perm := g.FindPermanent(targets[1])
 					if perm != nil {
-						opponentID = perm.Controller
+						opponentID = perm.ControllerID()
 					}
 				}
 				if opponentID == uuid.Nil {
@@ -1360,7 +1360,7 @@ func registerCreatures() {
 		totalToughnessGTE10 := func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
 			total := 0
 			for _, perm := range g.AllBattlefield() {
-				if perm.Controller == controller && perm.HasAttr(AttrIsCreature) {
+				if perm.ControllerID() == controller && perm.HasAttr(AttrIsCreature) {
 					total += perm.CurrentToughness(g)
 				}
 			}
@@ -1422,7 +1422,7 @@ func registerCreatures() {
 							card := perm.Card
 							owner := card.Owner()
 							if owner == uuid.Nil {
-								owner = perm.Controller
+								owner = perm.ControllerID()
 							}
 							g.ExilePermanent(perm)
 							g.PutOnBattlefield(card, owner)
@@ -1788,13 +1788,7 @@ func registerCreatures() {
 									return nil
 								}
 							}
-							perm := g.PutOnBattlefield(picked, controller)
-							if perm != nil && picked.Owner() != controller {
-								g.AddContinuousEffect(TargetEffect(LayerControl, Indefinite, perm.ID(), func(g *Game, target *Permanent) error {
-									target.Controller = controller
-									return nil
-								}))
-							}
+							g.PutOnBattlefield(picked, controller)
 							ctrl.LoseLife(picked.ManaCost().CMC())
 							return nil
 						},
@@ -2275,7 +2269,7 @@ func registerCreatures() {
 						}
 						var perms []*Permanent
 						for _, perm := range g.AllBattlefield() {
-							if perm.Controller == controller {
+							if perm.ControllerID() == controller {
 								perms = append(perms, perm)
 							}
 						}
@@ -2309,7 +2303,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				if IfControllerGainedLifeThisTurn(g, src.Controller) {
+				if IfControllerGainedLifeThisTurn(g, src.ControllerID()) {
 					src.BoostPT(2, 0)
 				}
 				return nil
@@ -2568,7 +2562,7 @@ func registerCreatures() {
 							return nil
 						}
 						for _, perm := range g.AllBattlefield() {
-							if perm.Controller == controller && perm.HasAttr(AttrIsCreature) {
+							if perm.ControllerID() == controller && perm.HasAttr(AttrIsCreature) {
 								ce := TemporaryBoost(perm.ID(), numColors, 0)
 								ce.SetSourceID(sourceID)
 								g.AddContinuousEffect(ce)
@@ -2609,7 +2603,7 @@ func registerCreatures() {
 						// Check if controller has any artifacts.
 						var artifacts []*Permanent
 						for _, perm := range g.AllBattlefield() {
-							if perm.Controller == controller && perm.HasAttr(AttrIsArtifact) {
+							if perm.ControllerID() == controller && perm.HasAttr(AttrIsArtifact) {
 								artifacts = append(artifacts, perm)
 							}
 						}
@@ -3047,7 +3041,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, perm := range g.AllBattlefield() {
-						if perm.Controller == src.Controller && perm.HasAttr(AttrIsCreature) && perm.Counters[P1P1] > 0 {
+						if perm.ControllerID() == src.ControllerID() && perm.HasAttr(AttrIsCreature) && perm.Counters[P1P1] > 0 {
 							g.GrantAttr(perm.ID(), Trample)
 						}
 					}
@@ -3063,7 +3057,7 @@ func registerCreatures() {
 						// Count differently named lands you control.
 						names := make(map[string]bool)
 						for _, perm := range g.AllBattlefield() {
-							if perm.Controller == controller && perm.HasAttr(AttrIsLand) {
+							if perm.ControllerID() == controller && perm.HasAttr(AttrIsLand) {
 								names[perm.Card.Name()] = true
 							}
 						}
@@ -3323,7 +3317,7 @@ func registerCreatures() {
 				if src == nil {
 					return nil
 				}
-				if !IfControllerGainedLifeThisTurn(g, src.Controller) {
+				if !IfControllerGainedLifeThisTurn(g, src.ControllerID()) {
 					return nil
 				}
 				src.BoostPT(2, 0)
@@ -3351,7 +3345,7 @@ func registerCreatures() {
 				} else {
 					perm := g.FindPermanent(targets[1])
 					if perm != nil {
-						opponentID = perm.Controller
+						opponentID = perm.ControllerID()
 					}
 				}
 				if opponentID == uuid.Nil {
@@ -3390,10 +3384,10 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					if !IfControllerGainedLifeThisTurn(g, src.Controller) {
+					if !IfControllerGainedLifeThisTurn(g, src.ControllerID()) {
 						return nil
 					}
-					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.ControllerID()))) {
 						p = g.MutablePermanent(p.ID())
 						if p == nil {
 							continue
@@ -3407,10 +3401,10 @@ func registerCreatures() {
 					if src == nil {
 						return nil
 					}
-					if !IfControllerGainedLifeThisTurn(g, src.Controller) {
+					if !IfControllerGainedLifeThisTurn(g, src.ControllerID()) {
 						return nil
 					}
-					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.ControllerID()))) {
 						g.GrantAttr(p.ID(), Trample)
 					}
 					return nil
@@ -3638,7 +3632,7 @@ func registerCreatures() {
 						// Collect untapped creatures the controller controls.
 						var untapped []*Permanent
 						for _, perm := range g.AllBattlefield() {
-							if perm.Controller == controller &&
+							if perm.ControllerID() == controller &&
 								perm.HasAttr(AttrIsCreature) &&
 								!perm.Tapped {
 								untapped = append(untapped, perm)
@@ -3758,7 +3752,7 @@ func registerCreatures() {
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 						for _, perm := range g.AllBattlefield() {
-							if perm.Controller == controller && isPestBatInsectSnakeSpider(perm, g) {
+							if perm.ControllerID() == controller && isPestBatInsectSnakeSpider(perm, g) {
 								g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
 							}
 						}

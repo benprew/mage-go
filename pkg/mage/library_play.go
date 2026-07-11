@@ -18,7 +18,7 @@ func RevealTopCardOfLibrary() ContinuousEffect {
 		if perm == nil {
 			return nil
 		}
-		g.effects.Rules.AddRevealedTopCard(perm.Controller)
+		g.effects.Rules.AddRevealedTopCard(perm.ControllerID())
 		return nil
 	})
 }
@@ -34,7 +34,7 @@ func PlayLandsFromTopOfLibrary() ContinuousEffect {
 		if perm == nil {
 			return nil
 		}
-		g.effects.Rules.AddPlayLandsFromZone(perm.Controller, ZoneLibrary)
+		g.effects.Rules.AddPlayLandsFromZone(perm.ControllerID(), ZoneLibrary)
 		return nil
 	})
 }
@@ -49,7 +49,7 @@ func AdditionalLandPlayStatic() ContinuousEffect {
 		if perm == nil {
 			return nil
 		}
-		g.effects.Rules.AddAdditionalLandPlay(perm.Controller, 1)
+		g.effects.Rules.AddAdditionalLandPlay(perm.ControllerID(), 1)
 		return nil
 	})
 }

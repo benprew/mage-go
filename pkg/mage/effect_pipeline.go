@@ -80,7 +80,7 @@ func (e *SnapshotPermanentData) Apply(ctx *EffectContext) error {
 	ctx.SetUUID(e.StoreAs, perm.ID())
 	ctx.SetInt(e.StoreAs+".power", perm.CurrentPower(ctx.Game))
 	ctx.SetInt(e.StoreAs+".toughness", perm.CurrentToughness(ctx.Game))
-	ctx.SetUUID(e.StoreAs+".controller", perm.Controller)
+	ctx.SetUUID(e.StoreAs+".controller", perm.ControllerID())
 	ctx.SetInt(e.StoreAs+".cmc", perm.Card.ManaCost().CMC())
 	ctx.Vars[e.StoreAs+".name"] = perm.Name()
 	return nil
@@ -194,7 +194,7 @@ func (e *BounceGatheredData) Apply(ctx *EffectContext) error {
 	card := perm.Card
 	owner := card.Owner()
 	if owner == uuid.Nil {
-		owner = perm.Controller
+		owner = perm.ControllerID()
 	}
 	ctx.Game.RemoveFromBattlefield(perm)
 	if !isToken {
@@ -406,7 +406,7 @@ func (e *ForEachPermanentData) Apply(ctx *EffectContext) error {
 	}
 	ids := make([]uuid.UUID, 0, len(perms))
 	for _, p := range perms {
-		if controllerFilter != uuid.Nil && p.Controller != controllerFilter {
+		if controllerFilter != uuid.Nil && p.ControllerID() != controllerFilter {
 			continue
 		}
 		ids = append(ids, p.ID())
@@ -566,7 +566,7 @@ func (e *ChoosePermanentData) Apply(ctx *EffectContext) error {
 	ctx.SetUUID(e.StoreAs, chosen.ID())
 	ctx.SetInt(e.StoreAs+".power", chosen.CurrentPower(ctx.Game))
 	ctx.SetInt(e.StoreAs+".toughness", chosen.CurrentToughness(ctx.Game))
-	ctx.SetUUID(e.StoreAs+".controller", chosen.Controller)
+	ctx.SetUUID(e.StoreAs+".controller", chosen.ControllerID())
 	return nil
 }
 

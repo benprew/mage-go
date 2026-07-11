@@ -469,7 +469,7 @@ func (e *grantAbilityEffect) Apply(ctx *EffectContext) error {
 				return nil
 			}
 			ability.SetSource(targetID)
-			ability.SetController(p.Controller)
+			ability.SetController(p.ControllerID())
 			p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ability))
 			return nil
 		})

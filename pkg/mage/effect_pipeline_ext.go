@@ -40,7 +40,7 @@ func (e *SnapshotAttachedData) Apply(ctx *EffectContext) error {
 	ctx.SetUUID(e.StoreAs, perm.ID())
 	ctx.SetInt(e.StoreAs+".power", perm.CurrentPower(ctx.Game))
 	ctx.SetInt(e.StoreAs+".toughness", perm.CurrentToughness(ctx.Game))
-	ctx.SetUUID(e.StoreAs+".controller", perm.Controller)
+	ctx.SetUUID(e.StoreAs+".controller", perm.ControllerID())
 	ctx.SetInt(e.StoreAs+".cmc", perm.Card.ManaCost().CMC())
 	ctx.Vars[e.StoreAs+".name"] = perm.Name()
 	return nil

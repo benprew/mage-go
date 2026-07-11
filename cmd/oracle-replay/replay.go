@@ -885,7 +885,7 @@ func buildGoBattlefield(g *mage.Game) map[string][]permEntry {
 		// Find controller name
 		var ctrlName string
 		for _, p := range g.AllPlayers() {
-			if p.PlayerID() == perm.Controller {
+			if p.PlayerID() == perm.ControllerID() {
 				ctrlName = p.Name()
 				break
 			}
@@ -1099,7 +1099,7 @@ func (p *replayPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
 	used := make(map[uuid.UUID]bool)
 	for _, name := range names {
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller != p.PlayerID() || used[perm.ID()] {
+			if perm.ControllerID() != p.PlayerID() || used[perm.ID()] {
 				continue
 			}
 			if matchCardName(perm.Name(), name) {
@@ -1150,7 +1150,7 @@ func (p *replayPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	for _, bp := range pairs {
 		var blocker *mage.Permanent
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == p.PlayerID() && !usedBlocker[perm.ID()] && matchCardName(perm.Name(), bp.BlockerName) {
+			if perm.ControllerID() == p.PlayerID() && !usedBlocker[perm.ID()] && matchCardName(perm.Name(), bp.BlockerName) {
 				blocker = perm
 				break
 			}

@@ -33,7 +33,7 @@ func (t *stoneGiantTarget) Possible(controller uuid.UUID, sourceCard Card, g *Ga
 		if !p.HasType(TypeCreature) {
 			continue
 		}
-		if p.Controller != controller {
+		if p.ControllerID() != controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {
@@ -76,8 +76,8 @@ func registerCreatures() {
 					}
 					bonus := 2
 					ap := g.ActivePlayerObj()
-					if ap != nil && ap.PlayerID() == src.Controller {
-						bonus += g.CountBattlefield(And(NotControlledBy(src.Controller), HasSubType("Swamp")))
+					if ap != nil && ap.PlayerID() == src.ControllerID() {
+						bonus += g.CountBattlefield(And(NotControlledBy(src.ControllerID()), HasSubType("Swamp")))
 					}
 					src.BoostPT(bonus, bonus)
 					return nil
@@ -397,9 +397,9 @@ func registerCreatures() {
 					}
 					var who PermanentFilter
 					if g.IsAttackingInCombat(sourceID) {
-						who = NotControlledBy(src.Controller)
+						who = NotControlledBy(src.ControllerID())
 					} else {
-						who = ControlledBy(src.Controller)
+						who = ControlledBy(src.ControllerID())
 					}
 					count := g.CountBattlefield(And(who, HasSubType("Forest")))
 					src.BoostPT(count, count)

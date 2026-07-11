@@ -39,7 +39,7 @@ func TestBalance(t *testing.T) {
 		playerA := g.AllPlayers()[0]
 		creatureCount := 0
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == playerA.PlayerID() && perm.HasType(core.TypeCreature) {
+			if perm.ControllerID() == playerA.PlayerID() && perm.HasType(core.TypeCreature) {
 				creatureCount++
 			}
 		}

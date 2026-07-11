@@ -368,10 +368,10 @@ func (*balanceEffect) Apply(ctx *EffectContext) error {
 	landCounts := make(map[uuid.UUID]int)
 	creatureCounts := make(map[uuid.UUID]int)
 	for _, p := range g.FilterBattlefield(IsLand) {
-		landCounts[p.Controller]++
+		landCounts[p.ControllerID()]++
 	}
 	for _, p := range g.FilterBattlefield(IsCreature) {
-		creatureCounts[p.Controller]++
+		creatureCounts[p.ControllerID()]++
 	}
 
 	minLands := -1

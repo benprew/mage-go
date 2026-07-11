@@ -641,7 +641,7 @@ func (tg *TestGame) ensureManaForCast(ca castAction) {
 func (tg *TestGame) untappedManaSupply(playerID uuid.UUID) map[core.Color]int {
 	out := map[core.Color]int{}
 	for _, perm := range tg.AllBattlefield() {
-		if perm.Controller != playerID || perm.Tapped {
+		if perm.ControllerID() != playerID || perm.Tapped {
 			continue
 		}
 		if !perm.CanTapForEffect(tg.Game) {
@@ -798,6 +798,7 @@ func (tg *TestGame) buildPriorityActionForCast(idx int) (mage.PriorityAction, bo
 
 	card, _ := mage.CreateCard(ca.spell)
 	if card != nil {
+		tg.SetXValue(ca.xValue)
 		validTargets := tg.validateTargets(card, targets, playerID)
 		if len(validTargets) == 0 && len(targets) > 0 {
 			return mage.PriorityAction{}, false
@@ -1022,7 +1023,7 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 			continue
 		}
 		if saa, isSAA := inner.(*mage.SimpleActivatedAbility); isSAA && saa.IsOpponentOnlyAbility() {
-			if perm.Controller == playerID {
+			if perm.ControllerID() == playerID {
 				continue
 			}
 		}
@@ -1179,14 +1180,10 @@ func (tg *TestGame) validateTargets(sourceCard mage.Card, targets []uuid.UUID, c
 	cts := sourceCard.CastTargets()
 	var valid []uuid.UUID
 	for i, tid := range targets {
-		// Graveyard-card cast targets (e.g. Animate Dead) must point to a card
-		// in a graveyard — reject battlefield permanents and players.
 		if i < len(cts) {
-			if _, isGY := cts[i].(*mage.GraveyardCardTarget); isGY {
-				possible := cts[i].Possible(controllerID, sourceCard, tg.Game)
-				if !slices.Contains(possible, tid) {
-					continue
-				}
+			possible := cts[i].Possible(controllerID, sourceCard, tg.Game)
+			if !slices.Contains(possible, tid) {
+				continue
 			}
 		}
 		perm := tg.FindPermanent(tid)
@@ -1289,7 +1286,7 @@ func (tg *TestGame) AssertPermanentCount(p PlayerRef, name string, want int) {
 		if perm.PhasedOut {
 			continue
 		}
-		if perm.Name() == name && perm.Controller == playerID {
+		if perm.Name() == name && perm.ControllerID() == playerID {
 			got++
 		}
 	}

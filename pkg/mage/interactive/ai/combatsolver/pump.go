@@ -23,7 +23,7 @@ func applyCombatSelfPump(g *mage.Game, playerID uuid.UUID, blocks []mage.BlockAs
 		}
 		blocker := g.FindPermanent(block.BlockerID)
 		attacker := g.FindPermanent(block.AttackerID)
-		if blocker == nil || attacker == nil || blocker.Controller != playerID {
+		if blocker == nil || attacker == nil || blocker.ControllerID() != playerID {
 			continue
 		}
 		info, ok := selfPumpAbility(blocker)

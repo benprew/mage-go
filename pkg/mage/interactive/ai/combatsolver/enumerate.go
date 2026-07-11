@@ -148,7 +148,7 @@ func enumerateBlockerSets(g *mage.Game, defenderID uuid.UUID) [][]mage.BlockAssi
 func eligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var out []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID || !perm.CanDeclareAsAttacker(g) {
+		if perm.ControllerID() != playerID || !perm.CanDeclareAsAttacker(g) {
 			continue
 		}
 		out = append(out, perm)
@@ -159,7 +159,7 @@ func eligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 func eligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	var out []*mage.Permanent
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID || !perm.CanDeclareAsBlocker(g) {
+		if perm.ControllerID() != playerID || !perm.CanDeclareAsBlocker(g) {
 			continue
 		}
 		out = append(out, perm)

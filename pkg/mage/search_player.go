@@ -60,7 +60,7 @@ func (sp *SearchPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Gam
 	for _, id := range possible {
 		if perm := g.FindPermanent(id); perm != nil {
 			val := permanentValue(perm, g)
-			if perm.Controller != myID {
+			if perm.ControllerID() != myID {
 				// Opponent's permanent: high priority (removal heuristic).
 				scored = append(scored, scoredTarget{id, 1000 + val})
 			} else {

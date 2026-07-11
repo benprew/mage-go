@@ -49,6 +49,7 @@ type LKIView interface {
 	ViewID() uuid.UUID
 	ViewName() string
 	ViewController() uuid.UUID
+	ViewAttachedTo() uuid.UUID
 	ViewOwner() uuid.UUID
 	ViewHasType(CardType) bool
 	ViewHasSubType(string) bool
@@ -101,12 +102,13 @@ type livePermanentView struct {
 
 func (v livePermanentView) ViewID() uuid.UUID         { return v.p.ID() }
 func (v livePermanentView) ViewName() string          { return v.p.Name() }
-func (v livePermanentView) ViewController() uuid.UUID { return v.p.Controller }
+func (v livePermanentView) ViewController() uuid.UUID { return v.p.ControllerID() }
+func (v livePermanentView) ViewAttachedTo() uuid.UUID { return v.p.AttachedTo }
 func (v livePermanentView) ViewOwner() uuid.UUID {
 	if o := v.p.Card.Owner(); o != uuid.Nil {
 		return o
 	}
-	return v.p.Controller
+	return v.p.ControllerID()
 }
 func (v livePermanentView) ViewHasType(t CardType) bool   { return v.p.HasType(t) }
 func (v livePermanentView) ViewHasSubType(s string) bool  { return v.p.HasSubType(s) }
@@ -172,7 +174,13 @@ func (l *PermanentLKI) ViewController() uuid.UUID {
 	if l.Snapshot == nil {
 		return uuid.Nil
 	}
-	return l.Snapshot.Controller
+	return l.Snapshot.ControllerID()
+}
+func (l *PermanentLKI) ViewAttachedTo() uuid.UUID {
+	if l.Snapshot == nil {
+		return uuid.Nil
+	}
+	return l.Snapshot.AttachedTo
 }
 func (l *PermanentLKI) ViewOwner() uuid.UUID { return l.Owner }
 func (l *PermanentLKI) ViewHasType(t CardType) bool {
@@ -225,7 +233,7 @@ func (g *Game) captureLKI(p *Permanent) {
 	isToken := p.IsToken
 	owner := p.Card.Owner()
 	if owner == uuid.Nil {
-		owner = p.Controller
+		owner = p.ControllerID()
 	}
 	snap := &Permanent{}
 	clonePermanentInto(snap, p)

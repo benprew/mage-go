@@ -41,7 +41,7 @@ func (s *Strategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
 		return false
 	}
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller == playerID && perm.CanDeclareAsAttacker(g) {
+		if perm.ControllerID() == playerID && perm.CanDeclareAsAttacker(g) {
 			return true
 		}
 	}
@@ -275,7 +275,7 @@ func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.Pri
 				if len(targets) > 0 {
 					for _, tid := range targets {
 						perm := g.FindPermanent(tid)
-						if perm != nil && perm.Controller == opponent.PlayerID() {
+						if perm != nil && perm.ControllerID() == opponent.PlayerID() {
 							return &interactive.PriorityAction{
 								Type:     interactive.ActionCastSpell,
 								CardID:   card.ID(),
@@ -654,7 +654,7 @@ func combinedManaCost(a, b core.ManaCost) core.ManaCost {
 
 func hasOpponentPermanentTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID) bool {
 	for _, id := range possible {
-		if perm := g.FindPermanent(id); perm != nil && perm.Controller != playerID {
+		if perm := g.FindPermanent(id); perm != nil && perm.ControllerID() != playerID {
 			return true
 		}
 	}
@@ -703,7 +703,7 @@ func bestAuraTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, possible [
 	bestScore := -10000
 	for _, id := range possible {
 		perm := g.FindPermanent(id)
-		if perm == nil || perm.Controller == playerID || !perm.HasType(core.TypeCreature) {
+		if perm == nil || perm.ControllerID() == playerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		if onlyIfLethal && perm.CurrentToughness(g)+profile.ToughnessBoost-perm.Damage > 0 {
@@ -784,10 +784,10 @@ func bestNTargetsForRequirement(g *mage.Game, playerID uuid.UUID, possible []uui
 		if perm == nil {
 			continue
 		}
-		if preferOwn && perm.Controller != playerID {
+		if preferOwn && perm.ControllerID() != playerID {
 			continue
 		}
-		if preferOpponent && perm.Controller == playerID {
+		if preferOpponent && perm.ControllerID() == playerID {
 			continue
 		}
 		score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
@@ -825,10 +825,10 @@ func bestTargetsForRequirementWithPreference(g *mage.Game, playerID uuid.UUID, p
 		if perm == nil {
 			continue
 		}
-		if preferOwn && perm.Controller != playerID {
+		if preferOwn && perm.ControllerID() != playerID {
 			continue
 		}
-		if preferOpponent && perm.Controller == playerID {
+		if preferOpponent && perm.ControllerID() == playerID {
 			continue
 		}
 		score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
@@ -849,7 +849,7 @@ func smallestOwnCreatureTarget(g *mage.Game, playerID uuid.UUID, possible []uuid
 	bestScore := 1 << 30
 	for _, id := range possible {
 		perm := g.FindPermanent(id)
-		if perm == nil || perm.Controller != playerID || !perm.HasType(core.TypeCreature) {
+		if perm == nil || perm.ControllerID() != playerID || !perm.HasType(core.TypeCreature) {
 			continue
 		}
 		score := eval.PermanentValueForTargeting(g, perm, eval.TargetGeneric)
@@ -864,15 +864,15 @@ func smallestOwnCreatureTarget(g *mage.Game, playerID uuid.UUID, possible []uuid
 func targetPreferenceBonus(g *mage.Game, playerID uuid.UUID, perm *mage.Permanent, preference mage.AITargetPreference, damage int) int {
 	switch preference {
 	case mage.PreferOpponentCreature:
-		if perm.Controller != playerID && perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() != playerID && perm.HasType(core.TypeCreature) {
 			return 40
 		}
 	case mage.PreferOwnCreature:
-		if perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() == playerID && perm.HasType(core.TypeCreature) {
 			return 40
 		}
 	case mage.PreferLethalCreature:
-		if perm.Controller != playerID && perm.HasType(core.TypeCreature) && damage >= perm.CurrentToughness(g)-perm.Damage {
+		if perm.ControllerID() != playerID && perm.HasType(core.TypeCreature) && damage >= perm.CurrentToughness(g)-perm.Damage {
 			return 50
 		}
 	case mage.PreferEvasiveCreature:
@@ -882,7 +882,7 @@ func targetPreferenceBonus(g *mage.Game, playerID uuid.UUID, perm *mage.Permanen
 	case mage.PreferLargestThreat:
 		return eval.PermanentValueForTargeting(g, perm, eval.TargetRemoval)
 	case mage.PreferSmallestOwnCreature:
-		if perm.Controller == playerID && perm.HasType(core.TypeCreature) {
+		if perm.ControllerID() == playerID && perm.HasType(core.TypeCreature) {
 			return 1000 - eval.PermanentValueForTargeting(g, perm, eval.TargetGeneric)
 		}
 		return -100
@@ -1071,7 +1071,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 		}
 		// If targeting a creature, pay just enough to kill it: lethal damage
 		// is its current toughness minus damage already marked.
-		if perm := g.FindPermanent(targets[0]); perm != nil && perm.Controller != playerID {
+		if perm := g.FindPermanent(targets[0]); perm != nil && perm.ControllerID() != playerID {
 			lethal := perm.CurrentToughness(g) - perm.Damage
 			if lethal > 0 && lethal <= maxX {
 				return lethal
@@ -1086,7 +1086,7 @@ func bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid
 		}
 		count := 0
 		for _, perm := range g.AllBattlefield() {
-			if perm.Controller == opponent.PlayerID() && perm.HasType(core.TypeCreature) && !perm.Tapped {
+			if perm.ControllerID() == opponent.PlayerID() && perm.HasType(core.TypeCreature) && !perm.Tapped {
 				count++
 			}
 		}

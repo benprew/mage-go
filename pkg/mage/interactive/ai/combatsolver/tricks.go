@@ -71,7 +71,7 @@ func applyCombatTricks(g *mage.Game, playerID uuid.UUID, pairings []trickPairing
 		}
 		ours := g.FindPermanent(pr.oursID)
 		enemy := g.FindPermanent(pr.enemyID)
-		if ours == nil || enemy == nil || ours.Controller != playerID {
+		if ours == nil || enemy == nil || ours.ControllerID() != playerID {
 			continue
 		}
 		budget = applyPumpToFlip(g, playerID, ours, enemy, &handPumps, abilityPumps, budget)
@@ -201,7 +201,7 @@ func applicablePumpUnits(g *mage.Game, playerID uuid.UUID, ours *mage.Permanent,
 func gatherAbilityPumps(g *mage.Game, playerID uuid.UUID) []abilityPump {
 	var pumps []abilityPump
 	for _, perm := range g.AllBattlefield() {
-		if perm.Controller != playerID {
+		if perm.ControllerID() != playerID {
 			continue
 		}
 		for _, raw := range perm.RuntimeAbilities {
@@ -337,7 +337,7 @@ func attackerPairings(g *mage.Game, playerID uuid.UUID, blocks []mage.BlockAssig
 			continue
 		}
 		atk := g.FindPermanent(b.AttackerID)
-		if atk == nil || atk.Controller != playerID {
+		if atk == nil || atk.ControllerID() != playerID {
 			continue
 		}
 		seen[b.AttackerID] = true

@@ -193,7 +193,7 @@ func registerEnchantments() {
 							if host == nil {
 								return nil
 							}
-							p := g.GetPlayer(host.Controller)
+							p := g.GetPlayer(host.ControllerID())
 							if p == nil {
 								return nil
 							}
@@ -308,7 +308,7 @@ func registerEnchantments() {
 		return NewAura("Death's Approach", "{B}",
 			WithStaticAbility(
 				AttachedEffect(LayerPT, func(g *Game, source, target *Permanent) error {
-					owner := g.GetPlayer(target.Controller)
+					owner := g.GetPlayer(target.ControllerID())
 					if owner == nil {
 						return nil
 					}
@@ -682,11 +682,11 @@ func registerEnchantments() {
 					if src == nil {
 						return nil
 					}
-					ctrl := g.GetPlayer(src.Controller)
+					ctrl := g.GetPlayer(src.ControllerID())
 					if ctrl == nil || ctrl.Life() < ctrl.StartingLife() {
 						return nil
 					}
-					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.Controller))) {
+					for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.ControllerID()))) {
 						p = g.MutablePermanent(p.ID())
 						if p == nil {
 							continue
@@ -805,7 +805,7 @@ func registerEnchantments() {
 						for _, perm := range g.FilterBattlefield(NewPermanentFilter(
 							"creature or planeswalker opponent controls",
 							func(p *Permanent, _ *Game) bool {
-								return p.Controller != controller && (p.HasType(TypeCreature) || p.HasType(TypePlaneswalker))
+								return p.ControllerID() != controller && (p.HasType(TypeCreature) || p.HasType(TypePlaneswalker))
 							},
 						)) {
 							g.DealDamageToPermanent(perm, 4, sourceID)

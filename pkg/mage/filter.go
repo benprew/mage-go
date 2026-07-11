@@ -106,14 +106,14 @@ var IsCreatureCard = NewCardFilter("creature card", func(c Card) bool {
 // ControlledBy returns a filter matching permanents controlled by the given player.
 func ControlledBy(playerID uuid.UUID) PermanentFilter {
 	return NewPermanentFilter("you control", func(p *Permanent, _ *Game) bool {
-		return p.Controller == playerID
+		return p.ControllerID() == playerID
 	})
 }
 
 // NotControlledBy returns a filter matching permanents not controlled by the given player.
 func NotControlledBy(playerID uuid.UUID) PermanentFilter {
 	return NewPermanentFilter("opponent controls", func(p *Permanent, _ *Game) bool {
-		return p.Controller != playerID
+		return p.ControllerID() != playerID
 	})
 }
 

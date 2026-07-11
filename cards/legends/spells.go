@@ -196,32 +196,11 @@ func registerSpells() {
 	// XXX: timing restriction (only before blockers) not enforced
 	Register("Disharmony", func() Card {
 		return NewInstant("Disharmony", "{2}{R}",
-			NewTargetedSpell(TargetCreature(IsAttacking), FuncEffect(
+			NewTargetedSpell(TargetCreature(IsAttacking), CompositeEffects(
 				"untap target attacking creature, remove from combat, gain control until end of turn",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					perm.Tapped = false
-					g.RemoveFromCombat(perm.ID())
-					targetID := targets[0]
-					// Gain control until end of turn — controller resets to owner when EOT effect expires
-					ce := FuncContinuousEffect(LayerControl, EndOfTurn, func(g *Game, _ uuid.UUID) error {
-						p := g.FindPermanent(targetID)
-						if p != nil {
-							p.Controller = controller
-						}
-						return nil
-					})
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
-					return nil
-				},
+				UntapTarget(),
+				RemoveFromCombat(),
+				GainControl().Until(EndOfTurn),
 			)),
 		)
 	})
@@ -458,7 +437,7 @@ func registerSpells() {
 										}), false,
 								)
 								trigger.SetSource(creature.ID())
-								trigger.SetController(creature.Controller)
+								trigger.SetController(creature.ControllerID())
 								creature.RuntimeAbilities = append(creature.RuntimeAbilities, trigger)
 							}
 						}
@@ -1317,7 +1296,7 @@ func registerSpells() {
 						if tapped >= x {
 							break
 						}
-						if perm.Controller != controller {
+						if perm.ControllerID() != controller {
 							g.TapPermanent(perm)
 							if perm.HasAttr(Flying) {
 								g.DealDamageToPermanent(perm, 2, sourceID)
@@ -1330,7 +1309,7 @@ func registerSpells() {
 						if tapped >= x {
 							break
 						}
-						if perm.Controller == controller {
+						if perm.ControllerID() == controller {
 							g.TapPermanent(perm)
 							if perm.HasAttr(Flying) {
 								g.DealDamageToPermanent(perm, 2, sourceID)

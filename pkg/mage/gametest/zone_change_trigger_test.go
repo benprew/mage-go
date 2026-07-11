@@ -86,7 +86,7 @@ func TestOnLeaveZone_AnyDestination_Exile(t *testing.T) {
 				mage.EffectProperties{},
 				func(g *mage.Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 					for _, p := range g.AllBattlefield() {
-						if p.Controller == controller && p.Card.Name() == cardName {
+						if p.ControllerID() == controller && p.Card.Name() == cardName {
 							g.ExilePermanent(p)
 							return nil
 						}

@@ -110,7 +110,7 @@ func keywordGrantRecipients(g *mage.Game, controllerID, sourceID uuid.UUID, sele
 	case mage.KindMatching, mage.KindAllMatching:
 		var recipients []uuid.UUID
 		for _, permanent := range g.AllBattlefield() {
-			if selector.Kind == mage.KindMatching && permanent.Controller != controllerID {
+			if selector.Kind == mage.KindMatching && permanent.ControllerID() != controllerID {
 				continue
 			}
 			if permanent.HasType(core.TypeCreature) && selector.Filter.Match(permanent, g) {

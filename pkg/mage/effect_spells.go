@@ -320,17 +320,9 @@ func AttachToTarget() Effect {
 func (e *attachToTargetEffect) Text() string                 { return "attach to target" }
 func (e *attachToTargetEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// controlChangeTargetEffect gains control of a target permanent.
-type controlChangeTargetEffect struct{}
-
 // ControlChangeTarget creates an effect that gives the controller permanent control of a target (e.g. Control Magic).
 func ControlChangeTarget() Effect {
-	return &controlChangeTargetEffect{}
-}
-
-func (e *controlChangeTargetEffect) Text() string { return "gain control of target permanent" }
-func (e *controlChangeTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return GainControl()
 }
 
 // extraTurnEffect gives the controller an extra turn.
@@ -550,18 +542,6 @@ func (*attachToTargetEffect) Apply(ctx *EffectContext) error {
 		return fmt.Errorf("no target for attach")
 	}
 	ctx.Game.Attach(ctx.SourceID, ctx.Targets[0])
-	return nil
-}
-
-func (*controlChangeTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for control change")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	perm.Controller = ctx.Controller
 	return nil
 }
 

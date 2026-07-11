@@ -227,7 +227,7 @@ func (ai *AIPlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, re
 	oppPlayer := uuid.Nil
 	for _, id := range possible {
 		if perm := g.FindPermanent(id); perm != nil {
-			if perm.Controller == myID {
+			if perm.ControllerID() == myID {
 				continue
 			}
 			lethal := max(perm.CurrentToughness(g)-perm.Damage, 1)
@@ -303,7 +303,7 @@ func (ai *AIPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.Ga
 		case g.FindPermanent(id) != nil:
 			perm := g.FindPermanent(id)
 			val := ai.permChoiceValue(perm, g)
-			if perm.Controller != myID {
+			if perm.ControllerID() != myID {
 				ranked = append(ranked, scored{id, 1000 + val})
 			} else {
 				ranked = append(ranked, scored{id, val})

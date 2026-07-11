@@ -68,11 +68,11 @@ func boardPower(g *mage.Game, rootPlayer uuid.UUID) (float64, float64) {
 		}
 		base := float64(p.CurrentPower(g) + p.CurrentToughness(g))
 		defender := rootPlayer
-		if p.Controller == rootPlayer {
+		if p.ControllerID() == rootPlayer {
 			defender = oppID
 		}
 		v := base * evasionFactor(g, p, defender)
-		if p.Controller == rootPlayer {
+		if p.ControllerID() == rootPlayer {
 			mine += v
 		} else {
 			theirs += v
@@ -93,7 +93,7 @@ func evasionFactor(g *mage.Game, p *mage.Permanent, defenderID uuid.UUID) float6
 
 func defenderHasAnyAttr(g *mage.Game, defenderID uuid.UUID, attrs ...core.Attr) bool {
 	for _, p := range g.AllBattlefield() {
-		if p.Controller != defenderID || !p.HasType(core.TypeCreature) {
+		if p.ControllerID() != defenderID || !p.HasType(core.TypeCreature) {
 			continue
 		}
 		if slices.ContainsFunc(attrs, p.HasAttr) {
@@ -106,7 +106,7 @@ func defenderHasAnyAttr(g *mage.Game, defenderID uuid.UUID, attrs ...core.Attr) 
 func countDefenderCreatures(g *mage.Game, defenderID uuid.UUID) int {
 	n := 0
 	for _, p := range g.AllBattlefield() {
-		if p.Controller == defenderID && p.HasType(core.TypeCreature) {
+		if p.ControllerID() == defenderID && p.HasType(core.TypeCreature) {
 			n++
 		}
 	}
@@ -119,7 +119,7 @@ func untappedLands(g *mage.Game, rootPlayer uuid.UUID) (int, int) {
 		if !p.HasType(core.TypeLand) || p.Tapped {
 			continue
 		}
-		if p.Controller == rootPlayer {
+		if p.ControllerID() == rootPlayer {
 			mine++
 		} else {
 			theirs++

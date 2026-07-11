@@ -48,9 +48,9 @@ func ChooseModeWithContext(modes []string, g *mage.Game, playerID uuid.UUID) int
 		if !perm.HasType(core.TypeCreature) {
 			continue
 		}
-		if perm.Controller == playerID {
+		if perm.ControllerID() == playerID {
 			myCreatures++
-		} else if opponent != nil && perm.Controller == opponent.PlayerID() {
+		} else if opponent != nil && perm.ControllerID() == opponent.PlayerID() {
 			oppCreatures++
 		}
 	}

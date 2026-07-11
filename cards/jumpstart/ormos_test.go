@@ -75,7 +75,7 @@ func TestOrmos_ActivatedAbilityDrawsFive(t *testing.T) {
 	}
 	forestsBF := 0
 	for _, perm := range g.AllBattlefield() {
-		if perm.Card.Name() == "Forest" && perm.Controller == pA.PlayerID() {
+		if perm.Card.Name() == "Forest" && perm.ControllerID() == pA.PlayerID() {
 			forestsBF++
 		}
 	}

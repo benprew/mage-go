@@ -268,10 +268,10 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		if perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities) {
 			return false
 		}
-		if perm.Controller != controller && !a.permission.AnyPlayerMayUse {
+		if perm.ControllerID() != controller && !a.permission.AnyPlayerMayUse {
 			return false
 		}
-		if perm.Controller == controller && a.permission.OpponentOnlyMayUse {
+		if perm.ControllerID() == controller && a.permission.OpponentOnlyMayUse {
 			return false
 		}
 	}
@@ -289,7 +289,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	}
 	if a.limits.ControlledSinceTurnStart {
 		perm := g.FindPermanent(a.source)
-		if perm == nil || perm.TurnControlGained >= g.turn {
+		if perm == nil || !perm.ControlledSinceTurnStart(g) {
 			return false
 		}
 	}

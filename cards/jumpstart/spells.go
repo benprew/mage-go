@@ -192,7 +192,7 @@ func registerSpells() {
 					if perm == nil {
 						return nil
 					}
-					ownerID := perm.Controller
+					ownerID := perm.ControllerID()
 					g.DestroyPermanent(perm)
 					if owner := g.GetPlayer(ownerID); owner != nil {
 						if len(owner.Hand()) > 0 {
@@ -557,7 +557,7 @@ func registerSpells() {
 					}
 					g.DealDamageToPermanent(perm, 3, sourceID)
 					if revealedDragon || controlledDragon {
-						if owner := g.GetPlayer(perm.Controller); owner != nil {
+						if owner := g.GetPlayer(perm.ControllerID()); owner != nil {
 							g.DealDamageToPlayer(owner, 3, sourceID)
 						}
 					}
@@ -761,7 +761,7 @@ func registerSpells() {
 					if perm == nil {
 						return nil
 					}
-					victimController := perm.Controller
+					victimController := perm.ControllerID()
 					g.DealDamageToPermanent(perm, 4, sourceID)
 					hasBig := false
 					for _, p := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
@@ -1154,7 +1154,7 @@ func registerSpells() {
 					if perm == nil {
 						return nil
 					}
-					ownerID := perm.Controller
+					ownerID := perm.ControllerID()
 					g.DestroyPermanent(perm)
 					if owner := g.GetPlayer(ownerID); owner != nil {
 						owner.LoseLife(2)
@@ -1390,7 +1390,7 @@ func registerSpells() {
 						if perm == nil {
 							return nil
 						}
-						creatureCtrl := perm.Controller
+						creatureCtrl := perm.ControllerID()
 						g.ExilePermanent(perm)
 						p := g.GetPlayer(creatureCtrl)
 						if p == nil {
@@ -1452,7 +1452,7 @@ func registerSpells() {
 							card := perm.Card
 							owner := card.Owner()
 							if owner == uuid.Nil {
-								owner = perm.Controller
+								owner = perm.ControllerID()
 							}
 							g.RemoveFromBattlefield(perm)
 							if pl := g.GetPlayer(owner); pl != nil {
@@ -1577,13 +1577,7 @@ func registerSpells() {
 							return nil
 						}
 					}
-					perm := g.PutOnBattlefield(picked, controller)
-					if perm != nil && picked.Owner() != controller {
-						g.AddContinuousEffect(TargetEffect(LayerControl, Indefinite, perm.ID(), func(g *Game, target *Permanent) error {
-							target.Controller = controller
-							return nil
-						}))
-					}
+					g.PutOnBattlefield(picked, controller)
 					ctrl.LoseLife(picked.ManaCost().CMC())
 					return nil
 				},
@@ -1697,7 +1691,7 @@ func registerSpells() {
 					if perm == nil {
 						continue
 					}
-					if perm.Controller != controller {
+					if perm.ControllerID() != controller {
 						continue
 					}
 					if perm.Card.HasSubType("Dinosaur") {
@@ -1780,7 +1774,7 @@ func registerSpells() {
 					card := perm.Card
 					owner := card.Owner()
 					if owner == uuid.Nil {
-						owner = perm.Controller
+						owner = perm.ControllerID()
 					}
 					ownerPlayer := g.GetPlayer(owner)
 					attacking := g.IsAttackingInCombat(perm.ID())
@@ -1788,7 +1782,7 @@ func registerSpells() {
 					if attacking && controllerPlayer != nil && ownerPlayer != nil &&
 						controllerPlayer.ChooseMayAbility("put "+card.Name()+" on top of "+ownerPlayer.Name()+"'s library instead of returning to hand") {
 						permID := perm.ID()
-						permController := perm.Controller
+						permController := perm.ControllerID()
 						g.RemoveFromBattlefield(perm)
 						ownerPlayer.SetLibrary(append([]Card{card}, ownerPlayer.Library()...))
 						g.FireEvent(GameEvent{
@@ -2018,7 +2012,7 @@ func registerSpells() {
 						card := perm.Card
 						ownerID := card.Owner()
 						if ownerID == uuid.Nil {
-							ownerID = perm.Controller
+							ownerID = perm.ControllerID()
 						}
 						g.RemoveFromBattlefield(perm)
 						if owner := g.GetPlayer(ownerID); owner != nil {
@@ -2079,23 +2073,7 @@ func registerSpells() {
 // gainControlUntilEOT registers a LayerControl continuous effect that switches
 // the target's controller until end of turn.
 func gainControlUntilEOT() Effect {
-	return FuncEffect(
-		"gain control until end of turn",
-		EffectProperties{Outcome: OutcomeBenefit},
-		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-			if len(targets) == 0 {
-				return nil
-			}
-			eff := TargetEffect(LayerControl, EndOfTurn, targets[0], func(g2 *Game, target *Permanent) error {
-				target.Controller = controller
-				return nil
-			})
-			eff.SetSourceID(sourceID)
-			g.AddContinuousEffect(eff)
-			g.ApplyContinuousEffects()
-			return nil
-		},
-	)
+	return GainControl().Until(EndOfTurn)
 }
 
 // drawSelfCard returns an effect that has the spell controller draw N cards.

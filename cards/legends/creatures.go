@@ -181,7 +181,7 @@ func registerCreatures() {
 					// Check if an opponent controls a nontoken red permanent
 					opponentHasRed := false
 					for _, p := range g.AllBattlefield() {
-						if p.Controller == src.Controller {
+						if p.ControllerID() == src.ControllerID() {
 							continue
 						}
 						if p.IsToken {
@@ -435,7 +435,7 @@ func registerCreatures() {
 						return nil
 					}
 					candidates := g.FilterBattlefield(NewPermanentFilter("Island", func(p *Permanent, _ *Game) bool {
-						return p.Controller == controller && p.HasSubType("Island")
+						return p.ControllerID() == controller && p.HasSubType("Island")
 					}))
 					if len(candidates) > 0 && player.ChooseMayAbility("sacrifice an Island") {
 						chosen := player.ChoosePermanent(candidates, "sacrifice Island", g)
@@ -937,7 +937,7 @@ func registerCreatures() {
 						return nil
 					}
 					candidates := g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
-						return p.Controller == controller && p.HasSubType("Swamp")
+						return p.ControllerID() == controller && p.HasSubType("Swamp")
 					}))
 					if len(candidates) >= 2 && player.ChooseMayAbility("sacrifice two Swamps") {
 						first := player.ChoosePermanent(candidates, "sacrifice Swamp (1 of 2)", g)
@@ -945,7 +945,7 @@ func registerCreatures() {
 							g.Sacrifice(first)
 							// Refresh candidates after first sacrifice
 							remaining := g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
-								return p.Controller == controller && p.HasSubType("Swamp")
+								return p.ControllerID() == controller && p.HasSubType("Swamp")
 							}))
 							if len(remaining) > 0 {
 								second := player.ChoosePermanent(remaining, "sacrifice Swamp (2 of 2)", g)
@@ -1025,19 +1025,13 @@ func registerCreatures() {
 											continue
 										}
 										blockerID := bid
-										ce := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
-											src := g.FindPermanent(srcID)
-											if src == nil {
-												return nil
-											}
-											target := g.MutablePermanent(blockerID)
-											if target != nil {
-												target.Controller = src.Controller
-											}
-											return nil
+										g.AddControlEffect(ControlEffectSpec{
+											SourceID: sourceID, TargetID: blockerID, ControllerID: controller,
+											Duration: Indefinite,
+											Conditions: []ControlConditionData{
+												ControlSourceControlledByEffectController{},
+											},
 										})
-										ce.SetSourceID(sourceID)
-										g.AddContinuousEffect(ce)
 									}
 								}
 							}
@@ -1211,7 +1205,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.AllBattlefield() {
-						if p.Controller == src.Controller {
+						if p.ControllerID() == src.ControllerID() {
 							continue
 						}
 						if p.IsToken {
@@ -1988,30 +1982,10 @@ func registerCreatures() {
 			WithSubTypes("Satyr"),
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
-				FuncEffect("gain control of target legendary creature while tapped",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						targetID := targets[0]
-						// Control lasts only while you control the source and it
-						// remains tapped. Tap-maintained so the untap step untaps
-						// the source automatically once the stolen creature leaves
-						// the battlefield.
-						controlledWhileTapped := func(g *Game, srcID uuid.UUID) bool {
-							src := g.FindPermanent(srcID)
-							return src != nil && src.Tapped && src.Controller == controller
-						}
-						ce := TapMaintainedTargetEffect(LayerControl, Indefinite, targetID,
-							func(g *Game, target *Permanent) error {
-								target.Controller = controller
-								return nil
-							}, controlledWhileTapped)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-						return nil
-					}),
+				GainControl().While(
+					ControlSourceControlledByEffectController{},
+					ControlSourceTapped{},
+				).TapMaintained(),
 				Tap(),
 				WithTarget(TargetCreature(NewPermanentFilter("legendary creature", func(p *Permanent, _ *Game) bool {
 					return p.Card.HasSuperType(SuperLegendary)
@@ -2098,7 +2072,7 @@ func registerCreatures() {
 						return nil
 					}
 					for _, p := range g.AllBattlefield() {
-						if p.Controller != src.Controller || !p.HasType(TypeCreature) {
+						if p.ControllerID() != src.ControllerID() || !p.HasType(TypeCreature) {
 							continue
 						}
 						if !p.Tapped && !g.IsAttackingInCombat(p.ID()) {
@@ -2483,7 +2457,7 @@ func registerCreatures() {
 							return nil
 						}
 						for _, p := range g.AllBattlefield() {
-							if p.Controller == johan.Controller && p.HasAttr(AttrIsCreature) {
+							if p.ControllerID() == johan.ControllerID() && p.HasAttr(AttrIsCreature) {
 								g.GrantAttr(p.ID(), Vigilance)
 							}
 						}
@@ -2865,32 +2839,16 @@ func registerCreatures() {
 					}
 					// Tap Kobolds of Kher Keep
 					for _, p := range g.FilterBattlefield(NewPermanentFilter("Kobolds of Kher Keep", func(p *Permanent, _ *Game) bool {
-						return p.Name() == "Kobolds of Kher Keep" && p.Controller == controller
+						return p.Name() == "Kobolds of Kher Keep" && p.ControllerID() == controller
 					})) {
 						g.TapPermanent(p)
 					}
-					// Use continuous effect at LayerControl to change controller
-					// (direct assignment gets reset each Apply cycle)
-					eff := FuncContinuousEffect(LayerControl, Indefinite, func(g *Game, srcID uuid.UUID) error {
-						// Change controller of Rohgahh
-						rohgahh := g.MutablePermanent(sourceID)
-						if rohgahh != nil {
-							rohgahh.Controller = oppID
+					g.AddControlEffect(ControlEffectSpec{SourceID: sourceID, TargetID: sourceID, ControllerID: oppID, Duration: Indefinite})
+					for _, p := range g.AllBattlefield() {
+						if p.Name() == "Kobolds of Kher Keep" && p.Card.Owner() == controller {
+							g.AddControlEffect(ControlEffectSpec{SourceID: sourceID, TargetID: p.ID(), ControllerID: oppID, Duration: Indefinite})
 						}
-						// Change controller of all Kobolds of Kher Keep
-						for _, p := range g.AllBattlefield() {
-							if p.Name() == "Kobolds of Kher Keep" && p.Card.Owner() == controller {
-								m := g.MutablePermanent(p.ID())
-								if m == nil {
-									continue
-								}
-								m.Controller = oppID
-							}
-						}
-						return nil
-					})
-					eff.SetSourceID(sourceID)
-					g.AddContinuousEffect(eff)
+					}
 					return nil
 				},
 			)).SetConditionData(EventPlayerIsController{})),
@@ -2908,30 +2866,10 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(AttrMayNotUntap),
 			WithActivatedAbility(
-				FuncEffect("gain control of target creature while tapped",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						targetID := targets[0]
-						// Control lasts only while you control the source and it
-						// remains tapped. Tap-maintained so the untap step untaps
-						// the source automatically once the stolen creature leaves
-						// the battlefield.
-						controlledWhileTapped := func(g *Game, srcID uuid.UUID) bool {
-							src := g.FindPermanent(srcID)
-							return src != nil && src.Tapped && src.Controller == controller
-						}
-						ce := TapMaintainedTargetEffect(LayerControl, Indefinite, targetID,
-							func(g *Game, target *Permanent) error {
-								target.Controller = controller
-								return nil
-							}, controlledWhileTapped)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-						return nil
-					}),
+				GainControl().While(
+					ControlSourceControlledByEffectController{},
+					ControlSourceTapped{},
+				).TapMaintained(),
 				Tap(),
 				WithTarget(TargetCreature()),
 			),
@@ -3209,7 +3147,7 @@ func registerCreatures() {
 				// Check if controller has another creature
 				hasOther := false
 				for _, p := range g.AllBattlefield() {
-					if p.Controller == src.Controller && p.HasType(TypeCreature) && p.ID() != sourceID {
+					if p.ControllerID() == src.ControllerID() && p.HasType(TypeCreature) && p.ID() != sourceID {
 						hasOther = true
 						break
 					}

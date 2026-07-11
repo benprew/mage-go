@@ -165,7 +165,7 @@ func registerEnchantments() {
 					// Check if chosen player controls a nontoken permanent of chosen color
 					hasNontoken := false
 					for _, p := range g.AllBattlefield() {
-						if p.Controller == chosenPlayer &&
+						if p.ControllerID() == chosenPlayer &&
 							HasColorFilter(chosenColor).Match(p, g) &&
 							!p.IsToken {
 							hasNontoken = true
@@ -203,7 +203,7 @@ func registerEnchantments() {
 						return false
 					}
 					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.Controller == chosenPlayer &&
+						if p.ControllerID() == chosenPlayer &&
 							cardHasColor(p.Card, chosenColor) &&
 							!p.IsToken {
 							return false
