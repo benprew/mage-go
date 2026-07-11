@@ -764,6 +764,100 @@ func TestPriorityAction_PrefersCurvePlay(t *testing.T) {
 
 // ── Ability activation in PriorityAction ────────────────────────────────────
 
+func TestPriorityAction_CardDrawAbilityDrawsWhenHandIsEmpty(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Swamp", 3)
+
+	greedCard := mage.NewEnchantment("Greed", "{3}{B}",
+		mage.WithActivatedAbility(
+			mage.DrawCards(mage.Fixed(1)),
+			mage.ManaCostOf("{B}"),
+			mage.WithCost(mage.LifePayCost(2)),
+		),
+	)
+	greedCard.SetOwner(pa.PlayerID())
+	greed := g.PutOnBattlefield(greedCard, pa.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != greed.ID() {
+		t.Fatalf("expected AI to draw with mana and life available, got %+v", action)
+	}
+}
+
+func TestPriorityAction_CardDrawAbilityValuesFullHandLess(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Swamp", 3)
+	for range 7 {
+		card := mage.NewCreature("Expensive Threat", "{3}{B}", 4, 4)
+		card.SetOwner(pa.PlayerID())
+		pa.AddToHand(card)
+	}
+
+	greedCard := mage.NewEnchantment("Greed", "{3}{B}",
+		mage.WithActivatedAbility(
+			mage.DrawCards(mage.Fixed(1)),
+			mage.ManaCostOf("{B}"),
+			mage.WithCost(mage.LifePayCost(2)),
+		),
+	)
+	greedCard.SetOwner(pa.PlayerID())
+	g.PutOnBattlefield(greedCard, pa.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected AI to value a full hand over another card, got %+v", action)
+	}
+}
+
+func TestPriorityAction_CardDrawAbilityKeepsLifeBuffer(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Swamp", 4)
+	pa.SetLife(5)
+
+	greedCard := mage.NewEnchantment("Greed", "{3}{B}",
+		mage.WithActivatedAbility(
+			mage.DrawCards(mage.Fixed(1)),
+			mage.ManaCostOf("{B}"),
+			mage.WithCost(mage.LifePayCost(2)),
+		),
+	)
+	greedCard.SetOwner(pa.PlayerID())
+	g.PutOnBattlefield(greedCard, pa.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionPass {
+		t.Fatalf("expected AI to keep a life buffer, got %+v", action)
+	}
+}
+
+func TestPriorityAction_CardDrawAbilityValuesLifeByCurrentTotal(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	addLands(g, pa, "Swamp", 4)
+
+	greedCard := mage.NewEnchantment("Greed", "{3}{B}",
+		mage.WithActivatedAbility(
+			mage.DrawCards(mage.Fixed(1)),
+			mage.ManaCostOf("{B}"),
+			mage.WithCost(mage.LifePayCost(2)),
+		),
+	)
+	greedCard.SetOwner(pa.PlayerID())
+	greed := g.PutOnBattlefield(greedCard, pa.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 0, true)
+	if action.Type != interactive.ActionActivateAbility || action.PermanentID != greed.ID() {
+		t.Fatalf("expected AI to spend two life while it has a large life buffer, got %+v", action)
+	}
+}
+
 func TestPriorityAction_ActivatesAbility(t *testing.T) {
 	g, pa, pb := makeGame()
 	oppCreature := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())

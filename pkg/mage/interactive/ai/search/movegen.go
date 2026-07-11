@@ -57,7 +57,7 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 		if !ok || !abilityHasNonRedundantUse(g, playerID, perm, aa) {
 			continue
 		}
-		q := abilityQualityFromInfo(g, info)
+		q := abilityQualityFromInfo(p, g, info)
 		moves = append(moves, Move{
 			Type:         interactive.ActionActivateAbility,
 			PermanentID:  info.PermanentID,
@@ -180,7 +180,7 @@ func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 	return eligible
 }
 
-func abilityQualityFromInfo(g *mage.Game, info mage.ActivatableInfo) int {
+func abilityQualityFromInfo(p mage.Player, g *mage.Game, info mage.ActivatableInfo) int {
 	perm := g.FindPermanent(info.PermanentID)
 	if perm == nil {
 		return 0
@@ -193,7 +193,7 @@ func abilityQualityFromInfo(g *mage.Game, info mage.ActivatableInfo) int {
 	if !ok {
 		return 0
 	}
-	return eval.AbilityQuality(aa)
+	return eval.AbilityQuality(aa, p, g)
 }
 
 func expandSpellMoves(p mage.Player, g *mage.Game, card mage.Card) []Move {

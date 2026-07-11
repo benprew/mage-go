@@ -277,10 +277,15 @@ func TestEvalCreature_DrawCreatureVsVanilla(t *testing.T) {
 
 // ── eval.AbilityQuality ─────────────────────────────────────────────────────
 
+func contextualAbilityQuality(ab mage.ActivatedAbility) int {
+	g, pa, _ := makeGame()
+	return eval.AbilityQuality(ab, pa, g)
+}
+
 func TestAbilityQuality_TapToDealDamage(t *testing.T) {
 	ab := mage.NewActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 		mage.WithTarget(mage.TargetDamageAnyTarget()))
-	got := eval.AbilityQuality(ab)
+	got := contextualAbilityQuality(ab)
 	if got != 4 {
 		t.Errorf("AbilityQuality(tap to ping) = %d, want 4", got)
 	}
@@ -288,18 +293,18 @@ func TestAbilityQuality_TapToDealDamage(t *testing.T) {
 
 func TestAbilityQuality_TapToDraw(t *testing.T) {
 	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.Tap())
-	got := eval.AbilityQuality(ab)
-	if got != 5 {
-		t.Errorf("AbilityQuality(tap to draw) = %d, want 5", got)
+	got := contextualAbilityQuality(ab)
+	if got != 7 {
+		t.Errorf("AbilityQuality(tap to draw) = %d, want 7", got)
 	}
 }
 
 func TestAbilityQuality_ExpensiveDraw(t *testing.T) {
 	ab := mage.NewActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.ManaCostOf("{3}{U}"),
 		mage.WithCost(mage.Tap()))
-	got := eval.AbilityQuality(ab)
-	if got != 3 {
-		t.Errorf("AbilityQuality(expensive draw) = %d, want 3", got)
+	got := contextualAbilityQuality(ab)
+	if got != 5 {
+		t.Errorf("AbilityQuality(expensive draw) = %d, want 5", got)
 	}
 }
 
@@ -309,7 +314,7 @@ func TestAbilityQuality_ExpensivePump(t *testing.T) {
 			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.ManaCostOf("{5}"),
 	)
-	got := eval.AbilityQuality(ab)
+	got := contextualAbilityQuality(ab)
 	if got != 1 {
 		t.Errorf("AbilityQuality(expensive pump) = %d, want 1", got)
 	}
@@ -321,7 +326,7 @@ func TestAbilityQuality_CheapBenefit(t *testing.T) {
 			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.ManaCostOf("{1}"),
 	)
-	got := eval.AbilityQuality(ab)
+	got := contextualAbilityQuality(ab)
 	if got != 2 {
 		t.Errorf("AbilityQuality(cheap benefit) = %d, want 2", got)
 	}
@@ -333,7 +338,7 @@ func TestAbilityQuality_FreeTapAbility(t *testing.T) {
 			func(g *mage.Game, s, c uuid.UUID, t []uuid.UUID) error { return nil }),
 		mage.Tap(),
 	)
-	got := eval.AbilityQuality(ab)
+	got := contextualAbilityQuality(ab)
 	if got != 2 {
 		t.Errorf("AbilityQuality(free tap) = %d, want 2", got)
 	}
@@ -348,8 +353,8 @@ func TestAbilityQuality_PingerBeatsPump(t *testing.T) {
 		mage.ManaCostOf("{5}"),
 	)
 
-	pingerQ := eval.AbilityQuality(pinger)
-	pumpQ := eval.AbilityQuality(pump)
+	pingerQ := contextualAbilityQuality(pinger)
+	pumpQ := contextualAbilityQuality(pump)
 
 	if pingerQ <= pumpQ {
 		t.Errorf("Pinger(%d) should beat expensive pump(%d)", pingerQ, pumpQ)

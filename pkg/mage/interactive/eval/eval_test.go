@@ -763,16 +763,19 @@ func TestManaCurveBonus_NoMana(t *testing.T) {
 // ── AbilityQuality (Phase 0D) ───────────────────────────────────────────────
 
 func TestAbilityQuality_DrawAbility(t *testing.T) {
+	pa := mage.NewBasePlayer("Alice")
+	pb := mage.NewBasePlayer("Bob")
+	g := mage.NewGame(pa, pb)
 	p := makePerm("Sage", "{1}{U}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.DrawCards(mage.Fixed(1)), mage.Tap()),
 	)
-	// The draw ability should score 5
+	// The draw ability gets an empty-hand bonus.
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
 		if ab, ok := inner.(mage.ActivatedAbility); ok {
-			got := AbilityQuality(ab)
-			if got != 5 {
-				t.Errorf("AbilityQuality(draw) = %d, want 5", got)
+			got := AbilityQuality(ab, pa, g)
+			if got != 7 {
+				t.Errorf("AbilityQuality(draw) = %d, want 7", got)
 			}
 			return
 		}
@@ -781,6 +784,9 @@ func TestAbilityQuality_DrawAbility(t *testing.T) {
 }
 
 func TestAbilityQuality_DamageAbility(t *testing.T) {
+	pa := mage.NewBasePlayer("Alice")
+	pb := mage.NewBasePlayer("Bob")
+	g := mage.NewGame(pa, pb)
 	p := makePerm("Pinger", "{1}{R}", 1, 1, uuid.New(),
 		mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(1)), mage.Tap(),
 			mage.WithTarget(mage.TargetDamageAnyTarget())),
@@ -788,7 +794,7 @@ func TestAbilityQuality_DamageAbility(t *testing.T) {
 	for _, a := range p.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
 		if ab, ok := inner.(mage.ActivatedAbility); ok {
-			got := AbilityQuality(ab)
+			got := AbilityQuality(ab, pa, g)
 			if got != 4 {
 				t.Errorf("AbilityQuality(damage) = %d, want 4", got)
 			}

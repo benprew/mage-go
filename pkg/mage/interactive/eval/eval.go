@@ -77,7 +77,7 @@ func defaultEvaluate(g *mage.Game, playerID uuid.UUID) int {
 
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
-		v := evalNonCreaturePermanent(perm)
+		v := evalNonCreaturePermanent(perm, g)
 		switch perm.ControllerID() {
 		case playerID:
 			score += v
@@ -139,7 +139,7 @@ func NewWeightedEvaluator(w Weights) StateEvaluator {
 
 		nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 		for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
-			v := float64(evalNonCreaturePermanent(perm))
+			v := float64(evalNonCreaturePermanent(perm, g))
 			role := ClassifyPermanent(perm)
 			roleWeight := roleWeightForPersonality(role, w)
 			switch perm.ControllerID() {
@@ -345,7 +345,7 @@ func weightedEvaluate(g *mage.Game, playerID uuid.UUID, w Weights) int {
 
 	nonCreatureNonLand := mage.And(mage.Not(mage.IsCreature), mage.Not(mage.IsLand))
 	for _, perm := range g.FilterBattlefield(nonCreatureNonLand) {
-		v := float64(evalNonCreaturePermanent(perm)) * boardScale
+		v := float64(evalNonCreaturePermanent(perm, g)) * boardScale
 		switch perm.ControllerID() {
 		case playerID:
 			score += v
@@ -405,7 +405,7 @@ func evalCreatureInGame(perm *mage.Permanent, g *mage.Game, applyTapPenalty bool
 		score /= 2
 	}
 	score += keywordBonusInGame(perm, g)
-	score += abilityBonus(perm)
+	score += abilityBonusInGame(perm, g)
 	// SBAs destroy lethally-damaged creatures before eval runs, so only
 	// sub-lethal damage reaches here. A mild penalty reflects vulnerability
 	// (one more bolt kills it) — combat damage clears at cleanup, so this
@@ -640,7 +640,7 @@ func abilityBonus(perm *mage.Permanent) int {
 				score += 2
 			}
 		case mage.ActivatedAbility:
-			score += AbilityQuality(ab)
+			score += intrinsicAbilityQuality(ab)
 		case mage.TriggeredAbility:
 			score += triggeredAbilityQuality(ab)
 		}
@@ -659,7 +659,7 @@ func isEvasionKeyword(kw core.Attr) bool {
 	return false
 }
 
-func AbilityQuality(ab mage.ActivatedAbility) int {
+func intrinsicAbilityQuality(ab mage.ActivatedAbility) int {
 	hasTapCost := false
 	manaCostTotal := 0
 	for _, c := range ab.Costs() {
@@ -747,6 +747,83 @@ func AbilityQuality(ab mage.ActivatedAbility) int {
 	return bestScore
 }
 
+// AbilityQuality scores an activated ability in its current game context.
+// It accounts for both the effect's intrinsic value and the value of drawing a
+// card given the player's life, hand, and immediately available plays.
+func AbilityQuality(ab mage.ActivatedAbility, p mage.Player, g *mage.Game) int {
+	score := intrinsicAbilityQuality(ab)
+
+	drawsCards := false
+	for _, effect := range ab.Effects() {
+		if effect.Properties().DrawCount > 0 {
+			drawsCards = true
+			break
+		}
+	}
+	if !drawsCards {
+		return score
+	}
+
+	lifeCost := 0
+	for _, cost := range ab.Costs() {
+		lifeCost += mage.LifePaymentAmount(cost)
+	}
+
+	score += cardDrawNeedAdjustment(p, g)
+	if lifeCost > 0 {
+		// Scale the same payment by the current life total: at 20 life, paying
+		// 2 is a modest cost; at 5 it is a large fraction of the AI's buffer.
+		score -= lifeCost * 15 / max(p.Life(), 1)
+	}
+	return score
+}
+
+// cardDrawNeedAdjustment values a new card more when the AI is short on
+// options, and less when its hand already contains cards it can deploy.
+func cardDrawNeedAdjustment(p mage.Player, g *mage.Game) int {
+	adjustment := 0
+	switch len(p.Hand()) {
+	case 0, 1, 2:
+		adjustment = 2
+	case 3, 4:
+		adjustment = 1
+	case 7, 8:
+		adjustment = -3
+	default:
+		if len(p.Hand()) >= 9 {
+			adjustment = -4
+		}
+	}
+
+	immediateOptions := len(g.GetCastableSpells(p.PlayerID())) + len(g.GetPlayableLands(p.PlayerID()))
+	return adjustment - min(immediateOptions, 2)
+}
+
+func abilityBonusInGame(perm *mage.Permanent, g *mage.Game) int {
+	p := g.GetPlayer(perm.ControllerID())
+	if p == nil {
+		return abilityBonus(perm)
+	}
+
+	score := 0
+	for _, a := range perm.RuntimeAbilities {
+		inner := mage.UnwrapAbility(a)
+		switch ab := inner.(type) {
+		case *mage.ManaAbility:
+			if ab.HasAnyColor() {
+				score += 3
+			} else {
+				score += 2
+			}
+		case mage.ActivatedAbility:
+			score += AbilityQuality(ab, p, g)
+		case mage.TriggeredAbility:
+			score += triggeredAbilityQuality(ab)
+		}
+	}
+	return score
+}
+
 func abilityHintQuality(hint mage.AIHint) int {
 	score := hint.ValueBias
 	for _, role := range hint.Roles {
@@ -769,7 +846,7 @@ func abilityHintQuality(hint mage.AIHint) int {
 // evalNonCreaturePermanent scores a non-creature, non-land permanent (enchantment,
 // artifact, etc.) by examining its abilities rather than just using CMC/2.
 // Returns a value that is at least CMC/NonCreatureCMCDiv (the old baseline).
-func evalNonCreaturePermanent(perm *mage.Permanent) int {
+func evalNonCreaturePermanent(perm *mage.Permanent, g *mage.Game) int {
 	baseValue := perm.Card.ManaCost().CMC() / NonCreatureCMCDiv
 
 	bonus := 0
@@ -786,7 +863,10 @@ func evalNonCreaturePermanent(perm *mage.Permanent) int {
 				bonus = s
 			}
 		case mage.ActivatedAbility:
-			q := AbilityQuality(ab)
+			q := intrinsicAbilityQuality(ab)
+			if p := g.GetPlayer(perm.ControllerID()); p != nil {
+				q = AbilityQuality(ab, p, g)
+			}
 			if q > bonus {
 				bonus = q
 			}

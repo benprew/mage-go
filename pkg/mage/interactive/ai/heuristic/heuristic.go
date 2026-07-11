@@ -320,7 +320,7 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 		if !ok || ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), ab.Effects(), targets) {
 			continue
 		}
-		score := eval.AbilityQuality(ab)
+		score := eval.AbilityQuality(ab, p, g)
 		if score > bestScore {
 			bestScore = score
 			bestInfo = info

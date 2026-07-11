@@ -202,7 +202,7 @@ func evalPermanentForTargeting(g *mage.Game, perm *mage.Permanent) int {
 	if perm.HasType(core.TypeCreature) {
 		return EvalCreatureInGame(perm, g)
 	}
-	return evalNonCreaturePermanent(perm)
+	return evalNonCreaturePermanent(perm, g)
 }
 
 func alreadyLethallyDamaged(g *mage.Game, perm *mage.Permanent) bool {

@@ -249,6 +249,15 @@ func LifePayCost(amount int) Cost {
 	return &lifePayCost{amount: amount}
 }
 
+// LifePaymentAmount reports the life required by a life-payment cost, or zero
+// for costs that do not pay life.
+func LifePaymentAmount(cost Cost) int {
+	if lifeCost, ok := cost.(*lifePayCost); ok {
+		return lifeCost.amount
+	}
+	return 0
+}
+
 func (c *lifePayCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
 	return p != nil && p.Life() > c.amount // must have more life than cost
