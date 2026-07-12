@@ -1,25 +1,11 @@
 package arabian
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
-
-// exactHandSizeCost is a zero-cost activation condition: the ability can only
-// be activated when the controller has exactly `size` cards in hand.
-type exactHandSizeCost struct{ size int }
-
-func (c *exactHandSizeCost) CanPay(_, controller uuid.UUID, g *Game) bool {
-	p := g.GetPlayer(controller)
-	return p != nil && len(p.Hand()) == c.size
-}
-func (c *exactHandSizeCost) Pay(_, _ uuid.UUID, _ *Game) error { return nil }
-func (c *exactHandSizeCost) Text() string {
-	return fmt.Sprintf("Activate only if you have exactly %d cards in hand", c.size)
-}
 
 func init() {
 	registerLands()
@@ -73,33 +59,22 @@ func registerLands() {
 	Register("Diamond Valley", func() Card {
 		return NewLand("Diamond Valley",
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs ChoosePermanentStep with controller-relative filter
-				FuncEffect("sacrifice creature, gain life equal to toughness",
+				FuncEffect("gain life equal to the sacrificed creature's toughness",
 					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, _, controller uuid.UUID, _ []uuid.UUID) error {
 						p := g.GetPlayer(controller)
 						if p == nil {
 							return nil
 						}
-						var creatures []*Permanent
-						for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
-							if perm.ID() != sourceID {
-								creatures = append(creatures, perm)
-							}
-						}
-						if len(creatures) == 0 {
+						sacrificed := g.LastSacrificed()
+						if sacrificed == nil {
 							return nil
 						}
-						chosen := p.ChoosePermanent(creatures, "sacrifice", g)
-						if chosen == nil {
-							return nil
-						}
-						toughness := chosen.CurrentToughness(g)
-						g.DoSacrifice(chosen)
-						g.PlayerGainLife(p, toughness)
+						g.PlayerGainLife(p, sacrificed.Toughness)
 						return nil
 					}),
 				Tap(),
+				WithCost(SacrificeCreatureCost()),
 			),
 		)
 	})
@@ -135,7 +110,10 @@ func registerLands() {
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
 				Tap(),
-				WithCost(&exactHandSizeCost{size: 7}),
+				mage.WithActivationCondition(func(g *Game, _ *Permanent, controller uuid.UUID) bool {
+					p := g.GetPlayer(controller)
+					return p != nil && len(p.Hand()) == 7
+				}),
 			),
 		)
 	})

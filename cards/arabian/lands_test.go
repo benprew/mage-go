@@ -87,6 +87,22 @@ func TestDiamondValley(t *testing.T) {
 		g.AssertLife(gametest.PlayerA, 23)
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 0)
 	})
+
+	t.Run("cannot_activate_without_creature_to_sacrifice", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Diamond Valley")
+		g.StopAt(1, core.PrecombatMain)
+		g.Execute()
+
+		playerID := g.GetPlayer(gametest.PlayerA).PlayerID()
+		valley := g.FindPermanentByName("Diamond Valley", playerID)
+		if valley == nil {
+			t.Fatal("Diamond Valley not found on battlefield")
+		}
+		if err := g.ActivateAbilityByIndex(playerID, valley.ID(), 0, nil); err == nil {
+			t.Fatal("activated Diamond Valley without a creature to sacrifice")
+		}
+	})
 }
 
 func TestOasis(t *testing.T) {
