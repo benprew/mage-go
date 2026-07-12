@@ -1,7 +1,6 @@
 package search
 
 import (
-	"slices"
 	"sort"
 	"strings"
 
@@ -404,48 +403,6 @@ func exhaustiveAttackPlans(eligible []*mage.Permanent) [][]uuid.UUID {
 	return out
 }
 
-func heuristicAttackPlans(g *mage.Game, playerID uuid.UUID, eligible []*mage.Permanent) [][]uuid.UUID {
-	opponent := g.GetOpponent(playerID)
-	if opponent == nil {
-		return nil
-	}
-	opponentID := opponent.PlayerID()
-
-	all := make([]uuid.UUID, 0, len(eligible))
-	seed := make([]uuid.UUID, 0, len(eligible))
-	var evasive []uuid.UUID
-	for _, atk := range eligible {
-		all = append(all, atk.ID())
-		if isEvasiveTo(g, atk, opponentID) {
-			evasive = append(evasive, atk.ID())
-		}
-		if shouldHeuristicAttack(g, atk, opponentID) {
-			seed = append(seed, atk.ID())
-		}
-	}
-
-	out := [][]uuid.UUID{all, seed, nil}
-	if len(evasive) > 0 && len(evasive) < len(eligible) {
-		out = append(out, evasive)
-	}
-	if len(seed) > 0 {
-		for _, atk := range eligible {
-			if containsID(seed, atk.ID()) {
-				continue
-			}
-			with := append([]uuid.UUID{}, seed...)
-			with = append(with, atk.ID())
-			out = append(out, with)
-			break
-		}
-		if len(seed) > 1 {
-			without := append([]uuid.UUID{}, seed[:len(seed)-1]...)
-			out = append(out, without)
-		}
-	}
-	return out
-}
-
 func shouldHeuristicAttack(g *mage.Game, atk *mage.Permanent, opponentID uuid.UUID) bool {
 	if atk.CurrentPower(g) <= 0 && !atk.HasKeyword(core.DoubleStrike) {
 		return false
@@ -659,123 +616,6 @@ func exhaustiveBlockPlans(g *mage.Game, attackers, blockers []*mage.Permanent) (
 	return out, true
 }
 
-func heuristicBlockPlans(g *mage.Game, defenderID uuid.UUID, attackers, blockers []*mage.Permanent) [][]mage.BlockAssignment {
-	sortedAttackers := append([]*mage.Permanent(nil), attackers...)
-	sort.SliceStable(sortedAttackers, func(i, j int) bool {
-		return attackerUrgency(g, sortedAttackers[i]) > attackerUrgency(g, sortedAttackers[j])
-	})
-	available := append([]*mage.Permanent(nil), blockers...)
-	sort.SliceStable(available, func(i, j int) bool {
-		return creatureValue(g, available[i]) < creatureValue(g, available[j])
-	})
-
-	seed := make([]mage.BlockAssignment, 0, len(blockers))
-	used := make(map[uuid.UUID]bool, len(blockers))
-	blocked := make(map[uuid.UUID]bool, len(attackers))
-
-	for _, atk := range sortedAttackers {
-		if blocker := findSingleBlocker(g, atk, available, used, func(blk *mage.Permanent) bool {
-			return canKill(g, blk, atk) && survivesAgainst(g, blk, atk)
-		}); blocker != nil {
-			seed = append(seed, mage.BlockAssignment{BlockerID: blocker.ID(), AttackerID: atk.ID()})
-			used[blocker.ID()] = true
-			blocked[atk.ID()] = true
-		}
-	}
-	for _, atk := range sortedAttackers {
-		if blocked[atk.ID()] {
-			continue
-		}
-		atkValue := creatureValue(g, atk)
-		if blocker := findSingleBlocker(g, atk, available, used, func(blk *mage.Permanent) bool {
-			return canKill(g, blk, atk) && creatureValue(g, blk)*100 <= atkValue*125
-		}); blocker != nil {
-			seed = append(seed, mage.BlockAssignment{BlockerID: blocker.ID(), AttackerID: atk.ID()})
-			used[blocker.ID()] = true
-			blocked[atk.ID()] = true
-		}
-	}
-	for _, atk := range sortedAttackers {
-		if blocked[atk.ID()] {
-			continue
-		}
-		if blocker := findSingleBlocker(g, atk, available, used, func(blk *mage.Permanent) bool {
-			return survivesAgainst(g, blk, atk)
-		}); blocker != nil {
-			seed = append(seed, mage.BlockAssignment{BlockerID: blocker.ID(), AttackerID: atk.ID()})
-			used[blocker.ID()] = true
-			blocked[atk.ID()] = true
-		}
-	}
-
-	out := [][]mage.BlockAssignment{orderBlockAssignments(g, seed), nil}
-	if len(seed) > 0 {
-		removed := append([]mage.BlockAssignment(nil), seed[:len(seed)-1]...)
-		out = append(out, orderBlockAssignments(g, removed))
-	}
-	for _, atk := range sortedAttackers {
-		if blocked[atk.ID()] || atk.HasKeyword(core.Deathtouch) {
-			continue
-		}
-		gang := bestGangBlock(g, atk, available, used)
-		if len(gang) == 0 {
-			continue
-		}
-		plan := append([]mage.BlockAssignment(nil), seed...)
-		for _, blocker := range gang {
-			plan = append(plan, mage.BlockAssignment{BlockerID: blocker.ID(), AttackerID: atk.ID()})
-		}
-		out = append(out, orderBlockAssignments(g, plan))
-		break
-	}
-	return out
-}
-
-func findSingleBlocker(g *mage.Game, atk *mage.Permanent, blockers []*mage.Permanent, used map[uuid.UUID]bool, pred func(*mage.Permanent) bool) *mage.Permanent {
-	for _, blocker := range blockers {
-		if used[blocker.ID()] || !mage.CanBlock(blocker, atk, g) || mage.HasLandwalkEvasion(atk, blocker.ControllerID(), g) {
-			continue
-		}
-		if pred(blocker) {
-			return blocker
-		}
-	}
-	return nil
-}
-
-func bestGangBlock(g *mage.Game, atk *mage.Permanent, blockers []*mage.Permanent, used map[uuid.UUID]bool) []*mage.Permanent {
-	var legal []*mage.Permanent
-	for _, blocker := range blockers {
-		if used[blocker.ID()] || !mage.CanBlock(blocker, atk, g) || mage.HasLandwalkEvasion(atk, blocker.ControllerID(), g) {
-			continue
-		}
-		legal = append(legal, blocker)
-	}
-	if len(legal) < 2 {
-		return nil
-	}
-	atkValue := creatureValue(g, atk)
-	for i := 0; i < len(legal); i++ {
-		for j := i + 1; j < len(legal); j++ {
-			group := []*mage.Permanent{legal[i], legal[j]}
-			if gangKills(g, atk, group) && estimatedDyingBlockerValue(g, atk, group)*100 <= atkValue*120 {
-				return group
-			}
-		}
-	}
-	for i := 0; i < len(legal); i++ {
-		for j := i + 1; j < len(legal); j++ {
-			for k := j + 1; k < len(legal); k++ {
-				group := []*mage.Permanent{legal[i], legal[j], legal[k]}
-				if gangKills(g, atk, group) && estimatedDyingBlockerValue(g, atk, group)*100 <= atkValue*120 {
-					return group
-				}
-			}
-		}
-	}
-	return nil
-}
-
 func gangKills(g *mage.Game, atk *mage.Permanent, blockers []*mage.Permanent) bool {
 	if atk.HasKeyword(core.FirstStrike) && !hasFirstStrikeDamage(blockers) {
 		survivingPower := 0
@@ -835,25 +675,6 @@ func attackerUrgency(g *mage.Game, atk *mage.Permanent) int {
 	}
 	urgency += creatureValue(g, atk) / 4
 	return urgency
-}
-
-func orderBlockAssignments(g *mage.Game, plan []mage.BlockAssignment) []mage.BlockAssignment {
-	out := append([]mage.BlockAssignment(nil), plan...)
-	sort.SliceStable(out, func(i, j int) bool {
-		if out[i].AttackerID == out[j].AttackerID {
-			atk := g.FindPermanent(out[i].AttackerID)
-			bi := g.FindPermanent(out[i].BlockerID)
-			bj := g.FindPermanent(out[j].BlockerID)
-			if atk != nil && bi != nil && bj != nil {
-				return blockerDamageOrderLess(g, atk, bi, bj)
-			}
-		}
-		if out[i].AttackerID.String() != out[j].AttackerID.String() {
-			return out[i].AttackerID.String() < out[j].AttackerID.String()
-		}
-		return out[i].BlockerID.String() < out[j].BlockerID.String()
-	})
-	return out
 }
 
 func blockPlanScore(g *mage.Game, defenderID uuid.UUID, plan []mage.BlockAssignment) int {
@@ -984,10 +805,6 @@ func repairBlockPlans(g *mage.Game, plans [][]mage.BlockAssignment) [][]mage.Blo
 		out = append(out, append([]mage.BlockAssignment(nil), repaired...))
 	}
 	return out
-}
-
-func containsID(ids []uuid.UUID, id uuid.UUID) bool {
-	return slices.Contains(ids, id)
 }
 
 func idsKey(ids []uuid.UUID) string {

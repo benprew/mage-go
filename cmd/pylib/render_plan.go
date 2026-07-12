@@ -31,12 +31,6 @@ func clampLife(value int64) int32 {
 	return int32(value)
 }
 
-// renderPlanVersion bumps when an opcode change is not byte-equal to v1.
-// v2 adds the “<dict>“ card-body deduplication opcodes (21-24); the v2
-// opcodes are additive and only appear when “cfg.dedupCardBodies“ is set,
-// so v2 emitters remain byte-equal to v1 until that flag is enabled.
-const renderPlanVersion = 2
-
 const (
 	opOpenState int32 = iota + 1
 	opCloseState
@@ -204,9 +198,6 @@ func zoneOwnerSlot(zone, owner int32) int {
 type encodeScratch struct {
 	cardIDToSlot     map[string]int64
 	renderIndex      renderPlanIndex
-	tokenPlan        []int32
-	tokenPlanLen     [1]int64
-	tokenPlanOvf     [1]int64
 	directEmitter    directTokenEmitter
 	directOut        tokenAssemblerOut
 	packedOptionPos  []int32
@@ -280,8 +271,6 @@ func (s *encodeScratch) reset() {
 	// Sparse-dense reset: only truncate the dense side. Stale dictSlotByRow
 	// entries are auto-rejected by the membership check, so this stays O(1).
 	idx.dictRowOrder = idx.dictRowOrder[:0]
-	s.tokenPlanLen[0] = 0
-	s.tokenPlanOvf[0] = 0
 }
 
 // ensureDictSparse grows dictSlotByRow so it can hold up to rowCount entries.
@@ -310,18 +299,6 @@ func (idx *renderPlanIndex) dictSlotFor(row int32) int32 {
 	idx.dictRowOrder = append(idx.dictRowOrder, row)
 	idx.dictSlotByRow[row] = s
 	return s
-}
-
-func (s *encodeScratch) internalRenderPlanView(capacity int64) outputViews {
-	if int64(cap(s.tokenPlan)) < capacity {
-		s.tokenPlan = make([]int32, capacity)
-	}
-	s.tokenPlan = s.tokenPlan[:capacity]
-	return outputViews{
-		renderPlan:         s.tokenPlan,
-		renderPlanLengths:  s.tokenPlanLen[:],
-		renderPlanOverflow: s.tokenPlanOvf[:],
-	}
 }
 
 func fillRenderPlan(batchIdx int64, state *apiGameState, pending *apiPending, playerIdx int, cfg encodeConfig, view outputViews, scratch *encodeScratch) *encodeError {

@@ -45,7 +45,6 @@ type replay struct {
 
 	// First fatal divergence causes replay to bail; record it.
 	divergence string
-	gameErr    error
 
 	// warnings accumulate non-fatal diffs (currently: playable-action
 	// mismatches between GetPlayableLands+GetCastableSpells and XMage's

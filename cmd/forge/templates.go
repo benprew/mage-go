@@ -93,17 +93,6 @@ var creatureCurve = map[int]map[Rarity]float64{
 	8: {Common: 0.00, Uncommon: 0.00, Rare: 0.04},
 }
 
-// Spell CMC curve weights.
-var spellCurve = map[int]map[Rarity]float64{
-	1: {Common: 0.20, Uncommon: 0.15, Rare: 0.10},
-	2: {Common: 0.30, Uncommon: 0.25, Rare: 0.18},
-	3: {Common: 0.25, Uncommon: 0.25, Rare: 0.22},
-	4: {Common: 0.15, Uncommon: 0.18, Rare: 0.20},
-	5: {Common: 0.08, Uncommon: 0.12, Rare: 0.16},
-	6: {Common: 0.02, Uncommon: 0.05, Rare: 0.10},
-	7: {Common: 0.00, Uncommon: 0.00, Rare: 0.04},
-}
-
 // Enchantment CMC curve weights.
 var enchantmentCurve = map[int]map[Rarity]float64{
 	1: {Common: 0.15, Uncommon: 0.10, Rare: 0.08},

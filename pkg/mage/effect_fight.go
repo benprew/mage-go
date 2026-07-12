@@ -70,9 +70,8 @@ func (*fightTargetEffect) Apply(ctx *EffectContext) error {
 // permanent ID as SourceID. The trigger is one-shot. The permID can be
 // supplied directly or read from a TargetVar saved on the EffectContext.
 type onPermanentDiesEffect struct {
-	permID    uuid.UUID
-	targetVar string
-	effects   []Effect
+	permID  uuid.UUID
+	effects []Effect
 }
 
 // OnPermanentDiesThisTurn registers a one-shot delayed trigger that fires

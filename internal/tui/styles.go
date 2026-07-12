@@ -33,18 +33,8 @@ var (
 			Foreground(colorDim).
 			PaddingLeft(1)
 
-	permStyle = lipgloss.NewStyle().
-			Foreground(colorWhite)
-
 	tappedPermStyle = lipgloss.NewStyle().
 			Foreground(colorTapped)
-
-	sickPermStyle = lipgloss.NewStyle().
-			Foreground(colorDim)
-
-	attackingPermStyle = lipgloss.NewStyle().
-				Foreground(colorRed).
-				Bold(true)
 
 	handCardStyle = lipgloss.NewStyle().
 			Foreground(colorWhite)

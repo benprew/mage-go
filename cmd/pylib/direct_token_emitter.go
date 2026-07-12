@@ -45,12 +45,6 @@ type directTokenEmitter struct {
 	scalarOwnerOpen int32
 }
 
-func newDirectTokenEmitter(tables *tokenTables, out *tokenAssemblerOut, maxTokens int32, dirty *directDirtyState) *directTokenEmitter {
-	e := &directTokenEmitter{}
-	e.reset(tables, out, maxTokens, dirty)
-	return e
-}
-
 // reset re-binds an emitter to a new output row and clears the per-row
 // state. Uses the row's directDirtyState to clear ONLY slots dirtied by
 // the previous run on this row: clear() (memclr) for the mask arrays,
@@ -256,90 +250,6 @@ func (e *directTokenEmitter) emitCloseZone(zone, owner int32) {
 	e.closeScalarOwner()
 	e.closeOption()
 	e.writeSpan(e.tables.zoneCloseSpan(zone, owner))
-}
-
-func (e *directTokenEmitter) emitOpenActions() {
-	e.closeScalarOwner()
-	e.emitFragment(fragOpenActions)
-}
-
-func (e *directTokenEmitter) emitCloseActions() {
-	e.closeScalarOwner()
-	e.closeOption()
-	e.emitFragment(fragCloseActions)
-}
-
-func (e *directTokenEmitter) emitOption(kindID, sourceRow, sourceUUIDIdx, abilityIdx int32) error {
-	e.closeScalarOwner()
-	e.closeOption()
-	pos := e.writeSingle(e.tables.optionID)
-	if pos >= 0 && e.nextOption < e.out.maxOptions {
-		e.out.optionPos[e.nextOption] = pos + e.out.cursorBase
-		e.out.optionMask[e.nextOption] = 1
-		e.curOptionIdx = e.nextOption
-		e.curTargetCount = 0
-		e.nextOption++
-	}
-	e.optionOpen = true
-
-	verbSpan := e.tables.actionVerbSpan(kindID)
-	kindKnown := verbSpan != nil
-	var flags uint8
-	if kindID >= 0 && int(kindID) < len(kindFlags) {
-		flags = kindFlags[kindID]
-	}
-	if kindKnown {
-		e.writeSpan(verbSpan)
-	}
-	if kindKnown && flags&kindFlagHasSource != 0 {
-		if !e.emitCardRef(sourceUUIDIdx) {
-			if sourceRow >= 0 && sourceRow < e.tables.cardRowCount {
-				e.writeSpan(e.tables.cardNameSpan(sourceRow))
-			}
-		}
-	}
-	if abilityIdx >= 0 && flags&kindFlagAbility != 0 {
-		span := e.tables.abilitySpan(abilityIdx)
-		if span == nil {
-			return fmt.Errorf(
-				"OP_OPTION out of bounds: ability=%d (range %d..%d)",
-				abilityIdx, e.tables.abilityMin, e.tables.abilityMax,
-			)
-		}
-		e.writeSpan(span)
-	}
-	return nil
-}
-
-func (e *directTokenEmitter) emitTarget(targetRow, targetUUIDIdx, targetKind int32) {
-	e.closeScalarOwner()
-	pos := e.writeSingle(e.tables.targetOpenID)
-	if pos >= 0 && e.curOptionIdx >= 0 && e.curTargetCount < e.out.maxTargets {
-		idx := e.curOptionIdx*e.out.maxTargets + e.curTargetCount
-		e.out.targetPos[idx] = pos + e.out.cursorBase
-		e.out.targetMask[idx] = 1
-		e.curTargetCount++
-		if idx+1 > e.maxTargetSlot {
-			e.maxTargetSlot = idx + 1
-		}
-	}
-	switch targetKind {
-	case renderTargetPlayer:
-		if targetRow == renderOwnerSelf {
-			e.writeSingle(e.tables.selfID)
-		} else {
-			e.writeSingle(e.tables.oppID)
-		}
-	default:
-		if !e.emitCardRef(targetUUIDIdx) {
-			if targetRow >= 0 && targetRow < e.tables.cardRowCount {
-				e.writeSpan(e.tables.cardNameSpan(targetRow))
-			} else {
-				e.emitFragment(fragTargetFallback)
-			}
-		}
-	}
-	e.writeSingle(e.tables.targetCloseID)
 }
 
 func (e *directTokenEmitter) emitCount(amount int32) error {

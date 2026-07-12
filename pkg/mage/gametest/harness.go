@@ -53,9 +53,6 @@ type castAction struct {
 
 	// fired becomes true once the handler has popped this action.
 	fired bool
-	// responsesReleased becomes true once this cast's spell has been
-	// observed on top of the stack and its responses have been enqueued.
-	responsesReleased bool
 }
 
 type responseAction struct {
@@ -65,16 +62,7 @@ type responseAction struct {
 	targets []string
 	xValue  int
 
-	// parentCastIdx is the index into tg.castActions of the parent cast.
-	// A response is gated on the parent's spell being the current top of
-	// the stack (by name match), meaning no later spell/ability has been
-	// layered on top of it.
-	parentCastIdx int
-	// nextResponseIdx is the index of this response within its parent's
-	// responses slice; the response is only eligible once all prior
-	// responses in that slice have already fired, preserving scripted order.
-	nextResponseIdx int
-	fired           bool
+	fired bool
 }
 
 type activateAction struct {
@@ -865,8 +853,8 @@ func (tg *TestGame) buildPriorityActionForActivate(idx int) (mage.PriorityAction
 
 // popResponseFor looks up a queued response whose parent cast is currently
 // the top object on the stack (by card ID) and whose responder matches the
-// player currently being asked for priority. Responses fire in the scripted
-// order within their parent (nextResponseIdx guard).
+// player currently being asked for priority. Responses fire in their scripted
+// slice order.
 func (tg *TestGame) popResponseFor(topSourceID uuid.UUID, ref PlayerRef) *responseAction {
 	for ci := range tg.castActions {
 		ca := &tg.castActions[ci]

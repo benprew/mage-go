@@ -391,10 +391,6 @@ func filterKeywords(keywords []Keyword, pie ColorPie, minAffinity float64) []Key
 }
 
 func generateETBAbility(pie ColorPie, budget float64, rng *RNG) string {
-	type etbOption struct {
-		name   string
-		weight float64
-	}
 	var options []WeightedOption[string]
 	tryAdd := func(name string, et EffectType) {
 		if w := pie.EffectAccess[et]; w > 0.05 {

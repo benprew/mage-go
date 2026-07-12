@@ -15,8 +15,6 @@ func isBasicLand(c Card) bool { return basicLandNames[c.Name()] }
 
 func isLandCard(c Card) bool { return c.HasType(TypeLand) }
 
-func isCreatureCardLocal(c Card) bool { return c.HasType(TypeCreature) }
-
 // searchBasicLandToBattlefieldTapped searches the controller's library for a
 // basic land card and puts it onto the battlefield tapped, then shuffles.
 func searchBasicLandToBattlefieldTapped(g *Game, controller uuid.UUID) {
