@@ -16,6 +16,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	input := flag.String("input", "", "JSONL file to analyze (default: stdin)")
 	verbose := flag.Bool("verbose", false, "show details for each flagged game")
 	flag.Parse()
@@ -25,7 +29,7 @@ func main() {
 		f, err := os.Open(*input)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		defer func() { _ = f.Close() }()
 		scanner = bufio.NewScanner(f)
@@ -51,15 +55,16 @@ func main() {
 	}
 	if err := scanner.Err(); err != nil {
 		fmt.Fprintf(os.Stderr, "error reading input: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
 	if len(results) == 0 {
 		fmt.Println("No games to analyze.")
-		return
+		return 0
 	}
 
 	analyze(results, *verbose)
+	return 0
 }
 
 func analyze(results []scenario.GameResult, verbose bool) {

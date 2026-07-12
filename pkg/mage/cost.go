@@ -46,7 +46,9 @@ func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
 		return ErrPlayerNotFound
 	}
 	mc := c.reducedCost(sourceID, g)
-	g.AutoTapForCost(controller, mc)
+	if err := g.AutoTapForCost(controller, mc); err != nil {
+		return err
+	}
 	return p.ManaPool().Pay(mc, nil)
 }
 
