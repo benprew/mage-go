@@ -230,7 +230,7 @@ func registerEnchantments() {
 						}
 						animated := g.FindPermanent(view.ViewAttachedTo())
 						if animated != nil {
-							g.Sacrifice(animated)
+							g.DoSacrifice(animated)
 						}
 						return nil
 					}), false)),

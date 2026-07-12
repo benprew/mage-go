@@ -37,7 +37,7 @@ func (c *sacrificeCreatureCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g 
 		return fmt.Errorf("no creature to sacrifice")
 	}
 	g.SetXValue(chosen.Card.ManaCost().CMC())
-	g.Sacrifice(chosen)
+	g.DoSacrifice(chosen)
 	return nil
 }
 

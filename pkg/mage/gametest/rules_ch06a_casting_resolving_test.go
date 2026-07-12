@@ -619,7 +619,7 @@ func TestCR604_2_StaticStopsWhenPermanentLeaves(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Ch06 Knight")
 
 	crusade := g.FindPermanent(crusadeID)
-	g.Sacrifice(crusade)
+	g.DoSacrifice(crusade)
 	g.Effects.Apply(g.Game)
 
 	// Knight back to 2/2 after Crusade leaves.

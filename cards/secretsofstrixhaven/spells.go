@@ -1790,7 +1790,7 @@ func registerSpells() {
 						}
 						chosen := opp.ChoosePermanent(nonTokenArtifacts, "sacrifice a nontoken artifact", g)
 						if chosen != nil {
-							g.Sacrifice(chosen)
+							g.DoSacrifice(chosen)
 						}
 						return nil
 					},
@@ -2215,7 +2215,7 @@ func registerSpells() {
 							if chosen == nil {
 								chosen = lands[0]
 							}
-							g.Sacrifice(chosen)
+							g.DoSacrifice(chosen)
 						}
 						// Search for four basic land cards and put them onto the battlefield tapped.
 						for range 4 {
@@ -2278,7 +2278,7 @@ func registerSpells() {
 								if chosen == nil {
 									chosen = candidates[0]
 								}
-								g.Sacrifice(chosen)
+								g.DoSacrifice(chosen)
 							}
 						}
 						return nil
@@ -3050,7 +3050,7 @@ func registerSpells() {
 					}
 					chosen := p.ChoosePermanent(candidates, "sacrifice a creature", g)
 					if chosen != nil {
-						g.Sacrifice(chosen)
+						g.DoSacrifice(chosen)
 					}
 				}
 				// Each opponent loses 1 life and you gain 1 life.
@@ -3725,7 +3725,7 @@ func registerSpells() {
 							if chosen == nil {
 								return nil
 							}
-							g.Sacrifice(chosen)
+							g.DoSacrifice(chosen)
 							g.PlayerDrawCard(p)
 							g.PlayerDrawCard(p)
 							return nil

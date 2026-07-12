@@ -306,7 +306,7 @@ func registerCreatures() {
 										}
 										perm := g.FindPermanent(targets[0])
 										if perm != nil {
-											g.Sacrifice(perm)
+											g.DoSacrifice(perm)
 										}
 										return nil
 									})},

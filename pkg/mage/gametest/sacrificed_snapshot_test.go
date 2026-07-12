@@ -28,6 +28,9 @@ func registerSacrificedSnapshotCards() {
 								if snap == nil || len(targets) == 0 {
 									return nil
 								}
+								if !snap.HasType(core.TypeCreature) {
+									return nil
+								}
 								if pl := g.GetPlayer(targets[0]); pl != nil {
 									g.DealDamageToPlayer(pl, snap.Power, sourceID)
 									return nil

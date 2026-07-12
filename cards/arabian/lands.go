@@ -95,7 +95,7 @@ func registerLands() {
 							return nil
 						}
 						toughness := chosen.CurrentToughness(g)
-						g.Sacrifice(chosen)
+						g.DoSacrifice(chosen)
 						g.PlayerGainLife(p, toughness)
 						return nil
 					}),

@@ -459,7 +459,7 @@ func registerArtifacts() {
 						var srcCard Card
 						if src != nil {
 							srcCard = src.Card
-							g.Sacrifice(src)
+							g.DoSacrifice(src)
 						}
 						// Let player choose any number of creatures to sacrifice
 						var totalPower int
@@ -479,7 +479,7 @@ func registerArtifacts() {
 							}
 							totalPower += chosen.CurrentPower(g)
 							sacrificedCards = append(sacrificedCards, chosen.Card)
-							g.Sacrifice(chosen)
+							g.DoSacrifice(chosen)
 						}
 						// Deal damage
 						if totalPower > 0 {

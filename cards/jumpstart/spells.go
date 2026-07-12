@@ -2168,7 +2168,7 @@ func eachPlayerSacrificesNCreatures(n int) Effect {
 					if chosen == nil {
 						break
 					}
-					g.Sacrifice(chosen)
+					g.DoSacrifice(chosen)
 				}
 			}
 			return nil

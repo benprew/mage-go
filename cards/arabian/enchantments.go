@@ -52,7 +52,7 @@ func registerEnchantments() {
 									g.DealDamageToPlayer(p, count, sourceID)
 								}
 							} else {
-								g.Sacrifice(perm)
+								g.DoSacrifice(perm)
 							}
 							return nil
 						}), false,
@@ -76,7 +76,7 @@ func registerEnchantments() {
 							if len(creatures) == 0 {
 								src := g.FindPermanent(sourceID)
 								if src != nil {
-									g.Sacrifice(src)
+									g.DoSacrifice(src)
 								}
 								return nil
 							}

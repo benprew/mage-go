@@ -621,7 +621,7 @@ func (e *sacrificeOrDamageEffect) Apply(ctx *EffectContext) error {
 		player := ctx.Game.GetPlayer(ctx.Controller)
 		chosen := player.ChoosePermanent(candidates, "sacrifice", ctx.Game)
 		if chosen != nil {
-			ctx.Game.Sacrifice(chosen)
+			ctx.Game.DoSacrifice(chosen)
 			return nil
 		}
 	}

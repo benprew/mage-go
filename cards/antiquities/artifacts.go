@@ -220,7 +220,7 @@ func registerArtifacts() {
 							}
 						}
 						for _, perm := range toSacrifice {
-							g.Sacrifice(perm)
+							g.DoSacrifice(perm)
 						}
 						return nil
 					}),

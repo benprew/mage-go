@@ -688,7 +688,7 @@ func TestAttachmentsOnSacrifice(t *testing.T) {
 		tg.Attach(auraID, crID)
 
 		perm := tg.FindPermanent(crID)
-		tg.Sacrifice(perm)
+		tg.DoSacrifice(perm)
 		tg.CheckStateBasedActions()
 
 		tg.AssertPermanentCount(PlayerA, crName, 0)
@@ -703,7 +703,7 @@ func TestAttachmentsOnSacrifice(t *testing.T) {
 		tg.Attach(equipID, crID)
 
 		perm := tg.FindPermanent(crID)
-		tg.Sacrifice(perm)
+		tg.DoSacrifice(perm)
 		tg.CheckStateBasedActions()
 
 		tg.AssertPermanentCount(PlayerA, crName, 0)

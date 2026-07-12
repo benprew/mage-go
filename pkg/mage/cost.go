@@ -217,28 +217,6 @@ func (c *requireCountersCost) Text() string {
 	return fmt.Sprintf("Requires %d+ %s counter(s)", c.amount, c.ct)
 }
 
-// sacrificeSourceCost requires sacrificing the source.
-type sacrificeSourceCost struct{}
-
-// SacrificeSourceCost creates a cost that requires sacrificing the source permanent.
-func SacrificeSourceCost() Cost { return &sacrificeSourceCost{} }
-
-func (c *sacrificeSourceCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	return g.FindPermanent(sourceID) != nil
-}
-
-func (c *sacrificeSourceCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	p := g.FindPermanent(sourceID)
-	if p == nil {
-		return ErrSourceNotFound
-	}
-	g.CaptureSacrificed(p)
-	g.Sacrifice(p)
-	return nil
-}
-
-func (c *sacrificeSourceCost) Text() string { return "Sacrifice ~" }
-
 // lifePayCost requires paying life.
 type lifePayCost struct {
 	amount int
@@ -275,76 +253,6 @@ func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 func (c *lifePayCost) Text() string {
 	return fmt.Sprintf("Pay %d life", c.amount)
 }
-
-// sacrificeMatchingCost requires sacrificing count permanents you control matching a filter.
-type sacrificeMatchingCost struct {
-	filter PermanentFilter
-	text   string
-	count  int
-}
-
-// SacrificeMatchingCost creates a cost that requires sacrificing a permanent you control
-// (other than the source) that matches the given filter.
-func SacrificeMatchingCost(filter PermanentFilter, text string) Cost {
-	return &sacrificeMatchingCost{filter: filter, text: text, count: 1}
-}
-
-// SacrificeNMatchingCost creates a cost that requires sacrificing n permanents you
-// control (other than the source) that match the given filter (e.g. Leviathan's
-// "sacrifice two Islands").
-func SacrificeNMatchingCost(n int, filter PermanentFilter, text string) Cost {
-	return &sacrificeMatchingCost{filter: filter, text: text, count: n}
-}
-
-// SacrificeArtifactCost creates a cost that requires sacrificing an artifact you control (other than the source).
-func SacrificeArtifactCost() Cost {
-	return SacrificeMatchingCost(IsArtifact, "Sacrifice an artifact")
-}
-
-// SacrificeCreatureCost creates a cost that requires sacrificing a creature you control (other than the source).
-func SacrificeCreatureCost() Cost {
-	return SacrificeMatchingCost(IsCreature, "Sacrifice a creature")
-}
-
-func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	found := 0
-	for _, p := range g.battlefield {
-		if p.ControllerID() == controller && p.ID() != sourceID && c.filter.Match(p, g) {
-			found++
-			if found >= c.count {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	if !c.CanPay(sourceID, controller, g) {
-		return fmt.Errorf("not enough permanents to sacrifice")
-	}
-	player := g.GetPlayer(controller)
-	for i := 0; i < c.count; i++ {
-		var candidates []*Permanent
-		for _, p := range g.battlefield {
-			if p.ControllerID() == controller && p.ID() != sourceID && c.filter.Match(p, g) {
-				candidates = append(candidates, p)
-			}
-		}
-		if len(candidates) == 0 {
-			return fmt.Errorf("no permanent to sacrifice")
-		}
-		chosen := player.ChoosePermanent(candidates, c.text, g)
-		if chosen == nil {
-			return fmt.Errorf("no permanent chosen")
-		}
-		g.CaptureSacrificed(chosen)
-		g.Sacrifice(chosen)
-	}
-	return nil
-}
-
-func (c *sacrificeMatchingCost) Text() string { return c.text }
 
 // tapMatchingCost requires tapping an untapped permanent you control matching a filter.
 type tapMatchingCost struct {

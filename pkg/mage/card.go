@@ -309,7 +309,7 @@ func WithCumulativeUpkeep(costPerAge string) CardOption {
 						if g.TryPayCostFromLands(controller, totalCost.String()) {
 							return nil
 						}
-						g.Sacrifice(perm)
+						g.DoSacrifice(perm)
 						return nil
 					}), false,
 			),

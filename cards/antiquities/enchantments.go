@@ -149,7 +149,7 @@ func registerEnchantments() {
 								return nil
 							}
 							if !g.TryPayCostFromLands(controller, "{2}") {
-								g.Sacrifice(perm)
+								g.DoSacrifice(perm)
 							}
 							return nil
 						}),

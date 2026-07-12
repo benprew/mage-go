@@ -133,7 +133,7 @@ func TestKelsFightFixer_DrawOnSelfSacrifice(t *testing.T) {
 	if kels == nil {
 		t.Fatal("Kels not on battlefield")
 	}
-	g.Sacrifice(kels)
+	g.DoSacrifice(kels)
 	g.PutTriggersOnStack()
 	g.ResolveStack()
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)

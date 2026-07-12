@@ -40,4 +40,13 @@
 // ReturnTargetFromAnyGraveyardToBattlefield puts that card onto the battlefield
 // with the resolving effect's controller as its default controller. Later
 // control effects therefore expire back to that player rather than the owner.
+//
+// # Sacrifice
+//
+// Sacrifice performs the named action and fires both its battlefield-to-
+// graveyard zone-change event and EvtSacrifice. SacrificeSource,
+// SacrificeTarget, and SacrificeGathered provide resolving effects;
+// SacrificeSourceCost and SacrificeMatchingCost provide costs. Sacrifice costs
+// record the sacrificed object's ID; resolving effects can read its generic
+// PermanentLKI, including power and toughness, with LastSacrificed.
 package mage

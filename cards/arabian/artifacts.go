@@ -157,7 +157,7 @@ func registerArtifacts() {
 								if p.IsToken {
 									continue
 								}
-								g.Sacrifice(p)
+								g.DoSacrifice(p)
 							}
 							return nil
 						}),
@@ -178,7 +178,7 @@ func registerArtifacts() {
 								if p.IsToken {
 									continue
 								}
-								g.Sacrifice(p)
+								g.DoSacrifice(p)
 							}
 							return nil
 						}),

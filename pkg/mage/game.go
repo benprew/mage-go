@@ -193,12 +193,12 @@ type Game struct {
 	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
 	resolvingDamageDistribution map[uuid.UUID]int
 
-	// LKI snapshot of the most recently sacrificed permanent paid as a cost
+	// ID of the most recently sacrificed permanent paid as a cost
 	// for the spell or ability currently on the stack. Set by SacrificeSourceCost,
 	// SacrificeMatchingCost, and SacrificeCreatureCost; read by effects via
 	// LastSacrificed(). Cleared at the start of each cost-pay cycle and after
-	// resolution.
-	lastSacrificed *SacrificedSnapshot
+	// resolution. The permanent's state is stored in the generic LKI map.
+	lastSacrificedID uuid.UUID
 
 	// LKI snapshots for permanents that have left the battlefield, keyed by
 	// permanent ID. Populated by RemoveFromBattlefield so that death/leave
@@ -1260,60 +1260,6 @@ func (g *Game) MoveCardsFromGraveyard(playerID uuid.UUID, cardIDs []uuid.UUID, t
 	return removed
 }
 
-// Sacrifice sacrifices a permanent (like destroy but doesn't check
-// indestructible). Self-referential triggers fire from the LKI snapshot's
-// captured abilities (CR 700.4 / 603.6c: any battlefield → graveyard
-// transition is "put into a graveyard," including sacrifice).
-func (g *Game) Sacrifice(perm *Permanent) {
-	controller := perm.ControllerID()
-	owner := perm.Card.Owner()
-	if owner == uuid.Nil {
-		owner = controller
-	}
-
-	isCreature := perm.HasType(TypeCreature)
-	isToken := perm.IsToken
-	permID := perm.ID()
-	card := perm.Card
-
-	g.RemoveFromBattlefield(perm)
-	selfTriggers := g.LKIAbilities(permID)
-
-	if !isToken {
-		p := g.GetPlayer(owner)
-		if p != nil {
-			p.AddToGraveyard(card)
-		}
-	}
-
-	zoneEvt := GameEvent{
-		Type:     EvtZoneChange,
-		SourceID: permID,
-		PlayerID: controller,
-		Flag:     true, // sacrifice path (vs. destroy/SBA)
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
-	}
-	g.FireEvent(zoneEvt)
-	g.checkAbilitiesForEvent(selfTriggers, &zoneEvt, permID, controller)
-
-	sacEvt := GameEvent{
-		Type:     EvtSacrifice,
-		SourceID: permID,
-		PlayerID: controller,
-		Flag:     isCreature, // Flag=true means the sacrificed permanent was a creature
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
-	}
-	g.FireEvent(sacEvt)
-	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
-
-	if isCreature {
-		g.creatureDeathsThisTurn++
-		g.recordCreatureDeath(controller)
-	}
-}
-
 // PlayerDiscard removes a card from the player's hand into their graveyard and
 // fires EvtDiscard. SourceID = card ID, PlayerID = discarding player.
 // Returns the card and true on success.
@@ -1364,25 +1310,6 @@ func (g *Game) PlayerGainLife(p Player, amount int) {
 	// If the result is still a LifeGainAction, gain the life
 	if lga, ok := result.(*LifeGainAction); ok {
 		p.GainLife(lga.Amount())
-	}
-}
-
-// sacrificePermanents sacrifices N nontoken permanents a player controls (for Lich).
-func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
-	sacrificed := 0
-	for sacrificed < count {
-		var target *Permanent
-		for _, p := range g.battlefield {
-			if p.ControllerID() == playerID {
-				target = p
-				break
-			}
-		}
-		if target == nil {
-			break
-		}
-		g.Sacrifice(target)
-		sacrificed++
 	}
 }
 
@@ -3274,7 +3201,7 @@ func (g *Game) CheckStateBasedActions() {
 			}
 		}
 		for _, p := range toSacrifice {
-			g.Sacrifice(p)
+			g.DoSacrifice(p)
 		}
 
 		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
@@ -3298,7 +3225,7 @@ func (g *Game) CheckStateBasedActions() {
 					keep := player.ChoosePermanent(perms, "legend rule: keep one", g)
 					for _, p := range perms {
 						if p != keep {
-							g.Sacrifice(p)
+							g.PutPermanentIntoGraveyard(p)
 						}
 					}
 					actions = true

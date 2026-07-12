@@ -640,7 +640,7 @@ func TestCR701_21_SacrificeMovesToGraveyard(t *testing.T) {
 							}
 							perm := g.FindPermanent(targets[0])
 							if perm != nil {
-								g.Sacrifice(perm)
+								g.DoSacrifice(perm)
 							}
 							return nil
 						},
@@ -689,7 +689,7 @@ func TestCR701_21_SacrificeRegenerationDoesNotApply(t *testing.T) {
 							}
 							perm := g.FindPermanent(targets[0])
 							if perm != nil {
-								g.Sacrifice(perm)
+								g.DoSacrifice(perm)
 							}
 							return nil
 						},
@@ -732,7 +732,7 @@ func TestCR701_21_IndestructibleCanBeSacrificed(t *testing.T) {
 							}
 							perm := g.FindPermanent(targets[0])
 							if perm != nil {
-								g.Sacrifice(perm)
+								g.DoSacrifice(perm)
 							}
 							return nil
 						},

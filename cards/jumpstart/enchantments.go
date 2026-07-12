@@ -656,7 +656,7 @@ func registerEnchantments() {
 						}
 						host := g.FindPermanent(src.AttachedTo)
 						if host != nil {
-							g.Sacrifice(host)
+							g.DoSacrifice(host)
 						}
 						token := NewToken("Myr", 1, 1,
 							[]CardType{TypeArtifact, TypeCreature}, []string{"Phyrexian", "Myr"})

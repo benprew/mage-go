@@ -138,31 +138,6 @@ func (e *exileTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-// sacrificeSourceEffect sacrifices the source permanent.
-type sacrificeSourceEffect struct{}
-
-// SacrificeSource creates an effect that sacrifices the source permanent.
-func SacrificeSource() Effect {
-	return &sacrificeSourceEffect{}
-}
-
-func (e *sacrificeSourceEffect) Text() string                 { return "sacrifice this permanent" }
-func (e *sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
-
-// sacrificeTargetEffect sacrifices the target permanent (targets[0]).
-type sacrificeTargetEffect struct{}
-
-// SacrificeTarget creates an effect that sacrifices the first target permanent.
-func SacrificeTarget() Effect {
-	return &sacrificeTargetEffect{}
-}
-
-// SacrificeTargetStep returns the Effect for use in pipelines/ForEach.
-func SacrificeTargetStep() Effect { return &sacrificeTargetEffect{} }
-
-func (e *sacrificeTargetEffect) Text() string                 { return "sacrifice target permanent" }
-func (e *sacrificeTargetEffect) Properties() EffectProperties { return EffectProperties{} }
-
 // balanceEffect equalizes lands, creatures, and hand sizes.
 type balanceEffect struct{}
 
@@ -191,18 +166,6 @@ func (e *chaosOrbEffect) Properties() EffectProperties {
 }
 
 // --- Executor functions (called from executor.go) ---
-
-func (*sacrificeTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.Sacrifice(perm)
-	return nil
-}
 
 func (*destroyTargetEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
@@ -354,15 +317,6 @@ func (*exileTargetEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (*sacrificeSourceEffect) Apply(ctx *EffectContext) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.Sacrifice(perm)
-	return nil
-}
-
 func (*balanceEffect) Apply(ctx *EffectContext) error {
 	g := ctx.Game
 	landCounts := make(map[uuid.UUID]int)
@@ -396,7 +350,7 @@ func (*balanceEffect) Apply(ctx *EffectContext) error {
 		for toSac > 0 {
 			for _, perm := range g.FilterBattlefield(And(ControlledBy(pid), IsLand)) {
 				if true {
-					g.Sacrifice(perm)
+					g.DoSacrifice(perm)
 					toSac--
 					break
 				}
@@ -410,7 +364,7 @@ func (*balanceEffect) Apply(ctx *EffectContext) error {
 		for toSac > 0 {
 			for _, perm := range g.FilterBattlefield(And(ControlledBy(pid), IsCreature)) {
 				if true {
-					g.Sacrifice(perm)
+					g.DoSacrifice(perm)
 					toSac--
 					break
 				}

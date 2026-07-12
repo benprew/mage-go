@@ -41,7 +41,7 @@ func (c *sacrificeArtifactCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g 
 		return fmt.Errorf("no artifact to sacrifice")
 	}
 	g.SetXValue(chosen.Card.ManaCost().CMC())
-	g.Sacrifice(chosen)
+	g.DoSacrifice(chosen)
 	return nil
 }
 
@@ -242,7 +242,7 @@ func registerCreatures() {
 						if len(candidates) > 0 && player.ChooseMayAbility("sacrifice an artifact") {
 							chosen := player.ChoosePermanent(candidates, "sacrifice", g)
 							if chosen != nil {
-								g.Sacrifice(chosen)
+								g.DoSacrifice(chosen)
 								return nil
 							}
 						}

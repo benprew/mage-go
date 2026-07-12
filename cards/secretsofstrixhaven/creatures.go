@@ -2280,7 +2280,7 @@ func registerCreatures() {
 						if chosen == nil {
 							return nil
 						}
-						g.Sacrifice(chosen)
+						g.DoSacrifice(chosen)
 						return nil
 					},
 				),
@@ -2618,7 +2618,7 @@ func registerCreatures() {
 						if chosen == nil {
 							return nil
 						}
-						g.Sacrifice(chosen)
+						g.DoSacrifice(chosen)
 						// Find the triggering spell on the stack.
 						var spellSourceID uuid.UUID
 						objs := g.GetStack().Objects()

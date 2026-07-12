@@ -440,14 +440,14 @@ func registerCreatures() {
 					if len(candidates) > 0 && player.ChooseMayAbility("sacrifice an Island") {
 						chosen := player.ChoosePermanent(candidates, "sacrifice Island", g)
 						if chosen != nil {
-							g.Sacrifice(chosen)
+							g.DoSacrifice(chosen)
 							return nil
 						}
 					}
 					// No Island or chose not to — sacrifice self and deal 6 damage
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
-						g.Sacrifice(perm)
+						g.DoSacrifice(perm)
 						p := g.GetPlayer(controller)
 						if p != nil {
 							g.DealDamageToPlayer(p, 6, sourceID)
@@ -942,7 +942,7 @@ func registerCreatures() {
 					if len(candidates) >= 2 && player.ChooseMayAbility("sacrifice two Swamps") {
 						first := player.ChoosePermanent(candidates, "sacrifice Swamp (1 of 2)", g)
 						if first != nil {
-							g.Sacrifice(first)
+							g.DoSacrifice(first)
 							// Refresh candidates after first sacrifice
 							remaining := g.FilterBattlefield(NewPermanentFilter("Swamp", func(p *Permanent, _ *Game) bool {
 								return p.ControllerID() == controller && p.HasSubType("Swamp")
@@ -950,7 +950,7 @@ func registerCreatures() {
 							if len(remaining) > 0 {
 								second := player.ChoosePermanent(remaining, "sacrifice Swamp (2 of 2)", g)
 								if second != nil {
-									g.Sacrifice(second)
+									g.DoSacrifice(second)
 									return nil
 								}
 							}
@@ -959,7 +959,7 @@ func registerCreatures() {
 					// Can't or chose not to sacrifice two Swamps — sacrifice self
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
-						g.Sacrifice(perm)
+						g.DoSacrifice(perm)
 					}
 					return nil
 				},
@@ -2954,7 +2954,7 @@ func registerCreatures() {
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					perm := g.FindPermanent(sourceID)
 					if perm != nil {
-						g.Sacrifice(perm)
+						g.DoSacrifice(perm)
 					}
 					return nil
 				},

@@ -193,7 +193,7 @@ func registerCreatures() {
 							// "When you control no lands, sacrifice this creature."
 							perm := g.FindPermanent(sourceID)
 							if perm != nil {
-								g.Sacrifice(perm)
+								g.DoSacrifice(perm)
 							}
 							return nil
 						}
@@ -203,7 +203,7 @@ func registerCreatures() {
 							chosen = lands[0]
 						}
 						wasIsland := chosen.HasSubType("Island")
-						g.Sacrifice(chosen)
+						g.DoSacrifice(chosen)
 						if wasIsland {
 							if player != nil {
 								g.DealDamageToPlayer(player, 3, sourceID)

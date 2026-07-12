@@ -150,27 +150,6 @@ func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-// SacrificeGatheredData sacrifices the permanent stored in a context variable.
-type SacrificeGatheredData struct{ VarName string }
-
-func SacrificeGathered(varName string) Effect { return &SacrificeGatheredData{VarName: varName} }
-
-func (e *SacrificeGatheredData) Text() string                 { return "sacrifice" }
-func (e *SacrificeGatheredData) Properties() EffectProperties { return EffectProperties{} }
-
-func (e *SacrificeGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.Sacrifice(perm)
-	return nil
-}
-
 // BounceGatheredData returns the permanent stored in a context variable to its owner's hand.
 type BounceGatheredData struct{ VarName string }
 
@@ -567,27 +546,6 @@ func (e *ChoosePermanentData) Apply(ctx *EffectContext) error {
 	ctx.SetInt(e.StoreAs+".power", chosen.CurrentPower(ctx.Game))
 	ctx.SetInt(e.StoreAs+".toughness", chosen.CurrentToughness(ctx.Game))
 	ctx.SetUUID(e.StoreAs+".controller", chosen.ControllerID())
-	return nil
-}
-
-// ---------------------------------------------------------------------------
-// SacrificeSource step (for pipelines — wraps the existing effect)
-// ---------------------------------------------------------------------------
-
-// SacrificeSourceData sacrifices the source permanent. Usable in pipelines.
-type SacrificeSourceData struct{}
-
-func SacrificeSourceStep() Effect { return &SacrificeSourceData{} }
-
-func (e *SacrificeSourceData) Text() string                 { return "sacrifice" }
-func (e *SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
-
-func (*SacrificeSourceData) Apply(ctx *EffectContext) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.Sacrifice(perm)
 	return nil
 }
 

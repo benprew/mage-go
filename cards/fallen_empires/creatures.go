@@ -572,7 +572,7 @@ func registerCreatures() {
 						if chosen == nil {
 							return nil
 						}
-						g.Sacrifice(src)
+						g.DoSacrifice(src)
 						chosen = g.MutablePermanent(chosen.ID())
 						if chosen == nil {
 							return nil

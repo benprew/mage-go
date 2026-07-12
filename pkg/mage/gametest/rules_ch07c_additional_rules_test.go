@@ -327,6 +327,31 @@ func TestCR704_5j_LegendRulePlayerChooses(t *testing.T) {
 	tg.AssertGraveyardCount(PlayerA, legName, 1)
 }
 
+func TestCR704_5j_LegendRuleDoesNotCountAsSacrifice(t *testing.T) {
+	registerTriggerLifeDiscardSacrificeCards()
+	const legName = "SBA Legend Rule Non-Sacrifice"
+	if !mage.CardRegistered(legName) {
+		mage.Register(legName, func() mage.Card {
+			return mage.NewCreature(legName, "{2}{W}", 3, 3,
+				mage.WithSuperTypes(core.SuperLegendary),
+			)
+		})
+	}
+
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Trig Sac Watcher")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, legName)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, legName)
+	tg.AddCard(core.ZoneLibrary, PlayerA, "Plains", 5)
+	tg.StopAt(1, core.PrecombatMain)
+	tg.Execute()
+
+	tg.AssertPermanentCount(PlayerA, legName, 1)
+	if got := len(tg.GetPlayer(PlayerA).Library()); got != 5 {
+		t.Fatalf("legend rule must not trigger sacrifice abilities: library size = %d, want 5", got)
+	}
+}
+
 // TestCR704_5j_LegendRuleDifferentControllers verifies that two players each controlling their own copy
 // of a legendary permanent is legal — no legend rule fires (CR 704.5j).
 func TestCR704_5j_LegendRuleDifferentControllers(t *testing.T) {

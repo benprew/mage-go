@@ -3347,7 +3347,7 @@ func registerCreatures() {
 						}
 						chosen := active.ChoosePermanent(creatures, "sacrifice a creature", g)
 						if chosen != nil {
-							g.Sacrifice(chosen)
+							g.DoSacrifice(chosen)
 						}
 						return nil
 					}),
@@ -3608,7 +3608,7 @@ func registerCreatures() {
 							}
 							chosen := pl.ChoosePermanent(creatures, "sacrifice a creature", g)
 							if chosen != nil {
-								g.Sacrifice(chosen)
+								g.DoSacrifice(chosen)
 							}
 						}
 						you := g.GetPlayer(controller)
@@ -3675,7 +3675,7 @@ func registerCreatures() {
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
 					if perm := g.FindPermanent(sourceID); perm != nil {
-						g.Sacrifice(perm)
+						g.DoSacrifice(perm)
 					}
 					return nil
 				},
