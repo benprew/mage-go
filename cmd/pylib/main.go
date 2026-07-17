@@ -16,7 +16,7 @@ package main
 #include <stdlib.h>
 #include "abi.h"
 */
-import "C"
+import "C" //nolint:gocritic // C and unsafe are distinct despite cgo's synthetic package metadata.
 
 import (
 	"encoding/json"
@@ -27,7 +27,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"unsafe"
+	"unsafe" //nolint:gocritic // Required for C buffer views; this is not a duplicate C import.
 
 	"github.com/google/uuid"
 
@@ -639,8 +639,9 @@ func routeAction(h *handle, req actionRequest) error {
 		msg := ev.Msg
 		switch msg.Prompt {
 		case interactive.PromptMainPhaseAction, interactive.PromptPriority:
-			if err := validatePriorityAction(req, msg.Options); err != nil {
-				return err
+			validationErr := validatePriorityAction(req, msg.Options)
+			if validationErr != nil {
+				return validationErr
 			}
 			pa, err := buildPriorityAction(req)
 			if err != nil {
@@ -1038,8 +1039,9 @@ func MageNewGame(cfgJSON *C.char) (id C.int64_t, resp *C.char) {
 	}()
 
 	var req newGameRequest
-	if err := json.Unmarshal([]byte(C.GoString(cfgJSON)), &req); err != nil {
-		return -1, errResponse("parse config: %v", err)
+	unmarshalErr := json.Unmarshal([]byte(C.GoString(cfgJSON)), &req)
+	if unmarshalErr != nil {
+		return -1, errResponse("parse config: %v", unmarshalErr)
 	}
 	if req.HandSize == 0 {
 		req.HandSize = 7
@@ -1186,12 +1188,14 @@ func MageStep(id C.int64_t, actionJSON *C.char) (resp *C.char) {
 	}
 
 	var req actionRequest
-	if err := json.Unmarshal([]byte(C.GoString(actionJSON)), &req); err != nil {
-		return errResponse("parse action: %v", err)
+	unmarshalErr := json.Unmarshal([]byte(C.GoString(actionJSON)), &req)
+	if unmarshalErr != nil {
+		return errResponse("parse action: %v", unmarshalErr)
 	}
 
-	if err := routeAction(h, req); err != nil {
-		return errResponse("%v", err)
+	routeErr := routeAction(h, req)
+	if routeErr != nil {
+		return errResponse("%v", routeErr)
 	}
 
 	ev := waitForNext(h)
@@ -1256,8 +1260,9 @@ func MageSetCardNameRows(cardNameRowsJSON *C.char) *C.char {
 		return errResponse("null card mapping")
 	}
 	var rows map[string]int64
-	if err := json.Unmarshal([]byte(C.GoString(cardNameRowsJSON)), &rows); err != nil {
-		return errResponse("parse card mapping: %v", err)
+	unmarshalErr := json.Unmarshal([]byte(C.GoString(cardNameRowsJSON)), &rows)
+	if unmarshalErr != nil {
+		return errResponse("parse card mapping: %v", unmarshalErr)
 	}
 	setCardRowOverrides(rows)
 	return toCStringResponse(apiResponse{OK: true})
@@ -1419,9 +1424,10 @@ func MageBatchStepByChoice(req *C.MageStepChoiceRequest) (res C.MageEncodeResult
 			pendingActionTiming += time.Since(phaseStart)
 			phaseStart = time.Now()
 		}
-		if err := routeAction(h, action); err != nil {
+		routeErr := routeAction(h, action)
+		if routeErr != nil {
 			h.mu.Unlock()
-			return newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("handle %d: %v", handleID, err))
+			return newEncodeResult(0, mageEncodeErrEncodeFailure, fmt.Sprintf("handle %d: %v", handleID, routeErr))
 		}
 		if timingEnabled {
 			routeTiming += time.Since(phaseStart)
@@ -1540,9 +1546,10 @@ func MageBatchStepByDecoderAction(req *C.MageDecoderStepRequest) (res C.MageEnco
 			rowStart := int64(i) * maxAnchors
 			anchorSlice = anchorHandles[rowStart : rowStart+ac]
 		}
-		if err := applyDecoderAction(dt, tokSlice, ptrSlice, isPtrSlice, anchorSlice, h); err != nil {
+		applyErr := applyDecoderAction(dt, tokSlice, ptrSlice, isPtrSlice, anchorSlice, h)
+		if applyErr != nil {
 			h.mu.Unlock()
-			fmt.Printf("MageBatchStepByDecoderAction: env %d apply failed: %v, skipping\n", i, err)
+			fmt.Printf("MageBatchStepByDecoderAction: env %d apply failed: %v, skipping\n", i, applyErr)
 			continue
 		}
 		ev := waitForNext(h)
@@ -1613,7 +1620,8 @@ func MageNativeTimingSummary(reset C.int32_t) *C.char {
 //export MageRegisterTokenTables
 func MageRegisterTokenTables(tables *C.MageTokenTables) C.int32_t {
 	defer func() { _ = recover() }()
-	if err := registerTokenTables(tables); err != nil {
+	registerErr := registerTokenTables(tables)
+	if registerErr != nil {
 		// Error path: keep prior registration intact, surface the code as
 		// nonzero. We use 1 generically; the message is logged only in tests.
 		return C.int32_t(1)

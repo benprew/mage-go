@@ -293,7 +293,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 	if timingEnabled {
 		clearStart = time.Now()
 	}
-	clearOutputViews(views, cfg)
+	clearOutputViews(views)
 	if timingEnabled {
 		clearTiming = time.Since(clearStart)
 	}
@@ -464,7 +464,7 @@ func encodeBatchGo(req batchRequest, cfg encodeConfig, views outputViews) (int64
 
 func encodeBatchGoPackedParallel(req batchRequest, cfg encodeConfig, views outputViews) (int64, *encodeError) {
 	callStart := time.Now()
-	clearOutputViews(views, cfg)
+	clearOutputViews(views)
 	if len(views.packedCuSeqlens) > 0 {
 		views.packedCuSeqlens[0] = 0
 	}
@@ -691,33 +691,33 @@ func compactPackedRows(views outputViews, cfg encodeConfig) *encodeError {
 	return nil
 }
 
-func clearOutputViews(view outputViews, cfg encodeConfig) {
+func clearOutputViews(view outputViews) {
 	fillInt64(view.traceKindID, 0)
 	fillInt64(view.slotCardRows, 0)
-	fillFloat32(view.slotOccupied, 0)
-	fillFloat32(view.slotTapped, 0)
-	fillFloat32(view.gameInfo, 0)
+	clear(view.slotOccupied)
+	clear(view.slotTapped)
+	clear(view.gameInfo)
 	fillInt64(view.pendingKindID, 0)
 	fillInt64(view.numPresentOptions, 0)
 	fillInt64(view.optionKindIDs, 0)
-	fillFloat32(view.optionScalars, 0)
-	fillFloat32(view.optionMask, 0)
+	clear(view.optionScalars)
+	clear(view.optionMask)
 	fillInt64(view.optionRefSlotIdx, -1)
 	fillInt64(view.optionRefCardRow, -1)
-	fillFloat32(view.targetMask, 0)
+	clear(view.targetMask)
 	fillInt64(view.targetTypeIDs, unknownTargetID)
-	fillFloat32(view.targetScalars, 0)
-	fillFloat32(view.targetOverflow, 0)
+	clear(view.targetScalars)
+	clear(view.targetOverflow)
 	fillInt64(view.targetRefSlotIdx, -1)
-	fillBytes(view.targetRefIsPlayer, 0)
-	fillBytes(view.targetRefIsSelf, 0)
-	fillBytes(view.mayMask, 0)
+	clear(view.targetRefIsPlayer)
+	clear(view.targetRefIsSelf)
+	clear(view.mayMask)
 	fillInt64(view.decisionStart, 0)
 	fillInt64(view.decisionCount, 0)
 	fillInt64(view.decisionOptionIdx, -1)
 	fillInt64(view.decisionTargetIdx, -1)
-	fillBytes(view.decisionMask, 0)
-	fillBytes(view.usesNoneHead, 0)
+	clear(view.decisionMask)
+	clear(view.usesNoneHead)
 	fillInt32(view.renderPlan, 0)
 	fillInt64(view.renderPlanLengths, 0)
 	fillInt64(view.renderPlanOverflow, 0)
@@ -1490,18 +1490,6 @@ func setCardRowOverrides(rows map[string]int64) {
 }
 
 func fillInt64(dst []int64, value int64) {
-	for i := range dst {
-		dst[i] = value
-	}
-}
-
-func fillFloat32(dst []float32, value float32) {
-	for i := range dst {
-		dst[i] = value
-	}
-}
-
-func fillBytes(dst []byte, value byte) {
 	for i := range dst {
 		dst[i] = value
 	}

@@ -84,9 +84,7 @@ func TestEmitDecisionSpec_Priority(t *testing.T) {
 		Kind:    "priority",
 		Options: []apiOption{{Kind: "pass"}, {Kind: "play_land"}, {Kind: "cast_spell"}},
 	}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	want := []int32{
 		ids.specOpen, ids.decisionType, ids.dtName[decTypePriority],
 		ids.legalAction, ids.legalAction, ids.legalAction,
@@ -131,9 +129,7 @@ func TestEmitDecisionSpec_DeclareAttackers(t *testing.T) {
 			{Kind: "attacker", PermanentUUID: uuid.New()},
 		},
 	}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	want := []int32{
 		ids.specOpen, ids.decisionType, ids.dtName[decTypeDeclareAttackers],
 		ids.legalAttacker, ids.legalAttacker,
@@ -184,9 +180,7 @@ func TestEmitDecisionSpec_DeclareBlockers(t *testing.T) {
 			}},
 		},
 	}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	// Expected token stream: open, dt, dt-name, blocker, blocker,
 	// attacker, attacker, close.
 	wantTokens := []int32{
@@ -238,9 +232,7 @@ func TestEmitDecisionSpec_ChooseTargets(t *testing.T) {
 			{Kind: "choice", IDUUID: uuid.New()},
 		},
 	}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	want := []int32{
 		ids.specOpen, ids.decisionType, ids.dtName[decTypeChooseTargets],
 		ids.legalTarget, ids.legalTarget, ids.legalTarget,
@@ -259,9 +251,7 @@ func TestEmitDecisionSpec_May(t *testing.T) {
 	ids := testSpecIDs()
 	out := newSpecOut()
 	pending := &apiPending{Kind: "may"}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	want := []int32{
 		ids.specOpen, ids.decisionType, ids.dtName[decTypeMay],
 		ids.specClose,
@@ -282,9 +272,7 @@ func TestEmitDecisionSpec_ChooseMode(t *testing.T) {
 		Kind:    "mode",
 		Options: []apiOption{{}, {}, {}},
 	}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	// max_value = len(options) = 3 => digit token "3" => 9303
 	want := []int32{
 		ids.specOpen, ids.decisionType, ids.dtName[decTypeChooseMode],
@@ -309,9 +297,7 @@ func TestEmitDecisionSpec_ChooseXMultiDigit(t *testing.T) {
 		Kind:   "number",
 		Amount: 12,
 	}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	// max_value = 12 => digits "12" => 9301, 9302
 	want := []int32{
 		ids.specOpen, ids.decisionType, ids.dtName[decTypeChooseX],
@@ -332,9 +318,7 @@ func TestEmitDecisionSpec_ChooseXMultiDigit(t *testing.T) {
 func TestEmitDecisionSpec_NilPendingNoOp(t *testing.T) {
 	ids := testSpecIDs()
 	out := newSpecOut()
-	if err := emitDecisionSpec(nil, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(nil, ids, out)
 	if out.tokensLen != 0 || out.anchorsLen != 0 || out.decisionType != decTypeNone {
 		t.Fatalf("expected empty output for nil pending; got tokensLen=%d anchorsLen=%d dt=%d",
 			out.tokensLen, out.anchorsLen, out.decisionType)
@@ -345,9 +329,7 @@ func TestEmitDecisionSpec_UnknownKind(t *testing.T) {
 	ids := testSpecIDs()
 	out := newSpecOut()
 	pending := &apiPending{Kind: "mana_color"}
-	if err := emitDecisionSpec(pending, ids, out); err != nil {
-		t.Fatalf("emit: %v", err)
-	}
+	emitDecisionSpec(pending, ids, out)
 	if out.decisionType != decTypeNone {
 		t.Fatalf("unknown kind should leave decisionType=None; got %d", out.decisionType)
 	}

@@ -4,13 +4,13 @@ package main
 #include <stdlib.h>
 #include "abi.h"
 */
-import "C"
+import "C" //nolint:gocritic // C and unsafe are distinct despite cgo's synthetic package metadata.
 
 import (
 	"fmt"
 	"sync"
 	"time"
-	"unsafe"
+	"unsafe" //nolint:gocritic // Required for C buffer views; this is not a duplicate C import.
 )
 
 type textRolloutConfig struct {
@@ -231,7 +231,8 @@ func (s *textRolloutScheduler) worker(handleID, slotID, episodeID int64) {
 			s.emitAbort(slotID, episodeID)
 			return
 		}
-		if err := routeAction(h, action); err != nil {
+		routeErr := routeAction(h, action)
+		if routeErr != nil {
 			h.mu.Unlock()
 			s.emitAbort(slotID, episodeID)
 			return

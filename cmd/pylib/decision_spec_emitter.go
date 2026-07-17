@@ -141,18 +141,17 @@ func pendingKindToDecisionType(kind string) (decisionType, bool) {
 
 // emitDecisionSpec writes one row's worth of spec tokens + anchors + side-
 // tensors into out. Mirrors magic_ai/text_encoder/render_spec.py::DecisionSpecRenderer.render
-// for the v1 anchor layout. Returns nil on success; an error means the
-// pending kind is unknown or unsupported (callers should treat it like a
-// no-spec row, leaving out.decisionType == decTypeNone).
-func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOut) error {
+// for the v1 anchor layout. Unknown or unsupported pending kinds produce a
+// no-spec row, leaving out.decisionType == decTypeNone.
+func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOut) {
 	out.reset()
 	if pending == nil {
-		return nil
+		return
 	}
 	dt, ok := pendingKindToDecisionType(pending.Kind)
 	if !ok {
 		// mana_color, mulligan, unknown — deferred per the plan.
-		return nil
+		return
 	}
 	out.decisionType = dt
 
@@ -244,7 +243,7 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 	case decTypeChooseMode:
 		maxValue := int32(len(options))
 		out.emit(ids.maxValueOpen)
-		emitDigits(out, ids, maxValue)
+		emitDigits(out, maxValue)
 		out.emit(ids.maxValueClose)
 
 	case decTypeChooseX:
@@ -257,12 +256,11 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 			maxValue = int32(n - 1)
 		}
 		out.emit(ids.maxValueOpen)
-		emitDigits(out, ids, maxValue)
+		emitDigits(out, maxValue)
 		out.emit(ids.maxValueClose)
 	}
 
 	out.emit(ids.specClose)
-	return nil
 }
 
 // emitDigits writes the BPE token id sequence for the integer “value“ by
@@ -271,7 +269,7 @@ func emitDecisionSpec(pending *apiPending, ids *specTokenIDs, out *specEmitterOu
 // range fall back to a single digit-zero emission to preserve grammar
 // well-formedness; production code must size the table to cover the full
 // reachable max-value range (X cap, mode count cap).
-func emitDigits(out *specEmitterOut, ids *specTokenIDs, value int32) {
+func emitDigits(out *specEmitterOut, value int32) {
 	if value < 0 {
 		value = 0
 	}

@@ -144,13 +144,13 @@ func (e *directTokenEmitter) emitFragment(fragID int32) {
 	e.writeSpan(e.tables.fragmentSpan(fragID))
 }
 
-func (e *directTokenEmitter) emitCardRef(uuidIdx int32) bool {
+func (e *directTokenEmitter) emitCardRef(uuidIdx int32) {
 	if uuidIdx < 0 || uuidIdx >= tokenAssemblerMaxCardRefs || uuidIdx >= e.tables.cardRefCount {
-		return false
+		return
 	}
 	pos := e.writeSingle(e.tables.cardRefIDs[uuidIdx])
 	if pos < 0 {
-		return false
+		return
 	}
 	mask := uint64(1) << (uint32(uuidIdx) & 63)
 	word := uint32(uuidIdx) >> 6
@@ -158,7 +158,6 @@ func (e *directTokenEmitter) emitCardRef(uuidIdx int32) bool {
 		e.dirty.cardRefSeen[word] |= mask
 		e.out.cardRefPos[uuidIdx] = pos + e.out.cursorBase
 	}
-	return true
 }
 
 func (e *directTokenEmitter) closeScalarOwner() {

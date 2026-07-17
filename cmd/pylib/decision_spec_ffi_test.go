@@ -35,9 +35,7 @@ func TestDecisionSpecFFI_BatchStateRoundtrip(t *testing.T) {
 	for i, pending := range []*apiPending{pending0, pending1} {
 		scratch.tokens = scratch.tokens[:cap(scratch.tokens)]
 		scratch.anchors = scratch.anchors[:cap(scratch.anchors)]
-		if err := emitDecisionSpec(pending, ids, scratch); err != nil {
-			t.Fatalf("row %d emit: %v", i, err)
-		}
+		emitDecisionSpec(pending, ids, scratch)
 		row := &state.rows[i]
 		row.decType = scratch.decisionType
 		for k := int32(0); k < scratch.anchorsLen; k++ {

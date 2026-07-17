@@ -4,14 +4,14 @@ package main
 #include <stdlib.h>
 #include "abi.h"
 */
-import "C"
+import "C" //nolint:gocritic // C and unsafe are distinct despite cgo's synthetic package metadata.
 
 import (
 	"fmt"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
-	"unsafe"
+	"unsafe" //nolint:gocritic // Required for C buffer views; this is not a duplicate C import.
 )
 
 // decisionSpecTokenStore is the Go-side mirror of MageDecisionSpecTokens.
@@ -259,9 +259,7 @@ func MageEncodeDecisionSpec(
 			scratch.reset()
 			continue
 		}
-		if err := emitDecisionSpec(pending, &tokens.ids, &scratch); err != nil {
-			continue
-		}
+		emitDecisionSpec(pending, &tokens.ids, &scratch)
 		if scratch.decisionType == decTypeNone {
 			continue
 		}

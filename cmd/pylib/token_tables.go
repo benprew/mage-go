@@ -4,12 +4,12 @@ package main
 #include <stdlib.h>
 #include "abi.h"
 */
-import "C"
+import "C" //nolint:gocritic // C and unsafe are distinct despite cgo's synthetic package metadata.
 
 import (
 	"fmt"
 	"sync"
-	"unsafe"
+	"unsafe" //nolint:gocritic // Required for C buffer views; this is not a duplicate C import.
 )
 
 // tokenTables is the Go-side mirror of the Python TokenTables wire format.
@@ -317,8 +317,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.structuralOffsets) > 0 {
 		t.structuralTokens = sliceI32(c.structural_tokens, int(t.structuralOffsets[fragmentCount]))
 	}
-	if err := validateTablePack("structural", t.structuralTokens, t.structuralOffsets, fragmentCount); err != nil {
-		return err
+	validationErr := validateTablePack("structural", t.structuralTokens, t.structuralOffsets, fragmentCount)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	turnEntries := int((t.turnMax - t.turnMin + 1) * t.stepCount)
@@ -326,8 +327,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.turnStepOff) > 0 {
 		t.turnStepTokens = sliceI32(c.turn_step_tokens, int(t.turnStepOff[turnEntries]))
 	}
-	if err := validateTablePack("turn_step", t.turnStepTokens, t.turnStepOff, turnEntries); err != nil {
-		return err
+	validationErr = validateTablePack("turn_step", t.turnStepTokens, t.turnStepOff, turnEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	lifeEntries := int((t.lifeMax - t.lifeMin + 1) * t.ownerCount)
@@ -335,8 +337,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.lifeOwnerOff) > 0 {
 		t.lifeOwnerTokens = sliceI32(c.life_owner_tokens, int(t.lifeOwnerOff[lifeEntries]))
 	}
-	if err := validateTablePack("life_owner", t.lifeOwnerTokens, t.lifeOwnerOff, lifeEntries); err != nil {
-		return err
+	validationErr = validateTablePack("life_owner", t.lifeOwnerTokens, t.lifeOwnerOff, lifeEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	abEntries := int(t.abilityMax - t.abilityMin + 1)
@@ -344,8 +347,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.abilityOff) > 0 {
 		t.abilityTokens = sliceI32(c.ability_tokens, int(t.abilityOff[abEntries]))
 	}
-	if err := validateTablePack("ability", t.abilityTokens, t.abilityOff, abEntries); err != nil {
-		return err
+	validationErr = validateTablePack("ability", t.abilityTokens, t.abilityOff, abEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	cnEntries := int(t.countMax - t.countMin + 1)
@@ -353,8 +357,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.countOff) > 0 {
 		t.countTokens = sliceI32(c.count_tokens, int(t.countOff[cnEntries]))
 	}
-	if err := validateTablePack("count", t.countTokens, t.countOff, cnEntries); err != nil {
-		return err
+	validationErr = validateTablePack("count", t.countTokens, t.countOff, cnEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	zoneEntries := int(t.zoneCount * t.ownerCount)
@@ -362,15 +367,17 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.zoneOpenOff) > 0 {
 		t.zoneOpenTokens = sliceI32(c.zone_open_tokens, int(t.zoneOpenOff[zoneEntries]))
 	}
-	if err := validateTablePack("zone_open", t.zoneOpenTokens, t.zoneOpenOff, zoneEntries); err != nil {
-		return err
+	validationErr = validateTablePack("zone_open", t.zoneOpenTokens, t.zoneOpenOff, zoneEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 	t.zoneCloseOff = sliceI32(c.zone_close_offsets, zoneEntries+1)
 	if len(t.zoneCloseOff) > 0 {
 		t.zoneCloseTok = sliceI32(c.zone_close_tokens, int(t.zoneCloseOff[zoneEntries]))
 	}
-	if err := validateTablePack("zone_close", t.zoneCloseTok, t.zoneCloseOff, zoneEntries); err != nil {
-		return err
+	validationErr = validateTablePack("zone_close", t.zoneCloseTok, t.zoneCloseOff, zoneEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	avEntries := int(t.actionVerbCount)
@@ -378,8 +385,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.actionVerbOff) > 0 {
 		t.actionVerbTokens = sliceI32(c.action_verb_tokens, int(t.actionVerbOff[avEntries]))
 	}
-	if err := validateTablePack("action_verb", t.actionVerbTokens, t.actionVerbOff, avEntries); err != nil {
-		return err
+	validationErr = validateTablePack("action_verb", t.actionVerbTokens, t.actionVerbOff, avEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	mcEntries := int(t.manaColorCount)
@@ -387,8 +395,9 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.manaOff) > 0 {
 		t.manaTokens = sliceI32(c.mana_glyph_tokens, int(t.manaOff[mcEntries]))
 	}
-	if err := validateTablePack("mana_glyph", t.manaTokens, t.manaOff, mcEntries); err != nil {
-		return err
+	validationErr = validateTablePack("mana_glyph", t.manaTokens, t.manaOff, mcEntries)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	t.cardRefIDs = sliceI32(c.card_ref_ids, int(t.cardRefCount))
@@ -402,15 +411,17 @@ func registerTokenTables(c *C.MageTokenTables) error {
 	if len(t.cardBodyOff) > 0 {
 		t.cardBodyToks = sliceI32(c.card_body_tokens, int(t.cardBodyOff[rowCount]))
 	}
-	if err := validateTablePack64("card_body", t.cardBodyToks, t.cardBodyOff, rowCount); err != nil {
-		return err
+	validationErr = validateTablePack64("card_body", t.cardBodyToks, t.cardBodyOff, rowCount)
+	if validationErr != nil {
+		return validationErr
 	}
 	t.cardNameOff = sliceI64(c.card_name_offsets, rowCount+1)
 	if len(t.cardNameOff) > 0 {
 		t.cardNameToks = sliceI32(c.card_name_tokens, int(t.cardNameOff[rowCount]))
 	}
-	if err := validateTablePack64("card_name", t.cardNameToks, t.cardNameOff, rowCount); err != nil {
-		return err
+	validationErr = validateTablePack64("card_name", t.cardNameToks, t.cardNameOff, rowCount)
+	if validationErr != nil {
+		return validationErr
 	}
 
 	// dict_entry_ids is sized rowCount (one entry per card row), or NULL
