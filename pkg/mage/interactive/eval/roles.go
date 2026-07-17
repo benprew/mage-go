@@ -100,7 +100,7 @@ func ClassifyPermanent(p *mage.Permanent) PermanentRole {
 }
 
 func hasEvasion(p *mage.Permanent) bool {
-	evasionKWs := []core.Keyword{
+	evasionKWs := []core.Attr{
 		core.Flying, core.Fear, core.Menace, core.UnblockableKW,
 		core.Islandwalk, core.Swampwalk, core.Forestwalk,
 		core.Mountainwalk, core.Plainswalk, core.Trample,

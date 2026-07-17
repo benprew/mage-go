@@ -386,7 +386,7 @@ func (r *replay) onPriority(g *mage.Game, playerIdx int, mainPhase bool) mage.Pr
 	// Consume the matched event.
 	r.cursor = idx + 1
 
-	if mismatches := r.diffSnapshot(g, playerIdx, ev.Snapshot); len(mismatches) > 0 {
+	if mismatches := r.diffSnapshot(g, ev.Snapshot); len(mismatches) > 0 {
 		r.fail("state mismatch at PRIORITY seq=%d T%d %s:\n  %s",
 			ev.Seq, ev.Snapshot.Turn, ev.Snapshot.Step, strings.Join(mismatches, "\n  "))
 		return mage.PriorityAction{Type: mage.PriorityPass}
@@ -756,7 +756,7 @@ type goPlayerSnap struct {
 	graveyard   []string
 }
 
-func (r *replay) diffSnapshot(g *mage.Game, playerIdx int, want *snapshot) []string {
+func (r *replay) diffSnapshot(g *mage.Game, want *snapshot) []string {
 	if want == nil {
 		return nil
 	}

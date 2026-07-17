@@ -128,7 +128,7 @@ func generateCreature(color Color, rarity Rarity, template CardTemplate, rng *RN
 		abilities = append(abilities, "ETB: Draw a card")
 
 	case TapCreature:
-		abilities = append(abilities, generateTapCreatureAbility(pie, color, rarity, rng))
+		abilities = append(abilities, generateTapCreatureAbility(pie, rarity, rng))
 		budget -= rng.Float64Range(0.75, 1.25)
 	}
 
@@ -169,7 +169,7 @@ func generateSpell(color Color, rarity Rarity, template CardTemplate, rng *RNG) 
 
 	pips := pickColoredPips(cmc, rarity, pie.ManaPipTendency, rng)
 	manaCost := buildManaCost(cmc, pips, color)
-	name := SpellName(color, template, rarity, rng)
+	name := SpellName(color, rarity, rng)
 
 	ct := SorceryType
 	if isInst {
@@ -189,7 +189,7 @@ func generateEnchantment(color Color, rarity Rarity, template CardTemplate, rng 
 	cmc := PickCMC(enchantmentCurve, rarity, rng)
 	pips := pickColoredPips(cmc, rarity, pie.ManaPipTendency, rng)
 	manaCost := buildManaCost(cmc, pips, color)
-	name := EnchantmentName(color, template, rarity, rng)
+	name := EnchantmentName(color, rarity, rng)
 
 	var subtypes []string
 	var abilities []string
@@ -455,7 +455,7 @@ func generateActivatedAbility(pie ColorPie, color Color, rng *RNG) string {
 	return "{2}: +1/+1 until end of turn"
 }
 
-func generateTapCreatureAbility(pie ColorPie, color Color, rarity Rarity, rng *RNG) string {
+func generateTapCreatureAbility(pie ColorPie, rarity Rarity, rng *RNG) string {
 	pingAccess := pie.EffectAccess[DirectDamage]
 	tapAccess := pie.EffectAccess[TapTarget]
 	drawAccess := pie.EffectAccess[DrawCards]

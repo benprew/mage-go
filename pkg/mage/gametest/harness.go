@@ -524,7 +524,7 @@ func (tg *TestGame) scriptedPriorityHandler() mage.PriorityHandler {
 
 		// 1. Response actions whose parent is live on the stack.
 		if top := g.StackPeek(); top != nil {
-			if r := tg.popResponseFor(top.SourceID, playerRef); r != nil {
+			if r := tg.popResponseFor(playerRef); r != nil {
 				return tg.buildPriorityActionForResponse(*r, playerIdx)
 			}
 		}
@@ -541,7 +541,7 @@ func (tg *TestGame) scriptedPriorityHandler() mage.PriorityHandler {
 		}
 
 		// 2. Scheduled cast / activate for this (turn, step, player).
-		if action, ok := tg.popScheduledForStep(g.CurrentTurn(), g.GetStep(), playerRef, playerIdx); ok {
+		if action, ok := tg.popScheduledForStep(g.CurrentTurn(), g.GetStep(), playerRef); ok {
 			return action
 		}
 
@@ -735,7 +735,7 @@ func (tg *TestGame) autoAddMana() {
 
 // popScheduledForStep looks for the earliest-seq queued cast/activate whose
 // (turn, step, player) matches and pops it, returning a PriorityAction.
-func (tg *TestGame) popScheduledForStep(turn int, step core.PhaseStep, ref PlayerRef, playerIdx int) (mage.PriorityAction, bool) {
+func (tg *TestGame) popScheduledForStep(turn int, step core.PhaseStep, ref PlayerRef) (mage.PriorityAction, bool) {
 	bestSeq := -1
 	bestCastIdx := -1
 	bestActIdx := -1
@@ -855,7 +855,7 @@ func (tg *TestGame) buildPriorityActionForActivate(idx int) (mage.PriorityAction
 // the top object on the stack (by card ID) and whose responder matches the
 // player currently being asked for priority. Responses fire in their scripted
 // slice order.
-func (tg *TestGame) popResponseFor(topSourceID uuid.UUID, ref PlayerRef) *responseAction {
+func (tg *TestGame) popResponseFor(ref PlayerRef) *responseAction {
 	for ci := range tg.castActions {
 		ca := &tg.castActions[ci]
 		if !ca.fired || len(ca.responses) == 0 {
@@ -874,7 +874,7 @@ func (tg *TestGame) popResponseFor(topSourceID uuid.UUID, ref PlayerRef) *respon
 			continue
 		}
 		// Match stack top to this cast by spell name.
-		if !stackTopMatchesSpell(tg.Game, obj, ca.spell) {
+		if !stackTopMatchesSpell(obj, ca.spell) {
 			continue
 		}
 		// Find first unfired response whose player matches.
@@ -897,7 +897,7 @@ func (tg *TestGame) popResponseFor(topSourceID uuid.UUID, ref PlayerRef) *respon
 // stackTopMatchesSpell returns true if the top stack object represents a
 // spell with the given name. The Stack stores StackObjects with Card pointers
 // for spells; abilities have IsAbility=true and a nil Card.
-func stackTopMatchesSpell(g *mage.Game, obj *mage.StackObject, name string) bool {
+func stackTopMatchesSpell(obj *mage.StackObject, name string) bool {
 	if obj == nil {
 		return false
 	}
@@ -1359,7 +1359,7 @@ func (tg *TestGame) AssertTapped(p PlayerRef, name string, tapped bool) {
 }
 
 // AssertHasAbility checks if a permanent has a keyword ability.
-func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw core.Keyword, has bool) {
+func (tg *TestGame) AssertHasAbility(p PlayerRef, name string, kw core.Attr, has bool) {
 	tg.t.Helper()
 	playerID := tg.getPlayerID(p)
 	perm := tg.FindPermanentByName(name, playerID)

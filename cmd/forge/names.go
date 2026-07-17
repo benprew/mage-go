@@ -123,7 +123,7 @@ func CreatureName(color Color, subtype string, rarity Rarity, rng *RNG) string {
 	return rng.Pick(phil.Adjectives) + " " + subtype
 }
 
-func SpellName(color Color, template CardTemplate, rarity Rarity, rng *RNG) string {
+func SpellName(color Color, rarity Rarity, rng *RNG) string {
 	phil := PieFor(color).Philosophy
 
 	type pattern int
@@ -195,9 +195,9 @@ func SpellName(color Color, template CardTemplate, rarity Rarity, rng *RNG) stri
 	return rng.Pick(phil.Adjectives) + " " + rng.Pick(phil.Nouns)
 }
 
-func EnchantmentName(color Color, template CardTemplate, rarity Rarity, rng *RNG) string {
+func EnchantmentName(color Color, rarity Rarity, rng *RNG) string {
 	// Enchantments use the same patterns as spells.
-	return SpellName(color, template, rarity, rng)
+	return SpellName(color, rarity, rng)
 }
 
 func toGerund(verb string) string {
