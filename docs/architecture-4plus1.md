@@ -1,558 +1,609 @@
 # mage-go: 4+1 Architectural View Model
 
-> A 2-player Magic: The Gathering rules engine in Go, inspired by XMage.
+> A two-player Magic: The Gathering rules engine in Go, inspired by XMage.
 > Reference: [4+1 Architectural View Model](https://en.wikipedia.org/wiki/4%2B1_architectural_view_model)
+>
+> Current through mage-go v0.5.1 (July 2026).
 
 ---
 
 ## 1. Logical View
 
-The logical view describes the key abstractions, their responsibilities, and relationships.
+The logical view describes the engine's principal abstractions and how card definitions use them.
 
 ### Core Domain Model
 
-```
-Game (Central Orchestrator)
+```text
+Game (rules engine and state machine)
   |-- Players [2]
-  |     |-- Hand, Library, Graveyard, Ante (zones)
+  |     |-- Hand, Library, Graveyard, Ante
   |     |-- ManaPool
-  |     '-- Life, PoisonCounters
+  |     '-- Life, poison, loss and per-turn state
   |
   |-- Battlefield []*Permanent
-  |     |-- Card (immutable definition)
-  |     |-- Attrs (baseAttrs + grantedAttrs, additive integer counts)
-  |     |-- Counters, Damage, Tapped, PhasedOut, FaceDown
+  |     |-- Card (definition and identity)
+  |     |-- Base and computed controller
+  |     |-- Base and granted attributes
+  |     |-- Counters, damage, tapped, phased-out and face-down state
   |     |-- Attachments / AttachedTo
-  |     '-- RuntimeAbilities
+  |     |-- RuntimeAbilities
+  |     '-- Continuous-effect overrides (type, color and P/T)
   |
-  |-- Stack (LIFO)
-  |     '-- StackObject (Card, Effects, Targets, XValue, ModeChoice)
+  |-- Stack
+  |     '-- StackObject (spell/ability, effects, targets and cast snapshot)
   |
   |-- Combat
-  |     |-- CombatGroup (attacker -> blockers)
-  |     '-- Bands (banding groups)
+  |     |-- CombatGroup (attacker -> blockers and defender)
+  |     '-- Bands and damage assignment
   |
   |-- EffectManager
-  |     |-- ContinuousEffect[] (applied by layer each cycle)
-  |     |-- ReplacementEffect[] (intercept Actions in pipeline)
-  |     '-- GameRules (damage shields, mana restrictions, cost reductions)
+  |     |-- ContinuousEffect[]
+  |     |-- ReplacementEffect[]
+  |     |-- Cycle-derived combat restrictions
+  |     |-- DamageSystem compatibility facade
+  |     '-- GameRules (mana, costs, permissions and rule modifiers)
   |
-  '-- Exile []ExiledCard
+  |-- TurnSchedule (remaining, inserted and skipped steps/turns)
+  |-- Pending and delayed triggers
+  |-- Last-known-information snapshots
+  |-- Per-turn and per-duel trackers
+  '-- Exile []ExiledCard (including face-down visibility metadata)
 ```
 
 ### Key Types
 
 | Type | Responsibility |
-|------|---------------|
-| **Game** | Central state machine: turns, phases, events, rule enforcement |
-| **Player** (interface) | Identity, zones, mana, life, decisions (strategy-abstracted) |
-| **Card** (interface) | Immutable card definition: name, cost, types, abilities, P/T |
-| **Permanent** | Mutable on-battlefield manifestation of a Card |
-| **Ability** | Base interface for all ability types (spell, triggered, activated, mana, static) |
-| **Effect** | One-shot game action: `Apply(g GameMutator, sourceID, controller, targets)` |
-| **ContinuousEffect** | Persistent effect applied each cycle in layer order |
-| **ReplacementEffect** | Intercepts and transforms Actions (damage prevention, regeneration) |
-| **Target** | Targeting requirement with validation: `Possible()`, `Choose()`, `Chosen()` |
-| **PermanentFilter** | Composable predicate for permanent matching |
-| **Cost** | Activation/casting cost: `CanPay()`, `Pay()` |
-| **Stack / StackObject** | LIFO queue of pending spells and abilities |
-| **Combat / CombatGroup** | Attacker-blocker pairs, banding, damage assignment |
-| **EffectManager** | Central registry for continuous effects, replacement effects, and dynamic rules |
-| **Registry** | Thread-safe card factory repository (name -> factory function) |
-| **GameReader** | Read-only game state interface for effects and queries |
-| **GameMutator** | Mutation interface (extends GameReader) hiding engine internals |
+|------|----------------|
+| `Ability` | Common identity/controller contract for spell, activated, mana, triggered and static abilities |
+| `ActionDefinition` | Shared definition for stack-using spells and activated abilities: effects, costs, targets, timing, limits and AI hints |
+| `Action` | A pending mutation that can be transformed or prevented by replacement effects |
+| `Card` | Card identity and printed characteristics, abilities, modes, costs and ownership |
+| `ContinuousEffect` | Layered effect that is reapplied while active for a declared duration |
+| `Cost` | Payment feasibility and execution, including mana, tap, sacrifice, discard and optional/alternate costs |
+| `EffectContext` | Resolving `Game`, source, controller, targets and scratch variables passed to an effect |
+| `Effect` | One-shot resolving behavior: `Apply(*EffectContext) error`, plus text and AI-visible properties |
+| `GameReader` | Primarily read-only query interface used by values, selectors, filters and trigger conditions; `FlipCoin` is its documented impure exception |
+| `Game` | Owns mutable game state, turn execution, events, stack resolution, combat and rule enforcement |
+| `PermanentLKI` / `LKIView` | Frozen battlefield state for dies, leaves and other last-known-information queries |
+| `Permanent` | Mutable battlefield form of a card, including computed characteristics and control state |
+| `Player` | Owns player zones and resources and supplies choices; implemented by base, human, AI, search and test players |
+| `Registry` | Thread-safe mapping from card name to factory |
+| `ReplacementEffect` | Matches and replaces an `Action`; returning `nil` prevents or fully consumes it |
+| `StackObject` | Cast/activation-time snapshot of a spell or ability waiting to resolve |
+| `Target` / filters | Legal-target discovery and validation using composable permanent and card predicates |
+| `TurnSchedule` | Mutable sequence supporting extra/skipped steps, phases and turns |
 
-### Interface Segregation: GameReader vs GameMutator
+### Card-Facing Effect Model
 
-Effects interact with the game exclusively through two interfaces:
+Effects no longer resolve through a `GameMutator` interface. The current canonical path is:
 
-- **GameReader** exposes queries: `FindPermanent`, `FilterBattlefield`, `GetPlayer`, `XValue`, `CombatGroups`, etc.
-- **GameMutator** extends GameReader with mutations: `DestroyPermanent`, `DealDamageToPlayer`, `PutOnBattlefield`, `AddContinuousEffect`, `AddPreventionShield`, etc.
+```text
+StackObject
+  -> Effect.Apply(*EffectContext)
+       |-- ctx.Game        concrete *Game
+       |-- ctx.SourceID
+       |-- ctx.Controller
+       |-- ctx.Targets
+       '-- ctx.Vars        per-resolution scratch data
+```
 
-This boundary prevents effects from bypassing rules checks or directly touching `*Game` internals.
+`GameReader` remains the restricted query surface for code that should be observational, such as `ValueSource`, `PlayerSelector`, filters and trigger predicates. `FlipCoin` is the documented exception and must not be called from repeatedly evaluated conditions. Card implementations normally use the re-exporting `pkg/mage/dsl` package; its explicit escape hatches expose concrete engine types only where the DSL is not yet sufficient.
 
-### Ability Taxonomy
+Every `Effect` also reports `EffectProperties` and optional `AIHint` metadata. The heuristic and search AIs use this data to classify outcomes, timing, targets, removal, burn, pump, protection and other strategic roles without switching on each concrete card.
 
-| Ability Type | Key Struct | Trigger |
-|--------------|-----------|---------|
-| **Spell** | `SpellAbility` | Cast from hand, resolves on stack |
-| **Triggered** | `GenericTriggered` | Event-driven (ETB, dies, attacks, upkeep, etc.) |
-| **Activated** | `SimpleActivatedAbility` | Player-activated with costs and restrictions |
-| **Mana** | `ManaAbility` | Tap for mana (does not use the stack) |
-| **Static** | `StaticAbilityHolder` | Always-on continuous effects |
+### Ability and Action Taxonomy
 
-### Layer System (MTG CR 613)
+| Kind | Representation | Runtime behavior |
+|------|----------------|------------------|
+| Activated | `ActionDefinition` (`SimpleActivatedAbility` is a compatibility alias) | Pays costs, chooses targets and uses the stack |
+| Mana | `ManaAbility` | Resolves immediately without the stack |
+| Spell | `SpellAbility` over `ActionDefinition` | Cast from a permitted zone and resolves from the stack |
+| Static | `StaticAbilityHolder` and specialized ability types | Registers continuous effects, replacements or rule modifiers |
+| Triggered | `GenericTriggered` | Watches a typed event or state condition, snapshots its controller and creates a stack object |
 
-Continuous effects are applied in strict layer order each cycle:
+Spells and non-mana activated abilities deliberately share `ActionDefinition`. It holds `ActionKind`, effects, targets, costs, timing rules, activation limits/permissions, conditions and AI hints. This keeps casting and activation enumeration aligned for the UI, AI and foreign-function interface.
 
-| Layer | Name | Example |
-|-------|------|---------|
-| 1 | Copy | Clone, Copy Artifact |
-| 2 | Control | Control Magic, Old Man of the Sea |
-| 3 | Text | Sleight of Mind |
-| 4 | Type | Lace effects, land type changes |
-| 5 | Color | Color-changing effects |
-| 6 | Ability | Grant/revoke keywords and abilities |
-| 7 | P/T | Power/toughness boosts |
+### Stack and Casting Snapshots
+
+`StackObject` stores more than a card and targets. It preserves information that must not be recomputed at resolution:
+
+- chosen X and modal mode;
+- per-mode and multi-target selections;
+- the zone each target occupied when chosen;
+- divided-damage allocation;
+- whether the object is a spell copy;
+- cast zone and exile-on-leave-stack behavior;
+- `CastContext` for facts captured while casting; and
+- triggering event amount and source.
+
+This supports modal spells, alternate costs, flashback-like casting, spell copies, zone-sensitive triggers, intervening target movement and effects that refer to cast-time information.
+
+### Replacement Action Pipeline
+
+The engine models replaceable mutations as typed `Action` values. Current action families include:
+
+- damage to a player or creature;
+- destruction;
+- drawing a card;
+- gaining life; and
+- adding counters, including counters placed as a permanent enters.
+
+The flow is synchronous and inline:
+
+```text
+Game mutation request
+  -> construct Action
+  -> EffectManager.ApplyReplacements
+       -> apply each matching non-prevention replacement at most once
+       -> apply matching prevention effects
+       -> repeat while a transformed action has another match
+  -> execute the surviving action, or stop if it is nil
+```
+
+Replacement effects may transform the amount or action type, perform replacement-specific work, or consume the action. Regeneration, damage prevention/redirection, draw replacement, counter modification and life-gain replacement use this mechanism. Not every named action is represented by an `Action` yet; for example, sacrifice has a first-class `Game.DoSacrifice` path with zone-change, sacrifice-event and LKI handling.
+
+### Events, Triggers and Last-Known Information
+
+`GameEvent` carries an event type plus source, target, player, amount, flag and zone endpoints. `EvtZoneChange` is the general event for battlefield, hand, library, graveyard, exile and stack movement; specialized events remain for game actions and aggregate combat facts.
+
+`GenericTriggered` supports:
+
+- event predicates built from composable `TriggerConditionData`;
+- triggered targets selected when the trigger is created;
+- optional and modal triggers;
+- abilities active in non-battlefield zones; and
+- state triggers that fire once per false-to-true transition.
+
+When a permanent leaves the battlefield, `PermanentLKI` captures its controller, types, subtypes, P/T, counters, abilities and attachment state. `LookupObject` returns one `LKIView` abstraction over either a live permanent or its snapshot. Current LKI capture is centered on battlefield departures and is cleared during cleanup; durable and non-battlefield LKI remain future extensions.
+
+### Continuous Effects, Layers and Control
+
+The layer enum follows the familiar MTG ordering:
+
+| Layer | Name | Current role |
+|-------|------|--------------|
+| 1 | Copy | Copy effects and copied characteristics |
+| 2 | Control | Timestamped and conditional controller computation |
+| 3 | Text | Represented by `LayerText`; not currently traversed by `EffectManager.Apply` |
+| 4 | Type | Card type and subtype changes |
+| 5 | Color | Color-setting effects |
+| 6 | Ability | Keyword and runtime-ability grants/removals |
+| 7 | P/T | Base P/T setting and modifications |
+
+Each application cycle clears derived state, removes expired effects, applies copy and control, then type, color, ability and P/T effects. It also rebuilds cycle-scoped replacement effects, combat restrictions and dynamic game rules.
+
+Control is a computed Layer 2 characteristic. A permanent retains a base controller and receives a computed controller after control effects are reconciled to stability. Conditional control effects latch expiration, timestamp order decides later effects, attachment-based control follows the aura's controller, and a real control change updates ability context and summoning-sickness timing.
 
 ### Attribute System
 
-Keywords and capabilities are stored as additive integer counts on Permanents:
+Attributes cover keywords and battlefield capabilities in fixed-size arrays on `Permanent`:
 
-- `baseAttrs` -- intrinsic attributes that persist until explicitly revoked
-- `grantedAttrs` -- temporary attributes reset and recomputed each effect cycle
-- `HasAttr(a)` returns `baseAttrs[a] + grantedAttrs[a] > 0`
+- `baseAttrs` contains intrinsic and persistent counts;
+- `grantedAttrs` is cleared and recomputed each continuous-effect cycle; and
+- `HasAttr(a)` tests whether the combined value is positive.
 
-This enables proper stacking: "grant Flying" + "remove Flying" + "grant Flying" = net 1 = has Flying.
+Base grants are additive. Continuous ability grants and removals are last-writer-wins in timestamp order: a removal offsets all intrinsic instances, while a later grant restores the attribute. This matches effects such as “loses all landwalk” interacting with multiple lords more closely than simple integer subtraction.
+
+### Searchable Game State
+
+`Game.Clone` creates branches for AI search. Immutable `Card` and `Effect` values are shared; mutable players, stack, combat, schedules, triggers, trackers and rules are copied. Battlefield permanents use copy-on-write sharing and become private through `MutablePermanent` before mutation. Interactive callbacks are removed and cloned players become `SearchPlayer` instances with non-interactive choices.
 
 ### Design Patterns
 
 | Pattern | Where |
 |---------|-------|
-| **Factory** | Registry: deferred card instantiation via factory functions |
-| **Strategy** | Player interface: pluggable decision-making (AI, human, test) |
-| **Observer** | Triggered abilities: subscribe to GameEvent types |
-| **Chain of Responsibility** | Replacement effects: pipeline intercepting Actions |
-| **State Machine** | Game: explicit turn/phase/step progression |
-| **Proxy** | Permanent wraps Card, delegating queries but adding mutable state |
-| **Facade** | GameMutator: simplified API over EffectManager complexity |
-| **Predicate** | Filters: composable predicates for card/permanent selection |
+| Factory | Card registry and set registration |
+| Strategy | Human/test/search player choices and `AIStrategy` implementations |
+| Observer | Typed events and triggered abilities |
+| Chain of responsibility | Replacement-effect pipeline |
+| State machine | Turn schedule, steps, priority and stack resolution |
+| Proxy/view | `Permanent` over `Card`, `LKIView`, `GameReader` |
+| Copy-on-write | Battlefield state in AI search clones |
+| Builder/DSL | Card constructors, action options and composable effect pipelines |
+| Predicate | Filters, selectors and trigger/activation conditions |
 
 ---
 
 ## 2. Process View
 
-The process view describes runtime behavior, concurrency, game flow, and event processing.
+The process view describes runtime sequencing, game flow and concurrency.
 
 ### Turn Structure
 
-```
-Untap -> Upkeep -> Draw -> Main1 -> BeginCombat -> DeclareAttackers ->
-DeclareBlockers -> FirstStrikeDamage -> CombatDamage -> EndCombat ->
-Main2 -> EndStep -> Cleanup
-```
-
-Each step:
-1. Reapply continuous effects: `g.Effects.Apply(g)`
-2. Execute step-specific logic (untap permanents, draw card, declare combat, etc.)
-3. Check state-based actions (loop until quiescent)
-4. Resolve stack / run priority loop
-
-### Priority System
-
-Two operating modes:
-
-**Non-Interactive (test/AI-only):**
-```
-CheckStateBasedActions() -> ResolveStack()  // drain atomically
+```text
+Untap -> Upkeep -> Draw -> PrecombatMain -> BeginCombat ->
+DeclareAttackers -> DeclareBlockers -> FirstStrikeDamage ->
+CombatDamage -> EndCombat -> PostcombatMain -> EndStep -> Cleanup
 ```
 
-**Interactive (human play):**
-```
-loop {
-    CheckStateBasedActions()
-    PutTriggersOnStack()
-    for each player (starting active):
-        action = OnPriority(g, playerIdx)
-        if action != Pass:
-            execute action
-            restart loop
-    if all pass: break
-}
+`TurnSchedule` builds this canonical sequence for each turn and lets effects insert or skip steps, skip combat phases and skip turns. `Game` separately queues extra turns.
+
+A step generally performs the following work:
+
+1. set the current step and apply continuous effects;
+2. perform the step's turn-based actions and fire events;
+3. put pending triggers on the stack;
+4. run a priority round when that step grants priority;
+5. check state-based actions and reapply effects before returning; and
+6. empty mana pools at the step/phase boundary.
+
+The untap step does not grant priority. A normal cleanup step does not either, but cleanup repeats with a priority round when a state-based action or trigger occurs during cleanup.
+
+### Priority and Stack Resolution
+
+There are two engine modes:
+
+```text
+No PriorityHandler (unit tests and direct engine use)
+  CheckStateBasedActions -> ResolveStack atomically
+
+PriorityHandler installed (interactive, AI, replay and FFI)
+  loop:
+    CheckStateBasedActions
+    CheckStateTriggers
+    PutTriggersOnStack
+    ask active player, then non-active player
+    if someone acts: execute and restart
+    if both pass and stack is empty: end the step
+    if both pass and stack is non-empty: resolve one object and restart
 ```
 
-### Event -> Trigger -> Stack Pipeline
+The engine's priority action vocabulary is pass, cast spell, activate ability and play land. The interactive package has a richer transport action type that also carries attacker, blocker and modal-choice interactions.
 
-```
+### Event-to-Trigger Pipeline
+
+```text
 FireEvent(GameEvent)
-    |
-    v
-For each permanent/ability: if eventType matches && condition(evt) holds
-    |
-    v
-Queue in pendingTriggers[]
-    |
-    v
-PutTriggersOnStack() -- build StackObjects, push to Stack
-    |
-    v
-ResolveStackObject: apply effects via GameMutator
-    |
-    v
-State-based actions -> more triggers -> priority
+  -> inspect eligible live and zone-active triggered abilities
+  -> evaluate read-only trigger conditions
+  -> snapshot source/controller/event context in pendingTriggers
+  -> choose trigger targets
+  -> PutTriggersOnStack
+  -> resolve Effect values with EffectContext
+  -> state-based actions and newly generated triggers
 ```
 
-### Replacement Effect Pipeline
+State triggers are evaluated beside state-based actions and are armed until their condition becomes false. Delayed triggers are registered separately and remain until their event and condition match or their duration expires.
 
-When the engine emits an Action (damage, destruction, draw):
-```
-Action -> for each active ReplacementEffect:
-            if Matches(action): action = Replace(action)
-       -> apply final Action (or nil = prevented)
-```
+### State-Based Actions
 
-Built-in replacements: regeneration (destroy -> tap + remove damage), prevention shields (absorb N damage), fog (prevent all combat damage), forcefield (reduce unblocked damage to 1).
+`CheckStateBasedActions` loops until no further change is made. It currently handles:
 
-### State-Based Actions (SBAs)
+- lethal damage and zero-or-less toughness;
+- zero-loyalty planeswalkers;
+- +1/+1 and -1/-1 counter annihilation;
+- illegal or missing aura hosts and invalid equipment attachment;
+- static sacrifice-unless-land requirements;
+- legend and world rules;
+- poison loss and drawing from an empty library; and
+- follow-on triggers generated by those transitions.
 
-Called after every step and every stack resolution; loops until quiescent:
+The planeswalker implementation is intentionally partial: entry loyalty and zero-loyalty state-based actions exist, but loyalty activation rules and attacking planeswalkers are not complete.
 
-1. Lethal damage: destroy creatures with damage >= toughness
-2. Zero toughness: remove creatures with toughness <= 0
-3. Counter annihilation: cancel equal +1/+1 and -1/-1 counters
-4. Aura validity: destroy auras with illegal/missing targets
-5. Equipment validity: unattach from non-creatures
-6. Planeswalker uniqueness, legend rule, etc.
+### Mana Payment
+
+`SolveMana` is a pure solver over floating mana, candidate sources, restrictions, conversions and preservation scores. It supports colored, generic and hybrid requirements, multi-mana sources and mana bonuses. Callers apply the returned tap plan; `CanSolveMana` uses the same logic for affordability checks. This keeps UI legality checks, AI planning and actual auto-tapping consistent.
 
 ### Concurrency Model
 
 | Component | Model |
 |-----------|-------|
-| **Game Engine** (`pkg/mage`) | Single-threaded; all mutations sequential and deterministic |
-| **Registry** | `sync.RWMutex` protects card factory map |
-| **Interactive Loop** | Dedicated goroutine; blocks on channel I/O |
-| **Human Player I/O** | Buffered channels: `toTUI`, `fromTUI`, `choiceReqs`, `choiceResps` |
-| **AI Strategy** | Called synchronously from game loop goroutine |
-| **SSH Server** | One goroutine per session; each runs its own game loop |
+| Core `Game` | Single-threaded mutation; a game loop owns its game state |
+| Registry | `sync.RWMutex` protects the global card factory map |
+| Human input | Buffered game/action and choice request/response channel pairs |
+| AI strategy | Called synchronously by the owning game loop |
+| Search | Synchronous cloned-state exploration with copy-on-write permanents |
+| TUI/WASM | Game loop and transport pumps run in goroutines |
+| SSH server | Concurrent sessions and games; lobby state protected by a mutex |
+| C/Python FFI | Process-global handle table protected by mutexes; each game has a decision-loop goroutine |
+| Batch/text rollout FFI | Coordinates multiple handles and inference batches across goroutines |
 
-The game engine is NOT concurrent internally. All mutations happen in the game loop goroutine. Channels provide async I/O decoupling only.
+The core engine is not safe for concurrent mutation. Concurrency exists at the adapter boundary and between independent games, not inside one game's rules transitions.
 
-### Channel-Based Player Communication
+### Randomness and Reproducibility
 
-```go
-type HumanPlayer struct {
-    *mage.BasePlayer
-    toTUI       chan GameMsg          // game -> UI
-    fromTUI     chan PriorityAction   // UI -> game
-    choiceReqs  chan ChoiceRequest    // game -> UI (modal)
-    choiceResps chan ChoiceResponse   // UI -> game (modal)
-}
-```
-
-The game loop blocks on `<-fromTUI` waiting for human decisions. The TUI reads `GameMsg`, renders, collects input, and sends `PriorityAction` back. This decouples game logic from UI completely.
+Shuffling, random discard/selection, coin flips and some tools use `math/rand`. Tests can script coin-flip results, while scenario and FFI entry points accept seeds for reproducible runs. Reproducibility therefore requires controlling both player choices and random seeding; `Game.Clone` does not own or clone an independent RNG stream.
 
 ---
 
 ## 3. Development View
 
-The development view describes code organization, packages, build system, and development workflow.
+The development view describes package organization, build tooling and the card workflow.
 
 ### Package Layout
 
-```
+```text
 mage-go/
-|-- pkg/mage/                  # Core engine (105 .go files)
-|   |-- core/                  # Enums, value types (19 files, code-generated)
-|   |-- gametest/              # Test harness DSL (8 files)
-|   '-- interactive/           # Human/AI player layer (11 files)
-|       |-- ai/                # AI strategies
-|       '-- eval/              # Board evaluation
+|-- pkg/mage/                       # Core rules engine
+|   |-- core/                       # Enums and value types
+|   |-- dsl/                        # Card-author-facing re-export surface
+|   |-- gametest/                   # Scenario test harness
+|   '-- interactive/                # UI-neutral human/AI adapter layer
+|       |-- ai/                     # AI interface, player and personalities
+|       |   |-- heuristic/          # Local personality-driven strategy
+|       |   |-- search/             # Full-turn minimax, TT and Zobrist hashing
+|       |   '-- combatsolver/       # Joint combat/trick solver
+|       '-- eval/                   # Board, role, targeting and lethal evaluation
 |
-|-- cards/                     # Card implementations by set
-|   |-- limited/               # Alpha/Beta/Unlimited
-|   |-- arabian/               # Arabian Nights
-|   |-- antiquities/           # Antiquities
-|   |-- legends/               # Legends
-|   |-- fallen_empires/        # Fallen Empires
-|   '-- custom/                # Custom/test cards
+|-- pkg/catalog/                    # Indexed Scryfall metadata catalog
 |
-|-- cmd/                       # Binaries
-|   |-- tui/                   # Terminal UI
-|   |-- server/                # SSH multiplayer server
-|   |-- wasm/                  # WebAssembly build
-|   |-- fetchset/              # Fetch card data from Scryfall
-|   |-- genset/                # Generate card stubs from JSON
-|   |-- fetchcatalog/          # Bulk fetch multiple sets
-|   |-- gametest/              # Debug: two AIs playing
-|   |-- cardart/               # Pixel art generator
-|   '-- forge/                 # Procedural card set generator
+|-- cards/                          # Set packages and generated catalog data
+|   |-- limited/                    # Limited Edition Alpha
+|   |-- arabian/                    # Arabian Nights
+|   |-- antiquities/                # Antiquities
+|   |-- legends/                    # Legends
+|   |-- fallen_empires/             # Fallen Empires
+|   |-- fourthedition/              # Fourth Edition
+|   |-- jumpstart/                  # Jumpstart implementation package
+|   |-- secretsofstrixhaven/        # Secrets of Strixhaven implementation package
+|   '-- custom/                     # Custom/test cards
 |
-|-- internal/tui/              # Bubbletea TUI components
-|-- web/                       # Browser UI (HTML/JS/WASM)
-|-- data/                      # Scryfall JSON per set
-'-- docs/                      # Comprehensive rules, tutorials
+|-- internal/tui/                   # Bubble Tea models, views and deck helpers
+|-- internal/scenario/              # Rogue-deck parsing and scenario result types
+|
+|-- cmd/
+|   |-- tui/                        # Local terminal game
+|   |-- server/                     # SSH lobby and game server
+|   |-- wasm/                       # Browser/WASM adapter
+|   |-- pylib/                      # C shared library and Python package
+|   |-- gametest/                   # Interactive/profilable AI-vs-AI runner
+|   |-- scenariotest/               # Batch AI-vs-AI JSONL runner
+|   |-- scenarioanalyze/            # Scenario anomaly/statistics analysis
+|   |-- oracle-replay/              # XMage JSONL replay and state comparison
+|   |-- fetchset/, fetchcatalog/    # Scryfall acquisition tools
+|   |-- genset/                     # Set/card stub generator
+|   |-- cardart/                    # Pixel-art renderer
+|   '-- forge/                      # Procedural card generator
+|
+|-- data/                           # Set, catalog and tokenizer data
+|-- rogue_dck/                      # Shandalar rogue deck lists
+|-- web/                            # Browser UI assets
+|-- docs/ and active-design-docs/   # Stable references and evolving designs
+|-- .agents/skills/                 # Card, set and engine workflows
+|-- pyproject.toml / setup.py       # Python binding build/package metadata
+'-- Makefile
 ```
+
+`cards/all.go` is the side-effect import used by applications to register the production aggregate. A package directory's presence does not necessarily mean it is imported by that aggregate; currently Jumpstart and Secrets of Strixhaven are kept outside `cards/all.go`.
 
 ### Dependencies
 
-- **Only external runtime dep:** `github.com/google/uuid`
-- **UI:** Charmbracelet ecosystem (bubbletea, lipgloss, wish, ssh)
-- **Codegen:** `github.com/dmarkham/enumer` for enum String/Parse methods
+- The rules engine's direct third-party runtime dependency is `github.com/google/uuid`.
+- Terminal and SSH applications use Bubble Tea, Lip Gloss, Wish and Charmbracelet SSH.
+- Enum generation uses `github.com/dmarkham/enumer` through Go's tool dependency mechanism.
+- The optional Python package uses `cffi` and `orjson` and builds the Go C shared library during packaging.
 
-### Card Registration Pattern
+### Card Registration and DSL
 
-```go
-// cards/limited/creatures.go
-func init() {
-    registerCreatures()
-}
+Set packages register factories by exact card name during package initialization. Modern card code imports `pkg/mage/dsl` for constructors, effects, targets, costs, selectors, values and core re-exports. Factories create new card identities for each deck copy rather than sharing runtime cards.
 
-func registerCreatures() {
-    Register("Serra Angel", func() Card {
-        return NewCreature("Serra Angel", "{3}{W}{W}", 4, 4,
-            WithSubTypes("Angel"),
-            WithKeyword(Flying),
-            WithKeyword(Vigilance),
-        )
-    })
-}
-```
+Generated set packages normally contain:
 
-Each set package has a consistent structure:
-- `creatures.go`, `spells.go`, `enchantments.go`, `artifacts.go`, `lands.go` -- card definitions
-- `register.go` -- exports registration functions
-- `test.go` -- blank imports to trigger `init()` execution
+- `creatures.go`, `spells.go`, `enchantments.go`, `artifacts.go` and `lands.go`;
+- `register.go` or `set.go` for set registration and embedded catalog metadata;
+- `test.go` for cross-set side-effect imports; and
+- focused `*_test.go` files for card behavior and interactions.
 
-### Test Organization
+### Build and Verification
 
-- **Card tests** live in card packages: `cards/limited/correctness_test.go`, `cards/arabian/creatures_test.go`
-- **Engine tests** in `pkg/mage/*_test.go` and `pkg/mage/gametest/*_test.go`
-- All tests use `gametest.TestGame` DSL for scenario-based testing
+| Target | Current command |
+|--------|-----------------|
+| Test everything | `make test` -> `go test ./...` |
+| Build packages | `make build` -> `go build ./...` |
+| Format/lint/fix | `make lint` -> `modernize -fix`, `golangci-lint fmt`, `golangci-lint run --fix` |
+| Build WASM | `make wasm` -> compile `cmd/wasm` and copy `wasm_exec.js` |
+| Build card art tool | `make cardart` |
 
-### Build System (Makefile)
-
-| Target | Command |
-|--------|---------|
-| `test` | `go test ./... --count=10` |
-| `build` | `go build ./...` |
-| `vet` | `go vet ./...` |
-| `lint` | `golangci-lint run ./... && staticcheck ./...` |
-| `wasm` | `GOOS=js GOARCH=wasm go build -o web/mage.wasm ./cmd/wasm/` |
-| `clean` | Remove generated binaries and coverage files |
-
-### Code Generation
-
-All enums in `pkg/mage/core/` use `//go:generate enumer` directives, producing `_enumer.go` files with `String()`, `Parse()`, and other methods automatically.
+Engine and card changes follow test-driven development. Card behavior is tested through `gametest.TestGame`; lower-level engine tests live beside `pkg/mage` code. The suite also contains comprehensive-rules-oriented tests grouped by rule chapter, AI/search tests, replay tests, FFI encoder tests and catalog/tool tests.
 
 ### Set Implementation Pipeline
 
+```text
+Scryfall
+  |-- cmd/fetchset ------> data/<SET>.json
+  |-- cmd/fetchcatalog --> data/catalog/<SET>.json
+  '-- cmd/genset --------> cards/<package>/*.go + embedded catalog JSON
+                              -> card-by-card TDD
+                              -> implement-set / implement-card workflow
+                              -> validate-set audit
+                              -> go test ./... and make lint
 ```
-Scryfall API -> cmd/fetchset -> data/*.json -> cmd/genset -> cards/{set}/*.go -> TDD -> tests pass
-```
+
+`pkg/mage/doc.go` documents important engine contracts, while `pkg/mage/dsl/dsl.go` is the practical inventory of the card-author-facing surface. Comprehensive-rule details are indexed in `docs/comprehensive-rules-index.md`.
 
 ---
 
 ## 4. Physical View
 
-The physical view describes deployment topology and how the system maps to infrastructure.
+The physical view maps packages to executable and integration boundaries.
 
-### Deployment Targets
+### 4.1 Native TUI
 
-#### 4.1 Standalone TUI (Native Binary)
-
-```
-+--------------------+
-| User Terminal      |
-|--------------------|
-| TUI Binary         |
-|  - Game Engine     |
-|  - Bubbletea UI    |
-|  - AI Opponent     |
-+--------------------+
+```text
+Terminal
+  <-> Bubble Tea model (internal/tui)
+  <-> HumanPlayer channels (pkg/mage/interactive)
+  <-> game-loop goroutine
+  <-> Game + heuristic/search AI
 ```
 
-- **Build:** `go build ./cmd/tui/`
-- **Network:** None (single-machine, local play)
-- **Players:** Human vs. AI
+`cmd/tui` is a local human-vs-AI application. Deck construction, AI personality inference and AI mode selection happen in the native process; no network service or persistence is required.
 
-#### 4.2 SSH Multiplayer Server
+### 4.2 SSH Server
 
-```
-+-----------------+     SSH (port 2222)    +------------------------+
-| SSH Client 1    |----------------------->| SSH Server             |
-| (Terminal)      |<-----------------------|  - Lobby (matchmaking) |
-+-----------------+                        |  - Game Engine         |
-                                           |  - Per-session TUI     |
-+-----------------+     SSH (port 2222)    |  - AI Engine           |
-| SSH Client 2    |----------------------->|  - Host keys in .ssh/  |
-| (Terminal)      |<-----------------------|                        |
-+-----------------+                        +------------------------+
+```text
+SSH clients
+  <-> Wish SSH server :${PORT:-2222}
+       |-- Bubble Tea lobby
+       |-- mutex-protected game slots
+       |-- human-vs-human multiplayer loop
+       '-- human-vs-AI single-player loop
 ```
 
-- **Build:** `go build ./cmd/server/`
-- **Port:** Configurable via `PORT` env var (default 2222)
-- **Protocol:** SSH + PTY
-- **Concurrency:** One goroutine per session; lobby mutex protects game slots
-- **Players:** Human vs. Human or Human vs. AI
+The server creates `.ssh/server_ed25519` through Wish's host-key handling, starts a Bubble Tea program per SSH session and forwards terminal resize events. Each player receives an independent channel set connected to the shared game loop. There is no database or durable match state.
 
-#### 4.3 Browser-Based (WebAssembly)
+### 4.3 Browser/WASM
 
-```
-+-------------------------------+     HTTP/HTTPS    +-------------------+
-| Web Browser                   |<----------------->| Static HTTP Server|
-|  - index.html                 |                   |  - mage.wasm      |
-|  - game.js (33KB UI bridge)  |                   |  - game.js        |
-|  - wasm_exec.js (Go runtime) |                   |  - index.html     |
-|  - mage.wasm (Game Engine)   |                   +-------------------+
-|  - AI (runs in WASM)         |
-+-------------------------------+
+```text
+Static HTTP server
+  -> index.html + game.js + wasm_exec.js + mage.wasm
+
+Browser tab
+  |-- JavaScript UI
+  |-- syscall/js bridge
+  |-- interactive game-loop goroutine
+  '-- Game + selected AI, entirely client-side
 ```
 
-- **Build:** `make wasm`
-- **Serving:** Any static HTTP server (e.g., `python3 -m http.server`)
-- **API Bridge:** Go exposes global JS functions via `syscall/js`:
-  - `mageGetCardList()` -- all registered cards
-  - `mageStartGame(deckJSON, callbacks...)` -- initiate game
-  - `mageSendAction(actionJSON)` -- player actions
-  - `mageSendChoice(choiceJSON)` -- modal choices
-- **Players:** Human (browser) vs. AI (in WASM)
-- **Note:** Game engine runs entirely client-side; server only serves static files
+The Go module exports four JavaScript globals:
 
-### Data Flow Comparison
+- `mageGetCardList()`;
+- `mageStartGame(deckJSON, onGameMsg, onChoiceReq, aiDeckJSON?, personality?, mode?)`;
+- `mageSendAction(actionJSON)`; and
+- `mageSendChoice(choiceJSON)`.
 
-| Dimension | TUI | SSH Server | Browser/WASM |
-|-----------|-----|-----------|--------------|
-| **Network** | None | SSH (2222) | HTTP |
-| **Players** | 1 Human + 1 AI | 1-2 Humans + optional AI | 1 Human + 1 AI |
-| **UI** | Bubbletea | Bubbletea + Wish | HTML/CSS/JS |
-| **Game Loop** | Goroutine | Goroutine per game | Goroutine (WASM) |
-| **State Sync** | Channels | Channels | Channels -> JS callbacks |
-| **Persistence** | None | None | None |
-| **Scale** | Single user | Multiple concurrent sessions | Single session per tab |
+The web server only delivers static files; rules execution and AI run in the browser.
 
-### Support Tooling
+### 4.4 C Shared Library and Python Binding
 
-| Binary | Purpose | I/O |
-|--------|---------|-----|
-| `fetchset` | Fetch card data from Scryfall API | HTTP -> JSON file |
-| `fetchcatalog` | Bulk fetch 37+ sets | HTTP -> data/catalog/*.json |
-| `genset` | Generate Go stubs from JSON | JSON -> Go source files |
-| `gametest` | Two AIs playing (debug) | stdout game log |
-| `cardart` | Pixel art card images | PNG/SVG/ANSI output |
-| `forge` | Procedural card generation | stdout JSON |
+```text
+Python / C caller
+  <-> cgo ABI (libmage.so, libmage.dylib or DLL)
+       |-- process-global opaque game handles
+       |-- JSON state/legal/step API
+       |-- batched game polling and stepping
+       |-- native token and decision-spec encoders
+       |-- grammar masks
+       '-- text-rollout inference scheduler
+            <-> per-game decision-loop goroutines
+```
 
-### Configuration
+`cmd/pylib` can be built with `go build -buildmode=c-shared`. `setup.py` builds and packages that library for the `mage-go` Python package. The ABI provides simple handle-based game control as well as high-throughput batch and tokenization paths intended for model training and inference.
 
-- **`PORT`** env var: SSH server port
-- **`FETCHSET_SKIP_TLS`** env var: skip TLS for Scryfall (sandbox workaround)
-- **Host keys:** `.ssh/server_ed25519` (auto-generated)
-- **No Docker, no external databases, no persistence layer**
+### 4.5 Offline and Validation Tools
+
+| Binary | Purpose |
+|--------|---------|
+| `gametest` | Run and profile one or more AI-vs-AI games with selectable strategies and decks |
+| `scenariotest` | Run seeded batches against Shandalar rogue decks and emit JSONL results |
+| `scenarioanalyze` | Group panics, timeouts, anomalous games and win statistics from scenario JSONL |
+| `oracle-replay` | Replay XMage recorder JSONL/GZIP and compare legal actions and priority snapshots |
+| `fetchset` / `fetchcatalog` | Download implementation and metadata inputs from Scryfall |
+| `genset` | Generate set source, registration, tests and embedded catalog scaffolding |
+| `cardart` | Render pixel-art card assets |
+| `forge` | Generate procedural card sets |
+
+### Deployment Comparison
+
+| Dimension | TUI | SSH | Browser/WASM | C/Python |
+|-----------|-----|-----|--------------|----------|
+| Boundary | Local terminal | SSH/PTTY | `syscall/js` callbacks | C ABI and Python wrapper |
+| Players | Human + AI | Human + human or human + AI | Human + AI | Caller-controlled players/batches |
+| Game ownership | One local process | One goroutine per game | One browser tab | Opaque process-global handle |
+| State transport | Go channels | Go channels through session TUIs | JSON callbacks | JSON or packed native buffers |
+| Persistence | None | None | None | Caller-owned |
 
 ---
 
 ## +1. Scenarios View
 
-The scenarios view describes key use cases that exercise and validate the other four views.
+The scenarios connect the other four views through representative workflows.
 
-### Scenario 1: Playing a Game (Terminal)
+### Scenario 1: Resolve a Targeted Spell
 
-**Actor:** Human player
+1. A priority handler selects a spell, X value and legal targets.
+2. Casting pays costs and creates a `StackObject` with target-zone and cast-time snapshots.
+3. `EvtSpellCast` and `EvtBecomesTarget` events queue applicable triggers.
+4. Both players pass; the top stack object resolves.
+5. Each `Effect` receives an `EffectContext` and requests mutations on `*Game`.
+6. Replaceable mutations pass through `EffectManager.ApplyReplacements`.
+7. The engine fires resulting events, checks state-based actions and starts the next priority round.
 
-1. Launch `./tui`, select deck archetype and AI personality
-2. Game creates `mage.Game` with HumanPlayer + AI player
-3. `RunGameLoop` starts in goroutine, communicates via channels
-4. Each priority window: game sends `GameMsg` -> TUI renders -> human selects action -> `PriorityAction` sent back
-5. AI takes turns via `aiPlayer.GetPriorityAction()` (heuristic, minimax, or adaptive)
-6. Game resolves spells, combat, triggers, SBAs per turn structure
-7. Winner announced when a player reaches 0 life or other loss condition
+**Views exercised:** Logical (actions, effects, stack), Process (priority and replacement flow)
 
-**Views exercised:** Logical (all types), Process (turn loop, priority, channels), Physical (TUI binary)
+### Scenario 2: Search-AI Combat Decision
 
-### Scenario 2: Playing via SSH
+1. The AI receives priority or a combat declaration callback.
+2. The heuristic strategy gathers `EffectProperties`, targets and available mana, or the search strategy generates legal moves.
+3. Search clones the game, sharing immutable cards/effects and battlefield permanents copy-on-write.
+4. The combat solver evaluates attacker subsets, defender blocks, pump/removal tricks and first/double-strike windows.
+5. Evaluation and transposition-table results select an action or cache a turn plan.
+6. The chosen action is executed on the live, single-owner game loop.
 
-**Actors:** Two remote human players
+**Views exercised:** Logical (clones and AI metadata), Process (synchronous search), Development (AI subpackages)
 
-1. Server listens on port 2222; two players SSH in
-2. Lobby matches players into a game session
-3. Both get Bubbletea TUI instances backed by shared `mage.Game`
-4. Active player's TUI shows interactive options; opponent sees read-only view
-5. Actions broadcast to both TUI instances via channel forwarding
-6. Disconnection: closed channel detected, remaining player can continue or concede
+### Scenario 3: Play Through a UI Adapter
 
-**Views exercised:** Process (goroutine per session, channel sync), Physical (SSH server topology)
+1. TUI, SSH or browser code constructs players and decks and starts an interactive game loop.
+2. `SnapshotGameState` produces a viewer-oriented serializable state.
+3. `GetAvailableActions` builds legal action options.
+4. A human response returns through channels or a JavaScript callback bridge.
+5. Modal choices use the separate choice request/response path.
+6. The adapter renders updates until the engine reports a winner or disconnection.
 
-### Scenario 3: Implementing a New Card (TDD)
+**Views exercised:** Process (channels), Physical (native, SSH or WASM deployment)
 
-**Actor:** Developer
+### Scenario 4: Implement a Card or Set
 
-1. Find Oracle text on Scryfall
-2. Read `pkg/mage/doc.go` for available effects, triggers, and constructors
-3. Write failing test using `gametest.TestGame` DSL:
-   ```go
-   g := gametest.NewTestGame(t)
-   g.AddCard(ZoneBattlefield, PlayerA, "Lightning Bolt")
-   g.CastSpell(1, PrecombatMain, PlayerA, "Lightning Bolt", "PlayerB")
-   g.StopAt(1, EndStep)
-   g.Execute()
-   g.AssertLife(PlayerB, 17)
-   ```
-4. Implement card registration with appropriate constructors and effects
-5. Run test: `go test ./cards/limited -run TestLightningBolt`
-6. Iterate until passing; run full suite: `go test ./cards/...`
+1. Fetch Oracle and catalog data from Scryfall.
+2. Generate set scaffolding with full Oracle comments.
+3. Read `pkg/mage/doc.go`, the DSL and relevant comprehensive-rule sections.
+4. Write a failing `gametest.TestGame` scenario.
+5. Compose an existing action/effect/target/cost pipeline, or add exact engine support with engine tests.
+6. Run focused tests, `go test ./...` and `make lint`.
+7. Validate registration, Oracle fidelity, unsupported markers and regression coverage.
 
-**Views exercised:** Logical (Card, Effect, Ability types), Development (test DSL, package structure)
+**Views exercised:** Logical (DSL and rules primitives), Development (generation and TDD)
 
-### Scenario 4: Implementing a New Set
+### Scenario 5: Cross-Engine Replay
 
-**Actor:** Developer
+1. XMage records a game as JSONL, optionally GZIP-compressed.
+2. `oracle-replay` reconstructs decks and scripted choices in mage-go.
+3. At each recorded priority point it compares snapshots and available actions.
+4. The tool reports the first state divergence, with configurable loose action matching and tracing.
 
-1. **Fetch:** `go run ./cmd/fetchset -o data/DRK.json DRK`
-2. **Scaffold:** `go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/`
-   - Generates `creatures.go`, `spells.go`, etc. with Oracle text comments and `// TODO: implement` stubs
-   - Generates `test.go` with blank imports for init() registration
-3. **Implement:** TDD loop per card (or use `/implement-set` skill for automation)
-4. **Validate:** `/validate-set thedark DRK` audits completeness, test coverage, Oracle fidelity
+**Views exercised:** Process (deterministic driving), Physical (offline validation tool)
 
-**Views exercised:** Development (genset pipeline, package layout), Logical (Registry, Card factories)
+### Scenario 6: Batched Model Rollout
 
-### Scenario 5: Testing Card Interactions
+1. Python creates game handles through the C ABI with seeded configuration.
+2. Native game loops stop at pending decisions.
+3. Batch polling gathers state and legal choices across ready games.
+4. Native encoders produce packed state/decision tokens and grammar masks.
+5. A model returns choices, which are decoded and stepped back into the relevant games.
+6. Completed games release their handles and buffers.
 
-**Actor:** Developer
-
-1. Set up board state with multiple cards from different sets
-2. Queue actions across multiple turns:
-   ```go
-   g.AddCard(ZoneBattlefield, PlayerA, "Sengir Vampire")
-   g.AddCard(ZoneBattlefield, PlayerB, "White Knight")
-   g.Attack(1, PlayerA, "Sengir Vampire")
-   g.Block(1, PlayerB, "White Knight", "Sengir Vampire")
-   g.StopAt(2, Upkeep)
-   g.Execute()
-   g.AssertGraveyardCount(PlayerB, "White Knight", 1)
-   g.AssertCounterCount(PlayerA, "Sengir Vampire", Plus1Plus1, 1)
-   ```
-3. Assertions verify interactions: combat damage, triggers, SBAs, continuous effects
-
-**Views exercised:** Process (combat, triggers, SBAs), Logical (abilities, effects, layers)
-
-### Scenario 6: Adding an Engine Feature
-
-**Actor:** Developer
-
-1. Card implementation reveals missing engine support (e.g., new event type, new replacement effect)
-2. Design minimal addition: new `EventType`, new `GameMutator` method, or new `ContinuousEffect` variant
-3. Write engine tests in `pkg/mage/gametest/mechanics_test.go`
-4. Implement in core engine files
-5. Verify engine tests pass
-6. Update `pkg/mage/doc.go` with new API
-7. Use feature in card implementations
-8. Run full suite: `go test ./...`
-
-**Views exercised:** All views (core engine touches everything)
-
-### Scenario Summary
-
-| Scenario | Key Actors | Entry Point | Primary Views |
-|----------|-----------|-------------|---------------|
-| Play (TUI) | Human, AI | `cmd/tui/` | Process, Physical |
-| Play (SSH) | 2 Humans | `cmd/server/` | Process, Physical |
-| Implement Card | Developer | card package | Logical, Development |
-| Implement Set | Developer | `cmd/fetchset`, `cmd/genset` | Development |
-| Test Interactions | Developer | test files | Process, Logical |
-| Engine Feature | Developer | `pkg/mage/` | All |
+**Views exercised:** Logical (serializable decisions), Process (batched goroutines), Physical (C/Python boundary)
 
 ---
 
 ## Cross-Cutting Concerns
 
-### Determinism
-The engine is fully deterministic given the same player decisions. No randomness exists in game logic (shuffling is external). This enables reliable testing and potential replay support.
+### Oracle Fidelity
+
+Card factories retain full Oracle text comments, and engine primitives are expected to model every restriction and edge case rather than approximate it. The general zone-change event, LKI views, cast snapshots, target-zone validation and typed replacement actions exist to preserve facts across the exact points where Magic rules need them.
 
 ### Extensibility
-New cards require zero engine changes when existing effects cover the mechanics. The composable Effect/Ability/Cost/Target/Filter system handles the vast majority of cards. When the engine must be extended, the GameMutator interface boundary ensures changes are explicit and auditable.
 
-### Testability
-The `gametest.TestGame` DSL enables scenario-based tests that read like game narratives. The non-interactive mode (no `OnPriority` handler) allows atomic test execution without channel overhead. Over 800 tests cover card interactions, combat, triggers, and edge cases.
+The card DSL composes constructors, action definitions, effects, targets, filters, values, conditions and costs. Engine changes are still required when a rule cannot be expressed exactly. `pkg/mage/dsl` makes the intended card-facing boundary visible, while `EffectContext` escape hatches make remaining coupling explicit.
+
+### Testability and Validation
+
+The same rules paths serve scenario tests, interactive play, AI search, foreign callers and replay validation. Seeded batch scenarios and XMage replay add system-level checks beyond unit tests. Search cloning and scripted test players allow complex branches without UI I/O.
+
+### Performance
+
+Hot paths avoid allocations through fixed-size attribute/counter arrays, reusable effect and mana scratch storage, copy-on-write battlefield clones, cached render plans, packed token output, transposition tables and Zobrist hashing. Timing and profiling hooks exist in the AI runner, engine loop and C ABI.
 
 ### Portability
-A single Go codebase compiles to native binary (TUI/server), WebAssembly (browser), with no code duplication. The interactive layer abstracts over terminal I/O (Bubbletea channels) and browser I/O (JS callbacks), keeping the engine UI-agnostic.
+
+The rules engine is shared by native terminal programs, an SSH service, WebAssembly and a C shared library. UI-specific serialization and concurrency stay in `pkg/mage/interactive` or executable adapters, while core rule transitions remain synchronous Go calls.
+
+### Known Architectural Boundaries
+
+- The engine is intentionally two-player.
+- A single `Game` must have one mutation owner.
+- Randomness is process-level `math/rand`, not game-owned cloneable state.
+- Text-layer traversal and full planeswalker rules are incomplete.
+- LKI is strongest for battlefield departures; general event-scoped LKI is not complete.
+- The card DSL still exposes concrete engine escape hatches while its package boundary evolves.
