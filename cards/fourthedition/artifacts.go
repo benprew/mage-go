@@ -31,17 +31,28 @@ func registerArtifacts() {
 	// Fellwar Stone {2}
 	// Artifact
 	// {T}: Add one mana of any color that a land an opponent controls could produce.
-	// TODO: implement — needs opponent's land mana inspection
 	Register("Fellwar Stone", func() Card {
-		return NewArtifact("Fellwar Stone", "{2}")
+		return NewArtifact("Fellwar Stone", "{2}",
+			WithStaticAbility(SourceHasManaAbilitiesOpponentLandsCouldProduce()),
+		)
 	})
 
 	// Library of Leng {1}
 	// Artifact
 	// You have no maximum hand size.
 	// If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.
-	// TODO: implement — needs discard replacement effect
 	Register("Library of Leng", func() Card {
-		return NewArtifact("Library of Leng", "{1}")
+		return NewArtifact("Library of Leng", "{1}",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					source := g.FindPermanent(sourceID)
+					if source != nil {
+						g.SetNoMaximumHandSize(source.ControllerID())
+					}
+					return nil
+				}),
+				DiscardToLibraryReplacement(),
+			),
+		)
 	})
 }

@@ -1516,7 +1516,7 @@ func registerCreatures() {
 						}
 						// Pay X generic mana.
 						cost := fmt.Sprintf("{%d}", x)
-						if !g.TryPayCostFromLands(controller, cost) {
+						if !g.TryPayMana(controller, cost) {
 							return nil
 						}
 						// Choose another target creature.

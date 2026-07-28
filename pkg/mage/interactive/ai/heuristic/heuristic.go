@@ -477,6 +477,7 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 
 func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
 	playerID := p.PlayerID()
+	xValue := bestXValue(g, playerID, card, nil)
 
 	var targets []uuid.UUID
 
@@ -499,15 +500,16 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 		// rather than only filling the first requirement.
 		for _, t := range sa.Targets() {
 			possible := t.Possible(playerID, card, g)
+			minTargets, maxTargets := mage.TargetBounds(t, xValue)
 			if len(possible) == 0 {
-				if t.Min() > 0 {
+				if minTargets > 0 {
 					return nil
 				}
 				continue
 			}
 
-			chosen := s.selectTargetsForSpec(g, playerID, t, possible, purpose, damage, outcome, hint)
-			if len(chosen) < t.Min() {
+			chosen := s.selectTargetsForSpec(g, playerID, t, possible, purpose, damage, outcome, hint, maxTargets)
+			if len(chosen) < minTargets {
 				return nil
 			}
 			targets = append(targets, chosen...)
@@ -542,8 +544,8 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 // selectTargetsForSpec chooses up to t.Max() targets for a single Target spec.
 // For specs that accept more than one target it returns the best N (distinct);
 // for single-target specs it preserves the original per-type selection logic.
-func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage.Target, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, outcome mage.Outcome, hint mage.AIHint) []uuid.UUID {
-	n := max(t.Max(), 1)
+func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage.Target, possible []uuid.UUID, purpose eval.TargetPurpose, damage int, outcome mage.Outcome, hint mage.AIHint, maxTargets int) []uuid.UUID {
+	n := max(maxTargets, 1)
 	opponent := g.GetOpponent(playerID)
 
 	switch t.(type) {

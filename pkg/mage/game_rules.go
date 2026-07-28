@@ -391,6 +391,12 @@ func (r *GameRules) SetMaxHandSize(playerID uuid.UUID, size int) {
 	r.maxHandSize[playerID] = size
 }
 
+// SetNoMaximumHandSize removes the player's maximum hand size while the
+// continuous effect that calls it remains active.
+func (r *GameRules) SetNoMaximumHandSize(playerID uuid.UUID) {
+	r.maxHandSize[playerID] = -1
+}
+
 // MaxHandSize returns the max hand size for a player (default 7).
 func (r *GameRules) MaxHandSize(playerID uuid.UUID) int {
 	if size, ok := r.maxHandSize[playerID]; ok {

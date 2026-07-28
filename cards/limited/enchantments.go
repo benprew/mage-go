@@ -174,7 +174,7 @@ func registerEnchantments() {
 					if attached == nil {
 						return nil
 					}
-					if g.TryPayCostFromLands(attached.ControllerID(), "{4}") {
+					if g.TryPayMana(attached.ControllerID(), "{4}") {
 						attached.Tapped = false
 					}
 					return nil
@@ -617,7 +617,7 @@ func registerEnchantments() {
 						activePlayer := g.ActivePlayerObj().PlayerID()
 						blues := g.FilterBattlefield(And(IsCreature, HasColorFilter(Blue), ControlledBy(activePlayer), IsTapped))
 						for _, blue := range blues {
-							if g.TryPayCostFromLands(activePlayer, "{4}") {
+							if g.TryPayMana(activePlayer, "{4}") {
 								blue = g.MutablePermanent(blue.ID())
 								if blue == nil {
 									continue

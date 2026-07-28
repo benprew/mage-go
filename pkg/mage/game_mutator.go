@@ -420,6 +420,20 @@ func (g *Game) AddSourcePrevention(playerID, sourceID uuid.UUID) {
 	g.effects.AddReplacement(&sourcePreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, dmgSource: sourceID})
 }
 
+// AddSourcePreventionShield prevents up to amount damage from sourceID to the
+// specified player during the next matching damage event.
+func (g *Game) AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount int) {
+	if amount <= 0 {
+		return
+	}
+	g.effects.AddReplacement(&sourcePreventionShieldReplacement{
+		replacementBase: replacementBase{duration: EndOfTurn},
+		playerID:        playerID,
+		dmgSource:       sourceID,
+		remaining:       amount,
+	})
+}
+
 // AddTypePrevention adds a card-type damage prevention rule for the player.
 func (g *Game) AddTypePrevention(playerID uuid.UUID, ct CardType) {
 	g.effects.AddReplacement(&typePreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, cardType: ct})
@@ -621,6 +635,18 @@ func (g *Game) AddActivationCostReduction(permID uuid.UUID, amount int) {
 // SetMaxHandSize sets the maximum hand size for a player.
 func (g *Game) SetMaxHandSize(playerID uuid.UUID, size int) {
 	g.effects.Rules.SetMaxHandSize(playerID, size)
+}
+
+// SetNoMaximumHandSize removes the player's maximum hand size for the current
+// continuous-effect cycle.
+func (g *Game) SetNoMaximumHandSize(playerID uuid.UUID) {
+	g.effects.Rules.SetNoMaximumHandSize(playerID)
+}
+
+// MaximumHandSize returns the player's current maximum hand size. A negative
+// value means the player has no maximum hand size.
+func (g *Game) MaximumHandSize(playerID uuid.UUID) int {
+	return g.effects.Rules.MaxHandSize(playerID)
 }
 
 // AddExpansionCastBlock blocks spells from the given set code from being cast.

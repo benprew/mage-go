@@ -972,6 +972,46 @@ func GrantManaAbilityToAttached(productions ...ManaProduction) ContinuousEffect 
 	})
 }
 
+// SourceHasManaAbilitiesOpponentLandsCouldProduce grants the source one
+// tap-for-mana ability for each color an opponent's land could produce.
+func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		source := g.MutablePermanent(sourceID)
+		if source == nil {
+			return nil
+		}
+		colors := make(map[Color]bool)
+		for _, land := range g.battlefield {
+			if land.ControllerID() == source.ControllerID() || !land.HasType(TypeLand) {
+				continue
+			}
+			for _, ability := range land.RuntimeAbilities {
+				for _, production := range abilityManaProductions(UnwrapAbility(ability)) {
+					if production.Color == AnyColor {
+						for _, color := range []Color{White, Blue, Black, Red, Green} {
+							colors[color] = true
+						}
+						continue
+					}
+					if production.Color != Colorless {
+						colors[production.Color] = true
+					}
+				}
+			}
+		}
+		for _, color := range []Color{White, Blue, Black, Red, Green} {
+			if !colors[color] {
+				continue
+			}
+			ability := NewManaAbility(color)
+			ability.SetSource(source.ID())
+			ability.SetController(source.ControllerID())
+			source.RuntimeAbilities = append(source.RuntimeAbilities, WrapGrantedAbility(ability))
+		}
+		return nil
+	})
+}
+
 // ---------------------------------------------------------------------------
 // Animate artifact effects (P/T = mana value)
 // ---------------------------------------------------------------------------

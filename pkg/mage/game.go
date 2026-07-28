@@ -640,8 +640,6 @@ func (g *Game) findCardForDamageSource(sourceID uuid.UUID) Card {
 	return g.FindCardAnywhere(sourceID)
 }
 
-// TryPayCostFromLands attempts to pay a mana cost by tapping untapped lands
-// controlled by the player. Returns true if the cost was fully paid.
 // FlipCoin simulates a coin flip. Returns true for "win" (heads).
 // If CoinFlipResults is non-empty, pops from the front (for test determinism).
 func (g *Game) FlipCoin(playerID uuid.UUID) bool {
@@ -653,108 +651,22 @@ func (g *Game) FlipCoin(playerID uuid.UUID) bool {
 	return rand.Intn(2) == 0
 }
 
-func (g *Game) TryPayCostFromLands(playerID uuid.UUID, manaCostStr string) bool {
+// TryPayMana attempts to pay a mana cost using floating mana and any untapped
+// mana sources the player may activate. It is suitable for resolving effects
+// that ask a player to pay mana outside the spell-casting pipeline.
+func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
+	player := g.GetPlayer(playerID)
+	if player == nil {
+		return false
+	}
 	cost := ParseManaCost(manaCostStr)
-
-	// Collect untapped lands controlled by the player
-	var lands []*Permanent
-	for _, p := range g.battlefield {
-		if p.ControllerID() == playerID && !p.Tapped && p.HasType(TypeLand) {
-			lands = append(lands, p)
-		}
+	if !g.CanAfford(playerID, cost, nil) {
+		return false
 	}
-
-	used := make(map[uuid.UUID]bool)
-
-	// Pay colored costs first
-	colorCosts := []struct {
-		amount  int
-		subtype string
-	}{
-		{cost.White, "Plains"},
-		{cost.Blue, "Island"},
-		{cost.Black, "Swamp"},
-		{cost.Red, "Mountain"},
-		{cost.Green, "Forest"},
+	if err := g.AutoTapForCost(playerID, cost); err != nil {
+		return false
 	}
-
-	for _, cc := range colorCosts {
-		for i := 0; i < cc.amount; i++ {
-			found := false
-			for _, land := range lands {
-				if !used[land.ID()] && land.HasSubType(cc.subtype) {
-					used[land.ID()] = true
-					found = true
-					break
-				}
-			}
-			if !found {
-				return false
-			}
-		}
-	}
-
-	// Pay hybrid symbols (CR 107.4d): each {X/Y} can be paid with either
-	// color. Greedy allocation — try the first listed color, fall back to
-	// the second. Sufficient for the simple hybrid costs in print.
-	for _, h := range cost.Hybrid {
-		paid := false
-		for _, c := range []Color{h.A, h.B} {
-			subtype := ""
-			switch c {
-			case White:
-				subtype = "Plains"
-			case Blue:
-				subtype = "Island"
-			case Black:
-				subtype = "Swamp"
-			case Red:
-				subtype = "Mountain"
-			case Green:
-				subtype = "Forest"
-			}
-			if subtype == "" {
-				continue
-			}
-			for _, land := range lands {
-				if !used[land.ID()] && land.HasSubType(subtype) {
-					used[land.ID()] = true
-					paid = true
-					break
-				}
-			}
-			if paid {
-				break
-			}
-		}
-		if !paid {
-			return false
-		}
-	}
-
-	// Pay generic cost with any remaining untapped land
-	for i := 0; i < cost.Generic; i++ {
-		found := false
-		for _, land := range lands {
-			if !used[land.ID()] {
-				used[land.ID()] = true
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	// Actually tap the selected lands
-	for _, land := range lands {
-		if used[land.ID()] {
-			g.TapPermanent(land)
-		}
-	}
-
-	return true
+	return player.ManaPool().Pay(cost, nil) == nil
 }
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
@@ -1273,6 +1185,42 @@ func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
 		SourceID: cardID,
 		PlayerID: p.PlayerID(),
 	})
+	return c, true
+}
+
+// PlayerDiscardByEffect discards a card through the replacement pipeline.
+// Costs and turn-based discards must continue to use PlayerDiscard.
+func (g *Game) PlayerDiscardByEffect(p Player, cardID, sourceID uuid.UUID) (Card, bool) {
+	if p == nil {
+		return nil, false
+	}
+	action := NewDiscardAction(sourceID, p.PlayerID(), cardID)
+	result := g.effects.ApplyReplacements(action, g)
+	if result == nil {
+		return nil, false
+	}
+	discard, ok := result.(*DiscardAction)
+	if !ok {
+		return nil, false
+	}
+	return g.executeDiscard(discard)
+}
+
+func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
+	p := g.GetPlayer(action.PlayerID())
+	if p == nil {
+		return nil, false
+	}
+	c, ok := p.RemoveFromHand(action.CardID())
+	if !ok {
+		return nil, false
+	}
+	if action.Destination() == ZoneLibrary {
+		p.SetLibrary(append([]Card{c}, p.Library()...))
+	} else {
+		p.AddToGraveyard(c)
+	}
+	g.FireEvent(GameEvent{Type: EvtDiscard, SourceID: c.ID(), PlayerID: p.PlayerID()})
 	return c, true
 }
 
@@ -2766,6 +2714,30 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, spec
 	return nil
 }
 
+func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard Card, chosen []uuid.UUID, x int) error {
+	specs := sourceCard.CastTargets()
+	if len(specs) != 1 {
+		return nil
+	}
+	spec := specs[0]
+	minTargets, maxTargets := TargetBounds(spec, x)
+	if _, variable := spec.(VariableTarget); !variable {
+		return nil
+	}
+	if len(chosen) < minTargets || len(chosen) > maxTargets {
+		return fmt.Errorf("%s requires exactly %d targets", sourceCard.Name(), minTargets)
+	}
+	possible := spec.Possible(controller, sourceCard, g)
+	seen := make(map[uuid.UUID]bool, len(chosen))
+	for _, id := range chosen {
+		if seen[id] || !slices.Contains(possible, id) {
+			return fmt.Errorf("invalid target for %s", sourceCard.Name())
+		}
+		seen[id] = true
+	}
+	return nil
+}
+
 func (g *Game) autoTapForManaCosts(controller, sourceID uuid.UUID, costs []Cost, hint AutoTapHint) error {
 	for _, cost := range costs {
 		if mc, ok := cost.(*ManaCostPayment); ok {
@@ -2859,6 +2831,12 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	xValue := 0
 	if len(xValues) > 0 {
 		xValue = xValues[0]
+	}
+	if xValue < 0 {
+		return fmt.Errorf("X cannot be negative")
+	}
+	if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
+		return err
 	}
 
 	mc := card.ManaCost()
@@ -3746,7 +3724,7 @@ func (g *Game) doCleanupActions() bool {
 	// Hand size discard: active player discards down to max hand size (CR 514.1)
 	p := active
 	maxHS := g.effects.Rules.MaxHandSize(p.PlayerID())
-	for len(p.Hand()) > maxHS {
+	for maxHS >= 0 && len(p.Hand()) > maxHS {
 		chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
 		if len(chosen) == 0 {
 			break

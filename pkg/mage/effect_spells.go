@@ -577,7 +577,7 @@ func (e *counterUnlessPayEffect) Apply(ctx *EffectContext) error {
 	if spellController == nil {
 		return nil
 	}
-	if ctx.Game.TryPayCostFromLands(obj.Controller, e.cost) {
+	if ctx.Game.TryPayMana(obj.Controller, e.cost) {
 		return nil // paid, spell resolves
 	}
 	ctx.Game.CounterSpellOnStack(ctx.Targets[0])

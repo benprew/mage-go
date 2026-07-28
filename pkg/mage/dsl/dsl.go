@@ -282,6 +282,7 @@ var (
 	PutIntoGraveyardFromBattlefieldTrigger     = mage.PutIntoGraveyardFromBattlefieldTrigger
 	NewSpellAbility                            = mage.NewSpellAbility
 	NewTargetedSpell                           = mage.NewTargetedSpell
+	NewMultiTargetSpell                        = mage.NewMultiTargetSpell
 	ToAllMatching                              = mage.ToAllMatching
 	RegisterDelayedTriggerStep                 = mage.RegisterDelayedTriggerStep
 	SacrificeAtUpkeepUnlessPay                 = mage.SacrificeAtUpkeepUnlessPay
@@ -433,11 +434,14 @@ var (
 	SnapshotAttached   = mage.SnapshotAttached
 
 	// Bundled static abilities
-	ProtectionFromColor                           = mage.ProtectionFromColor
-	PreventDamageFromTo                           = mage.PreventDamageFromTo
-	PreventDamageToSourceByRemovingCounters       = mage.PreventDamageToSourceByRemovingCounters
-	PreventFromAttackingIfDefendingPlayerControls = mage.PreventFromAttackingIfDefendingPlayerControls
-	SourceCantAttackUnlessPays                    = mage.SourceCantAttackUnlessPays
+	ProtectionFromColor                             = mage.ProtectionFromColor
+	PreventDamageFromTo                             = mage.PreventDamageFromTo
+	PreventDamageToSourceByRemovingCounters         = mage.PreventDamageToSourceByRemovingCounters
+	PreventFromAttackingIfDefendingPlayerControls   = mage.PreventFromAttackingIfDefendingPlayerControls
+	SourceCantAttackUnlessPays                      = mage.SourceCantAttackUnlessPays
+	AttachedCantAttackUnlessPays                    = mage.AttachedCantAttackUnlessPays
+	SourceHasManaAbilitiesOpponentLandsCouldProduce = mage.SourceHasManaAbilitiesOpponentLandsCouldProduce
+	DiscardToLibraryReplacement                     = mage.DiscardToLibraryReplacement
 
 	EffectIfPaid     = mage.EffectIfPaid
 	UnlessTargetPays = mage.UnlessTargetPays
@@ -509,12 +513,15 @@ var (
 
 var (
 	TargetCreature                          = mage.TargetCreature
+	TargetNCreatures                        = mage.TargetNCreatures
+	TargetXCreatures                        = mage.TargetXCreatures
 	TargetOtherCreature                     = mage.TargetOtherCreature
 	TargetArtifact                          = mage.TargetArtifact
 	TargetDamageAnyTarget                   = mage.TargetDamageAnyTarget
 	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
 	TargetCreatureYouControl                = mage.TargetCreatureYouControl
 	TargetPermanent                         = mage.TargetPermanent
+	TargetXPermanents                       = mage.TargetXPermanents
 	TargetPlayer                            = mage.TargetPlayer
 	TargetCreatureInHand                    = mage.TargetCreatureInHand
 	TargetSpellOnStack                      = mage.TargetSpellOnStack
@@ -540,6 +547,7 @@ var (
 var (
 	SacrificeSourceCost    = mage.SacrificeSourceCost
 	ManaCostOf             = mage.ManaCostOf
+	ParseManaCost          = core.ParseManaCost
 	WithFrom               = mage.WithFrom
 	WithTo                 = mage.WithTo
 	WithCombatOnly         = mage.WithCombatOnly

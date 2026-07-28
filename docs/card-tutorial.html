@@ -1686,7 +1686,7 @@ g.<span class="fn">AssertPermanentCount</span>(
 <span class="fn">RemoveFromCombat</span>(uuid.UUID)
 <span class="fn">AddContinuousEffect</span>(CE)
 <span class="fn">ApplyContinuousEffects</span>()
-<span class="fn">TryPayCostFromLands</span>(id, cost)
+<span class="fn">TryPayMana</span>(id, cost)
 <span class="fn">FlipCoin</span>(uuid.UUID) <span class="tp">bool</span></code></pre>
   </div>
   <div data-notes="Effects receive GameMutator — read anything, mutate anything. But mutations aren't raw writes. DestroyPermanent goes through the replacement pipeline. The API is safe by design."></div>

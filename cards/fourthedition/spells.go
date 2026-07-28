@@ -3,6 +3,7 @@ package fourthedition
 import (
 	"github.com/google/uuid"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -15,10 +16,29 @@ func registerSpells() {
 	// Ashes to Ashes {1}{B}{B}
 	// Sorcery
 	// Exile two target nonartifact creatures. Ashes to Ashes deals 5 damage to you.
-	// TODO: implement — needs two-target spell support
 	Register("Ashes to Ashes", func() Card {
 		return NewSorcery("Ashes to Ashes", "{1}{B}{B}",
-			NewSpellAbility(),
+			mage.NewSpell(
+				FuncEffect("exile two target nonartifact creatures and deal 5 damage to you",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						for _, targetID := range targets {
+							if permanent := g.FindPermanent(targetID); permanent != nil {
+								g.ExilePermanent(permanent)
+							}
+						}
+						if player := g.GetPlayer(controller); player != nil {
+							g.DealDamageToPlayer(player, 5, sourceID)
+						}
+						return nil
+					}),
+				WithTarget(TargetNCreatures(2, Not(IsArtifact))),
+				WithAIHint(AIHint{
+					Roles:         []AIRole{AIRoleRemoval},
+					TargetPurpose: AITargetExile,
+					PreferTarget:  PreferLargestThreat,
+				}),
+			),
 		)
 	})
 
@@ -99,10 +119,27 @@ func registerSpells() {
 	// Mind Bomb {U}
 	// Sorcery
 	// Each player may discard up to three cards. Mind Bomb deals damage to each player equal to 3 minus the number of cards they discarded this way.
-	// TODO: implement — needs player discard choice
 	Register("Mind Bomb", func() Card {
 		return NewSorcery("Mind Bomb", "{U}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect("each player may discard up to three cards, then takes damage for the difference",
+				EffectProperties{Outcome: OutcomeDetriment},
+				func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+					discarded := make(map[uuid.UUID]int)
+					for _, player := range g.AllPlayers() {
+						amount := player.ChooseNumber(0, min(3, len(player.Hand())), "Mind Bomb discard count")
+						cards := player.ChooseCardsFromHand(amount, "Mind Bomb", g)
+						for _, card := range cards {
+							if _, ok := g.PlayerDiscardByEffect(player, card.ID(), sourceID); ok {
+								discarded[player.PlayerID()]++
+							}
+						}
+					}
+					for _, player := range g.AllPlayers() {
+						g.DealDamageToPlayer(player, 3-discarded[player.PlayerID()], sourceID)
+					}
+					return nil
+				}),
+			),
 		)
 	})
 
@@ -120,20 +157,73 @@ func registerSpells() {
 	// Volcanic Eruption {X}{U}{U}{U}
 	// Sorcery
 	// Destroy X target Mountains. Volcanic Eruption deals damage to each creature and each player equal to the number of Mountains put into a graveyard this way.
-	// TODO: implement — needs X-target destruction + conditional damage
 	Register("Volcanic Eruption", func() Card {
 		return NewSorcery("Volcanic Eruption", "{X}{U}{U}{U}",
-			NewSpellAbility(),
+			mage.NewSpell(
+				FuncEffect("destroy X target Mountains and deal damage equal to those put into graveyards",
+					EffectProperties{Outcome: OutcomeDetriment, Destroys: true, Mass: true},
+					func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
+						putIntoGraveyard := 0
+						for _, targetID := range targets {
+							permanent := g.FindPermanent(targetID)
+							if permanent == nil {
+								continue
+							}
+							cardID := permanent.Card.ID()
+							g.DestroyPermanent(permanent)
+							for _, player := range g.AllPlayers() {
+								for _, card := range player.Graveyard() {
+									if card.ID() == cardID {
+										putIntoGraveyard++
+									}
+								}
+							}
+						}
+						if putIntoGraveyard == 0 {
+							return nil
+						}
+						creatures := append([]*Permanent(nil), g.AllBattlefield()...)
+						for _, creature := range creatures {
+							if creature.HasType(TypeCreature) {
+								g.DealDamageToPermanent(creature, putIntoGraveyard, sourceID)
+							}
+						}
+						for _, player := range g.AllPlayers() {
+							g.DealDamageToPlayer(player, putIntoGraveyard, sourceID)
+						}
+						return nil
+					}),
+				WithTarget(TargetXPermanents(And(IsLand, HasSubType("Mountain")))),
+				WithAIHint(AIHint{
+					Roles:         []AIRole{AIRoleRemoval},
+					TargetPurpose: AITargetRemoval,
+					PreferTarget:  PreferLargestThreat,
+				}),
+			),
 		)
 	})
 
 	// Word of Binding {X}{B}{B}
 	// Sorcery
 	// Tap X target creatures.
-	// TODO: implement — needs X-target support
 	Register("Word of Binding", func() Card {
 		return NewSorcery("Word of Binding", "{X}{B}{B}",
-			NewSpellAbility(),
+			mage.NewSpell(
+				FuncEffect("tap X target creatures", EffectProperties{Outcome: OutcomeDetriment, Taps: true},
+					func(g *Game, _ uuid.UUID, _ uuid.UUID, targets []uuid.UUID) error {
+						for _, targetID := range targets {
+							if permanent := g.FindPermanent(targetID); permanent != nil {
+								g.TapPermanent(permanent)
+							}
+						}
+						return nil
+					}),
+				WithTarget(TargetXCreatures()),
+				WithAIHint(AIHint{
+					TargetPurpose: AITargetTap,
+					PreferTarget:  PreferLargestThreat,
+				}),
+			),
 		)
 	})
 }

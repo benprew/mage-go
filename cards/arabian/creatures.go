@@ -725,7 +725,7 @@ func registerCreatures() {
 									if p == nil {
 										return nil
 									}
-									if !g.TryPayCostFromLands(damagedPlayerID, "{1}") {
+									if !g.TryPayMana(damagedPlayerID, "{1}") {
 										p.LoseLife(1)
 									}
 									return nil

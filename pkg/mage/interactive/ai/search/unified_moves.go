@@ -85,7 +85,7 @@ func expandTargets(g *mage.Game, playerID uuid.UUID, card mage.Card, mode, x int
 		}}
 	}
 	purpose, damage, _ := targetPurposeForCard(g, playerID, card, x)
-	combos := topTargetCombinations(g, playerID, card, targets, purpose, damage)
+	combos := topTargetCombinations(g, playerID, card, targets, purpose, damage, x)
 	if len(combos) == 0 {
 		return nil
 	}

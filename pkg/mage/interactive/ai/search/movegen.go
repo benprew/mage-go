@@ -323,7 +323,7 @@ func expandNonXSpellMoves(p mage.Player, g *mage.Game, card mage.Card, xValue, m
 		}}
 	}
 
-	combos := topTargetCombinations(g, playerID, card, allTargetReqs, purpose, damage)
+	combos := topTargetCombinations(g, playerID, card, allTargetReqs, purpose, damage, xValue)
 	if len(combos) == 0 {
 		return []Move{{
 			Type:       interactive.ActionCastSpell,

@@ -1,6 +1,8 @@
 package fourthedition
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -28,9 +30,11 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant creature
 	// Enchanted creature can't attack unless its controller pays {3}.
-	// TODO: implement — needs attack cost mechanism
 	Register("Brainwash", func() Card {
-		return NewAura("Brainwash", "{W}")
+		return NewAura("Brainwash", "{W}",
+			WithCastTarget(TargetCreature()),
+			WithStaticAbility(AttachedCantAttackUnlessPays(GenericCost(3))),
+		)
 	})
 
 	// Creature Bond {1}{U}
@@ -73,9 +77,49 @@ func registerEnchantments() {
 	// Enchantment — Aura
 	// Enchant land
 	// At the beginning of the upkeep of enchanted land's controller, destroy that land unless that player pays {1} or 1 life.
-	// TODO: implement — needs choice between mana and life payment
 	Register("Erosion", func() Card {
-		return NewAura("Erosion", "{U}{U}{U}")
+		return NewAura("Erosion", "{U}{U}{U}",
+			WithCastTarget(TargetLand()),
+			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
+				FuncEffect("destroy enchanted land unless its controller pays {1} or 1 life",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+						source := g.FindPermanent(sourceID)
+						if source == nil || !source.IsAttached() {
+							return nil
+						}
+						land := g.FindPermanent(source.AttachedTo)
+						if land == nil {
+							return nil
+						}
+						player := g.GetPlayer(land.ControllerID())
+						if player == nil {
+							return nil
+						}
+						paid := false
+						choices := []string{"don't pay"}
+						if g.CanAfford(player.PlayerID(), ParseManaCost("{1}"), nil) {
+							choices = append([]string{"pay {1}"}, choices...)
+						}
+						if player.Life() >= 1 {
+							choices = append(choices[:len(choices)-1], "pay 1 life", "don't pay")
+						}
+						switch choices[player.ChooseMode(choices, "Erosion")] {
+						case "pay {1}":
+							paid = g.TryPayMana(player.PlayerID(), "{1}")
+						case "pay 1 life":
+							if player.Life() >= 1 {
+								g.PlayerLoseLife(player, 1)
+								paid = true
+							}
+						}
+						if !paid {
+							g.DestroyPermanent(land)
+						}
+						return nil
+					}), false),
+			),
+		)
 	})
 
 	// Flood {U}
@@ -126,10 +170,39 @@ func registerEnchantments() {
 	// Power Leak {1}{U}
 	// Enchantment — Aura
 	// Enchant enchantment
-	// At the beginning of the upkeep of enchanted enchantment's controller, that player may pay any amount of mana. Power Leak deals 2 damage to that player. Prevent X of that damage, where X is the amount of mana that player paid this way.
-	// TODO: implement — needs mana payment choice
+	// At the beginning of the upkeep of enchanted enchantment's controller, that player may pay any amount of mana. This Aura deals 2 damage to that player. Prevent X of that damage, where X is the amount of mana that player paid this way.
 	Register("Power Leak", func() Card {
-		return NewAura("Power Leak", "{1}{U}")
+		return NewAura("Power Leak", "{1}{U}",
+			WithCastTarget(TargetPermanent(IsEnchantment)),
+			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
+				FuncEffect("enchanted enchantment's controller may pay mana to prevent that much of 2 damage",
+					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},
+					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+						source := g.FindPermanent(sourceID)
+						if source == nil || !source.IsAttached() {
+							return nil
+						}
+						enchantment := g.FindPermanent(source.AttachedTo)
+						if enchantment == nil {
+							return nil
+						}
+						player := g.GetPlayer(enchantment.ControllerID())
+						if player == nil {
+							return nil
+						}
+						available := g.HypotheticalMana(player.PlayerID())
+						paid := player.ChooseNumber(0, available, "Power Leak mana payment")
+						if paid > 0 && !g.TryPayMana(player.PlayerID(), fmt.Sprintf("{%d}", paid)) {
+							paid = 0
+						}
+						if paid > 0 {
+							g.AddSourcePreventionShield(player.PlayerID(), sourceID, min(paid, 2))
+						}
+						g.DealDamageToPlayer(player, 2, sourceID)
+						return nil
+					}), false),
+			),
+		)
 	})
 
 	// Sunken City {U}{U}

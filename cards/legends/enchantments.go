@@ -477,7 +477,7 @@ func registerEnchantments() {
 							}
 							cmc := so.Card.ManaCost().CMC()
 							if cmc > 0 {
-								if !g.TryPayCostFromLands(so.Controller, fmt.Sprintf("{%d}", cmc)) {
+								if !g.TryPayMana(so.Controller, fmt.Sprintf("{%d}", cmc)) {
 									g.CounterSpellOnStack(targets[0])
 								}
 							}
@@ -642,7 +642,7 @@ func registerEnchantments() {
 							}
 							cmc := so.Card.ManaCost().CMC()
 							if cmc > 0 {
-								if !g.TryPayCostFromLands(so.Controller, fmt.Sprintf("{%d}", cmc)) {
+								if !g.TryPayMana(so.Controller, fmt.Sprintf("{%d}", cmc)) {
 									g.CounterSpellOnStack(targets[0])
 								}
 							}
@@ -885,7 +885,7 @@ func registerEnchantments() {
 												}
 												ownerP.AddToHand(removed)
 												// Try to pay UUU to return Puppet Master
-												if g.TryPayCostFromLands(controller, "{U}{U}{U}") {
+												if g.TryPayMana(controller, "{U}{U}{U}") {
 													// Return Puppet Master from graveyard
 													for _, c2 := range g.GetPlayer(controller).Graveyard() {
 														if c2.Name() == "Puppet Master" {

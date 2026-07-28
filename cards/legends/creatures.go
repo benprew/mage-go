@@ -691,7 +691,7 @@ func registerCreatures() {
 				"destroy Cosmic Horror unless you pay {3}{B}{B}{B}; if destroyed, deal 7 damage",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					if g.TryPayCostFromLands(controller, "{3}{B}{B}{B}") {
+					if g.TryPayMana(controller, "{3}{B}{B}{B}") {
 						return nil // paid, keep the creature
 					}
 					perm := g.FindPermanent(sourceID)
@@ -1419,7 +1419,7 @@ func registerCreatures() {
 						player := g.GetPlayer(controller)
 						paid := false
 						if player != nil && player.ChooseMayAbility(fmt.Sprintf("pay {%d}", counters)) {
-							paid = g.TryPayCostFromLands(controller, cost)
+							paid = g.TryPayMana(controller, cost)
 						}
 						if !paid {
 							g.TapPermanent(perm)
@@ -2825,7 +2825,7 @@ func registerCreatures() {
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
 					player := g.GetPlayer(controller)
-					if player != nil && player.ChooseMayAbility("pay {R}{R}{R}") && g.TryPayCostFromLands(controller, "{R}{R}{R}") {
+					if player != nil && player.ChooseMayAbility("pay {R}{R}{R}") && g.TryPayMana(controller, "{R}{R}{R}") {
 						return nil
 					}
 					opponent := g.GetOpponent(controller)

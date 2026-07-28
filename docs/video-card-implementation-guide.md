@@ -643,7 +643,7 @@ Three test cards: Non-Island (20 life), Island (17 life), No Lands (17 life + Dj
 
 **GameReader** (read-only): `GetPlayer`, `GetOpponent`, `ActivePlayerObj`, `AllPlayers`, `FindPermanent`, `FindPermanentByName`, `FindCardAnywhere`, `AnyBattlefield`, `FilterBattlefield`, `CountBattlefield`, `XValue`, `ModeValue`, `GetResolvingCard`, `FindStackObject`, `CombatGroups`
 
-**GameMutator** (read + mutations): `PlayerGainLife`, `FireEvent`, `PutOnBattlefield`, `RemoveFromBattlefield`, `DestroyPermanent`, `ExilePermanent`, `Sacrifice`, `DealDamageToPlayer`, `DealDamageToPermanent`, `CounterSpellOnStack`, `PushStack`, `Attach`, `RegisterDelayedTrigger`, `GrantExtraTurn`, `RemoveFromCombat`, `AddContinuousEffect`, `ApplyContinuousEffects`, `TryPayCostFromLands`, `FlipCoin`
+**GameMutator** (read + mutations): `PlayerGainLife`, `FireEvent`, `PutOnBattlefield`, `RemoveFromBattlefield`, `DestroyPermanent`, `ExilePermanent`, `Sacrifice`, `DealDamageToPlayer`, `DealDamageToPermanent`, `CounterSpellOnStack`, `PushStack`, `Attach`, `RegisterDelayedTrigger`, `GrantExtraTurn`, `RemoveFromCombat`, `AddContinuousEffect`, `ApplyContinuousEffects`, `TryPayMana`, `FlipCoin`
 
 *Mutations go through the replacement pipeline. The API is safe by design.*
 

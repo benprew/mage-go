@@ -676,7 +676,7 @@ func TestConversion(t *testing.T) {
 		// Conversion: All Mountains are Plains.
 		g := gametest.NewTestGame(t)
 		// Add 2 Plains first so Conversion can pay {W}{W} at upkeep and survive.
-		// Plains are added before Mountain so TryPayCostFromLands picks them first.
+		// Plains provide the upkeep payment while the converted Mountain remains untapped.
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Conversion")

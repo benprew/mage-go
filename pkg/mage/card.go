@@ -306,7 +306,7 @@ func WithCumulativeUpkeep(costPerAge string) CardOption {
 						for range count {
 							totalCost.WriteString(costPerAge)
 						}
-						if g.TryPayCostFromLands(controller, totalCost.String()) {
+						if g.TryPayMana(controller, totalCost.String()) {
 							return nil
 						}
 						g.DoSacrifice(perm)

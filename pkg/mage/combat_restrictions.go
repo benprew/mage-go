@@ -153,6 +153,15 @@ func SourceCantAttackUnlessPays(cost Cost) ContinuousEffect {
 	})
 }
 
+// AttachedCantAttackUnlessPays creates a continuous effect for an Aura whose
+// enchanted creature has a cost to attack.
+func AttachedCantAttackUnlessPays(cost Cost) ContinuousEffect {
+	return AttachedEffect(LayerAbility, func(g *Game, _, target *Permanent) error {
+		g.effects.AddAttackCost(target.ID(), cost)
+		return nil
+	})
+}
+
 // PayAttackCosts pays the CR 508.1e costs registered for atk. When prompt is
 // true the controller is first asked whether to pay (declining is legal — the
 // creature simply isn't declared as an attacker); search clones pass false

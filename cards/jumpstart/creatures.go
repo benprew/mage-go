@@ -670,7 +670,7 @@ func registerCreatures() {
 					if !p.ChooseMayAbility("pay {1} to draw a card") {
 						return nil
 					}
-					if !g.TryPayCostFromLands(controller, "{1}") {
+					if !g.TryPayMana(controller, "{1}") {
 						return nil
 					}
 					p.DrawCard()

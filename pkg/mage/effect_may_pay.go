@@ -2,8 +2,6 @@ package mage
 
 import (
 	"fmt"
-
-	"github.com/google/uuid"
 )
 
 // mayPayManaEffect implements "you may pay {N}. If you do, ___" mid-resolution
@@ -12,7 +10,7 @@ import (
 // On Apply, the controller is asked whether to pay the mana cost
 // (Player.ChooseMayAbility on a description like "pay {1}{W} to put X +1/+1
 // counters on target Unicorn"). If the player accepts AND the mana can be
-// paid via Game.TryPayCostFromLands, the inner Effect resolves with the same
+// paid via Game.TryPayMana, the inner Effect resolves with the same
 // sourceID/controller/targets the outer trigger resolved with. Otherwise
 // nothing happens.
 //
@@ -25,7 +23,7 @@ type mayPayManaEffect struct {
 }
 
 // MayPayMana wraps an inner Effect with an optional mana payment. If the
-// controller chooses to pay and can pay the cost (using TryPayCostFromLands),
+// controller chooses to pay and can pay the cost (using TryPayMana),
 // the inner effect resolves with the same parameters the outer effect was
 // called with. If the controller declines or cannot pay, the inner effect
 // does not resolve.
@@ -59,10 +57,8 @@ func (e *mayPayManaEffect) Apply(ctx *EffectContext) error {
 	if !p.ChooseMayAbility(e.description) {
 		return nil
 	}
-	if !ctx.Game.TryPayCostFromLands(ctx.Controller, e.cost) {
+	if !ctx.Game.TryPayMana(ctx.Controller, e.cost) {
 		return nil
 	}
 	return ApplyEffect(ctx.Game, e.inner, ctx.SourceID, ctx.Controller, ctx.Targets)
 }
-
-var _ = uuid.Nil // keep uuid import

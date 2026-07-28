@@ -104,6 +104,34 @@ func (r *preventionShieldReplacement) Clone() ReplacementEffect {
 	return &c
 }
 
+type sourcePreventionShieldReplacement struct {
+	replacementBase
+	playerID  uuid.UUID
+	dmgSource uuid.UUID
+	remaining int
+}
+
+func (r *sourcePreventionShieldReplacement) Matches(action Action, _ GameReader) bool {
+	damage, ok := action.(*DamageToPlayerAction)
+	return ok && damage.PlayerID() == r.playerID && damage.ActionSource() == r.dmgSource
+}
+
+func (r *sourcePreventionShieldReplacement) Replace(action Action, _ *Game) Action {
+	damage := action.(*DamageToPlayerAction)
+	prevented := min(damage.Amount(), r.remaining)
+	r.remaining -= prevented
+	if remaining := damage.Amount() - prevented; remaining > 0 {
+		return damage.WithAmount(remaining)
+	}
+	return nil
+}
+
+func (r *sourcePreventionShieldReplacement) IsActive(_ GameReader) bool { return r.remaining > 0 }
+func (r *sourcePreventionShieldReplacement) Clone() ReplacementEffect {
+	cp := *r
+	return &cp
+}
+
 // ---------------------------------------------------------------------------
 // 3. Fog: prevent all combat damage
 // ---------------------------------------------------------------------------
@@ -903,13 +931,14 @@ func isPreventionReplacement(r ReplacementEffect) bool {
 	return ok && pe.IsPreventionEffect()
 }
 
-func (*preventionShieldReplacement) IsPreventionEffect() bool     { return true }
-func (*fogReplacement) IsPreventionEffect() bool                  { return true }
-func (*forcefieldReplacement) IsPreventionEffect() bool           { return true }
-func (*colorPreventionReplacement) IsPreventionEffect() bool      { return true }
-func (*sourcePreventionReplacement) IsPreventionEffect() bool     { return true }
-func (*typePreventionReplacement) IsPreventionEffect() bool       { return true }
-func (*damagePreventionRuleReplacement) IsPreventionEffect() bool { return true }
+func (*preventionShieldReplacement) IsPreventionEffect() bool       { return true }
+func (*fogReplacement) IsPreventionEffect() bool                    { return true }
+func (*forcefieldReplacement) IsPreventionEffect() bool             { return true }
+func (*colorPreventionReplacement) IsPreventionEffect() bool        { return true }
+func (*sourcePreventionReplacement) IsPreventionEffect() bool       { return true }
+func (*sourcePreventionShieldReplacement) IsPreventionEffect() bool { return true }
+func (*typePreventionReplacement) IsPreventionEffect() bool         { return true }
+func (*damagePreventionRuleReplacement) IsPreventionEffect() bool   { return true }
 
 // ---------------------------------------------------------------------------
 // 18. Counter doubler: doubles +1/+1 counter placements on matching permanents

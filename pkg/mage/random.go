@@ -2,6 +2,8 @@ package mage
 
 import (
 	"math/rand"
+
+	"github.com/google/uuid"
 )
 
 // Random-card primitives. These cover effects that pick a card uniformly at
@@ -34,7 +36,7 @@ func (g *Game) DiscardAtRandom(p Player, n int) []Card {
 		}
 		idx := rand.Intn(len(hand))
 		card := hand[idx]
-		if c, ok := g.PlayerDiscard(p, card.ID()); ok {
+		if c, ok := g.PlayerDiscardByEffect(p, card.ID(), uuid.Nil); ok {
 			discarded = append(discarded, c)
 		} else {
 			break

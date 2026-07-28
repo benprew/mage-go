@@ -629,7 +629,7 @@ func registerArtifacts() {
 						}
 						// Pay {X}{X} where X = pin counters (2*pins generic mana)
 						manaCost := fmt.Sprintf("{%d}", 2*pins)
-						if !g.TryPayCostFromLands(controller, manaCost) {
+						if !g.TryPayMana(controller, manaCost) {
 							return nil // cannot pay
 						}
 						// Deal damage to target

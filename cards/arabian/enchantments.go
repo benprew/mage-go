@@ -43,7 +43,7 @@ func registerEnchantments() {
 							for range count {
 								cost.WriteString("{G}")
 							}
-							if g.TryPayCostFromLands(controller, cost.String()) {
+							if g.TryPayMana(controller, cost.String()) {
 								// Deal damage equal to wind counters to each creature and player
 								for _, c := range g.FilterBattlefield(IsCreature) {
 									g.DealDamageToPermanent(c, count, sourceID)

@@ -26,6 +26,54 @@ type BaseTarget struct {
 	max    int
 }
 
+// VariableTarget reports target-count bounds that depend on the announced X.
+type VariableTarget interface {
+	Target
+	BoundsForX(x int) (min, max int)
+}
+
+// TargetBounds returns a target's bounds for the announced X value.
+func TargetBounds(target Target, x int) (min, max int) {
+	if variable, ok := target.(VariableTarget); ok {
+		return variable.BoundsForX(x)
+	}
+	return target.Min(), target.Max()
+}
+
+type countBoundTarget struct {
+	inner Target
+	count int
+	usesX bool
+}
+
+func (t *countBoundTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	return t.inner.Possible(controller, sourceCard, g)
+}
+func (t *countBoundTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+	return t.inner.Choose(controller, sourceCard, g, chosen)
+}
+func (t *countBoundTarget) Chosen() []uuid.UUID { return t.inner.Chosen() }
+func (t *countBoundTarget) IsChosen() bool      { return t.inner.IsChosen() }
+func (t *countBoundTarget) Min() int {
+	if t.usesX {
+		return 0
+	}
+	return t.count
+}
+func (t *countBoundTarget) Max() int {
+	if t.usesX {
+		return 100
+	}
+	return t.count
+}
+func (t *countBoundTarget) Reset() { t.inner.Reset() }
+func (t *countBoundTarget) BoundsForX(x int) (int, int) {
+	if t.usesX {
+		return max(x, 0), max(x, 0)
+	}
+	return t.count, t.count
+}
+
 func (t *BaseTarget) Chosen() []uuid.UUID { return t.chosen }
 func (t *BaseTarget) IsChosen() bool      { return len(t.chosen) > 0 }
 func (t *BaseTarget) Min() int            { return t.min }
@@ -83,6 +131,17 @@ func TargetCreature(filters ...PermanentFilter) Target {
 		BaseTarget: BaseTarget{min: 1, max: 1},
 		Filters:    filters,
 	}
+}
+
+// TargetNCreatures requires exactly n distinct target creatures.
+func TargetNCreatures(n int, filters ...PermanentFilter) Target {
+	return &countBoundTarget{inner: TargetCreature(filters...), count: n}
+}
+
+// TargetXCreatures requires exactly the announced value of X in distinct
+// target creatures.
+func TargetXCreatures(filters ...PermanentFilter) Target {
+	return &countBoundTarget{inner: TargetCreature(filters...), usesX: true}
 }
 
 // TargetOtherCreature creates a target that selects a creature other than the
@@ -406,6 +465,12 @@ func TargetPermanent(filters ...PermanentFilter) Target {
 		BaseTarget: BaseTarget{min: 1, max: 1},
 		Filters:    filters,
 	}
+}
+
+// TargetXPermanents requires exactly the announced value of X in distinct
+// target permanents matching all filters.
+func TargetXPermanents(filters ...PermanentFilter) Target {
+	return &countBoundTarget{inner: TargetPermanent(filters...), usesX: true}
 }
 
 // TargetPermanentOpponentControls creates a target that selects a permanent an

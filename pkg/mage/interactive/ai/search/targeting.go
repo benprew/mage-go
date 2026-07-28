@@ -44,8 +44,12 @@ func targetPurposeForCard(g *mage.Game, playerID uuid.UUID, card mage.Card, x in
 	return purpose, damage, outcome
 }
 
-func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int) [][]uuid.UUID {
-	return topTargetCombinationsFiltered(g, playerID, source, reqs, purpose, damage, nil)
+func topTargetCombinations(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, xValues ...int) [][]uuid.UUID {
+	x := 0
+	if len(xValues) > 0 {
+		x = xValues[0]
+	}
+	return topTargetCombinationsFiltered(g, playerID, source, reqs, purpose, damage, x, nil)
 }
 
 func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage.Permanent, ability mage.ActivatedAbility, purpose eval.TargetPurpose, damage int) [][]uuid.UUID {
@@ -55,7 +59,7 @@ func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage
 			return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), []uuid.UUID{targetID})
 		}
 	}
-	combos := topTargetCombinationsFiltered(g, playerID, source.Card, ability.Targets(), purpose, damage, allow)
+	combos := topTargetCombinationsFiltered(g, playerID, source.Card, ability.Targets(), purpose, damage, 0, allow)
 	result := combos[:0]
 	for _, combo := range combos {
 		if !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), combo) {
@@ -65,15 +69,16 @@ func topAbilityTargetCombinations(g *mage.Game, playerID uuid.UUID, source *mage
 	return result
 }
 
-func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage int, allow func(uuid.UUID) bool) [][]uuid.UUID {
+func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source mage.Card, reqs []mage.Target, purpose eval.TargetPurpose, damage, x int, allow func(uuid.UUID) bool) [][]uuid.UUID {
 	if len(reqs) == 0 {
 		return [][]uuid.UUID{{}}
 	}
 
-	slots := make([][]scoredTarget, 0, len(reqs))
+	groups := make([][][]scoredTarget, 0, len(reqs))
 	for _, req := range reqs {
 		possible := req.Possible(playerID, source, g)
-		if len(possible) == 0 {
+		minTargets, maxTargets := mage.TargetBounds(req, x)
+		if len(possible) < minTargets {
 			return nil
 		}
 		scored := make([]scoredTarget, 0, len(possible))
@@ -84,31 +89,54 @@ func topTargetCombinationsFiltered(g *mage.Game, playerID uuid.UUID, source mage
 			score := eval.TargetValueForPurpose(g, playerID, id, purpose, damage)
 			scored = append(scored, scoredTarget{id: id, score: score})
 		}
-		if len(scored) == 0 {
+		if len(scored) < minTargets {
 			return nil
 		}
 		sort.SliceStable(scored, func(i, j int) bool {
 			return scored[i].score > scored[j].score
 		})
-		if len(scored) > maxTargetCandidatesPerSlot {
-			scored = scored[:maxTargetCandidatesPerSlot]
+		candidateLimit := max(maxTargetCandidatesPerSlot, maxTargets)
+		if len(scored) > candidateLimit {
+			scored = scored[:candidateLimit]
 		}
-		slots = append(slots, scored)
+		maxTargets = min(maxTargets, len(scored))
+		var selections [][]scoredTarget
+		var choose func(start, remaining int, current []scoredTarget)
+		choose = func(start, remaining int, current []scoredTarget) {
+			if len(selections) >= maxTargetCombinations {
+				return
+			}
+			if remaining == 0 {
+				selections = append(selections, append([]scoredTarget(nil), current...))
+				return
+			}
+			for i := start; i <= len(scored)-remaining; i++ {
+				choose(i+1, remaining-1, append(current, scored[i]))
+			}
+		}
+		for count := maxTargets; count >= minTargets; count-- {
+			choose(0, count, nil)
+		}
+		groups = append(groups, selections)
 	}
 
 	var combos [][]uuid.UUID
 	var build func(int, []uuid.UUID)
-	build = func(slot int, current []uuid.UUID) {
+	build = func(group int, current []uuid.UUID) {
 		if len(combos) >= maxTargetCombinations {
 			return
 		}
-		if slot == len(slots) {
+		if group == len(groups) {
 			cp := append([]uuid.UUID(nil), current...)
 			combos = append(combos, cp)
 			return
 		}
-		for _, cand := range slots[slot] {
-			build(slot+1, append(current, cand.id))
+		for _, selection := range groups[group] {
+			next := append([]uuid.UUID(nil), current...)
+			for _, candidate := range selection {
+				next = append(next, candidate.id)
+			}
+			build(group+1, next)
 		}
 	}
 	build(0, nil)

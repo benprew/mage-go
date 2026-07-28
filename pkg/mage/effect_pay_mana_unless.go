@@ -6,7 +6,7 @@ import (
 
 // payManaUnlessEffect implements an OPTIONAL "do X unless you pay {cost}" branch
 // (CR 118.3 / 603.4). The controller is asked whether to pay; only if they
-// accept AND the mana can be paid from untapped lands is the ifNotPaid branch
+// accept AND the mana can be paid is the ifNotPaid branch
 // skipped. If they decline or cannot pay, ifNotPaid resolves.
 //
 // The player keeps the choice of taking the consequence even when they could
@@ -59,7 +59,7 @@ func (e *payManaUnlessEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	p := g.GetPlayer(ctx.Controller)
-	if p != nil && p.ChooseMayAbility(prompt) && g.TryPayCostFromLands(ctx.Controller, e.cost) {
+	if p != nil && p.ChooseMayAbility(prompt) && g.TryPayMana(ctx.Controller, e.cost) {
 		return nil
 	}
 	return ApplyEffect(g, e.ifNotPaid, ctx.SourceID, ctx.Controller, ctx.Targets)
