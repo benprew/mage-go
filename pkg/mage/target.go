@@ -454,8 +454,9 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	BaseTarget
-	Filters      []PermanentFilter
-	opponentOnly bool
+	Filters       []PermanentFilter
+	opponentOnly  bool
+	opponentOwned bool
 }
 
 // TargetPermanent creates a target that selects any permanent on the battlefield,
@@ -483,6 +484,16 @@ func TargetPermanentOpponentControls(filters ...PermanentFilter) Target {
 	}
 }
 
+// TargetPermanentOpponentOwns creates a target that selects a permanent an
+// opponent currently owns, regardless of who controls it.
+func TargetPermanentOpponentOwns(filters ...PermanentFilter) Target {
+	return &PermanentTarget{
+		BaseTarget:    BaseTarget{min: 1, max: 1},
+		Filters:       filters,
+		opponentOwned: true,
+	}
+}
+
 // TargetUpToNPermanents creates a target that selects from 0 up to n
 // permanents on the battlefield, optionally narrowed by PermanentFilter
 // predicates. Mirrors TargetUpToNCreatures for spells like Proctor's Gaze
@@ -503,6 +514,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	var result []uuid.UUID
 	for _, p := range g.battlefield {
 		if t.opponentOnly && p.ControllerID() == controller {
+			continue
+		}
+		if t.opponentOwned && p.Card.Owner() == controller {
 			continue
 		}
 		if !p.CanBeTargetedBy(sourceCard, controller, g) {

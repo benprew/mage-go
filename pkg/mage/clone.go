@@ -19,6 +19,8 @@ type UUIDMap[V any] map[uuid.UUID]V
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
+		anteEnabled:               g.anteEnabled,
+		anteSettled:               g.anteSettled,
 		turn:                      g.turn,
 		step:                      g.step,
 		activePlayer:              g.activePlayer,
@@ -34,6 +36,11 @@ func (g *Game) Clone() *Game {
 		resolvingCombatDamage:     g.resolvingCombatDamage,
 		cardsPutIntoExileThisTurn: g.cardsPutIntoExileThisTurn,
 	}
+	c.originalOwners = cloneUUIDMap(g.originalOwners)
+	if c.originalOwners == nil {
+		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
+	}
+	c.anteResult = append([]OwnershipChange(nil), g.anteResult...)
 
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
 	c.players = make([]Player, len(g.players))
@@ -56,8 +63,10 @@ func (g *Game) Clone() *Game {
 	c.exile = make([]ExiledCard, len(g.exile))
 	for i, ec := range g.exile {
 		c.exile[i] = ExiledCard{
-			Card:     ec.Card, // shared Card ref
-			ExiledBy: ec.ExiledBy,
+			Card:       ec.Card, // shared Card ref
+			ExiledBy:   ec.ExiledBy,
+			FaceDown:   ec.FaceDown,
+			RevealedTo: append([]uuid.UUID(nil), ec.RevealedTo...),
 		}
 	}
 

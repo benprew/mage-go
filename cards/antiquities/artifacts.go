@@ -601,14 +601,37 @@ func registerArtifacts() {
 	// Bronze Tablet {6}
 	// Artifact
 	// Remove this card from your deck before playing if you're not playing for ante.
-	// Bronze Tablet enters tapped.
-	// {4}, {T}: Exile Bronze Tablet and target nontoken permanent an opponent owns. That player
-	// may pay 10 life. If they do, put this card into its owner's graveyard. Otherwise, that
-	// player owns this card and you own the other exiled card.
-	// Ante mechanic with permanent ownership swapping between players.
-	// TODO: Add support for changing card ownership during a game.
+	// This artifact enters tapped.
+	// {4}, {T}: Exile this artifact and target nontoken permanent an opponent owns. That player may pay 10 life. If they do, put this card into its owner's graveyard. Otherwise, that player owns this card and you own the other exiled card.
 	Register("Bronze Tablet", func() Card {
-		return NewArtifact("Bronze Tablet", "{6}")
+		return NewArtifact("Bronze Tablet", "{6}",
+			WithKeyword(EntersTapped),
+			WithActivatedAbility(
+				Pipeline(
+					"exile this artifact and target nontoken permanent an opponent owns",
+					EffectProperties{},
+					SnapshotPermanent(SelectSource, "tablet"),
+					SnapshotPermanent(SelectTarget, "target"),
+					ExileGathered("tablet"),
+					ExileGathered("target"),
+					IfPlayerPays(
+						VarPlayer("target.owner"),
+						LifePayCost(10),
+						"pay 10 life for Bronze Tablet",
+						MoveExiledGatheredToGraveyard("tablet"),
+						Pipeline(
+							"exchange ownership",
+							EffectProperties{},
+							ChangeOwnerGathered("tablet", VarPlayer("target.owner")),
+							ChangeOwnerGathered("target", SelectController()),
+						),
+					),
+				),
+				GenericCost(4),
+				WithCost(Tap()),
+				WithTarget(TargetPermanentOpponentOwns(Not(IsToken))),
+			),
+		)
 	})
 
 	// Weakstone {4}

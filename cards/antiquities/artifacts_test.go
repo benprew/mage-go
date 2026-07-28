@@ -1,12 +1,129 @@
 package antiquities
 
 import (
+	"slices"
 	"testing"
+
+	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
+
+func bronzeTabletTestGame(t *testing.T) (*gametest.TestGame, *mage.Permanent, *mage.Permanent) {
+	t.Helper()
+	g := gametest.NewTestGameWithAnte(t)
+	a := g.GetPlayer(gametest.PlayerA)
+	b := g.GetPlayer(gametest.PlayerB)
+	tabletCard, err := mage.CreateCard("Bronze Tablet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tabletCard.SetOwner(a.PlayerID())
+	tablet := g.PutOnBattlefield(tabletCard, a.PlayerID())
+	targetCard := mage.NewArtifact("Owned Target", "{1}")
+	targetCard.SetOwner(b.PlayerID())
+	target := g.PutOnBattlefield(targetCard, b.PlayerID())
+	return g, tablet, target
+}
+
+func activateBronzeTablet(t *testing.T, g *gametest.TestGame, tablet, target *mage.Permanent) {
+	t.Helper()
+	tablet.Tapped = false
+	g.GetPlayer(gametest.PlayerA).ManaPool().Add(core.Colorless, 4)
+	if err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerA).PlayerID(), tablet.ID(), 0, []uuid.UUID{target.ID()}); err != nil {
+		t.Fatalf("activate Bronze Tablet: %v", err)
+	}
+	g.ResolveTopOfStack()
+}
+
+func TestBronzeTabletEntersTappedAndTargetsByOwner(t *testing.T) {
+	g, tablet, eligible := bronzeTabletTestGame(t)
+	if !tablet.Tapped {
+		t.Fatal("Bronze Tablet did not enter tapped")
+	}
+	a := g.GetPlayer(gametest.PlayerA)
+	b := g.GetPlayer(gametest.PlayerB)
+	g.RemoveFromBattlefield(eligible)
+	controlledByA := g.PutOnBattlefield(eligible.Card, a.PlayerID())
+	ownedByA := mage.NewArtifact("Wrong Owner", "{1}")
+	ownedByA.SetOwner(a.PlayerID())
+	wrongOwner := g.PutOnBattlefield(ownedByA, b.PlayerID())
+	tokenCard := mage.NewToken("Opponent Token", 1, 1, []core.CardType{core.TypeArtifact, core.TypeCreature}, nil)
+	tokenCard.SetOwner(b.PlayerID())
+	token := g.PutOnBattlefield(tokenCard, b.PlayerID())
+
+	aa := mage.UnwrapAbility(tablet.RuntimeAbilities[0]).(mage.ActivatedAbility)
+	possible := aa.Targets()[0].Possible(a.PlayerID(), tablet.Card, g.Game)
+	if !slices.Contains(possible, controlledByA.ID()) {
+		t.Fatal("opponent-owned permanent controlled by ability controller was not targetable")
+	}
+	if slices.Contains(possible, wrongOwner.ID()) || slices.Contains(possible, token.ID()) {
+		t.Fatal("owner/token targeting restriction was not enforced")
+	}
+}
+
+func TestBronzeTabletUsesPipeline(t *testing.T) {
+	card, err := mage.CreateCard("Bronze Tablet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	aa := mage.UnwrapAbility(card.Abilities()[0]).(mage.ActivatedAbility)
+	if _, ok := aa.Effects()[0].(*mage.PipelineData); !ok {
+		t.Fatalf("Bronze Tablet effect is %T, want *mage.PipelineData", aa.Effects()[0])
+	}
+}
+
+func TestBronzeTabletOwnerPaysTenLife(t *testing.T) {
+	g, tablet, target := bronzeTabletTestGame(t)
+	activateBronzeTablet(t, g, tablet, target)
+	g.AssertLife(gametest.PlayerB, 10)
+	g.AssertGraveyardCount(gametest.PlayerA, "Bronze Tablet", 1)
+	g.AssertExileCount("Owned Target", 1)
+	if g.FindCardAnywhere(target.ID()).Owner() != g.GetPlayer(gametest.PlayerB).PlayerID() {
+		t.Fatal("paid branch changed target ownership")
+	}
+}
+
+func TestBronzeTabletPaidBranchUsesCurrentOwnerGraveyard(t *testing.T) {
+	g, tablet, target := bronzeTabletTestGame(t)
+	if err := g.ChangeOwner(tablet.ID(), g.GetPlayer(gametest.PlayerB).PlayerID()); err != nil {
+		t.Fatal(err)
+	}
+	activateBronzeTablet(t, g, tablet, target)
+	g.AssertGraveyardCount(gametest.PlayerA, "Bronze Tablet", 0)
+	g.AssertGraveyardCount(gametest.PlayerB, "Bronze Tablet", 1)
+}
+
+func TestBronzeTabletDeclinedPaymentSwapsOwnership(t *testing.T) {
+	g, tablet, target := bronzeTabletTestGame(t)
+	g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(false)
+	activateBronzeTablet(t, g, tablet, target)
+	g.AssertLife(gametest.PlayerB, 20)
+	g.AssertExileCount("Bronze Tablet", 1)
+	g.AssertExileCount("Owned Target", 1)
+	if g.FindCardAnywhere(tablet.ID()).Owner() != g.GetPlayer(gametest.PlayerB).PlayerID() ||
+		g.FindCardAnywhere(target.ID()).Owner() != g.GetPlayer(gametest.PlayerA).PlayerID() {
+		t.Fatal("declined branch did not exchange ownership")
+	}
+	g.SetLife(gametest.PlayerB, 0)
+	result, err := g.AnteResult()
+	if err != nil || len(result) != 2 {
+		t.Fatalf("AnteResult = %#v, %v", result, err)
+	}
+}
+
+func TestBronzeTabletCannotPayAtTenLife(t *testing.T) {
+	g, tablet, target := bronzeTabletTestGame(t)
+	g.SetLife(gametest.PlayerB, 10)
+	activateBronzeTablet(t, g, tablet, target)
+	g.AssertLife(gametest.PlayerB, 10)
+	if g.FindCardAnywhere(tablet.ID()).Owner() != g.GetPlayer(gametest.PlayerB).PlayerID() ||
+		g.FindCardAnywhere(target.ID()).Owner() != g.GetPlayer(gametest.PlayerA).PlayerID() {
+		t.Fatal("unpayable branch did not exchange ownership")
+	}
+}
 
 func TestAmuletOfKroog(t *testing.T) {
 	t.Run("prevents 1 damage to target", func(t *testing.T) {

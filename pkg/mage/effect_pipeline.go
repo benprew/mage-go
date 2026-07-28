@@ -48,6 +48,7 @@ func (e *PipelineData) Apply(ctx *EffectContext) error {
 //	"{name}.power"      → int (current power)
 //	"{name}.toughness"  → int (current toughness)
 //	"{name}.controller" → uuid.UUID
+//	"{name}.owner"      → uuid.UUID
 //	"{name}.cmc"        → int (converted mana cost)
 //	"{name}.name"       → string
 type SnapshotPermanentData struct {
@@ -81,6 +82,7 @@ func (e *SnapshotPermanentData) Apply(ctx *EffectContext) error {
 	ctx.SetInt(e.StoreAs+".power", perm.CurrentPower(ctx.Game))
 	ctx.SetInt(e.StoreAs+".toughness", perm.CurrentToughness(ctx.Game))
 	ctx.SetUUID(e.StoreAs+".controller", perm.ControllerID())
+	ctx.SetUUID(e.StoreAs+".owner", perm.Card.Owner())
 	ctx.SetInt(e.StoreAs+".cmc", perm.Card.ManaCost().CMC())
 	ctx.Vars[e.StoreAs+".name"] = perm.Name()
 	return nil

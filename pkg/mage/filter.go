@@ -117,6 +117,22 @@ func NotControlledBy(playerID uuid.UUID) PermanentFilter {
 	})
 }
 
+// OwnedBy returns a filter matching permanents currently owned by playerID.
+// Ownership and control are independent (CR 108.3, 110.2).
+func OwnedBy(playerID uuid.UUID) PermanentFilter {
+	return NewPermanentFilter("you own", func(p *Permanent, _ *Game) bool {
+		return p.Card.Owner() == playerID
+	})
+}
+
+// NotOwnedBy returns a filter matching permanents currently owned by another
+// player, regardless of who controls them.
+func NotOwnedBy(playerID uuid.UUID) PermanentFilter {
+	return NewPermanentFilter("an opponent owns", func(p *Permanent, _ *Game) bool {
+		return p.Card.Owner() != playerID
+	})
+}
+
 // HasColorFilter returns a filter matching permanents whose current effective
 // color set (honoring ColorOverride from continuous effects, CR 613 layer 5)
 // includes the given color. Reading effective colors (not the raw mana cost)

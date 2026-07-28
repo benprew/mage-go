@@ -60,6 +60,7 @@ type Player interface {
 	RemoveFromHand(uuid.UUID) (Card, bool)
 	DiscardCard(uuid.UUID) (Card, bool)
 	Graveyard() []Card
+	SetGraveyard([]Card)
 	AddToGraveyard(Card)
 	RemoveFromGraveyard(uuid.UUID) (Card, bool)
 	Library() []Card
@@ -73,6 +74,7 @@ type Player interface {
 
 	// Ante zone
 	Ante() []Card
+	SetAnte([]Card)
 	AddToAnte(Card)
 	RemoveFromAnte(uuid.UUID) (Card, bool)
 
@@ -246,6 +248,8 @@ func (p *BasePlayer) DiscardCard(id uuid.UUID) (Card, bool) {
 
 func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
 
+func (p *BasePlayer) SetGraveyard(cards []Card) { p.graveyard = cards }
+
 func (p *BasePlayer) AddToGraveyard(c Card) {
 	p.assertOwner(c)
 	p.graveyard = append(p.graveyard, c)
@@ -274,6 +278,8 @@ func (p *BasePlayer) ClearGraveyard() {
 }
 
 func (p *BasePlayer) Ante() []Card { return p.ante }
+
+func (p *BasePlayer) SetAnte(cards []Card) { p.ante = cards }
 
 func (p *BasePlayer) AddToAnte(c Card) {
 	p.ante = append(p.ante, c)

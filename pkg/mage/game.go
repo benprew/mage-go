@@ -20,6 +20,8 @@ var (
 	ErrSourceTapped      = errors.New("source is already tapped")
 	ErrNoCreature        = errors.New("no creature to sacrifice")
 	ErrSorcerySpeed      = errors.New("can only activate at sorcery speed")
+	ErrAnteDisabled      = errors.New("ante is not enabled for this game")
+	ErrAnteSettled       = errors.New("ante result has already been settled")
 )
 
 // ExiledCard tracks a card in exile along with metadata about why it was exiled.
@@ -53,8 +55,12 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 
 // Game is the central game state and engine.
 type Game struct {
-	players     []Player
-	battlefield []*Permanent
+	players        []Player
+	anteEnabled    bool
+	originalOwners map[uuid.UUID]uuid.UUID
+	anteResult     []OwnershipChange
+	anteSettled    bool
+	battlefield    []*Permanent
 	// Search clones share battlefield permanent pointers until a branch writes
 	// to a permanent. ownedPermanents contains IDs whose pointers are private to
 	// this Game after sharing began.
@@ -329,8 +335,14 @@ type stateTriggerKey struct {
 
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
+	return newGame(playerA, playerB, false)
+}
+
+func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 	return &Game{
 		players:                     []Player{playerA, playerB},
+		anteEnabled:                 anteEnabled,
+		originalOwners:              make(map[uuid.UUID]uuid.UUID),
 		stack:                       NewStack(),
 		combat:                      NewCombat(),
 		effects:                     NewEffectManager(),
@@ -608,12 +620,22 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 		return g.resolvingCard
 	}
 	for _, pl := range g.players {
+		for _, c := range pl.Library() {
+			if c.ID() == id {
+				return c
+			}
+		}
 		for _, c := range pl.Hand() {
 			if c.ID() == id {
 				return c
 			}
 		}
 		for _, c := range pl.Graveyard() {
+			if c.ID() == id {
+				return c
+			}
+		}
+		for _, c := range pl.Ante() {
 			if c.ID() == id {
 				return c
 			}
@@ -2480,6 +2502,11 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 		for _, c := range p.Hand() {
 			if c.ID() == id {
 				return ZoneHand
+			}
+		}
+		for _, c := range p.Ante() {
+			if c.ID() == id {
+				return ZoneAnte
 			}
 		}
 	}

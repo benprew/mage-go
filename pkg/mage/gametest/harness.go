@@ -101,6 +101,21 @@ func NewTestGame(t *testing.T) *TestGame {
 	return tg
 }
 
+// NewTestGameWithAnte creates an ante-enabled test game with an initially
+// empty ante. Tests can then use Game.MoveToAnte or add explicit ante cards.
+func NewTestGameWithAnte(t *testing.T) *TestGame {
+	t.Helper()
+	pA := NewTestPlayer("PlayerA")
+	pB := NewTestPlayer("PlayerB")
+	g, err := mage.NewGameWithAnte(pA, pB, nil, nil)
+	if err != nil {
+		t.Fatalf("NewTestGameWithAnte: %v", err)
+	}
+	tg := &TestGame{Game: g, t: t, playerA: pA, playerB: pB}
+	tg.syncFromGame()
+	return tg
+}
+
 func (tg *TestGame) syncFromGame() {
 	tg.Combat = tg.GetCombat()
 	tg.Effects = tg.GetEffects()
@@ -1526,5 +1541,25 @@ func (tg *TestGame) AssertAnteCount(p PlayerRef, name string, want int) {
 	}
 	if got != want {
 		tg.t.Errorf("AssertAnteCount(%v, %s): got %d, want %d", p, name, got, want)
+	}
+}
+
+// AssertOwnedAnteCount checks the shared ante zone for cards with the given
+// name and current owner.
+func (tg *TestGame) AssertOwnedAnteCount(p PlayerRef, name string, want int) {
+	tg.t.Helper()
+	cards, err := tg.AnteCardsOwnedBy(tg.getPlayerID(p))
+	if err != nil {
+		tg.t.Errorf("AssertOwnedAnteCount(%v, %s): %v", p, name, err)
+		return
+	}
+	got := 0
+	for _, c := range cards {
+		if c.Name() == name {
+			got++
+		}
+	}
+	if got != want {
+		tg.t.Errorf("AssertOwnedAnteCount(%v, %s): got %d, want %d", p, name, got, want)
 	}
 }

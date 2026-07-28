@@ -333,6 +333,8 @@ var (
 	SetVarFromHandSize                        = mage.SetVarFromHandSize
 	AddColorPreventionStep                    = mage.AddColorPreventionStep
 	ExileGathered                             = mage.ExileGathered
+	ChangeOwnerGathered                       = mage.ChangeOwnerGathered // for ante cards
+	MoveExiledGatheredToGraveyard             = mage.MoveExiledGatheredToGraveyard
 	GainLifeFromVar                           = mage.GainLifeFromVar
 	GainLifeControllerFromVar                 = mage.GainLifeControllerFromVar
 	ModalEffect                               = mage.ModalEffect
@@ -443,8 +445,10 @@ var (
 	SourceHasManaAbilitiesOpponentLandsCouldProduce = mage.SourceHasManaAbilitiesOpponentLandsCouldProduce
 	DiscardToLibraryReplacement                     = mage.DiscardToLibraryReplacement
 
+	// TODO remove instances of EffectIfPaid and UnlessTargetPays and replace with IfPlayerPays
 	EffectIfPaid     = mage.EffectIfPaid
 	UnlessTargetPays = mage.UnlessTargetPays
+	IfPlayerPays     = mage.IfPlayerPays
 )
 
 // =============================================================================
@@ -491,6 +495,8 @@ var (
 	IsBlocking          = mage.IsBlocking
 	ControlledBy        = mage.ControlledBy
 	NotControlledBy     = mage.NotControlledBy
+	OwnedBy             = mage.OwnedBy
+	NotOwnedBy          = mage.NotOwnedBy
 	PrintedInSet        = mage.PrintedInSet
 	IsAuraOnLand        = mage.IsAuraOnLand
 	HasColorFilter      = mage.HasColorFilter
@@ -537,6 +543,7 @@ var (
 	TargetArtifactWithManaValueX            = mage.TargetArtifactWithManaValueX
 	TargetCreatureBlockingOrBlockedBySource = mage.TargetCreatureBlockingOrBlockedBySource
 	TargetPermanentOpponentControls         = mage.TargetPermanentOpponentControls
+	TargetPermanentOpponentOwns             = mage.TargetPermanentOpponentOwns
 	TargetOpponent                          = mage.TargetOpponent
 )
 
