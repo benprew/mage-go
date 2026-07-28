@@ -42,6 +42,47 @@ func TestHolyStrengthFizzlesWhenTargetDestroyed(t *testing.T) {
 	})
 }
 
+func TestLivingArtifact(t *testing.T) {
+	t.Run("damage adds vitality counters", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Sol Ring")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(2, core.EndStep)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 3)
+	})
+
+	t.Run("upkeep may trade a counter for life", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Sol Ring")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 2)
+		g.AssertLife(gametest.PlayerA, 18)
+	})
+
+	t.Run("upkeep ability may be declined", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Living Artifact")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Living Artifact", "Sol Ring")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertCounterCount(gametest.PlayerA, "Living Artifact", core.Vitality, 3)
+		g.AssertLife(gametest.PlayerA, 17)
+	})
+}
+
 func TestInvisibility(t *testing.T) {
 	t.Run("creature_unblockable_except_walls", func(t *testing.T) {
 		// Invisibility: Enchanted creature can't be blocked except by Walls.

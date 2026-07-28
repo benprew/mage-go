@@ -105,6 +105,63 @@ func TestWinterOrb(t *testing.T) {
 	})
 }
 
+func TestDisruptingScepterOnlyDuringControllersTurn(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Disrupting Scepter")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.StopAt(2, core.PrecombatMain)
+	g.Execute()
+
+	playerA := g.GetPlayer(gametest.PlayerA).PlayerID()
+	playerB := g.GetPlayer(gametest.PlayerB).PlayerID()
+	scepter := g.FindPermanentByName("Disrupting Scepter", playerA)
+	if scepter == nil {
+		t.Fatal("Disrupting Scepter not found")
+	}
+	if err := g.ActivateAbilityByIndex(playerA, scepter.ID(), 0, []uuid.UUID{playerB}); err == nil {
+		t.Fatal("Disrupting Scepter should not be activatable during an opponent's turn")
+	}
+	g.AssertTapped(gametest.PlayerA, "Disrupting Scepter", false)
+}
+
+func TestDingusEgg(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dingus Egg")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Sinkhole")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Sinkhole", "Forest")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 18)
+	g.AssertLife(gametest.PlayerA, 20)
+}
+
+func TestLibraryOfLeng(t *testing.T) {
+	t.Run("removes maximum hand size", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Library of Leng")
+		playerA := g.GetPlayer(gametest.PlayerA).PlayerID()
+		if got := g.MaximumHandSize(playerA); got != -1 {
+			t.Fatalf("maximum hand size = %d, want no maximum", got)
+		}
+	})
+
+	t.Run("effect discard may go on top of library", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Library of Leng")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Mind Twist")
+		g.ChooseDiscard(gametest.PlayerA, "Grizzly Bears")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
+		g.CastSpellWithX(2, core.PrecombatMain, gametest.PlayerB, "Mind Twist", 1, "PlayerA")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertLibraryTop(gametest.PlayerA, "Grizzly Bears")
+	})
+}
+
 func TestMeekstone(t *testing.T) {
 	t.Run("prevents_big_creatures_from_untapping", func(t *testing.T) {
 		// Meekstone: Creatures with power 3 or greater don't untap during their

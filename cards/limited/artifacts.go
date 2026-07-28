@@ -105,15 +105,17 @@ func registerArtifacts() {
 		)
 	})
 
+	// Disrupting Scepter {3}
+	// Artifact
+	// {3}, {T}: Target player discards a card. Activate only during your turn.
 	Register("Disrupting Scepter", func() Card {
-		// XXX: missing "Activate only during your turn" restriction
 		return NewArtifact("Disrupting Scepter", "{3}",
-			// {3}, {T}: Target player discards a card
 			WithActivatedAbility(
 				DiscardCards(Fixed(1)),
 				GenericCost(3),
 				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
+				WithYourTurnOnly(),
 			),
 		)
 	})
@@ -214,6 +216,39 @@ func registerArtifacts() {
 			WithAbility(WheneverLandEntersBattlefieldTrigger(
 				DealDamageToPlayers(Fixed(2), SelectEventController()), false,
 			)),
+		)
+	})
+
+	// Dingus Egg {4}
+	// Artifact
+	// Whenever a land is put into a graveyard from the battlefield, this artifact deals 2 damage to that land's controller.
+	Register("Dingus Egg", func() Card {
+		return NewArtifact("Dingus Egg", "{4}",
+			WithAbility(NewTriggered(EvtZoneChange, false,
+				DealDamageToPlayers(Fixed(2), SelectTargetPermanentController()),
+			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+				EventSourceWasOfType{Type: TypeLand},
+			}})),
+		)
+	})
+
+	// Library of Leng {1}
+	// Artifact
+	// You have no maximum hand size.
+	// If an effect causes you to discard a card, discard it, but you may put it on top of your library instead of into your graveyard.
+	Register("Library of Leng", func() Card {
+		return NewArtifact("Library of Leng", "{1}",
+			WithStaticAbility(
+				FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+					source := g.FindPermanent(sourceID)
+					if source != nil {
+						g.SetNoMaximumHandSize(source.ControllerID())
+					}
+					return nil
+				}),
+				DiscardToLibraryReplacement(),
+			),
 		)
 	})
 

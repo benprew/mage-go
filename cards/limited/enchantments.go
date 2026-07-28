@@ -631,8 +631,11 @@ func registerEnchantments() {
 		)
 	})
 
-	// TODO implement
-	//   "Text": "Enchant land\nEnchanted land has indestructible and can't be enchanted by other Auras.",
+	// XXX: Enchanted land can't be enchanted by other Auras is not supported.
+	// Consecrate Land {W}
+	// Enchantment — Aura
+	// Enchant land
+	// Enchanted land has indestructible and can't be enchanted by other Auras.
 	Register("Consecrate Land", func() Card {
 		return NewAura("Consecrate Land", "{W}",
 			WithCastTarget(TargetLand()),
@@ -642,8 +645,10 @@ func registerEnchantments() {
 		)
 	})
 
-	// TODO implement
-	// Fastbond's effects only apply to caster, not all players
+	// Fastbond {G}
+	// Enchantment
+	// You may play any number of lands on each of your turns.
+	// Whenever you play a land, if it wasn't the first land you played this turn, this enchantment deals 1 damage to you.
 	Register("Fastbond", func() Card {
 		return NewEnchantment("Fastbond", "{G}",
 			WithStaticAbility(AllowUnlimitedLandPlays()),
@@ -713,6 +718,33 @@ func registerEnchantments() {
 					AttachAura,
 				),
 			),
+		)
+	})
+
+	// Living Artifact {G}
+	// Enchantment — Aura
+	// Enchant artifact
+	// Whenever you're dealt damage, put that many vitality counters on this Aura.
+	// At the beginning of your upkeep, you may remove a vitality counter from this Aura. If you do, you gain 1 life.
+	Register("Living Artifact", func() Card {
+		return NewAura("Living Artifact", "{G}",
+			WithCastTarget(TargetArtifact()),
+			WithAbility(NewTriggered(EvtDamageDealt, false,
+				AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
+			).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
+				return evt.TargetID == controllerID && evt.Amount > 0
+			})),
+			WithAbility(BeginningOfUpkeepTrigger(
+				IfPlayerPays(
+					SelectController(),
+					GenericCost(0),
+					"remove a vitality counter from Living Artifact",
+					Pipeline("remove a vitality counter and gain 1 life",
+						EffectProperties{Outcome: OutcomeBenefit},
+						RemoveCounters(Vitality, 1),
+						GainLifeStep(1),
+					), nil,
+				), false).SetConditionData(SourceHasCounterCond{CounterType: Vitality, MinCount: 1})),
 		)
 	})
 
