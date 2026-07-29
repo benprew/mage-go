@@ -83,6 +83,17 @@ func TestBerserk(t *testing.T) {
 }
 
 func TestWheelOfFortune(t *testing.T) {
+	t.Run("uses pipeline", func(t *testing.T) {
+		card, err := mage.CreateCard("Wheel of Fortune")
+		if err != nil {
+			t.Fatal(err)
+		}
+		ability := mage.UnwrapAbility(card.Abilities()[0]).(*mage.SpellAbility)
+		if _, ok := ability.Effects()[0].(*mage.PipelineData); !ok {
+			t.Fatalf("Wheel of Fortune effect is %T, want *mage.PipelineData", ability.Effects()[0])
+		}
+	})
+
 	t.Run("discards hand then draws 7", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Wheel of Fortune")
