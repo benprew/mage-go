@@ -355,8 +355,10 @@ var (
 	ForEachControlledPermanent                = mage.ForEachControlledPermanent
 	DrawCards                                 = mage.DrawCards
 	DrawCardsActivePlayer                     = mage.DrawCardsActivePlayer
+	DiscardHand                               = mage.DiscardHand
+	AnteLibraryTop                            = mage.AnteLibraryTop
+	ExchangeTargetAnteCardWithLibraryTop      = mage.ExchangeTargetAnteCardWithLibraryTop
 	MillTargetPlayer                          = mage.MillTargetPlayer
-	DiscardHandAndDraw                        = mage.DiscardHandAndDraw
 	CopySpellOnStack                          = mage.CopySpellOnStack
 	DoubleTargetPower                         = mage.DoubleTargetPower
 	PreventAllCombatDamage                    = mage.PreventAllCombatDamage
@@ -544,6 +546,7 @@ var (
 	TargetCreatureBlockingOrBlockedBySource = mage.TargetCreatureBlockingOrBlockedBySource
 	TargetPermanentOpponentControls         = mage.TargetPermanentOpponentControls
 	TargetPermanentOpponentOwns             = mage.TargetPermanentOpponentOwns
+	TargetCardYouOwnInAnte                  = mage.TargetCardYouOwnInAnte
 	TargetOpponent                          = mage.TargetOpponent
 )
 

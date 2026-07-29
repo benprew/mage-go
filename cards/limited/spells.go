@@ -329,9 +329,17 @@ func registerSpells() {
 		)
 	})
 
+	// Wheel of Fortune {2}{R}
+	// Sorcery
+	// Each player discards their hand, then draws seven cards.
 	Register("Wheel of Fortune", func() Card {
 		return NewSorcery("Wheel of Fortune", "{2}{R}",
-			NewSpellAbility(DiscardHandAndDraw(7)),
+			NewSpellAbility(Pipeline(
+				"each player discards their hand, then draws seven cards",
+				EffectProperties{},
+				DiscardHand().Targeting(SelectEachPlayer()),
+				DrawCards(Fixed(7)).Targeting(SelectEachPlayer()),
+			)),
 		)
 	})
 
@@ -493,31 +501,15 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Discard your hand, ante the top card of your library, then draw seven cards.
-	// TODO: convert to pipeline — needs ante manipulation primitives
 	Register("Contract from Below", func() Card {
 		return NewSorcery("Contract from Below", "{B}",
-			NewSpellAbility(FuncEffect(
+			NewSpellAbility(Pipeline(
 				"discard hand, ante top card, draw seven",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					for _, c := range p.Hand() {
-						p.DiscardCard(c.ID())
-					}
-					lib := p.Library()
-					if len(lib) > 0 {
-						top := lib[0]
-						p.SetLibrary(lib[1:])
-						p.AddToAnte(top)
-					}
-					for range 7 {
-						g.PlayerDrawCard(p)
-					}
-					return nil
-				})),
+				DiscardHand(),
+				AnteLibraryTop(),
+				DrawCards(Fixed(7)).Targeting(SelectController()),
+			)),
 		)
 	})
 
@@ -525,34 +517,13 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// You own target card in the ante. Exchange that card with the top card of your library.
-	// TODO: convert to pipeline — needs ante manipulation primitives
 	Register("Darkpact", func() Card {
 		return NewSorcery("Darkpact", "{B}{B}{B}",
-			NewSpellAbility(FuncEffect(
+			NewTargetedSpell(TargetCardYouOwnInAnte(), Pipeline(
 				"exchange ante card with top of library",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					ante := p.Ante()
-					if len(ante) == 0 {
-						return nil
-					}
-					lib := p.Library()
-					if len(lib) == 0 {
-						return nil
-					}
-					anteCard, ok := p.RemoveFromAnte(ante[0].ID())
-					if !ok {
-						return nil
-					}
-					topLib := lib[0]
-					p.SetLibrary(append([]Card{anteCard}, lib[1:]...))
-					p.AddToAnte(topLib)
-					return nil
-				})),
+				ExchangeTargetAnteCardWithLibraryTop(),
+			)),
 		)
 	})
 
@@ -560,23 +531,13 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Each player antes the top card of their library.
-	// TODO: convert to pipeline — needs ante manipulation primitives
 	Register("Demonic Attorney", func() Card {
 		return NewSorcery("Demonic Attorney", "{1}{B}{B}",
-			NewSpellAbility(FuncEffect(
+			NewSpellAbility(Pipeline(
 				"each player antes the top card of their library",
 				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					for _, p := range g.AllPlayers() {
-						lib := p.Library()
-						if len(lib) > 0 {
-							top := lib[0]
-							p.SetLibrary(lib[1:])
-							p.AddToAnte(top)
-						}
-					}
-					return nil
-				})),
+				AnteLibraryTop().Targeting(SelectEachPlayer()),
+			)),
 		)
 	})
 	// ===== MOVED FROM OTHER FILES =====
