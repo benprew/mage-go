@@ -24,10 +24,10 @@ func registerSpells() {
 	// Sorcery
 	// As an additional cost to cast this spell, sacrifice a Goblin.
 	// Goblin Grenade deals 5 damage to any target.
-	// TODO: implement
 	Register("Goblin Grenade", withExpansion(func() Card {
 		return NewSorcery("Goblin Grenade", "{R}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(5))),
+			WithAdditionalCost(SacrificeMatchingCost(HasSubType("Goblin"), "Sacrifice a Goblin")),
 		)
 	}))
 

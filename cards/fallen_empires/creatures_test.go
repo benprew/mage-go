@@ -423,6 +423,77 @@ func TestElvishHunter_TargetDoesntUntap(t *testing.T) {
 	g.AssertHasAbility(gametest.PlayerB, "Grizzly Bears", AttrDoesNotUntap, true)
 }
 
+func TestVodalianMage_CountersUnlessControllerPaysOne(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Vodalian Mage")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Island")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.CastSpell(1, PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
+	g.ActivateInResponseTo(gametest.PlayerA, "Vodalian Mage", "Lightning Bolt")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 20)
+	g.AssertGraveyardCount(gametest.PlayerB, "Lightning Bolt", 1)
+	g.AssertTapped(gametest.PlayerA, "Vodalian Mage", true)
+}
+
+func TestHomaridWarrior_GainsShroudAndSkipsNextUntap(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Homarid Warrior")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Island")
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Homarid Warrior")
+	g.StopAt(3, PrecombatMain)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Homarid Warrior", true)
+	g.AssertHasAbility(gametest.PlayerA, "Homarid Warrior", Shroud, false)
+}
+
+func TestDeepSpawn_MillsTwoAtUpkeep(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Deep Spawn")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest", 3)
+	g.StopAt(1, PrecombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Deep Spawn", 1)
+	g.AssertGraveyardCount(gametest.PlayerA, "Forest", 2)
+}
+
+func TestDeepSpawn_SacrificedWhenItCannotMillTwo(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Deep Spawn")
+	g.AddCard(ZoneLibrary, gametest.PlayerA, "Forest")
+	g.StopAt(1, PrecombatMain)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Deep Spawn", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Deep Spawn", 1)
+}
+
+func TestOrcishCaptain_CoinFlipBoostsOrShrinksTarget(t *testing.T) {
+	t.Run("win", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Orcish Captain")
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Orcish Veteran")
+		g.SetCoinFlipResults([]bool{true})
+		g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Orcish Captain", "Orcish Veteran")
+		g.StopAt(1, BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Orcish Veteran", 4, 2)
+	})
+
+	t.Run("loss", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Orcish Captain")
+		g.AddCard(ZoneBattlefield, gametest.PlayerA, "Orcish Veteran")
+		g.SetCoinFlipResults([]bool{false})
+		g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Orcish Captain", "Orcish Veteran")
+		g.StopAt(1, BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Orcish Veteran", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Orcish Veteran", 1)
+	})
+}
+
 // ===== Icatian Javelineers Tests =====
 
 func TestIcatianJavelineers_DealsDamage(t *testing.T) {

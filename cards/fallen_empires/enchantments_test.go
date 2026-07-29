@@ -43,6 +43,35 @@ func TestBreedingPit_CreatesThrullToken(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Thrull", 0, 1)
 }
 
+func TestGoblinWarrens_SacrificesTwoGoblinsAndCreatesThree(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Warrens")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mons's Goblin Raiders", 2)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
+	g.ChoosePermanent(gametest.PlayerA, "Mons's Goblin Raiders")
+	g.ChoosePermanent(gametest.PlayerA, "Mons's Goblin Raiders")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Goblin Warrens")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Mons's Goblin Raiders", 0)
+	g.AssertPermanentCount(gametest.PlayerA, "Goblin", 3)
+	g.AssertGraveyardCount(gametest.PlayerA, "Mons's Goblin Raiders", 2)
+}
+
+func TestHomaridSpawningBed_CreatesTokensEqualToManaValue(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Homarid Spawning Bed")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phantom Monster")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
+	g.ChoosePermanent(gametest.PlayerA, "Phantom Monster")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Homarid Spawning Bed")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertPermanentCount(gametest.PlayerA, "Phantom Monster", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Phantom Monster", 1)
+	g.AssertPermanentCount(gametest.PlayerA, "Camarid", 4)
+}
+
 func TestElvenFortress_BoostsBlocker(t *testing.T) {
 	// {1}{G}: Target blocking creature gets +0/+1 until end of turn.
 	g := gametest.NewTestGame(t)

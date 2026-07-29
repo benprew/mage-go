@@ -129,3 +129,27 @@ func TestElvenLyre_BoostsCreature(t *testing.T) {
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
 	g.AssertPermanentCount(gametest.PlayerA, "Elven Lyre", 0)
 }
+
+func TestSpiritShield_BoostsWhileTapped(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spirit Shield")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Spirit Shield", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Spirit Shield", true)
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4)
+}
+
+func TestZelyonSword_BoostsWhileTapped(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Zelyon Sword")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Zelyon Sword", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Zelyon Sword", true)
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 2)
+}

@@ -84,9 +84,18 @@ func registerEnchantments() {
 	// Goblin Warrens {2}{R}
 	// Enchantment
 	// {2}{R}, Sacrifice two Goblins: Create three 1/1 red Goblin creature tokens.
-	// TODO: implement
 	Register("Goblin Warrens", withExpansion(func() Card {
-		return NewEnchantment("Goblin Warrens", "{2}{R}")
+		return NewEnchantment("Goblin Warrens", "{2}{R}",
+			WithActivatedAbility(
+				CompositeEffects("create three 1/1 red Goblin creature tokens",
+					CreateColoredToken("Goblin", 1, 1, []Color{Red}, []CardType{TypeCreature}, []string{"Goblin"}),
+					CreateColoredToken("Goblin", 1, 1, []Color{Red}, []CardType{TypeCreature}, []string{"Goblin"}),
+					CreateColoredToken("Goblin", 1, 1, []Color{Red}, []CardType{TypeCreature}, []string{"Goblin"}),
+				),
+				ManaCostOf("{2}{R}"),
+				WithCost(SacrificeNMatchingCost(2, HasSubType("Goblin"), "Sacrifice two Goblins")),
+			),
+		)
 	}))
 
 	// Heroism {2}{W}
@@ -100,9 +109,28 @@ func registerEnchantments() {
 	// Homarid Spawning Bed {U}{U}
 	// Enchantment
 	// {1}{U}{U}, Sacrifice a blue creature: Create X 1/1 blue Camarid creature tokens, where X is the sacrificed creature's mana value.
-	// TODO: implement
 	Register("Homarid Spawning Bed", withExpansion(func() Card {
-		return NewEnchantment("Homarid Spawning Bed", "{U}{U}")
+		return NewEnchantment("Homarid Spawning Bed", "{U}{U}",
+			WithActivatedAbility(
+				FuncEffect("create Camarids equal to the sacrificed creature's mana value", EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						sacrificed := g.LastSacrificed()
+						if sacrificed == nil || sacrificed.Snapshot == nil {
+							return nil
+						}
+						for range sacrificed.Snapshot.Card.ManaCost().CMC() {
+							if err := ApplyEffect(g,
+								CreateColoredToken("Camarid", 1, 1, []Color{Blue}, []CardType{TypeCreature}, []string{"Camarid"}),
+								sourceID, controller, nil); err != nil {
+								return err
+							}
+						}
+						return nil
+					}),
+				ManaCostOf("{1}{U}{U}"),
+				WithCost(SacrificeMatchingCost(And(IsCreature, HasColorFilter(Blue)), "Sacrifice a blue creature")),
+			),
+		)
 	}))
 
 	// Merseine {2}{U}{U}

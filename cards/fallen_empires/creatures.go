@@ -270,10 +270,36 @@ func registerCreatures() {
 	// Trample
 	// At the beginning of your upkeep, sacrifice this creature unless you mill two cards.
 	// {U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap this creature. (A creature with shroud can't be the target of spells or abilities.)
-	// TODO: implement
 	Register("Deep Spawn", withExpansion(func() Card {
 		return NewCreature("Deep Spawn", "{5}{U}{U}{U}", 6, 6,
 			WithSubTypes("Homarid"),
+			WithKeyword(Trample),
+			WithAbility(BeginningOfUpkeepTrigger(
+				FuncEffect("sacrifice this creature unless you mill two cards", EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+						player := g.GetPlayer(controller)
+						if player != nil && len(player.Library()) >= 2 && player.ChooseMayAbility("mill two cards") {
+							return ApplyEffect(g, MillTargetPlayer(Fixed(2)).Targeting(SelectController()), sourceID, controller, nil)
+						}
+						return ApplyEffect(g, SacrificeSource(), sourceID, controller, nil)
+					}),
+				false,
+			)),
+			WithActivatedAbility(
+				Pipeline("gain shroud, skip next untap, and tap",
+					EffectProperties{Outcome: OutcomeBenefit},
+					GrantKeyword(Shroud).Targeting(ToSource()),
+					StunCreature().Targeting(ToSource()),
+					FuncEffect("tap this creature", EffectProperties{},
+						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+							if source := g.FindPermanent(sourceID); source != nil {
+								g.TapPermanent(source)
+							}
+							return nil
+						}),
+				),
+				ManaCostOf("{U}"),
+			),
 		)
 	}))
 
@@ -348,10 +374,24 @@ func registerCreatures() {
 	// Creature — Homarid Warrior
 	// 3/3
 	// {U}: This creature gains shroud until end of turn and doesn't untap during your next untap step. Tap it. (A creature with shroud can't be the target of spells or abilities.)
-	// TODO: implement
 	Register("Homarid Warrior", withExpansion(func() Card {
 		return NewCreature("Homarid Warrior", "{4}{U}", 3, 3,
 			WithSubTypes("Homarid", "Warrior"),
+			WithActivatedAbility(
+				Pipeline("gain shroud, skip next untap, and tap",
+					EffectProperties{Outcome: OutcomeBenefit},
+					GrantKeyword(Shroud).Targeting(ToSource()),
+					StunCreature().Targeting(ToSource()),
+					FuncEffect("tap this creature", EffectProperties{},
+						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
+							if source := g.FindPermanent(sourceID); source != nil {
+								g.TapPermanent(source)
+							}
+							return nil
+						}),
+				),
+				ManaCostOf("{U}"),
+			),
 		)
 	}))
 
@@ -426,10 +466,15 @@ func registerCreatures() {
 	// Creature — Merfolk Wizard
 	// 1/1
 	// {U}, {T}: Counter target spell unless its controller pays {1}.
-	// TODO: implement
 	Register("Vodalian Mage", withExpansion(func() Card {
 		return NewCreature("Vodalian Mage", "{2}{U}", 1, 1,
 			WithSubTypes("Merfolk", "Wizard"),
+			WithActivatedAbility(
+				CounterUnlessPay("{1}"),
+				ManaCostOf("{U}"),
+				WithCost(Tap()),
+				WithTarget(TargetSpellOnStack()),
+			),
 		)
 	}))
 
@@ -728,10 +773,18 @@ func registerCreatures() {
 	// Creature — Orc Warrior
 	// 1/1
 	// {1}: Flip a coin. If you win the flip, target Orc creature gets +2/+0 until end of turn. If you lose the flip, it gets -0/-2 until end of turn.
-	// TODO: implement
 	Register("Orcish Captain", withExpansion(func() Card {
 		return NewCreature("Orcish Captain", "{R}", 1, 1,
 			WithSubTypes("Orc", "Warrior"),
+			WithActivatedAbility(
+				IfElse("flip a coin",
+					FlipCoinCond{},
+					Boost(Fixed(2), Fixed(0)),
+					Boost(Fixed(0), Fixed(-2)),
+				),
+				GenericCost(1),
+				WithTarget(TargetCreature(HasSubType("Orc"))),
+			),
 		)
 	}))
 

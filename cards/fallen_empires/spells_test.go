@@ -40,3 +40,17 @@ func TestIcatianTown_CreateFourTokens(t *testing.T) {
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Citizen", 4)
 }
+
+func TestGoblinGrenade_SacrificesGoblinAndDealsFive(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Goblin Grenade")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mons's Goblin Raiders")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+	g.ChoosePermanent(gametest.PlayerA, "Mons's Goblin Raiders")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Goblin Grenade", "PlayerB")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 15)
+	g.AssertPermanentCount(gametest.PlayerA, "Mons's Goblin Raiders", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Mons's Goblin Raiders", 1)
+}

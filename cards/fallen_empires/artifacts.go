@@ -196,18 +196,38 @@ func registerArtifacts() {
 	// Artifact
 	// You may choose not to untap this artifact during your untap step.
 	// {2}, {T}: Target creature gets +0/+2 for as long as this artifact remains tapped.
-	// TODO: implement
 	Register("Spirit Shield", withExpansion(func() Card {
-		return NewArtifact("Spirit Shield", "{3}")
+		return NewArtifact("Spirit Shield", "{3}",
+			WithKeyword(AttrMayNotUntap),
+			WithActivatedAbility(
+				Boost(Fixed(0), Fixed(2)).
+					Targeting(ToTarget()).
+					Until(WhileOnBattlefield).
+					WhileSourceTapped(),
+				GenericCost(2),
+				WithCost(Tap()),
+				WithTarget(TargetCreature()),
+			),
+		)
 	}))
 
 	// Zelyon Sword {3}
 	// Artifact
 	// You may choose not to untap this artifact during your untap step.
 	// {3}, {T}: Target creature gets +2/+0 for as long as this artifact remains tapped.
-	// TODO: implement
 	Register("Zelyon Sword", withExpansion(func() Card {
-		return NewArtifact("Zelyon Sword", "{3}")
+		return NewArtifact("Zelyon Sword", "{3}",
+			WithKeyword(AttrMayNotUntap),
+			WithActivatedAbility(
+				Boost(Fixed(2), Fixed(0)).
+					Targeting(ToTarget()).
+					Until(WhileOnBattlefield).
+					WhileSourceTapped(),
+				GenericCost(3),
+				WithCost(Tap()),
+				WithTarget(TargetCreature()),
+			),
+		)
 	}))
 
 }
