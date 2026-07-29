@@ -299,7 +299,7 @@ func TestCR407_2_AnteZoneBasicFlow(t *testing.T) {
 // "Contract from Below" moves the top library card to ante.
 func TestCR407_2_AnteFromLibraryViaSpell(t *testing.T) {
 	registerCh04Cards()
-	g := NewTestGame(t)
+	g := NewTestGameWithAnte(t)
 	// Put a known card on top of A's library.
 	g.AddCard(core.ZoneLibrary, PlayerA, "Zone Test Bear")
 	g.AddCard(core.ZoneHand, PlayerA, "Contract from Below")
@@ -317,7 +317,7 @@ func TestCR407_2_AnteFromLibraryViaSpell(t *testing.T) {
 // should appear in its owner's ante, not the opponent's.
 func TestCR407_4_OnlyOwnerCanAnteOwnCards(t *testing.T) {
 	registerCh04Cards()
-	g := NewTestGame(t)
+	g := NewTestGameWithAnte(t)
 	g.AddCard(core.ZoneLibrary, PlayerA, "Zone Test Bear")
 	g.AddCard(core.ZoneLibrary, PlayerB, "Zone Test Saproling")
 	g.AddCard(core.ZoneHand, PlayerA, "Demonic Attorney")

@@ -43,10 +43,6 @@ Updated 2026-07-28 after reconciling the package against `IMPLEMENTATION_GAPS.md
 - **False Orders** — needs declare-blockers-only timing and the complete block reassignment/unblocking rules.
 - **Siren's Call** — needs its cast restriction and an attack-if-able effect in addition to the delayed destruction.
 
-## Ante cards
+## Ante deck construction
 
-These cards are registered, but their current direct zone manipulation is not Oracle-complete and does not use the ante APIs consistently:
-
-- **Contract from Below** — needs ante-enabled legality/removal handling and pipeline steps for discarding the hand, moving the library top to ante, and drawing seven.
-- **Darkpact** — needs a target in the shared ante zone, ownership validation/change, and an exact exchange with the library top.
-- **Demonic Attorney** — needs ante-enabled legality/removal handling and a reusable each-player top-card-to-ante step.
+- **Bronze Tablet**, **Contract from Below**, **Darkpact**, and **Demonic Attorney** — the in-game ante behavior is implemented, but CR 407.3 deck legality still needs ante-only card metadata and deck-construction validation outside the card package.

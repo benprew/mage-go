@@ -333,21 +333,6 @@ func (e *searchLibraryToTopEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// discardHandAndDrawEffect makes each player discard their hand and draw N cards.
-type discardHandAndDrawEffect struct {
-	drawCount int
-}
-
-// DiscardHandAndDraw creates an effect where each player discards their hand then draws n cards (e.g. Timetwister, Wheel of Fortune).
-func DiscardHandAndDraw(n int) Effect {
-	return &discardHandAndDrawEffect{drawCount: n}
-}
-
-func (e *discardHandAndDrawEffect) Text() string {
-	return fmt.Sprintf("Each player discards their hand, then draws %d cards", e.drawCount)
-}
-func (e *discardHandAndDrawEffect) Properties() EffectProperties { return EffectProperties{} }
-
 // shuffleHandAndGraveyardIntoLibraryAndDrawEffect shuffles each player's hand
 // and graveyard into their library, then each player draws N cards.
 type shuffleHandAndGraveyardIntoLibraryAndDrawEffect struct {
@@ -688,21 +673,6 @@ func (*searchLibraryToTopEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	p.SetLibrary(newLib)
-	return nil
-}
-
-func (e *discardHandAndDrawEffect) Apply(ctx *EffectContext) error {
-	for _, p := range ctx.Game.AllPlayers() {
-		// Discard entire hand
-		hand := p.Hand()
-		for _, c := range hand {
-			ctx.Game.PlayerDiscardByEffect(p, c.ID(), ctx.SourceID)
-		}
-		// Draw N cards
-		for i := 0; i < e.drawCount; i++ {
-			ctx.Game.PlayerDrawCard(p)
-		}
-	}
 	return nil
 }
 
