@@ -13,11 +13,11 @@ import (
 func buildRulesText(c mage.Card) string {
 	var parts []string
 	formatActivated := func(ab mage.ActivatedAbility) string {
-		var costParts []string
+		costParts := make([]string, 0, len(ab.Costs()))
 		for _, cost := range ab.Costs() {
 			costParts = append(costParts, cost.Text())
 		}
-		var effParts []string
+		effParts := make([]string, 0, len(ab.Effects()))
 		for _, eff := range ab.Effects() {
 			effParts = append(effParts, eff.Text())
 		}
@@ -32,7 +32,7 @@ func buildRulesText(c mage.Card) string {
 	for _, a := range c.Abilities() {
 		switch ab := a.(type) {
 		case *mage.ProtectionAbility:
-			var colors []string
+			colors := make([]string, 0, len(ab.FromColors))
 			for _, col := range ab.FromColors {
 				colors = append(colors, col.String())
 			}
@@ -260,8 +260,9 @@ func snapshotManaPool(mp *mage.ManaPool) ManaPoolState {
 }
 
 func snapshotStack(g *mage.Game) []StackItemState {
-	var items []StackItemState
-	for _, obj := range g.StackObjects() {
+	stackObjects := g.StackObjects()
+	items := make([]StackItemState, 0, len(stackObjects))
+	for _, obj := range stackObjects {
 		name := "Ability"
 		if obj.Card != nil {
 			name = obj.Card.Name()

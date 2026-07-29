@@ -128,12 +128,12 @@ func aiDeckEntries(entries []tui.DeckEntry) []ai.DeckCard {
 	return deck
 }
 
-func promptChoice(label string, max int) int {
+func promptChoice(label string, maximum int) int {
 	for {
-		fmt.Printf("%s [1-%d]: ", label, max)
+		fmt.Printf("%s [1-%d]: ", label, maximum)
 		var choice int
 		_, err := fmt.Scan(&choice)
-		if err == nil && choice >= 1 && choice <= max {
+		if err == nil && choice >= 1 && choice <= maximum {
 			return choice - 1
 		}
 		fmt.Println("  Invalid choice, try again.")

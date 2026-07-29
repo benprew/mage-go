@@ -3340,8 +3340,7 @@ func registerCreatures() {
 						if active == nil || active.PlayerID() == controller {
 							return nil
 						}
-						var creatures []*Permanent
-						creatures = append(creatures, g.FilterBattlefield(And(IsCreature, ControlledBy(active.PlayerID())))...)
+						creatures := g.FilterBattlefield(And(IsCreature, ControlledBy(active.PlayerID())))
 						if len(creatures) == 0 {
 							return nil
 						}
@@ -3441,17 +3440,17 @@ func registerCreatures() {
 				FuncEffect("if an opponent discarded a card this turn, draw a card and lose 1 life",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						any := false
+						discarded := false
 						for _, pl := range g.AllPlayers() {
 							if pl.PlayerID() == controller {
 								continue
 							}
 							if g.PlayerDiscardCountThisTurn(pl.PlayerID()) > 0 {
-								any = true
+								discarded = true
 								break
 							}
 						}
-						if !any {
+						if !discarded {
 							return nil
 						}
 						you := g.GetPlayer(controller)

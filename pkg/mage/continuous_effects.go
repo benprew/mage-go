@@ -742,22 +742,23 @@ func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 func CyclopeanTombEffect() ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.battlefield {
-			if p.HasType(TypeLand) && p.Counters[Mire] > 0 {
-				p = g.MutablePermanent(p.ID())
-				if p == nil {
-					continue
-				}
-				p.SubTypeOverride = []string{"Swamp"}
-				var filtered []Ability
-				for _, a := range p.RuntimeAbilities {
-					inner := UnwrapAbility(a)
-					if _, ok := inner.(*ManaAbility); !ok {
-						filtered = append(filtered, a)
-					}
-				}
-				p.RuntimeAbilities = filtered
-				p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(Black)})
+			if !p.HasType(TypeLand) || p.Counters[Mire] == 0 {
+				continue
 			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
+			p.SubTypeOverride = []string{"Swamp"}
+			var filtered []Ability
+			for _, a := range p.RuntimeAbilities {
+				inner := UnwrapAbility(a)
+				if _, ok := inner.(*ManaAbility); !ok {
+					filtered = append(filtered, a)
+				}
+			}
+			p.RuntimeAbilities = filtered
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(Black)})
 		}
 		return nil
 	})
@@ -1385,13 +1386,15 @@ func (em *EffectManager) AddCopyEffect(doppelgangerID uuid.UUID, target *Permane
 func (em *EffectManager) UpdateCopyEffect(doppelgangerID uuid.UUID, target *Permanent) {
 	keywords := extractKeywords(target)
 	for _, e := range em.effects {
-		if ce, ok := e.(*doppelgangerCopyEffect); ok && ce.doppelgangerID == doppelgangerID {
-			ce.copiedName = target.Name()
-			ce.power = target.Card.Power()
-			ce.toughness = target.Card.Toughness()
-			ce.keywords = keywords
-			return
+		ce, ok := e.(*doppelgangerCopyEffect)
+		if !ok || ce.doppelgangerID != doppelgangerID {
+			continue
 		}
+		ce.copiedName = target.Name()
+		ce.power = target.Card.Power()
+		ce.toughness = target.Card.Toughness()
+		ce.keywords = keywords
+		return
 	}
 	// No existing effect found, create a new one
 	em.AddCopyEffect(doppelgangerID, target)

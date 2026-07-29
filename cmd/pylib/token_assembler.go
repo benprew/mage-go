@@ -149,7 +149,7 @@ func assembleTokensFromPlan(
 	tables *tokenTables,
 	out *tokenAssemblerOut,
 	maxTokens int32,
-) (int32, bool, error) {
+) (tokensWritten int32, truncated bool, err error) {
 	if tables == nil {
 		return 0, false, fmt.Errorf("token tables not registered")
 	}
@@ -180,7 +180,7 @@ func assembleTokensFromPlan(
 		overflow        bool
 		nextOption      int32      // index in option_positions for the next OP_OPTION
 		curOptionIdx    int32 = -1 // index of the option whose target bucket is open
-		curTargetCount  int32 = 0
+		curTargetCount  int32
 		optionOpen      bool
 		scalarOwnerOpen int32 = -1 // -1 / 0 / 1
 	)

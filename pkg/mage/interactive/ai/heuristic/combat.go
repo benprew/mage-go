@@ -764,11 +764,11 @@ func pumpsToSurvive(dmg, effToughness, boost int) int {
 	return (deficit + boost - 1) / boost
 }
 
-// affordablePumpCount returns how many times (capped at max) the player can pay
+// affordablePumpCount returns how many times (capped at maximum) the player can pay
 // for ab from currently available mana. Abilities carrying a non-mana cost (a
 // tap or sacrifice) or an {X} cost can be used at most once, since those costs
 // cannot be repaid repeatedly this priority pass.
-func affordablePumpCount(ab mage.ActivatedAbility, g *mage.Game, playerID uuid.UUID, max int) int {
+func affordablePumpCount(ab mage.ActivatedAbility, g *mage.Game, playerID uuid.UUID, maximum int) int {
 	per := core.ManaCost{}
 	repeatable := true
 	for _, c := range ab.Costs() {
@@ -786,7 +786,7 @@ func affordablePumpCount(ab mage.ActivatedAbility, g *mage.Game, playerID uuid.U
 	}
 	combined := core.ManaCost{}
 	count := 0
-	for count < max {
+	for count < maximum {
 		combined = addManaCost(combined, per)
 		if !g.CanAfford(playerID, combined, nil) {
 			break
@@ -817,7 +817,7 @@ func regeneratesEffects(effects []mage.Effect) bool {
 	return slices.ContainsFunc(effects, mage.IsRegenerationEffect)
 }
 
-func regeneratesAttachedTarget(ab mage.ActivatedAbility, source *mage.Permanent, target *mage.Permanent) bool {
+func regeneratesAttachedTarget(ab mage.ActivatedAbility, source, target *mage.Permanent) bool {
 	if source.AttachedTo != target.ID() {
 		return false
 	}
@@ -849,7 +849,7 @@ func effectsRegenerateAttached(effects []mage.Effect, attachedVars map[string]bo
 // considering for holding, along with its hold-adjusted value (removal and
 // beneficial tricks are weighted up). Returns nil/0 when no usable instant is
 // affordable.
-func bestHoldableInstant(p mage.Player, g *mage.Game) (mage.Card, float64) {
+func bestHoldableInstant(p mage.Player, g *mage.Game) (card mage.Card, value float64) {
 	playerID := p.PlayerID()
 
 	var bestCard mage.Card

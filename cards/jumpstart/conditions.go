@@ -12,7 +12,7 @@ import (
 // "if you didn't attack with a creature this turn, sacrifice this Aura" check.
 type controllerDidNotAttackThisTurn struct{}
 
-func (controllerDidNotAttackThisTurn) CheckTriggerCond(_ *GameEvent, g GameReader, _ uuid.UUID, controllerID uuid.UUID) bool {
+func (controllerDidNotAttackThisTurn) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
 	for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(controllerID))) {
 		if g.HasAttackedThisTurn(p.ID()) {
 			return false

@@ -32,19 +32,19 @@ func (p *modalChoosePlayer) ChooseMode(_ []string, _ string) int {
 	return m
 }
 
-func (p *modalChoosePlayer) ChooseTargets(possible []uuid.UUID, min, max int, _ *Game) []uuid.UUID {
+func (p *modalChoosePlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, _ *Game) []uuid.UUID {
 	if len(p.targets) > 0 {
 		out := p.targets[0]
 		p.targets = p.targets[1:]
 		return out
 	}
-	if min == 0 {
+	if minimum == 0 {
 		return nil
 	}
-	if len(possible) < min {
+	if len(possible) < minimum {
 		return nil
 	}
-	return possible[:min]
+	return possible[:minimum]
 }
 
 func newModalGame() (*Game, *modalChoosePlayer, *modalChoosePlayer) {

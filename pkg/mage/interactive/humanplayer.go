@@ -277,19 +277,19 @@ func (p *HumanPlayer) ChooseMayAbility(description string) bool {
 	return resp.Accepted
 }
 
-func (p *HumanPlayer) ChooseNumber(min, max int, reason string) int {
-	opts := make([]ChoiceOption, max-min+1)
-	for i := min; i <= max; i++ {
-		opts[i-min] = ChoiceOption{Label: fmt.Sprintf("%d", i)}
+func (p *HumanPlayer) ChooseNumber(minimum, maximum int, reason string) int {
+	opts := make([]ChoiceOption, maximum-minimum+1)
+	for i := minimum; i <= maximum; i++ {
+		opts[i-minimum] = ChoiceOption{Label: fmt.Sprintf("%d", i)}
 	}
 	p.choiceReqs <- ChoiceRequest{Type: ChoiceNumber, Reason: reason, Options: opts}
 	resp := <-p.choiceResps
-	n := resp.SelectedIndex + min
-	if n < min {
-		return min
+	n := resp.SelectedIndex + minimum
+	if n < minimum {
+		return minimum
 	}
-	if n > max {
-		return max
+	if n > maximum {
+		return maximum
 	}
 	return n
 }

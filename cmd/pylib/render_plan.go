@@ -234,7 +234,7 @@ func newEncodeScratch() *encodeScratch {
 func (s *encodeScratch) packedAnchorScratch(
 	optionCount int64,
 	targetCount int64,
-) ([]int32, []byte, []int32, []byte) {
+) (optionPositions []int32, optionMask []byte, targetPositions []int32, targetMask []byte) {
 	if optionCount < 0 {
 		optionCount = 0
 	}
@@ -565,8 +565,8 @@ func appendRenderCardsForZone(
 	}
 }
 
-func stackItemCardRow(item interactive.StackItemState, scratch *encodeScratch, state *apiGameState) (int32, string, bool) {
-	name := item.Name
+func stackItemCardRow(item interactive.StackItemState, scratch *encodeScratch, state *apiGameState) (row int32, name string, ok bool) {
+	name = item.Name
 	if name != "" && name != "Ability" {
 		if row, ok := scratch.cachedRowForName(name); ok {
 			return row, name, true
@@ -586,7 +586,7 @@ func stackItemCardRow(item interactive.StackItemState, scratch *encodeScratch, s
 	if name == "Ability" {
 		return 0, name, true
 	}
-	row, ok := scratch.cachedRowForName(name)
+	row, ok = scratch.cachedRowForName(name)
 	return row, name, ok
 }
 
@@ -780,7 +780,7 @@ func renderStatusBits(perm *interactive.PermanentState) int32 {
 	return bits
 }
 
-func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) {
+func renderOptionSource(option apiOption, index renderPlanIndex) (row, uuidIndex int32) {
 	// In practice an option carries exactly one source identifier:
 	// cast_spell / play_land / choice → CardUUID, the rest → PermanentUUID
 	// (with ChoiceMay using IDUUID). Try the most likely field first per
@@ -821,7 +821,7 @@ func renderOptionSource(option apiOption, index renderPlanIndex) (int32, int32) 
 	return -1, -1
 }
 
-func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index renderPlanIndex) (int32, int32, int32) {
+func renderTarget(target apiTarget, selfID, oppID uuid.UUID, index renderPlanIndex) (row, uuidIndex, targetType int32) {
 	if target.IDUUID == uuid.Nil {
 		return -1, -1, renderTargetUnknown
 	}
@@ -841,7 +841,7 @@ func renderTarget(target apiTarget, selfID uuid.UUID, oppID uuid.UUID, index ren
 	return -1, -1, renderTargetUnknown
 }
 
-func renderSlotIndex(owner int32, zone int32, cardIdx int) int32 {
+func renderSlotIndex(owner, zone int32, cardIdx int) int32 {
 	var slotZone int
 	switch {
 	case owner == renderOwnerSelf && zone == renderZoneHand:

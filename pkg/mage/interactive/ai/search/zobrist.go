@@ -282,12 +282,12 @@ func (z *ZobristTables) Hash(g *mage.Game) uint64 {
 	return h
 }
 
-func clampIdx(v, max int) int {
+func clampIdx(v, maximum int) int {
 	if v < 0 {
 		return 0
 	}
-	if v >= max {
-		return max - 1
+	if v >= maximum {
+		return maximum - 1
 	}
 	return v
 }

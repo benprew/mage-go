@@ -1610,7 +1610,7 @@ func (g *Game) PerformSurveil(p Player, n int) int {
 // validateScryPlacement ensures the player's choice is a valid partition of
 // `top`. On any inconsistency it returns the safe default (all on top in the
 // original order) so cards are never dropped.
-func validateScryPlacement(top []Card, bottom, topOrder []uuid.UUID) ([]uuid.UUID, []uuid.UUID) {
+func validateScryPlacement(top []Card, bottom, topOrder []uuid.UUID) (validBottom, validTopOrder []uuid.UUID) {
 	want := make(map[uuid.UUID]bool, len(top))
 	for _, c := range top {
 		want[c.ID()] = true
@@ -2218,7 +2218,8 @@ func (g *Game) PutTriggersOnStack() {
 		}
 		reverseTriggers(active)
 		reverseTriggers(nonActive)
-		g.pendingTriggers = append(active, nonActive...)
+		active = append(active, nonActive...)
+		g.pendingTriggers = active
 	}
 	for _, pt := range g.pendingTriggers {
 		obj := &StackObject{
@@ -2860,7 +2861,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		xValue = xValues[0]
 	}
 	if xValue < 0 {
-		return fmt.Errorf("X cannot be negative")
+		return fmt.Errorf("x cannot be negative")
 	}
 	if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
 		return err
@@ -3452,7 +3453,8 @@ func (g *Game) applyDrawReplacement(p Player, count int) {
 		}
 	}
 	rand.Shuffle(len(rest), func(i, j int) { rest[i], rest[j] = rest[j], rest[i] })
-	newLib := []Card{chosen}
+	newLib := make([]Card, 1, 1+len(lib)-count+len(rest))
+	newLib[0] = chosen
 	newLib = append(newLib, lib[count:]...)
 	newLib = append(newLib, rest...)
 	p.SetLibrary(newLib)

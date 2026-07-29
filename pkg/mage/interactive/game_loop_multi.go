@@ -210,8 +210,7 @@ func runMultiplayerGameLoop(g *mage.Game, channels [2]PlayerChannels, sendSnapsh
 			}
 
 			// Pre-step logging
-			switch step {
-			case core.CombatDamage:
+			if step == core.CombatDamage {
 				if len(g.CombatGroups()) > 0 {
 					addLog("── Combat damage ──")
 					logCombatPreview(g, addLog)

@@ -84,7 +84,7 @@ func newTextReadyResult(rows, terminals, decisions, code int64, msg string) C.Ma
 	}
 }
 
-func textRolloutLifeTotals(h *handle) (int64, int64) {
+func textRolloutLifeTotals(h *handle) (player0Life, player1Life int64) {
 	if h == nil || h.game == nil || h.game.PlayerCount() < 2 {
 		return 0, 0
 	}
@@ -391,7 +391,7 @@ func MageAddTextRolloutGames(req *C.MageTextRolloutStartRequest) (res C.MageEnco
 }
 
 //export MageNextTextInferenceBatch
-func MageNextTextInferenceBatch(maxRows C.int64_t, timeoutMS C.int64_t, out *C.MageTextReadyBatchOutputs) (res C.MageTextReadyBatchResult) {
+func MageNextTextInferenceBatch(maxRows, timeoutMS C.int64_t, out *C.MageTextReadyBatchOutputs) (res C.MageTextReadyBatchResult) {
 	defer func() {
 		if r := recover(); r != nil {
 			res = newTextReadyResult(0, 0, 0, mageEncodeErrEncodeFailure, fmt.Sprintf("panic: %v", r))

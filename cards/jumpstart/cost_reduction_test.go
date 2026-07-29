@@ -185,6 +185,7 @@ func TestHeraldsHorn_ReducesChosenCreatureType(t *testing.T) {
 	hornPerm := g.FindPermanentByName("Herald's Horn", pid)
 	if hornPerm == nil {
 		t.Fatal("Herald's Horn not found on battlefield")
+		return
 	}
 	hornPerm.ChosenSubtype = "Dragon"
 

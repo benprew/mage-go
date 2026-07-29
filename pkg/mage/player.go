@@ -79,7 +79,7 @@ type Player interface {
 	RemoveFromAnte(uuid.UUID) (Card, bool)
 
 	// Decision-making (overridden by TestPlayer)
-	ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID
+	ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *Game) []uuid.UUID
 	DeclareAttackers(g *Game) []uuid.UUID
 	DeclareBlockers(g *Game) []BlockAssignment
 	ChooseMayAbility(description string) bool
@@ -104,7 +104,7 @@ type Player interface {
 	ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
-	ChooseNumber(min, max int, reason string) int
+	ChooseNumber(minimum, maximum int, reason string) int
 
 	// ChooseString asks the player to pick one option from a string list,
 	// e.g. a creature type for "as ~ enters, choose a creature type"
@@ -331,9 +331,9 @@ func (p *BasePlayer) PoisonCounters() int { return p.poisonCounters }
 func (p *BasePlayer) AddPoisonCounters(n int) { p.poisonCounters += n }
 
 // Default decision implementations (overridden by TestPlayer).
-func (p *BasePlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {
-	if len(possible) >= min {
-		return possible[:min]
+func (p *BasePlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *Game) []uuid.UUID {
+	if len(possible) >= minimum {
+		return possible[:minimum]
 	}
 	return nil
 }
@@ -400,8 +400,8 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 	return nil
 }
 
-func (p *BasePlayer) ChooseNumber(min, max int, reason string) int {
-	return max // default: choose maximum
+func (p *BasePlayer) ChooseNumber(minimum, maximum int, reason string) int {
+	return maximum // default: choose maximum
 }
 
 func (p *BasePlayer) ChooseString(options []string, reason string) string {
@@ -413,7 +413,7 @@ func (p *BasePlayer) ChooseString(options []string, reason string) string {
 
 // ChooseScryPlacement: deterministic default keeps every revealed card on top
 // in its original order. Card implementations and AI players may override this.
-func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader) (bottom, topOrder []uuid.UUID) {
 	topOrder = make([]uuid.UUID, len(top))
 	for i, c := range top {
 		topOrder[i] = c.ID()
@@ -424,7 +424,7 @@ func (p *BasePlayer) ChooseScryPlacement(top []Card, reason string, g GameReader
 // ChooseSurveilPlacement: deterministic default keeps every revealed card on
 // top in its original order (no cards milled to the graveyard). Card
 // implementations and AI players may override this.
-func (p *BasePlayer) ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID) {
+func (p *BasePlayer) ChooseSurveilPlacement(top []Card, reason string, g GameReader) (graveyard, topOrder []uuid.UUID) {
 	topOrder = make([]uuid.UUID, len(top))
 	for i, c := range top {
 		topOrder[i] = c.ID()

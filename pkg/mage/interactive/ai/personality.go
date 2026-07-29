@@ -13,6 +13,7 @@ const (
 )
 
 // Personality parameterises how an AIPlayer makes decisions.
+//
 // Deprecated: Use WeightedPersonality for new code.
 type Personality struct {
 	Name                string

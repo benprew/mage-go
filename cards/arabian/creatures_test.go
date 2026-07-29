@@ -996,6 +996,7 @@ func TestKhabalGhoul(t *testing.T) {
 		}
 		if parentGhoul == nil {
 			t.Fatal("no Khabál Ghoul on parent battlefield")
+			return
 		}
 		before := parentGhoul.Counters[core.P1P1]
 

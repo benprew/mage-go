@@ -405,41 +405,42 @@ func registerSpells() {
 					// Find the creature(s) blocked by this Wall in combat groups
 					for _, grp := range g.CombatGroups() {
 						for _, bid := range grp.BlockerIDs {
-							if bid == wallID {
-								creature := g.FindPermanent(grp.AttackerID)
-								if creature == nil {
-									continue
-								}
-								power := creature.CurrentPower(g)
-								if power > 0 {
-									creature.AddCounter(Glyph, power)
-								}
-								creatureID := creature.ID()
-								// Grant "doesn't untap while it has glyph counters" (indefinite)
-								eff := TargetEffect(LayerAbility, Indefinite, creatureID, func(g *Game, target *Permanent) error {
-									if target.Counters[Glyph] > 0 {
-										g.GrantAttr(target.ID(), AttrDoesNotUntap)
-									}
-									return nil
-								})
-								eff.SetSourceID(sourceID)
-								g.AddContinuousEffect(eff)
-								// Grant "at beginning of your upkeep, remove a glyph counter"
-								trigger := BeginningOfUpkeepTrigger(
-									FuncEffect("remove a glyph counter",
-										EffectProperties{},
-										func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
-											perm := g.FindPermanent(srcID)
-											if perm != nil && perm.Counters[Glyph] > 0 {
-												perm.RemoveCounter(Glyph, 1)
-											}
-											return nil
-										}), false,
-								)
-								trigger.SetSource(creature.ID())
-								trigger.SetController(creature.ControllerID())
-								creature.RuntimeAbilities = append(creature.RuntimeAbilities, trigger)
+							if bid != wallID {
+								continue
 							}
+							creature := g.FindPermanent(grp.AttackerID)
+							if creature == nil {
+								continue
+							}
+							power := creature.CurrentPower(g)
+							if power > 0 {
+								creature.AddCounter(Glyph, power)
+							}
+							creatureID := creature.ID()
+							// Grant "doesn't untap while it has glyph counters" (indefinite)
+							eff := TargetEffect(LayerAbility, Indefinite, creatureID, func(g *Game, target *Permanent) error {
+								if target.Counters[Glyph] > 0 {
+									g.GrantAttr(target.ID(), AttrDoesNotUntap)
+								}
+								return nil
+							})
+							eff.SetSourceID(sourceID)
+							g.AddContinuousEffect(eff)
+							// Grant "at beginning of your upkeep, remove a glyph counter"
+							trigger := BeginningOfUpkeepTrigger(
+								FuncEffect("remove a glyph counter",
+									EffectProperties{},
+									func(g *Game, srcID, ctrl uuid.UUID, _ []uuid.UUID) error {
+										perm := g.FindPermanent(srcID)
+										if perm != nil && perm.Counters[Glyph] > 0 {
+											perm.RemoveCounter(Glyph, 1)
+										}
+										return nil
+									}), false,
+							)
+							trigger.SetSource(creature.ID())
+							trigger.SetController(creature.ControllerID())
+							creature.RuntimeAbilities = append(creature.RuntimeAbilities, trigger)
 						}
 					}
 					return nil

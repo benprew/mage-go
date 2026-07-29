@@ -1126,7 +1126,7 @@ func registerCreatures() {
 				ManaCostOf("{0}"),
 				WithCost(Tap()),
 				WithCost(TapCreatureCost()),
-				WithCost(TapCreatureCost()),
+				WithCost(TapCreatureCost()), //nolint:gocritic // Oracle requires two separate tap-creature costs.
 				WithSorcerySpeed(),
 			),
 			WithAbility(castCopyAb),
@@ -4041,11 +4041,10 @@ func registerCreatures() {
 						if opp == nil {
 							return nil
 						}
-						var candidates []*Permanent
-						candidates = append(candidates, g.FilterBattlefield(And(
+						candidates := g.FilterBattlefield(And(
 							ControlledBy(opp.PlayerID()),
 							IsCreature,
-						))...)
+						))
 						if len(candidates) == 0 {
 							return nil
 						}

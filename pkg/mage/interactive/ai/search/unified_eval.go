@@ -54,13 +54,12 @@ func lifePressure(life int) float64 {
 	return delta * delta / 20.0
 }
 
-func boardPower(g *mage.Game, rootPlayer uuid.UUID) (float64, float64) {
+func boardPower(g *mage.Game, rootPlayer uuid.UUID) (mine, theirs float64) {
 	opp := g.GetOpponent(rootPlayer)
 	if opp == nil {
 		return 0, 0
 	}
 
-	var mine, theirs float64
 	oppID := opp.PlayerID()
 	for _, p := range g.AllBattlefield() {
 		if !p.HasType(core.TypeCreature) {
@@ -113,8 +112,7 @@ func countDefenderCreatures(g *mage.Game, defenderID uuid.UUID) int {
 	return n
 }
 
-func untappedLands(g *mage.Game, rootPlayer uuid.UUID) (int, int) {
-	var mine, theirs int
+func untappedLands(g *mage.Game, rootPlayer uuid.UUID) (mine, theirs int) {
 	for _, p := range g.AllBattlefield() {
 		if !p.HasType(core.TypeLand) || p.Tapped {
 			continue

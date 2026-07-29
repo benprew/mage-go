@@ -197,19 +197,19 @@ func (rng *RNG) Intn(n int) int {
 	return rng.r.Intn(n)
 }
 
-func (rng *RNG) IntRange(min, max int) int {
-	if max <= min {
-		return min
+func (rng *RNG) IntRange(minimum, maximum int) int {
+	if maximum <= minimum {
+		return minimum
 	}
-	return min + rng.r.Intn(max-min+1)
+	return minimum + rng.r.Intn(maximum-minimum+1)
 }
 
 func (rng *RNG) Float64() float64 {
 	return rng.r.Float64()
 }
 
-func (rng *RNG) Float64Range(min, max float64) float64 {
-	return min + rng.r.Float64()*(max-min)
+func (rng *RNG) Float64Range(minimum, maximum float64) float64 {
+	return minimum + rng.r.Float64()*(maximum-minimum)
 }
 
 func (rng *RNG) Bool() bool {

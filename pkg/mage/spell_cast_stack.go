@@ -70,10 +70,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	return obj, nil
 }
 
-func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid.UUID, promptTargets bool, modePrompt string) ([]Effect, []uuid.UUID, [][]uuid.UUID, int) {
-	var effects []Effect
-	var modalTargets [][]uuid.UUID
-	modeChoice := 0
+func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid.UUID, promptTargets bool, modePrompt string) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
 	if ms, ok := getModalSpellAbility(card); ok {
 		if modePrompt == "" {
 			modePrompt = card.Name()

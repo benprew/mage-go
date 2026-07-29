@@ -384,7 +384,8 @@ func PrintSummary(set GeneratedSet) {
 }
 
 func PrintCardList(set GeneratedSet) {
-	colorOrder := append(AllColors, Colorless)
+	colorOrder := append([]Color(nil), AllColors...)
+	colorOrder = append(colorOrder, Colorless)
 
 	byColor := make(map[Color][]GeneratedCard)
 	for _, gc := range set.Cards {
@@ -411,7 +412,7 @@ func PrintCardList(set GeneratedSet) {
 			if c.IsCreature() {
 				kwStr := ""
 				if len(c.Keywords) > 0 {
-					var kws []string
+					kws := make([]string, 0, len(c.Keywords))
 					for _, kw := range c.Keywords {
 						kws = append(kws, kw.String())
 					}

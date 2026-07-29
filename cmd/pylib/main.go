@@ -220,7 +220,7 @@ func errResponse(format string, args ...any) *C.char {
 	return toCStringResponse(apiResponse{OK: false, Error: fmt.Sprintf(format, args...)})
 }
 
-func newEncodeResult(rowsWritten int64, code int64, msg string) C.MageEncodeResult {
+func newEncodeResult(rowsWritten, code int64, msg string) C.MageEncodeResult {
 	var cmsg *C.char
 	if msg != "" {
 		cmsg = C.CString(msg)
@@ -721,7 +721,7 @@ func winnerPlayerIndex(h *handle) int64 {
 	return -1
 }
 
-func priorityActionFromChoiceCol(pending *apiPending, col int64, maxOptions int64, maxTargetsPerOption int64) (actionRequest, error) {
+func priorityActionFromChoiceCol(pending *apiPending, col, maxOptions, maxTargetsPerOption int64) (actionRequest, error) {
 	optionCount := minInt64(int64(len(pending.Options)), maxOptions)
 	candidateIdx := int64(0)
 	for optIdx := int64(0); optIdx < optionCount; optIdx++ {
@@ -774,7 +774,7 @@ func priorityActionFromChoiceCol(pending *apiPending, col int64, maxOptions int6
 	return actionRequest{}, fmt.Errorf("priority choice column %d out of range", col)
 }
 
-func actionFromStepChoice(pending *apiPending, selectedCols []int64, maySelected int64, maxOptions int64, maxTargetsPerOption int64) (actionRequest, error) {
+func actionFromStepChoice(pending *apiPending, selectedCols []int64, maySelected, maxOptions, maxTargetsPerOption int64) (actionRequest, error) {
 	if pending == nil {
 		return actionRequest{}, fmt.Errorf("no pending request")
 	}
@@ -1695,7 +1695,7 @@ func MageTokenTableSummary() *C.char {
 // Two key fields cover all (zero or one used).
 //
 //export MageTokenTableLookup
-func MageTokenTableLookup(kind C.int32_t, k0 C.int32_t, k1 C.int32_t) *C.char {
+func MageTokenTableLookup(kind, k0, k1 C.int32_t) *C.char {
 	defer func() { _ = recover() }()
 	t := getTokenTables()
 	if t == nil {

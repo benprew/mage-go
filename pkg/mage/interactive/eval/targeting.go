@@ -167,7 +167,7 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 }
 
 // TargetValueForPurpose scores either a permanent or player target.
-func TargetValueForPurpose(g *mage.Game, controller uuid.UUID, target uuid.UUID, purpose TargetPurpose, damage int) int {
+func TargetValueForPurpose(g *mage.Game, controller, target uuid.UUID, purpose TargetPurpose, damage int) int {
 	if perm := g.FindPermanent(target); perm != nil {
 		score := PermanentValueForTargeting(g, perm, purpose)
 		if purpose == TargetBurn && damage > 0 {

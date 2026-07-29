@@ -46,7 +46,7 @@ func TestTurnStructureMain_TwoMainPhasesPerTurn(t *testing.T) {
 	tg := NewTestGame(t)
 	tg.padLibraries()
 
-	var visited []core.PhaseStep
+	visited := make([]core.PhaseStep, 0, len(core.AllSteps()))
 	tg.OnPriority = func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
 		return mage.PriorityAction{Type: mage.PriorityPass}
 	}

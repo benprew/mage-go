@@ -51,7 +51,7 @@ func TestTurnPhases(t *testing.T) {
 			core.EndStep,
 			core.Cleanup,
 		}
-		var got []core.PhaseStep
+		got := make([]core.PhaseStep, 0, len(core.AllSteps()))
 		for _, step := range core.AllSteps() {
 			tg.RunStepWithPriority(step)
 			got = append(got, tg.Step)

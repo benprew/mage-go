@@ -99,8 +99,10 @@ func subtypes(c Card) []string {
 // oracleComment formats oracle text as a Go comment block.
 func oracleComment(c Card) string {
 	var lines []string
-	lines = append(lines, fmt.Sprintf("// %s %s", c.Name, c.ManaCost))
-	lines = append(lines, fmt.Sprintf("// %s", c.TypeLine))
+	lines = append(lines,
+		fmt.Sprintf("// %s %s", c.Name, c.ManaCost),
+		fmt.Sprintf("// %s", c.TypeLine),
+	)
 	if c.Power != "" && c.Toughness != "" {
 		lines = append(lines, fmt.Sprintf("// %s/%s", c.Power, c.Toughness))
 	}
@@ -444,9 +446,9 @@ func writeCreatures(dir, pkg string, groups []colorGroup) {
 		Label string
 		Cards []struct{ Stub string }
 	}
-	var gd []groupData
+	gd := make([]groupData, 0, len(groups))
 	for _, g := range groups {
-		var cards []struct{ Stub string }
+		cards := make([]struct{ Stub string }, 0, len(g.Cards))
 		for _, c := range g.Cards {
 			cards = append(cards, struct{ Stub string }{creatureStub(c)})
 		}

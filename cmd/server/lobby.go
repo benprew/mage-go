@@ -84,13 +84,14 @@ func (l *Lobby) CreateSlot(sess *PlayerSession) *GameSlot {
 func (l *Lobby) JoinSlot(slotID string, sess *PlayerSession) (*GameSlot, error) {
 	l.mu.Lock()
 	for _, slot := range l.slots {
-		if slot.ID == slotID && slot.p2 == nil && !slot.isAI {
-			slot.p2 = sess
-			l.mu.Unlock()
-			close(slot.ready)
-			go l.startPvPGame(slot)
-			return slot, nil
+		if slot.ID != slotID || slot.p2 != nil || slot.isAI {
+			continue
 		}
+		slot.p2 = sess
+		l.mu.Unlock()
+		close(slot.ready)
+		go l.startPvPGame(slot)
+		return slot, nil
 	}
 	l.mu.Unlock()
 	return nil, fmt.Errorf("slot %q not found or already full", slotID)

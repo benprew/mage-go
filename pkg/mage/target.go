@@ -29,11 +29,11 @@ type BaseTarget struct {
 // VariableTarget reports target-count bounds that depend on the announced X.
 type VariableTarget interface {
 	Target
-	BoundsForX(x int) (min, max int)
+	BoundsForX(x int) (minimum, maximum int)
 }
 
 // TargetBounds returns a target's bounds for the announced X value.
-func TargetBounds(target Target, x int) (min, max int) {
+func TargetBounds(target Target, x int) (minimum, maximum int) {
 	if variable, ok := target.(VariableTarget); ok {
 		return variable.BoundsForX(x)
 	}
@@ -67,7 +67,7 @@ func (t *countBoundTarget) Max() int {
 	return t.count
 }
 func (t *countBoundTarget) Reset() { t.inner.Reset() }
-func (t *countBoundTarget) BoundsForX(x int) (int, int) {
+func (t *countBoundTarget) BoundsForX(x int) (minimum, maximum int) {
 	if t.usesX {
 		return max(x, 0), max(x, 0)
 	}
@@ -296,7 +296,7 @@ func TargetPlayer() Target {
 }
 
 func (t *PlayerTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
-	var result []uuid.UUID
+	result := make([]uuid.UUID, 0, len(g.players))
 	for _, p := range g.players {
 		result = append(result, p.PlayerID())
 	}

@@ -224,7 +224,8 @@ func NewAction(kind ActionKind, opts ...ActionOption) *ActionDefinition {
 
 // NewActivated creates an activated action with a primary cost and effects.
 func NewActivated(cost Cost, parts ...any) *ActionDefinition {
-	opts := []ActionOption{WithCost(cost)}
+	opts := make([]ActionOption, 1, 1+len(parts))
+	opts[0] = WithCost(cost)
 	opts = append(opts, actionPartsToOptions(parts...)...)
 	return NewAction(ActionActivated, opts...)
 }
@@ -232,7 +233,8 @@ func NewActivated(cost Cost, parts ...any) *ActionDefinition {
 // NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
 // and optional additional costs, targets, or effects via AbilityOption functions.
 func NewActivatedAbility(effect Effect, cost Cost, opts ...AbilityOption) *SimpleActivatedAbility {
-	parts := []any{effect}
+	parts := make([]any, 1, 1+len(opts))
+	parts[0] = effect
 	for _, opt := range opts {
 		parts = append(parts, opt)
 	}

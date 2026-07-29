@@ -350,7 +350,7 @@ func (tg *TestGame) ChooseFromLibrary(p PlayerRef, name string) {
 // (CR 701.18). `bottom` lists card names (in placement order) that go to the
 // bottom of the library; `topOrder` lists the remaining card names in their
 // new top-of-library order. Both must reference cards revealed by the scry.
-func (tg *TestGame) ChooseScry(p PlayerRef, bottom []string, topOrder []string) {
+func (tg *TestGame) ChooseScry(p PlayerRef, bottom, topOrder []string) {
 	tg.GetPlayer(p).AddScryDecision(bottom, topOrder)
 }
 
@@ -358,7 +358,7 @@ func (tg *TestGame) ChooseScry(p PlayerRef, bottom []string, topOrder []string) 
 // performs (CR 701.42). `graveyard` lists card names (in placement order) that
 // go into the graveyard; `topOrder` lists the remaining card names in their
 // new top-of-library order. Both must reference cards revealed by the surveil.
-func (tg *TestGame) ChooseSurveil(p PlayerRef, graveyard []string, topOrder []string) {
+func (tg *TestGame) ChooseSurveil(p PlayerRef, graveyard, topOrder []string) {
 	tg.GetPlayer(p).AddSurveilDecision(graveyard, topOrder)
 }
 
@@ -1505,11 +1505,11 @@ func (tg *TestGame) AssertManaProduced(p PlayerRef, color core.Color, want int) 
 }
 
 // AssertManaProducedAtLeast is the >= variant of AssertManaProduced.
-func (tg *TestGame) AssertManaProducedAtLeast(p PlayerRef, color core.Color, min int) {
+func (tg *TestGame) AssertManaProducedAtLeast(p PlayerRef, color core.Color, minimum int) {
 	tg.t.Helper()
 	got := tg.GetPlayer(p).ManaPool().CountProducedThisTurn(color)
-	if got < min {
-		tg.t.Errorf("AssertManaProducedAtLeast(%v, %v): got %d, want >= %d", p, color, got, min)
+	if got < minimum {
+		tg.t.Errorf("AssertManaProducedAtLeast(%v, %v): got %d, want >= %d", p, color, got, minimum)
 	}
 }
 

@@ -73,7 +73,7 @@ func analyze(results []scenario.GameResult, verbose bool) {
 	// Categorize games.
 	var panics, maxTurns, timeouts []scenario.GameResult
 	var withAnomalies []scenario.GameResult
-	var turns []int
+	turns := make([]int, 0, len(results))
 	panicGroups := map[string][]scenario.GameResult{}
 	winCounts := map[string]int{}
 	deckWins := map[string]int{}
@@ -127,7 +127,7 @@ func analyze(results []scenario.GameResult, verbose bool) {
 			count int
 			games []scenario.GameResult
 		}
-		var entries []panicEntry
+		entries := make([]panicEntry, 0, len(panicGroups))
 		for msg, games := range panicGroups {
 			entries = append(entries, panicEntry{msg, len(games), games})
 		}
@@ -212,7 +212,7 @@ func analyze(results []scenario.GameResult, verbose bool) {
 		games int
 		wins  int
 	}
-	var deckStats []deckStat
+	deckStats := make([]deckStat, 0, len(deckGames))
 	for name, games := range deckGames {
 		deckStats = append(deckStats, deckStat{name, games, deckWins[name]})
 	}
@@ -239,7 +239,7 @@ func analyze(results []scenario.GameResult, verbose bool) {
 		}
 	}
 	if len(skippedSet) > 0 {
-		var skippedList []string
+		skippedList := make([]string, 0, len(skippedSet))
 		for c := range skippedSet {
 			skippedList = append(skippedList, c)
 		}

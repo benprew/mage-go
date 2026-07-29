@@ -782,12 +782,11 @@ func registerCreatures() {
 						if src == nil {
 							return nil
 						}
-						var tetravites []*Permanent
-						tetravites = append(tetravites, g.FilterBattlefield(And(
+						tetravites := g.FilterBattlefield(And(
 							ControlledBy(controller),
 							IsToken,
 							CreatedByFilter(sourceID),
-						))...)
+						))
 						if len(tetravites) == 0 {
 							return nil
 						}

@@ -196,13 +196,13 @@ func (ai *AIPlayer) ChooseManaColor(reason string) core.Color {
 // ChooseNumber picks the minimum for costs the AI wants to minimize
 // (discarding, sacrificing, paying life) and the maximum otherwise (e.g. how
 // much damage to deal, how many cards to draw).
-func (ai *AIPlayer) ChooseNumber(min, max int, reason string) int {
+func (ai *AIPlayer) ChooseNumber(minimum, maximum int, reason string) int {
 	lower := strings.ToLower(reason)
 	if strings.Contains(lower, "discard") || strings.Contains(lower, "sacrifice") ||
 		strings.Contains(lower, "pay") || strings.Contains(lower, "lose") {
-		return min
+		return minimum
 	}
-	return max
+	return maximum
 }
 
 // ChooseDamageDistribution spreads divided damage to kill as many of the
@@ -280,15 +280,12 @@ func (ai *AIPlayer) ChooseDamageDistribution(possible []uuid.UUID, total int, re
 // spells) the AI could not pre-select at cast time. Lacking the effect's
 // purpose at this point, it applies the common-case removal heuristic: prefer
 // the opponent (face, then their most valuable permanents) over our own.
-func (ai *AIPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.Game) []uuid.UUID {
-	if len(possible) < min {
+func (ai *AIPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *mage.Game) []uuid.UUID {
+	if len(possible) < minimum {
 		return nil
 	}
-	if g == nil || min <= 0 {
-		count := min
-		if count > len(possible) {
-			count = len(possible)
-		}
+	if g == nil || minimum <= 0 {
+		count := min(minimum, len(possible))
 		return possible[:count]
 	}
 
@@ -323,12 +320,9 @@ func (ai *AIPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.Ga
 		return ranked[i].score > ranked[j].score
 	})
 
-	count := min
-	if count > len(ranked) {
-		count = len(ranked)
-	}
+	count := min(minimum, len(ranked))
 	result := make([]uuid.UUID, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		result[i] = ranked[i].id
 	}
 	return result

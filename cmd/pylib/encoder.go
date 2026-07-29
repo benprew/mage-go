@@ -267,7 +267,7 @@ func validateEncodeConfig(cfg encodeConfig) *encodeError {
 		return &encodeError{code: mageEncodeErrArg, message: fmt.Sprintf("target_scalar_dim=%d, want %d", cfg.targetScalarDim, targetScalarDim)}
 	case cfg.maxCachedChoices < cfg.maxOptions:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_options"}
-	case cfg.maxCachedChoices < cfg.maxTargetsPerOption+1:
+	case cfg.maxCachedChoices <= cfg.maxTargetsPerOption:
 		return &encodeError{code: mageEncodeErrArg, message: "max_cached_choices must be >= max_targets_per_option + 1"}
 	case (cfg.emitRenderPlan || cfg.emitTokensPacked) && cfg.renderPlanCapacity <= 0:
 		return &encodeError{code: mageEncodeErrArg, message: "render_plan_capacity must be positive when render-plan-backed token assembly is set"}
@@ -1166,7 +1166,7 @@ func manaSymbolsFromCost(manaCost string) []string {
 	}
 }
 
-func resolveOptionReference(option apiOption, cardIDToSlot map[string]int64) (int64, int64, *encodeError) {
+func resolveOptionReference(option apiOption, cardIDToSlot map[string]int64) (slot, row int64, encodeErr *encodeError) {
 	for _, key := range []string{option.CardID, option.PermanentID, option.ID} {
 		if key == "" {
 			continue
@@ -1318,7 +1318,7 @@ func traceKindForPending(pending *apiPending) string {
 	}
 }
 
-func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPerOption int64) int64 {
+func priorityCandidateCount(pending *apiPending, maxOptions, maxTargetsPerOption int64) int64 {
 	if pending == nil || pending.Kind != "priority" {
 		return 0
 	}
@@ -1340,8 +1340,7 @@ func priorityCandidateCount(pending *apiPending, maxOptions int64, maxTargetsPer
 	return count
 }
 
-func playerIDs(state *apiGameState, perspectivePlayerIdx int) (uuid.UUID, uuid.UUID) {
-	var selfID, oppID uuid.UUID
+func playerIDs(state *apiGameState, perspectivePlayerIdx int) (selfID, oppID uuid.UUID) {
 	if len(state.Players) > 0 {
 		selfID = state.Players[perspectivePlayerIdx].ID
 	}
@@ -1501,7 +1500,7 @@ func fillInt32(dst []int32, value int32) {
 	}
 }
 
-func clipNorm(value float64, maximum float64) float32 {
+func clipNorm(value, maximum float64) float32 {
 	if maximum <= 0 {
 		return 0
 	}

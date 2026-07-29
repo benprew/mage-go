@@ -45,6 +45,7 @@ linters:
         - name: context-as-argument
         - name: context-keys-type
         - name: dot-imports
+          disabled: true
         - name: error-return
         - name: error-strings
         - name: error-naming
@@ -55,6 +56,7 @@ linters:
         - name: superfluous-else
         - name: time-naming
         - name: unexported-return
+          disabled: true
         - name: unreachable-code
         - name: var-declaration
 
@@ -62,6 +64,7 @@ linters:
       checks:
         - all
         - "-ST1000"
+        - "-ST1001"
         - "-ST1003"
         - "-ST1020"
         - "-ST1021"

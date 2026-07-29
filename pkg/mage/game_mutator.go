@@ -620,7 +620,7 @@ func (g *Game) AddCycleReplacement(r ReplacementEffect) {
 }
 
 // SetArtifactUntapMax sets the maximum number of artifacts that may untap per turn.
-func (g *Game) SetArtifactUntapMax(max int) { g.effects.Rules.ArtifactUntapMax = max }
+func (g *Game) SetArtifactUntapMax(maximum int) { g.effects.Rules.ArtifactUntapMax = maximum }
 
 // AddSpellTypeCostReduction adds a generic cost reduction for spells of the given type.
 func (g *Game) AddSpellTypeCostReduction(ct CardType, amount int) {

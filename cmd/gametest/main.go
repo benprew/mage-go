@@ -29,6 +29,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	maxTurns := flag.Int("turns", 50, "maximum number of turns")
 	deckA := flag.Int("deck-a", -1, "deck index for player A (0-based, -1 = random)")
 	deckB := flag.Int("deck-b", -1, "deck index for player B (0-based, -1 = random)")
@@ -56,12 +60,12 @@ func main() {
 		f, err := os.Create(*cpuProfile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "could not create cpu profile: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		if err := pprof.StartCPUProfile(f); err != nil {
 			fmt.Fprintf(os.Stderr, "could not start cpu profile: %v\n", err)
 			f.Close()
-			os.Exit(1)
+			return 1
 		}
 		profiles.cpuFile = f
 		profiles.cpuActive = true
@@ -76,7 +80,7 @@ func main() {
 		devnull, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "could not open /dev/null: %v\n", err)
-			os.Exit(1)
+			return 1
 		}
 		os.Stdout = devnull
 	}
@@ -84,11 +88,11 @@ func main() {
 	deckPool, err := loadDeckPool(*rogueDecks, *rogueDir, *minCards)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not load decks: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 	if *deckA >= len(deckPool) || *deckB >= len(deckPool) {
 		fmt.Fprintf(os.Stderr, "invalid deck index (max %d)\n", len(deckPool)-1)
-		os.Exit(1)
+		return 1
 	}
 
 	var rng *rand.Rand
@@ -151,6 +155,7 @@ func main() {
 			float64(*games)/max(totalLoop.Seconds(), 1e-9),
 		)
 	}
+	return 0
 }
 
 type profileRun struct {

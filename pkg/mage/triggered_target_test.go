@@ -18,15 +18,15 @@ type choosePromptCall struct {
 	min, max int
 }
 
-func (rp *recordingPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {
-	rp.calls = append(rp.calls, choosePromptCall{possible: append([]uuid.UUID(nil), possible...), min: min, max: max})
+func (rp *recordingPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *Game) []uuid.UUID {
+	rp.calls = append(rp.calls, choosePromptCall{possible: append([]uuid.UUID(nil), possible...), min: minimum, max: maximum})
 	if len(rp.chooseQueue) > 0 {
 		choice := rp.chooseQueue[0]
 		rp.chooseQueue = rp.chooseQueue[1:]
 		return choice
 	}
-	if len(possible) >= min {
-		n := min
+	if len(possible) >= minimum {
+		n := minimum
 		if n == 0 && len(possible) > 0 {
 			n = 1
 		}

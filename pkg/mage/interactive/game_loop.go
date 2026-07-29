@@ -166,8 +166,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 	for g.CurrentTurn() <= 100 {
 		for _, step := range core.AllSteps() {
 			// Pre-step logging
-			switch step {
-			case core.CombatDamage:
+			if step == core.CombatDamage {
 				if len(g.CombatGroups()) > 0 {
 					addLog("── Combat damage ──")
 					logCombatPreview(g, addLog)

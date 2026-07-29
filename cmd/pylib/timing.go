@@ -133,12 +133,12 @@ func nativeLoopTimingEnabled() bool {
 	return nativeTimingEnabledFlag.Load() != 0
 }
 
-func addNativeEncodeTiming(rows int64, total, view, clear, stateAction, decision time.Duration) {
+func addNativeEncodeTiming(rows int64, total, view, clearDuration, stateAction, decision time.Duration) {
 	atomic.AddInt64(&nativeEncodeCalls, 1)
 	atomic.AddInt64(&nativeEncodeRows, rows)
 	atomic.AddInt64(&nativeEncodeTotalNs, int64(total))
 	atomic.AddInt64(&nativeEncodeViewNs, int64(view))
-	atomic.AddInt64(&nativeEncodeClearNs, int64(clear))
+	atomic.AddInt64(&nativeEncodeClearNs, int64(clearDuration))
 	atomic.AddInt64(&nativeEncodeStateNs, int64(stateAction))
 	atomic.AddInt64(&nativeEncodeDecisionNs, int64(decision))
 }

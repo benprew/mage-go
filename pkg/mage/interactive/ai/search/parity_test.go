@@ -205,8 +205,9 @@ func unholyStrengthTargetOutcomes(t *testing.T, g *mage.Game, aliceID uuid.UUID,
 	if len(targets) == 0 {
 		t.Fatalf("Unholy Strength has no cast targets")
 	}
-	var out []unholyOutcome
-	for _, targetID := range targets[0].Possible(aliceID, card, g) {
+	possible := targets[0].Possible(aliceID, card, g)
+	out := make([]unholyOutcome, 0, len(possible))
+	for _, targetID := range possible {
 		m := &Move{
 			Type:     interactive.ActionCastSpell,
 			CardID:   card.ID(),

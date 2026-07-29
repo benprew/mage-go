@@ -238,7 +238,7 @@ func (tp *TestPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 // ChooseTargets selects from possible targets (for auto-targeting).
 // If a scripted target name is queued (via TestGame.ChooseTarget), it is
 // resolved against the possible IDs by matching player name or permanent name.
-func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.Game) []uuid.UUID {
+func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *mage.Game) []uuid.UUID {
 	if len(tp.chooseTarget) > 0 {
 		name := tp.chooseTarget[0]
 		for _, id := range possible {
@@ -252,11 +252,8 @@ func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *mage.
 			}
 		}
 	}
-	if len(possible) >= min {
-		n := min
-		if n > len(possible) {
-			n = len(possible)
-		}
+	if len(possible) >= minimum {
+		n := min(minimum, len(possible))
 		return possible[:n]
 	}
 	return nil
@@ -438,7 +435,7 @@ func (tp *TestPlayer) AddScryDecision(bottom, topOrder []string) {
 
 // ChooseScryPlacement consumes one queued decision; with no queued decision
 // the BasePlayer default applies (keep all on top in current order).
-func (tp *TestPlayer) ChooseScryPlacement(top []mage.Card, reason string, g mage.GameReader) (bottom []uuid.UUID, topOrder []uuid.UUID) {
+func (tp *TestPlayer) ChooseScryPlacement(top []mage.Card, reason string, g mage.GameReader) (bottom, topOrder []uuid.UUID) {
 	if len(tp.chooseScryDecisions) == 0 {
 		return tp.BasePlayer.ChooseScryPlacement(top, reason, g)
 	}
@@ -489,7 +486,7 @@ func (tp *TestPlayer) AddSurveilDecision(graveyard, topOrder []string) {
 
 // ChooseSurveilPlacement consumes one queued decision; with no queued
 // decision the BasePlayer default applies (keep all on top in current order).
-func (tp *TestPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g mage.GameReader) (graveyard []uuid.UUID, topOrder []uuid.UUID) {
+func (tp *TestPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g mage.GameReader) (graveyard, topOrder []uuid.UUID) {
 	if len(tp.chooseSurveilDecisions) == 0 {
 		return tp.BasePlayer.ChooseSurveilPlacement(top, reason, g)
 	}
@@ -529,17 +526,17 @@ func (tp *TestPlayer) ChooseSurveilPlacement(top []mage.Card, reason string, g m
 }
 
 // ChooseNumber picks a number from the given range.
-func (tp *TestPlayer) ChooseNumber(min, max int, reason string) int {
+func (tp *TestPlayer) ChooseNumber(minimum, maximum int, reason string) int {
 	if len(tp.chooseNumber) > 0 {
 		n := tp.chooseNumber[0]
 		tp.chooseNumber = tp.chooseNumber[1:]
-		if n < min {
-			return min
+		if n < minimum {
+			return minimum
 		}
-		if n > max {
-			return max
+		if n > maximum {
+			return maximum
 		}
 		return n
 	}
-	return max // default: choose maximum
+	return maximum // default: choose maximum
 }

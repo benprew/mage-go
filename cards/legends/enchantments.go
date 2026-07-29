@@ -392,8 +392,7 @@ func registerEnchantments() {
 						if p == nil {
 							return nil
 						}
-						var candidates []*Permanent
-						candidates = append(candidates, g.FilterBattlefield(Or(HasColorFilter(Black), HasColorFilter(Red)))...)
+						candidates := g.FilterBattlefield(Or(HasColorFilter(Black), HasColorFilter(Red)))
 						if len(candidates) == 0 {
 							return nil
 						}

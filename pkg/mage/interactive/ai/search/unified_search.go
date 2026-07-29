@@ -293,7 +293,7 @@ func (s *searcher) search(g *mage.Game, priorityID uuid.UUID, prevPass bool, alp
 	return s.search(clone, clone.ActivePlayerObj().PlayerID(), false, alpha, beta)
 }
 
-func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bool, alpha, beta float64) ([]ChainStep, float64) {
+func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bool, alpha, beta float64) (chain []ChainStep, score float64) {
 	step := g.GetStep()
 	actor := g.GetPlayer(priorityID)
 	if actor == nil {
@@ -369,7 +369,7 @@ func (s *searcher) priorityRound(g *mage.Game, priorityID uuid.UUID, prevPass bo
 	return bestChain, bestScore
 }
 
-func (s *searcher) branchAttackers(g *mage.Game, alpha, beta float64) ([]ChainStep, float64) {
+func (s *searcher) branchAttackers(g *mage.Game, alpha, beta float64) (chain []ChainStep, score float64) {
 	activeIdx := g.ActivePlayerIndex()
 	activePlayer := g.PlayerAt(activeIdx)
 	activePlayerID := activePlayer.PlayerID()
@@ -452,7 +452,7 @@ func (s *searcher) branchAttackers(g *mage.Game, alpha, beta float64) ([]ChainSt
 	return bestChain, bestScore
 }
 
-func (s *searcher) branchBlockers(g *mage.Game, alpha, beta float64) ([]ChainStep, float64) {
+func (s *searcher) branchBlockers(g *mage.Game, alpha, beta float64) (chain []ChainStep, score float64) {
 	defenderIdx := 1 - g.ActivePlayerIndex()
 	defender := g.PlayerAt(defenderIdx)
 	defenderID := defender.PlayerID()

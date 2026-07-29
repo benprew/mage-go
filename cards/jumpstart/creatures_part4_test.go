@@ -27,6 +27,7 @@ func TestNyxathid_PinsOpponentAndShrinksByHandSize(t *testing.T) {
 	perm := g.FindPermanentByName("Nyxathid", g.GetPlayer(gametest.PlayerA).PlayerID())
 	if perm == nil {
 		t.Fatal("Nyxathid not on battlefield")
+		return
 	}
 	if perm.ChosenPlayer != pidB {
 		t.Errorf("ChosenPlayer: got %v, want PlayerB %v", perm.ChosenPlayer, pidB)

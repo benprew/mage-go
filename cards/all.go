@@ -5,6 +5,7 @@
 package cards
 
 import (
+	// Register every card set through its init function.
 	_ "github.com/benprew/mage-go/cards/antiquities"
 	_ "github.com/benprew/mage-go/cards/arabian"
 	_ "github.com/benprew/mage-go/cards/custom"

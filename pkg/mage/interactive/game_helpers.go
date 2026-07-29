@@ -103,7 +103,7 @@ func getEligibleAttackers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 }
 
 func attackerOptions(eligible []*mage.Permanent) []ActionOption {
-	var options []ActionOption
+	options := make([]ActionOption, 0, len(eligible))
 	for _, perm := range eligible {
 		options = append(options, ActionOption{
 			Type:        ActionSelectAttackers,
@@ -126,7 +126,7 @@ func getEligibleBlockers(g *mage.Game, playerID uuid.UUID) []*mage.Permanent {
 }
 
 func blockerOptions(g *mage.Game, defenderID uuid.UUID, eligible []*mage.Permanent) []ActionOption {
-	var options []ActionOption
+	options := make([]ActionOption, 0, len(eligible)+1)
 	for _, perm := range eligible {
 		opt := ActionOption{
 			Type:        ActionSelectBlockers,

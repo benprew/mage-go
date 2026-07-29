@@ -106,9 +106,7 @@ func GenerateAttackerSets(g *mage.Game, playerID uuid.UUID) [][]uuid.UUID {
 	for i, p := range eligible {
 		all[i] = p.ID()
 	}
-	sets = append(sets, all)
-
-	sets = append(sets, nil)
+	sets = append(sets, all, nil)
 
 	if len(eligible) > 1 {
 		for _, p := range eligible {

@@ -402,9 +402,7 @@ func (m Model) View() string {
 		if m.canUndo {
 			hints = append(hints, "(u) Undo")
 		}
-		hints = append(hints, "(i) Inspect cards")
-		hints = append(hints, "(l) Full log")
-		hints = append(hints, "(?) Help")
+		hints = append(hints, "(i) Inspect cards", "(l) Full log", "(?) Help")
 		b.WriteString(undoHintStyle.Render("  " + strings.Join(hints, "  ")))
 		b.WriteString("\n")
 	}
@@ -533,7 +531,7 @@ func buildPermCard(p interactive.PermanentState, eligible, selected bool) string
 				keys = append(keys, ct)
 			}
 			sort.Strings(keys)
-			var cparts []string
+			cparts := make([]string, 0, len(keys))
 			for _, ct := range keys {
 				cparts = append(cparts, fmt.Sprintf("[%s×%d]", ct, p.Counters[ct]))
 			}
@@ -627,15 +625,12 @@ func renderCardDetail(c cardDetail) string {
 	}
 	lines = append(lines, header)
 
-	// Type line
+	// Type line and separator
 	typeLine := c.Types
 	if c.SubTypes != "" {
 		typeLine += " — " + c.SubTypes
 	}
-	lines = append(lines, typeLine)
-
-	// Separator
-	lines = append(lines, strings.Repeat("─", 30))
+	lines = append(lines, typeLine, strings.Repeat("─", 30))
 
 	// Keywords
 	if len(c.Keywords) > 0 {

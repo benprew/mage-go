@@ -487,7 +487,7 @@ func generateTapCreatureAbility(pie ColorPie, rarity Rarity, rng *RNG) string {
 	return "{T}: Deal 1 damage to any target"
 }
 
-func generateSpellEffect(template CardTemplate, rarity Rarity, color Color, rng *RNG) (string, float64) {
+func generateSpellEffect(template CardTemplate, rarity Rarity, color Color, rng *RNG) (effect string, cost float64) {
 	switch template {
 	case Burn:
 		mag := pickMagnitude(2, rarity, rng)
@@ -618,7 +618,7 @@ func generateSpellEffect(template CardTemplate, rarity Rarity, color Color, rng 
 	return "Gain 1 life", 1.0
 }
 
-func generateCantripEffect(pie ColorPie, rng *RNG) (string, float64) {
+func generateCantripEffect(pie ColorPie, rng *RNG) (effect string, cost float64) {
 	var options []WeightedOption[string]
 	if w := pie.EffectAccess[DirectDamage]; w > 0.1 {
 		options = append(options, W("damage", w))

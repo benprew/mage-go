@@ -173,7 +173,8 @@ func applyPumpToFlip(g *mage.Game, playerID uuid.UUID, ours, enemy *mage.Permane
 
 	if bestSpell >= 0 {
 		hp := *handPumps
-		*handPumps = append(hp[:bestSpell], hp[bestSpell+1:]...)
+		hp = append(hp[:bestSpell], hp[bestSpell+1:]...)
+		*handPumps = hp
 	}
 	return budget - bestCost
 }

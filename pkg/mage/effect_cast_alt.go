@@ -362,30 +362,30 @@ type exileInsteadOfGraveyardReplacement struct {
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Matches(a Action, g GameReader) bool {
-	switch act := a.(type) {
-	case *DestroyPermanentAction:
-		perm := g.FindPermanent(act.PermanentID())
-		if perm == nil {
-			return false
-		}
-		return perm.Card != nil && perm.Card.ID() == r.cardID
+	act, ok := a.(*DestroyPermanentAction)
+	if !ok {
+		return false
 	}
-	return false
+	perm := g.FindPermanent(act.PermanentID())
+	if perm == nil {
+		return false
+	}
+	return perm.Card != nil && perm.Card.ID() == r.cardID
 }
 
 func (r *exileInsteadOfGraveyardReplacement) Replace(a Action, g *Game) Action {
-	switch act := a.(type) {
-	case *DestroyPermanentAction:
-		perm := g.FindPermanent(act.PermanentID())
-		if perm == nil {
-			return nil
-		}
-		card := perm.Card
-		g.RemoveFromBattlefield(perm)
-		g.ExileCard(card, r.sourceID)
+	act, ok := a.(*DestroyPermanentAction)
+	if !ok {
+		return a
+	}
+	perm := g.FindPermanent(act.PermanentID())
+	if perm == nil {
 		return nil
 	}
-	return a
+	card := perm.Card
+	g.RemoveFromBattlefield(perm)
+	g.ExileCard(card, r.sourceID)
+	return nil
 }
 
 func (r *exileInsteadOfGraveyardReplacement) IsActive(_ GameReader) bool { return true }

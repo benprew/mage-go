@@ -34,17 +34,14 @@ func permanentValue(p *Permanent, g GameReader) int {
 //   - Prefers opponent's permanents over own (most targeted spells are removal)
 //   - Among opponent permanents, prefers highest-value creatures
 //   - If targets include player IDs, prefers the opponent
-func (sp *SearchPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Game) []uuid.UUID {
-	if len(possible) < min {
+func (sp *SearchPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *Game) []uuid.UUID {
+	if len(possible) < minimum {
 		return nil
 	}
 
 	// If no game context, fall back to first-available.
 	if g == nil {
-		count := min
-		if count > len(possible) {
-			count = len(possible)
-		}
+		count := min(minimum, len(possible))
 		return possible[:count]
 	}
 
@@ -92,12 +89,9 @@ func (sp *SearchPlayer) ChooseTargets(possible []uuid.UUID, min, max int, g *Gam
 		scored[i], scored[maxIdx] = scored[maxIdx], scored[i]
 	}
 
-	count := min
-	if count > len(scored) {
-		count = len(scored)
-	}
+	count := min(minimum, len(scored))
 	result := make([]uuid.UUID, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		result[i] = scored[i].id
 	}
 	return result
@@ -265,12 +259,12 @@ func (sp *SearchPlayer) ChooseCardFromLibrary(candidates []Card, reason string, 
 //   - "damage" context: pick max (deal maximum damage)
 //   - "discard" context: pick min (discard as few as possible)
 //   - default: pick max (greedy)
-func (sp *SearchPlayer) ChooseNumber(min, max int, reason string) int {
+func (sp *SearchPlayer) ChooseNumber(minimum, maximum int, reason string) int {
 	lower := strings.ToLower(reason)
 	if strings.Contains(lower, "discard") {
-		return min
+		return minimum
 	}
-	return max
+	return maximum
 }
 
 // Compile-time check that SearchPlayer satisfies Player.

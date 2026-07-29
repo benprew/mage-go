@@ -17,6 +17,13 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
+// Strategy implements ai.AIStrategy using personality-driven heuristics.
+type Strategy struct {
+	Personality ai.Personality //nolint:staticcheck // Retained for legacy strategy construction.
+	Weights     ai.WeightedPersonality
+	weightsInit bool
+}
+
 // stackHasOpponentThreat returns true when a stack object controlled by
 // someone other than playerID is currently resolving — typically an
 // opponent's spell or ability that may threaten our creatures.
@@ -61,20 +68,13 @@ func (s *Strategy) solverProfile() combatsolver.Profile {
 	}
 }
 
-// Strategy implements ai.AIStrategy using personality-driven heuristics.
-type Strategy struct {
-	Personality ai.Personality
-	Weights     ai.WeightedPersonality
-	weightsInit bool
-}
-
 // New creates a Strategy from a WeightedPersonality.
 func New(w ai.WeightedPersonality) *Strategy {
 	return &Strategy{Weights: w, weightsInit: true}
 }
 
 // NewFromOld creates a Strategy from a legacy boolean Personality.
-func NewFromOld(p ai.Personality) *Strategy {
+func NewFromOld(p ai.Personality) *Strategy { //nolint:staticcheck // This is the legacy compatibility constructor.
 	return &Strategy{Personality: p, Weights: p.ToWeighted(), weightsInit: true}
 }
 

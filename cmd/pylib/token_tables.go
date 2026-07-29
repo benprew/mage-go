@@ -131,7 +131,7 @@ func sliceI64(ptr *C.int64_t, length int) []int64 {
 
 // validateTablePack ensures an offsets table is consistent with its token
 // buffer: monotonically non-decreasing, terminal value matches token length.
-func validateTablePack(name string, tokens []int32, offsets []int32, expectedEntries int) error {
+func validateTablePack(name string, tokens, offsets []int32, expectedEntries int) error {
 	if len(offsets) != expectedEntries+1 {
 		return fmt.Errorf("%s offsets length=%d, want %d", name, len(offsets), expectedEntries+1)
 	}
