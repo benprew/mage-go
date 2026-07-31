@@ -571,6 +571,7 @@ var (
 	SacrificeNMatchingCost = mage.SacrificeNMatchingCost
 	LifePayCost            = mage.LifePayCost
 	DiscardCost            = mage.DiscardCost
+	EitherCost             = mage.EitherCost
 )
 
 // =============================================================================

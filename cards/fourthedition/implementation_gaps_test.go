@@ -147,6 +147,29 @@ func TestBrainwash(t *testing.T) {
 }
 
 func TestErosion(t *testing.T) {
+	t.Run("targets only lands", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		card, err := mage.CreateCard("Erosion")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		targets := card.CastTargets()
+		if len(targets) != 1 {
+			t.Fatalf("cast target count = %d, want 1", len(targets))
+		}
+		possible := targets[0].Possible(g.GetPlayer(gametest.PlayerA).PlayerID(), card, g.Game)
+		if len(possible) != 1 {
+			t.Fatalf("possible target count = %d, want 1", len(possible))
+		}
+		land := g.FindPermanentByName("Island", g.GetPlayer(gametest.PlayerB).PlayerID())
+		if land == nil || possible[0] != land.ID() {
+			t.Fatalf("possible targets = %v, want only Island", possible)
+		}
+	})
+
 	t.Run("controller may pay one life", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
@@ -163,7 +186,7 @@ func TestErosion(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Erosion")
-		g.ChooseMode(gametest.PlayerB, 2)
+		g.GetPlayer(gametest.PlayerB).QueueMayAbilityChoices(false)
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Erosion", "Island")
 		g.StopAt(2, core.PrecombatMain)
 		g.Execute()

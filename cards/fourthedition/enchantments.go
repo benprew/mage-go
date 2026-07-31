@@ -81,43 +81,17 @@ func registerEnchantments() {
 		return NewAura("Erosion", "{U}{U}{U}",
 			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				FuncEffect("destroy enchanted land unless its controller pays {1} or 1 life",
+				Pipeline("destroy enchanted land unless its controller pays {1} or 1 life",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-						source := g.FindPermanent(sourceID)
-						if source == nil || !source.IsAttached() {
-							return nil
-						}
-						land := g.FindPermanent(source.AttachedTo)
-						if land == nil {
-							return nil
-						}
-						player := g.GetPlayer(land.ControllerID())
-						if player == nil {
-							return nil
-						}
-						paid := false
-						choices := []string{"don't pay"}
-						if g.CanAfford(player.PlayerID(), ParseManaCost("{1}"), nil) {
-							choices = append([]string{"pay {1}"}, choices...)
-						}
-						if player.Life() >= 1 {
-							choices = append(choices[:len(choices)-1], "pay 1 life", "don't pay")
-						}
-						switch choices[player.ChooseMode(choices, "Erosion")] {
-						case "pay {1}":
-							paid = g.TryPayMana(player.PlayerID(), "{1}")
-						case "pay 1 life":
-							if player.Life() >= 1 {
-								g.PlayerLoseLife(player, 1)
-								paid = true
-							}
-						}
-						if !paid {
-							g.DestroyPermanent(land)
-						}
-						return nil
-					}), false),
+					SnapshotAttached("land"),
+					IfPlayerPays(
+						VarPlayer("land.controller"),
+						EitherCost(ManaCostOf("{1}"), LifePayCost(1)),
+						"pay {1} or 1 life",
+						nil,
+						DestroyGathered("land"),
+					),
+				), false),
 			),
 		)
 	})
