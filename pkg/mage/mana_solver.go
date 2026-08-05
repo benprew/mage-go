@@ -17,6 +17,9 @@ import (
 //   - Sources: candidate untapped mana sources, already filtered for
 //     ineligible ones (e.g., the activation source when {T} is in the cost).
 //     The solver may use any of them.
+//   - CostedSources: candidate targetless mana abilities with both a mana cost
+//     and a tap cost. When ordinary sources cannot pay Cost, the solver searches
+//     for an ordered activation plan that pays these intermediate costs.
 //   - Scores: preservation score per source (same length as Sources); higher
 //     = prefer to keep untapped. The solver picks lowest-score eligible
 //     source at each step. Score is computed by the caller via
@@ -25,13 +28,17 @@ import (
 //     elsewhere on the battlefield) produced when the given permanent taps.
 //   - Conversions: one-way mana conversions (Sunglasses of Urza style:
 //     Red→White lets red mana / red sources pay white slots). Optional.
+//   - SpellContext: payment context for restricted mana used on the final cost.
+//     Activation costs are ability payments and therefore use no spell context.
 type ManaSolverInputs struct {
-	Pool        *ManaPool
-	Cost        ManaCost
-	Sources     []manaSourceInfo
-	Scores      []int
-	BonusFor    func(uuid.UUID) int
-	Conversions map[Color]Color
+	Pool          *ManaPool
+	Cost          ManaCost
+	Sources       []manaSourceInfo
+	CostedSources []costedManaSource
+	Scores        []int
+	BonusFor      func(uuid.UUID) int
+	Conversions   map[Color]Color
+	SpellContext  *SpellPaymentContext
 }
 
 // ManaTap describes one source the caller should tap and the color slot the
@@ -45,13 +52,16 @@ type ManaSolverInputs struct {
 // just running the first one.
 type ManaTap struct {
 	PermanentID uuid.UUID
-	Color       Color
+	// AbilityIndex is -1 for an ordinary tap-for-mana source. Nonnegative
+	// values identify the exact costed mana ability that must be activated.
+	AbilityIndex int
+	Color        Color
 }
 
-// ManaSolution describes the result of solving a mana payment: an ordered
-// list of taps (permanent + chosen color) the caller should apply (via
-// TapForManaWithColor) to produce the mana for the cost. The solver doesn't
-// mutate state, so the caller is responsible for applying the solution.
+// ManaSolution describes the result of solving a mana payment. SourcesToTap is
+// an ordered list of ordinary taps and exact costed-ability activations. The
+// solver doesn't mutate state, so the caller is responsible for applying the
+// solution in order.
 type ManaSolution struct {
 	SourcesToTap []ManaTap
 }
@@ -76,6 +86,8 @@ const efficiencyBonusPerSavedTap = 25
 //     If single-mana sources alone can't cover the remainder, bias toward
 //     multi-mana sources (efficiencyBonusPerSavedTap * (Amount - 1)) so the
 //     solver doesn't tap N basics when one Sol Ring would do.
+//  4. If that fast path fails and CostedSources are present, search ordered
+//     activations while simulating each activation cost and mana production.
 //
 // Bonus mana from ManaBonusAbility on other battlefield permanents (Mana Flare,
 // Gauntlet of Might) and the extra mana from multi-mana sources tapped in the
@@ -83,17 +95,31 @@ const efficiencyBonusPerSavedTap = 25
 func SolveMana(in ManaSolverInputs) (*ManaSolution, error) {
 	sources := append([]manaSourceInfo(nil), in.Sources...)
 	sol, ok, err := solveMana(in, sources, true)
-	if !ok {
-		return nil, err
+	if ok {
+		return sol, nil
 	}
-	return sol, nil
+	if len(in.CostedSources) > 0 {
+		if plan, planned := planCostedManaPayment(in); planned {
+			return &ManaSolution{SourcesToTap: plan}, nil
+		}
+	}
+	return nil, err
 }
 
-// CanSolveMana reports whether the given mana inputs can pay the cost without
-// allocating a solution. It may mark entries in in.Sources as used; callers
+// CanSolveMana reports whether the given mana inputs can pay the cost. It uses
+// the same costed-source planning as SolveMana, but discards the resulting plan.
+// Without costed sources it may mark entries in in.Sources as used; callers
 // should pass disposable scratch storage.
 func CanSolveMana(in ManaSolverInputs) bool {
-	_, ok, _ := solveMana(in, in.Sources, false)
+	sources := in.Sources
+	if len(in.CostedSources) > 0 {
+		sources = append([]manaSourceInfo(nil), sources...)
+	}
+	_, ok, _ := solveMana(in, sources, false)
+	if ok {
+		return true
+	}
+	_, ok = planCostedManaPayment(in)
 	return ok
 }
 
@@ -205,7 +231,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			src := sources[idx]
 			sources[idx].PermanentID = uuid.Nil
 			if collectSolution {
-				toTap = append(toTap, ManaTap{PermanentID: src.PermanentID, Color: cn.color})
+				toTap = append(toTap, ManaTap{PermanentID: src.PermanentID, AbilityIndex: -1, Color: cn.color})
 			}
 			needed[cn.color]--
 			bonus := bonusFor(src.PermanentID)
@@ -291,7 +317,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			return nil, false, solveManaError(collectSolution, "cannot pay cost %s: %d generic mana still needed, no untapped sources remain", mc, genericNeeded)
 		}
 		if collectSolution {
-			toTap = append(toTap, ManaTap{PermanentID: sources[idx].PermanentID, Color: Colorless})
+			toTap = append(toTap, ManaTap{PermanentID: sources[idx].PermanentID, AbilityIndex: -1, Color: Colorless})
 		}
 		produced := sources[idx].Amount + bonusFor(sources[idx].PermanentID)
 		genericNeeded -= produced

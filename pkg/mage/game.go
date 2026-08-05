@@ -4366,23 +4366,30 @@ func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint Auto
 		scores[i] = g.preservationScore(src, hint, handDemand)
 	}
 
-	solution, err := SolveMana(ManaSolverInputs{
+	solverInputs := ManaSolverInputs{
 		Pool:        p.ManaPool(),
 		Cost:        mc,
 		Sources:     sources,
 		Scores:      scores,
 		BonusFor:    g.countManaBonuses,
 		Conversions: p.ManaPool().ManaConversions,
-	})
+	}
+	costed := g.getCostedManaSources(playerID)
+	if hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil {
+		filtered := costed[:0]
+		for _, source := range costed {
+			if source.PermanentID != hint.ActivationSource {
+				filtered = append(filtered, source)
+			}
+		}
+		costed = filtered
+	}
+	solverInputs.CostedSources = costed
+	solution, err := SolveMana(solverInputs)
 	if err != nil {
 		return err
 	}
-	for _, tap := range solution.SourcesToTap {
-		if err := g.TapForManaWithColor(playerID, tap.PermanentID, tap.Color); err != nil {
-			return err
-		}
-	}
-	return nil
+	return g.applyManaSolution(playerID, solution)
 }
 
 // preservationScore returns the score for a mana source under the smart-tap
@@ -4500,11 +4507,13 @@ func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
 	g.manaScratch = sources
 	return CanSolveMana(ManaSolverInputs{
-		Pool:        p.ManaPool(),
-		Cost:        mc,
-		Sources:     sources,
-		BonusFor:    g.countManaBonuses,
-		Conversions: p.ManaPool().ManaConversions,
+		Pool:          p.ManaPool(),
+		Cost:          mc,
+		Sources:       sources,
+		CostedSources: g.getCostedManaSources(playerID),
+		BonusFor:      g.countManaBonuses,
+		Conversions:   p.ManaPool().ManaConversions,
+		SpellContext:  spellCtx,
 	})
 }
 
@@ -4525,11 +4534,18 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 	bonusFor := g.countManaBonuses
 	conv := p.ManaPool().ManaConversions
 	pool := p.ManaPool()
+	costed := g.getCostedManaSources(playerID)
 
 	// Upper bound: every source taps for its full Amount + bonus, plus pool.
 	upperMana := pool.TotalMana()
 	for _, src := range sources {
 		upperMana += src.Amount + bonusFor(src.PermanentID)
+	}
+	for _, src := range costed {
+		for _, production := range src.Productions {
+			upperMana += max(production.Amount, 1)
+		}
+		upperMana += bonusFor(src.PermanentID)
 	}
 	tryX := func(x int) bool {
 		cost := ManaCost{
@@ -4542,12 +4558,14 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 			Hybrid:  mc.Hybrid,
 		}
 		_, err := SolveMana(ManaSolverInputs{
-			Pool:        pool,
-			Cost:        cost,
-			Sources:     sources,
-			Scores:      scores,
-			BonusFor:    bonusFor,
-			Conversions: conv,
+			Pool:          pool,
+			Cost:          cost,
+			Sources:       sources,
+			CostedSources: costed,
+			Scores:        scores,
+			BonusFor:      bonusFor,
+			Conversions:   conv,
+			SpellContext:  spellCtx,
 		})
 		return err == nil
 	}

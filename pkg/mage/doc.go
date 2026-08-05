@@ -49,4 +49,17 @@
 // SacrificeSourceCost and SacrificeMatchingCost provide costs. Sacrifice costs
 // record the sacrificed object's ID; resolving effects can read its generic
 // PermanentLKI, including power and toughness, with LastSacrificed.
+//
+// # Mana-production metadata
+//
+// ManaProductionsForAbility exposes the production profile of tap-for-mana
+// abilities to engine consumers such as AI evaluation. It recognizes both
+// ManaAbility values created by WithManaAbility or WithMultiManaAbility and
+// equivalent activated abilities built from Tap with only AddMana or
+// AddAnyMana effects. SolveMana and CanSolveMana use a fast greedy path for
+// ordinary sources, then search ordered activations when targetless
+// mana-producing abilities have both a mana cost and Tap. CanAfford, MaxXValue,
+// and automatic mana payment all use that unified solver behavior. Automatic
+// payment executes the exact planned ability, paying its activation cost before
+// using the produced mana.
 package mage

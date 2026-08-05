@@ -121,3 +121,62 @@ func TestSolveMana_UnpayableReturnsError(t *testing.T) {
 		t.Fatalf("expected error, got solution %+v", sol)
 	}
 }
+
+func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
+	landIDs := []uuid.UUID{uuid.New(), uuid.New(), uuid.New()}
+	prismID := uuid.New()
+	pool := NewManaPool()
+
+	sol, err := SolveMana(ManaSolverInputs{
+		Pool: pool,
+		Cost: ManaCost{Generic: 1, Blue: 1},
+		Sources: []manaSourceInfo{
+			{PermanentID: landIDs[0], Colors: []Color{Red}, Amount: 1},
+			{PermanentID: landIDs[1], Colors: []Color{Black}, Amount: 1},
+			{PermanentID: landIDs[2], Colors: []Color{Black}, Amount: 1},
+		},
+		CostedSources: []costedManaSource{{
+			PermanentID:  prismID,
+			AbilityIndex: 7,
+			Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
+			ManaCost:     ManaCost{Generic: 2},
+		}},
+	})
+	if err != nil {
+		t.Fatalf("SolveMana failed: %v", err)
+	}
+	if !CanSolveMana(ManaSolverInputs{
+		Pool: pool,
+		Cost: ManaCost{Generic: 1, Blue: 1},
+		Sources: []manaSourceInfo{
+			{PermanentID: landIDs[0], Colors: []Color{Red}, Amount: 1},
+			{PermanentID: landIDs[1], Colors: []Color{Black}, Amount: 1},
+			{PermanentID: landIDs[2], Colors: []Color{Black}, Amount: 1},
+		},
+		CostedSources: []costedManaSource{{
+			PermanentID:  prismID,
+			AbilityIndex: 7,
+			Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
+			ManaCost:     ManaCost{Generic: 2},
+		}},
+	}) {
+		t.Fatal("CanSolveMana should use the same costed-source planning")
+	}
+
+	foundPrism := false
+	for i, action := range sol.SourcesToTap {
+		if action.PermanentID != prismID {
+			continue
+		}
+		foundPrism = true
+		if action.AbilityIndex != 7 || action.Color != Blue {
+			t.Fatalf("unexpected Prism action: %+v", action)
+		}
+		if i < 2 {
+			t.Fatalf("Prism was planned before its {2} activation cost was funded: %+v", sol.SourcesToTap)
+		}
+	}
+	if !foundPrism {
+		t.Fatal("solution did not include the costed mana ability")
+	}
+}

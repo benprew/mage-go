@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -446,6 +447,96 @@ func TestCanAfford_ActivatedManaAbility(t *testing.T) {
 	}
 	if g.CanAfford(pid, ManaCost{Generic: 4}, nil) {
 		t.Error("should not afford {4} with only Mana Vault")
+	}
+}
+
+func TestCanAfford_CostedActivatedManaAbility(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	for i, color := range []Color{Red, Black, Black} {
+		addLand(t, g, pid, fmt.Sprintf("Land %d", i), color)
+	}
+	prism := NewArtifact("Celestial Prism", "{3}",
+		WithActivatedAbility(
+			AddAnyMana(1, Colorless),
+			GenericCost(2),
+			WithCost(Tap()),
+		),
+	)
+	prism.SetOwner(pid)
+	prismPerm := g.PutOnBattlefield(prism, pid)
+	prismPerm.RevokeBaseAttr(AttrSummonSick)
+
+	falconCost := ManaCost{Generic: 1, Blue: 1}
+	if !g.CanAfford(pid, falconCost, nil) {
+		t.Fatal("should afford {1}{U} by paying {2} to activate Celestial Prism")
+	}
+	if err := g.AutoTapForCost(pid, falconCost); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if !prismPerm.Tapped {
+		t.Error("expected Celestial Prism to be tapped")
+	}
+	if err := g.players[0].ManaPool().Pay(falconCost, nil); err != nil {
+		t.Fatalf("paying {1}{U} after auto-tap failed: %v", err)
+	}
+}
+
+func TestCastSpell_CostedActivatedManaAbility(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
+
+	for i, color := range []Color{Red, Black, Black} {
+		addLand(t, g, pid, fmt.Sprintf("Land %d", i), color)
+	}
+	prism := NewArtifact("Celestial Prism", "{3}",
+		WithActivatedAbility(
+			AddAnyMana(1, Colorless),
+			GenericCost(2),
+			WithCost(Tap()),
+		),
+	)
+	prism.SetOwner(pid)
+	prismPerm := g.PutOnBattlefield(prism, pid)
+	prismPerm.RevokeBaseAttr(AttrSummonSick)
+
+	falcon := NewCreature("Zephyr Falcon", "{1}{U}", 1, 1)
+	falcon.SetOwner(pid)
+	g.players[0].AddToHand(falcon)
+
+	castable := g.GetCastableSpells(pid)
+	if len(castable) != 1 || castable[0].ID() != falcon.ID() {
+		t.Fatal("expected Zephyr Falcon to be included in castable spells")
+	}
+	if err := g.CastSpellByID(pid, falcon.ID(), nil, 0); err != nil {
+		t.Fatalf("casting Zephyr Falcon failed: %v", err)
+	}
+	if !prismPerm.Tapped {
+		t.Error("expected Celestial Prism to be tapped while casting Zephyr Falcon")
+	}
+}
+
+func TestCanAfford_CostedActivatedManaAbilityRequiresItsActivationCost(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	addLand(t, g, pid, "Mountain", Red)
+	addLand(t, g, pid, "Swamp", Black)
+	prism := NewArtifact("Celestial Prism", "{3}",
+		WithActivatedAbility(
+			AddAnyMana(1, Colorless),
+			GenericCost(2),
+			WithCost(Tap()),
+		),
+	)
+	prism.SetOwner(pid)
+	prismPerm := g.PutOnBattlefield(prism, pid)
+	prismPerm.RevokeBaseAttr(AttrSummonSick)
+
+	if g.CanAfford(pid, ManaCost{Generic: 1, Blue: 1}, nil) {
+		t.Fatal("should not afford {1}{U} when activating Celestial Prism consumes both lands")
 	}
 }
 
