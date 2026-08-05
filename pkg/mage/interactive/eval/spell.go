@@ -56,19 +56,20 @@ func SpellIsWorthless(card mage.Card, p mage.Player, g *mage.Game) bool {
 func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 	playerID := p.PlayerID()
 	cmc := card.ManaCost().CMC()
+	manaValue := manaSourceSpellValue(card)
 
 	if card.HasType(core.TypeCreature) {
 		pw := card.Power()
 		tg := card.Toughness()
 		v := pw*2 + tg
-		if v > 0 {
-			return v
+		if v <= 0 {
+			v = cmc
 		}
-		return cmc
+		return v + manaValue
 	}
 
-	score := 0
-	found := false
+	score := manaValue
+	found := manaValue > 0
 
 	opponent := g.GetOpponent(playerID)
 	var oppID uuid.UUID
@@ -218,6 +219,61 @@ func SpellValue(card mage.Card, p mage.Player, g *mage.Game) int {
 		return v
 	}
 	return cmc
+}
+
+func manaSourceSpellValue(card mage.Card) int {
+	cmc := card.ManaCost().CMC()
+	isCreature := card.HasType(core.TypeCreature)
+	best := 0
+	colors := make(map[core.Color]struct{})
+	hasAnyColor := false
+
+	for _, ability := range card.Abilities() {
+		productions := mage.ManaProductionsForAbility(ability)
+		if len(productions) == 0 {
+			continue
+		}
+
+		amount := 0
+		hasColoredMana := false
+		abilityHasAnyColor := false
+		for _, production := range productions {
+			produced := production.Amount
+			if produced <= 0 {
+				produced = 1
+			}
+			amount += produced
+			switch production.Color {
+			case core.AnyColor:
+				hasAnyColor = true
+				abilityHasAnyColor = true
+			case core.Colorless:
+			default:
+				hasColoredMana = true
+				colors[production.Color] = struct{}{}
+			}
+		}
+
+		base := 3
+		if isCreature {
+			base = 2
+		}
+		value := base + amount*3
+		if !isCreature && amount > cmc {
+			value += (amount - cmc) * 3
+		}
+		if abilityHasAnyColor {
+			value += 2
+		} else if hasColoredMana {
+			value++
+		}
+		best = max(best, value)
+	}
+
+	if !hasAnyColor && len(colors) > 1 {
+		best++
+	}
+	return best
 }
 
 // auraSpellValue scores an aura whose effect comes from continuous static

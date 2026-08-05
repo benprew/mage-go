@@ -86,6 +86,27 @@ func TestChooseCardsFromHand_KeepsLandWhenManaLight(t *testing.T) {
 	}
 }
 
+func TestChooseCardsFromHand_KeepsZeroCostManaArtifact(t *testing.T) {
+	g, bot, _ := aiGame()
+	for range 3 {
+		land := mage.NewLand("Forest", mage.WithManaAbility(core.Green))
+		land.SetOwner(bot.PlayerID())
+		g.AddToBattlefield(mage.NewPermanent(land, bot.PlayerID()))
+	}
+
+	mox := mage.NewArtifact("Test Mox", "{0}", mage.WithManaAbility(core.White))
+	mox.SetOwner(bot.PlayerID())
+	filler := mage.NewCreature("Filler", "{1}", 1, 1)
+	filler.SetOwner(bot.PlayerID())
+	bot.AddToHand(mox)
+	bot.AddToHand(filler)
+
+	discards := bot.ChooseCardsFromHand(1, "discard", g)
+	if len(discards) != 1 || discards[0].ID() != filler.ID() {
+		t.Fatalf("should keep the mana artifact and discard filler; got %v", discards)
+	}
+}
+
 func TestChooseManaColor_MostNeededInHand(t *testing.T) {
 	_, bot, _ := aiGame()
 	c := mage.NewCreature("Goblins", "{R}{R}{R}", 3, 3)

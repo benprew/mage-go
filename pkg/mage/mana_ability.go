@@ -56,6 +56,17 @@ func (ma *ManaAbility) PrimaryColor() Color {
 	return Colorless
 }
 
+// ManaProductionsForAbility returns the mana produced by an ability that acts
+// as a tap-for-mana source. It recognizes both ManaAbility and activated
+// abilities whose only cost is tapping and whose effects only add mana.
+func ManaProductionsForAbility(a Ability) []ManaProduction {
+	productions := abilityManaProductions(UnwrapAbility(a))
+	if productions == nil {
+		return nil
+	}
+	return append([]ManaProduction(nil), productions...)
+}
+
 // NewManaAbility creates a tap-for-mana ability that produces one mana of the given color.
 func NewManaAbility(c Color) *ManaAbility {
 	return &ManaAbility{

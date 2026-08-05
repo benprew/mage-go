@@ -375,6 +375,41 @@ func TestSpellValue_Creature(t *testing.T) {
 	}
 }
 
+func TestSpellValue_ZeroCostManaArtifact(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewArtifact("Test Mox", "{0}", mage.WithManaAbility(core.White))
+	card.SetOwner(pa.PlayerID())
+
+	got := SpellValue(card, pa, g)
+	if got != 10 {
+		t.Errorf("SpellValue(zero-cost mana artifact) = %d, want 10", got)
+	}
+}
+
+func TestSpellValue_MultiManaArtifact(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewArtifact("Test Ring", "{1}", mage.WithMultiManaAbility(
+		mage.ManaProduction{Color: core.Colorless, Amount: 2},
+	))
+	card.SetOwner(pa.PlayerID())
+
+	got := SpellValue(card, pa, g)
+	if got != 12 {
+		t.Errorf("SpellValue(two-mana artifact) = %d, want 12", got)
+	}
+}
+
+func TestSpellValue_ManaCreatureIncludesBodyAndMana(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewCreature("Mana Elf", "{G}", 1, 1, mage.WithManaAbility(core.Green))
+	card.SetOwner(pa.PlayerID())
+
+	got := SpellValue(card, pa, g)
+	if got != 9 {
+		t.Errorf("SpellValue(1/1 mana creature) = %d, want 9", got)
+	}
+}
+
 func TestSpellValue_DrawSpell(t *testing.T) {
 	g, pa, _ := makeGame()
 	card := mage.NewSorcery("Divination", "{2}{U}",

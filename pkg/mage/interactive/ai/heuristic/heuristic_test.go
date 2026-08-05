@@ -298,6 +298,20 @@ func TestPriorityAction_PassWhenEmpty(t *testing.T) {
 	}
 }
 
+func TestPriorityAction_CastsZeroCostManaArtifact(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetStep(core.PrecombatMain)
+	mox := mage.NewArtifact("Test Mox", "{0}", mage.WithManaAbility(core.White))
+	mox.SetOwner(pa.PlayerID())
+	pa.AddToHand(mox)
+
+	start := New(ai.MidrangeWeighted)
+	action := start.PriorityAction(pa, g, 1, true)
+	if action.Type != interactive.ActionCastSpell || action.CardName != "Test Mox" {
+		t.Fatalf("expected zero-cost mana artifact to be cast, got %v", action)
+	}
+}
+
 func TestPriorityAction_PassOnNonMainEmptyHand(t *testing.T) {
 	g, pa, _ := makeGame()
 	start := &Strategy{Personality: ai.MidrangePersonality}
