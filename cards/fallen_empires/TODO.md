@@ -1,6 +1,8 @@
 # Fallen Empires — Remaining Work
 
-## Registered cards marked for implementation
+This inventory includes unimplemented and partially implemented cards. A reprint is considered implemented when its current Oracle behavior is fully registered by another card package.
+
+## Unimplemented cards
 
 ### Artifacts
 
