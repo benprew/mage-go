@@ -50,6 +50,14 @@
 // record the sacrificed object's ID; resolving effects can read its generic
 // PermanentLKI, including power and toughness, with LastSacrificed.
 //
+// # Combat damage assignment
+//
+// A blocked attacker without an explicit player-supplied assignment assigns
+// lethal damage to each blocker in order, then assigns all remaining damage to
+// the final blocker. With trample, remaining damage is dealt to the defender
+// instead. Damage events report the full amount assigned and dealt, including
+// damage beyond a blocker's lethal toughness.
+//
 // # Mana-production metadata
 //
 // ManaProductionsForAbility exposes the production profile of tap-for-mana

@@ -431,21 +431,21 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 		// invalid per CR 510.1c (each blocker before the next must be assigned
 		// at least lethal damage; with trample, all blockers must be at lethal
 		// before any goes to the defender).
+		orderedPerms := make([]*Permanent, 0, len(orderedIDs))
+		for _, bid := range orderedIDs {
+			if blk := g.FindPermanent(bid); blk != nil {
+				orderedPerms = append(orderedPerms, blk)
+			}
+		}
 		var assignment map[uuid.UUID]int
 		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(orderedIDs) > 1 {
-			orderedPerms := make([]*Permanent, 0, len(orderedIDs))
-			for _, bid := range orderedIDs {
-				if blk := g.FindPermanent(bid); blk != nil {
-					orderedPerms = append(orderedPerms, blk)
-				}
-			}
 			assignment = assigner.GetCombatDamageAssignment(g, atk, orderedPerms, atkPower)
 			if assignment != nil && !validateBlockerAssignment(g, atk, orderedIDs, assignment, atkPower) {
 				assignment = nil
 			}
 		}
 
-		remainingDmg := atkPower
+		var remainingDmg int
 		if assignment != nil {
 			usedDmg := 0
 			for _, bid := range orderedIDs {
@@ -461,22 +461,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			}
 			remainingDmg = atkPower - usedDmg
 		} else {
-			for _, bid := range orderedIDs {
-				blk := g.FindPermanent(bid)
-				if blk == nil {
-					continue
-				}
-				needed := lethalCombatDamageRequired(atk, blk, g)
-				if needed <= 0 {
-					continue
-				}
-				dealt := min(remainingDmg, needed)
-				g.DealDamageToPermanent(blk, dealt, atk.ID())
-				remainingDmg -= dealt
-				if remainingDmg <= 0 {
-					break
-				}
-			}
+			remainingDmg = dealDefaultBlockedCombatDamage(g, atk, orderedPerms, atkPower, atk.HasKeyword(Trample))
 		}
 		if remainingDmg > 0 && atk.HasKeyword(Trample) {
 			defender := g.GetPlayer(group.DefenderID)
@@ -604,6 +589,24 @@ func lethalCombatDamageRequired(source, target *Permanent, g *Game) int {
 	return needed
 }
 
+func dealDefaultBlockedCombatDamage(g *Game, source *Permanent, blockers []*Permanent, total int, hasTrample bool) int {
+	remaining := total
+	for i, blocker := range blockers {
+		dealt := min(remaining, lethalCombatDamageRequired(source, blocker, g))
+		if !hasTrample && i == len(blockers)-1 {
+			dealt = remaining
+		}
+		if dealt > 0 {
+			g.DealDamageToPermanent(blocker, dealt, source.ID())
+			remaining -= dealt
+		}
+		if remaining <= 0 {
+			break
+		}
+	}
+	return remaining
+}
+
 // doBlockingBandDamage handles combat where multiple blockers with banding block
 // a single attacker. The defending player (controller of the blocking band) chooses
 // how the attacker's damage is distributed across band members.
@@ -652,19 +655,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 			}
 		} else {
 			// Default: normal distribution (no banding benefit).
-			remainingDmg := atkPower
-			for _, blk := range blockerPerms {
-				needed := lethalCombatDamageRequired(atk, blk, g)
-				if needed <= 0 {
-					continue
-				}
-				dealt := min(remainingDmg, needed)
-				g.DealDamageToPermanent(blk, dealt, atk.ID())
-				remainingDmg -= dealt
-				if remainingDmg <= 0 {
-					break
-				}
-			}
+			remainingDmg := dealDefaultBlockedCombatDamage(g, atk, blockerPerms, atkPower, atk.HasKeyword(Trample))
 			if remainingDmg > 0 && atk.HasKeyword(Trample) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
@@ -782,7 +773,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			}
 		}
 
-		remainingDmg := totalBandPower
+		var remainingDmg int
 		if assignment != nil {
 			usedDmg := 0
 			for _, blk := range blockerPerms {
@@ -793,18 +784,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			}
 			remainingDmg = totalBandPower - usedDmg
 		} else {
-			for _, blk := range blockerPerms {
-				needed := lethalCombatDamageRequired(primaryAttacker, blk, g)
-				if needed <= 0 {
-					continue
-				}
-				dealt := min(remainingDmg, needed)
-				g.DealDamageToPermanent(blk, dealt, primaryAttacker.ID())
-				remainingDmg -= dealt
-				if remainingDmg <= 0 {
-					break
-				}
-			}
+			remainingDmg = dealDefaultBlockedCombatDamage(g, primaryAttacker, blockerPerms, totalBandPower, hasTrample)
 		}
 		if remainingDmg > 0 && hasTrample {
 			defender := g.GetPlayer(defenderID)

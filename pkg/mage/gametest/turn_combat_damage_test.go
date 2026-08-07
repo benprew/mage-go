@@ -142,6 +142,39 @@ func TestCombatDamage(t *testing.T) {
 		tg.AssertLife(PlayerB, 15)
 	})
 
+	// CR 510.1c — If exactly one creature blocks an attacker, the attacker
+	// assigns all its combat damage to that blocker, including damage beyond
+	// lethal. Effects that use the amount dealt must see the full amount.
+	t.Run("CR 510.1c assigns all damage to a single blocker", func(t *testing.T) {
+		attacker := "510.1c Linked Attacker 7/7"
+		blocker := "510.1c Blocker 1/1"
+		if !mage.CardRegistered(attacker) {
+			mage.Register(attacker, func() mage.Card {
+				return mage.NewCreature(attacker, "{3}{B}{B}{B}", 7, 7,
+					mage.WithSubTypes("Horror"),
+					mage.WithAbility(
+						mage.NewTriggered(core.EvtDamageDealt, false,
+							mage.GainLifeAmount(mage.EventAmountValue()),
+						).SetConditionData(mage.EventSourceIsSelf{}),
+					),
+				)
+			})
+		}
+		if !mage.CardRegistered(blocker) {
+			mage.Register(blocker, func() mage.Card {
+				return mage.NewCreature(blocker, "{W}", 1, 1, mage.WithSubTypes("Soldier"))
+			})
+		}
+		tg := NewTestGame(t)
+		tg.AddCard(core.ZoneBattlefield, PlayerA, attacker)
+		tg.AddCard(core.ZoneBattlefield, PlayerB, blocker)
+		tg.Attack(1, PlayerA, attacker)
+		tg.Block(1, PlayerB, blocker, attacker)
+		tg.StopAt(1, core.PostcombatMain)
+		tg.Execute()
+		tg.AssertLife(PlayerA, 27)
+	})
+
 	// CR 510.1c — If an attacking creature is blocked by multiple creatures,
 	// the attacking creature's controller chooses the damage assignment order
 	// among the blockers and divides the attacker's combat damage among them,

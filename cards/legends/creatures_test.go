@@ -1056,6 +1056,20 @@ func TestSpiritLink(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 18) // took 2 combat damage
 		g.AssertLife(gametest.PlayerA, 22) // gained 2 life (equal to damage dealt)
 	})
+
+	t.Run("gains life for damage beyond a blocker's toughness", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		horrorID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cosmic Horror")
+		linkID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spirit Link")
+		g.Attach(linkID, horrorID)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 6)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mons's Goblin Raiders")
+		g.Attack(1, gametest.PlayerA, "Cosmic Horror")
+		g.Block(1, gametest.PlayerB, "Mons's Goblin Raiders", "Cosmic Horror")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 27)
+	})
 }
 
 // ===== MORE RAMPAGE =====
