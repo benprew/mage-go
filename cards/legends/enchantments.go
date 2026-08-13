@@ -1154,7 +1154,7 @@ func registerEnchantments() {
 	Register("Underworld Dreams", func() Card {
 		return NewEnchantment("Underworld Dreams", "{B}{B}{B}",
 			WithAbility(NewTriggered(EvtCardDrawn, false,
-				DealDamageToPlayers(Fixed(1), SelectEventController()),
+				DealDamageToPlayers(Fixed(1), SelectTargetPlayer()),
 			).SetConditionData(EventPlayerIsNotController{})),
 		)
 	})

@@ -125,6 +125,17 @@ func TestDisruptingScepterOnlyDuringControllersTurn(t *testing.T) {
 	g.AssertTapped(gametest.PlayerA, "Disrupting Scepter", false)
 }
 
+func TestAnkhOfMishra(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ankh of Mishra")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Forest")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Island")
+	g.StopAt(2, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerA, 18)
+	g.AssertLife(gametest.PlayerB, 18)
+}
+
 func TestDingusEgg(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dingus Egg")

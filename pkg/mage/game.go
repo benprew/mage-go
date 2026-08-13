@@ -2283,9 +2283,9 @@ func (g *Game) PutTriggersOnStack() {
 			g.pushStack(obj)
 			continue
 		}
-		// For triggers that need to pass the event's player as a target
-		// (e.g., "deal damage to that land's controller", "that player draws"),
-		// store the event PlayerID as a target on the stack object.
+		// Bind event context needed by resolving triggered effects. Some events
+		// expose their player through targets[0]; zone changes instead expose the
+		// moved object so effects can inspect it or its controller.
 		if pt.event != nil {
 			if gt, ok := pt.ability.(*GenericTriggered); ok {
 				switch gt.eventType {

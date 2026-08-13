@@ -591,7 +591,6 @@ var (
 	SelectTarget                    = mage.SelectTarget
 	SelectSource                    = mage.SelectSource
 	SelectActivePlayer              = mage.SelectActivePlayer
-	SelectEventController           = mage.SelectEventController
 	SelectAttachedController        = mage.SelectAttachedController
 	SelectEachPlayer                = mage.SelectEachPlayer
 	SelectEachOpponent              = mage.SelectEachOpponent

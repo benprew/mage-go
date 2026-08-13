@@ -211,10 +211,11 @@ func registerArtifacts() {
 
 	// ===== MISC ARTIFACTS =====
 
+	// Whenever a land enters, this artifact deals 2 damage to that land's controller.
 	Register("Ankh of Mishra", func() Card {
 		return NewArtifact("Ankh of Mishra", "{2}",
 			WithAbility(WheneverLandEntersBattlefieldTrigger(
-				DealDamageToPlayers(Fixed(2), SelectEventController()), false,
+				DealDamageToPlayers(Fixed(2), SelectTargetPermanentController()), false,
 			)),
 		)
 	})

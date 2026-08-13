@@ -603,23 +603,21 @@ func (s selectDefendingPlayer) Select(g GameReader, sourceID, _ uuid.UUID, _ []u
 }
 func (s selectDefendingPlayer) Text() string { return "defending player" }
 
-// selectEventController reads targets[0] as a player ID (for event-based triggers).
-type selectEventController struct{}
+type selectTargetPlayer struct{}
 
-// SelectEventController creates a PlayerSelector that reads targets[0] as a player ID,
-// used for event-based triggers that pass the relevant player through the target list.
-func SelectEventController() PlayerSelector { return selectEventController{} }
-func (s selectEventController) Select(_ GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
+// SelectTargetPlayer creates a PlayerSelector that reads targets[0] as a player ID.
+// Use for targeted spells and triggers whose event player is bound to targets[0].
+func SelectTargetPlayer() PlayerSelector { return selectTargetPlayer{} }
+func (s selectTargetPlayer) Select(g GameReader, _, _ uuid.UUID, targets []uuid.UUID) []uuid.UUID {
 	if len(targets) == 0 {
+		return nil
+	}
+	if g.GetPlayer(targets[0]) == nil {
 		return nil
 	}
 	return []uuid.UUID{targets[0]}
 }
-func (s selectEventController) Text() string { return "that player" }
-
-// SelectTargetPlayer creates a PlayerSelector that reads targets[0] as a player ID.
-// Use for targeted spells that target a player.
-func SelectTargetPlayer() PlayerSelector { return selectEventController{} }
+func (s selectTargetPlayer) Text() string { return "that player" }
 
 // selectTargetPermanentController resolves targets[0] as a permanent and
 // returns its controller. Used for triggers where the target is a permanent

@@ -50,6 +50,14 @@
 // record the sacrificed object's ID; resolving effects can read its generic
 // PermanentLKI, including power and toughness, with LastSacrificed.
 //
+// # Player selectors
+//
+// SelectTargetPlayer reads the first resolving target and returns it only when
+// it identifies a player. Trigger helpers for draw, discard, and sacrifice
+// events bind the event's player in that position. Zone-change triggers bind
+// the moved object instead; use SelectTargetPermanentController when an effect
+// refers to that object's controller.
+//
 // # Combat damage assignment
 //
 // A blocked attacker without an explicit player-supplied assignment assigns
