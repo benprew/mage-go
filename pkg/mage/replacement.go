@@ -326,8 +326,9 @@ func (r *typePreventionReplacement) Clone() ReplacementEffect {
 
 type reverseDamageReplacement struct {
 	replacementBase
-	playerID uuid.UUID
-	consumed bool
+	playerID  uuid.UUID
+	dmgSource uuid.UUID
+	consumed  bool
 }
 
 func (r *reverseDamageReplacement) Matches(a Action, _ GameReader) bool {
@@ -335,7 +336,7 @@ func (r *reverseDamageReplacement) Matches(a Action, _ GameReader) bool {
 	if !ok {
 		return false
 	}
-	return act.PlayerID() == r.playerID
+	return act.PlayerID() == r.playerID && act.ActionSource() == r.dmgSource
 }
 
 func (r *reverseDamageReplacement) Replace(a Action, g *Game) Action {

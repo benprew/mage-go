@@ -250,6 +250,10 @@ func (tp *TestPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, 
 				tp.chooseTarget = tp.chooseTarget[1:]
 				return []uuid.UUID{id}
 			}
+			if card := g.FindCardAnywhere(id); card != nil && card.Name() == name {
+				tp.chooseTarget = tp.chooseTarget[1:]
+				return []uuid.UUID{id}
+			}
 		}
 	}
 	if len(possible) >= minimum {

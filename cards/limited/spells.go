@@ -67,11 +67,11 @@ func registerSpells() {
 		)
 	})
 
+	// The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way.
 	Register("Reverse Damage", func() Card {
 		return NewInstant("Reverse Damage", "{1}{W}{W}",
 			NewSpellAbility(Pipeline("prevent the next source of damage to you and gain that much life",
 				EffectProperties{Outcome: OutcomeBenefit},
-				AddPreventionShieldToControllerStep(1000),
 				AddReverseDamageShieldStep(),
 			)),
 		)

@@ -372,7 +372,8 @@ func (e *AddReverseDamageShieldData) Properties() EffectProperties {
 }
 
 func (*AddReverseDamageShieldData) Apply(ctx *EffectContext) error {
-	ctx.Game.AddReverseDamageShield(ctx.Controller)
+	sourceID := ctx.Game.ChooseDamageSource(ctx.Controller)
+	ctx.Game.AddReverseDamageShield(ctx.Controller, sourceID)
 	return nil
 }
 

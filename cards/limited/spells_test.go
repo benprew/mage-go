@@ -132,12 +132,50 @@ func TestReverseDamage(t *testing.T) {
 		g.SetLife(gametest.PlayerB, 20)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm") // 6/4
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Reverse Damage")
+		g.ChooseTarget(gametest.PlayerB, "Craw Wurm")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Reverse Damage")
 		g.Attack(1, gametest.PlayerA, "Craw Wurm")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
 		// Reverse Damage prevents 6 combat damage and gains 6 life: 20 + 6 = 26.
 		g.AssertLife(gametest.PlayerB, 26)
+	})
+
+	t.Run("does_not_reverse_damage_from_previous_turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Reverse Damage")
+		g.Attack(1, gametest.PlayerA, "Craw Wurm")
+		g.ChooseTarget(gametest.PlayerB, "Craw Wurm")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Reverse Damage")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 14)
+	})
+
+	t.Run("only_reverses_damage_from_the_chosen_source", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Reverse Damage")
+		g.ChooseTarget(gametest.PlayerB, "Craw Wurm")
+		g.CastSpell(1, core.Upkeep, gametest.PlayerB, "Reverse Damage")
+		g.Attack(1, gametest.PlayerA, "Hill Giant", "Craw Wurm")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 23)
+	})
+
+	t.Run("can_choose_a_spell_on_the_stack", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Reverse Damage")
+		g.ChooseTarget(gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "PlayerB")
+		g.CastInResponseTo(gametest.PlayerB, "Reverse Damage")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerB, 23)
 	})
 }
 

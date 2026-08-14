@@ -343,11 +343,51 @@ func (g *Game) AddColorPrevention(playerID uuid.UUID, color Color) {
 	g.effects.AddReplacement(&colorPreventionReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID, color: color})
 }
 
-// AddReverseDamageShield adds a reverse-damage shield for the player.
+// ChooseDamageSource asks playerID to choose a permanent or spell on the stack
+// as a damage source without targeting it.
+func (g *Game) ChooseDamageSource(playerID uuid.UUID) uuid.UUID {
+	player := g.GetPlayer(playerID)
+	if player == nil {
+		return uuid.Nil
+	}
+	seen := make(map[uuid.UUID]bool)
+	var possible []uuid.UUID
+	add := func(id uuid.UUID) {
+		if id == uuid.Nil || seen[id] || g.FindCardAnywhere(id) == nil {
+			return
+		}
+		seen[id] = true
+		possible = append(possible, id)
+	}
+	for _, permanent := range g.AllBattlefield() {
+		if !permanent.PhasedOut {
+			add(permanent.ID())
+		}
+	}
+	for _, object := range g.stack.Objects() {
+		if !object.IsAbility {
+			add(object.SourceID)
+		}
+	}
+	chosen := player.ChooseTargets(possible, 1, 1, g)
+	if len(chosen) == 0 || !seen[chosen[0]] {
+		return uuid.Nil
+	}
+	return chosen[0]
+}
+
+// AddReverseDamageShield adds a source-bound reverse-damage shield for the player.
 // Prepended so it is checked before any prevention shields (which would
 // otherwise absorb the damage before the reverse replacement sees it).
-func (g *Game) AddReverseDamageShield(playerID uuid.UUID) {
-	g.effects.PrependReplacement(&reverseDamageReplacement{replacementBase: replacementBase{duration: EndOfTurn}, playerID: playerID})
+func (g *Game) AddReverseDamageShield(playerID, sourceID uuid.UUID) {
+	if sourceID == uuid.Nil {
+		return
+	}
+	g.effects.PrependReplacement(&reverseDamageReplacement{
+		replacementBase: replacementBase{duration: EndOfTurn},
+		playerID:        playerID,
+		dmgSource:       sourceID,
+	})
 }
 
 // SetChannelActive marks the Channel ability as active for the player.
