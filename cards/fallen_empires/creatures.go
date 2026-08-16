@@ -1017,10 +1017,27 @@ func registerCreatures() {
 	// Creature — Insect Monk Cleric
 	// 1/2
 	// {T}, Sacrifice a green creature: Target land becomes a Forest. (This effect lasts indefinitely.)
-	// TODO: implement
 	Register("Thelonite Monk", withExpansion(func() Card {
 		return NewCreature("Thelonite Monk", "{2}{G}{G}", 1, 2,
 			WithSubTypes("Insect", "Monk", "Cleric"),
+			WithActivatedAbility(
+				FuncEffect(
+					"target land becomes a Forest indefinitely",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, _ uuid.UUID, _ uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						effect := BecomesBasicLandTargetEffect(targets[0], Indefinite, "Forest")
+						effect.SetSourceID(uuid.Nil)
+						g.AddContinuousEffect(effect)
+						return nil
+					},
+				),
+				Tap(),
+				WithCost(SacrificeMatchingIncludingSourceCost(And(IsCreature, HasColorFilter(Green)), "Sacrifice a green creature")),
+				WithTarget(TargetLand()),
+			),
 		)
 	}))
 

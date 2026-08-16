@@ -102,7 +102,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		if action := s.considerRegeneration(p, g); action != nil {
 			return *action
 		}
-		if action := s.considerPumpForCombatKill(p, g); action != nil {
+		if action := s.considerCombatPump(p, g); action != nil {
 			return *action
 		}
 	}

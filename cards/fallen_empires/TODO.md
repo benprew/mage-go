@@ -24,7 +24,6 @@
 - **Orcish Spy**
 - **Elvish Scout**
 - **Thelonite Druid**
-- **Thelonite Monk**
 
 ### Enchantments
 

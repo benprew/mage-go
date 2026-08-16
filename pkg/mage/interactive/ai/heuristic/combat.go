@@ -348,15 +348,14 @@ func (s *Strategy) pumpToughnessAction(playerID uuid.UUID, g *mage.Game, abiliti
 	return s.pumpAbilityAction(playerID, g, abilities, target, dmg, effToughness)
 }
 
-// considerPumpForCombatKill looks for one of our attackers or blockers that
-// doesn't currently deal enough damage to kill the creature it's fighting and,
-// if we control an affordable power-boost ability, pumps it enough to secure
-// the kill. Only single-attacker/single-blocker pairings are considered — gang
-// blocks split an attacker's damage across multiple blockers, so pumping one
-// combatant's power doesn't reliably determine what the opposing creature
+// considerCombatPump looks for an affordable power boost that makes combat
+// lethal to the defending player or kills an opposing combatant. Only
+// single-attacker/single-blocker pairings are considered for creature kills —
+// gang blocks split an attacker's damage across multiple blockers, so pumping
+// one combatant's power doesn't reliably determine what the opposing creature
 // takes. Like considerRegeneration, this must act before combat damage is
 // dealt, so it only runs during the declare-blockers step with an empty stack.
-func (s *Strategy) considerPumpForCombatKill(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+func (s *Strategy) considerCombatPump(p mage.Player, g *mage.Game) *interactive.PriorityAction {
 	playerID := p.PlayerID()
 	combat := g.GetCombat()
 	if combat == nil {
@@ -388,6 +387,26 @@ func (s *Strategy) considerPumpForCombatKill(p mage.Player, g *mage.Game) *inter
 	}
 
 	res := simulateCombatDamage(g, attackers, blockerMap, initialDamage)
+	abilities := g.GetActivatableAbilities(playerID)
+
+	// Once blockers are known, spend only the power needed for an unblocked
+	// attacker to deal the remaining damage to the defending player. Repeating
+	// this decision after each activation naturally stops once lethal is locked
+	// in or the available mana can no longer cover the full deficit.
+	if opponent := g.GetOpponent(playerID); opponent != nil {
+		deficit := opponent.Life() + res.opponentLifeGained - res.damageToOpponent
+		if deficit > 0 {
+			for _, atkID := range attackers {
+				atk := g.FindPermanent(atkID)
+				if atk == nil || atk.ControllerID() != playerID || len(blockerMap[atkID]) != 0 {
+					continue
+				}
+				if action := s.pumpPowerAction(playerID, g, abilities, atk, deficit); action != nil {
+					return action
+				}
+			}
+		}
+	}
 
 	// Pairs of (our creature, the single creature it's fighting) where our
 	// creature is not already killing its opponent.
@@ -419,7 +438,6 @@ func (s *Strategy) considerPumpForCombatKill(p mage.Player, g *mage.Game) *inter
 		return eval.EvalCreatureInGame(candidates[i].theirs, g) > eval.EvalCreatureInGame(candidates[j].theirs, g)
 	})
 
-	abilities := g.GetActivatableAbilities(playerID)
 	for _, c := range candidates {
 		deficit := c.theirs.CurrentToughness(g) - res.dmgTaken[c.theirs.ID()]
 		if deficit <= 0 {

@@ -1031,6 +1031,43 @@ func TestPriorityAction_PumpsBlockerToKillAttacker(t *testing.T) {
 	}
 }
 
+func TestPriorityAction_PumpsUnblockedAttackerForLethal(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.DeclareBlockers)
+	pb.SetLife(10)
+	addLands(g, pa, "Plains", 10)
+
+	wall := g.PutOnBattlefield(createCard(t, "Wall of Swords", pa.PlayerID()), pa.PlayerID())
+	blessing := g.PutOnBattlefield(createCard(t, "Blessing", pa.PlayerID()), pa.PlayerID())
+	g.Attach(blessing.ID(), wall.ID())
+
+	g.GetCombat().AddAttacker(wall.ID(), pb.PlayerID())
+
+	start := New(ai.MidrangeWeighted)
+	manaSpent := 0
+	for range 10 {
+		action := start.PriorityAction(pa, g, 0, false)
+		if action.Type != interactive.ActionActivateAbility {
+			break
+		}
+		if action.PermanentID != wall.ID() {
+			t.Fatalf("expected the AI to pump its unblocked attacker for lethal, got %+v", action)
+		}
+		if err := g.ActivateAbilityByIndex(pa.PlayerID(), action.PermanentID, action.AbilityIndex, action.Targets); err != nil {
+			t.Fatalf("activating Blessing-granted pump: %v", err)
+		}
+		g.ResolveTopOfStack()
+		manaSpent++
+	}
+
+	if manaSpent != 7 {
+		t.Fatalf("expected the AI to spend exactly 7 mana for lethal, spent %d", manaSpent)
+	}
+	if got := wall.CurrentPower(g); got != pb.Life() {
+		t.Fatalf("expected Wall of Swords power to equal opponent life, got %d/%d", got, pb.Life())
+	}
+}
+
 func TestEvaluateCombatOutcome_LifelinkScoreBonus(t *testing.T) {
 	g, pa, _ := makeGame()
 	ll := makePerm("Lifelinker", "{1}{W}{W}", 3, 3, pa.PlayerID(), mage.WithKeyword(core.Lifelink))
