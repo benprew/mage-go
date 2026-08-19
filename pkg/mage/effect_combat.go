@@ -3,8 +3,6 @@ package mage
 import (
 	"fmt"
 
-	"github.com/google/uuid"
-
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -208,10 +206,8 @@ func (e *markDestroyAtEOTAfterNActivationsEffect) Properties() EffectProperties 
 	return EffectProperties{}
 }
 
-// stunEffect causes the selected permanent to skip its next own untap step
-// (i.e. its controller's next untap step), then expires. Implemented as a
-// turn-bounded continuous effect that grants AttrDoesNotUntap; no counter is
-// placed on the permanent.
+// stunEffect causes the selected permanent to skip its next untap attempt
+// during its then-controller's untap step. No counter is placed.
 type stunEffect struct {
 	selector TargetSelector
 }
@@ -221,6 +217,12 @@ type stunEffect struct {
 // .Targeting(...) to apply to the source.
 func StunCreature() *stunEffect {
 	return &stunEffect{selector: TargetSelector{Kind: KindTarget}}
+}
+
+// SkipNextUntapTarget creates the explicit one-shot untap-skipping effect.
+// StunCreature is retained as its compatibility name.
+func SkipNextUntapTarget() *stunEffect {
+	return StunCreature()
 }
 
 // Targeting sets which permanent the stun applies to.
@@ -468,25 +470,7 @@ func (e *stunEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	for _, perm := range perms {
-		permID := perm.ID()
-		// Compute the turn number on which the permanent's controller will
-		// next have an untap step. In a 2-player game that's currentTurn+2 if
-		// the permanent's controller is currently active, else currentTurn+1.
-		expiryTurn := ctx.Game.CurrentTurn() + 1
-		if ctx.Game.ActivePlayerObj().PlayerID() == perm.ControllerID() {
-			expiryTurn = ctx.Game.CurrentTurn() + 2
-		}
-		ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-			p := g.FindPermanent(permID)
-			if p != nil {
-				g.GrantAttr(p.ID(), AttrDoesNotUntap)
-			}
-			return nil
-		}, func(g *Game, _ uuid.UUID) bool {
-			return g.CurrentTurn() <= expiryTurn && g.FindPermanent(permID) != nil
-		})
-		ce.SetSourceID(ctx.SourceID)
-		ctx.Game.AddContinuousEffect(ce)
+		ctx.Game.SkipNextUntap(perm.ID())
 	}
 	return nil
 }

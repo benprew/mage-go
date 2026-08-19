@@ -398,30 +398,6 @@ func registerEnchantments() {
 		)
 	})
 
-	// ===== LACE CYCLE =====
-
-	laces := []struct {
-		name  string
-		cost  string
-		color Color
-	}{
-		{"Chaoslace", "{R}", Red},
-		{"Deathlace", "{B}", Black},
-		{"Lifelace", "{G}", Green},
-		{"Purelace", "{W}", White},
-		{"Thoughtlace", "{U}", Blue},
-	}
-	for _, lace := range laces {
-		name := lace.name
-		color := lace.color
-		cost := lace.cost
-		Register(name, func() Card {
-			return NewInstant(name, cost,
-				NewTargetedSpell(TargetPermanent(), ChangeColorEffect(color)),
-			)
-		})
-	}
-
 	// ===== MOVED FROM OTHER FILES =====
 
 	Register("Steal Artifact", func() Card {

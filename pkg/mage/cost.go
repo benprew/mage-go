@@ -32,6 +32,56 @@ func GenericCost(n int) Cost {
 	return &ManaCostPayment{MC: ManaCost{Generic: n}}
 }
 
+type actionCostContext struct {
+	Targets []uuid.UUID
+	XValue  int
+}
+
+type contextualActionCost interface {
+	Cost
+	resolveActionCost(actionCostContext) Cost
+}
+
+type manaCostPerTarget struct {
+	perTarget ManaCost
+}
+
+// ManaCostPerTarget creates a contextual mana cost multiplied by the number
+// of targets chosen for the spell or ability. Target identities are acquired
+// before this cost is evaluated and paid.
+func ManaCostPerTarget(cost string) Cost {
+	return &manaCostPerTarget{perTarget: ParseManaCost(cost)}
+}
+
+func (c *manaCostPerTarget) CanPay(uuid.UUID, uuid.UUID, *Game) bool { return true }
+func (c *manaCostPerTarget) Pay(uuid.UUID, uuid.UUID, *Game) error {
+	return fmt.Errorf("per-target mana cost requires action context")
+}
+func (c *manaCostPerTarget) Text() string { return c.perTarget.String() + " for each target" }
+func (c *manaCostPerTarget) resolveActionCost(ctx actionCostContext) Cost {
+	return &ManaCostPayment{MC: multiplyManaCost(c.perTarget, len(ctx.Targets))}
+}
+
+func multiplyManaCost(mc ManaCost, n int) ManaCost {
+	if n <= 0 {
+		return ManaCost{}
+	}
+	out := ManaCost{
+		Generic: mc.Generic * n,
+		White:   mc.White * n,
+		Blue:    mc.Blue * n,
+		Black:   mc.Black * n,
+		Red:     mc.Red * n,
+		Green:   mc.Green * n,
+		HasX:    mc.HasX,
+		XCount:  mc.XCount * n,
+	}
+	for range n {
+		out.Hybrid = append(out.Hybrid, mc.Hybrid...)
+	}
+	return out
+}
+
 func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	mc := c.reducedCost(sourceID, g)
 	// TODO: action costs paid mid-cast (game.go:2855+) flow through here and

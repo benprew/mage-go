@@ -14,38 +14,81 @@ func init() {
 }
 
 func registerSpells() {
+	// ===== LACE CYCLE =====
+
+	// Purelace {W}
+	// Instant
+	// Target spell or permanent becomes white. (Mana symbols on that permanent remain unchanged.)
+	Register("Purelace", func() Card {
+		return NewInstant("Purelace", "{W}",
+			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(White)),
+		)
+	})
+
+	// Thoughtlace {U}
+	// Instant
+	// Target spell or permanent becomes blue. (Mana symbols on that permanent remain unchanged.)
+	Register("Thoughtlace", func() Card {
+		return NewInstant("Thoughtlace", "{U}",
+			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Blue)),
+		)
+	})
+
+	// Deathlace {B}
+	// Instant
+	// Target spell or permanent becomes black. (Mana symbols on that permanent remain unchanged.)
+	Register("Deathlace", func() Card {
+		return NewInstant("Deathlace", "{B}",
+			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Black)),
+		)
+	})
+
+	// Chaoslace {R}
+	// Instant
+	// Target spell or permanent becomes red. (Its mana symbols remain unchanged.)
+	Register("Chaoslace", func() Card {
+		return NewInstant("Chaoslace", "{R}",
+			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Red)),
+		)
+	})
+
+	// Lifelace {G}
+	// Instant
+	// Target spell or permanent becomes green. (Mana symbols on that permanent remain unchanged.)
+	Register("Lifelace", func() Card {
+		return NewInstant("Lifelace", "{G}",
+			NewTargetedSpell(TargetSpellOrPermanent(), LaceEffect(Green)),
+		)
+	})
+
 	// ===== WHITE SPELLS =====
 
 	Register("Swords to Plowshares", func() Card {
 		return NewInstant("Swords to Plowshares", "{W}",
-			NewTargetedSpell(TargetCreature(), Pipeline(
-				"exile target creature. Its controller gains life equal to its power",
-				EffectProperties{Outcome: OutcomeDetriment, TargetPurposeOverride: AITargetExile},
-				SnapshotPermanent(SelectTarget, "victim"),
-				ExileGathered("victim"),
-				GainLifeFromVar("victim.controller", "victim.power"),
-			)),
+			NewTargetedSpell(TargetCreature(), SwordsToPlowsharesEffect()),
 		)
 	})
 
 	Register("Disenchant", func() Card {
 		return NewInstant("Disenchant", "{1}{W}",
-			NewTargetedSpell(TargetArtifactOrEnchantment(), DestroyTargetPermanent()),
+			NewTargetedSpell(TargetArtifactOrEnchantment(), DisenchantEffect()),
 		)
 	})
 
 	Register("Healing Salve", func() Card {
-		c := NewInstant("Healing Salve", "{W}",
-			NewTargetedSpell(TargetDamageAnyTarget(), ModalEffect(
-				"target player gains 3 life or prevent the next 3 damage that would be dealt to any target this turn",
-				GainLifeTarget(Fixed(3)),
-				PreventDamageToTarget(Fixed(3)),
-			)),
-		)
-		c.SetModes([]string{
-			"Target player gains 3 life",
-			"Prevent the next 3 damage that would be dealt to any target this turn",
-		})
+		c := NewInstant("Healing Salve", "{W}", nil)
+		c.AddAbility(NewModalSpell([]Mode{
+			{
+				Label:   "Target player gains 3 life",
+				Targets: []Target{TargetPlayer()},
+				Effects: []Effect{HealingSalveGainEffect()},
+			},
+			{
+				Label:   "Prevent the next 3 damage that would be dealt to any target this turn",
+				Targets: []Target{TargetDamageAnyTarget()},
+				Effects: []Effect{HealingSalvePreventionEffect()},
+			},
+		}))
 		return c
 	})
 
@@ -95,7 +138,7 @@ func registerSpells() {
 
 	Register("Ancestral Recall", func() Card {
 		return NewInstant("Ancestral Recall", "{U}",
-			NewTargetedSpell(TargetPlayer(), DrawCards(Fixed(3))),
+			NewTargetedSpell(TargetPlayer(), AncestralRecallEffect()),
 		)
 	})
 
@@ -113,7 +156,7 @@ func registerSpells() {
 
 	Register("Unsummon", func() Card {
 		return NewInstant("Unsummon", "{U}",
-			NewTargetedSpell(TargetCreature(), ReturnToHandTarget()),
+			NewTargetedSpell(TargetCreature(), UnsummonEffect()),
 		)
 	})
 
@@ -139,7 +182,7 @@ func registerSpells() {
 
 	Register("Twiddle", func() Card {
 		return NewInstant("Twiddle", "{U}",
-			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TapOrUntapTarget()),
+			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TwiddleEffect()),
 		)
 	})
 
@@ -256,7 +299,7 @@ func registerSpells() {
 
 	Register("Lightning Bolt", func() Card {
 		return NewInstant("Lightning Bolt", "{R}",
-			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(3))),
+			NewTargetedSpell(TargetDamageAnyTarget(), LightningBoltEffect()),
 		)
 	})
 
@@ -351,37 +394,7 @@ func registerSpells() {
 
 	Register("Berserk", func() Card {
 		return NewInstant("Berserk", "{G}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"Target creature gains trample and gets +X/+0. Destroy at end of turn if it attacked.",
-				GrantKeyword(Trample),
-				DoubleTargetPower(),
-				// TODO: convert to pipeline — needs DelayedTrigger + HasAttackedThisTurn primitives
-				FuncEffect("destroy at end of turn if attacked", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					targetID := targets[0]
-					g.RegisterDelayedTrigger(&DelayedTrigger{
-						EventType:  EvtEndStep,
-						SourceID:   sourceID,
-						Controller: controller,
-						Effects: []Effect{FuncEffect(
-							"destroy creature if it attacked",
-							EffectProperties{},
-							func(g2 *Game, srcID, ctrlID uuid.UUID, _ []uuid.UUID) error {
-								if g2.HasAttackedThisTurn(targetID) {
-									perm := g2.FindPermanent(targetID)
-									if perm != nil {
-										g2.DestroyPermanent(perm)
-									}
-								}
-								return nil
-							}),
-						},
-					})
-					return nil
-				}),
-			)),
+			NewTargetedSpell(TargetCreature(), BerserkEffect()),
 		)
 	})
 
@@ -389,7 +402,7 @@ func registerSpells() {
 
 	Register("Giant Growth", func() Card {
 		return NewInstant("Giant Growth", "{G}",
-			NewTargetedSpell(TargetCreature(), Boost(Fixed(3), Fixed(3))),
+			NewTargetedSpell(TargetCreature(), GiantGrowthEffect()),
 		)
 	})
 
@@ -436,7 +449,7 @@ func registerSpells() {
 
 	Register("Fog", func() Card {
 		return NewInstant("Fog", "{G}",
-			NewSpellAbility(PreventAllCombatDamage()),
+			NewSpellAbility(FogEffect()),
 		)
 	})
 

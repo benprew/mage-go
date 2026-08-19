@@ -51,6 +51,9 @@ const (
 	Page   // Diary of Dreams page counters
 	Growth // Comforting Counsel growth counters
 
+	// Astral counters
+	Husk // Necropolis of Azar husk counters
+
 	// NumCounters must remain the last entry — it sizes the fixed-length
 	// counter array on Permanent, so clone is a memcpy instead of a map copy.
 	NumCounters
@@ -130,6 +133,8 @@ func (ct CounterType) String() string {
 		return "Page"
 	case Growth:
 		return "Growth"
+	case Husk:
+		return "Husk"
 	default:
 		return "Unknown"
 	}

@@ -31,3 +31,5 @@ judgment JUD Judgment
 onslaught ONS Onslaught
 legions LGN Legions
 scourge SCG Scourge
+astral PAST Astral Cards
+promo PHPR HarperPrism Book Promos

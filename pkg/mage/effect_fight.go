@@ -6,15 +6,15 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// fightTargetEffect implements CR 701.13 ("X fights Y"): the source permanent
+// fightTargetEffect implements CR 701.14 ("X fights Y"): the source permanent
 // and the target permanent each deal damage equal to their power to the
 // other. Both must be creatures on the battlefield at resolution; if either
-// has left or is no longer a creature, neither deals damage (CR 701.13c).
+// has left or is no longer a creature, neither deals damage (CR 701.14b).
 // Source and target deal damage simultaneously.
 type fightTargetEffect struct{}
 
 // FightTarget creates an effect where the source creature and the target
-// creature fight (CR 701.13). Pair with TargetCreature() (or a more
+// creature fight (CR 701.14). Pair with TargetCreature() (or a more
 // specific target like "another target creature").
 func FightTarget() Effect {
 	return &fightTargetEffect{}
@@ -42,26 +42,55 @@ func (*fightTargetEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 
-	srcPower := src.CurrentPower(ctx.Game)
-	tgtPower := tgt.CurrentPower(ctx.Game)
+	fightPermanents(ctx, src, tgt)
+	return nil
+}
 
-	// Apply protection short-circuits per direction.
-	srcCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
-	tgtCard := ctx.Game.FindCardAnywhere(tgt.ID())
+type fightGatheredEffect struct {
+	firstVar  string
+	secondVar string
+}
 
-	if srcPower > 0 && (tgtCard == nil || !tgt.HasProtectionFrom(srcCard)) {
-		ctx.Game.DealDamageToPermanent(tgt, srcPower, ctx.SourceID)
+// FightGathered creates a pipeline step that has two variable-bound creatures
+// fight. If either variable no longer identifies a battlefield creature,
+// neither deals damage (CR 701.14b).
+func FightGathered(firstVar, secondVar string) Effect {
+	return &fightGatheredEffect{firstVar: firstVar, secondVar: secondVar}
+}
+
+func (*fightGatheredEffect) Text() string { return "those creatures fight each other" }
+func (*fightGatheredEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
+func (e *fightGatheredEffect) Apply(ctx *EffectContext) error {
+	first := ctx.Game.FindPermanent(ctx.TryGetUUID(e.firstVar))
+	second := ctx.Game.FindPermanent(ctx.TryGetUUID(e.secondVar))
+	if first == nil || second == nil || !first.HasType(TypeCreature) || !second.HasType(TypeCreature) {
+		return nil
 	}
-	if tgtPower > 0 && (srcCard == nil || !src.HasProtectionFrom(tgtCard)) {
-		ctx.Game.DealDamageToPermanent(src, tgtPower, tgt.ID())
+	fightPermanents(ctx, first, second)
+	return nil
+}
+
+func fightPermanents(ctx *EffectContext, first, second *Permanent) {
+	firstPower := first.CurrentPower(ctx.Game)
+	secondPower := second.CurrentPower(ctx.Game)
+	firstCard := ctx.Game.FindCardAnywhere(first.ID())
+	secondCard := ctx.Game.FindCardAnywhere(second.ID())
+
+	if firstPower > 0 && (secondCard == nil || !second.HasProtectionFromInGame(firstCard, ctx.Game)) {
+		ctx.Game.DealDamageToPermanent(second, firstPower, first.ID())
+	}
+	if secondPower > 0 && (firstCard == nil || !first.HasProtectionFromInGame(secondCard, ctx.Game)) {
+		ctx.Game.DealDamageToPermanent(first, secondPower, second.ID())
 	}
 	ctx.Game.FireEvent(GameEvent{
 		Type:     EvtFight,
-		SourceID: ctx.SourceID,
-		TargetID: tgt.ID(),
+		SourceID: first.ID(),
+		TargetID: second.ID(),
 		PlayerID: ctx.Controller,
 	})
-	return nil
 }
 
 // onPermanentDiesEffect registers a delayed trigger that fires the first

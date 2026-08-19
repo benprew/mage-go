@@ -693,7 +693,16 @@ func (g *Game) AddEntersTappedRule(f func(*Permanent) bool) {
 }
 
 // SetCoinFlipResults sets deterministic coin flip results for testing.
-func (g *Game) SetCoinFlipResults(results []bool) { g.coinFlipResults = results }
+func (g *Game) SetCoinFlipResults(results []bool) {
+	g.coinFlipResults = append([]bool(nil), results...)
+}
+
+// SetRandomResults sets raw deterministic RandIntn results for testing. Values
+// are consumed in order and normalized to each requested range. The input is
+// copied so later caller mutations do not affect the game.
+func (g *Game) SetRandomResults(results []int) {
+	g.randomResults = append([]int(nil), results...)
+}
 
 // SetOnPriority sets the priority handler callback.
 func (g *Game) SetOnPriority(h PriorityHandler) { g.onPriority = h }

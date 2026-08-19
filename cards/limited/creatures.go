@@ -101,7 +101,7 @@ func registerCreatures() {
 		return NewCreature("Prodigal Sorcerer", "{2}{U}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
-				DealDamage(Fixed(1)),
+				ProdigalSorcererEffect(),
 				Tap(),
 				WithTarget(TargetDamageAnyTarget()),
 			),

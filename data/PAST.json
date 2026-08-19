@@ -1,0 +1,167 @@
+[
+  {
+    "name": "Aswan Jaguar",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Summon Jaguar",
+    "oracle_text": "When Aswan Jaguar comes into play, choose a random creature type from those in target opponent's deck.\n{G}{G}, {T}: Bury target creature of the chosen type.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Call from the Grave",
+    "mana_cost": "{2}{B}",
+    "cmc": 3,
+    "type_line": "Sorcery",
+    "oracle_text": "Put a random creature from a random graveyard into play under your control. Call from the Grave deals to you an amount of damage equal to that creature's casting cost.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Faerie Dragon",
+    "mana_cost": "{2}{G}{G}",
+    "cmc": 4,
+    "type_line": "Summon Dragon",
+    "oracle_text": "Flying\n{1}{G}{G}: Play a random effect.",
+    "power": "1",
+    "toughness": "3",
+    "colors": [
+      "G"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Goblin Polka Band",
+    "mana_cost": "{R}{R}",
+    "cmc": 2,
+    "type_line": "Summon Goblin",
+    "oracle_text": "{2}, {T}, Pay {R} for each target: Tap any number of random target creatures. Goblins tapped in this way do not untap during their controllers' next untap phases.",
+    "power": "1",
+    "toughness": "1",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Necropolis of Azar",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Enchantment",
+    "oracle_text": "Whenever a non-black creature is put into any graveyard from play, put a husk counter on Necropolis of Azar.\n{5}, Remove a husk counter from Necropolis of Azar: Put a Spawn of Azar token into play. Treat this token as a black creature with a random power and toughness, each no less than 1 and no greater than 3, that has swampwalk.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Orcish Catapult",
+    "mana_cost": "{X}{R}{R}",
+    "cmc": 2,
+    "type_line": "Instant",
+    "oracle_text": "Randomly distribute X -0/-1 counters among a random number of random target creatures.",
+    "colors": [
+      "R"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Power Struggle",
+    "mana_cost": "{2}{U}{U}{U}",
+    "cmc": 5,
+    "type_line": "Enchantment",
+    "oracle_text": "During each player's upkeep, that player exchanges control of random target artifact, creature or land he or she controls, for control of random target permanent of the same type that a random opponent controls.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Prismatic Dragon",
+    "mana_cost": "{2}{W}{W}",
+    "cmc": 4,
+    "type_line": "Summon Dragon",
+    "oracle_text": "Flying\nDuring your upkeep, Prismatic Dragon becomes a random color permanently.\n{2}: Prismatic Dragon becomes a random color permanently.",
+    "power": "2",
+    "toughness": "3",
+    "colors": [
+      "W"
+    ],
+    "keywords": [
+      "Flying"
+    ],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Rainbow Knights",
+    "mana_cost": "{W}{W}",
+    "cmc": 2,
+    "type_line": "Summon Knights",
+    "oracle_text": "When Rainbow Knights comes into play, it gains protection from a random color permanently.\n{1}: First strike until end of turn.\n{W}{W}: +0/+0, +1/+0 or +2/+0 until end of turn chosen at random.",
+    "power": "2",
+    "toughness": "1",
+    "colors": [
+      "W"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Whimsy",
+    "mana_cost": "{X}{U}{U}",
+    "cmc": 2,
+    "type_line": "Sorcery",
+    "oracle_text": "Play X random fast effects.",
+    "colors": [
+      "U"
+    ],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Pandora's Box",
+    "mana_cost": "{5}",
+    "cmc": 5,
+    "type_line": "Artifact",
+    "oracle_text": "{3}, {T}: Choose a random summon card from all players' decks. For each player, flip a coin. If the flip ends up heads, put a token creature into play and treat it as though an exact copy of the chosen summon card were just played.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  },
+  {
+    "name": "Gem Bazaar",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "When Gem Bazaar comes into play, choose a random color.\n{T}: Add to your mana pool one mana of the color last chosen. Then choose a random color.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "common",
+    "set": "past"
+  }
+]

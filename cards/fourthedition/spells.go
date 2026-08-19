@@ -49,7 +49,7 @@ func registerSpells() {
 		return NewInstant("Fissure", "{3}{R}{R}",
 			NewTargetedSpell(
 				TargetPermanent(Or(IsCreature, IsLand)),
-				DestroyTargetNoRegen(),
+				FissureEffect(),
 			),
 		)
 	})

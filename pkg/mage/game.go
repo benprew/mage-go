@@ -108,6 +108,10 @@ type Game struct {
 
 	// Card currently being resolved (set during ResolveStackObject)
 	resolvingCard Card
+	// Color state is installed before target legality is checked because the
+	// resolving object has already been popped from the stack.
+	resolvingColorSourceID uuid.UUID
+	resolvingColorOverride *[]Color
 
 	// Zone the resolving spell was cast from (set during ResolveStackObject
 	// from StackObject.CastZone). Read by triggers expressing "if you cast it
@@ -199,6 +203,15 @@ type Game struct {
 	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
 	resolvingDamageDistribution map[uuid.UUID]int
 
+	// CounterDistribution assigned when the current spell or ability was put
+	// on the stack. Cleared after resolution.
+	resolvingCounterDistribution map[uuid.UUID]int
+
+	// skipNextUntap tracks object-specific one-shot untap replacements. Entries
+	// survive control changes and are consumed only by an actual untap attempt
+	// during the permanent's then-controller's untap step.
+	skipNextUntap map[uuid.UUID]int
+
 	// ID of the most recently sacrificed permanent paid as a cost
 	// for the spell or ability currently on the stack. Set by SacrificeSourceCost,
 	// SacrificeMatchingCost, and SacrificeCreatureCost; read by effects via
@@ -228,6 +241,9 @@ type Game struct {
 
 	// Coin flip results (for test determinism; popped in order)
 	coinFlipResults []bool
+
+	// Random integer results (for test determinism; popped in order)
+	randomResults []int
 
 	// Priority handler — called when a player receives priority.
 	// If nil, the engine drains the stack atomically (legacy behavior).
@@ -670,7 +686,7 @@ func (g *Game) FlipCoin(playerID uuid.UUID) bool {
 		g.coinFlipResults = g.coinFlipResults[1:]
 		return result
 	}
-	return rand.Intn(2) == 0
+	return g.RandIntn(2) == 0
 }
 
 // TryPayMana attempts to pay a mana cost using floating mana and any untapped
@@ -693,7 +709,15 @@ func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
+	return g.putOnBattlefield(card, controller, nil, uuid.Nil)
+}
+
+func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
 	perm := NewPermanent(card, controller)
+	if colors != nil {
+		override := append([]Color(nil), (*colors)...)
+		perm.ColorOverride = &override
+	}
 	g.addOwnedPermanent(perm)
 	perm.turnControlGained = g.turn
 
@@ -779,6 +803,9 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 
 	g.ensureBattlefieldSliceOwned()
 	g.battlefield = append(g.battlefield, perm)
+	if colors != nil {
+		g.effects.Add(permanentColorEffect(perm, *colors, colorSourceID))
+	}
 
 	// Register continuous effects from static abilities
 	for _, a := range perm.RuntimeAbilities {
@@ -905,6 +932,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	if perm == nil {
 		return
 	}
+	delete(g.skipNextUntap, perm.ID())
 	perm = g.mutablePermanentIncludingPhased(perm.ID())
 	if perm == nil {
 		return
@@ -1784,7 +1812,7 @@ func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.
 
 	// Protection from source prevents all damage (static ability, pre-pipeline)
 	sourceCard := g.FindCardAnywhere(sourceID)
-	if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+	if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, g) {
 		return
 	}
 
@@ -2222,6 +2250,7 @@ func (g *Game) PutTriggersOnStack() {
 		g.pendingTriggers = active
 	}
 	for _, pt := range g.pendingTriggers {
+		targetSource := g.FindCardAnywhere(pt.sourceID)
 		obj := &StackObject{
 			ID:         uuid.New(),
 			Controller: pt.controller,
@@ -2255,6 +2284,8 @@ func (g *Game) PutTriggersOnStack() {
 			obj.ModeChoice = idx
 			if len(chosen.Targets) > 0 {
 				obj.Targets = g.chooseTriggerTargets(pt, chosen.Targets)
+				obj.TargetSpecs = expandTargetSpecs(chosen.Targets, obj.Targets, obj.XValue)
+				obj.TargetSource = targetSource
 			}
 			g.pushStack(obj)
 			continue
@@ -2280,6 +2311,8 @@ func (g *Game) PutTriggersOnStack() {
 					}
 				}
 			}
+			obj.TargetSpecs = expandTargetSpecs(declared, obj.Targets, obj.XValue)
+			obj.TargetSource = targetSource
 			g.pushStack(obj)
 			continue
 		}
@@ -2422,6 +2455,19 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uui
 	sourceCard := g.FindCardAnywhere(pt.sourceID)
 	var out []uuid.UUID
 	for _, t := range declared {
+		if pair, ok := t.(*randomActivePlayerExchangePairTarget); ok {
+			out = append(out, pair.chooseForTrigger(pt.controller, sourceCard, g)...)
+			continue
+		}
+		if random, ok := t.(*randomTarget); ok {
+			chosen := g.chooseRandomTargets(pt.controller, sourceCard, random, 0)
+			if len(chosen) == 0 && t.Min() > 0 {
+				out = append(out, uuid.Nil)
+			} else {
+				out = append(out, chosen...)
+			}
+			continue
+		}
 		t.Reset()
 		possible := t.Possible(pt.controller, sourceCard, g)
 		if len(possible) == 0 {
@@ -2516,6 +2562,7 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 
 // Used to track game-specific state before pushing object onto stack
 func (g *Game) pushStack(obj *StackObject) {
+	g.chooseRandomCounterDistribution(obj)
 	// Track target zone when targeted, needed for CR 608.2b
 	obj.TargetZones = make(map[uuid.UUID]Zone, len(obj.Targets))
 	for _, t := range obj.Targets {
@@ -2527,7 +2574,7 @@ func (g *Game) pushStack(obj *StackObject) {
 
 // Check if target is still legal at resolution time. Used in stack responses and
 // resolutions.
-func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone) bool {
+func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone, spec Target) bool {
 	if g.GetPlayer(targetID) != nil {
 		return true
 	}
@@ -2537,7 +2584,12 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controlle
 		return false
 	}
 	if perm := g.FindPermanent(targetID); perm != nil {
-		return perm.CanBeTargetedBy(sourceCard, controller, g)
+		if !perm.CanBeTargetedBy(sourceCard, controller, g) {
+			return false
+		}
+	}
+	if spec != nil && !slices.Contains(spec.Possible(controller, sourceCard, g), targetID) {
+		return false
 	}
 	return true
 }
@@ -2549,6 +2601,14 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	defer g.CheckStateBasedActions()
 	defer g.ClearSacrificed()
+	previousColorSourceID := g.resolvingColorSourceID
+	previousColorOverride := g.resolvingColorOverride
+	g.resolvingColorSourceID = obj.SourceID
+	g.resolvingColorOverride = obj.ColorOverride
+	defer func() {
+		g.resolvingColorSourceID = previousColorSourceID
+		g.resolvingColorOverride = previousColorOverride
+	}()
 
 	// CR 608.2b: a spell/ability with target(s) fails to resolve only if ALL of
 	// them are illegal at resolution. uuid.Nil entries are positional
@@ -2562,7 +2622,15 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	for i, t := range obj.Targets {
 		if t != uuid.Nil {
 			hasRealTarget = true
-			if g.isTargetStillLegal(t, obj.Card, obj.Controller, obj.TargetZones[t]) {
+			var spec Target
+			if i < len(obj.TargetSpecs) {
+				spec = obj.TargetSpecs[i]
+			}
+			sourceCard := obj.Card
+			if obj.TargetSource != nil {
+				sourceCard = obj.TargetSource
+			}
+			if g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec) {
 				resolvedTargets[i] = t
 				anyLegal = true
 				continue
@@ -2583,12 +2651,14 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolvingCard = obj.Card
 	g.resolvingTargets = obj.Targets
 	g.resolvingDamageDistribution = obj.DamageDistribution
+	g.resolvingCounterDistribution = obj.CounterDistribution
 	g.resolvingCastZone = obj.CastZone
 	g.resolvingCastContext = obj.CastContext
 	for _, eff := range obj.Effects {
 		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, resolvedTargets)
 	}
 	g.resolvingDamageDistribution = nil
+	g.resolvingCounterDistribution = nil
 	// Note: g.resolvingCastContext is intentionally NOT cleared here so
 	// PutOnBattlefield (and ETB replacement effects like
 	// EntersWithComputedCounters) can still consult cast-time state such as
@@ -2610,7 +2680,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	if obj.Card != nil && !obj.IsAbility {
 		// Permanents go to the battlefield instead
 		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
-			perm := g.PutOnBattlefield(obj.Card, obj.Controller)
+			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.ColorOverride, obj.SourceID)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
@@ -2713,31 +2783,35 @@ func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total
 	return out
 }
 
-func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, specs []Target, chosen []uuid.UUID, label string) error {
-	if len(specs) == 0 || len(chosen) == 0 {
+func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, specs []Target, chosen []uuid.UUID, x int, label string) error {
+	if len(specs) == 0 {
 		return nil
 	}
+	offset := 0
 	for i, spec := range specs {
-		if i >= len(chosen) {
-			break
+		minimum, maximum := TargetBounds(spec, x)
+		remainingRequired := 0
+		for _, later := range specs[i+1:] {
+			laterMinimum, _ := TargetBounds(later, x)
+			remainingRequired += laterMinimum
 		}
-		if tf, ok := spec.(interface{ Filter() PermanentFilter }); ok {
-			targetPerm := g.FindPermanent(chosen[i])
-			if targetPerm != nil {
-				if !tf.Filter().Match(targetPerm, g) {
-					return fmt.Errorf("invalid target for %s", label)
-				}
-				if !targetPerm.CanBeTargetedBy(sourceCard, controller, g) {
-					return fmt.Errorf("target cannot be targeted")
-				}
-				continue
-			}
+		available := max(0, len(chosen)-offset-remainingRequired)
+		count := min(maximum, available)
+		if count < minimum {
+			return fmt.Errorf("not enough targets for %s", label)
 		}
 		possible := spec.Possible(controller, sourceCard, g)
-		found := slices.Contains(possible, chosen[i])
-		if !found {
-			return fmt.Errorf("invalid target for %s", label)
+		seen := make(map[uuid.UUID]bool, count)
+		for _, id := range chosen[offset : offset+count] {
+			if seen[id] || !slices.Contains(possible, id) {
+				return fmt.Errorf("invalid target for %s", label)
+			}
+			seen[id] = true
 		}
+		offset += count
+	}
+	if offset != len(chosen) {
+		return fmt.Errorf("too many targets for %s", label)
 	}
 	return nil
 }
@@ -2778,6 +2852,56 @@ func (g *Game) autoTapForManaCosts(controller, sourceID uuid.UUID, costs []Cost,
 		}
 	}
 	return nil
+}
+
+func addActionManaCost(total *ManaCost, add ManaCost) {
+	total.Generic += add.Generic
+	total.White += add.White
+	total.Blue += add.Blue
+	total.Black += add.Black
+	total.Red += add.Red
+	total.Green += add.Green
+	total.Hybrid = append(total.Hybrid, add.Hybrid...)
+	if add.HasX {
+		total.HasX = true
+		total.XCount += add.XCount
+	}
+}
+
+func (g *Game) prepareActionCosts(costs []Cost, targets []uuid.UUID, x int) []Cost {
+	ctx := actionCostContext{Targets: append([]uuid.UUID(nil), targets...), XValue: x}
+	resolved := make([]Cost, 0, len(costs))
+	var mana ManaCost
+	for _, cost := range costs {
+		if contextual, ok := cost.(contextualActionCost); ok {
+			cost = contextual.resolveActionCost(ctx)
+		}
+		if payment, ok := cost.(*ManaCostPayment); ok {
+			addActionManaCost(&mana, payment.MC)
+			continue
+		}
+		resolved = append(resolved, cost)
+	}
+	if !mana.IsZero() {
+		resolved = append([]Cost{&ManaCostPayment{MC: mana}}, resolved...)
+	}
+	return resolved
+}
+
+func (g *Game) canPayActionCostsAtomically(controller, sourceID uuid.UUID, costs []Cost) bool {
+	for _, cost := range costs {
+		if !cost.CanPay(sourceID, controller, g) {
+			return false
+		}
+	}
+	for _, cost := range costs {
+		payment, ok := cost.(*ManaCostPayment)
+		if !ok {
+			continue
+		}
+		return g.CanAfford(controller, payment.reducedCost(sourceID, g), nil)
+	}
+	return true
 }
 
 func (g *Game) payActionCosts(controller, sourceID uuid.UUID, costs []Cost) error {
@@ -2862,6 +2986,11 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 	if xValue < 0 {
 		return fmt.Errorf("x cannot be negative")
+	}
+	targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
+	targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
+	if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
+		return err
 	}
 	if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
 		return err
@@ -2976,7 +3105,12 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 			actionCosts = append(actionCosts, sa.Costs()...)
 		}
 	}
-	if err := g.autoTapForManaCosts(playerID, card.ID(), actionCosts, AutoTapHint{CastingCard: card.ID()}); err != nil {
+	actionCosts = g.prepareActionCosts(actionCosts, targets, xValue)
+	hint := AutoTapHint{CastingCard: card.ID()}
+	if !g.canPayActionCostsAtomically(playerID, card.ID(), actionCosts) {
+		return fmt.Errorf("cannot pay action costs for %s", name)
+	}
+	if err := g.autoTapForManaCosts(playerID, card.ID(), actionCosts, hint); err != nil {
 		return err
 	}
 	for _, cost := range actionCosts {
@@ -3008,10 +3142,37 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	return err
 }
 
-// addManaFromAbility resolves a mana ability's productions, adding mana to the player's pool.
-// AnyColor productions prompt the player to choose a color.
-func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) {
-	g.addManaProductions(ma.Productions, p, perm)
+// addManaFromAbility resolves a mana ability's current productions, then runs
+// its immediate post-production effects.
+func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) error {
+	productions := ma.currentProductions(g, perm.ID())
+	g.addManaProductions(productions, p, perm)
+	return g.runManaPostProduction(ma, p, perm)
+}
+
+func (g *Game) runManaPostProduction(ma *ManaAbility, p Player, perm *Permanent) error {
+	if ma == nil || len(ma.postProduction) == 0 {
+		return nil
+	}
+	// Claim a copy-on-write permanent before card-defined follow-up effects run.
+	// This keeps callbacks that locate the source through FindPermanent from
+	// mutating a permanent shared with another search branch.
+	perm = g.MutablePermanent(perm.ID())
+	if perm == nil {
+		return nil
+	}
+	ctx := &EffectContext{
+		Game:       g,
+		SourceID:   perm.ID(),
+		Controller: p.PlayerID(),
+		Vars:       make(map[string]any),
+	}
+	for _, effect := range ma.postProduction {
+		if err := effect.Apply(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // addManaProductions adds mana to the player's pool from a list of productions.
@@ -3150,7 +3311,7 @@ func (g *Game) CheckStateBasedActions() {
 				if host == nil {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
-				} else if host.HasProtectionFrom(p.Card) {
+				} else if host.HasProtectionFromInGame(p.Card, g) {
 					aurasToDrop = append(aurasToDrop, p)
 					actions = true
 				} else if !auraHostIsLegal(p.Card, host, g) {
@@ -3314,6 +3475,33 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 	return true
 }
 
+// SkipNextUntap causes the specific battlefield object to skip its next untap
+// attempt during its then-controller's untap step.
+func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
+	if g.FindPermanent(permanentID) == nil {
+		return
+	}
+	if g.skipNextUntap == nil {
+		g.skipNextUntap = make(map[uuid.UUID]int)
+	}
+	g.skipNextUntap[permanentID]++
+}
+
+func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
+	if p == nil || !p.Tapped {
+		return false
+	}
+	if remaining := g.skipNextUntap[p.ID()]; remaining > 0 {
+		if remaining == 1 {
+			delete(g.skipNextUntap, p.ID())
+		} else {
+			g.skipNextUntap[p.ID()] = remaining - 1
+		}
+		return false
+	}
+	return g.UntapPermanent(p)
+}
+
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 	// Island Sanctuary: clear protection at the start of the player's turn
@@ -3356,30 +3544,30 @@ func (g *Game) doUntap() {
 				if !autoUntap && !active.ChooseMayAbility("untap "+p.Name()) {
 					continue
 				}
-				g.UntapPermanent(p)
+				g.untapPermanentDuringUntapStep(p)
 			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
 				// Land with untap limit in effect
 				if p.Tapped && landsUntapped < landUntapLimit {
-					if g.UntapPermanent(p) {
+					if g.untapPermanentDuringUntapStep(p) {
 						landsUntapped++
 					}
 				}
 			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
 				// Artifact (non-land) with untap limit in effect (Damping Field)
 				if p.Tapped && artifactsUntapped < artifactUntapLimit {
-					if g.UntapPermanent(p) {
+					if g.untapPermanentDuringUntapStep(p) {
 						artifactsUntapped++
 					}
 				}
 			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
 				// Creature with untap limit in effect (Smoke)
 				if p.Tapped && creaturesUntapped < creatureUntapLimit {
-					if g.UntapPermanent(p) {
+					if g.untapPermanentDuringUntapStep(p) {
 						creaturesUntapped++
 					}
 				}
 			} else if p.Tapped {
-				g.UntapPermanent(p)
+				g.untapPermanentDuringUntapStep(p)
 			}
 			if mp := g.MutablePermanent(p.ID()); mp != nil {
 				mp.RevokeBaseAttr(AttrSummonSick)
@@ -4039,22 +4227,27 @@ func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredCol
 	}
 
 	var chosen []ManaProduction
+	var chosenAbility *ManaAbility
 	var firstProd []ManaProduction
+	var firstAbility *ManaAbility
 	for _, a := range perm.RuntimeAbilities {
-		productions := abilityManaProductions(a)
+		productions := abilityManaProductions(a, g, perm.ID())
 		if productions == nil {
 			continue
 		}
 		if firstProd == nil {
 			firstProd = productions
+			firstAbility, _ = UnwrapAbility(a).(*ManaAbility)
 		}
 		if preferredColor != Colorless && productionsMatchColor(productions, preferredColor) {
 			chosen = productions
+			chosenAbility, _ = UnwrapAbility(a).(*ManaAbility)
 			break
 		}
 	}
 	if chosen == nil {
 		chosen = firstProd
+		chosenAbility = firstAbility
 	}
 	if chosen == nil {
 		return fmt.Errorf("permanent has no mana ability")
@@ -4065,6 +4258,9 @@ func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredCol
 	g.TapPermanent(perm)
 	if p := g.GetPlayer(playerID); p != nil {
 		g.addManaProductionsForColor(chosen, p, perm, preferredColor)
+		if err := g.runManaPostProduction(chosenAbility, p, perm); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -4085,10 +4281,10 @@ func productionsMatchColor(productions []ManaProduction, preferredColor Color) b
 // as a tap-for-mana mana source, or nil if the ability is not such a source.
 // Recognizes both *ManaAbility and *SimpleActivatedAbility whose only cost is
 // tapping and whose effects all produce mana (AddMana / AddAnyMana).
-func abilityManaProductions(a Ability) []ManaProduction {
+func abilityManaProductions(a Ability, g GameReader, sourceID uuid.UUID) []ManaProduction {
 	switch ab := a.(type) {
 	case *ManaAbility:
-		return ab.Productions
+		return ab.currentProductions(g, sourceID)
 	case *SimpleActivatedAbility:
 		return activatedManaProductions(ab)
 	}
@@ -4212,7 +4408,7 @@ func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourc
 		var perTap map[Color]int
 		perTapTotal := 0
 		for _, a := range perm.RuntimeAbilities {
-			productions := abilityManaProductions(a)
+			productions := abilityManaProductions(a, g, perm.ID())
 			if productions == nil {
 				continue
 			}
@@ -4468,7 +4664,7 @@ func (g *Game) utilityAbilityCount(permID uuid.UUID) int {
 		if _, ok := inner.(ActivatedAbility); !ok {
 			continue
 		}
-		if abilityManaProductions(inner) != nil {
+		if abilityManaProductions(inner, g, perm.ID()) != nil {
 			continue
 		}
 		count++
@@ -4812,7 +5008,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		g.TapPermanent(perm)
 		p := g.GetPlayer(playerID)
 		if p != nil {
-			g.addManaFromAbility(ma, p, perm)
+			if err := g.addManaFromAbility(ma, p, perm); err != nil {
+				return err
+			}
 		}
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,
@@ -4845,17 +5043,46 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return fmt.Errorf("cannot activate ability")
 	}
 
+	actionTargets := aa.Targets()
+	actionEffects := aa.Effects()
+	modeChoice := -1
+	var modalTargets [][]uuid.UUID
+	if modal, ok := aa.(interface{ Modes() []Mode }); ok && len(modal.Modes()) > 0 {
+		modes := modal.Modes()
+		chooser := g.GetPlayer(playerID)
+		if effectChooser, ok := chooser.(EffectModeChooser); ok {
+			modeChoice = effectChooser.ChooseModeWithEffects(modes, perm.Card.Name(), g)
+		} else if chooser != nil {
+			labels := make([]string, len(modes))
+			for i, mode := range modes {
+				labels[i] = mode.Label
+			}
+			modeChoice = chooser.ChooseMode(labels, perm.Card.Name())
+		}
+		if modeChoice < 0 || modeChoice >= len(modes) {
+			modeChoice = 0
+		}
+		mode := modes[modeChoice]
+		actionTargets = mode.Targets
+		actionEffects = mode.Effects
+		targets = g.promptTargetsForList(playerID, perm.Card, actionTargets)
+		modalTargets = make([][]uuid.UUID, len(modes))
+		modalTargets[modeChoice] = append([]uuid.UUID(nil), targets...)
+	}
+
 	// When the caller supplied no targets but the ability's targeting is
 	// forced (e.g. "you", or a single legal target), fill them in here so the
 	// ability doesn't fizzle. The interactive layer relies on this to skip
 	// prompting for targets that offer no real choice.
 	if len(targets) == 0 {
-		if forced := ForcedActivationTargets(playerID, perm.Card, aa.Targets(), g); forced != nil {
+		if forced := ForcedActivationTargets(playerID, perm.Card, actionTargets, g); forced != nil {
 			targets = forced
 		}
 	}
+	targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.currentX)
+	targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
 
-	if err := g.validateActionTargets(playerID, perm.Card, aa.Targets(), targets, "ability"); err != nil {
+	if err := g.validateActionTargets(playerID, perm.Card, actionTargets, targets, g.currentX, "ability"); err != nil {
 		return err
 	}
 
@@ -4871,10 +5098,14 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		}
 	}
 	hint := AutoTapHint{ActivationSource: perm.ID(), ActivationTapsSource: hasTapCost}
-	if err := g.autoTapForManaCosts(playerID, perm.ID(), aa.Costs(), hint); err != nil {
+	preparedCosts := g.prepareActionCosts(aa.Costs(), targets, g.currentX)
+	if !g.canPayActionCostsAtomically(playerID, perm.ID(), preparedCosts) {
+		return fmt.Errorf("cannot pay activation costs")
+	}
+	if err := g.autoTapForManaCosts(playerID, perm.ID(), preparedCosts, hint); err != nil {
 		return err
 	}
-	if err := g.payActionCosts(playerID, perm.ID(), aa.Costs()); err != nil {
+	if err := g.payActionCosts(playerID, perm.ID(), preparedCosts); err != nil {
 		return err
 	}
 
@@ -4883,12 +5114,17 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		saa.MarkActivated()
 	}
 
-	obj := newStackObject(playerID, perm.ID(), nil, aa.Effects(), targets, g.currentX, true)
+	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.currentX, true)
+	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.currentX)
+	obj.TargetSource = perm.Card
+	obj.ModeChoice = modeChoice
+	obj.ModalTargets = modalTargets
 
-	// Modal abilities: choose mode at activation time
-	chooseModeForStackObject(obj, perm.Card.Modes(), g.GetPlayer(playerID), perm.Card.Name())
+	if modeChoice < 0 {
+		chooseModeForStackObject(obj, perm.Card.Modes(), g.GetPlayer(playerID), perm.Card.Name())
+	}
 
-	for _, eff := range aa.Effects() {
+	for _, eff := range actionEffects {
 		if !IsDividedDamageEffect(eff) {
 			continue
 		}

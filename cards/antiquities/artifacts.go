@@ -292,7 +292,7 @@ func registerArtifacts() {
 	Register("Millstone", func() Card {
 		return NewArtifact("Millstone", "{2}",
 			WithActivatedAbility(
-				MillTargetPlayer(Fixed(2)),
+				MillstoneEffect(),
 				GenericCost(2),
 				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
@@ -359,7 +359,7 @@ func registerArtifacts() {
 	Register("Staff of Zegon", func() Card {
 		return NewArtifact("Staff of Zegon", "{4}",
 			WithActivatedAbility(
-				Boost(Fixed(-2), Fixed(0)),
+				StaffOfZegonEffect(),
 				GenericCost(3),
 				WithCost(Tap()),
 				WithTarget(TargetCreature()),
@@ -525,7 +525,7 @@ func registerArtifacts() {
 	Register("Tawnos's Wand", func() Card {
 		return NewArtifact("Tawnos's Wand", "{4}",
 			WithActivatedAbility(
-				GrantKeyword(UnblockableKW),
+				TawnosWandEffect(),
 				GenericCost(2),
 				WithCost(Tap()),
 				WithTarget(TargetCreature(HasPowerLTE(2))),

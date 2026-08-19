@@ -406,7 +406,7 @@ func registerSpells() {
 			NewMultiTargetSpell(
 				[]Target{
 					TargetCreatureYouControl(),
-					TargetCreatureOpponentControls(),
+					TargetUpToNCreaturesOpponentControls(1),
 				},
 				FuncEffect(
 					"get +1/+0 if another instant or sorcery cast this turn, then deal damage equal to power to opponent creature",
@@ -464,7 +464,7 @@ func registerSpells() {
 			NewMultiTargetSpell(
 				[]Target{
 					TargetCreatureYouControl(),
-					TargetCreatureOpponentControls(),
+					TargetUpToNCreaturesOpponentControls(1),
 				},
 				FuncEffect(
 					"+0/+10 until end of turn, then fight opponent creature",

@@ -108,11 +108,13 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		return nil
 	}
 	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   sourceID,
-		Controller: controller,
-		Targets:    targets,
-		Vars:       make(map[string]any),
+		Game:                g,
+		SourceID:            sourceID,
+		Controller:          controller,
+		Targets:             targets,
+		Vars:                make(map[string]any),
+		DamageDistribution:  g.resolvingDamageDistribution,
+		CounterDistribution: g.resolvingCounterDistribution,
 	}
 	err := e.Apply(ctx)
 	if err != nil {

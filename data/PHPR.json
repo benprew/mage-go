@@ -1,0 +1,70 @@
+[
+  {
+    "name": "Arena",
+    "cmc": 0,
+    "type_line": "Land",
+    "oracle_text": "{3}, {T}: Tap target creature you control and target creature of an opponent's choice they control. Those creatures fight each other. (Each deals damage equal to its power to the other.)",
+    "colors": [],
+    "keywords": [
+      "Fight"
+    ],
+    "rarity": "rare",
+    "set": "phpr"
+  },
+  {
+    "name": "Sewers of Estark",
+    "mana_cost": "{2}{B}{B}",
+    "cmc": 4,
+    "type_line": "Instant",
+    "oracle_text": "Choose target creature. If it's attacking, it can't be blocked this turn. If it's blocking, prevent all combat damage that would be dealt this combat by it and each creature it's blocking.",
+    "colors": [
+      "B"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "phpr"
+  },
+  {
+    "name": "Windseeker Centaur",
+    "mana_cost": "{1}{R}{R}",
+    "cmc": 3,
+    "type_line": "Creature — Centaur",
+    "oracle_text": "Vigilance",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "R"
+    ],
+    "keywords": [
+      "Vigilance"
+    ],
+    "rarity": "rare",
+    "set": "phpr"
+  },
+  {
+    "name": "Giant Badger",
+    "mana_cost": "{1}{G}{G}",
+    "cmc": 3,
+    "type_line": "Creature — Badger",
+    "oracle_text": "Whenever this creature blocks, it gets +2/+2 until end of turn.",
+    "power": "2",
+    "toughness": "2",
+    "colors": [
+      "G"
+    ],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "phpr"
+  },
+  {
+    "name": "Mana Crypt",
+    "mana_cost": "{0}",
+    "cmc": 0,
+    "type_line": "Artifact",
+    "oracle_text": "At the beginning of your upkeep, flip a coin. If you lose the flip, this artifact deals 3 damage to you.\n{T}: Add {C}{C}.",
+    "colors": [],
+    "keywords": [],
+    "rarity": "rare",
+    "set": "phpr"
+  }
+]

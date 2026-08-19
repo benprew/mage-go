@@ -129,6 +129,23 @@ func (pa *ProtectionAbility) Blocks(card Card) bool {
 	return pa.Filter.Match(card)
 }
 
+// BlocksInGame evaluates color protection against the source object's current
+// colors. Other protection qualities continue to use their CardFilter.
+func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
+	if card == nil {
+		return false
+	}
+	if len(pa.FromColors) == 0 || g == nil {
+		return pa.Blocks(card)
+	}
+	for _, sourceColor := range g.EffectiveColors(card.ID()) {
+		if slices.Contains(pa.FromColors, sourceColor) {
+			return true
+		}
+	}
+	return false
+}
+
 // StaticAbilityHolder holds continuous effects as a static ability.
 type StaticAbilityHolder struct {
 	BaseAbility

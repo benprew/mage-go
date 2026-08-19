@@ -41,9 +41,11 @@ func TargetBounds(target Target, x int) (minimum, maximum int) {
 }
 
 type countBoundTarget struct {
-	inner Target
-	count int
-	usesX bool
+	inner  Target
+	count  int
+	usesX  bool
+	upToX  bool
+	oneToX bool
 }
 
 func (t *countBoundTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
@@ -55,23 +57,234 @@ func (t *countBoundTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game
 func (t *countBoundTarget) Chosen() []uuid.UUID { return t.inner.Chosen() }
 func (t *countBoundTarget) IsChosen() bool      { return t.inner.IsChosen() }
 func (t *countBoundTarget) Min() int {
+	if t.upToX {
+		return 0
+	}
+	if t.oneToX {
+		return 0
+	}
 	if t.usesX {
 		return 0
 	}
 	return t.count
 }
 func (t *countBoundTarget) Max() int {
-	if t.usesX {
+	if t.usesX || t.upToX || t.oneToX {
 		return 100
 	}
 	return t.count
 }
 func (t *countBoundTarget) Reset() { t.inner.Reset() }
 func (t *countBoundTarget) BoundsForX(x int) (minimum, maximum int) {
+	if t.upToX {
+		return 0, max(x, 0)
+	}
+	if t.oneToX {
+		if x <= 0 {
+			return 0, 0
+		}
+		return 1, x
+	}
 	if t.usesX {
 		return max(x, 0), max(x, 0)
 	}
 	return t.count, t.count
+}
+
+// randomTarget wraps an ordinary targeting requirement. The wrapped target
+// still owns legality and count bounds; this wrapper changes only who selects
+// the identities and, optionally, the count.
+type randomTarget struct {
+	inner       Target
+	randomCount bool
+}
+
+// TargetRandom makes the engine choose the wrapped target's identities
+// uniformly at random without replacement. Fixed counts are preserved. For a
+// variable count, the controller chooses only the number of targets.
+func TargetRandom(inner Target) Target {
+	return &randomTarget{inner: inner}
+}
+
+// TargetRandomCount makes the engine choose both the target count and the
+// distinct target identities uniformly at random from the wrapped target's
+// currently legal bounds.
+func TargetRandomCount(inner Target) Target {
+	return &randomTarget{inner: inner, randomCount: true}
+}
+
+func (t *randomTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	return t.inner.Possible(controller, sourceCard, g)
+}
+func (t *randomTarget) Choose(controller uuid.UUID, sourceCard Card, g *Game, chosen []uuid.UUID) error {
+	return t.inner.Choose(controller, sourceCard, g, chosen)
+}
+func (t *randomTarget) Chosen() []uuid.UUID { return t.inner.Chosen() }
+func (t *randomTarget) IsChosen() bool      { return t.inner.IsChosen() }
+func (t *randomTarget) Min() int            { return t.inner.Min() }
+func (t *randomTarget) Max() int            { return t.inner.Max() }
+func (t *randomTarget) Reset()              { t.inner.Reset() }
+func (t *randomTarget) BoundsForX(x int) (minimum, maximum int) {
+	return TargetBounds(t.inner, x)
+}
+
+func isRandomTarget(t Target) bool {
+	_, ok := t.(*randomTarget)
+	return ok
+}
+
+func uniqueTargetCandidates(ids []uuid.UUID) []uuid.UUID {
+	unique := make([]uuid.UUID, 0, len(ids))
+	seen := make(map[uuid.UUID]bool, len(ids))
+	for _, id := range ids {
+		if id == uuid.Nil || seen[id] {
+			continue
+		}
+		seen[id] = true
+		unique = append(unique, id)
+	}
+	return unique
+}
+
+func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target *randomTarget, x int) []uuid.UUID {
+	if target == nil {
+		return nil
+	}
+	target.Reset()
+	candidates := uniqueTargetCandidates(target.Possible(controller, sourceCard, g))
+	minimum, maximum := TargetBounds(target, x)
+	maximum = min(maximum, len(candidates))
+	if maximum < minimum {
+		return nil
+	}
+	count := minimum
+	if maximum > minimum {
+		if target.randomCount {
+			count += g.RandIntn(maximum - minimum + 1)
+		} else if player := g.GetPlayer(controller); player != nil {
+			count = player.ChooseNumber(minimum, maximum, "choose number of random targets")
+			count = min(max(count, minimum), maximum)
+		}
+	}
+	chosen := make([]uuid.UUID, 0, count)
+	for range count {
+		idx := g.RandIntn(len(candidates))
+		chosen = append(chosen, candidates[idx])
+		candidates = append(candidates[:idx], candidates[idx+1:]...)
+	}
+	_ = target.Choose(controller, sourceCard, g, chosen)
+	return chosen
+}
+
+// acquireRandomTargets replaces random target declarations with engine-chosen
+// identities. Supplied UUIDs correspond only to ordinary declarations; random
+// declarations obtain their variable count from the controller or RNG.
+func (g *Game) acquireRandomTargets(controller uuid.UUID, sourceCard Card, specs []Target, supplied []uuid.UUID, x int) []uuid.UUID {
+	if !slices.ContainsFunc(specs, isRandomTarget) {
+		return supplied
+	}
+	out := make([]uuid.UUID, 0, len(supplied))
+	offset := 0
+	hasOrdinary := false
+	for i, spec := range specs {
+		if random, ok := spec.(*randomTarget); ok {
+			out = append(out, g.chooseRandomTargets(controller, sourceCard, random, x)...)
+			continue
+		}
+		hasOrdinary = true
+		_, maximum := TargetBounds(spec, x)
+		remainingRequired := 0
+		for _, later := range specs[i+1:] {
+			if isRandomTarget(later) {
+				continue
+			}
+			laterMinimum, _ := TargetBounds(later, x)
+			remainingRequired += laterMinimum
+		}
+		available := max(0, len(supplied)-offset-remainingRequired)
+		count := min(maximum, available)
+		out = append(out, supplied[offset:offset+count]...)
+		offset += count
+	}
+	if hasOrdinary {
+		out = append(out, supplied[offset:]...)
+	}
+	return out
+}
+
+type randomActivePlayerExchangePairTarget struct {
+	BaseTarget
+}
+
+// TargetRandomActivePlayerExchangePair chooses two targets for Power
+// Struggle-style triggers. The first is an active-player-controlled artifact,
+// creature, or land with a compatible opposing partner; the second is a
+// uniformly random compatible opposing permanent.
+func TargetRandomActivePlayerExchangePair() Target {
+	return &randomActivePlayerExchangePairTarget{BaseTarget: BaseTarget{min: 0, max: 2}}
+}
+
+func (t *randomActivePlayerExchangePairTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	possible := make([]uuid.UUID, 0)
+	for _, permanent := range g.battlefield {
+		if !isExchangePermanent(permanent) || !permanent.CanBeTargetedBy(sourceCard, controller, g) {
+			continue
+		}
+		possible = append(possible, permanent.ID())
+	}
+	return possible
+}
+
+func (t *randomActivePlayerExchangePairTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+	t.chosen = append([]uuid.UUID(nil), chosen...)
+	return nil
+}
+
+func (t *randomActivePlayerExchangePairTarget) chooseForTrigger(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	t.Reset()
+	active := g.ActivePlayerObj()
+	if active == nil {
+		return nil
+	}
+	activeID := active.PlayerID()
+	targetable := make([]*Permanent, 0)
+	for _, permanent := range g.battlefield {
+		if isExchangePermanent(permanent) && permanent.CanBeTargetedBy(sourceCard, controller, g) {
+			targetable = append(targetable, permanent)
+		}
+	}
+	type pairCandidate struct {
+		first    *Permanent
+		partners []*Permanent
+	}
+	pairs := make([]pairCandidate, 0)
+	for _, first := range targetable {
+		if first.ControllerID() != activeID {
+			continue
+		}
+		candidate := pairCandidate{first: first}
+		for _, second := range targetable {
+			if second.ControllerID() == activeID || !shareExchangePermanentType(first, second) {
+				continue
+			}
+			candidate.partners = append(candidate.partners, second)
+		}
+		if len(candidate.partners) > 0 {
+			pairs = append(pairs, candidate)
+		}
+	}
+	if len(pairs) == 0 {
+		return nil
+	}
+	pair := pairs[g.RandIntn(len(pairs))]
+	second := pair.partners[g.RandIntn(len(pair.partners))]
+	chosen := []uuid.UUID{pair.first.ID(), second.ID()}
+	_ = t.Choose(controller, sourceCard, g, chosen)
+	return chosen
+}
+
+func isExchangePermanent(permanent *Permanent) bool {
+	return permanent != nil && (permanent.HasType(TypeArtifact) || permanent.HasType(TypeCreature) || permanent.HasType(TypeLand))
 }
 
 func (t *BaseTarget) Chosen() []uuid.UUID { return t.chosen }
@@ -115,6 +328,112 @@ func (t *opponentChosenTarget) Max() int                    { return t.inner.Max
 func (t *opponentChosenTarget) Reset()                      { t.inner.Reset() }
 func (t *opponentChosenTarget) OpponentChoosesTarget() bool { return true }
 
+func isOpponentChosenTarget(t Target) bool {
+	opponentChoice, ok := t.(interface{ OpponentChoosesTarget() bool })
+	return ok && opponentChoice.OpponentChoosesTarget()
+}
+
+func hasOpponentChosenTarget(targets []Target) bool {
+	return slices.ContainsFunc(targets, isOpponentChosenTarget)
+}
+
+// acquireOpponentChosenTargets replaces the supplied slice positions owned by
+// TargetOpponentChoice with choices made by the opposing player. Legal
+// candidates are still computed using the action's controller and source, so
+// changing who makes the choice does not change control restrictions,
+// protection, hexproof, or any other targeting requirement.
+func (g *Game) acquireOpponentChosenTargets(controller uuid.UUID, sourceCard Card, specs []Target, supplied []uuid.UUID) []uuid.UUID {
+	if len(specs) == 0 {
+		return supplied
+	}
+	if !hasOpponentChosenTarget(specs) {
+		return supplied
+	}
+
+	out := make([]uuid.UUID, 0, len(supplied))
+	offset := 0
+	for i, spec := range specs {
+		remainingRequired := 0
+		for _, later := range specs[i+1:] {
+			remainingRequired += later.Min()
+		}
+		available := max(0, len(supplied)-offset-remainingRequired)
+		count := min(spec.Max(), available)
+		if count < spec.Min() {
+			count = spec.Min()
+		}
+		consumed := min(count, len(supplied)-offset)
+
+		if !isOpponentChosenTarget(spec) {
+			out = append(out, supplied[offset:offset+consumed]...)
+			offset += consumed
+			continue
+		}
+
+		spec.Reset()
+		possible := spec.Possible(controller, sourceCard, g)
+		chooser := g.GetOpponent(controller)
+		var requested []uuid.UUID
+		if chooser != nil && len(possible) > 0 {
+			requested = chooser.ChooseTargets(possible, spec.Min(), spec.Max(), g)
+		}
+		chosen := make([]uuid.UUID, 0, min(spec.Max(), len(requested)))
+		for _, id := range requested {
+			if len(chosen) == spec.Max() {
+				break
+			}
+			if slices.Contains(possible, id) && !slices.Contains(chosen, id) {
+				chosen = append(chosen, id)
+			}
+		}
+		for _, id := range possible {
+			if len(chosen) >= spec.Min() {
+				break
+			}
+			if !slices.Contains(chosen, id) {
+				chosen = append(chosen, id)
+			}
+		}
+		if len(chosen) == 0 && spec.Min() > 0 {
+			chosen = append(chosen, uuid.Nil)
+		}
+		_ = spec.Choose(controller, sourceCard, g, chosen)
+		out = append(out, chosen...)
+		offset += consumed
+	}
+	out = append(out, supplied[offset:]...)
+	return out
+}
+
+func expandTargetSpecs(specs []Target, chosen []uuid.UUID, x int) []Target {
+	if len(specs) == 0 || len(chosen) == 0 {
+		return nil
+	}
+	expanded := make([]Target, 0, len(chosen))
+	offset := 0
+	for i, spec := range specs {
+		minimum, maximum := TargetBounds(spec, x)
+		remainingRequired := 0
+		for _, later := range specs[i+1:] {
+			laterMinimum, _ := TargetBounds(later, x)
+			remainingRequired += laterMinimum
+		}
+		available := max(0, len(chosen)-offset-remainingRequired)
+		count := min(maximum, available)
+		if count < minimum {
+			count = min(minimum, len(chosen)-offset)
+		}
+		for range count {
+			expanded = append(expanded, spec)
+		}
+		offset += count
+	}
+	for len(expanded) < len(chosen) {
+		expanded = append(expanded, nil)
+	}
+	return expanded
+}
+
 // CreatureTarget targets a creature on the battlefield.
 type CreatureTarget struct {
 	BaseTarget
@@ -142,6 +461,18 @@ func TargetNCreatures(n int, filters ...PermanentFilter) Target {
 // target creatures.
 func TargetXCreatures(filters ...PermanentFilter) Target {
 	return &countBoundTarget{inner: TargetCreature(filters...), usesX: true}
+}
+
+// TargetUpToXCreatures allows from zero through the announced value of X
+// distinct creature targets.
+func TargetUpToXCreatures(filters ...PermanentFilter) Target {
+	return &countBoundTarget{inner: TargetCreature(filters...), upToX: true}
+}
+
+// TargetOneToXCreatures requires between one and the announced value of X
+// distinct creature targets. When X is zero, it requires zero targets.
+func TargetOneToXCreatures(filters ...PermanentFilter) Target {
+	return &countBoundTarget{inner: TargetCreature(filters...), oneToX: true}
 }
 
 // TargetOtherCreature creates a target that selects a creature other than the
@@ -218,6 +549,16 @@ func TargetUpToNCreaturesYouControl(n int, filters ...PermanentFilter) Target {
 		BaseTarget:     BaseTarget{min: 0, max: n},
 		Filters:        filters,
 		controllerOnly: true,
+	}
+}
+
+// TargetUpToNCreaturesOpponentControls creates a target that selects from zero
+// up to n creatures controlled by an opponent.
+func TargetUpToNCreaturesOpponentControls(n int, filters ...PermanentFilter) Target {
+	return &CreatureTarget{
+		BaseTarget:   BaseTarget{min: 0, max: n},
+		Filters:      filters,
+		opponentOnly: true,
 	}
 }
 
@@ -598,6 +939,59 @@ func (t *artifactWithManaValueXTarget) Choose(controller uuid.UUID, _ Card, g *G
 // Convenience wrapper for TargetPermanent(Or(IsArtifact, IsEnchantment)).
 func TargetArtifactOrEnchantment() Target {
 	return TargetPermanent(Or(IsArtifact, IsEnchantment))
+}
+
+// SpellOrPermanentTarget targets either a spell on the stack or a permanent
+// on the battlefield.
+type SpellOrPermanentTarget struct {
+	BaseTarget
+}
+
+type sourceChosenSubtypeCreatureTarget struct {
+	BaseTarget
+}
+
+// TargetCreatureOfSourceChosenSubtype creates a target matching creatures
+// whose subtype equals the source permanent's ChosenSubtype value.
+func TargetCreatureOfSourceChosenSubtype() Target {
+	return &sourceChosenSubtypeCreatureTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
+}
+
+func (t *sourceChosenSubtypeCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	source := g.FindPermanent(sourceCard.ID())
+	if source == nil || source.ChosenSubtype == "" {
+		return nil
+	}
+	possible := make([]uuid.UUID, 0)
+	for _, permanent := range g.AllBattlefield() {
+		if permanent.HasType(TypeCreature) && permanent.HasSubType(source.ChosenSubtype) && permanent.CanBeTargetedBy(sourceCard, controller, g) {
+			possible = append(possible, permanent.ID())
+		}
+	}
+	return possible
+}
+
+func (t *sourceChosenSubtypeCreatureTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+	t.chosen = append([]uuid.UUID(nil), chosen...)
+	return nil
+}
+
+// TargetSpellOrPermanent creates a single target that can select across the
+// stack and battlefield. Activated and triggered abilities are not spells and
+// are not included.
+func TargetSpellOrPermanent() Target {
+	return &SpellOrPermanentTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
+}
+
+func (t *SpellOrPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	permanents := TargetPermanent().Possible(controller, sourceCard, g)
+	spells := TargetSpellOnStack().Possible(controller, sourceCard, g)
+	return uniqueTargetCandidates(append(permanents, spells...))
+}
+
+func (t *SpellOrPermanentTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
 }
 
 // SpellOnStackTarget targets a spell on the stack, optionally filtered by CardFilter predicates.

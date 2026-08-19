@@ -8,16 +8,26 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
-	ID          uuid.UUID
-	Card        Card // non-nil for spells
-	Controller  uuid.UUID
-	SourceID    uuid.UUID // source permanent (for abilities)
-	Effects     []Effect
-	Targets     []uuid.UUID
-	IsAbility   bool
-	XValue      int // value of X for X-cost spells
-	ModeChoice  int // chosen mode for modal spells (0-indexed)
-	EventAmount int // amount from triggering event (e.g. damage dealt)
+	ID   uuid.UUID
+	Card Card // non-nil for spells
+	// ColorOverride is a layer-5 color-changing effect applied to this spell.
+	// It is carried to the permanent the spell becomes, but is not copiable.
+	ColorOverride *[]Color
+	Controller    uuid.UUID
+	SourceID      uuid.UUID // source permanent (for abilities)
+	Effects       []Effect
+	Targets       []uuid.UUID
+	// TargetSpecs is aligned with Targets and preserves each target's
+	// restrictions for the resolution-time legality check (CR 608.2b).
+	TargetSpecs []Target
+	// TargetSource is the card whose spell or ability chose the targets. For
+	// spells this is Card; for activated abilities Card remains nil because no
+	// card object is resolving on the stack.
+	TargetSource Card
+	IsAbility    bool
+	XValue       int // value of X for X-cost spells
+	ModeChoice   int // chosen mode for modal spells (0-indexed)
+	EventAmount  int // amount from triggering event (e.g. damage dealt)
 	// EventSourceID is the SourceID of the event that produced this
 	// triggered ability (e.g. on EvtDamageDealt, the damager's ID).
 	// Read by FuncEffect via Game.EventSourceID() during resolution.
@@ -29,6 +39,11 @@ type StackObject struct {
 	// resolution. Map keys are the target IDs in StackObject.Targets; values
 	// sum to the spell's total damage.
 	DamageDistribution map[uuid.UUID]int
+
+	// CounterDistribution carries per-target counter assignments chosen when
+	// the stack object is created. Assignments remain fixed if targets become
+	// illegal before resolution.
+	CounterDistribution map[uuid.UUID]int
 
 	// IsCopy marks this stack object as a copy of a spell (CR 707.10).
 	// Copies of spells cease to exist when they resolve or are countered —

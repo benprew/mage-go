@@ -507,7 +507,7 @@ func (e *dealDamageEffect) Apply(ctx *EffectContext) error {
 	}
 
 	sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
-	if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+	if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, ctx.Game) {
 		return nil
 	}
 
@@ -551,7 +551,7 @@ func (*dealDividedDamageEffect) Apply(ctx *EffectContext) error {
 			continue
 		}
 		sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
-		if sourceCard != nil && perm.HasProtectionFrom(sourceCard) {
+		if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, ctx.Game) {
 			continue
 		}
 		ctx.Game.DealDamageToPermanent(perm, amt, ctx.SourceID)

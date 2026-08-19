@@ -183,6 +183,37 @@ func (c EventSourceWasOfType) CheckTriggerCond(evt *GameEvent, g GameReader, _, 
 	return view.ViewHasType(c.Type)
 }
 
+// EventSourceWasColor checks the current color of a live event source or its
+// last-known color if it has left the battlefield.
+type EventSourceWasColor struct {
+	Color Color
+}
+
+func (c EventSourceWasColor) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	game, ok := g.(*Game)
+	if !ok {
+		return false
+	}
+	view := game.LookupObject(evt.SourceID)
+	return view != nil && view.ViewHasColor(c.Color)
+}
+
+// EventSourceWasNotColor checks that a live event source, or its last-known
+// battlefield state, did not have the specified color. Missing objects do not
+// match.
+type EventSourceWasNotColor struct {
+	Color Color
+}
+
+func (c EventSourceWasNotColor) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ uuid.UUID) bool {
+	game, ok := g.(*Game)
+	if !ok {
+		return false
+	}
+	view := game.LookupObject(evt.SourceID)
+	return view != nil && !view.ViewHasColor(c.Color)
+}
+
 // EventZoneChangeMatches checks that an EvtZoneChange event's FromZone and
 // ToZone match. Pass ZoneAny in either field to skip that side of the check
 // — useful for "when ~ leaves the battlefield" (To=ZoneAny) and "when ~

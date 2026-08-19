@@ -16,6 +16,7 @@ func init() {
 // in g.CurrentX so the effect can read it via g.XValue().
 type sacrificeArtifactCaptureCMCCost struct{}
 
+// TODO move this into engine
 func (c *sacrificeArtifactCaptureCMCCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.AllBattlefield() {
 		if p.ControllerID() == controller && p.HasType(TypeArtifact) && p.ID() != sourceID {
@@ -25,6 +26,7 @@ func (c *sacrificeArtifactCaptureCMCCost) CanPay(sourceID, controller uuid.UUID,
 	return false
 }
 
+// TODO move this into engine
 func (c *sacrificeArtifactCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
 	for _, p := range g.AllBattlefield() {

@@ -112,7 +112,7 @@ func registerArtifacts() {
 	Register("Aladdin's Ring", func() Card {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
-				DealDamage(Fixed(4)),
+				AladdinsRingEffect(),
 				Tap(),
 				WithCost(ManaCostOf("{8}")),
 				WithTarget(TargetDamageAnyTarget()),
@@ -126,11 +126,7 @@ func registerArtifacts() {
 	Register("Bottle of Suleiman", func() Card {
 		return NewArtifact("Bottle of Suleiman", "{4}",
 			WithActivatedAbility(
-				IfElse("flip coin: 5/5 Djinn or 5 damage",
-					FlipCoinCond{},
-					CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
-					DealDamageToPlayers(Fixed(5), SelectController()),
-				),
+				BottleOfSuleimanEffect(),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeSourceCost()),
 			),
@@ -230,7 +226,7 @@ func registerArtifacts() {
 	Register("Flying Carpet", func() Card {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
-				GrantKeyword(Flying),
+				FlyingCarpetEffect(),
 				Tap(),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),

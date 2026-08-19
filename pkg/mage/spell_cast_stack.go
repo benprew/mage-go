@@ -43,6 +43,8 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		SourceID:          sourceID,
 		Effects:           effects,
 		Targets:           targets,
+		TargetSpecs:       expandTargetSpecs(card.CastTargets(), targets, opts.XValue),
+		TargetSource:      card,
 		XValue:            opts.XValue,
 		ModeChoice:        modeChoice,
 		ModalTargets:      modalTargets,
@@ -85,7 +87,9 @@ func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid
 		}
 		mode := ms.modes[modeChoice]
 		effects = append(effects, mode.Effects...)
-		targets = g.promptTargetsForList(caster.PlayerID(), card, mode.Targets)
+		if len(targets) == 0 {
+			targets = g.promptTargetsForList(caster.PlayerID(), card, mode.Targets)
+		}
 		modalTargets = make([][]uuid.UUID, len(ms.modes))
 		modalTargets[modeChoice] = targets
 		return effects, targets, modalTargets, modeChoice

@@ -28,13 +28,7 @@ func registerSpells() {
 	// equal to its mana value.
 	Register("Crumble", func() Card {
 		return NewInstant("Crumble", "{G}",
-			NewTargetedSpell(TargetArtifact(), Pipeline(
-				"destroy target artifact; controller gains life equal to CMC",
-				EffectProperties{Outcome: OutcomeDetriment},
-				SnapshotPermanent(SelectTarget, "target"),
-				DestroyGatheredNoRegen("target"),
-				GainLifeFromVar("target.controller", "target.cmc"),
-			)),
+			NewTargetedSpell(TargetArtifact(), CrumbleEffect()),
 		)
 	})
 

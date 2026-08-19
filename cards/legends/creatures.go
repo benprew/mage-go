@@ -896,12 +896,7 @@ func registerCreatures() {
 						ce := TemporaryBoost(sourceID, -1, 0)
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
-						// Put -0/-1 counter on target
-						target := g.MutablePermanent(targetID)
-						if target != nil {
-							target.AddCounter(M0M1, 1)
-						}
-						return nil
+						return ApplyEffect(g, LesserWerewolfCounterEffect(), sourceID, controller, []uuid.UUID{targetID})
 					},
 				),
 				ManaCostOf("{B}"),

@@ -110,6 +110,8 @@ type (
 	EventAmountGreaterThan                 = mage.EventAmountGreaterThan
 	EventSourceHasType                     = mage.EventSourceHasType
 	EventSourceWasOfType                   = mage.EventSourceWasOfType
+	EventSourceWasColor                    = mage.EventSourceWasColor
+	EventSourceWasNotColor                 = mage.EventSourceWasNotColor
 	EventZoneChangeMatches                 = mage.EventZoneChangeMatches
 	SourceInOwnGraveyardWithCreaturesAbove = mage.SourceInOwnGraveyardWithCreaturesAbove
 	SourceAttackedOrBlockedThisTurn        = mage.SourceAttackedOrBlockedThisTurn
@@ -128,6 +130,8 @@ type (
 	SourceIsBlockedAttacker                = mage.SourceIsBlockedAttacker
 	SourceInCombat                         = mage.SourceInCombat
 	ManaProduction                         = mage.ManaProduction
+	ManaProductionFunc                     = mage.ManaProductionFunc
+	Mode                                   = mage.Mode
 	NotTriggerCond                         = mage.NotTriggerCond
 	AndTriggerCond                         = mage.AndTriggerCond
 	OrTriggerCond                          = mage.OrTriggerCond
@@ -186,6 +190,7 @@ var (
 	WithYourTurnOnly             = mage.WithYourTurnOnly
 	WithManaAbility              = mage.WithManaAbility
 	WithMultiManaAbility         = mage.WithMultiManaAbility
+	WithDynamicManaAbility       = mage.WithDynamicManaAbility
 	WithAnyColorMana             = mage.WithAnyColorMana
 	WithStepOnly                 = mage.WithStepOnly
 )
@@ -195,6 +200,11 @@ var (
 // =============================================================================
 
 var (
+	NewDynamicManaAbility                      = mage.NewDynamicManaAbility
+	NewModalActivated                          = mage.NewModalActivated
+	NewModalSpell                              = mage.NewModalSpell
+	ChosenColorManaProductions                 = mage.ChosenColorManaProductions
+	ManaProductionsForAbilityInGame            = mage.ManaProductionsForAbilityInGame
 	NewTriggered                               = mage.NewTriggered
 	NewStateTriggered                          = mage.NewStateTriggered
 	BeginningOfUpkeepTrigger                   = mage.BeginningOfUpkeepTrigger
@@ -304,6 +314,47 @@ var (
 // =============================================================================
 
 var (
+	// Reusable classic card effects
+	AladdinsRingEffect                           = mage.AladdinsRingEffect
+	AncestralRecallEffect                        = mage.AncestralRecallEffect
+	BerserkEffect                                = mage.BerserkEffect
+	BloodLustEffect                              = mage.BloodLustEffect
+	BoomerangEffect                              = mage.BoomerangEffect
+	BottleOfSuleimanEffect                       = mage.BottleOfSuleimanEffect
+	CrumbleEffect                                = mage.CrumbleEffect
+	DisenchantEffect                             = mage.DisenchantEffect
+	DisruptingScepterEffect                      = mage.DisruptingScepterEffect
+	FissureEffect                                = mage.FissureEffect
+	FlyingCarpetEffect                           = mage.FlyingCarpetEffect
+	FogEffect                                    = mage.FogEffect
+	GiantGrowthEffect                            = mage.GiantGrowthEffect
+	HealingSalveGainEffect                       = mage.HealingSalveGainEffect
+	HealingSalvePreventionEffect                 = mage.HealingSalvePreventionEffect
+	HelmOfChatzukEffect                          = mage.HelmOfChatzukEffect
+	HurrJackalEffect                             = mage.HurrJackalEffect
+	LaceEffect                                   = mage.LaceEffect
+	LesserWerewolfCounterEffect                  = mage.LesserWerewolfCounterEffect
+	LightningBoltEffect                          = mage.LightningBoltEffect
+	MillstoneEffect                              = mage.MillstoneEffect
+	NevinyrralsDiskEffect                        = mage.NevinyrralsDiskEffect
+	PandorasBoxEffect                            = mage.PandorasBoxEffect
+	ProdigalSorcererEffect                       = mage.ProdigalSorcererEffect
+	SindbadEffect                                = mage.SindbadEffect
+	SorceressQueenEffect                         = mage.SorceressQueenEffect
+	StaffOfZegonEffect                           = mage.StaffOfZegonEffect
+	SwordsToPlowsharesEffect                     = mage.SwordsToPlowsharesEffect
+	TawnosWandEffect                             = mage.TawnosWandEffect
+	TheHiveEffect                                = mage.TheHiveEffect
+	TwiddleEffect                                = mage.TwiddleEffect
+	UnsummonEffect                               = mage.UnsummonEffect
+	ApplyToRandomPermanent                       = mage.ApplyToRandomPermanent
+	ApplyToRandomSpellOrPermanent                = mage.ApplyToRandomSpellOrPermanent
+	ApplyToRandomPlayer                          = mage.ApplyToRandomPlayer
+	ApplyToRandomDamageTarget                    = mage.ApplyToRandomDamageTarget
+	SetSourceChosenColorAtRandom                 = mage.SetSourceChosenColorAtRandom
+	ChangeSourceToRandomColor                    = mage.ChangeSourceToRandomColor
+	ChooseRandomCreatureSubtypeFromTargetLibrary = mage.ChooseRandomCreatureSubtypeFromTargetLibrary
+
 	// Removal / combat
 	DestroyTarget                             = mage.DestroyTarget
 	DestroyTargetPermanent                    = mage.DestroyTargetPermanent
@@ -318,6 +369,7 @@ var (
 	UntapSource                               = mage.UntapSource
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	TapGathered                               = mage.TapGathered
+	FightGathered                             = mage.FightGathered
 	UntapTarget                               = mage.UntapTarget
 	UntapTargetStep                           = mage.UntapTargetStep
 	UntapGathered                             = mage.UntapGathered
@@ -357,6 +409,7 @@ var (
 	RemoveFromCombat                          = mage.RemoveFromCombat
 	RegenerateSource                          = mage.RegenerateSource
 	StunCreature                              = mage.StunCreature
+	SkipNextUntapTarget                       = mage.SkipNextUntapTarget
 	ReplaceKeywordEffect                      = mage.ReplaceKeywordEffect
 	ForEachCombatOpponent                     = mage.ForEachCombatOpponent
 	ForEachPermanent                          = mage.ForEachPermanent
@@ -445,6 +498,7 @@ var (
 	AddAnyMana         = mage.AddAnyMana
 	DiscardCards       = mage.DiscardCards
 	SnapshotPermanent  = mage.SnapshotPermanent
+	SnapshotTarget     = mage.SnapshotTarget
 	SnapshotAttached   = mage.SnapshotAttached
 
 	// Bundled static abilities
@@ -502,6 +556,7 @@ var (
 	HasPowerLTE         = mage.HasPowerLTE
 	IsTapped            = mage.IsTapped
 	IsUntapped          = mage.IsUntapped
+	IsEnchanted         = mage.IsEnchanted
 	Named               = mage.Named
 	IsAttacking         = mage.IsAttacking
 	IsBlocking          = mage.IsBlocking
@@ -533,12 +588,20 @@ var (
 	TargetCreature                          = mage.TargetCreature
 	TargetNCreatures                        = mage.TargetNCreatures
 	TargetXCreatures                        = mage.TargetXCreatures
+	TargetUpToXCreatures                    = mage.TargetUpToXCreatures
+	TargetOneToXCreatures                   = mage.TargetOneToXCreatures
+	TargetRandom                            = mage.TargetRandom
+	TargetRandomCount                       = mage.TargetRandomCount
+	TargetRandomActivePlayerExchangePair    = mage.TargetRandomActivePlayerExchangePair
 	TargetOtherCreature                     = mage.TargetOtherCreature
 	TargetArtifact                          = mage.TargetArtifact
 	TargetDamageAnyTarget                   = mage.TargetDamageAnyTarget
 	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
 	TargetCreatureYouControl                = mage.TargetCreatureYouControl
+	TargetUpToNCreaturesOpponentControls    = mage.TargetUpToNCreaturesOpponentControls
 	TargetPermanent                         = mage.TargetPermanent
+	TargetSpellOrPermanent                  = mage.TargetSpellOrPermanent
+	TargetCreatureOfSourceChosenSubtype     = mage.TargetCreatureOfSourceChosenSubtype
 	TargetXPermanents                       = mage.TargetXPermanents
 	TargetPlayer                            = mage.TargetPlayer
 	TargetCreatureInHand                    = mage.TargetCreatureInHand
@@ -565,27 +628,31 @@ var (
 // =============================================================================
 
 var (
-	SacrificeSourceCost                  = mage.SacrificeSourceCost
-	ManaCostOf                           = mage.ManaCostOf
-	ParseManaCost                        = core.ParseManaCost
-	WithFrom                             = mage.WithFrom
-	WithTo                               = mage.WithTo
-	WithCombatOnly                       = mage.WithCombatOnly
-	WithPlayerOnly                       = mage.WithPlayerOnly
-	GenericCost                          = mage.GenericCost
-	XManaCost                            = mage.XManaCost
-	RemoveCountersCost                   = mage.RemoveCountersCost
-	RequireCountersCost                  = mage.RequireCountersCost
-	SacrificeCreatureCost                = mage.SacrificeCreatureCost
-	DiscardRandomCost                    = mage.DiscardRandomCost
-	ExileSourceCost                      = mage.ExileSourceCost
-	SacrificeArtifactCost                = mage.SacrificeArtifactCost
-	SacrificeMatchingCost                = mage.SacrificeMatchingCost
-	SacrificeMatchingIncludingSourceCost = mage.SacrificeMatchingIncludingSourceCost
-	SacrificeNMatchingCost               = mage.SacrificeNMatchingCost
-	LifePayCost                          = mage.LifePayCost
-	DiscardCost                          = mage.DiscardCost
-	EitherCost                           = mage.EitherCost
+	SacrificeSourceCost                          = mage.SacrificeSourceCost
+	ManaCostOf                                   = mage.ManaCostOf
+	ParseManaCost                                = core.ParseManaCost
+	WithFrom                                     = mage.WithFrom
+	WithTo                                       = mage.WithTo
+	WithCombatOnly                               = mage.WithCombatOnly
+	WithPlayerOnly                               = mage.WithPlayerOnly
+	GenericCost                                  = mage.GenericCost
+	ManaCostPerTarget                            = mage.ManaCostPerTarget
+	RandomCounterDistribution                    = mage.RandomCounterDistribution
+	ExchangeControlOfTargets                     = mage.ExchangeControlOfTargets
+	ExchangeControlOfTargetsSharingPermanentType = mage.ExchangeControlOfTargetsSharingPermanentType
+	XManaCost                                    = mage.XManaCost
+	RemoveCountersCost                           = mage.RemoveCountersCost
+	RequireCountersCost                          = mage.RequireCountersCost
+	SacrificeCreatureCost                        = mage.SacrificeCreatureCost
+	DiscardRandomCost                            = mage.DiscardRandomCost
+	ExileSourceCost                              = mage.ExileSourceCost
+	SacrificeArtifactCost                        = mage.SacrificeArtifactCost
+	SacrificeMatchingCost                        = mage.SacrificeMatchingCost
+	SacrificeMatchingIncludingSourceCost         = mage.SacrificeMatchingIncludingSourceCost
+	SacrificeNMatchingCost                       = mage.SacrificeNMatchingCost
+	LifePayCost                                  = mage.LifePayCost
+	DiscardCost                                  = mage.DiscardCost
+	EitherCost                                   = mage.EitherCost
 )
 
 // =============================================================================
@@ -836,6 +903,7 @@ const (
 	Pin          = core.Pin
 	Carrion      = core.Carrion
 	Vitality     = core.Vitality
+	Husk         = core.Husk
 	NumCounters  = core.NumCounters
 )
 

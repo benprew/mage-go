@@ -52,16 +52,17 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp := &StackObject{
-		ID:          uuid.New(),
-		Card:        copiedCard,
-		Controller:  controller,
-		IsAbility:   original.IsAbility,
-		XValue:      original.XValue,
-		ModeChoice:  original.ModeChoice,
-		EventAmount: original.EventAmount,
-		IsCopy:      true,
-		CastZone:    original.CastZone,
-		CastContext: original.CastContext,
+		ID:           uuid.New(),
+		Card:         copiedCard,
+		Controller:   controller,
+		IsAbility:    original.IsAbility,
+		XValue:       original.XValue,
+		ModeChoice:   original.ModeChoice,
+		EventAmount:  original.EventAmount,
+		IsCopy:       true,
+		CastZone:     original.CastZone,
+		CastContext:  original.CastContext,
+		TargetSource: copiedCard,
 	}
 	if copiedCard != nil {
 		cp.SourceID = copiedCard.ID()
@@ -75,6 +76,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp.Targets = append([]uuid.UUID(nil), original.Targets...)
+	cp.TargetSpecs = append([]Target(nil), original.TargetSpecs...)
 
 	if len(original.ModalTargets) > 0 {
 		cp.ModalTargets = make([][]uuid.UUID, len(original.ModalTargets))
@@ -86,6 +88,10 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	if len(original.DamageDistribution) > 0 {
 		cp.DamageDistribution = make(map[uuid.UUID]int, len(original.DamageDistribution))
 		maps.Copy(cp.DamageDistribution, original.DamageDistribution)
+	}
+	if len(original.CounterDistribution) > 0 {
+		cp.CounterDistribution = make(map[uuid.UUID]int, len(original.CounterDistribution))
+		maps.Copy(cp.CounterDistribution, original.CounterDistribution)
 	}
 
 	if mayChooseNewTargets && copiedCard != nil {
@@ -139,12 +145,20 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 // controller for choices. Used by spell-copy reprompts and by the modal
 // cast-target gather.
 func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard Card, targets []Target) []uuid.UUID {
-	pl := g.GetPlayer(controller)
-	if pl == nil {
+	if g.GetPlayer(controller) == nil {
 		return nil
 	}
 	var out []uuid.UUID
 	for _, t := range targets {
+		if random, ok := t.(*randomTarget); ok {
+			chosen := g.chooseRandomTargets(controller, sourceCard, random, g.currentX)
+			if len(chosen) == 0 && t.Min() > 0 {
+				out = append(out, uuid.Nil)
+			} else {
+				out = append(out, chosen...)
+			}
+			continue
+		}
 		t.Reset()
 		possible := t.Possible(controller, sourceCard, g)
 		if len(possible) == 0 {
@@ -153,7 +167,14 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard Card, targe
 			}
 			continue
 		}
-		chosen := pl.ChooseTargets(possible, t.Min(), t.Max(), g)
+		chooser := g.GetPlayer(controller)
+		if isOpponentChosenTarget(t) {
+			chooser = g.GetOpponent(controller)
+		}
+		var chosen []uuid.UUID
+		if chooser != nil {
+			chosen = chooser.ChooseTargets(possible, t.Min(), t.Max(), g)
+		}
 		if len(chosen) == 0 && t.Min() > 0 {
 			chosen = possible[:1]
 		}

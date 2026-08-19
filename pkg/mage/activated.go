@@ -197,6 +197,7 @@ type ActionDefinition struct {
 	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
 	activationConds     []ActivationCondition
 	aiHints             []AIHint
+	modes               []Mode
 }
 
 // SimpleActivatedAbility is kept as a compatibility name for activated actions.
@@ -228,6 +229,17 @@ func NewActivated(cost Cost, parts ...any) *ActionDefinition {
 	opts[0] = WithCost(cost)
 	opts = append(opts, actionPartsToOptions(parts...)...)
 	return NewAction(ActionActivated, opts...)
+}
+
+// NewModalActivated creates an activated ability whose chosen mode determines
+// its targets and effects. Additional parts may add costs or action options.
+func NewModalActivated(cost Cost, modes []Mode, parts ...any) *ActionDefinition {
+	if len(modes) < 2 {
+		panic("NewModalActivated: a modal ability needs at least two modes (CR 700.2)")
+	}
+	action := NewActivated(cost, parts...)
+	action.modes = append([]Mode(nil), modes...)
+	return action
 }
 
 // NewActivatedAbility creates an activated ability with a primary effect, a primary cost,
@@ -359,6 +371,7 @@ func (a *ActionDefinition) Costs() []Cost      { return a.costs }
 func (a *ActionDefinition) Targets() []Target  { return a.targets }
 func (a *ActionDefinition) SorcerySpeed() bool { return a.timing == TimingSorcery }
 func (a *ActionDefinition) AIHints() []AIHint  { return a.aiHints }
+func (a *ActionDefinition) Modes() []Mode      { return a.modes }
 
 // EquipAbility is an activated ability for equipment (sorcery speed, targets creature you control).
 type EquipAbility struct {

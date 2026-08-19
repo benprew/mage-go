@@ -793,7 +793,7 @@ func TestRiddleOfLightningScry(t *testing.T) {
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains")
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Swamp")
 	g.ChooseScry(gametest.PlayerA, []string{"Forest", "Island", "Plains"}, nil)
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Riddle of Lightning")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Riddle of Lightning", "PlayerB")
 	g.StopAt(1, core.EndStep)
 	g.Execute()
 	g.AssertLibraryTop(gametest.PlayerA, "Swamp", "Forest", "Island", "Plains")

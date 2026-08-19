@@ -234,24 +234,7 @@ func registerCreatures() {
 		return NewCreature("Sindbad", "{1}{U}", 1, 1,
 			WithSubTypes("Human"),
 			WithActivatedAbility(
-				// TODO: convert to pipeline — needs draw-and-conditional-discard primitive
-				FuncEffect("draw and reveal; discard if not land",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						card, ok := p.DrawCard()
-						if !ok {
-							return nil
-						}
-						if !card.HasType(TypeLand) {
-							p.RemoveFromHand(card.ID())
-							p.AddToGraveyard(card)
-						}
-						return nil
-					}),
+				SindbadEffect(),
 				Tap(),
 			),
 		)
@@ -432,7 +415,7 @@ func registerCreatures() {
 		return NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard", "Sorcerer"),
 			WithActivatedAbility(
-				SetPTUntilEndOfTurn(0, 2, SelectTarget),
+				SorceressQueenEffect(),
 				Tap(),
 				WithTarget(TargetOtherCreature()),
 			),
@@ -518,7 +501,7 @@ func registerCreatures() {
 		return NewCreature("Hurr Jackal", "{R}", 1, 1,
 			WithSubTypes("Jackal"),
 			WithActivatedAbility(
-				GrantKeyword(CantRegenerate),
+				HurrJackalEffect(),
 				Tap(),
 				WithTarget(TargetCreature()),
 			),

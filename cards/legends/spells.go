@@ -125,30 +125,7 @@ func registerSpells() {
 	// TODO: convert to pipeline — needs conditional TemporaryBoost based on current toughness
 	Register("Blood Lust", func() Card {
 		return NewInstant("Blood Lust", "{1}{R}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"target creature gets +4/-4 or +4/-(toughness-1)",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					toughness := perm.CurrentToughness(g)
-					var tMod int
-					if toughness >= 5 {
-						tMod = -4
-					} else {
-						tMod = -(toughness - 1)
-					}
-					ce := TemporaryBoost(perm.ID(), 4, tMod)
-					ce.SetSourceID(sourceID)
-					g.AddContinuousEffect(ce)
-					return nil
-				},
-			)),
+			NewTargetedSpell(TargetCreature(), BloodLustEffect()),
 		)
 	})
 
@@ -157,7 +134,7 @@ func registerSpells() {
 	// Return target permanent to its owner's hand.
 	Register("Boomerang", func() Card {
 		return NewInstant("Boomerang", "{U}{U}",
-			NewTargetedSpell(TargetPermanent(), ReturnToHandTarget()),
+			NewTargetedSpell(TargetPermanent(), BoomerangEffect()),
 		)
 	})
 

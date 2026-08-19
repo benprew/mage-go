@@ -338,18 +338,18 @@ func (e *extraTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// changeColorEffect changes a target permanent's color.
+// changeColorEffect changes a target spell or permanent's color.
 type changeColorEffect struct {
 	color Color
 }
 
-// ChangeColorEffect creates an effect that changes a target permanent's color.
+// ChangeColorEffect creates an effect that changes a target spell or permanent's color.
 func ChangeColorEffect(color Color) Effect {
 	return &changeColorEffect{color: color}
 }
 
 func (e *changeColorEffect) Text() string {
-	return fmt.Sprintf("Target permanent becomes %s", e.color)
+	return fmt.Sprintf("Target spell or permanent becomes %s", e.color)
 }
 func (e *changeColorEffect) Properties() EffectProperties { return EffectProperties{} }
 
@@ -554,14 +554,7 @@ func (e *changeColorEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
 	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	// Register as a continuous effect so the color change persists
-	ce := ColorOverride(perm.ID(), e.color)
-	ce.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(ce)
+	ctx.Game.ChangeObjectColor(ctx.Targets[0], e.color)
 	return nil
 }
 

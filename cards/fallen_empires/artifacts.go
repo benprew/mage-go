@@ -35,25 +35,18 @@ func registerArtifacts() {
 	// • You gain 2 life.
 	// • Prevent the next 2 damage that would be dealt to any target this turn.
 	Register("Balm of Restoration", withExpansion(func() Card {
-		c := NewArtifact("Balm of Restoration", "{2}",
-			WithActivatedAbility(
-				Pipeline("gain 2 life or prevent 2 damage",
-					EffectProperties{Outcome: OutcomeBenefit},
-					ModalEffect("choose one",
-						GainLife(2),
-						PreventDamageToTarget(Fixed(2)),
-					),
-				),
-				GenericCost(1),
-				WithCost(Tap()),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetDamageAnyTarget()),
-			),
-		)
-		c.SetModes([]string{
-			"You gain 2 life",
-			"Prevent the next 2 damage that would be dealt to any target this turn",
-		})
+		c := NewArtifact("Balm of Restoration", "{2}")
+		c.AddAbility(NewModalActivated(GenericCost(1), []Mode{
+			{
+				Label:   "You gain 2 life",
+				Effects: []Effect{GainLife(2)},
+			},
+			{
+				Label:   "Prevent the next 2 damage that would be dealt to any target this turn",
+				Targets: []Target{TargetDamageAnyTarget()},
+				Effects: []Effect{PreventDamageToTarget(Fixed(2))},
+			},
+		}, WithCost(Tap()), WithCost(SacrificeSourceCost())))
 		return c
 	}))
 

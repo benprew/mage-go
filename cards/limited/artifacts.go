@@ -111,7 +111,7 @@ func registerArtifacts() {
 	Register("Disrupting Scepter", func() Card {
 		return NewArtifact("Disrupting Scepter", "{3}",
 			WithActivatedAbility(
-				DiscardCards(Fixed(1)),
+				DisruptingScepterEffect(),
 				GenericCost(3),
 				WithCost(Tap()),
 				WithTarget(TargetPlayer()),
@@ -148,11 +148,7 @@ func registerArtifacts() {
 		return NewArtifact("The Hive", "{5}",
 			// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp.
 			WithActivatedAbility(
-				CreateToken("Wasp", 1, 1,
-					[]CardType{TypeArtifact, TypeCreature},
-					[]string{"Insect"},
-					Flying,
-				),
+				TheHiveEffect(),
 				GenericCost(5),
 				WithCost(Tap()),
 			),
@@ -328,7 +324,7 @@ func registerArtifacts() {
 		return NewArtifact("Helm of Chatzuk", "{1}",
 			// {1}, {T}: Target creature gains banding until end of turn.
 			WithActivatedAbility(
-				GrantKeyword(Banding),
+				HelmOfChatzukEffect(),
 				GenericCost(1),
 				WithCost(Tap()),
 				WithTarget(TargetCreature()),
@@ -400,11 +396,7 @@ func registerArtifacts() {
 			WithKeyword(EntersTapped),
 			// {1}, {T}: Destroy all artifacts, creatures, and enchantments
 			WithActivatedAbility(
-				CompositeEffects("destroy all artifacts, creatures, and enchantments",
-					DestroyAllCreatures(),
-					DestroyAllEnchantments(),
-					DestroyAllMatching(IsArtifact, "destroy all artifacts"),
-				),
+				NevinyrralsDiskEffect(),
 				GenericCost(1),
 				WithCost(Tap()),
 			),

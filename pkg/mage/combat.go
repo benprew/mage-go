@@ -271,7 +271,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	}
 	// Defender creatures can't attack (checked elsewhere), but they CAN block.
 	// Protection: creature with protection from X can't be blocked by X
-	if attacker.HasProtectionFrom(blocker.Card) {
+	if attacker.HasProtectionFromInGame(blocker.Card, g) {
 		return false
 	}
 	// Flying: can only be blocked by creatures with flying or reach

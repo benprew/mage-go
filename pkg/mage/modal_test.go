@@ -249,3 +249,71 @@ func TestNewModalSpell_StackObjectRecordsMode(t *testing.T) {
 		t.Errorf("ModalTargets: got %v, want mode 1 populated", top.ModalTargets)
 	}
 }
+
+func TestNewModalSpell_HonorsSuppliedTargetForChosenMode(t *testing.T) {
+	g, a, b := newModalGame()
+	spell := NewInstant("Modal Target Test", "{0}", nil)
+	spell.AddAbility(NewModalSpell([]Mode{
+		{Label: "target player", Targets: []Target{TargetPlayer()}, Effects: []Effect{GainLifeTarget(Fixed(1))}},
+		{Label: "no target", Effects: []Effect{GainLife(1)}},
+	}))
+	spell.SetOwner(a.PlayerID())
+	a.AddToHand(spell)
+	a.modes = []int{0}
+	a.targets = [][]uuid.UUID{{a.PlayerID()}}
+
+	if err := g.CastSpellByName(a.PlayerID(), spell.Name(), []uuid.UUID{b.PlayerID()}); err != nil {
+		t.Fatalf("CastSpellByName: %v", err)
+	}
+	top := g.Stack().Peek()
+	if top == nil || len(top.Targets) != 1 || top.Targets[0] != b.PlayerID() {
+		t.Fatalf("targets = %v, want supplied target B", top.Targets)
+	}
+}
+
+func TestNewModalActivated_TargetsOnlyChosenMode(t *testing.T) {
+	t.Run("targetless mode", func(t *testing.T) {
+		g, a, _ := newModalGame()
+		source := NewArtifact("Modal Source", "{0}")
+		source.AddAbility(NewModalActivated(GenericCost(0), []Mode{
+			{Label: "gain life", Effects: []Effect{GainLife(2)}},
+			{Label: "damage target", Targets: []Target{TargetDamageAnyTarget()}, Effects: []Effect{DealDamage(Fixed(1))}},
+		}))
+		source.SetOwner(a.PlayerID())
+		perm := g.PutOnBattlefield(source, a.PlayerID())
+		a.modes = []int{0}
+
+		if err := g.ActivateAbilityByIndex(a.PlayerID(), perm.ID(), 0, nil); err != nil {
+			t.Fatalf("ActivateAbilityByIndex: %v", err)
+		}
+		g.ResolveTopOfStack()
+		if a.Life() != 22 {
+			t.Fatalf("life = %d, want 22", a.Life())
+		}
+	})
+
+	t.Run("targeted mode", func(t *testing.T) {
+		g, a, b := newModalGame()
+		source := NewArtifact("Modal Source", "{0}")
+		source.AddAbility(NewModalActivated(GenericCost(0), []Mode{
+			{Label: "gain life", Effects: []Effect{GainLife(2)}},
+			{Label: "damage target", Targets: []Target{TargetDamageAnyTarget()}, Effects: []Effect{DealDamage(Fixed(1))}},
+		}))
+		source.SetOwner(a.PlayerID())
+		perm := g.PutOnBattlefield(source, a.PlayerID())
+		a.modes = []int{1}
+		a.targets = [][]uuid.UUID{{b.PlayerID()}}
+
+		if err := g.ActivateAbilityByIndex(a.PlayerID(), perm.ID(), 0, nil); err != nil {
+			t.Fatalf("ActivateAbilityByIndex: %v", err)
+		}
+		top := g.Stack().Peek()
+		if top == nil || top.ModeChoice != 1 || len(top.Targets) != 1 || top.Targets[0] != b.PlayerID() {
+			t.Fatalf("stack object = %#v, want mode 1 targeting B", top)
+		}
+		g.ResolveTopOfStack()
+		if b.Life() != 19 {
+			t.Fatalf("opponent life = %d, want 19", b.Life())
+		}
+	})
+}

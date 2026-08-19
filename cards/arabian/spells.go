@@ -12,6 +12,7 @@ import (
 // in g.CurrentX so the effect can read it via g.XValue().
 type sacrificeCreatureCaptureCMCCost struct{}
 
+// TODO move this out of Arabian and into the engine
 func (c *sacrificeCreatureCaptureCMCCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, p := range g.AllBattlefield() {
 		if p.ControllerID() == controller && p.HasType(TypeCreature) && p.ID() != sourceID {
@@ -21,6 +22,7 @@ func (c *sacrificeCreatureCaptureCMCCost) CanPay(sourceID, controller uuid.UUID,
 	return false
 }
 
+// TODO move this out of Arabian and into the engine
 func (c *sacrificeCreatureCaptureCMCCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
 	for _, p := range g.AllBattlefield() {

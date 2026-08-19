@@ -143,6 +143,12 @@ func (e *controlContinuousEffect) cloneEffect() ContinuousEffect {
 
 // AddControlEffect registers and immediately reconciles a Layer 2 control effect.
 func (g *Game) AddControlEffect(spec ControlEffectSpec) {
+	e := newControlContinuousEffect(spec)
+	g.effects.Add(e)
+	g.effects.Apply(g)
+}
+
+func newControlContinuousEffect(spec ControlEffectSpec) *controlContinuousEffect {
 	e := &controlContinuousEffect{
 		targetID:      spec.TargetID,
 		controllerID:  spec.ControllerID,
@@ -151,8 +157,81 @@ func (g *Game) AddControlEffect(spec ControlEffectSpec) {
 		tapMaintained: spec.TapMaintained,
 	}
 	e.SetSourceID(spec.SourceID)
-	g.effects.Add(e)
+	return e
+}
+
+// ExchangeControl atomically creates simultaneous indefinite Layer 2 effects
+// that exchange the current controllers of two battlefield permanents.
+func (g *Game) ExchangeControl(firstID, secondID, sourceID uuid.UUID) bool {
+	first := g.FindPermanent(firstID)
+	second := g.FindPermanent(secondID)
+	if first == nil || second == nil || firstID == secondID {
+		return false
+	}
+	firstController := first.ControllerID()
+	secondController := second.ControllerID()
+	if firstController == secondController || first.HasAttr(AttrCantChangeControl) || second.HasAttr(AttrCantChangeControl) {
+		return false
+	}
+	g.effects.Add(newControlContinuousEffect(ControlEffectSpec{
+		SourceID: sourceID, TargetID: firstID, ControllerID: secondController, Duration: Indefinite,
+	}))
+	g.effects.Add(newControlContinuousEffect(ControlEffectSpec{
+		SourceID: sourceID, TargetID: secondID, ControllerID: firstController, Duration: Indefinite,
+	}))
 	g.effects.Apply(g)
+	return true
+}
+
+type exchangeControlTargetsEffect struct {
+	requireSharedPermanentType bool
+}
+
+// ExchangeControlOfTargets exchanges control of the first two targets if the
+// entire exchange remains possible as the effect resolves.
+func ExchangeControlOfTargets() Effect {
+	return &exchangeControlTargetsEffect{}
+}
+
+// ExchangeControlOfTargetsSharingPermanentType additionally requires both
+// targets to still share artifact, creature, or land type at resolution.
+func ExchangeControlOfTargetsSharingPermanentType() Effect {
+	return &exchangeControlTargetsEffect{requireSharedPermanentType: true}
+}
+
+func (*exchangeControlTargetsEffect) Text() string {
+	return "exchange control of two target permanents"
+}
+func (*exchangeControlTargetsEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeUnknown}
+}
+
+func (e *exchangeControlTargetsEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.Targets) < 2 || ctx.Targets[0] == uuid.Nil || ctx.Targets[1] == uuid.Nil {
+		return nil
+	}
+	first := ctx.Game.FindPermanent(ctx.Targets[0])
+	second := ctx.Game.FindPermanent(ctx.Targets[1])
+	if first == nil || second == nil {
+		return nil
+	}
+	if e.requireSharedPermanentType && !shareExchangePermanentType(first, second) {
+		return nil
+	}
+	ctx.Game.ExchangeControl(first.ID(), second.ID(), ctx.SourceID)
+	return nil
+}
+
+func shareExchangePermanentType(first, second *Permanent) bool {
+	if first == nil || second == nil {
+		return false
+	}
+	for _, cardType := range []CardType{TypeArtifact, TypeCreature, TypeLand} {
+		if first.HasType(cardType) && second.HasType(cardType) {
+			return true
+		}
+	}
+	return false
 }
 
 // GainControlEffect creates continuous control effects when it resolves.

@@ -17,12 +17,19 @@ type ManaProduction struct {
 	AnyCombination bool
 }
 
+// ManaProductionFunc derives a mana ability's current production from its
+// source permanent. Implementations must be pure queries: solvers may call the
+// function more than once without activating the ability.
+type ManaProductionFunc func(g GameReader, sourceID uuid.UUID) []ManaProduction
+
 // ManaAbility is a mana ability that taps to add mana.
 // Productions defines what mana is produced. Each entry is a color+amount pair.
 // Use AnyColor as the color to let the player choose when activated.
 type ManaAbility struct {
 	BaseAbility
-	Productions []ManaProduction
+	Productions        []ManaProduction
+	dynamicProductions ManaProductionFunc
+	postProduction     []Effect
 }
 
 // ProducedAmount returns the total mana this ability produces when activated.
@@ -60,11 +67,35 @@ func (ma *ManaAbility) PrimaryColor() Color {
 // as a tap-for-mana source. It recognizes both ManaAbility and activated
 // abilities whose only cost is tapping and whose effects only add mana.
 func ManaProductionsForAbility(a Ability) []ManaProduction {
-	productions := abilityManaProductions(UnwrapAbility(a))
+	productions := abilityManaProductions(UnwrapAbility(a), nil, uuid.Nil)
 	if productions == nil {
 		return nil
 	}
 	return append([]ManaProduction(nil), productions...)
+}
+
+// ManaProductionsForAbilityInGame returns the mana an ability currently
+// produces for sourceID. Unlike ManaProductionsForAbility, it resolves dynamic
+// production callbacks against live game state.
+func ManaProductionsForAbilityInGame(a Ability, g GameReader, sourceID uuid.UUID) []ManaProduction {
+	productions := abilityManaProductions(UnwrapAbility(a), g, sourceID)
+	if productions == nil {
+		return nil
+	}
+	return append([]ManaProduction(nil), productions...)
+}
+
+// ChosenColorManaProductions produces one mana of the source permanent's
+// current ChosenColor. An unset or nonconcrete choice produces nothing.
+func ChosenColorManaProductions(g GameReader, sourceID uuid.UUID) []ManaProduction {
+	if g == nil {
+		return nil
+	}
+	perm := g.FindPermanent(sourceID)
+	if perm == nil || perm.ChosenColor == Colorless || perm.ChosenColor == AnyColor {
+		return nil
+	}
+	return []ManaProduction{{Color: perm.ChosenColor, Amount: 1}}
 }
 
 // NewManaAbility creates a tap-for-mana ability that produces one mana of the given color.
@@ -91,6 +122,32 @@ func NewMultiManaAbility(productions ...ManaProduction) *ManaAbility {
 		},
 		Productions: productions,
 	}
+}
+
+// NewDynamicManaAbility creates a tap mana ability whose production is derived
+// from its source permanent at query and activation time. afterProduction
+// effects run immediately, in order, after mana is added and without using the
+// stack.
+func NewDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Effect) *ManaAbility {
+	return &ManaAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityMana,
+		},
+		dynamicProductions: productions,
+		postProduction:     append([]Effect(nil), afterProduction...),
+	}
+}
+
+func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []ManaProduction {
+	if ma.dynamicProductions != nil {
+		productions := ma.dynamicProductions(g, sourceID)
+		if productions == nil {
+			return []ManaProduction{}
+		}
+		return productions
+	}
+	return ma.Productions
 }
 
 // ManaBonusAbility grants bonus mana when matching permanents are tapped for mana.

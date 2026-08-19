@@ -20,6 +20,10 @@ type EffectContext struct {
 	// DamageDistribution is set when the resolving stack object carries a
 	// pre-chosen damage distribution (divided-damage spells/abilities).
 	DamageDistribution map[uuid.UUID]int
+
+	// CounterDistribution is set when the resolving stack object carries a
+	// cast-time random counter assignment.
+	CounterDistribution map[uuid.UUID]int
 }
 
 // SetInt stores an integer variable in the context.

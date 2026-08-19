@@ -52,13 +52,21 @@ func (e *PipelineData) Apply(ctx *EffectContext) error {
 //	"{name}.cmc"        → int (converted mana cost)
 //	"{name}.name"       → string
 type SnapshotPermanentData struct {
-	Selector PermanentSelector
-	StoreAs  string
+	Selector    PermanentSelector
+	TargetIndex int
+	StoreAs     string
 }
 
 // SnapshotPermanent creates a pipeline step that reads a permanent's properties.
 func SnapshotPermanent(sel PermanentSelector, storeAs string) Effect {
 	return &SnapshotPermanentData{Selector: sel, StoreAs: storeAs}
+}
+
+// SnapshotTarget creates a pipeline step that stores the battlefield
+// permanent at the given target index and its current properties. A missing or
+// illegal target is recorded as "{name}.missing" and leaves no stored ID.
+func SnapshotTarget(index int, storeAs string) Effect {
+	return &SnapshotPermanentData{Selector: SelectTarget, TargetIndex: index, StoreAs: storeAs}
 }
 
 func (e *SnapshotPermanentData) Text() string                 { return "" }
@@ -69,10 +77,11 @@ func (e *SnapshotPermanentData) Apply(ctx *EffectContext) error {
 	if e.Selector == SelectSource {
 		perm = ctx.Game.FindPermanent(ctx.SourceID)
 	} else {
-		if len(ctx.Targets) == 0 {
+		if e.TargetIndex < 0 || e.TargetIndex >= len(ctx.Targets) {
+			ctx.SetBool(e.StoreAs+".missing", true)
 			return nil
 		}
-		perm = ctx.Game.FindPermanent(ctx.Targets[0])
+		perm = ctx.Game.FindPermanent(ctx.Targets[e.TargetIndex])
 	}
 	if perm == nil {
 		ctx.SetBool(e.StoreAs+".missing", true)

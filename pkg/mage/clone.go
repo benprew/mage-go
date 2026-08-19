@@ -29,6 +29,7 @@ func (g *Game) Clone() *Game {
 		currentEventAmount:        g.currentEventAmount,
 		currentEventSourceID:      g.currentEventSourceID,
 		resolvingCard:             g.resolvingCard, // Card ref shared
+		resolvingColorSourceID:    g.resolvingColorSourceID,
 		landsPlayedThisTurn:       g.landsPlayedThisTurn,
 		creatureDeathsThisTurn:    g.creatureDeathsThisTurn,
 		cleanupPriorityRounds:     g.cleanupPriorityRounds,
@@ -36,11 +37,16 @@ func (g *Game) Clone() *Game {
 		resolvingCombatDamage:     g.resolvingCombatDamage,
 		cardsPutIntoExileThisTurn: g.cardsPutIntoExileThisTurn,
 	}
+	if g.resolvingColorOverride != nil {
+		colors := append([]Color(nil), (*g.resolvingColorOverride)...)
+		c.resolvingColorOverride = &colors
+	}
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
 	}
 	c.anteResult = append([]OwnershipChange(nil), g.anteResult...)
+	c.skipNextUntap = cloneUUIDMap(g.skipNextUntap)
 
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
 	c.players = make([]Player, len(g.players))
@@ -129,6 +135,11 @@ func (g *Game) Clone() *Game {
 	if len(g.coinFlipResults) > 0 {
 		c.coinFlipResults = make([]bool, len(g.coinFlipResults))
 		copy(c.coinFlipResults, g.coinFlipResults)
+	}
+	// Deep copy scripted random results so search branches consume them
+	// independently.
+	if len(g.randomResults) > 0 {
+		c.randomResults = append([]int(nil), g.randomResults...)
 	}
 
 	// Deep copy UUID-keyed maps.
@@ -262,6 +273,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
 		Card:                       src.Card, // shared
+		incarnationID:              src.incarnationID,
 		computedController:         src.computedController,
 		baseController:             src.baseController,
 		Tapped:                     src.Tapped,
@@ -347,6 +359,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		Card:          obj.Card, // shared Card ref
 		Controller:    obj.Controller,
 		SourceID:      obj.SourceID,
+		TargetSource:  obj.TargetSource,
 		IsAbility:     obj.IsAbility,
 		XValue:        obj.XValue,
 		ModeChoice:    obj.ModeChoice,
@@ -355,6 +368,10 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		IsCopy:        obj.IsCopy,
 		CastZone:      obj.CastZone,
 		CastContext:   obj.CastContext,
+	}
+	if obj.ColorOverride != nil {
+		colors := append([]Color(nil), (*obj.ColorOverride)...)
+		clone.ColorOverride = &colors
 	}
 	if len(obj.ModalTargets) > 0 {
 		clone.ModalTargets = make([][]uuid.UUID, len(obj.ModalTargets))
@@ -376,9 +393,16 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		clone.Targets = make([]uuid.UUID, len(obj.Targets))
 		copy(clone.Targets, obj.Targets)
 	}
+	if len(obj.TargetSpecs) > 0 {
+		clone.TargetSpecs = append([]Target(nil), obj.TargetSpecs...)
+	}
 	if len(obj.DamageDistribution) > 0 {
 		clone.DamageDistribution = make(map[uuid.UUID]int, len(obj.DamageDistribution))
 		maps.Copy(clone.DamageDistribution, obj.DamageDistribution)
+	}
+	if len(obj.CounterDistribution) > 0 {
+		clone.CounterDistribution = make(map[uuid.UUID]int, len(obj.CounterDistribution))
+		maps.Copy(clone.CounterDistribution, obj.CounterDistribution)
 	}
 	if len(obj.TargetZones) > 0 {
 		clone.TargetZones = make(map[uuid.UUID]Zone, len(obj.TargetZones))

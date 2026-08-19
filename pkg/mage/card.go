@@ -332,6 +332,15 @@ func WithMultiManaAbility(productions ...ManaProduction) CardOption {
 	return func(c *BaseCard) { c.AddAbility(NewMultiManaAbility(productions...)) }
 }
 
+// WithDynamicManaAbility adds a mana ability whose production is derived from
+// the source permanent and whose follow-up effects run immediately after mana
+// is produced.
+func WithDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Effect) CardOption {
+	return func(c *BaseCard) {
+		c.AddAbility(NewDynamicManaAbility(productions, afterProduction...))
+	}
+}
+
 // WithAnyColorMana adds an any-color mana ability.
 func WithAnyColorMana() CardOption {
 	return func(c *BaseCard) { c.AddAbility(NewManaAbility(AnyColor)) }
@@ -544,6 +553,7 @@ func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 // Permanent represents a card on the battlefield.
 type Permanent struct {
 	Card               Card
+	incarnationID      uuid.UUID
 	computedController uuid.UUID
 	baseController     uuid.UUID
 	Tapped             bool
@@ -611,6 +621,7 @@ type Permanent struct {
 func NewPermanent(card Card, controller uuid.UUID) *Permanent {
 	p := &Permanent{
 		Card:               card,
+		incarnationID:      uuid.New(),
 		computedController: controller,
 		baseController:     controller,
 		IsToken:            card.IsToken(),
@@ -774,6 +785,20 @@ func (p *Permanent) HasProtectionFrom(card Card) bool {
 	return false
 }
 
+// HasProtectionFromInGame checks protection against the source's current
+// characteristics, including color-changing effects on spells and permanents.
+func (p *Permanent) HasProtectionFromInGame(card Card, g *Game) bool {
+	if p.FaceDown {
+		return false
+	}
+	for _, a := range p.RuntimeAbilities {
+		if pa, ok := a.(*ProtectionAbility); ok && pa.BlocksInGame(card, g) {
+			return true
+		}
+	}
+	return false
+}
+
 // CanBeTargetedBy checks hexproof, shroud, and protection.
 func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *Game) bool {
 	if p.HasKeyword(Shroud) {
@@ -782,7 +807,7 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 	if p.HasKeyword(Hexproof) && p.ControllerID() != sourceController {
 		return false
 	}
-	if source != nil && p.HasProtectionFrom(source) {
+	if source != nil && p.HasProtectionFromInGame(source, g) {
 		return false
 	}
 	// "Can't be enchanted" — block enchantment spells from targeting this permanent.

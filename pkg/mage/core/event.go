@@ -39,7 +39,7 @@ const (
 	EvtCreatureBlocks     // fired once per blocking creature per combat (CR 509.3a)
 	EvtEntersAttacking    // fired when a creature is put onto the battlefield attacking (CR 508.4)
 	EvtEntersBlocking     // fired when a creature is put onto the battlefield blocking (CR 509.4)
-	EvtFight              // fired once per fight resolution (CR 701.13). SourceID = first fighter, TargetID = second fighter, PlayerID = controller of the fight effect (zero if unknown). Used by "whenever ~ fights" triggers like Neyith of the Dire Hunt.
+	EvtFight              // fired once per fight resolution (CR 701.14). SourceID = first fighter, TargetID = second fighter, PlayerID = controller of the fight effect (zero if unknown). Used by "whenever ~ fights" triggers like Neyith of the Dire Hunt.
 	EvtCardsLeftGraveyard // fired once per "burst" when one or more cards leave a player's graveyard for any other zone (exile via cost, return-to-hand, reanimate, etc.). PlayerID = graveyard owner whose cards left, Amount = number of cards that left in this burst. Used by "whenever one or more cards leave your graveyard" triggers (CR 603.10 — multiple cards moving from one zone to another via the same effect form a single zone-change "event group").
 )
 

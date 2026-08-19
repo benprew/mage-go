@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -54,6 +56,7 @@ type LKIView interface {
 	ViewHasType(CardType) bool
 	ViewHasSubType(string) bool
 	ViewHasKeyword(Keyword) bool
+	ViewHasColor(Color) bool
 	ViewPower() int
 	ViewToughness() int
 	ViewIsToken() bool
@@ -113,8 +116,11 @@ func (v livePermanentView) ViewOwner() uuid.UUID {
 func (v livePermanentView) ViewHasType(t CardType) bool   { return v.p.HasType(t) }
 func (v livePermanentView) ViewHasSubType(s string) bool  { return v.p.HasSubType(s) }
 func (v livePermanentView) ViewHasKeyword(k Keyword) bool { return v.p.HasKeyword(k) }
-func (v livePermanentView) ViewPower() int                { return v.p.CurrentPower(v.g) }
-func (v livePermanentView) ViewToughness() int            { return v.p.CurrentToughness(v.g) }
+func (v livePermanentView) ViewHasColor(c Color) bool {
+	return slices.Contains(v.p.Colors(), c)
+}
+func (v livePermanentView) ViewPower() int     { return v.p.CurrentPower(v.g) }
+func (v livePermanentView) ViewToughness() int { return v.p.CurrentToughness(v.g) }
 func (v livePermanentView) ViewIsToken() bool {
 	return v.p.IsToken
 }
@@ -194,6 +200,9 @@ func (l *PermanentLKI) ViewHasKeyword(k Keyword) bool {
 		return false
 	}
 	return l.Snapshot.HasKeyword(k)
+}
+func (l *PermanentLKI) ViewHasColor(c Color) bool {
+	return l.Snapshot != nil && slices.Contains(l.Snapshot.Colors(), c)
 }
 func (l *PermanentLKI) ViewPower() int     { return l.Power }
 func (l *PermanentLKI) ViewToughness() int { return l.Toughness }
