@@ -99,6 +99,32 @@ func IsKeywordAttr(a Attr) bool {
 	return a >= Flying
 }
 
+// IsAbilityAttr reports whether an attribute represents an ability that can be
+// added or removed in layer 6. Type identity, combat capability, power/toughness
+// capability, and summoning sickness are not abilities.
+func IsAbilityAttr(a Attr) bool {
+	if IsKeywordAttr(a) {
+		return true
+	}
+	switch a {
+	case AttrDoesNotUntap,
+		AttrEntersTapped,
+		AttrMustAttack,
+		AttrMustBeBlocked,
+		AttrMustBeBlockedIfAble,
+		AttrMayNotUntap,
+		AttrCantBeEnchanted,
+		AttrCantBeTargetedByArtifacts,
+		AttrCantChangeControl,
+		AttrCantActivateNonManaAbilities,
+		AttrCantActivate,
+		AttrAssignsDamageEqualToToughness:
+		return true
+	default:
+		return false
+	}
+}
+
 func (a Attr) String() string {
 	switch a {
 	case AttrCanAttack:

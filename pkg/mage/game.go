@@ -786,7 +786,7 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 			for _, e := range sa.Effects {
 				// Set the source ID on the continuous effect
 				g.setEffectSource(e, perm.ID())
-				g.effects.Add(e)
+				g.effects.Add(&printedAbilityContinuousEffect{ContinuousEffect: e})
 			}
 		}
 	}
@@ -893,7 +893,7 @@ func (g *Game) turnFaceUp(perm *Permanent) {
 		if sa, ok := a.(*StaticAbilityHolder); ok {
 			for _, e := range sa.Effects {
 				g.setEffectSource(e, perm.ID())
-				g.effects.Add(e)
+				g.effects.Add(&printedAbilityContinuousEffect{ContinuousEffect: e})
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package fourthedition
 import (
 	"testing"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 
@@ -633,13 +634,68 @@ func TestGaeasLiege(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 1)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain", 1)
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Gaea's Liege", "Mountain")
-		g.StopAt(1, core.PrecombatMain)
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// Mountain becomes a Forest, so it now counts as one of opponent's Forests.
 		// Gaea's Liege isn't attacking, so P/T = 1 (your only Forest).
 		g.AssertPowerToughness(gametest.PlayerA, "Gaea's Liege", 1, 1)
 		// Sanity: still on the battlefield
 		g.AssertPermanentCount(gametest.PlayerB, "Mountain", 1)
+		mountain := g.FindPermanentByName("Mountain", g.GetPlayer(gametest.PlayerB).PlayerID())
+		if mountain == nil {
+			t.Fatal("Mountain not found")
+		}
+		if !mountain.HasSubType("Forest") || mountain.HasSubType("Mountain") {
+			t.Fatalf("converted land subtypes: Forest=%v Mountain=%v", mountain.HasSubType("Forest"), mountain.HasSubType("Mountain"))
+		}
+		var green, red int
+		for _, ability := range mountain.RuntimeAbilities {
+			for _, production := range mage.ManaProductionsForAbility(ability) {
+				switch production.Color {
+				case core.Green:
+					green += production.Amount
+				case core.Red:
+					red += production.Amount
+				}
+			}
+		}
+		if green != 1 || red != 0 {
+			t.Fatalf("converted Mountain mana abilities: green=%d red=%d, want green=1 red=0", green, red)
+		}
+	})
+
+	t.Run("target land reverts when Liege leaves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Gaea's Liege")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Unsummon")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Gaea's Liege", "Mountain")
+		g.CastSpell(1, core.PostcombatMain, gametest.PlayerA, "Unsummon", "Gaea's Liege")
+		g.StopAt(1, core.EndStep)
+		g.Execute()
+
+		mountain := g.FindPermanentByName("Mountain", g.GetPlayer(gametest.PlayerB).PlayerID())
+		if mountain == nil {
+			t.Fatal("Mountain not found")
+		}
+		if mountain.HasSubType("Forest") || !mountain.HasSubType("Mountain") {
+			t.Fatalf("restored land subtypes: Forest=%v Mountain=%v", mountain.HasSubType("Forest"), mountain.HasSubType("Mountain"))
+		}
+		var green, red int
+		for _, ability := range mountain.RuntimeAbilities {
+			for _, production := range mage.ManaProductionsForAbility(ability) {
+				switch production.Color {
+				case core.Green:
+					green += production.Amount
+				case core.Red:
+					red += production.Amount
+				}
+			}
+		}
+		if green != 0 || red != 1 {
+			t.Fatalf("restored Mountain mana abilities: green=%d red=%d, want green=0 red=1", green, red)
+		}
 	})
 }
 

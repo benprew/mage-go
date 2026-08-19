@@ -118,14 +118,7 @@ func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 		if perm == nil || perm.ControllerID() != playerID || perm.FaceDown {
 			continue
 		}
-		subs := perm.Card.SubTypes()
-		if len(perm.SubTypeOverride) > 0 {
-			subs = perm.SubTypeOverride
-		}
-		for _, st := range subs {
-			ctx.ControllerSubtypesAtCast[st] = true
-		}
-		for _, st := range perm.SubTypeAdditions {
+		for _, st := range perm.computedSubtypes() {
 			ctx.ControllerSubtypesAtCast[st] = true
 		}
 	}

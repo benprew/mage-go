@@ -249,23 +249,30 @@ func registerEnchantments() {
 		)
 	})
 
+	// Evil Presence {B}
+	// Enchantment — Aura
+	// Enchant land
+	// Enchanted land is a Swamp.
 	Register("Evil Presence", func() Card {
 		return NewAura("Evil Presence", "{B}",
 			WithCastTarget(TargetLand()),
 			WithStaticAbility(
-				ChangeAttachedSubTypes([]string{"Swamp"}),
+				BecomesBasicLandAttachedEffect("Swamp"),
 			),
 		)
 	})
 
+	// Phantasmal Terrain {U}{U}
+	// Enchantment — Aura
+	// Enchant land
+	// As this Aura enters, choose a basic land type.
+	// Enchanted land is the chosen type.
 	Register("Phantasmal Terrain", func() Card {
 		return NewAura("Phantasmal Terrain", "{U}{U}",
 			WithCastTarget(TargetLand()),
-			WithAbility(EntersBattlefieldTrigger(
-				ChooseColorStep("Choose basic land type for Phantasmal Terrain"),
-				false)),
+			WithETBEffect(ChooseColorStep("Choose basic land type for Phantasmal Terrain")),
 			WithStaticAbility(
-				ChangeAttachedSubTypesByChosenColor(),
+				BecomesChosenBasicLandAttachedEffect(),
 			),
 		)
 	})
@@ -585,10 +592,14 @@ func registerEnchantments() {
 		)
 	})
 
+	// Conversion {2}{W}{W}
+	// Enchantment
+	// At the beginning of your upkeep, sacrifice this enchantment unless you pay {W}{W}.
+	// All Mountains are Plains.
 	Register("Conversion", func() Card {
 		return NewEnchantment("Conversion", "{2}{W}{W}",
 			WithStaticAbility(
-				ChangeSubTypesForAll([]string{"Mountain"}, []string{"Plains"}),
+				BecomesBasicLandsEffect(And(IsLand, HasSubType("Mountain")), "Plains"),
 			),
 			WithAbility(SacrificeAtUpkeepUnlessPay("{W}{W}")),
 		)

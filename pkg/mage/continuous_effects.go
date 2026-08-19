@@ -110,9 +110,19 @@ func RemoveKeywordFromAttached(kw Keyword, at AttachType) ContinuousEffect {
 // ChangeAttachedSubTypes replaces the subtypes of the attached permanent (e.g. Evil Presence
 // makes enchanted land a Swamp, Phantasmal Terrain makes it a chosen type).
 func ChangeAttachedSubTypes(newSubTypes []string) ContinuousEffect {
-	return AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
-		target.SubTypeOverride = make([]string, len(newSubTypes))
-		copy(target.SubTypeOverride, newSubTypes)
+	validateBasicLandSubtypes("ChangeAttachedSubTypes", newSubTypes)
+	return AttachedEffect(LayerType, func(g *Game, _, target *Permanent) error {
+		applyBecomesBasicLand(g, target, newSubTypes)
+		return nil
+	})
+}
+
+// BecomesBasicLandAttachedEffect makes the permanent enchanted by the source
+// into the listed basic land types in layer 4.
+func BecomesBasicLandAttachedEffect(subtypes ...string) ContinuousEffect {
+	validateBasicLandSubtypes("BecomesBasicLandAttachedEffect", subtypes)
+	return AttachedEffect(LayerType, func(g *Game, _, target *Permanent) error {
+		applyBecomesBasicLand(g, target, subtypes)
 		return nil
 	})
 }
@@ -124,7 +134,19 @@ func ChangeAttachedSubTypesByChosenColor() ContinuousEffect {
 	return AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
 		landType := ColorToBasicLandType(source.ChosenColor)
 		if landType != "" {
-			target.SubTypeOverride = []string{landType}
+			applyBecomesBasicLand(g, target, []string{landType})
+		}
+		return nil
+	})
+}
+
+// BecomesChosenBasicLandAttachedEffect makes the enchanted permanent the basic
+// land type stored as the source permanent's chosen color.
+func BecomesChosenBasicLandAttachedEffect() ContinuousEffect {
+	return AttachedEffect(LayerType, func(g *Game, source, target *Permanent) error {
+		landType := ColorToBasicLandType(source.ChosenColor)
+		if landType != "" {
+			applyBecomesBasicLand(g, target, []string{landType})
 		}
 		return nil
 	})
@@ -165,7 +187,7 @@ func GrantTriggeredAbilityToAttached(eventType EventType, optional bool, cond Tr
 		if cond != nil {
 			trig.SetConditionData(cond)
 		}
-		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{trig})
+		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{Ability: trig})
 		return nil
 	})
 }
@@ -183,7 +205,7 @@ func GrantActivatedAbilityToAttached(effect Effect, cost Cost, at AttachType, op
 		}
 		ab.source = target.ID()
 		ab.controller = target.ControllerID()
-		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{ab})
+		target.RuntimeAbilities = append(target.RuntimeAbilities, &grantedByEffect{Ability: ab})
 		return nil
 	})
 }
@@ -369,7 +391,7 @@ func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter
 			if p == nil {
 				continue
 			}
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{ab})
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{Ability: ab})
 		}
 		return nil
 	})
@@ -413,7 +435,7 @@ func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond Trigger
 			if p == nil {
 				continue
 			}
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{trig})
+			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{Ability: trig})
 		}
 		return nil
 	})
@@ -700,38 +722,171 @@ func ReduceSpellCostForColor(color Color, amount int) ContinuousEffect {
 // to toSubTypes (e.g. Conversion: all Mountains become Plains).
 func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		// Map basic land subtypes to mana colors
-		colorMap := map[string]Color{
-			"Plains": White, "Island": Blue, "Swamp": Black,
-			"Mountain": Red, "Forest": Green,
-		}
-		var newColor Color
-		hasNewColor := false
-		for _, st := range toSubTypes {
-			if c, ok := colorMap[st]; ok {
-				newColor = c
-				hasNewColor = true
-				break
+		for _, p := range g.battlefield {
+			if !slices.ContainsFunc(fromSubTypes, p.HasSubType) {
+				continue
+			}
+			p = g.MutablePermanent(p.ID())
+			if p == nil {
+				continue
+			}
+			probe := fromSubTypes[0]
+			if len(toSubTypes) > 0 {
+				probe = toSubTypes[0]
+			}
+			family, ok := subtypeFamilyForCard(p.Card, probe)
+			if ok {
+				applySetSubtypes(g, p, family, toSubTypes)
 			}
 		}
-		for _, p := range g.battlefield {
-			if slices.ContainsFunc(fromSubTypes, p.HasSubType) {
-				p = g.MutablePermanent(p.ID())
-				if p == nil {
-					continue
+		return nil
+	})
+}
+
+// BecomesBasicLandTargetEffect replaces a target land's land subtypes and
+// printed rules-text abilities with basic land types and their intrinsic mana
+// abilities in layer 4. Abilities granted by other effects are preserved. The
+// printed abilities and land subtypes return when the effect expires.
+func BecomesBasicLandTargetEffect(targetID uuid.UUID, duration Duration, subtypes ...string) ContinuousEffect {
+	validateBasicLandSubtypes("BecomesBasicLandTargetEffect", subtypes)
+	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
+		applyBecomesBasicLand(g, target, subtypes)
+		return nil
+	})
+}
+
+// BecomesBasicLandsEffect applies a basic-land-type change to every permanent
+// matching filter in layer 4.
+func BecomesBasicLandsEffect(filter PermanentFilter, subtypes ...string) ContinuousEffect {
+	validateBasicLandSubtypes("BecomesBasicLandsEffect", subtypes)
+	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, permanent := range g.battlefield {
+			if filter.Match(permanent, g) {
+				permanent = g.MutablePermanent(permanent.ID())
+				if permanent != nil {
+					applyBecomesBasicLand(g, permanent, subtypes)
 				}
-				p.SubTypeOverride = toSubTypes
-				if hasNewColor && p.HasType(TypeLand) {
-					var filtered []Ability
-					for _, a := range p.RuntimeAbilities {
-						inner := UnwrapAbility(a)
-						if _, ok := inner.(*ManaAbility); !ok {
-							filtered = append(filtered, a)
-						}
-					}
-					p.RuntimeAbilities = filtered
-					p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(newColor)})
-				}
+			}
+		}
+		return nil
+	})
+}
+
+func validateBasicLandSubtypes(name string, subtypes []string) {
+	if len(subtypes) == 0 {
+		panic(name + ": at least one basic land type is required")
+	}
+	for _, subtype := range subtypes {
+		if _, ok := basicLandTypeColor(subtype); !ok {
+			panic(name + ": invalid basic land type " + subtype)
+		}
+	}
+}
+
+func applyBecomesBasicLand(g *Game, target *Permanent, subtypes []string) {
+	applySetSubtypes(g, target, SubtypeLand, subtypes)
+}
+
+// BecomesBasicLandTargetUntilSourceLeaves applies a basic-land-type change
+// until the effect's source changes zones. It remains active while the source
+// is phased out because phasing is not a zone change.
+func BecomesBasicLandTargetUntilSourceLeaves(targetID uuid.UUID, subtypes ...string) ContinuousEffect {
+	return BecomesBasicLandTargetEffect(targetID, Indefinite, subtypes...)
+}
+
+func isLandSubtype(subtype string) bool {
+	switch subtype {
+	case "Cave", "Desert", "Forest", "Gate", "Island", "Lair", "Locus", "Mine", "Mountain", "Plains", "Planet", "Power-Plant", "Sphere", "Swamp", "Tower", "Town", "Urza's":
+		return true
+	default:
+		return false
+	}
+}
+
+func basicLandTypeColor(subtype string) (Color, bool) {
+	switch subtype {
+	case "Plains":
+		return White, true
+	case "Island":
+		return Blue, true
+	case "Swamp":
+		return Black, true
+	case "Mountain":
+		return Red, true
+	case "Forest":
+		return Green, true
+	default:
+		return Colorless, false
+	}
+}
+
+func isBasicLandSubtype(subtype string) bool {
+	_, ok := basicLandTypeColor(subtype)
+	return ok
+}
+
+func refreshIntrinsicBasicLandManaAbilities(target *Permanent) {
+	retained := target.RuntimeAbilities[:0]
+	for _, ability := range target.RuntimeAbilities {
+		if granted, ok := ability.(*grantedByEffect); ok && granted.intrinsicBasicLandMana {
+			continue
+		}
+		retained = append(retained, ability)
+	}
+	target.RuntimeAbilities = retained
+	if !target.HasType(TypeLand) {
+		return
+	}
+	for _, subtype := range target.computedSubtypes() {
+		color, ok := basicLandTypeColor(subtype)
+		if !ok || permanentHasManaAbilityColor(target, color) {
+			continue
+		}
+		ability := NewManaAbility(color)
+		ability.SetSource(target.ID())
+		ability.SetController(target.ControllerID())
+		target.RuntimeAbilities = append(target.RuntimeAbilities, wrapIntrinsicBasicLandManaAbility(ability))
+	}
+}
+
+func permanentHasManaAbilityColor(target *Permanent, color Color) bool {
+	for _, ability := range target.RuntimeAbilities {
+		for _, production := range ManaProductionsForAbility(ability) {
+			if production.Color == color && production.Amount > 0 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func removeAllAbilitiesAtCurrentLayer(g *Game, target *Permanent) {
+	target.RuntimeAbilities = nil
+	target.printedAbilitiesSuppressed = true
+	for attr := Attr(1); attr < NumAttrs; attr++ {
+		if IsAbilityAttr(attr) {
+			g.effects.RevokeAttr(target.ID(), attr)
+		}
+	}
+}
+
+// RemoveAllAbilities makes the target permanent lose all abilities in layer 6
+// for the requested duration. Later layer-6 effects can grant abilities back.
+func RemoveAllAbilities(targetID uuid.UUID, duration Duration) ContinuousEffect {
+	return TargetEffect(LayerAbility, duration, targetID, func(g *Game, target *Permanent) error {
+		removeAllAbilitiesAtCurrentLayer(g, target)
+		return nil
+	})
+}
+
+// RemoveAllAbilitiesFromAll makes every matching permanent lose all abilities
+// in layer 6 while the source remains on the battlefield.
+func RemoveAllAbilitiesFromAll(filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, permanent := range g.FilterBattlefield(filter) {
+			permanent = g.MutablePermanent(permanent.ID())
+			if permanent != nil {
+				removeAllAbilitiesAtCurrentLayer(g, permanent)
 			}
 		}
 		return nil
@@ -749,16 +904,7 @@ func CyclopeanTombEffect() ContinuousEffect {
 			if p == nil {
 				continue
 			}
-			p.SubTypeOverride = []string{"Swamp"}
-			var filtered []Ability
-			for _, a := range p.RuntimeAbilities {
-				inner := UnwrapAbility(a)
-				if _, ok := inner.(*ManaAbility); !ok {
-					filtered = append(filtered, a)
-				}
-			}
-			p.RuntimeAbilities = filtered
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{NewManaAbility(Black)})
+			applyBecomesBasicLand(g, p, []string{"Swamp"})
 		}
 		return nil
 	})
@@ -850,7 +996,7 @@ type AnimateLandOptions struct {
 // The caller is responsible for choosing the layer; this function performs
 // the layer-4 (type), layer-5 (color), layer-6 (keyword), and layer-7b
 // (P/T) mutations together. Each Apply() cycle resets BasePTOverride,
-// SubTypeOverride, ColorOverride, granted keyword attrs, and granted
+// subtype-family additions, ColorOverride, granted keyword attrs, and granted
 // runtime abilities, so we recompute them from the card baseline here.
 func applyAnimateLand(g *Game, target *Permanent, opts AnimateLandOptions) {
 	g.effects.GrantAttr(target.ID(), AttrIsCreature)
@@ -860,30 +1006,7 @@ func applyAnimateLand(g *Game, target *Permanent, opts AnimateLandOptions) {
 	target.BasePTOverride = &[2]int{opts.Power, opts.Toughness}
 
 	if len(opts.SubTypes) > 0 {
-		base := target.Card.SubTypes()
-		merged := make([]string, 0, len(base)+len(opts.SubTypes))
-		seen := map[string]bool{}
-		for _, s := range base {
-			if !seen[s] {
-				merged = append(merged, s)
-				seen[s] = true
-			}
-		}
-		if len(target.SubTypeOverride) > 0 {
-			for _, s := range target.SubTypeOverride {
-				if !seen[s] {
-					merged = append(merged, s)
-					seen[s] = true
-				}
-			}
-		}
-		for _, s := range opts.SubTypes {
-			if !seen[s] {
-				merged = append(merged, s)
-				seen[s] = true
-			}
-		}
-		target.SubTypeOverride = merged
+		target.addSubtypeFamily(SubtypeCreature, opts.SubTypes)
 	}
 
 	if len(opts.Colors) > 0 {
@@ -1433,13 +1556,7 @@ func extractKeywords(p *Permanent) []Keyword {
 // without duplicating one already present (in either base subtypes, an
 // override, or another addition).
 func addSubTypeAddition(p *Permanent, subtype string) {
-	if subtype == "" {
-		return
-	}
-	if p.HasSubType(subtype) {
-		return
-	}
-	p.SubTypeAdditions = append(p.SubTypeAdditions, subtype)
+	p.addSubtypeFamily(SubtypeCreature, []string{subtype})
 }
 
 // GrantSubTypeToControlled grants a subtype to all permanents controlled by
@@ -1456,7 +1573,7 @@ func GrantSubTypeToControlled(subtype string, filter PermanentFilter) Continuous
 			if p.ControllerID() != src.ControllerID() {
 				continue
 			}
-			if !filter.Match(p, g) {
+			if !filter.Match(p, g) || !p.supportsSubtypeFamily(SubtypeCreature) {
 				continue
 			}
 			p = g.MutablePermanent(p.ID())
@@ -1475,7 +1592,7 @@ func GrantSubTypeToAll(subtype string, filter PermanentFilter) ContinuousEffect 
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.FilterBattlefield(filter) {
 			p = g.MutablePermanent(p.ID())
-			if p == nil {
+			if p == nil || !p.supportsSubtypeFamily(SubtypeCreature) {
 				continue
 			}
 			addSubTypeAddition(p, subtype)
@@ -1487,10 +1604,56 @@ func GrantSubTypeToAll(subtype string, filter PermanentFilter) ContinuousEffect 
 // GrantSubTypeToTarget grants a subtype to a specific permanent for the given
 // duration ("in addition to its other types"). Operates at LayerType.
 func GrantSubTypeToTarget(targetID uuid.UUID, subtype string, duration Duration) ContinuousEffect {
+	return AddSubtypes(targetID, SubtypeCreature, duration, subtype)
+}
+
+// SetSubtypes replaces the target permanent's subtypes in one subtype family.
+// Subtypes belonging to every other family are retained.
+func SetSubtypes(targetID uuid.UUID, family SubtypeFamily, duration Duration, subtypes ...string) ContinuousEffect {
+	validateSubtypeChange("SetSubtypes", family, subtypes)
 	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
-		addSubTypeAddition(target, subtype)
+		applySetSubtypes(g, target, family, subtypes)
 		return nil
 	})
+}
+
+func applySetSubtypes(g *Game, target *Permanent, family SubtypeFamily, subtypes []string) {
+	if !target.supportsSubtypeFamily(family) {
+		return
+	}
+	target.setSubtypeFamily(family, subtypes)
+	if family == SubtypeLand && slices.ContainsFunc(subtypes, isBasicLandSubtype) {
+		removeAllAbilitiesAtCurrentLayer(g, target)
+	}
+	refreshIntrinsicBasicLandManaAbilities(target)
+}
+
+// AddSubtypes adds subtypes in one subtype family without replacing existing
+// subtypes in that family or any other family.
+func AddSubtypes(targetID uuid.UUID, family SubtypeFamily, duration Duration, subtypes ...string) ContinuousEffect {
+	validateSubtypeChange("AddSubtypes", family, subtypes)
+	return TargetEffect(LayerType, duration, targetID, func(_ *Game, target *Permanent) error {
+		if !target.supportsSubtypeFamily(family) {
+			return nil
+		}
+		target.addSubtypeFamily(family, subtypes)
+		refreshIntrinsicBasicLandManaAbilities(target)
+		return nil
+	})
+}
+
+func validateSubtypeChange(name string, family SubtypeFamily, subtypes []string) {
+	if !family.valid() {
+		panic(name + ": invalid subtype family")
+	}
+	for _, subtype := range subtypes {
+		if subtype == "" {
+			panic(name + ": subtype must not be empty")
+		}
+		if knownFamily, ok := knownSubtypeFamily(subtype); ok && knownFamily != family {
+			panic(name + ": subtype belongs to a different subtype family: " + subtype)
+		}
+	}
 }
 
 // BecomesSubType replaces the (creature) subtypes of a specific permanent with
@@ -1499,11 +1662,7 @@ func GrantSubTypeToTarget(targetID uuid.UUID, subtype string, duration Duration)
 // (creature/etc.) but its printed subtypes are overridden. Operates at
 // LayerType.
 func BecomesSubType(targetID uuid.UUID, subtype string, duration Duration) ContinuousEffect {
-	return TargetEffect(LayerType, duration, targetID, func(g *Game, target *Permanent) error {
-		target.SubTypeOverride = []string{subtype}
-		target.SubTypeAdditions = nil
-		return nil
-	})
+	return SetSubtypes(targetID, SubtypeCreature, duration, subtype)
 }
 
 // BecomesColor replaces the colors of a specific permanent with the given

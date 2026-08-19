@@ -730,16 +730,31 @@ func TestConversion(t *testing.T) {
 		if pool.CountProducedThisTurn(core.White) < 6 { // 5 auto + 1 from converted Mountain
 			t.Errorf("Conversion should make Mountain produce {W}; expected >= 6 white, got %d", pool.CountProducedThisTurn(core.White))
 		}
+		mountain := g.FindPermanentByName("Mountain", g.AllPlayers()[0].PlayerID())
+		if mountain == nil {
+			t.Fatal("Mountain not found")
+		}
+		if white, red := landManaProduction(mountain, core.White), landManaProduction(mountain, core.Red); white != 1 || red != 0 {
+			t.Errorf("Conversion mana abilities: white=%d red=%d, want white=1 red=0", white, red)
+		}
 	})
 
 	t.Run("sacrifice_unless_pay_WW", func(t *testing.T) {
 		// At the beginning of your upkeep, sacrifice Conversion unless you pay {W}{W}.
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Conversion")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		// No {W}{W} paid -> Conversion sacrificed.
 		g.AssertPermanentCount(gametest.PlayerA, "Conversion", 0)
+		mountain := g.FindPermanentByName("Mountain", g.AllPlayers()[0].PlayerID())
+		if mountain == nil {
+			t.Fatal("Mountain not found")
+		}
+		if white, red := landManaProduction(mountain, core.White), landManaProduction(mountain, core.Red); white != 0 || red != 1 {
+			t.Errorf("restored Mountain mana abilities: white=%d red=%d, want white=0 red=1", white, red)
+		}
 	})
 }
 

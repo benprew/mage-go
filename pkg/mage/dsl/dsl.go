@@ -68,6 +68,7 @@ type (
 	AITargetPreference                        = mage.AITargetPreference
 	PipelineData                              = mage.PipelineData
 	PermanentFilter                           = mage.PermanentFilter
+	SubtypeFamily                             = mage.SubtypeFamily
 	TriggeredAbility                          = mage.TriggeredAbility
 	Cost                                      = mage.Cost
 	Target                                    = mage.Target
@@ -224,6 +225,13 @@ var (
 	PreventBlockingUntilEndOfCombat            = mage.PreventBlockingUntilEndOfCombat
 	IncreaseSpellCostForColor                  = mage.IncreaseSpellCostForColor
 	ChangeSubTypesForAll                       = mage.ChangeSubTypesForAll
+	BecomesBasicLandTargetEffect               = mage.BecomesBasicLandTargetEffect
+	BecomesBasicLandTargetUntilSourceLeaves    = mage.BecomesBasicLandTargetUntilSourceLeaves
+	BecomesBasicLandsEffect                    = mage.BecomesBasicLandsEffect
+	SetSubtypes                                = mage.SetSubtypes
+	AddSubtypes                                = mage.AddSubtypes
+	RemoveAllAbilities                         = mage.RemoveAllAbilities
+	RemoveAllAbilitiesFromAll                  = mage.RemoveAllAbilitiesFromAll
 	AllowUnlimitedLandPlays                    = mage.AllowUnlimitedLandPlays
 	LimitCreatureUntaps                        = mage.LimitCreatureUntaps
 	BoostControlledCreatures                   = mage.BoostControlledCreatures
@@ -249,6 +257,8 @@ var (
 	RemoveKeywordFromAttached                  = mage.RemoveKeywordFromAttached
 	ChangeAttachedSubTypes                     = mage.ChangeAttachedSubTypes
 	ChangeAttachedSubTypesByChosenColor        = mage.ChangeAttachedSubTypesByChosenColor
+	BecomesBasicLandAttachedEffect             = mage.BecomesBasicLandAttachedEffect
+	BecomesChosenBasicLandAttachedEffect       = mage.BecomesChosenBasicLandAttachedEffect
 	GrantProtectionToAttached                  = mage.GrantProtectionToAttached
 	NewManaBonusAbility                        = mage.NewManaBonusAbility
 	ControlChangeContinuous                    = mage.ControlChangeContinuous
@@ -552,26 +562,27 @@ var (
 // =============================================================================
 
 var (
-	SacrificeSourceCost    = mage.SacrificeSourceCost
-	ManaCostOf             = mage.ManaCostOf
-	ParseManaCost          = core.ParseManaCost
-	WithFrom               = mage.WithFrom
-	WithTo                 = mage.WithTo
-	WithCombatOnly         = mage.WithCombatOnly
-	WithPlayerOnly         = mage.WithPlayerOnly
-	GenericCost            = mage.GenericCost
-	XManaCost              = mage.XManaCost
-	RemoveCountersCost     = mage.RemoveCountersCost
-	RequireCountersCost    = mage.RequireCountersCost
-	SacrificeCreatureCost  = mage.SacrificeCreatureCost
-	DiscardRandomCost      = mage.DiscardRandomCost
-	ExileSourceCost        = mage.ExileSourceCost
-	SacrificeArtifactCost  = mage.SacrificeArtifactCost
-	SacrificeMatchingCost  = mage.SacrificeMatchingCost
-	SacrificeNMatchingCost = mage.SacrificeNMatchingCost
-	LifePayCost            = mage.LifePayCost
-	DiscardCost            = mage.DiscardCost
-	EitherCost             = mage.EitherCost
+	SacrificeSourceCost                  = mage.SacrificeSourceCost
+	ManaCostOf                           = mage.ManaCostOf
+	ParseManaCost                        = core.ParseManaCost
+	WithFrom                             = mage.WithFrom
+	WithTo                               = mage.WithTo
+	WithCombatOnly                       = mage.WithCombatOnly
+	WithPlayerOnly                       = mage.WithPlayerOnly
+	GenericCost                          = mage.GenericCost
+	XManaCost                            = mage.XManaCost
+	RemoveCountersCost                   = mage.RemoveCountersCost
+	RequireCountersCost                  = mage.RequireCountersCost
+	SacrificeCreatureCost                = mage.SacrificeCreatureCost
+	DiscardRandomCost                    = mage.DiscardRandomCost
+	ExileSourceCost                      = mage.ExileSourceCost
+	SacrificeArtifactCost                = mage.SacrificeArtifactCost
+	SacrificeMatchingCost                = mage.SacrificeMatchingCost
+	SacrificeMatchingIncludingSourceCost = mage.SacrificeMatchingIncludingSourceCost
+	SacrificeNMatchingCost               = mage.SacrificeNMatchingCost
+	LifePayCost                          = mage.LifePayCost
+	DiscardCost                          = mage.DiscardCost
+	EitherCost                           = mage.EitherCost
 )
 
 // =============================================================================
@@ -725,6 +736,13 @@ const (
 	SuperBasic     = core.SuperBasic
 	SuperLegendary = core.SuperLegendary
 	SuperWorld     = core.SuperWorld
+
+	SubtypeArtifact     = mage.SubtypeArtifact
+	SubtypeCreature     = mage.SubtypeCreature
+	SubtypeEnchantment  = mage.SubtypeEnchantment
+	SubtypeLand         = mage.SubtypeLand
+	SubtypePlaneswalker = mage.SubtypePlaneswalker
+	SubtypeSpell        = mage.SubtypeSpell
 )
 
 // Colors

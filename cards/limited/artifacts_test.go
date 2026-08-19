@@ -16,6 +16,19 @@ import (
 
 // ---------------------------------------------------------------------------
 // Artifacts
+
+func landManaProduction(perm *mage.Permanent, color core.Color) int {
+	total := 0
+	for _, ability := range perm.RuntimeAbilities {
+		for _, production := range mage.ManaProductionsForAbility(ability) {
+			if production.Color == color {
+				total += production.Amount
+			}
+		}
+	}
+	return total
+}
+
 // ---------------------------------------------------------------------------
 
 func TestWinterOrb(t *testing.T) {
@@ -511,6 +524,34 @@ func TestEvilPresence(t *testing.T) {
 		if !perm.HasSubType("Swamp") {
 			t.Errorf("Evil Presence should make Forest a Swamp")
 		}
+		if black, green := landManaProduction(perm, core.Black), landManaProduction(perm, core.Green); black != 1 || green != 0 {
+			t.Errorf("Evil Presence mana abilities: black=%d green=%d, want black=1 green=0", black, green)
+		}
+	})
+
+	t.Run("land_reverts_when_aura_leaves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Evil Presence")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Evil Presence", "Forest")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		aura := g.FindPermanentByName("Evil Presence", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if aura == nil {
+			t.Fatal("Evil Presence not found")
+		}
+		g.DestroyPermanent(aura)
+
+		land := g.FindPermanentByName("Forest", g.GetPlayer(gametest.PlayerB).PlayerID())
+		if land == nil {
+			t.Fatal("Forest not found")
+		}
+		if land.HasSubType("Swamp") || !land.HasSubType("Forest") {
+			t.Fatal("Forest did not regain its printed subtype")
+		}
+		if black, green := landManaProduction(land, core.Black), landManaProduction(land, core.Green); black != 0 || green != 1 {
+			t.Errorf("restored Forest mana abilities: black=%d green=%d, want black=0 green=1", black, green)
+		}
 	})
 }
 
@@ -533,6 +574,9 @@ func TestPhantasmalTerrain(t *testing.T) {
 		if !perm.HasSubType("Island") {
 			t.Errorf("Phantasmal Terrain should change Mountain to Island")
 		}
+		if blue, red := landManaProduction(perm, core.Blue), landManaProduction(perm, core.Red); blue != 1 || red != 0 {
+			t.Errorf("Phantasmal Terrain mana abilities: blue=%d red=%d, want blue=1 red=0", blue, red)
+		}
 	})
 
 	t.Run("land_becomes_swamp_when_black_chosen", func(t *testing.T) {
@@ -549,6 +593,9 @@ func TestPhantasmalTerrain(t *testing.T) {
 		}
 		if !perm.HasSubType("Swamp") {
 			t.Errorf("Phantasmal Terrain with Black choice should change Forest to Swamp")
+		}
+		if black, green := landManaProduction(perm, core.Black), landManaProduction(perm, core.Green); black != 1 || green != 0 {
+			t.Errorf("Phantasmal Terrain mana abilities: black=%d green=%d, want black=1 green=0", black, green)
 		}
 	})
 }
@@ -954,6 +1001,9 @@ func TestCyclopeanTomb(t *testing.T) {
 		if !perm.HasSubType("Swamp") {
 			t.Errorf("Cyclopean Tomb should make Forest a Swamp")
 		}
+		if black, green := landManaProduction(perm, core.Black), landManaProduction(perm, core.Green); black != 1 || green != 0 {
+			t.Errorf("Cyclopean Tomb mana abilities: black=%d green=%d, want black=1 green=0", black, green)
+		}
 		// Forest should have a Mire counter
 		if perm.Counters[core.Mire] < 1 {
 			t.Errorf("Forest should have a Mire counter, got %d", perm.Counters[core.Mire])
@@ -977,6 +1027,9 @@ func TestCyclopeanTomb(t *testing.T) {
 		}
 		if perm.HasSubType("Swamp") {
 			t.Errorf("Forest should revert to non-Swamp after Cyclopean Tomb leaves")
+		}
+		if black, green := landManaProduction(perm, core.Black), landManaProduction(perm, core.Green); black != 0 || green != 1 {
+			t.Errorf("restored Forest mana abilities: black=%d green=%d, want black=0 green=1", black, green)
 		}
 	})
 

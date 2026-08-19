@@ -123,15 +123,23 @@ func (*sacrificeSourceCost) Pay(sourceID, _ uuid.UUID, g *Game) error {
 func (*sacrificeSourceCost) Text() string { return "Sacrifice ~" }
 
 type sacrificeMatchingCost struct {
-	filter PermanentFilter
-	text   string
-	count  int
+	filter        PermanentFilter
+	text          string
+	count         int
+	includeSource bool
 }
 
 // SacrificeMatchingCost creates a cost that sacrifices another permanent the
 // controller controls which matches the filter.
 func SacrificeMatchingCost(filter PermanentFilter, text string) Cost {
 	return &sacrificeMatchingCost{filter: filter, text: text, count: 1}
+}
+
+// SacrificeMatchingIncludingSourceCost creates a cost that sacrifices a
+// matching permanent the controller controls, including the ability's source
+// when it matches.
+func SacrificeMatchingIncludingSourceCost(filter PermanentFilter, text string) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, includeSource: true}
 }
 
 // SacrificeNMatchingCost creates a cost that sacrifices n other matching
@@ -153,7 +161,7 @@ func SacrificeCreatureCost() Cost {
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	found := 0
 	for _, p := range g.battlefield {
-		if p.ControllerID() == controller && p.ID() != sourceID && c.filter.Match(p, g) {
+		if p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
 			found++
 			if found >= c.count {
 				return true
@@ -171,7 +179,7 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	for i := 0; i < c.count; i++ {
 		var candidates []*Permanent
 		for _, p := range g.battlefield {
-			if p.ControllerID() == controller && p.ID() != sourceID && c.filter.Match(p, g) {
+			if p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
 				candidates = append(candidates, p)
 			}
 		}

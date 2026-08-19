@@ -3,9 +3,42 @@ package fallen_empires
 import (
 	"testing"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
+
+func TestTheloniteMonk(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Thelonite Monk")
+	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Thelonite Monk", "Mountain")
+	g.StopAt(1, BeginCombat)
+	g.Execute()
+
+	g.AssertGraveyardCount(gametest.PlayerA, "Thelonite Monk", 1)
+	land := g.FindPermanentByName("Mountain", g.GetPlayer(gametest.PlayerB).PlayerID())
+	if land == nil {
+		t.Fatal("Mountain not found")
+	}
+	if !land.HasSubType("Forest") || land.HasSubType("Mountain") {
+		t.Fatalf("converted land subtypes: Forest=%v Mountain=%v", land.HasSubType("Forest"), land.HasSubType("Mountain"))
+	}
+	var green, red int
+	for _, ability := range land.RuntimeAbilities {
+		for _, production := range mage.ManaProductionsForAbility(ability) {
+			switch production.Color {
+			case Green:
+				green += production.Amount
+			case Red:
+				red += production.Amount
+			}
+		}
+	}
+	if green != 1 || red != 0 {
+		t.Fatalf("converted land mana abilities: green=%d red=%d, want green=1 red=0", green, red)
+	}
+}
 
 func TestVodalianSoldiers(t *testing.T) {
 	// Vanilla 1/2 Merfolk Soldier — just verify stats on the battlefield.

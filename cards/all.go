@@ -13,4 +13,5 @@ import (
 	_ "github.com/benprew/mage-go/cards/fourthedition"
 	_ "github.com/benprew/mage-go/cards/legends"
 	_ "github.com/benprew/mage-go/cards/limited"
+	_ "github.com/benprew/mage-go/cards/thedark"
 )

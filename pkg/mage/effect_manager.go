@@ -25,6 +25,26 @@ type deepCloneableEffect interface {
 	cloneEffect() ContinuousEffect
 }
 
+type printedAbilityContinuousEffect struct {
+	ContinuousEffect
+}
+
+func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
+	source := g.FindPermanent(e.SourceID())
+	if source != nil && source.printedAbilitiesSuppressed {
+		return false
+	}
+	return e.ContinuousEffect.IsActive(g)
+}
+
+func (e *printedAbilityContinuousEffect) cloneEffect() ContinuousEffect {
+	inner := e.ContinuousEffect
+	if cloneable, ok := inner.(deepCloneableEffect); ok {
+		inner = cloneable.cloneEffect()
+	}
+	return &printedAbilityContinuousEffect{ContinuousEffect: inner}
+}
+
 // effectSource provides SourceID/SetSourceID to all continuous effects.
 type effectSource struct {
 	sourceID uuid.UUID
@@ -217,6 +237,9 @@ func (e *targetEffect) cloneEffect() ContinuousEffect {
 
 func (e *targetEffect) IsActive(g *Game) bool {
 	if g.FindPermanent(e.targetID) == nil {
+		if g.FindPermanentIncludingPhased(e.targetID) != nil {
+			return false
+		}
 		e.expired = true
 		return false
 	}
@@ -433,6 +456,8 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		needsReset := len(p.SubTypeOverride) > 0 ||
 			len(p.SubTypeAdditions) > 0 ||
+			p.hasSubtypeFamilyEffects() ||
+			p.printedAbilitiesSuppressed ||
 			p.BasePTOverride != nil ||
 			p.ColorOverride != nil ||
 			p.powerBonus != 0 ||
@@ -458,6 +483,20 @@ func (em *EffectManager) Apply(g *Game) {
 		if p == nil {
 			continue
 		}
+		if p.printedAbilitiesSuppressed {
+			existing := make(map[uuid.UUID]bool, len(p.RuntimeAbilities))
+			for _, a := range p.RuntimeAbilities {
+				existing[a.AbilityID()] = true
+			}
+			restored := make([]Ability, 0, len(p.Card.Abilities())+len(p.RuntimeAbilities))
+			for _, a := range p.Card.Abilities() {
+				if !existing[a.AbilityID()] {
+					restored = append(restored, a)
+				}
+			}
+			p.RuntimeAbilities = append(restored, p.RuntimeAbilities...)
+			p.printedAbilitiesSuppressed = false
+		}
 		base := p.RuntimeAbilities[:0]
 		for _, a := range p.RuntimeAbilities {
 			if _, ok := a.(*grantedByEffect); !ok {
@@ -467,6 +506,7 @@ func (em *EffectManager) Apply(g *Game) {
 		p.RuntimeAbilities = base
 		p.SubTypeOverride = nil
 		p.SubTypeAdditions = nil
+		p.resetSubtypeFamilyEffects()
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
 		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.
@@ -491,6 +531,7 @@ func (em *EffectManager) Apply(g *Game) {
 	for _, effect := range em.effects {
 		if effect.GetLayer() == LayerCopy && effect.IsActive(g) {
 			_ = effect.Apply(g)
+			em.syncAttrDeltas(g)
 		}
 	}
 	em.applyControlLayer(g)
@@ -503,6 +544,7 @@ func (em *EffectManager) Apply(g *Game) {
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
 				_ = e.Apply(g)
+				em.syncAttrDeltas(g)
 			}
 		}
 	}
@@ -510,27 +552,7 @@ func (em *EffectManager) Apply(g *Game) {
 	// Sync mana conversions to all player mana pools
 	em.Rules.SyncManaConversions(g.players)
 
-	// Write the grant/revoke decisions recorded during this cycle into each
-	// permanent's grantedAttrs. Each entry is the last-writer-wins result (see
-	// GrantAttr/RevokeAttr): +1 means the latest effect granted the attr, -1
-	// means it removed it. A grant forces the attr present; a revoke forces it
-	// absent by fully offsetting the base count, so "loses all landwalk"
-	// removes the ability even when several lords granted it (CR 613.9 /
-	// 702.14e), instead of merely decrementing one instance.
-	for permID, delta := range em.attrDeltas {
-		perm := g.MutablePermanent(permID)
-		if perm == nil {
-			continue
-		}
-		for a, d := range delta {
-			switch {
-			case d > 0:
-				perm.grantedAttrs[a] = 1
-			case d < 0:
-				perm.grantedAttrs[a] = -(perm.baseAttrs[a] + 1)
-			}
-		}
-	}
+	em.syncAttrDeltas(g)
 
 	// Post-layer enforcement: AttrCantChangeControl reverts any control changes
 	// applied during LayerControl. This runs after attrs are written so that
@@ -559,6 +581,26 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 		g.syncAbilityContext(p)
+	}
+}
+
+// syncAttrDeltas exposes the latest attribute result after each continuous
+// effect so later effects see characteristics established earlier in layer and
+// timestamp order (CR 613.1, 613.7).
+func (em *EffectManager) syncAttrDeltas(g *Game) {
+	for permID, delta := range em.attrDeltas {
+		perm := g.MutablePermanent(permID)
+		if perm == nil {
+			continue
+		}
+		for a, d := range delta {
+			switch {
+			case d > 0:
+				perm.grantedAttrs[a] = 1
+			case d < 0:
+				perm.grantedAttrs[a] = -(perm.baseAttrs[a] + 1)
+			}
+		}
 	}
 }
 
@@ -749,11 +791,16 @@ func (em *EffectManager) ClearReplacementsEndOfTurn() {
 // grantedByEffect is a marker wrapper to identify abilities granted by continuous effects.
 type grantedByEffect struct {
 	Ability
+	intrinsicBasicLandMana bool
 }
 
 // WrapGrantedAbility wraps an ability as granted-by-effect so it is cleaned up
 // and re-applied each continuous effect cycle. Use this when a continuous effect
 // needs to grant a triggered or activated ability to a permanent.
 func WrapGrantedAbility(a Ability) Ability {
-	return &grantedByEffect{a}
+	return &grantedByEffect{Ability: a}
+}
+
+func wrapIntrinsicBasicLandManaAbility(a Ability) Ability {
+	return &grantedByEffect{Ability: a, intrinsicBasicLandMana: true}
 }

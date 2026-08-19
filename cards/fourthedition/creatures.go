@@ -414,18 +414,9 @@ func registerCreatures() {
 						if len(targets) == 0 {
 							return nil
 						}
-						targetID := targets[0]
-						ce := FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-							perm := g.MutablePermanent(targetID)
-							if perm == nil {
-								return nil
-							}
-							perm.SubTypeOverride = []string{"Forest"}
-							return nil
-						})
+						ce := BecomesBasicLandTargetUntilSourceLeaves(targets[0], "Forest")
 						ce.SetSourceID(sourceID)
 						g.AddContinuousEffect(ce)
-						g.ApplyContinuousEffects()
 						return nil
 					},
 				),

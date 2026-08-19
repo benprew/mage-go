@@ -261,27 +261,34 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 // copied only when non-empty.
 func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
-		Card:                src.Card, // shared
-		computedController:  src.computedController,
-		baseController:      src.baseController,
-		Tapped:              src.Tapped,
-		PhasedOut:           src.PhasedOut,
-		Damage:              src.Damage,
-		AttachedTo:          src.AttachedTo,
-		IsToken:             src.IsToken,
-		FaceDown:            src.FaceDown,
-		ChosenColor:         src.ChosenColor,
-		ChosenPlayer:        src.ChosenPlayer,
-		ChosenSubtype:       src.ChosenSubtype,
-		ControlledPermanent: src.ControlledPermanent,
-		turnControlGained:   src.turnControlGained,
-		StoredValue:         src.StoredValue,
-		CreatedBy:           src.CreatedBy,
-		powerBonus:          src.powerBonus,
-		toughBonus:          src.toughBonus,
-		Counters:            src.Counters, // fixed-size array: value copy
-		baseAttrs:           src.baseAttrs,
-		grantedAttrs:        src.grantedAttrs,
+		Card:                       src.Card, // shared
+		computedController:         src.computedController,
+		baseController:             src.baseController,
+		Tapped:                     src.Tapped,
+		PhasedOut:                  src.PhasedOut,
+		Damage:                     src.Damage,
+		AttachedTo:                 src.AttachedTo,
+		IsToken:                    src.IsToken,
+		FaceDown:                   src.FaceDown,
+		ChosenColor:                src.ChosenColor,
+		ChosenPlayer:               src.ChosenPlayer,
+		ChosenSubtype:              src.ChosenSubtype,
+		ControlledPermanent:        src.ControlledPermanent,
+		turnControlGained:          src.turnControlGained,
+		StoredValue:                src.StoredValue,
+		CreatedBy:                  src.CreatedBy,
+		printedAbilitiesSuppressed: src.printedAbilitiesSuppressed,
+		powerBonus:                 src.powerBonus,
+		toughBonus:                 src.toughBonus,
+		Counters:                   src.Counters, // fixed-size array: value copy
+		baseAttrs:                  src.baseAttrs,
+		printedAbilityAttrs:        src.printedAbilityAttrs,
+		grantedAttrs:               src.grantedAttrs,
+	}
+	for family := range subtypeFamilyCount {
+		dst.subtypeFamilyOverrideSet[family] = src.subtypeFamilyOverrideSet[family]
+		dst.subtypeFamilyOverrides[family] = append([]string(nil), src.subtypeFamilyOverrides[family]...)
+		dst.subtypeFamilyAdditions[family] = append([]string(nil), src.subtypeFamilyAdditions[family]...)
 	}
 	// Deep copy attachments.
 	if len(src.Attachments) > 0 {
