@@ -1,6 +1,3 @@
-export GOCACHE := $(CURDIR)/.cache/go-build
-export GOLANGCI_LINT_CACHE := $(CURDIR)/.cache/golangci-lint
-
 .PHONY: test build vet lint wasm cardart clean
 
 test:
