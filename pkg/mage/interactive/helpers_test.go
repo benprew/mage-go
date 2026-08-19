@@ -456,6 +456,19 @@ func TestSnapshotGameState_BattlefieldCreatures(t *testing.T) {
 	}
 }
 
+func TestSnapshotGameState_PermanentUsesComputedSubtypes(t *testing.T) {
+	g, pa, _ := makeGame()
+	card := mage.NewLand("City of Brass")
+	perm := mage.NewPermanent(card, pa.PlayerID())
+	g.AddToBattlefield(perm)
+	g.AddContinuousEffect(mage.BecomesBasicLandTargetEffect(perm.ID(), core.Indefinite, "Forest"))
+
+	snap := SnapshotGameState(g, 0)
+	if got := snap.You.Battlefield[0].SubTypes; got != "Forest" {
+		t.Fatalf("permanent subtypes = %q, want %q", got, "Forest")
+	}
+}
+
 func TestSnapshotGameState_HandCards(t *testing.T) {
 	g, pa, _ := makeGame()
 	card := mage.NewInstant("Lightning Bolt", "{R}", mage.NewSpellAbility(mage.DealDamage(mage.Fixed(3))))

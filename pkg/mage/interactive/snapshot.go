@@ -214,7 +214,7 @@ func snapshotPlayer(g *mage.Game, p mage.Player, viewerID uuid.UUID, showHand bo
 			}
 			permState.Types += t.String()
 		}
-		for _, st := range perm.Card.SubTypes() {
+		for _, st := range perm.SubTypes() {
 			if permState.SubTypes != "" {
 				permState.SubTypes += " "
 			}

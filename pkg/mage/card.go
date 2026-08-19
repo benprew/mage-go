@@ -749,6 +749,14 @@ func (p *Permanent) HasSubType(s string) bool {
 	return slices.Contains(p.computedSubtypes(), s)
 }
 
+// SubTypes returns the permanent's current subtypes after continuous effects.
+func (p *Permanent) SubTypes() []string {
+	if p.FaceDown {
+		return nil
+	}
+	return p.computedSubtypes()
+}
+
 // HasKeyword checks if this permanent currently has the given keyword ability.
 // Delegates to HasAttr: all keyword storage is now in baseAttrs/grantedAttrs.
 func (p *Permanent) HasKeyword(kw Keyword) bool {
