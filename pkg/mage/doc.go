@@ -131,6 +131,19 @@
 // optional one-way conversions, so overlapping hybrid choices cannot make
 // affordability and final payment disagree.
 //
+// # Spell total-cost transactions
+//
+// Every casting path locks one total cost before changing live game state.
+// The transaction combines the printed or alternate mana cost with printed
+// additional costs and spell-action mana costs, resolves optional and either
+// choices, removes the proposed card from its source zone, and validates the
+// complete payment on isolated game state. Automatic mana production then
+// executes one exact solver plan and the combined mana component is paid once.
+// A rejected transaction leaves mana pools, life totals, mana sources, other
+// cost resources, and the proposed card unchanged. Mana spent activating a
+// mana ability is excluded from CastContext.ColorsSpent; only the locked
+// spell-total payment contributes to cast-time mana metadata.
+//
 // WithDynamicManaAbility and NewDynamicManaAbility derive productions from the
 // source permanent at query and activation time. Solvers use
 // ManaProductionsForAbilityInGame, so they advertise only the source's current

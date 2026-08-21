@@ -3038,77 +3038,24 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		mc.Generic -= r
 	}
 
-	// Reset per-spell drained-colors tally so the cast snapshot captures
-	// exactly which colors were spent paying for THIS spell (Chamber Sentry:
-	// "enters with a +1/+1 counter on it for each color of mana spent to
-	// cast it").
-	p.ManaPool().ResetLastDrained()
-
-	spellCtx := SpellContextForCard(card)
-
-	// Channel: pay life for generic/X costs instead of mana
+	payMC := mc
+	lifeLoss := 0
+	// Channel: pay life for the printed generic/X portion instead of mana.
 	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
-		// Pay colored portion from pool
-		colorMC := mc
-		colorMC.Generic = 0
-		colorMC.HasX = false
-		if !colorMC.IsZero() {
-			if !p.ManaPool().CanPay(colorMC, spellCtx) {
-				if err := g.autoTapForCost(playerID, colorMC, AutoTapHint{CastingCard: card.ID()}, spellCtx); err != nil {
-					return fmt.Errorf("cannot pay mana cost %s for %s: %w", colorMC, name, err)
-				}
-			}
-			if !p.ManaPool().CanPay(colorMC, spellCtx) {
-				return fmt.Errorf("cannot pay mana cost %s for %s", colorMC, name)
-			}
-			if err := p.ManaPool().Pay(colorMC, spellCtx); err != nil {
-				return err
-			}
-		}
-		// Pay generic + X from life
-		lifeCost := mc.Generic
+		payMC.Generic = 0
+		payMC.HasX = false
+		payMC.XCount = 0
+		lifeLoss = mc.Generic
 		if mc.HasX {
-			lifeCost += xValue * mc.XCount
-		}
-		g.PlayerLoseLife(p, lifeCost)
-	} else {
-		// Pay mana cost (auto-pay from pool)
-		payMC := mc
-		if mc.HasX {
-			payMC.Generic += xValue * mc.XCount
-		}
-		if !payMC.IsZero() {
-			if !p.ManaPool().CanPay(payMC, spellCtx) {
-				if err := g.autoTapForCost(playerID, payMC, AutoTapHint{CastingCard: card.ID()}, spellCtx); err != nil {
-					return fmt.Errorf("cannot pay mana cost %s for %s: %w", payMC, name, err)
-				}
-			}
-			if !p.ManaPool().CanPay(payMC, spellCtx) {
-				return fmt.Errorf("cannot pay mana cost %s for %s", payMC, name)
-			}
-			if err := p.ManaPool().Pay(payMC, spellCtx); err != nil {
-				return err
-			}
+			lifeLoss += xValue * mc.XCount
 		}
 	}
 
-	// Pay additional costs (sacrifice, discard, etc.). Clear any stale
-	// per-cast reveal state from a prior cast so this cast's snapshot
-	// only captures reveals paid for *this* spell.
-	g.lastCostReveal = nil
+	var totalCosts []Cost
 	if bc, ok := card.(*BaseCard); ok {
-		for _, cost := range bc.AdditionalCosts() {
-			if !cost.CanPay(card.ID(), playerID, g) {
-				return fmt.Errorf("cannot pay additional cost for %s: %s", name, cost.Text())
-			}
-			if err := cost.Pay(card.ID(), playerID, g); err != nil {
-				return err
-			}
-		}
+		totalCosts = append(totalCosts, bc.AdditionalCosts()...)
 	}
 
-	// Build action costs before moving the card so action-level costs
-	// are paid as part of casting.
 	var actionCosts []Cost
 	for _, a := range card.Abilities() {
 		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
@@ -3116,19 +3063,22 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 	actionCosts = g.prepareActionCosts(actionCosts, targets, xValue)
-	hint := AutoTapHint{CastingCard: card.ID()}
-	if !g.canPayActionCostsAtomically(playerID, card.ID(), actionCosts) {
-		return fmt.Errorf("cannot pay action costs for %s", name)
+	totalCosts = append(totalCosts, actionCosts...)
+
+	payment, err := g.prepareSpellPaymentTransaction(spellPaymentSpec{
+		Card:       card,
+		Controller: playerID,
+		Zone:       ZoneHand,
+		Mana:       payMC,
+		LifeLoss:   lifeLoss,
+		Costs:      totalCosts,
+		Targets:    targets,
+		XValue:     xValue,
+	})
+	if err != nil {
+		return fmt.Errorf("cannot pay total cost for %s: %w", name, err)
 	}
-	if err := g.autoTapForManaCosts(playerID, card.ID(), actionCosts, hint); err != nil {
-		return err
-	}
-	for _, cost := range actionCosts {
-		if !cost.CanPay(card.ID(), playerID, g) {
-			return fmt.Errorf("cannot pay action cost for %s: %s", name, cost.Text())
-		}
-	}
-	if err := g.payActionCosts(playerID, card.ID(), actionCosts); err != nil {
+	if err := payment.Commit(); err != nil {
 		return err
 	}
 
@@ -3138,10 +3088,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		g.currentX = 0
 	}
 
-	// Remove from hand
-	p.RemoveFromHand(card.ID())
-
-	_, err := g.pushCastSpellObject(castStackObjectOptions{
+	_, err = g.pushCastSpellObject(castStackObjectOptions{
 		Card:         card,
 		Controller:   playerID,
 		Targets:      targets,
@@ -4495,9 +4442,20 @@ func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint Auto
 }
 
 func (g *Game) autoTapForCost(playerID uuid.UUID, mc ManaCost, hint AutoTapHint, spellCtx *SpellPaymentContext) error {
+	solution, err := g.planManaForCost(playerID, mc, hint, spellCtx)
+	if err != nil {
+		return err
+	}
+	return g.applyManaSolution(playerID, solution)
+}
+
+func (g *Game) planManaForCost(playerID uuid.UUID, mc ManaCost, hint AutoTapHint, spellCtx *SpellPaymentContext) (*ManaSolution, error) {
 	p := g.GetPlayer(playerID)
 	if p == nil {
-		return ErrPlayerNotFound
+		return nil, ErrPlayerNotFound
+	}
+	if mc.IsZero() {
+		return &ManaSolution{}, nil
 	}
 	sources := g.getUntappedManaSources(playerID)
 
@@ -4527,11 +4485,7 @@ func (g *Game) autoTapForCost(playerID uuid.UUID, mc ManaCost, hint AutoTapHint,
 		Conversions:  p.ManaPool().ManaConversions,
 		SpellContext: spellCtx,
 	}
-	solution, err := SolveMana(solverInputs)
-	if err != nil {
-		return err
-	}
-	return g.applyManaSolution(playerID, solution)
+	return SolveMana(solverInputs)
 }
 
 // preservationScore returns the score for a mana source under the smart-tap

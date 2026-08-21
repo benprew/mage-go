@@ -136,8 +136,8 @@ func (g *Game) CastCardFromExileWithoutPaying(playerID, cardID uuid.UUID, target
 // CastCardFromZoneWithAlternateCost casts the named card from the given zone
 // by paying the supplied alternate mana cost instead of its printed mana cost
 // (CR 117.9). Additional costs on the card are still paid afterward. The
-// alternate cost is paid from the player's mana pool; the caller is
-// responsible for ensuring the pool holds enough mana before calling.
+// alternate cost and every additional/action mana component are planned and
+// auto-paid as one locked total cost.
 func (g *Game) CastCardFromZoneWithAlternateCost(playerID, cardID uuid.UUID, zone Zone, alternate ManaCost, targets []uuid.UUID, xValue int) error {
 	mc := alternate
 	return g.castCardFromZone(playerID, cardID, zone, targets, xValue, &mc, false)
@@ -156,8 +156,11 @@ func (g *Game) castCardFromZone(playerID, cardID uuid.UUID, zone Zone, targets [
 // causes the resolver to send the card to exile instead of graveyard on
 // resolution / fizzle (used by flashback per CR 702.34).
 func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost, permitForeignOwner, exileOnLeaveStack bool) error {
-	p := g.GetPlayer(playerID)
-	if p == nil {
+	return g.castCardFromZoneOptsWithCosts(playerID, cardID, zone, targets, xValue, alternateMC, permitForeignOwner, exileOnLeaveStack, nil, false)
+}
+
+func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int, alternateMC *ManaCost, permitForeignOwner, exileOnLeaveStack bool, extraCosts []Cost, anyColor bool) error {
+	if g.GetPlayer(playerID) == nil {
 		return ErrPlayerNotFound
 	}
 	card := g.findCardInZoneOpt(playerID, cardID, zone, permitForeignOwner)
@@ -173,33 +176,37 @@ func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targe
 		return fmt.Errorf("can't cast a land")
 	}
 
-	// Reset per-spell drained-colors tally so the cast snapshot can capture
-	// exactly which colors were spent (or none, for free casts).
-	p.ManaPool().ResetLastDrained()
-
-	// Pay the alternate mana cost if specified.
-	spellCtx := SpellContextForCard(card)
-	if alternateMC != nil && !alternateMC.IsZero() {
-		if !p.ManaPool().CanPay(*alternateMC, spellCtx) {
-			return fmt.Errorf("cannot pay alternate cost %s for %s", alternateMC, card.Name())
-		}
-		if err := p.ManaPool().Pay(*alternateMC, spellCtx); err != nil {
-			return err
+	var mana ManaCost
+	if alternateMC != nil {
+		mana = *alternateMC
+	}
+	totalCosts := append([]Cost(nil), extraCosts...)
+	if bc, ok := card.(*BaseCard); ok {
+		totalCosts = append(totalCosts, bc.AdditionalCosts()...)
+	}
+	var actionCosts []Cost
+	for _, ability := range card.Abilities() {
+		if spell, ok := ability.(*SpellAbility); ok && spell.Kind() == ActionSpell {
+			actionCosts = append(actionCosts, spell.Costs()...)
 		}
 	}
+	totalCosts = append(totalCosts, g.prepareActionCosts(actionCosts, targets, xValue)...)
 
-	// Pay additional costs (sacrifice, discard, exile cards, etc.) printed
-	// on the card. Per CR 601.2b alternate costs do NOT replace additional
-	// costs; both are paid.
-	if bc, ok := card.(*BaseCard); ok {
-		for _, cost := range bc.AdditionalCosts() {
-			if !cost.CanPay(card.ID(), playerID, g) {
-				return fmt.Errorf("cannot pay additional cost for %s: %s", card.Name(), cost.Text())
-			}
-			if err := cost.Pay(card.ID(), playerID, g); err != nil {
-				return err
-			}
-		}
+	payment, err := g.prepareSpellPaymentTransaction(spellPaymentSpec{
+		Card:       card,
+		Controller: playerID,
+		Zone:       zone,
+		Mana:       mana,
+		Costs:      totalCosts,
+		Targets:    targets,
+		XValue:     xValue,
+		AnyColor:   anyColor,
+	})
+	if err != nil {
+		return fmt.Errorf("cannot pay total cost for %s: %w", card.Name(), err)
+	}
+	if err := payment.Commit(); err != nil {
+		return err
 	}
 
 	if g.currentX != 0 && xValue == 0 {
@@ -207,12 +214,7 @@ func (g *Game) castCardFromZoneOpts(playerID, cardID uuid.UUID, zone Zone, targe
 		g.currentX = 0
 	}
 
-	// Remove the card from its source zone.
-	if g.removeCardFromZone(playerID, cardID, zone) == nil {
-		return fmt.Errorf("could not remove %s from %s", card.Name(), zone)
-	}
-
-	_, err := g.pushCastSpellObject(castStackObjectOptions{
+	_, err = g.pushCastSpellObject(castStackObjectOptions{
 		Card:              card,
 		Controller:        playerID,
 		Targets:           targets,
@@ -289,62 +291,11 @@ func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets 
 	}
 
 	mc := card.ManaCost()
-	if mc.HasX {
-		mc.Generic += xValue * mc.XCount
+	if err := g.castCardFromZoneOptsWithCosts(playerID, cardID, ZoneExile, targets, xValue, &mc, true, false, nil, perm.AnyColorMana); err != nil {
+		return err
 	}
-
-	spellCtx := SpellContextForCard(card)
-	if perm.AnyColorMana {
-		// CR 609.4b: spend any-color mana for colored pips. Implement by
-		// summing colored requirements into generic and using only the
-		// generic-paying path. Order: pay colored first if pool has them,
-		// then collapse remainder to generic.
-		totalColored := mc.White + mc.Blue + mc.Black + mc.Red + mc.Green + len(mc.Hybrid)
-		flat := ManaCost{Generic: mc.Generic + totalColored}
-		p := g.GetPlayer(playerID)
-		if !p.ManaPool().CanPay(flat, spellCtx) {
-			return fmt.Errorf("cannot pay %s for %s", flat, card.Name())
-		}
-		if err := p.ManaPool().Pay(flat, spellCtx); err != nil {
-			return err
-		}
-	} else {
-		p := g.GetPlayer(playerID)
-		if !mc.IsZero() {
-			if !p.ManaPool().CanPay(mc, spellCtx) {
-				return fmt.Errorf("cannot pay %s for %s", mc, card.Name())
-			}
-			if err := p.ManaPool().Pay(mc, spellCtx); err != nil {
-				return err
-			}
-		}
-	}
-
-	if bc, ok := card.(*BaseCard); ok {
-		for _, cost := range bc.AdditionalCosts() {
-			if !cost.CanPay(card.ID(), playerID, g) {
-				return fmt.Errorf("cannot pay additional cost for %s: %s", card.Name(), cost.Text())
-			}
-			if err := cost.Pay(card.ID(), playerID, g); err != nil {
-				return err
-			}
-		}
-	}
-
 	g.ClearCastFromExilePermission(cardID)
-	if g.removeCardFromZone(playerID, cardID, ZoneExile) == nil {
-		return fmt.Errorf("could not remove %s from exile", card.Name())
-	}
-
-	_, err := g.pushCastSpellObject(castStackObjectOptions{
-		Card:         card,
-		Controller:   playerID,
-		Targets:      targets,
-		XValue:       xValue,
-		CastZone:     ZoneExile,
-		SnapshotCast: true,
-	})
-	return err
+	return nil
 }
 
 // --- "If would be put into a graveyard this turn, exile it instead" ---

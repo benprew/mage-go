@@ -67,47 +67,10 @@ func WithFlashback(mana ManaCost, additional ...Cost) CardOption {
 // Returns nil when the card has no alternate costs.
 func (c *BaseCard) AlternateCosts() []AlternateCost { return c.alternateCosts }
 
-// validateAlternateAdditionalCosts confirms an entire bundle of additional
-// costs can be satisfied together (CR 601.2f). It accounts for sequential
-// consumption of shared resources: e.g. two SacrificeCreatureCost entries
-// require the player to control at least two creatures right now, even
-// though each individual CanPay only checks for one.
-//
-// Per-cost availability beyond that (mana, life, hand size, etc.) is left
-// to the cost's own CanPay; this validator focuses on permanent-pool costs
-// where the same predicate is used multiple times.
-func validateAlternateAdditionalCosts(g *Game, sourceID, controller uuid.UUID, costs []Cost) error {
-	needs := map[string]*sacrificeMatchingCost{}
-	counts := map[string]int{}
-	for _, c := range costs {
-		if !c.CanPay(sourceID, controller, g) {
-			return fmt.Errorf("%s", c.Text())
-		}
-		if sc, ok := c.(*sacrificeMatchingCost); ok {
-			needs[sc.text] = sc
-			counts[sc.text]++
-		}
-	}
-	for key, sc := range needs {
-		need := counts[key]
-		have := 0
-		for _, p := range g.battlefield {
-			if p.ControllerID() == controller && p.ID() != sourceID && sc.filter.Match(p, g) {
-				have++
-			}
-		}
-		if have < need {
-			return fmt.Errorf("%s (need %d, have %d)", sc.text, need, have)
-		}
-	}
-	return nil
-}
-
 // CastCardWithAlternateCost casts the named card via the altIdx'th alternate
 // cost on the card. The card must currently be in the alt's source zone.
-// Mana is auto-tapped from untapped sources if the pool is short; the alt's
-// additional costs are then paid; finally the spell goes onto the stack via
-// the standard cast-from-zone pipeline.
+// The alternate mana, alternate additional costs, printed additional costs,
+// and spell-action costs are locked and paid by the shared spell transaction.
 func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int, targets []uuid.UUID, xValue int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
@@ -141,21 +104,6 @@ func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int,
 		return fmt.Errorf("alt-cost condition not met for %s", card.Name())
 	}
 
-	spellCtx := SpellContextForCard(card)
-	if !alt.Mana.IsZero() && !p.ManaPool().CanPay(alt.Mana, spellCtx) {
-		if err := g.autoTapForCost(playerID, alt.Mana, AutoTapHint{CastingCard: card.ID()}, spellCtx); err != nil {
-			return fmt.Errorf("cannot pay alt-cost mana %s for %s: %w", alt.Mana, card.Name(), err)
-		}
-	}
-	if err := validateAlternateAdditionalCosts(g, card.ID(), playerID, alt.Additional); err != nil {
-		return fmt.Errorf("cannot pay alt additional cost for %s: %w", card.Name(), err)
-	}
-	for _, cost := range alt.Additional {
-		if err := cost.Pay(card.ID(), playerID, g); err != nil {
-			return fmt.Errorf("paying alt additional cost for %s: %w", card.Name(), err)
-		}
-	}
-
 	mc := alt.Mana
-	return g.castCardFromZoneOpts(playerID, cardID, alt.Zone, targets, xValue, &mc, false, alt.Flashback)
+	return g.castCardFromZoneOptsWithCosts(playerID, cardID, alt.Zone, targets, xValue, &mc, false, alt.Flashback, alt.Additional, false)
 }

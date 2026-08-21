@@ -84,9 +84,8 @@ func multiplyManaCost(mc ManaCost, n int) ManaCost {
 
 func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	mc := c.reducedCost(sourceID, g)
-	// TODO: action costs paid mid-cast (game.go:2855+) flow through here and
-	// should see the spell context per CR 601.2f. Workshop/Metamorphosis don't
-	// exercise this path, so nil is fine for now.
+	// Spell casting extracts this cost into the locked total-mana transaction;
+	// this standalone path is used by activated and other non-spell actions.
 	return g.CanAfford(controller, mc, nil)
 }
 

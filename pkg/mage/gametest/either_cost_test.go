@@ -58,6 +58,9 @@ func TestEitherCost_FallsBackToOnlyPayable(t *testing.T) {
 	// Hand has only the spell itself — it'll be on the stack during cost
 	// payment, so discard has no card to take. Only "{5}" is payable.
 	tg.AddCard(core.ZoneHand, PlayerA, "Test Branching Cost Spell")
+	for range 7 {
+		tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	}
 	tg.CastSpell(1, core.PrecombatMain, PlayerA, "Test Branching Cost Spell")
 	tg.StopAt(1, core.EndStep)
 	tg.Execute()

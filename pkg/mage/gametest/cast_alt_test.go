@@ -42,6 +42,24 @@ func registerCastAltTestCards() {
 				)
 			})
 		}
+		if !mage.CardRegistered("Cast-Alt Atomic Failure") {
+			mage.Register("Cast-Alt Atomic Failure", func() mage.Card {
+				return mage.NewSorcery("Cast-Alt Atomic Failure", "{2}{R}",
+					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.WithAdditionalCost(mage.LifePayCost(100)),
+					mage.WithFlashback(core.ParseManaCost("{R}")),
+				)
+			})
+		}
+		if !mage.CardRegistered("Cast-Alt Combined Mana") {
+			mage.Register("Cast-Alt Combined Mana", func() mage.Card {
+				return mage.NewSorcery("Cast-Alt Combined Mana", "{3}",
+					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.WithAdditionalCost(mage.ManaCostOf("{W}")),
+					mage.WithFlashback(core.ParseManaCost("{1}")),
+				)
+			})
+		}
 	})
 }
 
@@ -239,6 +257,50 @@ func TestCastFromZoneWithAlternateCost(t *testing.T) {
 	}
 	if pA.ManaPool().TotalMana() != 0 {
 		t.Errorf("expected mana pool empty after paying alt cost, got %d", pA.ManaPool().TotalMana())
+	}
+}
+
+func TestAlternateCastUnpayableTotalCostDoesNotTapManaSources(t *testing.T) {
+	registerCastAltTestCards()
+	tg := NewTestGame(t)
+	pA := tg.GetPlayer(PlayerA)
+	tg.AddCard(core.ZoneGraveyard, PlayerA, "Cast-Alt Atomic Failure")
+	cardID := pA.Graveyard()[0].ID()
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Mountain")
+	mountain := tg.FindPermanentByName("Mountain", pA.PlayerID())
+
+	if err := tg.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, nil, 0); err == nil {
+		t.Fatal("expected the unpayable total alternate cost to reject the cast")
+	}
+	if mountain.Tapped {
+		t.Fatal("failed alternate cast tapped its Mountain")
+	}
+	if got := pA.ManaPool().TotalMana(); got != 0 {
+		t.Fatalf("failed alternate cast left %d mana in the pool, want 0", got)
+	}
+	found := false
+	for _, card := range pA.Graveyard() {
+		found = found || card.ID() == cardID
+	}
+	if !found {
+		t.Fatal("failed alternate cast removed the spell from the graveyard")
+	}
+}
+
+func TestAlternateCastCombinesManaComponents(t *testing.T) {
+	registerCastAltTestCards()
+	tg := NewTestGame(t)
+	pA := tg.GetPlayer(PlayerA)
+	tg.AddCard(core.ZoneGraveyard, PlayerA, "Cast-Alt Combined Mana")
+	cardID := pA.Graveyard()[0].ID()
+	pA.ManaPool().Add(core.White, 1)
+	pA.ManaPool().Add(core.Blue, 1)
+
+	if err := tg.CastCardWithAlternateCost(pA.PlayerID(), cardID, 0, nil, 0); err != nil {
+		t.Fatalf("casting alternate {1} plus additional {W} from {W}{U}: %v", err)
+	}
+	if got := pA.ManaPool().TotalMana(); got != 0 {
+		t.Fatalf("alternate total payment left %d mana, want 0", got)
 	}
 }
 
