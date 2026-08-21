@@ -1,6 +1,7 @@
 package interactive
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -14,7 +15,15 @@ import (
 // aiActionPause is how long to pause after each visible AI action so the player
 // can see what happened; 0 means no pause (useful for testing).
 func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
+	RunGameLoopContext(context.Background(), g, humanIdx, aiActionPause)
+}
+
+// RunGameLoopContext runs the interactive game loop until the game ends or the
+// context is canceled.
+func RunGameLoopContext(ctx context.Context, g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 	hp := g.PlayerAt(humanIdx).(*HumanPlayer)
+	hp.setDone(ctx.Done())
+	defer hp.setDone(nil)
 	defer close(hp.toTUI)
 	defer close(hp.choiceReqs)
 
@@ -33,9 +42,12 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 		hp.gameLog = gameLog
 	}
 
-	send := func(prompt PromptType, options []ActionOption) {
+	send := func(prompt PromptType, options []ActionOption) bool {
+		if ctx.Err() != nil {
+			return false
+		}
 		state := SnapshotGameState(g, humanIdx)
-		hp.toTUI <- GameMsg{
+		msg := GameMsg{
 			State:    state,
 			Prompt:   prompt,
 			Options:  options,
@@ -44,22 +56,36 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 			Winner:   g.Winner(),
 			CanUndo:  lastUndo.valid,
 		}
+		select {
+		case hp.toTUI <- msg:
+			return true
+		case <-ctx.Done():
+			return false
+		}
 	}
 
-	getHumanAction := func(mainPhase bool) PriorityAction {
+	getHumanAction := func(mainPhase bool) (PriorityAction, bool) {
 		playerID := g.PlayerAt(humanIdx).PlayerID()
 		options := GetAvailableActions(g, playerID)
 		if shouldAutoPassPriority(options) {
 			lastUndo.valid = false
-			send(PromptNone, nil)
-			return PriorityAction{Type: ActionPass}
+			return PriorityAction{Type: ActionPass}, send(PromptNone, nil)
 		}
 		if mainPhase {
-			send(PromptMainPhaseAction, options)
+			if !send(PromptMainPhaseAction, options) {
+				return PriorityAction{Type: ActionPass}, false
+			}
 		} else {
-			send(PromptPriority, options)
+			if !send(PromptPriority, options) {
+				return PriorityAction{Type: ActionPass}, false
+			}
 		}
-		return <-hp.fromTUI
+		select {
+		case action := <-hp.fromTUI:
+			return action, true
+		case <-ctx.Done():
+			return PriorityAction{Type: ActionPass}, false
+		}
 	}
 
 	getAIAction := func(mainPhase bool) PriorityAction {
@@ -71,23 +97,38 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 
 	// showAIAction sends an updated game state snapshot and briefly pauses so the
 	// player can see the result of each AI action before the game moves on.
-	showAIAction := func() {
-		send(PromptNone, nil)
-		if aiActionPause > 0 {
-			time.Sleep(aiActionPause)
+	showAIAction := func() bool {
+		if !send(PromptNone, nil) {
+			return false
 		}
+		if aiActionPause > 0 {
+			timer := time.NewTimer(aiActionPause)
+			defer timer.Stop()
+			select {
+			case <-timer.C:
+			case <-ctx.Done():
+				return false
+			}
+		}
+		return true
 	}
 
-	getAction := func(playerIdx int, mainPhase bool) PriorityAction {
+	getAction := func(playerIdx int, mainPhase bool) (PriorityAction, bool) {
+		if ctx.Err() != nil {
+			return PriorityAction{Type: ActionPass}, false
+		}
 		if playerIdx == humanIdx {
 			return getHumanAction(mainPhase)
 		}
-		return getAIAction(mainPhase)
+		return getAIAction(mainPhase), true
 	}
 
 	// --- Install priority handler on the engine ---
 	g.SetOnPriority(func(g *mage.Game, playerIdx int, mainPhase bool) mage.PriorityAction {
-		action := getAction(playerIdx, mainPhase)
+		action, ok := getAction(playerIdx, mainPhase)
+		if !ok {
+			return mage.PriorityAction{Type: mage.PriorityPass}
+		}
 
 		// Handle undo (loop until real action)
 		for action.Type == ActionUndo && lastUndo.valid {
@@ -97,7 +138,10 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 			}
 			lastUndo.valid = false
 			addLog("Undid last action")
-			action = getAction(playerIdx, mainPhase)
+			action, ok = getAction(playerIdx, mainPhase)
+			if !ok {
+				return mage.PriorityAction{Type: mage.PriorityPass}
+			}
 		}
 
 		if action.Type != ActionPass {
@@ -139,7 +183,7 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 			addLog(fmt.Sprintf("Activated ability: %s%s", name, targetSuffix(g, action.Targets)))
 		}
 		if playerIdx != humanIdx {
-			showAIAction()
+			_ = showAIAction()
 		}
 	})
 
@@ -165,6 +209,9 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 	// --- Main turn loop ---
 	for g.CurrentTurn() <= 100 {
 		for _, step := range core.AllSteps() {
+			if ctx.Err() != nil {
+				return
+			}
 			// Pre-step logging
 			if step == core.CombatDamage {
 				if len(g.CombatGroups()) > 0 {
@@ -174,6 +221,9 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 			}
 
 			g.RunStepWithPriority(step)
+			if ctx.Err() != nil {
+				return
+			}
 
 			// Post-step logging and display
 			switch step {
@@ -191,12 +241,12 @@ func RunGameLoop(g *mage.Game, humanIdx int, aiActionPause time.Duration) {
 			case core.CombatDamage:
 				if len(g.CombatGroups()) > 0 {
 					reportCombatResults(g, addLog)
-					showAIAction()
+					_ = showAIAction()
 				}
 			}
 
 			if g.IsGameOver() {
-				send(PromptNone, nil)
+				_ = send(PromptNone, nil)
 				return
 			}
 		}

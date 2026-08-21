@@ -18,6 +18,7 @@ type HumanPlayer struct {
 	gameLog     []string // kept in sync by RunGameLoop; used when building GameMsg
 	choiceReqs  chan ChoiceRequest
 	choiceResps chan ChoiceResponse
+	done        <-chan struct{}
 
 	combatDamageAssignments map[uuid.UUID]map[uuid.UUID]int
 }
@@ -62,13 +63,15 @@ func (p *HumanPlayer) DeclareAttackers(g *mage.Game) []uuid.UUID {
 	}
 	idx := findPlayerIndex(g, p.PlayerID())
 	state := SnapshotGameState(g, idx)
-	p.toTUI <- GameMsg{
+	if !p.sendGameMsg(GameMsg{
 		State:   state,
 		Prompt:  PromptDeclareAttackers,
 		Options: attackerOptions(eligible),
 		Log:     append([]string(nil), p.gameLog...),
+	}) {
+		return nil
 	}
-	action := <-p.fromTUI
+	action := p.receiveAction()
 	if action.Type == ActionSelectAttackers {
 		return action.Attackers
 	}
@@ -84,13 +87,15 @@ func (p *HumanPlayer) DeclareBlockers(g *mage.Game) []mage.BlockAssignment {
 	}
 	idx := findPlayerIndex(g, p.PlayerID())
 	state := SnapshotGameState(g, idx)
-	p.toTUI <- GameMsg{
+	if !p.sendGameMsg(GameMsg{
 		State:   state,
 		Prompt:  PromptDeclareBlockers,
 		Options: blockerOptions(g, p.PlayerID(), eligible),
 		Log:     append([]string(nil), p.gameLog...),
+	}) {
+		return nil
 	}
-	action := <-p.fromTUI
+	action := p.receiveAction()
 	if action.Type == ActionSelectBlockers {
 		return action.Blockers
 	}
@@ -103,13 +108,15 @@ func (p *HumanPlayer) GetBlockerOrder(g *mage.Game, attacker *mage.Permanent, bl
 	}
 	idx := findPlayerIndex(g, p.PlayerID())
 	state := SnapshotGameState(g, idx)
-	p.toTUI <- GameMsg{
+	if !p.sendGameMsg(GameMsg{
 		State:   state,
 		Prompt:  PromptAssignCombatDamage,
 		Options: combatDamageOptions(g, attacker, blockers, totalPower),
 		Log:     append([]string(nil), p.gameLog...),
+	}) {
+		return nil
 	}
-	action := <-p.fromTUI
+	action := p.receiveAction()
 	if action.Type != ActionAssignCombatDamage {
 		return nil
 	}
@@ -128,13 +135,15 @@ func (p *HumanPlayer) GetCombatDamageAssignment(g *mage.Game, attacker *mage.Per
 
 	idx := findPlayerIndex(g, p.PlayerID())
 	state := SnapshotGameState(g, idx)
-	p.toTUI <- GameMsg{
+	if !p.sendGameMsg(GameMsg{
 		State:   state,
 		Prompt:  PromptAssignCombatDamage,
 		Options: combatDamageOptions(g, attacker, blockers, totalPower),
 		Log:     append([]string(nil), p.gameLog...),
+	}) {
+		return nil
 	}
-	action := <-p.fromTUI
+	action := p.receiveAction()
 	if action.Type != ActionAssignCombatDamage {
 		return nil
 	}
@@ -151,13 +160,48 @@ func (p *HumanPlayer) ChoiceResponses() chan<- ChoiceResponse {
 	return p.choiceResps
 }
 
+func (p *HumanPlayer) setDone(done <-chan struct{}) {
+	p.done = done
+}
+
+func (p *HumanPlayer) sendGameMsg(msg GameMsg) bool {
+	select {
+	case p.toTUI <- msg:
+		return true
+	case <-p.done:
+		return false
+	}
+}
+
+func (p *HumanPlayer) receiveAction() PriorityAction {
+	select {
+	case action := <-p.fromTUI:
+		return action
+	case <-p.done:
+		return PriorityAction{Type: ActionPass}
+	}
+}
+
+func (p *HumanPlayer) requestChoice(req ChoiceRequest) ChoiceResponse {
+	select {
+	case p.choiceReqs <- req:
+	case <-p.done:
+		return ChoiceResponse{}
+	}
+	select {
+	case resp := <-p.choiceResps:
+		return resp
+	case <-p.done:
+		return ChoiceResponse{}
+	}
+}
+
 func (p *HumanPlayer) ChooseMode(modes []string, reason string) int {
 	opts := make([]ChoiceOption, len(modes))
 	for i, m := range modes {
 		opts[i] = ChoiceOption{Label: m}
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoiceMode, Reason: reason, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoiceMode, Reason: reason, Options: opts})
 	return resp.SelectedIndex
 }
 
@@ -169,8 +213,7 @@ func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason strin
 	for i, c := range candidates {
 		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name()}
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoicePermanent, Reason: reason, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoicePermanent, Reason: reason, Options: opts})
 	if len(resp.SelectedIDs) > 0 {
 		for _, c := range candidates {
 			if c.ID() == resp.SelectedIDs[0] {
@@ -189,8 +232,7 @@ func (p *HumanPlayer) ChooseCardFromHand(candidates []mage.Card, reason string, 
 	for i, c := range candidates {
 		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoiceCardsFromHand, Reason: reason, Amount: 1, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoiceCardsFromHand, Reason: reason, Amount: 1, Options: opts})
 	if len(resp.SelectedIDs) > 0 {
 		for _, c := range candidates {
 			if c.ID() == resp.SelectedIDs[0] {
@@ -213,8 +255,7 @@ func (p *HumanPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 	for i, c := range hand {
 		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoiceCardsFromHand, Reason: reason, Amount: amount, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoiceCardsFromHand, Reason: reason, Amount: amount, Options: opts})
 	idSet := make(map[uuid.UUID]bool, len(resp.SelectedIDs))
 	for _, id := range resp.SelectedIDs {
 		idSet[id] = true
@@ -239,8 +280,7 @@ func (p *HumanPlayer) ChooseManaColor(reason string) core.Color {
 		{Label: "Red", Color: core.Red},
 		{Label: "Green", Color: core.Green},
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoiceManaColor, Reason: reason, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoiceManaColor, Reason: reason, Options: opts})
 	return resp.SelectedColor
 }
 
@@ -252,8 +292,7 @@ func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 	for i, c := range candidates {
 		opts[i] = ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()}
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoiceCardFromLibrary, Reason: reason, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoiceCardFromLibrary, Reason: reason, Options: opts})
 	if len(resp.SelectedIDs) > 0 {
 		for _, c := range candidates {
 			if c.ID() == resp.SelectedIDs[0] {
@@ -265,15 +304,14 @@ func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 }
 
 func (p *HumanPlayer) ChooseMayAbility(description string) bool {
-	p.choiceReqs <- ChoiceRequest{
+	resp := p.requestChoice(ChoiceRequest{
 		Type:   ChoiceMay,
 		Reason: description,
 		Options: []ChoiceOption{
 			{Label: "Yes"},
 			{Label: "No"},
 		},
-	}
-	resp := <-p.choiceResps
+	})
 	return resp.Accepted
 }
 
@@ -282,8 +320,7 @@ func (p *HumanPlayer) ChooseNumber(minimum, maximum int, reason string) int {
 	for i := minimum; i <= maximum; i++ {
 		opts[i-minimum] = ChoiceOption{Label: fmt.Sprintf("%d", i)}
 	}
-	p.choiceReqs <- ChoiceRequest{Type: ChoiceNumber, Reason: reason, Options: opts}
-	resp := <-p.choiceResps
+	resp := p.requestChoice(ChoiceRequest{Type: ChoiceNumber, Reason: reason, Options: opts})
 	n := resp.SelectedIndex + minimum
 	if n < minimum {
 		return minimum
