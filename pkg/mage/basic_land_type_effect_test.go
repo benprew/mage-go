@@ -85,6 +85,44 @@ func TestBecomesBasicLandTargetEffectAddsIntrinsicManaDuringLayerFourApply(t *te
 	}
 }
 
+func TestAutoTapForCostUsesManaFromChangedBasicLandSubtype(t *testing.T) {
+	player := NewBasePlayer("Alice")
+	g := NewGame(player, NewBasePlayer("Bob"))
+	card := NewLand("Mishra's Factory", WithManaAbility(Colorless))
+	card.SetOwner(player.PlayerID())
+	land := g.PutOnBattlefield(card, player.PlayerID())
+	g.AddContinuousEffect(BecomesBasicLandTargetEffect(land.ID(), Indefinite, "Island"))
+
+	if err := g.AutoTapForCost(player.PlayerID(), ManaCost{Blue: 1}); err != nil {
+		t.Fatalf("AutoTapForCost({U}) failed after land became an Island: %v", err)
+	}
+	if !land.Tapped {
+		t.Fatal("changed land was not tapped to pay {U}")
+	}
+}
+
+func TestAutoTapForCostUsesManaFlareBonusFromChangedBasicLandSubtype(t *testing.T) {
+	player := NewBasePlayer("Alice")
+	g := NewGame(player, NewBasePlayer("Bob"))
+	card := NewLand("Mishra's Factory", WithManaAbility(Colorless))
+	card.SetOwner(player.PlayerID())
+	land := g.PutOnBattlefield(card, player.PlayerID())
+	flare := NewEnchantment("Mana Flare", "{2}{R}", WithAbility(NewManaFlareAbility(IsLand)))
+	flare.SetOwner(player.PlayerID())
+	g.PutOnBattlefield(flare, player.PlayerID())
+	g.AddContinuousEffect(BecomesBasicLandTargetEffect(land.ID(), Indefinite, "Island"))
+
+	if !g.CanAfford(player.PlayerID(), ManaCost{Blue: 2}, nil) {
+		t.Fatal("mana solver did not consider {U}{U} affordable")
+	}
+	if err := g.AutoTapForCost(player.PlayerID(), ManaCost{Blue: 2}); err != nil {
+		t.Fatalf("AutoTapForCost({U}{U}) failed with Mana Flare after land became an Island: %v", err)
+	}
+	if !land.Tapped {
+		t.Fatal("changed land was not tapped to pay {U}{U}")
+	}
+}
+
 func TestBecomesBasicLandTargetEffectClearsOnlyLandSubtypes(t *testing.T) {
 	player := NewBasePlayer("Alice")
 	g := NewGame(player, NewBasePlayer("Bob"))

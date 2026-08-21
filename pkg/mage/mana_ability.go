@@ -22,6 +22,20 @@ type ManaProduction struct {
 // function more than once without activating the ability.
 type ManaProductionFunc func(g GameReader, sourceID uuid.UUID) []ManaProduction
 
+// ManaBonusColor describes either a fixed bonus-mana color or a bonus whose
+// color matches the color selected for the source's mana production.
+type ManaBonusColor Color
+
+const MatchProduced ManaBonusColor = ManaBonusColor(AnyColor) + 1
+
+// Resolve returns the concrete color of the bonus for a source activation.
+func (c ManaBonusColor) Resolve(producedColor Color) Color {
+	if c == MatchProduced {
+		return producedColor
+	}
+	return Color(c)
+}
+
 // ManaAbility is a mana ability that taps to add mana.
 // Productions defines what mana is produced. Each entry is a color+amount pair.
 // Use AnyColor as the color to let the player choose when activated.

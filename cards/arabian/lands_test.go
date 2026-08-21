@@ -73,6 +73,31 @@ func TestCityOfBrass(t *testing.T) {
 		// Tapping City of Brass for mana should deal 1 damage to controller
 		g.AssertLife(gametest.PlayerA, 19)
 	})
+
+	t.Run("autotap_prefers_islands", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "City of Brass")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island")
+		playerID := g.GetPlayer(gametest.PlayerA).PlayerID()
+
+		if err := g.AutoTapForCost(playerID, core.ManaCost{Blue: 2}); err != nil {
+			t.Fatalf("AutoTapForCost({U}{U}) failed: %v", err)
+		}
+		city := g.FindPermanentByName("City of Brass", playerID)
+		if city == nil || city.Tapped {
+			t.Fatal("solver tapped City of Brass instead of two Islands")
+		}
+		islandsTapped := 0
+		for _, permanent := range g.AllBattlefield() {
+			if permanent.ControllerID() == playerID && permanent.Name() == "Island" && permanent.Tapped {
+				islandsTapped++
+			}
+		}
+		if islandsTapped != 2 {
+			t.Fatalf("tapped Islands = %d, want 2", islandsTapped)
+		}
+	})
 }
 
 func TestDiamondValley(t *testing.T) {

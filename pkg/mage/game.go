@@ -4282,6 +4282,7 @@ func productionsMatchColor(productions []ManaProduction, preferredColor Color) b
 // Recognizes both *ManaAbility and *SimpleActivatedAbility whose only cost is
 // tapping and whose effects all produce mana (AddMana / AddAnyMana).
 func abilityManaProductions(a Ability, g GameReader, sourceID uuid.UUID) []ManaProduction {
+	a = UnwrapAbility(a)
 	switch ab := a.(type) {
 	case *ManaAbility:
 		return ab.currentProductions(g, sourceID)
@@ -4359,28 +4360,31 @@ type AutoTapHint struct {
 
 var manaPoolColors = [...]Color{White, Blue, Black, Red, Green, Colorless}
 
-// countManaBonuses returns how many bonus mana a permanent would produce when tapped.
-func (g *Game) countManaBonuses(permanentID uuid.UUID) int {
+func (g *Game) manaBonuses(permanentID uuid.UUID) []ManaBonusColor {
 	tappedPerm := g.FindPermanent(permanentID)
 	if tappedPerm == nil {
-		return 0
+		return nil
 	}
-	bonus := 0
+	var bonuses []ManaBonusColor
 	for _, perm := range g.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			inner := UnwrapAbility(a)
 			if mb, ok := inner.(*ManaBonusAbility); ok {
 				if mb.AttachedOnly {
 					if perm.AttachedTo == tappedPerm.ID() {
-						bonus++
+						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
 					}
 				} else if mb.Filter.Match(tappedPerm, g) {
-					bonus++
+					if mb.MatchProduced {
+						bonuses = append(bonuses, MatchProduced)
+					} else {
+						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
+					}
 				}
 			}
 		}
 	}
-	return bonus
+	return bonuses
 }
 
 // getUntappedManaSources returns all untapped permanents with mana abilities for a player.
@@ -4567,7 +4571,7 @@ func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint Auto
 		Cost:        mc,
 		Sources:     sources,
 		Scores:      scores,
-		BonusFor:    g.countManaBonuses,
+		BonusesFor:  g.manaBonuses,
 		Conversions: p.ManaPool().ManaConversions,
 	}
 	costed := g.getCostedManaSources(playerID)
@@ -4601,6 +4605,9 @@ func (g *Game) preservationScore(src manaSourceInfo, hint AutoTapHint, handDeman
 	// Each non-mana activated ability on the permanent adds utility — prefer
 	// to keep utility lands like Strip Mine and Mishra's Factory untapped.
 	score += 10 * g.utilityAbilityCount(src.PermanentID)
+	// Preserve mana sources whose active tap triggers are detrimental, such as
+	// City of Brass dealing damage to its controller.
+	score += g.manaSourceDrawbackScore(src.PermanentID)
 	// Color flexibility: colorless-only sources (Sol Ring, Wastes) are least
 	// flexible and tap first. Each colored option adds +1 — duals are
 	// preserved more than basics, AnyColor sources more than duals.
@@ -4613,6 +4620,32 @@ func (g *Game) preservationScore(src manaSourceInfo, hint AutoTapHint, handDeman
 		// color is still needed for unplayed cards.
 		if c >= 0 && int(c) <= int(AnyColor) {
 			score += handDemand[c]
+		}
+	}
+	return score
+}
+
+func (g *Game) manaSourceDrawbackScore(permID uuid.UUID) int {
+	perm := g.FindPermanent(permID)
+	if perm == nil {
+		return 0
+	}
+	score := 0
+	for _, ability := range perm.RuntimeAbilities {
+		triggered, ok := UnwrapAbility(ability).(TriggeredAbility)
+		if !ok || !triggered.CheckEventType(EvtTapped) {
+			continue
+		}
+		for _, effect := range triggered.Effects() {
+			props := effect.Properties()
+			if props.Outcome != OutcomeDetriment {
+				continue
+			}
+			severity := 1
+			if props.DamageValue != nil {
+				severity = max(props.DamageValue.Resolve(g, perm.ID(), perm.ControllerID(), nil), 1)
+			}
+			score += 25 * severity
 		}
 	}
 	return score
@@ -4687,7 +4720,7 @@ func (g *Game) HypotheticalMana(playerID uuid.UUID) int {
 	g.manaScratch = sources
 	for _, src := range sources {
 		total += src.Amount
-		total += g.countManaBonuses(src.PermanentID)
+		total += len(g.manaBonuses(src.PermanentID))
 	}
 	return total
 }
@@ -4707,7 +4740,7 @@ func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 		Cost:          mc,
 		Sources:       sources,
 		CostedSources: g.getCostedManaSources(playerID),
-		BonusFor:      g.countManaBonuses,
+		BonusesFor:    g.manaBonuses,
 		Conversions:   p.ManaPool().ManaConversions,
 		SpellContext:  spellCtx,
 	})
@@ -4727,7 +4760,7 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
 	g.manaScratch = sources
 	scores := make([]int, len(sources))
-	bonusFor := g.countManaBonuses
+	bonusesFor := g.manaBonuses
 	conv := p.ManaPool().ManaConversions
 	pool := p.ManaPool()
 	costed := g.getCostedManaSources(playerID)
@@ -4735,13 +4768,13 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 	// Upper bound: every source taps for its full Amount + bonus, plus pool.
 	upperMana := pool.TotalMana()
 	for _, src := range sources {
-		upperMana += src.Amount + bonusFor(src.PermanentID)
+		upperMana += src.Amount + len(bonusesFor(src.PermanentID))
 	}
 	for _, src := range costed {
 		for _, production := range src.Productions {
 			upperMana += max(production.Amount, 1)
 		}
-		upperMana += bonusFor(src.PermanentID)
+		upperMana += len(bonusesFor(src.PermanentID))
 	}
 	tryX := func(x int) bool {
 		cost := ManaCost{
@@ -4759,7 +4792,7 @@ func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPayment
 			Sources:       sources,
 			CostedSources: costed,
 			Scores:        scores,
-			BonusFor:      bonusFor,
+			BonusesFor:    bonusesFor,
 			Conversions:   conv,
 			SpellContext:  spellCtx,
 		})

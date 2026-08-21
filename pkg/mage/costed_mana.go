@@ -150,7 +150,7 @@ func manaProductionChoices(source manaPlanSource) []manaProductionChoice {
 	return []manaProductionChoice{{Color: Colorless, Productions: source.Productions}}
 }
 
-func addPlannedProductions(pool *ManaPool, productions []ManaProduction, preferred Color, bonus int) {
+func addPlannedProductions(pool *ManaPool, productions []ManaProduction, preferred Color, bonuses []ManaBonusColor) {
 	for _, production := range productions {
 		amount := production.Amount
 		if amount <= 0 {
@@ -162,8 +162,8 @@ func addPlannedProductions(pool *ManaPool, productions []ManaProduction, preferr
 		}
 		pool.Add(color, amount)
 	}
-	if bonus > 0 {
-		pool.Add(Colorless, bonus)
+	for _, bonus := range bonuses {
+		pool.Add(bonus.Resolve(preferred), 1)
 	}
 }
 
@@ -179,9 +179,9 @@ func planCostedManaPayment(in ManaSolverInputs) ([]ManaTap, bool) {
 	used := make([]bool, len(sources))
 	path := make([]ManaTap, 0, len(sources))
 	memo := make(map[string]bool)
-	bonusFor := in.BonusFor
-	if bonusFor == nil {
-		bonusFor = func(uuid.UUID) int { return 0 }
+	bonusesFor := in.BonusesFor
+	if bonusesFor == nil {
+		bonusesFor = func(uuid.UUID) []ManaBonusColor { return nil }
 	}
 
 	var search func() bool
@@ -205,7 +205,7 @@ func planCostedManaPayment(in ManaSolverInputs) ([]ManaTap, bool) {
 					pool.RestorePool(snapshot)
 					continue
 				}
-				addPlannedProductions(pool, choice.Productions, choice.Color, bonusFor(source.PermanentID))
+				addPlannedProductions(pool, choice.Productions, choice.Color, bonusesFor(source.PermanentID))
 				for j := range sources {
 					if sources[j].PermanentID == source.PermanentID {
 						used[j] = true

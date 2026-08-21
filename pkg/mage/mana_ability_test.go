@@ -151,3 +151,12 @@ func TestDynamicManaAbility_PostProductionMutationIsCloneSafe(t *testing.T) {
 		t.Errorf("clone post-production mutation leaked to original: got %s", perm.ChosenColor)
 	}
 }
+
+func TestManaBonusColorResolve(t *testing.T) {
+	if got := ManaBonusColor(Green).Resolve(Blue); got != Green {
+		t.Fatalf("fixed green bonus resolved to %v", got)
+	}
+	if got := MatchProduced.Resolve(Blue); got != Blue {
+		t.Fatalf("match-produced bonus resolved to %v", got)
+	}
+}

@@ -214,6 +214,39 @@ func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 	}
 }
 
+func TestAutoTapForCost_PrefersLandsWithoutTapDrawback(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	painful := NewLand("Painful Island",
+		WithManaAbility(Blue),
+		WithAbility(NewTriggered(EvtTapped, false,
+			DealDamageToPlayers(Fixed(1), SelectController()),
+		).SetConditionData(EventSourceIsSelf{})),
+	)
+	painful.SetOwner(pid)
+	painfulPerm := g.PutOnBattlefield(painful, pid)
+
+	islands := make([]*Permanent, 0, 2)
+	for range 2 {
+		island := NewLand("Island", WithSubTypes("Island"), WithManaAbility(Blue))
+		island.SetOwner(pid)
+		islands = append(islands, g.PutOnBattlefield(island, pid))
+	}
+
+	if err := g.AutoTapForCost(pid, ManaCost{Blue: 2}); err != nil {
+		t.Fatalf("AutoTapForCost({U}{U}) failed: %v", err)
+	}
+	if painfulPerm.Tapped {
+		t.Fatal("solver tapped the land with a damage drawback")
+	}
+	for _, island := range islands {
+		if !island.Tapped {
+			t.Fatal("solver did not tap both drawback-free Islands")
+		}
+	}
+}
+
 func TestMaxXValue_BasicLands(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()

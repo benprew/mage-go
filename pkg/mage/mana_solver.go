@@ -24,8 +24,8 @@ import (
 //     = prefer to keep untapped. The solver picks lowest-score eligible
 //     source at each step. Score is computed by the caller via
 //     preservationScore so the solver stays caller-agnostic.
-//   - BonusFor: returns the additional mana (from Mana Flare-style abilities
-//     elsewhere on the battlefield) produced when the given permanent taps.
+//   - BonusesFor: returns bonus mana from Mana Flare-style abilities elsewhere
+//     on the battlefield. Each value is a fixed color or MatchProduced.
 //   - Conversions: one-way mana conversions (Sunglasses of Urza style:
 //     Red→White lets red mana / red sources pay white slots). Optional.
 //   - SpellContext: payment context for restricted mana used on the final cost.
@@ -36,14 +36,14 @@ type ManaSolverInputs struct {
 	Sources       []manaSourceInfo
 	CostedSources []costedManaSource
 	Scores        []int
-	BonusFor      func(uuid.UUID) int
+	BonusesFor    func(uuid.UUID) []ManaBonusColor
 	Conversions   map[Color]Color
 	SpellContext  *SpellPaymentContext
 }
 
 // ManaTap describes one source the caller should tap and the color slot the
 // solver picked it for. Color is the colored requirement (White/Blue/Black/
-// Red/Green) the tap is satisfying; Colorless means the tap was picked in
+// Red/Green) the source should produce; Colorless means the tap was picked in
 // the generic pass and any color the source produces is acceptable.
 //
 // The color matters for sources that have multiple separate mana abilities
@@ -192,21 +192,20 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 	}
 	genericNeeded := mc.Generic - min(mc.Generic, poolRemaining)
 
-	bonusFor := in.BonusFor
-	if bonusFor == nil {
-		bonusFor = func(uuid.UUID) int { return 0 }
+	bonusesFor := in.BonusesFor
+	if bonusesFor == nil {
+		bonusesFor = func(uuid.UUID) []ManaBonusColor { return nil }
 	}
 
 	var toTap []ManaTap
 	surplusMana := 0
-	// coloredSurplus tracks colored mana left over from dual-emit sources
-	// after their "trigger" color slot is satisfied. A future slot of the
-	// same color drains the surplus before reaching for another source.
+	// coloredSurplus tracks colored mana left over after a source satisfies its
+	// first slot, including multi-mana sources and mana-bonus effects.
 	var coloredSurplus [AnyColor + 1]int
 
 	// Colored pass: per slot, pick lowest-score source that can produce the
-	// required color. Multi-mana sources contribute their excess (Amount - 1)
-	// plus any bonus mana to surplusMana so the generic pass benefits.
+	// required color. Extra and bonus mana retain their colors so a source that
+	// produces {U}{U}, including via Mana Flare, can satisfy two blue pips.
 	// Iterate colorNeeds (slice) rather than `needed` (map) so the tap order
 	// in toTap is deterministic across runs.
 	for _, cn := range colorNeeds {
@@ -230,11 +229,11 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			}
 			src := sources[idx]
 			sources[idx].PermanentID = uuid.Nil
+			productionColor := sourceColorForRequirement(src, cn.color, conv)
 			if collectSolution {
-				toTap = append(toTap, ManaTap{PermanentID: src.PermanentID, AbilityIndex: -1, Color: cn.color})
+				toTap = append(toTap, ManaTap{PermanentID: src.PermanentID, AbilityIndex: -1, Color: productionColor})
 			}
 			needed[cn.color]--
-			bonus := bonusFor(src.PermanentID)
 			if len(src.PerTapOutput) > 0 {
 				// Dual-emit: route every produced color to its surplus
 				// bucket (minus the one unit we just consumed for cn.color).
@@ -260,14 +259,27 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 						coloredSurplus[effC] += amt
 					}
 				}
-				surplusMana += bonus
 				// Any leftover Amount beyond the per-tap colored output (rare;
 				// indicates Amount > sum of PerTapOutput) falls into generic.
 				if src.Amount > total {
 					surplusMana += src.Amount - total
 				}
 			} else {
-				surplusMana += max(src.Amount-1, 0) + bonus
+				extra := max(src.Amount-1, 0)
+				effectiveColor := convertedManaColor(productionColor, conv)
+				if effectiveColor == Colorless {
+					surplusMana += extra
+				} else {
+					coloredSurplus[effectiveColor] += extra
+				}
+			}
+			for _, bonus := range bonusesFor(src.PermanentID) {
+				effectiveColor := convertedManaColor(bonus.Resolve(productionColor), conv)
+				if effectiveColor == Colorless {
+					surplusMana++
+				} else {
+					coloredSurplus[effectiveColor]++
+				}
 			}
 		}
 	}
@@ -288,7 +300,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			if src.PermanentID == uuid.Nil {
 				continue
 			}
-			if src.Amount+bonusFor(src.PermanentID) <= 1 {
+			if src.Amount+len(bonusesFor(src.PermanentID)) <= 1 {
 				singleManaCount++
 			}
 		}
@@ -302,7 +314,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 			}
 			s := scoreAt(scores, j)
 			if needEfficiency {
-				produced := src.Amount + bonusFor(src.PermanentID)
+				produced := src.Amount + len(bonusesFor(src.PermanentID))
 				saved := min(produced, genericNeeded) - 1
 				if saved > 0 {
 					s -= saved * efficiencyBonusPerSavedTap
@@ -319,7 +331,7 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 		if collectSolution {
 			toTap = append(toTap, ManaTap{PermanentID: sources[idx].PermanentID, AbilityIndex: -1, Color: Colorless})
 		}
-		produced := sources[idx].Amount + bonusFor(sources[idx].PermanentID)
+		produced := sources[idx].Amount + len(bonusesFor(sources[idx].PermanentID))
 		genericNeeded -= produced
 		sources[idx].PermanentID = uuid.Nil
 	}
@@ -328,6 +340,27 @@ func solveMana(in ManaSolverInputs, sources []manaSourceInfo, collectSolution bo
 		return nil, true, nil
 	}
 	return &ManaSolution{SourcesToTap: toTap}, true, nil
+}
+
+func sourceColorForRequirement(src manaSourceInfo, required Color, conv map[Color]Color) Color {
+	for _, color := range src.Colors {
+		if color == required {
+			return color
+		}
+	}
+	for _, color := range src.Colors {
+		if convertedManaColor(color, conv) == required {
+			return color
+		}
+	}
+	return required
+}
+
+func convertedManaColor(color Color, conv map[Color]Color) Color {
+	if converted, ok := conv[color]; ok {
+		return converted
+	}
+	return color
 }
 
 func scoreAt(scores []int, i int) int {
