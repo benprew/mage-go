@@ -98,6 +98,176 @@ func TestCanAfford_PoolCoversEntireCost(t *testing.T) {
 	}
 }
 
+func TestCanAfford_RejectsRestrictedManaForWrongSpell(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.players[0].ManaPool().AddRestricted(Colorless, 1, ArtifactSpellsOnly{})
+
+	creature := NewCreature("Restricted Mana Test", "{1}", 1, 1)
+	if g.CanAfford(pid, ManaCost{Generic: 1}, SpellContextForCard(creature)) {
+		t.Fatal("restricted artifact mana should not make a creature spell affordable")
+	}
+}
+
+func TestCastSpell_AutoTapIgnoresUnusableRestrictedMana(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
+
+	g.players[0].ManaPool().AddRestricted(Colorless, 1, ArtifactSpellsOnly{})
+	first := addLand(t, g, pid, "Mountain", Red)
+	second := addLand(t, g, pid, "Forest", Green)
+	spell := NewCreature("Grizzly Bears", "{2}", 2, 2)
+	spell.SetOwner(pid)
+	g.players[0].AddToHand(spell)
+
+	if err := g.CastSpellByID(pid, spell.ID(), nil, 0); err != nil {
+		t.Fatalf("casting with two unrestricted sources failed: %v", err)
+	}
+	if !first.Tapped || !second.Tapped {
+		t.Fatalf("both unrestricted sources should be tapped: first=%v second=%v", first.Tapped, second.Tapped)
+	}
+}
+
+func TestCastSpell_AutoTapsLockedIncreasedCost(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+	forest := addLand(t, g, pid, "Forest", Green)
+	spell := NewCreature("Increased Red Spell", "{R}", 1, 1)
+	spell.SetOwner(pid)
+	g.players[0].AddToHand(spell)
+	g.effects.Rules.SpellCostIncreases[Red] = 1
+
+	if err := g.CastSpellByID(pid, spell.ID(), nil, 0); err != nil {
+		t.Fatalf("casting spell with increased cost failed: %v", err)
+	}
+	if !mountain.Tapped || !forest.Tapped {
+		t.Fatalf("locked {1}{R} cost should tap both lands: mountain=%v forest=%v", mountain.Tapped, forest.Tapped)
+	}
+}
+
+func TestCastSpell_AutoTapDoesNotOverpayReducedCost(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
+
+	mountain := addLand(t, g, pid, "Mountain", Red)
+	forest := addLand(t, g, pid, "Forest", Green)
+	spell := NewCreature("Reduced Red Spell", "{1}{R}", 1, 1)
+	spell.SetOwner(pid)
+	g.players[0].AddToHand(spell)
+	g.effects.Rules.SpellCostReductions[Red] = 1
+
+	if err := g.CastSpellByID(pid, spell.ID(), nil, 0); err != nil {
+		t.Fatalf("casting spell with reduced cost failed: %v", err)
+	}
+	if !mountain.Tapped {
+		t.Fatal("Mountain should pay the locked {R} cost")
+	}
+	if forest.Tapped {
+		t.Fatal("Forest should remain untapped after the generic reduction")
+	}
+}
+
+func TestAutoTapForCost_DoesNotMergeDifferentManaAbilities(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	source := NewLand("Choice Land",
+		WithManaAbility(Red),
+		WithMultiManaAbility(ManaProduction{Color: Blue, Amount: 3}),
+	)
+	source.SetOwner(pid)
+	perm := g.PutOnBattlefield(source, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	if g.CanAfford(pid, ManaCost{Red: 3}, nil) {
+		t.Fatal("one-red ability must not inherit the other ability's amount")
+	}
+	if err := g.AutoTapForCost(pid, ManaCost{Red: 3}); err == nil {
+		t.Fatal("auto-tap should reject an impossible three-red payment")
+	}
+	if perm.Tapped {
+		t.Fatal("failed planning must not tap the source")
+	}
+
+	if err := g.AutoTapForCost(pid, ManaCost{Blue: 3}); err != nil {
+		t.Fatalf("three-blue ability should remain usable: %v", err)
+	}
+	if got := g.players[0].ManaPool().Count(Blue); got != 3 {
+		t.Fatalf("three-blue ability produced %d blue mana, want 3", got)
+	}
+}
+
+func TestAutoTapForCost_AnyCombinationUsesMultipleColors(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	source := NewArtifact("Any Combination Source", "{2}",
+		WithMultiManaAbility(ManaProduction{Color: AnyColor, Amount: 2, AnyCombination: true}),
+	)
+	source.SetOwner(pid)
+	perm := g.PutOnBattlefield(source, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+
+	cost := ManaCost{Blue: 1, Red: 1}
+	if err := g.AutoTapForCost(pid, cost); err != nil {
+		t.Fatalf("auto-tap could not split any-combination mana: %v", err)
+	}
+	if err := g.players[0].ManaPool().Pay(cost, nil); err != nil {
+		t.Fatalf("planned split did not reach the pool: %v", err)
+	}
+}
+
+func TestAutoTapForCost_ConversionPreservesUnconvertedSurplus(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	source := NewLand("Double Red Land",
+		WithMultiManaAbility(ManaProduction{Color: Red, Amount: 2}),
+	)
+	source.SetOwner(pid)
+	perm := g.PutOnBattlefield(source, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+	g.players[0].ManaPool().ManaConversions = map[Color]Color{Red: White}
+
+	cost := ManaCost{White: 1, Red: 1}
+	if err := g.AutoTapForCost(pid, cost); err != nil {
+		t.Fatalf("auto-tap rejected optional Red-to-White conversion: %v", err)
+	}
+	if err := g.players[0].ManaPool().Pay(cost, nil); err != nil {
+		t.Fatalf("converted payment failed after auto-tap: %v", err)
+	}
+}
+
+func TestTapForMana_MultiColorSourceGetsOneManaFlareBonus(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	source := NewLand("Two-Color Land",
+		WithMultiManaAbility(
+			ManaProduction{Color: Green, Amount: 1},
+			ManaProduction{Color: White, Amount: 1},
+		),
+	)
+	source.SetOwner(pid)
+	perm := g.PutOnBattlefield(source, pid)
+	perm.RevokeBaseAttr(AttrSummonSick)
+	flare := NewEnchantment("Mana Flare", "{2}{R}", WithAbility(NewManaFlareAbility(IsLand)))
+	flare.SetOwner(pid)
+	g.PutOnBattlefield(flare, pid)
+
+	if err := g.TapForMana(pid, perm.ID()); err != nil {
+		t.Fatalf("tapping two-color source failed: %v", err)
+	}
+	if got := g.players[0].ManaPool().TotalMana(); got != 3 {
+		t.Fatalf("two produced mana plus one Mana Flare bonus = 3, got %d", got)
+	}
+}
+
 func TestManaCostPayment_CanPay_ConsidersUntappedSources(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()

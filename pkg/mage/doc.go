@@ -108,11 +108,14 @@
 // abilities to engine consumers such as AI evaluation. It recognizes both
 // ManaAbility values created by WithManaAbility or WithMultiManaAbility and
 // equivalent activated abilities built from Tap with only AddMana or
-// AddAnyMana effects. SolveMana and CanSolveMana use a fast greedy path for
-// ordinary sources, then search ordered activations when targetless
-// mana-producing abilities have both a mana cost and Tap. CanAfford, MaxXValue,
-// and automatic mana payment all use that unified solver behavior. Automatic
-// payment executes the exact planned ability, paying its activation cost before
+// AddAnyMana effects. SolveMana and CanSolveMana search one unified source
+// model containing every exact mana ability on each permanent, including
+// targetless mana-producing abilities with both a mana cost and Tap. The
+// planner preserves AnyColor and AnyCombination choices, mana restrictions,
+// conversions, bonus mana, and ordered activation costs without merging the
+// amounts of separate abilities. CanAfford, MaxXValue, and automatic mana
+// payment use the same planning behavior. Automatic payment executes the exact
+// planned ability and production choice, paying its activation cost before
 // using the produced mana.
 //
 // WithDynamicManaAbility and NewDynamicManaAbility derive productions from the

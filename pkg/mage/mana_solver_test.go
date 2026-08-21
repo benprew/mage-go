@@ -78,8 +78,8 @@ func TestSolveMana_PureWithoutGame(t *testing.T) {
 	mountainID := uuid.New()
 	forestID := uuid.New()
 	sources := []manaSourceInfo{
-		{PermanentID: mountainID, Name: "Mountain", Colors: []Color{Red}, Amount: 1},
-		{PermanentID: forestID, Name: "Forest", Colors: []Color{Green}, Amount: 1},
+		testSolverSource(mountainID, Red, 1),
+		testSolverSource(forestID, Green, 1),
 	}
 	scores := []int{1, 1}
 	pool := NewManaPool()
@@ -122,6 +122,34 @@ func TestSolveMana_UnpayableReturnsError(t *testing.T) {
 	}
 }
 
+func TestSolveMana_PreservationScoresDoNotMakeFeasibleCostFail(t *testing.T) {
+	dualID := uuid.New()
+	plainsID := uuid.New()
+
+	sol, err := SolveMana(ManaSolverInputs{
+		Pool: NewManaPool(),
+		Cost: ManaCost{White: 1, Blue: 1},
+		Sources: []manaSourceInfo{
+			{
+				PermanentID: dualID,
+				Colors:      []Color{White, Blue},
+				Abilities: []manaSourceAbility{
+					{AbilityIndex: 0, Productions: []ManaProduction{{Color: White, Amount: 1}}},
+					{AbilityIndex: 1, Productions: []ManaProduction{{Color: Blue, Amount: 1}}},
+				},
+			},
+			testSolverSource(plainsID, White, 1),
+		},
+		Scores: []int{2, 11},
+	})
+	if err != nil {
+		t.Fatalf("SolveMana rejected a feasible {W}{U} payment: %v", err)
+	}
+	if len(sol.SourcesToTap) != 2 {
+		t.Fatalf("expected both sources in the plan, got %+v", sol.SourcesToTap)
+	}
+}
+
 func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 	landIDs := []uuid.UUID{uuid.New(), uuid.New(), uuid.New()}
 	prismID := uuid.New()
@@ -131,16 +159,19 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 		Pool: pool,
 		Cost: ManaCost{Generic: 1, Blue: 1},
 		Sources: []manaSourceInfo{
-			{PermanentID: landIDs[0], Colors: []Color{Red}, Amount: 1},
-			{PermanentID: landIDs[1], Colors: []Color{Black}, Amount: 1},
-			{PermanentID: landIDs[2], Colors: []Color{Black}, Amount: 1},
+			testSolverSource(landIDs[0], Red, 1),
+			testSolverSource(landIDs[1], Black, 1),
+			testSolverSource(landIDs[2], Black, 1),
+			{
+				PermanentID: prismID,
+				Colors:      []Color{White, Blue, Black, Red, Green},
+				Abilities: []manaSourceAbility{{
+					AbilityIndex: 7,
+					Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
+					ManaCost:     ManaCost{Generic: 2},
+				}},
+			},
 		},
-		CostedSources: []costedManaSource{{
-			PermanentID:  prismID,
-			AbilityIndex: 7,
-			Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
-			ManaCost:     ManaCost{Generic: 2},
-		}},
 	})
 	if err != nil {
 		t.Fatalf("SolveMana failed: %v", err)
@@ -149,16 +180,19 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 		Pool: pool,
 		Cost: ManaCost{Generic: 1, Blue: 1},
 		Sources: []manaSourceInfo{
-			{PermanentID: landIDs[0], Colors: []Color{Red}, Amount: 1},
-			{PermanentID: landIDs[1], Colors: []Color{Black}, Amount: 1},
-			{PermanentID: landIDs[2], Colors: []Color{Black}, Amount: 1},
+			testSolverSource(landIDs[0], Red, 1),
+			testSolverSource(landIDs[1], Black, 1),
+			testSolverSource(landIDs[2], Black, 1),
+			{
+				PermanentID: prismID,
+				Colors:      []Color{White, Blue, Black, Red, Green},
+				Abilities: []manaSourceAbility{{
+					AbilityIndex: 7,
+					Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
+					ManaCost:     ManaCost{Generic: 2},
+				}},
+			},
 		},
-		CostedSources: []costedManaSource{{
-			PermanentID:  prismID,
-			AbilityIndex: 7,
-			Productions:  []ManaProduction{{Color: AnyColor, Amount: 1}},
-			ManaCost:     ManaCost{Generic: 2},
-		}},
 	}) {
 		t.Fatal("CanSolveMana should use the same costed-source planning")
 	}
@@ -178,5 +212,16 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 	}
 	if !foundPrism {
 		t.Fatal("solution did not include the costed mana ability")
+	}
+}
+
+func testSolverSource(id uuid.UUID, color Color, amount int) manaSourceInfo {
+	return manaSourceInfo{
+		PermanentID: id,
+		Colors:      []Color{color},
+		Abilities: []manaSourceAbility{{
+			AbilityIndex: 0,
+			Productions:  []ManaProduction{{Color: color, Amount: amount}},
+		}},
 	}
 }
