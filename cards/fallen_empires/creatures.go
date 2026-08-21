@@ -1,8 +1,6 @@
 package fallen_empires
 
 import (
-	"slices"
-
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -685,14 +683,7 @@ func registerCreatures() {
 	Register("Brassclaw Orcs", withExpansion(func() Card {
 		return NewCreature("Brassclaw Orcs", "{2}{R}", 3, 2,
 			WithSubTypes("Orc"),
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.AllBattlefield() {
-					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
-						g.PreventBlockPair(sourceID, p.ID())
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(SourceCanBlockOnly(HasPowerLTE(1))),
 		)
 	}))
 
@@ -808,17 +799,7 @@ func registerCreatures() {
 		return NewCreature("Orcish Veteran", "{2}{R}", 2, 2,
 			WithSubTypes("Orc"),
 			// Can't block white creatures with power 2 or greater
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.AllBattlefield() {
-					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
-						isWhite := slices.Contains(p.Colors(), White)
-						if isWhite {
-							g.PreventBlockPair(sourceID, p.ID())
-						}
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(SourceCanBlockOnly(Or(Not(HasColorFilter(White)), HasPowerLTE(1)))),
 			WithActivatedAbility(
 				GrantKeyword(FirstStrike).Targeting(ToSource()),
 				ManaCostOf("{R}"),
@@ -846,14 +827,7 @@ func registerCreatures() {
 				return nil
 			})),
 			// Can't block creatures with power 3 or greater
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.AllBattlefield() {
-					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 3 {
-						g.PreventBlockPair(sourceID, p.ID())
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(SourceCanBlockOnly(HasPowerLTE(2))),
 		)
 	}))
 

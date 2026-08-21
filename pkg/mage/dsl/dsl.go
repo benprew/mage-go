@@ -508,6 +508,11 @@ var (
 	PreventFromAttackingIfDefendingPlayerControls   = mage.PreventFromAttackingIfDefendingPlayerControls
 	SourceCantAttackUnlessPays                      = mage.SourceCantAttackUnlessPays
 	AttachedCantAttackUnlessPays                    = mage.AttachedCantAttackUnlessPays
+	SourceCanBlockOnly                              = mage.SourceCanBlockOnly
+	SourceCantBeBlockedExceptBy                     = mage.SourceCantBeBlockedExceptBy
+	SourceCantBeBlockedByFewerThan                  = mage.SourceCantBeBlockedByFewerThan
+	TargetCantBeBlockedExceptBy                     = mage.TargetCantBeBlockedExceptBy
+	TargetMustBeBlockedIfAble                       = mage.TargetMustBeBlockedIfAble
 	SourceHasManaAbilitiesOpponentLandsCouldProduce = mage.SourceHasManaAbilitiesOpponentLandsCouldProduce
 	DiscardToLibraryReplacement                     = mage.DiscardToLibraryReplacement
 

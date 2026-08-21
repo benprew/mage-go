@@ -380,14 +380,7 @@ func registerCreatures() {
 	Register("Ironclaw Orcs", func() Card {
 		return NewCreature("Ironclaw Orcs", "{1}{R}", 2, 2,
 			WithSubTypes("Orc"),
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				for _, p := range g.AllBattlefield() {
-					if p.HasType(TypeCreature) && p.CurrentPower(g) >= 2 {
-						g.PreventBlockPair(sourceID, p.ID())
-					}
-				}
-				return nil
-			})),
+			WithStaticAbility(SourceCanBlockOnly(HasPowerLTE(1))),
 		)
 	})
 

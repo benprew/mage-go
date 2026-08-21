@@ -7,6 +7,7 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 
+	_ "github.com/benprew/mage-go/cards/legends"
 	_ "github.com/benprew/mage-go/cards/limited"
 )
 
@@ -207,6 +208,29 @@ func TestCavePeople(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Mountainwalk, true)
+	})
+
+	t.Run("with The Brute, attacks at 3/2 and cannot be blocked by Ironclaw Orcs", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cave People")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "The Brute")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "The Brute", "Cave People")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ironclaw Orcs")
+
+		// Before attack: Cave People is 2/4 (1/4 + 1/+0 from The Brute)
+		// When attacking: gets +1/-2 until end of turn -> becomes 3/2
+		g.Attack(1, gametest.PlayerA, "Cave People")
+		// Player B attempts to block with Ironclaw Orcs (can't block creatures with power 2 or greater)
+		g.Block(1, gametest.PlayerB, "Ironclaw Orcs", "Cave People")
+		g.StopAt(1, core.EndCombat)
+		g.Execute()
+
+		// Ironclaw Orcs cannot legally block a 3-power creature; block is rejected.
+		// Cave People connects for 3 combat damage.
+		g.AssertLife(gametest.PlayerB, 17)
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertPermanentCount(gametest.PlayerB, "Ironclaw Orcs", 1)
+		g.AssertPermanentCount(gametest.PlayerA, "Cave People", 1)
 	})
 }
 
