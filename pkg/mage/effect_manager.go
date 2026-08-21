@@ -435,9 +435,21 @@ func (em *EffectManager) Apply(g *Game) {
 	em.Rules.ResetPerCycle()
 	em.Damage.ResetPerCycle()
 
-	controllersAtCycleStart := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
-	for _, p := range g.battlefield {
-		controllersAtCycleStart[p.ID()] = p.ControllerID()
+	controlStateMayChange := em.hasControlLayerEffects()
+	if !controlStateMayChange {
+		for _, p := range g.battlefield {
+			if p.computedController != p.baseController {
+				controlStateMayChange = true
+				break
+			}
+		}
+	}
+	var controllersAtCycleStart map[uuid.UUID]uuid.UUID
+	if controlStateMayChange {
+		controllersAtCycleStart = make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
+		for _, p := range g.battlefield {
+			controllersAtCycleStart[p.ID()] = p.ControllerID()
+		}
 	}
 
 	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
@@ -554,32 +566,37 @@ func (em *EffectManager) Apply(g *Game) {
 
 	em.syncAttrDeltas(g)
 
-	// Post-layer enforcement: AttrCantChangeControl reverts any control changes
-	// applied during LayerControl. This runs after attrs are written so that
-	// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
-	for _, p := range g.battlefield {
-		priorController := controllersAtCycleStart[p.ID()]
-		if p.HasAttr(AttrCantChangeControl) && p.ControllerID() != priorController {
-			p = g.MutablePermanent(p.ID())
-			if p == nil {
-				continue
+	if controlStateMayChange {
+		// Post-layer enforcement: AttrCantChangeControl reverts any control changes
+		// applied during LayerControl. This runs after attrs are written so that
+		// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
+		for _, p := range g.battlefield {
+			priorController := controllersAtCycleStart[p.ID()]
+			if p.HasAttr(AttrCantChangeControl) && p.ControllerID() != priorController {
+				p = g.MutablePermanent(p.ID())
+				if p == nil {
+					continue
+				}
+				p.computedController = priorController
 			}
-			p.computedController = priorController
+		}
+
+		for _, p := range g.battlefield {
+			priorController := controllersAtCycleStart[p.ID()]
+			if p.ControllerID() != priorController {
+				p = g.MutablePermanent(p.ID())
+				if p == nil {
+					continue
+				}
+				p.turnControlGained = g.turn
+				if !p.HasAttr(AttrSummonSick) {
+					p.GrantBaseAttr(AttrSummonSick)
+				}
+			}
 		}
 	}
 
 	for _, p := range g.battlefield {
-		priorController := controllersAtCycleStart[p.ID()]
-		if p.ControllerID() != priorController {
-			p = g.MutablePermanent(p.ID())
-			if p == nil {
-				continue
-			}
-			p.turnControlGained = g.turn
-			if !p.HasAttr(AttrSummonSick) {
-				p.GrantBaseAttr(AttrSummonSick)
-			}
-		}
 		g.syncAbilityContext(p)
 	}
 }
@@ -605,6 +622,13 @@ func (em *EffectManager) syncAttrDeltas(g *Game) {
 }
 
 func (em *EffectManager) applyControlLayer(g *Game) {
+	// Returning before touching permanents preserves their copy-on-write sharing
+	// in cloned search states, which keeps minimax clone allocations bounded.
+	if !em.hasControlLayerEffects() {
+		g.layer2Controllers = nil
+		return
+	}
+
 	controllers := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
 	for _, permanent := range g.battlefield {
 		controllers[permanent.ID()] = permanent.baseController
@@ -652,6 +676,15 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 		_ = effect.Apply(g)
 	}
 	g.layer2Controllers = nil
+}
+
+func (em *EffectManager) hasControlLayerEffects() bool {
+	for _, effect := range em.effects {
+		if effect.GetLayer() == LayerControl {
+			return true
+		}
+	}
+	return false
 }
 
 func controlEffectActive(effect ContinuousEffect, g *Game, latchExpiration bool) bool {

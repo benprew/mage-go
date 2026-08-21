@@ -8,7 +8,10 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-var cloneCardSliceSink []Card
+var (
+	cloneCardSliceSink []Card
+	cloneGameSink      *Game
+)
 
 // setupTestGame creates a mid-game state with permanents, hand cards, and various state.
 func setupTestGame() *Game {
@@ -333,6 +336,36 @@ func TestCloneOriginalMutationDoesNotAffectClone(t *testing.T) {
 	}
 	if c.battlefield[1].Damage != 1 {
 		t.Fatalf("original mutation leaked damage to clone: got %d", c.battlefield[1].Damage)
+	}
+}
+
+func TestCloneApplyWithoutControlEffectsCopiesOnlyAffectedPermanents(t *testing.T) {
+	pA := NewBasePlayer("Alice")
+	pB := NewBasePlayer("Bob")
+	g := NewGame(pA, pB)
+
+	targetCard := NewCreature("Target", "{1}{G}", 2, 2)
+	targetCard.SetOwner(pA.PlayerID())
+	target := NewPermanent(targetCard, pA.PlayerID())
+
+	untouchedCard := NewCreature("Untouched", "{2}{G}", 3, 3)
+	untouchedCard.SetOwner(pA.PlayerID())
+	untouched := NewPermanent(untouchedCard, pA.PlayerID())
+
+	g.AddToBattlefield(target, untouched)
+	g.effects.Add(TemporaryBoost(target.ID(), 1, 1))
+
+	clone := g.Clone()
+	clone.effects.Apply(clone)
+
+	if clone.FindPermanent(target.ID()) == target {
+		t.Fatal("effect target should be copied before its derived state changes")
+	}
+	if clone.FindPermanent(untouched.ID()) != untouched {
+		t.Fatal("applying effects without a control effect should keep untouched permanents shared")
+	}
+	if target.powerBonus != 0 || clone.FindPermanent(target.ID()).powerBonus != 1 {
+		t.Fatal("temporary boost should change only the clone")
 	}
 }
 
@@ -983,6 +1016,47 @@ func BenchmarkClone(b *testing.B) {
 	b.ReportAllocs()
 	for b.Loop() {
 		_ = g.Clone()
+	}
+}
+
+func setupStackHeavyCloneBenchmarkGame() *Game {
+	g := setupTestGame()
+	owners := []uuid.UUID{g.players[0].PlayerID(), g.players[1].PlayerID()}
+	for i := range 8 {
+		targets := []uuid.UUID{owners[(i+1)%2], g.battlefield[i%len(g.battlefield)].ID()}
+		g.pushStack(&StackObject{
+			ID:                  uuid.New(),
+			Controller:          owners[i%2],
+			SourceID:            uuid.New(),
+			Targets:             targets,
+			ModalTargets:        [][]uuid.UUID{targets[:1], targets[1:]},
+			DamageDistribution:  map[uuid.UUID]int{targets[0]: i + 1},
+			CounterDistribution: map[uuid.UUID]int{targets[1]: i + 1},
+			TargetZones: map[uuid.UUID]Zone{
+				targets[0]: ZoneAny,
+				targets[1]: ZoneBattlefield,
+			},
+		})
+	}
+	return g
+}
+
+func TestCloneStackHeavyGameAllocationBudget(t *testing.T) {
+	g := setupStackHeavyCloneBenchmarkGame()
+	allocs := testing.AllocsPerRun(100, func() {
+		cloneGameSink = g.Clone()
+	})
+	const maxAllocs = 138
+	if allocs > maxAllocs {
+		t.Fatalf("stack-heavy Game.Clone allocated %.0f times, budget is %d", allocs, maxAllocs)
+	}
+}
+
+func BenchmarkCloneStackHeavyGame(b *testing.B) {
+	g := setupStackHeavyCloneBenchmarkGame()
+	b.ReportAllocs()
+	for b.Loop() {
+		cloneGameSink = g.Clone()
 	}
 }
 
