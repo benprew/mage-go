@@ -203,7 +203,7 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 			continue
 		}
 		foundPrism = true
-		if action.AbilityIndex != 7 || action.Color != Blue {
+		if action.AbilityIndex != 7 || len(action.Productions) != 1 || action.Productions[0].Color != Blue {
 			t.Fatalf("unexpected Prism action: %+v", action)
 		}
 		if i < 2 {
@@ -212,6 +212,118 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 	}
 	if !foundPrism {
 		t.Fatal("solution did not include the costed mana ability")
+	}
+}
+
+func TestManaProductionChoicesForDemand_BoundsIrrelevantSurplus(t *testing.T) {
+	caps := manaChoiceCapsForCost(ManaCost{White: 1}, nil)
+	choices := manaProductionChoicesForDemand([]ManaProduction{{
+		Color:          AnyColor,
+		Amount:         20,
+		AnyCombination: true,
+	}}, nil, caps)
+
+	if len(choices) != 2 {
+		t.Fatalf("20 mana in any combination for a one-white demand produced %d choices, want 2", len(choices))
+	}
+	foundWhite := false
+	foundNoWhite := false
+	for _, choice := range choices {
+		var total, white int
+		for _, production := range choice.Productions {
+			total += production.Amount
+			if production.Color == White {
+				white += production.Amount
+			}
+		}
+		if total != 20 {
+			t.Fatalf("choice produced %d mana, want 20: %+v", total, choice)
+		}
+		foundWhite = foundWhite || white > 0
+		foundNoWhite = foundNoWhite || white == 0
+	}
+	if !foundWhite || !foundNoWhite {
+		t.Fatalf("choices must represent both paying and not paying white: %+v", choices)
+	}
+}
+
+func TestManaProductionChoicesForDemand_DeduplicatesEquivalentAnyColorEntries(t *testing.T) {
+	productions := make([]ManaProduction, 6)
+	for i := range productions {
+		productions[i] = ManaProduction{Color: AnyColor, Amount: 1}
+	}
+	choices := manaProductionChoicesForDemand(productions, nil, manaChoiceCaps{})
+	if len(choices) != 1 {
+		t.Fatalf("generic-only demand produced %d equivalent any-color choices, want 1", len(choices))
+	}
+	if got := productionsTotalAmount(choices[0].Productions); got != 6 {
+		t.Fatalf("choice produces %d mana, want 6: %+v", got, choices[0])
+	}
+}
+
+func TestManaChoiceCapsIncludeColoredActivationDemand(t *testing.T) {
+	inputs := ManaSolverInputs{
+		Pool: NewManaPool(),
+		Cost: ManaCost{Generic: 1},
+		Sources: []manaSourceInfo{
+			{
+				PermanentID: uuid.New(),
+				Abilities: []manaSourceAbility{{
+					AbilityIndex: 0,
+					Productions: []ManaProduction{{
+						Color:          AnyColor,
+						Amount:         20,
+						AnyCombination: true,
+					}},
+				}},
+			},
+			{
+				PermanentID: uuid.New(),
+				Abilities: []manaSourceAbility{{
+					AbilityIndex: 1,
+					ManaCost:     ManaCost{Blue: 1},
+					Productions:  []ManaProduction{{Color: Colorless, Amount: 1}},
+				}},
+			},
+		},
+	}
+	caps := manaChoiceCapsForInputs(inputs)
+	if caps[Blue] != 1 {
+		t.Fatalf("blue demand cap is %d, want 1", caps[Blue])
+	}
+	choices := manaProductionChoicesForDemand(inputs.Sources[0].Abilities[0].Productions, nil, caps)
+	foundBlue := false
+	for _, choice := range choices {
+		for _, production := range choice.Productions {
+			foundBlue = foundBlue || production.Color == Blue
+		}
+	}
+	if !foundBlue {
+		t.Fatalf("bounded choices omitted mana needed for a source activation: %+v", choices)
+	}
+}
+
+func BenchmarkSolveMana_LargeAnyCombination(b *testing.B) {
+	inputs := ManaSolverInputs{
+		Pool: NewManaPool(),
+		Cost: ManaCost{Generic: 3, White: 1},
+		Sources: []manaSourceInfo{{
+			PermanentID: uuid.New(),
+			Abilities: []manaSourceAbility{{
+				Productions: []ManaProduction{{
+					Color:          AnyColor,
+					Amount:         20,
+					AnyCombination: true,
+				}},
+			}},
+		}},
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		if _, err := SolveMana(inputs); err != nil {
+			b.Fatal(err)
+		}
 	}
 }
 

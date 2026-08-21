@@ -3,8 +3,6 @@ package mage
 import (
 	"container/heap"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -29,7 +27,6 @@ type ManaSolverInputs struct {
 type ManaTap struct {
 	PermanentID  uuid.UUID
 	AbilityIndex int
-	Color        Color
 	Productions  []ManaProduction
 	BonusColors  []Color
 }
@@ -40,21 +37,30 @@ type ManaSolution struct {
 }
 
 type manaProductionChoice struct {
-	Color       Color
 	Productions []ManaProduction
 	BonusColors []Color
 }
 
 type manaSearchNode struct {
 	pool     *ManaPool
-	used     []bool
-	path     []ManaTap
+	used     string
+	parent   *manaSearchNode
+	action   ManaTap
 	score    int
-	taps     int
+	depth    int
 	cost     int
 	priority int
 	seq      int
 }
+
+type manaSearchKey struct {
+	total         [AnyColor + 1]int
+	abilityUsable [AnyColor + 1]int
+	spellUsable   [AnyColor + 1]int
+	used          string
+}
+
+type manaChoiceCaps [AnyColor + 1]int
 
 type manaSearchQueue []*manaSearchNode
 
@@ -65,9 +71,6 @@ func (q manaSearchQueue) Less(i, j int) bool {
 	}
 	if q[i].cost != q[j].cost {
 		return q[i].cost < q[j].cost
-	}
-	if q[i].taps != q[j].taps {
-		return q[i].taps > q[j].taps
 	}
 	return q[i].seq < q[j].seq
 }
@@ -109,18 +112,18 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 	weight := len(in.Sources) + 1
 	root := &manaSearchNode{
 		pool: rootPool,
-		used: make([]bool, len(in.Sources)),
+		used: emptyManaSourceSet(len(in.Sources)),
 	}
 	root.priority = manaSearchLowerBound(root, in)
 	queue := manaSearchQueue{root}
 	heap.Init(&queue)
-	bestCost := map[string]int{manaSearchStateKey(rootPool, root.used, in.SpellContext): 0}
+	bestCost := map[manaSearchKey]int{manaSearchStateKey(rootPool, root.used, in.SpellContext): 0}
+	choiceCaps := manaChoiceCapsForInputs(in)
 	productionChoices := make([][][]manaProductionChoice, len(in.Sources))
+	choicesComputed := make([][]bool, len(in.Sources))
 	for sourceIndex, source := range in.Sources {
 		productionChoices[sourceIndex] = make([][]manaProductionChoice, len(source.Abilities))
-		for abilityIndex, ability := range source.Abilities {
-			productionChoices[sourceIndex][abilityIndex] = manaProductionChoices(ability.Productions, source.Bonuses)
-		}
+		choicesComputed[sourceIndex] = make([]bool, len(source.Abilities))
 	}
 	seq := 0
 
@@ -131,36 +134,38 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 			continue
 		}
 		if node.pool.CanPay(in.Cost, in.SpellContext) {
-			return append([]ManaTap(nil), node.path...), true
+			return reconstructManaPlan(node), true
 		}
 
 		for sourceIndex, source := range in.Sources {
-			if node.used[sourceIndex] {
+			if manaSourceSetContains(node.used, sourceIndex) {
 				continue
 			}
 			for abilityIndex, ability := range source.Abilities {
 				if !node.pool.CanPay(ability.ManaCost, nil) {
 					continue
 				}
+				if !choicesComputed[sourceIndex][abilityIndex] {
+					productionChoices[sourceIndex][abilityIndex] = manaProductionChoicesForDemand(ability.Productions, source.Bonuses, choiceCaps)
+					choicesComputed[sourceIndex][abilityIndex] = true
+				}
 				for _, choice := range productionChoices[sourceIndex][abilityIndex] {
 					nextPool := cloneManaPoolForSearch(node.pool, in.Conversions)
-					if err := nextPool.Pay(ability.ManaCost, nil); err != nil {
+					if !payManaForSearch(nextPool, ability.ManaCost) {
 						continue
 					}
-					addConcreteMana(nextPool, choice.Productions, choice.BonusColors)
+					addConcreteManaForSearch(nextPool, choice.Productions, choice.BonusColors)
 
-					nextUsed := append([]bool(nil), node.used...)
-					nextUsed[sourceIndex] = true
-					nextPath := append(append([]ManaTap(nil), node.path...), ManaTap{
+					nextUsed := manaSourceSetWith(node.used, sourceIndex)
+					nextAction := ManaTap{
 						PermanentID:  source.PermanentID,
 						AbilityIndex: ability.AbilityIndex,
-						Color:        choice.Color,
-						Productions:  append([]ManaProduction(nil), choice.Productions...),
-						BonusColors:  append([]Color(nil), choice.BonusColors...),
-					})
+						Productions:  choice.Productions,
+						BonusColors:  choice.BonusColors,
+					}
 					nextScore := node.score + max(scoreAt(in.Scores, sourceIndex), 0)
-					nextTaps := node.taps + 1
-					nextCost := nextScore*weight + nextTaps
+					nextDepth := node.depth + 1
+					nextCost := nextScore*weight + nextDepth
 					nextKey := manaSearchStateKey(nextPool, nextUsed, in.SpellContext)
 					if known, ok := bestCost[nextKey]; ok && known <= nextCost {
 						continue
@@ -168,13 +173,14 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 					bestCost[nextKey] = nextCost
 					seq++
 					next := &manaSearchNode{
-						pool:  nextPool,
-						used:  nextUsed,
-						path:  nextPath,
-						score: nextScore,
-						taps:  nextTaps,
-						cost:  nextCost,
-						seq:   seq,
+						pool:   nextPool,
+						used:   nextUsed,
+						parent: node,
+						action: nextAction,
+						score:  nextScore,
+						depth:  nextDepth,
+						cost:   nextCost,
+						seq:    seq,
 					}
 					next.priority = nextCost + manaSearchLowerBound(next, in)
 					heap.Push(&queue, next)
@@ -185,11 +191,63 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 	return nil, false
 }
 
+func reconstructManaPlan(node *manaSearchNode) []ManaTap {
+	plan := make([]ManaTap, node.depth)
+	for i := node.depth - 1; i >= 0; i-- {
+		plan[i] = node.action
+		node = node.parent
+	}
+	return plan
+}
+
+func emptyManaSourceSet(sourceCount int) string {
+	return string(make([]byte, (sourceCount+7)/8))
+}
+
+func manaSourceSetContains(used string, sourceIndex int) bool {
+	return used[sourceIndex/8]&(1<<uint(sourceIndex%8)) != 0
+}
+
+func manaSourceSetWith(used string, sourceIndex int) string {
+	next := []byte(used)
+	next[sourceIndex/8] |= 1 << uint(sourceIndex%8)
+	return string(next)
+}
+
 func cloneManaPoolForSearch(pool *ManaPool, conversions map[Color]Color) *ManaPool {
-	clone := NewManaPool()
-	clone.RestorePool(pool.SnapshotPool())
-	clone.ManaConversions = conversions
-	return clone
+	return &ManaPool{
+		pool:            append([]Mana(nil), pool.pool...),
+		ManaConversions: conversions,
+	}
+}
+
+func payManaForSearch(pool *ManaPool, cost ManaCost) bool {
+	plan, ok := pool.paymentPlan(cost, nil)
+	if !ok {
+		return false
+	}
+	remaining := plan
+	kept := pool.pool[:0]
+	for _, mana := range pool.pool {
+		if remaining[mana.Color] > 0 && manaUsable(mana, nil) {
+			remaining[mana.Color]--
+			continue
+		}
+		kept = append(kept, mana)
+	}
+	pool.pool = kept
+	return true
+}
+
+func addConcreteManaForSearch(pool *ManaPool, productions []ManaProduction, bonusColors []Color) {
+	for _, production := range productions {
+		for range normalizedManaAmount(production.Amount) {
+			pool.pool = append(pool.pool, Mana{Color: production.Color})
+		}
+	}
+	for _, color := range bonusColors {
+		pool.pool = append(pool.pool, Mana{Color: color})
+	}
 }
 
 func addConcreteMana(pool *ManaPool, productions []ManaProduction, bonusColors []Color) {
@@ -215,7 +273,7 @@ func manaSearchLowerBound(node *manaSearchNode, in ManaSolverInputs) int {
 	}
 	maxOutput := 0
 	for i, source := range in.Sources {
-		if node.used[i] {
+		if manaSourceSetContains(node.used, i) {
 			continue
 		}
 		for _, ability := range source.Abilities {
@@ -243,51 +301,105 @@ func usableManaCount(pool *ManaPool, spellCtx *SpellPaymentContext) int {
 	return total
 }
 
-func manaSearchStateKey(pool *ManaPool, used []bool, spellCtx *SpellPaymentContext) string {
-	var total [AnyColor + 1]int
-	var abilityUsable [AnyColor + 1]int
-	var spellUsable [AnyColor + 1]int
+func manaSearchStateKey(pool *ManaPool, used string, spellCtx *SpellPaymentContext) manaSearchKey {
+	key := manaSearchKey{used: used}
 	for _, mana := range pool.pool {
-		total[mana.Color]++
+		key.total[mana.Color]++
 		if manaUsable(mana, nil) {
-			abilityUsable[mana.Color]++
+			key.abilityUsable[mana.Color]++
 		}
 		if manaUsable(mana, spellCtx) {
-			spellUsable[mana.Color]++
+			key.spellUsable[mana.Color]++
 		}
 	}
-	var b strings.Builder
-	for _, color := range manaPoolColors {
-		b.WriteString(strconv.Itoa(total[color]))
-		b.WriteByte('/')
-		b.WriteString(strconv.Itoa(abilityUsable[color]))
-		b.WriteByte('/')
-		b.WriteString(strconv.Itoa(spellUsable[color]))
-		b.WriteByte(',')
-	}
-	b.WriteByte('|')
-	for _, isUsed := range used {
-		if isUsed {
-			b.WriteByte('1')
-		} else {
-			b.WriteByte('0')
-		}
-	}
-	return b.String()
+	return key
 }
 
-func manaProductionChoices(productions []ManaProduction, bonuses []ManaBonusColor) []manaProductionChoice {
-	concrete := concreteManaProductions(productions)
+func manaChoiceCapsForInputs(in ManaSolverInputs) manaChoiceCaps {
+	caps := manaChoiceCapsForCost(in.Cost, in.Conversions)
+	for _, source := range in.Sources {
+		var sourceCaps manaChoiceCaps
+		for _, ability := range source.Abilities {
+			abilityCaps := manaChoiceCapsForCost(ability.ManaCost, in.Conversions)
+			for _, color := range manaPoolColors {
+				sourceCaps[color] = max(sourceCaps[color], abilityCaps[color])
+			}
+		}
+		for _, color := range manaPoolColors {
+			caps[color] += sourceCaps[color]
+		}
+	}
+	return caps
+}
+
+func manaChoiceCapsForCost(cost ManaCost, conversions map[Color]Color) manaChoiceCaps {
+	var caps manaChoiceCaps
+	addManaChoiceCaps(&caps, cost, conversions)
+	return caps
+}
+
+func addManaChoiceCaps(caps *manaChoiceCaps, cost ManaCost, conversions map[Color]Color) {
+	for _, requirement := range [...]struct {
+		color Color
+		count int
+	}{
+		{White, cost.White},
+		{Blue, cost.Blue},
+		{Black, cost.Black},
+		{Red, cost.Red},
+		{Green, cost.Green},
+	} {
+		addManaRequirementCaps(caps, requirement.color, requirement.count, conversions)
+	}
+	for _, hybrid := range cost.Hybrid {
+		var candidates [AnyColor + 1]bool
+		markManaRequirementCandidates(&candidates, hybrid.A, conversions)
+		markManaRequirementCandidates(&candidates, hybrid.B, conversions)
+		for _, color := range manaPoolColors {
+			if candidates[color] {
+				caps[color]++
+			}
+		}
+	}
+}
+
+func addManaRequirementCaps(caps *manaChoiceCaps, required Color, count int, conversions map[Color]Color) {
+	if count <= 0 {
+		return
+	}
+	var candidates [AnyColor + 1]bool
+	markManaRequirementCandidates(&candidates, required, conversions)
+	for _, color := range manaPoolColors {
+		if candidates[color] {
+			caps[color] += count
+		}
+	}
+}
+
+func markManaRequirementCandidates(candidates *[AnyColor + 1]bool, required Color, conversions map[Color]Color) {
+	candidates[required] = true
+	for _, from := range manaPoolColors {
+		if conversions[from] == required {
+			candidates[from] = true
+		}
+	}
+}
+
+func manaProductionChoicesForDemand(productions []ManaProduction, bonuses []ManaBonusColor, caps manaChoiceCaps) []manaProductionChoice {
+	concrete := concreteManaProductionsForDemand(productions, caps)
 	result := make([]manaProductionChoice, 0, len(concrete))
 	for _, production := range concrete {
 		producedColors := productionColors(production)
-		bonusChoices := concreteBonusChoices(bonuses, producedColors)
+		remainingCaps := caps
+		for _, produced := range production {
+			remainingCaps[produced.Color] = max(remainingCaps[produced.Color]-produced.Amount, 0)
+		}
+		bonusChoices := concreteBonusChoicesForDemand(bonuses, producedColors, remainingCaps)
 		if len(bonusChoices) == 0 {
 			bonusChoices = [][]Color{{}}
 		}
 		for _, bonusColors := range bonusChoices {
 			result = append(result, manaProductionChoice{
-				Color:       preferredProductionColor(productions, production),
 				Productions: production,
 				BonusColors: bonusColors,
 			})
@@ -296,49 +408,54 @@ func manaProductionChoices(productions []ManaProduction, bonuses []ManaBonusColo
 	return result
 }
 
-func concreteManaProductions(productions []ManaProduction) [][]ManaProduction {
+func concreteManaProductionsForDemand(productions []ManaProduction, caps manaChoiceCaps) [][]ManaProduction {
 	if len(productions) == 0 {
 		return nil
 	}
-	var countChoices [][AnyColor + 1]int
-	var expand func(int, [AnyColor + 1]int)
-	expand = func(index int, current [AnyColor + 1]int) {
-		if index == len(productions) {
-			countChoices = append(countChoices, current)
-			return
+	states := [][AnyColor + 1]int{{}}
+	for _, production := range productions {
+		nextStates := make([][AnyColor + 1]int, 0, len(states))
+		seen := make(map[[AnyColor + 1]int]bool, len(states))
+		appendState := func(candidate [AnyColor + 1]int) {
+			signature := boundedManaSignature(candidate, caps)
+			if seen[signature] {
+				return
+			}
+			seen[signature] = true
+			nextStates = append(nextStates, candidate)
 		}
-		production := productions[index]
 		amount := normalizedManaAmount(production.Amount)
-		if production.Color != AnyColor {
-			current[production.Color] += amount
-			expand(index+1, current)
-			return
-		}
-		if !production.AnyCombination {
-			for color := White; color <= Green; color++ {
+		for _, current := range states {
+			if production.Color != AnyColor {
+				current[production.Color] += amount
+				appendState(current)
+				continue
+			}
+			if !production.AnyCombination {
+				for color := White; color <= Green; color++ {
+					next := current
+					next[color] += amount
+					appendState(next)
+				}
+				continue
+			}
+			remainingCaps := caps
+			for _, color := range manaPoolColors {
+				remainingCaps[color] = max(remainingCaps[color]-current[color], 0)
+			}
+			for _, allocation := range boundedManaAllocations(amount, []Color{White, Blue, Black, Red, Green}, remainingCaps) {
 				next := current
-				next[color] += amount
-				expand(index+1, next)
+				for color := White; color <= Green; color++ {
+					next[color] += allocation[color]
+				}
+				appendState(next)
 			}
-			return
 		}
-		for _, allocation := range coloredManaAllocations(amount) {
-			next := current
-			for color := White; color <= Green; color++ {
-				next[color] += allocation[color]
-			}
-			expand(index+1, next)
-		}
+		states = nextStates
 	}
-	expand(0, [AnyColor + 1]int{})
 
-	seen := make(map[[AnyColor + 1]int]bool, len(countChoices))
-	result := make([][]ManaProduction, 0, len(countChoices))
-	for _, choice := range countChoices {
-		if seen[choice] {
-			continue
-		}
-		seen[choice] = true
+	result := make([][]ManaProduction, 0, len(states))
+	for _, choice := range states {
 		var concrete []ManaProduction
 		for _, color := range manaPoolColors {
 			if choice[color] > 0 {
@@ -350,22 +467,43 @@ func concreteManaProductions(productions []ManaProduction) [][]ManaProduction {
 	return result
 }
 
-func coloredManaAllocations(amount int) [][AnyColor + 1]int {
+func boundedManaSignature(amounts [AnyColor + 1]int, caps manaChoiceCaps) [AnyColor + 1]int {
+	var signature [AnyColor + 1]int
+	for _, color := range manaPoolColors {
+		signature[color] = min(amounts[color], caps[color])
+	}
+	return signature
+}
+
+func boundedManaAllocations(amount int, colors []Color, caps manaChoiceCaps) [][AnyColor + 1]int {
+	if amount < 0 || len(colors) == 0 {
+		return nil
+	}
 	var result [][AnyColor + 1]int
-	var distribute func(Color, int, [AnyColor + 1]int)
-	distribute = func(color Color, remaining int, allocation [AnyColor + 1]int) {
-		if color == Green {
-			allocation[color] = remaining
-			result = append(result, allocation)
+	var distribute func(int, int, [AnyColor + 1]int)
+	distribute = func(index, remaining int, allocation [AnyColor + 1]int) {
+		if index == len(colors) {
+			if remaining == 0 {
+				result = append(result, allocation)
+				return
+			}
+			for _, color := range colors {
+				if allocation[color] == caps[color] {
+					allocation[color] += remaining
+					result = append(result, allocation)
+					return
+				}
+			}
 			return
 		}
-		for n := 0; n <= remaining; n++ {
+		color := colors[index]
+		for n := 0; n <= min(remaining, caps[color]); n++ {
 			next := allocation
 			next[color] = n
-			distribute(color+1, remaining-n, next)
+			distribute(index+1, remaining-n, next)
 		}
 	}
-	distribute(White, amount, [AnyColor + 1]int{})
+	distribute(0, amount, [AnyColor + 1]int{})
 	return result
 }
 
@@ -379,46 +517,46 @@ func productionColors(productions []ManaProduction) []Color {
 	return colors
 }
 
-func concreteBonusChoices(bonuses []ManaBonusColor, producedColors []Color) [][]Color {
-	choices := [][]Color{{}}
+func concreteBonusChoicesForDemand(bonuses []ManaBonusColor, producedColors []Color, caps manaChoiceCaps) [][]Color {
+	var fixed []Color
+	matchCount := 0
 	for _, bonus := range bonuses {
 		if bonus != MatchProduced {
-			for i := range choices {
-				choices[i] = append(choices[i], Color(bonus))
-			}
+			color := Color(bonus)
+			fixed = append(fixed, color)
+			caps[color] = max(caps[color]-1, 0)
 			continue
 		}
-		if len(producedColors) == 0 {
-			continue
-		}
-		expanded := make([][]Color, 0, len(producedColors)*len(choices))
-		for _, choice := range choices {
-			for _, color := range producedColors {
-				next := append([]Color(nil), choice...)
-				next = append(next, color)
-				expanded = append(expanded, next)
+		matchCount++
+	}
+	if matchCount == 0 || len(producedColors) == 0 {
+		return [][]Color{fixed}
+	}
+	producedColors = distinctColors(producedColors)
+	allocations := boundedManaAllocations(matchCount, producedColors, caps)
+	choices := make([][]Color, 0, len(allocations))
+	for _, allocation := range allocations {
+		choice := append([]Color(nil), fixed...)
+		for _, color := range producedColors {
+			for range allocation[color] {
+				choice = append(choice, color)
 			}
 		}
-		choices = expanded
+		choices = append(choices, choice)
 	}
 	return choices
 }
 
-func preferredProductionColor(original, concrete []ManaProduction) Color {
-	for _, production := range original {
-		if production.Color != AnyColor {
-			continue
-		}
-		for _, resolved := range concrete {
-			if resolved.Color != Colorless && resolved.Amount > 0 {
-				return resolved.Color
-			}
+func distinctColors(colors []Color) []Color {
+	var seen [AnyColor + 1]bool
+	result := make([]Color, 0, len(colors))
+	for _, color := range colors {
+		if !seen[color] {
+			seen[color] = true
+			result = append(result, color)
 		}
 	}
-	if len(concrete) == 1 {
-		return concrete[0].Color
-	}
-	return Colorless
+	return result
 }
 
 func scoreAt(scores []int, i int) int {

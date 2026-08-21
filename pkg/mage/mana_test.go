@@ -105,3 +105,41 @@ func TestAddRestricted_CreatureSpellsOnly(t *testing.T) {
 		t.Fatal("CreatureSpellsOnly mana should not pay for an artifact spell")
 	}
 }
+
+func TestManaPoolPayment_BacktracksAcrossOverlappingHybridSymbols(t *testing.T) {
+	mp := NewManaPool()
+	mp.Add(White, 1)
+	mp.Add(Blue, 1)
+	cost := ManaCost{Hybrid: []HybridSymbol{
+		{A: White, B: Blue},
+		{A: White, B: Black},
+	}}
+
+	if !mp.CanPay(cost, nil) {
+		t.Fatal("{W}{U} can pay {W/U}{W/B} by using blue, then white")
+	}
+	if err := mp.Pay(cost, nil); err != nil {
+		t.Fatalf("Pay rejected the allocation accepted by CanPay: %v", err)
+	}
+	if got := mp.TotalMana(); got != 0 {
+		t.Fatalf("payment left %d mana, want 0", got)
+	}
+}
+
+func TestManaPoolPayment_ConversionCanPayHybridSymbol(t *testing.T) {
+	mp := NewManaPool()
+	mp.Add(Red, 1)
+	mp.ManaConversions = map[Color]Color{Red: White}
+	cost := ManaCost{Hybrid: []HybridSymbol{{A: White, B: Blue}}}
+
+	if !mp.CanPay(cost, nil) {
+		t.Fatal("red mana spendable as white should pay {W/U}")
+	}
+	mp.ResetLastDrained()
+	if err := mp.Pay(cost, nil); err != nil {
+		t.Fatalf("Pay rejected converted hybrid payment: %v", err)
+	}
+	if got := mp.LastDrainedColors[Red]; got != 1 {
+		t.Fatalf("payment drained %d red mana, want 1", got)
+	}
+}

@@ -686,6 +686,41 @@ func TestCanAfford_CostedActivatedManaAbility(t *testing.T) {
 	}
 }
 
+func TestAutoTapForCost_CostedManaAbilityIncludesManaBonus(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+
+	addLand(t, g, pid, "Mountain 1", Red)
+	addLand(t, g, pid, "Mountain 2", Red)
+	filter := NewLand("Mana Filter",
+		WithActivatedAbility(
+			AddAnyMana(1, Colorless),
+			GenericCost(2),
+			WithCost(Tap()),
+		),
+	)
+	filter.SetOwner(pid)
+	filterPerm := g.PutOnBattlefield(filter, pid)
+	filterPerm.RevokeBaseAttr(AttrSummonSick)
+	flare := NewEnchantment("Mana Flare", "{2}{R}", WithAbility(NewManaFlareAbility(IsLand)))
+	flare.SetOwner(pid)
+	g.PutOnBattlefield(flare, pid)
+
+	cost := ManaCost{Blue: 2}
+	if !g.CanAfford(pid, cost, nil) {
+		t.Fatal("two lands should fund the filter, whose blue mana receives a matching bonus")
+	}
+	if err := g.AutoTapForCost(pid, cost); err != nil {
+		t.Fatalf("AutoTapForCost failed: %v", err)
+	}
+	if !filterPerm.Tapped {
+		t.Fatal("expected the costed mana ability to be activated")
+	}
+	if err := g.players[0].ManaPool().Pay(cost, nil); err != nil {
+		t.Fatalf("bonus mana in the executed plan could not pay {U}{U}: %v", err)
+	}
+}
+
 func TestCastSpell_CostedActivatedManaAbility(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()

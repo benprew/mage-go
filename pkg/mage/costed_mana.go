@@ -2,7 +2,6 @@ package mage
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/google/uuid"
 
@@ -177,10 +176,98 @@ func (g *Game) activatePlannedManaSource(playerID uuid.UUID, action ManaTap) err
 }
 
 func plannedManaChoiceAvailable(productions []ManaProduction, bonuses []ManaBonusColor, action ManaTap) bool {
-	for _, choice := range manaProductionChoices(productions, bonuses) {
-		if slices.Equal(choice.Productions, action.Productions) && slices.Equal(choice.BonusColors, action.BonusColors) {
-			return true
+	if !plannedProductionsAvailable(productions, action.Productions) {
+		return false
+	}
+	return plannedBonusColorsAvailable(bonuses, action.Productions, action.BonusColors)
+}
+
+func plannedProductionsAvailable(productions, planned []ManaProduction) bool {
+	var remaining [AnyColor + 1]int
+	for _, production := range planned {
+		if production.Color == AnyColor || production.Amount <= 0 {
+			return false
+		}
+		remaining[production.Color] += production.Amount
+	}
+	var singleColorAmounts []int
+	combinationAmount := 0
+	for _, production := range productions {
+		amount := normalizedManaAmount(production.Amount)
+		switch {
+		case production.Color != AnyColor:
+			remaining[production.Color] -= amount
+			if remaining[production.Color] < 0 {
+				return false
+			}
+		case production.AnyCombination:
+			combinationAmount += amount
+		default:
+			singleColorAmounts = append(singleColorAmounts, amount)
 		}
 	}
-	return false
+
+	var assignSingleColors func(int) bool
+	assignSingleColors = func(index int) bool {
+		if index == len(singleColorAmounts) {
+			total := 0
+			for _, color := range manaPoolColors {
+				if color == Colorless && remaining[color] != 0 {
+					return false
+				}
+				total += remaining[color]
+			}
+			return total == combinationAmount
+		}
+		amount := singleColorAmounts[index]
+		for color := White; color <= Green; color++ {
+			if remaining[color] < amount {
+				continue
+			}
+			remaining[color] -= amount
+			if assignSingleColors(index + 1) {
+				return true
+			}
+			remaining[color] += amount
+		}
+		return false
+	}
+	return assignSingleColors(0)
+}
+
+func plannedBonusColorsAvailable(bonuses []ManaBonusColor, plannedProductions []ManaProduction, planned []Color) bool {
+	var remaining [AnyColor + 1]int
+	for _, color := range planned {
+		if color == AnyColor {
+			return false
+		}
+		remaining[color]++
+	}
+	matchCount := 0
+	for _, bonus := range bonuses {
+		if bonus == MatchProduced {
+			matchCount++
+			continue
+		}
+		color := Color(bonus)
+		remaining[color]--
+		if remaining[color] < 0 {
+			return false
+		}
+	}
+	produced := [AnyColor + 1]bool{}
+	for _, color := range productionColors(plannedProductions) {
+		produced[color] = true
+	}
+	if matchCount > 0 && len(productionColors(plannedProductions)) == 0 {
+		matchCount = 0
+	}
+	total := 0
+	for _, color := range manaPoolColors {
+		if remaining[color] > 0 && !produced[color] {
+			return false
+		}
+		total += remaining[color]
+	}
+	return total == matchCount
 }

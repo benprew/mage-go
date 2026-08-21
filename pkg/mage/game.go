@@ -4341,7 +4341,6 @@ func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
 // scoring; payment planning operates on Abilities without merging their output.
 type manaSourceInfo struct {
 	PermanentID uuid.UUID
-	Name        string
 	Colors      []Color
 	Abilities   []manaSourceAbility
 	Bonuses     []ManaBonusColor
@@ -4440,7 +4439,6 @@ func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourc
 		}
 		sources = append(sources, manaSourceInfo{
 			PermanentID: perm.ID(),
-			Name:        perm.Name(),
 			Colors:      colors,
 			Abilities:   abilities,
 			Bonuses:     g.manaBonuses(perm.ID()),

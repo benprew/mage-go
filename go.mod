@@ -1,6 +1,6 @@
 module github.com/benprew/mage-go
 
-go 1.24.1
+go 1.26.7
 
 require (
 	github.com/charmbracelet/bubbletea v1.3.10

@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -163,102 +164,147 @@ func (mp *ManaPool) recordDrain(c Color) {
 // spellCtx is non-nil when paying for a spell cast; pass nil for ability
 // activations and other non-spell costs (restricted mana is excluded then).
 func (mp *ManaPool) CanPay(mc ManaCost, spellCtx *SpellPaymentContext) bool {
-	avail := map[Color]int{}
-	for _, m := range mp.pool {
-		if !manaUsable(m, spellCtx) {
+	_, ok := mp.paymentPlan(mc, spellCtx)
+	return ok
+}
+
+type manaPaymentRequirement struct {
+	candidates []Color
+}
+
+type manaPaymentState struct {
+	index     int
+	available [AnyColor + 1]int
+}
+
+func (mp *ManaPool) paymentPlan(mc ManaCost, spellCtx *SpellPaymentContext) ([AnyColor + 1]int, bool) {
+	var available [AnyColor + 1]int
+	total := 0
+	for _, mana := range mp.pool {
+		if !manaUsable(mana, spellCtx) {
 			continue
 		}
-		avail[m.Color]++
+		available[mana.Color]++
+		total++
+	}
+	if total < mc.CMC() {
+		return [AnyColor + 1]int{}, false
+	}
+	if len(mp.ManaConversions) == 0 && len(mc.Hybrid) == 0 {
+		return directManaPaymentPlan(available, mc)
 	}
 
-	type colorReq struct {
-		color  Color
-		needed int
+	requirements := make([]manaPaymentRequirement, 0, mc.CMC()-mc.Generic)
+	appendRequirements := func(color Color, count int) {
+		candidates := mp.paymentCandidates(color)
+		for range count {
+			requirements = append(requirements, manaPaymentRequirement{candidates: candidates})
+		}
 	}
-	reqs := []colorReq{
+	appendRequirements(White, mc.White)
+	appendRequirements(Blue, mc.Blue)
+	appendRequirements(Black, mc.Black)
+	appendRequirements(Red, mc.Red)
+	appendRequirements(Green, mc.Green)
+	for _, hybrid := range mc.Hybrid {
+		candidates := append([]Color(nil), mp.paymentCandidates(hybrid.A)...)
+		for _, candidate := range mp.paymentCandidates(hybrid.B) {
+			if !containsPaymentColor(candidates, candidate) {
+				candidates = append(candidates, candidate)
+			}
+		}
+		requirements = append(requirements, manaPaymentRequirement{candidates: candidates})
+	}
+
+	remaining := available
+	failed := make(map[manaPaymentState]bool)
+	var allocate func(int) bool
+	allocate = func(index int) bool {
+		if index == len(requirements) {
+			return true
+		}
+		state := manaPaymentState{index: index, available: remaining}
+		if failed[state] {
+			return false
+		}
+		for _, candidate := range requirements[index].candidates {
+			if remaining[candidate] == 0 {
+				continue
+			}
+			remaining[candidate]--
+			if allocate(index + 1) {
+				return true
+			}
+			remaining[candidate]++
+		}
+		failed[state] = true
+		return false
+	}
+	if !allocate(0) {
+		return [AnyColor + 1]int{}, false
+	}
+
+	used := [AnyColor + 1]int{}
+	for _, color := range manaPoolColors {
+		used[color] = available[color] - remaining[color]
+	}
+	generic := mc.Generic
+	for _, color := range [...]Color{Colorless, White, Blue, Black, Red, Green} {
+		amount := min(remaining[color], generic)
+		used[color] += amount
+		generic -= amount
+		if generic == 0 {
+			break
+		}
+	}
+	if generic != 0 {
+		return [AnyColor + 1]int{}, false
+	}
+	return used, true
+}
+
+func directManaPaymentPlan(available [AnyColor + 1]int, mc ManaCost) ([AnyColor + 1]int, bool) {
+	used := [AnyColor + 1]int{}
+	for _, requirement := range [...]struct {
+		color Color
+		count int
+	}{
 		{White, mc.White},
 		{Blue, mc.Blue},
 		{Black, mc.Black},
 		{Red, mc.Red},
 		{Green, mc.Green},
+	} {
+		if available[requirement.color] < requirement.count {
+			return [AnyColor + 1]int{}, false
+		}
+		available[requirement.color] -= requirement.count
+		used[requirement.color] = requirement.count
 	}
-
-	if len(mp.ManaConversions) == 0 {
-		remaining := 0
-		for _, r := range reqs {
-			if avail[r.color] < r.needed {
-				return false
-			}
-			avail[r.color] -= r.needed
-			remaining += avail[r.color]
-		}
-		if !allocateHybrids(mc.Hybrid, avail) {
-			return false
-		}
-		remaining = avail[Colorless]
-		for _, r := range reqs {
-			remaining += avail[r.color]
-		}
-		return remaining >= mc.Generic
-	}
-
-	used := map[Color]int{}
-	for _, r := range reqs {
-		need := r.needed
-		exact := min(avail[r.color]-used[r.color], need)
-		if exact > 0 {
-			used[r.color] += exact
-			need -= exact
-		}
-		if need > 0 {
-			for from, to := range mp.ManaConversions {
-				if to == r.color && from != r.color {
-					conv := min(avail[from]-used[from], need)
-					if conv > 0 {
-						used[from] += conv
-						need -= conv
-					}
-				}
-			}
-		}
-		if need > 0 {
-			return false
+	generic := mc.Generic
+	for _, color := range [...]Color{Colorless, White, Blue, Black, Red, Green} {
+		amount := min(available[color], generic)
+		used[color] += amount
+		generic -= amount
+		if generic == 0 {
+			break
 		}
 	}
-	remainingByColor := map[Color]int{}
-	for c, count := range avail {
-		remainingByColor[c] = count - used[c]
-	}
-	if !allocateHybrids(mc.Hybrid, remainingByColor) {
-		return false
-	}
-	remaining := 0
-	for _, count := range remainingByColor {
-		remaining += count
-	}
-	return remaining >= mc.Generic
+	return used, generic == 0
 }
 
-// allocateHybrids greedily assigns each hybrid symbol to one of its two colors
-// from the available pool, mutating the map to reflect consumption. Returns
-// false if any symbol cannot be paid. The allocation is deterministic: it
-// prefers the more-abundant color, breaking ties by symbol order (color A
-// first). This is sufficient for the simple cases the engine currently sees;
-// it can fail to find a valid allocation only when colors share constraints
-// across symbols, which doesn't arise for the hybrid costs in print.
-func allocateHybrids(syms []HybridSymbol, avail map[Color]int) bool {
-	for _, h := range syms {
-		a, b := avail[h.A], avail[h.B]
-		switch {
-		case a >= b && a > 0:
-			avail[h.A] = a - 1
-		case b > 0:
-			avail[h.B] = b - 1
-		default:
-			return false
+func (mp *ManaPool) paymentCandidates(required Color) []Color {
+	candidates := []Color{required}
+	for _, from := range manaPoolColors {
+		if from != required && mp.ManaConversions[from] == required {
+			candidates = append(candidates, from)
 		}
 	}
-	return true
+	return candidates
+}
+
+func containsPaymentColor(colors []Color, color Color) bool {
+	return slices.Contains(colors, color)
 }
 
 // Surplus returns how much mana would remain after paying the given cost,
@@ -275,64 +321,16 @@ func (mp *ManaPool) Surplus(mc ManaCost, spellCtx *SpellPaymentContext) int {
 // spent preferentially (it would otherwise be wasted at end-of-step per
 // CR 500.5).
 func (mp *ManaPool) Pay(mc ManaCost, spellCtx *SpellPaymentContext) error {
-	if !mp.CanPay(mc, spellCtx) {
+	plan, ok := mp.paymentPlan(mc, spellCtx)
+	if !ok {
 		return fmt.Errorf("insufficient mana to pay %s", mc)
 	}
-	type colorReq struct {
-		color  Color
-		needed int
-	}
-	reqs := []colorReq{
-		{White, mc.White},
-		{Blue, mc.Blue},
-		{Black, mc.Black},
-		{Red, mc.Red},
-		{Green, mc.Green},
-	}
-	for _, r := range reqs {
-		need := r.needed
-		removed := mp.removeUpTo(r.color, need, spellCtx)
-		need = removed
-		if need > 0 {
-			for from, to := range mp.ManaConversions {
-				if to == r.color && from != r.color {
-					need = mp.removeUpTo(from, need, spellCtx)
-					if need <= 0 {
-						break
-					}
-				}
-			}
+	for _, color := range [...]Color{Colorless, White, Blue, Black, Red, Green} {
+		if remaining := mp.removeUpTo(color, plan[color], spellCtx); remaining != 0 {
+			return fmt.Errorf("mana pool changed while paying %s", mc)
 		}
-	}
-	for _, h := range mc.Hybrid {
-		a, b := mp.usableCount(h.A, spellCtx), mp.usableCount(h.B, spellCtx)
-		if a >= b && a > 0 {
-			mp.removeUpTo(h.A, 1, spellCtx)
-		} else if b > 0 {
-			mp.removeUpTo(h.B, 1, spellCtx)
-		}
-	}
-	generic := mc.Generic
-	generic = mp.removeUpTo(Colorless, generic, spellCtx)
-	for _, c := range []Color{White, Blue, Black, Red, Green} {
-		if generic <= 0 {
-			break
-		}
-		generic = mp.removeUpTo(c, generic, spellCtx)
 	}
 	return nil
-}
-
-// usableCount returns the number of pool entries of color c that may be
-// spent given the spell context. Used during hybrid allocation.
-func (mp *ManaPool) usableCount(c Color, spellCtx *SpellPaymentContext) int {
-	n := 0
-	for _, m := range mp.pool {
-		if m.Color == c && manaUsable(m, spellCtx) {
-			n++
-		}
-	}
-	return n
 }
 
 // removeUpTo consumes up to n mana of color c, preferring restricted-but-
