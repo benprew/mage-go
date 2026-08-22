@@ -173,28 +173,32 @@ func (g *Game) PayAttackCosts(atk *Permanent, controller uuid.UUID, prompt bool)
 	if len(costs) == 0 {
 		return true
 	}
-	for _, c := range costs {
-		if !c.CanPay(atk.ID(), controller, g) {
-			return false
-		}
+	preparedCosts := g.prepareActionCosts(costs, nil, 0)
+	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
+		Controller: controller,
+		SourceID:   atk.ID(),
+		Costs:      preparedCosts,
+		Hint: AutoTapHint{
+			ReservedSources: []uuid.UUID{atk.ID()},
+		},
+	})
+	if err != nil {
+		return false
 	}
 	if prompt {
 		p := g.GetPlayer(controller)
 		if p == nil {
 			return false
 		}
-		texts := make([]string, len(costs))
-		for i, c := range costs {
+		texts := make([]string, len(preparedCosts))
+		for i, c := range preparedCosts {
 			texts[i] = c.Text()
 		}
 		if !p.ChooseMayAbility(strings.Join(texts, " and ") + " for " + atk.Name() + " to attack") {
 			return false
 		}
 	}
-	if err := g.autoTapForManaCosts(controller, atk.ID(), costs, AutoTapHint{}); err != nil {
-		return false
-	}
-	return g.payActionCosts(controller, atk.ID(), costs) == nil
+	return payment.Commit() == nil
 }
 
 // TargetCantBeBlockedExceptBy creates a target-scoped continuous effect that

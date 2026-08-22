@@ -13,16 +13,11 @@ import (
 // component, and proves the complete payment on a game clone before Commit
 // mutates live state.
 type spellPaymentTransaction struct {
-	game             *Game
-	card             Card
-	controller       uuid.UUID
-	zone             Zone
-	mana             ManaCost
-	lifeLoss         int
-	costs            []Cost
-	optionalOutcomes map[uuid.UUID]bool
-	spellContext     *SpellPaymentContext
-	manaSolution     *ManaSolution
+	game       *Game
+	card       Card
+	controller uuid.UUID
+	zone       Zone
+	payment    *costPaymentTransaction
 }
 
 type spellPaymentSpec struct {
@@ -52,29 +47,34 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 			totalMana = flattenManaCost(totalMana)
 		}
 		spellCtx := SpellContextForCard(spec.Card)
-		solution, err := g.planManaForCost(spec.Controller, totalMana, AutoTapHint{CastingCard: spec.Card.ID()}, spellCtx)
+		payment, err := g.prepareCostPaymentTransaction(costPaymentSpec{
+			Controller:             spec.Controller,
+			SourceID:               spec.Card.ID(),
+			Mana:                   totalMana,
+			LifeLoss:               spec.LifeLoss,
+			Hint:                   AutoTapHint{CastingCard: spec.Card.ID()},
+			SpellContext:           spellCtx,
+			ResetDrainedBeforeMana: true,
+		}, nil)
 		if err != nil {
 			return nil, fmt.Errorf("cannot pay total mana cost %s for %s: %w", totalMana, spec.Card.Name(), err)
 		}
 		return &spellPaymentTransaction{
-			game:         g,
-			card:         spec.Card,
-			controller:   spec.Controller,
-			zone:         spec.Zone,
-			mana:         totalMana,
-			lifeLoss:     spec.LifeLoss,
-			spellContext: spellCtx,
-			manaSolution: solution,
+			game:       g,
+			card:       spec.Card,
+			controller: spec.Controller,
+			zone:       spec.Zone,
+			payment:    payment,
 		}, nil
 	}
 
-	validation := cloneGameForSpellPayment(g)
+	validation := cloneGameForCostPayment(g)
 	validation.currentX = spec.XValue
 	if validation.removeCardFromZone(spec.Controller, spec.Card.ID(), spec.Zone) == nil {
 		return nil, fmt.Errorf("could not move %s from %s while validating its total cost", spec.Card.Name(), spec.Zone)
 	}
 
-	lockedCosts, outcomes, err := lockSpellCosts(spec.Costs, spec.Card.ID(), spec.Controller, spec.Targets, spec.XValue, validation, player)
+	lockedCosts, outcomes, err := lockPaymentCosts(spec.Costs, spec.Card.ID(), spec.Controller, spec.Targets, spec.XValue, validation, player)
 	if err != nil {
 		return nil, err
 	}
@@ -95,25 +95,27 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	}
 
 	spellCtx := SpellContextForCard(spec.Card)
-	solution, err := g.planManaForCost(spec.Controller, totalMana, AutoTapHint{CastingCard: spec.Card.ID()}, spellCtx)
+	payment, err := g.prepareCostPaymentTransaction(costPaymentSpec{
+		Controller:             spec.Controller,
+		SourceID:               spec.Card.ID(),
+		Mana:                   totalMana,
+		LifeLoss:               spec.LifeLoss,
+		Costs:                  nonMana,
+		OptionalOutcomes:       outcomes,
+		Hint:                   AutoTapHint{CastingCard: spec.Card.ID()},
+		SpellContext:           spellCtx,
+		ResetDrainedBeforeMana: true,
+	}, validation)
 	if err != nil {
 		return nil, fmt.Errorf("cannot pay total mana cost %s for %s: %w", totalMana, spec.Card.Name(), err)
 	}
-	if err := validateSpellPayment(validation, spec, totalMana, nonMana, solution, spellCtx); err != nil {
-		return nil, err
-	}
 
 	return &spellPaymentTransaction{
-		game:             g,
-		card:             spec.Card,
-		controller:       spec.Controller,
-		zone:             spec.Zone,
-		mana:             totalMana,
-		lifeLoss:         spec.LifeLoss,
-		costs:            nonMana,
-		optionalOutcomes: outcomes,
-		spellContext:     spellCtx,
-		manaSolution:     solution,
+		game:       g,
+		card:       spec.Card,
+		controller: spec.Controller,
+		zone:       spec.Zone,
+		payment:    payment,
 	}, nil
 }
 
@@ -132,27 +134,6 @@ func directSpellManaCosts(costs []Cost, xValue int) (ManaCost, bool) {
 	return total, true
 }
 
-func cloneGameForSpellPayment(g *Game) *Game {
-	wasBattlefieldShared := g.battlefieldShared
-	wasBattlefieldSliceShared := g.battlefieldSliceShared
-	ownedPermanents := g.ownedPermanents
-	clone := g.Clone()
-	g.battlefieldShared = wasBattlefieldShared
-	g.battlefieldSliceShared = wasBattlefieldSliceShared
-	g.ownedPermanents = ownedPermanents
-
-	clone.battlefield = make([]*Permanent, len(g.battlefield))
-	for i, permanent := range g.battlefield {
-		copy := &Permanent{}
-		clonePermanentInto(copy, permanent)
-		clone.battlefield[i] = copy
-	}
-	clone.battlefieldShared = false
-	clone.battlefieldSliceShared = false
-	clone.ownedPermanents = nil
-	return clone
-}
-
 func resolvedSpellManaCost(cost ManaCost, xValue int) ManaCost {
 	if cost.HasX {
 		cost.Generic += xValue * cost.XCount
@@ -166,7 +147,7 @@ func flattenManaCost(cost ManaCost) ManaCost {
 	return ManaCost{Generic: manaCostUnits(cost)}
 }
 
-func lockSpellCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uuid.UUID, xValue int, validation *Game, chooser Player) ([]Cost, map[uuid.UUID]bool, error) {
+func lockPaymentCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uuid.UUID, xValue int, validation *Game, chooser Player) ([]Cost, map[uuid.UUID]bool, error) {
 	var locked []Cost
 	outcomes := make(map[uuid.UUID]bool)
 	var lock func(Cost) error
@@ -215,67 +196,12 @@ func lockSpellCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uuid
 	return locked, outcomes, nil
 }
 
-func validateSpellPayment(validation *Game, spec spellPaymentSpec, mana ManaCost, costs []Cost, solution *ManaSolution, spellCtx *SpellPaymentContext) error {
-	player := validation.GetPlayer(spec.Controller)
-	if player == nil {
-		return ErrPlayerNotFound
-	}
-	if err := validation.applyManaSolution(spec.Controller, solution); err != nil {
-		return fmt.Errorf("cannot activate mana abilities for %s: %w", spec.Card.Name(), err)
-	}
-	if !mana.IsZero() {
-		if err := player.ManaPool().Pay(mana, spellCtx); err != nil {
-			return fmt.Errorf("cannot pay total mana cost %s for %s: %w", mana, spec.Card.Name(), err)
-		}
-	}
-	if spec.LifeLoss > 0 {
-		validation.PlayerLoseLife(player, spec.LifeLoss)
-	}
-	for _, cost := range costs {
-		validationCost := cost
-		if randomDiscard, ok := cost.(*discardRandomCost); ok {
-			validationCost = &discardCost{amount: randomDiscard.amount}
-		}
-		if !validationCost.CanPay(spec.Card.ID(), spec.Controller, validation) {
-			return fmt.Errorf("cannot pay total cost for %s: %s", spec.Card.Name(), cost.Text())
-		}
-		if err := validationCost.Pay(spec.Card.ID(), spec.Controller, validation); err != nil {
-			return fmt.Errorf("cannot pay total cost for %s: %w", spec.Card.Name(), err)
-		}
-	}
-	return nil
-}
-
 // Commit moves the proposed card out of its source zone, activates the exact
 // prevalidated mana plan, and pays the locked total cost once.
 func (tx *spellPaymentTransaction) Commit() error {
 	if tx.game.removeCardFromZone(tx.controller, tx.card.ID(), tx.zone) == nil {
 		return fmt.Errorf("could not remove %s from %s", tx.card.Name(), tx.zone)
 	}
-	player := tx.game.GetPlayer(tx.controller)
-	if player == nil {
-		return ErrPlayerNotFound
-	}
 	tx.game.lastCostReveal = nil
-	if err := tx.game.applyManaSolution(tx.controller, tx.manaSolution); err != nil {
-		return err
-	}
-	player.ManaPool().ResetLastDrained()
-	if !tx.mana.IsZero() {
-		if err := player.ManaPool().Pay(tx.mana, tx.spellContext); err != nil {
-			return err
-		}
-	}
-	if tx.lifeLoss > 0 {
-		tx.game.PlayerLoseLife(player, tx.lifeLoss)
-	}
-	for _, cost := range tx.costs {
-		if err := cost.Pay(tx.card.ID(), tx.controller, tx.game); err != nil {
-			return err
-		}
-	}
-	for sourceID, paid := range tx.optionalOutcomes {
-		tx.game.setOptionalCostPaid(sourceID, paid)
-	}
-	return nil
+	return tx.payment.Commit()
 }

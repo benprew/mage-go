@@ -90,15 +90,16 @@ func (c *ManaCostPayment) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 }
 
 func (c *ManaCostPayment) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	mc := c.reducedCost(sourceID, g)
-	if err := g.AutoTapForCost(controller, mc); err != nil {
+	tx, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
+		Controller:               controller,
+		SourceID:                 sourceID,
+		Costs:                    []Cost{c},
+		ApplyActivationReduction: true,
+	})
+	if err != nil {
 		return err
 	}
-	return p.ManaPool().Pay(mc, nil)
+	return tx.Commit()
 }
 
 // reducedCost applies activation cost reductions (e.g. Power Artifact) to the mana cost.

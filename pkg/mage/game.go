@@ -693,18 +693,15 @@ func (g *Game) FlipCoin(playerID uuid.UUID) bool {
 // mana sources the player may activate. It is suitable for resolving effects
 // that ask a player to pay mana outside the spell-casting pipeline.
 func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
-	player := g.GetPlayer(playerID)
-	if player == nil {
-		return false
-	}
 	cost := ParseManaCost(manaCostStr)
-	if !g.CanAfford(playerID, cost, nil) {
+	tx, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
+		Controller: playerID,
+		Costs:      []Cost{&ManaCostPayment{MC: cost}},
+	})
+	if err != nil {
 		return false
 	}
-	if err := g.AutoTapForCost(playerID, cost); err != nil {
-		return false
-	}
-	return player.ManaPool().Pay(cost, nil) == nil
+	return tx.Commit() == nil
 }
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
@@ -2846,20 +2843,6 @@ func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard Car
 	return nil
 }
 
-func (g *Game) autoTapForManaCosts(controller, sourceID uuid.UUID, costs []Cost, hint AutoTapHint) error {
-	for _, cost := range costs {
-		if mc, ok := cost.(*ManaCostPayment); ok {
-			reduced := mc.reducedCost(sourceID, g)
-			if !reduced.IsZero() {
-				if err := g.AutoTapForCostWithHint(controller, reduced, hint); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
 func addActionManaCost(total *ManaCost, add ManaCost) {
 	total.Generic += add.Generic
 	total.White += add.White
@@ -2892,31 +2875,6 @@ func (g *Game) prepareActionCosts(costs []Cost, targets []uuid.UUID, x int) []Co
 		resolved = append([]Cost{&ManaCostPayment{MC: mana}}, resolved...)
 	}
 	return resolved
-}
-
-func (g *Game) canPayActionCostsAtomically(controller, sourceID uuid.UUID, costs []Cost) bool {
-	for _, cost := range costs {
-		if !cost.CanPay(sourceID, controller, g) {
-			return false
-		}
-	}
-	for _, cost := range costs {
-		payment, ok := cost.(*ManaCostPayment)
-		if !ok {
-			continue
-		}
-		return g.CanAfford(controller, payment.reducedCost(sourceID, g), nil)
-	}
-	return true
-}
-
-func (g *Game) payActionCosts(controller, sourceID uuid.UUID, costs []Cost) error {
-	for _, cost := range costs {
-		if err := cost.Pay(sourceID, controller, g); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func newStackObject(controller, sourceID uuid.UUID, card Card, effects []Effect, targets []uuid.UUID, xValue int, isAbility bool) *StackObject {
@@ -4320,6 +4278,10 @@ type manaSourceInfo struct {
 // permanent that is activating an ability and weight color preferences by
 // other spells the player still wants to cast.
 type AutoTapHint struct {
+	// ReservedSources lists permanents that the surrounding action must keep
+	// untapped while mana is produced. Attack declarations use this for chosen
+	// attackers; multi-source total costs may reserve more than one permanent.
+	ReservedSources []uuid.UUID
 	// ActivationSource is the permanent whose activated ability is being paid
 	// for (zero UUID if not applicable, e.g. when casting a spell). Sources
 	// matching this id are penalized so we only tap them as a last resort.
@@ -4481,12 +4443,17 @@ func (g *Game) planManaForCost(playerID uuid.UUID, mc ManaCost, hint AutoTapHint
 	}
 	sources := g.getUntappedManaSources(playerID)
 
-	// {T} on the source means the cost-payment step will tap it; remove it
-	// from auto-tap candidates so we don't fail later with "already tapped".
-	if hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil {
+	// Remove sources reserved for another part of the total cost or action.
+	if len(hint.ReservedSources) > 0 || hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil {
 		filtered := sources[:0]
 		for _, src := range sources {
-			if src.PermanentID != hint.ActivationSource {
+			reserved := hint.ActivationTapsSource && src.PermanentID == hint.ActivationSource
+			if !reserved {
+				if slices.Contains(hint.ReservedSources, src.PermanentID) {
+					reserved = true
+				}
+			}
+			if !reserved {
 				filtered = append(filtered, src)
 			}
 		}
@@ -5017,10 +4984,8 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		return err
 	}
 
-	// Auto-tap lands to pay mana costs, then pay all costs. Build a hint so
-	// the algorithm deprioritizes tapping the source itself; if the ability
-	// already has a {T} cost, hard-exclude the source so we don't try to use
-	// it as both tap-cost payer and mana source (which would conflict).
+	// Lock and validate the total activation cost before changing live state.
+	// If the ability includes {T}, reserve its source from mana planning.
 	hasTapCost := false
 	for _, c := range aa.Costs() {
 		if _, ok := c.(*tap); ok {
@@ -5030,13 +4995,19 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	hint := AutoTapHint{ActivationSource: perm.ID(), ActivationTapsSource: hasTapCost}
 	preparedCosts := g.prepareActionCosts(aa.Costs(), targets, g.currentX)
-	if !g.canPayActionCostsAtomically(playerID, perm.ID(), preparedCosts) {
-		return fmt.Errorf("cannot pay activation costs")
+	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
+		Controller:               playerID,
+		SourceID:                 perm.ID(),
+		Costs:                    preparedCosts,
+		Targets:                  targets,
+		XValue:                   g.currentX,
+		Hint:                     hint,
+		ApplyActivationReduction: true,
+	})
+	if err != nil {
+		return fmt.Errorf("cannot pay activation costs: %w", err)
 	}
-	if err := g.autoTapForManaCosts(playerID, perm.ID(), preparedCosts, hint); err != nil {
-		return err
-	}
-	if err := g.payActionCosts(playerID, perm.ID(), preparedCosts); err != nil {
+	if err := payment.Commit(); err != nil {
 		return err
 	}
 

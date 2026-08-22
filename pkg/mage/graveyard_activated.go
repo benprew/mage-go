@@ -112,21 +112,20 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		}
 	}
 
-	// No hint needed: the card is in the graveyard (not the hand or
-	// battlefield), so neither hand-demand nor activation-source biases apply.
-	for _, c := range gaa.Costs() {
-		if mc, ok := c.(*ManaCostPayment); ok {
-			if !mc.MC.IsZero() {
-				if err := g.AutoTapForCost(playerID, mc.MC); err != nil {
-					return err
-				}
-			}
-		}
+	preparedCosts := g.prepareActionCosts(gaa.Costs(), targets, g.currentX)
+	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
+		Controller:               playerID,
+		SourceID:                 cardID,
+		Costs:                    preparedCosts,
+		Targets:                  targets,
+		XValue:                   g.currentX,
+		ApplyActivationReduction: true,
+	})
+	if err != nil {
+		return err
 	}
-	for _, c := range gaa.Costs() {
-		if err := c.Pay(cardID, playerID, g); err != nil {
-			return err
-		}
+	if err := payment.Commit(); err != nil {
+		return err
 	}
 
 	gaa.MarkActivated()

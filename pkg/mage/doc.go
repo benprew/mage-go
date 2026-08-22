@@ -140,18 +140,23 @@
 // EventSourceID; trigger conditions can use LKI when another activation cost
 // moved it off the battlefield.
 //
-// # Spell total-cost transactions
+// # Total-cost payment transactions
 //
-// Every casting path locks one total cost before changing live game state.
-// The transaction combines the printed or alternate mana cost with printed
-// additional costs and spell-action mana costs, resolves optional and either
-// choices, removes the proposed card from its source zone, and validates the
-// complete payment on isolated game state. Automatic mana production then
-// executes one exact solver plan and the combined mana component is paid once.
-// A rejected transaction leaves mana pools, life totals, mana sources, other
-// cost resources, and the proposed card unchanged. Mana spent activating a
-// mana ability is excluded from CastContext.ColorsSpent; only the locked
-// spell-total payment contributes to cast-time mana metadata.
+// Spell casting, battlefield and graveyard activated abilities, attack costs,
+// resolving TryPayMana payments, and standalone ManaCostPayment values share
+// one total-cost transaction. It combines all mana components, locks optional
+// and either choices, plans exact mana abilities, and proves every payment in
+// order on isolated game state before Commit changes the live game. A rejected
+// transaction leaves mana pools, life totals, tapped state, cards, counters,
+// and other cost resources unchanged.
+//
+// AutoTapHint.ReservedSources removes permanents needed by the surrounding
+// action from mana planning. Attack-cost payment reserves the attacker, and an
+// activated ability with {T} reserves its source. This prevents automatic mana
+// production from making the rest of the locked total cost or action illegal.
+// Mana spent activating a mana ability is excluded from
+// CastContext.ColorsSpent; only a spell's locked total-mana payment contributes
+// to cast-time mana metadata.
 //
 // WithDynamicManaAbility and NewDynamicManaAbility derive productions from the
 // source permanent at query and activation time. Solvers use
@@ -233,8 +238,9 @@
 // target.” Random targets are acquired before the cost is evaluated. All mana
 // portions of an action cost are combined for affordability, autotap, and
 // payment, preventing generic mana from consuming colors needed by a later
-// per-target component. Costs are checked before mana sources or nonmana costs
-// are changed, so an unaffordable activation fails atomically.
+// per-target component. The shared total-cost transaction checks sequential
+// resource use before mana sources or nonmana costs are changed, so an
+// unaffordable action fails atomically rather than paying an affordable prefix.
 //
 // RandomCounterDistribution assigns a ValueSource total of counters when the
 // stack object is created. Each target receives one, then every remaining
