@@ -115,11 +115,11 @@ func TestMishrasWorkshop(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Workshop")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Amulet of Kroog") // {2}, artifact
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Workshop")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Amulet of Kroog")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Amulet of Kroog", 1)
+		g.AssertTapped(gametest.PlayerA, "Mishra's Workshop", true)
 	})
 
 	// Regression: previously the restriction was implemented as a player-wide

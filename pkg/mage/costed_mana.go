@@ -9,9 +9,10 @@ import (
 )
 
 type manaSourceAbility struct {
-	AbilityIndex int
-	Productions  []ManaProduction
-	ManaCost     ManaCost
+	AbilityIndex    int
+	Productions     []ManaProduction
+	ManaCost        ManaCost
+	Interchangeable bool
 }
 
 func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex int, g *Game) (manaSourceAbility, bool) {
@@ -22,8 +23,9 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 			return manaSourceAbility{}, false
 		}
 		return manaSourceAbility{
-			AbilityIndex: abilityIndex,
-			Productions:  append([]ManaProduction(nil), productions...),
+			AbilityIndex:    abilityIndex,
+			Productions:     append([]ManaProduction(nil), productions...),
+			Interchangeable: manaAbility.dynamicProductions == nil && len(manaAbility.postProduction) == 0,
 		}, true
 	}
 
@@ -58,9 +60,10 @@ func manaSourceAbilityForPlanning(a Ability, sourceID uuid.UUID, abilityIndex in
 		return manaSourceAbility{}, false
 	}
 	return manaSourceAbility{
-		AbilityIndex: abilityIndex,
-		Productions:  productions,
-		ManaCost:     manaCost,
+		AbilityIndex:    abilityIndex,
+		Productions:     productions,
+		ManaCost:        manaCost,
+		Interchangeable: true,
 	}, true
 }
 
@@ -184,56 +187,48 @@ func plannedManaChoiceAvailable(productions []ManaProduction, bonuses []ManaBonu
 }
 
 func plannedProductionsAvailable(productions, planned []ManaProduction) bool {
-	var remaining [AnyColor + 1]int
+	var caps manaChoiceCaps
 	for _, production := range planned {
 		if production.Color == AnyColor || production.Amount <= 0 {
 			return false
 		}
-		remaining[production.Color] += production.Amount
+		caps[production.Color] += production.Amount
 	}
-	var singleColorAmounts []int
-	combinationAmount := 0
-	for _, production := range productions {
-		amount := normalizedManaAmount(production.Amount)
-		switch {
-		case production.Color != AnyColor:
-			remaining[production.Color] -= amount
-			if remaining[production.Color] < 0 {
-				return false
-			}
-		case production.AnyCombination:
-			combinationAmount += amount
-		default:
-			singleColorAmounts = append(singleColorAmounts, amount)
+	for _, choice := range concreteManaProductionsForDemand(productions, caps) {
+		if concreteManaProductionsEqual(choice, planned) {
+			return true
 		}
 	}
+	return false
+}
 
-	var assignSingleColors func(int) bool
-	assignSingleColors = func(index int) bool {
-		if index == len(singleColorAmounts) {
-			total := 0
-			for _, color := range manaPoolColors {
-				if color == Colorless && remaining[color] != 0 {
-					return false
-				}
-				total += remaining[color]
-			}
-			return total == combinationAmount
+type concreteManaProductionKey struct {
+	color       Color
+	restriction string
+}
+
+func concreteManaProductionsEqual(a, b []ManaProduction) bool {
+	amounts := make(map[concreteManaProductionKey]int, len(a))
+	for _, production := range a {
+		key := concreteManaProductionKey{
+			color:       production.Color,
+			restriction: manaRestrictionIdentity(production.Restriction),
 		}
-		amount := singleColorAmounts[index]
-		for color := White; color <= Green; color++ {
-			if remaining[color] < amount {
-				continue
-			}
-			remaining[color] -= amount
-			if assignSingleColors(index + 1) {
-				return true
-			}
-			remaining[color] += amount
-		}
-		return false
+		amounts[key] += normalizedManaAmount(production.Amount)
 	}
-	return assignSingleColors(0)
+	for _, production := range b {
+		key := concreteManaProductionKey{
+			color:       production.Color,
+			restriction: manaRestrictionIdentity(production.Restriction),
+		}
+		amounts[key] -= normalizedManaAmount(production.Amount)
+	}
+	for _, amount := range amounts {
+		if amount != 0 {
+			return false
+		}
+	}
+	return true
 }
 
 func plannedBonusColorsAvailable(bonuses []ManaBonusColor, plannedProductions []ManaProduction, planned []Color) bool {

@@ -215,6 +215,186 @@ func TestSolveMana_CostedManaSourceReturnsExecutablePlan(t *testing.T) {
 	}
 }
 
+func TestSolveMana_CanonicalizesEquivalentSources(t *testing.T) {
+	const sourceCount = 30
+	sources := make([]manaSourceInfo, sourceCount)
+	for i := range sources {
+		sources[i] = testSolverSource(uuid.New(), Red, 1)
+	}
+
+	stats := &manaSearchStats{}
+	plan, ok := searchManaWithStats(ManaSolverInputs{
+		Pool:    NewManaPool(),
+		Cost:    ManaCost{Generic: sourceCount / 2},
+		Sources: sources,
+	}, stats)
+	if !ok {
+		t.Fatal("equivalent sources should pay the generic cost")
+	}
+	if len(plan) != sourceCount/2 {
+		t.Fatalf("plan taps %d sources, want %d", len(plan), sourceCount/2)
+	}
+	if stats.ExpandedNodes > sourceCount+1 {
+		t.Fatalf("search expanded %d nodes for %d equivalent sources", stats.ExpandedNodes, sourceCount)
+	}
+}
+
+func TestSolveMana_DoesNotCanonicalizeDifferentPreservationScores(t *testing.T) {
+	expensiveID := uuid.New()
+	preferredID := uuid.New()
+	plan, err := SolveMana(ManaSolverInputs{
+		Pool: NewManaPool(),
+		Cost: ManaCost{Generic: 1},
+		Sources: []manaSourceInfo{
+			testSolverSource(expensiveID, Red, 1),
+			testSolverSource(preferredID, Red, 1),
+		},
+		Scores: []int{100, 0},
+	})
+	if err != nil {
+		t.Fatalf("SolveMana failed: %v", err)
+	}
+	if len(plan.SourcesToTap) != 1 || plan.SourcesToTap[0].PermanentID != preferredID {
+		t.Fatalf("solver ignored preservation scores: %+v", plan.SourcesToTap)
+	}
+}
+
+func TestSolveMana_CanonicalizesEquivalentSourcesWhenCostIsImpossible(t *testing.T) {
+	const sourceCount = 30
+	sources := make([]manaSourceInfo, sourceCount)
+	for i := range sources {
+		sources[i] = testSolverSource(uuid.New(), Red, 1)
+	}
+
+	stats := &manaSearchStats{}
+	if _, ok := searchManaWithStats(ManaSolverInputs{
+		Pool:    NewManaPool(),
+		Cost:    ManaCost{White: 1},
+		Sources: sources,
+	}, stats); ok {
+		t.Fatal("Mountains should not pay a white mana cost")
+	}
+	if stats.ExpandedNodes > sourceCount+1 {
+		t.Fatalf("impossible search expanded %d nodes for %d equivalent sources", stats.ExpandedNodes, sourceCount)
+	}
+}
+
+func TestSolveMana_PrunesImpossibleColoredCostBeforeSubsetSearch(t *testing.T) {
+	const sourceCount = 15
+	sources := make([]manaSourceInfo, sourceCount)
+	scores := make([]int, sourceCount)
+	for i := range sources {
+		sources[i] = testSolverSource(uuid.New(), Red, 1)
+		scores[i] = i + 1
+	}
+
+	stats := &manaSearchStats{}
+	if _, ok := searchManaWithStats(ManaSolverInputs{
+		Pool:    NewManaPool(),
+		Cost:    ManaCost{White: 1},
+		Sources: sources,
+		Scores:  scores,
+	}, stats); ok {
+		t.Fatal("Mountains should not pay a white mana cost")
+	}
+	if stats.ExpandedNodes != 1 {
+		t.Fatalf("impossible colored cost expanded %d nodes, want only the root", stats.ExpandedNodes)
+	}
+}
+
+func TestSolveMana_RestrictedProductionUsesSpellContext(t *testing.T) {
+	workshopID := uuid.New()
+	inputs := ManaSolverInputs{
+		Pool: NewManaPool(),
+		Cost: ManaCost{Generic: 3},
+		Sources: []manaSourceInfo{{
+			PermanentID: workshopID,
+			Abilities: []manaSourceAbility{{
+				AbilityIndex: 0,
+				Productions: []ManaProduction{{
+					Color:       Colorless,
+					Amount:      3,
+					Restriction: ArtifactSpellsOnly{},
+				}},
+			}},
+		}},
+	}
+
+	artifactContext := SpellContextForCard(NewArtifact("Test Artifact", "{3}"))
+	inputs.SpellContext = artifactContext
+	if _, err := SolveMana(inputs); err != nil {
+		t.Fatalf("restricted source should pay for an artifact spell: %v", err)
+	}
+
+	creatureContext := SpellContextForCard(NewCreature("Test Creature", "{3}", 3, 3))
+	inputs.SpellContext = creatureContext
+	if _, err := SolveMana(inputs); err == nil {
+		t.Fatal("artifact-only source should not pay for a creature spell")
+	}
+}
+
+func TestSolveMana_RestrictedProductionCannotPayManaAbilityCost(t *testing.T) {
+	artifactContext := SpellContextForCard(NewArtifact("White Artifact", "{W}"))
+	_, err := SolveMana(ManaSolverInputs{
+		Pool:         NewManaPool(),
+		Cost:         ManaCost{White: 1},
+		SpellContext: artifactContext,
+		Sources: []manaSourceInfo{
+			{
+				PermanentID: uuid.New(),
+				Abilities: []manaSourceAbility{{
+					Productions: []ManaProduction{{
+						Color:       Colorless,
+						Amount:      1,
+						Restriction: ArtifactSpellsOnly{},
+					}},
+				}},
+			},
+			{
+				PermanentID: uuid.New(),
+				Abilities: []manaSourceAbility{{
+					ManaCost:    ManaCost{Generic: 1},
+					Productions: []ManaProduction{{Color: White, Amount: 1}},
+				}},
+			},
+		},
+	})
+	if err == nil {
+		t.Fatal("spell-only mana must not pay a mana ability activation cost")
+	}
+}
+
+func TestPlannedProductionsAvailable_PreservesRestriction(t *testing.T) {
+	original := []ManaProduction{{
+		Color:       Colorless,
+		Amount:      3,
+		Restriction: ArtifactSpellsOnly{},
+	}}
+	if !plannedProductionsAvailable(original, original) {
+		t.Fatal("matching restricted production should be available")
+	}
+	if plannedProductionsAvailable(original, []ManaProduction{{Color: Colorless, Amount: 3}}) {
+		t.Fatal("planned production must not discard the original restriction")
+	}
+}
+
+func TestManaProductionChoicesForDemand_PreservesRestriction(t *testing.T) {
+	restriction := CreatureSpellsOnly{}
+	choices := manaProductionChoicesForDemand([]ManaProduction{{
+		Color:       AnyColor,
+		Amount:      1,
+		Restriction: restriction,
+	}}, nil, manaChoiceCapsForCost(ManaCost{Blue: 1}, nil))
+	for _, choice := range choices {
+		for _, production := range choice.Productions {
+			if production.Color == Blue && manaRestrictionIdentity(production.Restriction) == manaRestrictionIdentity(restriction) {
+				return
+			}
+		}
+	}
+	t.Fatalf("restricted any-color choices omitted restricted blue mana: %+v", choices)
+}
+
 func TestManaProductionChoicesForDemand_BoundsIrrelevantSurplus(t *testing.T) {
 	caps := manaChoiceCapsForCost(ManaCost{White: 1}, nil)
 	choices := manaProductionChoicesForDemand([]ManaProduction{{
@@ -327,13 +507,34 @@ func BenchmarkSolveMana_LargeAnyCombination(b *testing.B) {
 	}
 }
 
+func BenchmarkSolveMana_ManyEquivalentSources(b *testing.B) {
+	const sourceCount = 30
+	sources := make([]manaSourceInfo, sourceCount)
+	for i := range sources {
+		sources[i] = testSolverSource(uuid.New(), Red, 1)
+	}
+	inputs := ManaSolverInputs{
+		Pool:    NewManaPool(),
+		Cost:    ManaCost{Generic: sourceCount / 2},
+		Sources: sources,
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for range b.N {
+		if _, err := SolveMana(inputs); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
 func testSolverSource(id uuid.UUID, color Color, amount int) manaSourceInfo {
 	return manaSourceInfo{
 		PermanentID: id,
 		Colors:      []Color{color},
 		Abilities: []manaSourceAbility{{
-			AbilityIndex: 0,
-			Productions:  []ManaProduction{{Color: color, Amount: amount}},
+			AbilityIndex:    0,
+			Productions:     []ManaProduction{{Color: color, Amount: amount}},
+			Interchangeable: true,
 		}},
 	}
 }

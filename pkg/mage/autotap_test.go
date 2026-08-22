@@ -129,6 +129,84 @@ func TestCastSpell_AutoTapIgnoresUnusableRestrictedMana(t *testing.T) {
 	}
 }
 
+func TestCastSpell_AutoTapsDeclarativeRestrictedManaSource(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
+
+	workshop := NewLand("Test Workshop", WithMultiManaAbility(ManaProduction{
+		Color:       Colorless,
+		Amount:      3,
+		Restriction: ArtifactSpellsOnly{},
+	}))
+	workshop.SetOwner(pid)
+	workshopPermanent := g.PutOnBattlefield(workshop, pid)
+
+	spell := NewArtifact("Test Artifact", "{2}")
+	spell.SetOwner(pid)
+	g.players[0].AddToHand(spell)
+
+	if err := g.CastSpellByID(pid, spell.ID(), nil, 0); err != nil {
+		t.Fatalf("casting with a declarative restricted source failed: %v", err)
+	}
+	if !workshopPermanent.Tapped {
+		t.Fatal("automatic payment should tap the restricted mana source")
+	}
+	creatureContext := SpellContextForCard(NewCreature("Follow-up Creature", "{1}", 1, 1))
+	if g.players[0].ManaPool().CanPay(ManaCost{Generic: 1}, creatureContext) {
+		t.Fatal("unspent mana from the source should retain its artifact-spell restriction")
+	}
+}
+
+func TestCastSpell_DoesNotAutoTapDeclarativeRestrictedManaForWrongSpell(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	g.step = PrecombatMain
+
+	workshop := NewLand("Test Workshop", WithMultiManaAbility(ManaProduction{
+		Color:       Colorless,
+		Amount:      3,
+		Restriction: ArtifactSpellsOnly{},
+	}))
+	workshop.SetOwner(pid)
+	workshopPermanent := g.PutOnBattlefield(workshop, pid)
+
+	spell := NewCreature("Test Creature", "{3}", 3, 3)
+	spell.SetOwner(pid)
+	g.players[0].AddToHand(spell)
+
+	if err := g.CastSpellByID(pid, spell.ID(), nil, 0); err == nil {
+		t.Fatal("artifact-only mana source should not make the creature castable")
+	}
+	if workshopPermanent.Tapped {
+		t.Fatal("failed automatic payment should leave the source untapped")
+	}
+}
+
+func TestTapForMana_PreservesDeclarativeRestriction(t *testing.T) {
+	g := newPriorityTestGame()
+	pid := g.players[0].PlayerID()
+	workshop := NewLand("Test Workshop", WithMultiManaAbility(ManaProduction{
+		Color:       Colorless,
+		Amount:      3,
+		Restriction: ArtifactSpellsOnly{},
+	}))
+	workshop.SetOwner(pid)
+	permanent := g.PutOnBattlefield(workshop, pid)
+
+	if err := g.TapForMana(pid, permanent.ID()); err != nil {
+		t.Fatalf("tapping declarative restricted source failed: %v", err)
+	}
+	artifactContext := SpellContextForCard(NewArtifact("Test Artifact", "{3}"))
+	if !g.players[0].ManaPool().CanPay(ManaCost{Generic: 3}, artifactContext) {
+		t.Fatal("produced mana should pay for an artifact spell")
+	}
+	creatureContext := SpellContextForCard(NewCreature("Test Creature", "{3}", 3, 3))
+	if g.players[0].ManaPool().CanPay(ManaCost{Generic: 3}, creatureContext) {
+		t.Fatal("produced mana should not pay for a creature spell")
+	}
+}
+
 func TestCastSpell_AutoTapsLockedIncreasedCost(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()

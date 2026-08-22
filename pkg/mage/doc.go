@@ -124,12 +124,17 @@
 // amounts of separate abilities. CanAfford, MaxXValue, and automatic mana
 // payment use the same planning behavior. Automatic payment executes the exact
 // planned ability and production choice, paying its activation cost before
-// using the produced mana. AnyCombination choices are generated lazily and
-// collapse surplus distributions that are equivalent for the requested cost
-// and any mana-source activation costs. ManaPool.CanPay and ManaPool.Pay share
-// one exact allocation path for colored and hybrid symbols, including
-// optional one-way conversions, so overlapping hybrid choices cannot make
-// affordability and final payment disagree.
+// using the produced mana. Set ManaProduction.Restriction to declare spending
+// restrictions on a mana ability; both prompted and planned activation retain
+// that restriction on every produced mana unit. AnyCombination choices are
+// generated lazily and collapse surplus distributions that are equivalent for
+// the requested cost and any mana-source activation costs. Search likewise
+// canonicalizes interchangeable static sources and rejects costs whose total
+// or colored requirements cannot be reached before enumerating source subsets.
+// Dynamic and post-production abilities remain distinct. ManaPool.CanPay and
+// ManaPool.Pay share one exact allocation path for colored and hybrid symbols,
+// including optional one-way conversions, so overlapping hybrid choices cannot
+// make affordability and final payment disagree.
 //
 // EvtTappedForMana fires after a mana ability with {T} in its activation cost
 // resolves and actually produces mana (CR 106.12a). Its SourceID is the tapped

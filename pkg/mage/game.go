@@ -3123,7 +3123,7 @@ func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player
 		if prod.Color == AnyColor && prod.AnyCombination && amt > 1 {
 			for i := 0; i < amt; i++ {
 				color := p.ChooseManaColor("add mana")
-				p.ManaPool().Add(color, 1)
+				addManaProductionToPool(p.ManaPool(), color, 1, prod.Restriction)
 				producedColors = appendProducedColor(producedColors, color)
 			}
 			continue
@@ -3136,11 +3136,19 @@ func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player
 				color = p.ChooseManaColor("add mana")
 			}
 		}
-		p.ManaPool().Add(color, amt)
+		addManaProductionToPool(p.ManaPool(), color, amt, prod.Restriction)
 		producedColors = appendProducedColor(producedColors, color)
 	}
 	g.applyManaBonuses(perm, producedColors, p)
 	return producedAmount
+}
+
+func addManaProductionToPool(pool *ManaPool, color Color, amount int, restriction ManaRestriction) {
+	if restriction != nil {
+		pool.AddRestricted(color, amount, restriction)
+		return
+	}
+	pool.Add(color, amount)
 }
 
 func (g *Game) fireTappedForMana(sourceID, playerID uuid.UUID, amount int) {

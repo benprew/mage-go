@@ -59,19 +59,11 @@ func registerLands() {
 	// {T}: Add {C}{C}{C}. Spend this mana only to cast artifact spells.
 	Register("Mishra's Workshop", func() Card {
 		return NewLand("Mishra's Workshop",
-			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "add restricted mana" step
-				FuncEffect("add {C}{C}{C} (spend only to cast artifact spells)",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							p.ManaPool().AddRestricted(Colorless, 3, ArtifactSpellsOnly{})
-						}
-						return nil
-					}),
-				Tap(),
-			),
+			WithMultiManaAbility(ManaProduction{
+				Color:       Colorless,
+				Amount:      3,
+				Restriction: ArtifactSpellsOnly{},
+			}),
 		)
 	})
 

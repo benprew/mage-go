@@ -10,11 +10,13 @@ import (
 // If AnyCombination is true and Color is AnyColor, the controller chooses a
 // color independently for each of the Amount mana produced (e.g. "Add X mana
 // in any combination of colors"). When false, AnyColor with Amount > 1 picks a
-// single color for all of them ("X mana of any one color").
+// single color for all of them ("X mana of any one color"). Restriction, when
+// non-nil, applies to every mana unit produced by this entry.
 type ManaProduction struct {
 	Color          Color
 	Amount         int
 	AnyCombination bool
+	Restriction    ManaRestriction
 }
 
 // ManaProductionFunc derives a mana ability's current production from its
@@ -126,8 +128,8 @@ func NewManaAbility(c Color) *ManaAbility {
 // NewMultiManaAbility creates a mana ability from one or more productions.
 // Use for cards that produce multiple mana or multiple colors at once.
 //
-//	NewMultiManaAbility(ManaProduction{Colorless, 2})           // Sol Ring
-//	NewMultiManaAbility(ManaProduction{Green, 1}, ManaProduction{White, 1}) // {G}{W}
+//	NewMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2})
+//	NewMultiManaAbility(ManaProduction{Color: Green, Amount: 1}, ManaProduction{Color: White, Amount: 1})
 func NewMultiManaAbility(productions ...ManaProduction) *ManaAbility {
 	return &ManaAbility{
 		BaseAbility: BaseAbility{

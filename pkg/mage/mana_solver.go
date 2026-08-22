@@ -3,6 +3,7 @@ package mage
 import (
 	"container/heap"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -62,7 +63,21 @@ type manaSearchKey struct {
 
 type manaChoiceCaps [AnyColor + 1]int
 
+type concreteManaProductionState struct {
+	amounts     [AnyColor + 1]int
+	productions []ManaProduction
+}
+
+type concreteManaProductionStateKey struct {
+	amounts    [AnyColor + 1]int
+	restricted string
+}
+
 type manaSearchQueue []*manaSearchNode
+
+type manaSearchStats struct {
+	ExpandedNodes int
+}
 
 func (q manaSearchQueue) Len() int { return len(q) }
 func (q manaSearchQueue) Less(i, j int) bool {
@@ -103,6 +118,10 @@ func CanSolveMana(in ManaSolverInputs) bool {
 }
 
 func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
+	return searchManaWithStats(in, nil)
+}
+
+func searchManaWithStats(in ManaSolverInputs, stats *manaSearchStats) ([]ManaTap, bool) {
 	rootPool := NewManaPool()
 	if in.Pool != nil {
 		rootPool.RestorePool(in.Pool.SnapshotPool())
@@ -121,11 +140,14 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 	choiceCaps := manaChoiceCapsForInputs(in)
 	productionChoices := make([][][]manaProductionChoice, len(in.Sources))
 	choicesComputed := make([][]bool, len(in.Sources))
+	sourceGroups := equivalentManaSourceGroups(in)
 	for sourceIndex, source := range in.Sources {
 		productionChoices[sourceIndex] = make([][]manaProductionChoice, len(source.Abilities))
 		choicesComputed[sourceIndex] = make([]bool, len(source.Abilities))
 	}
 	seq := 0
+	groupGeneration := 0
+	seenGroups := make([]int, len(in.Sources))
 
 	for queue.Len() > 0 {
 		node := heap.Pop(&queue).(*manaSearchNode)
@@ -133,14 +155,26 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 		if known, ok := bestCost[key]; ok && node.cost > known {
 			continue
 		}
+		if stats != nil {
+			stats.ExpandedNodes++
+		}
 		if node.pool.CanPay(in.Cost, in.SpellContext) {
 			return reconstructManaPlan(node), true
 		}
+		if !manaSearchCanStillPay(node, in) {
+			continue
+		}
 
+		groupGeneration++
 		for sourceIndex, source := range in.Sources {
 			if manaSourceSetContains(node.used, sourceIndex) {
 				continue
 			}
+			group := sourceGroups[sourceIndex]
+			if seenGroups[group] == groupGeneration {
+				continue
+			}
+			seenGroups[group] = groupGeneration
 			for abilityIndex, ability := range source.Abilities {
 				if !node.pool.CanPay(ability.ManaCost, nil) {
 					continue
@@ -189,6 +223,175 @@ func searchMana(in ManaSolverInputs) ([]ManaTap, bool) {
 		}
 	}
 	return nil, false
+}
+
+func manaSearchCanStillPay(node *manaSearchNode, in ManaSolverInputs) bool {
+	maxUsableMana := usableManaCount(node.pool, in.SpellContext)
+	for sourceIndex, source := range in.Sources {
+		if manaSourceSetContains(node.used, sourceIndex) {
+			continue
+		}
+		bestAbility := 0
+		for _, ability := range source.Abilities {
+			usable := 0
+			for _, production := range ability.Productions {
+				if productionRestrictionUsable(production.Restriction, in.SpellContext) {
+					usable += normalizedManaAmount(production.Amount)
+				}
+			}
+			bestAbility = max(bestAbility, usable+len(source.Bonuses))
+		}
+		maxUsableMana += bestAbility
+	}
+	if maxUsableMana < manaCostUnits(in.Cost) {
+		return false
+	}
+
+	var available [AnyColor + 1]int
+	for _, mana := range node.pool.pool {
+		if manaUsable(mana, in.SpellContext) {
+			available[mana.Color]++
+		}
+	}
+	for sourceIndex, source := range in.Sources {
+		if manaSourceSetContains(node.used, sourceIndex) {
+			continue
+		}
+		for _, ability := range source.Abilities {
+			for _, production := range ability.Productions {
+				if !productionRestrictionUsable(production.Restriction, in.SpellContext) {
+					continue
+				}
+				amount := normalizedManaAmount(production.Amount)
+				if production.Color != AnyColor {
+					available[production.Color] += amount
+					continue
+				}
+				for color := White; color <= Green; color++ {
+					available[color] += amount
+				}
+			}
+		}
+		for _, bonus := range source.Bonuses {
+			if bonus == MatchProduced {
+				for color := White; color <= Green; color++ {
+					available[color]++
+				}
+				continue
+			}
+			available[Color(bonus)]++
+		}
+	}
+	for _, requirement := range [...]struct {
+		color Color
+		count int
+	}{
+		{White, in.Cost.White},
+		{Blue, in.Cost.Blue},
+		{Black, in.Cost.Black},
+		{Red, in.Cost.Red},
+		{Green, in.Cost.Green},
+	} {
+		if relaxedManaAvailableForColor(available, requirement.color, in.Conversions) < requirement.count {
+			return false
+		}
+	}
+	for _, hybrid := range in.Cost.Hybrid {
+		if relaxedManaAvailableForColor(available, hybrid.A, in.Conversions)+
+			relaxedManaAvailableForColor(available, hybrid.B, in.Conversions) == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func productionRestrictionUsable(restriction ManaRestriction, spellCtx *SpellPaymentContext) bool {
+	if restriction == nil {
+		return true
+	}
+	return spellCtx != nil && restriction.IsSatisfiedBy(*spellCtx)
+}
+
+func relaxedManaAvailableForColor(available [AnyColor + 1]int, required Color, conversions map[Color]Color) int {
+	total := available[required]
+	for _, from := range manaPoolColors {
+		if from != required && conversions[from] == required {
+			total += available[from]
+		}
+	}
+	return total
+}
+
+func equivalentManaSourceGroups(in ManaSolverInputs) []int {
+	groups := make([]int, len(in.Sources))
+	groupCount := 0
+	for i := range in.Sources {
+		groups[i] = -1
+		for previous := range i {
+			if manaSourcesEquivalentForSearch(in.Sources[i], in.Sources[previous], scoreAt(in.Scores, i), scoreAt(in.Scores, previous), in.SpellContext) {
+				groups[i] = groups[previous]
+				break
+			}
+		}
+		if groups[i] < 0 {
+			groups[i] = groupCount
+			groupCount++
+		}
+	}
+	return groups
+}
+
+func manaSourcesEquivalentForSearch(a, b manaSourceInfo, aScore, bScore int, spellCtx *SpellPaymentContext) bool {
+	if max(aScore, 0) != max(bScore, 0) || len(a.Abilities) != len(b.Abilities) || len(a.Bonuses) != len(b.Bonuses) {
+		return false
+	}
+	for i := range a.Bonuses {
+		if a.Bonuses[i] != b.Bonuses[i] {
+			return false
+		}
+	}
+	for i := range a.Abilities {
+		if !a.Abilities[i].Interchangeable || !b.Abilities[i].Interchangeable {
+			return false
+		}
+		if !manaCostsEqual(a.Abilities[i].ManaCost, b.Abilities[i].ManaCost) || len(a.Abilities[i].Productions) != len(b.Abilities[i].Productions) {
+			return false
+		}
+		for j := range a.Abilities[i].Productions {
+			aProduction := a.Abilities[i].Productions[j]
+			bProduction := b.Abilities[i].Productions[j]
+			if aProduction.Color != bProduction.Color ||
+				aProduction.Amount != bProduction.Amount ||
+				aProduction.AnyCombination != bProduction.AnyCombination ||
+				!manaRestrictionsEquivalentForSearch(aProduction.Restriction, bProduction.Restriction, spellCtx) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func manaCostsEqual(a, b ManaCost) bool {
+	if a.Generic != b.Generic || a.White != b.White || a.Blue != b.Blue || a.Black != b.Black ||
+		a.Red != b.Red || a.Green != b.Green || a.HasX != b.HasX || a.XCount != b.XCount || len(a.Hybrid) != len(b.Hybrid) {
+		return false
+	}
+	for i := range a.Hybrid {
+		if a.Hybrid[i] != b.Hybrid[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func manaRestrictionsEquivalentForSearch(a, b ManaRestriction, spellCtx *SpellPaymentContext) bool {
+	if a == nil || b == nil {
+		return a == nil && b == nil
+	}
+	if spellCtx == nil {
+		return true
+	}
+	return a.IsSatisfiedBy(*spellCtx) == b.IsSatisfiedBy(*spellCtx)
 }
 
 func reconstructManaPlan(node *manaSearchNode) []ManaTap {
@@ -242,7 +445,7 @@ func payManaForSearch(pool *ManaPool, cost ManaCost) bool {
 func addConcreteManaForSearch(pool *ManaPool, productions []ManaProduction, bonusColors []Color) {
 	for _, production := range productions {
 		for range normalizedManaAmount(production.Amount) {
-			pool.pool = append(pool.pool, Mana{Color: production.Color})
+			pool.pool = append(pool.pool, Mana{Color: production.Color, Restriction: production.Restriction})
 		}
 	}
 	for _, color := range bonusColors {
@@ -252,7 +455,12 @@ func addConcreteManaForSearch(pool *ManaPool, productions []ManaProduction, bonu
 
 func addConcreteMana(pool *ManaPool, productions []ManaProduction, bonusColors []Color) {
 	for _, production := range productions {
-		pool.Add(production.Color, normalizedManaAmount(production.Amount))
+		amount := normalizedManaAmount(production.Amount)
+		if production.Restriction != nil {
+			pool.AddRestricted(production.Color, amount, production.Restriction)
+		} else {
+			pool.Add(production.Color, amount)
+		}
 	}
 	for _, color := range bonusColors {
 		pool.Add(color, 1)
@@ -412,12 +620,12 @@ func concreteManaProductionsForDemand(productions []ManaProduction, caps manaCho
 	if len(productions) == 0 {
 		return nil
 	}
-	states := [][AnyColor + 1]int{{}}
+	states := []concreteManaProductionState{{}}
 	for _, production := range productions {
-		nextStates := make([][AnyColor + 1]int, 0, len(states))
-		seen := make(map[[AnyColor + 1]int]bool, len(states))
-		appendState := func(candidate [AnyColor + 1]int) {
-			signature := boundedManaSignature(candidate, caps)
+		nextStates := make([]concreteManaProductionState, 0, len(states))
+		seen := make(map[concreteManaProductionStateKey]bool, len(states))
+		appendState := func(candidate concreteManaProductionState) {
+			signature := concreteManaStateKey(candidate, caps)
 			if seen[signature] {
 				return
 			}
@@ -427,26 +635,32 @@ func concreteManaProductionsForDemand(productions []ManaProduction, caps manaCho
 		amount := normalizedManaAmount(production.Amount)
 		for _, current := range states {
 			if production.Color != AnyColor {
-				current[production.Color] += amount
+				current.amounts[production.Color] += amount
+				current.productions = appendConcreteProduction(current.productions, production.Color, amount, production.Restriction)
 				appendState(current)
 				continue
 			}
 			if !production.AnyCombination {
 				for color := White; color <= Green; color++ {
-					next := current
-					next[color] += amount
+					next := cloneConcreteManaProductionState(current)
+					next.amounts[color] += amount
+					next.productions = appendConcreteProduction(next.productions, color, amount, production.Restriction)
 					appendState(next)
 				}
 				continue
 			}
 			remainingCaps := caps
 			for _, color := range manaPoolColors {
-				remainingCaps[color] = max(remainingCaps[color]-current[color], 0)
+				remainingCaps[color] = max(remainingCaps[color]-current.amounts[color], 0)
 			}
 			for _, allocation := range boundedManaAllocations(amount, []Color{White, Blue, Black, Red, Green}, remainingCaps) {
-				next := current
+				next := cloneConcreteManaProductionState(current)
 				for color := White; color <= Green; color++ {
-					next[color] += allocation[color]
+					if allocation[color] == 0 {
+						continue
+					}
+					next.amounts[color] += allocation[color]
+					next.productions = appendConcreteProduction(next.productions, color, allocation[color], production.Restriction)
 				}
 				appendState(next)
 			}
@@ -455,16 +669,66 @@ func concreteManaProductionsForDemand(productions []ManaProduction, caps manaCho
 	}
 
 	result := make([][]ManaProduction, 0, len(states))
-	for _, choice := range states {
-		var concrete []ManaProduction
-		for _, color := range manaPoolColors {
-			if choice[color] > 0 {
-				concrete = append(concrete, ManaProduction{Color: color, Amount: choice[color]})
-			}
-		}
-		result = append(result, concrete)
+	for _, state := range states {
+		result = append(result, state.productions)
 	}
 	return result
+}
+
+func cloneConcreteManaProductionState(state concreteManaProductionState) concreteManaProductionState {
+	state.productions = append([]ManaProduction(nil), state.productions...)
+	return state
+}
+
+func appendConcreteProduction(productions []ManaProduction, color Color, amount int, restriction ManaRestriction) []ManaProduction {
+	return append(productions, ManaProduction{Color: color, Amount: amount, Restriction: restriction})
+}
+
+func concreteManaStateKey(state concreteManaProductionState, caps manaChoiceCaps) concreteManaProductionStateKey {
+	return concreteManaProductionStateKey{
+		amounts:    boundedManaSignature(state.amounts, caps),
+		restricted: restrictedManaProductionSignature(state.productions, caps),
+	}
+}
+
+func restrictedManaProductionSignature(productions []ManaProduction, caps manaChoiceCaps) string {
+	type restrictionAmounts struct {
+		key     string
+		total   int
+		amounts [AnyColor + 1]int
+	}
+	var restrictions []restrictionAmounts
+	for _, production := range productions {
+		if production.Restriction == nil {
+			continue
+		}
+		key := manaRestrictionIdentity(production.Restriction)
+		index := -1
+		for i := range restrictions {
+			if restrictions[i].key == key {
+				index = i
+				break
+			}
+		}
+		if index < 0 {
+			restrictions = append(restrictions, restrictionAmounts{key: key})
+			index = len(restrictions) - 1
+		}
+		restrictions[index].total += production.Amount
+		restrictions[index].amounts[production.Color] += production.Amount
+	}
+	var signature strings.Builder
+	for _, restriction := range restrictions {
+		fmt.Fprintf(&signature, "%s:%d:%v;", restriction.key, restriction.total, boundedManaSignature(restriction.amounts, caps))
+	}
+	return signature.String()
+}
+
+func manaRestrictionIdentity(restriction ManaRestriction) string {
+	if restriction == nil {
+		return ""
+	}
+	return fmt.Sprintf("%T:%s", restriction, restriction.Description())
 }
 
 func boundedManaSignature(amounts [AnyColor + 1]int, caps manaChoiceCaps) [AnyColor + 1]int {
