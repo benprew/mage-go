@@ -749,9 +749,9 @@ func registerEnchantments() {
 	// Whenever a player taps a land for mana, Manabarbs deals 1 damage to that player.
 	Register("Manabarbs", func() Card {
 		return NewEnchantment("Manabarbs", "{3}{R}",
-			WithAbility(NewTriggered(EvtTapped, false,
-				DealDamageToPlayers(Fixed(1), SelectTargetPermanentController()),
-			).SetConditionData(EventSourceHasType{Type: TypeLand})),
+			WithAbility(NewTriggered(EvtTappedForMana, false,
+				DealDamageToPlayers(Fixed(1), SelectTargetPlayer()),
+			).SetConditionData(EventSourceWasOfType{Type: TypeLand})),
 		)
 	})
 

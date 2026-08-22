@@ -2365,6 +2365,12 @@ func (g *Game) PutTriggersOnStack() {
 					}
 					obj.EventAmount = pt.event.Amount
 					obj.EventSourceID = pt.event.SourceID
+				case EvtTappedForMana:
+					if pt.event.PlayerID != uuid.Nil {
+						obj.Targets = []uuid.UUID{pt.event.PlayerID}
+					}
+					obj.EventAmount = pt.event.Amount
+					obj.EventSourceID = pt.event.SourceID
 				case EvtTapped, EvtAbilityActivated:
 					// Pass the permanent's ID so effects can identify it
 					if pt.event.SourceID != uuid.Nil {
@@ -3101,10 +3107,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 // addManaFromAbility resolves a mana ability's current productions, then runs
 // its immediate post-production effects.
-func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) error {
+func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) (int, error) {
 	productions := ma.currentProductions(g, perm.ID())
-	g.addManaProductions(productions, p, perm)
-	return g.runManaPostProduction(ma, p, perm)
+	produced := g.addManaProductions(productions, p, perm)
+	return produced, g.runManaPostProduction(ma, p, perm)
 }
 
 func (g *Game) runManaPostProduction(ma *ManaAbility, p Player, perm *Permanent) error {
@@ -3135,8 +3141,8 @@ func (g *Game) runManaPostProduction(ma *ManaAbility, p Player, perm *Permanent)
 // addManaProductions adds mana to the player's pool from a list of productions.
 // AnyColor productions prompt the player to choose a color. Used by both the
 // proper *ManaAbility path and the *SimpleActivatedAbility tap-for-mana path.
-func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *Permanent) {
-	g.addManaProductionsForColor(productions, p, perm, Colorless)
+func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *Permanent) int {
+	return g.addManaProductionsForColor(productions, p, perm, Colorless)
 }
 
 // addManaProductionsForColor is the autotap-friendly variant: when
@@ -3145,13 +3151,15 @@ func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *
 // so a requested color is honored end-to-end. AnyCombination productions
 // prompt when this helper is used directly; automatic payment executes its
 // solver-selected concrete combination through applyManaSolution.
-func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) {
+func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) int {
 	var producedColors []Color
+	producedAmount := 0
 	for _, prod := range productions {
 		amt := prod.Amount
 		if amt <= 0 {
 			amt = 1
 		}
+		producedAmount += amt
 		// "X mana in any combination of colors": ask once per mana point so
 		// the controller can split colors arbitrarily.
 		if prod.Color == AnyColor && prod.AnyCombination && amt > 1 {
@@ -3174,6 +3182,19 @@ func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player
 		producedColors = appendProducedColor(producedColors, color)
 	}
 	g.applyManaBonuses(perm, producedColors, p)
+	return producedAmount
+}
+
+func (g *Game) fireTappedForMana(sourceID, playerID uuid.UUID, amount int) {
+	if amount <= 0 {
+		return
+	}
+	g.FireEvent(GameEvent{
+		Type:     EvtTappedForMana,
+		SourceID: sourceID,
+		PlayerID: playerID,
+		Amount:   amount,
+	})
 }
 
 // applyManaBonuses checks for mana bonus effects when a permanent is tapped for mana.
@@ -4221,10 +4242,11 @@ func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredCol
 	}
 	g.TapPermanent(perm)
 	if p := g.GetPlayer(playerID); p != nil {
-		g.addManaProductionsForColor(chosen, p, perm, preferredColor)
+		produced := g.addManaProductionsForColor(chosen, p, perm, preferredColor)
 		if err := g.runManaPostProduction(chosenAbility, p, perm); err != nil {
 			return err
 		}
+		g.fireTappedForMana(perm.ID(), playerID, produced)
 	}
 	return nil
 }
@@ -4912,8 +4934,11 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		}
 		g.TapPermanent(perm)
 		p := g.GetPlayer(playerID)
+		produced := 0
 		if p != nil {
-			if err := g.addManaFromAbility(ma, p, perm); err != nil {
+			var err error
+			produced, err = g.addManaFromAbility(ma, p, perm)
+			if err != nil {
 				return err
 			}
 		}
@@ -4922,6 +4947,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			SourceID: perm.ID(),
 			PlayerID: playerID,
 		})
+		g.fireTappedForMana(perm.ID(), playerID, produced)
 		return nil
 	}
 
@@ -5025,6 +5051,18 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
 
+	if produced := tappedForManaAmount(aa, actionEffects, actionTargets); produced > 0 {
+		g.FireEvent(GameEvent{
+			Type:     EvtAbilityActivated,
+			SourceID: perm.ID(),
+			PlayerID: playerID,
+			Flag:     true,
+		})
+		g.ResolveStackObject(obj)
+		g.fireTappedForMana(perm.ID(), playerID, produced)
+		return nil
+	}
+
 	if modeChoice < 0 {
 		chooseModeForStackObject(obj, perm.Card.Modes(), g.GetPlayer(playerID), perm.Card.Name())
 	}
@@ -5056,6 +5094,36 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	g.fireBecomesTargetEvents(obj, true)
 
 	return nil
+}
+
+func tappedForManaAmount(ability ActivatedAbility, effects []Effect, targets []Target) int {
+	if len(targets) != 0 {
+		return 0
+	}
+	hasTapCost := false
+	for _, cost := range ability.Costs() {
+		if _, ok := cost.(*tap); ok {
+			hasTapCost = true
+			break
+		}
+	}
+	if !hasTapCost {
+		return 0
+	}
+	amount := 0
+	for _, effect := range effects {
+		switch add := effect.(type) {
+		case *addManaEffect:
+			if add.amount > 0 {
+				amount += add.amount
+			}
+		case *addAnyManaEffect:
+			if add.amount > 0 {
+				amount += add.amount
+			}
+		}
+	}
+	return amount
 }
 
 // ResolveTopOfStack resolves just the top item on the stack.

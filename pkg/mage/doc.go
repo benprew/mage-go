@@ -131,6 +131,15 @@
 // optional one-way conversions, so overlapping hybrid choices cannot make
 // affordability and final payment disagree.
 //
+// EvtTappedForMana fires after a mana ability with {T} in its activation cost
+// resolves and actually produces mana (CR 106.12a). Its SourceID is the tapped
+// permanent, PlayerID is the activating player, and Amount is the mana produced
+// by that ability. Ordinary taps continue to fire only EvtTapped. Card triggers
+// such as Manabarbs should listen for EvtTappedForMana and use SelectTargetPlayer
+// for the activating player. Resolving effects can read the mana source through
+// EventSourceID; trigger conditions can use LKI when another activation cost
+// moved it off the battlefield.
+//
 // # Spell total-cost transactions
 //
 // Every casting path locks one total cost before changing live game state.

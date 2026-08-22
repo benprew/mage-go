@@ -172,6 +172,7 @@ func (g *Game) activatePlannedManaSource(playerID uuid.UUID, action ManaTap) err
 		activated.MarkActivated()
 		g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), PlayerID: playerID})
 	}
+	g.fireTappedForMana(perm.ID(), playerID, productionsTotalAmount(action.Productions))
 	return nil
 }
 

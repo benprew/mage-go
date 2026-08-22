@@ -786,6 +786,7 @@ const (
 	EvtDrawStep         = core.EvtDrawStep
 	EvtDamageDealt      = core.EvtDamageDealt
 	EvtTapped           = core.EvtTapped
+	EvtTappedForMana    = core.EvtTappedForMana
 	EvtUpkeep           = core.EvtUpkeep
 	EvtDeclaredAttacker = core.EvtDeclaredAttacker
 	EvtLifeGained       = core.EvtLifeGained

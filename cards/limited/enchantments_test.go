@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	_ "github.com/benprew/mage-go/cards/arabian"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
@@ -493,6 +494,18 @@ func TestManabarbs(t *testing.T) {
 		g.Execute()
 		g.AssertLife(gametest.PlayerA, 20)
 		g.AssertLife(gametest.PlayerB, 19)
+	})
+
+	t.Run("does_not_damage_player_for_nonmana_land_ability", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Manabarbs")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Island of Wak-Wak")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Serra Angel")
+		g.ActivateAbility(2, core.PrecombatMain, gametest.PlayerB, "Island of Wak-Wak", "Serra Angel")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertLife(gametest.PlayerA, 20)
+		g.AssertLife(gametest.PlayerB, 20)
 	})
 }
 
