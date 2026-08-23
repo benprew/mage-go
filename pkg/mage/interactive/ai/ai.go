@@ -117,6 +117,19 @@ func (ai *AIPlayer) ShouldMulligan(handSize int) bool {
 		if lands <= 1 || lands >= 6 {
 			return true
 		}
+		// Flooded hand with no early/mid plays (5 lands, only CMC 5+ spells).
+		if lands == 5 {
+			hasEarly := false
+			for _, c := range hand {
+				if !c.HasType(core.TypeLand) && c.ManaCost().CMC() <= 4 {
+					hasEarly = true
+					break
+				}
+			}
+			if !hasEarly {
+				return true
+			}
+		}
 		// Mulligan if no castable spells: all spells have CMC > lands + 2.
 		if spells > 0 {
 			hasCastable := false
@@ -129,6 +142,23 @@ func (ai *AIPlayer) ShouldMulligan(handSize int) bool {
 			if !hasCastable {
 				return true
 			}
+
+			// Color check: if hand has low-CMC spells (CMC <= 3), check if at least one matches land colors.
+			hasLowCMC := false
+			hasColorMatch := false
+			landColors := handLandColors(hand)
+			for _, c := range hand {
+				if !c.HasType(core.TypeLand) && c.ManaCost().CMC() <= 3 {
+					hasLowCMC = true
+					if canPayColored(c.ManaCost(), landColors) {
+						hasColorMatch = true
+						break
+					}
+				}
+			}
+			if hasLowCMC && !hasColorMatch && lands <= 3 {
+				return true
+			}
 		}
 		return false
 	}
@@ -138,6 +168,53 @@ func (ai *AIPlayer) ShouldMulligan(handSize int) bool {
 		return true
 	}
 	return false
+}
+
+func handLandColors(hand []mage.Card) map[core.Color]int {
+	colors := make(map[core.Color]int)
+	for _, c := range hand {
+		if !c.HasType(core.TypeLand) {
+			continue
+		}
+		switch c.Name() {
+		case "Forest":
+			colors[core.Green]++
+		case "Mountain":
+			colors[core.Red]++
+		case "Plains":
+			colors[core.White]++
+		case "Island":
+			colors[core.Blue]++
+		case "Swamp":
+			colors[core.Black]++
+		}
+		for _, a := range c.Abilities() {
+			if ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility); ok {
+				if ma.HasAnyColor() {
+					for _, col := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {
+						colors[col]++
+					}
+				} else if ma.PrimaryColor() != core.Colorless {
+					colors[ma.PrimaryColor()]++
+				}
+			}
+		}
+	}
+	return colors
+}
+
+func canPayColored(mc core.ManaCost, colors map[core.Color]int) bool {
+	if len(colors) == 0 {
+		return true
+	}
+	if mc.White > colors[core.White] ||
+		mc.Blue > colors[core.Blue] ||
+		mc.Black > colors[core.Black] ||
+		mc.Red > colors[core.Red] ||
+		mc.Green > colors[core.Green] {
+		return false
+	}
+	return true
 }
 
 // Mulligan shuffles the AI's hand back into the library and draws one fewer card.

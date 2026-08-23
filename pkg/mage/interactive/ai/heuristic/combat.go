@@ -450,6 +450,164 @@ func (s *Strategy) considerCombatPump(p mage.Player, g *mage.Game) *interactive.
 	return nil
 }
 
+// considerCombatPumpSpell checks if an instant pump spell in hand can turn combat
+// into a victory (saving our creature, killing an enemy creature, or dealing lethal).
+func (s *Strategy) considerCombatPumpSpell(p mage.Player, g *mage.Game) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+	combat := g.GetCombat()
+	if combat == nil || len(g.StackObjects()) > 0 {
+		return nil
+	}
+
+	attackers := make([]uuid.UUID, 0, len(combat.Groups))
+	blockerMap := make(map[uuid.UUID][]uuid.UUID, len(combat.Groups))
+	initialDamage := make(map[uuid.UUID]int, len(combat.Groups)*2)
+	for _, grp := range combat.Groups {
+		atk := g.FindPermanent(grp.AttackerID)
+		if atk == nil {
+			continue
+		}
+		attackers = append(attackers, grp.AttackerID)
+		blockerMap[grp.AttackerID] = grp.BlockerIDs
+		initialDamage[grp.AttackerID] = atk.Damage
+		for _, bid := range grp.BlockerIDs {
+			if blk := g.FindPermanent(bid); blk != nil {
+				initialDamage[bid] = blk.Damage
+			}
+		}
+	}
+	if len(attackers) == 0 {
+		return nil
+	}
+
+	res := simulateCombatDamage(g, attackers, blockerMap, initialDamage)
+
+	type pumpSpell struct {
+		card       mage.Card
+		powerBoost int
+		toughBoost int
+	}
+	var pumpSpells []pumpSpell
+	for _, card := range p.Hand() {
+		if !card.HasType(core.TypeInstant) {
+			continue
+		}
+		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
+			continue
+		}
+		pb, tb := spellPumpBoost(card)
+		if pb > 0 || tb > 0 {
+			pumpSpells = append(pumpSpells, pumpSpell{card: card, powerBoost: pb, toughBoost: tb})
+		}
+	}
+	if len(pumpSpells) == 0 {
+		return nil
+	}
+
+	// 1. Check for lethal on defending player.
+	if opponent := g.GetOpponent(playerID); opponent != nil {
+		deficit := opponent.Life() + res.opponentLifeGained - res.damageToOpponent
+		if deficit > 0 {
+			for _, atkID := range attackers {
+				atk := g.FindPermanent(atkID)
+				if atk == nil || atk.ControllerID() != playerID || len(blockerMap[atkID]) != 0 {
+					continue
+				}
+				for _, ps := range pumpSpells {
+					if ps.powerBoost >= deficit {
+						if isLegalSpellTarget(g, playerID, ps.card, atk.ID()) {
+							return &interactive.PriorityAction{
+								Type:     interactive.ActionCastSpell,
+								CardID:   ps.card.ID(),
+								CardName: ps.card.Name(),
+								Targets:  []uuid.UUID{atk.ID()},
+								XValue:   bestXValue(g, playerID, ps.card, []uuid.UUID{atk.ID()}),
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 2. Check for saving our creature or killing opposing creature in single combat.
+	type pair struct{ mine, theirs *mage.Permanent }
+	var candidates []pair
+	for _, atkID := range attackers {
+		blockerIDs := blockerMap[atkID]
+		if len(blockerIDs) != 1 {
+			continue
+		}
+		atk := g.FindPermanent(atkID)
+		blk := g.FindPermanent(blockerIDs[0])
+		if atk == nil || blk == nil {
+			continue
+		}
+		if atk.ControllerID() == playerID && atk.HasType(core.TypeCreature) && blk.HasType(core.TypeCreature) {
+			candidates = append(candidates, pair{mine: atk, theirs: blk})
+		}
+		if blk.ControllerID() == playerID && blk.HasType(core.TypeCreature) && atk.HasType(core.TypeCreature) {
+			candidates = append(candidates, pair{mine: blk, theirs: atk})
+		}
+	}
+
+	sort.SliceStable(candidates, func(i, j int) bool {
+		return eval.EvalCreatureInGame(candidates[i].mine, g) > eval.EvalCreatureInGame(candidates[j].mine, g)
+	})
+
+	for _, c := range candidates {
+		mineDead := res.isDead(c.mine.ID(), c.mine.CurrentToughness(g))
+		theirsDead := res.isDead(c.theirs.ID(), c.theirs.CurrentToughness(g))
+
+		for _, ps := range pumpSpells {
+			if !isLegalSpellTarget(g, playerID, ps.card, c.mine.ID()) {
+				continue
+			}
+
+			savesMine := mineDead && !res.isDead(c.mine.ID(), c.mine.CurrentToughness(g)+ps.toughBoost)
+			killsTheirs := !theirsDead && (res.dmgTaken[c.theirs.ID()]+ps.powerBoost >= c.theirs.CurrentToughness(g))
+
+			if savesMine || killsTheirs {
+				return &interactive.PriorityAction{
+					Type:     interactive.ActionCastSpell,
+					CardID:   ps.card.ID(),
+					CardName: ps.card.Name(),
+					Targets:  []uuid.UUID{c.mine.ID()},
+					XValue:   bestXValue(g, playerID, ps.card, []uuid.UUID{c.mine.ID()}),
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func spellPumpBoost(card mage.Card) (powerBoost, toughnessBoost int) {
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			for _, e := range sa.Effects() {
+				props := e.Properties()
+				powerBoost += props.PowerBoost
+				toughnessBoost += props.ToughnessBoost
+			}
+		}
+	}
+	return powerBoost, toughnessBoost
+}
+
+func isLegalSpellTarget(g *mage.Game, playerID uuid.UUID, card mage.Card, targetID uuid.UUID) bool {
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			for _, t := range sa.Targets() {
+				if slices.Contains(t.Possible(playerID, card, g), targetID) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // pumpPowerAction returns the first affordable power-boost activation on
 // source that raises its power by at least deficit, or nil if none can fully
 // cover it from currently available mana.
@@ -869,6 +1027,7 @@ func effectsRegenerateAttached(effects []mage.Effect, attachedVars map[string]bo
 // affordable.
 func bestHoldableInstant(p mage.Player, g *mage.Game) (card mage.Card, value float64) {
 	playerID := p.PlayerID()
+	isPostcombat := g.GetStep() == core.PostcombatMain
 
 	var bestCard mage.Card
 	bestValue := 0.0
@@ -877,6 +1036,9 @@ func bestHoldableInstant(p mage.Player, g *mage.Game) (card mage.Card, value flo
 			continue
 		}
 		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
+			continue
+		}
+		if isPostcombat && combatsolver.ClassifyCombat(card) == combatsolver.RolePump {
 			continue
 		}
 		hasUsableEffect := false
@@ -898,7 +1060,9 @@ func bestHoldableInstant(p mage.Player, g *mage.Game) (card mage.Card, value flo
 				case mage.OutcomeDetriment:
 					sv *= 1.5
 				case mage.OutcomeBenefit:
-					sv *= 1.3
+					if !isPostcombat {
+						sv *= 1.3
+					}
 				}
 			}
 		}
@@ -968,6 +1132,9 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 	inCombat := g.GetStep() == core.DeclareAttackers || g.GetStep() == core.DeclareBlockers ||
 		g.GetStep() == core.CombatDamage || g.GetStep() == core.FirstStrikeDamage
 
+	activePlayer := g.PlayerAt(g.ActivePlayer())
+	isOpponentEndStep := g.GetStep() == core.EndStep && activePlayer != nil && activePlayer.PlayerID() != playerID
+
 	var bestAction *interactive.PriorityAction
 	bestValue := 0
 
@@ -981,10 +1148,7 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 		if !aiHintAllowsTiming(cardAIHint(card), g, false) {
 			continue
 		}
-		// Pump tricks are most informed once blockers are declared (we know
-		// which attackers are blocked, so we can pump for lethal or to save a
-		// creature). Hold them through the declare-attackers window unless a
-		// threat is already on the stack that we need to respond to.
+		// Pump tricks are held through DeclareAttackers unless answering a stack threat.
 		if g.GetStep() == core.DeclareAttackers && !stackHasThreat &&
 			combatsolver.ClassifyCombat(card) == combatsolver.RolePump {
 			continue
@@ -1028,9 +1192,23 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 			}
 		}
 
+		// At end of opponent's turn, castable instant draw, token generation, or burn is free tempo.
+		if isOpponentEndStep {
+			for _, a := range card.Abilities() {
+				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+					for _, e := range sa.Effects() {
+						props := e.Properties()
+						if props.DrawCount > 0 || props.TokenPower > 0 || props.DamageValue != nil {
+							sv += 4
+						}
+					}
+				}
+			}
+		}
+
 		if sv > bestValue {
 			targets := s.autoSelectTargets(p, g, card)
-			if len(targets) > 0 {
+			if !requiresTargets(card) || len(targets) > 0 {
 				bestValue = sv
 				bestAction = &interactive.PriorityAction{
 					Type:     interactive.ActionCastSpell,

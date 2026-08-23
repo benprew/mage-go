@@ -396,27 +396,66 @@ func HandCMCs(hand []mage.Card) []int {
 
 // ManaCurveBonus scores a spell based on how well it uses available mana.
 func ManaCurveBonus(cardCMC, availableMana int, handCMCs []int) float64 {
-	if availableMana <= 0 {
+	if availableMana <= 0 || cardCMC <= 0 || cardCMC > availableMana {
 		return 0
 	}
 
-	maxCastable := 0
+	otherCMCs := make([]int, 0, len(handCMCs))
+	cardFound := false
 	for _, cmc := range handCMCs {
-		if cmc <= availableMana && cmc > maxCastable {
-			maxCastable = cmc
+		if !cardFound && cmc == cardCMC {
+			cardFound = true
+			continue
+		}
+		if cmc > 0 && cmc <= availableMana {
+			otherCMCs = append(otherCMCs, cmc)
 		}
 	}
 
-	if cardCMC == maxCastable {
-		return 3
+	remMana := availableMana - cardCMC
+	bestRem := bestSubsetSum(otherCMCs, remMana)
+	bestWithCard := cardCMC + bestRem
+
+	maxSingle := 0
+	for _, cmc := range handCMCs {
+		if cmc <= availableMana && cmc > maxSingle {
+			maxSingle = cmc
+		}
 	}
 
-	if maxCastable > 0 && cardCMC < maxCastable {
-		wastedMana := availableMana - cardCMC
-		if wastedMana >= 2 {
-			return -2
-		}
+	wastedMana := availableMana - bestWithCard
+	if wastedMana == 0 {
+		return 3.5
+	}
+	if bestWithCard >= maxSingle && wastedMana == 1 {
+		return 2.0
+	}
+	if wastedMana >= 2 && bestWithCard < maxSingle {
+		return -2.0
 	}
 
 	return 0
+}
+
+func bestSubsetSum(cmcs []int, capacity int) int {
+	if capacity <= 0 || len(cmcs) == 0 {
+		return 0
+	}
+	dp := make([]bool, capacity+1)
+	dp[0] = true
+	best := 0
+	for _, c := range cmcs {
+		if c <= 0 {
+			continue
+		}
+		for v := capacity; v >= c; v-- {
+			if dp[v-c] {
+				dp[v] = true
+				if v > best {
+					best = v
+				}
+			}
+		}
+	}
+	return best
 }

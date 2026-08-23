@@ -55,6 +55,21 @@ func (s *Strategy) shouldHoldForCombat(g *mage.Game, playerID uuid.UUID) bool {
 	return false
 }
 
+func (s *Strategy) hasCombatManaAbility(g *mage.Game, playerID uuid.UUID) bool {
+	for _, perm := range g.FilterBattlefield(mage.And(mage.ControlledBy(playerID), mage.IsCreature)) {
+		for _, a := range perm.RuntimeAbilities {
+			if ab, ok := mage.UnwrapAbility(a).(mage.ActivatedAbility); ok {
+				for _, c := range ab.Costs() {
+					if mcp, ok := c.(*mage.ManaCostPayment); ok && mcp.MC.CMC() > 0 {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
+}
+
 // solverProfile translates a WeightedPersonality into a combatsolver.Profile.
 func (s *Strategy) solverProfile() combatsolver.Profile {
 	w := s.weights()
@@ -105,6 +120,9 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 		if action := s.considerCombatPump(p, g); action != nil {
 			return *action
 		}
+		if action := s.considerCombatPumpSpell(p, g); action != nil {
+			return *action
+		}
 	}
 
 	// Save a creature from a destroy- or lethal-burn removal spell or ability on
@@ -137,6 +155,10 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 
 		if action := s.bestSpellAction(p, g, g.GetCastableSpells(playerID), func(card mage.Card) (int, bool) {
 			if card.HasType(core.TypeInstant) {
+				return 0, false
+			}
+			// In PrecombatMain, defer non-combat spells only if we have attackers and a trick/ability to hold mana for.
+			if g.GetStep() == core.PrecombatMain && s.shouldHoldForCombat(g, playerID) && (heldInstant != nil || s.hasCombatManaAbility(g, playerID)) && !isPrecombatSpell(card) {
 				return 0, false
 			}
 			// When holding an instant up (combat trick, removal, counter), keep
@@ -377,6 +399,10 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 				continue
 			}
 			opponent := g.GetOpponent(playerID)
+			if opponent != nil && damage >= opponent.Life() && slices.Contains(possible, opponent.PlayerID()) {
+				targets = append(targets, opponent.PlayerID())
+				continue
+			}
 			if s.weights().TargetFace >= 0.5 && opponent != nil {
 				aimedAtFace := false
 				for _, id := range possible {
@@ -607,6 +633,9 @@ func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage
 // aim at the face when that advances the game, otherwise pick the best creature
 // to burn, falling back to the face when no creature is worth it.
 func (s *Strategy) selectSingleBurnTarget(g *mage.Game, playerID uuid.UUID, possible []uuid.UUID, damage int, hint mage.AIHint, opponent mage.Player) []uuid.UUID {
+	if opponent != nil && damage >= opponent.Life() && slices.Contains(possible, opponent.PlayerID()) {
+		return []uuid.UUID{opponent.PlayerID()}
+	}
 	if s.weights().TargetFace >= 0.5 && opponent != nil {
 		for _, id := range possible {
 			if id == opponent.PlayerID() && shouldAimBurnAtFace(g, playerID, damage) {
@@ -614,7 +643,7 @@ func (s *Strategy) selectSingleBurnTarget(g *mage.Game, playerID uuid.UUID, poss
 			}
 		}
 	}
-	if hint.PreferTarget == mage.PreferOpponentFaceIfLethal && opponent != nil && damage >= opponent.Life() {
+	if opponent != nil && shouldAimBurnAtFace(g, playerID, damage) && slices.Contains(possible, opponent.PlayerID()) {
 		return []uuid.UUID{opponent.PlayerID()}
 	}
 	if tg := bestTargetsForRequirementWithPreference(g, playerID, possible, eval.TargetBurn, damage, false, true, hint.PreferTarget); len(tg) > 0 {
@@ -912,6 +941,9 @@ func shouldAimBurnAtFace(g *mage.Game, playerID uuid.UUID, damage int) bool {
 	if damage >= opponent.Life() {
 		return true
 	}
+	if opponent.Life() <= 6 {
+		return true
+	}
 	lethal := eval.CalculateLethal(g, playerID)
 	if lethal.MyBoardDamage+damage >= opponent.Life() {
 		return true
@@ -1123,8 +1155,7 @@ func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
 
 	var lands []mage.Card
 	neededColors := make(map[core.Color]int)
-	baseColors := availableManaColors(g, p.PlayerID())
-	baseTotal := eval.CountAvailableMana(g, p.PlayerID())
+	baseColors, baseTotal := boardManaSources(g, p.PlayerID())
 
 	for _, c := range hand {
 		if c.HasType(core.TypeLand) {
@@ -1198,14 +1229,32 @@ func chooseBestLand(p mage.Player, g *mage.Game) mage.Card {
 	return lands[0]
 }
 
-func availableManaColors(g *mage.Game, playerID uuid.UUID) map[core.Color]int {
-	colors := make(map[core.Color]int)
-	for _, perm := range g.FilterBattlefield(mage.And(mage.ControlledBy(playerID), mage.IsUntapped)) {
+func boardManaSources(g *mage.Game, playerID uuid.UUID) (colors map[core.Color]int, total int) {
+	colors = make(map[core.Color]int)
+	total = 0
+	for _, perm := range g.FilterBattlefield(mage.ControlledBy(playerID)) {
+		hasMana := false
+		if perm.HasType(core.TypeLand) {
+			hasMana = true
+			switch perm.Name() {
+			case "Forest":
+				colors[core.Green]++
+			case "Mountain":
+				colors[core.Red]++
+			case "Plains":
+				colors[core.White]++
+			case "Island":
+				colors[core.Blue]++
+			case "Swamp":
+				colors[core.Black]++
+			}
+		}
 		for _, a := range perm.RuntimeAbilities {
 			ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility)
 			if !ok {
 				continue
 			}
+			hasMana = true
 			if ma.HasAnyColor() {
 				for _, color := range []core.Color{core.White, core.Blue, core.Black, core.Red, core.Green} {
 					colors[color]++
@@ -1214,8 +1263,11 @@ func availableManaColors(g *mage.Game, playerID uuid.UUID) map[core.Color]int {
 				colors[ma.PrimaryColor()]++
 			}
 		}
+		if hasMana {
+			total++
+		}
 	}
-	return colors
+	return colors, total
 }
 
 func landManaColors(card mage.Card) ([]core.Color, bool) {
@@ -1263,4 +1315,28 @@ func coloredManaProgress(mc core.ManaCost, colors map[core.Color]int) int {
 	score += min(colors[core.Red], mc.Red)
 	score += min(colors[core.Green], mc.Green)
 	return score
+}
+
+func isPrecombatSpell(card mage.Card) bool {
+	if card.HasType(core.TypeCreature) && card.AttrSeeds()[core.Haste] > 0 {
+		return true
+	}
+	if card.HasType(core.TypeSorcery) || card.HasType(core.TypeEnchantment) {
+		for _, a := range card.Abilities() {
+			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+				outcome := mage.SpellOutcome(sa.Effects())
+				if outcome == mage.OutcomeDetriment {
+					return true
+				}
+				for _, e := range sa.Effects() {
+					props := e.Properties()
+					if props.PowerBoost > 0 || props.Mass {
+						return true
+					}
+				}
+			}
+		}
+	}
+	hint := cardAIHint(card)
+	return hint.Timing == mage.AITimingMainPhase
 }

@@ -39,13 +39,18 @@ func TargetPurposeForEffects(effects []mage.Effect) TargetPurpose {
 		if props.Taps && props.Outcome == mage.OutcomeDetriment {
 			purpose = TargetTap
 		}
-		if props.Outcome == mage.OutcomeDetriment && purpose == TargetGeneric {
-			purpose = TargetRemoval
-		}
-		if props.PowerBoost != 0 || props.ToughnessBoost != 0 || props.GrantedKeyword != 0 {
-			return TargetPump
+		if props.Outcome == mage.OutcomeDetriment {
+			if props.PowerBoost < 0 || props.ToughnessBoost < 0 {
+				return TargetRemoval
+			}
+			if purpose == TargetGeneric {
+				purpose = TargetRemoval
+			}
 		}
 		if props.Outcome == mage.OutcomeBenefit {
+			if props.PowerBoost != 0 || props.ToughnessBoost != 0 || props.GrantedKeyword != 0 {
+				return TargetPump
+			}
 			purpose = TargetAura
 		}
 	}
@@ -94,6 +99,15 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		if perm.Tapped && perm.HasAttr(core.AttrDoesNotUntap) {
 			value /= 2
 		}
+		if perm.HasType(core.TypeCreature) {
+			aurasAttached := 0
+			for _, aura := range g.FilterBattlefield(mage.And(mage.IsEnchantment, mage.Not(mage.IsCreature))) {
+				if aura.AttachedTo == perm.ID() {
+					aurasAttached++
+				}
+			}
+			value += aurasAttached * 4
+		}
 		return value
 	case TargetExile:
 		// Exile, sacrifice, and -X/-X remove indestructible creatures, so unlike
@@ -104,6 +118,15 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		if perm.Tapped && perm.HasAttr(core.AttrDoesNotUntap) {
 			value /= 2
 		}
+		if perm.HasType(core.TypeCreature) {
+			aurasAttached := 0
+			for _, aura := range g.FilterBattlefield(mage.And(mage.IsEnchantment, mage.Not(mage.IsCreature))) {
+				if aura.AttachedTo == perm.ID() {
+					aurasAttached++
+				}
+			}
+			value += aurasAttached * 4
+		}
 		return value
 	case TargetBurn:
 		if perm.HasType(core.TypeCreature) && alreadyLethallyDamaged(g, perm) {
@@ -112,7 +135,16 @@ func PermanentValueForTargeting(g *mage.Game, perm *mage.Permanent, purpose Targ
 		return value
 	case TargetBounce:
 		if perm.IsToken {
-			value += 3
+			return value
+		}
+		if perm.HasType(core.TypeCreature) {
+			aurasAttached := 0
+			for _, aura := range g.FilterBattlefield(mage.And(mage.IsEnchantment, mage.Not(mage.IsCreature))) {
+				if aura.AttachedTo == perm.ID() {
+					aurasAttached++
+				}
+			}
+			value += aurasAttached * 4
 		}
 		return value * 3 / 4
 	case TargetTap:

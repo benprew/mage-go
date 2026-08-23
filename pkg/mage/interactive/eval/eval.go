@@ -714,6 +714,36 @@ func intrinsicAbilityQuality(ab mage.ActivatedAbility) int {
 			}
 		}
 
+		if props.TokenPower > 0 || props.TokenToughness > 0 {
+			s := 4
+			if manaCostTotal >= 6 {
+				s = 3
+			}
+			if s > bestScore {
+				bestScore = s
+			}
+		}
+
+		if props.Taps && props.Outcome == mage.OutcomeDetriment {
+			s := 4
+			if manaCostTotal >= 4 {
+				s = 3
+			}
+			if s > bestScore {
+				bestScore = s
+			}
+		}
+
+		if props.LifeGain > 0 {
+			s := 3
+			if manaCostTotal >= 4 {
+				s = 2
+			}
+			if s > bestScore {
+				bestScore = s
+			}
+		}
+
 		if props.Outcome == mage.OutcomeBenefit {
 			s := 2
 			if manaCostTotal >= 4 {
