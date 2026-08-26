@@ -8,6 +8,7 @@ import (
 	_ "github.com/benprew/mage-go/cards/arabian"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
+	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
 // Tests for cards registered in alpha_enchantments.go.
@@ -919,4 +920,42 @@ func TestStasis(t *testing.T) {
 		// Stasis should be sacrificed at upkeep (no {U} paid).
 		g.AssertPermanentCount(gametest.PlayerA, "Stasis", 0)
 	})
+}
+
+func TestAnimateDeadCastabilityWithOpponentCreatureOnly(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Animate Dead")
+	g.AddCard(core.ZoneGraveyard, gametest.PlayerB, "Serra Angel")
+	g.SetStep(core.PrecombatMain)
+
+	playerAID := g.AllPlayers()[0].PlayerID()
+	castable := g.GetCastableSpells(playerAID)
+
+	found := false
+	for _, c := range castable {
+		if c.Name() == "Animate Dead" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("expected Animate Dead to be in GetCastableSpells when opponent's graveyard has a creature, got %v", castable)
+	}
+
+	opts := interactive.GetAvailableActions(g.Game, playerAID)
+	foundOpt := false
+	for _, opt := range opts {
+		if opt.CardName == "Animate Dead" {
+			foundOpt = true
+			if len(opt.ValidTargets) == 0 {
+				t.Fatalf("expected Animate Dead to have valid targets, got 0")
+			}
+			break
+		}
+	}
+	if !foundOpt {
+		t.Fatalf("expected Animate Dead in GetAvailableActions, got %v", opts)
+	}
 }
