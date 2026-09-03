@@ -6,31 +6,24 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// CR 700.2 — Modal spells and abilities. A spell or ability is modal if it
-// has two or more options preceded by "Choose one —", "Choose two —",
-// "Choose one or both —", etc. The controller of the spell or ability
-// chooses the desired number of modes as the spell or ability is being cast
-// or activated. Each chosen mode defines its own targets (if any) and its
-// own one-shot effect. Targets and additional costs are chosen only for
-// the chosen modes (CR 700.2d, 601.2c).
+// CR 700.2 — Modal spells and abilities.
+// A spell or ability is modal if it has two or more options preceded by text such as "Choose one —".
+// The controller chooses the modes during casting or activation.
+// Each chosen mode specifies its own targets and effects.
+// The player chooses targets and pays additional costs only for the chosen modes (CR 700.2d, 601.2c).
 //
-// Engine model:
-//   - Mode bundles a label, a list of Target requirements, and a list of
-//     Effect resolutions specific to that mode.
-//   - A *ModalSpellAbility is a SpellAbility whose Modes() list defines the
-//     options. Building one with NewModalSpell([]Mode{…}) sets the card up
-//     to prompt Player.ChooseMode at cast time, gather targets only for
-//     the chosen mode, and resolve only that mode's effects.
-//   - The chosen mode index is stored on the StackObject (ModeChoice). The
-//     chosen mode's targets are stored on StackObject.Targets (and also on
-//     StackObject.ModalTargets[ModeChoice]).
-//   - At resolution, the executor runs only the effects of Modes()[ModeChoice].
-//     The shared ModeValue() / currentMode plumbing remains so legacy
-//     SetModes-style cards continue to work alongside the new API.
+// Engine design:
+//   - A Mode struct contains a label, target requirements, and effects for that mode.
+//   - A *ModalSpellAbility contains a list of available modes.
+//     Function NewModalSpell prompts the player to choose a mode at cast time.
+//     The function collects targets only for the chosen mode and executes only that mode's effects.
+//   - The StackObject stores the index of the chosen mode in ModeChoice.
+//     The StackObject stores targets for the chosen mode in StackObject.Targets.
+//   - During resolution, the executor runs only the effects of the chosen mode.
+//     The engine maintains ModeValue() compatibility for older cards.
 //
-// Modal triggered abilities (Trusty Retriever, Entomber Exarch ETB) are
-// supported via ModalTriggerEffect, which prompts ChooseMode at trigger
-// resolution and dispatches to the chosen mode's effect.
+// ModalTriggerEffect supports modal triggered abilities.
+// It prompts for mode selection at resolution and executes the corresponding effect.
 
 // Mode describes one option of a modal spell or ability. Targets is the
 // list of Target requirements specific to this mode (zero or more); the

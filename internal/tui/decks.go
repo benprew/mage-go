@@ -124,7 +124,8 @@ var Archetypes = []DeckArchetype{
 	{Name: "Priestess (W walls)", Entries: priestessDeckEntries},
 }
 
-// BuildDeck creates a shuffled deck of cards from a deck list, setting card owners.
+// BuildDeck makes a shuffled deck of cards from a deck list.
+// The function sets the owner for each card.
 func BuildDeck(entries []DeckEntry, ownerID uuid.UUID) []mage.Card {
 	var deck []mage.Card
 	for _, entry := range entries {
@@ -143,7 +144,7 @@ func BuildDeck(entries []DeckEntry, ownerID uuid.UUID) []mage.Card {
 	return deck
 }
 
-// DrawOpeningHand draws 7 cards from the library into the player's hand.
+// DrawOpeningHand draws seven cards from the library into the hand of the player.
 func DrawOpeningHand(p mage.Player) {
 	for range 7 {
 		p.DrawCard()

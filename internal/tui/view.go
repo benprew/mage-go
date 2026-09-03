@@ -12,8 +12,8 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/interactive"
 )
 
-// frame applies terminal-size constraints so shorter views fully overwrite
-// taller previous views (prevents SSH rendering bleed-through).
+// frame applies terminal dimension limits to content. Shorter views then fully
+// overwrite taller views to prevent display errors during an SSH session.
 func (m Model) frame(content string) string {
 	w := m.width
 	if w <= 0 {
@@ -468,7 +468,7 @@ func renderBattlefieldTo(b *strings.Builder, perms []interactive.PermanentState,
 	}
 }
 
-// renderLandPerm renders a land as a compact single token.
+// renderLandPerm shows a land permanent as a small single text block.
 func renderLandPerm(p interactive.PermanentState) string {
 	name := p.Name
 	if p.Tapped {
@@ -477,8 +477,9 @@ func renderLandPerm(p interactive.PermanentState) string {
 	return landCardStyle.Render(name)
 }
 
-// buildPermCard renders a non-land permanent as a fixed-width multi-line card.
-// eligible: can be selected as attacker. selected: chosen to attack this declaration.
+// buildPermCard makes a multi-line card with a fixed width for a non-land permanent.
+// When eligible is true, the player can choose the permanent as an attacker.
+// When selected is true, the player has chosen the permanent to attack.
 func buildPermCard(p interactive.PermanentState, eligible, selected bool) string {
 	// Choose colors based on status.
 	var nameColor lipgloss.Color

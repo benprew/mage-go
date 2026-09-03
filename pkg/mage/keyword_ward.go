@@ -6,29 +6,19 @@ package mage
 // spell or ability an opponent controls, counter that spell or ability
 // unless that player pays [cost]."
 //
-// Implementation:
+// Implementation details:
 //
-//   - core.Ward is a keyword Attr so AssertHasAbility(player, name, core.Ward,
-//     true) works for display/test purposes (CR 702.21a — ward is a
-//     triggered ability, not a static ability, but it still appears in the
-//     creature's keyword list).
-//   - WithWard(cost) wires both the display Attr and a triggered ability
-//     that fires on EvtBecomesTarget when the spell/ability's controller
-//     is an opponent of the warded permanent's controller.
-//   - On resolution, the opponent is offered a may-pay choice. If they pay
-//     (or can pay and choose to), the spell/ability proceeds. If they
-//     decline or can't pay, the spell/ability is countered via
-//     CounterSpellOnStack (which also covers activated abilities — both
-//     spells and abilities are removed by their stack-object source ID
-//     match). For triggered abilities — which can't be the target of
-//     ward according to CR 702.21a's "spell or ability an opponent
-//     controls" wording, since triggered abilities also count — we still
-//     try to counter; uncounterable spells (WithUncounterable / static
-//     filters) are unaffected per CounterSpellOnStack.
+//   - core.Ward is a keyword attribute. Test functions can check this attribute (CR 702.21a).
+//   - WithWard(cost) attaches the display attribute and a triggered ability.
+//     The ability triggers on EvtBecomesTarget when an opponent controls the spell or ability.
+//   - During resolution, the opponent can pay the ward cost.
+//     If the opponent pays the cost, the spell or ability continues.
+//     If the opponent does not pay the cost, the engine counters the spell or ability.
+//     The function CounterSpellOnStack counters spells and activated abilities.
+//     Spells that cannot be countered remain unaffected.
 //
-// Ward triggers do NOT trigger when the warded permanent itself is
-// targeted by its own controller (CR 702.21b — only opponents). This is
-// enforced by the EventPlayerIsOpponent condition.
+// The ability does not trigger when the controller targets their own permanent (CR 702.21b).
+// The EventPlayerIsOpponent condition enforces this rule.
 
 import (
 	"fmt"

@@ -24,18 +24,16 @@ var (
 	ErrAnteSettled       = errors.New("ante result has already been settled")
 )
 
-// ExiledCard tracks a card in exile along with metadata about why it was exiled.
+// ExiledCard records a card in exile and the reason for the exile.
 //
-// FaceDown: when true, the card is in exile face down (CR 707, 406.3). Its
-// characteristics (name, types, mana cost, abilities, etc.) are hidden from
-// players who haven't been granted permission to look at it. Used by Gonti,
-// Lord of Luxury and similar effects that exile a card face down so opponents
-// can't see what was taken.
+// FaceDown: When true, the card is in exile face down (CR 707, 406.3).
+// The engine hides the card characteristics from unauthorized players.
+// Cards such as Gonti, Lord of Luxury use this field to hide cards from opponents.
 //
-// RevealedTo: the set of player IDs that have been granted permission to look
-// at a face-down exiled card's identity (CR 408). The exiling player and the
-// card's owner are typically included. Other players see only "an exiled
-// face-down card" — they cannot inspect its name or characteristics.
+// RevealedTo: Contains the IDs of players permitted to inspect the card (CR 408).
+// This list usually includes the exiling player and the card owner.
+// Other players see only that a face-down card is in exile.
+// Unauthorized players cannot inspect card characteristics.
 type ExiledCard struct {
 	Card       Card
 	ExiledBy   uuid.UUID // ID of the permanent/spell that caused the exile
@@ -1137,17 +1135,15 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 }
 
-// MoveFromGraveyard removes a card from playerID's graveyard and emits the
-// appropriate zone-change events: a per-card EvtZoneChange{From: ZoneGraveyard,
-// To: to} and a single EvtCardsLeftGraveyard with Amount=1, PlayerID=playerID.
-// It does NOT add the card to the destination zone — callers handle that —
-// because destination handling varies (exile records ExiledBy, hand uses
-// AddToHand, battlefield uses PutOnBattlefield). Returns the removed card
-// or nil/false if it wasn't in that graveyard.
+// MoveFromGraveyard removes a card from the graveyard of a player.
+// The function sends an EvtZoneChange event for the card.
+// The function also sends an EvtCardsLeftGraveyard event with Amount set to 1.
+// The function does not put the card into the destination zone.
+// The caller must put the card into the destination zone.
 //
-// For multi-card "burst" moves where Oracle text says "one or more cards
-// leave your graveyard" should fire only once per resolution (CR 603.10),
-// use MoveCardsFromGraveyard instead.
+// The function returns the removed card, or nil and false if the card was not present.
+//
+// When multiple cards leave a graveyard together (CR 603.10), use MoveCardsFromGraveyard.
 func (g *Game) MoveFromGraveyard(playerID, cardID uuid.UUID, to Zone) (Card, bool) {
 	p := g.GetPlayer(playerID)
 	if p == nil {
@@ -1540,15 +1536,16 @@ func (g *Game) drawCardRaw(p Player) (Card, bool) {
 	return c, ok
 }
 
-// PerformScry implements scry N (CR 701.18): the player looks at the top N
-// cards of their library, then puts any number of them on the bottom of their
-// library and the rest on top in any order. If the library has fewer than N
-// cards, the player scries however many are present. Returns the number of
-// cards actually scried.
+// PerformScry executes the scry action for N cards (CR 701.18).
+// The player examines the top N cards of the library.
+// The player can put any number of these cards on the bottom of the library.
+// The player puts the remaining cards on top of the library in any order.
+// If the library contains fewer than N cards, the player examines all available cards.
+// The function returns the quantity of cards examined.
 //
-// The placement decision is delegated to Player.ChooseScryPlacement; the engine
-// validates the returned IDs and falls back to "all on top, original order" on
-// any mismatch so a buggy player implementation cannot lose cards.
+// The method delegates card placement to Player.ChooseScryPlacement.
+// The engine validates the returned IDs.
+// If an ID mismatch occurs, the engine puts all cards on top in the original order.
 func (g *Game) PerformScry(p Player, n int) int {
 	if p == nil || n <= 0 {
 		return 0
@@ -1952,19 +1949,18 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	})
 }
 
-// fireBecomesTargetEvents fires EvtBecomesTarget for each declared target of a
-// stack object that has just been put on the stack with its targets chosen
-// (CR 603.6c, 119.5). The event is fired once per distinct target — players
-// and permanents alike. evt.SourceID is the spell/ability source (the casting
-// card's ID for spells, the source permanent's ID for activated abilities);
-// evt.TargetID is the targeted object's ID; evt.PlayerID is the controller of
-// the spell/ability; evt.Flag is true for activated abilities, false for spells.
+// fireBecomesTargetEvents sends an EvtBecomesTarget event for each declared target.
+// The function runs after a player puts an object on the stack and chooses targets (CR 603.6c, 119.5).
+// The engine sends one event for each distinct target permanent or player.
+// Field evt.SourceID contains the ID of the spell or ability source.
+// Field evt.TargetID contains the ID of the targeted object.
+// Field evt.PlayerID contains the ID of the spell or ability controller.
+// Field evt.Flag is true for activated abilities and false for spells.
 //
-// CR 603.6c: "becomes the target" triggered abilities trigger only once per
-// event, even if multiple targets are chosen, BUT only the targets that the
-// trigger applies to count — i.e. each affected permanent/player sees the
-// event independently. This implementation fires one event per distinct target
-// so triggers attached to different permanents each see "their" event.
+// CR 603.6c states that abilities trigger only once for each event when a spell has multiple targets.
+// However, each targeted permanent or player receives the event independently.
+// The engine sends one event for each distinct target.
+// This ensures that triggers on different permanents receive separate events.
 func (g *Game) fireBecomesTargetEvents(obj *StackObject, isAbility bool) {
 	if obj == nil {
 		return
@@ -2166,15 +2162,13 @@ func (g *Game) FireEvent(evt GameEvent) {
 	g.queueParadigmRecurringTriggers(&evt)
 }
 
-// CheckStateTriggers evaluates state-triggered abilities (CR 603.8) on every
-// battlefield permanent. A state trigger fires once each time its condition
-// transitions from false to true; while the condition stays true, it must not
-// re-trigger until it has been observed false. Newly-triggered abilities are
-// appended to pendingTriggers so the next PutTriggersOnStack call queues them
-// alongside any event-driven triggers.
+// CheckStateTriggers evaluates state-triggered abilities (CR 603.8) on all battlefield permanents.
+// A state trigger starts once when its condition changes from false to true.
+// While the condition remains true, the ability does not trigger again.
+// The ability triggers again only after the condition becomes false and then true again.
+// The engine appends new triggers to pendingTriggers.
 //
-// Call this whenever state-based actions are checked, before priority is
-// granted (the runPriorityRound loop does so after CheckStateBasedActions).
+// Call this function after state-based actions are checked and before a player receives priority.
 func (g *Game) CheckStateTriggers() {
 	seen := make(map[stateTriggerKey]bool)
 	for _, perm := range g.battlefield {
@@ -2213,22 +2207,20 @@ func (g *Game) CheckStateTriggers() {
 
 // PutTriggersOnStack puts all pending triggers onto the stack.
 //
-// CR 603.3b: If multiple abilities have triggered since the last time a player
-// received priority, the active player's triggered abilities are put on the
-// stack in any order the active player chooses, then each non-active player,
-// in turn order, puts their triggered abilities on the stack in any order
-// they choose. The last-put-on-stack ability ends up on top and resolves
-// first.
+// CR 603.3b specifies the trigger order when players receive priority.
+// The active player puts triggered abilities on the stack first in any chosen order.
+// Each non-active player in turn order then puts triggered abilities on the stack.
+// The last ability put on the stack resolves first.
 //
-// We partition pendingTriggers by controller into active and non-active
-// groups, then push the active group first and the non-active group second,
-// so the non-active player's triggers end up on top and resolve first.
+// The engine divides pending triggers into an active group and a non-active group.
+// The engine pushes the active group first.
+// The engine then pushes the non-active group.
+// Thus, the triggers of the non-active player resolve first.
 //
-// Within each group we reverse FireEvent's source-order so older permanents'
-// triggers end up on top of their group and resolve first. CR 603.3b lets the
-// controller pick any order; we pick the one XMage does, which keeps
-// cross-validation deterministic. (In particular, both "newer-first" and
-// "older-first" are CR-valid; matching the cross-val oracle is what matters.)
+// Within each group, the engine reverses the event source order.
+// Therefore, triggers from older permanents resolve first.
+// CR 603.3b permits any order.
+// The engine uses the XMage order to maintain deterministic test results.
 func (g *Game) PutTriggersOnStack() {
 	if len(g.pendingTriggers) > 1 {
 		activeID := g.ActivePlayerObj().PlayerID()

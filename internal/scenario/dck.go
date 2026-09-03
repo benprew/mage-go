@@ -11,7 +11,7 @@ import (
 
 var dckCardLineRE = regexp.MustCompile(`^(SB:\s*)?(\d+)\s+\[[^\]]+\]\s+(.+)$`)
 
-// ParseDCKDeck parses a Shandalar .dck deck file.
+// ParseDCKDeck parses a .dck deck file for Shandalar.
 func ParseDCKDeck(path string) (*RogueDeck, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -51,7 +51,8 @@ func ParseDCKDeck(path string) (*RogueDeck, error) {
 	return deck, nil
 }
 
-// LoadAllDCKDecks loads all .dck rogue deck files from a directory.
+// LoadAllDCKDecks loads all .dck files for rogue decks from a directory.
+// The function ignores files that it cannot parse and writes a warning to stderr.
 func LoadAllDCKDecks(dir string) ([]*RogueDeck, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {

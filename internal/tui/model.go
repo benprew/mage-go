@@ -93,7 +93,7 @@ type cardDetail struct {
 	IsCreature bool
 }
 
-// NewModel creates a new TUI model.
+// NewModel makes a new TUI model.
 func NewModel(toGame chan<- interactive.PriorityAction, fromGame <-chan interactive.GameMsg,
 	fromChoiceReqs <-chan interactive.ChoiceRequest, toChoiceResps chan<- interactive.ChoiceResponse) Model {
 	return Model{
@@ -404,8 +404,8 @@ func (m Model) handleChoiceKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// submitChoice builds and sends a ChoiceResponse for the pending choice.
-// singleIdx is used for single-select; multiIdxs is used for multi-select.
+// submitChoice makes and sends a ChoiceResponse for the pending choice.
+// Use singleIdx for one choice. Use multiIdxs for multiple choices.
 func (m *Model) submitChoice(req *interactive.ChoiceRequest, singleIdx int, multiIdxs []int) {
 	var resp interactive.ChoiceResponse
 	switch req.Type {
@@ -493,7 +493,7 @@ func (m Model) handleBlockerAssignKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// openBrowser builds the card browser list from all visible zones.
+// openBrowser makes the list of cards for the browser from all visible zones.
 func (m *Model) openBrowser() {
 	var items []browseItem
 
@@ -694,7 +694,8 @@ func (m Model) handleBrowseKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// permanentNameFromState resolves a permanent ID to its name by searching both battlefields.
+// permanentNameFromState finds the name of a permanent from its ID.
+// The function searches the battlefields of both players.
 func permanentNameFromState(state *interactive.GameState, id uuid.UUID) string {
 	for _, p := range state.You.Battlefield {
 		if p.ID == id {

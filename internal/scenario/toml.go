@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// ParseRogueDeck parses a Shandalar rogue deck TOML file.
+// ParseRogueDeck parses a TOML file for a Shandalar rogue deck.
 func ParseRogueDeck(path string) (*RogueDeck, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -68,8 +68,8 @@ func ParseRogueDeck(path string) (*RogueDeck, error) {
 	return deck, nil
 }
 
-// LoadAllRogueDecks loads all .toml rogue deck files from a directory.
-// Unparseable files are skipped with a warning printed to stderr.
+// LoadAllRogueDecks loads all TOML files for rogue decks from a directory.
+// The function ignores files that it cannot parse and writes a warning to stderr.
 func LoadAllRogueDecks(dir string) ([]*RogueDeck, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -90,7 +90,7 @@ func LoadAllRogueDecks(dir string) ([]*RogueDeck, error) {
 	return decks, nil
 }
 
-// parseCardEntry parses a line like: ["4", "Lightning Bolt"],
+// parseCardEntry parses a text line, for example: ["4", "Lightning Bolt"],
 func parseCardEntry(line string) (DeckEntry, error) {
 	line = strings.TrimSuffix(strings.TrimSpace(line), ",")
 	line = strings.TrimSpace(line)
