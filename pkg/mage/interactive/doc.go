@@ -1,18 +1,23 @@
 /*
-Package interactive provides the interactive player layer for the MTG engine:
-human players driven by a TUI over channels, computer players driven by
-pluggable heuristic strategies, position evaluation, and game-loop runners
-for both single-player (human vs. AI) and multiplayer (human vs. human over SSH)
-sessions.
+Package interactive provides player interfaces for the MTG engine.
+
+It supports human players through a terminal user interface (TUI) with Go
+channels. It supports computer players through configurable heuristic
+strategies. The package also provides position evaluation and game-loop
+runners for single-player and multiplayer sessions.
 
 # Human Players
 
-[HumanPlayer] wraps [mage.BasePlayer] and routes every game decision through a
-pair of buffered channels. The game loop writes a [GameMsg] (board snapshot +
-prompt + legal options) to [HumanPlayer.ToTUI]; the TUI reads it, renders the
-state, collects input, and sends a [PriorityAction] back on [HumanPlayer.FromTUI].
-Modal choices (mode selection, permanent selection, discard, color choice) use a
-separate [ChoiceRequest]/[ChoiceResponse] channel pair.
+[HumanPlayer] embeds [mage.BasePlayer]. It sends game decisions through
+buffered channels.
+
+The game loop sends a [GameMsg] value to [HumanPlayer.ToTUI]. A [GameMsg]
+contains a board snapshot, a prompt, and legal options. The TUI reads the
+message, displays the game state, and collects user input. The TUI then sends a
+[PriorityAction] back on [HumanPlayer.FromTUI].
+
+Modal choices (such as mode selection, permanent selection, discard, or color
+choice) use the [ChoiceRequest] and [ChoiceResponse] channel pair.
 
 	hp := interactive.NewHumanPlayer("Alice")
 	// For the SSH lobby, allocate channels first and wire them to the TUI model:
@@ -20,57 +25,64 @@ separate [ChoiceRequest]/[ChoiceResponse] channel pair.
 
 # AI Players
 
-[AIPlayer] wraps [mage.BasePlayer] with a pluggable [AIStrategy] that makes all
-decisions without channels. Three strategy hooks must be implemented:
+[AIPlayer] wraps [mage.BasePlayer] with an [AIStrategy] implementation. The AI
+makes all decisions without channels.
 
-  - PriorityAction — called when the AI has priority; returns what to cast,
-    which land to play, which ability to activate, or pass.
-  - Attackers — returns the IDs of creatures to attack with this turn.
-  - Blockers — returns blocker→attacker assignments.
+You must implement three strategy methods:
 
-[HeuristicStrategy] is the built-in implementation. On its main-phase turn it
-picks the highest-[spellValue] non-instant from the castable spells, plays a
-land if one is available, and optionally holds instants for the opponent's turn.
-Target selection in [HeuristicStrategy.autoSelectTargets] uses [evalCreature]
-scores and lethal-first [ThreatPerMana] ordering.
+  - PriorityAction — returns a spell to cast, a land to play, an ability to
+    activate, or a pass.
+  - Attackers — returns creature identifiers that attack this turn.
+  - Blockers — returns blocker assignments to attacking creatures.
+
+[HeuristicStrategy] is the default implementation. During its main phase, it
+selects the non-instant spell with the highest [spellValue]. It plays a land if
+available. It can hold instant spells until the turn of the opponent.
+[HeuristicStrategy.autoSelectTargets] selects targets by using [evalCreature]
+scores and [ThreatPerMana] priority.
 
 # Personalities
 
-[WeightedPersonality] provides continuous-valued weights for AI decision-making.
-Evaluation weights (LifeWeight, BoardWeight, CardWeight, ManaWeight, TempoWeight)
-flow into [WeightedEvaluator]. Decision weights (Aggression, BlockThreshold,
-HoldInstants, TargetFace, CurvePreference) are continuous 0.0-to-1.0 values
-that control combat, targeting, and spell-casting preferences.
+[WeightedPersonality] defines continuous weights for AI decisions. Evaluation
+weights (LifeWeight, BoardWeight, CardWeight, ManaWeight, TempoWeight)
+configure [WeightedEvaluator]. Decision weights (Aggression, BlockThreshold,
+HoldInstants, TargetFace, CurvePreference) use continuous values from 0.0
+through 1.0. These weights control combat, targeting, and spell-casting
+choices.
 
-Five weighted presets are provided:
+The package provides five preset configurations:
 
-  - [AggroWeighted] — high board weight, max aggression, low blocking,
-    cheapest spells first.
-  - [ControlWeighted] — high life/card weights, no aggression, hold instants,
-    block everything, most expensive first.
-  - [MidrangeWeighted] — balanced weights, 0.7 aggression, most expensive first.
-  - [TempoWeighted] — high tempo weight, 0.8 aggression, hold instants at 0.7.
-  - [BurnWeighted] — max aggression, never block, always target face.
+  - [AggroWeighted] — High board weight, maximum aggression, low blocking, and
+    lowest spell cost first.
+  - [ControlWeighted] — High life and card weights, zero aggression, holds
+    instants, blocks all attackers, and highest spell cost first.
+  - [MidrangeWeighted] — Balanced weights, 0.7 aggression, and highest spell
+    cost first.
+  - [TempoWeighted] — High tempo weight, 0.8 aggression, and 0.7 hold-instants
+    weight.
+  - [BurnWeighted] — Maximum aggression, zero blocking, and always targets the
+    opponent.
 
-The older boolean [Personality] type is retained for backward compatibility.
-It can be converted to [WeightedPersonality] via [Personality.ToWeighted].
-Boolean preset vars ([AggroPersonality], [ControlPersonality], etc.) still work
-and are auto-converted to weighted form when used with [HeuristicStrategy].
+The boolean [Personality] type remains for backward compatibility. Use
+[Personality.ToWeighted] to convert [Personality] to [WeightedPersonality].
+Preset variables such as [AggroPersonality] and [ControlPersonality] convert
+automatically when used with [HeuristicStrategy].
 
 Constructor helpers: [NewAIPlayer] (Midrange), [NewAggroAI], [NewControlAI],
-[NewTempoAI], [NewBurnAI], [NewWeightedAI] (custom weights).
+[NewTempoAI], [NewBurnAI], and [NewWeightedAI].
 
 # Composite Strategies
 
-[AdaptiveStrategy] wraps an Aggressive and a Defensive sub-strategy and switches
-between them based on [DefaultEvaluator]: when the AI's position score is ≥ 0
-it plays aggressively; when behind it plays defensively.
+[AdaptiveStrategy] contains an aggressive strategy and a defensive strategy.
+It selects between them based on [DefaultEvaluator]. When the position score is
+zero or greater, it uses the aggressive strategy. When the score is negative,
+it uses the defensive strategy.
 
-[SequentialStrategy] tries each sub-strategy in order and uses the first one
-that produces a non-pass priority action (or non-empty attacker/blocker list).
+[SequentialStrategy] evaluates multiple sub-strategies in order. It executes
+the first sub-strategy that produces an action other than a pass.
 
-Constructor: [NewAdaptiveAI] (AggroPersonality when ahead, ControlPersonality
-when behind).
+Constructor helper: [NewAdaptiveAI] (uses AggroPersonality when ahead and
+ControlPersonality when behind).
 
 # Position Evaluation
 
@@ -78,52 +90,62 @@ when behind).
 
 	type StateEvaluator func(g *mage.Game, playerID uuid.UUID) int
 
-Higher scores are better for playerID. [DefaultEvaluator] uses hardcoded weight
-constants; [WeightedEvaluator] returns a [StateEvaluator] parameterised by a
-[WeightedPersonality]'s evaluation weights. DefaultEvaluator sums five components:
+A higher score represents a better position for playerID. [DefaultEvaluator]
+uses constant weights. [WeightedEvaluator] returns a [StateEvaluator]
+configured by the evaluation weights of a [WeightedPersonality].
 
- 1. Life advantage: (myLife − oppLife) × [LifeWeight]
- 2. Creature board: for each creature, [evalCreature] score — positive for own,
-    negative for opponent's.
- 3. Non-creature permanents: CMC / [NonCreatureCMCDiv] per permanent.
- 4. Card advantage: (myHand − oppHand) × [CardWeight].
- 5. Mana development: own land count × [LandWeight], plus +1 per untapped land.
+[DefaultEvaluator] adds five components:
 
-[evalCreature] scores a creature from its base P/T (via counters and
-[BasePTOverride], without querying continuous effects), applies a ×2/3 discount
-for tapped creatures and ÷2 for summoning-sick creatures, then adds keyword and
-ability bonuses. All 31 keywords are weighted — evasion (Flying +4, Fear +3,
-Menace/Trample/landwalk +2, UnblockableKW +5), combat (DoubleStrike +4,
-FirstStrike/Haste +2), durability (Indestructible +5, Hexproof +3), utility
-(Vigilance/Lifelink +2), and drawbacks (Defender/DoesNotUntap −2, MustAttack −1).
-Mana abilities score +3 (any-color) or +2 (fixed); other activated and triggered
-abilities score +1 each.
+ 1. Life difference: (myLife − oppLife) × [LifeWeight]
+ 2. Creature board: sum of [evalCreature] scores (positive for own creatures,
+    negative for opponent creatures).
+ 3. Non-creature permanents: CMC / [NonCreatureCMCDiv] for each permanent.
+ 4. Card difference: (myHand − oppHand) × [CardWeight].
+ 5. Mana development: own land count × [LandWeight], plus 1 per untapped land.
 
-[ThreatPerMana] divides an [evalCreature] score by CMC and is used for lethal
-target prioritisation.
+[evalCreature] calculates a score from base power and toughness. It includes
+counters and [BasePTOverride]. It does not query continuous effects. It
+applies a 2/3 multiplier for tapped creatures. It divides the score by 2 for
+creatures with summoning sickness. It then adds bonuses for keywords and
+abilities.
+
+The function evaluates all 31 keywords:
+
+  - Evasion: Flying (+4), Fear (+3), Menace (+2), Trample (+2), landwalk (+2),
+    UnblockableKW (+5).
+  - Combat: DoubleStrike (+4), FirstStrike (+2), Haste (+2).
+  - Durability: Indestructible (+5), Hexproof (+3).
+  - Utility: Vigilance (+2), Lifelink (+2).
+  - Penalties: Defender (-2), DoesNotUntap (-2), MustAttack (-1).
+
+Mana abilities add +3 (any color) or +2 (fixed color). Other activated and
+triggered abilities add +1 each.
+
+[ThreatPerMana] divides an [evalCreature] score by CMC. The AI uses this value
+to prioritize lethal targets.
 
 [StateEvaluator] accepts a [*mage.Game] directly.
 
 # Game Loops
 
-[RunGameLoop] drives a single human-vs-AI game in its own goroutine. It owns the
-turn structure (untap → upkeep → draw → main → combat → main → end), calls
-[GetAvailableActions] to populate the TUI's action menu, executes [PriorityAction]
-decisions from both sides, resolves the stack on consecutive passes, and supports
-one level of undo during the human's main phase. The loop closes [HumanPlayer.ToTUI]
-on game over so the TUI can detect termination.
+[RunGameLoop] runs a game between a human player and an AI player in a
+goroutine. It manages the turn structure: untap, upkeep, draw, main, combat,
+main, and end. It calls [GetAvailableActions] to populate the TUI menu. It
+executes [PriorityAction] choices from both players. It resolves stack objects
+when both players pass in sequence. It supports one undo step during the main
+phase of the human player. When the game ends, the loop closes
+[HumanPlayer.ToTUI].
 
-[RunMultiplayerGameLoop] drives a human-vs-human game over two independent
-[PlayerChannels], one per player. It follows the same turn structure but has no AI
-logic, no undo, and handles player disconnection gracefully.
+[RunMultiplayerGameLoop] runs a game between two human players with separate
+[PlayerChannels]. It follows the same turn structure. It contains no AI logic
+and no undo support. It safely handles player disconnection.
 
 # Snapshots and Available Actions
 
-[SnapshotGameState] produces a [GameState] value — a fully serialisable, read-only
-view of the current position from one player's perspective — suitable for sending
-over the TUI channel or SSH connection.
+[SnapshotGameState] returns a read-only [GameState] value for one player. You
+can serialize this value and send it over channels or SSH connections.
 
-[GetAvailableActions] returns the legal [ActionOption] list for a player at a
-given point in the turn (main-phase vs. priority window).
+[GetAvailableActions] returns a list of legal [ActionOption] values for a
+player during the current turn phase.
 */
 package interactive

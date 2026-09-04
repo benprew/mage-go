@@ -2,345 +2,369 @@
 //
 // # Controllers and Layer 2
 //
-// A Permanent has a default controller and a computed controller. NewPermanent
-// initializes both from the controller supplied to PutOnBattlefield; this is
-// important for effects that put an opponent-owned card onto the battlefield
-// under your control (CR 110.2a). ControllerID returns the computed value.
+// A [Permanent] has a default controller and a computed controller.
+// [NewPermanent] initializes both values from the controller given to
+// [PutOnBattlefield]. This behavior supports effects that put an opponent card
+// onto the battlefield under your control (CR 110.2a). [Permanent.ControllerID]
+// returns the computed controller.
 //
-// EffectManager.Apply snapshots the current controller, resets the computed
-// value to the default, and applies control-changing effects in Layer 2 and
-// timestamp order (CR 613.1b, 613.7). Only a difference between the snapshot
-// and the final result is a real control change. A real change updates ability
-// context and continuous-control timing for attack and {T}/{Q} restrictions
-// (CR 302.6). Trigger controllers remain snapshots taken when the trigger is
-// created (CR 603.3a); leaves-the-battlefield triggers use LKI (CR 603.6c).
+// [EffectManager.Apply] records the current controller. It resets the
+// computed controller to the default value. It then applies control-changing
+// effects in Layer 2 by timestamp order (CR 613.1b, 613.7). A real control
+// change occurs only when the final controller differs from the recorded
+// controller. A real change updates ability context and timing restrictions
+// for attacks and tap or untap symbols (CR 302.6). Triggers keep the
+// controller recorded at trigger creation (CR 603.3a). Triggers that trigger
+// when a permanent leaves the battlefield use last-known information (CR 603.6c).
 //
-// Card code reads Permanent.ControllerID and must not directly mutate control.
-// GainControl is the reusable resolving-effect builder:
+// Card code must read [Permanent.ControllerID]. Card code must not change
+// controller fields directly. Use [GainControl] to build resolving control
+// effects:
 //
 //	GainControl().Targeting(ToTarget()).Until(EndOfTurn)
 //
-// Conditional control uses While with ControlConditionData values. For
-// tap-maintained effects such as Willow Satyr, use:
+// For conditional control, use While with [ControlConditionData] values. For
+// effects maintained while a source remains tapped, use:
 //
 //	GainControl().While(
 //		ControlSourceControlledByEffectController{},
 //		ControlSourceTapped{},
 //	).TapMaintained()
 //
-// Code that discovers targets dynamically at resolution uses
-// Game.AddControlEffect with a ControlEffectSpec. ControlAttached is the
-// canonical Control Magic-style static effect. ControlChangeContinuous is its
-// compatibility name.
+// If an effect determines targets at resolution, call [Game.AddControlEffect]
+// with a [ControlEffectSpec]. [ControlAttached] provides the static effect for
+// control Auras. [ControlChangeContinuous] is an alias for backward compatibility.
 //
-// ExchangeControl atomically snapshots two battlefield permanents' current
-// controllers and installs simultaneous indefinite Layer 2 effects. If either
-// object is missing, both already have the same controller, or either can't
-// change control, no part occurs. ExchangeControlOfTargets is the resolving
-// two-target effect. ExchangeControlOfTargetsSharingPermanentType additionally
-// revalidates a shared artifact, creature, or land type. The dependent
-// TargetRandomActivePlayerExchangePair target chooses a Power Struggle-style
-// pair when an upkeep trigger goes on the stack.
+// [ExchangeControl] records the current controllers of two permanents. It then
+// creates indefinite Layer 2 effects for both permanents. If either permanent
+// is missing, if both permanents share a controller, or if either permanent
+// cannot change control, the exchange does not occur.
+// [ExchangeControlOfTargets] is the resolving effect for two targets.
+// [ExchangeControlOfTargetsSharingPermanentType] also verifies that both
+// permanents share an artifact, creature, or land type. The target selector
+// [TargetRandomActivePlayerExchangePair] selects a pair of permanents when an
+// upkeep trigger goes on the stack.
 //
-// # One-shot untap skipping
+// # One-Shot Untap Skipping
 //
-// Game.SkipNextUntap marks a specific battlefield object to skip its next
-// attempted untap during its then-controller's untap step. The marker follows
-// control changes and turn ordering, is not consumed while the object is
-// untapped or otherwise isn't selected to untap, and is removed when the
-// object leaves the battlefield. SkipNextUntapTarget is the resolving effect;
-// StunCreature remains its compatibility name.
+// [Game.SkipNextUntap] marks a permanent to skip its next untap step. The
+// permanent skips the untap step of its current controller. The marker
+// persists through control changes and turn cycles. The marker does not
+// clear while the permanent is untapped or is not chosen to untap. The engine
+// removes the marker when the permanent leaves the battlefield.
+// [SkipNextUntapTarget] is the resolving effect. [StunCreature] is an alias
+// for backward compatibility.
 //
-// # Graveyard reanimation
+// # Graveyard Reanimation
 //
-// MoveFromAnyGraveyard reports the player whose graveyard actually contained
-// the card so zone-change events are attributed correctly.
-// ReturnTargetFromAnyGraveyardToBattlefield puts that card onto the battlefield
-// with the resolving effect's controller as its default controller. Later
-// control effects therefore expire back to that player rather than the owner.
-// EventSourceWasColor and EventSourceWasNotColor inspect either a live event
-// source or its last-known battlefield colors, including color-changing
-// effects that applied before it left the battlefield.
+// [MoveFromAnyGraveyard] returns the player who owned the graveyard that
+// contained the card. This behavior ensures accurate zone-change events.
+// [ReturnTargetFromAnyGraveyardToBattlefield] puts that card onto the
+// battlefield. The controller of the resolving effect becomes the default
+// controller of the card. When temporary control effects expire, control
+// returns to that player instead of the card owner. [EventSourceWasColor] and
+// [EventSourceWasNotColor] check the colors of an event source. They check
+// active battlefield permanents or last-known colors before zone change.
 //
-// # Object colors and protection
+// # Object Colors and Protection
 //
-// ChangeObjectColor assigns a new color to either a permanent or a spell on
-// the stack; ChangeColorEffect exposes the same behavior to resolving card
-// effects. A changed permanent keeps that color only for its current
-// battlefield incarnation. A changed permanent spell keeps the change as it
-// becomes a permanent, per CR 400.7a, but a copy of that spell does not copy
-// the color-changing effect. EffectiveColors accepts a permanent ID, stack
-// object ID, or spell source ID and reports the object's current layer-5
-// colors. Game clones own independent spell-color state.
+// [ChangeObjectColor] sets a new color on a permanent or a spell on the stack.
+// [ChangeColorEffect] provides this behavior for resolving card effects. A
+// permanent keeps this color only while it remains on the battlefield. A
+// permanent spell keeps this color when it enters the battlefield (CR 400.7a).
+// A copy of that spell does not copy the color change. [EffectiveColors]
+// accepts an identifier for a permanent, stack object, or spell source. It
+// returns the current layer-5 colors of the object. Cloned game states retain
+// independent color states.
 //
-// ProtectionFromColor and ProtectionFromColors consult EffectiveColors for
-// targeting, damage, blocking, fighting, and attachment legality. Protection
-// from card types, subtypes, or everything continues to use its CardFilter.
+// [ProtectionFromColor] and [ProtectionFromColors] use [EffectiveColors] to
+// check legality for targeting, damage, blocking, fighting, and attachment.
+// Protection from card types, subtypes, or all characteristics uses
+// [CardFilter].
 //
 // # Sacrifice
 //
-// Sacrifice performs the named action and fires both its battlefield-to-
-// graveyard zone-change event and EvtSacrifice. SacrificeSource,
-// SacrificeTarget, and SacrificeGathered provide resolving effects;
-// SacrificeSourceCost and SacrificeMatchingCost provide costs. Sacrifice costs
-// record the sacrificed object's ID; resolving effects can read its generic
-// PermanentLKI, including power and toughness, with LastSacrificed.
+// [Sacrifice] executes a sacrifice action. It emits a zone-change event and an
+// [EvtSacrifice] event. [SacrificeSource], [SacrificeTarget], and
+// [SacrificeGathered] provide resolving effects. [SacrificeSourceCost] and
+// [SacrificeMatchingCost] provide activation costs. Sacrifice costs record the
+// identifier of the sacrificed object. Resolving effects can read the
+// last-known information of the object with [LastSacrificed].
 //
-// # Damage-source choices
+// # Damage-Source Choices
 //
-// Effects that say "a source of your choice" make a non-targeting choice when
-// they resolve. ChooseDamageSource prompts for a permanent or spell on the
-// stack, and AddReverseDamageShield binds its one-shot prevention and life gain
-// to that source for the rest of the turn. AddReverseDamageShieldStep combines
-// those operations for card pipelines.
+// Effects that state "a source of your choice" do not target. The player
+// selects the source when the effect resolves. [ChooseDamageSource] prompts the
+// player to choose a permanent or a spell on the stack.
+// [AddReverseDamageShield] prevents damage from that source and adds life to
+// the player until end of turn. [AddReverseDamageShieldStep] combines these
+// actions in card pipelines.
 //
-// # Player selectors
+// # Player Selectors
 //
-// SelectTargetPlayer reads the first resolving target and returns it only when
-// it identifies a player. Trigger helpers for draw, discard, and sacrifice
-// events bind the event's player in that position. Zone-change triggers bind
-// the moved object instead; use SelectTargetPermanentController when an effect
-// refers to that object's controller.
+// [SelectTargetPlayer] reads the first target of a resolving effect. It
+// returns the target only if the target is a player. Helper functions for
+// draw, discard, and sacrifice triggers set that target to the event player.
+// Zone-change triggers set that target to the moved object. Use
+// [SelectTargetPermanentController] when an effect requires the controller
+// of that object.
 //
-// # Combat damage assignment
+// # Combat Damage Assignment
 //
-// A blocked attacker without an explicit player-supplied assignment assigns
-// lethal damage to each blocker in order, then assigns all remaining damage to
-// the final blocker. With trample, remaining damage is dealt to the defender
-// instead. Damage events report the full amount assigned and dealt, including
-// damage beyond a blocker's lethal toughness.
+// If a player does not assign combat damage manually, a blocked attacker
+// assigns lethal damage to each blocker in damage assignment order. The
+// attacker assigns all remaining damage to the last blocker. If the attacker
+// has trample, it assigns remaining damage to the defending player or
+// planeswalker. Damage events record the total damage assigned and dealt,
+// including excess damage above lethal toughness.
+// [PreventCombatDamageToAndBy] installs an end-of-turn replacement effect
+// preventing all combat damage dealt to and dealt by a specified creature;
+// [PreventCombatDamageToAndByTarget] provides the resolving card effect.
 //
-// # Mana-production metadata
+// # Targeting Helpers
 //
-// ManaProductionsForAbility exposes the production profile of tap-for-mana
-// abilities to engine consumers such as AI evaluation. It recognizes both
-// ManaAbility values created by WithManaAbility or WithMultiManaAbility and
-// equivalent activated abilities built from Tap with only AddMana or
-// AddAnyMana effects. SolveMana and CanSolveMana search one unified source
-// model containing every exact mana ability on each permanent, including
-// targetless mana-producing abilities with both a mana cost and Tap. The
-// planner preserves AnyColor and AnyCombination choices, mana restrictions,
-// conversions, bonus mana, and ordered activation costs without merging the
-// amounts of separate abilities. CanAfford, MaxXValue, and automatic mana
-// payment use the same planning behavior. Automatic payment executes the exact
-// planned ability and production choice, paying its activation cost before
-// using the produced mana. Set ManaProduction.Restriction to declare spending
-// restrictions on a mana ability; both prompted and planned activation retain
-// that restriction on every produced mana unit. AnyCombination choices are
-// generated lazily and collapse surplus distributions that are equivalent for
-// the requested cost and any mana-source activation costs. Search likewise
-// canonicalizes interchangeable static sources and rejects costs whose total
-// or colored requirements cannot be reached before enumerating source subsets.
-// Dynamic and post-production abilities remain distinct. ManaPool.CanPay and
-// ManaPool.Pay share one exact allocation path for colored and hybrid symbols,
-// including optional one-way conversions, so overlapping hybrid choices cannot
-// make affordability and final payment disagree.
+// [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
+// controlled by the ability's controller.
 //
-// EvtTappedForMana fires after a mana ability with {T} in its activation cost
-// resolves and actually produces mana (CR 106.12a). Its SourceID is the tapped
-// permanent, PlayerID is the activating player, and Amount is the mana produced
-// by that ability. Ordinary taps continue to fire only EvtTapped. Card triggers
-// such as Manabarbs should listen for EvtTappedForMana and use SelectTargetPlayer
-// for the activating player. Resolving effects can read the mana source through
-// EventSourceID; trigger conditions can use LKI when another activation cost
-// moved it off the battlefield.
 //
-// # Total-cost payment transactions
+// # Mana-Production Metadata
 //
-// Spell casting, battlefield and graveyard activated abilities, attack costs,
-// resolving TryPayMana payments, and standalone ManaCostPayment values share
-// one total-cost transaction. It combines all mana components, locks optional
-// and either choices, plans exact mana abilities, and proves every payment in
-// order on isolated game state before Commit changes the live game. A rejected
-// transaction leaves mana pools, life totals, tapped state, cards, counters,
-// and other cost resources unchanged.
+// [ManaProductionsForAbility] provides the output profile of tap-for-mana
+// abilities to systems such as AI evaluation. It identifies [ManaAbility]
+// values created by [WithManaAbility] or [WithMultiManaAbility]. It also
+// identifies activated abilities that combine a tap cost with only [AddMana]
+// or [AddAnyMana] effects.
 //
-// AutoTapHint.ReservedSources removes permanents needed by the surrounding
-// action from mana planning. Attack-cost payment reserves the attacker, and an
-// activated ability with {T} reserves its source. This prevents automatic mana
-// production from making the rest of the locked total cost or action illegal.
-// Mana spent activating a mana ability is excluded from
-// CastContext.ColorsSpent; only a spell's locked total-mana payment contributes
-// to cast-time mana metadata.
+// [SolveMana] and [CanSolveMana] search a unified model of all mana abilities
+// on permanents. This model includes targetless mana abilities with both a mana
+// cost and a tap cost. The planner handles choices for any color and any
+// combination, spending restrictions, conversions, bonus mana, and ordered
+// activation costs. It keeps separate abilities distinct.
 //
-// WithDynamicManaAbility and NewDynamicManaAbility derive productions from the
-// source permanent at query and activation time. Solvers use
-// ManaProductionsForAbilityInGame, so they advertise only the source's current
-// production. Post-production effects run immediately after the mana is added,
-// without using the stack. ChosenColorManaProductions is the reusable resolver
-// for sources that produce one mana of their current ChosenColor. Resolver
-// callbacks must be pure because affordability and search may query them more
-// than once; cloned games resolve against their independent permanent state.
+// [CanAfford], [MaxXValue], and automatic mana payments use this planner.
+// Automatic payment executes the planned ability and choice. It pays the
+// activation cost before it uses the produced mana. Set
+// [ManaProduction.Restriction] to define spending restrictions. Manual and
+// planned activations keep this restriction on each produced mana unit.
 //
-// # Ante and ownership
+// The solver creates combination choices on demand. It groups equivalent
+// surplus distributions to simplify calculation. The solver also groups
+// equivalent static sources and rejects impossible costs early.
 //
-// NewGame keeps ante disabled. NewGameWithAnte opts in even when its ante
-// lists are empty, validates the selected nontoken cards, and moves them from
-// their owners' libraries into the shared public ante zone. AnteCards,
-// AnteCardsOwnedBy, MoveToAnte, and RemoveFromAnte are the reusable zone APIs.
-// Card definitions can use TargetCardYouOwnInAnte, DiscardHand,
-// AnteLibraryTop, and ExchangeTargetAnteCardWithLibraryTop to express ante
-// spells without directly manipulating player zones. AnteLibraryTop accepts a
-// PlayerSelector, so the same effect covers "your" and "each player."
+// [ManaPool.CanPay] and [ManaPool.Pay] use the same logic for colored and
+// hybrid symbols, including one-way conversions. This shared logic guarantees
+// consistent results between payment checks and actual payments.
 //
-// ChangeOwner changes ownership without moving a card or changing its
-// controller. It works in every modeled card zone and replaces the card
-// copy-on-write so search clones stay isolated. OwnedBy and NotOwnedBy filter
-// battlefield permanents by current ownership rather than control. After a
-// game has exactly one winner, AnteResult awards the remaining ante to that
-// winner and returns the net ownership changes from original to final owner.
-// Pipelines can snapshot a permanent's owner with SnapshotPermanent, transfer
-// it with ChangeOwnerGathered, and move an exiled card to its current owner's
-// graveyard with MoveExiledGatheredToGraveyard. IfPlayerPays provides
-// paid and unpaid branches; EffectIfPaid and UnlessTargetPays are convenience
-// wrappers around it.
+// [EvtTappedForMana] occurs after a mana ability with a tap cost resolves and
+// produces mana (CR 106.12a). The event records the permanent in SourceID, the
+// player in PlayerID, and the produced mana in Amount. Normal tap actions emit
+// only [EvtTapped]. Cards such as Manabarbs listen for [EvtTappedForMana] and
+// use [SelectTargetPlayer] to identify the activating player. Resolving effects
+// read the mana source from [EventSourceID]. If another cost moved the source
+// off the battlefield, trigger conditions can read its last-known information.
 //
-// # Variable target counts
+// # Total-Cost Payment Transactions
 //
-// TargetXCreatures and TargetXPermanents require exactly the announced value
-// of X in distinct targets. TargetBounds exposes the cast-time bounds to
-// callers that generate or prompt for targets. TargetUpToXCreatures exposes
-// zero-through-X bounds used by random-count effects. TargetOneToXCreatures
-// exposes one-through-X bounds, with zero targets when X is zero.
+// Spell casting, activated abilities, attack costs, resolving [TryPayMana]
+// payments, and standalone [ManaCostPayment] operations use a single
+// total-cost transaction. The transaction combines all mana components, locks
+// alternative choices, plans mana abilities, and verifies all payments on an
+// isolated game state. [Commit] updates the active game only after verification
+// succeeds. A canceled transaction leaves mana pools, life totals, tapped
+// states, cards, counters, and other resources unchanged.
 //
-// # Random selection
+// [AutoTapHint.ReservedSources] excludes specified permanents from mana
+// planning. Attack-cost payments reserve the attacking creature. An activated
+// ability with a tap cost reserves its source permanent. This reservation
+// prevents automatic mana abilities from invalidating the primary action.
+// Mana spent to activate a mana ability does not count toward
+// [CastContext.ColorsSpent]. Only the final mana payment of a spell contributes
+// to cast metadata.
 //
-// RandIntn is the card-facing random integer primitive. It safely returns zero
-// for nonpositive bounds. SetRandomResults scripts raw values for deterministic
-// tests; values are consumed in order and normalized into the requested range,
-// and cloned games retain independent copies of the remaining script. Random
-// graveyard, hand, player, color, permanent, spell-or-permanent, damage-target,
-// and discard helpers, as well as unscripted coin flips, use this shared
-// primitive. RandomPlayer and RandomPermanent return nil when their candidate
-// sets are empty; RandomSpellOrPermanent and RandomDamageTarget return
-// uuid.Nil. Empty selections do not consume a scripted random result.
-// RandomPermanent accepts a PermanentFilter, with its zero value matching
-// every battlefield permanent. RandomDamageTarget chooses uniformly from all
-// creatures and players. RandomSpellOrPermanent combines battlefield
-// permanents with nonability stack objects.
+// [WithDynamicManaAbility] and [NewDynamicManaAbility] calculate mana
+// production from the source permanent when queried or activated. Solvers use
+// [ManaProductionsForAbilityInGame] to find the current production of the
+// source. Post-production effects execute immediately after mana is added,
+// without using the stack. [ChosenColorManaProductions] resolves mana for
+// sources that produce mana of their current [ChosenColor]. Resolver callbacks
+// must be pure functions without side effects. Affordability checks and search
+// algorithms can call them multiple times.
 //
-// ApplyToRandomPermanent, ApplyToRandomSpellOrPermanent,
-// ApplyToRandomPlayer, and ApplyToRandomDamageTarget wrap an existing Effect
-// and select its target during resolution. SetSourceChosenColorAtRandom and
-// ChangeSourceToRandomColor cover source-local random color effects.
-// ChooseRandomCreatureSubtypeFromTargetLibrary stores a uniformly selected
-// distinct creature subtype in the source's ChosenSubtype field;
-// TargetCreatureOfSourceChosenSubtype reads that value for later targeting.
-// IsEnchanted matches permanents with an Aura attached.
+// # Ante and Ownership
 //
-// TargetRandom wraps an ordinary Target and chooses distinct legal identities
-// uniformly at random as the spell or ability is put on the stack. Fixed target
-// counts remain fixed; for variable bounds, the controller chooses only the
-// count. TargetRandomCount also chooses the count uniformly from the legal
-// bounds. Both wrappers preserve the ordinary target on the stack, so filters,
-// protection, zone changes, resolution-time legality, and fizzle rules apply
-// normally. Random targeting is supported for spells, activated abilities,
-// triggered abilities, and prompted alternate/copy casting paths.
-// TargetUpToNCreaturesOpponentControls expresses optional opponent-creature
-// targets while preserving the controller restriction.
+// [NewGame] disables ante. [NewGameWithAnte] enables ante. It validates the
+// selected nontoken cards and moves them from libraries into the public ante
+// zone. [AnteCards], [AnteCardsOwnedBy], [MoveToAnte], and [RemoveFromAnte]
+// provide ante zone operations. Cards can use [TargetCardYouOwnInAnte],
+// [DiscardHand], [AnteLibraryTop], and [ExchangeTargetAnteCardWithLibraryTop]
+// without modifying player zones directly. [AnteLibraryTop] accepts a
+// [PlayerSelector] to support single-player or all-player effects.
 //
-// ManaCostPerTarget creates a contextual action cost such as “{R} for each
-// target.” Random targets are acquired before the cost is evaluated. All mana
-// portions of an action cost are combined for affordability, autotap, and
-// payment, preventing generic mana from consuming colors needed by a later
-// per-target component. The shared total-cost transaction checks sequential
-// resource use before mana sources or nonmana costs are changed, so an
-// unaffordable action fails atomically rather than paying an affordable prefix.
+// [ChangeOwner] changes the owner of a card without moving the card or
+// changing its controller. It operates in all card zones. It replaces the card
+// copy-on-write to keep cloned search states isolated. [OwnedBy] and
+// [NotOwnedBy] filter permanents by ownership rather than control. When a game
+// concludes with one winner, [AnteResult] gives the ante cards to that winner.
+// It returns all ownership changes.
 //
-// RandomCounterDistribution assigns a ValueSource total of counters when the
-// stack object is created. Each target receives one, then every remaining
-// counter is assigned with RandIntn. The frozen assignment is copied with the
-// stack object and is not redistributed when a target becomes illegal.
-// TargetSpellOrPermanent selects one spell on the stack or permanent on the
-// battlefield while excluding activated and triggered abilities. Its ordinary
-// target-zone snapshot ensures that moving between those zones makes the
-// original target illegal at resolution.
+// Pipelines can record a permanent owner with [SnapshotPermanent]. They can
+// change ownership with [ChangeOwnerGathered]. They can move an exiled card to
+// the graveyard of its current owner with [MoveExiledGatheredToGraveyard].
+// [IfPlayerPays] provides branches for paid and unpaid outcomes. [EffectIfPaid]
+// and [UnlessTargetPays] provide simplified wrappers for this check.
 //
-// # Reusable classic card effects
+// # Variable Target Counts
 //
-// Effects copied by other cards have named constructors in
-// effect_classic_cards.go. BerserkEffect, BloodLustEffect, FlyingCarpetEffect,
-// GiantGrowthEffect, HelmOfChatzukEffect, HurrJackalEffect, LaceEffect,
-// LesserWerewolfCounterEffect, LightningBoltEffect, ProdigalSorcererEffect,
-// SorceressQueenEffect, StaffOfZegonEffect, SwordsToPlowsharesEffect,
-// TawnosWandEffect, TwiddleEffect, and UnsummonEffect are the canonical
-// definitions used by both the original cards and cards that reproduce their
-// effects. Target selection remains on the caller, allowing a normal spell to
-// target conventionally and a random-effect card to select an object before
-// applying the same effect.
+// [TargetXCreatures] and [TargetXPermanents] require exact counts of distinct
+// targets equal to the declared value of X. [TargetBounds] provides the
+// target count bounds to callers that prompt for targets.
+// [TargetUpToXCreatures] allows zero through X targets for random-count
+// effects. [TargetOneToXCreatures] requires one through X targets, or zero
+// targets when X is zero.
 //
-// Whimsy and its source cards likewise share AladdinsRingEffect,
-// AncestralRecallEffect, BoomerangEffect, BottleOfSuleimanEffect,
-// CrumbleEffect, DisenchantEffect, DisruptingScepterEffect, FissureEffect,
-// FogEffect, HealingSalveGainEffect, HealingSalvePreventionEffect,
-// MillstoneEffect, NevinyrralsDiskEffect, PandorasBoxEffect, SindbadEffect, and
-// TheHiveEffect. Whimsy owns only random selection and ordered action dispatch.
+// # Random Selection
 //
-// # Discard replacement
+// [RandIntn] is the core function for random integers in card effects. It
+// returns zero when given a nonpositive upper bound. [SetRandomResults] sets
+// deterministic values for testing. The engine reads these values in order and
+// scales them to the requested range. Cloned games keep separate copies of the
+// remaining values. Random selection functions for graveyards, hands, players,
+// colors, permanents, spells, damage targets, and coin flips use this
+// function.
 //
-// PlayerDiscardByEffect routes effect-caused discards through the replacement
-// pipeline. PlayerDiscard is reserved for costs, turn-based actions, and other
-// discards that are not caused by an effect. DiscardToLibraryReplacement
-// implements Library of Leng-style optional destination replacement.
+// [RandomPlayer] and [RandomPermanent] return nil if no valid choices exist.
+// [RandomSpellOrPermanent] and [RandomDamageTarget] return [uuid.Nil] if no
+// valid choices exist. An empty choice does not use a test value.
+// [RandomPermanent] accepts a [PermanentFilter]. The zero value of the filter
+// matches all permanents on the battlefield. [RandomDamageTarget] selects
+// uniformly among all creatures and players. [RandomSpellOrPermanent] selects
+// among battlefield permanents and stack spells.
 //
-// # Continuous rules helpers
+// [ApplyToRandomPermanent], [ApplyToRandomSpellOrPermanent],
+// [ApplyToRandomPlayer], and [ApplyToRandomDamageTarget] wrap an [Effect].
+// They choose the target during effect resolution.
+// [SetSourceChosenColorAtRandom] and [ChangeSourceToRandomColor] set a random
+// color on the source object.
+// [ChooseRandomCreatureSubtypeFromTargetLibrary] selects a creature subtype
+// from a library and stores it in the ChosenSubtype field.
+// [TargetCreatureOfSourceChosenSubtype] targets creatures that match that
+// subtype. [IsEnchanted] matches permanents that have an attached Aura.
 //
-// TargetOpponentChoice wraps an individual Target whose choice is made by the
-// opposing player. Spell and activated-ability acquisition route only that
-// target's prompt to the opponent while evaluating legality from the action
-// controller and source as usual. SnapshotTarget binds an indexed target for
-// later pipeline steps. FightGathered has two variable-bound creatures fight
-// only if both remain battlefield creatures (CR 701.14).
-// NewModalActivated gives each mode of an activated ability its own targets
-// and effects; the mode is chosen before targets and costs are processed.
+// [TargetRandom] wraps a [Target]. It selects valid targets at random when
+// the spell or ability goes on the stack. Fixed target counts do not change.
+// For variable bounds, the player chooses only the target count.
+// [TargetRandomCount] also chooses the count at random within legal bounds.
+// Both functions preserve standard target validation for protection, zone
+// changes, and resolution legality. Random targeting supports spells,
+// activated abilities, triggered abilities, and alternate casting costs.
+// [TargetUpToNCreaturesOpponentControls] defines optional targets controlled
+// by an opponent.
 //
-// AttachedCantAttackUnlessPays adds an Aura-defined attack cost to the
-// enchanted creature. SourceHasManaAbilitiesOpponentLandsCouldProduce derives
-// Fellwar Stone-style colored mana abilities from opposing lands. A negative
-// MaximumHandSize means no maximum; SetNoMaximumHandSize installs that rule in
-// a continuous-effect cycle. AddSourcePreventionShield prevents a bounded
-// amount of damage from one source to one player. TryPayMana pays resolving
-// effect costs from floating mana and activatable mana sources.
-// # Basic land type changes
+// [ManaCostPerTarget] adds an extra cost for each chosen target, such as {R}
+// for each target. The engine selects random targets before it evaluates total
+// costs. It combines all mana costs to evaluate affordability and auto-tap.
+// This prevents generic costs from consuming mana needed for colored target
+// costs. If the total cost cannot be paid, the action stops without spending
+// resources.
 //
-// BecomesBasicLandTargetEffect implements effects that set a land to Plains,
-// Island, Swamp, Mountain, or Forest. In layer 4 it replaces the land's old
-// land subtypes and abilities generated by printed or copied rules text,
-// including keyword abilities, and grants the intrinsic mana abilities of the
-// new basic land types. Abilities granted by other effects are preserved, and
-// printed characteristics return when the effect ends. For
-// Oracle text lasting until the source leaves the battlefield, use
-// BecomesBasicLandTargetUntilSourceLeaves; it correctly survives the source
-// phasing out. BecomesBasicLandAttachedEffect and
-// BecomesChosenBasicLandAttachedEffect cover land Auras, while
-// BecomesBasicLandsEffect applies the same layer-4 operation to a filtered set
-// of permanents for effects such as Conversion and Blood Moon.
+// [RandomCounterDistribution] distributes counters when a stack object is
+// created. It gives one counter to each target, then distributes remaining
+// counters with [RandIntn]. The assignment remains fixed on the stack object
+// even if a target becomes illegal. [TargetSpellOrPermanent] targets one spell
+// on the stack or one permanent on the battlefield. It excludes activated and
+// triggered abilities. If the targeted object changes zones before resolution,
+// the target becomes illegal.
 //
-// # Subtype changes
+// # Reusable Classic Card Effects
 //
-// SetSubtypes and AddSubtypes are the family-aware layer-4 primitives. A set
-// operation replaces only the selected subtype family; an add operation keeps
-// every existing subtype. For example, changing the creature subtypes of a
-// Land Creature preserves its land subtypes:
+// The file effect_classic_cards.go defines constructor functions for shared
+// card effects. Both original cards and cards that copy their behavior use
+// these constructors:
+//   - [BerserkEffect], [BloodLustEffect], [FlyingCarpetEffect], [GiantGrowthEffect]
+//   - [HelmOfChatzukEffect], [HurrJackalEffect], [LaceEffect], [LesserWerewolfCounterEffect]
+//   - [LightningBoltEffect], [ProdigalSorcererEffect], [SorceressQueenEffect], [StaffOfZegonEffect]
+//   - [SwordsToPlowsharesEffect], [TawnosWandEffect], [TwiddleEffect], [UnsummonEffect]
+//
+// The calling card selects the target. This separation allows standard spells
+// and random-selection effects to apply the same effect logic.
+//
+// The card Whimsy and related cards share these effect constructors:
+//   - [AladdinsRingEffect], [AncestralRecallEffect], [BoomerangEffect], [BottleOfSuleimanEffect]
+//   - [CrumbleEffect], [DisenchantEffect], [DisruptingScepterEffect], [FissureEffect]
+//   - [FogEffect], [HealingSalveGainEffect], [HealingSalvePreventionEffect], [MillstoneEffect]
+//   - [NevinyrralsDiskEffect], [PandorasBoxEffect], [SindbadEffect], [TheHiveEffect]
+//
+// Whimsy handles only the random selection and the execution sequence.
+//
+// # Discard Replacement
+//
+// [PlayerDiscardByEffect] processes discards caused by card effects through the
+// replacement pipeline. [PlayerDiscard] handles discards caused by costs,
+// turn-based actions, or rules. [DiscardToLibraryReplacement] provides the
+// optional replacement effect for Library of Leng.
+//
+// # Continuous Rules Helpers
+//
+// [TargetOpponentChoice] wraps a [Target] that an opponent chooses. The engine
+// sends the prompt to the opponent. It evaluates targeting legality by using
+// the controller of the action. [SnapshotTarget] saves a target by index for
+// later pipeline steps.
+//
+// [FightGathered] causes two creatures to fight only if both remain creatures
+// on the battlefield (CR 701.14). [NewModalActivated] creates an activated
+// ability with modes. Each mode has distinct targets and effects. The player
+// selects the mode before selecting targets or paying costs.
+//
+// [AttachedCantAttackUnlessPays] adds an attack cost to an enchanted creature.
+// [SourceHasManaAbilitiesOpponentLandsCouldProduce] adds mana abilities based
+// on lands controlled by opponents. A negative [MaximumHandSize] indicates no
+// hand size limit. [SetNoMaximumHandSize] applies this rule as a continuous
+// effect. [AddSourcePreventionShield] prevents a specified amount of damage
+// from one source to one player. [TryPayMana] pays effect costs from floating
+// mana and available mana sources.
+//
+// # Basic Land Type Changes
+//
+// [BecomesBasicLandTargetEffect] changes a land into a Plains, Island, Swamp,
+// Mountain, or Forest. In layer 4, it replaces the existing land subtypes.
+// It removes printed abilities, copied abilities, and keyword abilities. It
+// grants the intrinsic mana ability of the new basic land type. Abilities
+// granted by other effects remain. Printed characteristics return after the
+// effect ends.
+//
+// For effects that last until the source leaves the battlefield, use
+// [BecomesBasicLandTargetUntilSourceLeaves]. This effect persists if the source
+// phases out. [BecomesBasicLandAttachedEffect] and
+// [BecomesChosenBasicLandAttachedEffect] apply to land Auras.
+// [BecomesBasicLandsEffect] applies this layer-4 change to all permanents that
+// match a filter, such as for Blood Moon.
+//
+// # Subtype Changes
+//
+// [SetSubtypes] and [AddSubtypes] modify subtypes in layer 4 by subtype family.
+// A set operation replaces only the specified subtype family. An add operation
+// preserves all existing subtypes. For example, changing the creature subtype
+// of a Land Creature preserves its land subtypes:
 //
 //	SetSubtypes(targetID, SubtypeCreature, EndOfTurn, "Human")
 //	AddSubtypes(targetID, SubtypeCreature, EndOfTurn, "Dinosaur")
 //
-// SubtypeArtifact, SubtypeCreature, SubtypeEnchantment, SubtypeLand,
-// SubtypePlaneswalker, and SubtypeSpell identify the independent CR 205.3
-// subtype sets. The target must have the corresponding card type when the
-// effect is applied. Setting a land subtype to a basic land type automatically
-// performs the CR 305.7 ability removal and intrinsic mana derivation;
-// BecomesBasicLandTargetEffect and its variants remain convenient
-// Oracle-shaped wrappers around that behavior.
+// [SubtypeArtifact], [SubtypeCreature], [SubtypeEnchantment], [SubtypeLand],
+// [SubtypePlaneswalker], and [SubtypeSpell] define the subtype families
+// (CR 205.3). The target must have the matching card type when the effect
+// applies. Setting a land subtype to a basic land type removes existing
+// abilities and adds intrinsic mana abilities (CR 305.7).
+// [BecomesBasicLandTargetEffect] and its variants provide wrappers for this
+// rule.
 //
-// # Removing abilities
+// # Removing Abilities
 //
-// RemoveAllAbilities applies "loses all abilities" in layer 6. The operation
-// removes abilities computed up to its timestamp, including keyword attrs and
-// runtime activated, triggered, static, and mana abilities. A later layer-6
-// effect can grant an ability back. RemoveAllAbilitiesFromAll applies the same
-// operation to a filter for Humility-style effects. Basic land subtype changes
-// reuse the same removal operation in layer 4, so ordinary layer-6 grants and
-// keyword counters are applied afterward and remain as required by CR 305.7.
+// [RemoveAllAbilities] applies "loses all abilities" in layer 6. The operation
+// removes abilities created before its timestamp. It removes keyword
+// attributes, activated abilities, triggered abilities, static abilities,
+// and mana abilities. Later layer-6 effects can grant new abilities.
+// [RemoveAllAbilitiesFromAll] applies this effect to all permanents that match
+// a filter, such as for Humility. Basic land subtype changes use this removal
+// in layer 4. As a result, layer-6 ability grants and keyword counters apply
+// afterward and persist (CR 305.7).
 package mage

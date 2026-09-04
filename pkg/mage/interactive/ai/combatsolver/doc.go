@@ -1,30 +1,31 @@
-// Package combatsolver computes joint-optimal combat decisions for the AI:
-// which attackers to declare, which blocks to assign, and which combat-eligible
-// instants and activated abilities to fire in the post-blockers response window.
+// Package combatsolver calculates combat decisions for the AI.
 //
-// The solver is a staged minimax over the natural priority structure of an MTG
-// combat phase:
+// The package calculates three decisions:
+//   - Which creatures attack.
+//   - Which creatures block.
+//   - Which instant spells and activated abilities the AI activates after
+//     blockers are declared.
+//
+// The solver uses a minimax algorithm across the combat phase:
 //
 //	L1 attacker chooses attacker subset A
-//	  L2 defender chooses blocks B*(A) maximising defender eval
-//	    L3 attacker activates trick-response R*(A,B) maximising attacker eval
-//	      ExecuteCombatDamage; eval position
+//	  L2 defender chooses blocks B*(A) that maximize defender evaluation
+//	    L3 attacker activates responses R*(A,B) that maximize attacker evaluation
+//	      ExecuteCombatDamage; evaluate position
 //
-// When any creature in combat has first strike or double strike, L3 fires twice:
-// once before normal damage (so first-strike-only damage is observable) and once
-// at normal damage.
+// If a creature has first strike or double strike, L3 runs two times. It runs
+// before normal combat damage, and it runs during normal combat damage.
 //
-// Defender-side analysis swaps the roles: opponent's attackers are fixed,
-// the AI picks blocks at L1, then tricks at L2.
+// When the AI defends, the analysis changes roles. The attacking creatures are
+// fixed. The AI selects blockers at L1, then selects responses at L2.
 //
-// Per spec, the solver does not model spells from the opponent's hand. It does
-// model the opponent's activated abilities, including those with hand-cost
-// components (cycling, discard-to-buff). Probabilistic modelling of unknown
-// opponent tricks is a phase-2 follow-up.
+// The solver does not simulate spells from the hand of the opponent. The
+// solver simulates activated abilities of the opponent, including abilities
+// with discard costs. Future updates will add probability models for unknown
+// cards in the hand of the opponent.
 //
-// The solver is called as a subroutine by both [HeuristicStrategy] and (in
-// phase 4) [SearchStrategy] in the parent ai/ package.
+// Both [HeuristicStrategy] and [SearchStrategy] call this solver.
 //
-// Dependencies are intentionally limited to pkg/mage and pkg/mage/interactive/eval
-// to keep the package free of import cycles with ai/.
+// This package imports only pkg/mage and pkg/mage/interactive/eval. This
+// limitation prevents import cycles with the ai package.
 package combatsolver
