@@ -19,19 +19,19 @@ type UUIDMap[V any] map[uuid.UUID]V
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
-		anteEnabled:           g.anteEnabled,
-		anteSettled:           g.anteSettled,
-		turn:                  g.turn,
-		step:                  g.step,
-		activePlayer:          g.activePlayer,
-		stopped:               g.stopped,
-		resolvingCombatDamage: g.resolvingCombatDamage,
+		anteEnabled:  g.anteEnabled,
+		anteSettled:  g.anteSettled,
+		turn:         g.turn,
+		step:         g.step,
+		activePlayer: g.activePlayer,
+		stopped:      g.stopped,
 	}
 	c.resolution = g.resolution.Clone()
 	c.trackers = g.trackers.Clone()
 	c.random = g.random.Clone()
 	c.triggers = g.triggers.Clone()
 	c.mana = g.mana.Clone()
+	c.damage = g.damage.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
@@ -94,26 +94,6 @@ func (g *Game) Clone() *Game {
 		c.schedule = cs
 	}
 
-	// Deep copy UUID-keyed maps.
-	c.damageDealtBy = cloneNestedUUIDMap(g.damageDealtBy)
-	if len(g.damageDealtToPlayersByPermanent) > 0 {
-		c.damageDealtToPlayersByPermanent = cloneNestedUUIDMap(g.damageDealtToPlayersByPermanent)
-	}
-	if len(g.damageDealtToPermanentsByPermanent) > 0 {
-		c.damageDealtToPermanentsByPermanent = cloneNestedUUIDMap(g.damageDealtToPermanentsByPermanent)
-	}
-	c.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageThisStep))
-	for k, inner := range g.combatDamageThisStep {
-		c.combatDamageThisStep[k] = cloneUUIDIntMap(inner)
-	}
-	c.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageSourcesThisStep))
-	for k, byRecip := range g.combatDamageSourcesThisStep {
-		dst := make(map[uuid.UUID]map[uuid.UUID]int, len(byRecip))
-		for r, bySrc := range byRecip {
-			dst[r] = cloneUUIDIntMap(bySrc)
-		}
-		c.combatDamageSourcesThisStep[k] = dst
-	}
 	c.customState = cloneCustomState(g.customState)
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
@@ -410,8 +390,6 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 	clone.cycleReplacements = cloneReplacementSlice(em.cycleReplacements)
 	// Clone subsystems.
 	clone.Rules = cloneGameRules(em.Rules)
-	clone.Damage = cloneDamageSystem(em.Damage)
-	clone.Damage.SetEffectManager(clone)
 	return clone
 }
 
@@ -457,15 +435,6 @@ func cloneGameRules(gr *GameRules) *GameRules {
 		clone.expansionCastBlock = make([]string, len(gr.expansionCastBlock))
 		copy(clone.expansionCastBlock, gr.expansionCastBlock)
 	}
-	return clone
-}
-
-// cloneDamageSystem deep copies the DamageSystem.
-func cloneDamageSystem(ds *DamageSystem) *DamageSystem {
-	clone := &DamageSystem{
-		damageReflection: make(map[uuid.UUID]damageReflectionEntry, len(ds.damageReflection)),
-	}
-	maps.Copy(clone.damageReflection, ds.damageReflection)
 	return clone
 }
 

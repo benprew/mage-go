@@ -284,17 +284,14 @@ type EffectManager struct {
 	attackCosts                map[uuid.UUID][]Cost             // creature -> costs its controller must pay to declare it as an attacker (CR 508.1e)
 	replacements               []ReplacementEffect              // persistent: one-shot, turn-scoped, while-on-battlefield
 	cycleReplacements          []ReplacementEffect              // cleared each Apply() cycle, re-registered by continuous effects
-	Damage                     *DamageSystem
 	Rules                      *GameRules
 }
 
 func NewEffectManager() *EffectManager {
 	em := &EffectManager{
 		attrDeltas: make(map[uuid.UUID]map[Attr]int),
-		Damage:     NewDamageSystem(),
 		Rules:      NewGameRules(),
 	}
-	em.Damage.SetEffectManager(em)
 	return em
 }
 
@@ -443,7 +440,6 @@ func (em *EffectManager) Apply(g *Game) {
 	em.resetCombatRestrictions()
 	em.cycleReplacements = em.cycleReplacements[:0]
 	em.Rules.ResetPerCycle()
-	em.Damage.ResetPerCycle()
 
 	controlStateMayChange := em.hasControlLayerEffects()
 	if !controlStateMayChange {

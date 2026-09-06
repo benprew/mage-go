@@ -91,24 +91,8 @@ type Game struct {
 	// TrackerSystem owns turn-scoped and duel-scoped observations and counters.
 	trackers TrackerSystem
 
-	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
-	damageDealtBy map[uuid.UUID]map[uuid.UUID]bool
-
-	// Game-long damage tracking by permanent (e.g. The Fallen)
-	damageDealtToPlayersByPermanent    map[uuid.UUID]map[uuid.UUID]bool
-	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
-
-	// Per-step combat damage aggregation. Maps controllerID -> recipientPlayerID
-	// -> total combat damage dealt this damage step. Reset before each
-	// ResolveDamage call; consumed to fire EvtCombatDamageDealt afterward.
-	combatDamageThisStep map[uuid.UUID]map[uuid.UUID]int
-	// Per-step combat damage breakdown by source permanent. Maps
-	// (controllerID, recipientPlayerID) -> sourcePermanentID -> amount.
-	// Populated alongside combatDamageThisStep; preserved across the
-	// EvtCombatDamageDealt fire so trigger predicates can filter on source
-	// attributes (e.g., "non-Human creatures you control"). Cleared at the
-	// end of flushCombatDamageAggregator.
-	combatDamageSourcesThisStep map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
+	// DamageSystem owns damage execution, history, aggregation, and reflection.
+	damage DamageSystem
 
 	// Permanent currently being put onto the battlefield during PutOnBattlefield,
 	// before it is appended to g.battlefield. Looked up by FindPermanent so
@@ -153,18 +137,8 @@ type Game struct {
 	// during a priority round. Used by the interactive layer for logging.
 	beforeStackResolve func(g *Game)
 
-	// OnDamageDealt is called after damage is dealt to a player or creature.
-	// sourceName is the name of the source card/permanent, targetName is the
-	// name of the target player or creature, amount is damage dealt, and
-	// isCombat indicates whether it was combat damage.
-	onDamageDealt func(sourceName, targetName string, amount int, isCombat bool)
-
 	// Control flags
 	stopped bool
-
-	// resolvingCombatDamage is true while combat damage is being resolved.
-	// Used by the replacement pipeline to identify combat damage actions.
-	resolvingCombatDamage bool
 
 	// castFromExilePermissions records which exiled cards specific players
 	// may cast (Gonti, Lord of Luxury and similar effects). The permission
@@ -195,26 +169,22 @@ func NewGame(playerA, playerB Player) *Game {
 
 func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 	return &Game{
-		players:                            []Player{playerA, playerB},
-		anteEnabled:                        anteEnabled,
-		originalOwners:                     make(map[uuid.UUID]uuid.UUID),
-		stack:                              NewStack(),
-		combat:                             NewCombat(),
-		effects:                            NewEffectManager(),
-		resolution:                         NewResolutionState(),
-		trackers:                           NewTrackerSystem(),
-		random:                             NewRandomSource(),
-		triggers:                           NewTriggerSystem(),
-		mana:                               NewManaSystem(),
-		turn:                               1,
-		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
-		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
-		damageDealtToPermanentsByPermanent: make(map[uuid.UUID]map[uuid.UUID]bool),
-		combatDamageThisStep:               make(map[uuid.UUID]map[uuid.UUID]int),
-		combatDamageSourcesThisStep:        make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
-		schedule:                           newTurnSchedule(),
-		exileInsteadCards:                  make(map[uuid.UUID]uuid.UUID),
-		customState:                        make(map[string]any),
+		players:           []Player{playerA, playerB},
+		anteEnabled:       anteEnabled,
+		originalOwners:    make(map[uuid.UUID]uuid.UUID),
+		stack:             NewStack(),
+		combat:            NewCombat(),
+		effects:           NewEffectManager(),
+		resolution:        NewResolutionState(),
+		trackers:          NewTrackerSystem(),
+		random:            NewRandomSource(),
+		triggers:          NewTriggerSystem(),
+		mana:              NewManaSystem(),
+		damage:            NewDamageSystem(),
+		turn:              1,
+		schedule:          newTurnSchedule(),
+		exileInsteadCards: make(map[uuid.UUID]uuid.UUID),
+		customState:       make(map[string]any),
 	}
 }
 
@@ -1297,27 +1267,8 @@ func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
 	return found
 }
 
-// flushCombatDamageAggregator fires EvtCombatDamageDealt once per (controller,
-// recipient-player) pair that took combat damage this step (CR 510.2 wrap-up).
-// Used by "whenever one or more creatures you control deal combat damage to a
-// player" aggregator triggers. Per-creature/per-target damage is also fired by
-// EvtDamageDealt; this aggregator provides once-per-step semantics.
 func (g *Game) flushCombatDamageAggregator() {
-	if len(g.combatDamageThisStep) == 0 {
-		return
-	}
-	for ctrlID, byRecipient := range g.combatDamageThisStep {
-		for recipID, amount := range byRecipient {
-			g.FireEvent(GameEvent{
-				Type:     EvtCombatDamageDealt,
-				PlayerID: ctrlID,
-				TargetID: recipID,
-				Amount:   amount,
-			})
-		}
-	}
-	g.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int)
-	g.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int)
+	g.damage.FlushCombatDamageAggregator(g)
 }
 
 // CombatDamageSourcesThisStep returns the per-source combat damage breakdown
@@ -1327,11 +1278,7 @@ func (g *Game) flushCombatDamageAggregator() {
 // condition closures listening to EvtCombatDamageDealt may use this to
 // filter on source attributes (e.g., "non-Human creatures you control").
 func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int {
-	byCtrl, ok := g.combatDamageSourcesThisStep[controllerID]
-	if !ok {
-		return nil
-	}
-	return byCtrl[recipientID]
+	return g.damage.CombatDamageSourcesThisStep(controllerID, recipientID)
 }
 
 // CounterSpellOnStack removes a spell from the stack by its source ID.
@@ -1520,225 +1467,22 @@ func defaultScryTopOrder(top []Card) []uuid.UUID {
 
 // DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
 func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
-	if amount <= 0 {
-		return
-	}
-	action := NewDamageToPlayerAction(sourceID, p.PlayerID(), amount, g.resolvingCombatDamage)
-	result := g.effects.ApplyReplacements(action, g)
-	if result == nil {
-		return
-	}
-	g.executeAction(result)
+	g.damage.DealDamageToPlayer(g, p, amount, sourceID)
 }
 
 // executeAction dispatches a post-replacement action to the appropriate executor.
 func (g *Game) executeAction(action Action) {
 	switch a := action.(type) {
 	case *DamageToPlayerAction:
-		g.executeDamageToPlayer(a)
+		g.damage.ExecuteDamageToPlayer(g, a)
 	case *DamageToCreatureAction:
-		g.executeDamageToCreature(a)
-	}
-}
-
-// executeDamageToPlayer applies damage to a player after all replacements have been applied.
-func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
-	p := g.GetPlayer(a.PlayerID())
-	if p == nil {
-		return
-	}
-	amount := a.Amount()
-	sourceID := a.ActionSource()
-
-	// Minimum life (Ali from Cairo): cap damage so life doesn't go below 1.
-	// This is checked here as a fallback for continuous effects that set the
-	// GameRules flag directly rather than registering a cycle replacement.
-	if g.effects.Rules.IsMinimumLifeActive(p.PlayerID()) {
-		maxDamage := max(p.Life()-1, 0)
-		if amount > maxDamage {
-			amount = maxDamage
-		}
-		if amount <= 0 {
-			return
-		}
-	}
-
-	// Lich replacement: instead of losing life, sacrifice permanents
-	if g.effects.Rules.IsLichActive(g, p.PlayerID()) {
-		g.sacrificePermanents(p.PlayerID(), amount)
-	} else {
-		// CR 119.9: damage dealt to a player causes that player to lose that
-		// much life. Fire EvtLifeLost so "whenever a player loses life" triggers
-		// see damage-induced life loss.
-		p.LoseLife(amount)
-		g.FireEvent(GameEvent{
-			Type:     EvtLifeLost,
-			PlayerID: p.PlayerID(),
-			Amount:   amount,
-		})
-	}
-	sourceCard := g.findCardForDamageSource(sourceID)
-	isArtifact := sourceCard != nil && sourceCard.HasType(TypeArtifact)
-	g.trackers.Turn.RecordDamageTaken(p.PlayerID(), amount, isArtifact)
-	if sourceID != uuid.Nil {
-		if g.damageDealtToPlayersByPermanent == nil {
-			g.damageDealtToPlayersByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
-		}
-		if g.damageDealtToPlayersByPermanent[sourceID] == nil {
-			g.damageDealtToPlayersByPermanent[sourceID] = make(map[uuid.UUID]bool)
-		}
-		g.damageDealtToPlayersByPermanent[sourceID][p.PlayerID()] = true
-	}
-	// Combat damage aggregation: track total damage this step per (controller,
-	// recipient-player) pair so EvtCombatDamageDealt can fire once per pair
-	// after the damage step completes (CR 510.2). Source must be a permanent
-	// on the battlefield with a controller.
-	if a.IsCombatDamage() {
-		if srcPerm := g.FindPermanent(sourceID); srcPerm != nil {
-			byCtrl, ok := g.combatDamageThisStep[srcPerm.ControllerID()]
-			if !ok {
-				byCtrl = make(map[uuid.UUID]int)
-				g.combatDamageThisStep[srcPerm.ControllerID()] = byCtrl
-			}
-			byCtrl[p.PlayerID()] += amount
-			byCtrlSrcs, ok := g.combatDamageSourcesThisStep[srcPerm.ControllerID()]
-			if !ok {
-				byCtrlSrcs = make(map[uuid.UUID]map[uuid.UUID]int)
-				g.combatDamageSourcesThisStep[srcPerm.ControllerID()] = byCtrlSrcs
-			}
-			bySrc, ok := byCtrlSrcs[p.PlayerID()]
-			if !ok {
-				bySrc = make(map[uuid.UUID]int)
-				byCtrlSrcs[p.PlayerID()] = bySrc
-			}
-			bySrc[sourceID] += amount
-		}
-	}
-	g.FireEvent(GameEvent{
-		Type:     EvtDamageDealt,
-		SourceID: sourceID,
-		TargetID: p.PlayerID(),
-		Amount:   amount,
-		Flag:     a.IsCombatDamage(),
-	})
-	if g.onDamageDealt != nil {
-		sourceName := "unknown"
-		if sc := g.findCardForDamageSource(sourceID); sc != nil {
-			sourceName = sc.Name()
-		}
-		g.onDamageDealt(sourceName, p.Name(), amount, a.IsCombatDamage())
-	}
-	// Lifelink
-	src := g.FindPermanent(sourceID)
-	if src != nil && src.HasKeyword(Lifelink) {
-		srcPlayer := g.GetPlayer(src.ControllerID())
-		if srcPlayer != nil {
-			srcPlayer.GainLife(amount)
-		}
-	}
-	// Face-down: flip the source if it dealt damage to a player
-	if src != nil && src.FaceDown {
-		g.turnFaceUp(src)
-	}
-	// Eye for an Eye: reflect damage to source's controller (post-damage, stays inline)
-	if reflectEntry, ok := g.effects.Damage.GetDamageReflection(p.PlayerID()); ok {
-		if reflectEntry.chosenSource == uuid.Nil || reflectEntry.chosenSource == sourceID {
-			g.effects.Damage.ClearDamageReflection(p.PlayerID())
-			reflectSourceCard := g.findCardForDamageSource(sourceID)
-			if reflectSourceCard != nil {
-				sourceOwner := reflectSourceCard.Owner()
-				if sourceOwner != uuid.Nil {
-					ownerPlayer := g.GetPlayer(sourceOwner)
-					if ownerPlayer != nil {
-						g.DealDamageToPlayer(ownerPlayer, amount, reflectEntry.eyeSourceID)
-					}
-				}
-			}
-		}
+		g.damage.ExecuteDamageToCreature(g, a)
 	}
 }
 
 // DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
 func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID) {
-	if amount <= 0 {
-		return
-	}
-
-	// Protection from source prevents all damage (static ability, pre-pipeline)
-	sourceCard := g.FindCardAnywhere(sourceID)
-	if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, g) {
-		return
-	}
-
-	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, g.resolvingCombatDamage)
-	result := g.effects.ApplyReplacements(action, g)
-	if result == nil {
-		return
-	}
-	g.executeAction(result)
-}
-
-// executeDamageToCreature applies damage to a creature after all replacements have been applied.
-func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
-	perm := g.MutablePermanent(a.PermanentID())
-	if perm == nil {
-		return
-	}
-	amount := a.Amount()
-	sourceID := a.ActionSource()
-
-	perm.Damage += amount
-	// Track which sources dealt damage to this permanent
-	if g.damageDealtBy[perm.ID()] == nil {
-		g.damageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
-	}
-	g.damageDealtBy[perm.ID()][sourceID] = true
-	if sourceID != uuid.Nil {
-		if g.damageDealtToPermanentsByPermanent == nil {
-			g.damageDealtToPermanentsByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
-		}
-		if g.damageDealtToPermanentsByPermanent[sourceID] == nil {
-			g.damageDealtToPermanentsByPermanent[sourceID] = make(map[uuid.UUID]bool)
-		}
-		g.damageDealtToPermanentsByPermanent[sourceID][perm.ID()] = true
-	}
-	g.FireEvent(GameEvent{
-		Type:     EvtDamageDealt,
-		SourceID: sourceID,
-		TargetID: perm.ID(),
-		Amount:   amount,
-	})
-	if g.onDamageDealt != nil {
-		sourceName := "unknown"
-		if sc := g.findCardForDamageSource(sourceID); sc != nil {
-			sourceName = sc.Name()
-		}
-		g.onDamageDealt(sourceName, perm.Name(), amount, g.resolvingCombatDamage)
-	}
-	// Deathtouch / BasiliskTouch
-	src := g.FindPermanent(sourceID)
-	if src != nil && amount > 0 {
-		if src.HasKeyword(Deathtouch) {
-			perm.Damage = perm.CurrentToughness(g)
-		} else if src.HasKeyword(BasiliskTouch) && !perm.HasSubType("Wall") {
-			perm.Damage = perm.CurrentToughness(g)
-		}
-	}
-	// Lifelink
-	if src != nil && src.HasKeyword(Lifelink) {
-		srcPlayer := g.GetPlayer(src.ControllerID())
-		if srcPlayer != nil {
-			g.PlayerGainLife(srcPlayer, amount)
-		}
-	}
-	// Face-down: flip the target if it was dealt damage
-	if perm.FaceDown {
-		g.turnFaceUp(perm)
-	}
-	// Face-down: flip the source if it dealt damage
-	if src != nil && src.FaceDown {
-		g.turnFaceUp(src)
-	}
+	g.damage.DealDamageToPermanent(g, perm, amount, sourceID)
 }
 
 // auraHostIsLegal reports whether host satisfies the aura's enchant ability
@@ -1772,24 +1516,12 @@ func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
 
 // HasDealtDamageToPlayer reports whether the given source permanent has dealt damage to playerID this game.
 func (g *Game) HasDealtDamageToPlayer(sourceID, playerID uuid.UUID) bool {
-	if g.damageDealtToPlayersByPermanent == nil {
-		return false
-	}
-	if m, ok := g.damageDealtToPlayersByPermanent[sourceID]; ok {
-		return m[playerID]
-	}
-	return false
+	return g.damage.HasDealtDamageToPlayer(sourceID, playerID)
 }
 
 // HasDealtDamageToPermanent reports whether the given source permanent has dealt damage to permID this game.
 func (g *Game) HasDealtDamageToPermanent(sourceID, permID uuid.UUID) bool {
-	if g.damageDealtToPermanentsByPermanent == nil {
-		return false
-	}
-	if m, ok := g.damageDealtToPermanentsByPermanent[sourceID]; ok {
-		return m[permID]
-	}
-	return false
+	return g.damage.HasDealtDamageToPermanent(sourceID, permID)
 }
 
 func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
@@ -3661,12 +3393,10 @@ func (g *Game) doCleanupActions() bool {
 	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()
 	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
-	g.effects.Damage.ClearEndOfTurn()
+	g.damage.ClearEndOfTurn()
 	g.effects.Rules.ClearEndOfTurn()
 	// Clear non-persistent delayed triggers (they only last "this turn")
 	g.triggers.ClearEndOfTurn()
-	// Clear damage tracking
-	g.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.trackers.Turn.ResetForNewTurn(active.PlayerID())
 	g.clearLKI()
 	// Clear last-drawn-card tracking for all players

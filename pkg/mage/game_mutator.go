@@ -214,7 +214,7 @@ func (g *Game) CurrentTurn() int {
 // GetDamageSources returns the set of permanent IDs that dealt damage to the
 // given permanent this turn. Returns nil if nothing dealt damage.
 func (g *Game) GetDamageSources(permID uuid.UUID) map[uuid.UUID]bool {
-	return g.damageDealtBy[permID]
+	return g.damage.DamageDealtBy(permID)
 }
 
 // GetBlockedThisTurn returns the list of attacker IDs that the given blocker
@@ -553,7 +553,7 @@ func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID) {
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
 // This stays as inline logic (post-damage effect, not a replacement).
 func (g *Game) SetDamageReflection(playerID, eyeSourceID, chosenSourceID uuid.UUID) {
-	g.effects.Damage.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
+	g.damage.SetDamageReflection(playerID, eyeSourceID, chosenSourceID)
 }
 
 // SetDrawReplacement stores a pending draw replacement for a player (Aladdin's Lamp).
@@ -702,9 +702,19 @@ func (g *Game) PreventBlockPair(blockerID, attackerID uuid.UUID) {
 	g.effects.PreventBlockPair(blockerID, attackerID)
 }
 
-// AddDamagePreventionRule adds a damage prevention rule to the damage system.
+// AddDamagePreventionRule adds a damage prevention rule to the effect manager.
 func (g *Game) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
-	g.effects.Damage.AddDamagePreventionRule(opts...)
+	dpr := &damagePreventionRule{}
+	for _, opt := range opts {
+		opt(dpr)
+	}
+	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
+		from:       dpr.from,
+		to:         dpr.to,
+		oneShot:    dpr.oneShot,
+		combatOnly: dpr.combatOnly,
+		playerOnly: dpr.playerOnly,
+	})
 }
 
 // AddCycleReplacement adds a replacement effect that lasts for the current effect cycle.
@@ -777,7 +787,7 @@ func (g *Game) SetBeforeStackResolve(f func(*Game)) { g.beforeStackResolve = f }
 
 // SetOnDamageDealt sets the callback invoked after damage is dealt.
 func (g *Game) SetOnDamageDealt(f func(sourceName, targetName string, amount int, isCombat bool)) {
-	g.onDamageDealt = f
+	g.damage.SetOnDamageDealt(f)
 }
 
 // SetStep sets the current phase step.
@@ -972,13 +982,13 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 
 // ExecuteCombatDamage resolves first-strike and normal combat damage for AI search clones.
 func (g *Game) ExecuteCombatDamage() {
-	g.resolvingCombatDamage = true
+	g.damage.SetResolvingCombatDamage(true)
 	if g.combat.HasFirstStrikers(g) {
 		g.combat.ResolveDamage(g, true)
 		g.CheckStateBasedActions()
 		g.flushCombatDamageAggregator()
 	}
 	g.combat.ResolveDamage(g, false)
-	g.resolvingCombatDamage = false
+	g.damage.SetResolvingCombatDamage(false)
 	g.flushCombatDamageAggregator()
 }

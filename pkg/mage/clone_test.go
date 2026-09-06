@@ -796,12 +796,12 @@ func TestCloneDamageSystem(t *testing.T) {
 
 	eyeID := uuid.New()
 	sourceID := uuid.New()
-	g.effects.Damage.SetDamageReflection(pA.PlayerID(), eyeID, sourceID)
+	g.damage.SetDamageReflection(pA.PlayerID(), eyeID, sourceID)
 
 	c := g.Clone()
 
 	// Verify reflection copied.
-	entry, ok := c.effects.Damage.GetDamageReflection(pA.PlayerID())
+	entry, ok := c.damage.GetDamageReflection(pA.PlayerID())
 	if !ok {
 		t.Fatal("Damage reflection should exist in clone")
 	}
@@ -810,8 +810,8 @@ func TestCloneDamageSystem(t *testing.T) {
 	}
 
 	// Mutate clone.
-	c.effects.Damage.ClearDamageReflection(pA.PlayerID())
-	_, ok = g.effects.Damage.GetDamageReflection(pA.PlayerID())
+	c.damage.ClearDamageReflection(pA.PlayerID())
+	_, ok = g.damage.GetDamageReflection(pA.PlayerID())
 	if !ok {
 		t.Error("Original damage reflection should still exist")
 	}
@@ -950,19 +950,19 @@ func TestCloneNestedUUIDMapIsolation(t *testing.T) {
 	// Set up DamageDealtBy with nested map.
 	permID := g.battlefield[1].ID()
 	sourceID := uuid.New()
-	g.damageDealtBy[permID] = map[uuid.UUID]bool{sourceID: true}
+	g.damage.damageDealtBy[permID] = map[uuid.UUID]bool{sourceID: true}
 
 	c := g.Clone()
 
 	// Verify nested map copied.
-	if !c.damageDealtBy[permID][sourceID] {
+	if !c.damage.damageDealtBy[permID][sourceID] {
 		t.Error("DamageDealtBy should be copied")
 	}
 
 	// Mutate clone inner map.
 	newSource := uuid.New()
-	c.damageDealtBy[permID][newSource] = true
-	if g.damageDealtBy[permID][newSource] {
+	c.damage.damageDealtBy[permID][newSource] = true
+	if g.damage.damageDealtBy[permID][newSource] {
 		t.Error("Original inner map should not be affected by clone mutation")
 	}
 }
