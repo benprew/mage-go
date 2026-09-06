@@ -1,8 +1,6 @@
 package mage
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -115,68 +113,6 @@ func activatedManaEffects(effects []Effect) ([]ManaProduction, bool) {
 		}
 	}
 	return productions, len(productions) > 0
-}
-
-func (g *Game) applyManaSolution(playerID uuid.UUID, solution *ManaSolution) error {
-	if solution == nil {
-		return nil
-	}
-	for _, action := range solution.SourcesToTap {
-		if err := g.activatePlannedManaSource(playerID, action); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (g *Game) activatePlannedManaSource(playerID uuid.UUID, action ManaTap) error {
-	perm := g.FindPermanent(action.PermanentID)
-	if perm == nil || action.AbilityIndex < 0 || action.AbilityIndex >= len(perm.RuntimeAbilities) {
-		return ErrPermanentNotFound
-	}
-	if perm.ControllerID() != playerID {
-		return fmt.Errorf("you don't control that permanent")
-	}
-	if perm.Tapped {
-		return fmt.Errorf("permanent is already tapped")
-	}
-	if perm.HasAttr(AttrCantActivate) || !perm.CanTapForEffect(g) {
-		return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
-	}
-
-	ability, ok := manaSourceAbilityForPlanning(perm.RuntimeAbilities[action.AbilityIndex], perm.ID(), action.AbilityIndex, g)
-	if !ok {
-		return fmt.Errorf("ability is not a supported mana ability")
-	}
-	if !plannedManaChoiceAvailable(ability.Productions, g.manaBonuses(perm.ID()), action) {
-		return fmt.Errorf("planned mana production is no longer available")
-	}
-	player := g.GetPlayer(playerID)
-	if player == nil {
-		return ErrPlayerNotFound
-	}
-	if !player.ManaPool().CanPay(ability.ManaCost, nil) {
-		return fmt.Errorf("cannot pay mana ability activation cost %s", ability.ManaCost)
-	}
-	if err := player.ManaPool().Pay(ability.ManaCost, nil); err != nil {
-		return err
-	}
-
-	g.TapPermanent(perm)
-	addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
-
-	inner := UnwrapAbility(perm.RuntimeAbilities[action.AbilityIndex])
-	switch activated := inner.(type) {
-	case *ManaAbility:
-		if err := g.runManaPostProduction(activated, player, perm); err != nil {
-			return err
-		}
-	case *SimpleActivatedAbility:
-		activated.MarkActivated()
-		g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), PlayerID: playerID})
-	}
-	g.fireTappedForMana(perm.ID(), playerID, productionsTotalAmount(action.Productions))
-	return nil
 }
 
 func plannedManaChoiceAvailable(productions []ManaProduction, bonuses []ManaBonusColor, action ManaTap) bool {

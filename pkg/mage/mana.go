@@ -92,9 +92,7 @@ func manaUsable(m Mana, spellCtx *SpellPaymentContext) bool {
 // Empties every player's mana pool. Called at the end of every step and phase per
 // CR 500.5.
 func (g *Game) emptyManaPools() {
-	for _, p := range g.players {
-		p.ManaPool().Clear()
-	}
+	g.mana.EmptyManaPools(g.players)
 }
 
 // CountProducedThisTurn returns how much mana of color c has been added to

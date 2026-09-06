@@ -31,6 +31,7 @@ func (g *Game) Clone() *Game {
 	c.trackers = g.trackers.Clone()
 	c.random = g.random.Clone()
 	c.triggers = g.triggers.Clone()
+	c.mana = g.mana.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)

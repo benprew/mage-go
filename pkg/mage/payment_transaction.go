@@ -85,7 +85,7 @@ func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *G
 	if g.GetPlayer(spec.Controller) == nil {
 		return nil, ErrPlayerNotFound
 	}
-	solution, err := g.planManaForCost(spec.Controller, spec.Mana, spec.Hint, spec.SpellContext)
+	solution, err := g.mana.PlanManaForCost(g, spec.Controller, spec.Mana, spec.Hint, spec.SpellContext)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 	if player == nil {
 		return ErrPlayerNotFound
 	}
-	if err := validation.applyManaSolution(tx.controller, tx.manaSolution); err != nil {
+	if err := validation.mana.ApplyManaSolution(validation, tx.controller, tx.manaSolution); err != nil {
 		return fmt.Errorf("cannot activate mana abilities: %w", err)
 	}
 	if !tx.mana.IsZero() {
@@ -149,7 +149,7 @@ func (tx *costPaymentTransaction) Commit() error {
 	if player == nil {
 		return ErrPlayerNotFound
 	}
-	if err := tx.game.applyManaSolution(tx.controller, tx.manaSolution); err != nil {
+	if err := tx.game.mana.ApplyManaSolution(tx.game, tx.controller, tx.manaSolution); err != nil {
 		return err
 	}
 	if tx.resetDrainedBeforeMana {

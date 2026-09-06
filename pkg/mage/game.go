@@ -70,7 +70,7 @@ type Game struct {
 	combat                 *Combat
 	effects                *EffectManager
 	layer2Controllers      map[uuid.UUID]uuid.UUID
-	manaScratch            []manaSourceInfo
+	mana                   ManaSystem
 
 	turn         int
 	step         PhaseStep
@@ -205,6 +205,7 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		trackers:                           NewTrackerSystem(),
 		random:                             NewRandomSource(),
 		triggers:                           NewTriggerSystem(),
+		mana:                               NewManaSystem(),
 		turn:                               1,
 		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
@@ -2904,133 +2905,6 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	return err
 }
 
-// addManaFromAbility resolves a mana ability's current productions, then runs
-// its immediate post-production effects.
-func (g *Game) addManaFromAbility(ma *ManaAbility, p Player, perm *Permanent) (int, error) {
-	productions := ma.currentProductions(g, perm.ID())
-	produced := g.addManaProductions(productions, p, perm)
-	return produced, g.runManaPostProduction(ma, p, perm)
-}
-
-func (g *Game) runManaPostProduction(ma *ManaAbility, p Player, perm *Permanent) error {
-	if ma == nil || len(ma.postProduction) == 0 {
-		return nil
-	}
-	// Claim a copy-on-write permanent before card-defined follow-up effects run.
-	// This keeps callbacks that locate the source through FindPermanent from
-	// mutating a permanent shared with another search branch.
-	perm = g.MutablePermanent(perm.ID())
-	if perm == nil {
-		return nil
-	}
-	ctx := &EffectContext{
-		Game:       g,
-		SourceID:   perm.ID(),
-		Controller: p.PlayerID(),
-		Vars:       make(map[string]any),
-	}
-	for _, effect := range ma.postProduction {
-		if err := effect.Apply(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// addManaProductions adds mana to the player's pool from a list of productions.
-// AnyColor productions prompt the player to choose a color. Used by both the
-// proper *ManaAbility path and the *SimpleActivatedAbility tap-for-mana path.
-func (g *Game) addManaProductions(productions []ManaProduction, p Player, perm *Permanent) int {
-	return g.addManaProductionsForColor(productions, p, perm, Colorless)
-}
-
-// addManaProductionsForColor is the autotap-friendly variant: when
-// preferredColor is non-Colorless, AnyColor productions resolve to
-// preferredColor without prompting the player. Used by TapForManaWithColor
-// so a requested color is honored end-to-end. AnyCombination productions
-// prompt when this helper is used directly; automatic payment executes its
-// solver-selected concrete combination through applyManaSolution.
-func (g *Game) addManaProductionsForColor(productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) int {
-	var producedColors []Color
-	producedAmount := 0
-	for _, prod := range productions {
-		amt := prod.Amount
-		if amt <= 0 {
-			amt = 1
-		}
-		producedAmount += amt
-		// "X mana in any combination of colors": ask once per mana point so
-		// the controller can split colors arbitrarily.
-		if prod.Color == AnyColor && prod.AnyCombination && amt > 1 {
-			for i := 0; i < amt; i++ {
-				color := p.ChooseManaColor("add mana")
-				addManaProductionToPool(p.ManaPool(), color, 1, prod.Restriction)
-				producedColors = appendProducedColor(producedColors, color)
-			}
-			continue
-		}
-		color := prod.Color
-		if color == AnyColor {
-			if preferredColor != Colorless {
-				color = preferredColor
-			} else {
-				color = p.ChooseManaColor("add mana")
-			}
-		}
-		addManaProductionToPool(p.ManaPool(), color, amt, prod.Restriction)
-		producedColors = appendProducedColor(producedColors, color)
-	}
-	g.applyManaBonuses(perm, producedColors, p)
-	return producedAmount
-}
-
-func addManaProductionToPool(pool *ManaPool, color Color, amount int, restriction ManaRestriction) {
-	if restriction != nil {
-		pool.AddRestricted(color, amount, restriction)
-		return
-	}
-	pool.Add(color, amount)
-}
-
-func (g *Game) fireTappedForMana(sourceID, playerID uuid.UUID, amount int) {
-	if amount <= 0 {
-		return
-	}
-	g.FireEvent(GameEvent{
-		Type:     EvtTappedForMana,
-		SourceID: sourceID,
-		PlayerID: playerID,
-		Amount:   amount,
-	})
-}
-
-// applyManaBonuses checks for mana bonus effects when a permanent is tapped for mana.
-func (g *Game) applyManaBonuses(tappedPerm *Permanent, producedColors []Color, p Player) {
-	for _, bonus := range g.manaBonuses(tappedPerm.ID()) {
-		bonusColor := Color(bonus)
-		if bonus == MatchProduced {
-			if len(producedColors) == 0 {
-				continue
-			}
-			bonusColor = producedColors[0]
-			if len(producedColors) > 1 {
-				chosen := p.ChooseManaColor("add bonus mana")
-				if slices.Contains(producedColors, chosen) {
-					bonusColor = chosen
-				}
-			}
-		}
-		p.ManaPool().Add(bonusColor, 1)
-	}
-}
-
-func appendProducedColor(colors []Color, color Color) []Color {
-	if slices.Contains(colors, color) {
-		return colors
-	}
-	return append(colors, color)
-}
-
 // CheckStateBasedActions checks and processes state-based actions.
 func (g *Game) CheckStateBasedActions() {
 	for {
@@ -4001,69 +3875,11 @@ func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
 // mana-producing (built via WithActivatedAbility(AddMana(...), Tap())
 // — e.g. Mana Vault).
 func (g *Game) TapForMana(playerID, permanentID uuid.UUID) error {
-	return g.TapForManaWithColor(playerID, permanentID, Colorless)
+	return g.mana.TapForMana(g, playerID, permanentID, Colorless)
 }
 
-// TapForManaWithColor taps a permanent for mana, picking the mana ability
-// whose productions match preferredColor when the permanent has more than
-// one mana ability (e.g. Underground Sea, which is registered as separate
-// "{T}: Add {U}" and "{T}: Add {B}" abilities). Pass Colorless to mean
-// "no preference" — the first mana ability is used, matching the prior
-// TapForMana behavior. If no ability matches preferredColor, the first
-// mana ability is used as a fallback.
 func (g *Game) TapForManaWithColor(playerID, permanentID uuid.UUID, preferredColor Color) error {
-	perm := g.FindPermanent(permanentID)
-	if perm == nil {
-		return ErrPermanentNotFound
-	}
-	if perm.ControllerID() != playerID {
-		return fmt.Errorf("you don't control that permanent")
-	}
-	if perm.Tapped {
-		return fmt.Errorf("permanent is already tapped")
-	}
-	if perm.HasAttr(AttrCantActivate) {
-		return fmt.Errorf("cannot activate mana ability of %s", perm.Name())
-	}
-
-	var chosen []ManaProduction
-	var chosenAbility *ManaAbility
-	var firstProd []ManaProduction
-	var firstAbility *ManaAbility
-	for _, a := range perm.RuntimeAbilities {
-		productions := abilityManaProductions(a, g, perm.ID())
-		if productions == nil {
-			continue
-		}
-		if firstProd == nil {
-			firstProd = productions
-			firstAbility, _ = UnwrapAbility(a).(*ManaAbility)
-		}
-		if preferredColor != Colorless && productionsMatchColor(productions, preferredColor) {
-			chosen = productions
-			chosenAbility, _ = UnwrapAbility(a).(*ManaAbility)
-			break
-		}
-	}
-	if chosen == nil {
-		chosen = firstProd
-		chosenAbility = firstAbility
-	}
-	if chosen == nil {
-		return fmt.Errorf("permanent has no mana ability")
-	}
-	if !perm.CanTapForEffect(g) {
-		return fmt.Errorf("creature has summoning sickness")
-	}
-	g.TapPermanent(perm)
-	if p := g.GetPlayer(playerID); p != nil {
-		produced := g.addManaProductionsForColor(chosen, p, perm, preferredColor)
-		if err := g.runManaPostProduction(chosenAbility, p, perm); err != nil {
-			return err
-		}
-		g.fireTappedForMana(perm.ID(), playerID, produced)
-	}
-	return nil
+	return g.mana.TapForMana(g, playerID, permanentID, preferredColor)
 }
 
 // productionsMatchColor reports whether the production list can satisfy a
@@ -4156,394 +3972,27 @@ type AutoTapHint struct {
 
 var manaPoolColors = [...]Color{White, Blue, Black, Red, Green, Colorless}
 
-func (g *Game) manaBonuses(permanentID uuid.UUID) []ManaBonusColor {
-	tappedPerm := g.FindPermanent(permanentID)
-	if tappedPerm == nil {
-		return nil
-	}
-	var bonuses []ManaBonusColor
-	for _, perm := range g.battlefield {
-		for _, a := range perm.RuntimeAbilities {
-			inner := UnwrapAbility(a)
-			if mb, ok := inner.(*ManaBonusAbility); ok {
-				if mb.AttachedOnly {
-					if perm.AttachedTo == tappedPerm.ID() {
-						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
-					}
-				} else if mb.Filter.Match(tappedPerm, g) {
-					if mb.MatchProduced {
-						bonuses = append(bonuses, MatchProduced)
-					} else {
-						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
-					}
-				}
-			}
-		}
-	}
-	return bonuses
-}
-
-// getUntappedManaSources returns all untapped permanents with mana abilities for a player.
-func (g *Game) getUntappedManaSources(playerID uuid.UUID) []manaSourceInfo {
-	var sources []manaSourceInfo
-	return g.appendUntappedManaSources(playerID, sources)
-}
-
-func (g *Game) appendUntappedManaSources(playerID uuid.UUID, sources []manaSourceInfo) []manaSourceInfo {
-	for _, perm := range g.battlefield {
-		if perm.ControllerID() != playerID || perm.Tapped {
-			continue
-		}
-		if perm.HasAttr(AttrCantActivate) {
-			continue
-		}
-		// Skip summoning-sick creatures without haste
-		if !perm.CanTapForEffect(g) {
-			continue
-		}
-		var colors []Color
-		seen := [AnyColor + 1]bool{}
-		var abilities []manaSourceAbility
-		for abilityIndex, ability := range perm.RuntimeAbilities {
-			sourceAbility, ok := manaSourceAbilityForPlanning(ability, perm.ID(), abilityIndex, g)
-			if !ok {
-				continue
-			}
-			abilities = append(abilities, sourceAbility)
-			for _, p := range sourceAbility.Productions {
-				for _, c := range expandProductionColor(p.Color) {
-					if !seen[c] {
-						seen[c] = true
-						colors = append(colors, c)
-					}
-				}
-			}
-		}
-		if len(abilities) == 0 {
-			continue
-		}
-		if len(colors) == 0 {
-			colors = []Color{Colorless}
-		}
-		sources = append(sources, manaSourceInfo{
-			PermanentID: perm.ID(),
-			Colors:      colors,
-			Abilities:   abilities,
-			Bonuses:     g.manaBonuses(perm.ID()),
-		})
-	}
-	return sources
-}
-
-// expandProductionColor returns the concrete colors a ManaProduction can
-// produce. AnyColor expands to the five colored colors; everything else
-// maps to itself.
-func expandProductionColor(c Color) []Color {
-	if c == AnyColor {
-		return []Color{White, Blue, Black, Red, Green}
-	}
-	return []Color{c}
-}
-
-func productionsTotalAmount(productions []ManaProduction) int {
-	total := 0
-	for _, p := range productions {
-		if p.Amount <= 0 {
-			total++
-		} else {
-			total += p.Amount
-		}
-	}
-	return total
-}
-
-func maxManaSourceOutput(source manaSourceInfo) int {
-	maximum := 0
-	for _, ability := range source.Abilities {
-		maximum = max(maximum, productionsTotalAmount(ability.Productions)+len(source.Bonuses))
-	}
-	return maximum
-}
-
 // AutoTapForCost taps untapped lands/mana sources to pay a mana cost,
-// accounting for mana already in the player's pool. Equivalent to
-// AutoTapForCostWithHint with a zero hint; smart-tap heuristics only kick in
-// when callers pass an AutoTapHint via AutoTapForCostWithHint.
+// accounting for mana already in the player's pool.
 func (g *Game) AutoTapForCost(playerID uuid.UUID, mc ManaCost) error {
-	return g.AutoTapForCostWithHint(playerID, mc, AutoTapHint{})
+	return g.mana.AutoTapForCost(g, playerID, mc, AutoTapHint{}, nil)
 }
 
-// AutoTapForCostWithHint taps untapped lands/mana sources to pay a mana cost,
-// using the hint to deprioritize the activated-ability source and to weight
-// color preferences by other castable spells in hand. See AutoTapHint for
-// hint semantics. Gathers solver inputs from Game state, delegates the
-// decision to SolveMana, and executes the exact planned abilities and choices.
+// AutoTapForCostWithHint taps untapped lands/mana sources to pay a mana cost with a hint.
 func (g *Game) AutoTapForCostWithHint(playerID uuid.UUID, mc ManaCost, hint AutoTapHint) error {
-	return g.autoTapForCost(playerID, mc, hint, nil)
+	return g.mana.AutoTapForCost(g, playerID, mc, hint, nil)
 }
 
-func (g *Game) autoTapForCost(playerID uuid.UUID, mc ManaCost, hint AutoTapHint, spellCtx *SpellPaymentContext) error {
-	solution, err := g.planManaForCost(playerID, mc, hint, spellCtx)
-	if err != nil {
-		return err
-	}
-	return g.applyManaSolution(playerID, solution)
-}
-
-func (g *Game) planManaForCost(playerID uuid.UUID, mc ManaCost, hint AutoTapHint, spellCtx *SpellPaymentContext) (*ManaSolution, error) {
-	p := g.GetPlayer(playerID)
-	if p == nil {
-		return nil, ErrPlayerNotFound
-	}
-	if mc.IsZero() {
-		return &ManaSolution{}, nil
-	}
-	sources := g.getUntappedManaSources(playerID)
-
-	// Remove sources reserved for another part of the total cost or action.
-	if len(hint.ReservedSources) > 0 || hint.ActivationTapsSource && hint.ActivationSource != uuid.Nil {
-		filtered := sources[:0]
-		for _, src := range sources {
-			reserved := hint.ActivationTapsSource && src.PermanentID == hint.ActivationSource
-			if !reserved {
-				if slices.Contains(hint.ReservedSources, src.PermanentID) {
-					reserved = true
-				}
-			}
-			if !reserved {
-				filtered = append(filtered, src)
-			}
-		}
-		sources = filtered
-	}
-
-	handDemand := g.computeHandDemand(playerID, hint.CastingCard)
-	scores := make([]int, len(sources))
-	for i, src := range sources {
-		scores[i] = g.preservationScore(src, hint, handDemand)
-	}
-
-	solverInputs := ManaSolverInputs{
-		Pool:         p.ManaPool(),
-		Cost:         mc,
-		Sources:      sources,
-		Scores:       scores,
-		Conversions:  p.ManaPool().ManaConversions,
-		SpellContext: spellCtx,
-	}
-	return SolveMana(solverInputs)
-}
-
-// preservationScore returns the score for a mana source under the smart-tap
-// heuristic. Higher = prefer to keep untapped (tap last). See AutoTapHint.
-func (g *Game) preservationScore(src manaSourceInfo, hint AutoTapHint, handDemand [AnyColor + 1]int) int {
-	score := 0
-	// Heavy penalty for the activated-ability's own source, so it only taps
-	// as a last resort. (When ActivationTapsSource is true the source has
-	// already been filtered out.)
-	if hint.ActivationSource != uuid.Nil && src.PermanentID == hint.ActivationSource {
-		score += 1000
-	}
-	// Each non-mana activated ability on the permanent adds utility — prefer
-	// to keep utility lands like Strip Mine and Mishra's Factory untapped.
-	score += 10 * g.utilityAbilityCount(src.PermanentID)
-	// Preserve mana sources whose active tap triggers are detrimental, such as
-	// City of Brass dealing damage to its controller.
-	score += g.manaSourceDrawbackScore(src.PermanentID)
-	// Color flexibility: colorless-only sources (Sol Ring, Wastes) are least
-	// flexible and tap first. Each colored option adds +1 — duals are
-	// preserved more than basics, AnyColor sources more than duals.
-	for _, c := range src.Colors {
-		if c == Colorless {
-			continue
-		}
-		score++
-		// Demand from other castable hand spells — preserve sources whose
-		// color is still needed for unplayed cards.
-		if c >= 0 && int(c) <= int(AnyColor) {
-			score += handDemand[c]
-		}
-	}
-	return score
-}
-
-func (g *Game) manaSourceDrawbackScore(permID uuid.UUID) int {
-	perm := g.FindPermanent(permID)
-	if perm == nil {
-		return 0
-	}
-	score := 0
-	for _, ability := range perm.RuntimeAbilities {
-		triggered, ok := UnwrapAbility(ability).(TriggeredAbility)
-		if !ok || !triggered.CheckEventType(EvtTapped) {
-			continue
-		}
-		for _, effect := range triggered.Effects() {
-			props := effect.Properties()
-			if props.Outcome != OutcomeDetriment {
-				continue
-			}
-			severity := 1
-			if props.DamageValue != nil {
-				severity = max(props.DamageValue.Resolve(g, perm.ID(), perm.ControllerID(), nil), 1)
-			}
-			score += 25 * severity
-		}
-	}
-	return score
-}
-
-// computeHandDemand sums colored pip demand across spells in the player's
-// hand, excluding the card identified by `exclude` (the spell we're currently
-// paying for). Hybrid pips count toward both their colors. Used to bias
-// auto-tap toward preserving lands whose color matches still-castable spells.
-func (g *Game) computeHandDemand(playerID, exclude uuid.UUID) [AnyColor + 1]int {
-	var demand [AnyColor + 1]int
-	p := g.GetPlayer(playerID)
-	if p == nil {
-		return demand
-	}
-	for _, c := range p.Hand() {
-		if c.ID() == exclude {
-			continue
-		}
-		if c.HasType(TypeLand) {
-			continue
-		}
-		mc := c.ManaCost()
-		demand[White] += mc.White
-		demand[Blue] += mc.Blue
-		demand[Black] += mc.Black
-		demand[Red] += mc.Red
-		demand[Green] += mc.Green
-		for _, h := range mc.Hybrid {
-			demand[h.A]++
-			demand[h.B]++
-		}
-	}
-	return demand
-}
-
-// utilityAbilityCount returns the number of activated abilities on a permanent
-// that are NOT tap-for-mana abilities. Mana-producing abilities (both
-// *ManaAbility and the SimpleActivatedAbility {T}: Add X form) are skipped so
-// Mana Vault and similar cost-laden mana sources don't get a utility penalty.
-func (g *Game) utilityAbilityCount(permID uuid.UUID) int {
-	perm := g.FindPermanent(permID)
-	if perm == nil {
-		return 0
-	}
-	count := 0
-	for abilityIndex, a := range perm.RuntimeAbilities {
-		inner := UnwrapAbility(a)
-		if _, ok := inner.(ActivatedAbility); !ok {
-			continue
-		}
-		if _, ok := manaSourceAbilityForPlanning(a, perm.ID(), abilityIndex, g); ok {
-			continue
-		}
-		count++
-	}
-	return count
-}
-
-// HypotheticalMana returns the total mana a player could produce right now:
-// floating pool plus the per-tap output (and Mana Flare-style bonuses) of
-// every untapped mana source. Used by spell-evaluation heuristics that just
-// want a count, not an affordability decision — for color-aware checks use
-// CanAfford/MaxXValue, which route through SolveMana.
 func (g *Game) HypotheticalMana(playerID uuid.UUID) int {
-	p := g.GetPlayer(playerID)
-	if p == nil {
-		return 0
-	}
-	total := p.ManaPool().TotalMana()
-	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
-	g.manaScratch = sources
-	for _, src := range sources {
-		total += maxManaSourceOutput(src)
-	}
-	return total
+	return g.mana.HypotheticalMana(g, playerID)
 }
 
-// CanAfford returns true if a player has enough mana (pool + untapped sources)
-// to pay a cost. spellCtx is non-nil when checking affordability for casting
-// a specific spell (so restricted mana can count); nil for ability costs.
 func (g *Game) CanAfford(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPaymentContext) bool {
-	p := g.GetPlayer(playerID)
-	if p == nil {
-		return false
-	}
-	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
-	g.manaScratch = sources
-	return CanSolveMana(ManaSolverInputs{
-		Pool:         p.ManaPool(),
-		Cost:         mc,
-		Sources:      sources,
-		Conversions:  p.ManaPool().ManaConversions,
-		SpellContext: spellCtx,
-	})
+	return g.mana.CanAfford(g, playerID, mc, spellCtx)
 }
 
-// MaxXValue returns the maximum X value a player can pay for a spell with cost mc,
-// considering mana in pool plus untapped sources. Binary-searches via SolveMana
-// so dual lands and conversions are honored.
 func (g *Game) MaxXValue(playerID uuid.UUID, mc ManaCost, spellCtx *SpellPaymentContext) int {
-	if !mc.HasX || mc.XCount == 0 {
-		return 0
-	}
-	p := g.GetPlayer(playerID)
-	if p == nil {
-		return 0
-	}
-	sources := g.appendUntappedManaSources(playerID, g.manaScratch[:0])
-	g.manaScratch = sources
-	scores := make([]int, len(sources))
-	conv := p.ManaPool().ManaConversions
-	pool := p.ManaPool()
-
-	// Upper bound: every source taps for its full Amount + bonus, plus pool.
-	upperMana := pool.TotalMana()
-	for _, src := range sources {
-		upperMana += maxManaSourceOutput(src)
-	}
-	tryX := func(x int) bool {
-		cost := ManaCost{
-			Generic: mc.Generic + x*mc.XCount,
-			White:   mc.White,
-			Blue:    mc.Blue,
-			Black:   mc.Black,
-			Red:     mc.Red,
-			Green:   mc.Green,
-			Hybrid:  mc.Hybrid,
-		}
-		_, err := SolveMana(ManaSolverInputs{
-			Pool:         pool,
-			Cost:         cost,
-			Sources:      sources,
-			Scores:       scores,
-			Conversions:  conv,
-			SpellContext: spellCtx,
-		})
-		return err == nil
-	}
-	if !tryX(0) {
-		return 0
-	}
-	hi := upperMana / mc.XCount
-	if hi == 0 {
-		return 0
-	}
-	lo := 0
-	for lo < hi {
-		mid := (lo + hi + 1) / 2
-		if tryX(mid) {
-			lo = mid
-		} else {
-			hi = mid - 1
-		}
-	}
-	return lo
+	return g.mana.MaxXValue(g, playerID, mc, spellCtx)
 }
 
 // ActivatableInfo describes an activated ability on a permanent that can currently be used.
@@ -4761,7 +4210,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		produced := 0
 		if p != nil {
 			var err error
-			produced, err = g.addManaFromAbility(ma, p, perm)
+			produced, err = g.mana.AddManaFromAbility(g, ma, p, perm)
 			if err != nil {
 				return err
 			}
@@ -4771,7 +4220,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			SourceID: perm.ID(),
 			PlayerID: playerID,
 		})
-		g.fireTappedForMana(perm.ID(), playerID, produced)
+		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		return nil
 	}
 
@@ -4887,7 +4336,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			Flag:     true,
 		})
 		g.ResolveStackObject(obj)
-		g.fireTappedForMana(perm.ID(), playerID, produced)
+		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		return nil
 	}
 
