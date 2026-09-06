@@ -148,11 +148,8 @@ type Game struct {
 	// Delayed triggers
 	delayedTriggers []*DelayedTrigger
 
-	// Coin flip results (for test determinism; popped in order)
-	coinFlipResults []bool
-
-	// Random integer results (for test determinism; popped in order)
-	randomResults []int
+	// RandomSource encapsulates random number and coin flip outcomes
+	random RandomSource
 
 	// Priority handler — called when a player receives priority.
 	// If nil, the engine drains the stack atomically (legacy behavior).
@@ -245,6 +242,7 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		effects:                            NewEffectManager(),
 		resolution:                         NewResolutionState(),
 		trackers:                           NewTrackerSystem(),
+		random:                             NewRandomSource(),
 		turn:                               1,
 		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
@@ -559,12 +557,7 @@ func (g *Game) findCardForDamageSource(sourceID uuid.UUID) Card {
 // FlipCoin simulates a coin flip. Returns true for "win" (heads).
 // If CoinFlipResults is non-empty, pops from the front (for test determinism).
 func (g *Game) FlipCoin(playerID uuid.UUID) bool {
-	if len(g.coinFlipResults) > 0 {
-		result := g.coinFlipResults[0]
-		g.coinFlipResults = g.coinFlipResults[1:]
-		return result
-	}
-	return g.RandIntn(2) == 0
+	return g.random.FlipCoin(playerID)
 }
 
 // TryPayMana attempts to pay a mana cost using floating mana and any untapped

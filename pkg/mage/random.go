@@ -1,8 +1,6 @@
 package mage
 
 import (
-	"math/rand"
-
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -21,19 +19,7 @@ var colors = [...]Color{White, Blue, Black, Red, Green}
 // modulo, so negative scripted values wrap from the end of the range. Once the
 // scripted values are exhausted, RandIntn uses the process random source.
 func (g *Game) RandIntn(n int) int {
-	if n <= 0 {
-		return 0
-	}
-	if len(g.randomResults) == 0 {
-		return rand.Intn(n)
-	}
-	result := g.randomResults[0]
-	g.randomResults = g.randomResults[1:]
-	result %= n
-	if result < 0 {
-		result += n
-	}
-	return result
+	return g.random.RandIntn(n)
 }
 
 // RandomPlayer returns one player chosen uniformly at random using the game's

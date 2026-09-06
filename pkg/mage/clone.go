@@ -29,6 +29,7 @@ func (g *Game) Clone() *Game {
 	}
 	c.resolution = g.resolution.Clone()
 	c.trackers = g.trackers.Clone()
+	c.random = g.random.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
@@ -111,17 +112,6 @@ func (g *Game) Clone() *Game {
 			}
 			c.delayedTriggers[i] = &clone
 		}
-	}
-
-	// Deep copy coin flip results.
-	if len(g.coinFlipResults) > 0 {
-		c.coinFlipResults = make([]bool, len(g.coinFlipResults))
-		copy(c.coinFlipResults, g.coinFlipResults)
-	}
-	// Deep copy scripted random results so search branches consume them
-	// independently.
-	if len(g.randomResults) > 0 {
-		c.randomResults = append([]int(nil), g.randomResults...)
 	}
 
 	// Deep copy UUID-keyed maps.
