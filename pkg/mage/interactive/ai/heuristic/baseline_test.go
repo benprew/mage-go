@@ -240,8 +240,120 @@ func (s *baselineStrategy) considerAbilityActivation(p mage.Player, g *mage.Game
 }
 
 func (s *baselineStrategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.PriorityAction {
-	st := New(s.Weights)
-	return st.evaluateResponse(p, g)
+	return oldEvaluateResponse(p, g, s.Weights)
+}
+
+func oldEvaluateResponse(p mage.Player, g *mage.Game, w ai.WeightedPersonality) *interactive.PriorityAction {
+	playerID := p.PlayerID()
+	opponent := g.GetOpponent(playerID)
+	if opponent == nil {
+		return nil
+	}
+
+	stackHasThreat := false
+	if len(g.StackObjects()) > 0 {
+		for _, obj := range g.StackObjects() {
+			if obj.Controller != playerID {
+				stackHasThreat = true
+				break
+			}
+		}
+	}
+
+	inCombat := g.GetStep() == core.DeclareAttackers || g.GetStep() == core.DeclareBlockers ||
+		g.GetStep() == core.CombatDamage || g.GetStep() == core.FirstStrikeDamage
+
+	activePlayer := g.PlayerAt(g.ActivePlayer())
+	isOpponentEndStep := g.GetStep() == core.EndStep && activePlayer != nil && activePlayer.PlayerID() != playerID
+
+	var bestAction *interactive.PriorityAction
+	bestValue := 0
+
+	for _, card := range p.Hand() {
+		if !card.HasType(core.TypeInstant) {
+			continue
+		}
+		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
+			continue
+		}
+		if !aiHintAllowsTiming(cardAIHint(card), g, false) {
+			continue
+		}
+		// Pump tricks are held through DeclareAttackers unless answering a stack threat.
+		if g.GetStep() == core.DeclareAttackers && !stackHasThreat &&
+			combatsolver.ClassifyCombat(card) == combatsolver.RolePump {
+			continue
+		}
+
+		hasUsableEffect := false
+		for _, a := range card.Abilities() {
+			if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+				if mage.SpellOutcome(sa.Effects()) != mage.OutcomeUnknown {
+					hasUsableEffect = true
+					break
+				}
+			}
+		}
+		if !hasUsableEffect {
+			continue
+		}
+
+		sv := eval.SpellValue(card, p, g)
+
+		if stackHasThreat {
+			sv += 3
+		}
+
+		for _, a := range card.Abilities() {
+			sa, ok := a.(*mage.SpellAbility)
+			if !ok || sa.Kind() != mage.ActionSpell {
+				continue
+			}
+			outcome := mage.SpellOutcome(sa.Effects())
+			if outcome == mage.OutcomeDetriment {
+				sv += 2
+				if inCombat {
+					sv += 3
+				}
+			}
+			if outcome == mage.OutcomeBenefit && inCombat {
+				sv += 4
+			}
+		}
+
+		if isOpponentEndStep {
+			for _, a := range card.Abilities() {
+				if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+					for _, e := range sa.Effects() {
+						props := e.Properties()
+						if props.DrawCount > 0 || props.TokenPower > 0 || props.DamageValue != nil {
+							sv += 4
+						}
+					}
+				}
+			}
+		}
+
+		if sv > bestValue {
+			targets := oldAutoSelectTargets(p, g, card, w)
+			if !requiresTargets(card) || len(targets) > 0 {
+				bestValue = sv
+				bestAction = &interactive.PriorityAction{
+					Type:     interactive.ActionCastSpell,
+					CardID:   card.ID(),
+					CardName: card.Name(),
+					Targets:  targets,
+					XValue:   bestXValue(g, playerID, card, targets),
+				}
+			}
+		}
+	}
+
+	if bestAction != nil && bestValue >= 3 {
+		return bestAction
+	}
+
+	return nil
 }
 
 func (s *baselineStrategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {

@@ -208,6 +208,9 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 			if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 				continue
 			}
+			if combatsolver.ClassifyCombat(card) == combatsolver.RolePump {
+				continue
+			}
 			if holdCombatTricks && combatsolver.ClassifyCombat(card) != combatsolver.RoleNone {
 				continue
 			}
@@ -231,7 +234,7 @@ func (s *Strategy) PriorityAction(p mage.Player, g *mage.Game, landsPlayed int, 
 						CardID:   card.ID(),
 						CardName: card.Name(),
 						Targets:  targets,
-						XValue:   bestXValue(g, playerID, card, targets),
+						XValue:   s.bestXValue(g, playerID, card, targets),
 					}
 				}
 			}
@@ -259,6 +262,20 @@ func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []mage.Car
 		if requiresTargets(card) && len(targets) == 0 {
 			continue
 		}
+		xVal := s.bestXValue(g, playerID, card, targets)
+		if card.ManaCost().HasX && isCardDamageSpell(card) {
+			if len(targets) > 0 {
+				if perm := g.FindPermanent(targets[0]); perm != nil {
+					if xVal < perm.CurrentToughness(g)-perm.Damage {
+						continue
+					}
+				} else if tp := g.GetPlayer(targets[0]); tp != nil {
+					if !shouldAimBurnAtFace(g, playerID, xVal) {
+						continue
+					}
+				}
+			}
+		}
 		if score <= bestScore {
 			continue
 		}
@@ -268,7 +285,7 @@ func (s *Strategy) bestSpellAction(p mage.Player, g *mage.Game, cards []mage.Car
 			CardID:   card.ID(),
 			CardName: card.Name(),
 			Targets:  targets,
-			XValue:   bestXValue(g, playerID, card, targets),
+			XValue:   xVal,
 		}
 	}
 
@@ -298,12 +315,18 @@ func (s *Strategy) findBestRemoval(p mage.Player, g *mage.Game) *interactive.Pri
 					for _, tid := range targets {
 						perm := g.FindPermanent(tid)
 						if perm != nil && perm.ControllerID() == opponent.PlayerID() {
+							xVal := s.bestXValue(g, playerID, card, targets)
+							if card.ManaCost().HasX && isCardDamageSpell(card) {
+								if xVal < perm.CurrentToughness(g)-perm.Damage {
+									continue
+								}
+							}
 							return &interactive.PriorityAction{
 								Type:     interactive.ActionCastSpell,
 								CardID:   card.ID(),
 								CardName: card.Name(),
 								Targets:  targets,
-								XValue:   bestXValue(g, playerID, card, targets),
+								XValue:   xVal,
 							}
 						}
 					}
@@ -503,7 +526,7 @@ func (s *Strategy) Blockers(p mage.Player, g *mage.Game) []mage.BlockAssignment 
 
 func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card) []uuid.UUID {
 	playerID := p.PlayerID()
-	xValue := bestXValue(g, playerID, card, nil)
+	xValue := s.bestXValue(g, playerID, card, nil)
 
 	var targets []uuid.UUID
 
@@ -518,6 +541,11 @@ func (s *Strategy) autoSelectTargets(p mage.Player, g *mage.Game, card mage.Card
 			purpose = hintedPurpose
 		}
 		damage := spellDamageForTargets(g, playerID, card, nil)
+		if damage == 0 && card.ManaCost().HasX && isCardDamageSpell(card) {
+			fixedCost := card.ManaCost().CMC()
+			availMana := eval.CountAvailableMana(g, playerID)
+			damage = max(availMana-fixedCost, 0)
+		}
 		outcome := mage.SpellOutcome(sa.Effects())
 
 		// Each Target spec is resolved independently and its chosen targets are
@@ -1067,6 +1095,53 @@ func abilityDamageForTargets(g *mage.Game, playerID, sourceID uuid.UUID, effects
 		}
 	}
 	return damage
+}
+
+func isCardDamageSpell(card mage.Card) bool {
+	for _, a := range card.Abilities() {
+		if sa, ok := a.(*mage.SpellAbility); ok && sa.Kind() == mage.ActionSpell {
+			for _, t := range sa.Targets() {
+				if _, ok := t.(*mage.DamageAnyTarget); ok {
+					return true
+				}
+			}
+			for _, e := range sa.Effects() {
+				if e.Properties().DamageValue != nil {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func (s *Strategy) bestXValue(g *mage.Game, playerID uuid.UUID, card mage.Card, targets []uuid.UUID) int {
+	mc := card.ManaCost()
+	if !mc.HasX {
+		return 0
+	}
+	fixedCost := mc.CMC()
+	availMana := eval.CountAvailableMana(g, playerID)
+	maxX := availMana - fixedCost
+	if maxX < 1 {
+		return 1
+	}
+
+	if isCardDamageSpell(card) && len(targets) > 0 {
+		if tp := g.GetPlayer(targets[0]); tp != nil && tp.PlayerID() != playerID {
+			if life := tp.Life(); life > 0 && life <= maxX {
+				return life
+			}
+		}
+		if perm := g.FindPermanent(targets[0]); perm != nil && perm.ControllerID() != playerID {
+			lethal := perm.CurrentToughness(g) - perm.Damage
+			if lethal > 0 && lethal <= maxX {
+				return lethal
+			}
+		}
+	}
+
+	return bestXValue(g, playerID, card, targets)
 }
 
 // bestXValue picks the best X value for an X-cost spell.

@@ -1148,8 +1148,8 @@ func (s *Strategy) evaluateResponse(p mage.Player, g *mage.Game) *interactive.Pr
 		if !aiHintAllowsTiming(cardAIHint(card), g, false) {
 			continue
 		}
-		// Pump tricks are held through DeclareAttackers unless answering a stack threat.
-		if g.GetStep() == core.DeclareAttackers && !stackHasThreat &&
+		// Pump tricks are only cast during combat (after blockers) or to answer a stack threat.
+		if (!inCombat || g.GetStep() == core.DeclareAttackers) && !stackHasThreat &&
 			combatsolver.ClassifyCombat(card) == combatsolver.RolePump {
 			continue
 		}

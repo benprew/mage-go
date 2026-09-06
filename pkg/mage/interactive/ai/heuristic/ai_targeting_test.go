@@ -237,3 +237,85 @@ func TestPriorityAction_HoldsGiantGrowthUntilBlockers(t *testing.T) {
 		t.Fatalf("Giant Growth should target our own creature, got %v", act.Targets)
 	}
 }
+
+// Combat tricks (pump spells) should never be cast proactively in PostcombatMain
+// where their temporary combat buff expires without effect.
+func TestPriorityAction_DoesNotCastCombatTrickInPostcombatMain(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetActivePlayerIndex(0)
+
+	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(creature)
+	addLands(g, pa, "Forest", 1)
+
+	card := createCard(t, "Giant Growth", pa.PlayerID())
+	pa.AddToHand(card)
+
+	s := New(ai.AggroWeighted)
+
+	g.SetStep(core.PostcombatMain)
+	act := s.PriorityAction(pa, g, 0, true)
+	if act.Type == interactive.ActionCastSpell && act.CardName == "Giant Growth" {
+		t.Fatalf("Giant Growth should NOT be cast in PostcombatMain, but it was cast")
+	}
+	if act.Type != interactive.ActionPass {
+		t.Fatalf("expected ActionPass in PostcombatMain, got %+v", act)
+	}
+}
+
+// Combat tricks (pump spells) should never be cast in non-combat steps like EndStep.
+func TestPriorityAction_DoesNotCastCombatTrickInEndStep(t *testing.T) {
+	g, pa, _ := makeGame()
+	g.SetActivePlayerIndex(0)
+
+	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(creature)
+	addLands(g, pa, "Forest", 1)
+
+	card := createCard(t, "Giant Growth", pa.PlayerID())
+	pa.AddToHand(card)
+
+	s := New(ai.AggroWeighted)
+
+	g.SetStep(core.EndStep)
+	act := s.PriorityAction(pa, g, 0, false)
+	if act.Type == interactive.ActionCastSpell && act.CardName == "Giant Growth" {
+		t.Fatalf("Giant Growth should NOT be cast in EndStep, but it was cast")
+	}
+	if act.Type != interactive.ActionPass {
+		t.Fatalf("expected ActionPass in EndStep, got %+v", act)
+	}
+}
+
+// When an opponent threat is on the stack, Giant Growth should be cast to save the creature even in EndStep.
+func TestPriorityAction_CastsGiantGrowthAgainstRemovalInEndStep(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetActivePlayerIndex(1)
+
+	creature := makePerm("Bear", "{1}{G}", 2, 2, pa.PlayerID())
+	g.AddToBattlefield(creature)
+	addLands(g, pa, "Forest", 1)
+
+	card := createCard(t, "Giant Growth", pa.PlayerID())
+	pa.AddToHand(card)
+
+	bolt := createCard(t, "Lightning Bolt", pb.PlayerID())
+	g.PushStack(&mage.StackObject{
+		ID:         uuid.New(),
+		Card:       bolt,
+		Controller: pb.PlayerID(),
+		SourceID:   bolt.ID(),
+		Targets:    []uuid.UUID{creature.ID()},
+	})
+
+	s := New(ai.AggroWeighted)
+
+	g.SetStep(core.EndStep)
+	act := s.PriorityAction(pa, g, 0, false)
+	if act.Type != interactive.ActionCastSpell || act.CardName != "Giant Growth" {
+		t.Fatalf("expected Giant Growth to be cast in response to Lightning Bolt, got %+v", act)
+	}
+	if len(act.Targets) != 1 || act.Targets[0] != creature.ID() {
+		t.Fatalf("Giant Growth should target the threatened creature, got %v", act.Targets)
+	}
+}

@@ -123,6 +123,9 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp 
 	var wg sync.WaitGroup
 	gamesPerWorker := totalGames / workers
 
+	var newWinsByDeck [5]int64
+	var baselineWinsByDeck [5]int64
+
 	for w := range workers {
 		workerIdx := w
 		start := workerIdx * gamesPerWorker
@@ -153,8 +156,10 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp 
 					switch res {
 					case 1:
 						atomic.AddInt64(&newWins, 1)
+						atomic.AddInt64(&newWinsByDeck[deckIdxA], 1)
 					case 2:
 						atomic.AddInt64(&baselineWins, 1)
+						atomic.AddInt64(&baselineWinsByDeck[deckIdxB], 1)
 					default:
 						atomic.AddInt64(&draws, 1)
 					}
@@ -165,8 +170,10 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp 
 					switch res {
 					case 1:
 						atomic.AddInt64(&baselineWins, 1)
+						atomic.AddInt64(&baselineWinsByDeck[deckIdxA], 1)
 					case 2:
 						atomic.AddInt64(&newWins, 1)
+						atomic.AddInt64(&newWinsByDeck[deckIdxB], 1)
 					default:
 						atomic.AddInt64(&draws, 1)
 					}
@@ -187,6 +194,16 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp 
 	fmt.Printf("1k Games Simulation Results: %s\n", label)
 	fmt.Printf("New AI Wins:      %d (%.1f%% of decided)\n", newWins, winRate)
 	fmt.Printf("Baseline AI Wins: %d (%.1f%% of decided)\n", baselineWins, 100.0-winRate)
+	for d := range numArchetypes {
+		nw := atomic.LoadInt64(&newWinsByDeck[d])
+		bw := atomic.LoadInt64(&baselineWinsByDeck[d])
+		tot := nw + bw
+		wr := 0.0
+		if tot > 0 {
+			wr = float64(nw) / float64(tot) * 100.0
+		}
+		fmt.Printf("  %-25s: New %3d vs Base %3d (%.1f%%)\n", archetypes[d].Name, nw, bw, wr)
+	}
 	fmt.Printf("Draws:            %d\n", draws)
 	fmt.Printf("Total Games:      %d\n", totalGames)
 	fmt.Printf("=======================================================\n\n")

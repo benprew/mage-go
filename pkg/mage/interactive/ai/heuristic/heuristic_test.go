@@ -1059,3 +1059,92 @@ func TestPriorityAction_DoesNotQueueDuplicateKeywordGrant(t *testing.T) {
 		t.Fatalf("expected pass when equivalent keyword grant is already on stack, got %v", action.Type)
 	}
 }
+
+func TestDisintegrate_DoesNotWasteWithInsufficientX(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
+
+	angel := makePerm("Serra Angel", "{3}{W}{W}", 4, 4, pb.PlayerID())
+	g.AddToBattlefield(angel)
+
+	disintegrate, err := mage.CreateCard("Disintegrate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	disintegrate.SetOwner(pa.PlayerID())
+	pa.AddToHand(disintegrate)
+
+	addLands(g, pa, "Mountain", 2)
+
+	s := New(ai.BurnWeighted)
+	action := s.PriorityAction(pa, g, 0, true)
+
+	if action.Type == interactive.ActionCastSpell && action.CardName == "Disintegrate" {
+		t.Fatalf("AI should not cast Disintegrate for X=1 at a 4/4 creature, got %+v", action)
+	}
+}
+
+func TestDisintegrate_CastsWithLethalX(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
+
+	angel := makePerm("Serra Angel", "{3}{W}{W}", 4, 4, pb.PlayerID())
+	g.AddToBattlefield(angel)
+
+	disintegrate, err := mage.CreateCard("Disintegrate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	disintegrate.SetOwner(pa.PlayerID())
+	pa.AddToHand(disintegrate)
+
+	addLands(g, pa, "Mountain", 6)
+
+	s := New(ai.BurnWeighted)
+	action := s.PriorityAction(pa, g, 0, true)
+
+	if action.Type != interactive.ActionCastSpell || action.CardName != "Disintegrate" {
+		t.Fatalf("expected Disintegrate to be cast with sufficient mana, got %+v", action)
+	}
+	if action.XValue != 4 {
+		t.Fatalf("expected Disintegrate XValue=4 (lethal), got %d", action.XValue)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != angel.ID() {
+		t.Fatalf("expected target Serra Angel, got %v", action.Targets)
+	}
+}
+
+func TestDisintegrate_TargetsKillableCreatureWhenCannotKillLargest(t *testing.T) {
+	g, pa, pb := makeGame()
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(0)
+
+	angel := makePerm("Serra Angel", "{3}{W}{W}", 4, 4, pb.PlayerID())
+	bear := makePerm("Bear", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(angel, bear)
+
+	disintegrate, err := mage.CreateCard("Disintegrate")
+	if err != nil {
+		t.Fatal(err)
+	}
+	disintegrate.SetOwner(pa.PlayerID())
+	pa.AddToHand(disintegrate)
+
+	// 3 Mountains: X=2 available. Cannot kill 4/4 Angel, but CAN kill 2/2 Bear!
+	addLands(g, pa, "Mountain", 3)
+
+	s := New(ai.BurnWeighted)
+	action := s.PriorityAction(pa, g, 0, true)
+
+	if action.Type != interactive.ActionCastSpell || action.CardName != "Disintegrate" {
+		t.Fatalf("expected Disintegrate to kill Bear, got %+v", action)
+	}
+	if action.XValue != 2 {
+		t.Fatalf("expected Disintegrate XValue=2, got %d", action.XValue)
+	}
+	if len(action.Targets) != 1 || action.Targets[0] != bear.ID() {
+		t.Fatalf("expected target Bear, got %v", action.Targets)
+	}
+}
