@@ -102,7 +102,7 @@ func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory fu
 		Controller:    playerID,
 		IsCopy:        true,
 		CastZone:      ZoneAny,
-		XValue:        g.currentX,
+		XValue:        g.resolution.X(),
 		SnapshotCast:  true,
 		PromptTargets: true,
 	})

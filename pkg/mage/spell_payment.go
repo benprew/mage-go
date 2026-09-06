@@ -69,7 +69,7 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	}
 
 	validation := cloneGameForCostPayment(g)
-	validation.currentX = spec.XValue
+	validation.resolution.SetX(spec.XValue)
 	if validation.removeCardFromZone(spec.Controller, spec.Card.ID(), spec.Zone) == nil {
 		return nil, fmt.Errorf("could not move %s from %s while validating its total cost", spec.Card.Name(), spec.Zone)
 	}
@@ -202,6 +202,6 @@ func (tx *spellPaymentTransaction) Commit() error {
 	if tx.game.removeCardFromZone(tx.controller, tx.card.ID(), tx.zone) == nil {
 		return fmt.Errorf("could not remove %s from %s", tx.card.Name(), tx.zone)
 	}
-	tx.game.lastCostReveal = nil
+	tx.game.resolution.SetLastCostReveal(nil)
 	return tx.payment.Commit()
 }

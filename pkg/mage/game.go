@@ -93,36 +93,8 @@ type Game struct {
 	// Per-turn step schedule and pending skips (CR 500.7–500.11).
 	schedule *TurnSchedule
 
-	// X value for the currently resolving spell
-	currentX int
-
-	// Chosen mode for the currently resolving modal spell (0-indexed)
-	currentMode int
-
-	// Amount from the triggering event (e.g. damage dealt) for triggered abilities
-	currentEventAmount int
-	// SourceID of the triggering event (e.g. the damager on EvtDamageDealt).
-	// Read by Game.EventSourceID() during resolution of a triggered ability.
-	currentEventSourceID uuid.UUID
-
-	// Card currently being resolved (set during ResolveStackObject)
-	resolvingCard Card
-	// Color state is installed before target legality is checked because the
-	// resolving object has already been popped from the stack.
-	resolvingColorSourceID uuid.UUID
-	resolvingColorOverride *[]Color
-
-	// Zone the resolving spell was cast from (set during ResolveStackObject
-	// from StackObject.CastZone). Read by triggers expressing "if you cast it
-	// from your hand"/"from your graveyard" — including ETB triggers on the
-	// resolving permanent, since PutOnBattlefield is invoked before the field
-	// is cleared.
-	resolvingCastZone Zone
-
-	// Cast-time snapshot for the resolving stack object (CR 608.2g). Set
-	// during ResolveStackObject from StackObject.CastContext; read by
-	// effects via Game.ResolvingCastContext(). Cleared after resolution.
-	resolvingCastContext *CastContext
+	// ResolutionState owns transient resolution and cost scratch state.
+	resolution ResolutionState
 
 	// Interactive play tracking
 	landsPlayedThisTurn int
@@ -143,9 +115,6 @@ type Game struct {
 	// Game-long damage tracking by permanent (e.g. The Fallen)
 	damageDealtToPlayersByPermanent    map[uuid.UUID]map[uuid.UUID]bool
 	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
-
-	// Most recently exiled card from graveyard cost payment or effect
-	lastExiledCard Card
 
 	// Player damage tracking: maps player ID -> total damage taken this turn
 	damageTakenThisTurn map[uuid.UUID]int
@@ -199,34 +168,16 @@ type Game struct {
 	// snapshot and compare deltas.
 	cleanupPriorityRounds int
 
-	// Targets of the spell currently being resolved (for ETB copy effects)
-	resolvingTargets []uuid.UUID
-
 	// Permanent currently being put onto the battlefield during PutOnBattlefield,
 	// before it is appended to g.battlefield. Looked up by FindPermanent so
 	// that counter-placement replacements (ETB additional, doubling) can match
 	// the entering permanent during ETB resolution.
 	enteringPermanent *Permanent
 
-	// DamageDistribution chosen at cast/activation time for the spell currently
-	// being resolved (CR 601.2d, divided damage). Cleared after resolution.
-	resolvingDamageDistribution map[uuid.UUID]int
-
-	// CounterDistribution assigned when the current spell or ability was put
-	// on the stack. Cleared after resolution.
-	resolvingCounterDistribution map[uuid.UUID]int
-
 	// skipNextUntap tracks object-specific one-shot untap replacements. Entries
 	// survive control changes and are consumed only by an actual untap attempt
 	// during the permanent's then-controller's untap step.
 	skipNextUntap map[uuid.UUID]int
-
-	// ID of the most recently sacrificed permanent paid as a cost
-	// for the spell or ability currently on the stack. Set by SacrificeSourceCost,
-	// SacrificeMatchingCost, and SacrificeCreatureCost; read by effects via
-	// LastSacrificed(). Cleared at the start of each cost-pay cycle and after
-	// resolution. The permanent's state is stored in the generic LKI map.
-	lastSacrificedID uuid.UUID
 
 	// LKI snapshots for permanents that have left the battlefield, keyed by
 	// permanent ID. Populated by RemoveFromBattlefield so that death/leave
@@ -288,11 +239,6 @@ type Game struct {
 	// into a graveyard this turn (Scholar of the Lost Trove rider). Value
 	// is the source ID that granted the rider. Cleared at end of turn.
 	exileInsteadCards map[uuid.UUID]uuid.UUID
-
-	// lastCostReveal is the most recent card revealed by a
-	// [RevealFromHandCost]. Cleared on each cost-pay cycle by the cost
-	// pipeline; clients can read it during effect resolution.
-	lastCostReveal Card
 
 	// Per-turn trackers (see per_turn_trackers.go). Reset by
 	// resetPerTurnTrackers in the turn-end cleanup pipeline.
@@ -371,6 +317,7 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		stack:                              NewStack(),
 		combat:                             NewCombat(),
 		effects:                            NewEffectManager(),
+		resolution:                         NewResolutionState(),
 		turn:                               1,
 		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
@@ -643,8 +590,8 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 		}
 	}
 	// Check the currently resolving card (popped from stack, not yet in graveyard)
-	if g.resolvingCard != nil && g.resolvingCard.ID() == id {
-		return g.resolvingCard
+	if rc := g.resolution.ResolvingCard(); rc != nil && rc.ID() == id {
+		return rc
 	}
 	for _, pl := range g.players {
 		for _, c := range pl.Library() {
@@ -683,8 +630,8 @@ func (g *Game) findCardForDamageSource(sourceID uuid.UUID) Card {
 	if perm != nil {
 		return perm.Card
 	}
-	if g.resolvingCard != nil && g.resolvingCard.ID() == sourceID {
-		return g.resolvingCard
+	if rc := g.resolution.ResolvingCard(); rc != nil && rc.ID() == sourceID {
+		return rc
 	}
 	return g.FindCardAnywhere(sourceID)
 }
@@ -751,8 +698,8 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 	// effects (Oona's Blackguard) and counter doublers (Branching Evolution)
 	// can intercept the placement.
 	for _, a := range perm.RuntimeAbilities {
-		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.currentX > 0 {
-			g.AddCountersWithReplacement(perm, xc.CounterType, g.currentX, perm.ID(), true)
+		if xc, ok := a.(*EntersWithXCountersAbility); ok && g.resolution.X() > 0 {
+			g.AddCountersWithReplacement(perm, xc.CounterType, g.resolution.X(), perm.ID(), true)
 			break
 		}
 	}
@@ -803,8 +750,8 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 
 	// Copy creature on ETB (Vesuvan Doppelganger): copy target creature's P/T and keywords
 	for _, a := range perm.RuntimeAbilities {
-		if _, ok := a.(*CopyCreatureOnETBAbility); ok && len(g.resolvingTargets) > 0 {
-			target := g.FindPermanent(g.resolvingTargets[0])
+		if _, ok := a.(*CopyCreatureOnETBAbility); ok && len(g.resolution.ResolvingTargets()) > 0 {
+			target := g.FindPermanent(g.resolution.ResolvingTargets()[0])
 			if target != nil {
 				g.effects.AddCopyEffect(perm.ID(), target)
 			}
@@ -854,8 +801,8 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 
 	// Run ETB-with-targets effects (e.g. Oubliette exile on entry)
 	for _, a := range perm.RuntimeAbilities {
-		if etb, ok := a.(*ETBWithTargetsAbility); ok && len(g.resolvingTargets) > 0 {
-			_ = ApplyEffect(g, etb.Effect, perm.ID(), controller, g.resolvingTargets)
+		if etb, ok := a.(*ETBWithTargetsAbility); ok && len(g.resolution.ResolvingTargets()) > 0 {
+			_ = ApplyEffect(g, etb.Effect, perm.ID(), controller, g.resolution.ResolvingTargets())
 			break
 		}
 	}
@@ -866,8 +813,8 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 		Type:     EvtZoneChange,
 		SourceID: perm.ID(),
 		PlayerID: controller,
-		Amount:   g.currentX, // preserve X from resolving spell for ETB triggers
-		FromZone: ZoneAny,    // engine doesn't model the precise origin of an ETB
+		Amount:   g.resolution.X(), // preserve X from resolving spell for ETB triggers
+		FromZone: ZoneAny,          // engine doesn't model the precise origin of an ETB
 		ToZone:   ZoneBattlefield,
 	})
 
@@ -2668,14 +2615,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	defer g.CheckStateBasedActions()
 	defer g.ClearSacrificed()
-	previousColorSourceID := g.resolvingColorSourceID
-	previousColorOverride := g.resolvingColorOverride
-	g.resolvingColorSourceID = obj.SourceID
-	g.resolvingColorOverride = obj.ColorOverride
-	defer func() {
-		g.resolvingColorSourceID = previousColorSourceID
-		g.resolvingColorOverride = previousColorOverride
-	}()
+	defer g.resolution.SetColorOverride(obj.SourceID, obj.ColorOverride)()
 
 	// CR 608.2b: a spell/ability with target(s) fails to resolve only if ALL of
 	// them are illegal at resolution. uuid.Nil entries are positional
@@ -2711,35 +2651,15 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 		return
 	}
 
-	g.currentX = obj.XValue
-	g.currentMode = obj.ModeChoice
-	g.currentEventAmount = obj.EventAmount
-	g.currentEventSourceID = obj.EventSourceID
-	g.resolvingCard = obj.Card
-	g.resolvingTargets = obj.Targets
-	g.resolvingDamageDistribution = obj.DamageDistribution
-	g.resolvingCounterDistribution = obj.CounterDistribution
-	g.resolvingCastZone = obj.CastZone
-	g.resolvingCastContext = obj.CastContext
+	defer g.resolution.Begin(obj)()
 	for _, eff := range obj.Effects {
 		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, resolvedTargets)
 	}
-	g.resolvingDamageDistribution = nil
-	g.resolvingCounterDistribution = nil
-	// Note: g.resolvingCastContext is intentionally NOT cleared here so
-	// PutOnBattlefield (and ETB replacement effects like
-	// EntersWithComputedCounters) can still consult cast-time state such as
-	// ColorsSpent (Chamber Sentry). It is cleared at every exit path below.
+	g.resolution.ClearDistributions()
 
 	// Copies of spells cease to exist as they resolve (CR 707.10) — no
 	// graveyard, no battlefield, no exile. The effects already ran above.
 	if obj.IsCopy {
-		g.currentX = 0
-		g.currentMode = 0
-		g.resolvingCard = nil
-		g.resolvingTargets = nil
-		g.resolvingCastZone = ZoneAny
-		g.resolvingCastContext = nil
 		return
 	}
 
@@ -2755,24 +2675,11 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 					g.Attach(perm.ID(), obj.Targets[0])
 				}
 			}
-
-			g.currentX = 0
-			g.currentMode = 0
-			g.resolvingTargets = nil
-			g.resolvingCastZone = ZoneAny
-			g.resolvingCastContext = nil
 			return
 		}
 
 		g.cleanupSpell(obj)
 	}
-
-	g.currentX = 0
-	g.currentMode = 0
-	g.resolvingCard = nil
-	g.resolvingTargets = nil
-	g.resolvingCastZone = ZoneAny
-	g.resolvingCastContext = nil
 }
 
 // Move spell to graveyard/exile as appropriate. Used for resolving cast
@@ -3110,10 +3017,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		return err
 	}
 
-	// If an additional cost set g.currentX (e.g. sacrifice-capture-CMC), use it
-	if g.currentX != 0 && xValue == 0 {
-		xValue = g.currentX
-		g.currentX = 0
+	// If an additional cost set g.resolution.X (e.g. sacrifice-capture-CMC), use it
+	if g.resolution.X() != 0 && xValue == 0 {
+		xValue = g.resolution.X()
+		g.resolution.SetX(0)
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
@@ -5099,10 +5006,10 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			targets = forced
 		}
 	}
-	targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.currentX)
+	targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
 	targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
 
-	if err := g.validateActionTargets(playerID, perm.Card, actionTargets, targets, g.currentX, "ability"); err != nil {
+	if err := g.validateActionTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X(), "ability"); err != nil {
 		return err
 	}
 
@@ -5116,13 +5023,13 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		}
 	}
 	hint := AutoTapHint{ActivationSource: perm.ID(), ActivationTapsSource: hasTapCost}
-	preparedCosts := g.prepareActionCosts(aa.Costs(), targets, g.currentX)
+	preparedCosts := g.prepareActionCosts(aa.Costs(), targets, g.resolution.X())
 	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
 		Controller:               playerID,
 		SourceID:                 perm.ID(),
 		Costs:                    preparedCosts,
 		Targets:                  targets,
-		XValue:                   g.currentX,
+		XValue:                   g.resolution.X(),
 		Hint:                     hint,
 		ApplyActivationReduction: true,
 	})
@@ -5138,8 +5045,8 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		saa.MarkActivated()
 	}
 
-	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.currentX, true)
-	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.currentX)
+	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
+	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.resolution.X())
 	obj.TargetSource = perm.Card
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets

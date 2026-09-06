@@ -151,7 +151,7 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard Card, targe
 	var out []uuid.UUID
 	for _, t := range targets {
 		if random, ok := t.(*randomTarget); ok {
-			chosen := g.chooseRandomTargets(controller, sourceCard, random, g.currentX)
+			chosen := g.chooseRandomTargets(controller, sourceCard, random, g.resolution.X())
 			if len(chosen) == 0 && t.Min() > 0 {
 				out = append(out, uuid.Nil)
 			} else {

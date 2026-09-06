@@ -138,8 +138,8 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		Controller:          controller,
 		Targets:             targets,
 		Vars:                make(map[string]any),
-		DamageDistribution:  g.resolvingDamageDistribution,
-		CounterDistribution: g.resolvingCounterDistribution,
+		DamageDistribution:  g.resolution.DamageDistribution(),
+		CounterDistribution: g.resolution.CounterDistribution(),
 	}
 	err := e.Apply(ctx)
 	if err != nil {

@@ -32,8 +32,8 @@ func (g *Game) EffectiveColors(objectID uuid.UUID) []Color {
 		}
 		return cardColors(object.Card)
 	}
-	if objectID == g.resolvingColorSourceID && g.resolvingColorOverride != nil {
-		return append([]Color(nil), (*g.resolvingColorOverride)...)
+	if objectID == g.resolution.ColorSourceID() && g.resolution.ColorOverride() != nil {
+		return append([]Color(nil), (*g.resolution.ColorOverride())...)
 	}
 	return cardColors(g.FindCardAnywhere(objectID))
 }

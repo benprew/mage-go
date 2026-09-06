@@ -293,8 +293,8 @@ func (g *Game) replaceCardReference(cardID uuid.UUID, replacement Card) bool {
 			return true
 		}
 	}
-	if g.resolvingCard != nil && g.resolvingCard.ID() == cardID {
-		g.resolvingCard = replacement
+	if rc := g.resolution.ResolvingCard(); rc != nil && rc.ID() == cardID {
+		g.resolution.SetResolvingCard(replacement)
 		return true
 	}
 	for i := range g.exile {

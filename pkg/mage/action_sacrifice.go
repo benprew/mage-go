@@ -15,20 +15,20 @@ func (g *Game) CaptureSacrificed(p *Permanent) {
 	if p == nil {
 		return
 	}
-	g.lastSacrificedID = p.ID()
+	g.resolution.SetLastSacrificedID(p.ID())
 }
 
 // LastSacrificed returns generic last-known information for the permanent most
 // recently sacrificed as a cost.
 func (g *Game) LastSacrificed() *PermanentLKI {
-	if g.lastSacrificedID == uuid.Nil {
+	if g.resolution.LastSacrificedID() == uuid.Nil {
 		return nil
 	}
-	return g.LKI(g.lastSacrificedID)
+	return g.LKI(g.resolution.LastSacrificedID())
 }
 
 // ClearSacrificed forgets which permanent was most recently sacrificed as a cost.
-func (g *Game) ClearSacrificed() { g.lastSacrificedID = uuid.Nil }
+func (g *Game) ClearSacrificed() { g.resolution.SetLastSacrificedID(uuid.Nil) }
 
 // Sacrifice sacrifices a permanent (like destroy but doesn't check
 // indestructible). Self-referential triggers fire from the LKI snapshot's

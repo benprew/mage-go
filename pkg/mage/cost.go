@@ -217,7 +217,7 @@ func RemoveXCountersFromSourceCost(ct CounterType) Cost {
 }
 
 func (c *removeXCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	x := g.currentX
+	x := g.resolution.X()
 	if x <= 0 {
 		return true
 	}
@@ -226,7 +226,7 @@ func (c *removeXCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bo
 }
 
 func (c *removeXCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	x := g.currentX
+	x := g.resolution.X()
 	if x <= 0 {
 		return nil
 	}
@@ -547,13 +547,13 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	}
 	// Reveal the card; no zone change (CR 701.16). The card stays in
 	// hand. Engine clients can observe the reveal via [Game.LastCostReveal].
-	g.lastCostReveal = chosen
+	g.resolution.SetLastCostReveal(chosen)
 	return nil
 }
 
 // LastCostReveal returns the most recently revealed card from a
 // [RevealFromHandCost] payment, or nil if none.
-func (g *Game) LastCostReveal() Card { return g.lastCostReveal }
+func (g *Game) LastCostReveal() Card { return g.resolution.LastCostReveal() }
 
 func (c *revealFromHandCost) Text() string {
 	if c.label != "" {
@@ -808,7 +808,7 @@ func (c *xManaCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 }
 
 func (c *xManaCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	x := g.currentX
+	x := g.resolution.X()
 	if x <= 0 {
 		return nil
 	}

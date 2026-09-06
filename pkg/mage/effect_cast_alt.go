@@ -209,9 +209,9 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return err
 	}
 
-	if g.currentX != 0 && xValue == 0 {
-		xValue = g.currentX
-		g.currentX = 0
+	if g.resolution.X() != 0 && xValue == 0 {
+		xValue = g.resolution.X()
+		g.resolution.SetX(0)
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{

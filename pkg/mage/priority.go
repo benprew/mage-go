@@ -62,12 +62,12 @@ func (g *Game) executePriorityAction(playerIdx int, action PriorityAction) bool 
 			return false
 		}
 	case PriorityActivateAbility:
-		prevX := g.currentX
+		prevX := g.resolution.X()
 		if action.XValue > 0 {
-			g.currentX = action.XValue
+			g.resolution.SetX(action.XValue)
 		}
 		err := g.ActivateAbilityByIndex(playerID, action.PermanentID, action.AbilityIdx, action.Targets)
-		g.currentX = prevX
+		g.resolution.SetX(prevX)
 		if err != nil {
 			if DebugPriority {
 				fmt.Printf("[PRIORITY] ActivateAbility FAILED player=%s permID=%s abilityIdx=%d targets=%v err=%v\n",

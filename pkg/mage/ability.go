@@ -358,7 +358,7 @@ func FrankensteinsMonsterAbility() *frankensteinsMonsterAbility {
 }
 
 func (a *frankensteinsMonsterAbility) OnEnter(g *Game, perm *Permanent) bool {
-	x := g.currentX
+	x := g.resolution.X()
 	p := g.GetPlayer(perm.ControllerID())
 	if p == nil {
 		return false
@@ -427,7 +427,7 @@ func (a *namelessRaceAbility) OnEnter(g *Game, perm *Permanent) bool {
 		}
 	}
 
-	amount := max(min(g.currentX, maxPay), 0)
+	amount := max(min(g.resolution.X(), maxPay), 0)
 	p.LoseLife(amount)
 	g.FireEvent(GameEvent{
 		Type:     EvtLifeLost,

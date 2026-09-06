@@ -112,13 +112,13 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		}
 	}
 
-	preparedCosts := g.prepareActionCosts(gaa.Costs(), targets, g.currentX)
+	preparedCosts := g.prepareActionCosts(gaa.Costs(), targets, g.resolution.X())
 	payment, err := g.prepareActionPaymentTransaction(actionPaymentSpec{
 		Controller:               playerID,
 		SourceID:                 cardID,
 		Costs:                    preparedCosts,
 		Targets:                  targets,
-		XValue:                   g.currentX,
+		XValue:                   g.resolution.X(),
 		ApplyActivationReduction: true,
 	})
 	if err != nil {
@@ -136,7 +136,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 		SourceID:   cardID,
 		IsAbility:  true,
 		Targets:    targets,
-		XValue:     g.currentX,
+		XValue:     g.resolution.X(),
 	}
 	obj.Effects = append(obj.Effects, gaa.Effects()...)
 	g.pushStack(obj)

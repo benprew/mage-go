@@ -70,45 +70,58 @@ var _ GameReader = (*Game)(nil)
 // --- GameReader proxy methods on *Game ---
 
 // LastExiledCard returns the most recently exiled card recorded during cost payment or effect resolution.
-func (g *Game) LastExiledCard() Card { return g.lastExiledCard }
+func (g *Game) LastExiledCard() Card { return g.resolution.LastExiledCard() }
 
 // SetLastExiledCard sets the most recently exiled card.
-func (g *Game) SetLastExiledCard(c Card) { g.lastExiledCard = c }
+func (g *Game) SetLastExiledCard(c Card) { g.resolution.SetLastExiledCard(c) }
 
 // AllPlayers returns all players in the game.
 func (g *Game) AllPlayers() []Player { return g.players }
 
 // XValue returns the current X value for the resolving spell/ability.
-func (g *Game) XValue() int { return g.currentX }
+func (g *Game) XValue() int { return g.resolution.X() }
 
 // ModeValue returns the current chosen mode for the resolving modal spell.
-func (g *Game) ModeValue() int { return g.currentMode }
+func (g *Game) ModeValue() int { return g.resolution.Mode() }
 
 // EventAmount returns the amount from the triggering event (e.g. damage dealt).
-func (g *Game) EventAmount() int { return g.currentEventAmount }
+func (g *Game) EventAmount() int { return g.resolution.EventAmount() }
 
 // EventSourceID returns the SourceID of the event that triggered the
 // currently-resolving triggered ability. For an EvtDamageDealt trigger,
 // this is the damager's permanent ID. Returns uuid.Nil when there is no
 // trigger context (e.g. spell resolution).
-func (g *Game) EventSourceID() uuid.UUID { return g.currentEventSourceID }
+func (g *Game) EventSourceID() uuid.UUID { return g.resolution.EventSourceID() }
 
 // GetResolvingCard returns the card currently being resolved from the stack.
-func (g *Game) GetResolvingCard() Card { return g.resolvingCard }
+func (g *Game) GetResolvingCard() Card { return g.resolution.ResolvingCard() }
 
 // ResolvingCastZone returns the zone the resolving spell was cast from
 // (CR 601.2a). Returns ZoneAny when no spell is resolving or the resolving
 // stack object is an ability rather than a spell. Read by triggers expressing
 // "if you cast it from your hand"/"from your graveyard" conditions, including
 // ETB triggers that fire while PutOnBattlefield is in flight.
-func (g *Game) ResolvingCastZone() Zone { return g.resolvingCastZone }
+func (g *Game) ResolvingCastZone() Zone { return g.resolution.ResolvingCastZone() }
 
 // ResolvingCastContext returns the cast-time snapshot of the spell currently
 // being resolved (CR 608.2g). Returns nil when there is no resolving spell
 // or the resolving stack object is an ability. Effects that reference
 // cast-time state ("as you cast this spell") should consult this rather
 // than re-querying live state.
-func (g *Game) ResolvingCastContext() *CastContext { return g.resolvingCastContext }
+func (g *Game) ResolvingCastContext() *CastContext { return g.resolution.ResolvingCastContext() }
+
+// ResolvingDamageDistribution returns the divided damage distribution for the resolving object.
+func (g *Game) ResolvingDamageDistribution() map[uuid.UUID]int {
+	return g.resolution.DamageDistribution()
+}
+
+// ResolvingCounterDistribution returns the counter distribution for the resolving object.
+func (g *Game) ResolvingCounterDistribution() map[uuid.UUID]int {
+	return g.resolution.CounterDistribution()
+}
+
+// Resolution returns the ResolutionState subsystem.
+func (g *Game) Resolution() *ResolutionState { return &g.resolution }
 
 // snapshotCastContext builds a CastContext for a spell about to be pushed
 // onto the stack by the controller with playerID. Captures the controller's
@@ -129,8 +142,8 @@ func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 			ctx.ControllerSubtypesAtCast[st] = true
 		}
 	}
-	if g.lastCostReveal != nil {
-		ctx.RevealedAtCast = append(ctx.RevealedAtCast, g.lastCostReveal)
+	if lastReveal := g.resolution.LastCostReveal(); lastReveal != nil {
+		ctx.RevealedAtCast = append(ctx.RevealedAtCast, lastReveal)
 	}
 	if pl := g.GetPlayer(playerID); pl != nil {
 		if drained := pl.ManaPool().LastDrainedColors; len(drained) > 0 {
@@ -667,7 +680,7 @@ func (g *Game) AllBattlefield() []*Permanent {
 }
 
 // GetResolvingTargets returns the targets of the spell currently being resolved.
-func (g *Game) GetResolvingTargets() []uuid.UUID { return g.resolvingTargets }
+func (g *Game) GetResolvingTargets() []uuid.UUID { return g.resolution.ResolvingTargets() }
 
 // GetArtifactUntapMax returns the maximum number of artifacts that may untap per turn.
 func (g *Game) GetArtifactUntapMax() int { return g.effects.Rules.ArtifactUntapMax }
@@ -676,7 +689,7 @@ func (g *Game) GetArtifactUntapMax() int { return g.effects.Rules.ArtifactUntapM
 func (g *Game) ActivePlayerIndex() int { return g.activePlayer }
 
 // SetXValue sets the X value for the currently resolving spell.
-func (g *Game) SetXValue(x int) { g.currentX = x }
+func (g *Game) SetXValue(x int) { g.resolution.SetX(x) }
 
 // GrantAttr grants an attribute to a permanent via the effect manager.
 func (g *Game) GrantAttr(permID uuid.UUID, a Attr) { g.effects.GrantAttr(permID, a) }

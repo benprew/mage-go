@@ -24,12 +24,6 @@ func (g *Game) Clone() *Game {
 		turn:                      g.turn,
 		step:                      g.step,
 		activePlayer:              g.activePlayer,
-		currentX:                  g.currentX,
-		currentMode:               g.currentMode,
-		currentEventAmount:        g.currentEventAmount,
-		currentEventSourceID:      g.currentEventSourceID,
-		resolvingCard:             g.resolvingCard, // Card ref shared
-		resolvingColorSourceID:    g.resolvingColorSourceID,
 		landsPlayedThisTurn:       g.landsPlayedThisTurn,
 		creatureDeathsThisTurn:    g.creatureDeathsThisTurn,
 		cleanupPriorityRounds:     g.cleanupPriorityRounds,
@@ -37,10 +31,7 @@ func (g *Game) Clone() *Game {
 		resolvingCombatDamage:     g.resolvingCombatDamage,
 		cardsPutIntoExileThisTurn: g.cardsPutIntoExileThisTurn,
 	}
-	if g.resolvingColorOverride != nil {
-		colors := append([]Color(nil), (*g.resolvingColorOverride)...)
-		c.resolvingColorOverride = &colors
-	}
+	c.resolution = g.resolution.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
@@ -103,12 +94,6 @@ func (g *Game) Clone() *Game {
 		c.schedule = cs
 	}
 
-	// Deep copy resolving targets.
-	if len(g.resolvingTargets) > 0 {
-		c.resolvingTargets = make([]uuid.UUID, len(g.resolvingTargets))
-		copy(c.resolvingTargets, g.resolvingTargets)
-	}
-
 	// Deep copy pending triggers (share ability/event refs, they're read-only during search).
 	if len(g.pendingTriggers) > 0 {
 		c.pendingTriggers = make([]*pendingTrigger, len(g.pendingTriggers))
@@ -150,7 +135,6 @@ func (g *Game) Clone() *Game {
 	if len(g.damageDealtToPermanentsByPermanent) > 0 {
 		c.damageDealtToPermanentsByPermanent = cloneNestedUUIDMap(g.damageDealtToPermanentsByPermanent)
 	}
-	c.lastExiledCard = g.lastExiledCard
 	c.damageTakenThisTurn = cloneUUIDIntMap(g.damageTakenThisTurn)
 	c.artifactDamageTakenThisTurn = cloneUUIDIntMap(g.artifactDamageTakenThisTurn)
 	c.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageThisStep))

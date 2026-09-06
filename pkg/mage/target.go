@@ -948,7 +948,7 @@ type artifactWithManaValueXTarget struct {
 }
 
 func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	x := g.currentX
+	x := g.resolution.X()
 	var result []uuid.UUID
 	for _, p := range g.battlefield {
 		if !p.HasType(TypeArtifact) {

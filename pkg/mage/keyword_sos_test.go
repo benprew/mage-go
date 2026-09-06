@@ -137,7 +137,7 @@ func TestPrepared_CastPreparedCopyForwardsCurrentX(t *testing.T) {
 	perm := g.PutOnBattlefield(c, a.PlayerID())
 	g.ResolveStack()
 
-	g.currentX = 3
+	g.SetXValue(3)
 	if err := g.CastPreparedSpellCopy(a.PlayerID(), perm.Card.ID(), spellFactory); err != nil {
 		t.Fatalf("CastPreparedSpellCopy: %v", err)
 	}

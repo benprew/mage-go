@@ -569,7 +569,7 @@ func (e *dealDamageEffect) Apply(ctx *EffectContext) error {
 func (*dealDividedDamageEffect) Apply(ctx *EffectContext) error {
 	dist := ctx.DamageDistribution
 	if dist == nil {
-		dist = ctx.Game.resolvingDamageDistribution
+		dist = ctx.Game.ResolvingDamageDistribution()
 	}
 	if len(dist) == 0 {
 		return nil

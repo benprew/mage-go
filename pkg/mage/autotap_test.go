@@ -387,7 +387,7 @@ func TestActivateAbilityByIndex_SetsXValue(t *testing.T) {
 	}
 
 	// Set CurrentX and activate — the stack object should capture XValue
-	g.currentX = 5
+	g.SetXValue(5)
 	err := g.ActivateAbilityByIndex(pid, perm.ID(), abilityIdx, nil)
 	if err != nil {
 		t.Fatalf("ActivateAbilityByIndex failed: %v", err)
