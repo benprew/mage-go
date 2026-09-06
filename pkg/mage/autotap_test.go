@@ -112,7 +112,7 @@ func TestCanAfford_RejectsRestrictedManaForWrongSpell(t *testing.T) {
 func TestCastSpell_AutoTapIgnoresUnusableRestrictedMana(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	g.players[0].ManaPool().AddRestricted(Colorless, 1, ArtifactSpellsOnly{})
 	first := addLand(t, g, pid, "Mountain", Red)
@@ -132,7 +132,7 @@ func TestCastSpell_AutoTapIgnoresUnusableRestrictedMana(t *testing.T) {
 func TestCastSpell_AutoTapsDeclarativeRestrictedManaSource(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	workshop := NewLand("Test Workshop", WithMultiManaAbility(ManaProduction{
 		Color:       Colorless,
@@ -161,7 +161,7 @@ func TestCastSpell_AutoTapsDeclarativeRestrictedManaSource(t *testing.T) {
 func TestCastSpell_DoesNotAutoTapDeclarativeRestrictedManaForWrongSpell(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	workshop := NewLand("Test Workshop", WithMultiManaAbility(ManaProduction{
 		Color:       Colorless,
@@ -210,7 +210,7 @@ func TestTapForMana_PreservesDeclarativeRestriction(t *testing.T) {
 func TestCastSpell_AutoTapsLockedIncreasedCost(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	mountain := addLand(t, g, pid, "Mountain", Red)
 	forest := addLand(t, g, pid, "Forest", Green)
@@ -230,7 +230,7 @@ func TestCastSpell_AutoTapsLockedIncreasedCost(t *testing.T) {
 func TestCastSpell_AutoTapDoesNotOverpayReducedCost(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	mountain := addLand(t, g, pid, "Mountain", Red)
 	forest := addLand(t, g, pid, "Forest", Green)
@@ -365,7 +365,7 @@ func TestManaCostPayment_CanPay_ConsidersUntappedSources(t *testing.T) {
 func TestActivateAbilityByIndex_SetsXValue(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	// Create a creature with an activated ability: {0}: gain 1 life
 	card := NewCreature("Test Creature", "{G}", 1, 1,
@@ -802,7 +802,7 @@ func TestAutoTapForCost_CostedManaAbilityIncludesManaBonus(t *testing.T) {
 func TestCastSpell_CostedActivatedManaAbility(t *testing.T) {
 	g := newPriorityTestGame()
 	pid := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 
 	for i, color := range []Color{Red, Black, Black} {
 		addLand(t, g, pid, fmt.Sprintf("Land %d", i), color)

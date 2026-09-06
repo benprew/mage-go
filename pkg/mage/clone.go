@@ -19,13 +19,11 @@ type UUIDMap[V any] map[uuid.UUID]V
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
-		anteEnabled:  g.anteEnabled,
-		anteSettled:  g.anteSettled,
-		turn:         g.turn,
-		step:         g.step,
-		activePlayer: g.activePlayer,
-		stopped:      g.stopped,
+		anteEnabled: g.anteEnabled,
+		anteSettled: g.anteSettled,
+		stopped:     g.stopped,
 	}
+	c.turns = g.turns.Clone()
 	c.zones = g.zones.Clone()
 	c.resolution = g.resolution.Clone()
 	c.trackers = g.trackers.Clone()
@@ -38,7 +36,6 @@ func (g *Game) Clone() *Game {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
 	}
 	c.anteResult = append([]OwnershipChange(nil), g.anteResult...)
-	c.skipNextUntap = cloneUUIDMap(g.skipNextUntap)
 
 	// Deep copy players, wrapping in SearchPlayer for non-interactive choices.
 	c.players = make([]Player, len(g.players))
@@ -54,24 +51,6 @@ func (g *Game) Clone() *Game {
 
 	// Deep copy effect manager.
 	c.effects = cloneEffectManager(g.effects)
-
-	// Deep copy extra turns.
-	if len(g.extraTurns) > 0 {
-		c.extraTurns = make([]uuid.UUID, len(g.extraTurns))
-		copy(c.extraTurns, g.extraTurns)
-	}
-
-	// Deep copy turn schedule.
-	if g.schedule != nil {
-		cs := newTurnSchedule()
-		if len(g.schedule.Remaining) > 0 {
-			cs.Remaining = make([]PhaseStep, len(g.schedule.Remaining))
-			copy(cs.Remaining, g.schedule.Remaining)
-		}
-		maps.Copy(cs.SkipNextStep, g.schedule.SkipNextStep)
-		maps.Copy(cs.SkipNextTurnFor, g.schedule.SkipNextTurnFor)
-		c.schedule = cs
-	}
 
 	c.customState = cloneCustomState(g.customState)
 

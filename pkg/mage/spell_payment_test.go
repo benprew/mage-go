@@ -9,7 +9,7 @@ import (
 func TestCastSpellCombinesPrintedAndAdditionalMana(t *testing.T) {
 	g := newPriorityTestGame()
 	playerID := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 	g.players[0].ManaPool().Add(White, 1)
 	g.players[0].ManaPool().Add(Blue, 1)
 
@@ -31,7 +31,7 @@ func TestCastSpellCombinesPrintedAndAdditionalMana(t *testing.T) {
 func TestCastSpellCombinesPrintedAndActionMana(t *testing.T) {
 	g := newPriorityTestGame()
 	playerID := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 	g.players[0].ManaPool().Add(White, 1)
 	g.players[0].ManaPool().Add(Blue, 1)
 
@@ -52,7 +52,7 @@ func TestCastSpellCombinesPrintedAndActionMana(t *testing.T) {
 func TestCastSpellUnpayableTotalCostDoesNotTapManaSources(t *testing.T) {
 	g := newPriorityTestGame()
 	playerID := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 	mountain := addLand(t, g, playerID, "Mountain", Red)
 
 	spell := NewSorcery("Unpayable Additional Life", "{R}",
@@ -83,7 +83,7 @@ func TestCastSpellUnpayableTotalCostDoesNotTapManaSources(t *testing.T) {
 func TestCastSpellLocksEitherCostAfterRemovingSpellFromHand(t *testing.T) {
 	g := newPriorityTestGame()
 	playerID := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 	g.players[0].ManaPool().Add(Black, 1)
 	g.players[0].ManaPool().Add(Colorless, 7)
 
@@ -105,7 +105,7 @@ func TestCastSpellLocksEitherCostAfterRemovingSpellFromHand(t *testing.T) {
 func TestCastSpellColorsSpentExcludeManaAbilityActivationCosts(t *testing.T) {
 	g := newPriorityTestGame()
 	playerID := g.players[0].PlayerID()
-	g.step = PrecombatMain
+	g.SetStep(PrecombatMain)
 	addLand(t, g, playerID, "Mountain 1", Red)
 	addLand(t, g, playerID, "Mountain 2", Red)
 	filter := NewArtifact("Mana Filter", "{3}",

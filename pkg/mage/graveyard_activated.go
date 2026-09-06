@@ -101,7 +101,7 @@ func (g *Game) ActivateGraveyardAbility(playerID, cardID uuid.UUID, abilityIdx i
 	}
 
 	if gaa.SorcerySpeed() {
-		if !g.step.IsMainPhase() {
+		if !g.turns.Step().IsMainPhase() {
 			return ErrSorcerySpeed
 		}
 		if g.ActivePlayerObj().PlayerID() != playerID {

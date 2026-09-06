@@ -65,18 +65,11 @@ type Game struct {
 	layer2Controllers map[uuid.UUID]uuid.UUID
 	mana              ManaSystem
 
-	turn         int
-	step         PhaseStep
-	activePlayer int // index into players
+	// TurnSystem owns turn, step, active player, extra turns, scheduling, and untap skips.
+	turns TurnSystem
 
 	// TriggerSystem owns pending, delayed, and state-triggered abilities.
 	triggers TriggerSystem
-
-	// Extra turns
-	extraTurns []uuid.UUID // player IDs who get extra turns
-
-	// Per-turn step schedule and pending skips (CR 500.7–500.11).
-	schedule *TurnSchedule
 
 	// ResolutionState owns transient resolution and cost scratch state.
 	resolution ResolutionState
@@ -86,11 +79,6 @@ type Game struct {
 
 	// DamageSystem owns damage execution, history, aggregation, and reflection.
 	damage DamageSystem
-
-	// skipNextUntap tracks object-specific one-shot untap replacements. Entries
-	// survive control changes and are consumed only by an actual untap attempt
-	// during the permanent's then-controller's untap step.
-	skipNextUntap map[uuid.UUID]int
 
 	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
 	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
@@ -129,7 +117,7 @@ type Game struct {
 }
 
 func (g *Game) ActivePlayer() int {
-	return g.activePlayer
+	return g.turns.ActivePlayerIndex()
 }
 
 // NewGame creates a new 2-player game.
@@ -152,8 +140,7 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		triggers:       NewTriggerSystem(),
 		mana:           NewManaSystem(),
 		damage:         NewDamageSystem(),
-		turn:           1,
-		schedule:       newTurnSchedule(),
+		turns:          NewTurnSystem(),
 		customState:    make(map[string]any),
 	}
 }
@@ -180,12 +167,23 @@ func (g *Game) GetOpponent(id uuid.UUID) Player {
 
 // ActivePlayerObj returns the currently active player.
 func (g *Game) ActivePlayerObj() Player {
-	return g.players[g.activePlayer]
+	if len(g.players) == 0 {
+		return nil
+	}
+	idx := g.turns.ActivePlayerIndex()
+	if idx < 0 || idx >= len(g.players) {
+		return nil
+	}
+	return g.players[idx]
 }
 
 // NonActivePlayerObj returns the non-active player.
 func (g *Game) NonActivePlayerObj() Player {
-	return g.players[(g.activePlayer+1)%2]
+	if len(g.players) < 2 {
+		return nil
+	}
+	idx := (g.turns.ActivePlayerIndex() + 1) % len(g.players)
+	return g.players[idx]
 }
 
 // FindPermanent finds a permanent by ID on the battlefield.
@@ -358,7 +356,7 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 		perm.ColorOverride = &override
 	}
 	g.zones.addOwnedPermanent(perm)
-	perm.turnControlGained = g.turn
+	perm.turnControlGained = g.turns.Turn()
 
 	g.syncAbilityContext(perm)
 
@@ -586,7 +584,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	if perm == nil {
 		return
 	}
-	delete(g.skipNextUntap, perm.ID())
+	g.turns.RemoveSkipNextUntap(perm.ID())
 	perm = g.mutablePermanentIncludingPhased(perm.ID())
 	if perm == nil {
 		return
@@ -2284,7 +2282,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	// CR 702.8 — Flash: "You may cast this spell any time you could cast an
 	// instant." A card with Flash bypasses the sorcery-speed gate entirely.
 	if !card.HasType(TypeInstant) && !cardHasKeyword(card, Flash) && !g.effects.Rules.HasFlashGrant(playerID, card) {
-		if !g.step.IsMainPhase() {
+		if !g.turns.Step().IsMainPhase() {
 			return ErrSorcerySpeed
 		}
 		if g.ActivePlayerObj().PlayerID() != playerID {
@@ -2694,22 +2692,14 @@ func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 	if g.FindPermanent(permanentID) == nil {
 		return
 	}
-	if g.skipNextUntap == nil {
-		g.skipNextUntap = make(map[uuid.UUID]int)
-	}
-	g.skipNextUntap[permanentID]++
+	g.turns.SkipNextUntap(permanentID)
 }
 
 func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
 	if p == nil || !p.Tapped {
 		return false
 	}
-	if remaining := g.skipNextUntap[p.ID()]; remaining > 0 {
-		if remaining == 1 {
-			delete(g.skipNextUntap, p.ID())
-		} else {
-			g.skipNextUntap[p.ID()] = remaining - 1
-		}
+	if g.turns.ConsumeSkipNextUntap(p.ID()) {
 		return false
 	}
 	return g.UntapPermanent(p)
@@ -2914,7 +2904,7 @@ func (g *Game) doDeclareAttackers() {
 
 	// Form attacking bands if the player has scripted them.
 	if bf, ok := active.(BandFormer); ok {
-		for _, band := range bf.GetBandFormations(g.turn, g) {
+		for _, band := range bf.GetBandFormations(g.turns.Turn(), g) {
 			if g.isValidBand(band) {
 				g.combat.AddBand(band)
 			}
@@ -3205,32 +3195,30 @@ func (g *Game) doCleanupActions() bool {
 
 // Run executes the game until the stop condition.
 func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
-	for g.turn <= maxTurns {
+	for g.turns.Turn() <= maxTurns {
 		// Turn-skip (CR 500.11): if the active player's next turn is
 		// marked as skipped, consume the skip and advance past this turn
 		// without running any steps.
 		activeID := g.ActivePlayerObj().PlayerID()
-		if g.schedule != nil && g.schedule.consumeTurnSkip(activeID) {
+		if g.turns.ConsumeTurnSkip(activeID) {
 			// Fall through to the extra-turn / next-player logic below.
 		} else if g.RunTurn(stopTurn, stopStep) {
 			return
 		}
 		// Check for extra turns
-		if len(g.extraTurns) > 0 {
-			extraPlayerID := g.extraTurns[0]
-			g.extraTurns = g.extraTurns[1:]
+		if extraPlayerID, ok := g.turns.PopExtraTurn(); ok {
 			// Find the player index
 			for i, p := range g.players {
 				if p.PlayerID() == extraPlayerID {
-					g.activePlayer = i
+					g.turns.SetActivePlayerIndex(i)
 					break
 				}
 			}
 		} else {
 			// Next turn: swap active player
-			g.activePlayer = (g.activePlayer + 1) % len(g.players)
+			g.turns.SetActivePlayerIndex((g.turns.ActivePlayerIndex() + 1) % len(g.players))
 		}
-		g.turn++
+		g.turns.IncrementTurn()
 	}
 }
 
@@ -3309,7 +3297,7 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	if g.effects.Rules.CantPlayLands() {
 		return fmt.Errorf("players can't play lands")
 	}
-	if !g.step.IsMainPhase() {
+	if !g.turns.Step().IsMainPhase() {
 		return fmt.Errorf("can only play lands during a main phase")
 	}
 	if g.ActivePlayerObj().PlayerID() != playerID {
@@ -3524,7 +3512,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 	if p == nil {
 		return nil
 	}
-	isMainPhase := g.step.IsMainPhase()
+	isMainPhase := g.turns.Step().IsMainPhase()
 	isActive := g.ActivePlayerObj().PlayerID() == playerID
 
 	var castable []Card
@@ -3586,7 +3574,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 // Checks: main phase, active player, land-play limit (respects Fastbond etc.),
 // and expansion blocks.
 func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
-	if !g.step.IsMainPhase() {
+	if !g.turns.Step().IsMainPhase() {
 		return nil
 	}
 	if g.ActivePlayerObj().PlayerID() != playerID {
@@ -3647,7 +3635,7 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 			if !aa.CanActivate(playerID, g) {
 				continue
 			}
-			if aa.SorcerySpeed() && !g.step.IsMainPhase() {
+			if aa.SorcerySpeed() && !g.turns.Step().IsMainPhase() {
 				continue
 			}
 			desc := ""

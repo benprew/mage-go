@@ -10,16 +10,12 @@ import (
 // from g.Schedule so that effects can skip or insert steps mid-turn.
 // stopAt is checked: if we reach the specified turn+step, we stop.
 func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
-	if g.schedule == nil {
-		g.schedule = newTurnSchedule()
-	}
-	// g.resetManaProducedThisTurn()
-	g.schedule.buildNextTurn()
+	g.turns.BuildNextTurn()
 	for {
-		step, ok := g.schedule.popNextStep()
+		step, ok := g.turns.PopNextStep()
 		if !ok {
 			// Put the stop step back so the next Run resumes correctly.
-			g.schedule.Remaining = append([]PhaseStep{step}, g.schedule.Remaining...)
+			g.turns.Schedule().Remaining = append([]PhaseStep{step}, g.turns.Schedule().Remaining...)
 			return false
 		}
 		g.RunStepWithPriority(step)
@@ -33,7 +29,7 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
-	g.step = step
+	g.turns.SetStep(step)
 
 	// CR 500.5: any unspent mana empties as the step/phase ends.
 	defer g.emptyManaPools()
@@ -73,7 +69,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 	case Draw:
 		// CR 103.8a: In a two-player game, the player who plays first
 		// skips the draw step of their first turn.
-		if g.turn == 1 && g.activePlayer == 0 && len(g.players) == 2 {
+		if g.turns.Turn() == 1 && g.turns.ActivePlayerIndex() == 0 && len(g.players) == 2 {
 			return
 		}
 		g.doDrawNormalDraw()

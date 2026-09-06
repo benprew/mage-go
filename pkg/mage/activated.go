@@ -275,7 +275,7 @@ func actionPartsToOptions(parts ...any) []ActionOption {
 func (a *ActionDefinition) Kind() ActionKind { return a.kind }
 
 func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
-	if a.timing == TimingUpkeepOnly && g.step != Upkeep {
+	if a.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
 		return false
 	}
 	if perm := g.FindPermanent(a.source); perm != nil {
@@ -292,7 +292,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if a.timing == TimingStepOnly && a.stepOnly != 0 && g.step != a.stepOnly {
+	if a.timing == TimingStepOnly && a.stepOnly != 0 && g.turns.Step() != a.stepOnly {
 		return false
 	}
 	if a.limits.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.limits.MaxActivationsPerTurn {
@@ -325,7 +325,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	// only be activated when its controller could cast a sorcery: main phase,
 	// active player, empty stack.
 	if a.SorcerySpeed() {
-		if !g.step.IsMainPhase() {
+		if !g.turns.Step().IsMainPhase() {
 			return false
 		}
 		if g.ActivePlayerObj().PlayerID() != controller {

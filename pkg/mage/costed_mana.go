@@ -71,13 +71,13 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 		return false
 	}
 	controller := perm.ControllerID()
-	if ability.timing == TimingUpkeepOnly && g.step != Upkeep {
+	if ability.timing == TimingUpkeepOnly && g.turns.Step() != Upkeep {
 		return false
 	}
 	if ability.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if ability.timing == TimingStepOnly && ability.stepOnly != 0 && g.step != ability.stepOnly {
+	if ability.timing == TimingStepOnly && ability.stepOnly != 0 && g.turns.Step() != ability.stepOnly {
 		return false
 	}
 	if ability.limits.MaxActivationsPerTurn > 0 && ability.activationsThisTurn >= ability.limits.MaxActivationsPerTurn {
@@ -94,7 +94,7 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 			return false
 		}
 	}
-	if ability.SorcerySpeed() && (!g.step.IsMainPhase() || g.ActivePlayerObj().PlayerID() != controller || !g.stack.IsEmpty()) {
+	if ability.SorcerySpeed() && (!g.turns.Step().IsMainPhase() || g.ActivePlayerObj().PlayerID() != controller || !g.stack.IsEmpty()) {
 		return false
 	}
 	return true

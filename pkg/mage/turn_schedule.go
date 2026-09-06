@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"maps"
+
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -36,6 +38,21 @@ type TurnSchedule struct {
 // for harnesses that may need to reset it.
 func NewTurnSchedule() *TurnSchedule {
 	return newTurnSchedule()
+}
+
+// Clone creates an independent deep copy of the TurnSchedule.
+func (ts *TurnSchedule) Clone() *TurnSchedule {
+	if ts == nil {
+		return nil
+	}
+	cs := newTurnSchedule()
+	if len(ts.Remaining) > 0 {
+		cs.Remaining = make([]core.PhaseStep, len(ts.Remaining))
+		copy(cs.Remaining, ts.Remaining)
+	}
+	maps.Copy(cs.SkipNextStep, ts.SkipNextStep)
+	maps.Copy(cs.SkipNextTurnFor, ts.SkipNextTurnFor)
+	return cs
 }
 
 // ConsumeTurnSkip exposes consumeTurnSkip for external harnesses.
@@ -90,51 +107,35 @@ func (ts *TurnSchedule) popNextStep() (core.PhaseStep, bool) {
 // AppendExtraStep queues step to run at the end of the remaining schedule
 // for the current turn. CR 500.9 / 500.10.
 func (g *Game) AppendExtraStep(step core.PhaseStep) {
-	g.schedule.Remaining = append(g.schedule.Remaining, step)
+	g.turns.AppendExtraStep(step)
 }
 
 // InsertStepAfter inserts step into the remaining schedule directly after
 // the first occurrence of anchor. If anchor is not in the remaining
 // schedule, step is appended. CR 500.9.
 func (g *Game) InsertStepAfter(anchor, step core.PhaseStep) {
-	for i, s := range g.schedule.Remaining {
-		if s == anchor {
-			rest := append([]core.PhaseStep{step}, g.schedule.Remaining[i+1:]...)
-			g.schedule.Remaining = append(g.schedule.Remaining[:i+1], rest...)
-			return
-		}
-	}
-	g.AppendExtraStep(step)
+	g.turns.InsertStepAfter(anchor, step)
 }
 
 // SkipNextOccurrenceOfStep marks one upcoming occurrence of step to be
 // skipped. If the step is still in the current turn's Remaining schedule,
 // the next pop will drop it; otherwise it applies to a future turn. CR 500.11.
 func (g *Game) SkipNextOccurrenceOfStep(step core.PhaseStep) {
-	g.schedule.SkipNextStep[step]++
+	g.turns.SkipNextOccurrenceOfStep(step)
 }
 
 // SkipNextCombatPhase queues skips for every step in the combat phase
 // (BeginCombat through EndCombat) for the next turn that reaches them.
 // Used for effects like "skip your next combat phase". CR 500.11, 506.1.
 func (g *Game) SkipNextCombatPhase() {
-	for _, s := range []core.PhaseStep{
-		core.BeginCombat,
-		core.DeclareAttackers,
-		core.DeclareBlockers,
-		core.FirstStrikeDamage,
-		core.CombatDamage,
-		core.EndCombat,
-	} {
-		g.schedule.SkipNextStep[s]++
-	}
+	g.turns.SkipNextCombatPhase()
 }
 
 // SkipNextTurnFor marks one upcoming turn of playerID as skipped. The
 // driver detects this at turn-start and proceeds to the following player /
 // extra turn. CR 500.11, 500.7.
 func (g *Game) SkipNextTurnFor(playerID uuid.UUID) {
-	g.schedule.SkipNextTurnFor[playerID]++
+	g.turns.SkipNextTurnFor(playerID)
 }
 
 // consumeTurnSkip returns true if the active player's next turn should be

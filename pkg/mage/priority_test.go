@@ -47,11 +47,11 @@ func TestRunStepWithPriority_Untap(t *testing.T) {
 
 func TestRunStepWithPriority_Draw(t *testing.T) {
 	g := newPriorityTestGame()
-	g.turn = 2 // not turn 1 so draw happens
+	g.SetTurn(2) // not turn 1 so draw happens
 
-	handBefore := len(g.players[g.activePlayer].Hand())
+	handBefore := len(g.players[g.ActivePlayer()].Hand())
 	g.RunStepWithPriority(Draw)
-	handAfter := len(g.players[g.activePlayer].Hand())
+	handAfter := len(g.players[g.ActivePlayer()].Hand())
 
 	if handAfter != handBefore+1 {
 		t.Errorf("expected hand size %d after draw, got %d", handBefore+1, handAfter)
@@ -70,8 +70,8 @@ func TestRunStepWithPriority_FullTurn(t *testing.T) {
 	}
 
 	// Verify the turn completed normally
-	if g.step != Cleanup {
-		t.Errorf("expected step Cleanup, got %v", g.step)
+	if g.GetStep() != Cleanup {
+		t.Errorf("expected step Cleanup, got %v", g.GetStep())
 	}
 }
 
@@ -91,8 +91,8 @@ func TestRunStepWithPriority_NilHandler_FullTurn(t *testing.T) {
 		for _, step := range AllSteps() {
 			g.RunStepWithPriority(step)
 		}
-		g.activePlayer = (g.activePlayer + 1) % 2
-		g.turn++
+		g.SetActivePlayerIndex((g.ActivePlayer() + 1) % 2)
+		g.SetTurn(g.CurrentTurn() + 1)
 	}
 
 	for i, p := range g.players {
@@ -112,7 +112,7 @@ func TestRunPriorityRound_NilHandler(t *testing.T) {
 
 func TestRunPriorityRound_ActionExecution(t *testing.T) {
 	g := newPriorityTestGame()
-	g.step = PrecombatMain // needed for land plays
+	g.SetStep(PrecombatMain) // needed for land plays
 
 	// Add a land to hand
 	land := NewLand("Forest")

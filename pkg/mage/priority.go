@@ -103,7 +103,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		}
 		if DebugPriority && iterations%50 == 0 {
 			fmt.Printf("[PRIORITY] WARNING: %d iterations in RunPriorityRound turn=%d step=%s mainPhase=%v stackSize=%d\n",
-				iterations, g.turn, g.step, mainPhase, g.stack.Size())
+				iterations, g.turns.Turn(), g.turns.Step(), mainPhase, g.stack.Size())
 			for i, p := range g.players {
 				fmt.Printf("[PRIORITY]   player[%d]=%s life=%d hand=%d battlefield=%d\n",
 					i, p.Name(), p.Life(), len(p.Hand()), countBattlefield(g, p.PlayerID()))
@@ -111,7 +111,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		}
 		if iterations > 500 {
 			fmt.Printf("[PRIORITY] EMERGENCY: breaking out of priority loop after %d iterations turn=%d step=%s\n",
-				iterations, g.turn, g.step)
+				iterations, g.turns.Turn(), g.turns.Step())
 			return
 		}
 
@@ -138,7 +138,7 @@ func (g *Game) runPriorityRound(mainPhase bool) {
 		// 3. Cycle through players starting from active player
 		allPassed := true
 		for i := 0; i < len(g.players); i++ {
-			playerIdx := (g.activePlayer + i) % len(g.players)
+			playerIdx := (g.turns.ActivePlayerIndex() + i) % len(g.players)
 			if timingEnabled {
 				phaseStart = time.Now()
 			}

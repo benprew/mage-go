@@ -72,9 +72,9 @@ func setupTestGame() *Game {
 	g.zones.battlefield = append(g.zones.battlefield, creature2)
 
 	// Set game state.
-	g.turn = 5
-	g.step = PrecombatMain
-	g.activePlayer = 0
+	g.SetTurn(5)
+	g.SetStep(PrecombatMain)
+	g.SetActivePlayerIndex(0)
 	g.SetLandsPlayedThisTurn(1)
 	g.trackers.Turn.RecordAttacked(creature1.ID())
 	g.trackers.Turn.RecordDamageTaken(pB.PlayerID(), 3, false)
@@ -91,14 +91,14 @@ func TestCloneIntegrity(t *testing.T) {
 	c := g.Clone()
 
 	// Scalars.
-	if c.turn != 5 {
-		t.Errorf("Turn: got %d, want 5", c.turn)
+	if c.CurrentTurn() != 5 {
+		t.Errorf("Turn: got %d, want 5", c.CurrentTurn())
 	}
-	if c.step != PrecombatMain {
-		t.Errorf("Step: got %v, want PrecombatMain", c.step)
+	if c.GetStep() != PrecombatMain {
+		t.Errorf("Step: got %v, want PrecombatMain", c.GetStep())
 	}
-	if c.activePlayer != 0 {
-		t.Errorf("ActivePlayer: got %d, want 0", c.activePlayer)
+	if c.ActivePlayerIndex() != 0 {
+		t.Errorf("ActivePlayer: got %d, want 0", c.ActivePlayerIndex())
 	}
 	if c.GetLandsPlayedThisTurn() != 1 {
 		t.Errorf("LandsPlayedThisTurn: got %d, want 1", c.GetLandsPlayedThisTurn())

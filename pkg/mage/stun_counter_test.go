@@ -27,7 +27,7 @@ func TestStunCounter_RemovedInsteadOfUntapping(t *testing.T) {
 	g.TapPermanent(bp)
 	bp.AddCounter(Stun, 2)
 
-	g.activePlayer = 0 // index of player A
+	g.SetActivePlayerIndex(0) // index of player A
 	g.doUntap()
 
 	if !bp.Tapped {
@@ -53,7 +53,7 @@ func TestStunCounter_UntapsWhenNoCountersRemain(t *testing.T) {
 
 	g.TapPermanent(bp)
 	bp.AddCounter(Stun, 1)
-	g.activePlayer = 0 // index of player A
+	g.SetActivePlayerIndex(0) // index of player A
 
 	g.doUntap()
 	if !bp.Tapped {

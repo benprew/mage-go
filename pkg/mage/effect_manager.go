@@ -594,7 +594,7 @@ func (em *EffectManager) Apply(g *Game) {
 				if p == nil {
 					continue
 				}
-				p.turnControlGained = g.turn
+				p.turnControlGained = g.turns.Turn()
 				if !p.HasAttr(AttrSummonSick) {
 					p.GrantBaseAttr(AttrSummonSick)
 				}

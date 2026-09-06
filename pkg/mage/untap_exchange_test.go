@@ -16,12 +16,12 @@ func TestSkipNextUntapFollowsPermanentAcrossControlChanges(t *testing.T) {
 		SourceID: b.PlayerID(), TargetID: perm.ID(), ControllerID: b.PlayerID(), Duration: Indefinite,
 	})
 
-	g.activePlayer = 0
+	g.SetActivePlayerIndex(0)
 	g.doUntap()
 	if !g.FindPermanent(perm.ID()).Tapped {
 		t.Fatal("noncontroller's untap step consumed skip")
 	}
-	g.activePlayer = 1
+	g.SetActivePlayerIndex(1)
 	g.doUntap()
 	if !g.FindPermanent(perm.ID()).Tapped {
 		t.Fatal("permanent did not skip its new controller's untap")
@@ -34,7 +34,7 @@ func TestSkipNextUntapFollowsPermanentAcrossControlChanges(t *testing.T) {
 
 func TestSkipNextUntapRequiresAnUntapAttemptAndIsCloneSafe(t *testing.T) {
 	g, _, _, perm := controllerTestGame(t)
-	g.activePlayer = 0
+	g.SetActivePlayerIndex(0)
 	g.SkipNextUntap(perm.ID())
 	g.doUntap()
 	perm = g.MutablePermanent(perm.ID())

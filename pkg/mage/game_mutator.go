@@ -208,7 +208,7 @@ func (g *Game) CreatureDeaths() int {
 }
 
 func (g *Game) CurrentTurn() int {
-	return g.turn
+	return g.turns.Turn()
 }
 
 // GetDamageSources returns the set of permanent IDs that dealt damage to the
@@ -252,7 +252,7 @@ func (g *Game) GetInstantOrSorceryCastThisTurn(playerID uuid.UUID) int {
 
 // GrantExtraTurn gives the specified player an extra turn after the current one.
 func (g *Game) GrantExtraTurn(playerID uuid.UUID) {
-	g.extraTurns = append(g.extraTurns, playerID)
+	g.turns.GrantExtraTurn(playerID)
 }
 
 // RemoveFromCombat removes a permanent from combat by ID.
@@ -686,7 +686,7 @@ func (g *Game) GetResolvingTargets() []uuid.UUID { return g.resolution.Resolving
 func (g *Game) GetArtifactUntapMax() int { return g.effects.Rules.ArtifactUntapMax }
 
 // ActivePlayerIndex returns the index of the active player in the Players slice.
-func (g *Game) ActivePlayerIndex() int { return g.activePlayer }
+func (g *Game) ActivePlayerIndex() int { return g.turns.ActivePlayerIndex() }
 
 // SetXValue sets the X value for the currently resolving spell.
 func (g *Game) SetXValue(x int) { g.resolution.SetX(x) }
@@ -791,29 +791,24 @@ func (g *Game) SetOnDamageDealt(f func(sourceName, targetName string, amount int
 }
 
 // SetStep sets the current phase step.
-func (g *Game) SetStep(s PhaseStep) { g.step = s }
+func (g *Game) SetStep(s PhaseStep) { g.turns.SetStep(s) }
 
 // GetStep returns the current phase step.
-func (g *Game) GetStep() PhaseStep { return g.step }
+func (g *Game) GetStep() PhaseStep { return g.turns.Step() }
 
 // SetTurn sets the current turn number.
-func (g *Game) SetTurn(n int) { g.turn = n }
+func (g *Game) SetTurn(n int) { g.turns.SetTurn(n) }
 
 // SetActivePlayerIndex sets which player is the active player by index.
-func (g *Game) SetActivePlayerIndex(idx int) { g.activePlayer = idx }
+func (g *Game) SetActivePlayerIndex(idx int) { g.turns.SetActivePlayerIndex(idx) }
 
 // PopExtraTurn removes and returns the next extra turn player ID, if any.
 func (g *Game) PopExtraTurn() (uuid.UUID, bool) {
-	if len(g.extraTurns) == 0 {
-		return uuid.UUID{}, false
-	}
-	id := g.extraTurns[0]
-	g.extraTurns = g.extraTurns[1:]
-	return id, true
+	return g.turns.PopExtraTurn()
 }
 
 // HasExtraTurns reports whether there are pending extra turns.
-func (g *Game) HasExtraTurns() bool { return len(g.extraTurns) > 0 }
+func (g *Game) HasExtraTurns() bool { return g.turns.HasExtraTurns() }
 
 // GetLandsPlayedThisTurn returns the number of lands played this turn.
 func (g *Game) GetLandsPlayedThisTurn() int { return g.trackers.Turn.LandsPlayed() }
@@ -861,10 +856,7 @@ func (g *Game) GetStack() *Stack { return g.stack }
 
 // GetSchedule returns the current turn schedule, initializing it if needed.
 func (g *Game) GetSchedule() *TurnSchedule {
-	if g.schedule == nil {
-		g.schedule = newTurnSchedule()
-	}
-	return g.schedule
+	return g.turns.Schedule()
 }
 
 // AddToBattlefield appends permanents directly to the battlefield without ETB processing.

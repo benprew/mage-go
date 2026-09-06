@@ -96,7 +96,7 @@ func TestConditionalControlExpiresPermanently(t *testing.T) {
 
 func TestControlChangeRestoresSummoningSickness(t *testing.T) {
 	g, _, b, perm := controllerTestGame(t)
-	g.turn = 3
+	g.SetTurn(3)
 	perm.RevokeBaseAttr(AttrSummonSick)
 
 	if err := ApplyEffect(g, GainControl(), b.PlayerID(), b.PlayerID(), []uuid.UUID{perm.ID()}); err != nil {
