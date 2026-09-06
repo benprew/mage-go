@@ -48,6 +48,13 @@ type (
 	Card                                      = mage.Card
 	Game                                      = mage.Game
 	GameReader                                = mage.GameReader
+	PlayerReader                              = mage.PlayerReader
+	BattlefieldReader                         = mage.BattlefieldReader
+	ResolutionReader                          = mage.ResolutionReader
+	TurnReader                                = mage.TurnReader
+	CombatReader                              = mage.CombatReader
+	TrackerReader                             = mage.TrackerReader
+	StackReader                               = mage.StackReader
 	Player                                    = mage.Player
 	Permanent                                 = mage.Permanent
 	Action                                    = mage.Action

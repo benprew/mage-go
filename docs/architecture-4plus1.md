@@ -14,46 +14,67 @@ The logical view describes the engine's principal abstractions and how card defi
 ### Core Domain Model
 
 ```text
-Game (rules engine and state machine)
+Game (aggregate root rules engine and coordinator)
   |-- Players [2]
   |     |-- Hand, Library, Graveyard, Ante
   |     |-- ManaPool
   |     '-- Life, poison, loss and per-turn state
   |
-  |-- Battlefield []*Permanent
-  |     |-- Card (definition and identity)
-  |     |-- Base and computed controller
-  |     |-- Base and granted attributes
-  |     |-- Counters, damage, tapped, phased-out and face-down state
-  |     |-- Attachments / AttachedTo
-  |     |-- RuntimeAbilities
-  |     '-- Continuous-effect overrides (type, color and P/T)
+  |-- ZoneSystem
+  |     |-- Battlefield []*Permanent (with copy-on-write search semantics)
+  |     |-- Exile []ExiledCard (including face-down visibility metadata)
+  |     |-- Entering permanent tracker (ETB)
+  |     '-- Last-known-information (LKI) snapshots
   |
-  |-- Stack
-  |     '-- StackObject (spell/ability, effects, targets and cast snapshot)
+  |-- TurnSystem
+  |     |-- Turn counter, step/phase, active player index
+  |     |-- TurnSchedule (remaining, inserted, and skipped steps/turns)
+  |     |-- Extra turns queue
+  |     '-- Skip next untap counters
   |
-  |-- Combat
-  |     |-- CombatGroup (attacker -> blockers and defender)
-  |     '-- Bands and damage assignment
+  |-- ResolutionState
+  |     |-- Transient resolving card, cast zone, and CastContext
+  |     |-- X value, chosen mode, triggering event amount & source ID
+  |     |-- Resolving targets, damage/counter distributions
+  |     '-- Last cost reveal & last sacrificed permanent
   |
-  |-- EffectManager
-  |     |-- ContinuousEffect[]
-  |     |-- ReplacementEffect[]
-  |     |-- Cycle-derived combat restrictions
-  |     |-- DamageSystem compatibility facade
-  |     '-- GameRules (mana, costs, permissions and rule modifiers)
+  |-- TriggerSystem
+  |     |-- Pending triggers
+  |     |-- Delayed triggers
+  |     '-- Armed state triggers (CR 603.8)
   |
-  |-- TurnSchedule (remaining, inserted and skipped steps/turns)
-  |-- Pending and delayed triggers
-  |-- Last-known-information snapshots
-  |-- Per-turn and per-duel trackers
-  '-- Exile []ExiledCard (including face-down visibility metadata)
+  |-- ManaSystem
+  |     |-- Mana source discovery and solver planning
+  |     '-- Auto-tap payment scratch buffers
+  |
+  |-- DamageSystem
+  |     |-- Damage execution and reflection
+  |     |-- Combat damage step aggregation and source breakdown
+  |     '-- Damage history
+  |
+  |-- TrackerSystem
+  |     |-- TurnTrackers (per-turn observations)
+  |     '-- DuelTrackers (per-duel observations)
+  |
+  |-- RandomSource (deterministic random numbers & coin flips)
+  |-- Stack (StackObjects for spells and abilities)
+  |-- Combat (CombatGroups, attacker/blocker pairings, and bands)
+  '-- EffectManager (continuous effects, replacement effects, and GameRules)
 ```
 
-### Key Types
+### Key Types and Subsystems
 
 | Type | Responsibility |
 |------|----------------|
+| `Game` | Aggregate root rules engine coordinator; owns top-level loops, cloning, and subsystem orchestration |
+| `ZoneSystem` | Battlefield copy-on-write management, exile storage, LKI snapshots, and zone transitions |
+| `TurnSystem` | Turn/step progression, active player tracking, extra turns, scheduling, and untap skips |
+| `ResolutionState` | Transient resolution scratch state (X, mode, cast snapshot, targets, distributions) |
+| `TriggerSystem` | Pending, delayed, and armed state-triggered abilities |
+| `ManaSystem` | Source discovery, mana ability solver planning, and auto-tap execution |
+| `DamageSystem` | Damage execution, combat aggregation, prevention, and history tracking |
+| `TrackerSystem` | Turn-scoped (`TurnTrackers`) and duel-scoped (`DuelTrackers`) game action observations |
+| `RandomSource` | Deterministic random number and coin flip queue |
 | `Ability` | Common identity/controller contract for spell, activated, mana, triggered and static abilities |
 | `ActionDefinition` | Shared definition for stack-using spells and activated abilities: effects, costs, targets, timing, limits and AI hints |
 | `Action` | A pending mutation that can be transformed or prevented by replacement effects |
@@ -62,8 +83,7 @@ Game (rules engine and state machine)
 | `Cost` | Payment feasibility and execution, including mana, tap, sacrifice, discard and optional/alternate costs |
 | `EffectContext` | Resolving `Game`, source, controller, targets and scratch variables passed to an effect |
 | `Effect` | One-shot resolving behavior: `Apply(*EffectContext) error`, plus text and AI-visible properties |
-| `GameReader` | Primarily read-only query interface used by values, selectors, filters and trigger conditions; `FlipCoin` is its documented impure exception |
-| `Game` | Owns mutable game state, turn execution, events, stack resolution, combat and rule enforcement |
+| `GameReader` | Composed query interface (`PlayerReader`, `BattlefieldReader`, `ResolutionReader`, `TurnReader`, `CombatReader`, `TrackerReader`, `StackReader`) used by values, selectors, filters and trigger conditions |
 | `PermanentLKI` / `LKIView` | Frozen battlefield state for dies, leaves and other last-known-information queries |
 | `Permanent` | Mutable battlefield form of a card, including computed characteristics and control state |
 | `Player` | Owns player zones and resources and supplies choices; implemented by base, human, AI, search and test players |

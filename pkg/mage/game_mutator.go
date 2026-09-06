@@ -8,20 +8,28 @@ import (
 	"github.com/google/uuid"
 )
 
-// GameReader is the read-only view of Game used by ValueSource and PlayerSelector.
-// It exposes query methods but no mutation. *Game satisfies this interface.
-type GameReader interface {
+// PlayerReader provides read-only access to players.
+type PlayerReader interface {
 	GetPlayer(uuid.UUID) Player
 	GetOpponent(uuid.UUID) Player
 	ActivePlayerObj() Player
 	NonActivePlayerObj() Player
+	AllPlayers() []Player
+}
+
+// BattlefieldReader provides read-only queries against permanents on the battlefield.
+type BattlefieldReader interface {
 	FindPermanent(uuid.UUID) *Permanent
 	FindPermanentByName(string, uuid.UUID) *Permanent
-	FindCardAnywhere(uuid.UUID) Card
+	FindPermanentIncludingPhased(uuid.UUID) *Permanent
 	AnyBattlefield(PermanentFilter) bool
 	FilterBattlefield(PermanentFilter) []*Permanent
 	CountBattlefield(PermanentFilter) int
-	AllPlayers() []Player
+	AllBattlefield() []*Permanent
+}
+
+// ResolutionReader provides read-only queries for transient resolution context.
+type ResolutionReader interface {
 	XValue() int
 	ModeValue() int
 	EventAmount() int
@@ -29,15 +37,30 @@ type GameReader interface {
 	GetResolvingCard() Card
 	ResolvingCastZone() Zone
 	ResolvingCastContext() *CastContext
-	FindStackObject(uuid.UUID) *StackObject
+	GetResolvingTargets() []uuid.UUID
+	LastExiledCard() Card
+}
+
+// TurnReader provides read-only queries for turn and active player progression.
+type TurnReader interface {
+	CurrentTurn() int
+	ActivePlayerIndex() int
+}
+
+// CombatReader provides read-only queries for combat state.
+type CombatReader interface {
 	CombatGroups() []*CombatGroup
 	CombatGroupFor(uuid.UUID) *CombatGroup
 	IsAttackingInCombat(uuid.UUID) bool
 	IsBlockingInCombat(uuid.UUID) bool
+	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
+}
+
+// TrackerReader provides read-only queries for turn-scoped and duel-scoped observations.
+type TrackerReader interface {
 	DamageTakenByPlayer(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
 	CreatureDeaths() int
-	CurrentTurn() int
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
 	GetInstantsCastThisTurn(uuid.UUID) int
@@ -45,27 +68,50 @@ type GameReader interface {
 	GetSorceriesCastThisTurn(uuid.UUID) int
 	GetInstantOrSorceryCastThisTurn(uuid.UUID) int
 	TimesTargetedThisTurn(uuid.UUID) int
-	AllBattlefield() []*Permanent
-	GetResolvingTargets() []uuid.UUID
-	FindPermanentIncludingPhased(uuid.UUID) *Permanent
-	GetArtifactUntapMax() int
-	ActivePlayerIndex() int
-	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
-	HypotheticalMana(uuid.UUID) int // returns the amount of hypthetical mana a player has available
 	PlayerCardsDrawnThisTurn(uuid.UUID) int
 	PlayerCardsLeftGraveyardThisTurn(uuid.UUID) int
 	PlayerHadCardLeaveGraveyardThisTurn(uuid.UUID) bool
 	CardsPutIntoExileThisTurn() int
+}
+
+// StackReader provides read-only queries for the stack.
+type StackReader interface {
+	FindStackObject(uuid.UUID) *StackObject
+}
+
+// GameReader is the composed read-only view of Game used by ValueSource,
+// PlayerSelector, filters, and conditions. It composes focused domain readers.
+// *Game satisfies this interface and each sub-interface.
+type GameReader interface {
+	PlayerReader
+	BattlefieldReader
+	ResolutionReader
+	TurnReader
+	CombatReader
+	TrackerReader
+	StackReader
+
+	FindCardAnywhere(uuid.UUID) Card
+	GetArtifactUntapMax() int
+	HypotheticalMana(uuid.UUID) int
 	// FlipCoin is NOT a pure query: each call is a fresh flip (and consumes
 	// scripted test results). It exists here so FlipCoinCond can run at effect
 	// resolution; never call it from trigger or state-trigger conditions,
 	// which may be evaluated repeatedly.
 	FlipCoin(uuid.UUID) bool
-	LastExiledCard() Card
 }
 
-// Compile-time check that *Game satisfies GameReader.
-var _ GameReader = (*Game)(nil)
+// Compile-time check that *Game satisfies GameReader and all sub-interfaces.
+var (
+	_ GameReader        = (*Game)(nil)
+	_ PlayerReader      = (*Game)(nil)
+	_ BattlefieldReader = (*Game)(nil)
+	_ ResolutionReader  = (*Game)(nil)
+	_ TurnReader        = (*Game)(nil)
+	_ CombatReader      = (*Game)(nil)
+	_ TrackerReader     = (*Game)(nil)
+	_ StackReader       = (*Game)(nil)
+)
 
 // --- GameReader proxy methods on *Game ---
 

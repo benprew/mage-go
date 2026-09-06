@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed.
+Implemented (Phases 0–9 Complete).
 
 This document defines a design and implementation plan to separate the
 responsibilities of mage.Game into cohesive subsystems. The refactor must

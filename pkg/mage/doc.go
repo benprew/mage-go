@@ -1,5 +1,37 @@
 // Package mage implements the two-player Magic: The Gathering rules engine.
 //
+// # Subsystem Architecture and Ownership
+//
+// [Game] serves as the aggregate root and coordinator of the engine. Rather than
+// implementing every domain rule directly, [Game] composes cohesive, stateful
+// subsystems that each own their state invariants and cloning behavior:
+//
+//   - [ZoneSystem]: Owns battlefield storage with copy-on-write semantics for AI
+//     search, exile storage with visibility metadata, entering-permanent tracking,
+//     and Last-Known Information (LKI) snapshots.
+//   - [TurnSystem]: Owns turn counters, current phase and step, active player
+//     index, extra turns, [TurnSchedule] lifecycle, and one-shot untap skip counters.
+//   - [ResolutionState]: Owns transient resolution scratch state including X values,
+//     chosen modes, event source/amount context, cast-time snapshots ([CastContext]),
+//     targets, damage/counter distributions, and cost payment reveals/sacrifices.
+//   - [TriggerSystem]: Owns pending triggers waiting for stack placement, active
+//     [DelayedTrigger] instances, and armed state triggers (CR 603.8).
+//   - [ManaSystem]: Owns mana source discovery, mana ability solver planning,
+//     and payment scratch buffers.
+//   - [DamageSystem]: Owns damage execution, combat damage step aggregation,
+//     damage history tracking, and damage reflection.
+//   - [TrackerSystem]: Owns turn-scoped observations ([TurnTrackers]) and duel-scoped
+//     observations ([DuelTrackers]).
+//   - [RandomSource]: Owns deterministic integer and coin flip queues for tests
+//     and AI simulation.
+//
+// In addition to these subsystems, [Game] coordinates the [Stack], [Combat],
+// [EffectManager] (continuous and replacement effects), and [Player] instances.
+//
+// Read-only queries are organized into focused domain interfaces:
+// [PlayerReader], [BattlefieldReader], [ResolutionReader], [TurnReader],
+// [CombatReader], [TrackerReader], and [StackReader], which compose into [GameReader].
+//
 // # Controllers and Layer 2
 //
 // A [Permanent] has a default controller and a computed controller.

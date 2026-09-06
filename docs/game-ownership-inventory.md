@@ -92,14 +92,14 @@ This document represents the Phase 0 deliverable of the Game Subsystem Refactor 
 
 ---
 
-## Phase Plan & Boundaries
+## Phase Plan & Boundaries (Completed)
 
-1. **Phase 1: ResolutionState**: Extract `resolution_state.go` with scoped Begin/End lifecycle and deep cloning.
-2. **Phase 2: TrackerSystem**: Extract `tracker_system.go` with `TurnTrackers` and `DuelTrackers`.
-3. **Phase 3: RandomSource**: Extract `random_source.go` with deterministic RNG queue.
-4. **Phase 4: TriggerSystem**: Extract `trigger_system.go` with pending, delayed, and armed state triggers.
-5. **Phase 5: ManaSystem**: Extract `mana_system.go` with scratch state, discovery, and payment planning.
-6. **Phase 6: DamageSystem**: Extract `damage_system.go` with aggregation, history, and prevention.
-7. **Phase 7: ZoneSystem**: Extract `zone_system.go` with battlefield COW, exile, and LKI.
-8. **Phase 8: TurnSystem**: Extract `turn_system.go` with schedule, active player, and extra turns.
-9. **Phase 9: Cleanup & Facades**: Shrink compatibility surfaces, update docs.
+1. **Phase 1: ResolutionState** [Done]: Extract `resolution_state.go` with scoped Begin/End lifecycle and deep cloning.
+2. **Phase 2: TrackerSystem** [Done]: Extract `tracker_system.go` with `TurnTrackers` and `DuelTrackers`.
+3. **Phase 3: RandomSource** [Done]: Extract `random_source.go` with deterministic RNG queue.
+4. **Phase 4: TriggerSystem** [Done]: Extract `trigger_system.go` with pending, delayed, and armed state triggers.
+5. **Phase 5: ManaSystem** [Done]: Extract `mana_system.go` with scratch state, discovery, and payment planning.
+6. **Phase 6: DamageSystem** [Done]: Extract `damage_system.go` with aggregation, history, and prevention.
+7. **Phase 7: ZoneSystem** [Done]: Extract `zone_system.go` with battlefield COW, exile, and LKI.
+8. **Phase 8: TurnSystem** [Done]: Extract `turn_system.go` with schedule, active player, and extra turns.
+9. **Phase 9: Cleanup & Facades** [Done]: Shrink compatibility surfaces, split `GameReader` into domain readers, update documentation and architectural models.
