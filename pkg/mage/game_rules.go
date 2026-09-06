@@ -37,6 +37,9 @@ type GameRules struct {
 	revealedTopCard          map[uuid.UUID]bool          // players playing with top card of library revealed (Future Sight, Oracle of Mul Daya). Per Apply() cycle.
 	playLandsFromZones       map[uuid.UUID]map[Zone]bool // player -> zones (other than hand) from which lands may be played. Per Apply() cycle.
 	additionalLandPlays      map[uuid.UUID]int           // per-cycle additional land-play allowance from static abilities (Azusa, Oracle of Mul Daya).
+	cantPlayLands            bool                        // true if players can't play lands (Worms of the Earth)
+	landsCantEnter           bool                        // true if lands can't enter the battlefield (Worms of the Earth)
+	deepWaterActive          map[uuid.UUID]bool          // player -> if true, lands they control produce {U} instead of other types (Deep Water)
 }
 
 // flashGrantEntry holds a continuous flash-permission grant. Player is the
@@ -67,6 +70,7 @@ func NewGameRules() *GameRules {
 		maxHandSize:              make(map[uuid.UUID]int),
 		NullifiedLandwalks:       make(map[Attr]bool),
 		ActivationCostReductions: make(map[uuid.UUID]int),
+		deepWaterActive:          make(map[uuid.UUID]bool),
 	}
 }
 
@@ -93,6 +97,8 @@ func (r *GameRules) ResetPerCycle() {
 	clear(r.revealedTopCard)
 	clear(r.playLandsFromZones)
 	clear(r.additionalLandPlays)
+	r.cantPlayLands = false
+	r.landsCantEnter = false
 }
 
 // AddRevealedTopCard marks playerID as playing with the top card of their
@@ -232,6 +238,7 @@ func (r *GameRules) ShouldEnterTapped(perm *Permanent) bool {
 // ClearEndOfTurn resets all turn-scoped game rule state.
 func (r *GameRules) ClearEndOfTurn() {
 	r.channelActive = make(map[uuid.UUID]bool)
+	r.deepWaterActive = make(map[uuid.UUID]bool)
 }
 
 // SyncManaConversions syncs mana conversion state to all player mana pools.
@@ -437,4 +444,45 @@ func (r *GameRules) NullifyLandwalk(kw Attr) {
 // IsLandwalkNullified returns true if the given landwalk attr is nullified.
 func (r *GameRules) IsLandwalkNullified(kw Attr) bool {
 	return r.NullifiedLandwalks[kw]
+}
+
+// ---------------------------------------------------------------------------
+// Land Entry Restrictions (Worms of the Earth)
+// ---------------------------------------------------------------------------
+
+// SetCantPlayLands sets whether players can play lands during this Apply() cycle.
+func (r *GameRules) SetCantPlayLands(val bool) {
+	r.cantPlayLands = val
+}
+
+// CantPlayLands reports whether players are prohibited from playing lands.
+func (r *GameRules) CantPlayLands() bool {
+	return r.cantPlayLands
+}
+
+// SetLandsCantEnter sets whether lands cannot enter the battlefield during this Apply() cycle.
+func (r *GameRules) SetLandsCantEnter(val bool) {
+	r.landsCantEnter = val
+}
+
+// LandsCantEnter reports whether lands are prohibited from entering the battlefield.
+func (r *GameRules) LandsCantEnter() bool {
+	return r.landsCantEnter
+}
+
+// ---------------------------------------------------------------------------
+// Deep Water
+// ---------------------------------------------------------------------------
+
+// SetDeepWaterActive sets whether lands controlled by playerID produce {U} this turn.
+func (r *GameRules) SetDeepWaterActive(playerID uuid.UUID) {
+	if r.deepWaterActive == nil {
+		r.deepWaterActive = make(map[uuid.UUID]bool)
+	}
+	r.deepWaterActive[playerID] = true
+}
+
+// IsDeepWaterActive reports whether Deep Water is active for playerID.
+func (r *GameRules) IsDeepWaterActive(playerID uuid.UUID) bool {
+	return r.deepWaterActive != nil && r.deepWaterActive[playerID]
 }

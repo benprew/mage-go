@@ -144,6 +144,13 @@ func (g *Game) Clone() *Game {
 
 	// Deep copy UUID-keyed maps.
 	c.damageDealtBy = cloneNestedUUIDMap(g.damageDealtBy)
+	if len(g.damageDealtToPlayersByPermanent) > 0 {
+		c.damageDealtToPlayersByPermanent = cloneNestedUUIDMap(g.damageDealtToPlayersByPermanent)
+	}
+	if len(g.damageDealtToPermanentsByPermanent) > 0 {
+		c.damageDealtToPermanentsByPermanent = cloneNestedUUIDMap(g.damageDealtToPermanentsByPermanent)
+	}
+	c.lastExiledCard = g.lastExiledCard
 	c.damageTakenThisTurn = cloneUUIDIntMap(g.damageTakenThisTurn)
 	c.artifactDamageTakenThisTurn = cloneUUIDIntMap(g.artifactDamageTakenThisTurn)
 	c.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageThisStep))

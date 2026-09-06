@@ -54,6 +54,12 @@ const (
 	// Astral counters
 	Husk // Necropolis of Azar husk counters
 
+	// The Dark counters
+	P0P1   // +0/+1 (Living Armor, Necropolis)
+	P2P0   // +2/+0 (Frankenstein's Monster)
+	P0P2   // +0/+2 (Frankenstein's Monster)
+	Hunger // Fasting
+
 	// NumCounters must remain the last entry — it sizes the fixed-length
 	// counter array on Permanent, so clone is a memcpy instead of a map copy.
 	NumCounters
@@ -135,6 +141,14 @@ func (ct CounterType) String() string {
 		return "Growth"
 	case Husk:
 		return "Husk"
+	case P0P1:
+		return "+0/+1"
+	case P2P0:
+		return "+2/+0"
+	case P0P2:
+		return "+0/+2"
+	case Hunger:
+		return "Hunger"
 	default:
 		return "Unknown"
 	}
@@ -145,6 +159,8 @@ func (ct CounterType) PowerBoost() int {
 	switch ct {
 	case P1P1, P1P0, P1P2:
 		return 1
+	case P2P0:
+		return 2
 	case M1M1:
 		return -1
 	case M2M2:
@@ -157,9 +173,9 @@ func (ct CounterType) PowerBoost() int {
 // ToughnessBoost returns the toughness modification from this counter type.
 func (ct CounterType) ToughnessBoost() int {
 	switch ct {
-	case P1P1:
+	case P1P1, P0P1:
 		return 1
-	case P1P2:
+	case P1P2, P0P2:
 		return 2
 	case M1M1:
 		return -1

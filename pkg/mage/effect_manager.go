@@ -8,7 +8,9 @@ import (
 
 // ContinuousEffect represents an ongoing effect on the game.
 type ContinuousEffect interface {
-	Apply(g *Game) error
+	Text() string
+	Properties() EffectProperties
+	Apply(*EffectContext) error
 	GetLayer() Layer
 	GetDuration() Duration
 	IsActive(g *Game) bool
@@ -117,8 +119,10 @@ func FuncContinuousEffect(layer Layer, duration Duration, apply ContinuousApplyF
 	}
 }
 
-func (e *funcContinuousEffect) GetLayer() Layer       { return e.layer }
-func (e *funcContinuousEffect) GetDuration() Duration { return e.duration }
+func (e *funcContinuousEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *funcContinuousEffect) Text() string                 { return "" }
+func (e *funcContinuousEffect) GetLayer() Layer              { return e.layer }
+func (e *funcContinuousEffect) GetDuration() Duration        { return e.duration }
 
 func (e *funcContinuousEffect) IsActive(g *Game) bool {
 	if e.active != nil {
@@ -132,8 +136,8 @@ func (e *funcContinuousEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
 }
 
-func (e *funcContinuousEffect) Apply(g *Game) error {
-	return e.apply(g, e.sourceID)
+func (e *funcContinuousEffect) Apply(ctx *EffectContext) error {
+	return e.apply(ctx.Game, e.sourceID)
 }
 
 // AttachedApplyFunc receives both the source and the attached target.
@@ -155,15 +159,18 @@ func AttachedEffect(layer Layer, apply AttachedApplyFunc) ContinuousEffect {
 	}
 }
 
-func (e *attachedEffect) GetLayer() Layer       { return e.layer }
-func (e *attachedEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *attachedEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *attachedEffect) Text() string                 { return "" }
+func (e *attachedEffect) GetLayer() Layer              { return e.layer }
+func (e *attachedEffect) GetDuration() Duration        { return WhileOnBattlefield }
 
 func (e *attachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
 	return src != nil && src.IsAttached()
 }
 
-func (e *attachedEffect) Apply(g *Game) error {
+func (e *attachedEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	src := g.FindPermanent(e.sourceID)
 	if src == nil || !src.IsAttached() {
 		return nil
@@ -225,8 +232,10 @@ func TapMaintainedTargetEffect(layer Layer, duration Duration, targetID uuid.UUI
 	}
 }
 
-func (e *targetEffect) GetLayer() Layer       { return e.layer }
-func (e *targetEffect) GetDuration() Duration { return e.duration }
+func (e *targetEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *targetEffect) Text() string                 { return "" }
+func (e *targetEffect) GetLayer() Layer              { return e.layer }
+func (e *targetEffect) GetDuration() Duration        { return e.duration }
 
 // cloneEffect deep-copies the effect so its mutable expired latch is isolated
 // from the original when the game is cloned for AI search.
@@ -255,7 +264,8 @@ func (e *targetEffect) IsActive(g *Game) bool {
 	return true
 }
 
-func (e *targetEffect) Apply(g *Game) error {
+func (e *targetEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	target := g.MutablePermanent(e.targetID)
 	if target == nil {
 		return nil
@@ -542,7 +552,7 @@ func (em *EffectManager) Apply(g *Game) {
 
 	for _, effect := range em.effects {
 		if effect.GetLayer() == LayerCopy && effect.IsActive(g) {
-			_ = effect.Apply(g)
+			_ = effect.Apply(&EffectContext{Game: g})
 			em.syncAttrDeltas(g)
 		}
 	}
@@ -555,7 +565,7 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
-				_ = e.Apply(g)
+				_ = e.Apply(&EffectContext{Game: g})
 				em.syncAttrDeltas(g)
 			}
 		}
@@ -646,7 +656,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 			if effect.GetLayer() != LayerControl || !controlEffectActive(effect, g, false) {
 				continue
 			}
-			_ = effect.Apply(g)
+			_ = effect.Apply(&EffectContext{Game: g})
 		}
 		next := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
 		stable := true
@@ -673,7 +683,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 		if effect.GetLayer() != LayerControl || !controlEffectActive(effect, g, true) {
 			continue
 		}
-		_ = effect.Apply(g)
+		_ = effect.Apply(&EffectContext{Game: g})
 	}
 	g.layer2Controllers = nil
 }
@@ -769,6 +779,11 @@ func (em *EffectManager) RemoveReplacements(sourceID uuid.UUID) {
 // Returns nil if the action was fully prevented/replaced.
 // Each replacement fires at most once per event to prevent infinite loops.
 func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
+	if dca, ok := action.(*DamageToCreatureAction); ok {
+		if perm := g.FindPermanent(dca.PermanentID()); perm != nil && perm.HasAttr(AttrDamageCantBePreventedOrRedirected) {
+			return action
+		}
+	}
 	applied := make(map[ReplacementEffect]bool)
 	tryMatch := func(action Action, preventionOnly bool) (Action, ReplacementEffect, bool) {
 		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {

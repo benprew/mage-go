@@ -126,7 +126,6 @@
 // [TargetAuraAttachedToCreatureYouControl] targets an Aura attached to a creature
 // controlled by the ability's controller.
 //
-//
 // # Mana-Production Metadata
 //
 // [ManaProductionsForAbility] provides the output profile of tap-for-mana
@@ -320,7 +319,10 @@
 // on lands controlled by opponents. A negative [MaximumHandSize] indicates no
 // hand size limit. [SetNoMaximumHandSize] applies this rule as a continuous
 // effect. [AddSourcePreventionShield] prevents a specified amount of damage
-// from one source to one player. [TryPayMana] pays effect costs from floating
+// from one source to one player. [AddHalfDamageFromSourcePreventionShield]
+// prevents half the damage (rounded down) from one source to one player.
+// [TargetPermanentManaValue] provides a [ValueSource] resolving to the target
+// permanent's mana value. [TryPayMana] pays effect costs from floating
 // mana and available mana sources.
 //
 // # Basic Land Type Changes

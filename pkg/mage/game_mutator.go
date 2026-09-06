@@ -61,12 +61,19 @@ type GameReader interface {
 	// resolution; never call it from trigger or state-trigger conditions,
 	// which may be evaluated repeatedly.
 	FlipCoin(uuid.UUID) bool
+	LastExiledCard() Card
 }
 
 // Compile-time check that *Game satisfies GameReader.
 var _ GameReader = (*Game)(nil)
 
 // --- GameReader proxy methods on *Game ---
+
+// LastExiledCard returns the most recently exiled card recorded during cost payment or effect resolution.
+func (g *Game) LastExiledCard() Card { return g.lastExiledCard }
+
+// SetLastExiledCard sets the most recently exiled card.
+func (g *Game) SetLastExiledCard(c Card) { g.lastExiledCard = c }
 
 // AllPlayers returns all players in the game.
 func (g *Game) AllPlayers() []Player { return g.players }
@@ -261,6 +268,22 @@ func (g *Game) SetPreventCombatDamage() {
 	g.effects.AddReplacement(&fogReplacement{replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn}})
 }
 
+// PreventCombatDamageToAndBy adds a replacement effect preventing all combat damage dealt to and dealt by creatureID this turn.
+func (g *Game) PreventCombatDamageToAndBy(creatureID uuid.UUID) {
+	g.effects.AddReplacement(&creatureCombatDamagePreventionReplacement{
+		replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn},
+		creatureID:      creatureID,
+	})
+}
+
+// PreventDamageToPlayerByCreaturesWithFlying adds a replacement effect preventing all damage dealt to playerID by creatures with flying this turn.
+func (g *Game) PreventDamageToPlayerByCreaturesWithFlying(playerID uuid.UUID) {
+	g.effects.AddReplacement(&playerDamageFromFlyingCreaturesPreventionReplacement{
+		replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn},
+		playerID:        playerID,
+	})
+}
+
 // AddRegenerationShield adds a regeneration shield to the specified permanent.
 func (g *Game) AddRegenerationShield(id uuid.UUID) {
 	// Find existing regeneration replacement for this permanent and increment
@@ -442,6 +465,20 @@ func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
 	})
 }
 
+// AddFastingReplacement registers the Fasting draw replacement: while sourceID is
+// on the battlefield, the controller may skip their draw step to gain 2 life.
+func (g *Game) AddFastingReplacement(playerID, sourceID uuid.UUID) {
+	g.effects.AddReplacement(&fastingReplacement{
+		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
+		playerID:        playerID,
+	})
+}
+
+// SetDeepWaterActive activates Deep Water for playerID until end of turn.
+func (g *Game) SetDeepWaterActive(playerID uuid.UUID) {
+	g.effects.Rules.SetDeepWaterActive(playerID)
+}
+
 // SetMinimumLife marks a player as having minimum-life protection (Ali from Cairo).
 func (g *Game) SetMinimumLife(playerID uuid.UUID) {
 	g.effects.AddCycleReplacement(&minimumLifeReplacement{playerID: playerID})
@@ -464,6 +501,16 @@ func (g *Game) AddSourcePreventionShield(playerID, sourceID uuid.UUID, amount in
 		playerID:        playerID,
 		dmgSource:       sourceID,
 		remaining:       amount,
+	})
+}
+
+// AddHalfDamageFromSourcePreventionShield prevents half the damage (rounded down)
+// from sourceID to playerID the next time sourceID would deal damage to playerID this turn.
+func (g *Game) AddHalfDamageFromSourcePreventionShield(playerID, sourceID uuid.UUID) {
+	g.effects.AddReplacement(&halfDamagePreventionShieldReplacement{
+		replacementBase: replacementBase{duration: EndOfTurn},
+		playerID:        playerID,
+		dmgSource:       sourceID,
 	})
 }
 

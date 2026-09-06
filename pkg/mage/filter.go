@@ -310,6 +310,30 @@ func HasColorCardFilter(color Color) CardFilter {
 	})
 }
 
+// HasSubTypeCardFilter returns a CardFilter matching cards with the given subtype.
+func HasSubTypeCardFilter(subType string) CardFilter {
+	return NewCardFilter(subType+" card", func(c Card) bool {
+		return c.HasSubType(subType)
+	})
+}
+
+// IsPermanentCard matches cards with permanent types (Artifact, Creature, Enchantment, Land, Planeswalker).
+var IsPermanentCard = NewCardFilter("permanent card", func(c Card) bool {
+	return c.HasType(TypeArtifact) || c.HasType(TypeCreature) || c.HasType(TypeEnchantment) || c.HasType(TypeLand) || c.HasType(TypePlaneswalker)
+})
+
+// AndCardFilter returns a CardFilter that matches only if all provided filters match.
+func AndCardFilter(filters ...CardFilter) CardFilter {
+	return NewCardFilter("matching card", func(c Card) bool {
+		for _, f := range filters {
+			if !f.Match(c) {
+				return false
+			}
+		}
+		return true
+	})
+}
+
 // PrintedInSet returns a filter matching permanents whose card name was
 // originally printed in the given set (by set code, e.g. "ARN").
 func PrintedInSet(setCode string) PermanentFilter {

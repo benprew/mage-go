@@ -3,6 +3,7 @@ package mage
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"math/rand"
 	"slices"
 
@@ -139,6 +140,13 @@ type Game struct {
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	damageDealtBy map[uuid.UUID]map[uuid.UUID]bool
 
+	// Game-long damage tracking by permanent (e.g. The Fallen)
+	damageDealtToPlayersByPermanent    map[uuid.UUID]map[uuid.UUID]bool
+	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
+
+	// Most recently exiled card from graveyard cost payment or effect
+	lastExiledCard Card
+
 	// Player damage tracking: maps player ID -> total damage taken this turn
 	damageTakenThisTurn map[uuid.UUID]int
 
@@ -159,6 +167,9 @@ type Game struct {
 
 	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
 	attackedThisTurn map[uuid.UUID]bool
+
+	// Creatures that attacked during a player's last turn: playerID -> permID -> bool (for Tangle Kelp)
+	attackedLastTurn map[uuid.UUID]map[uuid.UUID]bool
 
 	// Blockers this turn: key = blocker ID, value = attacker IDs it blocked
 	// Survives combat reset for post-combat checks (e.g., Glyph of Reincarnation)
@@ -354,27 +365,29 @@ func NewGame(playerA, playerB Player) *Game {
 
 func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 	return &Game{
-		players:                     []Player{playerA, playerB},
-		anteEnabled:                 anteEnabled,
-		originalOwners:              make(map[uuid.UUID]uuid.UUID),
-		stack:                       NewStack(),
-		combat:                      NewCombat(),
-		effects:                     NewEffectManager(),
-		turn:                        1,
-		damageDealtBy:               make(map[uuid.UUID]map[uuid.UUID]bool),
-		damageTakenThisTurn:         make(map[uuid.UUID]int),
-		artifactDamageTakenThisTurn: make(map[uuid.UUID]int),
-		combatDamageThisStep:        make(map[uuid.UUID]map[uuid.UUID]int),
-		combatDamageSourcesThisStep: make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
-		attackedThisTurn:            make(map[uuid.UUID]bool),
-		blockedThisTurn:             make(map[uuid.UUID][]uuid.UUID),
-		instantsCastThisTurn:        make(map[uuid.UUID]int),
-		sorceriesCastThisTurn:       make(map[uuid.UUID]int),
-		timesTargetedThisTurn:       make(map[uuid.UUID]int),
-		armedStateTriggers:          make(map[stateTriggerKey]bool),
-		schedule:                    newTurnSchedule(),
-		exileInsteadCards:           make(map[uuid.UUID]uuid.UUID),
-		customState:                 make(map[string]any),
+		players:                            []Player{playerA, playerB},
+		anteEnabled:                        anteEnabled,
+		originalOwners:                     make(map[uuid.UUID]uuid.UUID),
+		stack:                              NewStack(),
+		combat:                             NewCombat(),
+		effects:                            NewEffectManager(),
+		turn:                               1,
+		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
+		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
+		damageDealtToPermanentsByPermanent: make(map[uuid.UUID]map[uuid.UUID]bool),
+		damageTakenThisTurn:                make(map[uuid.UUID]int),
+		artifactDamageTakenThisTurn:        make(map[uuid.UUID]int),
+		combatDamageThisStep:               make(map[uuid.UUID]map[uuid.UUID]int),
+		combatDamageSourcesThisStep:        make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
+		attackedThisTurn:                   make(map[uuid.UUID]bool),
+		blockedThisTurn:                    make(map[uuid.UUID][]uuid.UUID),
+		instantsCastThisTurn:               make(map[uuid.UUID]int),
+		sorceriesCastThisTurn:              make(map[uuid.UUID]int),
+		timesTargetedThisTurn:              make(map[uuid.UUID]int),
+		armedStateTriggers:                 make(map[stateTriggerKey]bool),
+		schedule:                           newTurnSchedule(),
+		exileInsteadCards:                  make(map[uuid.UUID]uuid.UUID),
+		customState:                        make(map[string]any),
 	}
 }
 
@@ -708,6 +721,9 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 }
 
 func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
+	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
+		return nil
+	}
 	perm := NewPermanent(card, controller)
 	if colors != nil {
 		override := append([]Color(nil), (*colors)...)
@@ -793,6 +809,22 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 				g.effects.AddCopyEffect(perm.ID(), target)
 			}
 			break
+		}
+	}
+
+	for _, a := range perm.RuntimeAbilities {
+		if asEnter, ok := UnwrapAbility(a).(AsEntersBattlefieldAbility); ok {
+			if !asEnter.OnEnter(g, perm) {
+				owner := perm.Card.Owner()
+				if owner == uuid.Nil {
+					owner = perm.ControllerID()
+				}
+				p := g.GetPlayer(owner)
+				if p != nil {
+					p.AddToGraveyard(perm.Card)
+				}
+				return nil
+			}
 		}
 	}
 
@@ -1724,6 +1756,15 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 		})
 	}
 	g.damageTakenThisTurn[p.PlayerID()] += amount
+	if sourceID != uuid.Nil {
+		if g.damageDealtToPlayersByPermanent == nil {
+			g.damageDealtToPlayersByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
+		}
+		if g.damageDealtToPlayersByPermanent[sourceID] == nil {
+			g.damageDealtToPlayersByPermanent[sourceID] = make(map[uuid.UUID]bool)
+		}
+		g.damageDealtToPlayersByPermanent[sourceID][p.PlayerID()] = true
+	}
 	// Track artifact damage separately (for Reverse Polarity)
 	sourceCard := g.findCardForDamageSource(sourceID)
 	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
@@ -1833,6 +1874,15 @@ func (g *Game) executeDamageToCreature(a *DamageToCreatureAction) {
 		g.damageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
 	}
 	g.damageDealtBy[perm.ID()][sourceID] = true
+	if sourceID != uuid.Nil {
+		if g.damageDealtToPermanentsByPermanent == nil {
+			g.damageDealtToPermanentsByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
+		}
+		if g.damageDealtToPermanentsByPermanent[sourceID] == nil {
+			g.damageDealtToPermanentsByPermanent[sourceID] = make(map[uuid.UUID]bool)
+		}
+		g.damageDealtToPermanentsByPermanent[sourceID][perm.ID()] = true
+	}
 	g.FireEvent(GameEvent{
 		Type:     EvtDamageDealt,
 		SourceID: sourceID,
@@ -1897,6 +1947,28 @@ func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
 		default:
 			return true
 		}
+	}
+	return false
+}
+
+// HasDealtDamageToPlayer reports whether the given source permanent has dealt damage to playerID this game.
+func (g *Game) HasDealtDamageToPlayer(sourceID, playerID uuid.UUID) bool {
+	if g.damageDealtToPlayersByPermanent == nil {
+		return false
+	}
+	if m, ok := g.damageDealtToPlayersByPermanent[sourceID]; ok {
+		return m[playerID]
+	}
+	return false
+}
+
+// HasDealtDamageToPermanent reports whether the given source permanent has dealt damage to permID this game.
+func (g *Game) HasDealtDamageToPermanent(sourceID, permID uuid.UUID) bool {
+	if g.damageDealtToPermanentsByPermanent == nil {
+		return false
+	}
+	if m, ok := g.damageDealtToPermanentsByPermanent[sourceID]; ok {
+		return m[permID]
 	}
 	return false
 }
@@ -2678,7 +2750,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.ColorOverride, obj.SourceID)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
-			if obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
+			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
 				if slices.Contains(obj.Card.SubTypes(), "Aura") {
 					g.Attach(perm.ID(), obj.Targets[0])
 				}
@@ -3314,6 +3386,35 @@ func (g *Game) CheckStateBasedActions() {
 			g.DoSacrifice(p)
 		}
 
+		// Sacrifice creatures if controller controls a specific subtype (e.g. Goblins of the Flarg)
+		var toSacrificeControls []*Permanent
+		for _, p := range g.battlefield {
+			var forbidSubtype string
+			for _, a := range p.RuntimeAbilities {
+				if sa, ok := a.(*SacrificeIfControlsAbility); ok {
+					forbidSubtype = sa.Subtype
+					break
+				}
+			}
+			if forbidSubtype == "" {
+				continue
+			}
+			controlsForbid := false
+			for _, other := range g.battlefield {
+				if other.ID() != p.ID() && other.ControllerID() == p.ControllerID() && other.HasSubType(forbidSubtype) {
+					controlsForbid = true
+					break
+				}
+			}
+			if controlsForbid {
+				toSacrificeControls = append(toSacrificeControls, p)
+				actions = true
+			}
+		}
+		for _, p := range toSacrificeControls {
+			g.DoSacrifice(p)
+		}
+
 		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
 		// permanents with the same name, they choose one and sacrifice the rest.
 		var legendCounts map[uuid.UUID]map[string][]*Permanent // controller -> name -> perms
@@ -3673,6 +3774,14 @@ func (g *Game) doDeclareAttackers() {
 	g.ResolveStack()
 }
 
+// AttackedDuringLastTurn reports whether the given creature attacked during playerID's most recent turn.
+func (g *Game) AttackedDuringLastTurn(playerID, permID uuid.UUID) bool {
+	if m, ok := g.attackedLastTurn[playerID]; ok {
+		return m[permID]
+	}
+	return false
+}
+
 // isValidBand checks that a slice of attacker IDs meets banding requirements:
 // all must be currently attacking, at least one must have banding, and at most
 // one may lack banding.
@@ -3925,6 +4034,16 @@ func (g *Game) doCleanupActions() bool {
 	g.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.damageTakenThisTurn = make(map[uuid.UUID]int)
 	g.artifactDamageTakenThisTurn = make(map[uuid.UUID]int)
+
+	// Save active player's attackers to attackedLastTurn before clearing
+	if g.attackedLastTurn == nil {
+		g.attackedLastTurn = make(map[uuid.UUID]map[uuid.UUID]bool)
+	}
+	activeID := active.PlayerID()
+	lastMap := make(map[uuid.UUID]bool, len(g.attackedThisTurn))
+	maps.Copy(lastMap, g.attackedThisTurn)
+	g.attackedLastTurn[activeID] = lastMap
+
 	g.attackedThisTurn = make(map[uuid.UUID]bool)
 	g.blockedThisTurn = make(map[uuid.UUID][]uuid.UUID)
 	g.instantsCastThisTurn = make(map[uuid.UUID]int)
@@ -4063,6 +4182,9 @@ func (g *Game) AddAdditionalLandPlay(playerID uuid.UUID, n int) {
 // stack. Callers are responsible for draining the stack (via ResolveStack
 // or RunPriorityRound).
 func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
+	if g.effects.Rules.CantPlayLands() {
+		return fmt.Errorf("players can't play lands")
+	}
 	if !g.step.IsMainPhase() {
 		return fmt.Errorf("can only play lands during a main phase")
 	}

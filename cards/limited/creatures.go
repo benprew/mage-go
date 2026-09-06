@@ -447,7 +447,7 @@ func registerCreatures() {
 			WithSubTypes("Goblin"),
 			// Other Goblin creatures get +1/+1 and mountainwalk
 			WithStaticAbility(
-				BoostAllCreatures(1, 1, HasSubType("Goblin")),
+				BoostAllCreatures(1, 1, HasSubType("Goblin"), WhileOnBattlefield),
 				GrantKeywordToAll(Mountainwalk, HasSubType("Goblin")),
 			),
 		)
@@ -727,7 +727,7 @@ func registerCreatures() {
 			WithSubTypes("Merfolk"),
 			// Other Merfolk creatures get +1/+1 and islandwalk
 			WithStaticAbility(
-				BoostAllCreatures(1, 1, HasSubType("Merfolk")),
+				BoostAllCreatures(1, 1, HasSubType("Merfolk"), WhileOnBattlefield),
 				GrantKeywordToAll(Islandwalk, HasSubType("Merfolk")),
 			),
 		)

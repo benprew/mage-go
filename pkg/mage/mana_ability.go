@@ -115,13 +115,14 @@ func ChosenColorManaProductions(g GameReader, sourceID uuid.UUID) []ManaProducti
 }
 
 // NewManaAbility creates a tap-for-mana ability that produces one mana of the given color.
-func NewManaAbility(c Color) *ManaAbility {
+func NewManaAbility(c Color, afterProduction ...Effect) *ManaAbility {
 	return &ManaAbility{
 		BaseAbility: BaseAbility{
 			id:          uuid.New(),
 			abilityType: AbilityMana,
 		},
-		Productions: []ManaProduction{{Color: c, Amount: 1}},
+		Productions:    []ManaProduction{{Color: c, Amount: 1}},
+		postProduction: append([]Effect(nil), afterProduction...),
 	}
 }
 

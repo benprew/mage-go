@@ -273,6 +273,19 @@ func BlocksTrigger(effect Effect, optional bool) *GenericTriggered {
 		}})
 }
 
+// BlocksOrBlockedByDamagedCreatureTrigger fires when the source creature blocks
+// or becomes blocked by a creature that has been dealt damage this turn (Giant Shark).
+func BlocksOrBlockedByDamagedCreatureTrigger(effect Effect) *GenericTriggered {
+	return NewTriggered(EvtDeclaredBlocker, false, effect).
+		SetConditionData(EventBlocksOrBlockedByDamagedCreature{})
+}
+
+// BlocksOrBecomesBlockedTrigger fires when the source creature blocks or becomes blocked (Spitting Slug).
+func BlocksOrBecomesBlockedTrigger(effect Effect) *GenericTriggered {
+	return NewTriggered(EvtDeclaredBlocker, false, effect).
+		SetConditionData(EventBlocksOrBecomesBlocked{})
+}
+
 // DiesCreatureTrigger fires when another creature you control dies.
 // The filter parameter is reserved for future use.
 // Fires on EvtZoneChange (BF -> GY) with a was-creature LKI predicate

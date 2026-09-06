@@ -76,7 +76,7 @@ func TestBecomesBasicLandTargetEffectAddsIntrinsicManaDuringLayerFourApply(t *te
 	if effect.GetLayer() != LayerType {
 		t.Fatalf("effect layer = %v, want layer 4 type-changing effects", effect.GetLayer())
 	}
-	if err := effect.Apply(g); err != nil {
+	if err := effect.Apply(&EffectContext{Game: g}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -135,7 +135,7 @@ func TestBecomesBasicLandTargetEffectClearsOnlyLandSubtypes(t *testing.T) {
 	land := g.PutOnBattlefield(landCard, player.PlayerID())
 
 	effect := BecomesBasicLandTargetEffect(land.ID(), Indefinite, "Forest")
-	if err := effect.Apply(g); err != nil {
+	if err := effect.Apply(&EffectContext{Game: g}); err != nil {
 		t.Fatal(err)
 	}
 

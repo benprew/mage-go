@@ -102,6 +102,7 @@ type Player interface {
 	// must pre-filter candidates; implementations should return a card from
 	// `candidates` (or nil if empty).
 	ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card
+	ChooseCardFromGraveyard(candidates []Card, reason string, g GameReader) Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
 	ChooseNumber(minimum, maximum int, reason string) int
@@ -383,6 +384,13 @@ func (p *BasePlayer) ChooseCardsFromHand(amount int, reason string, g GameReader
 }
 
 func (p *BasePlayer) ChooseCardFromHand(candidates []Card, reason string, g GameReader) Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	return candidates[0]
+}
+
+func (p *BasePlayer) ChooseCardFromGraveyard(candidates []Card, reason string, g GameReader) Card {
 	if len(candidates) == 0 {
 		return nil
 	}

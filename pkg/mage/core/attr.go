@@ -24,6 +24,8 @@ const (
 	AttrCantActivateNonManaAbilities  // permanent's non-mana activated abilities can't be activated (CR 605 mana abilities are unaffected)
 	AttrCantActivate                  // permanent's activated abilities (including mana abilities) can't be activated (Linvala, Keeper of Silence)
 	AttrAssignsDamageEqualToToughness // permanent assigns combat damage equal to its toughness rather than its power (Doran the Siege Tower / Assault Formation)
+	AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked
+	AttrDamageCantBePreventedOrRedirected
 
 	// Type-identity attrs (battlefield) — replaces TypesAdded []CardType on Permanent.
 	AttrIsCreature
@@ -83,7 +85,7 @@ const (
 // NumAttrs is the array-bound size for per-permanent attr storage.
 // Kept slightly above attrCount so future Attrs can be added without
 // resizing array fields. Must stay >= int(attrCount).
-const NumAttrs = 64
+const NumAttrs = 80
 
 // Backward-compat aliases: capability attrs that replaced old keyword constants.
 // Existing card definitions using WithKeyword(DoesNotUntapKW) etc. compile unchanged.
@@ -118,7 +120,9 @@ func IsAbilityAttr(a Attr) bool {
 		AttrCantChangeControl,
 		AttrCantActivateNonManaAbilities,
 		AttrCantActivate,
-		AttrAssignsDamageEqualToToughness:
+		AttrAssignsDamageEqualToToughness,
+		AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked,
+		AttrDamageCantBePreventedOrRedirected:
 		return true
 	default:
 		return false
@@ -159,6 +163,10 @@ func (a Attr) String() string {
 		return "Can't Activate Abilities"
 	case AttrAssignsDamageEqualToToughness:
 		return "Assigns Combat Damage Equal to Toughness"
+	case AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked:
+		return "Can't Be Targeted by Spells Unless Attacked or Blocked"
+	case AttrDamageCantBePreventedOrRedirected:
+		return "Damage Can't Be Prevented or Redirected"
 	case AttrIsCreature:
 		return "IsCreature"
 	case AttrIsLand:

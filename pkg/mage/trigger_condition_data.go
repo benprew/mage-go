@@ -39,6 +39,46 @@ func (EventTargetIsSelf) CheckTriggerCond(evt *GameEvent, _ GameReader, sourceID
 	return evt.TargetID == sourceID
 }
 
+// EventBlocksOrBlockedByDamagedCreature checks if the source creature blocked or became
+// blocked by a creature that has been dealt damage this turn (Giant Shark).
+type EventBlocksOrBlockedByDamagedCreature struct{}
+
+func (EventBlocksOrBlockedByDamagedCreature) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	if evt.Type != EvtDeclaredBlocker {
+		return false
+	}
+	var otherID uuid.UUID
+	if evt.SourceID == sourceID {
+		otherID = evt.TargetID
+	} else if evt.TargetID == sourceID {
+		otherID = evt.SourceID
+	} else {
+		return false
+	}
+	if otherID == uuid.Nil {
+		return false
+	}
+	other := g.FindPermanent(otherID)
+	if other == nil || !other.HasType(TypeCreature) {
+		return false
+	}
+	if game, ok := g.(*Game); ok && game.PermanentDamageReceivedThisTurn(otherID) > 0 {
+		return true
+	}
+	return other.Damage > 0
+}
+
+// EventBlocksOrBecomesBlocked checks if the source creature blocked or became blocked.
+type EventBlocksOrBecomesBlocked struct{}
+
+func (EventBlocksOrBecomesBlocked) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
+	if evt.Type != EvtDeclaredBlocker {
+		return false
+	}
+	return evt.SourceID == sourceID || evt.TargetID == sourceID
+}
+
+
 // EventPlayerIsController checks evt.PlayerID == controllerID.
 type EventPlayerIsController struct{}
 

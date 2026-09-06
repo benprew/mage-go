@@ -13,18 +13,20 @@ import (
 type TargetKind int
 
 const (
-	KindTarget      TargetKind = iota // targets[0] from spell/ability targeting
-	KindSource                        // the source permanent
-	KindAttached                      // the permanent source is attached to
-	KindMatching                      // controlled creatures matching a filter
-	KindAllMatching                   // all creatures on battlefield matching a filter
-	KindGathered                      // permanent ID from a pipeline context variable
-	KindAllTargets                    // every UUID in ctx.Targets (multi-target spells/abilities)
+	KindTarget                    TargetKind = iota // targets[0] from spell/ability targeting
+	KindSource                                      // the source permanent
+	KindAttached                                    // the permanent source is attached to
+	KindMatching                                    // controlled creatures matching a filter
+	KindAllMatching                                 // all creatures on battlefield matching a filter
+	KindOtherMatching                               // all creatures on battlefield matching a filter, except source
+	KindGathered                                    // permanent ID from a pipeline context variable
+	KindAllTargets                                  // every UUID in ctx.Targets (multi-target spells/abilities)
+	KindBlockingOrBlockedBySource                   // creatures blocking or blocked by the source permanent
 )
 
 // TargetSelector describes which permanent(s) an effect applies to. Use the
 // convenience constructors ToTarget(), ToSource(), ToAttached(), ToMatching(),
-// ToAllMatching(), and ToGathered() to create selectors.
+// ToAllMatching(), ToOtherMatching(), and ToGathered() to create selectors.
 type TargetSelector struct {
 	Kind    TargetKind
 	Filter  PermanentFilter
@@ -40,6 +42,9 @@ func ToMatching(f PermanentFilter) TargetSelector {
 func ToAllMatching(f PermanentFilter) TargetSelector {
 	return TargetSelector{Kind: KindAllMatching, Filter: f}
 }
+func ToOtherMatching(f PermanentFilter) TargetSelector {
+	return TargetSelector{Kind: KindOtherMatching, Filter: f}
+}
 func ToGathered(varName string) TargetSelector {
 	return TargetSelector{Kind: KindGathered, VarName: varName}
 }
@@ -50,6 +55,9 @@ func ToGathered(varName string) TargetSelector {
 // permanent (so a multi-target spell whose first target leaves still affects
 // the surviving targets, per CR 608.2b).
 func ToAllTargets() TargetSelector { return TargetSelector{Kind: KindAllTargets} }
+func ToBlockingOrBlockedBySource() TargetSelector {
+	return TargetSelector{Kind: KindBlockingOrBlockedBySource}
+}
 
 // BoostUntilEndOfTurn is a compatibility helper for the older boost API.
 func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector) Effect {
@@ -90,6 +98,14 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		return ctx.Game.FilterBattlefield(And(ControlledBy(ctx.Controller), IsCreature, sel.Filter))
 	case KindAllMatching:
 		return ctx.Game.FilterBattlefield(And(IsCreature, sel.Filter))
+	case KindOtherMatching:
+		var out []*Permanent
+		for _, p := range ctx.Game.battlefield {
+			if p.ID() != ctx.SourceID && p.HasType(TypeCreature) && sel.Filter.Match(p, ctx.Game) {
+				out = append(out, p)
+			}
+		}
+		return out
 	case KindGathered:
 		id := ctx.TryGetUUID(sel.VarName)
 		if id == uuid.Nil {
@@ -106,6 +122,26 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 			}
 			if p := ctx.Game.FindPermanent(id); p != nil {
 				out = append(out, p)
+			}
+		}
+		return out
+	case KindBlockingOrBlockedBySource:
+		var out []*Permanent
+		for _, cg := range ctx.Game.CombatGroups() {
+			if cg.AttackerID == ctx.SourceID {
+				for _, bid := range cg.BlockerIDs {
+					if p := ctx.Game.FindPermanent(bid); p != nil {
+						out = append(out, p)
+					}
+				}
+			} else {
+				for _, bid := range cg.BlockerIDs {
+					if bid == ctx.SourceID {
+						if p := ctx.Game.FindPermanent(cg.AttackerID); p != nil {
+							out = append(out, p)
+						}
+					}
+				}
 			}
 		}
 		return out

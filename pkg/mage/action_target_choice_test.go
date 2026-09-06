@@ -155,3 +155,35 @@ func TestOpponentChosenTarget_RechecksControlRestrictionAtResolution(t *testing.
 		t.Fatalf("damage = (%d, %d), want no fight", firstPerm.Damage, secondPerm.Damage)
 	}
 }
+
+func TestTargetAuraAttachedToCreatureYouControl(t *testing.T) {
+	g, a, b := newTriggerTargetGame()
+
+	myCreature := NewCreature("My Creature", "{1}", 1, 1)
+	myCreature.SetOwner(a.PlayerID())
+	myCreaturePerm := g.PutOnBattlefield(myCreature, a.PlayerID())
+
+	oppCreature := NewCreature("Opp Creature", "{1}", 1, 1)
+	oppCreature.SetOwner(b.PlayerID())
+	oppCreaturePerm := g.PutOnBattlefield(oppCreature, b.PlayerID())
+
+	auraOnMine := NewAura("Aura On Mine", "{W}")
+	auraOnMine.SetOwner(a.PlayerID())
+	auraOnMinePerm := g.PutOnBattlefield(auraOnMine, a.PlayerID())
+	auraOnMinePerm.AttachedTo = myCreaturePerm.ID()
+
+	auraOnOpp := NewAura("Aura On Opp", "{W}")
+	auraOnOpp.SetOwner(a.PlayerID())
+	auraOnOppPerm := g.PutOnBattlefield(auraOnOpp, a.PlayerID())
+	auraOnOppPerm.AttachedTo = oppCreaturePerm.ID()
+
+	targetSpec := TargetAuraAttachedToCreatureYouControl()
+	possible := targetSpec.Possible(a.PlayerID(), nil, g)
+
+	if !slices.Contains(possible, auraOnMinePerm.ID()) {
+		t.Fatalf("expected possible targets to contain auraOnMine, got %v", possible)
+	}
+	if slices.Contains(possible, auraOnOppPerm.ID()) {
+		t.Fatalf("expected possible targets not to contain auraOnOpp, got %v", possible)
+	}
+}

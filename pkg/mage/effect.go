@@ -68,6 +68,31 @@ func (e *compositeEffect) Properties() EffectProperties {
 	return out
 }
 
+type ifSourceTappedEffect struct {
+	then Effect
+}
+
+// IfSourceTapped wraps an effect so it only resolves if the source permanent is tapped (e.g. Eater of the Dead).
+func IfSourceTapped(then Effect) Effect {
+	return &ifSourceTappedEffect{then: then}
+}
+
+func (e *ifSourceTappedEffect) Text() string {
+	return "if this creature is tapped, " + e.then.Text()
+}
+
+func (e *ifSourceTappedEffect) Properties() EffectProperties {
+	return e.then.Properties()
+}
+
+func (e *ifSourceTappedEffect) Apply(ctx *EffectContext) error {
+	perm := ctx.Game.FindPermanent(ctx.SourceID)
+	if perm == nil || !perm.Tapped {
+		return nil
+	}
+	return e.then.Apply(ctx)
+}
+
 func mergeEffectProperties(dst *EffectProperties, src EffectProperties) {
 	if dst.Outcome == OutcomeUnknown && src.Outcome != OutcomeUnknown {
 		dst.Outcome = src.Outcome
@@ -298,6 +323,26 @@ type xValue struct{}
 func XValue() ValueSource                                                { return xValue{} }
 func (v xValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return g.XValue() }
 func (v xValue) Text() string                                            { return "X" }
+
+// halfXRoundedDown is a ValueSource that returns floor(X/2).
+type halfXRoundedDown struct{}
+
+// HalfXRoundedDown creates a ValueSource that returns floor(X/2).
+func HalfXRoundedDown() ValueSource { return halfXRoundedDown{} }
+func (v halfXRoundedDown) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
+	return g.XValue() / 2
+}
+func (v halfXRoundedDown) Text() string { return "half X rounded down" }
+
+// halfXRoundedUp is a ValueSource that returns ceil(X/2).
+type halfXRoundedUp struct{}
+
+// HalfXRoundedUp creates a ValueSource that returns ceil(X/2).
+func HalfXRoundedUp() ValueSource { return halfXRoundedUp{} }
+func (v halfXRoundedUp) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
+	return (g.XValue() + 1) / 2
+}
+func (v halfXRoundedUp) Text() string { return "half X rounded up" }
 
 // mulValue multiplies two ValueSources.
 type mulValue struct {
@@ -558,6 +603,21 @@ func (s selectEachOpponent) Select(g GameReader, _, controller uuid.UUID, _ []uu
 }
 func (s selectEachOpponent) Text() string { return "each opponent" }
 
+// selectOpponent returns the first opponent of the controller (in a 2-player game, the only opponent).
+type selectOpponent struct{}
+
+// SelectOpponent creates a PlayerSelector that returns an opponent of the controller.
+func SelectOpponent() PlayerSelector { return selectOpponent{} }
+func (s selectOpponent) Select(g GameReader, _, controller uuid.UUID, _ []uuid.UUID) []uuid.UUID {
+	for _, p := range g.AllPlayers() {
+		if p.PlayerID() != controller {
+			return []uuid.UUID{p.PlayerID()}
+		}
+	}
+	return nil
+}
+func (s selectOpponent) Text() string { return "an opponent" }
+
 // selectAttachedController follows source → AttachedTo → Controller.
 type selectAttachedController struct{}
 
@@ -642,3 +702,85 @@ func (s selectTargetPermanentController) Select(g GameReader, _, _ uuid.UUID, ta
 	return nil
 }
 func (s selectTargetPermanentController) Text() string { return "that permanent's controller" }
+
+type exiledCardManaValue struct{}
+
+// ExiledCardManaValue returns a ValueSource equal to the mana value of the most recently exiled card.
+func ExiledCardManaValue() ValueSource { return exiledCardManaValue{} }
+
+func (v exiledCardManaValue) Resolve(g GameReader, _, _ uuid.UUID, _ []uuid.UUID) int {
+	if c := g.LastExiledCard(); c != nil {
+		return c.ManaCost().CMC()
+	}
+	return 0
+}
+
+func (v exiledCardManaValue) Text() string { return "the exiled card's mana value" }
+
+type targetPermanentManaValue struct{}
+
+// TargetPermanentManaValue returns a ValueSource equal to the mana value of targets[0].
+func TargetPermanentManaValue() ValueSource { return targetPermanentManaValue{} }
+
+func (v targetPermanentManaValue) Resolve(g GameReader, _, _ uuid.UUID, targets []uuid.UUID) int {
+	if len(targets) == 0 {
+		return 0
+	}
+	if p := g.FindPermanent(targets[0]); p != nil && p.Card != nil {
+		return p.Card.ManaCost().CMC()
+	}
+	if game, ok := g.(*Game); ok {
+		if lki := game.LKI(targets[0]); lki != nil && lki.Snapshot != nil && lki.Snapshot.Card != nil {
+			return lki.Snapshot.Card.ManaCost().CMC()
+		}
+	}
+	return 0
+}
+
+func (v targetPermanentManaValue) Text() string { return "that creature's mana value" }
+
+type exileEventSourceEffect struct{}
+
+// ExileEventSourceEffect exiles the permanent/card that caused the triggering event from the graveyard.
+func ExileEventSourceEffect() Effect { return &exileEventSourceEffect{} }
+
+func (e *exileEventSourceEffect) Text() string                 { return "exile that creature" }
+func (e *exileEventSourceEffect) Properties() EffectProperties { return EffectProperties{} }
+
+func (e *exileEventSourceEffect) Apply(ctx *EffectContext) error {
+	cardID := ctx.Game.EventSourceID()
+	for _, p := range ctx.Game.AllPlayers() {
+		if card, ok := ctx.Game.MoveFromGraveyard(p.PlayerID(), cardID, ZoneExile); ok {
+			ctx.Game.ExileCard(card, ctx.SourceID)
+			return nil
+		}
+	}
+	return nil
+}
+
+type theFallenUpkeepEffect struct{}
+
+// TheFallenUpkeepEffect deals 1 damage to each opponent and planeswalker the source has dealt damage to this game.
+func TheFallenUpkeepEffect() Effect { return &theFallenUpkeepEffect{} }
+
+func (e *theFallenUpkeepEffect) Text() string {
+	return "deals 1 damage to each opponent and planeswalker it has dealt damage to this game"
+}
+func (e *theFallenUpkeepEffect) Properties() EffectProperties { return EffectProperties{} }
+
+func (e *theFallenUpkeepEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
+	sourceID := ctx.SourceID
+	controller := ctx.Controller
+	for _, p := range g.AllPlayers() {
+		if p.PlayerID() != controller && g.HasDealtDamageToPlayer(sourceID, p.PlayerID()) {
+			g.DealDamageToPlayer(p, 1, sourceID)
+		}
+	}
+	for _, perm := range g.battlefield {
+		if perm.HasType(TypePlaneswalker) && perm.ControllerID() != controller && g.HasDealtDamageToPermanent(sourceID, perm.ID()) {
+			g.DealDamageToPermanent(perm, 1, sourceID)
+		}
+	}
+	return nil
+}

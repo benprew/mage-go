@@ -190,6 +190,25 @@ func SacrificeUnlessLand(subtype string) *SacrificeUnlessLandAbility {
 	}
 }
 
+// SacrificeIfControlsAbility requires the controller to sacrifice the permanent
+// as a state-based action if they control another permanent of a specific subtype (e.g. Dwarf).
+type SacrificeIfControlsAbility struct {
+	BaseAbility
+	Subtype string
+}
+
+// SacrificeIfControls creates a static ability that sacrifices the source as a state-based action
+// if the controller controls a permanent of the given subtype (e.g. "Dwarf" for Goblins of the Flarg).
+func SacrificeIfControls(subtype string) *SacrificeIfControlsAbility {
+	return &SacrificeIfControlsAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+		Subtype: subtype,
+	}
+}
+
 // EntersWithXCountersAbility is a replacement effect that adds X counters when
 // the permanent enters the battlefield.
 type EntersWithXCountersAbility struct {
@@ -314,4 +333,107 @@ func ETBEffect(effect Effect) *ETBEffectAbility {
 		},
 		Effect: effect,
 	}
+}
+
+// AsEntersBattlefieldAbility is an interface for abilities that modify how a permanent enters the battlefield
+// or replace its entry entirely (e.g. Frankenstein's Monster, Nameless Race).
+// If OnEnter returns false, the permanent is put into its owner's graveyard instead of the battlefield.
+type AsEntersBattlefieldAbility interface {
+	Ability
+	OnEnter(g *Game, perm *Permanent) bool
+}
+
+type frankensteinsMonsterAbility struct {
+	BaseAbility
+}
+
+// FrankensteinsMonsterAbility creates the ETB replacement ability for Frankenstein's Monster.
+func FrankensteinsMonsterAbility() *frankensteinsMonsterAbility {
+	return &frankensteinsMonsterAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+	}
+}
+
+func (a *frankensteinsMonsterAbility) OnEnter(g *Game, perm *Permanent) bool {
+	x := g.currentX
+	p := g.GetPlayer(perm.ControllerID())
+	if p == nil {
+		return false
+	}
+	var creatureCards []Card
+	for _, c := range p.Graveyard() {
+		if c.HasType(TypeCreature) {
+			creatureCards = append(creatureCards, c)
+		}
+	}
+	if len(creatureCards) < x {
+		return false
+	}
+	toExile := creatureCards[:x]
+	for _, c := range toExile {
+		removed, ok := g.MoveFromGraveyard(perm.ControllerID(), c.ID(), ZoneExile)
+		if ok && removed != nil {
+			g.ExileCard(removed, perm.ID())
+		}
+		choice := p.ChooseString([]string{"+1/+1", "+2/+0", "+0/+2"}, "Choose counter for Frankenstein's Monster")
+		ct := P1P1
+		switch choice {
+		case "+2/+0":
+			ct = P2P0
+		case "+0/+2":
+			ct = P0P2
+		}
+		g.AddCountersWithReplacement(perm, ct, 1, perm.ID(), true)
+	}
+	return true
+}
+
+type namelessRaceAbility struct {
+	BaseAbility
+}
+
+// NamelessRaceAbility creates the ETB life-payment ability for Nameless Race.
+func NamelessRaceAbility() *namelessRaceAbility {
+	return &namelessRaceAbility{
+		BaseAbility: BaseAbility{
+			id:          uuid.New(),
+			abilityType: AbilityStatic,
+		},
+	}
+}
+
+func (a *namelessRaceAbility) OnEnter(g *Game, perm *Permanent) bool {
+	p := g.GetPlayer(perm.ControllerID())
+	if p == nil {
+		return false
+	}
+	maxPay := 0
+	for _, opp := range g.AllPlayers() {
+		if opp.PlayerID() == perm.ControllerID() {
+			continue
+		}
+		for _, battlefieldPerm := range g.battlefield {
+			if battlefieldPerm.ControllerID() == opp.PlayerID() && !battlefieldPerm.IsToken && slices.Contains(battlefieldPerm.Colors(), White) {
+				maxPay++
+			}
+		}
+		for _, c := range opp.Graveyard() {
+			if slices.Contains(c.ManaCost().Colors(), White) {
+				maxPay++
+			}
+		}
+	}
+
+	amount := max(min(g.currentX, maxPay), 0)
+	p.LoseLife(amount)
+	g.FireEvent(GameEvent{
+		Type:     EvtLifeLost,
+		PlayerID: p.PlayerID(),
+		Amount:   amount,
+	})
+	perm.StoredValue = amount
+	return true
 }

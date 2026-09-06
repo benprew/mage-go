@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -664,6 +665,59 @@ func (c *exileFromGraveyardCost) Text() string {
 		return "Exile a card from your graveyard"
 	}
 	return fmt.Sprintf("Exile %d cards from your graveyard", c.amount)
+}
+
+type exileMatchingCardFromGraveyardCost struct {
+	filter CardFilter
+	text   string
+}
+
+// ExileMatchingCardFromGraveyardCost creates a cost that requires the controller
+// to exile a card matching the given filter from their graveyard.
+func ExileMatchingCardFromGraveyardCost(filter CardFilter, text string) Cost {
+	return &exileMatchingCardFromGraveyardCost{filter: filter, text: text}
+}
+
+func (c *exileMatchingCardFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return false
+	}
+	return slices.ContainsFunc(p.Graveyard(), c.filter.Match)
+}
+
+func (c *exileMatchingCardFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil {
+		return ErrPlayerNotFound
+	}
+	var candidates []Card
+	for _, card := range p.Graveyard() {
+		if c.filter.Match(card) {
+			candidates = append(candidates, card)
+		}
+	}
+	if len(candidates) == 0 {
+		return fmt.Errorf("no matching card in graveyard to exile")
+	}
+	chosen := p.ChooseCardFromGraveyard(candidates, c.text, g)
+	if chosen == nil {
+		chosen = candidates[0]
+	}
+	removed, ok := g.MoveFromGraveyard(controller, chosen.ID(), ZoneExile)
+	if !ok || removed == nil {
+		return fmt.Errorf("failed to move card %s from graveyard", chosen.Name())
+	}
+	g.ExileCard(removed, sourceID)
+	g.SetLastExiledCard(removed)
+	return nil
+}
+
+func (c *exileMatchingCardFromGraveyardCost) Text() string {
+	if c.text != "" {
+		return c.text
+	}
+	return "Exile a card from your graveyard"
 }
 
 // returnToHandCost requires returning a permanent you control to its owner's hand.

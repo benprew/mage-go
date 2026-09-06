@@ -899,6 +899,41 @@ func TargetArtifact() Target {
 	return TargetPermanent(IsArtifact)
 }
 
+// TargetAuraAttachedToCreatureYouControl creates a target that selects an Aura
+// attached to a creature the controller controls.
+func TargetAuraAttachedToCreatureYouControl() Target {
+	return &auraAttachedToCreatureYouControlTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1},
+	}
+}
+
+type auraAttachedToCreatureYouControlTarget struct {
+	BaseTarget
+}
+
+func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	var result []uuid.UUID
+	for _, p := range g.battlefield {
+		if !p.IsAttached() || (!p.HasType(TypeEnchantment) && !p.HasSubType("Aura")) {
+			continue
+		}
+		host := g.FindPermanent(p.AttachedTo)
+		if host == nil || !host.HasType(TypeCreature) || host.ControllerID() != controller {
+			continue
+		}
+		if !p.CanBeTargetedBy(sourceCard, controller, g) {
+			continue
+		}
+		result = append(result, p.ID())
+	}
+	return result
+}
+
+func (t *auraAttachedToCreatureYouControlTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
 // TargetArtifactWithManaValueX creates a target that selects an artifact on the
 // battlefield whose mana value equals the current X value (g.currentX). Used by
 // spells like Detonate where the targeting restriction depends on X.
@@ -990,6 +1025,27 @@ func (t *SpellOrPermanentTarget) Possible(controller uuid.UUID, sourceCard Card,
 }
 
 func (t *SpellOrPermanentTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
+	t.chosen = chosen
+	return nil
+}
+
+// DamageSourceTarget targets any permanent or spell on the stack as a source of damage.
+type DamageSourceTarget struct {
+	BaseTarget
+}
+
+// TargetDamageSource creates a target for a damage source (a permanent or a spell on the stack).
+func TargetDamageSource() Target {
+	return &DamageSourceTarget{BaseTarget: BaseTarget{min: 1, max: 1}}
+}
+
+func (t *DamageSourceTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	permanents := TargetPermanent().Possible(controller, sourceCard, g)
+	spells := TargetSpellOnStack().Possible(controller, sourceCard, g)
+	return uniqueTargetCandidates(append(permanents, spells...))
+}
+
+func (t *DamageSourceTarget) Choose(_ uuid.UUID, _ Card, _ *Game, chosen []uuid.UUID) error {
 	t.chosen = chosen
 	return nil
 }

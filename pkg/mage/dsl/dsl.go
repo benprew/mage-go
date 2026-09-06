@@ -193,6 +193,7 @@ var (
 	WithDynamicManaAbility       = mage.WithDynamicManaAbility
 	WithAnyColorMana             = mage.WithAnyColorMana
 	WithStepOnly                 = mage.WithStepOnly
+	WithSorcerySpeed             = mage.WithSorcerySpeed
 )
 
 // =============================================================================
@@ -210,6 +211,7 @@ var (
 	BeginningOfUpkeepTrigger                   = mage.BeginningOfUpkeepTrigger
 	AttacksTrigger                             = mage.AttacksTrigger
 	BlocksTrigger                              = mage.BlocksTrigger
+	BlocksOrBecomesBlockedTrigger              = mage.BlocksOrBecomesBlockedTrigger
 	EntersBattlefieldTrigger                   = mage.EntersBattlefieldTrigger
 	StaticAbility                              = mage.StaticAbility
 	GrantAbilityToAttached                     = mage.GrantAbilityToAttached
@@ -223,6 +225,7 @@ var (
 	BoostAllCreatures                          = mage.BoostAllCreatures
 	BoostOtherControlledCreatures              = mage.BoostOtherControlledCreatures
 	GrantKeywordToAll                          = mage.GrantKeywordToAll
+	GrantKeywordToAllIncludingSource           = mage.GrantKeywordToAllIncludingSource
 	GrantKeywordToOtherControlled              = mage.GrantKeywordToOtherControlled
 	LimitLandUntaps                            = mage.LimitLandUntaps
 	PreventUntapForMatching                    = mage.PreventUntapForMatching
@@ -278,6 +281,9 @@ var (
 	BeginningOfAttachedControllerUpkeepTrigger = mage.BeginningOfAttachedControllerUpkeepTrigger
 	DealsDamageToOpponentTrigger               = mage.DealsDamageToOpponentTrigger
 	SacrificeUnlessLand                        = mage.SacrificeUnlessLand
+	SacrificeIfControls                        = mage.SacrificeIfControls
+	BlocksOrBlockedByDamagedCreatureTrigger    = mage.BlocksOrBlockedByDamagedCreatureTrigger
+	ToughnessEqualsControlledCount             = mage.ToughnessEqualsControlledCount
 	CreatureDealtDamageBySourceDiesTrigger     = mage.CreatureDealtDamageBySourceDiesTrigger
 	DiesTrigger                                = mage.DiesTrigger
 	OnLeaveZone                                = mage.OnLeaveZone
@@ -286,6 +292,8 @@ var (
 	EntersWithXCounters                        = mage.EntersWithXCounters
 	BeginningOfEachEndStepTrigger              = mage.BeginningOfEachEndStepTrigger
 	CopyCreatureOnETB                          = mage.CopyCreatureOnETB
+	FrankensteinsMonsterAbility                = mage.FrankensteinsMonsterAbility
+	NamelessRaceAbility                        = mage.NamelessRaceAbility
 	ETBEffect                                  = mage.ETBEffect
 	AnyCreatureDiesTrigger                     = mage.AnyCreatureDiesTrigger
 	BeginningOfEachDrawStepTrigger             = mage.BeginningOfEachDrawStepTrigger
@@ -425,11 +433,17 @@ var (
 	CopySpellOnStack                          = mage.CopySpellOnStack
 	DoubleTargetPower                         = mage.DoubleTargetPower
 	PreventAllCombatDamage                    = mage.PreventAllCombatDamage
+	PreventCombatDamageToAndByTarget          = mage.PreventCombatDamageToAndByTarget
 	ForcefieldEffect                          = mage.ForcefieldEffect
 	CloneTarget                               = mage.CloneTarget
 	BlackViseEffect                           = mage.BlackViseEffect
 	TheRackEffect                             = mage.TheRackEffect
 	CompositeEffects                          = mage.CompositeEffects
+	IfSourceTapped                            = mage.IfSourceTapped
+	GrantProtectionTarget                     = mage.GrantProtectionTarget
+	PreventDamageToYouByCreaturesWithFlying   = mage.PreventDamageToYouByCreaturesWithFlying
+	FightTarget                               = mage.FightTarget
+	PutFromHandOntoBattlefield                = mage.PutFromHandOntoBattlefield
 	ChangeColorEffect                         = mage.ChangeColorEffect
 	DestroyAllCreatures                       = mage.DestroyAllCreatures
 	DestroyAllCreaturesNoRegen                = mage.DestroyAllCreaturesNoRegen
@@ -442,6 +456,7 @@ var (
 	DestroyGathered                           = mage.DestroyGathered
 	DestroyTargetStep                         = mage.DestroyTargetStep
 	ExileTargetStep                           = mage.ExileTargetStep
+	ExileTargetCardFromGraveyard              = mage.ExileTargetCardFromGraveyard
 	DestroyAttachedStep                       = mage.DestroyAttachedStep
 	BalanceEffect                             = mage.BalanceEffect
 	CounterSpell                              = mage.CounterSpell
@@ -482,11 +497,15 @@ var (
 	ToAttached                             = mage.ToAttached
 	ToTarget                               = mage.ToTarget
 	ToSource                               = mage.ToSource
+	ToBlockingOrBlockedBySource            = mage.ToBlockingOrBlockedBySource
 	ToGathered                             = mage.ToGathered
 	ToMatching                             = mage.ToMatching
+	ToOtherMatching                        = mage.ToOtherMatching
 	GrantAttrToGathered                    = mage.GrantAttrToGathered
 	DiscardRandom                          = mage.DiscardRandom
 	ReturnSourceFromGraveyardToBattlefield = mage.ReturnSourceFromGraveyardToBattlefield
+	ExileEventSourceEffect                 = mage.ExileEventSourceEffect
+	TheFallenUpkeepEffect                  = mage.TheFallenUpkeepEffect
 	PTEqualsCount                          = mage.PTEqualsCount
 	PTEqualsControlledCount                = mage.PTEqualsControlledCount
 
@@ -539,50 +558,54 @@ var (
 // =============================================================================
 
 var (
-	And                 = mage.And
-	Or                  = mage.Or
-	Not                 = mage.Not
-	HasSubType          = mage.HasSubType
-	HasKeywordFilter    = mage.HasKeywordFilter
-	NotHasKeywordFilter = mage.NotHasKeywordFilter
-	IsID                = mage.IsID
-	IsBandedWith        = mage.IsBandedWith
-	IsCreature          = mage.IsCreature
-	IsArtifact          = mage.IsArtifact
-	IsEnchantment       = mage.IsEnchantment
-	IsLand              = mage.IsLand
-	IsLegendary         = mage.IsLegendary
-	IsToken             = mage.IsToken
-	NewPermanentFilter  = mage.NewPermanentFilter
-	NewCardFilter       = mage.NewCardFilter
-	IsArtifactCard      = mage.IsArtifactCard
-	CreatedByFilter     = mage.CreatedByFilter
-	HasPowerGTE         = mage.HasPowerGTE
-	HasPowerLTE         = mage.HasPowerLTE
-	IsTapped            = mage.IsTapped
-	IsUntapped          = mage.IsUntapped
-	IsEnchanted         = mage.IsEnchanted
-	Named               = mage.Named
-	IsAttacking         = mage.IsAttacking
-	IsBlocking          = mage.IsBlocking
-	ControlledBy        = mage.ControlledBy
-	NotControlledBy     = mage.NotControlledBy
-	OwnedBy             = mage.OwnedBy
-	NotOwnedBy          = mage.NotOwnedBy
-	PrintedInSet        = mage.PrintedInSet
-	IsAuraOnLand        = mage.IsAuraOnLand
-	HasColorFilter      = mage.HasColorFilter
-	HasColorCardFilter  = mage.HasColorCardFilter
-	AnyPermanent        = mage.AnyPermanent
+	And                  = mage.And
+	Or                   = mage.Or
+	Not                  = mage.Not
+	HasSubType           = mage.HasSubType
+	HasKeywordFilter     = mage.HasKeywordFilter
+	NotHasKeywordFilter  = mage.NotHasKeywordFilter
+	IsID                 = mage.IsID
+	IsBandedWith         = mage.IsBandedWith
+	IsCreature           = mage.IsCreature
+	IsArtifact           = mage.IsArtifact
+	IsEnchantment        = mage.IsEnchantment
+	IsLand               = mage.IsLand
+	IsLegendary          = mage.IsLegendary
+	IsToken              = mage.IsToken
+	NewPermanentFilter   = mage.NewPermanentFilter
+	NewCardFilter        = mage.NewCardFilter
+	IsArtifactCard       = mage.IsArtifactCard
+	CreatedByFilter      = mage.CreatedByFilter
+	HasPowerGTE          = mage.HasPowerGTE
+	HasPowerLTE          = mage.HasPowerLTE
+	IsTapped             = mage.IsTapped
+	IsUntapped           = mage.IsUntapped
+	IsEnchanted          = mage.IsEnchanted
+	Named                = mage.Named
+	IsAttacking          = mage.IsAttacking
+	IsBlocking           = mage.IsBlocking
+	ControlledBy         = mage.ControlledBy
+	NotControlledBy      = mage.NotControlledBy
+	OwnedBy              = mage.OwnedBy
+	NotOwnedBy           = mage.NotOwnedBy
+	PrintedInSet         = mage.PrintedInSet
+	IsAuraOnLand         = mage.IsAuraOnLand
+	HasColorFilter       = mage.HasColorFilter
+	HasColorCardFilter   = mage.HasColorCardFilter
+	HasSubTypeCardFilter = mage.HasSubTypeCardFilter
+	IsPermanentCard      = mage.IsPermanentCard
+	AndCardFilter        = mage.AndCardFilter
+	AnyPermanent         = mage.AnyPermanent
 
 	// Static-ability "while" guards (functions, not filters, but used the
 	// same way at the call site)
-	WhileSourceAttacking = mage.WhileSourceAttacking
-	WhileSourceUntapped  = mage.WhileSourceUntapped
-	WhileControlling     = mage.WhileControlling
-	SourceUntapped       = mage.SourceUntapped
-	SourceTapped         = mage.SourceTapped
-	SourceAttached       = mage.SourceAttached
+	WhileSourceAttacking  = mage.WhileSourceAttacking
+	WhileSourceUntapped   = mage.WhileSourceUntapped
+	WhileControlling      = mage.WhileControlling
+	WhileOpponentControls = mage.WhileOpponentControls
+	SourceUntapped        = mage.SourceUntapped
+	SourceTapped          = mage.SourceTapped
+	SourceAttached        = mage.SourceAttached
 )
 
 // =============================================================================
@@ -601,8 +624,10 @@ var (
 	TargetOtherCreature                     = mage.TargetOtherCreature
 	TargetArtifact                          = mage.TargetArtifact
 	TargetDamageAnyTarget                   = mage.TargetDamageAnyTarget
+	TargetDamageSource                      = mage.TargetDamageSource
 	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
 	TargetCreatureYouControl                = mage.TargetCreatureYouControl
+	TargetAuraAttachedToCreatureYouControl  = mage.TargetAuraAttachedToCreatureYouControl
 	TargetUpToNCreaturesOpponentControls    = mage.TargetUpToNCreaturesOpponentControls
 	TargetPermanent                         = mage.TargetPermanent
 	TargetSpellOrPermanent                  = mage.TargetSpellOrPermanent
@@ -617,6 +642,7 @@ var (
 	TargetArtifactOrEnchantment             = mage.TargetArtifactOrEnchantment
 	TargetCreatureInYourGraveyard           = mage.TargetCreatureInYourGraveyard
 	TargetCreatureCardInAnyGraveyard        = mage.TargetCreatureCardInAnyGraveyard
+	TargetCardInAnyGraveyard                = mage.TargetCardInAnyGraveyard
 	TargetCardInYourGraveyard               = mage.TargetCardInYourGraveyard
 	TargetControlledCreature                = mage.TargetControlledCreature
 	TargetControlledPermanent               = mage.TargetControlledPermanent
@@ -626,6 +652,7 @@ var (
 	TargetPermanentOpponentOwns             = mage.TargetPermanentOpponentOwns
 	TargetCardYouOwnInAnte                  = mage.TargetCardYouOwnInAnte
 	TargetOpponent                          = mage.TargetOpponent
+	TargetOpponentChoice                    = mage.TargetOpponentChoice
 )
 
 // =============================================================================
@@ -658,6 +685,7 @@ var (
 	LifePayCost                                  = mage.LifePayCost
 	DiscardCost                                  = mage.DiscardCost
 	EitherCost                                   = mage.EitherCost
+	ExileMatchingCardFromGraveyardCost           = mage.ExileMatchingCardFromGraveyardCost
 )
 
 // =============================================================================
@@ -667,6 +695,10 @@ var (
 var (
 	Fixed                           = mage.Fixed
 	XValue                          = mage.XValue
+	ExiledCardManaValue             = mage.ExiledCardManaValue
+	TargetPermanentManaValue        = mage.TargetPermanentManaValue
+	HalfXRoundedDown                = mage.HalfXRoundedDown
+	HalfXRoundedUp                  = mage.HalfXRoundedUp
 	EventAmountValue                = mage.EventAmountValue
 	CountBattlefield                = mage.CountBattlefield
 	UntappedLandsAtTurnStart        = mage.UntappedLandsAtTurnStart
@@ -680,6 +712,7 @@ var (
 	SelectAttachedController        = mage.SelectAttachedController
 	SelectEachPlayer                = mage.SelectEachPlayer
 	SelectEachOpponent              = mage.SelectEachOpponent
+	SelectOpponent                  = mage.SelectOpponent
 	SelectTargetPermanentController = mage.SelectTargetPermanentController
 	SelectTargetPlayer              = mage.SelectTargetPlayer
 	SelectDefendingPlayer           = mage.SelectDefendingPlayer
@@ -872,13 +905,15 @@ const (
 
 // Attrs (non-keyword permanent flags)
 const (
-	AttrCanBlock                  = core.AttrCanBlock
-	AttrDoesNotUntap              = core.AttrDoesNotUntap
-	AttrCantBeEnchanted           = core.AttrCantBeEnchanted
-	AttrCantChangeControl         = core.AttrCantChangeControl
-	AttrMayNotUntap               = core.AttrMayNotUntap
-	AttrCantBeTargetedByArtifacts = core.AttrCantBeTargetedByArtifacts
-	EntersTapped                  = core.EntersTapped
+	AttrCanBlock                                      = core.AttrCanBlock
+	AttrDoesNotUntap                                  = core.AttrDoesNotUntap
+	AttrCantBeEnchanted                               = core.AttrCantBeEnchanted
+	AttrCantChangeControl                             = core.AttrCantChangeControl
+	AttrMayNotUntap                                   = core.AttrMayNotUntap
+	AttrCantBeTargetedByArtifacts                     = core.AttrCantBeTargetedByArtifacts
+	AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked = core.AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked
+	AttrDamageCantBePreventedOrRedirected             = core.AttrDamageCantBePreventedOrRedirected
+	EntersTapped                                      = core.EntersTapped
 )
 
 // Counters
@@ -910,6 +945,10 @@ const (
 	Carrion      = core.Carrion
 	Vitality     = core.Vitality
 	Husk         = core.Husk
+	P0P1         = core.P0P1
+	P2P0         = core.P2P0
+	P0P2         = core.P0P2
+	Hunger       = core.Hunger
 	NumCounters  = core.NumCounters
 )
 

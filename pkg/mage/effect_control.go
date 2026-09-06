@@ -72,6 +72,10 @@ type controlContinuousEffect struct {
 	effectSource
 }
 
+func (e *controlContinuousEffect) Properties() EffectProperties {
+	return EffectProperties{}
+}
+func (e *controlContinuousEffect) Text() string          { return "" }
 func (e *controlContinuousEffect) GetLayer() Layer       { return LayerControl }
 func (e *controlContinuousEffect) GetDuration() Duration { return e.duration }
 
@@ -104,13 +108,16 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 
 type attachedControlEffect struct{ effectSource }
 
-func (e *attachedControlEffect) GetLayer() Layer       { return LayerControl }
-func (e *attachedControlEffect) GetDuration() Duration { return WhileOnBattlefield }
+func (e *attachedControlEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *attachedControlEffect) Text() string                 { return "" }
+func (e *attachedControlEffect) GetLayer() Layer              { return LayerControl }
+func (e *attachedControlEffect) GetDuration() Duration        { return WhileOnBattlefield }
 func (e *attachedControlEffect) IsActive(g *Game) bool {
 	source := g.FindPermanent(e.SourceID())
 	return source != nil && source.IsAttached() && g.FindPermanent(source.AttachedTo) != nil
 }
-func (e *attachedControlEffect) Apply(g *Game) error {
+func (e *attachedControlEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	source := g.FindPermanent(e.SourceID())
 	if source == nil {
 		return nil
@@ -127,7 +134,8 @@ func (e *attachedControlEffect) Apply(g *Game) error {
 	return nil
 }
 
-func (e *controlContinuousEffect) Apply(g *Game) error {
+func (e *controlContinuousEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	target := g.MutablePermanent(e.targetID)
 	if target != nil {
 		target.computedController = e.controllerID

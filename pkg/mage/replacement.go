@@ -132,6 +132,37 @@ func (r *sourcePreventionShieldReplacement) Clone() ReplacementEffect {
 	return &cp
 }
 
+type halfDamagePreventionShieldReplacement struct {
+	replacementBase
+	playerID  uuid.UUID
+	dmgSource uuid.UUID
+	consumed  bool
+}
+
+func (r *halfDamagePreventionShieldReplacement) Matches(action Action, _ GameReader) bool {
+	if r.consumed {
+		return false
+	}
+	damage, ok := action.(*DamageToPlayerAction)
+	return ok && damage.PlayerID() == r.playerID && damage.ActionSource() == r.dmgSource
+}
+
+func (r *halfDamagePreventionShieldReplacement) Replace(action Action, _ *Game) Action {
+	r.consumed = true
+	damage := action.(*DamageToPlayerAction)
+	prevented := damage.Amount() / 2 // rounded down
+	if remaining := damage.Amount() - prevented; remaining > 0 {
+		return damage.WithAmount(remaining)
+	}
+	return nil
+}
+
+func (r *halfDamagePreventionShieldReplacement) IsActive(_ GameReader) bool { return !r.consumed }
+func (r *halfDamagePreventionShieldReplacement) Clone() ReplacementEffect {
+	cp := *r
+	return &cp
+}
+
 // ---------------------------------------------------------------------------
 // 3. Fog: prevent all combat damage
 // ---------------------------------------------------------------------------
@@ -162,6 +193,76 @@ func (r *fogReplacement) Clone() ReplacementEffect {
 	c := *r
 	return &c
 }
+
+// ---------------------------------------------------------------------------
+// 3a. Creature combat damage prevention (Maze of Ith)
+// ---------------------------------------------------------------------------
+
+type creatureCombatDamagePreventionReplacement struct {
+	replacementBase
+	creatureID uuid.UUID
+}
+
+func (r *creatureCombatDamagePreventionReplacement) Matches(a Action, _ GameReader) bool {
+	switch act := a.(type) {
+	case *DamageToPlayerAction:
+		return act.IsCombatDamage() && act.ActionSource() == r.creatureID
+	case *DamageToCreatureAction:
+		return act.IsCombatDamage() && (act.ActionSource() == r.creatureID || act.PermanentID() == r.creatureID)
+	}
+	return false
+}
+
+func (r *creatureCombatDamagePreventionReplacement) Replace(a Action, _ *Game) Action {
+	return nil
+}
+
+func (r *creatureCombatDamagePreventionReplacement) IsActive(_ GameReader) bool {
+	return true
+}
+
+func (r *creatureCombatDamagePreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+func (*creatureCombatDamagePreventionReplacement) IsPreventionEffect() bool { return true }
+
+type playerDamageFromFlyingCreaturesPreventionReplacement struct {
+	replacementBase
+	playerID uuid.UUID
+}
+
+func (r *playerDamageFromFlyingCreaturesPreventionReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*DamageToPlayerAction)
+	if !ok || act.PlayerID() != r.playerID {
+		return false
+	}
+	srcID := act.ActionSource()
+	if srcID == uuid.Nil {
+		return false
+	}
+	perm := g.FindPermanent(srcID)
+	if perm != nil {
+		return perm.HasType(TypeCreature) && perm.HasKeyword(Flying)
+	}
+	return false
+}
+
+func (r *playerDamageFromFlyingCreaturesPreventionReplacement) Replace(a Action, _ *Game) Action {
+	return nil
+}
+
+func (r *playerDamageFromFlyingCreaturesPreventionReplacement) IsActive(_ GameReader) bool {
+	return true
+}
+
+func (r *playerDamageFromFlyingCreaturesPreventionReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+func (*playerDamageFromFlyingCreaturesPreventionReplacement) IsPreventionEffect() bool { return true }
 
 // ---------------------------------------------------------------------------
 // 4. Forcefield: reduce unblocked combat damage to player to 1
@@ -687,6 +788,44 @@ func (r *islandSanctuaryReplacement) Clone() ReplacementEffect {
 }
 
 // ---------------------------------------------------------------------------
+// Fasting: optional skip-draw to gain 2 life
+// ---------------------------------------------------------------------------
+
+type fastingReplacement struct {
+	replacementBase
+	playerID uuid.UUID
+}
+
+func (r *fastingReplacement) Matches(a Action, _ GameReader) bool {
+	act, ok := a.(*DrawCardAction)
+	if !ok {
+		return false
+	}
+	return act.IsNormalDraw() && act.PlayerID() == r.playerID
+}
+
+func (r *fastingReplacement) Replace(a Action, g *Game) Action {
+	p := g.GetPlayer(r.playerID)
+	if p == nil {
+		return a
+	}
+	if !p.ChooseMayAbility("skip your draw step to gain 2 life") {
+		return a
+	}
+	g.PlayerGainLife(p, 2)
+	return nil
+}
+
+func (r *fastingReplacement) IsActive(g GameReader) bool {
+	return g.FindPermanent(r.sourceID) != nil
+}
+
+func (r *fastingReplacement) Clone() ReplacementEffect {
+	c := *r
+	return &c
+}
+
+// ---------------------------------------------------------------------------
 // 17. Draw replacement: Aladdin's Lamp draw replacement
 // ---------------------------------------------------------------------------
 
@@ -932,14 +1071,15 @@ func isPreventionReplacement(r ReplacementEffect) bool {
 	return ok && pe.IsPreventionEffect()
 }
 
-func (*preventionShieldReplacement) IsPreventionEffect() bool       { return true }
-func (*fogReplacement) IsPreventionEffect() bool                    { return true }
-func (*forcefieldReplacement) IsPreventionEffect() bool             { return true }
-func (*colorPreventionReplacement) IsPreventionEffect() bool        { return true }
-func (*sourcePreventionReplacement) IsPreventionEffect() bool       { return true }
-func (*sourcePreventionShieldReplacement) IsPreventionEffect() bool { return true }
-func (*typePreventionReplacement) IsPreventionEffect() bool         { return true }
-func (*damagePreventionRuleReplacement) IsPreventionEffect() bool   { return true }
+func (*preventionShieldReplacement) IsPreventionEffect() bool           { return true }
+func (*fogReplacement) IsPreventionEffect() bool                        { return true }
+func (*forcefieldReplacement) IsPreventionEffect() bool                 { return true }
+func (*colorPreventionReplacement) IsPreventionEffect() bool            { return true }
+func (*sourcePreventionReplacement) IsPreventionEffect() bool           { return true }
+func (*sourcePreventionShieldReplacement) IsPreventionEffect() bool     { return true }
+func (*halfDamagePreventionShieldReplacement) IsPreventionEffect() bool { return true }
+func (*typePreventionReplacement) IsPreventionEffect() bool             { return true }
+func (*damagePreventionRuleReplacement) IsPreventionEffect() bool       { return true }
 
 // ---------------------------------------------------------------------------
 // 18. Counter doubler: doubles +1/+1 counter placements on matching permanents

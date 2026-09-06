@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/google/uuid"
@@ -36,6 +37,36 @@ func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
 		target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(color))
 		return nil
 	})
+}
+
+type grantProtectionTargetEffect struct {
+	color Color
+}
+
+// GrantProtectionTarget grants target creature protection from the given color until end of turn.
+func GrantProtectionTarget(color Color) Effect {
+	return &grantProtectionTargetEffect{color: color}
+}
+
+func (e *grantProtectionTargetEffect) Text() string {
+	return fmt.Sprintf("target creature gains protection from %s until end of turn", e.color)
+}
+
+func (e *grantProtectionTargetEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+
+func (e *grantProtectionTargetEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.Targets) == 0 {
+		return fmt.Errorf("no target for protection")
+	}
+	targetID := ctx.Targets[0]
+	eff := TargetEffect(LayerAbility, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
+		target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(e.color))
+		return nil
+	})
+	ctx.Game.AddContinuousEffect(eff)
+	return nil
 }
 
 // PreventAttachedFromActivatingNonManaAbilities creates a continuous effect that
@@ -459,8 +490,8 @@ func PreventFromAttackingIfDefendingPlayerControls(filter PermanentFilter) Conti
 
 // BoostAllCreatures creates a continuous effect that boosts all matching creatures
 // except the source (typical lord behavior).
-func BoostAllCreatures(power, toughness int, filter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+func BoostAllCreatures(power, toughness int, filter PermanentFilter, duration Duration) ContinuousEffect {
+	return FuncContinuousEffect(LayerPT, duration, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
@@ -532,11 +563,41 @@ func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
 	})
 }
 
+// ToughnessEqualsControlledCount creates a continuous effect where the source creature gets
+// +0/+N where N is the count of permanents matching countFilter that you control.
+func ToughnessEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		src := g.MutablePermanent(sourceID)
+		if src == nil {
+			return nil
+		}
+		count := g.CountBattlefield(And(ControlledBy(src.ControllerID()), countFilter))
+		src.toughBonus += count
+		return nil
+	})
+}
+
 // GrantKeywordToAll grants a keyword ability to all matching creatures (excluding source).
 func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		for _, p := range g.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
+				continue
+			}
+			if !filter.Match(p, g) {
+				continue
+			}
+			g.effects.GrantAttr(p.ID(), kw)
+		}
+		return nil
+	})
+}
+
+// GrantKeywordToAllIncludingSource grants a keyword ability to all matching creatures (including source).
+func GrantKeywordToAllIncludingSource(kw Keyword, filter PermanentFilter) ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		for _, p := range g.battlefield {
+			if !p.HasType(TypeCreature) {
 				continue
 			}
 			if !filter.Match(p, g) {
@@ -1273,6 +1334,15 @@ func AllowUnlimitedLandPlays() ContinuousEffect {
 	})
 }
 
+// WormsOfTheEarthEffect creates a continuous effect preventing players from playing lands and lands from entering the battlefield.
+func WormsOfTheEarthEffect() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+		g.effects.Rules.SetCantPlayLands(true)
+		g.effects.Rules.SetLandsCantEnter(true)
+		return nil
+	})
+}
+
 // ManaConversion creates a continuous effect that allows spending one color as another
 // (e.g. Sunglasses of Urza: red→white).
 func ManaConversion(from, to Color) ContinuousEffect {
@@ -1345,6 +1415,18 @@ func WhileControlling(filter PermanentFilter) SourceCondition {
 	}
 }
 
+// WhileOpponentControls is a SourceCondition factory that ensures an opponent of
+// the source's controller controls a permanent matching the filter.
+func WhileOpponentControls(filter PermanentFilter) SourceCondition {
+	return func(source *Permanent, g *Game) bool {
+		opp := g.GetOpponent(source.ControllerID())
+		if opp == nil {
+			return false
+		}
+		return g.AnyBattlefield(And(ControlledBy(opp.PlayerID()), filter))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Damage prevention continuous effect
 // ---------------------------------------------------------------------------
@@ -1376,6 +1458,10 @@ func PreventDamageFromTo(from PermanentFilter, toFactory func(uuid.UUID) Permane
 	}
 }
 
+func (e *preventDamageRuleContinuous) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+func (e *preventDamageRuleContinuous) Text() string          { return "prevent damage from X to Y" }
 func (e *preventDamageRuleContinuous) GetLayer() Layer       { return LayerAbility }
 func (e *preventDamageRuleContinuous) GetDuration() Duration { return WhileOnBattlefield }
 
@@ -1390,7 +1476,8 @@ func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
 	return true
 }
 
-func (e *preventDamageRuleContinuous) Apply(g *Game) error {
+func (e *preventDamageRuleContinuous) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	toFilter := e.toFactory(e.sourceID)
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
 		replacementBase: replacementBase{sourceID: e.sourceID},
@@ -1426,6 +1513,12 @@ func PreventNoncombatDamageToControllerAndCreatures() ContinuousEffect {
 	return &preventNoncombatDamageToControllerContinuous{}
 }
 
+func (e *preventNoncombatDamageToControllerContinuous) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+func (e *preventNoncombatDamageToControllerContinuous) Text() string {
+	return "prevent all noncombat damage"
+}
 func (e *preventNoncombatDamageToControllerContinuous) GetLayer() Layer {
 	return LayerAbility
 }
@@ -1438,7 +1531,8 @@ func (e *preventNoncombatDamageToControllerContinuous) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
 }
 
-func (e *preventNoncombatDamageToControllerContinuous) Apply(g *Game) error {
+func (e *preventNoncombatDamageToControllerContinuous) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	src := g.FindPermanent(e.sourceID)
 	if src == nil {
 		return nil
@@ -1472,6 +1566,12 @@ type doppelgangerCopyEffect struct {
 	keywords       []Keyword
 }
 
+func (e *doppelgangerCopyEffect) Properties() EffectProperties {
+	return EffectProperties{}
+}
+func (e *doppelgangerCopyEffect) Text() string {
+	return "copy creature's P/T and keyword abilities"
+}
 func (e *doppelgangerCopyEffect) GetLayer() Layer       { return LayerCopy }
 func (e *doppelgangerCopyEffect) GetDuration() Duration { return Indefinite }
 
@@ -1479,7 +1579,8 @@ func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.doppelgangerID) != nil
 }
 
-func (e *doppelgangerCopyEffect) Apply(g *Game) error {
+func (e *doppelgangerCopyEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	perm := g.MutablePermanent(e.doppelgangerID)
 	if perm == nil {
 		return nil

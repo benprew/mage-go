@@ -66,14 +66,15 @@ type responseAction struct {
 }
 
 type activateAction struct {
-	seq      int
-	turn     int
-	step     core.PhaseStep
-	player   PlayerRef
-	permName string
-	targets  []string
-	xValue   int
-	fired    bool
+	seq          int
+	turn         int
+	step         core.PhaseStep
+	player       PlayerRef
+	permName     string
+	targets      []string
+	xValue       int
+	abilityIndex int
+	fired        bool
 }
 
 type counterAction struct {
@@ -267,11 +268,33 @@ func (tg *TestGame) ActivateInResponseTo(p PlayerRef, permName string, targets .
 	})
 }
 
+// ActivateInResponseToWithX is like ActivateInResponseTo but passes an X value.
+func (tg *TestGame) ActivateInResponseToWithX(p PlayerRef, permName string, xValue int, targets ...string) {
+	if len(tg.castActions) == 0 {
+		return
+	}
+	last := &tg.castActions[len(tg.castActions)-1]
+	last.responses = append(last.responses, responseAction{
+		player:  p,
+		perm:    permName,
+		targets: targets,
+		xValue:  xValue,
+	})
+}
+
 // ActivateAbility scripts an ability activation at a specific turn/step.
 func (tg *TestGame) ActivateAbility(turn int, step core.PhaseStep, p PlayerRef, permName string, targets ...string) {
 	tg.actionSeq++
 	tg.activateActions = append(tg.activateActions, activateAction{
-		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets,
+		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets, abilityIndex: -1,
+	})
+}
+
+// ActivateAbilityIndex scripts activation of a specific ability index on a permanent.
+func (tg *TestGame) ActivateAbilityIndex(turn int, step core.PhaseStep, p PlayerRef, permName string, abilityIndex int, targets ...string) {
+	tg.actionSeq++
+	tg.activateActions = append(tg.activateActions, activateAction{
+		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets, abilityIndex: abilityIndex,
 	})
 }
 
@@ -279,7 +302,7 @@ func (tg *TestGame) ActivateAbility(turn int, step core.PhaseStep, p PlayerRef, 
 func (tg *TestGame) ActivateAbilityWithX(turn int, step core.PhaseStep, p PlayerRef, permName string, x int, targets ...string) {
 	tg.actionSeq++
 	tg.activateActions = append(tg.activateActions, activateAction{
-		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets, xValue: x,
+		seq: tg.actionSeq, turn: turn, step: step, player: p, permName: permName, targets: targets, xValue: x, abilityIndex: -1,
 	})
 }
 
@@ -839,8 +862,27 @@ func (tg *TestGame) buildPriorityActionForActivate(idx int) (mage.PriorityAction
 	playerID := tg.getPlayerID(aa.player)
 	targets := tg.resolveTargets(aa.targets, playerID)
 	tg.ensureManaForActivate(*aa)
-	tg.SetXValue(aa.xValue)
-	perm, abilityIdx, err := tg.findActivatableAbilityByName(playerID, aa.permName, targets)
+	var perm *mage.Permanent
+	var abilityIdx int
+	var err error
+	if aa.abilityIndex >= 0 {
+		perm = tg.FindPermanentByName(aa.permName, playerID)
+		if perm == nil {
+			for _, p := range tg.AllBattlefield() {
+				if p.Name() == aa.permName {
+					perm = p
+					break
+				}
+			}
+		}
+		if perm == nil {
+			err = fmt.Errorf("permanent %s not found", aa.permName)
+		} else {
+			abilityIdx = aa.abilityIndex
+		}
+	} else {
+		perm, abilityIdx, err = tg.findActivatableAbilityByName(playerID, aa.permName, targets)
+	}
 	if err != nil {
 		// Fall back to graveyard-zone activated ability when the permanent is
 		// not on the battlefield (CR 112.6 — abilities that function in zones

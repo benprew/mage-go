@@ -140,6 +140,27 @@ func ReturnTargetFromAnyGraveyardToBattlefield() Effect {
 	return &returnFromAnyGraveyardEffect{}
 }
 
+// exileTargetCardFromGraveyardEffect exiles target card from any graveyard.
+type exileTargetCardFromGraveyardEffect struct{}
+
+// ExileTargetCardFromGraveyard exiles target card from a graveyard.
+func ExileTargetCardFromGraveyard() Effect {
+	return &exileTargetCardFromGraveyardEffect{}
+}
+
+// ExileTargetCardFromGraveyardStep returns the Effect for use in pipelines.
+func ExileTargetCardFromGraveyardStep() Effect {
+	return &exileTargetCardFromGraveyardEffect{}
+}
+
+func (e *exileTargetCardFromGraveyardEffect) Text() string {
+	return "exile target card from a graveyard"
+}
+
+func (e *exileTargetCardFromGraveyardEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+
 func (e *returnFromGraveyardEffect) Text() string {
 	return "return target creature card from your graveyard to the battlefield"
 }
@@ -533,6 +554,17 @@ func (*returnFromAnyGraveyardEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	return nil
+}
+
+func (*exileTargetCardFromGraveyardEffect) Apply(ctx *EffectContext) error {
+	if len(ctx.Targets) == 0 {
+		return nil
+	}
+	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.Targets[0], ZoneExile)
+	if ok {
+		ctx.Game.ExileCard(card, ctx.SourceID)
+	}
 	return nil
 }
 

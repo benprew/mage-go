@@ -323,8 +323,8 @@ func WithCardType(t CardType) CardOption {
 }
 
 // WithManaAbility adds a mana ability for the given color.
-func WithManaAbility(color Color) CardOption {
-	return func(c *BaseCard) { c.AddAbility(NewManaAbility(color)) }
+func WithManaAbility(color Color, afterProduction ...Effect) CardOption {
+	return func(c *BaseCard) { c.AddAbility(NewManaAbility(color, afterProduction...)) }
 }
 
 // WithMultiManaAbility adds a mana ability with custom productions.
@@ -825,6 +825,12 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 	// "Can't be targeted by abilities from artifact sources" (Artifact Ward).
 	if source != nil && source.HasType(TypeArtifact) && p.HasAttr(AttrCantBeTargetedByArtifacts) {
 		return false
+	}
+	// "Can't be the target of spells unless it attacked or blocked this turn" (Lurker).
+	if p.HasAttr(AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked) && g != nil && !g.PermanentAttackedOrBlockedThisTurn(p.ID()) {
+		if source != nil && (source.HasType(TypeInstant) || source.HasType(TypeSorcery) || g.FindPermanent(source.ID()) == nil) {
+			return false
+		}
 	}
 	return true
 }

@@ -204,6 +204,11 @@ func (g *Game) prepareActionPaymentTransaction(spec actionPaymentSpec) (*costPay
 			if spec.ApplyActivationReduction {
 				component = payment.reducedCost(spec.SourceID, g)
 			}
+			if component.HasX {
+				component.Generic += spec.XValue * max(1, component.XCount)
+				component.HasX = false
+				component.XCount = 0
+			}
 			addActionManaCost(&mana, component)
 		case *xManaCost:
 			mana.Generic += spec.XValue

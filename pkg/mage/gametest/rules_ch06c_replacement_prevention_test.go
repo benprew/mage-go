@@ -330,3 +330,27 @@ func (r *ch06DoubleDamageReplacement) Clone() mage.ReplacementEffect {
 	c := *r
 	return &c
 }
+
+func TestPreventCombatDamageToAndBy(t *testing.T) {
+	registerCh06Cards()
+
+	g := NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, PlayerA, "Ch06 Giant") // 3/3
+	g.AddCard(core.ZoneBattlefield, PlayerB, "Ch06 Bear")  // 2/2
+
+	giant := g.FindPermanentByName("Ch06 Giant", g.GetPlayer(PlayerA).PlayerID())
+	if giant == nil {
+		t.Fatal("Giant not found")
+	}
+
+	g.PreventCombatDamageToAndBy(giant.ID())
+
+	g.Attack(1, PlayerA, "Ch06 Giant")
+	g.Block(1, PlayerB, "Ch06 Bear", "Ch06 Giant")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+
+	// Both should still be alive because combat damage dealt to and by Giant was prevented
+	g.AssertPermanentCount(PlayerA, "Ch06 Giant", 1)
+	g.AssertPermanentCount(PlayerB, "Ch06 Bear", 1)
+}

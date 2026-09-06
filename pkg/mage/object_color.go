@@ -69,13 +69,16 @@ type objectColorEffect struct {
 	effectSource
 }
 
-func (e *objectColorEffect) GetLayer() Layer       { return LayerColor }
-func (e *objectColorEffect) GetDuration() Duration { return Indefinite }
+func (e *objectColorEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *objectColorEffect) Text() string                 { return "" }
+func (e *objectColorEffect) GetLayer() Layer              { return LayerColor }
+func (e *objectColorEffect) GetDuration() Duration        { return Indefinite }
 func (e *objectColorEffect) IsActive(g *Game) bool {
 	target := g.FindPermanentIncludingPhased(e.targetID)
 	return target != nil && target.incarnationID == e.incarnationID
 }
-func (e *objectColorEffect) Apply(g *Game) error {
+func (e *objectColorEffect) Apply(ctx *EffectContext) error {
+	g := ctx.Game
 	target := g.MutablePermanentIncludingPhased(e.targetID)
 	if target == nil || target.incarnationID != e.incarnationID {
 		return nil
