@@ -76,15 +76,8 @@ type Game struct {
 	step         PhaseStep
 	activePlayer int // index into players
 
-	// Event handling
-	pendingTriggers []*pendingTrigger
-
-	// armedStateTriggers tracks state-triggered abilities (CR 603.8) that have
-	// fired but not yet rearmed. Key is the (sourceID, abilityID) pair. A
-	// state trigger only re-fires once its condition has gone false and then
-	// true again — armedStateTriggers[key] == true means "fired since last
-	// observed false; do not fire again until it's seen false."
-	armedStateTriggers map[stateTriggerKey]bool
+	// TriggerSystem owns pending, delayed, and state-triggered abilities.
+	triggers TriggerSystem
 
 	// Extra turns
 	extraTurns []uuid.UUID // player IDs who get extra turns
@@ -145,9 +138,6 @@ type Game struct {
 	// gain twice that much life instead.") and similar effects.
 	lifeGainModifiers []lifeGainModifierEntry
 
-	// Delayed triggers
-	delayedTriggers []*DelayedTrigger
-
 	// RandomSource encapsulates random number and coin flip outcomes
 	random RandomSource
 
@@ -198,35 +188,6 @@ func (g *Game) ActivePlayer() int {
 	return g.activePlayer
 }
 
-// DelayedTrigger represents a one-shot triggered ability that fires when
-// a specific event occurs (e.g., "destroy this creature at end of turn").
-type DelayedTrigger struct {
-	EventType     EventType
-	TargetID      uuid.UUID
-	Effects       []Effect
-	SourceID      uuid.UUID
-	Controller    uuid.UUID
-	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
-	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
-	MatchTargetID uuid.UUID // if set, only fire when evt.TargetID matches
-	MatchFromZone Zone      // for EvtZoneChange: ZoneAny to skip the from check
-	MatchToZone   Zone      // for EvtZoneChange: ZoneAny to skip the to check
-	MatchFlag     bool      // if true, only fire when evt.Flag is true (e.g. combat damage)
-	Persistent    bool      // if true, trigger is not consumed after firing
-}
-
-type pendingTrigger struct {
-	ability    TriggeredAbility
-	event      *GameEvent
-	sourceID   uuid.UUID
-	controller uuid.UUID
-}
-
-type stateTriggerKey struct {
-	sourceID  uuid.UUID
-	abilityID uuid.UUID
-}
-
 // NewGame creates a new 2-player game.
 func NewGame(playerA, playerB Player) *Game {
 	return newGame(playerA, playerB, false)
@@ -243,13 +204,13 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		resolution:                         NewResolutionState(),
 		trackers:                           NewTrackerSystem(),
 		random:                             NewRandomSource(),
+		triggers:                           NewTriggerSystem(),
 		turn:                               1,
 		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPermanentsByPermanent: make(map[uuid.UUID]map[uuid.UUID]bool),
 		combatDamageThisStep:               make(map[uuid.UUID]map[uuid.UUID]int),
 		combatDamageSourcesThisStep:        make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
-		armedStateTriggers:                 make(map[stateTriggerKey]bool),
 		schedule:                           newTurnSchedule(),
 		exileInsteadCards:                  make(map[uuid.UUID]uuid.UUID),
 		customState:                        make(map[string]any),
@@ -964,7 +925,7 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 			continue
 		}
 		if ta.CheckTrigger(evt, g) {
-			g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+			g.triggers.AddPending(&pendingTrigger{
 				ability:    ta,
 				event:      evt,
 				sourceID:   sourceID,
@@ -1921,7 +1882,12 @@ func (g *Game) TimesTargetedThisTurn(id uuid.UUID) int {
 // RegisterDelayedTrigger registers a one-shot delayed trigger that will fire
 // when the specified event type occurs.
 func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
-	g.delayedTriggers = append(g.delayedTriggers, dt)
+	g.triggers.RegisterDelayed(dt)
+}
+
+// DelayedTriggers returns all active delayed triggers.
+func (g *Game) DelayedTriggers() []*DelayedTrigger {
+	return g.triggers.Delayed()
 }
 
 // FireEvent dispatches an event and checks triggered abilities.
@@ -1950,7 +1916,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 				continue
 			}
 			if ta.CheckTrigger(&evt, g) {
-				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+				g.triggers.AddPending(&pendingTrigger{
 					ability:    ta,
 					event:      &evt,
 					sourceID:   perm.ID(),
@@ -1985,7 +1951,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 				if !gt.CheckTrigger(&evt, g) {
 					continue
 				}
-				g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+				g.triggers.AddPending(&pendingTrigger{
 					ability:    gt,
 					event:      &evt,
 					sourceID:   c.ID(),
@@ -2017,7 +1983,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if !gt.CheckTrigger(&evt, g) {
 				continue
 			}
-			g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+			g.triggers.AddPending(&pendingTrigger{
 				ability:    gt,
 				event:      &evt,
 				sourceID:   obj.SourceID,
@@ -2027,8 +1993,8 @@ func (g *Game) FireEvent(evt GameEvent) {
 	}
 
 	// Check delayed triggers (one-shot unless Persistent, removed after matching)
-	remaining := g.delayedTriggers[:0]
-	for _, dt := range g.delayedTriggers {
+	var remaining []*DelayedTrigger
+	for _, dt := range g.triggers.Delayed() {
 		if dt.EventType == evt.Type {
 			if dt.MatchEventID != uuid.Nil && evt.SourceID != dt.MatchEventID {
 				remaining = append(remaining, dt)
@@ -2084,7 +2050,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 			remaining = append(remaining, dt)
 		}
 	}
-	g.delayedTriggers = remaining
+	g.triggers.SetDelayed(remaining)
 	g.queueParadigmRecurringTriggers(&evt)
 }
 
@@ -2108,14 +2074,14 @@ func (g *Game) CheckStateTriggers() {
 			seen[key] = true
 			cond := ta.CheckTrigger(nil, g)
 			if !cond {
-				delete(g.armedStateTriggers, key)
+				g.triggers.DisarmStateTrigger(key)
 				continue
 			}
-			if g.armedStateTriggers[key] {
+			if g.triggers.IsStateTriggerArmed(key) {
 				continue
 			}
-			g.armedStateTriggers[key] = true
-			g.pendingTriggers = append(g.pendingTriggers, &pendingTrigger{
+			g.triggers.ArmStateTrigger(key)
+			g.triggers.AddPending(&pendingTrigger{
 				ability:    ta,
 				sourceID:   perm.ID(),
 				controller: perm.ControllerID(),
@@ -2124,11 +2090,7 @@ func (g *Game) CheckStateTriggers() {
 	}
 	// Drop entries for sources no longer on the battlefield so a re-entered
 	// instance starts fresh.
-	for key := range g.armedStateTriggers {
-		if !seen[key] {
-			delete(g.armedStateTriggers, key)
-		}
-	}
+	g.triggers.ClearUnseenArmed(seen)
 }
 
 // PutTriggersOnStack puts all pending triggers onto the stack.
@@ -2148,11 +2110,12 @@ func (g *Game) CheckStateTriggers() {
 // CR 603.3b permits any order.
 // The engine uses the XMage order to maintain deterministic test results.
 func (g *Game) PutTriggersOnStack() {
-	if len(g.pendingTriggers) > 1 {
+	pending := g.triggers.Pending()
+	if len(pending) > 1 {
 		activeID := g.ActivePlayerObj().PlayerID()
-		active := make([]*pendingTrigger, 0, len(g.pendingTriggers))
-		nonActive := make([]*pendingTrigger, 0, len(g.pendingTriggers))
-		for _, pt := range g.pendingTriggers {
+		active := make([]*pendingTrigger, 0, len(pending))
+		nonActive := make([]*pendingTrigger, 0, len(pending))
+		for _, pt := range pending {
 			if pt.controller == activeID {
 				active = append(active, pt)
 			} else {
@@ -2162,9 +2125,9 @@ func (g *Game) PutTriggersOnStack() {
 		reverseTriggers(active)
 		reverseTriggers(nonActive)
 		active = append(active, nonActive...)
-		g.pendingTriggers = active
+		g.triggers.SetPending(active)
 	}
-	for _, pt := range g.pendingTriggers {
+	for _, pt := range g.triggers.Pending() {
 		targetSource := g.FindCardAnywhere(pt.sourceID)
 		obj := &StackObject{
 			ID:         uuid.New(),
@@ -2360,7 +2323,7 @@ func (g *Game) PutTriggersOnStack() {
 		}
 		g.pushStack(obj)
 	}
-	g.pendingTriggers = nil
+	g.triggers.ClearPending()
 }
 
 // chooseTriggerTargets prompts the trigger's controller to choose targets for
@@ -3826,14 +3789,8 @@ func (g *Game) doCleanupActions() bool {
 	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
 	g.effects.Damage.ClearEndOfTurn()
 	g.effects.Rules.ClearEndOfTurn()
-	// Clear persistent delayed triggers (they only last "this turn")
-	kept := g.delayedTriggers[:0]
-	for _, dt := range g.delayedTriggers {
-		if !dt.Persistent {
-			kept = append(kept, dt)
-		}
-	}
-	g.delayedTriggers = kept
+	// Clear non-persistent delayed triggers (they only last "this turn")
+	g.triggers.ClearEndOfTurn()
 	// Clear damage tracking
 	g.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
 	g.trackers.Turn.ResetForNewTurn(active.PlayerID())

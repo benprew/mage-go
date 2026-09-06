@@ -847,7 +847,7 @@ func TestCloneDelayedTriggers(t *testing.T) {
 	pB := NewBasePlayer("Bob")
 	g := NewGame(pA, pB)
 
-	g.delayedTriggers = append(g.delayedTriggers, &DelayedTrigger{
+	g.RegisterDelayedTrigger(&DelayedTrigger{
 		EventType:  EvtEndStep,
 		TargetID:   uuid.New(),
 		SourceID:   uuid.New(),
@@ -856,16 +856,16 @@ func TestCloneDelayedTriggers(t *testing.T) {
 	})
 
 	c := g.Clone()
-	if len(c.delayedTriggers) != 1 {
-		t.Fatalf("Delayed triggers count: got %d, want 1", len(c.delayedTriggers))
+	if len(c.DelayedTriggers()) != 1 {
+		t.Fatalf("Delayed triggers count: got %d, want 1", len(c.DelayedTriggers()))
 	}
-	if c.delayedTriggers[0].Persistent != true {
+	if c.DelayedTriggers()[0].Persistent != true {
 		t.Error("Delayed trigger Persistent should be true")
 	}
 
 	// Mutate clone.
-	c.delayedTriggers[0].Persistent = false
-	if !g.delayedTriggers[0].Persistent {
+	c.DelayedTriggers()[0].Persistent = false
+	if !g.DelayedTriggers()[0].Persistent {
 		t.Error("Original delayed trigger should still be persistent")
 	}
 }

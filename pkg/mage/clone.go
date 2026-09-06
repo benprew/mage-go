@@ -30,6 +30,7 @@ func (g *Game) Clone() *Game {
 	c.resolution = g.resolution.Clone()
 	c.trackers = g.trackers.Clone()
 	c.random = g.random.Clone()
+	c.triggers = g.triggers.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
@@ -92,28 +93,6 @@ func (g *Game) Clone() *Game {
 		c.schedule = cs
 	}
 
-	// Deep copy pending triggers (share ability/event refs, they're read-only during search).
-	if len(g.pendingTriggers) > 0 {
-		c.pendingTriggers = make([]*pendingTrigger, len(g.pendingTriggers))
-		for i, pt := range g.pendingTriggers {
-			clone := *pt
-			c.pendingTriggers[i] = &clone
-		}
-	}
-
-	// Deep copy delayed triggers (share Effect refs).
-	if len(g.delayedTriggers) > 0 {
-		c.delayedTriggers = make([]*DelayedTrigger, len(g.delayedTriggers))
-		for i, dt := range g.delayedTriggers {
-			clone := *dt
-			if len(dt.Effects) > 0 {
-				clone.Effects = make([]Effect, len(dt.Effects))
-				copy(clone.Effects, dt.Effects)
-			}
-			c.delayedTriggers[i] = &clone
-		}
-	}
-
 	// Deep copy UUID-keyed maps.
 	c.damageDealtBy = cloneNestedUUIDMap(g.damageDealtBy)
 	if len(g.damageDealtToPlayersByPermanent) > 0 {
@@ -143,7 +122,6 @@ func (g *Game) Clone() *Game {
 	}
 	c.exileInsteadCards = make(map[uuid.UUID]uuid.UUID, len(g.exileInsteadCards))
 	maps.Copy(c.exileInsteadCards, g.exileInsteadCards)
-	c.armedStateTriggers = cloneStateTriggerMap(g.armedStateTriggers)
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
 	// OnPriority, AfterPriorityAction, BeforeStackResolve all remain nil.
@@ -521,15 +499,6 @@ func cloneUUIDMap[V any](src UUIDMap[V]) UUIDMap[V] {
 		return nil
 	}
 	dst := make(UUIDMap[V], len(src))
-	maps.Copy(dst, src)
-	return dst
-}
-
-func cloneStateTriggerMap(src map[stateTriggerKey]bool) map[stateTriggerKey]bool {
-	if src == nil {
-		return make(map[stateTriggerKey]bool)
-	}
-	dst := make(map[stateTriggerKey]bool, len(src))
 	maps.Copy(dst, src)
 	return dst
 }
