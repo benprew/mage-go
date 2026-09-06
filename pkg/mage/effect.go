@@ -777,7 +777,7 @@ func (e *theFallenUpkeepEffect) Apply(ctx *EffectContext) error {
 			g.DealDamageToPlayer(p, 1, sourceID)
 		}
 	}
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		if perm.HasType(TypePlaneswalker) && perm.ControllerID() != controller && g.HasDealtDamageToPermanent(sourceID, perm.ID()) {
 			g.DealDamageToPermanent(perm, 1, sourceID)
 		}

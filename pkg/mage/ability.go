@@ -415,7 +415,7 @@ func (a *namelessRaceAbility) OnEnter(g *Game, perm *Permanent) bool {
 		if opp.PlayerID() == perm.ControllerID() {
 			continue
 		}
-		for _, battlefieldPerm := range g.battlefield {
+		for _, battlefieldPerm := range g.zones.battlefield {
 			if battlefieldPerm.ControllerID() == opp.PlayerID() && !battlefieldPerm.IsToken && slices.Contains(battlefieldPerm.Colors(), White) {
 				maxPay++
 			}

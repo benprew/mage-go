@@ -38,24 +38,24 @@ type costPaymentSpec struct {
 }
 
 func cloneGameForCostPayment(g *Game) *Game {
-	wasBattlefieldShared := g.battlefieldShared
-	wasBattlefieldSliceShared := g.battlefieldSliceShared
-	ownedPermanents := g.ownedPermanents
+	wasBattlefieldShared := g.zones.battlefieldShared
+	wasBattlefieldSliceShared := g.zones.battlefieldSliceShared
+	ownedPermanents := g.zones.ownedPermanents
 	clone := g.Clone()
-	g.battlefieldShared = wasBattlefieldShared
-	g.battlefieldSliceShared = wasBattlefieldSliceShared
-	g.ownedPermanents = ownedPermanents
+	g.zones.battlefieldShared = wasBattlefieldShared
+	g.zones.battlefieldSliceShared = wasBattlefieldSliceShared
+	g.zones.ownedPermanents = ownedPermanents
 
-	clone.battlefield = make([]*Permanent, len(g.battlefield))
-	for i, permanent := range g.battlefield {
+	clone.zones.battlefield = make([]*Permanent, len(g.zones.battlefield))
+	for i, permanent := range g.zones.battlefield {
 		clonedPermanent := &Permanent{}
 		clonePermanentInto(clonedPermanent, permanent)
 		clonedPermanent.RuntimeAbilities = clonePaymentAbilities(permanent.RuntimeAbilities)
-		clone.battlefield[i] = clonedPermanent
+		clone.zones.battlefield[i] = clonedPermanent
 	}
-	clone.battlefieldShared = false
-	clone.battlefieldSliceShared = false
-	clone.ownedPermanents = nil
+	clone.zones.battlefieldShared = false
+	clone.zones.battlefieldSliceShared = false
+	clone.zones.ownedPermanents = nil
 	return clone
 }
 

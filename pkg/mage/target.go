@@ -226,7 +226,7 @@ func TargetRandomActivePlayerExchangePair() Target {
 
 func (t *randomActivePlayerExchangePairTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	possible := make([]uuid.UUID, 0)
-	for _, permanent := range g.battlefield {
+	for _, permanent := range g.zones.battlefield {
 		if !isExchangePermanent(permanent) || !permanent.CanBeTargetedBy(sourceCard, controller, g) {
 			continue
 		}
@@ -248,7 +248,7 @@ func (t *randomActivePlayerExchangePairTarget) chooseForTrigger(controller uuid.
 	}
 	activeID := active.PlayerID()
 	targetable := make([]*Permanent, 0)
-	for _, permanent := range g.battlefield {
+	for _, permanent := range g.zones.battlefield {
 		if isExchangePermanent(permanent) && permanent.CanBeTargetedBy(sourceCard, controller, g) {
 			targetable = append(targetable, permanent)
 		}
@@ -584,7 +584,7 @@ func TargetUpToNCardsInYourGraveyard(n int, filters ...CardFilter) Target {
 func (t *CreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	sourceID := sourceCard.ID()
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if !p.HasType(TypeCreature) {
 			continue
 		}
@@ -712,7 +712,7 @@ func TargetDamageAnyTarget() Target {
 
 func (t *DamageAnyTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if (p.HasType(TypeCreature) || p.HasType(TypePlaneswalker)) && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
@@ -743,7 +743,7 @@ func TargetPlayerOrPlaneswalker() Target {
 
 func (t *PlayerOrPlaneswalkerTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.HasType(TypePlaneswalker) && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
@@ -779,7 +779,7 @@ func TargetControlledCreature() Target {
 
 func (t *ControlledCreatureTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.HasType(TypeCreature) && p.ControllerID() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
@@ -853,7 +853,7 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if t.opponentOnly && p.ControllerID() == controller {
 			continue
 		}
@@ -913,7 +913,7 @@ type auraAttachedToCreatureYouControlTarget struct {
 
 func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if !p.IsAttached() || (!p.HasType(TypeEnchantment) && !p.HasSubType("Aura")) {
 			continue
 		}
@@ -950,7 +950,7 @@ type artifactWithManaValueXTarget struct {
 func (t *artifactWithManaValueXTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	x := g.resolution.X()
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if !p.HasType(TypeArtifact) {
 			continue
 		}
@@ -1283,7 +1283,7 @@ func TargetControlledPermanent() Target {
 
 func (t *ControlledPermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && p.Card.Owner() == controller && p.CanBeTargetedBy(sourceCard, controller, g) {
 			result = append(result, p.ID())
 		}
@@ -1344,7 +1344,7 @@ func (t *PowerLESourceCreatureTarget) Possible(controller uuid.UUID, sourceCard 
 	}
 	srcPower := src.CurrentPower(g)
 	var result []uuid.UUID
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if !p.HasType(TypeCreature) {
 			continue
 		}

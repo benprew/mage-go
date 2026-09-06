@@ -137,7 +137,7 @@ func TestRunPriorityRound_ActionExecution(t *testing.T) {
 		t.Errorf("expected 1 land played, got %d", g.GetLandsPlayedThisTurn())
 	}
 	found := false
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.Name() == "Forest" {
 			found = true
 			break

@@ -70,10 +70,7 @@ type LKIView interface {
 // own pre-removal selfAbilities capture. Returns nil if no LKI snapshot
 // exists for id.
 func (g *Game) LKIAbilities(id uuid.UUID) []Ability {
-	if lki := g.LKI(id); lki != nil {
-		return lki.ViewAbilities()
-	}
-	return nil
+	return g.zones.LKIAbilities(id)
 }
 
 // LookupObject returns an LKIView for the given object ID, preferring the
@@ -86,13 +83,7 @@ func (g *Game) LKIAbilities(id uuid.UUID) []Ability {
 // to read state about an object across the live/dead boundary. Use it
 // instead of branching on FindPermanent + LKI manually.
 func (g *Game) LookupObject(id uuid.UUID) LKIView {
-	if p := g.FindPermanent(id); p != nil {
-		return livePermanentView{p: p, g: g}
-	}
-	if lki := g.LKI(id); lki != nil {
-		return lki
-	}
-	return nil
+	return g.zones.LookupObject(id, g)
 }
 
 // livePermanentView adapts a live *Permanent to the LKIView interface so
@@ -221,40 +212,9 @@ func (l *PermanentLKI) ViewAbilities() []Ability {
 }
 
 // captureLKI records an LKI snapshot for a permanent that is about to leave
-// the battlefield. Deep-clones the live *Permanent so the snapshot is a
-// faithful frozen copy of all its state — counters, runtime abilities,
-// attachments, P/T overrides — not a hand-picked subset. Idempotent;
-// re-snapshotting overwrites.
-//
-// CR alignment: 113.7a / 603.10 say a triggered ability looks at the most
-// recent existence of the object before the event fired. The snapshot is
-// that "most recent existence." Power and Toughness are recorded outside
-// the snapshot because CurrentPower(g) on the clone would consult
-// continuous effects sourced from the (now-removed) permanent and return
-// the wrong value.
+// the battlefield.
 func (g *Game) captureLKI(p *Permanent) {
-	if p == nil {
-		return
-	}
-	if g.lki == nil {
-		g.lki = make(map[uuid.UUID]*PermanentLKI)
-	}
-	isToken := p.IsToken
-	owner := p.Card.Owner()
-	if owner == uuid.Nil {
-		owner = p.ControllerID()
-	}
-	snap := &Permanent{}
-	clonePermanentInto(snap, p)
-	g.lki[p.ID()] = &PermanentLKI{
-		ID:        p.ID(),
-		Name:      p.Name(),
-		Owner:     owner,
-		Power:     p.CurrentPower(g),
-		Toughness: p.CurrentToughness(g),
-		IsToken:   isToken,
-		Snapshot:  snap,
-	}
+	g.zones.CaptureLKI(p, g)
 }
 
 // LKI returns the last-known-information snapshot for a permanent that has
@@ -263,13 +223,5 @@ func (g *Game) captureLKI(p *Permanent) {
 // a creature an opponent controls dies") should consult LKI when
 // FindPermanent returns nil.
 func (g *Game) LKI(id uuid.UUID) *PermanentLKI {
-	if g.lki == nil {
-		return nil
-	}
-	return g.lki[id]
-}
-
-// clearLKI wipes LKI entries. Called at the end of each turn's cleanup.
-func (g *Game) clearLKI() {
-	g.lki = nil
+	return g.zones.LKI(id)
 }

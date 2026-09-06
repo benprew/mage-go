@@ -673,10 +673,10 @@ func (g *Game) UpdateCopyEffect(permID uuid.UUID, target *Permanent) {
 
 // AllBattlefield returns all permanents on the battlefield.
 func (g *Game) AllBattlefield() []*Permanent {
-	if len(g.battlefield) == 0 {
+	if len(g.zones.battlefield) == 0 {
 		return nil
 	}
-	return g.battlefield[:len(g.battlefield):len(g.battlefield)]
+	return g.zones.battlefield[:len(g.zones.battlefield):len(g.zones.battlefield)]
 }
 
 // GetResolvingTargets returns the targets of the spell currently being resolved.
@@ -842,7 +842,7 @@ func (g *Game) IsBandedWith(a, b uuid.UUID) bool {
 }
 
 // GetExile returns all exiled cards.
-func (g *Game) GetExile() []ExiledCard { return g.exile }
+func (g *Game) GetExile() []ExiledCard { return g.zones.Exile() }
 
 // PlayerCount returns the number of players in the game.
 func (g *Game) PlayerCount() int { return len(g.players) }
@@ -870,11 +870,7 @@ func (g *Game) GetSchedule() *TurnSchedule {
 // AddToBattlefield appends permanents directly to the battlefield without ETB processing.
 // Used by tests that construct permanents manually.
 func (g *Game) AddToBattlefield(perms ...*Permanent) {
-	g.ensureBattlefieldSliceOwned()
-	for _, p := range perms {
-		g.addOwnedPermanent(p)
-	}
-	g.battlefield = append(g.battlefield, perms...)
+	g.zones.AddToBattlefield(perms...)
 }
 
 // SetLandsPlayedThisTurn sets the number of lands played this turn.
@@ -882,13 +878,7 @@ func (g *Game) SetLandsPlayedThisTurn(n int) { g.trackers.Turn.SetLandsPlayed(n)
 
 // TruncateBattlefield truncates the battlefield to the given length (for undo snapshots).
 func (g *Game) TruncateBattlefield(n int) {
-	g.ensureBattlefieldSliceOwned()
-	if g.ownedPermanents != nil {
-		for _, p := range g.battlefield[n:] {
-			delete(g.ownedPermanents, p.ID())
-		}
-	}
-	g.battlefield = g.battlefield[:n]
+	g.zones.TruncateBattlefield(n)
 }
 
 // SetPlayerAt replaces the player at the given index.

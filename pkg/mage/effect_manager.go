@@ -443,7 +443,7 @@ func (em *EffectManager) Apply(g *Game) {
 
 	controlStateMayChange := em.hasControlLayerEffects()
 	if !controlStateMayChange {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.computedController != p.baseController {
 				controlStateMayChange = true
 				break
@@ -452,14 +452,14 @@ func (em *EffectManager) Apply(g *Game) {
 	}
 	var controllersAtCycleStart map[uuid.UUID]uuid.UUID
 	if controlStateMayChange {
-		controllersAtCycleStart = make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
-		for _, p := range g.battlefield {
+		controllersAtCycleStart = make(map[uuid.UUID]uuid.UUID, len(g.zones.battlefield))
+		for _, p := range g.zones.battlefield {
 			controllersAtCycleStart[p.ID()] = p.ControllerID()
 		}
 	}
 
 	// Reset granted runtime abilities, subtype overrides, and grantedAttrs from effects.
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		controllerNeedsReset := p.computedController != p.baseController
 		if controllerNeedsReset {
 			p = g.MutablePermanent(p.ID())
@@ -576,7 +576,7 @@ func (em *EffectManager) Apply(g *Game) {
 		// Post-layer enforcement: AttrCantChangeControl reverts any control changes
 		// applied during LayerControl. This runs after attrs are written so that
 		// effects granted at LayerAbility (e.g. Guardian Beast) take effect.
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			priorController := controllersAtCycleStart[p.ID()]
 			if p.HasAttr(AttrCantChangeControl) && p.ControllerID() != priorController {
 				p = g.MutablePermanent(p.ID())
@@ -587,7 +587,7 @@ func (em *EffectManager) Apply(g *Game) {
 			}
 		}
 
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			priorController := controllersAtCycleStart[p.ID()]
 			if p.ControllerID() != priorController {
 				p = g.MutablePermanent(p.ID())
@@ -602,7 +602,7 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 	}
 
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		g.syncAbilityContext(p)
 	}
 }
@@ -635,14 +635,14 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 		return
 	}
 
-	controllers := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
-	for _, permanent := range g.battlefield {
+	controllers := make(map[uuid.UUID]uuid.UUID, len(g.zones.battlefield))
+	for _, permanent := range g.zones.battlefield {
 		controllers[permanent.ID()] = permanent.baseController
 	}
 
-	for range len(g.battlefield) + 1 {
+	for range len(g.zones.battlefield) + 1 {
 		g.layer2Controllers = controllers
-		for _, permanent := range g.battlefield {
+		for _, permanent := range g.zones.battlefield {
 			permanent = g.MutablePermanent(permanent.ID())
 			if permanent != nil {
 				permanent.computedController = permanent.baseController
@@ -654,9 +654,9 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 			}
 			_ = effect.Apply(&EffectContext{Game: g})
 		}
-		next := make(map[uuid.UUID]uuid.UUID, len(g.battlefield))
+		next := make(map[uuid.UUID]uuid.UUID, len(g.zones.battlefield))
 		stable := true
-		for _, permanent := range g.battlefield {
+		for _, permanent := range g.zones.battlefield {
 			next[permanent.ID()] = permanent.ControllerID()
 			if next[permanent.ID()] != controllers[permanent.ID()] {
 				stable = false
@@ -669,7 +669,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 	}
 
 	g.layer2Controllers = controllers
-	for _, permanent := range g.battlefield {
+	for _, permanent := range g.zones.battlefield {
 		permanent = g.MutablePermanent(permanent.ID())
 		if permanent != nil {
 			permanent.computedController = permanent.baseController

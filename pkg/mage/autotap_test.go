@@ -452,7 +452,7 @@ func TestAutoTapForCost_ManaBonusReducesTapping(t *testing.T) {
 	}
 
 	tappedCount := 0
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		if perm.Name() == "Mountain" && perm.Tapped {
 			tappedCount++
 		}

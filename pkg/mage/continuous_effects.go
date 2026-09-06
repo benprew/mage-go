@@ -94,7 +94,7 @@ func AssignsDamageEqualToToughnessForCreaturesYouControl() ContinuousEffect {
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
@@ -120,7 +120,7 @@ func AssignsDamageEqualToToughnessSelf() ContinuousEffect {
 // control can't be activated" — pass an opponent-scoped filter.
 func PreventActivationsOfMatching(filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !filter.Match(p, g) {
 				continue
 			}
@@ -405,7 +405,7 @@ func PreventBlockingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
 // GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
 func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) {
 				continue
 			}
@@ -449,7 +449,7 @@ func GrantTriggeredAbilityToAllIncludingSource(eventType EventType, optional boo
 
 func grantTriggeredAbilityToAll(eventType EventType, optional bool, cond TriggerConditionData, filter PermanentFilter, includeSource bool, effects ...Effect) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !includeSource && p.ID() == sourceID {
 				continue
 			}
@@ -492,7 +492,7 @@ func PreventFromAttackingIfDefendingPlayerControls(filter PermanentFilter) Conti
 // except the source (typical lord behavior).
 func BoostAllCreatures(power, toughness int, filter PermanentFilter, duration Duration) ContinuousEffect {
 	return FuncContinuousEffect(LayerPT, duration, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
 			}
@@ -514,7 +514,7 @@ func BoostAllCreatures(power, toughness int, filter PermanentFilter, duration Du
 // matching creatures including the source.
 func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) {
 				continue
 			}
@@ -580,7 +580,7 @@ func ToughnessEqualsControlledCount(countFilter PermanentFilter) ContinuousEffec
 // GrantKeywordToAll grants a keyword ability to all matching creatures (excluding source).
 func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID {
 				continue
 			}
@@ -596,7 +596,7 @@ func GrantKeywordToAll(kw Keyword, filter PermanentFilter) ContinuousEffect {
 // GrantKeywordToAllIncludingSource grants a keyword ability to all matching creatures (including source).
 func GrantKeywordToAllIncludingSource(kw Keyword, filter PermanentFilter) ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) {
 				continue
 			}
@@ -618,7 +618,7 @@ func GrantKeywordToControlled(kw Keyword, filter PermanentFilter) ContinuousEffe
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
@@ -640,7 +640,7 @@ func GrantKeywordToOtherControlled(kw Keyword, filter PermanentFilter) Continuou
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.ControllerID() != src.ControllerID() {
 				continue
 			}
@@ -662,7 +662,7 @@ func BoostOtherControlledCreatures(power, toughness int, filter PermanentFilter)
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ID() == sourceID || p.ControllerID() != src.ControllerID() {
 				continue
 			}
@@ -700,7 +700,7 @@ func RevokeAttrFromControlled(attr Attr, filter PermanentFilter) ContinuousEffec
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
@@ -732,7 +732,7 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeCreature) || p.ControllerID() != src.ControllerID() {
 				continue
 			}
@@ -783,7 +783,7 @@ func ReduceSpellCostForColor(color Color, amount int) ContinuousEffect {
 // to toSubTypes (e.g. Conversion: all Mountains become Plains).
 func ChangeSubTypesForAll(fromSubTypes, toSubTypes []string) ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !slices.ContainsFunc(fromSubTypes, p.HasSubType) {
 				continue
 			}
@@ -821,7 +821,7 @@ func BecomesBasicLandTargetEffect(targetID uuid.UUID, duration Duration, subtype
 func BecomesBasicLandsEffect(filter PermanentFilter, subtypes ...string) ContinuousEffect {
 	validateBasicLandSubtypes("BecomesBasicLandsEffect", subtypes)
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, permanent := range g.battlefield {
+		for _, permanent := range g.zones.battlefield {
 			if filter.Match(permanent, g) {
 				permanent = g.MutablePermanent(permanent.ID())
 				if permanent != nil {
@@ -957,7 +957,7 @@ func RemoveAllAbilitiesFromAll(filter PermanentFilter) ContinuousEffect {
 // CyclopeanTombEffect overrides subtypes of all permanents with Mire counters to Swamp.
 func CyclopeanTombEffect() ContinuousEffect {
 	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if !p.HasType(TypeLand) || p.Counters[Mire] == 0 {
 				continue
 			}
@@ -974,7 +974,7 @@ func CyclopeanTombEffect() ContinuousEffect {
 // PreventAllUntaps prevents ALL permanents from untapping during untap steps (Stasis).
 func PreventAllUntaps() ContinuousEffect {
 	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			g.effects.GrantAttr(p.ID(), AttrDoesNotUntap)
 		}
 		return nil
@@ -1166,7 +1166,7 @@ func SourceHasManaAbilitiesOpponentLandsCouldProduce() ContinuousEffect {
 			return nil
 		}
 		colors := make(map[Color]bool)
-		for _, land := range g.battlefield {
+		for _, land := range g.zones.battlefield {
 			if land.ControllerID() == source.ControllerID() || !land.HasType(TypeLand) {
 				continue
 			}
@@ -1670,7 +1670,7 @@ func GrantSubTypeToControlled(subtype string, filter PermanentFilter) Continuous
 		if src == nil {
 			return nil
 		}
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != src.ControllerID() {
 				continue
 			}

@@ -60,7 +60,7 @@ func (g *Game) findCardInZoneOpt(playerID, cardID uuid.UUID, zone Zone, permitFo
 			}
 		}
 	case ZoneExile:
-		for _, ec := range g.exile {
+		for _, ec := range g.zones.exile {
 			if ec.Card.ID() != cardID {
 				continue
 			}
@@ -242,35 +242,19 @@ type CastableFromExilePermission struct {
 // The permission persists until the card leaves exile. If anyColorMana is
 // true, the player may spend mana of any color when paying for the card.
 func (g *Game) GrantCastFromExile(playerID, cardID uuid.UUID, anyColorMana bool) {
-	g.castFromExilePermissions = append(g.castFromExilePermissions, CastableFromExilePermission{
-		CardID:       cardID,
-		PlayerID:     playerID,
-		AnyColorMana: anyColorMana,
-	})
+	g.zones.GrantCastFromExile(playerID, cardID, anyColorMana)
 }
 
 // CastFromExilePermissionFor returns the permission record (if any) granting
 // the given player the right to cast the given exiled card.
 func (g *Game) CastFromExilePermissionFor(playerID, cardID uuid.UUID) *CastableFromExilePermission {
-	for i := range g.castFromExilePermissions {
-		perm := &g.castFromExilePermissions[i]
-		if perm.PlayerID == playerID && perm.CardID == cardID {
-			return perm
-		}
-	}
-	return nil
+	return g.zones.CastFromExilePermissionFor(playerID, cardID)
 }
 
 // ClearCastFromExilePermission removes any permission tied to the given card
 // (called when the card leaves exile).
 func (g *Game) ClearCastFromExilePermission(cardID uuid.UUID) {
-	kept := g.castFromExilePermissions[:0]
-	for _, perm := range g.castFromExilePermissions {
-		if perm.CardID != cardID {
-			kept = append(kept, perm)
-		}
-	}
-	g.castFromExilePermissions = kept
+	g.zones.ClearCastFromExilePermission(cardID)
 }
 
 // CastExiledCardWithPermission casts an exiled card the controller has been
@@ -360,7 +344,7 @@ func (g *Game) AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID) 
 		replacementBase: replacementBase{sourceID: sourceID, duration: EndOfTurn},
 		cardID:          cardID,
 	})
-	g.exileInsteadCards[cardID] = sourceID
+	g.zones.AddExileInstead(cardID, sourceID)
 }
 
 // IsCardMarkedExileInsteadOfGraveyard returns true when the card with the
@@ -368,12 +352,11 @@ func (g *Game) AddExileIfWouldGoToGraveyardThisTurn(cardID, sourceID uuid.UUID) 
 // it instead" replacement this turn. ResolveStackObject reads this for
 // instants and sorceries that resolve and would normally go to the graveyard.
 func (g *Game) IsCardMarkedExileInsteadOfGraveyard(cardID uuid.UUID) bool {
-	_, ok := g.exileInsteadCards[cardID]
-	return ok
+	return g.zones.IsExileInstead(cardID)
 }
 
 // ClearExileInsteadOfGraveyardForTurn clears the per-turn map. Called from
 // the cleanup phase together with replacement EOT cleanup.
 func (g *Game) ClearExileInsteadOfGraveyardForTurn() {
-	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
+	g.zones.ClearExileInstead()
 }

@@ -326,7 +326,7 @@ func TapCreatureCost() Cost {
 }
 
 func (c *tapMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) && c.filter.Match(p, g) {
 			return true
 		}
@@ -336,7 +336,7 @@ func (c *tapMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 
 func (c *tapMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && p.ID() != sourceID && !p.Tapped && p.CanTapForEffect(g) && c.filter.Match(p, g) {
 			candidates = append(candidates, p)
 		}
@@ -739,7 +739,7 @@ func (c *returnToHandCost) matchFilter(p *Permanent, g *Game) bool {
 }
 
 func (c *returnToHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && p.ID() != sourceID && c.matchFilter(p, g) {
 			return true
 		}
@@ -749,7 +749,7 @@ func (c *returnToHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool 
 
 func (c *returnToHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var candidates []*Permanent
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && p.ID() != sourceID && c.matchFilter(p, g) {
 			candidates = append(candidates, p)
 		}

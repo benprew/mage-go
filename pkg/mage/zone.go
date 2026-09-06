@@ -6,7 +6,7 @@ import "github.com/google/uuid"
 
 func countBattlefield(g *Game, playerID uuid.UUID) int {
 	count := 0
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == playerID {
 			count++
 		}

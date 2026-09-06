@@ -235,7 +235,7 @@ func PreventBlockByPowerLessThanSource(blockerFilter PermanentFilter) Continuous
 		}
 		threshold := src.CurrentPower(g)
 		controllerID := src.ControllerID()
-		for _, blocker := range g.battlefield {
+		for _, blocker := range g.zones.battlefield {
 			if !blocker.HasType(TypeCreature) {
 				continue
 			}
@@ -245,7 +245,7 @@ func PreventBlockByPowerLessThanSource(blockerFilter PermanentFilter) Continuous
 			if blocker.CurrentPower(g) >= threshold {
 				continue
 			}
-			for _, atk := range g.battlefield {
+			for _, atk := range g.zones.battlefield {
 				if atk.ControllerID() != controllerID {
 					continue
 				}

@@ -41,7 +41,7 @@ func (ms *ManaSystem) ManaBonuses(g *Game, permanentID uuid.UUID) []ManaBonusCol
 		return nil
 	}
 	var bonuses []ManaBonusColor
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		for _, a := range perm.RuntimeAbilities {
 			inner := UnwrapAbility(a)
 			if mb, ok := inner.(*ManaBonusAbility); ok {
@@ -70,7 +70,7 @@ func (ms *ManaSystem) GetUntappedManaSources(g *Game, playerID uuid.UUID) []mana
 
 // AppendUntappedManaSources appends untapped mana sources for a player to the target slice.
 func (ms *ManaSystem) AppendUntappedManaSources(g *Game, playerID uuid.UUID, sources []manaSourceInfo) []manaSourceInfo {
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		if perm.ControllerID() != playerID || perm.Tapped {
 			continue
 		}

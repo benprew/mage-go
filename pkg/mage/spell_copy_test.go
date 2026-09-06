@@ -163,12 +163,12 @@ func TestCopySpellOnStack_CopyDoesNotEnterAnyZone(t *testing.T) {
 	if cardSliceContains(a.Hand(), copyCardID) || cardSliceContains(a.Library(), copyCardID) {
 		t.Errorf("copy card found in hand/library; should have ceased to exist")
 	}
-	for _, ec := range g.exile {
+	for _, ec := range g.zones.exile {
 		if ec.Card.ID() == copyCardID {
 			t.Errorf("copy card found in exile; should have ceased to exist")
 		}
 	}
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.Card.ID() == copyCardID {
 			t.Errorf("copy card found on battlefield; should have ceased to exist")
 		}

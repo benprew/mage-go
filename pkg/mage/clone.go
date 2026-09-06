@@ -26,6 +26,7 @@ func (g *Game) Clone() *Game {
 		activePlayer: g.activePlayer,
 		stopped:      g.stopped,
 	}
+	c.zones = g.zones.Clone()
 	c.resolution = g.resolution.Clone()
 	c.trackers = g.trackers.Clone()
 	c.random = g.random.Clone()
@@ -43,28 +44,6 @@ func (g *Game) Clone() *Game {
 	c.players = make([]Player, len(g.players))
 	for i, p := range g.players {
 		c.players[i] = clonePlayer(p)
-	}
-
-	// Share battlefield permanents copy-on-write. Cap-limiting forces appends in
-	// either branch to allocate a distinct slice header/backing array.
-	if len(g.battlefield) > 0 {
-		c.battlefield = g.battlefield[:len(g.battlefield):len(g.battlefield)]
-		g.battlefieldSliceShared = true
-		c.battlefieldSliceShared = true
-	}
-	g.battlefieldShared = true
-	g.ownedPermanents = nil
-	c.battlefieldShared = true
-
-	// Deep copy exile zone.
-	c.exile = make([]ExiledCard, len(g.exile))
-	for i, ec := range g.exile {
-		c.exile[i] = ExiledCard{
-			Card:       ec.Card, // shared Card ref
-			ExiledBy:   ec.ExiledBy,
-			FaceDown:   ec.FaceDown,
-			RevealedTo: append([]uuid.UUID(nil), ec.RevealedTo...),
-		}
 	}
 
 	// Deep copy stack.
@@ -95,14 +74,6 @@ func (g *Game) Clone() *Game {
 	}
 
 	c.customState = cloneCustomState(g.customState)
-
-	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.
-	if len(g.castFromExilePermissions) > 0 {
-		c.castFromExilePermissions = make([]CastableFromExilePermission, len(g.castFromExilePermissions))
-		copy(c.castFromExilePermissions, g.castFromExilePermissions)
-	}
-	c.exileInsteadCards = make(map[uuid.UUID]uuid.UUID, len(g.exileInsteadCards))
-	maps.Copy(c.exileInsteadCards, g.exileInsteadCards)
 
 	// Interactive callbacks are nil'd — search clones don't call back to UI.
 	// OnPriority, AfterPriorityAction, BeforeStackResolve all remain nil.

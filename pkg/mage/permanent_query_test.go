@@ -78,7 +78,7 @@ func TestCreature_CannotDeclareAsAttacker_WhenAttackRevokedByEffect(t *testing.T
 	card := NewCreature("Test", "{2}", 2, 2)
 	p := NewPermanent(card, uuid.New())
 	p.RevokeBaseAttr(AttrSummonSick)
-	g.battlefield = append(g.battlefield, p)
+	g.zones.battlefield = append(g.zones.battlefield, p)
 	// Simulate an effect revoking AttrCanAttack
 	p.grantedAttrs[AttrCanAttack] = -1 // net = baseAttrs(1) + granted(-1) = 0
 	if p.CanDeclareAsAttacker(g) {
@@ -101,7 +101,7 @@ func TestCreature_CanDeclareAsBlocker_WhenUntapped(t *testing.T) {
 	g := makeTestGame()
 	card := NewCreature("Test", "{2}", 2, 2)
 	p := NewPermanent(card, uuid.New())
-	g.battlefield = append(g.battlefield, p)
+	g.zones.battlefield = append(g.zones.battlefield, p)
 	if !p.CanDeclareAsBlocker(g) {
 		t.Error("expected CanDeclareAsBlocker true for untapped creature")
 	}
@@ -113,7 +113,7 @@ func TestCreature_CannotDeclareAsBlocker_WhenTapped(t *testing.T) {
 	card := NewCreature("Test", "{2}", 2, 2)
 	p := NewPermanent(card, uuid.New())
 	p.Tapped = true
-	g.battlefield = append(g.battlefield, p)
+	g.zones.battlefield = append(g.zones.battlefield, p)
 	if p.CanDeclareAsBlocker(g) {
 		t.Error("expected CanDeclareAsBlocker false when tapped")
 	}
@@ -126,7 +126,7 @@ func TestCreature_CannotDeclareAsBlocker_WhenBlockPrevented(t *testing.T) {
 	g := makeTestGame()
 	card := NewCreature("Test", "{2}", 2, 2)
 	p := NewPermanent(card, uuid.New())
-	g.battlefield = append(g.battlefield, p)
+	g.zones.battlefield = append(g.zones.battlefield, p)
 	// Simulate RevokeAttr(AttrCanBlock): net = base(1) + granted(-1) = 0 → HasAttr false
 	p.grantedAttrs[AttrCanBlock] = -1
 	if p.CanDeclareAsBlocker(g) {
@@ -139,7 +139,7 @@ func TestLand_CannotDeclareAsBlocker(t *testing.T) {
 	g := makeTestGame()
 	card := NewLand("Forest")
 	p := NewPermanent(card, uuid.New())
-	g.battlefield = append(g.battlefield, p)
+	g.zones.battlefield = append(g.zones.battlefield, p)
 	if p.CanDeclareAsBlocker(g) {
 		t.Error("expected CanDeclareAsBlocker false for land")
 	}

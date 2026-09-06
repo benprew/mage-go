@@ -100,7 +100,7 @@ func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 		return ctx.Game.FilterBattlefield(And(IsCreature, sel.Filter))
 	case KindOtherMatching:
 		var out []*Permanent
-		for _, p := range ctx.Game.battlefield {
+		for _, p := range ctx.Game.zones.battlefield {
 			if p.ID() != ctx.SourceID && p.HasType(TypeCreature) && sel.Filter.Match(p, ctx.Game) {
 				out = append(out, p)
 			}

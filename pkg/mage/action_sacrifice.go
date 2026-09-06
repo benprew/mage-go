@@ -88,7 +88,7 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 func (g *Game) sacrificePermanents(playerID uuid.UUID, count int) {
 	for range count {
 		var target *Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() == playerID {
 				target = p
 				break
@@ -160,7 +160,7 @@ func SacrificeCreatureCost() Cost {
 
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	found := 0
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
 			found++
 			if found >= c.count {
@@ -178,7 +178,7 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	player := g.GetPlayer(controller)
 	for i := 0; i < c.count; i++ {
 		var candidates []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
 				candidates = append(candidates, p)
 			}

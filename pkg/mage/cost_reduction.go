@@ -188,7 +188,7 @@ func CondCardLeftYourGraveyardThisTurn() SpellCondition {
 // creature with flying").
 func CondControlsMatching(f PermanentFilter) SpellCondition {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != controller {
 				continue
 			}
@@ -244,7 +244,7 @@ func AmountByGraveyardCount(f CardFilter) SpellAmount {
 func AmountByTotalPower(f PermanentFilter) SpellAmount {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
 		total := 0
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != controller {
 				continue
 			}
@@ -263,7 +263,7 @@ func AmountByTotalPower(f PermanentFilter) SpellAmount {
 func AmountByPermanentCount(f PermanentFilter) SpellAmount {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) int {
 		n := 0
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != controller {
 				continue
 			}

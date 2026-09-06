@@ -283,8 +283,8 @@ func (g *Game) replaceCardReference(cardID uuid.UUID, replacement Card) bool {
 		mutable.Card = replacement
 		return true
 	}
-	if g.enteringPermanent != nil && g.enteringPermanent.ID() == cardID {
-		g.enteringPermanent.Card = replacement
+	if ep := g.zones.EnteringPermanent(); ep != nil && ep.ID() == cardID {
+		ep.Card = replacement
 		return true
 	}
 	for _, obj := range g.stack.objects {
@@ -297,12 +297,8 @@ func (g *Game) replaceCardReference(cardID uuid.UUID, replacement Card) bool {
 		g.resolution.SetResolvingCard(replacement)
 		return true
 	}
-	for i := range g.exile {
-		if g.exile[i].Card.ID() == cardID {
-			g.exile = append([]ExiledCard(nil), g.exile...)
-			g.exile[i].Card = replacement
-			return true
-		}
+	if g.zones.ReplaceExiledCard(cardID, replacement) {
+		return true
 	}
 	for _, player := range g.players {
 		if cards, ok := replaceCardInSlice(player.Library(), cardID, replacement); ok {

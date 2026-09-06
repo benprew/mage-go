@@ -14,10 +14,10 @@ func makeTestGameWithPerm(t *testing.T) (*Game, *Permanent) {
 	card := NewCreature("Test", "{1}", 1, 1)
 	perm := NewPermanent(card, uuid.New())
 	g := &Game{
-		battlefield: []*Permanent{perm},
-		stack:       NewStack(),
-		combat:      NewCombat(),
-		effects:     NewEffectManager(),
+		zones:   ZoneSystem{battlefield: []*Permanent{perm}},
+		stack:   NewStack(),
+		combat:  NewCombat(),
+		effects: NewEffectManager(),
 	}
 	return g, perm
 }
@@ -156,10 +156,10 @@ func TestEffectManager_ReplaceRemovedKW_WithRevokeAttrKeyword(t *testing.T) {
 	card := NewCreature("Air Elemental", "{3}{U}{U}", 4, 4, WithKeyword(Flying))
 	perm := NewPermanent(card, uuid.New())
 	g := &Game{
-		battlefield: []*Permanent{perm},
-		stack:       NewStack(),
-		combat:      NewCombat(),
-		effects:     NewEffectManager(),
+		zones:   ZoneSystem{battlefield: []*Permanent{perm}},
+		stack:   NewStack(),
+		combat:  NewCombat(),
+		effects: NewEffectManager(),
 	}
 	if !perm.HasAttr(Flying) {
 		t.Fatal("precondition: creature should have Flying")

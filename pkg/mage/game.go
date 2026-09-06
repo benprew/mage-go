@@ -53,24 +53,17 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 
 // Game is the central game state and engine.
 type Game struct {
-	players        []Player
-	anteEnabled    bool
-	originalOwners map[uuid.UUID]uuid.UUID
-	anteResult     []OwnershipChange
-	anteSettled    bool
-	battlefield    []*Permanent
-	// Search clones share battlefield permanent pointers until a branch writes
-	// to a permanent. ownedPermanents contains IDs whose pointers are private to
-	// this Game after sharing began.
-	battlefieldShared      bool
-	battlefieldSliceShared bool
-	ownedPermanents        map[uuid.UUID]struct{}
-	exile                  []ExiledCard // exile zone with metadata
-	stack                  *Stack
-	combat                 *Combat
-	effects                *EffectManager
-	layer2Controllers      map[uuid.UUID]uuid.UUID
-	mana                   ManaSystem
+	players           []Player
+	anteEnabled       bool
+	originalOwners    map[uuid.UUID]uuid.UUID
+	anteResult        []OwnershipChange
+	anteSettled       bool
+	zones             ZoneSystem
+	stack             *Stack
+	combat            *Combat
+	effects           *EffectManager
+	layer2Controllers map[uuid.UUID]uuid.UUID
+	mana              ManaSystem
 
 	turn         int
 	step         PhaseStep
@@ -94,23 +87,10 @@ type Game struct {
 	// DamageSystem owns damage execution, history, aggregation, and reflection.
 	damage DamageSystem
 
-	// Permanent currently being put onto the battlefield during PutOnBattlefield,
-	// before it is appended to g.battlefield. Looked up by FindPermanent so
-	// that counter-placement replacements (ETB additional, doubling) can match
-	// the entering permanent during ETB resolution.
-	enteringPermanent *Permanent
-
 	// skipNextUntap tracks object-specific one-shot untap replacements. Entries
 	// survive control changes and are consumed only by an actual untap attempt
 	// during the permanent's then-controller's untap step.
 	skipNextUntap map[uuid.UUID]int
-
-	// LKI snapshots for permanents that have left the battlefield, keyed by
-	// permanent ID. Populated by RemoveFromBattlefield so that death/leave
-	// triggers (and their conditions) can read the dying permanent's
-	// controller, types, P/T, and token-ness after it has moved zones.
-	// Cleared at end-of-turn cleanup.
-	lki map[uuid.UUID]*PermanentLKI
 
 	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
 	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
@@ -140,16 +120,6 @@ type Game struct {
 	// Control flags
 	stopped bool
 
-	// castFromExilePermissions records which exiled cards specific players
-	// may cast (Gonti, Lord of Luxury and similar effects). The permission
-	// persists until the card leaves exile.
-	castFromExilePermissions []CastableFromExilePermission
-
-	// exileInsteadCards maps card IDs that should be exiled instead of put
-	// into a graveyard this turn (Scholar of the Lost Trove rider). Value
-	// is the source ID that granted the rider. Cleared at end of turn.
-	exileInsteadCards map[uuid.UUID]uuid.UUID
-
 	// customState is a per-game string-keyed bag for set-specific keyword
 	// support to stash auxiliary state (e.g. Paradigm "have I resolved a
 	// spell with this name yet?" tracking). Populate via paradigmStateOf
@@ -169,22 +139,22 @@ func NewGame(playerA, playerB Player) *Game {
 
 func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 	return &Game{
-		players:           []Player{playerA, playerB},
-		anteEnabled:       anteEnabled,
-		originalOwners:    make(map[uuid.UUID]uuid.UUID),
-		stack:             NewStack(),
-		combat:            NewCombat(),
-		effects:           NewEffectManager(),
-		resolution:        NewResolutionState(),
-		trackers:          NewTrackerSystem(),
-		random:            NewRandomSource(),
-		triggers:          NewTriggerSystem(),
-		mana:              NewManaSystem(),
-		damage:            NewDamageSystem(),
-		turn:              1,
-		schedule:          newTurnSchedule(),
-		exileInsteadCards: make(map[uuid.UUID]uuid.UUID),
-		customState:       make(map[string]any),
+		players:        []Player{playerA, playerB},
+		anteEnabled:    anteEnabled,
+		originalOwners: make(map[uuid.UUID]uuid.UUID),
+		zones:          NewZoneSystem(),
+		stack:          NewStack(),
+		combat:         NewCombat(),
+		effects:        NewEffectManager(),
+		resolution:     NewResolutionState(),
+		trackers:       NewTrackerSystem(),
+		random:         NewRandomSource(),
+		triggers:       NewTriggerSystem(),
+		mana:           NewManaSystem(),
+		damage:         NewDamageSystem(),
+		turn:           1,
+		schedule:       newTurnSchedule(),
+		customState:    make(map[string]any),
 	}
 }
 
@@ -221,18 +191,7 @@ func (g *Game) NonActivePlayerObj() Player {
 // FindPermanent finds a permanent by ID on the battlefield.
 // Phased-out permanents are invisible.
 func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
-	for _, p := range g.battlefield {
-		if p.PhasedOut {
-			continue
-		}
-		if p.ID() == id {
-			return p
-		}
-	}
-	if g.enteringPermanent != nil && g.enteringPermanent.ID() == id {
-		return g.enteringPermanent
-	}
-	return nil
+	return g.zones.FindPermanent(id)
 }
 
 // PhaseOut phases the permanent with the given ID out of the battlefield, along
@@ -242,48 +201,18 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 // out — the permanent followed by its attachments — so the caller can later
 // phase exactly that set back in with PhaseIn.
 func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
-	perm := g.MutablePermanent(id)
-	if perm == nil {
-		return nil
-	}
-	perm.PhasedOut = true
-	phased := []uuid.UUID{id}
-	for _, p := range g.battlefield {
-		if p.PhasedOut || p.AttachedTo != id {
-			continue
-		}
-		if !p.HasSubType("Aura") && !p.HasSubType("Equipment") {
-			continue
-		}
-		att := g.MutablePermanent(p.ID())
-		if att == nil {
-			continue
-		}
-		att.PhasedOut = true
-		phased = append(phased, att.ID())
-	}
-	return phased
+	return g.zones.PhaseOut(id)
 }
 
 // PhaseIn phases the given permanents back onto the battlefield. IDs that are
 // not currently phased out are skipped.
 func (g *Game) PhaseIn(ids []uuid.UUID) {
-	for _, id := range ids {
-		perm := g.mutablePermanentIncludingPhased(id)
-		if perm != nil && perm.PhasedOut {
-			perm.PhasedOut = false
-		}
-	}
+	g.zones.PhaseIn(ids)
 }
 
 // FindPermanentIncludingPhased finds a permanent by ID even if phased out.
 func (g *Game) FindPermanentIncludingPhased(id uuid.UUID) *Permanent {
-	for _, p := range g.battlefield {
-		if p.ID() == id {
-			return p
-		}
-	}
-	return nil
+	return g.zones.FindPermanentIncludingPhased(id)
 }
 
 // MutablePermanent returns an owned battlefield permanent pointer suitable for
@@ -291,144 +220,51 @@ func (g *Game) FindPermanentIncludingPhased(id uuid.UUID) *Permanent {
 // to a shared permanent clones that permanent and replaces the battlefield
 // entry in this Game only. Phased-out permanents are invisible.
 func (g *Game) MutablePermanent(id uuid.UUID) *Permanent {
-	for i, p := range g.battlefield {
-		if p.PhasedOut {
-			continue
-		}
-		if p.ID() == id {
-			return g.mutablePermanentAt(i)
-		}
-	}
-	if g.enteringPermanent != nil && g.enteringPermanent.ID() == id {
-		return g.enteringPermanent
-	}
-	return nil
+	return g.zones.MutablePermanent(id)
 }
 
 // mutablePermanentIncludingPhased is the mutable counterpart to
 // FindPermanentIncludingPhased.
 func (g *Game) mutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
-	for i, p := range g.battlefield {
-		if p.ID() == id {
-			return g.mutablePermanentAt(i)
-		}
-	}
-	return nil
+	return g.zones.MutablePermanentIncludingPhased(id)
 }
 
 // MutablePermanentIncludingPhased is the exported mutable counterpart to
 // FindPermanentIncludingPhased. Returns an owned battlefield permanent
 // pointer suitable for mutation (triggers copy-on-write under search).
 func (g *Game) MutablePermanentIncludingPhased(id uuid.UUID) *Permanent {
-	return g.mutablePermanentIncludingPhased(id)
-}
-
-func (g *Game) mutablePermanentAt(i int) *Permanent {
-	p := g.battlefield[i]
-	if !g.battlefieldShared {
-		return p
-	}
-	if g.ownedPermanents != nil {
-		if _, ok := g.ownedPermanents[p.ID()]; ok {
-			return p
-		}
-	}
-	g.ensureBattlefieldSliceOwned()
-	cp := new(Permanent)
-	clonePermanentInto(cp, p)
-	g.battlefield[i] = cp
-	g.addOwnedPermanent(cp)
-	return cp
-}
-
-func (g *Game) ensureBattlefieldSliceOwned() {
-	if !g.battlefieldSliceShared {
-		return
-	}
-	if len(g.battlefield) == 0 {
-		g.battlefield = nil
-		g.battlefieldSliceShared = false
-		return
-	}
-	cp := make([]*Permanent, len(g.battlefield))
-	copy(cp, g.battlefield)
-	g.battlefield = cp
-	g.battlefieldSliceShared = false
-}
-
-func (g *Game) addOwnedPermanent(p *Permanent) {
-	if p == nil || !g.battlefieldShared {
-		return
-	}
-	if g.ownedPermanents == nil {
-		g.ownedPermanents = make(map[uuid.UUID]struct{})
-	}
-	g.ownedPermanents[p.ID()] = struct{}{}
+	return g.zones.MutablePermanentIncludingPhased(id)
 }
 
 // FindPermanentByName finds a permanent by name on the battlefield (first match).
 // Phased-out permanents are invisible.
 func (g *Game) FindPermanentByName(name string, controller uuid.UUID) *Permanent {
-	for _, p := range g.battlefield {
-		if p.PhasedOut {
-			continue
-		}
-		if p.Name() == name && p.ControllerID() == controller {
-			return p
-		}
-	}
-	return nil
+	return g.zones.FindPermanentByName(name, controller)
 }
 
 // AnyBattlefield returns true if any permanent on the battlefield matches f.
 // Phased-out permanents are invisible.
 func (g *Game) AnyBattlefield(f PermanentFilter) bool {
-	for _, p := range g.battlefield {
-		if p.PhasedOut {
-			continue
-		}
-		if f.Match(p, g) {
-			return true
-		}
-	}
-	return false
+	return g.zones.AnyBattlefield(f, g)
 }
 
 // FilterBattlefield returns all permanents on the battlefield matching f.
 // Phased-out permanents are invisible.
 func (g *Game) FilterBattlefield(f PermanentFilter) []*Permanent {
-	var result []*Permanent
-	for _, p := range g.battlefield {
-		if p.PhasedOut {
-			continue
-		}
-		if f.Match(p, g) {
-			result = append(result, p)
-		}
-	}
-	return result
+	return g.zones.FilterBattlefield(f, g)
 }
 
 // CountBattlefield returns the number of permanents on the battlefield matching f.
 // Phased-out permanents are invisible.
 func (g *Game) CountBattlefield(f PermanentFilter) int {
-	n := 0
-	for _, p := range g.battlefield {
-		if p.PhasedOut {
-			continue
-		}
-		if f.Match(p, g) {
-			n++
-		}
-	}
-	return n
+	return g.zones.CountBattlefield(f, g)
 }
 
 // FindCardAnywhere finds a card by ID anywhere in the game.
 // Also checks the currently resolving card (which may be in limbo between
 // stack pop and graveyard placement during resolution).
 func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ID() == id {
 			return p.Card
 		}
@@ -465,7 +301,7 @@ func (g *Game) FindCardAnywhere(id uuid.UUID) Card {
 			}
 		}
 	}
-	for _, ec := range g.exile {
+	for _, ec := range g.zones.exile {
 		if ec.Card.ID() == id {
 			return ec.Card
 		}
@@ -521,7 +357,7 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 		override := append([]Color(nil), (*colors)...)
 		perm.ColorOverride = &override
 	}
-	g.addOwnedPermanent(perm)
+	g.zones.addOwnedPermanent(perm)
 	perm.turnControlGained = g.turn
 
 	g.syncAbilityContext(perm)
@@ -535,8 +371,8 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 	// Expose the entering permanent to FindPermanent for the duration of ETB
 	// resolution so counter-placement replacements (ETB additional counters,
 	// doublers) can match it before it joins g.battlefield.
-	g.enteringPermanent = perm
-	defer func() { g.enteringPermanent = nil }()
+	g.zones.SetEnteringPermanent(perm)
+	defer g.zones.ClearEnteringPermanent()
 
 	// Add X counters if configured (replacement effect, not a trigger).
 	// Routed through AddCountersWithReplacement so ETB-additional counter
@@ -620,8 +456,7 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 		}
 	}
 
-	g.ensureBattlefieldSliceOwned()
-	g.battlefield = append(g.battlefield, perm)
+	g.zones.AddPermanent(perm)
 	if colors != nil {
 		g.effects.Add(permanentColorEffect(perm, *colors, colorSourceID))
 	}
@@ -782,16 +617,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	copy(attachments, perm.Attachments)
 
 	// Remove from battlefield
-	g.ensureBattlefieldSliceOwned()
-	for i, p := range g.battlefield {
-		if p.ID() == perm.ID() {
-			g.battlefield = append(g.battlefield[:i], g.battlefield[i+1:]...)
-			if g.ownedPermanents != nil {
-				delete(g.ownedPermanents, perm.ID())
-			}
-			break
-		}
-	}
+	g.zones.RemovePermanent(perm.ID())
 
 	g.effects.Apply(g)
 	// Leave-zone trigger dispatch (CR 603.6c) happens in the destination-
@@ -1174,7 +1000,7 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 	card := perm.Card
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
-	g.exile = append(g.exile, ExiledCard{Card: card})
+	g.zones.ExileCard(card, uuid.Nil)
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
@@ -1189,7 +1015,7 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 
 // ExileCard moves a card (from any zone) to the exile zone.
 func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
-	g.exile = append(g.exile, ExiledCard{Card: card, ExiledBy: exiledBy})
+	g.zones.ExileCard(card, exiledBy)
 	g.recordCardPutIntoExile(card)
 }
 
@@ -1200,13 +1026,7 @@ func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
 // ID in revealedTo. Owners of face-down exiled cards do not automatically see
 // the identity, matching Gonti's printed ruling.
 func (g *Game) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
-	rev := append([]uuid.UUID(nil), revealedTo...)
-	g.exile = append(g.exile, ExiledCard{
-		Card:       card,
-		ExiledBy:   exiledBy,
-		FaceDown:   true,
-		RevealedTo: rev,
-	})
+	g.zones.ExileCardFaceDown(card, exiledBy, revealedTo...)
 	g.recordCardPutIntoExile(card)
 }
 
@@ -1214,57 +1034,23 @@ func (g *Game) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uu
 // the face-down exiled card with the given ID. No-op if the card is face up
 // (already public) or not in exile.
 func (g *Game) RevealExiledCardTo(cardID, playerID uuid.UUID) {
-	for i := range g.exile {
-		if g.exile[i].Card.ID() != cardID {
-			continue
-		}
-		ec := &g.exile[i]
-		if !ec.FaceDown {
-			return
-		}
-		if slices.Contains(ec.RevealedTo, playerID) {
-			return
-		}
-		ec.RevealedTo = append(ec.RevealedTo, playerID)
-		return
-	}
+	g.zones.RevealExiledCardTo(cardID, playerID)
 }
 
 // FindExiledCard finds an exiled card by its ID.
 func (g *Game) FindExiledCard(cardID uuid.UUID) *ExiledCard {
-	for i := range g.exile {
-		if g.exile[i].Card.ID() == cardID {
-			return &g.exile[i]
-		}
-	}
-	return nil
+	return g.zones.FindExiledCard(cardID)
 }
 
 // RemoveFromExile removes a card from exile by ID and returns it.
 func (g *Game) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
-	for i, ec := range g.exile {
-		if ec.Card.ID() == cardID {
-			g.exile = append(g.exile[:i], g.exile[i+1:]...)
-			return ec.Card, true
-		}
-	}
-	return nil, false
+	return g.zones.RemoveFromExile(cardID)
 }
 
 // RemoveExiledCardBySource removes all exiled cards with the given ExiledBy ID
 // and returns them. Used by Tawnos's Coffin and similar cards.
 func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
-	var found []ExiledCard
-	remaining := g.exile[:0]
-	for _, ec := range g.exile {
-		if ec.ExiledBy == exiledBy {
-			found = append(found, ec)
-		} else {
-			remaining = append(remaining, ec)
-		}
-	}
-	g.exile = remaining
-	return found
+	return g.zones.RemoveExiledCardBySource(exiledBy)
 }
 
 func (g *Game) flushCombatDamageAggregator() {
@@ -1627,7 +1413,7 @@ func (g *Game) DelayedTriggers() []*DelayedTrigger {
 func (g *Game) FireEvent(evt GameEvent) {
 	g.recordPerTurnEvent(&evt)
 	g.recordPerDuelEvent(&evt)
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		g.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -1796,7 +1582,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 // Call this function after state-based actions are checked and before a player receives priority.
 func (g *Game) CheckStateTriggers() {
 	seen := make(map[stateTriggerKey]bool)
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		g.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -2147,7 +1933,7 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 	if g.stack.FindBySourceID(id) != nil {
 		return ZoneStack
 	}
-	for _, ec := range g.exile {
+	for _, ec := range g.zones.exile {
 		if ec.Card != nil && ec.Card.ID() == id {
 			return ZoneExile
 		}
@@ -2646,7 +2432,7 @@ func (g *Game) CheckStateBasedActions() {
 		// creatures (CR 702.12b) are skipped — the destroy would be a no-op
 		// and setting actions=true would loop the SBA forever.
 		var toDestroy []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
 				toDestroy = append(toDestroy, p)
 				actions = true
@@ -2658,7 +2444,7 @@ func (g *Game) CheckStateBasedActions() {
 
 		// Check for creatures with 0 or less toughness (not destruction — bypasses indestructible)
 		var zeroToughness []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 {
 				zeroToughness = append(zeroToughness, p)
 				actions = true
@@ -2672,7 +2458,7 @@ func (g *Game) CheckStateBasedActions() {
 		// graveyard. Loyalty-activated abilities, attacking planeswalkers, and
 		// the legacy damage-redirection rules are not implemented.
 		var zeroLoyalty []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
 				zeroLoyalty = append(zeroLoyalty, p)
 				actions = true
@@ -2683,7 +2469,7 @@ func (g *Game) CheckStateBasedActions() {
 		}
 
 		// MTG rule 704.5q: +1/+1 and -1/-1 counter annihilation
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			plus := p.Counters[P1P1]
 			minus := p.Counters[M1M1]
 			if plus > 0 && minus > 0 {
@@ -2700,7 +2486,7 @@ func (g *Game) CheckStateBasedActions() {
 
 		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
 		var aurasToDrop []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.PhasedOut {
 				continue
 			}
@@ -2723,7 +2509,7 @@ func (g *Game) CheckStateBasedActions() {
 		}
 
 		// Equipment attached to a non-creature or missing host becomes unattached
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.PhasedOut {
 				continue
 			}
@@ -2742,7 +2528,7 @@ func (g *Game) CheckStateBasedActions() {
 
 		// Sacrifice creatures that require a land type the controller doesn't have
 		var toSacrifice []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			var landSubtype string
 			for _, a := range p.RuntimeAbilities {
 				if sa, ok := a.(*SacrificeUnlessLandAbility); ok {
@@ -2754,7 +2540,7 @@ func (g *Game) CheckStateBasedActions() {
 				continue
 			}
 			hasLand := false
-			for _, other := range g.battlefield {
+			for _, other := range g.zones.battlefield {
 				if other.ControllerID() == p.ControllerID() && other.HasSubType(landSubtype) {
 					hasLand = true
 					break
@@ -2771,7 +2557,7 @@ func (g *Game) CheckStateBasedActions() {
 
 		// Sacrifice creatures if controller controls a specific subtype (e.g. Goblins of the Flarg)
 		var toSacrificeControls []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			var forbidSubtype string
 			for _, a := range p.RuntimeAbilities {
 				if sa, ok := a.(*SacrificeIfControlsAbility); ok {
@@ -2783,7 +2569,7 @@ func (g *Game) CheckStateBasedActions() {
 				continue
 			}
 			controlsForbid := false
-			for _, other := range g.battlefield {
+			for _, other := range g.zones.battlefield {
 				if other.ID() != p.ID() && other.ControllerID() == p.ControllerID() && other.HasSubType(forbidSubtype) {
 					controlsForbid = true
 					break
@@ -2801,7 +2587,7 @@ func (g *Game) CheckStateBasedActions() {
 		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
 		// permanents with the same name, they choose one and sacrifice the rest.
 		var legendCounts map[uuid.UUID]map[string][]*Permanent // controller -> name -> perms
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.Card.HasSuperType(SuperLegendary) {
 				if legendCounts == nil {
 					legendCounts = make(map[uuid.UUID]map[string][]*Permanent)
@@ -2830,7 +2616,7 @@ func (g *Game) CheckStateBasedActions() {
 		// MTG rule 704.5k: World rule — if two or more permanents have the World
 		// supertype, all except the most recent one are put into their owners' graveyards.
 		var worldPerms []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.Card.HasSuperType(SuperWorld) {
 				worldPerms = append(worldPerms, p)
 			}
@@ -2938,7 +2724,7 @@ func (g *Game) doUntap() {
 	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
 	// similar effects read this at upkeep.
 	count := 0
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
 			count++
 		}
@@ -2952,7 +2738,7 @@ func (g *Game) doUntap() {
 	creatureUntapLimit := g.effects.Rules.CreatureUntapMax
 	creaturesUntapped := 0
 
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == active.PlayerID() {
 			if p.HasAttr(AttrDoesNotUntap) {
 				// Does not untap — skip
@@ -3084,7 +2870,7 @@ func (g *Game) doDeclareAttackers() {
 	for _, id := range attackerIDs {
 		declared[id] = true
 	}
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == active.PlayerID() && p.HasAttr(AttrMustAttack) && !declared[p.ID()] {
 			if p.CanDeclareAsAttacker(g) {
 				attackerIDs = append(attackerIDs, p.ID())
@@ -3322,7 +3108,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 		minN := max(g.effects.MinBlockers(group.AttackerID), 1)
 		// Find legal blockers controlled by the defender.
 		var candidates []*Permanent
-		for _, p := range g.battlefield {
+		for _, p := range g.zones.battlefield {
 			if p.ControllerID() != defenderID {
 				continue
 			}
@@ -3374,7 +3160,7 @@ func (g *Game) doCleanupActions() bool {
 		g.PlayerDiscard(p, chosen[0].ID())
 	}
 	// Clear damage from all creatures
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		if p.Damage == 0 {
 			continue
 		}
@@ -3392,18 +3178,17 @@ func (g *Game) doCleanupActions() bool {
 	g.effects.RemoveEndOfTurn()
 	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()
-	g.exileInsteadCards = map[uuid.UUID]uuid.UUID{}
+	g.zones.ClearEndOfTurn()
 	g.damage.ClearEndOfTurn()
 	g.effects.Rules.ClearEndOfTurn()
 	// Clear non-persistent delayed triggers (they only last "this turn")
 	g.triggers.ClearEndOfTurn()
 	g.trackers.Turn.ResetForNewTurn(active.PlayerID())
-	g.clearLKI()
 	// Clear last-drawn-card tracking for all players
 	for _, p := range g.players {
 		p.ClearLastDrawnCard()
 	}
-	for _, p := range g.battlefield {
+	for _, p := range g.zones.battlefield {
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		p.Counters[Charge] = 0
 		// Reset once-per-turn activated abilities
@@ -3826,7 +3611,7 @@ func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
 // GetActivatableAbilities returns activated abilities the player can currently use.
 func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 	var result []ActivatableInfo
-	for _, perm := range g.battlefield {
+	for _, perm := range g.zones.battlefield {
 		isOwner := perm.ControllerID() == playerID
 		for i, a := range perm.RuntimeAbilities {
 			inner := UnwrapAbility(a)
