@@ -19,19 +19,16 @@ type UUIDMap[V any] map[uuid.UUID]V
 // Players are wrapped in SearchPlayer for non-interactive choice defaults.
 func (g *Game) Clone() *Game {
 	c := &Game{
-		anteEnabled:               g.anteEnabled,
-		anteSettled:               g.anteSettled,
-		turn:                      g.turn,
-		step:                      g.step,
-		activePlayer:              g.activePlayer,
-		landsPlayedThisTurn:       g.landsPlayedThisTurn,
-		creatureDeathsThisTurn:    g.creatureDeathsThisTurn,
-		cleanupPriorityRounds:     g.cleanupPriorityRounds,
-		stopped:                   g.stopped,
-		resolvingCombatDamage:     g.resolvingCombatDamage,
-		cardsPutIntoExileThisTurn: g.cardsPutIntoExileThisTurn,
+		anteEnabled:           g.anteEnabled,
+		anteSettled:           g.anteSettled,
+		turn:                  g.turn,
+		step:                  g.step,
+		activePlayer:          g.activePlayer,
+		stopped:               g.stopped,
+		resolvingCombatDamage: g.resolvingCombatDamage,
 	}
 	c.resolution = g.resolution.Clone()
+	c.trackers = g.trackers.Clone()
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
@@ -135,8 +132,6 @@ func (g *Game) Clone() *Game {
 	if len(g.damageDealtToPermanentsByPermanent) > 0 {
 		c.damageDealtToPermanentsByPermanent = cloneNestedUUIDMap(g.damageDealtToPermanentsByPermanent)
 	}
-	c.damageTakenThisTurn = cloneUUIDIntMap(g.damageTakenThisTurn)
-	c.artifactDamageTakenThisTurn = cloneUUIDIntMap(g.artifactDamageTakenThisTurn)
 	c.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(g.combatDamageThisStep))
 	for k, inner := range g.combatDamageThisStep {
 		c.combatDamageThisStep[k] = cloneUUIDIntMap(inner)
@@ -149,28 +144,6 @@ func (g *Game) Clone() *Game {
 		}
 		c.combatDamageSourcesThisStep[k] = dst
 	}
-	c.attackedThisTurn = cloneUUIDBoolMap(g.attackedThisTurn)
-	c.instantsCastThisTurn = cloneUUIDIntMap(g.instantsCastThisTurn)
-	c.sorceriesCastThisTurn = cloneUUIDIntMap(g.sorceriesCastThisTurn)
-	c.timesTargetedThisTurn = cloneUUIDMap(g.timesTargetedThisTurn)
-	c.discardCountThisTurn = cloneUUIDMap(g.discardCountThisTurn)
-	c.lifeGainedThisTurn = cloneUUIDMap(g.lifeGainedThisTurn)
-	c.permDamageReceivedThisTurn = cloneUUIDMap(g.permDamageReceivedThisTurn)
-	c.attackedOrBlockedThisTurn = cloneUUIDMap(g.attackedOrBlockedThisTurn)
-	c.playerCastSpellThisTurn = cloneUUIDMap(g.playerCastSpellThisTurn)
-	c.playerAttackedThisTurn = cloneUUIDMap(g.playerAttackedThisTurn)
-	c.cardsDrawnThisTurn = cloneUUIDMap(g.cardsDrawnThisTurn)
-	c.cardsLeftGraveyardThisTurn = cloneUUIDMap(g.cardsLeftGraveyardThisTurn)
-	c.exileZoneChangesPending = cloneUUIDMap(g.exileZoneChangesPending)
-	c.duelLandsPlayed = cloneUUIDMap(g.duelLandsPlayed)
-	c.duelAttackersDeclared = cloneUUIDMap(g.duelAttackersDeclared)
-	c.duelCreatureDeaths = cloneUUIDMap(g.duelCreatureDeaths)
-	c.duelNonCombatDamage = cloneUUIDMap(g.duelNonCombatDamage)
-	c.duelSpellsCastByColor = cloneUUIDColorMap(g.duelSpellsCastByColor)
-	c.duelSpellsCastByType = cloneUUIDCardTypeMap(g.duelSpellsCastByType)
-	c.blockedThisTurn = cloneBlockedThisTurn(g.blockedThisTurn)
-	c.extraLandPlaysThisTurn = cloneUUIDMap(g.extraLandPlaysThisTurn)
-	c.optionalCostPaid = cloneUUIDMap(g.optionalCostPaid)
 	c.customState = cloneCustomState(g.customState)
 
 	// Deep copy cast-from-exile permissions and exile-instead-of-graveyard tags.

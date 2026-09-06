@@ -137,9 +137,9 @@ func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {
 		return
 	}
 	if card.HasType(TypeInstant) {
-		g.instantsCastThisTurn[playerID]++
+		g.trackers.Turn.RecordInstantCast(playerID)
 	}
 	if card.HasType(TypeSorcery) {
-		g.sorceriesCastThisTurn[playerID]++
+		g.trackers.Turn.RecordSorceryCast(playerID)
 	}
 }

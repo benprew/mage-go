@@ -3,7 +3,6 @@ package mage
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"math/rand"
 	"slices"
 
@@ -96,18 +95,8 @@ type Game struct {
 	// ResolutionState owns transient resolution and cost scratch state.
 	resolution ResolutionState
 
-	// Interactive play tracking
-	landsPlayedThisTurn int
-
-	// Per-player additional-land-play allowance granted this turn ("you may
-	// play an additional land this turn"). Reset alongside landsPlayedThisTurn
-	// during cleanup. CR 305.2 / Explore-style effects.
-	extraLandPlaysThisTurn map[uuid.UUID]int
-
-	// Per-source flag set by OptionalCost: true if the controller chose to
-	// pay the optional cost most recently. Resolution-time effects branch on
-	// LastCostOptionalPaid(sourceID).
-	optionalCostPaid map[uuid.UUID]bool
+	// TrackerSystem owns turn-scoped and duel-scoped observations and counters.
+	trackers TrackerSystem
 
 	// Damage tracking: maps target permanent ID -> set of source permanent IDs that dealt damage this turn
 	damageDealtBy map[uuid.UUID]map[uuid.UUID]bool
@@ -115,12 +104,6 @@ type Game struct {
 	// Game-long damage tracking by permanent (e.g. The Fallen)
 	damageDealtToPlayersByPermanent    map[uuid.UUID]map[uuid.UUID]bool
 	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
-
-	// Player damage tracking: maps player ID -> total damage taken this turn
-	damageTakenThisTurn map[uuid.UUID]int
-
-	// Artifact damage tracking: maps player ID -> artifact damage taken this turn
-	artifactDamageTakenThisTurn map[uuid.UUID]int
 
 	// Per-step combat damage aggregation. Maps controllerID -> recipientPlayerID
 	// -> total combat damage dealt this damage step. Reset before each
@@ -133,40 +116,6 @@ type Game struct {
 	// attributes (e.g., "non-Human creatures you control"). Cleared at the
 	// end of flushCombatDamageAggregator.
 	combatDamageSourcesThisStep map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
-
-	// Creatures that attacked this turn (survives combat reset for end-of-turn checks)
-	attackedThisTurn map[uuid.UUID]bool
-
-	// Creatures that attacked during a player's last turn: playerID -> permID -> bool (for Tangle Kelp)
-	attackedLastTurn map[uuid.UUID]map[uuid.UUID]bool
-
-	// Blockers this turn: key = blocker ID, value = attacker IDs it blocked
-	// Survives combat reset for post-combat checks (e.g., Glyph of Reincarnation)
-	blockedThisTurn map[uuid.UUID][]uuid.UUID
-
-	// Instant spells cast this turn per player (for Ichneumon Druid, etc.)
-	instantsCastThisTurn  map[uuid.UUID]int
-	sorceriesCastThisTurn map[uuid.UUID]int
-
-	// Creature deaths this turn (total count across all players)
-	creatureDeathsThisTurn int
-
-	// Number of untapped lands the active player controlled at the start of
-	// this turn (snapshot taken before the untap step). Read by Power Surge.
-	untappedLandsAtTurnStart map[uuid.UUID]int
-
-	// Times an object (permanent or player) became the target of a spell or
-	// activated ability this turn (CR 603.6c). Keyed by object ID. Used by
-	// "first time each turn" target triggers like Kira, Great Glass-Spinner.
-	timesTargetedThisTurn map[uuid.UUID]int
-
-	// CleanupPriorityRounds counts how many times players have received priority
-	// during a cleanup step in this game. Normally no priority is given during
-	// cleanup (CR 514.3); it is only granted when a state-based action fires or
-	// a triggered ability triggers during cleanup (CR 514.3a). Tests assert on
-	// this to distinguish the two cases. Not reset across turns — tests take a
-	// snapshot and compare deltas.
-	cleanupPriorityRounds int
 
 	// Permanent currently being put onto the battlefield during PutOnBattlefield,
 	// before it is appended to g.battlefield. Looked up by FindPermanent so
@@ -240,29 +189,6 @@ type Game struct {
 	// is the source ID that granted the rider. Cleared at end of turn.
 	exileInsteadCards map[uuid.UUID]uuid.UUID
 
-	// Per-turn trackers (see per_turn_trackers.go). Reset by
-	// resetPerTurnTrackers in the turn-end cleanup pipeline.
-	discardCountThisTurn       map[uuid.UUID]int  // playerID -> discards this turn
-	lifeGainedThisTurn         map[uuid.UUID]int  // playerID -> life gained this turn
-	permDamageReceivedThisTurn map[uuid.UUID]int  // permID/playerID -> damage taken this turn
-	attackedOrBlockedThisTurn  map[uuid.UUID]bool // permID -> attacked or blocked this turn
-	playerCastSpellThisTurn    map[uuid.UUID]bool // playerID -> cast any spell this turn
-	playerAttackedThisTurn     map[uuid.UUID]bool // playerID -> declared at least one attacker this turn
-	cardsDrawnThisTurn         map[uuid.UUID]int  // playerID -> count of cards drawn this turn (per Zurzoth, Chaos Rider et al.)
-	cardsLeftGraveyardThisTurn map[uuid.UUID]int  // playerID -> cards that left that player's graveyard this turn
-	cardsPutIntoExileThisTurn  int                // total cards put into exile this turn
-	exileZoneChangesPending    map[uuid.UUID]int  // cardID -> ZoneExile events already counted, awaiting ExileCard append
-
-	// Per-duel objective counters (see per_duel_trackers.go). Unlike the
-	// per-turn trackers these are NOT reset between turns; they accumulate for
-	// the whole game and are read at game-over (used by the s30 quest system).
-	duelSpellsCastByColor map[uuid.UUID]map[Color]int    // playerID -> color -> spells cast
-	duelSpellsCastByType  map[uuid.UUID]map[CardType]int // playerID -> type -> spells cast
-	duelLandsPlayed       map[uuid.UUID]int              // playerID -> lands played
-	duelAttackersDeclared map[uuid.UUID]int              // playerID -> attackers declared
-	duelCreatureDeaths    map[uuid.UUID]int              // controllerID -> own creatures that died
-	duelNonCombatDamage   map[uuid.UUID]int              // dealerID -> non-combat damage dealt to the opposing player
-
 	// customState is a per-game string-keyed bag for set-specific keyword
 	// support to stash auxiliary state (e.g. Paradigm "have I resolved a
 	// spell with this name yet?" tracking). Populate via paradigmStateOf
@@ -318,19 +244,13 @@ func newGame(playerA, playerB Player, anteEnabled bool) *Game {
 		combat:                             NewCombat(),
 		effects:                            NewEffectManager(),
 		resolution:                         NewResolutionState(),
+		trackers:                           NewTrackerSystem(),
 		turn:                               1,
 		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPermanentsByPermanent: make(map[uuid.UUID]map[uuid.UUID]bool),
-		damageTakenThisTurn:                make(map[uuid.UUID]int),
-		artifactDamageTakenThisTurn:        make(map[uuid.UUID]int),
 		combatDamageThisStep:               make(map[uuid.UUID]map[uuid.UUID]int),
 		combatDamageSourcesThisStep:        make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
-		attackedThisTurn:                   make(map[uuid.UUID]bool),
-		blockedThisTurn:                    make(map[uuid.UUID][]uuid.UUID),
-		instantsCastThisTurn:               make(map[uuid.UUID]int),
-		sorceriesCastThisTurn:              make(map[uuid.UUID]int),
-		timesTargetedThisTurn:              make(map[uuid.UUID]int),
 		armedStateTriggers:                 make(map[stateTriggerKey]bool),
 		schedule:                           newTurnSchedule(),
 		exileInsteadCards:                  make(map[uuid.UUID]uuid.UUID),
@@ -853,7 +773,7 @@ func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.U
 		return perm
 	}
 	g.combat.AddBlocker(perm.ID(), attackerID)
-	g.blockedThisTurn[perm.ID()] = append(g.blockedThisTurn[perm.ID()], attackerID)
+	g.trackers.Turn.RecordBlocked(perm.ID(), attackerID)
 	return perm
 }
 
@@ -1013,7 +933,7 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
 	if isCreature {
-		g.creatureDeathsThisTurn++
+		g.trackers.Turn.RecordCreatureDeath()
 		g.recordCreatureDeath(controller)
 	}
 }
@@ -1109,7 +1029,7 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
 
 	if isCreature {
-		g.creatureDeathsThisTurn++
+		g.trackers.Turn.RecordCreatureDeath()
 		g.recordCreatureDeath(controller)
 	}
 }
@@ -1702,7 +1622,9 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 			Amount:   amount,
 		})
 	}
-	g.damageTakenThisTurn[p.PlayerID()] += amount
+	sourceCard := g.findCardForDamageSource(sourceID)
+	isArtifact := sourceCard != nil && sourceCard.HasType(TypeArtifact)
+	g.trackers.Turn.RecordDamageTaken(p.PlayerID(), amount, isArtifact)
 	if sourceID != uuid.Nil {
 		if g.damageDealtToPlayersByPermanent == nil {
 			g.damageDealtToPlayersByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
@@ -1711,11 +1633,6 @@ func (g *Game) executeDamageToPlayer(a *DamageToPlayerAction) {
 			g.damageDealtToPlayersByPermanent[sourceID] = make(map[uuid.UUID]bool)
 		}
 		g.damageDealtToPlayersByPermanent[sourceID][p.PlayerID()] = true
-	}
-	// Track artifact damage separately (for Reverse Polarity)
-	sourceCard := g.findCardForDamageSource(sourceID)
-	if sourceCard != nil && sourceCard.HasType(TypeArtifact) {
-		g.artifactDamageTakenThisTurn[p.PlayerID()] += amount
 	}
 	// Combat damage aggregation: track total damage this step per (controller,
 	// recipient-player) pair so EvtCombatDamageDealt can fire once per pair
@@ -1984,16 +1901,13 @@ func (g *Game) fireBecomesTargetEvents(obj *StackObject, isAbility bool) {
 	if obj == nil {
 		return
 	}
-	if g.timesTargetedThisTurn == nil {
-		g.timesTargetedThisTurn = make(map[uuid.UUID]int)
-	}
 	seen := make(map[uuid.UUID]bool)
 	for _, tid := range obj.Targets {
 		if tid == uuid.Nil || seen[tid] {
 			continue
 		}
 		seen[tid] = true
-		g.timesTargetedThisTurn[tid]++
+		g.trackers.Turn.RecordTimesTargeted(tid)
 		g.FireEvent(GameEvent{
 			Type:     EvtBecomesTarget,
 			SourceID: obj.SourceID,
@@ -2008,7 +1922,7 @@ func (g *Game) fireBecomesTargetEvents(obj *StackObject, isAbility bool) {
 // player) has become the target of a spell or activated ability this turn.
 // Counter resets at the cleanup step.
 func (g *Game) TimesTargetedThisTurn(id uuid.UUID) int {
-	return g.timesTargetedThisTurn[id]
+	return g.trackers.Turn.TimesTargeted(id)
 }
 
 // RegisterDelayedTrigger registers a one-shot delayed trigger that will fire
@@ -3461,16 +3375,13 @@ func (g *Game) doUntap() {
 	// Snapshot the active player's untapped land count before the untap loop
 	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
 	// similar effects read this at upkeep.
-	if g.untappedLandsAtTurnStart == nil {
-		g.untappedLandsAtTurnStart = make(map[uuid.UUID]int)
-	}
 	count := 0
 	for _, p := range g.battlefield {
 		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
 			count++
 		}
 	}
-	g.untappedLandsAtTurnStart[active.PlayerID()] = count
+	g.trackers.Turn.SetUntappedLandsAtTurnStart(active.PlayerID(), count)
 
 	landUntapLimit := g.effects.Rules.LandUntapMax
 	landsUntapped := 0
@@ -3525,8 +3436,7 @@ func (g *Game) doUntap() {
 			}
 		}
 	}
-	g.landsPlayedThisTurn = 0
-	g.extraLandPlaysThisTurn = nil
+	g.trackers.Turn.ResetLandsPlayed()
 }
 
 // TODO this should "tell" turn to do upkeep actions and give turn a list of actions to do
@@ -3646,7 +3556,7 @@ func (g *Game) doDeclareAttackers() {
 		}
 
 		g.combat.AddAttacker(id, defender.PlayerID())
-		g.attackedThisTurn[id] = true
+		g.trackers.Turn.RecordAttacked(id)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
@@ -3683,7 +3593,7 @@ func (g *Game) doDeclareAttackers() {
 
 // AttackedDuringLastTurn reports whether the given creature attacked during playerID's most recent turn.
 func (g *Game) AttackedDuringLastTurn(playerID, permID uuid.UUID) bool {
-	if m, ok := g.attackedLastTurn[playerID]; ok {
+	if m := g.trackers.Turn.AttackedLastTurn(playerID); m != nil {
 		return m[permID]
 	}
 	return false
@@ -3772,7 +3682,7 @@ func (g *Game) doDeclareBlockers() {
 		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, attackerID)
-		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], attackerID)
+		g.trackers.Turn.RecordBlocked(ba.BlockerID, attackerID)
 		// CR 509.3a — Flag=true marks the once-per-combat "Whenever ~ blocks"
 		// firing for this blocker; subsequent attackers fire with Flag=false
 		// for "blocks a creature" per-pair triggers only.
@@ -3828,13 +3738,7 @@ func (g *Game) enforceMinimumBlockers() {
 		group.Blocked = false
 		for _, bid := range dropped {
 			// Also clean up the per-turn blocked tracking for this attacker.
-			rest := g.blockedThisTurn[bid][:0]
-			for _, aid := range g.blockedThisTurn[bid] {
-				if aid != group.AttackerID {
-					rest = append(rest, aid)
-				}
-			}
-			g.blockedThisTurn[bid] = rest
+			g.trackers.Turn.RemoveBlockedAttacker(bid, group.AttackerID)
 		}
 	}
 }
@@ -3877,7 +3781,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 		for i := 0; i < minN && i < len(candidates); i++ {
 			b := candidates[i]
 			g.combat.AddBlocker(b.ID(), atk.ID())
-			g.blockedThisTurn[b.ID()] = append(g.blockedThisTurn[b.ID()], atk.ID())
+			g.trackers.Turn.RecordBlocked(b.ID(), atk.ID())
 			g.FireEvent(GameEvent{
 				Type:     EvtDeclaredBlocker,
 				SourceID: b.ID(),
@@ -3939,26 +3843,8 @@ func (g *Game) doCleanupActions() bool {
 	g.delayedTriggers = kept
 	// Clear damage tracking
 	g.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
-	g.damageTakenThisTurn = make(map[uuid.UUID]int)
-	g.artifactDamageTakenThisTurn = make(map[uuid.UUID]int)
-
-	// Save active player's attackers to attackedLastTurn before clearing
-	if g.attackedLastTurn == nil {
-		g.attackedLastTurn = make(map[uuid.UUID]map[uuid.UUID]bool)
-	}
-	activeID := active.PlayerID()
-	lastMap := make(map[uuid.UUID]bool, len(g.attackedThisTurn))
-	maps.Copy(lastMap, g.attackedThisTurn)
-	g.attackedLastTurn[activeID] = lastMap
-
-	g.attackedThisTurn = make(map[uuid.UUID]bool)
-	g.blockedThisTurn = make(map[uuid.UUID][]uuid.UUID)
-	g.instantsCastThisTurn = make(map[uuid.UUID]int)
-	g.sorceriesCastThisTurn = make(map[uuid.UUID]int)
-	g.timesTargetedThisTurn = make(map[uuid.UUID]int)
-	g.creatureDeathsThisTurn = 0
+	g.trackers.Turn.ResetForNewTurn(active.PlayerID())
 	g.clearLKI()
-	g.resetPerTurnTrackers()
 	// Clear last-drawn-card tracking for all players
 	for _, p := range g.players {
 		p.ClearLastDrawnCard()
@@ -4016,9 +3902,7 @@ func (g *Game) MaxLandPlays() int {
 		limit = 999
 	}
 	activeID := g.ActivePlayerObj().PlayerID()
-	if g.extraLandPlaysThisTurn != nil {
-		limit += g.extraLandPlaysThisTurn[activeID]
-	}
+	limit += g.trackers.Turn.ExtraLandPlays(activeID)
 	limit += g.effects.Rules.AdditionalLandPlays(activeID)
 	return limit
 }
@@ -4031,19 +3915,13 @@ func (g *Game) GrantExtraLandPlay(playerID uuid.UUID, n int) {
 	if n <= 0 {
 		return
 	}
-	if g.extraLandPlaysThisTurn == nil {
-		g.extraLandPlaysThisTurn = make(map[uuid.UUID]int)
-	}
-	g.extraLandPlaysThisTurn[playerID] += n
+	g.trackers.Turn.AddExtraLandPlays(playerID, n)
 }
 
 // ExtraLandPlaysGrantedThisTurn returns the cumulative additional land-play
 // allowance granted to the player this turn (not including the base 1).
 func (g *Game) ExtraLandPlaysGrantedThisTurn(playerID uuid.UUID) int {
-	if g.extraLandPlaysThisTurn == nil {
-		return 0
-	}
-	return g.extraLandPlaysThisTurn[playerID]
+	return g.trackers.Turn.ExtraLandPlays(playerID)
 }
 
 // AddRevealedTopCardEffect marks playerID as playing with the top card of
@@ -4098,7 +3976,7 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	if g.ActivePlayerObj().PlayerID() != playerID {
 		return fmt.Errorf("only the active player can play a land")
 	}
-	if g.landsPlayedThisTurn >= g.MaxLandPlays() {
+	if g.trackers.Turn.LandsPlayed() >= g.MaxLandPlays() {
 		return fmt.Errorf("already played a land this turn")
 	}
 
@@ -4144,13 +4022,13 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 	}
 
 	g.PutOnBattlefield(card, playerID)
-	g.landsPlayedThisTurn++
+	g.trackers.Turn.RecordLandPlayed()
 
 	g.FireEvent(GameEvent{
 		Type:     EvtLandPlayed,
 		SourceID: card.ID(),
 		PlayerID: playerID,
-		Amount:   g.landsPlayedThisTurn, // which land number this was
+		Amount:   g.trackers.Turn.LandsPlayed(), // which land number this was
 	})
 	g.PutTriggersOnStack()
 
@@ -4800,7 +4678,7 @@ func (g *Game) GetPlayableLands(playerID uuid.UUID) []Card {
 	if g.ActivePlayerObj().PlayerID() != playerID {
 		return nil
 	}
-	if g.landsPlayedThisTurn >= g.MaxLandPlays() {
+	if g.trackers.Turn.LandsPlayed() >= g.MaxLandPlays() {
 		return nil
 	}
 	p := g.GetPlayer(playerID)

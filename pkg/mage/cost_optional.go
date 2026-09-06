@@ -53,10 +53,7 @@ func (c *optionalCost) Text() string {
 }
 
 func (g *Game) setOptionalCostPaid(sourceID uuid.UUID, paid bool) {
-	if g.optionalCostPaid == nil {
-		g.optionalCostPaid = make(map[uuid.UUID]bool)
-	}
-	g.optionalCostPaid[sourceID] = paid
+	g.trackers.Turn.SetOptionalCostPaid(sourceID, paid)
 }
 
 // LastCostOptionalPaid reports whether the most recent OptionalCost
@@ -64,18 +61,12 @@ func (g *Game) setOptionalCostPaid(sourceID uuid.UUID, paid bool) {
 // that source can branch on this to apply the "if you do, ___" half of an
 // optional additional cost (e.g. Draconic Roar's bonus damage).
 func (g *Game) LastCostOptionalPaid(sourceID uuid.UUID) bool {
-	if g.optionalCostPaid == nil {
-		return false
-	}
-	return g.optionalCostPaid[sourceID]
+	return g.trackers.Turn.OptionalCostPaid(sourceID)
 }
 
 // ClearOptionalCostPaid clears the "paid" flag for a source. Called by
 // the engine when a spell or ability finishes resolving so the flag does
 // not leak into a future cast.
 func (g *Game) ClearOptionalCostPaid(sourceID uuid.UUID) {
-	if g.optionalCostPaid == nil {
-		return
-	}
-	delete(g.optionalCostPaid, sourceID)
+	g.trackers.Turn.ClearOptionalCostPaid(sourceID)
 }

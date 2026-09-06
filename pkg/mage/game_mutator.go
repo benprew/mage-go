@@ -194,17 +194,17 @@ func (g *Game) IsBlockingInCombat(permID uuid.UUID) bool {
 
 // DamageTakenByPlayer returns the total damage the given player has taken this turn.
 func (g *Game) DamageTakenByPlayer(playerID uuid.UUID) int {
-	return g.damageTakenThisTurn[playerID]
+	return g.trackers.Turn.DamageTaken(playerID)
 }
 
 // HasAttackedThisTurn reports whether the permanent with the given ID attacked this turn.
 func (g *Game) HasAttackedThisTurn(permID uuid.UUID) bool {
-	return g.attackedThisTurn[permID]
+	return g.trackers.Turn.Attacked(permID)
 }
 
 // CreatureDeaths returns the number of creatures that died this turn.
 func (g *Game) CreatureDeaths() int {
-	return g.creatureDeathsThisTurn
+	return g.trackers.Turn.CreatureDeaths()
 }
 
 func (g *Game) CurrentTurn() int {
@@ -220,32 +220,32 @@ func (g *Game) GetDamageSources(permID uuid.UUID) map[uuid.UUID]bool {
 // GetBlockedThisTurn returns the list of attacker IDs that the given blocker
 // blocked this turn. Returns nil if it didn't block anything.
 func (g *Game) GetBlockedThisTurn(blockerID uuid.UUID) []uuid.UUID {
-	return g.blockedThisTurn[blockerID]
+	return g.trackers.Turn.Blocked(blockerID)
 }
 
 // GetInstantsCastThisTurn returns the number of instants the given player has cast this turn.
 func (g *Game) GetInstantsCastThisTurn(playerID uuid.UUID) int {
-	return g.instantsCastThisTurn[playerID]
+	return g.trackers.Turn.InstantsCast(playerID)
 }
 
 // UntappedLandsAtTurnStart returns the number of untapped lands the given
 // player controlled at the start of the current turn (snapshot taken before
 // the untap step). Used by Power Surge.
 func (g *Game) UntappedLandsAtTurnStart(playerID uuid.UUID) int {
-	return g.untappedLandsAtTurnStart[playerID]
+	return g.trackers.Turn.UntappedLandsAtTurnStart(playerID)
 }
 
 // GetSorceriesCastThisTurn returns the number of sorceries the given player
 // has cast this turn.
 func (g *Game) GetSorceriesCastThisTurn(playerID uuid.UUID) int {
-	return g.sorceriesCastThisTurn[playerID]
+	return g.trackers.Turn.SorceriesCast(playerID)
 }
 
 // GetInstantOrSorceryCastThisTurn returns the total instants and sorceries
 // the given player has cast this turn (CR 117 — combined predicate used by
 // many cards that ask "if you've cast an instant or sorcery spell this turn").
 func (g *Game) GetInstantOrSorceryCastThisTurn(playerID uuid.UUID) int {
-	return g.instantsCastThisTurn[playerID] + g.sorceriesCastThisTurn[playerID]
+	return g.trackers.Turn.InstantsCast(playerID) + g.trackers.Turn.SorceriesCast(playerID)
 }
 
 // --- Mutation methods on *Game ---
@@ -655,7 +655,7 @@ func (g *Game) AddETBAdditionalCounters(sourceID uuid.UUID, ct CounterType, extr
 
 // GetArtifactDamageTaken returns the artifact damage the player has taken this turn.
 func (g *Game) GetArtifactDamageTaken(playerID uuid.UUID) int {
-	return g.artifactDamageTakenThisTurn[playerID]
+	return g.trackers.Turn.ArtifactDamageTaken(playerID)
 }
 
 // CopyEffectCurrentName returns the name of the creature currently being copied
@@ -806,10 +806,10 @@ func (g *Game) PopExtraTurn() (uuid.UUID, bool) {
 func (g *Game) HasExtraTurns() bool { return len(g.extraTurns) > 0 }
 
 // GetLandsPlayedThisTurn returns the number of lands played this turn.
-func (g *Game) GetLandsPlayedThisTurn() int { return g.landsPlayedThisTurn }
+func (g *Game) GetLandsPlayedThisTurn() int { return g.trackers.Turn.LandsPlayed() }
 
 // GetCleanupPriorityRounds returns the total cleanup priority rounds granted.
-func (g *Game) GetCleanupPriorityRounds() int { return g.cleanupPriorityRounds }
+func (g *Game) GetCleanupPriorityRounds() int { return g.trackers.Turn.CleanupPriorityRounds() }
 
 // ApplyEffects applies all continuous effects to current permanents.
 func (g *Game) ApplyEffects() { g.effects.Apply(g) }
@@ -868,7 +868,7 @@ func (g *Game) AddToBattlefield(perms ...*Permanent) {
 }
 
 // SetLandsPlayedThisTurn sets the number of lands played this turn.
-func (g *Game) SetLandsPlayedThisTurn(n int) { g.landsPlayedThisTurn = n }
+func (g *Game) SetLandsPlayedThisTurn(n int) { g.trackers.Turn.SetLandsPlayed(n) }
 
 // TruncateBattlefield truncates the battlefield to the given length (for undo snapshots).
 func (g *Game) TruncateBattlefield(n int) {
@@ -913,7 +913,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 			g.TapPermanent(atk)
 		}
 		g.combat.AddAttacker(id, defender.PlayerID())
-		g.attackedThisTurn[id] = true
+		g.trackers.Turn.RecordAttacked(id)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
@@ -948,7 +948,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
 		g.combat.AddBlocker(ba.BlockerID, ba.AttackerID)
-		g.blockedThisTurn[ba.BlockerID] = append(g.blockedThisTurn[ba.BlockerID], ba.AttackerID)
+		g.trackers.Turn.RecordBlocked(ba.BlockerID, ba.AttackerID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredBlocker,
 			SourceID: ba.BlockerID,

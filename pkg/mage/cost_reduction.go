@@ -171,7 +171,7 @@ func SpellsOr(ps ...SpellPredicate) SpellPredicate {
 // turn (Bone Picker).
 func CondCreatureDiedThisTurn() SpellCondition {
 	return func(g *Game, _ uuid.UUID, _ Card, _ uuid.UUID) bool {
-		return g.creatureDeathsThisTurn > 0
+		return g.CreatureDeaths() > 0
 	}
 }
 

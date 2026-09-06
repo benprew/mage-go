@@ -79,7 +79,7 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
 
 	if isCreature {
-		g.creatureDeathsThisTurn++
+		g.trackers.Turn.RecordCreatureDeath()
 		g.recordCreatureDeath(controller)
 	}
 }

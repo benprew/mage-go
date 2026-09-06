@@ -75,9 +75,9 @@ func setupTestGame() *Game {
 	g.turn = 5
 	g.step = PrecombatMain
 	g.activePlayer = 0
-	g.landsPlayedThisTurn = 1
-	g.attackedThisTurn[creature1.ID()] = true
-	g.damageTakenThisTurn[pB.PlayerID()] = 3
+	g.SetLandsPlayedThisTurn(1)
+	g.trackers.Turn.RecordAttacked(creature1.ID())
+	g.trackers.Turn.RecordDamageTaken(pB.PlayerID(), 3, false)
 
 	// Add mana to pools.
 	pA.ManaPool().Add(Green, 2)
@@ -100,8 +100,8 @@ func TestCloneBasicFields(t *testing.T) {
 	if c.activePlayer != g.activePlayer {
 		t.Errorf("ActivePlayer: got %d, want %d", c.activePlayer, g.activePlayer)
 	}
-	if c.landsPlayedThisTurn != g.landsPlayedThisTurn {
-		t.Errorf("LandsPlayedThisTurn: got %d, want %d", c.landsPlayedThisTurn, g.landsPlayedThisTurn)
+	if c.GetLandsPlayedThisTurn() != g.GetLandsPlayedThisTurn() {
+		t.Errorf("LandsPlayedThisTurn: got %d, want %d", c.GetLandsPlayedThisTurn(), g.GetLandsPlayedThisTurn())
 	}
 
 	// Players must preserve UUIDs.
@@ -176,10 +176,10 @@ func TestCloneBasicFields(t *testing.T) {
 
 	// UUID-keyed maps.
 	pBID := g.players[1].PlayerID()
-	if c.damageTakenThisTurn[pBID] != 3 {
-		t.Errorf("DamageTakenThisTurn: got %d, want 3", c.damageTakenThisTurn[pBID])
+	if c.DamageTakenByPlayer(pBID) != 3 {
+		t.Errorf("DamageTakenByPlayer: got %d, want 3", c.DamageTakenByPlayer(pBID))
 	}
-	if !c.attackedThisTurn[g.battlefield[1].ID()] {
+	if !c.HasAttackedThisTurn(g.battlefield[1].ID()) {
 		t.Error("AttackedThisTurn should be copied")
 	}
 }
@@ -231,9 +231,9 @@ func TestCloneIsolation(t *testing.T) {
 	}
 
 	// Mutate clone map.
-	c.damageTakenThisTurn[g.players[0].PlayerID()] = 99
-	if g.damageTakenThisTurn[g.players[0].PlayerID()] != 0 {
-		t.Errorf("Original DamageTakenThisTurn should be 0, got %d", g.damageTakenThisTurn[g.players[0].PlayerID()])
+	c.trackers.Turn.RecordDamageTaken(g.players[0].PlayerID(), 99, false)
+	if g.DamageTakenByPlayer(g.players[0].PlayerID()) != 0 {
+		t.Errorf("Original DamageTakenByPlayer should be 0, got %d", g.DamageTakenByPlayer(g.players[0].PlayerID()))
 	}
 
 	// Mutate clone library.

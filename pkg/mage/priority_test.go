@@ -133,8 +133,8 @@ func TestRunPriorityRound_ActionExecution(t *testing.T) {
 
 	g.runPriorityRound(true)
 
-	if g.landsPlayedThisTurn != 1 {
-		t.Errorf("expected 1 land played, got %d", g.landsPlayedThisTurn)
+	if g.GetLandsPlayedThisTurn() != 1 {
+		t.Errorf("expected 1 land played, got %d", g.GetLandsPlayedThisTurn())
 	}
 	found := false
 	for _, p := range g.battlefield {
