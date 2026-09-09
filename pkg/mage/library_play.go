@@ -23,6 +23,21 @@ func RevealTopCardOfLibrary() ContinuousEffect {
 	})
 }
 
+// RevealTopCardsOfAllLibraries returns a continuous effect that, while the
+// source permanent is on the battlefield, marks every player's library top as
+// revealed.
+func RevealTopCardsOfAllLibraries() ContinuousEffect {
+	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+		if g.FindPermanent(sourceID) == nil {
+			return nil
+		}
+		for _, player := range g.AllPlayers() {
+			g.effects.Rules.AddRevealedTopCard(player.PlayerID())
+		}
+		return nil
+	})
+}
+
 // PlayLandsFromTopOfLibrary returns a continuous effect that lets the
 // source permanent's controller play lands from the top of their library
 // (CR 305.4a allows this with the appropriate static permission). The

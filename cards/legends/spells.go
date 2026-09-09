@@ -5,6 +5,8 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -220,33 +222,14 @@ func registerSpells() {
 	// Energy Tap {U}
 	// Sorcery
 	// Tap target untapped creature you control. If you do, add an amount of {C} equal to that creature's mana value.
-	// TODO: convert to pipeline — needs TapGathered step and AddManaFromVar step
 	Register("Energy Tap", func() Card {
 		return NewSorcery("Energy Tap", "{U}",
-			NewTargetedSpell(TargetControlledCreature(), FuncEffect(
+			NewTargetedSpell(TargetCreatureYouControl(IsUntapped), Pipeline(
 				"tap target untapped creature you control; add {C} equal to its mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					if perm.Tapped {
-						return nil // must be untapped
-					}
-					g.TapPermanent(perm)
-					cmc := perm.Card.ManaCost().CMC()
-					if cmc > 0 {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							p.ManaPool().Add(Colorless, cmc)
-						}
-					}
-					return nil
-				},
+				SnapshotPermanent(SelectTarget, "creature"),
+				TapGathered("creature"),
+				AddManaFromVar(Colorless, "creature.cmc"),
 			)),
 		)
 	})
@@ -254,11 +237,36 @@ func registerSpells() {
 	// Eureka {2}{G}{G}
 	// Sorcery
 	// Starting with you, each player may put a permanent card from their hand onto the battlefield. Repeat this process until no one puts a card onto the battlefield.
-	// XXX: requires iterative player choice of putting permanent cards from hand to battlefield — engine lacks support for repeated interactive permanent-drops
-	// TODO: implement when iterative player choice from hand is supported
 	Register("Eureka", func() Card {
 		return NewSorcery("Eureka", "{2}{G}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect("each player may put permanent cards from hand onto the battlefield", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				players := g.AllPlayers()
+				for {
+					playedAny := false
+					for _, player := range players {
+						var candidates []Card
+						for _, card := range player.Hand() {
+							if card.HasType(TypeArtifact) || card.HasType(TypeCreature) || card.HasType(TypeEnchantment) || card.HasType(TypeLand) || card.HasType(TypePlaneswalker) {
+								candidates = append(candidates, card)
+							}
+						}
+						if len(candidates) == 0 || !player.ChooseMayAbility("put a permanent card onto the battlefield") {
+							continue
+						}
+						chosen := player.ChooseCardFromHand(candidates, "Eureka: choose a permanent card", g)
+						if chosen == nil {
+							continue
+						}
+						player.RemoveFromHand(chosen.ID())
+						g.PutOnBattlefield(chosen, player.PlayerID())
+						playedAny = true
+					}
+					if !playedAny {
+						break
+					}
+				}
+				return nil
+			})),
 		)
 	})
 
@@ -697,11 +705,48 @@ func registerSpells() {
 	// Juxtapose {3}{U}
 	// Sorcery
 	// You and target player exchange control of the creature you each control with the greatest mana value. Then exchange control of artifacts the same way. If two or more permanents a player controls are tied for greatest, their controller chooses one of them.
-	// XXX: requires mutual control exchange of highest-CMC permanents with tie-breaking choice — complex control exchange not supported
-	// TODO: implement when mutual control exchange with player choice is supported
 	Register("Juxtapose", func() Card {
 		return NewSorcery("Juxtapose", "{3}{U}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetOpponent(), FuncEffect("exchange control of creatures and artifacts with the greatest mana values", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+				if len(targets) == 0 {
+					return nil
+				}
+				opponentID := targets[0]
+				choose := func(playerID uuid.UUID, typ CardType) *Permanent {
+					filter := IsCreature
+					if typ == TypeArtifact {
+						filter = IsArtifact
+					}
+					candidates := g.FilterBattlefield(And(ControlledBy(playerID), filter))
+					if len(candidates) == 0 {
+						return nil
+					}
+					maxCMC := -1
+					for _, candidate := range candidates {
+						if candidate.Card.ManaCost().CMC() > maxCMC {
+							maxCMC = candidate.Card.ManaCost().CMC()
+						}
+					}
+					tied := make([]*Permanent, 0, len(candidates))
+					for _, candidate := range candidates {
+						if candidate.Card.ManaCost().CMC() == maxCMC {
+							tied = append(tied, candidate)
+						}
+					}
+					if len(tied) == 1 {
+						return tied[0]
+					}
+					return g.GetPlayer(playerID).ChoosePermanent(tied, "Juxtapose: choose a permanent tied for greatest mana value", g)
+				}
+				for _, typ := range []CardType{TypeCreature, TypeArtifact} {
+					first := choose(controller, typ)
+					second := choose(opponentID, typ)
+					if first != nil && second != nil {
+						g.ExchangeControl(first.ID(), second.ID(), sourceID)
+					}
+				}
+				return nil
+			})),
 		)
 	})
 
@@ -724,13 +769,9 @@ func registerSpells() {
 						cmc = obj.Card.ManaCost().CMC()
 					}
 					g.CounterSpellOnStack(targets[0])
-					// XXX: Oracle says "at the beginning of your next main phase" but no EvtMainPhase
-					// event exists in the engine. Using EvtUpkeep as fallback — mana pools persist
-					// between steps so the mana will be available at main phase, but the timing is
-					// technically wrong (fires at upkeep instead of precombat main).
 					if cmc > 0 {
 						g.RegisterDelayedTrigger(&DelayedTrigger{
-							EventType:     EvtUpkeep,
+							EventType:     core.EvtMainPhase,
 							SourceID:      sourceID,
 							Controller:    controller,
 							MatchPlayerID: controller,
@@ -756,11 +797,12 @@ func registerSpells() {
 	// Part Water {X}{X}{U}
 	// Sorcery
 	// X target creatures gain islandwalk until end of turn. (They can't be blocked as long as defending player controls an Island.)
-	// XXX: requires X targets — engine lacks variable target count based on X value
-	// TODO: implement when X-count targeting is supported
 	Register("Part Water", func() Card {
 		return NewSorcery("Part Water", "{X}{X}{U}",
-			NewSpellAbility(),
+			NewMultiTargetSpell(
+				[]Target{TargetXCreatures()},
+				GrantKeyword(Islandwalk).Targeting(mage.ToAllTargets()),
+			),
 		)
 	})
 
@@ -778,10 +820,12 @@ func registerSpells() {
 	// Pyrotechnics {4}{R}
 	// Sorcery
 	// Pyrotechnics deals 4 damage divided as you choose among any number of targets.
-	// XXX: divided damage among multiple targets not supported — deals 4 to single target
 	Register("Pyrotechnics", func() Card {
 		return NewSorcery("Pyrotechnics", "{4}{R}",
-			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(4))),
+			NewMultiTargetSpell(
+				[]Target{TargetDamageAnyTarget(), mage.TargetUpToNCreaturesOrPlayers(3)},
+				mage.DealDividedDamage(Fixed(4)),
+			),
 		)
 	})
 
@@ -806,10 +850,22 @@ func registerSpells() {
 	// Sorcery
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// Each player may ante the top card of their library. If a player does, that player's life total becomes 20.
-	// UNIMPLEMENTABLE: Ante mechanic — requires ante zone and permanent ownership changes.
 	Register("Rebirth", func() Card {
 		return NewSorcery("Rebirth", "{3}{G}{G}{G}",
-			NewSpellAbility(),
+			NewSpellAbility(FuncEffect("each player may ante the top card of their library and set their life total to 20", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+				if !g.AnteEnabled() {
+					return nil
+				}
+				for _, player := range g.AllPlayers() {
+					if len(player.Library()) == 0 || !player.ChooseMayAbility("ante the top card of your library") {
+						continue
+					}
+					if err := g.MoveToAnte(player.PlayerID(), player.Library()[0].ID()); err == nil {
+						player.SetLife(20)
+					}
+				}
+				return nil
+			})),
 		)
 	})
 
@@ -1215,11 +1271,27 @@ func registerSpells() {
 	// Visions {W}
 	// Sorcery
 	// Look at the top five cards of target player's library. You may then have that player shuffle that library.
-	// XXX: requires looking at top N cards of library and optional shuffle — engine lacks library peek with optional shuffle
-	// TODO: implement when library peek is supported
 	Register("Visions", func() Card {
 		return NewSorcery("Visions", "{W}",
-			NewSpellAbility(),
+			NewTargetedSpell(TargetPlayer(), FuncEffect(
+				"look at the top five cards of target player's library; you may have that player shuffle",
+				EffectProperties{},
+				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					target := g.GetPlayer(targets[0])
+					chooser := g.GetPlayer(controller)
+					if target == nil || chooser == nil {
+						return nil
+					}
+					g.RevealTopN(target, 5)
+					if chooser.ChooseMayAbility("have target player shuffle their library") {
+						target.ShuffleLibrary()
+					}
+					return nil
+				},
+			)),
 		)
 	})
 
@@ -1255,44 +1327,20 @@ func registerSpells() {
 	// Winter Blast {X}{G}
 	// Sorcery
 	// Tap X target creatures. Winter Blast deals 2 damage to each of those creatures with flying.
-	// XXX: X-count targeting not supported — taps all creatures and deals 2 to those with flying as approximation
 	Register("Winter Blast", func() Card {
 		return NewSorcery("Winter Blast", "{X}{G}",
-			NewSpellAbility(FuncEffect(
+			NewMultiTargetSpell([]Target{TargetXCreatures()}, FuncEffect(
 				"tap X target creatures; deal 2 damage to each with flying",
-				EffectProperties{Outcome: OutcomeDetriment, Mass: true, Taps: true},
+				EffectProperties{Outcome: OutcomeDetriment, Taps: true},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					x := g.XValue()
-					if x <= 0 {
-						return nil
-					}
-					// Get all creatures and tap up to X of them (opponent's first as heuristic)
-					allCreatures := g.FilterBattlefield(IsCreature)
-					tapped := 0
-					// Prefer opponent's creatures
-					for _, perm := range allCreatures {
-						if tapped >= x {
-							break
+					for _, targetID := range targets {
+						perm := g.FindPermanent(targetID)
+						if perm == nil {
+							continue
 						}
-						if perm.ControllerID() != controller {
-							g.TapPermanent(perm)
-							if perm.HasAttr(Flying) {
-								g.DealDamageToPermanent(perm, 2, sourceID)
-							}
-							tapped++
-						}
-					}
-					// If still need more, tap own creatures
-					for _, perm := range allCreatures {
-						if tapped >= x {
-							break
-						}
-						if perm.ControllerID() == controller {
-							g.TapPermanent(perm)
-							if perm.HasAttr(Flying) {
-								g.DealDamageToPermanent(perm, 2, sourceID)
-							}
-							tapped++
+						g.TapPermanent(perm)
+						if perm.HasKeyword(Flying) {
+							g.DealDamageToPermanent(perm, 2, sourceID)
 						}
 					}
 					return nil

@@ -400,6 +400,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 type damagePreventionRule struct {
 	from       PermanentFilter
 	to         PermanentFilter
+	toPlayerID uuid.UUID
 	oneShot    bool
 	combatOnly bool
 	playerOnly bool
@@ -418,6 +419,13 @@ func WithFrom(from PermanentFilter) damagePreventionRuleOption {
 func WithTo(to PermanentFilter) damagePreventionRuleOption {
 	return func(dpr *damagePreventionRule) {
 		dpr.to = to
+	}
+}
+
+// WithToPlayer restricts prevention to damage dealt to one player.
+func WithToPlayer(playerID uuid.UUID) damagePreventionRuleOption {
+	return func(dpr *damagePreventionRule) {
+		dpr.toPlayerID = playerID
 	}
 }
 

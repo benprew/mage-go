@@ -3,9 +3,46 @@ package legends
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
+
+func TestGreaterRealmOfPreservation(t *testing.T) {
+	t.Run("can choose a red spell on the stack as the damage source", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		realmID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Greater Realm of Preservation")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 2)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Chain Lightning")
+		boltID := g.GetPlayer(gametest.PlayerB).Hand()[0].ID()
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.SetActivePlayerIndex(1)
+		g.SetStep(core.PrecombatMain)
+		if err := g.CastSpellByID(g.GetPlayer(gametest.PlayerB).PlayerID(), boltID, []uuid.UUID{g.GetPlayer(gametest.PlayerA).PlayerID()}, 0); err != nil {
+			t.Fatalf("cast Lightning Bolt: %v", err)
+		}
+		g.ChooseTarget(gametest.PlayerA, "Chain Lightning")
+		if err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerA).PlayerID(), realmID, 0, nil); err != nil {
+			t.Fatalf("activate Greater Realm of Preservation: %v", err)
+		}
+		g.ResolveTopOfStack()
+		g.ResolveTopOfStack()
+		g.AssertLife(gametest.PlayerA, 20)
+	})
+}
+
+func TestFieldOfDreams(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Field of Dreams")
+	g.ApplyEffects()
+	if !g.IsTopCardRevealed(g.GetPlayer(gametest.PlayerA).PlayerID()) {
+		t.Fatal("controller's top card is not revealed")
+	}
+	if !g.IsTopCardRevealed(g.GetPlayer(gametest.PlayerB).PlayerID()) {
+		t.Fatal("opponent's top card is not revealed")
+	}
+}
 
 func TestSeeker(t *testing.T) {
 	t.Run("enchanted creature cannot be blocked by non-artifact non-white creature", func(t *testing.T) {
@@ -284,6 +321,17 @@ func TestCocoon(t *testing.T) {
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", true)
 		g.AssertCounterCount(gametest.PlayerA, "Cocoon", core.Pupa, 3)
+	})
+
+	t.Run("cannot enchant a creature an opponent controls", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Cocoon")
+		cocoonID := g.GetPlayer(gametest.PlayerA).Hand()[0].ID()
+		targetID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest")
+		if err := g.CastSpellByID(g.GetPlayer(gametest.PlayerA).PlayerID(), cocoonID, []uuid.UUID{targetID}, 0); err == nil {
+			t.Fatal("Cocoon targeted an opponent's creature")
+		}
 	})
 
 	t.Run("sacrifice after counters removed grants +1/+1 and flying", func(t *testing.T) {

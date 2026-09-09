@@ -298,13 +298,15 @@
 // costs. If the total cost cannot be paid, the action stops without spending
 // resources.
 //
-// [RandomCounterDistribution] distributes counters when a stack object is
-// created. It gives one counter to each target, then distributes remaining
-// counters with [RandIntn]. The assignment remains fixed on the stack object
-// even if a target becomes illegal. [TargetSpellOrPermanent] targets one spell
-// on the stack or one permanent on the battlefield. It excludes activated and
-// triggered abilities. If the targeted object changes zones before resolution,
-// the target becomes illegal.
+// AttachedCantAttackUnlessPays adds an Aura-defined attack cost to the
+// enchanted creature. SourceHasManaAbilitiesOpponentLandsCouldProduce derives
+// Fellwar Stone-style colored mana abilities from opposing lands. A negative
+// MaximumHandSize means no maximum; SetNoMaximumHandSize installs that rule in
+// a continuous-effect cycle. AddSourcePreventionShield prevents a bounded
+// amount of damage from one source to one player. TryPayMana pays resolving
+// effect costs from floating mana and activatable mana sources.
+// AddDamagePreventionRule accepts WithToPlayer to scope a source/filter rule to
+// damage dealt to one specific player.
 //
 // # Reusable Classic Card Effects
 //
@@ -393,12 +395,17 @@
 //
 // # Removing Abilities
 //
-// [RemoveAllAbilities] applies "loses all abilities" in layer 6. The operation
-// removes abilities created before its timestamp. It removes keyword
-// attributes, activated abilities, triggered abilities, static abilities,
-// and mana abilities. Later layer-6 effects can grant new abilities.
-// [RemoveAllAbilitiesFromAll] applies this effect to all permanents that match
-// a filter, such as for Humility. Basic land subtype changes use this removal
-// in layer 4. As a result, layer-6 ability grants and keyword counters apply
-// afterward and persist (CR 305.7).
+// RemoveAllAbilities applies "loses all abilities" in layer 6. The operation
+// removes abilities computed up to its timestamp, including keyword attrs and
+// runtime activated, triggered, static, and mana abilities. A later layer-6
+// effect can grant an ability back. RemoveAllAbilitiesFromAll applies the same
+// operation to a filter for Humility-style effects. Basic land subtype changes
+// reuse the same removal operation in layer 4, so ordinary layer-6 grants and
+// keyword counters are applied afterward and remain as required by CR 305.7.
+//
+// RevealTopCardOfLibrary exposes the top card of the source permanent's
+// controller's library. RevealTopCardsOfAllLibraries exposes every player's
+// library top for symmetric effects such as Field of Dreams. Both permissions
+// are recomputed with continuous effects and disappear when their source
+// leaves the battlefield.
 package mage

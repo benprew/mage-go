@@ -25,11 +25,9 @@ Summary
 Stubs (Not Implemented)
 
 Creatures:
-- Petra Sphinx (card naming + library reveal)
 - Quarum Trench Gnomes (per-land mana replacement)
 - Wood Elemental ("as enters" replacement with variable sacrifice)
 - Ayesha Tanaka (counter activated ability from artifact source)
-- Nebuchadnezzar (X mana + card naming + random hand reveal)
 
 Artifacts:
 - Gauntlets of Chaos (control exchange)
@@ -47,13 +45,12 @@ Creatures (6):
 - Tetsuo Umezawa — "can't be the target of Aura spells" not implemented
 - Shelkin Brownie — "bands with other" approximated as Banding
 - Marble Priest — "All Walls able to block do so" forced-block not implemented
-- Tempest Efreet — ante card, not implementable
 
 Artifacts (1):
 - Forethought Amulet — damage cap from instants/sorceries not implemented
 
 Enchantments (15):
-- Anti-Magic Aura, Arboria, Caverns of Despair, Chains of Mephistopheles, Divine Intervention, Equinox, Field of Dreams, Imprison, Land Equilibrium, Land's Edge, Revelation, Sylvan Library, Takklemaggot (partial —
+- Anti-Magic Aura, Arboria, Caverns of Despair, Chains of Mephistopheles, Divine Intervention, Equinox, Imprison, Land Equilibrium, Land's Edge, Revelation, Sylvan Library, Takklemaggot (partial —
   missing death trigger)
 
 Spells (12):
@@ -206,7 +203,7 @@ Enchantments needing tests:
 - Horror of Horrors, Invoke Prejudice, Living Plane (has test but limited), Puppet Master (limited), Spirit Shackle
 
 Spells needing tests:
-- Rebirth, Reset, Sea Kings' Blessing, Alabaster Potion
+- Reset, Sea Kings' Blessing, Alabaster Potion
 
   ---
 Weak Tests
@@ -227,9 +224,8 @@ These are the missing engine capabilities blocking multiple cards:
 ├────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ Draw replacement effects                   │ Chains of Mephistopheles, Sylvan Library, Caverns of Despair (3 cards)                                            │
 ├────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Revealed hand/library top                  │ Field of Dreams, Revelation (2+ cards)                                                                            │
+│ Revealed hand/library top                  │ Revelation                                                                                                         │
 ├────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Card naming                                │ Petra Sphinx, Nebuchadnezzar (2 cards)                                                                            │
 ├────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ Aura re-attachment/migration               │ Enchantment Alteration, Dwarven Song, Takklemaggot (3 cards)                                                      │
 ├────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤

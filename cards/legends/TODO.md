@@ -9,22 +9,16 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Ayesha Tanaka**
 - **Backdraft**
 - **Enchantment Alteration**
-- **Eureka**
 - **Gauntlets of Chaos**
-- **Juxtapose**
 - **Knowledge Vault**
-- **Nebuchadnezzar**
 - **North Star**
 - **Nova Pentacle**
-- **Part Water**
-- **Petra Sphinx**
 - **Quarum Trench Gnomes**
 - **Remove Enchantments**
 - **Reverberation**
 - **Ring of Immortals**
 - **Rust**
 - **Silhouette**
-- **Visions**
 - **Wood Elemental**
 
 ## Partial implementations
@@ -40,21 +34,17 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Disharmony**
 - **Divine Intervention**
 - **Equinox**
-- **Field of Dreams**
 - **Firestorm Phoenix**
 - **Forethought Amulet**
 - **Glyph of Reincarnation**
 - **Imprison**
 - **Land Equilibrium**
 - **Land's Edge**
-- **Mana Drain**
 - **Marble Priest**
 - **Master of the Hunt**
 - **Mountain Stronghold**
 - **Psychic Purge**
-- **Pyrotechnics**
 - **Rapid Fire**
-- **Rasputin Dreamweaver**
 - **Relic Bind**
 - **Reset**
 - **Revelation**
@@ -67,10 +57,7 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Unholy Citadel**
 - **Voodoo Doll**
 - **Wall of Shadows**
-- **Winter Blast**
 
 ## Unsupported stubs
 
 - **Falling Star**
-- **Rebirth**
-- **Tempest Efreet**

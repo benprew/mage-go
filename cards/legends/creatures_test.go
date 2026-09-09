@@ -25,6 +25,34 @@ func TestKeepersOfTheFaith(t *testing.T) {
 	})
 }
 
+func TestPetraSphinx(t *testing.T) {
+	t.Run("named top card goes to targeted player's hand", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Petra Sphinx")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Grizzly Bears")
+		g.ChooseString(gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Petra Sphinx", "PlayerB")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLibraryCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
+	})
+
+	t.Run("differently named top card goes to targeted player's graveyard", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Petra Sphinx")
+		g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Mountain")
+		g.ChooseString(gametest.PlayerB, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Petra Sphinx", "PlayerB")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertLibraryCount(gametest.PlayerB, "Mountain", 0)
+		g.AssertHandCount(gametest.PlayerB, "Mountain", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Mountain", 1)
+	})
+}
+
 func TestBarktoothWarbeard(t *testing.T) {
 	t.Run("is 6/5 legendary", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
@@ -1931,14 +1959,26 @@ func TestGhostsOfTheDamned(t *testing.T) {
 }
 
 func TestCosmicHorror(t *testing.T) {
-	t.Run("sacrificed at upkeep if cannot pay", func(t *testing.T) {
+	t.Run("destroyed at upkeep and deals damage if cannot pay", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cosmic Horror")
-		// On turn 3 upkeep, Cosmic Horror's sacrifice trigger fires
 		g.StopAt(3, core.PrecombatMain)
 		g.Execute()
-		// Can't pay {3}{B}{B}{B} — sacrificed
 		g.AssertPermanentCount(gametest.PlayerA, "Cosmic Horror", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Cosmic Horror", 1)
+		g.AssertLife(gametest.PlayerA, 13)
+	})
+
+	t.Run("controller may decline payment", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cosmic Horror")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 6)
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.StopAt(3, core.PrecombatMain)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Cosmic Horror", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Cosmic Horror", 1)
+		g.AssertLife(gametest.PlayerA, 13)
 	})
 }
 
@@ -2312,6 +2352,39 @@ func TestGwendlynDiCorci(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Gwendlyn Di Corci", 3, 5)
+	})
+}
+
+func TestNebuchadnezzar(t *testing.T) {
+	t.Run("discards named cards among X random revealed cards", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nebuchadnezzar")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Island")
+		g.ChooseString(gametest.PlayerA, "Grizzly Bears")
+		g.SetRandomResults([]int{0, 1, 0})
+		g.ActivateAbilityWithX(1, core.PrecombatMain, gametest.PlayerA, "Nebuchadnezzar", 3, "PlayerB")
+		g.StopAt(1, core.PostcombatMain)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 0)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 2)
+		g.AssertHandCount(gametest.PlayerB, "Mountain", 1)
+		g.AssertHandCount(gametest.PlayerB, "Island", 1)
+	})
+
+	t.Run("can activate only during controller's turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Nebuchadnezzar")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+		g.ChooseString(gametest.PlayerA, "Grizzly Bears")
+		g.SetRandomResults([]int{0})
+		g.ActivateAbilityWithX(2, core.PrecombatMain, gametest.PlayerA, "Nebuchadnezzar", 1, "PlayerB")
+		g.StopAt(2, core.PostcombatMain)
+		g.Execute()
+		g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
+		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
 	})
 }
 
@@ -3099,4 +3172,40 @@ func TestShelkinBrownie(t *testing.T) {
 		// Jasmine should have lost banding
 		g.AssertHasAbility(gametest.PlayerA, "Jasmine Boreal", core.Banding, false)
 	})
+}
+
+func TestTempestEfreet(t *testing.T) {
+	g := gametest.NewTestGameWithAnte(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tempest Efreet")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.SetLife(gametest.PlayerB, 5)
+	g.SetRandomResults([]int{0})
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tempest Efreet")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+
+	g.AssertPermanentCount(gametest.PlayerA, "Tempest Efreet", 0)
+	g.AssertGraveyardCount(gametest.PlayerB, "Tempest Efreet", 1)
+	g.AssertHandCount(gametest.PlayerA, "Grizzly Bears", 1)
+	if got := g.GetPlayer(gametest.PlayerB).Hand(); len(got) != 0 {
+		t.Fatalf("opponent hand still contains %d cards", len(got))
+	}
+	if owner := g.GetPlayer(gametest.PlayerA).Hand()[0].Owner(); owner != g.GetPlayer(gametest.PlayerA).PlayerID() {
+		t.Fatalf("exchanged card owner = %v, want PlayerA", owner)
+	}
+}
+
+func TestTempestEfreetOpponentMayPay(t *testing.T) {
+	g := gametest.NewTestGameWithAnte(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Tempest Efreet")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.SetLife(gametest.PlayerB, 20)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 10)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tempest Efreet")
+	g.StopAt(1, core.EndStep)
+	g.Execute()
+
+	g.AssertLife(gametest.PlayerB, 10)
+	g.AssertGraveyardCount(gametest.PlayerA, "Tempest Efreet", 1)
+	g.AssertHandCount(gametest.PlayerB, "Grizzly Bears", 1)
 }

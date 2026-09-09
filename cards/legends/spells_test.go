@@ -1,8 +1,10 @@
 package legends
 
 import (
+	"slices"
 	"testing"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
@@ -139,11 +141,80 @@ func TestEnergyTap(t *testing.T) {
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Durkwood Boars", true)
-		// XXX: Cannot assert mana pool contents -- the gametest DSL has no
-		// AssertManaPool method. The autoAddMana mechanism pre-loads mana for
-		// all scripted casts, making it impossible to indirectly test via a
-		// follow-up cast that depends on the generated mana.
+		g.AssertManaProduced(gametest.PlayerA, core.Colorless, 5)
 	})
+
+	t.Run("requires an untapped target", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Durkwood Boars")
+		boars := g.FindPermanentByName("Durkwood Boars", g.GetPlayer(gametest.PlayerA).PlayerID())
+		g.TapPermanent(boars)
+		card, err := mage.CreateCard("Energy Tap")
+		if err != nil {
+			t.Fatal(err)
+		}
+		possible := card.CastTargets()[0].Possible(g.GetPlayer(gametest.PlayerA).PlayerID(), card, g.Game)
+		if slices.Contains(possible, boars.ID()) {
+			t.Fatal("Energy Tap can target a tapped creature")
+		}
+	})
+}
+
+func TestPartWater(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Part Water")
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Part Water", 2, "Grizzly Bears", "Hill Giant")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Islandwalk, true)
+	g.AssertHasAbility(gametest.PlayerB, "Hill Giant", core.Islandwalk, true)
+}
+
+func TestWinterBlast(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Winter Blast")
+	g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Winter Blast", 2, "Azure Drake", "Hill Giant")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerB, "Azure Drake", true)
+	g.AssertTapped(gametest.PlayerB, "Hill Giant", true)
+	g.AssertTapped(gametest.PlayerB, "Grizzly Bears", false)
+	drake := g.FindPermanentByName("Azure Drake", g.GetPlayer(gametest.PlayerB).PlayerID())
+	if drake == nil || drake.Damage != 2 {
+		t.Fatalf("expected Azure Drake to have 2 damage, got %+v", drake)
+	}
+}
+
+func TestPyrotechnics(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Pyrotechnics")
+	g.ChooseDamageDistribution(gametest.PlayerA, map[string]int{
+		"PlayerB":       3,
+		"Grizzly Bears": 1,
+	})
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Pyrotechnics", "PlayerB", "Grizzly Bears")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLife(gametest.PlayerB, 17)
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
+}
+
+func TestVisions(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneLibrary, gametest.PlayerB, "Hill Giant")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Visions")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Visions", "PlayerB")
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+	g.AssertLibraryCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertLibraryCount(gametest.PlayerB, "Hill Giant", 1)
 }
 
 func TestActiveVolcano(t *testing.T) {
@@ -218,22 +289,26 @@ func TestWindsOfChange(t *testing.T) {
 }
 
 func TestManaDrainDelayedMana(t *testing.T) {
-	t.Run("adds colorless mana at next upkeep", func(t *testing.T) {
+	t.Run("does not add mana during upkeep", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
-		// Durkwood Boars costs {4}{G} = CMC 5
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Durkwood Boars")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Drain")
-		// PlayerA also has a Hill Giant (CMC 3) in hand to cast with the mana
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Hill Giant")
 		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Durkwood Boars")
 		g.CastInResponseTo(gametest.PlayerA, "Mana Drain")
-		// Turn 3 upkeep: delayed trigger fires, adds 5 colorless
-		// Then cast Hill Giant (CMC 3) from that mana in main phase
-		g.CastSpell(3, core.PrecombatMain, gametest.PlayerA, "Hill Giant")
+		g.StopAt(3, core.Draw)
+		g.Execute()
+		g.AssertManaProduced(gametest.PlayerA, core.Colorless, 0)
+	})
+
+	t.Run("adds colorless mana at next main phase", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Durkwood Boars")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Mana Drain")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Durkwood Boars")
+		g.CastInResponseTo(gametest.PlayerA, "Mana Drain")
 		g.StopAt(3, core.BeginCombat)
 		g.Execute()
-		g.AssertGraveyardCount(gametest.PlayerB, "Durkwood Boars", 1)
-		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		g.AssertManaProduced(gametest.PlayerA, core.Colorless, 5)
 	})
 }
 

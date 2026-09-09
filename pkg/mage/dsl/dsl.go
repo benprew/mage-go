@@ -253,6 +253,8 @@ var (
 	RemoveAllAbilities                         = mage.RemoveAllAbilities
 	RemoveAllAbilitiesFromAll                  = mage.RemoveAllAbilitiesFromAll
 	AllowUnlimitedLandPlays                    = mage.AllowUnlimitedLandPlays
+	RevealTopCardOfLibrary                     = mage.RevealTopCardOfLibrary
+	RevealTopCardsOfAllLibraries               = mage.RevealTopCardsOfAllLibraries
 	LimitCreatureUntaps                        = mage.LimitCreatureUntaps
 	BoostControlledCreatures                   = mage.BoostControlledCreatures
 	RevokeAttrFromControlled                   = mage.RevokeAttrFromControlled
@@ -316,6 +318,7 @@ var (
 	ChosenPlayerUpkeepTrigger                  = mage.ChosenPlayerUpkeepTrigger
 	PutIntoGraveyardFromBattlefieldTrigger     = mage.PutIntoGraveyardFromBattlefieldTrigger
 	NewSpellAbility                            = mage.NewSpellAbility
+	NewActivatedAbility                        = mage.NewActivatedAbility
 	NewTargetedSpell                           = mage.NewTargetedSpell
 	NewMultiTargetSpell                        = mage.NewMultiTargetSpell
 	ToAllMatching                              = mage.ToAllMatching
@@ -672,6 +675,7 @@ var (
 	ParseManaCost                                = core.ParseManaCost
 	WithFrom                                     = mage.WithFrom
 	WithTo                                       = mage.WithTo
+	WithToPlayer                                 = mage.WithToPlayer
 	WithCombatOnly                               = mage.WithCombatOnly
 	WithPlayerOnly                               = mage.WithPlayerOnly
 	GenericCost                                  = mage.GenericCost
@@ -706,6 +710,10 @@ var (
 	TargetPermanentManaValue        = mage.TargetPermanentManaValue
 	HalfXRoundedDown                = mage.HalfXRoundedDown
 	HalfXRoundedUp                  = mage.HalfXRoundedUp
+	ReduceSpellCostStatic           = mage.ReduceSpellCostStatic
+	SpellsOr                        = mage.SpellsOr
+	SpellHasType                    = mage.SpellHasType
+	FixedAmount                     = mage.FixedAmount
 	EventAmountValue                = mage.EventAmountValue
 	CountBattlefield                = mage.CountBattlefield
 	UntappedLandsAtTurnStart        = mage.UntappedLandsAtTurnStart
@@ -842,12 +850,13 @@ const (
 
 // Card types
 const (
-	TypeCreature    = core.TypeCreature
-	TypeArtifact    = core.TypeArtifact
-	TypeLand        = core.TypeLand
-	TypeEnchantment = core.TypeEnchantment
-	TypeInstant     = core.TypeInstant
-	TypeSorcery     = core.TypeSorcery
+	TypeCreature     = core.TypeCreature
+	TypeArtifact     = core.TypeArtifact
+	TypeLand         = core.TypeLand
+	TypeEnchantment  = core.TypeEnchantment
+	TypeInstant      = core.TypeInstant
+	TypeSorcery      = core.TypeSorcery
+	TypePlaneswalker = core.TypePlaneswalker
 
 	SuperBasic     = core.SuperBasic
 	SuperLegendary = core.SuperLegendary

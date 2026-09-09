@@ -128,6 +128,7 @@ func registerEnchantments() {
 	// At the beginning of your upkeep, remove a pupa counter from this Aura. If you can't, sacrifice it, put a +1/+1 counter on enchanted creature, and that creature gains flying.
 	Register("Cocoon", func() Card {
 		return NewAura("Cocoon", "{G}",
+			WithCastTarget(TargetControlledCreature()),
 			// TODO: convert to pipeline — needs TapAttached + AddCountersToSource primitives
 			WithAbility(EntersBattlefieldTrigger(
 				FuncEffect("tap enchanted creature and add pupa counters",
@@ -310,10 +311,10 @@ func registerEnchantments() {
 	// Field of Dreams {U}
 	// World Enchantment
 	// Players play with the top card of their libraries revealed.
-	// XXX: needs revealed library top card engine support
 	Register("Field of Dreams", func() Card {
 		return NewEnchantment("Field of Dreams", "{U}",
 			WithSuperTypes(SuperWorld),
+			WithStaticAbility(RevealTopCardsOfAllLibraries()),
 		)
 	})
 
@@ -381,29 +382,19 @@ func registerEnchantments() {
 	// {1}{W}: The next time a black or red source of your choice would deal damage to you this turn, prevent that damage.
 	Register("Greater Realm of Preservation", func() Card {
 		return NewEnchantment("Greater Realm of Preservation", "{1}{W}",
-			// TODO: convert to pipeline — needs ChoosePermanent + AddPreventionShield primitives
 			WithActivatedAbility(
 				FuncEffect("prevent next damage from a black or red source of your choice",
 					EffectProperties{Outcome: OutcomeBenefit},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						// Oracle: "a black or red source of your choice" — player picks a
-						// specific black or red permanent; shield prevents next damage from it.
-						p := g.GetPlayer(controller)
-						if p == nil {
+						chosen := g.ChooseDamageSource(controller)
+						if chosen == uuid.Nil {
 							return nil
 						}
-						candidates := g.FilterBattlefield(Or(HasColorFilter(Black), HasColorFilter(Red)))
-						if len(candidates) == 0 {
+						colors := g.EffectiveColors(chosen)
+						if !slices.Contains(colors, Black) && !slices.Contains(colors, Red) {
 							return nil
 						}
-						chosen := p.ChoosePermanent(candidates, "Greater Realm of Preservation: choose a black or red source", g)
-						if chosen == nil {
-							return nil
-						}
-						g.AddReplacementEffect(&blackOrRedPreventionReplacement{
-							playerID:       controller,
-							chosenSourceID: chosen.ID(),
-						})
+						g.AddSourcePrevention(controller, chosen)
 						return nil
 					}),
 				ManaCostOf("{1}{W}"),
@@ -1213,42 +1204,4 @@ func registerEnchantments() {
 		)
 	})
 
-}
-
-// blackOrRedPreventionReplacement prevents the next damage from a specific
-// chosen black or red source. It implements ReplacementEffect as a one-shot shield.
-type blackOrRedPreventionReplacement struct {
-	playerID       uuid.UUID
-	chosenSourceID uuid.UUID
-	consumed       bool
-	sourceID       uuid.UUID
-}
-
-func (r *blackOrRedPreventionReplacement) SourceID() uuid.UUID   { return r.sourceID }
-func (r *blackOrRedPreventionReplacement) GetDuration() Duration { return EndOfTurn }
-
-func (r *blackOrRedPreventionReplacement) Matches(a Action, g GameReader) bool {
-	act, ok := a.(*DamageToPlayerAction)
-	if !ok {
-		return false
-	}
-	if act.PlayerID() != r.playerID {
-		return false
-	}
-	// Only prevent damage from the specific source the player chose
-	return act.ActionSource() == r.chosenSourceID
-}
-
-func (r *blackOrRedPreventionReplacement) Replace(a Action, g *Game) Action {
-	r.consumed = true
-	return nil
-}
-
-func (r *blackOrRedPreventionReplacement) IsActive(_ GameReader) bool {
-	return !r.consumed
-}
-
-func (r *blackOrRedPreventionReplacement) Clone() ReplacementEffect {
-	c := *r
-	return &c
 }

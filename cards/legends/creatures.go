@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -247,10 +248,36 @@ func registerCreatures() {
 	// Creature — Sphinx
 	// 3/4
 	// {T}: Target player chooses a card name, then reveals the top card of their library. If that card has the chosen name, that player puts it into their hand. If it doesn't, the player puts it into their graveyard.
-	// TODO: implement — needs engine support for card naming and reveal
 	Register("Petra Sphinx", func() Card {
 		return NewCreature("Petra Sphinx", "{2}{W}{W}{W}", 3, 4,
 			WithSubTypes("Sphinx"),
+			WithActivatedAbility(
+				FuncEffect("name and reveal the top card of target player's library",
+					EffectProperties{},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						player := g.GetPlayer(targets[0])
+						if player == nil {
+							return nil
+						}
+						name := player.ChooseString(mage.RegisteredCardNames(), "choose a card name")
+						revealed := g.RemoveTopN(player, 1)
+						if len(revealed) == 0 {
+							return nil
+						}
+						if revealed[0].Name() == name {
+							player.AddToHand(revealed[0])
+						} else {
+							player.AddToGraveyard(revealed[0])
+						}
+						return nil
+					},
+				),
+				Tap(),
+				WithTarget(TargetPlayer()),
+			),
 		)
 	})
 
@@ -691,7 +718,8 @@ func registerCreatures() {
 				"destroy Cosmic Horror unless you pay {3}{B}{B}{B}; if destroyed, deal 7 damage",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					if g.TryPayMana(controller, "{3}{B}{B}{B}") {
+					player := g.GetPlayer(controller)
+					if player != nil && player.ChooseMayAbility("pay {3}{B}{B}{B}") && g.TryPayMana(controller, "{3}{B}{B}{B}") {
 						return nil // paid, keep the creature
 					}
 					perm := g.FindPermanent(sourceID)
@@ -699,9 +727,8 @@ func registerCreatures() {
 						g.DestroyPermanent(perm)
 						// If actually destroyed (not indestructible), deal 7 damage
 						if g.FindPermanent(sourceID) == nil {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.DealDamageToPlayer(p, 7, sourceID)
+							if player != nil {
+								g.DealDamageToPlayer(player, 7, sourceID)
 							}
 						}
 					}
@@ -1468,10 +1495,44 @@ func registerCreatures() {
 	// 3/3
 	// Remove this card from your deck before playing if you're not playing for ante.
 	// {T}, Sacrifice this creature: Target opponent may pay 10 life. If that player doesn't, they reveal a card at random from their hand. Exchange ownership of the revealed card and Tempest Efreet. Put the revealed card into your hand and Tempest Efreet from anywhere into that player's graveyard. This change in ownership is permanent.
-	// UNIMPLEMENTABLE: Ante mechanic — requires permanent ownership exchange between players.
 	Register("Tempest Efreet", func() Card {
 		return NewCreature("Tempest Efreet", "{1}{R}{R}{R}", 3, 3,
 			WithSubTypes("Efreet"),
+			WithActivatedAbility(
+				FuncEffect("target opponent may pay 10 life; otherwise exchange ownership of a random card and Tempest Efreet", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+					if len(targets) == 0 {
+						return nil
+					}
+					opponent := g.GetPlayer(targets[0])
+					controllerPlayer := g.GetPlayer(controller)
+					if opponent == nil || controllerPlayer == nil {
+						return nil
+					}
+					if opponent.Life() >= 10 && opponent.ChooseMayAbility("pay 10 life") {
+						opponent.LoseLife(10)
+						return nil
+					}
+					revealed := g.RandomCardFromHand(opponent, mage.CardFilter{})
+					if revealed != nil {
+						if err := g.ChangeOwner(revealed.ID(), controller); err != nil {
+							return err
+						}
+						if card, ok := opponent.RemoveFromHand(revealed.ID()); ok {
+							controllerPlayer.AddToHand(card)
+						}
+					}
+					if err := g.ChangeOwner(sourceID, opponent.PlayerID()); err != nil {
+						return err
+					}
+					if card, _, ok := g.MoveFromAnyGraveyard(sourceID, ZoneGraveyard); ok {
+						opponent.AddToGraveyard(card)
+					}
+					return nil
+				}),
+				Tap(),
+				WithCost(SacrificeSourceCost()),
+				WithTarget(TargetOpponent()),
+			),
 		)
 	})
 
@@ -1747,7 +1808,7 @@ func registerCreatures() {
 	// Giant Turtle {1}{G}{G}
 	// Creature — Turtle
 	// 2/4
-	// Giant Turtle can't attack if it attacked during your last turn.
+	// This creature can't attack if it attacked during your last turn.
 	Register("Giant Turtle", func() Card {
 		return NewCreature("Giant Turtle", "{1}{G}{G}", 2, 4,
 			WithSubTypes("Turtle"),
@@ -2598,11 +2659,44 @@ func registerCreatures() {
 	// Legendary Creature — Human Wizard
 	// 3/3
 	// {X}, {T}: Choose a card name. Target opponent reveals X cards at random from their hand. Then that player discards all cards with that name revealed this way. Activate only during your turn.
-	// TODO: implement
 	Register("Nebuchadnezzar", func() Card {
 		return NewCreature("Nebuchadnezzar", "{3}{U}{B}", 3, 3,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
+			WithActivatedAbility(
+				FuncEffect("name a card, reveal X random cards, and discard the named cards",
+					EffectProperties{Outcome: OutcomeDetriment},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						opponent := g.GetPlayer(targets[0])
+						chooser := g.GetPlayer(controller)
+						if opponent == nil || chooser == nil {
+							return nil
+						}
+						name := chooser.ChooseString(mage.RegisteredCardNames(), "choose a card name")
+						candidates := slices.Clone(opponent.Hand())
+						count := min(g.XValue(), len(candidates))
+						revealed := make([]Card, 0, count)
+						for range count {
+							index := g.RandIntn(len(candidates))
+							revealed = append(revealed, candidates[index])
+							candidates = slices.Delete(candidates, index, index+1)
+						}
+						for _, card := range revealed {
+							if card.Name() == name {
+								g.PlayerDiscardByEffect(opponent, card.ID(), sourceID)
+							}
+						}
+						return nil
+					},
+				),
+				ManaCostOf("{X}"),
+				WithCost(Tap()),
+				WithTarget(TargetOpponent()),
+				WithYourTurnOnly(),
+			),
 		)
 	})
 
@@ -2751,8 +2845,7 @@ func registerCreatures() {
 		return NewCreature("Rasputin Dreamweaver", "{4}{W}{U}", 4, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
-			// Enters with seven dream counters
-			WithAbility(ETBEffect(AddCounters(Dream, Fixed(7)).Targeting(ToSource()))),
+			WithAbility(EntersWithNCounters(Dream, 7)),
 			// Remove a dream counter: Add {C}
 			WithActivatedAbility(
 				AddMana(Colorless, 1),

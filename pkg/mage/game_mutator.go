@@ -757,6 +757,7 @@ func (g *Game) AddDamagePreventionRule(opts ...damagePreventionRuleOption) {
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
 		from:       dpr.from,
 		to:         dpr.to,
+		toPlayerID: dpr.toPlayerID,
 		oneShot:    dpr.oneShot,
 		combatOnly: dpr.combatOnly,
 		playerOnly: dpr.playerOnly,

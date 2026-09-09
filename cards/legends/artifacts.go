@@ -2,7 +2,6 @@ package legends
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/google/uuid"
 
@@ -67,7 +66,7 @@ func registerArtifacts() {
 						eff := FuncContinuousEffect(LayerAbility, EndOfTurn, func(g *Game, srcID uuid.UUID) error {
 							g.AddDamagePreventionRule(
 								WithFrom(And(IsAttacking, Not(HasKeywordFilter(Flying)))),
-								WithPlayerOnly(),
+								WithToPlayer(controller),
 							)
 							return nil
 						})
@@ -108,7 +107,7 @@ func registerArtifacts() {
 				),
 				ManaCostOf("{2}"),
 				WithCost(Tap()),
-				WithTarget(TargetPermanent()),
+				WithTarget(TargetControlledPermanent()),
 			),
 		)
 	})
@@ -270,13 +269,8 @@ func registerArtifacts() {
 						if p == nil {
 							return nil
 						}
-						gy := p.Graveyard()
-						for _, g := range slices.Backward(gy) {
-							if g.HasType(TypeCreature) {
-								toughness := g.Toughness()
-								p.GainLife(toughness)
-								return nil
-							}
+						if lki := g.LastSacrificed(); lki != nil && lki.HasType(TypeCreature) {
+							p.GainLife(lki.ViewToughness())
 						}
 						return nil
 					},
@@ -293,20 +287,30 @@ func registerArtifacts() {
 	Register("Life Matrix", func() Card {
 		return NewArtifact("Life Matrix", "{4}",
 			WithActivatedAbility(
-				AddCounters(Matrix, Fixed(1)),
+				FuncEffect("put a matrix counter on target creature and grant regeneration",
+					EffectProperties{Outcome: OutcomeBenefit},
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+						if len(targets) == 0 {
+							return nil
+						}
+						target := g.MutablePermanent(targets[0])
+						if target == nil {
+							return nil
+						}
+						target.AddCounter(Matrix, 1)
+						ability := NewActivatedAbility(RegenerateSource(), RemoveCountersCost(Matrix, 1))
+						ability.SetSource(target.ID())
+						ability.SetController(target.ControllerID())
+						target.RuntimeAbilities = append(target.RuntimeAbilities, ability)
+						return nil
+					},
+				),
 				ManaCostOf("{4}"),
 				WithCost(Tap()),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
 			),
 			// Grant "Remove a matrix counter: Regenerate" to all creatures with matrix counters
-			WithStaticAbility(GrantActivatedAbilityToAll(
-				RegenerateSource(),
-				RemoveCountersCost(Matrix, 1),
-				NewPermanentFilter("creature with matrix counter", func(p *Permanent, _ *Game) bool {
-					return p.Counters[Matrix] > 0
-				}),
-			)),
 		)
 	})
 
@@ -315,11 +319,7 @@ func registerArtifacts() {
 	// Instant and enchantment spells you cast cost {2} less to cast.
 	Register("Mana Matrix", func() Card {
 		return NewArtifact("Mana Matrix", "{6}",
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.AddSpellTypeCostReduction(TypeInstant, 2)
-				g.AddSpellTypeCostReduction(TypeEnchantment, 2)
-				return nil
-			})),
+			WithStaticAbility(ReduceSpellCostStatic(SpellsOr(SpellHasType(TypeInstant), SpellHasType(TypeEnchantment)), FixedAmount(2), nil)),
 		)
 	})
 
@@ -332,7 +332,7 @@ func registerArtifacts() {
 				FuncEffect(
 					"exchange life totals with target opponent",
 					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
+					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 						me := g.GetPlayer(controller)
 						opp := g.GetOpponent(controller)
 						if me == nil || opp == nil {
@@ -348,6 +348,7 @@ func registerArtifacts() {
 				Tap(),
 				WithCost(SacrificeSourceCost()),
 				WithUpkeepOnly(),
+				WithTarget(TargetOpponent()),
 			),
 		)
 	})
@@ -373,10 +374,7 @@ func registerArtifacts() {
 	// Creature spells you cast cost {2} less to cast.
 	Register("Planar Gate", func() Card {
 		return NewArtifact("Planar Gate", "{6}",
-			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				g.AddSpellTypeCostReduction(TypeCreature, 2)
-				return nil
-			})),
+			WithStaticAbility(ReduceSpellCostStatic(SpellHasType(TypeCreature), FixedAmount(2), nil)),
 		)
 	})
 

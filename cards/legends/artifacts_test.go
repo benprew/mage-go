@@ -3,6 +3,8 @@ package legends
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
@@ -43,7 +45,7 @@ func TestMirrorUniverse(t *testing.T) {
 		g.SetLife(gametest.PlayerA, 5)
 		g.SetLife(gametest.PlayerB, 18)
 		// Activate during PlayerA's upkeep (turn 3 — need to wait since it enters tapped? No, it's on battlefield)
-		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Mirror Universe")
+		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Mirror Universe", "PlayerB")
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		// Life totals should be swapped
@@ -123,6 +125,21 @@ func TestLifeChisel(t *testing.T) {
 		g.AssertLife(gametest.PlayerA, 14)
 		g.AssertPermanentCount(gametest.PlayerA, "Craw Wurm", 0)
 	})
+
+	t.Run("uses the sacrificed creature's toughness from last known information", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		chiselID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Life Chisel")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Craw Wurm")
+		g.SetLife(gametest.PlayerA, 10)
+		g.SetStep(core.Upkeep)
+		g.ChoosePermanent(gametest.PlayerA, "Craw Wurm")
+		if err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerA).PlayerID(), chiselID, 0, nil); err != nil {
+			t.Fatalf("activate Life Chisel: %v", err)
+		}
+		g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Grizzly Bears")
+		g.ResolveTopOfStack()
+		g.AssertLife(gametest.PlayerA, 14)
+	})
 }
 
 func TestKryShield(t *testing.T) {
@@ -184,6 +201,16 @@ func TestAlchorsTomb(t *testing.T) {
 		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Red, true)
 		g.AssertHasColor(gametest.PlayerA, "Grizzly Bears", core.Green, false)
 	})
+
+	t.Run("cannot target a permanent an opponent controls", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		tombID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Alchor's Tomb")
+		targetID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 2)
+		if err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerA).PlayerID(), tombID, 0, []uuid.UUID{targetID}); err == nil {
+			t.Fatal("Alchor's Tomb targeted an opponent's permanent")
+		}
+	})
 }
 
 func TestLifeMatrix(t *testing.T) {
@@ -196,6 +223,26 @@ func TestLifeMatrix(t *testing.T) {
 		g.StopAt(1, core.PrecombatMain)
 		g.Execute()
 		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.Matrix, 1)
+	})
+
+	t.Run("granted regeneration persists after Life Matrix leaves", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		matrixID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Life Matrix")
+		bearID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 4)
+		g.SetStep(core.Upkeep)
+		if err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerA).PlayerID(), matrixID, 0, []uuid.UUID{bearID}); err != nil {
+			t.Fatalf("activate Life Matrix: %v", err)
+		}
+		g.ResolveTopOfStack()
+		g.DestroyPermanent(g.FindPermanent(matrixID))
+		if err := g.ActivateAbilityByIndex(g.GetPlayer(gametest.PlayerA).PlayerID(), bearID, 0, nil); err != nil {
+			t.Fatalf("activate granted regeneration ability: %v", err)
+		}
+		g.ResolveTopOfStack()
+		g.DestroyPermanent(g.FindPermanent(bearID))
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertCounterCount(gametest.PlayerA, "Grizzly Bears", core.Matrix, 0)
 	})
 }
 
@@ -236,6 +283,18 @@ func TestManaMatrix(t *testing.T) {
 		// Divine Offering resolved — Black Mana Battery destroyed
 		g.AssertPermanentCount(gametest.PlayerB, "Black Mana Battery", 0)
 	})
+
+	t.Run("does not reduce an opponent's instant spells", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mana Matrix")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Divine Offering")
+		spellID := g.GetPlayer(gametest.PlayerB).Hand()[0].ID()
+		targetID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Black Mana Battery")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains")
+		if err := g.CastSpellByID(g.GetPlayer(gametest.PlayerB).PlayerID(), spellID, []uuid.UUID{targetID}, 0); err == nil {
+			t.Fatal("Mana Matrix reduced an opponent's spell")
+		}
+	})
 }
 
 func TestPlanarGate(t *testing.T) {
@@ -248,6 +307,18 @@ func TestPlanarGate(t *testing.T) {
 		g.StopAt(1, core.EndStep)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+	})
+
+	t.Run("does not reduce an opponent's creature spells", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Planar Gate")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Hill Giant")
+		spellID := g.GetPlayer(gametest.PlayerB).Hand()[0].ID()
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
+		if err := g.CastSpellByID(g.GetPlayer(gametest.PlayerB).PlayerID(), spellID, nil, 0); err == nil {
+			t.Fatal("Planar Gate reduced an opponent's spell")
+		}
 	})
 }
 
