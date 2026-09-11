@@ -209,17 +209,30 @@ func TestColorWards(t *testing.T) {
 	})
 
 	t.Run("ward_not_removed_by_protection", func(t *testing.T) {
-		// Special rule: Wards grant protection but don't fall off due to
-		// protection from their own color (they have a special exception).
+		// "This effect doesn't remove this Aura." Every Ward is white, so only
+		// White Ward's protection could remove the Ward itself (CR 704.5m).
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Ward")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Ward", "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "White Ward")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "White Ward", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// Black Ward should still be attached even though it grants protection from black.
-		g.AssertPermanentCount(gametest.PlayerA, "Black Ward", 1)
-		g.AssertAttachedTo(gametest.PlayerA, "Black Ward", "Grizzly Bears")
+		g.AssertPermanentCount(gametest.PlayerA, "White Ward", 1)
+		g.AssertAttachedTo(gametest.PlayerA, "White Ward", "Grizzly Bears")
+	})
+
+	t.Run("white_ward_still_protects_from_white", func(t *testing.T) {
+		// The exception covers only the Ward itself; other white sources are
+		// still stopped.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "White Ward")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Swords to Plowshares")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "White Ward", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Swords to Plowshares", "Grizzly Bears")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
 	})
 
 	t.Run("protection_ends_when_ward_leaves", func(t *testing.T) {
