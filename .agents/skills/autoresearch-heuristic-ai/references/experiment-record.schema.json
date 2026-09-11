@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mage-go.local/schemas/experiment-record.schema.json",
+  "title": "Heuristic AI experiment record",
+  "type": "object",
+  "additionalProperties": false,
+  "x-reconcile-run-totals": true,
+  "required": ["schema_version", "experiment_id", "hypothesis", "checkout", "files_changed", "shared_baseline", "tests", "runs", "decision", "decision_reason", "limitations"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "hypothesis": {"type": "string", "minLength": 1},
+    "checkout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "had_preexisting_changes"],
+      "properties": {
+        "revision": {"type": "string", "minLength": 1},
+        "had_preexisting_changes": {"type": "boolean"}
+      }
+    },
+    "files_changed": {"type": "array", "items": {"type": "string"}},
+    "shared_baseline": {"type": "boolean"},
+    "shared_paths": {"type": "array", "items": {"type": "string"}},
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "status"],
+        "properties": {
+          "command": {"type": "string", "minLength": 1},
+          "status": {"enum": ["passed", "failed", "not_run"]},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "candidate_wins", "baseline_wins", "draws", "total_games", "decided_win_rate"],
+        "properties": {
+          "kind": {"enum": ["control", "incumbent", "candidate"]},
+          "candidate_wins": {"type": "integer", "minimum": 0},
+          "baseline_wins": {"type": "integer", "minimum": 0},
+          "draws": {"type": "integer", "minimum": 0},
+          "total_games": {"type": "integer", "minimum": 1},
+          "decided_win_rate": {"type": "number", "minimum": 0, "maximum": 100},
+          "runtime_seconds": {"type": "number", "minimum": 0},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "decision": {"enum": ["accepted", "rejected", "inconclusive"]},
+    "decision_reason": {"type": "string", "minLength": 1},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "next_hypothesis": {"type": "string"}
+  }
+}

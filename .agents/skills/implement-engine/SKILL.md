@@ -1,41 +1,35 @@
 ---
 name: implement-engine
-description: Implement a mage-go engine capability needed for exact card behavior. Use for changes under pkg/mage or pkg/mage/core, with engine tests, card-facing documentation, and regression verification.
+description: Implement a reusable mage-go engine capability under pkg/mage or pkg/mage/core. Use for rules behavior that card code cannot express; do not wire or modify cards.
 ---
 
 # Implement an engine capability
 
-Build the requested capability from required behavior, rather than assuming it fits a fixed category of engine change.
+Build reusable engine behavior under `pkg/mage/` or `pkg/mage/core/`. Do not modify cards.
 
-## Boundary
+## Input
 
-Edit only `pkg/mage/` and `pkg/mage/core/`. Do not implement or modify cards. Return enough of the card-facing API for card work to continue.
-
-Preserve unrelated work and do not commit unless the user asks.
+When card work found the gap, read and preserve the fields defined by [../implement-card/references/engine-gap.schema.json](../implement-card/references/engine-gap.schema.json). For a direct request, first derive the same observable requirements without creating an artifact unless it helps the work.
 
 ## Workflow
 
-1. Read `pkg/mage/doc.go`, the request's Oracle text, and the relevant sections found through `docs/comprehensive-rules-index.md`.
-2. Search the engine for related behavior and follow its established ownership, state, event, cloning, and testing patterns. Consult XMage only when it helps clarify edge cases or architecture.
-3. Turn the request into observable requirements, including interactions and rules edge cases that distinguish a correct implementation from a partial one.
-4. Write focused engine tests first and confirm they fail for the expected reason. Use the lowest test level that proves the behavior; use `gametest` and test-only cards when game integration matters.
-5. Implement the smallest coherent engine change that satisfies those requirements. Integrate it wherever engine semantics require, and expose a concise card-facing API when callers need one. Do not force the design into a preselected list such as keyword, effect, trigger, or replacement effect.
-6. Update `pkg/mage/doc.go` for new or changed card-facing APIs and behavior.
-7. Run focused tests, all engine tests, the full repository suite, and the repository lint command. Fix regressions caused by the change.
+1. Read `pkg/mage/doc.go`, the relevant Oracle text, and only the rules sections needed for the capability.
+2. Find related engine behavior and follow its ownership, state, event, cloning, and test patterns.
+3. Define observable requirements and interactions that distinguish complete behavior from the example card's happy path.
+4. Write focused engine tests and confirm that they fail for the expected reason. Use `gametest` and test-only cards when integration matters.
+5. Implement the smallest coherent reusable change. Add every required engine integration point and expose a concise card-facing API.
+6. Update `pkg/mage/doc.go` for new or changed card-facing behavior.
 
-## Constraints
+Do not put card-specific policy in the engine. Preserve compatibility when practical and report a necessary breaking API change.
 
-- Follow the comprehensive rules exactly; do not implement only the example card's happy path.
-- Keep card-specific policy out of the engine unless it represents reusable game behavior.
-- Avoid unrelated refactors, but make all changes needed for a complete and internally consistent feature.
-- Preserve compatibility where practical. If a breaking API change is necessary, state it clearly.
+## Verification
 
-## Handoff
+Run these levels in order:
 
-Report:
+1. Focused: the new tests with `-count=1`.
+2. Engine: `go test ./pkg/mage/... -short -count=1`.
+3. Final: `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, and `make lint`.
 
-- the supported behavior and important edge cases;
-- the card-facing API;
-- tests and verification run;
-- files changed;
-- remaining limitations or card wiring still needed.
+Run long simulations only when the change affects AI behavior or the user asks for the complete long-running suite.
+
+Return the supported behavior, edge cases, card-facing API, verification, files changed, and remaining card wiring. If the input was an engine-gap record, return its ID with status `resolved` and resolution evidence.

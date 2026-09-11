@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mage-go.local/schemas/set-inventory.schema.json",
+  "title": "Mage-go set inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "x-reconcile-card-summary": true,
+  "required": ["schema_version", "set", "summary", "cards", "engine_gaps"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "set": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name", "package"],
+      "properties": {
+        "code": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "package": {"type": "string", "minLength": 1}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "implemented", "blocked_engine_gap", "accepted_unsupported", "defect", "stub"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "implemented": {"type": "integer", "minimum": 0},
+        "blocked_engine_gap": {"type": "integer", "minimum": 0},
+        "accepted_unsupported": {"type": "integer", "minimum": 0},
+        "defect": {"type": "integer", "minimum": 0},
+        "stub": {"type": "integer", "minimum": 0}
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status", "source_path", "oracle_text_complete", "oracle_match", "test_status", "evidence", "gap_ids"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "status": {"enum": ["implemented", "blocked_engine_gap", "accepted_unsupported", "defect", "stub"]},
+          "source_path": {"type": "string", "minLength": 1},
+          "oracle_text_complete": {"type": "boolean"},
+          "oracle_match": {"type": ["boolean", "null"]},
+          "test_status": {"enum": ["absent", "present", "passing", "failing", "not_needed"]},
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "gap_ids": {"type": "array", "items": {"type": "string"}},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "engine_gaps": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
+}

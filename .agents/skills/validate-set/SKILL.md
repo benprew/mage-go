@@ -1,57 +1,53 @@
 ---
 name: validate-set
-description: Audit a mage-go card set for completeness, Oracle fidelity, test quality, unsupported behavior, and regressions. Use to assess an implemented or partially implemented set and produce actionable findings without changing card or engine code.
+description: Audit one mage-go card set for completeness, Oracle fidelity, test quality, unsupported behavior, and regressions. Use for evidence-based assessment without changing card or engine implementations.
 ---
 
 # Validate a set
 
-Produce an evidence-based audit. Do not modify card or engine implementations.
+Audit actual implementation behavior. Do not edit card or engine code.
 
-## Establish authoritative inputs
+## Inputs
 
-Resolve the package and Scryfall set code through the arguments, `data/sets.txt`, and package metadata. Fetch missing canonical JSON when necessary:
+Resolve the package and Scryfall code with the request, `data/sets.txt`, and package metadata. Use Scryfall JSON as the Oracle source of truth.
+
+If canonical JSON is missing, disclose that the audit will add `data/<CODE>.json`, or fetch it to a temporary path when persistence is unnecessary:
 
 ```bash
-FETCHSET_SKIP_TLS=1 go run ./cmd/fetchset -o data/<CODE>.json <CODE>
+go run ./cmd/fetchset -o <output-path> <CODE>
 ```
 
-Use Scryfall JSON as the Oracle source of truth. Read `docs/comprehensive-rules-index.md` and consult only the rules sections needed to resolve specific questions.
+Do not disable TLS verification as part of the normal workflow. Read only the comprehensive-rules sections needed to resolve specific questions.
 
 ## Audit
 
-Inventory every registered card and its tests. For each card, determine:
+For every registered card, inspect code and tests and record:
 
-- whether it is complete, partial, a stub, or explicitly unsupported;
-- whether the source preserves the full Oracle text above `Register()`;
-- whether the implementation matches every rules-relevant part of that text;
-- whether tests adequately prove its distinct behavior and restrictions;
-- whether any gap belongs in card code or requires reusable engine support.
+- one implementation status;
+- whether the complete Oracle text is above `Register()`;
+- whether actual behavior matches every rules-relevant word;
+- whether tests can fail for plausible incorrect behavior;
+- any card-code defect or reusable engine gap.
 
-Inspect actual behavior in code rather than inferring correctness from constructor names, comments, markers, or passing tests alone. Look for omitted choices, conditions, targets, zones, timing, durations, values, and interactions. Treat any approximation as a defect unless it follows from the engine's documented two-player scope.
+Do not infer correctness from names, comments, markers, or passing tests alone. Do not demand redundant tests for declarative use of tested engine primitives. Reconcile every `UNIMPLEMENTABLE:` marker with `UNSUPPORTED.md`.
 
-Tests are appropriate when they can catch card-specific behavior or wiring. Do not demand redundant tests for purely declarative use of already-tested engine primitives. When tests exist, check that their assertions would fail for plausible incorrect implementations; include negative and boundary coverage where rules distinctions warrant it.
+For a set audit, create an inventory that follows [references/set-inventory.schema.json](references/set-inventory.schema.json). Use exact counts and validate the saved artifact:
 
-Verify every `UNIMPLEMENTABLE:` marker against `UNSUPPORTED.md`. Distinguish intentional architectural exclusions from capabilities that are merely not implemented yet.
+```bash
+python3 .agents/skills/scripts/validate_artifact.py .agents/skills/validate-set/references/set-inventory.schema.json <inventory.json>
+```
 
-## Run checks
+## Checks and report
 
-Run the set package tests without cache and run vet for the package:
+Run:
 
 ```bash
 go test ./cards/<package>/ -count=1
 go vet ./cards/<package>/
 ```
 
-Run broader checks when needed to confirm an engine interaction or repository-wide regression. Report pre-existing failures separately from audit findings when the evidence permits.
+Run broader checks only to confirm an engine interaction or repository regression. Separate pre-existing failures when evidence permits.
 
-## Report
+Write the result according to [references/validation-report.schema.json](references/validation-report.schema.json) when another skill or tool will consume it. Validate a saved report with the same script. Then give the user a concise human report led by exact counts and severity-ranked findings.
 
-Lead with a count-based summary, then list actionable findings by severity:
-
-1. failing tests or build errors;
-2. Oracle or rules mismatches;
-3. incomplete, stubbed, or inconsistently unsupported cards;
-4. missing or ineffective tests;
-5. shared engine gaps.
-
-For each correctness finding, identify the card, authoritative behavior, actual behavior, evidence location, and required outcome. Group findings that share a root cause. End with a prioritized next-work plan and explicitly state what was checked and any limits on confidence.
+Each correctness finding must state the card, authoritative behavior, actual behavior, evidence, required outcome, and confidence. Group shared root causes and end with prioritized next work, checks run, and confidence limits.
