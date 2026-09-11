@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 
 	_ "github.com/benprew/mage-go/cards/arabian"
+	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
@@ -220,6 +221,51 @@ func TestColorWards(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Black Ward", 1)
 		g.AssertAttachedTo(gametest.PlayerA, "Black Ward", "Grizzly Bears")
 	})
+
+	t.Run("protection_ends_when_ward_leaves", func(t *testing.T) {
+		// The protection lasts only while Black Ward is attached: once Disenchant
+		// destroys it, Terror can target the creature again.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Ward")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Disenchant")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Terror")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Ward", "Grizzly Bears")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Disenchant", "Black Ward")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Terror", "Grizzly Bears")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Black Ward", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	})
+
+	t.Run("grants_a_single_protection", func(t *testing.T) {
+		// The grant is reapplied on every layer pass, so it has to replace the
+		// previous pass's grant instead of piling up on the creature.
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Black Ward")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Black Ward", "Grizzly Bears")
+		g.StopAt(3, core.BeginCombat)
+		g.Execute()
+		bears := g.FindPermanentByName("Grizzly Bears", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if bears == nil {
+			t.Fatal("Grizzly Bears not found")
+		}
+		if n := countProtectionAbilities(bears); n != 1 {
+			t.Fatalf("Grizzly Bears carry %d protection abilities, want 1", n)
+		}
+	})
+}
+
+func countProtectionAbilities(p *mage.Permanent) int {
+	n := 0
+	for _, a := range p.RuntimeAbilities {
+		if _, ok := mage.UnwrapAbility(a).(*mage.ProtectionAbility); ok {
+			n++
+		}
+	}
+	return n
 }
 
 func TestLaceCycle(t *testing.T) {
