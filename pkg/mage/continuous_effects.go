@@ -31,10 +31,18 @@ func GrantAbilityToAttached(kw Keyword, at AttachType) ContinuousEffect {
 }
 
 // GrantProtectionToAttached creates a continuous effect granting protection from
-// a color to the attached creature (e.g. Black Ward, Blue Ward).
+// a color to the attached creature (e.g. Black Ward, Blue Ward). The protection
+// never removes the Aura granting it, as every Ward's Oracle text requires.
 func GrantProtectionToAttached(color Color, at AttachType) ContinuousEffect {
 	return AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
-		target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(color))
+		protection := ProtectionFromColor(color)
+		if source != nil {
+			protection.ExemptCardID = source.ID()
+		}
+		// Wrapped so the reset before each layer pass drops it again. A bare
+		// ability counts as printed: it would pile up on every pass and outlive
+		// the Ward.
+		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(protection))
 		return nil
 	})
 }
@@ -62,7 +70,9 @@ func (e *grantProtectionTargetEffect) Apply(ctx *EffectContext) error {
 	}
 	targetID := ctx.Targets[0]
 	eff := TargetEffect(LayerAbility, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
-		target.RuntimeAbilities = append(target.RuntimeAbilities, ProtectionFromColor(e.color))
+		// Wrapped for the same reason as GrantProtectionToAttached: unwrapped, it
+		// would survive the end of the turn.
+		target.RuntimeAbilities = append(target.RuntimeAbilities, WrapGrantedAbility(ProtectionFromColor(e.color)))
 		return nil
 	})
 	ctx.Game.AddContinuousEffect(eff)
