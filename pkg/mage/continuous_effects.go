@@ -751,9 +751,10 @@ func BoostControlledCreatures(power, toughness int, filter PermanentFilter) Cont
 }
 
 // PreventUntapForMatching creates a continuous effect that sets DoesNotUntap
-// on all permanents matching the given filter (e.g. Meekstone).
+// on all permanents matching the given filter (e.g. Meekstone). The filter runs
+// after every layer, so a power-dependent one sees the final power.
 func PreventUntapForMatching(filter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+	return FuncContinuousEffect(layerPostPT, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
 		for _, p := range g.FilterBattlefield(filter) {
 			g.effects.GrantAttr(p.ID(), AttrDoesNotUntap)
 		}
