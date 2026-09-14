@@ -59,8 +59,9 @@ func (e *counterSpellIfXMeetsOrExceedsCMCEffect) Properties() EffectProperties {
 // powerSinkEffect counters a spell unless its controller pays X mana.
 type powerSinkEffect struct{}
 
-// PowerSinkEffect creates an effect that counters a spell unless its controller pays X mana,
-// draining their pool either way (Power Sink).
+// PowerSinkEffect creates an effect that counters a spell unless its controller pays X mana;
+// a controller who doesn't pay also taps all lands with mana abilities and loses all unspent
+// mana (Power Sink).
 func PowerSinkEffect() Effect {
 	return &powerSinkEffect{}
 }
@@ -443,14 +444,19 @@ func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 	if spellController == nil {
 		return nil
 	}
-	// If they have enough mana in pool, they pay and spell resolves
-	totalMana := spellController.ManaPool().TotalMana()
-	if totalMana >= ctx.Game.XValue() {
-		// Opponent can pay - drain X mana but don't counter
-		spellController.ManaPool().DrainGeneric(ctx.Game.XValue())
+	// Paying goes through the regular payment path so the controller may tap
+	// untapped mana sources, not only spend mana already floating in the pool.
+	if ctx.Game.TryPayMana(obj.Controller, fmt.Sprintf("{%d}", ctx.Game.XValue())) {
 		return nil
 	}
-	// Can't pay - counter the spell and drain all mana
+	for _, land := range ctx.Game.FilterBattlefield(And(ControlledBy(obj.Controller), IsLand)) {
+		for _, a := range land.RuntimeAbilities {
+			if _, ok := UnwrapAbility(a).(*ManaAbility); ok {
+				ctx.Game.TapPermanent(land)
+				break
+			}
+		}
+	}
 	spellController.ManaPool().Clear()
 	ctx.Game.CounterSpellOnStack(ctx.Targets[0])
 	return nil
