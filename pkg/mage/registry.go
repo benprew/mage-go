@@ -29,6 +29,9 @@ func NewRegistry() *Registry {
 
 // Register adds a card factory to this registry.
 func (r *Registry) Register(name string, factory CardFactory) {
+	if err := validateFactory(name, factory); err != nil {
+		panic(err)
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.factories[name] = factory

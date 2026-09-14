@@ -6,8 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -173,7 +172,7 @@ func registerArtifacts() {
 							Controller:    controller,
 							MatchEventID:  targetID,
 							MatchFromZone: ZoneBattlefield,
-							Effects:       []Effect{SacrificeSource()},
+							Effects:       []Effect{Sacrifice(This)},
 						})
 
 						// If the creature deals damage to a creature this turn, the creature dealt damage can't be regenerated this turn.

@@ -538,13 +538,13 @@ func registerCreatures() {
 			// When attacks: register delayed end-of-combat sacrifice + 5 damage
 			WithAbility(AttacksTrigger(
 				RegisterDelayedTriggerStep(EvtEndOfCombat, "",
-					SacrificeSource(),
+					Sacrifice(This),
 					DealDamageToPlayers(Fixed(5), SelectController()),
 				), false)),
 			// When blocks: register delayed end-of-combat sacrifice + 5 damage
 			WithAbility(BlocksTrigger(
 				RegisterDelayedTriggerStep(EvtEndOfCombat, "",
-					SacrificeSource(),
+					Sacrifice(This),
 					DealDamageToPlayers(Fixed(5), SelectController()),
 				), false)),
 			// {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.

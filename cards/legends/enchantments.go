@@ -162,7 +162,7 @@ func registerEnchantments() {
 					&PipelineData{
 						Steps: []Effect{
 							SnapshotAttached("host"),
-							SacrificeSourceStep(),
+							Sacrifice(This),
 							AddCounters(P1P1, Fixed(1)).Targeting(ToGathered("host")),
 							GrantAttrToGathered("host", Flying),
 						},

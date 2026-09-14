@@ -5,8 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -390,19 +389,9 @@ func registerEnchantments() {
 				),
 				false,
 			)),
-			WithAbility(NewStateTriggered(false,
-				FuncEffect(
-					"sacrifice Mana Vortex when there are no lands on the battlefield",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							g.DoSacrifice(perm)
-						}
-						return nil
-					},
-				),
-			).SetConditionData(NoBattlefieldPermanentMatching{Filter: IsLand})),
+			WithAbility(WhenState(BattlefieldHasNone(IsLand),
+				Pipeline("sacrifice Mana Vortex when there are no lands on the battlefield",
+					EffectProperties{Outcome: OutcomeDetriment}, Sacrifice(This)))),
 		)
 	})
 

@@ -95,10 +95,17 @@ type (
 	CardOption                                = mage.CardOption
 	AbilityOption                             = mage.AbilityOption
 	ActionOption                              = mage.ActionOption
+	CardFilter                                = mage.CardFilter
+	StackObject                               = mage.StackObject
+	AnimateLandOptions                        = mage.AnimateLandOptions
+	ModalTriggerMode                          = mage.ModalTriggerMode
 
 	// Trigger condition data (interface + concrete types)
 	TriggerConditionData                   = mage.TriggerConditionData
 	EventSourceIsSelf                      = mage.EventSourceIsSelf
+	EventSourceNotSelf                     = mage.EventSourceNotSelf
+	EventSourceControlledByController      = mage.EventSourceControlledByController
+	EventSourceMatchesPermanentFilter      = mage.EventSourceMatchesPermanentFilter
 	EventPlayerIsController                = mage.EventPlayerIsController
 	EventPlayerIsNotController             = mage.EventPlayerIsNotController
 	SourceIsAttachedToEventSource          = mage.SourceIsAttachedToEventSource
@@ -107,11 +114,10 @@ type (
 	SourceNotSummonSick                    = mage.SourceNotSummonSick
 	SourceIsUnblockedAttacker              = mage.SourceIsUnblockedAttacker
 	HasAttackedThisTurnCond                = mage.HasAttackedThisTurnCond
-	ControllerHasNoPermanentMatching       = mage.ControllerHasNoPermanentMatching
-	NoBattlefieldPermanentMatching         = mage.NoBattlefieldPermanentMatching
 	SourceIsTapped                         = mage.SourceIsTapped
 	SourceIsUntapped                       = mage.SourceIsUntapped
 	EventFlagIsFalse                       = mage.EventFlagIsFalse
+	EventFlagIsTrue                        = mage.EventFlagIsTrue
 	SourceOnBattlefield                    = mage.SourceOnBattlefield
 	CombatGroupCountEquals                 = mage.CombatGroupCountEquals
 	EventAmountGreaterThan                 = mage.EventAmountGreaterThan
@@ -120,12 +126,14 @@ type (
 	EventSourceWasColor                    = mage.EventSourceWasColor
 	EventSourceWasNotColor                 = mage.EventSourceWasNotColor
 	EventZoneChangeMatches                 = mage.EventZoneChangeMatches
+	ResolvingSpellCastFromZone             = mage.ResolvingSpellCastFromZone
 	SourceInOwnGraveyardWithCreaturesAbove = mage.SourceInOwnGraveyardWithCreaturesAbove
 	SourceAttackedOrBlockedThisTurn        = mage.SourceAttackedOrBlockedThisTurn
 	SpellCastIsType                        = mage.SpellCastIsType
 	OpponentCastNthSpellOfType             = mage.OpponentCastNthSpellOfType
 	OpponentCastSpellOfType                = mage.OpponentCastSpellOfType
 	EventTargetIsSelf                      = mage.EventTargetIsSelf
+	EventTargetIsSelfFirstTimeThisTurn     = mage.EventTargetIsSelfFirstTimeThisTurn
 	EventSourceHasSubType                  = mage.EventSourceHasSubType
 	AttachedToIsEventSourceNoTapCost       = mage.AttachedToIsEventSourceNoTapCost
 	AttachedToDealsDamageToController      = mage.AttachedToDealsDamageToController
@@ -162,45 +170,52 @@ var Register = mage.Register
 // =============================================================================
 
 var (
-	NewCreature                  = mage.NewCreature
-	NewArtifact                  = mage.NewArtifact
-	NewEnchantment               = mage.NewEnchantment
-	NewInstant                   = mage.NewInstant
-	NewSorcery                   = mage.NewSorcery
-	NewLand                      = mage.NewLand
-	NewLandDestruction           = mage.NewLandDestruction
-	NewAura                      = mage.NewAura
-	NewBoostAura                 = mage.NewBoostAura
-	WithAuraAIProfile            = mage.WithAuraAIProfile
-	NewLuckyCharm                = mage.NewLuckyCharm
-	NewToken                     = mage.NewToken
-	WithSubTypes                 = mage.WithSubTypes
-	WithCardType                 = mage.WithCardType
-	WithKeyword                  = mage.WithKeyword
-	WithAbility                  = mage.WithAbility
-	WithStaticAbility            = mage.WithStaticAbility
-	WithActivatedAbility         = mage.WithActivatedAbility
-	WithCost                     = mage.WithCost
-	WithTarget                   = mage.WithTarget
-	WithAnyPlayerMay             = mage.WithAnyPlayerMay
-	WithETBEffect                = mage.WithETBEffect
-	WithSuperTypes               = mage.WithSuperTypes
-	WithAdditionalCost           = mage.WithAdditionalCost
-	WithCastTarget               = mage.WithCastTarget
-	WithOncePerTurn              = mage.WithOncePerTurn
-	WithEffect                   = mage.WithEffect
-	WithAIHint                   = mage.WithAIHint
-	WithUpkeepOnly               = mage.WithUpkeepOnly
-	WithControlledSinceTurnStart = mage.WithControlledSinceTurnStart
-	WithOpponentOnlyMay          = mage.WithOpponentOnlyMay
-	WithMaxActivationsPerTurn    = mage.WithMaxActivationsPerTurn
-	WithYourTurnOnly             = mage.WithYourTurnOnly
-	WithManaAbility              = mage.WithManaAbility
-	WithMultiManaAbility         = mage.WithMultiManaAbility
-	WithDynamicManaAbility       = mage.WithDynamicManaAbility
-	WithAnyColorMana             = mage.WithAnyColorMana
-	WithStepOnly                 = mage.WithStepOnly
-	WithSorcerySpeed             = mage.WithSorcerySpeed
+	NewCreature                   = mage.NewCreature
+	NewArtifact                   = mage.NewArtifact
+	NewEnchantment                = mage.NewEnchantment
+	NewInstant                    = mage.NewInstant
+	NewSorcery                    = mage.NewSorcery
+	NewLand                       = mage.NewLand
+	NewLandDestruction            = mage.NewLandDestruction
+	NewAura                       = mage.NewAura
+	NewBoostAura                  = mage.NewBoostAura
+	WithAuraAIProfile             = mage.WithAuraAIProfile
+	NewLuckyCharm                 = mage.NewLuckyCharm
+	NewToken                      = mage.NewToken
+	WithSubTypes                  = mage.WithSubTypes
+	WithCardType                  = mage.WithCardType
+	WithKeyword                   = mage.WithKeyword
+	WithAbility                   = mage.WithAbility
+	WithStaticAbility             = mage.WithStaticAbility
+	WithActivatedAbility          = mage.WithActivatedAbility
+	WithCost                      = mage.WithCost
+	WithTarget                    = mage.WithTarget
+	WithAnyPlayerMay              = mage.WithAnyPlayerMay
+	WithETBEffect                 = mage.WithETBEffect
+	WithSuperTypes                = mage.WithSuperTypes
+	WithAdditionalCost            = mage.WithAdditionalCost
+	WithCastTarget                = mage.WithCastTarget
+	WithOncePerTurn               = mage.WithOncePerTurn
+	WithEffect                    = mage.WithEffect
+	WithAIHint                    = mage.WithAIHint
+	WithUpkeepOnly                = mage.WithUpkeepOnly
+	WithControlledSinceTurnStart  = mage.WithControlledSinceTurnStart
+	WithOpponentOnlyMay           = mage.WithOpponentOnlyMay
+	WithMaxActivationsPerTurn     = mage.WithMaxActivationsPerTurn
+	WithYourTurnOnly              = mage.WithYourTurnOnly
+	WithManaAbility               = mage.WithManaAbility
+	WithMultiManaAbility          = mage.WithMultiManaAbility
+	WithDynamicManaAbility        = mage.WithDynamicManaAbility
+	WithAnyColorMana              = mage.WithAnyColorMana
+	WithStepOnly                  = mage.WithStepOnly
+	WithSorcerySpeed              = mage.WithSorcerySpeed
+	WithActivationCondition       = mage.WithActivationCondition
+	WithAlternateCost             = mage.WithAlternateCost
+	WithGraveyardActivatedAbility = mage.WithGraveyardActivatedAbility
+	WithLifeGainReplacement       = mage.WithLifeGainReplacement
+	WithMillReplacement           = mage.WithMillReplacement
+	WithSelfCostReduction         = mage.WithSelfCostReduction
+	WithUncounterable             = mage.WithUncounterable
 )
 
 // =============================================================================
@@ -208,123 +223,148 @@ var (
 // =============================================================================
 
 var (
-	NewDynamicManaAbility                      = mage.NewDynamicManaAbility
-	NewModalActivated                          = mage.NewModalActivated
-	NewModalSpell                              = mage.NewModalSpell
-	ChosenColorManaProductions                 = mage.ChosenColorManaProductions
-	ManaProductionsForAbilityInGame            = mage.ManaProductionsForAbilityInGame
-	NewTriggered                               = mage.NewTriggered
-	NewStateTriggered                          = mage.NewStateTriggered
-	BeginningOfUpkeepTrigger                   = mage.BeginningOfUpkeepTrigger
-	AttacksTrigger                             = mage.AttacksTrigger
-	BlocksTrigger                              = mage.BlocksTrigger
-	BlocksOrBecomesBlockedTrigger              = mage.BlocksOrBecomesBlockedTrigger
-	EntersBattlefieldTrigger                   = mage.EntersBattlefieldTrigger
-	StaticAbility                              = mage.StaticAbility
-	GrantAbilityToAttached                     = mage.GrantAbilityToAttached
-	GrantActivatedAbilityToAttached            = mage.GrantActivatedAbilityToAttached
-	GrantActivatedAbilityToAll                 = mage.GrantActivatedAbilityToAll
-	GrantTriggeredAbilityToAll                 = mage.GrantTriggeredAbilityToAll
-	NewManaFlareAbility                        = mage.NewManaFlareAbility
-	NewAttachedManaBonusAbility                = mage.NewAttachedManaBonusAbility
-	BoostAttached                              = mage.BoostAttached
-	BoostAllCreaturesIncludingSelf             = mage.BoostAllCreaturesIncludingSelf
-	BoostAllCreatures                          = mage.BoostAllCreatures
-	BoostOtherControlledCreatures              = mage.BoostOtherControlledCreatures
-	GrantKeywordToAll                          = mage.GrantKeywordToAll
-	GrantKeywordToAllIncludingSource           = mage.GrantKeywordToAllIncludingSource
-	GrantKeywordToOtherControlled              = mage.GrantKeywordToOtherControlled
-	LimitLandUntaps                            = mage.LimitLandUntaps
-	PreventUntapForMatching                    = mage.PreventUntapForMatching
-	TemporaryAnimateUntilEndOfCombat           = mage.TemporaryAnimateUntilEndOfCombat
-	TemporaryAnimate                           = mage.TemporaryAnimate
-	ManaConversion                             = mage.ManaConversion
-	AnimateLands                               = mage.AnimateLands
-	GrantColorToAll                            = mage.GrantColorToAll
-	CyclopeanTombEffect                        = mage.CyclopeanTombEffect
-	PreventBlockingUntilEndOfCombat            = mage.PreventBlockingUntilEndOfCombat
-	IncreaseSpellCostForColor                  = mage.IncreaseSpellCostForColor
-	ChangeSubTypesForAll                       = mage.ChangeSubTypesForAll
-	BecomesBasicLandTargetEffect               = mage.BecomesBasicLandTargetEffect
-	BecomesBasicLandTargetUntilSourceLeaves    = mage.BecomesBasicLandTargetUntilSourceLeaves
-	BecomesBasicLandsEffect                    = mage.BecomesBasicLandsEffect
-	SetSubtypes                                = mage.SetSubtypes
-	AddSubtypes                                = mage.AddSubtypes
-	RemoveAllAbilities                         = mage.RemoveAllAbilities
-	RemoveAllAbilitiesFromAll                  = mage.RemoveAllAbilitiesFromAll
-	AllowUnlimitedLandPlays                    = mage.AllowUnlimitedLandPlays
-	RevealTopCardOfLibrary                     = mage.RevealTopCardOfLibrary
-	RevealTopCardsOfAllLibraries               = mage.RevealTopCardsOfAllLibraries
-	LimitCreatureUntaps                        = mage.LimitCreatureUntaps
-	BoostControlledCreatures                   = mage.BoostControlledCreatures
-	RevokeAttrFromControlled                   = mage.RevokeAttrFromControlled
-	PreventAllUntaps                           = mage.PreventAllUntaps
-	BoostAttachedByCount                       = mage.BoostAttachedByCount
-	BodyguardContinuous                        = mage.BodyguardContinuous
-	AnimateArtifact                            = mage.AnimateArtifact
-	ForTarget                                  = mage.ForTarget
-	Attached                                   = mage.Attached
-	TemporaryBoost                             = mage.TemporaryBoost
-	TemporaryKeyword                           = mage.TemporaryKeyword
-	SetBasePT                                  = mage.SetBasePT
-	ForAll                                     = mage.ForAll
-	ColorOverride                              = mage.ColorOverride
-	NullifyLandwalkEffect                      = mage.NullifyLandwalkEffect
-	WrapGrantedAbility                         = mage.WrapGrantedAbility
-	AttachedEffect                             = mage.AttachedEffect
-	PreventAttachedFromUntapping               = mage.PreventAttachedFromUntapping
-	PreventAttachedFromAttacking               = mage.PreventAttachedFromAttacking
-	GrantKeywordToControlled                   = mage.GrantKeywordToControlled
-	RevokeKeywordFromAll                       = mage.RevokeKeywordFromAll
-	RemoveKeywordFromAttached                  = mage.RemoveKeywordFromAttached
-	ChangeAttachedSubTypes                     = mage.ChangeAttachedSubTypes
-	ChangeAttachedSubTypesByChosenColor        = mage.ChangeAttachedSubTypesByChosenColor
-	BecomesBasicLandAttachedEffect             = mage.BecomesBasicLandAttachedEffect
-	BecomesChosenBasicLandAttachedEffect       = mage.BecomesChosenBasicLandAttachedEffect
-	GrantProtectionToAttached                  = mage.GrantProtectionToAttached
-	NewManaBonusAbility                        = mage.NewManaBonusAbility
-	ControlChangeContinuous                    = mage.ControlChangeContinuous
-	ControlAttached                            = mage.ControlAttached
-	ControlSourceByChosenPlayer                = mage.ControlSourceByChosenPlayer
-	GainControl                                = mage.GainControl
-	BeginningOfAttachedControllerUpkeepTrigger = mage.BeginningOfAttachedControllerUpkeepTrigger
-	DealsDamageToOpponentTrigger               = mage.DealsDamageToOpponentTrigger
-	SacrificeUnlessLand                        = mage.SacrificeUnlessLand
-	SacrificeIfControls                        = mage.SacrificeIfControls
-	BlocksOrBlockedByDamagedCreatureTrigger    = mage.BlocksOrBlockedByDamagedCreatureTrigger
-	ToughnessEqualsControlledCount             = mage.ToughnessEqualsControlledCount
-	CreatureDealtDamageBySourceDiesTrigger     = mage.CreatureDealtDamageBySourceDiesTrigger
-	DiesTrigger                                = mage.DiesTrigger
-	OnLeaveZone                                = mage.OnLeaveZone
-	DiesCreatureTrigger                        = mage.DiesCreatureTrigger
-	EntersWithNCounters                        = mage.EntersWithNCounters
-	EntersWithXCounters                        = mage.EntersWithXCounters
-	BeginningOfEachEndStepTrigger              = mage.BeginningOfEachEndStepTrigger
-	CopyCreatureOnETB                          = mage.CopyCreatureOnETB
-	FrankensteinsMonsterAbility                = mage.FrankensteinsMonsterAbility
-	NamelessRaceAbility                        = mage.NamelessRaceAbility
-	ETBEffect                                  = mage.ETBEffect
-	AnyCreatureDiesTrigger                     = mage.AnyCreatureDiesTrigger
-	BeginningOfEachDrawStepTrigger             = mage.BeginningOfEachDrawStepTrigger
-	BeginningOfEachUpkeepTrigger               = mage.BeginningOfEachUpkeepTrigger
-	WheneverLandEntersBattlefieldTrigger       = mage.WheneverLandEntersBattlefieldTrigger
-	WhenOpponentPermanentBecomesTappedTrigger  = mage.WhenOpponentPermanentBecomesTappedTrigger
-	WhenAttachedBecomesTappedTrigger           = mage.WhenAttachedBecomesTappedTrigger
-	WhenDamageDealtToThisTrigger               = mage.WhenDamageDealtToThisTrigger
-	RampageTrigger                             = mage.RampageTrigger
-	WheneverEnchantmentCastTrigger             = mage.WheneverEnchantmentCastTrigger
-	WheneverSpellCastTrigger                   = mage.WheneverSpellCastTrigger
-	ChooseOpponentOnETB                        = mage.ChooseOpponentOnETB
-	ChosenPlayerUpkeepTrigger                  = mage.ChosenPlayerUpkeepTrigger
-	PutIntoGraveyardFromBattlefieldTrigger     = mage.PutIntoGraveyardFromBattlefieldTrigger
-	NewSpellAbility                            = mage.NewSpellAbility
-	NewActivatedAbility                        = mage.NewActivatedAbility
-	NewTargetedSpell                           = mage.NewTargetedSpell
-	NewMultiTargetSpell                        = mage.NewMultiTargetSpell
-	ToAllMatching                              = mage.ToAllMatching
-	RegisterDelayedTriggerStep                 = mage.RegisterDelayedTriggerStep
-	SacrificeAtUpkeepUnlessPay                 = mage.SacrificeAtUpkeepUnlessPay
-	DamageUnlessPayMana                        = mage.DamageUnlessPayMana
+	ETBChooseColorOtherThan                                             = mage.ETBChooseColorOtherThan
+	NewDynamicManaAbility                                               = mage.NewDynamicManaAbility
+	NewModalActivated                                                   = mage.NewModalActivated
+	NewModalSpell                                                       = mage.NewModalSpell
+	ChosenColorManaProductions                                          = mage.ChosenColorManaProductions
+	ManaProductionsForAbilityInGame                                     = mage.ManaProductionsForAbilityInGame
+	NewTriggered                                                        = mage.NewTriggered
+	BeginningOfUpkeepTrigger                                            = mage.BeginningOfUpkeepTrigger
+	AttacksTrigger                                                      = mage.AttacksTrigger
+	BlocksTrigger                                                       = mage.BlocksTrigger
+	BlocksOrBecomesBlockedTrigger                                       = mage.BlocksOrBecomesBlockedTrigger
+	EntersBattlefieldTrigger                                            = mage.EntersBattlefieldTrigger
+	StaticAbility                                                       = mage.StaticAbility
+	GrantAbilityToAttached                                              = mage.GrantAbilityToAttached
+	GrantActivatedAbilityToAttached                                     = mage.GrantActivatedAbilityToAttached
+	GrantActivatedAbilityToAll                                          = mage.GrantActivatedAbilityToAll
+	GrantTriggeredAbilityToAll                                          = mage.GrantTriggeredAbilityToAll
+	NewManaFlareAbility                                                 = mage.NewManaFlareAbility
+	NewAttachedManaBonusAbility                                         = mage.NewAttachedManaBonusAbility
+	BoostAttached                                                       = mage.BoostAttached
+	BoostAllCreaturesIncludingSelf                                      = mage.BoostAllCreaturesIncludingSelf
+	BoostAllCreatures                                                   = mage.BoostAllCreatures
+	BoostOtherControlledCreatures                                       = mage.BoostOtherControlledCreatures
+	GrantKeywordToAll                                                   = mage.GrantKeywordToAll
+	GrantKeywordToAllIncludingSource                                    = mage.GrantKeywordToAllIncludingSource
+	GrantKeywordToOtherControlled                                       = mage.GrantKeywordToOtherControlled
+	LimitLandUntaps                                                     = mage.LimitLandUntaps
+	PreventUntapForMatching                                             = mage.PreventUntapForMatching
+	TemporaryAnimateUntilEndOfCombat                                    = mage.TemporaryAnimateUntilEndOfCombat
+	TemporaryAnimate                                                    = mage.TemporaryAnimate
+	ManaConversion                                                      = mage.ManaConversion
+	AnimateLands                                                        = mage.AnimateLands
+	GrantColorToAll                                                     = mage.GrantColorToAll
+	CyclopeanTombEffect                                                 = mage.CyclopeanTombEffect
+	PreventBlockingUntilEndOfCombat                                     = mage.PreventBlockingUntilEndOfCombat
+	IncreaseSpellCostForColor                                           = mage.IncreaseSpellCostForColor
+	ChangeSubTypesForAll                                                = mage.ChangeSubTypesForAll
+	BecomesBasicLandTargetEffect                                        = mage.BecomesBasicLandTargetEffect
+	BecomesBasicLandTargetUntilSourceLeaves                             = mage.BecomesBasicLandTargetUntilSourceLeaves
+	BecomesBasicLandsEffect                                             = mage.BecomesBasicLandsEffect
+	SetSubtypes                                                         = mage.SetSubtypes
+	AddSubtypes                                                         = mage.AddSubtypes
+	RemoveAllAbilities                                                  = mage.RemoveAllAbilities
+	RemoveAllAbilitiesFromAll                                           = mage.RemoveAllAbilitiesFromAll
+	AllowUnlimitedLandPlays                                             = mage.AllowUnlimitedLandPlays
+	RevealTopCardOfLibrary                                              = mage.RevealTopCardOfLibrary
+	RevealTopCardsOfAllLibraries                                        = mage.RevealTopCardsOfAllLibraries
+	LimitCreatureUntaps                                                 = mage.LimitCreatureUntaps
+	BoostControlledCreatures                                            = mage.BoostControlledCreatures
+	RevokeAttrFromControlled                                            = mage.RevokeAttrFromControlled
+	PreventAllUntaps                                                    = mage.PreventAllUntaps
+	BoostAttachedByCount                                                = mage.BoostAttachedByCount
+	BodyguardContinuous                                                 = mage.BodyguardContinuous
+	AnimateArtifact                                                     = mage.AnimateArtifact
+	ForTarget                                                           = mage.ForTarget
+	Attached                                                            = mage.Attached
+	TemporaryBoost                                                      = mage.TemporaryBoost
+	TemporaryKeyword                                                    = mage.TemporaryKeyword
+	SetBasePT                                                           = mage.SetBasePT
+	ForAll                                                              = mage.ForAll
+	ColorOverride                                                       = mage.ColorOverride
+	NullifyLandwalkEffect                                               = mage.NullifyLandwalkEffect
+	WrapGrantedAbility                                                  = mage.WrapGrantedAbility
+	AttachedEffect                                                      = mage.AttachedEffect
+	PreventAttachedFromUntapping                                        = mage.PreventAttachedFromUntapping
+	PreventAttachedFromAttacking                                        = mage.PreventAttachedFromAttacking
+	GrantKeywordToControlled                                            = mage.GrantKeywordToControlled
+	RevokeKeywordFromAll                                                = mage.RevokeKeywordFromAll
+	RemoveKeywordFromAttached                                           = mage.RemoveKeywordFromAttached
+	ChangeAttachedSubTypes                                              = mage.ChangeAttachedSubTypes
+	ChangeAttachedSubTypesByChosenColor                                 = mage.ChangeAttachedSubTypesByChosenColor
+	BecomesBasicLandAttachedEffect                                      = mage.BecomesBasicLandAttachedEffect
+	BecomesChosenBasicLandAttachedEffect                                = mage.BecomesChosenBasicLandAttachedEffect
+	GrantProtectionToAttached                                           = mage.GrantProtectionToAttached
+	NewManaBonusAbility                                                 = mage.NewManaBonusAbility
+	ControlChangeContinuous                                             = mage.ControlChangeContinuous
+	ControlAttached                                                     = mage.ControlAttached
+	ControlSourceByChosenPlayer                                         = mage.ControlSourceByChosenPlayer
+	GainControl                                                         = mage.GainControl
+	BeginningOfAttachedControllerUpkeepTrigger                          = mage.BeginningOfAttachedControllerUpkeepTrigger
+	DealsDamageToOpponentTrigger                                        = mage.DealsDamageToOpponentTrigger
+	BlocksOrBlockedByDamagedCreatureTrigger                             = mage.BlocksOrBlockedByDamagedCreatureTrigger
+	ToughnessEqualsControlledCount                                      = mage.ToughnessEqualsControlledCount
+	CreatureDealtDamageBySourceDiesTrigger                              = mage.CreatureDealtDamageBySourceDiesTrigger
+	DiesTrigger                                                         = mage.DiesTrigger
+	OnLeaveZone                                                         = mage.OnLeaveZone
+	DiesCreatureTrigger                                                 = mage.DiesCreatureTrigger
+	EntersWithNCounters                                                 = mage.EntersWithNCounters
+	EntersWithXCounters                                                 = mage.EntersWithXCounters
+	BeginningOfEachEndStepTrigger                                       = mage.BeginningOfEachEndStepTrigger
+	CopyCreatureOnETB                                                   = mage.CopyCreatureOnETB
+	FrankensteinsMonsterAbility                                         = mage.FrankensteinsMonsterAbility
+	NamelessRaceAbility                                                 = mage.NamelessRaceAbility
+	ETBEffect                                                           = mage.ETBEffect
+	AnyCreatureDiesTrigger                                              = mage.AnyCreatureDiesTrigger
+	BeginningOfEachDrawStepTrigger                                      = mage.BeginningOfEachDrawStepTrigger
+	BeginningOfEachUpkeepTrigger                                        = mage.BeginningOfEachUpkeepTrigger
+	WheneverLandEntersBattlefieldTrigger                                = mage.WheneverLandEntersBattlefieldTrigger
+	WhenOpponentPermanentBecomesTappedTrigger                           = mage.WhenOpponentPermanentBecomesTappedTrigger
+	WhenAttachedBecomesTappedTrigger                                    = mage.WhenAttachedBecomesTappedTrigger
+	WhenDamageDealtToThisTrigger                                        = mage.WhenDamageDealtToThisTrigger
+	RampageTrigger                                                      = mage.RampageTrigger
+	WheneverEnchantmentCastTrigger                                      = mage.WheneverEnchantmentCastTrigger
+	WheneverSpellCastTrigger                                            = mage.WheneverSpellCastTrigger
+	ChooseOpponentOnETB                                                 = mage.ChooseOpponentOnETB
+	ChosenPlayerUpkeepTrigger                                           = mage.ChosenPlayerUpkeepTrigger
+	PutIntoGraveyardFromBattlefieldTrigger                              = mage.PutIntoGraveyardFromBattlefieldTrigger
+	NewSpellAbility                                                     = mage.NewSpellAbility
+	NewActivatedAbility                                                 = mage.NewActivatedAbility
+	NewTargetedSpell                                                    = mage.NewTargetedSpell
+	NewMultiTargetSpell                                                 = mage.NewMultiTargetSpell
+	ToAllMatching                                                       = mage.ToAllMatching
+	RegisterDelayedTriggerStep                                          = mage.RegisterDelayedTriggerStep
+	SacrificeAtUpkeepUnlessPay                                          = mage.SacrificeAtUpkeepUnlessPay
+	DamageUnlessPayMana                                                 = mage.DamageUnlessPayMana
+	AdditionalLandPlayStatic                                            = mage.AdditionalLandPlayStatic
+	AnimateLandWhileSourceOnBattlefield                                 = mage.AnimateLandWhileSourceOnBattlefield
+	BecomesColors                                                       = mage.BecomesColors
+	BecomesSubType                                                      = mage.BecomesSubType
+	BeginningOfYourEndStepFromGraveyard                                 = mage.BeginningOfYourEndStepFromGraveyard
+	CastAsThoughHadFlash                                                = mage.CastAsThoughHadFlash
+	DoubleLifeGainForController                                         = mage.DoubleLifeGainForController
+	DoubleMillForOpponents                                              = mage.DoubleMillForOpponents
+	ETBChooseOpponent                                                   = mage.ETBChooseOpponent
+	EntersWithComputedCounters                                          = mage.EntersWithComputedCounters
+	GrantSubTypeToTarget                                                = mage.GrantSubTypeToTarget
+	GrantTriggeredAbilityToAllIncludingSource                           = mage.GrantTriggeredAbilityToAllIncludingSource
+	PlayLandsFromTopOfLibrary                                           = mage.PlayLandsFromTopOfLibrary
+	PreventAttackingIfDefenderControlsAsManyOrMore                      = mage.PreventAttackingIfDefenderControlsAsManyOrMore
+	PreventBlockByPowerLessThanSource                                   = mage.PreventBlockByPowerLessThanSource
+	PreventBlockingIfAttackerControlsAsManyOrMore                       = mage.PreventBlockingIfAttackerControlsAsManyOrMore
+	ProtectionFromSubType                                               = mage.ProtectionFromSubType
+	RegisterUncounterableStatic                                         = mage.RegisterUncounterableStatic
+	WheneverOneOrMoreCreaturesAttackTrigger                             = mage.WheneverOneOrMoreCreaturesAttackTrigger
+	WheneverOneOrMoreCreaturesYouControlAttackTrigger                   = mage.WheneverOneOrMoreCreaturesYouControlAttackTrigger
+	WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger = mage.WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger
+	WheneverOpponentDiscardsTrigger                                     = mage.WheneverOpponentDiscardsTrigger
+	WheneverPermanentDealsCombatDamageToPlayerTrigger                   = mage.WheneverPermanentDealsCombatDamageToPlayerTrigger
+	WheneverPermanentEntersBattlefieldTrigger                           = mage.WheneverPermanentEntersBattlefieldTrigger
+	WheneverYouCastSpellTrigger                                         = mage.WheneverYouCastSpellTrigger
+	WheneverYouGainLifeTrigger                                          = mage.WheneverYouGainLifeTrigger
+	WheneverYouSacrificeCreatureTrigger                                 = mage.WheneverYouSacrificeCreatureTrigger
 )
 
 // =============================================================================
@@ -333,6 +373,8 @@ var (
 
 var (
 	// Reusable classic card effects
+	WormsOfTheEarthEffect                        = mage.WormsOfTheEarthEffect
+	OnTargetDiesThisTurn                         = mage.OnTargetDiesThisTurn
 	AladdinsRingEffect                           = mage.AladdinsRingEffect
 	AncestralRecallEffect                        = mage.AncestralRecallEffect
 	BerserkEffect                                = mage.BerserkEffect
@@ -376,13 +418,13 @@ var (
 	// Removal / combat
 	DestroyTarget                             = mage.DestroyTarget
 	DestroyTargetPermanent                    = mage.DestroyTargetPermanent
+	ExileTarget                               = mage.ExileTarget
 	DestroyTargetNoRegen                      = mage.DestroyTargetNoRegen
 	DestroyTargetArtifact                     = mage.DestroyTargetArtifact
 	DestroyTargetNoRegenStep                  = mage.DestroyTargetNoRegenStep
 	RegenerateTarget                          = mage.RegenerateTarget
 	RegenerateGathered                        = mage.RegenerateGathered
 	PreventDamageToTarget                     = mage.PreventDamageToTarget
-	SacrificeSource                           = mage.SacrificeSource
 	Tap                                       = mage.Tap
 	UntapSource                               = mage.UntapSource
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
@@ -398,6 +440,7 @@ var (
 	ReturnTargetFromAnyGraveyardToBattlefield = mage.ReturnTargetFromAnyGraveyardToBattlefield
 	ReturnFromGraveyardToHandTarget           = mage.ReturnFromGraveyardToHandTarget
 	ExileSourceFromGraveyard                  = mage.ExileSourceFromGraveyard
+	ExileTargetCardFromGraveyardStep          = mage.ExileTargetCardFromGraveyardStep
 	ReturnSourceToHand                        = mage.ReturnSourceToHand
 	SearchLibraryToHand                       = mage.SearchLibraryToHand
 	SearchLibraryToBattlefield                = mage.SearchLibraryToBattlefield
@@ -418,9 +461,11 @@ var (
 	GainLifeFromVar                           = mage.GainLifeFromVar
 	GainLifeControllerFromVar                 = mage.GainLifeControllerFromVar
 	ModalEffect                               = mage.ModalEffect
+	ModalTriggerEffect                        = mage.ModalTriggerEffect
+	MayPayMana                                = mage.MayPayMana
+	Scry                                      = mage.Scry
 	AddPreventionShieldToControllerStep       = mage.AddPreventionShieldToControllerStep
 	AddReverseDamageShieldStep                = mage.AddReverseDamageShieldStep
-	SacrificeSourceStep                       = mage.SacrificeSourceStep
 	AddContinuousEffectsStep                  = mage.AddContinuousEffectsStep
 	VarPlayer                                 = mage.VarPlayer
 	TapAllLands                               = mage.TapAllLands
@@ -479,8 +524,10 @@ var (
 	// Damage / life
 	GainLife                  = mage.GainLife
 	GainLifeAmount            = mage.GainLifeAmount
+	LoseLife                  = mage.LoseLife
 	LoseLifeAmount            = mage.LoseLifeAmount
 	GainLifeTarget            = mage.GainLifeTarget
+	TargetPlayerLoseLife      = mage.TargetPlayerLoseLife
 	PoisonTargetPlayer        = mage.PoisonTargetPlayer
 	DealDamage                = mage.DealDamage
 	DealDamageToPlayers       = mage.DealDamageToPlayers
@@ -504,8 +551,10 @@ var (
 	RevokeLandwalk                         = mage.RevokeLandwalk
 	AddCounters                            = mage.AddCounters
 	RemoveCounters                         = mage.RemoveCounters
+	MoveCountersFromSourceToTarget         = mage.MoveCountersFromSourceToTarget
 	ToAttached                             = mage.ToAttached
 	ToTarget                               = mage.ToTarget
+	ToAllTargets                           = mage.ToAllTargets
 	ToSource                               = mage.ToSource
 	ToBlockingOrBlockedBySource            = mage.ToBlockingOrBlockedBySource
 	ToGathered                             = mage.ToGathered
@@ -520,15 +569,19 @@ var (
 	PTEqualsControlledCount                = mage.PTEqualsControlledCount
 
 	// Tokens / snapshot
-	CreateColoredToken = mage.CreateColoredToken
-	CreateToken        = mage.CreateToken
-	CreateTokens       = mage.CreateTokens
-	AddMana            = mage.AddMana
-	AddAnyMana         = mage.AddAnyMana
-	DiscardCards       = mage.DiscardCards
-	SnapshotPermanent  = mage.SnapshotPermanent
-	SnapshotTarget     = mage.SnapshotTarget
-	SnapshotAttached   = mage.SnapshotAttached
+	CreateColoredToken   = mage.CreateColoredToken
+	CreateToken          = mage.CreateToken
+	CreateTokens         = mage.CreateTokens
+	CreateFoodToken      = mage.CreateFoodToken
+	CreateTreasureToken  = mage.CreateTreasureToken
+	CreateTreasureTokens = mage.CreateTreasureTokens
+	TokenWithAbilities   = mage.TokenWithAbilities
+	AddMana              = mage.AddMana
+	AddAnyMana           = mage.AddAnyMana
+	DiscardCards         = mage.DiscardCards
+	SnapshotPermanent    = mage.SnapshotPermanent
+	SnapshotTarget       = mage.SnapshotTarget
+	SnapshotAttached     = mage.SnapshotAttached
 
 	// Bundled static abilities
 	ProtectionFromColor                             = mage.ProtectionFromColor
@@ -568,44 +621,53 @@ var (
 // =============================================================================
 
 var (
-	And                  = mage.And
-	Or                   = mage.Or
-	Not                  = mage.Not
-	HasSubType           = mage.HasSubType
-	HasKeywordFilter     = mage.HasKeywordFilter
-	NotHasKeywordFilter  = mage.NotHasKeywordFilter
-	IsID                 = mage.IsID
-	IsBandedWith         = mage.IsBandedWith
-	IsCreature           = mage.IsCreature
-	IsArtifact           = mage.IsArtifact
-	IsEnchantment        = mage.IsEnchantment
-	IsLand               = mage.IsLand
-	IsLegendary          = mage.IsLegendary
-	IsToken              = mage.IsToken
-	NewPermanentFilter   = mage.NewPermanentFilter
-	NewCardFilter        = mage.NewCardFilter
-	IsArtifactCard       = mage.IsArtifactCard
-	CreatedByFilter      = mage.CreatedByFilter
-	HasPowerGTE          = mage.HasPowerGTE
-	HasPowerLTE          = mage.HasPowerLTE
-	IsTapped             = mage.IsTapped
-	IsUntapped           = mage.IsUntapped
-	IsEnchanted          = mage.IsEnchanted
-	Named                = mage.Named
-	IsAttacking          = mage.IsAttacking
-	IsBlocking           = mage.IsBlocking
-	ControlledBy         = mage.ControlledBy
-	NotControlledBy      = mage.NotControlledBy
-	OwnedBy              = mage.OwnedBy
-	NotOwnedBy           = mage.NotOwnedBy
-	PrintedInSet         = mage.PrintedInSet
-	IsAuraOnLand         = mage.IsAuraOnLand
-	HasColorFilter       = mage.HasColorFilter
-	HasColorCardFilter   = mage.HasColorCardFilter
-	HasSubTypeCardFilter = mage.HasSubTypeCardFilter
-	IsPermanentCard      = mage.IsPermanentCard
-	AndCardFilter        = mage.AndCardFilter
-	AnyPermanent         = mage.AnyPermanent
+	And                      = mage.And
+	Or                       = mage.Or
+	Not                      = mage.Not
+	HasSubType               = mage.HasSubType
+	HasKeywordFilter         = mage.HasKeywordFilter
+	NotHasKeywordFilter      = mage.NotHasKeywordFilter
+	IsID                     = mage.IsID
+	IsBandedWith             = mage.IsBandedWith
+	IsCreature               = mage.IsCreature
+	IsCreatureCard           = mage.IsCreatureCard
+	IsEnchantmentCard        = mage.IsEnchantmentCard
+	IsArtifact               = mage.IsArtifact
+	IsEnchantment            = mage.IsEnchantment
+	IsLand                   = mage.IsLand
+	IsLegendary              = mage.IsLegendary
+	IsToken                  = mage.IsToken
+	NewPermanentFilter       = mage.NewPermanentFilter
+	NewCardFilter            = mage.NewCardFilter
+	IsArtifactCard           = mage.IsArtifactCard
+	CreatedByFilter          = mage.CreatedByFilter
+	HasPowerGTE              = mage.HasPowerGTE
+	HasPowerLTE              = mage.HasPowerLTE
+	IsTapped                 = mage.IsTapped
+	IsUntapped               = mage.IsUntapped
+	IsEnchanted              = mage.IsEnchanted
+	Named                    = mage.Named
+	IsAttacking              = mage.IsAttacking
+	IsBlocking               = mage.IsBlocking
+	ControlledBy             = mage.ControlledBy
+	NotControlledBy          = mage.NotControlledBy
+	OwnedBy                  = mage.OwnedBy
+	NotOwnedBy               = mage.NotOwnedBy
+	PrintedInSet             = mage.PrintedInSet
+	IsAuraOnLand             = mage.IsAuraOnLand
+	HasColorFilter           = mage.HasColorFilter
+	HasColorCardFilter       = mage.HasColorCardFilter
+	HasSubTypeCardFilter     = mage.HasSubTypeCardFilter
+	IsPermanentCard          = mage.IsPermanentCard
+	AndCardFilter            = mage.AndCardFilter
+	AnyPermanent             = mage.AnyPermanent
+	SpellAny                 = mage.SpellAny
+	NotID                    = mage.NotID
+	PowerGreaterThan         = mage.PowerGreaterThan
+	CondCreatureDiedThisTurn = mage.CondCreatureDiedThisTurn
+	SpellHasKeyword          = mage.SpellHasKeyword
+	SpellHasSubType          = mage.SpellHasSubType
+	SpellsAnd                = mage.SpellsAnd
 
 	// Static-ability "while" guards (functions, not filters, but used the
 	// same way at the call site)
@@ -623,6 +685,8 @@ var (
 // =============================================================================
 
 var (
+	TargetCreatureOpponentControls          = mage.TargetCreatureOpponentControls
+	TargetPlayerOrPlaneswalker              = mage.TargetPlayerOrPlaneswalker
 	TargetCreature                          = mage.TargetCreature
 	TargetNCreatures                        = mage.TargetNCreatures
 	TargetXCreatures                        = mage.TargetXCreatures
@@ -663,6 +727,11 @@ var (
 	TargetCardYouOwnInAnte                  = mage.TargetCardYouOwnInAnte
 	TargetOpponent                          = mage.TargetOpponent
 	TargetOpponentChoice                    = mage.TargetOpponentChoice
+	TargetAnotherCreatureYouControl         = mage.TargetAnotherCreatureYouControl
+	TargetOtherCreatureInYourGraveyard      = mage.TargetOtherCreatureInYourGraveyard
+	TargetUpToNCardsInYourGraveyard         = mage.TargetUpToNCardsInYourGraveyard
+	TargetUpToNCreatures                    = mage.TargetUpToNCreatures
+	TargetUpToOneCreature                   = mage.TargetUpToOneCreature
 )
 
 // =============================================================================
@@ -697,6 +766,11 @@ var (
 	DiscardCost                                  = mage.DiscardCost
 	EitherCost                                   = mage.EitherCost
 	ExileMatchingCardFromGraveyardCost           = mage.ExileMatchingCardFromGraveyardCost
+	DiscardCardsWithDifferentNamesCost           = mage.DiscardCardsWithDifferentNamesCost
+	ExileFromGraveyardCost                       = mage.ExileFromGraveyardCost
+	ExileSelfFromGraveyardCost                   = mage.ExileSelfFromGraveyardCost
+	RemoveXCountersFromSourceCost                = mage.RemoveXCountersFromSourceCost
+	RevealFromHandCost                           = mage.RevealFromHandCost
 )
 
 // =============================================================================
@@ -731,6 +805,9 @@ var (
 	SelectTargetPermanentController = mage.SelectTargetPermanentController
 	SelectTargetPlayer              = mage.SelectTargetPlayer
 	SelectDefendingPlayer           = mage.SelectDefendingPlayer
+	AmountByGraveyardCount          = mage.AmountByGraveyardCount
+	AmountByTotalPower              = mage.AmountByTotalPower
+	CountZone                       = mage.CountZone
 )
 
 // Outcome enum values used in EffectProperties literals.
@@ -828,24 +905,27 @@ const (
 
 // Event types
 const (
-	EvtZoneChange       = core.EvtZoneChange
-	EvtBlockersDecl     = core.EvtBlockersDecl
-	EvtEndStep          = core.EvtEndStep
-	EvtDrawStep         = core.EvtDrawStep
-	EvtDamageDealt      = core.EvtDamageDealt
-	EvtTapped           = core.EvtTapped
-	EvtTappedForMana    = core.EvtTappedForMana
-	EvtUpkeep           = core.EvtUpkeep
-	EvtDeclaredAttacker = core.EvtDeclaredAttacker
-	EvtLifeGained       = core.EvtLifeGained
-	EvtLandPlayed       = core.EvtLandPlayed
-	EvtEndOfCombat      = core.EvtEndOfCombat
-	EvtBecameUntapped   = core.EvtBecameUntapped
-	EvtSpellCast        = core.EvtSpellCast
-	EvtBeginCombat      = core.EvtBeginCombat
-	EvtDeclaredBlocker  = core.EvtDeclaredBlocker
-	EvtAbilityActivated = core.EvtAbilityActivated
-	EvtCardDrawn        = core.EvtCardDrawn
+	EvtZoneChange        = core.EvtZoneChange
+	EvtBlockersDecl      = core.EvtBlockersDecl
+	EvtEndStep           = core.EvtEndStep
+	EvtDrawStep          = core.EvtDrawStep
+	EvtDamageDealt       = core.EvtDamageDealt
+	EvtTapped            = core.EvtTapped
+	EvtTappedForMana     = core.EvtTappedForMana
+	EvtUpkeep            = core.EvtUpkeep
+	EvtDeclaredAttacker  = core.EvtDeclaredAttacker
+	EvtLifeGained        = core.EvtLifeGained
+	EvtLandPlayed        = core.EvtLandPlayed
+	EvtEndOfCombat       = core.EvtEndOfCombat
+	EvtBecameUntapped    = core.EvtBecameUntapped
+	EvtSpellCast         = core.EvtSpellCast
+	EvtBeginCombat       = core.EvtBeginCombat
+	EvtDeclaredBlocker   = core.EvtDeclaredBlocker
+	EvtAbilityActivated  = core.EvtAbilityActivated
+	EvtCardDrawn         = core.EvtCardDrawn
+	EvtBecomesTarget     = core.EvtBecomesTarget
+	EvtCombatDamageDealt = core.EvtCombatDamageDealt
+	EvtFight             = core.EvtFight
 )
 
 // Card types
@@ -878,10 +958,12 @@ const (
 	Red       = core.Red
 	Green     = core.Green
 	Colorless = core.Colorless
+	AnyColor  = core.AnyColor
 )
 
 // Keywords (these are Attr values in core/attr.go)
 const (
+	Flash                      = core.Flash
 	Flying                     = core.Flying
 	Reach                      = core.Reach
 	FirstStrike                = core.FirstStrike
@@ -929,6 +1011,8 @@ const (
 	AttrCantBeTargetedByArtifacts                     = core.AttrCantBeTargetedByArtifacts
 	AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked = core.AttrCantBeTargetedBySpellsUnlessAttackedOrBlocked
 	AttrDamageCantBePreventedOrRedirected             = core.AttrDamageCantBePreventedOrRedirected
+	AttrCantActivate                                  = core.AttrCantActivate
+	AttrCantActivateNonManaAbilities                  = core.AttrCantActivateNonManaAbilities
 	EntersTapped                                      = core.EntersTapped
 )
 
@@ -1010,4 +1094,37 @@ var (
 	// TapMaintainedTargetEffect: target effect the source keeps active by staying
 	// tapped; the untap step auto-untaps the source once the target leaves play.
 	TapMaintainedTargetEffect = mage.TapMaintainedTargetEffect
+)
+
+// Composable state-trigger and source-sacrifice expressions.
+type (
+	ResolvingEffect    = mage.ResolvingEffect
+	PermanentRef       = mage.PermanentRef
+	StateCondition     = mage.StateCondition
+	StateReader        = mage.StateReader
+	StateContext       = mage.StateContext
+	StatePermanent     = mage.StatePermanent
+	StateDependency    = mage.StateDependency
+	DefinitionMetadata = mage.DefinitionMetadata
+)
+
+const (
+	StateBattlefield   = mage.StateBattlefield
+	StateSourceChoices = mage.StateSourceChoices
+)
+
+var (
+	This               = mage.This
+	Sacrifice          = mage.Sacrifice
+	WhenState          = mage.WhenState
+	Controls           = mage.Controls
+	ControlsNone       = mage.ControlsNone
+	BattlefieldHasNone = mage.BattlefieldHasNone
+	AllConditions      = mage.AllConditions
+	AnyCondition       = mage.AnyCondition
+	NotCondition       = mage.NotCondition
+	StateConditionFunc = mage.StateConditionFunc
+	IfState            = mage.IfState
+	Sequence           = mage.Sequence
+	InspectDefinition  = mage.InspectDefinition
 )

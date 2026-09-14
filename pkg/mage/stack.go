@@ -8,9 +8,10 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
-	stateKey stateTriggerKey
-	ID       uuid.UUID
-	Card     Card // non-nil for spells
+	sourceIncarnation uuid.UUID
+	stateKey          stateTriggerKey
+	ID                uuid.UUID
+	Card              Card // non-nil for spells
 	// ColorOverride is a layer-5 color-changing effect applied to this spell.
 	// It is carried to the permanent the spell becomes, but is not copiable.
 	ColorOverride *[]Color

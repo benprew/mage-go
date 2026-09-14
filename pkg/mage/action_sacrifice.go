@@ -247,16 +247,3 @@ func (e *SacrificeGatheredData) Apply(ctx *EffectContext) error {
 	}
 	return nil
 }
-
-// SacrificeSourceData sacrifices the source permanent in a pipeline.
-type SacrificeSourceData struct{}
-
-func SacrificeSourceStep() Effect                         { return &SacrificeSourceData{} }
-func (*SacrificeSourceData) Text() string                 { return "sacrifice" }
-func (*SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
-func (*SacrificeSourceData) Apply(ctx *EffectContext) error {
-	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil && perm.ControllerID() == ctx.Controller {
-		ctx.Game.DoSacrifice(perm)
-	}
-	return nil
-}

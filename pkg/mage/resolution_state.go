@@ -11,6 +11,8 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
+	sourceIncarnation uuid.UUID
+	sourceCaptured    bool
 	// X value for the currently resolving spell or activation
 	currentX int
 
@@ -157,6 +159,8 @@ func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard =
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
 	c := ResolutionState{
+		sourceIncarnation:      s.sourceIncarnation,
+		sourceCaptured:         s.sourceCaptured,
 		currentX:               s.currentX,
 		currentMode:            s.currentMode,
 		currentEventAmount:     s.currentEventAmount,

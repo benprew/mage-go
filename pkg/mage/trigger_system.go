@@ -11,26 +11,28 @@ import (
 // DelayedTrigger represents a one-shot triggered ability that fires when
 // a specific event occurs (e.g., "destroy this creature at end of turn").
 type DelayedTrigger struct {
-	EventType     EventType
-	TargetID      uuid.UUID
-	Effects       []Effect
-	SourceID      uuid.UUID
-	Controller    uuid.UUID
-	MatchEventID  uuid.UUID // if set, only fire when evt.SourceID matches
-	MatchPlayerID uuid.UUID // if set, only fire when evt.PlayerID matches
-	MatchTargetID uuid.UUID // if set, only fire when evt.TargetID matches
-	MatchFromZone Zone      // for EvtZoneChange: ZoneAny to skip the from check
-	MatchToZone   Zone      // for EvtZoneChange: ZoneAny to skip the to check
-	MatchFlag     bool      // if true, only fire when evt.Flag is true (e.g. combat damage)
-	Persistent    bool      // if true, trigger is not consumed after firing
+	sourceIncarnation uuid.UUID
+	EventType         EventType
+	TargetID          uuid.UUID
+	Effects           []Effect
+	SourceID          uuid.UUID
+	Controller        uuid.UUID
+	MatchEventID      uuid.UUID // if set, only fire when evt.SourceID matches
+	MatchPlayerID     uuid.UUID // if set, only fire when evt.PlayerID matches
+	MatchTargetID     uuid.UUID // if set, only fire when evt.TargetID matches
+	MatchFromZone     Zone      // for EvtZoneChange: ZoneAny to skip the from check
+	MatchToZone       Zone      // for EvtZoneChange: ZoneAny to skip the to check
+	MatchFlag         bool      // if true, only fire when evt.Flag is true (e.g. combat damage)
+	Persistent        bool      // if true, trigger is not consumed after firing
 }
 
 type pendingTrigger struct {
-	stateKey   stateTriggerKey
-	ability    TriggeredAbility
-	event      *GameEvent
-	sourceID   uuid.UUID
-	controller uuid.UUID
+	sourceIncarnation uuid.UUID
+	stateKey          stateTriggerKey
+	ability           TriggeredAbility
+	event             *GameEvent
+	sourceID          uuid.UUID
+	controller        uuid.UUID
 }
 
 type stateTriggerKey struct {

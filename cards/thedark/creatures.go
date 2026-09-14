@@ -3,8 +3,7 @@ package thedark
 import (
 	"github.com/google/uuid"
 
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -148,7 +147,7 @@ func registerCreatures() {
 		return NewCreature("Giant Shark", "{5}{U}", 4, 4,
 			WithSubTypes("Shark"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(SacrificeUnlessLand("Island")),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 			WithAbility(BlocksOrBlockedByDamagedCreatureTrigger(
 				CompositeEffects("gets +2/+0 and gains trample until end of turn",
 					Boost(Fixed(2), Fixed(0)).Targeting(ToSource()).Until(EndOfTurn),
@@ -365,7 +364,7 @@ func registerCreatures() {
 		return NewCreature("Goblins of the Flarg", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Warrior"),
 			WithKeyword(Mountainwalk),
-			WithAbility(SacrificeIfControls("Dwarf")),
+			WithAbility(WhenState(Controls(HasSubType("Dwarf")), Sacrifice(This))),
 		)
 	})
 

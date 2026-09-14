@@ -121,7 +121,7 @@ func registerCreatures() {
 				WithTarget(TargetDamageAnyTarget()),
 			),
 			// When you control no Islands, sacrifice Pirate Ship.
-			WithAbility(SacrificeUnlessLand("Island")),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 		)
 	})
 
@@ -780,7 +780,7 @@ func registerCreatures() {
 			WithStaticAbility(
 				PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island")),
 			),
-			WithAbility(SacrificeUnlessLand("Island")),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 		)
 	})
 

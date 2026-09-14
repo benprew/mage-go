@@ -11,11 +11,13 @@ import (
 // dispatch so intermediate values (snapshotted permanent properties, chosen
 // IDs, etc.) can flow between steps without closures.
 type EffectContext struct {
-	Game       *Game
-	SourceID   uuid.UUID
-	Controller uuid.UUID
-	Targets    []uuid.UUID
-	Vars       map[string]any
+	sourceIncarnation uuid.UUID
+	sourceCaptured    bool
+	Game              *Game
+	SourceID          uuid.UUID
+	Controller        uuid.UUID
+	Targets           []uuid.UUID
+	Vars              map[string]any
 
 	// DamageDistribution is set when the resolving stack object carries a
 	// pre-chosen damage distribution (divided-damage spells/abilities).

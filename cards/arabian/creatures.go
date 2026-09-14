@@ -93,8 +93,7 @@ func registerCreatures() {
 		return NewCreature("Dandân", "{U}{U}", 4, 1,
 			WithSubTypes("Fish"),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
-				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 		)
 	})
 
@@ -133,8 +132,7 @@ func registerCreatures() {
 				), false,
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
-			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
-				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 		)
 	})
 
@@ -150,8 +148,7 @@ func registerCreatures() {
 					GainLife(2),
 				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
-			WithAbility(NewTriggered(EvtZoneChange, false, SacrificeSource()).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}).
-				AndConditionData(ControllerHasNoPermanentMatching{Filter: HasSubType("Island")})),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 		)
 	})
 
@@ -213,8 +210,7 @@ func registerCreatures() {
 					}), false,
 			)),
 			// "When you control no lands, sacrifice Serendib Djinn."
-			WithAbility(NewStateTriggered(false, SacrificeSource()).
-				SetConditionData(ControllerHasNoPermanentMatching{Filter: IsLand})),
+			WithAbility(WhenState(ControlsNone(IsLand), Sacrifice(This))),
 		)
 	})
 

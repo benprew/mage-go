@@ -27,7 +27,7 @@ func SacrificeUnlessPayMana(cost string) Effect {
 		cost:       cost,
 		basePrompt: "pay " + cost + " or sacrifice",
 		keepName:   true,
-		ifNotPaid:  SacrificeSourceStep(),
+		ifNotPaid:  Sacrifice(This),
 	}
 }
 

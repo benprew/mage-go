@@ -3,8 +3,7 @@ package jumpstart
 import (
 	"github.com/google/uuid"
 
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -136,7 +135,7 @@ func registerLands() {
 				EntersBattlefieldTrigger(
 					UnlessTargetPays(SelectController(), ManaCostOf("{1}"),
 						"pay {1} or sacrifice Rupture Spire",
-						SacrificeSourceStep()),
+						Sacrifice(This)),
 					false,
 				),
 			),

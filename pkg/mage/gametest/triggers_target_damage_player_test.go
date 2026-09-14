@@ -24,7 +24,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		// "When this creature becomes the target of a spell or ability,
 		// sacrifice it." (Departed Deckhand pattern.)
 		reg("Trig Target Sac", func() mage.Card {
-			trig := mage.WheneverBecomesTargetTrigger(mage.SacrificeSource(), false)
+			trig := mage.WheneverBecomesTargetTrigger(mage.Sacrifice(mage.This), false)
 			return mage.NewCreature("Trig Target Sac", "{1}{U}", 2, 1,
 				mage.WithSubTypes("Spirit"),
 				mage.WithAbility(trig))

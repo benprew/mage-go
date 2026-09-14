@@ -9,14 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
-// Effect represents a one-shot effect that resolves. Each concrete type
-// implements Apply, which performs its mutations against the EffectContext.
-// Use ApplyEffect to run an Effect against a *Game.
-type Effect interface {
+// ResolvingEffect executes one resolving instruction. Use ApplyEffect to
+// supply its game and source context.
+type ResolvingEffect interface {
 	Text() string
 	Properties() EffectProperties
 	Apply(*EffectContext) error
 }
+
+// Effect is the temporary name for a resolving effect.
+type Effect = ResolvingEffect
 
 // funcEffect wraps an anonymous function as an Effect. Use FuncEffect to create
 // one-off effects inline in card definitions without needing a dedicated struct.
@@ -141,6 +143,13 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		Vars:                make(map[string]any),
 		DamageDistribution:  g.resolution.DamageDistribution(),
 		CounterDistribution: g.resolution.CounterDistribution(),
+	}
+	ctx.sourceCaptured = true
+	ctx.sourceIncarnation = g.resolution.sourceIncarnation
+	if !g.resolution.sourceCaptured {
+		if p := g.FindPermanent(sourceID); p != nil {
+			ctx.sourceIncarnation = p.incarnationID
+		}
 	}
 	err := e.Apply(ctx)
 	g.CheckStateTriggers()

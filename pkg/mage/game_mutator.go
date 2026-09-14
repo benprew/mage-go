@@ -308,6 +308,11 @@ func (g *Game) RemoveFromCombat(id uuid.UUID) {
 
 // PushStack pushes a stack object onto the stack.
 func (g *Game) PushStack(obj *StackObject) {
+	if obj.IsAbility && obj.sourceIncarnation == uuid.Nil {
+		if p := g.FindPermanent(obj.SourceID); p != nil {
+			obj.sourceIncarnation = p.incarnationID
+		}
+	}
 	g.pushStack(obj)
 }
 

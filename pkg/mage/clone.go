@@ -218,19 +218,21 @@ func cloneStack(s *Stack) *Stack {
 // cloneStackObject deep copies a StackObject.
 func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
-		ID:            obj.ID,
-		Card:          obj.Card, // shared Card ref
-		Controller:    obj.Controller,
-		SourceID:      obj.SourceID,
-		TargetSource:  obj.TargetSource,
-		IsAbility:     obj.IsAbility,
-		XValue:        obj.XValue,
-		ModeChoice:    obj.ModeChoice,
-		EventAmount:   obj.EventAmount,
-		EventSourceID: obj.EventSourceID,
-		IsCopy:        obj.IsCopy,
-		CastZone:      obj.CastZone,
-		CastContext:   obj.CastContext,
+		sourceIncarnation: obj.sourceIncarnation,
+		stateKey:          obj.stateKey,
+		ID:                obj.ID,
+		Card:              obj.Card, // shared Card ref
+		Controller:        obj.Controller,
+		SourceID:          obj.SourceID,
+		TargetSource:      obj.TargetSource,
+		IsAbility:         obj.IsAbility,
+		XValue:            obj.XValue,
+		ModeChoice:        obj.ModeChoice,
+		EventAmount:       obj.EventAmount,
+		EventSourceID:     obj.EventSourceID,
+		IsCopy:            obj.IsCopy,
+		CastZone:          obj.CastZone,
+		CastContext:       obj.CastContext,
 	}
 	if obj.ColorOverride != nil {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)

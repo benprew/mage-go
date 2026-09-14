@@ -1,7 +1,6 @@
 package arabian
 
 import (
-	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -11,10 +10,6 @@ import (
 
 func init() {
 	registerEnchantments()
-}
-
-func cardHasColor(c Card, color Color) bool {
-	return slices.Contains(c.ManaCost().Colors(), color)
 }
 
 func registerEnchantments() {
@@ -116,8 +111,7 @@ func registerEnchantments() {
 				),
 			),
 			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
-			WithAbility(NewStateTriggered(false, SacrificeSource()).
-				SetConditionData(NoBattlefieldPermanentMatching{Filter: IsCreature})),
+			WithAbility(WhenState(BattlefieldHasNone(IsCreature), Sacrifice(This))),
 		)
 	})
 
@@ -190,27 +184,23 @@ func registerEnchantments() {
 			),
 			// When the chosen player controls no nontoken permanents of the chosen color, sacrifice Jihad
 			WithAbility(
-				NewStateTriggered(false,
-					SacrificeSource(),
-				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
-					perm := g.FindPermanent(sourceID)
-					if perm == nil {
-						return false
-					}
-					chosenColor := perm.ChosenColor
-					chosenPlayer := perm.ChosenPlayer
-					if chosenColor == 0 || chosenPlayer == uuid.Nil {
-						return false
-					}
-					for _, p := range g.FilterBattlefield(AnyPermanent) {
-						if p.ControllerID() == chosenPlayer &&
-							cardHasColor(p.Card, chosenColor) &&
-							!p.IsToken {
-							return false
-						}
-					}
-					return true
-				}),
+				WhenState(
+					StateConditionFunc("chosen opponent controls no nontoken permanent of the chosen color",
+						[]StateDependency{StateBattlefield, StateSourceChoices},
+						func(g StateReader, ctx StateContext) bool {
+							source, ok := g.Permanent(ctx.SourceID)
+							if !ok || source.ChosenColor() == 0 || source.ChosenPlayer() == uuid.Nil {
+								return false
+							}
+							for _, p := range g.Battlefield() {
+								if p.ControllerID() == source.ChosenPlayer() && p.HasColor(source.ChosenColor()) && !p.IsToken() {
+									return false
+								}
+							}
+							return true
+						}),
+					Sacrifice(This),
+				),
 			),
 		)
 	})

@@ -5,6 +5,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -291,7 +292,7 @@ func registerEnchantments() {
 			),
 			WithAbility(
 				NewTriggered(EvtEndStep, false,
-					SacrificeSourceStep(),
+					dsl.Sacrifice(dsl.This),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 					EventPlayerIsController{},
 					controllerDidNotAttackThisTurn{},

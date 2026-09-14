@@ -1,0 +1,228 @@
+package mage
+
+import (
+	"errors"
+	"fmt"
+	"maps"
+	"reflect"
+	"slices"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+type definitionEdge struct {
+	name  string
+	value any
+}
+type definitionNode struct {
+	Role, Text        string
+	children          []definitionEdge
+	problem           string
+	battlefieldSource bool
+}
+type definitionInspector interface{ inspectDefinition() definitionNode }
+
+func (c *statePredicate) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "state-condition", Text: c.label}
+	if c.label == "" {
+		n.Text = c.kind + " condition"
+	}
+
+	for i, child := range c.children {
+		n.children = append(n.children, definitionEdge{fmt.Sprintf("conditions[%d]", i), child})
+	}
+	if (c.kind == "all" || c.kind == "any") && len(c.children) == 0 {
+		n.problem = "supply at least one condition"
+	}
+	if c.kind == "callback" {
+		if c.fn == nil {
+			n.problem = "supply a condition callback"
+		}
+		if len(c.dependencies) == 0 {
+			n.problem = "declare callback dependencies"
+		}
+		if c.label == "" {
+			n.problem = "supply a callback description"
+		}
+		for _, d := range c.dependencies {
+			if d != StateBattlefield && d != StateSourceChoices {
+				n.problem = "unknown state dependency"
+			}
+		}
+	}
+	return n
+}
+func (e *sacrificeEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), battlefieldSource: true, children: []definitionEdge{{"subject", e.subject}}}
+}
+func (sourceRef) inspectDefinition() definitionNode {
+	return definitionNode{Role: "permanent-ref", Text: "this"}
+}
+func (e *sequenceEffect) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "sequence"}
+	if len(e.effects) == 0 {
+		n.problem = "supply at least one effect"
+	}
+	for i, child := range e.effects {
+		n.children = append(n.children, definitionEdge{fmt.Sprintf("effects[%d]", i), child})
+	}
+	return n
+}
+func (e *stateBranch) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-branch", children: []definitionEdge{{"condition", e.condition}, {"then", e.effect}}}
+}
+func nilDefinition(v any) bool {
+	if v == nil {
+		return true
+	}
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Pointer, reflect.Interface, reflect.Func, reflect.Slice, reflect.Map:
+		return rv.IsNil()
+	}
+	return false
+}
+func describeDefinition(v any) definitionNode {
+	if n, ok := v.(definitionInspector); ok {
+		return n.inspectDefinition()
+	}
+	n := definitionNode{Role: "legacy"}
+	addEffects := func(es []Effect) {
+		for i, e := range es {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("effects[%d]", i), e})
+		}
+	}
+	switch e := v.(type) {
+	case *GenericTriggered:
+		if e.dslState {
+			n.Role = "state-trigger"
+			n.battlefieldSource = true
+			n.children = append(n.children, definitionEdge{"condition", e.stateDefinition})
+		}
+		if len(e.modes) == 0 {
+			addEffects(e.effects)
+		}
+		for i, m := range e.modes {
+			for j, eff := range m.Effects {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("modes[%d].effects[%d]", i, j), eff})
+			}
+		}
+	case interface{ Effects() []Effect }:
+		addEffects(e.Effects())
+	case *PipelineData:
+		addEffects(e.Steps)
+	case *compositeEffect:
+		addEffects(e.effects)
+	case *IfElseData:
+		if e.Then != nil {
+			n.children = append(n.children, definitionEdge{"then", e.Then})
+		}
+		if e.Else != nil {
+			n.children = append(n.children, definitionEdge{"else", e.Else})
+		}
+	case *ForEachPermanentData:
+		n.children = append(n.children, definitionEdge{"body", e.Inner})
+	case *ModalEffectData:
+		addEffects(e.Modes)
+	}
+	return n
+}
+
+// DefinitionMetadata keeps ordered structural information for diagnostics and AI.
+type DefinitionMetadata struct {
+	Role       string
+	Text       string
+	Children   []DefinitionMetadata
+	Properties EffectProperties
+}
+
+// InspectDefinition reports metadata without exposing an executable engine object.
+func InspectDefinition(value any) DefinitionMetadata {
+	if nilDefinition(value) {
+		return DefinitionMetadata{Role: "nil"}
+	}
+	n := describeDefinition(value)
+	out := DefinitionMetadata{Role: n.Role, Text: n.Text}
+	if e, ok := value.(Effect); ok {
+		out.Properties = e.Properties()
+		out.Properties.AIRoles = slices.Clone(out.Properties.AIRoles)
+		if out.Text == "" {
+			out.Text = e.Text()
+		}
+	}
+	for _, edge := range n.children {
+		out.Children = append(out.Children, InspectDefinition(edge.value))
+	}
+	return out
+}
+
+// ValidateCardDefinition checks the expression families that have DSL adapters.
+func ValidateCardDefinition(name string, card Card) error {
+	var problems []error
+	if nilDefinition(card) {
+		return fmt.Errorf("%s: card: supply a card definition", name)
+	}
+	var visit func(any, string, bool, map[any]bool)
+	visit = func(value any, path string, spell bool, active map[any]bool) {
+		fail := func(message string) { problems = append(problems, fmt.Errorf("%s: %s: %s", name, path, message)) }
+		if nilDefinition(value) {
+			fail("supply a non-nil expression")
+			return
+		}
+		if reflect.TypeOf(value).Comparable() {
+			if active[value] {
+				fail("remove cyclic definition dependency")
+				return
+			}
+			active[value] = true
+			defer delete(active, value)
+		}
+		n := describeDefinition(value)
+		if n.problem != "" {
+			fail(n.problem)
+		}
+		if spell && n.battlefieldSource {
+			fail("battlefield source action requires a permanent ability")
+		}
+		for _, edge := range n.children {
+			visit(edge.value, path+"."+edge.name, spell, active)
+		}
+	}
+	for i, a := range card.Abilities() {
+		spell := card.HasType(TypeInstant) || card.HasType(TypeSorcery) || (!nilDefinition(a) && a.Type() == AbilitySpell)
+		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool))
+	}
+	return errors.Join(problems...)
+}
+
+func validateFactory(name string, f CardFactory) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			err = fmt.Errorf("%s: factory: %v", name, p)
+		}
+	}()
+	if f == nil {
+		return fmt.Errorf("%s: factory: supply a factory", name)
+	}
+	return ValidateCardDefinition(name, f())
+}
+
+// ValidateDefinitions checks registered factories outside the registry lock.
+func (r *Registry) ValidateDefinitions() error {
+	r.mu.RLock()
+	factories := make(map[string]CardFactory, len(r.factories))
+	maps.Copy(factories, r.factories)
+	r.mu.RUnlock()
+	names := make([]string, 0, len(factories))
+	for name := range factories {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	var problems []error
+	for _, name := range names {
+		if err := validateFactory(name, factories[name]); err != nil {
+			problems = append(problems, err)
+		}
+	}
+	return errors.Join(problems...)
+}

@@ -815,11 +815,7 @@ func registerEnchantments() {
 		return NewEnchantment("Pestilence", "{2}{B}{B}",
 			// At the beginning of the end step, if no creatures are on the battlefield, sacrifice Pestilence.
 			WithAbility(BeginningOfEachEndStepTrigger(
-				IfElse("sacrifice if no creatures",
-					NoBattlefieldPermanentMatching{Filter: IsCreature},
-					SacrificeSourceStep(),
-					nil,
-				), false,
+				IfState(BattlefieldHasNone(IsCreature), Sacrifice(This)), false,
 			)),
 			// {B}: Deal 1 damage to each creature and each player
 			WithActivatedAbility(

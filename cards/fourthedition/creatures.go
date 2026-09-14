@@ -259,7 +259,7 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			WithKeyword(Haste),
 			WithAbility(
-				BeginningOfEachEndStepTrigger(SacrificeSource(), false),
+				BeginningOfEachEndStepTrigger(Sacrifice(This), false),
 			),
 		)
 	})

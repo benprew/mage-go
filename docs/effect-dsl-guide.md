@@ -9,23 +9,26 @@ If you've read `pkg/mage/doc.go`, this is the practical companion. `doc.go` is
 the broad API reference; this guide focuses specifically on **how to compose
 effects**.
 
-> **Note:** `doc.go`'s "Effects" section currently still describes the old
-> `Effect.Apply(g, sourceID, controller, targets) error` interface. That method
-> has been removed — `Effect` now only requires `Text()` and `Properties()`.
-> Execution flows through `ApplyEffect(g, e, ...)` and the executor's type
-> switch. The rest of `doc.go` is accurate.
+## Execution and composition
 
----
+Resolving effects implement `Apply(*EffectContext)`. `ApplyEffect(g, effect, ...)`
+creates the resolution context. `Sequence` executes instructions in order.
+Legacy `Pipeline` also shares a context and can preserve its diagnostic text
+and AI properties. Continuous and replacement effects keep their own lifecycles.
 
-## Mental model
+New state-trigger definitions use the closed roles in `pkg/mage/dsl`:
 
-A card effect is **inert data**. It says *what* should happen — "deal 3
-damage," "exile the target," "the controller gains life equal to its power" —
-without knowing *how* to mutate the game.
+```go
+WithAbility(WhenState(Controls(HasSubType("Dwarf")), Sacrifice(This)))
+```
 
-The engine has a single dispatch point, `ExecuteEffect(ctx, e)`, which type-
-switches over the concrete effect type and performs the mutation. Card code
-never sees `*Game`. Pipelines just sequence effect values.
+Use `StateConditionFunc` only for pure conditions that the built-in predicates
+cannot express. Declare its dependencies; the callback receives immutable
+`StateReader` snapshots. A coin flip is a resolution-time choice, never a state
+condition. Registration validates new expressions before the factory is stored.
+
+The following legacy pipeline example remains supported until typed bindings
+replace string variables:
 
 ```go
 // What you write — pure data:
@@ -43,15 +46,16 @@ Pipeline("exile target creature; controller gains life equal to its power",
 The `Effect` interface itself is minimal:
 
 ```go
-type Effect interface {
+type ResolvingEffect interface {
     Text() string
     Properties() EffectProperties
+    Apply(*EffectContext) error
 }
+type Effect = ResolvingEffect
 ```
 
-`EffectData` is a type alias for `Effect`. `DataEffect()` and `UnwrapEffect()`
-are identity functions kept for backward compatibility — **don't wrap with
-them in new code**.
+`Effect` is a temporary alias while legacy families migrate.
+
 
 ---
 
@@ -78,24 +82,25 @@ Use `Pipeline` whenever a later step needs to read state captured by an earlier
 step *before* the earlier step's mutation lands. Snapshots are the typical case
 (see "Variables and snapshots" below).
 
-### 2. `IfElse(text, cond, then, else)` — branch on a condition
+### 2. `IfState(condition, effect)` — branch on pure state
 
 ```go
-IfElse("sacrifice if no creatures",
-    NoBattlefieldPermanentMatching{Filter: IsCreature},
-    SacrificeSourceStep(),
-    nil,                  // nil else branch is fine
-)
+IfState(BattlefieldHasNone(IsCreature), Sacrifice(This))
 ```
 
-`cond` is a `TriggerConditionData` value — the same predicate vocabulary used
+`IfState` accepts a sealed `StateCondition`, including `Controls`,
+`ControlsNone`, `BattlefieldHasNone`, and their logical combinators. These
+conditions can also be used with `WhenState` to create stack-based state
+triggers. `StateConditionFunc` supplies a read-only escape hatch with declared
+dependencies. Use `Sequence` for multiple resolving instructions.
+
+Legacy `IfElse` still accepts `TriggerConditionData` — the vocabulary used
 for trigger conditions (see "Trigger conditions" below), evaluated against
 game state at resolution time. The predicate receives a zero-value event, so
 only state predicates make sense here; event predicates like
 `EventSourceIsSelf` always see empty event fields. Common ones:
 
 - `SourceIsTapped{}` / `SourceIsUntapped{}` — source tap state.
-- `NoBattlefieldPermanentMatching{Filter: ...}` — no permanent matches.
 - `SourceHasCounterCond{CounterType: ..., MinCount: 1}` — counter check.
 - `FlipCoinCond{}` — coin flip. Resolution-only: each evaluation is a fresh
   flip, so never use it as a trigger or state-trigger condition.
@@ -282,7 +287,7 @@ is wired:
 
 ```go
 WithAbility(NewTriggered(EvtBlockersDecl, /*optional=*/true,
-    SacrificeSource(),
+    Sacrifice(This),
     DiscardCards(Fixed(3)).Targeting(SelectDefendingPlayer()),
 ).SetConditionData(SourceIsUnblockedAttacker{}))
 ```
@@ -381,11 +386,7 @@ WithActivatedAbility(
 ```go
 NewEnchantment("Pestilence", "{2}{B}{B}",
     WithAbility(BeginningOfEachEndStepTrigger(
-        IfElse("sacrifice if no creatures",
-            NoBattlefieldPermanentMatching{Filter: IsCreature},
-            SacrificeSourceStep(),
-            nil,
-        ), false,
+        IfState(BattlefieldHasNone(IsCreature), Sacrifice(This)), false,
     )),
     WithActivatedAbility(
         CompositeEffects("deal 1 damage to each creature and each player",
@@ -432,7 +433,7 @@ deal 5 damage."
 ```go
 WithAbility(AttacksTrigger(
     RegisterDelayedTriggerStep(EvtEndOfCombat, "",
-        SacrificeSource(),
+        Sacrifice(This),
         DealDamageToPlayers(Fixed(5), SelectController()),
     ),
     /*persistent=*/false,

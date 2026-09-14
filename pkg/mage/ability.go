@@ -181,44 +181,6 @@ func UnwrapAbility(a Ability) Ability {
 	return a
 }
 
-// SacrificeUnlessLandAbility requires the controller to control a land of a
-// specific subtype or the permanent is sacrificed as a state-based action.
-type SacrificeUnlessLandAbility struct {
-	BaseAbility
-	LandSubtype string
-}
-
-// SacrificeUnlessLand creates a static ability that sacrifices the source as a state-based action
-// if the controller doesn't control a land of the given subtype (e.g. "Island" for Dandân).
-func SacrificeUnlessLand(subtype string) *SacrificeUnlessLandAbility {
-	return &SacrificeUnlessLandAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		LandSubtype: subtype,
-	}
-}
-
-// SacrificeIfControlsAbility requires the controller to sacrifice the permanent
-// as a state-based action if they control another permanent of a specific subtype (e.g. Dwarf).
-type SacrificeIfControlsAbility struct {
-	BaseAbility
-	Subtype string
-}
-
-// SacrificeIfControls creates a static ability that sacrifices the source as a state-based action
-// if the controller controls a permanent of the given subtype (e.g. "Dwarf" for Goblins of the Flarg).
-func SacrificeIfControls(subtype string) *SacrificeIfControlsAbility {
-	return &SacrificeIfControlsAbility{
-		BaseAbility: BaseAbility{
-			id:          uuid.New(),
-			abilityType: AbilityStatic,
-		},
-		Subtype: subtype,
-	}
-}
-
 // EntersWithXCountersAbility is a replacement effect that adds X counters when
 // the permanent enters the battlefield.
 type EntersWithXCountersAbility struct {

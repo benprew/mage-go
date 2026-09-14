@@ -47,6 +47,8 @@ type TriggerCondition func(evt *GameEvent, g GameReader, sourceID, controllerID 
 // or use [WhileInZoneTrigger]. The zone list defaults to [ZoneBattlefield] so
 // existing behavior is preserved.
 type GenericTriggered struct {
+	stateDefinition StateCondition
+	dslState        bool
 	BaseAbility
 	eventType      EventType
 	sourceZone     Zone
@@ -206,7 +208,7 @@ func (t *GenericTriggered) IsStateTrigger() bool { return t.isStateTrigger }
 // triggers don't listen for events — instead, the condition is checked
 // alongside state-based actions, and the trigger fires once per false→true
 // transition. Returns the trigger for chaining. Pair with a condition that
-// checks game state directly (e.g. NoBattlefieldPermanentMatching), and the
+// checks game state directly, and the
 // EventType passed to NewTriggered is ignored.
 func (t *GenericTriggered) AsStateTrigger() *GenericTriggered {
 	t.isStateTrigger = true

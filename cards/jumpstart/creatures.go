@@ -6,8 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 var _ = uuid.Nil
@@ -1134,7 +1133,7 @@ func registerCreatures() {
 	Register("Departed Deckhand", func() Card {
 		// "becomes the target of a spell" only — filter EvtBecomesTarget by Flag=false
 		// (Flag is true for activated abilities, false for spells per EvtBecomesTarget docs).
-		spellTargetTrig := NewTriggered(EvtBecomesTarget, false, SacrificeSource()).
+		spellTargetTrig := NewTriggered(EvtBecomesTarget, false, Sacrifice(This)).
 			SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventTargetIsSelf{},
 				EventFlagIsFalse{},

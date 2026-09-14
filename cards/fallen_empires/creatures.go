@@ -33,7 +33,7 @@ func moneychangerFactory() Card {
 				EffectProperties{Outcome: OutcomeBenefit},
 				SnapshotPermanent(SelectSource, "src"),
 				SnapshotSourceCounter(Credit, "credits"),
-				SacrificeSourceStep(),
+				Sacrifice(This),
 				IfVarGT("gain life if credits > 0", "credits", 0,
 					GainLifeFromVar("src.controller", "credits"),
 					nil,
@@ -279,7 +279,7 @@ func registerCreatures() {
 						if player != nil && len(player.Library()) >= 2 && player.ChooseMayAbility("mill two cards") {
 							return ApplyEffect(g, MillTargetPlayer(Fixed(2)).Targeting(SelectController()), sourceID, controller, nil)
 						}
-						return ApplyEffect(g, SacrificeSource(), sourceID, controller, nil)
+						return ApplyEffect(g, Sacrifice(This), sourceID, controller, nil)
 					}),
 				false,
 			)),
@@ -449,7 +449,7 @@ func registerCreatures() {
 			WithSubTypes("Merfolk", "Knight"),
 			WithKeyword(FirstStrike),
 			// When you control no Islands, sacrifice this creature.
-			WithAbility(SacrificeUnlessLand("Island")),
+			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
 			// Can't attack unless defending player controls an Island.
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(And(IsLand, HasSubType("Island")))),
 			// {U}: This creature gains flying until end of turn.
@@ -579,7 +579,7 @@ func registerCreatures() {
 		return NewCreature("Mindstab Thrull", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
-				SacrificeSource(),
+				Sacrifice(This),
 				DiscardCards(Fixed(3)).Targeting(SelectDefendingPlayer()),
 			).SetConditionData(SourceIsUnblockedAttacker{})),
 		)
@@ -592,7 +592,7 @@ func registerCreatures() {
 	Register("Necrite", withExpansion(func() Card {
 		return NewCreature("Necrite", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Thrull"),
-			// TODO: convert to pipeline — needs SacrificeSourceStep + ChoosePermanentStep (defending player's creatures) + DestroyGatheredNoRegen
+			// TODO: convert to pipeline — needs Sacrifice(This) + ChoosePermanentStep (defending player's creatures) + DestroyGatheredNoRegen
 			WithAbility(NewTriggered(EvtBlockersDecl, true,
 				FuncEffect("sacrifice, destroy target creature defending player controls",
 					EffectProperties{Outcome: OutcomeDetriment},

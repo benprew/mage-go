@@ -235,7 +235,7 @@ g.AssertLife(gametest.PlayerB, 17)
 - `DestroyTarget()` / `DestroyTargetPermanent()` / `DestroyTargetLand()` / `DestroyTargetArtifact()`
 - `DestroyAllCreatures()` / `DestroyAllLands()` / `DestroyAllEnchantments()`
 - `DestroyAllMatching(filter, text)` / `DestroyAllMatchingNoRegen(f, text)`
-- `ExileTarget()` / `SacrificeSource()`
+- `ExileTarget()` / `Sacrifice(This)`
 
 ---
 
@@ -482,7 +482,7 @@ mage.NewCreature("Black Knight", "{B}{B}", 2, 1,
 
 ## SLIDE 27 — Special Ability Types
 
-**ETB & Lifecycle:** `ETBWithTargets`, `ETBEffect`, `EntersWithXCounters`, `CopyCreatureOnETB`, `SacrificeUnlessLand`
+**ETB & Lifecycle:** `ETBWithTargets`, `ETBEffect`, `EntersWithXCounters`, `CopyCreatureOnETB`, `WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))`
 
 **Mana:** `NewManaAbility`, `ManaBonusAbility`, `NewManaBonusAbility`, `NewAttachedManaBonusAbility`, `NewEquipAbility`
 

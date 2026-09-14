@@ -3,8 +3,7 @@ package jumpstart
 import (
 	"github.com/google/uuid"
 
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // controllerDidNotAttackThisTurn is satisfied when no creature controlled by

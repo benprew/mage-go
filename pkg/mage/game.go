@@ -725,7 +725,7 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 			continue
 		}
 		if ta.CheckTrigger(evt, g) {
-			g.triggers.AddPending(&pendingTrigger{
+			g.queuePendingTrigger(&pendingTrigger{
 				ability:    ta,
 				event:      evt,
 				sourceID:   sourceID,
@@ -1404,6 +1404,13 @@ func (g *Game) TimesTargetedThisTurn(id uuid.UUID) int {
 // RegisterDelayedTrigger registers a one-shot delayed trigger that will fire
 // when the specified event type occurs.
 func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
+	if dt != nil {
+		captured := *dt
+		dt = &captured
+		if p := g.FindPermanentIncludingPhased(dt.SourceID); p != nil {
+			dt.sourceIncarnation = p.incarnationID
+		}
+	}
 	g.triggers.RegisterDelayed(dt)
 }
 
@@ -1451,7 +1458,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				continue
 			}
 			if ta.CheckTrigger(&evt, observer) {
-				g.triggers.AddPending(&pendingTrigger{
+				g.queuePendingTrigger(&pendingTrigger{
 					ability:    ta,
 					event:      &evt,
 					sourceID:   perm.ID(),
@@ -1486,7 +1493,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				if !gt.CheckTrigger(&evt, g) {
 					continue
 				}
-				g.triggers.AddPending(&pendingTrigger{
+				g.queuePendingTrigger(&pendingTrigger{
 					ability:    gt,
 					event:      &evt,
 					sourceID:   c.ID(),
@@ -1518,7 +1525,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 			if !gt.CheckTrigger(&evt, g) {
 				continue
 			}
-			g.triggers.AddPending(&pendingTrigger{
+			g.queuePendingTrigger(&pendingTrigger{
 				ability:    gt,
 				event:      &evt,
 				sourceID:   obj.SourceID,
@@ -1568,14 +1575,15 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				}
 			}
 			obj := &StackObject{
-				ID:            uuid.New(),
-				Controller:    dt.Controller,
-				SourceID:      dt.SourceID,
-				IsAbility:     true,
-				Effects:       dt.Effects,
-				Targets:       []uuid.UUID{dt.TargetID},
-				EventAmount:   evt.Amount,
-				EventSourceID: evt.SourceID,
+				ID:                uuid.New(),
+				Controller:        dt.Controller,
+				SourceID:          dt.SourceID,
+				sourceIncarnation: dt.sourceIncarnation,
+				IsAbility:         true,
+				Effects:           dt.Effects,
+				Targets:           []uuid.UUID{dt.TargetID},
+				EventAmount:       evt.Amount,
+				EventSourceID:     evt.SourceID,
 			}
 			g.pushStack(obj)
 			if dt.Persistent {
@@ -1597,6 +1605,9 @@ func (g *Game) CheckStateTriggers() {
 	}
 	seen := make(map[stateTriggerKey]bool)
 	for _, perm := range g.zones.battlefield {
+		if perm.PhasedOut {
+			continue
+		}
 		g.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -1614,7 +1625,7 @@ func (g *Game) CheckStateTriggers() {
 				continue
 			}
 			g.triggers.ArmStateTrigger(key)
-			g.triggers.AddPending(&pendingTrigger{
+			g.queuePendingTrigger(&pendingTrigger{
 				stateKey:   key,
 				ability:    ta,
 				sourceID:   perm.ID(),
@@ -1664,11 +1675,12 @@ func (g *Game) PutTriggersOnStack() {
 	for _, pt := range g.triggers.Pending() {
 		targetSource := g.FindCardAnywhere(pt.sourceID)
 		obj := &StackObject{
-			stateKey:   pt.stateKey,
-			ID:         uuid.New(),
-			Controller: pt.controller,
-			SourceID:   pt.sourceID,
-			IsAbility:  true,
+			stateKey:          pt.stateKey,
+			sourceIncarnation: pt.sourceIncarnation,
+			ID:                uuid.New(),
+			Controller:        pt.controller,
+			SourceID:          pt.sourceID,
+			IsAbility:         true,
 		}
 		// CR 603.1f / 603.3d: a modal triggered ability picks its mode as it
 		// goes on the stack, then gathers targets only for that mode. Push the
@@ -2015,6 +2027,9 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controlle
 
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
+	oldIncarnation, oldCaptured := g.resolution.sourceIncarnation, g.resolution.sourceCaptured
+	g.resolution.sourceIncarnation, g.resolution.sourceCaptured = obj.sourceIncarnation, true
+	defer func() { g.resolution.sourceIncarnation, g.resolution.sourceCaptured = oldIncarnation, oldCaptured }()
 	previousState := g.triggers.resolvingState
 	g.triggers.resolvingState = obj.stateKey
 	defer g.CheckStateBasedActions()
@@ -2527,64 +2542,6 @@ func (g *Game) CheckStateBasedActions() {
 					actions = true
 				}
 			}
-		}
-
-		// Sacrifice creatures that require a land type the controller doesn't have
-		var toSacrifice []*Permanent
-		for _, p := range g.zones.battlefield {
-			var landSubtype string
-			for _, a := range p.RuntimeAbilities {
-				if sa, ok := a.(*SacrificeUnlessLandAbility); ok {
-					landSubtype = sa.LandSubtype
-					break
-				}
-			}
-			if landSubtype == "" {
-				continue
-			}
-			hasLand := false
-			for _, other := range g.zones.battlefield {
-				if other.ControllerID() == p.ControllerID() && other.HasSubType(landSubtype) {
-					hasLand = true
-					break
-				}
-			}
-			if !hasLand {
-				toSacrifice = append(toSacrifice, p)
-				actions = true
-			}
-		}
-		for _, p := range toSacrifice {
-			g.DoSacrifice(p)
-		}
-
-		// Sacrifice creatures if controller controls a specific subtype (e.g. Goblins of the Flarg)
-		var toSacrificeControls []*Permanent
-		for _, p := range g.zones.battlefield {
-			var forbidSubtype string
-			for _, a := range p.RuntimeAbilities {
-				if sa, ok := a.(*SacrificeIfControlsAbility); ok {
-					forbidSubtype = sa.Subtype
-					break
-				}
-			}
-			if forbidSubtype == "" {
-				continue
-			}
-			controlsForbid := false
-			for _, other := range g.zones.battlefield {
-				if other.ID() != p.ID() && other.ControllerID() == p.ControllerID() && other.HasSubType(forbidSubtype) {
-					controlsForbid = true
-					break
-				}
-			}
-			if controlsForbid {
-				toSacrificeControls = append(toSacrificeControls, p)
-				actions = true
-			}
-		}
-		for _, p := range toSacrificeControls {
-			g.DoSacrifice(p)
 		}
 
 		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
@@ -3832,6 +3789,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
 	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.resolution.X())
+	obj.sourceIncarnation = perm.incarnationID
 	obj.TargetSource = perm.Card
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
@@ -3960,4 +3918,13 @@ func (g *Game) stateTriggerActive(key stateTriggerKey) bool {
 		}
 	}
 	return false
+}
+
+func (g *Game) queuePendingTrigger(pt *pendingTrigger) {
+	if p := g.FindPermanent(pt.sourceID); p != nil {
+		pt.sourceIncarnation = p.incarnationID
+	} else if lki := g.LKI(pt.sourceID); lki != nil && lki.Snapshot != nil {
+		pt.sourceIncarnation = lki.Snapshot.incarnationID
+	}
+	g.triggers.AddPending(pt)
 }

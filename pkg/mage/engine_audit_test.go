@@ -68,7 +68,7 @@ func TestAuditStateTriggerLifecycle(t *testing.T) {
 }
 
 func TestAuditSacrificeSourceController(t *testing.T) {
-	for _, effect := range []Effect{SacrificeSource(), SacrificeSourceStep()} {
+	for _, effect := range []Effect{Sacrifice(This), Sequence(Sacrifice(This))} {
 		t.Run(effect.Text(), func(t *testing.T) {
 			g, a, p := auditStateGame()
 			b := g.players[1]

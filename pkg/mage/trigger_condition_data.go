@@ -78,7 +78,6 @@ func (EventBlocksOrBecomesBlocked) CheckTriggerCond(evt *GameEvent, g GameReader
 	return evt.SourceID == sourceID || evt.TargetID == sourceID
 }
 
-
 // EventPlayerIsController checks evt.PlayerID == controllerID.
 type EventPlayerIsController struct{}
 
@@ -613,31 +612,6 @@ func (EventBecomesTargetSourceIsNotSelf) CheckTriggerCond(evt *GameEvent, _ Game
 // ---------------------------------------------------------------------------
 // Battlefield state predicates
 // ---------------------------------------------------------------------------
-
-// ControllerHasNoPermanentMatching checks that the controller has no permanent
-// on the battlefield matching the given filter.
-type ControllerHasNoPermanentMatching struct {
-	Filter PermanentFilter
-}
-
-func (c ControllerHasNoPermanentMatching) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	for _, p := range g.FilterBattlefield(c.Filter) {
-		if p.ControllerID() == controllerID {
-			return false
-		}
-	}
-	return true
-}
-
-// NoBattlefieldPermanentMatching checks that no permanent on the battlefield
-// matches the given filter (global, any controller).
-type NoBattlefieldPermanentMatching struct {
-	Filter PermanentFilter
-}
-
-func (c NoBattlefieldPermanentMatching) CheckTriggerCond(_ *GameEvent, g GameReader, _, _ uuid.UUID) bool {
-	return !g.AnyBattlefield(c.Filter)
-}
 
 // CreatureDeathsOccurred checks that at least one creature died this turn.
 type CreatureDeathsOccurred struct{}

@@ -116,7 +116,7 @@
 //
 // # State Triggers and Simultaneous Deaths
 //
-// [NewStateTriggered] records a trigger when its condition becomes true,
+// [WhenState] records a trigger when its condition becomes true,
 // including between resolving instructions. [FireEvent], [ApplyEffect],
 // [CompositeEffects], and [Pipeline] check these conditions. A trigger stays
 // suppressed while its original instance is pending, on the stack, or resolving.
@@ -140,15 +140,38 @@
 //
 // # Sacrifice
 //
-// [Sacrifice] executes a sacrifice action. It emits a zone-change event and an
-// [EvtSacrifice] event. [SacrificeSource], [SacrificeTarget], and
-// [SacrificeGathered] provide resolving effects. [SacrificeSourceCost] and
-// [SacrificeMatchingCost] provide activation costs. Sacrifice costs record the
-// identifier of the sacrificed object. Resolving effects can read the
-// last-known information of the object with [LastSacrificed].
+// [Sacrifice] creates a resolving effect for a [PermanentRef]. Use
+// Sacrifice(This) to sacrifice the source. The stored controller must still
+// control that battlefield incarnation. A source that leaves and returns is
+// a new object. Phasing does not change its incarnation.
+// [Game.DoSacrifice] executes the action and emits zone-change and sacrifice
+// events. [SacrificeTarget] and [SacrificeGathered] remain legacy adapters
+// until typed target and saved-value bindings replace their callers.
+// [SacrificeSourceCost] and [SacrificeMatchingCost] are costs, not effects.
+// Resolving effects can read cost information with [LastSacrificed].
 //
-// [SacrificeSource] and [SacrificeSourceStep] require the resolving controller
-// to control the source when the effect applies.
+// # Composable DSL: State Conditions
+//
+// Card authors use pkg/mage/dsl for migrated expressions:
+//
+//	WithAbility(WhenState(Controls(HasSubType("Dwarf")), Sacrifice(This)))
+//	WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This)))
+//
+// [Controls] includes the source. [BattlefieldHasNone] checks both players.
+// [AllConditions], [AnyCondition], and [NotCondition] combine pure conditions.
+// [StateConditionFunc] requires a description and declared dependencies. Its
+// callback receives [StateReader] snapshots with no mutable engine objects.
+// Callbacks must not use randomness, player choices, or mutable captures.
+// [IfState] checks a condition at resolution. [Sequence] executes effects in
+// order and preserves their structural metadata. The same [ResolvingEffect]
+// works in legacy pipelines, loops, and modes. [Effect] is a temporary alias.
+//
+// [Registry.Register] validates a definition outside the registry lock before
+// it stores the factory. Errors identify the card and expression path.
+// [Registry.ValidateDefinitions] checks all loaded sets and collects errors.
+// Validation covers migrated nodes and their known legacy containers. It does
+// not prove callback purity or inspect arbitrary Go code.
+// [InspectDefinition] supplies ordered metadata for diagnostics and AI.
 //
 // # Damage-Source Choices
 //
