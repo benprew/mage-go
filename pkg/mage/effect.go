@@ -135,6 +135,9 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 	if e == nil {
 		return nil
 	}
+	savedBindings := g.resolution.permanentBindings
+	g.resolution.permanentBindings = nil
+	defer func() { g.resolution.permanentBindings = savedBindings }()
 	ctx := &EffectContext{
 		Game:                g,
 		SourceID:            sourceID,

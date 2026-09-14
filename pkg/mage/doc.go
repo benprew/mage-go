@@ -173,6 +173,25 @@
 // not prove callback purity or inspect arbitrary Go code.
 // [InspectDefinition] supplies ordered metadata for diagnostics and AI.
 //
+// # Saved Permanent Bindings
+//
+// [BindPermanent] declares an immutable binding. [Snapshot] saves the current
+// battlefield incarnation, and [From] reads it. [AttachedPermanent] selects
+// the current attachment of the source incarnation. Use [Sequence] to keep
+// the producer and its consumers in the same resolution frame:
+//
+//	host := BindPermanent("host")
+//	Sequence(Snapshot(AttachedPermanent, host), Sacrifice(This), Sacrifice(From(host)))
+//
+// A missing or phased-out subject has no effect. A subject that leaves and
+// returns is a new object. An absent snapshot clears an earlier saved value.
+// [ResolutionState.Clone] copies saved values. Nested [ApplyEffect] calls use
+// separate frames and restore the outer frame when they return.
+// Registration rejects reads before a producer, duplicate binding names,
+// and reads outside an optional branch or loop that produces the value.
+// Use one sequence inside an ability or mode. Legacy containers do not merge
+// branch results or share saved values across separate ApplyEffect calls.
+//
 // # Damage-Source Choices
 //
 // Effects that state "a source of your choice" do not target. The player

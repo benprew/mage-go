@@ -15,10 +15,14 @@ type definitionEdge struct {
 	value any
 }
 type definitionNode struct {
-	Role, Text        string
-	children          []definitionEdge
-	problem           string
-	battlefieldSource bool
+	Role, Text         string
+	children           []definitionEdge
+	problem            string
+	battlefieldSource  bool
+	bindingDeclaration *PermanentBinding
+	bindingRead        *PermanentBinding
+	bindingWrite       *PermanentBinding
+	bindingScope       bool
 }
 type definitionInspector interface{ inspectDefinition() definitionNode }
 
@@ -53,10 +57,10 @@ func (c *statePredicate) inspectDefinition() definitionNode {
 	return n
 }
 func (e *sacrificeEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), battlefieldSource: true, children: []definitionEdge{{"subject", e.subject}}}
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
 }
 func (sourceRef) inspectDefinition() definitionNode {
-	return definitionNode{Role: "permanent-ref", Text: "this"}
+	return definitionNode{Role: "permanent-ref", Text: "this", battlefieldSource: true}
 }
 func (e *sequenceEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sequence"}
@@ -109,6 +113,9 @@ func describeDefinition(v any) definitionNode {
 		}
 	case interface{ Effects() []Effect }:
 		addEffects(e.Effects())
+	case *RegisterDelayedTriggerData:
+		n.bindingScope = true
+		addEffects(e.Effects)
 	case *PipelineData:
 		addEffects(e.Steps)
 	case *compositeEffect:
@@ -162,6 +169,8 @@ func ValidateCardDefinition(name string, card Card) error {
 	if nilDefinition(card) {
 		return fmt.Errorf("%s: card: supply a card definition", name)
 	}
+	var assigned map[*PermanentBinding]bool
+	var names map[string]*PermanentBinding
 	var visit func(any, string, bool, map[any]bool)
 	visit = func(value any, path string, spell bool, active map[any]bool) {
 		fail := func(message string) { problems = append(problems, fmt.Errorf("%s: %s: %s", name, path, message)) }
@@ -178,6 +187,22 @@ func ValidateCardDefinition(name string, card Card) error {
 			defer delete(active, value)
 		}
 		n := describeDefinition(value)
+		if n.bindingScope {
+			outerAssigned, outerNames := assigned, names
+			assigned = make(map[*PermanentBinding]bool)
+			names = make(map[string]*PermanentBinding)
+			defer func() { assigned, names = outerAssigned, outerNames }()
+		}
+		if n.bindingDeclaration != nil {
+			binding := n.bindingDeclaration
+			if prior, ok := names[binding.name]; ok && prior != binding {
+				fail("duplicate binding name: " + binding.name)
+			}
+			names[binding.name] = binding
+		}
+		if n.bindingRead != nil && !assigned[n.bindingRead] {
+			fail("binding requires a producer before this read on every path")
+		}
 		if n.problem != "" {
 			fail(n.problem)
 		}
@@ -185,10 +210,19 @@ func ValidateCardDefinition(name string, card Card) error {
 			fail("battlefield source action requires a permanent ability")
 		}
 		for _, edge := range n.children {
+			before := maps.Clone(assigned)
 			visit(edge.value, path+"."+edge.name, spell, active)
+			if !definitionSequential(value) {
+				assigned = before
+			}
+		}
+		if n.bindingWrite != nil {
+			assigned[n.bindingWrite] = true
 		}
 	}
 	for i, a := range card.Abilities() {
+		assigned = make(map[*PermanentBinding]bool)
+		names = make(map[string]*PermanentBinding)
 		spell := card.HasType(TypeInstant) || card.HasType(TypeSorcery) || (!nilDefinition(a) && a.Type() == AbilitySpell)
 		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool))
 	}
@@ -225,4 +259,13 @@ func (r *Registry) ValidateDefinitions() error {
 		}
 	}
 	return errors.Join(problems...)
+}
+
+func definitionSequential(value any) bool {
+	switch value.(type) {
+	case *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot:
+		return true
+	default:
+		return false
+	}
 }

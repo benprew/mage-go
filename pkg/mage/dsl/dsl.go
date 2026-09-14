@@ -1128,3 +1128,13 @@ var (
 	Sequence           = mage.Sequence
 	InspectDefinition  = mage.InspectDefinition
 )
+
+// Saved permanent expressions.
+type PermanentBinding = mage.PermanentBinding
+
+var (
+	BindPermanent     = mage.BindPermanent
+	Snapshot          = mage.Snapshot
+	From              = mage.From
+	AttachedPermanent = mage.AttachedPermanent
+)

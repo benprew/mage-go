@@ -27,8 +27,16 @@ type sacrificeEffect struct{ subject PermanentRef }
 
 // Sacrifice instructs the stored controller to sacrifice the subject.
 // An absent subject or a subject controlled by another player has no effect.
-func Sacrifice(subject PermanentRef) ResolvingEffect  { return &sacrificeEffect{subject: subject} }
-func (*sacrificeEffect) Text() string                 { return "sacrifice this permanent" }
+func Sacrifice(subject PermanentRef) ResolvingEffect { return &sacrificeEffect{subject: subject} }
+func (e *sacrificeEffect) Text() string {
+	if _, ok := e.subject.(sourceRef); ok {
+		return "sacrifice this permanent"
+	}
+	if subject, ok := e.subject.(definitionInspector); ok {
+		return "sacrifice " + subject.inspectDefinition().Text
+	}
+	return "sacrifice permanent"
+}
 func (*sacrificeEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *sacrificeEffect) Apply(ctx *EffectContext) error {
 	if p, ok := e.subject.resolvePermanent(ctx); ok && p.ControllerID() == ctx.Controller {

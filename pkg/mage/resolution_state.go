@@ -11,6 +11,7 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
+	permanentBindings map[*PermanentBinding]capturedPermanent
 	sourceIncarnation uuid.UUID
 	sourceCaptured    bool
 	// X value for the currently resolving spell or activation
@@ -99,6 +100,7 @@ func (s *ResolutionState) SetColorOverride(sourceID uuid.UUID, override *[]Color
 
 // Clear resets all resolving state fields to zero values.
 func (s *ResolutionState) Clear() {
+	s.permanentBindings = nil
 	s.currentX = 0
 	s.currentMode = 0
 	s.currentEventAmount = 0
@@ -159,6 +161,7 @@ func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard =
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
 	c := ResolutionState{
+		permanentBindings:      maps.Clone(s.permanentBindings),
 		sourceIncarnation:      s.sourceIncarnation,
 		sourceCaptured:         s.sourceCaptured,
 		currentX:               s.currentX,
