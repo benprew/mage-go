@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -781,43 +783,44 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 		}
 	}
 	applied := make(map[ReplacementEffect]bool)
-	tryMatch := func(action Action, preventionOnly bool) (Action, ReplacementEffect, bool) {
+	for action != nil {
+		var candidates []ReplacementEffect
+		seen := make(map[ReplacementEffect]bool)
 		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
 			for _, r := range list {
-				if applied[r] {
-					continue
-				}
-				if isPreventionReplacement(r) != preventionOnly {
-					continue
-				}
-				if !r.IsActive(g) {
-					continue
-				}
-				if r.Matches(action, g) {
-					return r.Replace(action, g), r, true
+				if !applied[r] && !seen[r] && r.IsActive(g) && r.Matches(action, g) {
+					candidates = append(candidates, r)
+					seen[r] = true
 				}
 			}
 		}
-		return action, nil, false
+		if len(candidates) == 0 {
+			break
+		}
+		index := 0
+		if len(candidates) > 1 {
+			if player := replacementAffectedPlayer(action, g); player != nil {
+				labels := make([]string, len(candidates))
+				for i, r := range candidates {
+					labels[i] = fmt.Sprintf("Replacement effect %d", i+1)
+					if card := g.FindCardAnywhere(r.SourceID()); card != nil {
+						labels[i] += ": " + card.Name()
+					}
+					if description, ok := r.(interface{ Text() string }); ok {
+						labels[i] += ": " + description.Text()
+					}
+				}
+				index = player.ChooseMode(labels, "Choose a replacement or prevention effect")
+				if index < 0 || index >= len(candidates) {
+					index = 0
+				}
+			}
+		}
+		r := candidates[index]
+		applied[r] = true
+		action = r.Replace(action, g)
 	}
-	for {
-		if action == nil {
-			return nil
-		}
-		newAction, r, ok := tryMatch(action, false)
-		if ok {
-			applied[r] = true
-			action = newAction
-			continue
-		}
-		newAction, r, ok = tryMatch(action, true)
-		if ok {
-			applied[r] = true
-			action = newAction
-			continue
-		}
-		break
-	}
+
 	return action
 }
 
@@ -847,4 +850,19 @@ func WrapGrantedAbility(a Ability) Ability {
 
 func wrapIntrinsicBasicLandManaAbility(a Ability) Ability {
 	return &grantedByEffect{Ability: a, intrinsicBasicLandMana: true}
+}
+
+func replacementAffectedPlayer(action Action, g *Game) Player {
+	if a, ok := action.(interface{ PlayerID() uuid.UUID }); ok {
+		return g.GetPlayer(a.PlayerID())
+	}
+	if a, ok := action.(interface{ PermanentID() uuid.UUID }); ok {
+		if p := g.FindPermanent(a.PermanentID()); p != nil {
+			return g.GetPlayer(p.ControllerID())
+		}
+		if c := g.FindCardAnywhere(a.PermanentID()); c != nil {
+			return g.GetPlayer(c.Owner())
+		}
+	}
+	return nil
 }

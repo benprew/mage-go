@@ -114,6 +114,30 @@
 // Protection from card types, subtypes, or all characteristics uses
 // [CardFilter].
 //
+// # State Triggers and Simultaneous Deaths
+//
+// [NewStateTriggered] records a trigger when its condition becomes true,
+// including between resolving instructions. [FireEvent], [ApplyEffect],
+// [CompositeEffects], and [Pipeline] check these conditions. A trigger stays
+// suppressed while its original instance is pending, on the stack, or resolving.
+// It can trigger again after that instance leaves the stack, even if its
+// condition stays true. A permanent that leaves and returns has a new instance.
+//
+// [DestroyPermanents] preserves the state before a simultaneous destruction
+// for leave-the-battlefield triggers. Mass destruction effects and lethal-damage
+// state-based actions use this path. Zero-toughness and zero-loyalty deaths
+// share the same observation batch. Conditions use the state before the batch;
+// trigger effects resolve against the current game state.
+//
+// # Replacement Choices
+//
+// When multiple replacements apply to an existing action, the affected player
+// chooses one with [Player.ChooseMode]. For a permanent, its controller chooses.
+// The pipeline rechecks applicability after each choice and uses each effect
+// at most once. Prevention has no automatic precedence over other replacements.
+// These actions do not include entering the battlefield; the special ordering
+// of entry replacements is outside this pipeline.
+//
 // # Sacrifice
 //
 // [Sacrifice] executes a sacrifice action. It emits a zone-change event and an
@@ -122,6 +146,9 @@
 // [SacrificeMatchingCost] provide activation costs. Sacrifice costs record the
 // identifier of the sacrificed object. Resolving effects can read the
 // last-known information of the object with [LastSacrificed].
+//
+// [SacrificeSource] and [SacrificeSourceStep] require the resolving controller
+// to control the source when the effect applies.
 //
 // # Damage-Source Choices
 //

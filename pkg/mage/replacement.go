@@ -1055,20 +1055,10 @@ func (*counterDamagePreventionReplacement) IsPreventionEffect() bool { return tr
 // Prevention effect classification (CR 616.1 ordering helper)
 // ---------------------------------------------------------------------------
 
-// PreventionEffect is an optional marker interface. Replacement effects that
-// are conceptually "prevention" or "reduction" effects (damage prevention
-// shields, Fog, Forcefield, color/source/type-scoped damage prevention, etc.)
-// implement this so the replacement pipeline can order them after modifying
-// replacements when both are applicable to the same event.
+// PreventionEffect identifies effects that prevent damage.
+// The affected player can choose these with other applicable replacements.
 type PreventionEffect interface {
 	IsPreventionEffect() bool
-}
-
-// isPreventionReplacement reports whether a replacement effect is a prevention
-// effect under the PreventionEffect marker.
-func isPreventionReplacement(r ReplacementEffect) bool {
-	pe, ok := r.(PreventionEffect)
-	return ok && pe.IsPreventionEffect()
 }
 
 func (*preventionShieldReplacement) IsPreventionEffect() bool           { return true }

@@ -207,8 +207,8 @@ func registerCh06Cards() {
 					mage.ManaCostOf("{B}")))
 		})
 		reg("Ch06 Artifact Death Watch", func() mage.Card {
-			return mage.NewArtifact("Ch06 Artifact Death Watch", "{2}",
-				mage.WithCardType(core.TypeCreature),
+			return mage.NewCreature("Ch06 Artifact Death Watch", "{2}", 1, 1,
+				mage.WithCardType(core.TypeArtifact),
 				mage.WithAbility(mage.AnyCreatureDiesTrigger(
 					mage.GainLife(1), false)))
 		})
@@ -587,6 +587,7 @@ func TestCR603_10a_TriggeredLooksBackInTimeLTB(t *testing.T) {
 
 	// Artifact Death Watch goes to graveyard.
 	g.AssertGraveyardCount(PlayerA, "Ch06 Artifact Death Watch", 1)
+	g.AssertLife(PlayerA, 22)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -57,6 +57,7 @@ func (e *compositeEffect) Apply(ctx *EffectContext) error {
 		if err := sub.Apply(ctx); err != nil {
 			return err
 		}
+		ctx.Game.CheckStateTriggers()
 	}
 	return nil
 }
@@ -142,6 +143,7 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		CounterDistribution: g.resolution.CounterDistribution(),
 	}
 	err := e.Apply(ctx)
+	g.CheckStateTriggers()
 	if err != nil {
 		fmt.Println("ERROR: ApplyEffect: ", err)
 	}

@@ -190,7 +190,7 @@ func registerEnchantments() {
 			),
 			// When the chosen player controls no nontoken permanents of the chosen color, sacrifice Jihad
 			WithAbility(
-				NewTriggered(EvtZoneChange, false,
+				NewStateTriggered(false,
 					SacrificeSource(),
 				).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					perm := g.FindPermanent(sourceID)
@@ -210,7 +210,7 @@ func registerEnchantments() {
 						}
 					}
 					return true
-				}).AndConditionData(EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneAny}),
+				}),
 			),
 		)
 	})

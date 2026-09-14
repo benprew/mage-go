@@ -206,7 +206,7 @@ func SacrificeSource() Effect { return &sacrificeSourceEffect{} }
 func (*sacrificeSourceEffect) Text() string                 { return "sacrifice this permanent" }
 func (*sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
 func (*sacrificeSourceEffect) Apply(ctx *EffectContext) error {
-	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil {
+	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil && perm.ControllerID() == ctx.Controller {
 		ctx.Game.DoSacrifice(perm)
 	}
 	return nil
@@ -253,7 +253,7 @@ func SacrificeSourceStep() Effect                         { return &SacrificeSou
 func (*SacrificeSourceData) Text() string                 { return "sacrifice" }
 func (*SacrificeSourceData) Properties() EffectProperties { return EffectProperties{} }
 func (*SacrificeSourceData) Apply(ctx *EffectContext) error {
-	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil {
+	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil && perm.ControllerID() == ctx.Controller {
 		ctx.Game.DoSacrifice(perm)
 	}
 	return nil

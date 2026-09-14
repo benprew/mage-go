@@ -617,7 +617,9 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Remove from battlefield
 	g.zones.RemovePermanent(perm.ID())
 
-	g.effects.Apply(g)
+	if g.triggers.zoneBatch == nil {
+		g.effects.Apply(g)
+	}
 	// Leave-zone trigger dispatch (CR 603.6c) happens in the destination-
 	// specific path (Destroy / Sacrifice / Exile / Bounce /
 	// PutPermanentIntoGraveyard) via EvtZoneChange + LKIAbilities. The
@@ -706,6 +708,9 @@ func (g *Game) TapPermanent(perm *Permanent) {
 
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
 func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourceID, controller uuid.UUID) {
+	if g.triggers.zoneBatch != nil && isBattlefieldLeaveEvent(evt) {
+		return
+	}
 	for _, a := range abilities {
 		ta, ok := UnwrapAbility(a).(TriggeredAbility)
 		if !ok {
@@ -1409,10 +1414,23 @@ func (g *Game) DelayedTriggers() []*DelayedTrigger {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	if batch := g.triggers.zoneBatch; batch != nil && isBattlefieldLeaveEvent(&evt) {
+		batch.events = append(batch.events, evt)
+		return
+	}
+	g.fireEvent(evt, nil)
+}
+
+func (g *Game) fireEvent(evt GameEvent, before *Game) {
+	defer g.CheckStateTriggers()
 	g.recordPerTurnEvent(&evt)
 	g.recordPerDuelEvent(&evt)
-	for _, perm := range g.zones.battlefield {
-		g.syncAbilityContext(perm)
+	observer := g
+	if before != nil {
+		observer = before
+	}
+	for _, perm := range observer.zones.battlefield {
+		observer.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
 			if !ok {
@@ -1432,7 +1450,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 			if gt, ok := ta.(*GenericTriggered); ok && !gt.FunctionsInZone(ZoneBattlefield) {
 				continue
 			}
-			if ta.CheckTrigger(&evt, g) {
+			if ta.CheckTrigger(&evt, observer) {
 				g.triggers.AddPending(&pendingTrigger{
 					ability:    ta,
 					event:      &evt,
@@ -1571,14 +1589,12 @@ func (g *Game) FireEvent(evt GameEvent) {
 	g.queueParadigmRecurringTriggers(&evt)
 }
 
-// CheckStateTriggers evaluates state-triggered abilities (CR 603.8) on all battlefield permanents.
-// A state trigger starts once when its condition changes from false to true.
-// While the condition remains true, the ability does not trigger again.
-// The ability triggers again only after the condition becomes false and then true again.
-// The engine appends new triggers to pendingTriggers.
-//
-// Call this function after state-based actions are checked and before a player receives priority.
+// CheckStateTriggers records state triggers that have no pending or active instance.
+// A condition can trigger again after its ability leaves the stack (CR 603.8).
 func (g *Game) CheckStateTriggers() {
+	if g.triggers.zoneBatch != nil || g.triggers.stateChecksPaused {
+		return
+	}
 	seen := make(map[stateTriggerKey]bool)
 	for _, perm := range g.zones.battlefield {
 		g.syncAbilityContext(perm)
@@ -1587,18 +1603,19 @@ func (g *Game) CheckStateTriggers() {
 			if !ok || !ta.IsStateTrigger() {
 				continue
 			}
-			key := stateTriggerKey{sourceID: perm.ID(), abilityID: ta.AbilityID()}
+			key := stateTriggerKey{sourceID: perm.ID(), abilityID: ta.AbilityID(), incarnationID: perm.incarnationID}
 			seen[key] = true
-			cond := ta.CheckTrigger(nil, g)
-			if !cond {
-				g.triggers.DisarmStateTrigger(key)
+			if g.stateTriggerActive(key) {
+				g.triggers.ArmStateTrigger(key)
 				continue
 			}
-			if g.triggers.IsStateTriggerArmed(key) {
+			g.triggers.DisarmStateTrigger(key)
+			if !ta.CheckTrigger(nil, g) {
 				continue
 			}
 			g.triggers.ArmStateTrigger(key)
 			g.triggers.AddPending(&pendingTrigger{
+				stateKey:   key,
 				ability:    ta,
 				sourceID:   perm.ID(),
 				controller: perm.ControllerID(),
@@ -1647,6 +1664,7 @@ func (g *Game) PutTriggersOnStack() {
 	for _, pt := range g.triggers.Pending() {
 		targetSource := g.FindCardAnywhere(pt.sourceID)
 		obj := &StackObject{
+			stateKey:   pt.stateKey,
 			ID:         uuid.New(),
 			Controller: pt.controller,
 			SourceID:   pt.sourceID,
@@ -1997,10 +2015,17 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controlle
 
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
+	previousState := g.triggers.resolvingState
+	g.triggers.resolvingState = obj.stateKey
+	defer g.CheckStateBasedActions()
+	defer func() {
+		g.triggers.resolvingState = previousState
+		g.CheckStateTriggers()
+	}()
+
 	// Check for fizzle: if the spell/ability has targets but all are now illegal,
 	// it fails to resolve (MTG rule 608.2b)
 
-	defer g.CheckStateBasedActions()
 	defer g.ClearSacrificed()
 	defer g.resolution.SetColorOverride(obj.SourceID, obj.ColorOverride)()
 
@@ -2426,44 +2451,24 @@ func (g *Game) CheckStateBasedActions() {
 	for {
 		actions := false
 
-		// Check for creatures with lethal damage (CR 704.5h). Indestructible
-		// creatures (CR 702.12b) are skipped — the destroy would be a no-op
-		// and setting actions=true would loop the SBA forever.
-		var toDestroy []*Permanent
+		var toDestroy, toGraveyard []*Permanent
 		for _, p := range g.zones.battlefield {
-			if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
+			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 || p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
+				toGraveyard = append(toGraveyard, p)
+			} else if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
 				toDestroy = append(toDestroy, p)
-				actions = true
 			}
 		}
-		for _, p := range toDestroy {
-			g.DestroyPermanent(p)
-		}
-
-		// Check for creatures with 0 or less toughness (not destruction — bypasses indestructible)
-		var zeroToughness []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 {
-				zeroToughness = append(zeroToughness, p)
-				actions = true
-			}
-		}
-		for _, p := range zeroToughness {
-			g.PutPermanentIntoGraveyard(p)
-		}
-
-		// CR 704.5i: a planeswalker with loyalty 0 is put into its owner's
-		// graveyard. Loyalty-activated abilities, attacking planeswalkers, and
-		// the legacy damage-redirection rules are not implemented.
-		var zeroLoyalty []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
-				zeroLoyalty = append(zeroLoyalty, p)
-				actions = true
-			}
-		}
-		for _, p := range zeroLoyalty {
-			g.PutPermanentIntoGraveyard(p)
+		if len(toDestroy)+len(toGraveyard) > 0 {
+			actions = true
+			g.withZoneChangeBatch(func() {
+				g.DestroyPermanents(toDestroy)
+				for _, p := range toGraveyard {
+					if current := g.FindPermanent(p.ID()); current != nil && current.incarnationID == p.incarnationID {
+						g.PutPermanentIntoGraveyard(current)
+					}
+				}
+			})
 		}
 
 		// MTG rule 704.5q: +1/+1 and -1/-1 counter annihilation
@@ -3938,4 +3943,21 @@ func (g *Game) Winner() string {
 
 func (g *Game) Stack() *Stack {
 	return g.stack
+}
+
+func (g *Game) stateTriggerActive(key stateTriggerKey) bool {
+	if g.triggers.resolvingState == key {
+		return true
+	}
+	for _, pt := range g.triggers.Pending() {
+		if pt.stateKey == key {
+			return true
+		}
+	}
+	for _, obj := range g.stack.Objects() {
+		if obj.stateKey == key {
+			return true
+		}
+	}
+	return false
 }

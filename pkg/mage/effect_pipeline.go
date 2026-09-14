@@ -33,6 +33,7 @@ func (e *PipelineData) Apply(ctx *EffectContext) error {
 		if err := step.Apply(ctx); err != nil {
 			return err
 		}
+		ctx.Game.CheckStateTriggers()
 	}
 	return nil
 }

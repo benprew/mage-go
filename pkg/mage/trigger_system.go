@@ -26,6 +26,7 @@ type DelayedTrigger struct {
 }
 
 type pendingTrigger struct {
+	stateKey   stateTriggerKey
 	ability    TriggeredAbility
 	event      *GameEvent
 	sourceID   uuid.UUID
@@ -33,15 +34,19 @@ type pendingTrigger struct {
 }
 
 type stateTriggerKey struct {
-	sourceID  uuid.UUID
-	abilityID uuid.UUID
+	sourceID      uuid.UUID
+	abilityID     uuid.UUID
+	incarnationID uuid.UUID
 }
 
 // TriggerSystem encapsulates pending triggers, delayed triggers, and armed state triggers.
 type TriggerSystem struct {
-	pending    []*pendingTrigger
-	delayed    []*DelayedTrigger
-	armedState map[stateTriggerKey]bool
+	stateChecksPaused bool
+	zoneBatch         *zoneChangeBatch
+	resolvingState    stateTriggerKey
+	pending           []*pendingTrigger
+	delayed           []*DelayedTrigger
+	armedState        map[stateTriggerKey]bool
 }
 
 // NewTriggerSystem returns an initialized TriggerSystem.
@@ -164,9 +169,16 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 		maps.Copy(clonedArmed, ts.armedState)
 	}
 
+	var batch *zoneChangeBatch
+	if ts.zoneBatch != nil {
+		batch = &zoneChangeBatch{before: ts.zoneBatch.before, events: append([]GameEvent(nil), ts.zoneBatch.events...)}
+	}
 	return TriggerSystem{
-		pending:    clonedPending,
-		delayed:    clonedDelayed,
-		armedState: clonedArmed,
+		stateChecksPaused: ts.stateChecksPaused,
+		zoneBatch:         batch,
+		resolvingState:    ts.resolvingState,
+		pending:           clonedPending,
+		delayed:           clonedDelayed,
+		armedState:        clonedArmed,
 	}
 }

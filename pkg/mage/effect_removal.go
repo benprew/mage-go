@@ -199,9 +199,7 @@ func (*destroyTargetPermanentEffect) Apply(ctx *EffectContext) error {
 
 func (e *destroyAllMatchingEffect) Apply(ctx *EffectContext) error {
 	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	for _, p := range toDestroy {
-		ctx.Game.DestroyPermanent(p)
-	}
+	ctx.Game.DestroyPermanents(toDestroy)
 	return nil
 }
 
@@ -213,8 +211,8 @@ func (e *destroyAllMatchingNoRegenEffect) Apply(ctx *EffectContext) error {
 			continue
 		}
 		p.GrantBaseAttr(CantRegenerate)
-		ctx.Game.DestroyPermanent(p)
 	}
+	ctx.Game.DestroyPermanents(toDestroy)
 	return nil
 }
 

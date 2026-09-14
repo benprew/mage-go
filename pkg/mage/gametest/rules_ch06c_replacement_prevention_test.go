@@ -292,20 +292,26 @@ func TestCR616_1f_ReplacementInteractionChainedEffects(t *testing.T) {
 // followed by a prevention shield chains correctly.
 func TestCR616_2_ReplacementInteractionBecomesApplicable(t *testing.T) {
 	registerCh06Cards()
-
-	g := NewTestGame(t)
-	g.AddCard(core.ZoneHand, PlayerA, "Ch06 Bolt")
-
-	pid := g.Players[1].PlayerID()
-	g.AddPreventionShield(pid, 2)
-	g.AddReplacementEffect(&ch06DoubleDamageReplacement{playerID: pid})
-
-	g.CastSpell(1, core.PrecombatMain, PlayerA, "Ch06 Bolt", "PlayerB")
-	g.StopAt(1, core.EndCombat)
-	g.Execute()
-
-	// 3 doubled to 6; then 2 prevented = 4 through.
-	g.AssertLife(PlayerB, 16)
+	for _, tc := range []struct {
+		name         string
+		choice, life int
+	}{
+		{"prevent first", 0, 18},
+		{"double first", 1, 16},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewTestGame(t)
+			g.AddCard(core.ZoneHand, PlayerA, "Ch06 Bolt")
+			pid := g.Players[1].PlayerID()
+			g.AddPreventionShield(pid, 2)
+			g.AddReplacementEffect(&ch06DoubleDamageReplacement{playerID: pid})
+			g.ChooseMode(PlayerB, tc.choice)
+			g.CastSpell(1, core.PrecombatMain, PlayerA, "Ch06 Bolt", "PlayerB")
+			g.StopAt(1, core.EndCombat)
+			g.Execute()
+			g.AssertLife(PlayerB, tc.life)
+		})
+	}
 }
 
 // ch06DoubleDamageReplacement doubles damage to a specific player.

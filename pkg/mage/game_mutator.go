@@ -1021,3 +1021,12 @@ func (g *Game) ExecuteCombatDamage() {
 	g.damage.SetResolvingCombatDamage(false)
 	g.flushCombatDamageAggregator()
 }
+
+// PutOnBattlefieldForSetup adds a starting permanent without state-trigger checks.
+// State triggers observe the complete fixture when game actions begin.
+func (g *Game) PutOnBattlefieldForSetup(card Card, controller uuid.UUID) *Permanent {
+	paused := g.triggers.stateChecksPaused
+	g.triggers.stateChecksPaused = true
+	defer func() { g.triggers.stateChecksPaused = paused }()
+	return g.PutOnBattlefield(card, controller)
+}
