@@ -3,7 +3,9 @@ package heuristic
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"runtime"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -101,11 +103,21 @@ func playSingleGame(stratA, stratB ai.AIStrategy, deckAEntries, deckBEntries []t
 	return 0
 }
 
-// run1kGames runs 1,000 games pitting newFactory against baselineFactory.
-// It runs 500 games where New is PlayerA (plays first) and 500 games where Baseline is PlayerA.
+func getSimulationGameCount() int {
+	if s := os.Getenv("SIM_GAMES"); s != "" {
+		if n, err := strconv.Atoi(s); err == nil && n > 0 {
+			return n
+		}
+	}
+	return 2
+}
+
+// run1kGames runs simulation games pitting newFactory against baselineFactory.
 // Decks are mirrored/paired evenly across archetype combinations.
+// By default, it runs 2 games (1 where New is PlayerA, 1 where New is PlayerB) to verify
+// functionality quickly. Set SIM_GAMES=1000 to run full statistical benchmarks.
 func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp ai.WeightedPersonality) ai.AIStrategy) (newWinsCount, baselineWinsCount, drawsCount int64, winRate float64) {
-	const totalGames = 1000
+	totalGames := getSimulationGameCount()
 	const maxTurns = 50
 
 	archetypes := tui.Archetypes
@@ -118,7 +130,7 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp 
 	var baselineWins int64
 	var draws int64
 
-	workers := max(runtime.NumCPU(), 1)
+	workers := max(min(max(runtime.NumCPU(), 1), totalGames), 1)
 
 	var wg sync.WaitGroup
 	gamesPerWorker := totalGames / workers
@@ -184,29 +196,36 @@ func run1kGames(t *testing.T, label string, newFactory, baselineFactory func(wp 
 
 	wg.Wait()
 
+	totalCompleted := newWins + baselineWins + draws
+	if totalCompleted != int64(totalGames) {
+		t.Fatalf("expected %d games to complete, got %d", totalGames, totalCompleted)
+	}
+
 	decidedGames := newWins + baselineWins
 	winRate = 0.0
 	if decidedGames > 0 {
 		winRate = float64(newWins) / float64(decidedGames) * 100.0
 	}
 
-	fmt.Printf("\n=======================================================\n")
-	fmt.Printf("1k Games Simulation Results: %s\n", label)
-	fmt.Printf("New AI Wins:      %d (%.1f%% of decided)\n", newWins, winRate)
-	fmt.Printf("Baseline AI Wins: %d (%.1f%% of decided)\n", baselineWins, 100.0-winRate)
-	for d := range numArchetypes {
-		nw := atomic.LoadInt64(&newWinsByDeck[d])
-		bw := atomic.LoadInt64(&baselineWinsByDeck[d])
-		tot := nw + bw
-		wr := 0.0
-		if tot > 0 {
-			wr = float64(nw) / float64(tot) * 100.0
+	if totalGames >= 10 {
+		fmt.Printf("\n=======================================================\n")
+		fmt.Printf("Simulation Results (%d games): %s\n", totalGames, label)
+		fmt.Printf("New AI Wins:      %d (%.1f%% of decided)\n", newWins, winRate)
+		fmt.Printf("Baseline AI Wins: %d (%.1f%% of decided)\n", baselineWins, 100.0-winRate)
+		for d := range numArchetypes {
+			nw := atomic.LoadInt64(&newWinsByDeck[d])
+			bw := atomic.LoadInt64(&baselineWinsByDeck[d])
+			tot := nw + bw
+			wr := 0.0
+			if tot > 0 {
+				wr = float64(nw) / float64(tot) * 100.0
+			}
+			fmt.Printf("  %-25s: New %3d vs Base %3d (%.1f%%)\n", archetypes[d].Name, nw, bw, wr)
 		}
-		fmt.Printf("  %-25s: New %3d vs Base %3d (%.1f%%)\n", archetypes[d].Name, nw, bw, wr)
+		fmt.Printf("Draws:            %d\n", draws)
+		fmt.Printf("Total Games:      %d\n", totalGames)
+		fmt.Printf("=======================================================\n\n")
 	}
-	fmt.Printf("Draws:            %d\n", draws)
-	fmt.Printf("Total Games:      %d\n", totalGames)
-	fmt.Printf("=======================================================\n\n")
 
 	return newWins, baselineWins, draws, winRate
 }

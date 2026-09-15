@@ -44,59 +44,43 @@ func buildMeasureState() (*mage.Game, *mage.BasePlayer, *mage.BasePlayer) {
 	return g, pa, pb
 }
 
-// TestMeasure_TTImpact runs identical searches with and without the
+// BenchmarkMeasure_TTImpact runs identical searches with and without the
 // transposition table and reports nodes, TT activity, and wall-clock time.
-// It is not an assertion-driven test; it exists to make A/B measurement
-// trivial via `go test -run Measure -v`.
-func TestMeasure_TTImpact(t *testing.T) {
-	// Generous budget so both variants complete the full iterative deepening
-	// — the point is to compare work-to-the-same-answer, not who stopped first.
+// Run via: go test -bench=BenchmarkMeasure_TTImpact -v ./pkg/mage/interactive/ai/search
+func BenchmarkMeasure_TTImpact(b *testing.B) {
 	cfg := Config{
 		MaxDepth:  6,
 		MaxNodes:  1 << 30,
 		TimeLimit: 60 * time.Second,
 	}
 
-	// ── Baseline: no TT ──────────────────────────────────────────────────
-	g1, pa1, _ := buildMeasureState()
-	noTT := &Strategy{
-		Config:    cfg,
-		Evaluator: eval.DefaultEvaluator,
-	}
-	start := time.Now()
-	actionNoTT := noTT.PriorityAction(pa1, g1, 0, true)
-	elapsedNoTT := time.Since(start)
-	nodesNoTT := noTT.LastNodes
+	b.Run("NoTT", func(b *testing.B) {
+		var lastNodes uint64
+		for i := 0; i < b.N; i++ {
+			g, pa, _ := buildMeasureState()
+			noTT := &Strategy{
+				Config:    cfg,
+				Evaluator: eval.DefaultEvaluator,
+			}
+			noTT.PriorityAction(pa, g, 0, true)
+			lastNodes = noTT.LastNodes
+		}
+		b.ReportMetric(float64(lastNodes), "nodes/op")
+	})
 
-	// ── TT-enabled ───────────────────────────────────────────────────────
-	g2, pa2, _ := buildMeasureState()
-	withTT := &Strategy{
-		Config:    cfg,
-		Evaluator: eval.DefaultEvaluator,
-		tt:        NewTranspositionTable(DefaultTTSizeMB),
-		zobrist:   NewZobristTables(),
-	}
-	start = time.Now()
-	actionTT := withTT.PriorityAction(pa2, g2, 0, true)
-	elapsedTT := time.Since(start)
-	nodesTT := withTT.LastNodes
-
-	t.Logf("── TT impact ──")
-	t.Logf("no TT : nodes=%d  time=%v  action=%v %s",
-		nodesNoTT, elapsedNoTT, actionNoTT.Type, actionNoTT.CardName)
-	t.Logf("with TT: nodes=%d  time=%v  action=%v %s",
-		nodesTT, elapsedTT, actionTT.Type, actionTT.CardName)
-	t.Logf("TT hits=%d stores=%d hit rate=%.1f%%",
-		withTT.TTHits, withTT.TTStores,
-		100*float64(withTT.TTHits)/float64(withTT.TTHits+withTT.TTStores+1))
-	if nodesNoTT > 0 {
-		t.Logf("node reduction: %.1f%%  (%d → %d)",
-			100*float64(int64(nodesNoTT)-int64(nodesTT))/float64(nodesNoTT),
-			nodesNoTT, nodesTT)
-	}
-	if elapsedNoTT > 0 {
-		t.Logf("time reduction: %.1f%%  (%v → %v)",
-			100*float64(elapsedNoTT-elapsedTT)/float64(elapsedNoTT),
-			elapsedNoTT, elapsedTT)
-	}
+	b.Run("WithTT", func(b *testing.B) {
+		var lastNodes uint64
+		for i := 0; i < b.N; i++ {
+			g, pa, _ := buildMeasureState()
+			withTT := &Strategy{
+				Config:    cfg,
+				Evaluator: eval.DefaultEvaluator,
+				tt:        NewTranspositionTable(DefaultTTSizeMB),
+				zobrist:   NewZobristTables(),
+			}
+			withTT.PriorityAction(pa, g, 0, true)
+			lastNodes = withTT.LastNodes
+		}
+		b.ReportMetric(float64(lastNodes), "nodes/op")
+	})
 }
