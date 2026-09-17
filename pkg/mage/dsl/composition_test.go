@@ -61,3 +61,19 @@ func TestTypedManaComposition(t *testing.T) {
 		t.Fatalf("productions = %+v", productions)
 	}
 }
+
+func TestTypedDelayedComposition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	saved := dsl.BindPermanent("saved")
+	effect := dsl.Sequence(dsl.Snapshot(target, saved),
+		dsl.AtNext(dsl.EachEndStep, dsl.Destroy(dsl.From(saved))),
+	)
+	card := mage.NewInstant("Delayed removal", "", mage.WithAbility(dsl.Spell(effect, dsl.WithTargets(target))))
+	if err := mage.ValidateCardDefinition("Delayed removal", card); err != nil {
+		t.Fatal(err)
+	}
+	metadata := dsl.InspectDefinition(effect)
+	if !metadata.Properties.Destroys || metadata.Children[1].Role != "delayed-step" {
+		t.Fatal("delayed composition lost metadata")
+	}
+}

@@ -240,6 +240,26 @@
 // While selects members at each modification's layer. Constructor input lists
 // are copied. Captured references survive phasing but not a zone round trip.
 //
+// # Delayed Turn-Step Triggers
+//
+// [AtNext] creates a one-shot delayed trigger during resolution. It accepts
+// a [TurnStepPattern], including [EachEndStep], [YourEndStep], and
+// [EachEndOfCombat]. Your-step patterns use the stored resolving controller.
+// An event that happened before installation does not trigger the ability.
+//
+// AtNext captures saved permanent bindings, typed target references, source
+// incarnation, and X. Each invocation has a separate captured frame. The body
+// gets its own copy when it resolves, so writes do not change another trigger
+// or a cloned game. A saved permanent can change characteristics or phase out
+// and in; leaving and returning to the battlefield makes it a different object.
+// Reads in the delayed body need a producer before installation or earlier in
+// that body. Delayed writes cannot supply values to the enclosing sequence.
+//
+// Delayed triggers now enter the existing pending queue. [PutTriggersOnStack]
+// places them with ordinary triggers in APNAP order at the next opportunity.
+// This also applies to legacy [RegisterDelayedTrigger] callers. AtNext does
+// not declare new targets or capture arbitrary legacy pipeline variables.
+//
 // # Damage-Source Choices
 //
 // Effects that state "a source of your choice" do not target. The player

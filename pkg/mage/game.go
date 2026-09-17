@@ -1407,7 +1407,7 @@ func (g *Game) RegisterDelayedTrigger(dt *DelayedTrigger) {
 	if dt != nil {
 		captured := *dt
 		dt = &captured
-		if p := g.FindPermanentIncludingPhased(dt.SourceID); p != nil {
+		if p := g.FindPermanentIncludingPhased(dt.SourceID); !dt.sourceCaptured && p != nil {
 			dt.sourceIncarnation = p.incarnationID
 		}
 	}
@@ -1574,18 +1574,13 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 					continue
 				}
 			}
-			obj := &StackObject{
-				ID:                uuid.New(),
-				Controller:        dt.Controller,
-				SourceID:          dt.SourceID,
+			g.triggers.AddPending(&pendingTrigger{
+				delayed:           dt,
+				sourceID:          dt.SourceID,
 				sourceIncarnation: dt.sourceIncarnation,
-				IsAbility:         true,
-				Effects:           dt.Effects,
-				Targets:           []uuid.UUID{dt.TargetID},
-				EventAmount:       evt.Amount,
-				EventSourceID:     evt.SourceID,
-			}
-			g.pushStack(obj)
+				controller:        dt.Controller,
+				event:             &evt,
+			})
 			if dt.Persistent {
 				remaining = append(remaining, dt)
 			}
@@ -1681,6 +1676,14 @@ func (g *Game) PutTriggersOnStack() {
 			Controller:        pt.controller,
 			SourceID:          pt.sourceID,
 			IsAbility:         true,
+		}
+		if dt := pt.delayed; dt != nil {
+			obj.Effects = append([]Effect(nil), dt.Effects...)
+			obj.Targets = []uuid.UUID{dt.TargetID}
+			obj.EventAmount = pt.event.Amount
+			obj.EventSourceID = pt.event.SourceID
+			g.pushStack(obj)
+			continue
 		}
 		// CR 603.1f / 603.3d: a modal triggered ability picks its mode as it
 		// goes on the stack, then gathers targets only for that mode. Push the

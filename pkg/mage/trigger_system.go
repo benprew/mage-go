@@ -11,6 +11,7 @@ import (
 // DelayedTrigger represents a one-shot triggered ability that fires when
 // a specific event occurs (e.g., "destroy this creature at end of turn").
 type DelayedTrigger struct {
+	sourceCaptured    bool
 	sourceIncarnation uuid.UUID
 	EventType         EventType
 	TargetID          uuid.UUID
@@ -27,6 +28,7 @@ type DelayedTrigger struct {
 }
 
 type pendingTrigger struct {
+	delayed           *DelayedTrigger
 	sourceIncarnation uuid.UUID
 	stateKey          stateTriggerKey
 	ability           TriggeredAbility
@@ -149,6 +151,7 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 		clonedPending = make([]*pendingTrigger, len(ts.pending))
 		for i, pt := range ts.pending {
 			clone := *pt
+			clone.delayed = cloneDelayedTrigger(pt.delayed)
 			clonedPending[i] = &clone
 		}
 	}
@@ -157,11 +160,7 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 	if len(ts.delayed) > 0 {
 		clonedDelayed = make([]*DelayedTrigger, len(ts.delayed))
 		for i, dt := range ts.delayed {
-			clone := *dt
-			if len(dt.Effects) > 0 {
-				clone.Effects = append([]Effect(nil), dt.Effects...)
-			}
-			clonedDelayed[i] = &clone
+			clonedDelayed[i] = cloneDelayedTrigger(dt)
 		}
 	}
 
@@ -183,4 +182,13 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 		delayed:           clonedDelayed,
 		armedState:        clonedArmed,
 	}
+}
+
+func cloneDelayedTrigger(dt *DelayedTrigger) *DelayedTrigger {
+	if dt == nil {
+		return nil
+	}
+	clone := *dt
+	clone.Effects = append([]Effect(nil), dt.Effects...)
+	return &clone
 }

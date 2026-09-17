@@ -145,6 +145,7 @@ func TestComposableSourceLifetimes(t *testing.T) {
 				}
 				if kind == "delayed" {
 					g.FireEvent(GameEvent{Type: EvtTapped, SourceID: c.ID()})
+					g.PutTriggersOnStack()
 				}
 				if g.stack.Size() != 1 {
 					t.Fatalf("stack size = %d", g.stack.Size())

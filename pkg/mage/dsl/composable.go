@@ -65,6 +65,10 @@ var (
 	WhenEvent         = mage.WhenEvent
 	Enters            = mage.Enters
 	Dies              = mage.Dies
+	AtNext            = mage.AtNext
+	EachEndStep       = mage.EachEndStep
+	YourEndStep       = mage.YourEndStep
+	EachEndOfCombat   = mage.EachEndOfCombat
 	At                = mage.At
 	YourUpkeep        = mage.YourUpkeep
 	EachUpkeep        = mage.EachUpkeep

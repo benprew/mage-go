@@ -38,13 +38,24 @@ func (p sourceEventPattern) inspectDefinition() definitionNode {
 type TurnStepPattern interface {
 	turnStepPattern()
 	makeStepTrigger(ResolvingEffect) *GenericTriggered
+	delayedStep() (EventType, bool)
 }
 type stepPattern struct {
 	event          EventType
 	controllerOnly bool
 }
 
-func (stepPattern) turnStepPattern() {}
+func (stepPattern) turnStepPattern()                 {}
+func (p stepPattern) delayedStep() (EventType, bool) { return p.event, p.controllerOnly }
+
+// EachEndStep matches the beginning of each end step.
+var EachEndStep = stepPattern{EvtEndStep, false}
+
+// YourEndStep matches the beginning of the controller's end step.
+var YourEndStep = stepPattern{EvtEndStep, true}
+
+// EachEndOfCombat matches the beginning of each end-of-combat step.
+var EachEndOfCombat = stepPattern{EvtEndOfCombat, false}
 
 // YourUpkeep matches the beginning of the controller's upkeep.
 var YourUpkeep = stepPattern{EvtUpkeep, true}
@@ -63,7 +74,11 @@ func (p stepPattern) makeStepTrigger(e ResolvingEffect) *GenericTriggered {
 	return t
 }
 func (p stepPattern) inspectDefinition() definitionNode {
-	return definitionNode{Role: "turn-step-pattern", Text: "turn step"}
+	label := p.event.String()
+	if p.controllerOnly {
+		label = "your " + label
+	}
+	return definitionNode{Role: "turn-step-pattern", Text: label}
 }
 
 // TriggerOption is a closed option for triggered abilities.
