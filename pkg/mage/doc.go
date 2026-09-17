@@ -230,6 +230,16 @@
 // a shield in the existing replacement pipeline. These adapters do not yet
 // cover every layer, duration, replacement rule, or legacy constructor.
 //
+// [SetColors] and [SetEachColors] replace colors in layer 5. An empty color
+// list makes the subjects colorless. [SetSubtypeFamily] replaces one subtype
+// family in layer 4; [AddSubtypeFamily] retains existing subtypes. Both use
+// the existing subtype rules, including basic land mana abilities. A subtype
+// cannot apply to a permanent without the corresponding card type.
+// [GrantEachKeyword] grants a keyword to a set in layer 6. These modifications
+// work in [Until] and [While]. Until captures membership before installation;
+// While selects members at each modification's layer. Constructor input lists
+// are copied. Captured references survive phasing but not a zone round trip.
+//
 // # Damage-Source Choices
 //
 // Effects that state "a source of your choice" do not target. The player
@@ -348,8 +358,8 @@
 // Pipelines can record a permanent owner with [SnapshotPermanent]. They can
 // change ownership with [ChangeOwnerGathered]. They can move an exiled card to
 // the graveyard of its current owner with [MoveExiledGatheredToGraveyard].
-// [IfPlayerPays] provides branches for paid and unpaid outcomes. [EffectIfPaid]
-// and [UnlessTargetPays] provide simplified wrappers for this check.
+// [IfPlayerPays] provides branches for paid and unpaid outcomes. [IfPaid]
+// and [UnlessPaid] provide typed wrappers for this check.
 //
 // # Variable Target Counts
 //

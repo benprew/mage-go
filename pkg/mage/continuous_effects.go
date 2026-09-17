@@ -1744,13 +1744,17 @@ func applySetSubtypes(g *Game, target *Permanent, family SubtypeFamily, subtypes
 func AddSubtypes(targetID uuid.UUID, family SubtypeFamily, duration Duration, subtypes ...string) ContinuousEffect {
 	validateSubtypeChange("AddSubtypes", family, subtypes)
 	return TargetEffect(LayerType, duration, targetID, func(_ *Game, target *Permanent) error {
-		if !target.supportsSubtypeFamily(family) {
-			return nil
-		}
-		target.addSubtypeFamily(family, subtypes)
-		refreshIntrinsicBasicLandManaAbilities(target)
+		applyAddSubtypes(target, family, subtypes)
 		return nil
 	})
+}
+
+func applyAddSubtypes(target *Permanent, family SubtypeFamily, subtypes []string) {
+	if !target.supportsSubtypeFamily(family) {
+		return
+	}
+	target.addSubtypeFamily(family, subtypes)
+	refreshIntrinsicBasicLandManaAbilities(target)
 }
 
 func validateSubtypeChange(name string, family SubtypeFamily, subtypes []string) {

@@ -79,15 +79,20 @@ type (
 )
 
 var (
-	ModifyPT     = mage.ModifyPT
-	ModifyEachPT = mage.ModifyEachPT
-	GrantKeyword = mage.GrantKeywordModification
-	Until        = mage.Until
-	While        = mage.While
-	Static       = mage.Static
-	AddCounters  = mage.AddCountersTo
-	GainLife     = mage.GainLifeFor
-	LoseLife     = mage.LoseLifeFor
+	SetColors        = mage.SetColors
+	SetEachColors    = mage.SetEachColors
+	SetSubtypeFamily = mage.SetSubtypeFamily
+	AddSubtypeFamily = mage.AddSubtypeFamily
+	GrantEachKeyword = mage.GrantEachKeyword
+	ModifyPT         = mage.ModifyPT
+	ModifyEachPT     = mage.ModifyEachPT
+	GrantKeyword     = mage.GrantKeywordModification
+	Until            = mage.Until
+	While            = mage.While
+	Static           = mage.Static
+	AddCounters      = mage.AddCountersTo
+	GainLife         = mage.GainLifeFor
+	LoseLife         = mage.LoseLifeFor
 )
 
 type (

@@ -17,6 +17,10 @@ type layerModification struct {
 	power, toughness ValueSource
 	keyword          Attr
 	layer            Layer
+	colors           []Color
+	family           SubtypeFamily
+	subtypes         []string
+	addSubtypes      bool
 }
 
 func (*layerModification) continuousModification()            {}
@@ -36,17 +40,70 @@ func ModifyEachPT(subjects PermanentSet, power, toughness ValueSource) Continuou
 func GrantKeywordModification(subject PermanentRef, keyword Attr) ContinuousModification {
 	return &layerModification{subject: subject, keyword: keyword, layer: LayerAbility}
 }
+
+// GrantEachKeyword grants a keyword to each member of a permanent set.
+func GrantEachKeyword(subjects PermanentSet, keyword Attr) ContinuousModification {
+	return &layerModification{subjects: subjects, keyword: keyword, layer: LayerAbility}
+}
+
+// SetColors replaces a permanent's colors. An empty list makes it colorless.
+func SetColors(subject PermanentRef, colors ...Color) ContinuousModification {
+	return &layerModification{subject: subject, colors: modificationColors(colors), layer: LayerColor}
+}
+
+// SetEachColors replaces the colors of each member of a permanent set.
+func SetEachColors(subjects PermanentSet, colors ...Color) ContinuousModification {
+	return &layerModification{subjects: subjects, colors: modificationColors(colors), layer: LayerColor}
+}
+
+func modificationColors(colors []Color) []Color {
+	for _, color := range colors {
+		if color < White || color > Green {
+			panic("colors: supply actual colors or an empty list for colorless")
+		}
+	}
+	return append([]Color(nil), colors...)
+}
+
+// SetSubtypeFamily replaces subtypes in one family and retains the other families.
+func SetSubtypeFamily(subject PermanentRef, family SubtypeFamily, subtypes ...string) ContinuousModification {
+	validateSubtypeChange("SetSubtypeFamily", family, subtypes)
+	return &layerModification{subject: subject, family: family, subtypes: append([]string(nil), subtypes...), layer: LayerType}
+}
+
+// AddSubtypeFamily adds subtypes without removing existing types or abilities.
+func AddSubtypeFamily(subject PermanentRef, family SubtypeFamily, subtypes ...string) ContinuousModification {
+	validateSubtypeChange("AddSubtypeFamily", family, subtypes)
+	return &layerModification{subject: subject, family: family, subtypes: append([]string(nil), subtypes...), addSubtypes: true, layer: LayerType}
+}
+
 func (m *layerModification) inspectDefinition() definitionNode {
 	subject := any(m.subject)
 	if m.subjects != nil {
 		subject = m.subjects
 	}
-	n := definitionNode{Role: "continuous-modification", children: []definitionEdge{{"subject", subject}}}
+	n := definitionNode{Role: "continuous-modification", Text: m.description(), children: []definitionEdge{{"subject", subject}}}
 	if m.layer == LayerPT {
 		n.children = append(n.children, definitionEdge{"power", m.power}, definitionEdge{"toughness", m.toughness})
 	}
 	return n
 }
+func (m *layerModification) description() string {
+	switch m.layer {
+	case LayerType:
+		if m.addSubtypes {
+			return fmt.Sprintf("add subtypes %v in family %v", m.subtypes, m.family)
+		}
+		return fmt.Sprintf("set subtypes %v in family %v", m.subtypes, m.family)
+	case LayerColor:
+		return fmt.Sprintf("set colors %v", m.colors)
+	case LayerAbility:
+		return fmt.Sprintf("grant %v", m.keyword)
+	default:
+		return "modify power and toughness"
+	}
+}
+
 func (m *layerModification) members(ctx *EffectContext) []*Permanent {
 	if m.subjects != nil {
 		return m.subjects.resolvePermanents(ctx)
@@ -61,13 +118,17 @@ type capturedModification struct {
 	permanent        capturedPermanent
 	power, toughness int
 	keyword          Attr
+	colors           []Color
+	family           SubtypeFamily
+	subtypes         []string
+	addSubtypes      bool
 }
 
 func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
 		if m.layer == LayerPT {
 			v.power = m.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
 			v.toughness = m.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
@@ -82,11 +143,21 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 		return
 	}
 	p = g.MutablePermanent(p.ID())
-	if layer == LayerPT {
+	switch layer {
+	case LayerPT:
 		p.powerBonus += v.power
 		p.toughBonus += v.toughness
-	} else {
+	case LayerAbility:
 		g.effects.GrantAttr(p.ID(), v.keyword)
+	case LayerColor:
+		colors := append([]Color(nil), v.colors...)
+		p.ColorOverride = &colors
+	case LayerType:
+		if v.addSubtypes {
+			applyAddSubtypes(p, v.family, v.subtypes)
+		} else {
+			applySetSubtypes(g, p, v.family, v.subtypes)
+		}
 	}
 }
 
@@ -124,7 +195,7 @@ func (r *continuousRule) staticEffects() []ContinuousEffect {
 		panic("static: supply at least one modification")
 	}
 	var effects []ContinuousEffect
-	for _, layer := range []Layer{LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerType, LayerColor, LayerAbility, LayerPT} {
 		var mods []*layerModification
 		for _, value := range r.modifications {
 			if nilDefinition(value) {
@@ -255,7 +326,7 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 }
 func (e *untilEffect) Apply(ctx *EffectContext) error {
 	var effects []*composedLayerEffect
-	for _, layer := range []Layer{LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerType, LayerColor, LayerAbility, LayerPT} {
 		entry := &composedLayerEffect{layer: layer, duration: e.duration}
 		entry.SetSourceID(ctx.SourceID)
 		for _, value := range e.modifications {

@@ -28,3 +28,22 @@ func TestTypedResolutionComposition(t *testing.T) {
 		t.Fatalf("composition metadata lost: %+v", metadata)
 	}
 }
+
+func TestTypedLayerComposition(t *testing.T) {
+	target := dsl.TargetPermanent("permanent", dsl.IsCreature)
+	effect := dsl.Until(core.EndOfTurn,
+		dsl.SetColors(target, core.Blue),
+		dsl.SetSubtypeFamily(target, dsl.SubtypeCreature, "Human"),
+		dsl.AddSubtypeFamily(target, dsl.SubtypeCreature, "Wizard"),
+	)
+	card := mage.NewCreature("Layers", "", 1, 1,
+		mage.WithAbility(dsl.Activate(dsl.Costs(), effect, dsl.WithTargets(target))),
+		mage.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.IsCreature),
+			dsl.SetEachColors(dsl.ControlledPermanents(dsl.IsCreature), core.Green),
+			dsl.GrantEachKeyword(dsl.ControlledPermanents(dsl.IsCreature), core.Flying),
+		))),
+	)
+	if err := mage.ValidateCardDefinition("Layers", card); err != nil {
+		t.Fatal(err)
+	}
+}
