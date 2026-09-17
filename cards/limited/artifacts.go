@@ -64,7 +64,7 @@ func registerArtifacts() {
 			),
 			// {3}: Untap Basalt Monolith
 			WithActivatedAbility(
-				UntapSource(),
+				Untap(This),
 				GenericCost(3),
 			),
 		)

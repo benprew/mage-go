@@ -3796,7 +3796,7 @@ func registerCreatures() {
 			WithSubTypes("Devil"),
 			WithKeyword(DoesNotUntapKW),
 			WithActivatedAbility(
-				UntapSource(),
+				Untap(This),
 				ManaCostOf("{1}"),
 				WithCost(SacrificeMatchingCost(NewPermanentFilter("another creature", func(p *Permanent, _ *Game) bool {
 					return p.HasType(TypeCreature)

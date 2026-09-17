@@ -226,7 +226,7 @@ func registerCreatures() {
 				IfSourceTapped(CompositeEffects(
 					"exile target creature card from a graveyard and untap this creature",
 					ExileTargetCardFromGraveyard(),
-					UntapSource(),
+					Untap(This),
 				)),
 				ManaCostOf("{0}"),
 				WithTarget(TargetCreatureCardInAnyGraveyard()),

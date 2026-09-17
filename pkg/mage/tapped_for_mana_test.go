@@ -113,7 +113,7 @@ func TestTappedForManaEvent(t *testing.T) {
 		g, player, _ := randomTestGame()
 		addTappedForManaWatcher(g, player)
 		land := NewLand("Utility Land",
-			WithActivatedAbility(UntapSource(), Tap()),
+			WithActivatedAbility(UntapPermanent(This), Tap()),
 		)
 		land.SetOwner(player.PlayerID())
 		perm := g.PutOnBattlefield(land, player.PlayerID())

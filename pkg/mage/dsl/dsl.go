@@ -423,7 +423,6 @@ var (
 	RegenerateGathered       = mage.RegenerateGathered
 	PreventDamageToTarget    = mage.PreventDamageToTarget
 
-	UntapSource                               = mage.UntapSource
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	TapGathered                               = mage.TapGathered
 	FightGathered                             = mage.FightGathered

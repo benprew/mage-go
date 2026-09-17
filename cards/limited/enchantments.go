@@ -472,7 +472,7 @@ func registerEnchantments() {
 			WithStaticAbility(
 				GrantAbilityToAttached(Haste, AttachAura),
 				GrantActivatedAbilityToAttached(
-					UntapSource(),
+					Untap(This),
 					GenericCost(0),
 					AttachAura,
 					WithOncePerTurn(),

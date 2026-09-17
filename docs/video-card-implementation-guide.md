@@ -255,7 +255,7 @@ g.AssertLife(gametest.PlayerB, 17)
 
 **Counters:** `AddCounters`, `RemoveCountersFromSource`
 
-**Permanents:** `Tap`, `UntapTarget`, `UntapSource`, `TapOrUntapTarget`, `TapAllLands`, `TapAttachedCreature`
+**Permanents:** `Tap`, `UntapTarget`, `Untap(This)`, `TapOrUntapTarget`, `TapAllLands`, `TapAttachedCreature`
 
 **Misc:** `AddMana`, `AddAnyMana`, `CreateToken`, `CloneTarget`, `CopySpellOnStack`, `AttachToTarget`, `ControlChangeTarget`, `ExtraTurn`, `ChangeColorEffect`, `CounterSpell`, `CounterSpellIfColor`, `CounterSpellIfXMeetsCMC`, `RegenerateSource`, `RegenerateTarget`, `ChooseColor`, `DestroyTargetAtEndOfTurn`, `ReplaceKeywordEffect`, `CompositeEffects`
 

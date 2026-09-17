@@ -312,3 +312,28 @@ Other continuous-effect families remain open.
 - `git diff --check` passed.
 
 Long AI simulations were not rerun; this slice changes no AI executor.
+
+## Source-untap action family
+
+Completed the [source-untap slice](composable-dsl-source-untap-slice.md) within
+later action slice 2. Every production caller now uses `dsl.Untap(This)`;
+`UntapSource` and its private executor are removed. A failing regression showed
+that the old helper could untap a returned source. The typed adapter preserves
+the captured incarnation through control changes and phasing, and rejects a
+returned or absent source. Stun counters, untap events, cloned games, metadata,
+validation, and public composition have focused coverage.
+
+Positional-target untap helpers remain. Aura tap migration also remains open:
+`AttachedPermanent` currently reads a live source and needs a separate audit of
+last-known attachment information for departed Auras under CR 608.2h.
+
+## Verification for the source-untap slice
+
+- Focused behavior, public composition, and compile-fail tests passed.
+- `go test ./pkg/mage/... -short -count=1` passed.
+- `go test ./... -short -count=1` and `go test ./... -count=1` passed, including
+  all card packages, registered definitions, and long AI simulations.
+- `go build ./...` and `go vet ./...` passed.
+- `make lint` passed with zero issues; optional cache writes were blocked by
+  the sandbox. Its unrelated Secrets of Strixhaven import change was reverted.
+- `git diff --check` passed.

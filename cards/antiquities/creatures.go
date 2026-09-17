@@ -511,7 +511,7 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			WithKeyword(DoesNotUntapKW),
 			WithActivatedAbility(
-				UntapSource(),
+				Untap(This),
 				GenericCost(9),
 				WithUpkeepOnly(),
 			),

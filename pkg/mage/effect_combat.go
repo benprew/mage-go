@@ -22,17 +22,6 @@ func (e *untapTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// untapSourceEffect untaps the source permanent.
-type untapSourceEffect struct{}
-
-// UntapSource creates an effect that untaps the source permanent.
-func UntapSource() Effect {
-	return &untapSourceEffect{}
-}
-
-func (e *untapSourceEffect) Text() string                 { return "Untap this permanent" }
-func (e *untapSourceEffect) Properties() EffectProperties { return EffectProperties{} }
-
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
 type tapAttachedCreatureEffect struct{}
 
@@ -312,14 +301,6 @@ func (*untapTargetEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	ctx.Game.UntapPermanent(perm)
-	return nil
-}
-
-func (*untapSourceEffect) Apply(ctx *EffectContext) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm != nil {
-		ctx.Game.UntapPermanent(perm)
-	}
 	return nil
 }
 

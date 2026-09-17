@@ -257,6 +257,18 @@
 // duration does not express "for as long as" conditions such as source control
 // or a tapped source; those conditions need their own lifetime adapters.
 //
+// # Source Untap Instructions
+//
+// Use dsl.Untap(dsl.This) to untap the source of a resolving ability.
+// [UntapPermanent] resolves the captured battlefield incarnation, then uses
+// [Game.UntapPermanent]. An absent, returned, or phased-out source has no
+// effect. A control change or a completed phasing cycle keeps the reference.
+// Stun counters and untap events use the existing action path. Positional
+// targets do not change the subject. Definitions retain benefit metadata and
+// expose the subject to validation. Spell-only sources are rejected.
+// The old source-only untap constructor is removed. Target and attachment
+// helpers remain for their separate migration families.
+//
 // # Typed Life Instructions
 //
 // Card authors use dsl.GainLife(subject, amount) and dsl.LoseLife(subject, amount).

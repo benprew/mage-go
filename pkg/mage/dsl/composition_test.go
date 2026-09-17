@@ -128,3 +128,23 @@ func TestTypedLifeComposition(t *testing.T) {
 		t.Fatalf("life metadata = %+v", info)
 	}
 }
+
+func TestTypedSourceUntapComposition(t *testing.T) {
+	saved := dsl.BindPermanent("source")
+	body := dsl.Sequence(dsl.Snapshot(dsl.This, saved), dsl.Untap(dsl.From(saved)))
+	cards := []mage.Card{
+		dsl.NewCreature("Activation", "", 1, 1, dsl.WithAbility(dsl.Activate(dsl.Costs(), dsl.Untap(dsl.This)))),
+		dsl.NewCreature("Trigger", "", 1, 1, dsl.WithAbility(dsl.At(dsl.YourUpkeep, body))),
+		dsl.NewCreature("Modes", "", 1, 1, dsl.WithAbility(dsl.ActivateModes(dsl.Costs(),
+			dsl.ModeOf("Untap", body), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info := dsl.InspectDefinition(body)
+	if info.Role != "sequence" || info.Properties.Outcome != mage.OutcomeBenefit {
+		t.Fatalf("untap metadata = %+v", info)
+	}
+}
