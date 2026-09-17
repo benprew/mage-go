@@ -13,7 +13,7 @@ func auditStateGame() (*Game, *BasePlayer, *Permanent) {
 	g := NewGame(a, b)
 	a.AddToHand(NewLand("Hand"))
 	a.AddToLibrary(NewLand("Library"))
-	ability := NewStateTriggered(false, GainLife(1)).SetCondition(func(_ *GameEvent, g GameReader, _, controller uuid.UUID) bool {
+	ability := NewStateTriggered(false, GainLifeFor(You, Fixed(1))).SetCondition(func(_ *GameEvent, g GameReader, _, controller uuid.UUID) bool {
 		return len(g.GetPlayer(controller).Hand()) == 0
 	})
 	card := NewCreature("Watcher", "", 1, 1, WithAbility(ability))
@@ -152,7 +152,7 @@ func TestAuditSimultaneousDeathTriggers(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
 			g := NewGame(a, b)
-			watcher := NewCreature("Watcher", "", 1, 1, WithAbility(AnyCreatureDiesTrigger(GainLife(1), false)))
+			watcher := NewCreature("Watcher", "", 1, 1, WithAbility(AnyCreatureDiesTrigger(GainLifeFor(You, Fixed(1)), false)))
 			other := NewCreature("Other", "", 1, 1)
 			watcher.SetOwner(a.PlayerID())
 			other.SetOwner(b.PlayerID())

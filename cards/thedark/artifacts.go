@@ -86,7 +86,7 @@ func registerArtifacts() {
 	Register("Fountain of Youth", func() Card {
 		return NewArtifact("Fountain of Youth", "{0}",
 			WithActivatedAbility(
-				mage.GainLife(1),
+				GainLife(You, Fixed(1)),
 				ManaCostOf("{2}"),
 				WithCost(TapCost(This)),
 			),

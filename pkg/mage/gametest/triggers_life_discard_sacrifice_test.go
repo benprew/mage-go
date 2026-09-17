@@ -59,7 +59,7 @@ func registerTriggerLifeDiscardSacrificeCards() {
 		// Source for life gain: simple gain-3 instant.
 		reg("Trig Healing Salve", func() mage.Card {
 			return mage.NewInstant("Trig Healing Salve", "{W}",
-				mage.NewSpellAbility(mage.GainLife(3)))
+				mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))))
 		})
 
 		// Targeted discard: target opponent discards 1 card.
@@ -73,7 +73,7 @@ func registerTriggerLifeDiscardSacrificeCards() {
 		reg("Trig Altar", func() mage.Card {
 			return mage.NewArtifact("Trig Altar", "{2}",
 				mage.WithActivatedAbility(
-					mage.GainLife(1),
+					mage.GainLifeFor(mage.You, mage.Fixed(1)),
 					mage.SacrificeCreatureCost()))
 		})
 

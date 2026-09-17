@@ -14,7 +14,7 @@ func TestCastSpellCombinesPrintedAndAdditionalMana(t *testing.T) {
 	g.players[0].ManaPool().Add(Blue, 1)
 
 	spell := NewSorcery("Combined Additional Mana", "{1}",
-		NewSpellAbility(GainLife(1)),
+		NewSpellAbility(GainLifeFor(You, Fixed(1))),
 		WithAdditionalCost(ManaCostOf("{W}")),
 	)
 	spell.SetOwner(playerID)
@@ -36,7 +36,7 @@ func TestCastSpellCombinesPrintedAndActionMana(t *testing.T) {
 	g.players[0].ManaPool().Add(Blue, 1)
 
 	spell := NewSorcery("Combined Action Mana", "{1}",
-		NewSpell(GainLife(1), WithCost(ManaCostOf("{W}"))),
+		NewSpell(GainLifeFor(You, Fixed(1)), WithCost(ManaCostOf("{W}"))),
 	)
 	spell.SetOwner(playerID)
 	g.players[0].AddToHand(spell)
@@ -56,7 +56,7 @@ func TestCastSpellUnpayableTotalCostDoesNotTapManaSources(t *testing.T) {
 	mountain := addLand(t, g, playerID, "Mountain", Red)
 
 	spell := NewSorcery("Unpayable Additional Life", "{R}",
-		NewSpellAbility(GainLife(1)),
+		NewSpellAbility(GainLifeFor(You, Fixed(1))),
 		WithAdditionalCost(LifePayCost(100)),
 	)
 	spell.SetOwner(playerID)
@@ -88,7 +88,7 @@ func TestCastSpellLocksEitherCostAfterRemovingSpellFromHand(t *testing.T) {
 	g.players[0].ManaPool().Add(Colorless, 7)
 
 	spell := NewSorcery("Locked Either Cost", "{2}{B}",
-		NewSpellAbility(GainLife(1)),
+		NewSpellAbility(GainLifeFor(You, Fixed(1))),
 		WithAdditionalCost(EitherCost(DiscardCost(1), ManaCostOf("{5}"))),
 	)
 	spell.SetOwner(playerID)
@@ -115,7 +115,7 @@ func TestCastSpellColorsSpentExcludeManaAbilityActivationCosts(t *testing.T) {
 	filterPermanent := g.PutOnBattlefield(filter, playerID)
 	filterPermanent.RevokeBaseAttr(AttrSummonSick)
 
-	spell := NewSorcery("Colors Spent Transaction", "{U}", NewSpellAbility(GainLife(1)))
+	spell := NewSorcery("Colors Spent Transaction", "{U}", NewSpellAbility(GainLifeFor(You, Fixed(1))))
 	spell.SetOwner(playerID)
 	g.players[0].AddToHand(spell)
 

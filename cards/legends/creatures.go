@@ -2161,7 +2161,7 @@ func registerCreatures() {
 			WithKeyword(Trample),
 			WithAbility(CreatureDealtDamageBySourceDiesTrigger(
 				CompositeEffects("gain 1 life and deal 1 damage to target player",
-					mage.GainLife(1),
+					GainLife(You, Fixed(1)),
 					DealDamage(Fixed(1)),
 				),
 				false,
@@ -2994,7 +2994,7 @@ func registerCreatures() {
 			WithSubTypes("Demon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Swampwalk),
-			WithAbility(WheneverSpellCastTrigger(mage.GainLife(1), false, HasColorCardFilter(Black))),
+			WithAbility(WheneverSpellCastTrigger(GainLife(You, Fixed(1)), false, HasColorCardFilter(Black))),
 		)
 	})
 

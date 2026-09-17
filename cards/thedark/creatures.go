@@ -257,7 +257,7 @@ func registerCreatures() {
 				ManaCostOf("{B}"),
 				WithCost(TapCost(This)),
 				WithTarget(TargetCardInAnyGraveyard(IsArtifactCard)),
-				WithEffect(mage.GainLife(2)),
+				WithEffect(GainLife(You, Fixed(2))),
 			),
 		)
 	})

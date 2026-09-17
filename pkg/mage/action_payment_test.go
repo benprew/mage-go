@@ -65,7 +65,7 @@ func TestActivateAbility_TotalCostFailureIsAtomic(t *testing.T) {
 
 	sourceCard := NewArtifact("Expensive Device", "{1}",
 		WithActivatedAbility(
-			GainLife(1),
+			GainLifeFor(You, Fixed(1)),
 			GenericCost(1),
 			WithCost(LifePayCost(2)),
 			WithCost(LifePayCost(2)),

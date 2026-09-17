@@ -116,7 +116,7 @@ func TestCombatPhaseGeneral(t *testing.T) {
 				return mage.NewCreature(name, "{2}", 1, 1,
 					mage.WithSubTypes("Spirit"),
 					mage.WithAbility(mage.NewTriggered(core.EvtEndOfCombat, false,
-						mage.GainLife(3))))
+						mage.GainLifeFor(mage.You, mage.Fixed(3)))))
 			})
 		}
 		tg := NewTestGame(t)

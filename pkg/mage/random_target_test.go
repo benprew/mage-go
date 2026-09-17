@@ -69,7 +69,7 @@ func TestTargetRandomVariableCountAsksOnlyForCount(t *testing.T) {
 	g, a, b := newRandomTargetGame()
 	a.numbers = []int{2}
 	source := NewArtifact("Random Any Number", "{0}", WithActivatedAbility(
-		GainLife(1), GenericCost(0),
+		GainLifeFor(You, Fixed(1)), GenericCost(0),
 		WithTarget(TargetRandom(TargetUpToNCreatures(4))),
 	))
 	source.SetOwner(a.PlayerID())
@@ -100,7 +100,7 @@ func TestTargetRandomCountUsesOneToXBoundsForSpell(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			g, a, b := newRandomTargetGame()
 			spell := NewInstant("Random X Targets", "{X}", NewTargetedSpell(
-				TargetRandomCount(TargetOneToXCreatures()), GainLife(1),
+				TargetRandomCount(TargetOneToXCreatures()), GainLifeFor(You, Fixed(1)),
 			))
 			spell.SetOwner(a.PlayerID())
 			a.AddToHand(spell)
@@ -128,7 +128,7 @@ func TestTargetRandomCountUsesOneToXBoundsForSpell(t *testing.T) {
 func TestTargetRandomTriggeredAbilityChoosesBeforeStack(t *testing.T) {
 	g, a, b := newRandomTargetGame()
 	source := NewArtifact("Random Trigger", "{0}", WithAbility(
-		NewTriggered(EvtUpkeep, false, GainLife(1)).AddTarget(TargetRandom(TargetCreature())),
+		NewTriggered(EvtUpkeep, false, GainLifeFor(You, Fixed(1))).AddTarget(TargetRandom(TargetCreature())),
 	))
 	source.SetOwner(a.PlayerID())
 	g.PutOnBattlefield(source, a.PlayerID())
@@ -153,7 +153,7 @@ func TestTargetRandomTriggeredAbilityChoosesBeforeStack(t *testing.T) {
 func TestRandomTargetUsesNormalFizzleRules(t *testing.T) {
 	g, a, b := newRandomTargetGame()
 	source := NewArtifact("Random Fizzle", "{0}", WithActivatedAbility(
-		GainLife(3), GenericCost(0), WithTarget(TargetRandom(TargetCreature())),
+		GainLifeFor(You, Fixed(3)), GenericCost(0), WithTarget(TargetRandom(TargetCreature())),
 	))
 	source.SetOwner(a.PlayerID())
 	sourcePerm := g.PutOnBattlefield(source, a.PlayerID())
@@ -174,7 +174,7 @@ func TestManaCostPerTargetAutotapsCombinedCost(t *testing.T) {
 	g, a, b := newRandomTargetGame()
 	a.numbers = []int{2}
 	source := NewArtifact("Per Target Cost", "{0}", WithActivatedAbility(
-		GainLife(1), GenericCost(2),
+		GainLifeFor(You, Fixed(1)), GenericCost(2),
 		WithCost(Tap()),
 		WithCost(ManaCostPerTarget("{R}")),
 		WithTarget(TargetRandom(TargetUpToNCreatures(4))),
@@ -210,7 +210,7 @@ func TestManaCostPerTargetFailureIsAtomic(t *testing.T) {
 	g, a, b := newRandomTargetGame()
 	a.numbers = []int{2}
 	source := NewArtifact("Per Target Cost", "{0}", WithActivatedAbility(
-		GainLife(1), GenericCost(2),
+		GainLifeFor(You, Fixed(1)), GenericCost(2),
 		WithCost(Tap()),
 		WithCost(ManaCostPerTarget("{R}")),
 		WithTarget(TargetRandom(TargetUpToNCreatures(4))),
@@ -255,7 +255,7 @@ func TestManaCostPerTargetSpellUsesRandomTargetsBeforePayment(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			g, a, b := newRandomTargetGame()
 			spell := NewInstant("Per Target Spell", "{0}", NewSpell(
-				GainLife(1),
+				GainLifeFor(You, Fixed(1)),
 				WithTarget(TargetRandom(TargetNCreatures(2))),
 				WithCost(ManaCostPerTarget("{R}")),
 			))

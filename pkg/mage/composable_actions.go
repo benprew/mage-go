@@ -226,12 +226,12 @@ func (e *destroyEachEffect) inspectDefinition() definitionNode {
 
 // GainLifeFor gains life for the selected player through the existing life action.
 func GainLifeFor(subject PlayerRef, amount ValueSource) ResolvingEffect {
-	return &subjectAction{player: subject, effect: GainLifeTarget(amount), amount: amount, verb: "gain life for"}
+	return &lifeAction{subject: subject, amount: amount, gain: true}
 }
 
 // LoseLifeFor loses life for the selected player through the existing life action.
 func LoseLifeFor(subject PlayerRef, amount ValueSource) ResolvingEffect {
-	return &subjectAction{player: subject, effect: TargetPlayerLoseLife(amount), amount: amount, verb: "lose life for"}
+	return &lifeAction{subject: subject, amount: amount}
 }
 
 // AddCountersTo adds counters through the existing replacement action.
@@ -260,3 +260,54 @@ func (e *tapSubjectEffect) inspectDefinition() definitionNode {
 
 // TapCost pays by tapping the source. It uses the existing payment transaction.
 func TapCost(sourceRef) Cost { return Tap() }
+
+type lifeAction struct {
+	subject PlayerRef
+	amount  ValueSource
+	gain    bool
+}
+
+func (e *lifeAction) Text() string {
+	verb := "lose"
+	if e.gain {
+		verb = "gain"
+	}
+	amount := ""
+	if !nilDefinition(e.amount) {
+		amount = e.amount.Text()
+	}
+	return verb + " " + amount + " life for " + InspectDefinition(e.subject).Text
+}
+
+func (e *lifeAction) Properties() EffectProperties {
+	p := EffectProperties{Outcome: OutcomeDetriment}
+	if e.gain {
+		p.Outcome = OutcomeBenefit
+		if value, ok := e.amount.(fixedValue); ok {
+			p.LifeGain = max(0, value.n)
+		}
+	}
+	return p
+}
+
+func (e *lifeAction) Apply(ctx *EffectContext) error {
+	id, ok := e.subject.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	// The recipient must not replace targets used to calculate the amount.
+	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
+	child := *ctx
+	child.Targets = []uuid.UUID{id}
+	if e.gain {
+		return GainLifeTarget(Fixed(amount)).Apply(&child)
+	}
+	return TargetPlayerLoseLife(Fixed(amount)).Apply(&child)
+}
+
+func (e *lifeAction) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+}

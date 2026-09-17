@@ -3,8 +3,6 @@ package arabian
 import (
 	"github.com/google/uuid"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -147,7 +145,7 @@ func registerCreatures() {
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					mage.GainLife(2),
+					GainLife(You, Fixed(2)),
 				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
 			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
@@ -300,7 +298,7 @@ func registerCreatures() {
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
-				GainLifeAmount(EventAmountValue()),
+				GainLife(You, EventAmountValue()),
 			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})

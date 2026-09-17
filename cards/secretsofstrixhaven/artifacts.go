@@ -3,7 +3,7 @@ package secretsofstrixhaven
 import (
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
-
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 	"github.com/google/uuid"
 )
 
@@ -24,7 +24,7 @@ func registerArtifacts() {
 		leavesGraveyardEffect := CompositeEffects(
 			"this artifact deals 1 damage to each opponent and you gain 1 life",
 			DealDamageToPlayers(Fixed(1), SelectEachOpponent()),
-			GainLife(1),
+			dsl.GainLife(dsl.You, dsl.Fixed(1)),
 		)
 		millOne := FuncEffect(
 			"mill a card",
@@ -134,7 +134,7 @@ func registerArtifacts() {
 		return NewArtifact("Potioner's Trove", "{3}",
 			WithAnyColorMana(),
 			WithActivatedAbility(
-				GainLife(2),
+				dsl.GainLife(dsl.You, dsl.Fixed(2)),
 				Tap(),
 				WithActivationCondition(lifeGainCondition),
 			),

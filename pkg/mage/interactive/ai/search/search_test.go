@@ -942,7 +942,7 @@ func TestGeneratePriorityMoves_ModalSpellGeneratesPerModeMove(t *testing.T) {
 	g, pa, _ := makeGame()
 
 	charm := mage.NewInstant("Charm", "{W}",
-		mage.NewSpellAbility(mage.GainLife(3)),
+		mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 	)
 	charm.SetModes([]string{"Gain 3 life", "Prevent 3 damage", "Destroy target enchantment"})
 	charm.SetOwner(pa.PlayerID())
@@ -1000,7 +1000,7 @@ func TestApplySpellCast_LifeGain(t *testing.T) {
 	pa.SetLife(17)
 
 	lifeSpell := mage.NewSorcery("Healing Touch", "{W}",
-		mage.NewSpellAbility(mage.GainLife(3)),
+		mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 	)
 	lifeSpell.SetOwner(pa.PlayerID())
 	pa.AddToHand(lifeSpell)

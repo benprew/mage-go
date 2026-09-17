@@ -8,6 +8,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // basicLandNamesSOS is the set of basic land card names used for search filters.
@@ -781,7 +782,7 @@ func registerCreatures() {
 			// {W}, Exile this card from your graveyard: You gain 2 life. Surveil 1. Activate only as a sorcery.
 			WithGraveyardActivatedAbility(
 				CompositeEffects("gain 2 life and surveil 1",
-					GainLife(2),
+					dsl.GainLife(dsl.You, dsl.Fixed(2)),
 					Surveil(Fixed(1)),
 				),
 				ManaCostOf("{W}"),
@@ -1579,7 +1580,7 @@ func registerCreatures() {
 					CompositeEffects(
 						"put a +1/+1 counter on target creature; you gain 1 life",
 						AddCounters(P1P1, Fixed(1)),
-						GainLife(1),
+						dsl.GainLife(dsl.You, dsl.Fixed(1)),
 					),
 				))
 		}
@@ -1963,7 +1964,7 @@ func registerCreatures() {
 				[]CardType{TypeCreature},
 				[]string{"Pest"},
 			),
-			AttacksTrigger(GainLife(1), false),
+			AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false),
 		)
 		return NewCreature("Moseo, Vein's New Dean", "{2}{B}", 2, 1,
 			WithSubTypes("Bird", "Skeleton", "Warlock"),
@@ -3147,7 +3148,7 @@ func registerCreatures() {
 		return NewCreature("Mindful Biomancer", "{1}{G}", 2, 2,
 			WithSubTypes("Dryad", "Druid"),
 			// When this creature enters, you gain 1 life.
-			WithAbility(EntersBattlefieldTrigger(GainLife(1), false)),
+			WithAbility(EntersBattlefieldTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false)),
 			// {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
 			WithActivatedAbility(
 				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()),
@@ -3183,7 +3184,7 @@ func registerCreatures() {
 					[]CardType{TypeCreature},
 					[]string{"Pest"},
 				),
-				AttacksTrigger(GainLife(1), false),
+				AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false),
 			)
 		}
 		return NewCreature("Pestbrood Sloth", "{3}{G}", 4, 4,
@@ -3212,7 +3213,7 @@ func registerCreatures() {
 		return NewCreature("Shopkeeper's Bane", "{2}{G}", 4, 2,
 			WithSubTypes("Badger", "Pest"),
 			WithKeyword(Trample),
-			WithAbility(AttacksTrigger(GainLife(2), false)),
+			WithAbility(AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(2)), false)),
 		)
 	})
 
@@ -3773,7 +3774,7 @@ func registerCreatures() {
 			WithSubTypes("Spirit", "Frog"),
 			// Whenever this creature or another creature you control enters, you gain 1 life.
 			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
-				GainLife(1),
+				dsl.GainLife(dsl.You, dsl.Fixed(1)),
 				false,
 				IsCreature,
 			).AndConditionData(EventSourceControlledByController{})),
@@ -3995,7 +3996,7 @@ func registerCreatures() {
 				[]CardType{TypeCreature},
 				[]string{"Pest"},
 			),
-			AttacksTrigger(GainLife(1), false),
+			AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false),
 		)
 		return NewCreature("Essenceknit Scholar", "{B}{B/G}{G}", 3, 1,
 			WithSubTypes("Dryad", "Warlock"),
@@ -4339,7 +4340,7 @@ func registerCreatures() {
 				[]CardType{TypeCreature},
 				[]string{"Pest"},
 			),
-			AttacksTrigger(GainLife(1), false),
+			AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false),
 		)
 		spellFactory := func() Card {
 			return NewSorcery("Pest Friend", "{B/G}",
@@ -4639,7 +4640,7 @@ func registerCreatures() {
 			WithSubTypes("Dinosaur", "Fractal"),
 			WithKeyword(Flying),
 			WithAbility(EntersWithXCounters(P1P1)),
-			WithAbility(ETBEffect(GainLife(2))),
+			WithAbility(ETBEffect(dsl.GainLife(dsl.You, dsl.Fixed(2)))),
 		)
 	})
 
@@ -5039,7 +5040,7 @@ func registerCreatures() {
 				NewSpellAbility(CompositeEffects(
 					"draw a card and gain 1 life",
 					DrawCards(Fixed(1)),
-					GainLife(1),
+					dsl.GainLife(dsl.You, dsl.Fixed(1)),
 				)))
 		}
 		// Tam becomes prepared via landfall, not at ETB.
@@ -5092,7 +5093,7 @@ func registerCreatures() {
 			WithSubTypes("Skeleton", "Pest"),
 			WithKeyword(Menace),
 			// Whenever this creature attacks, you gain 1 life.
-			WithAbility(AttacksTrigger(GainLife(1), false)),
+			WithAbility(AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false)),
 			// {B}{G}: Return this card from your graveyard to the battlefield tapped.
 			WithGraveyardActivatedAbility(
 				FuncEffect("return this card from your graveyard to the battlefield tapped",

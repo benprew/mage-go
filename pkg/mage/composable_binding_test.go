@@ -137,7 +137,7 @@ func TestPermanentBindingAbsentSnapshot(t *testing.T) {
 	c := NewCreature("Source", "", 1, 1)
 	g.PutOnBattlefield(c, a.PlayerID())
 	saved := BindPermanent("host")
-	effect := Sequence(Snapshot(This, saved), Snapshot(AttachedPermanent, saved), Sacrifice(From(saved)), GainLife(2))
+	effect := Sequence(Snapshot(This, saved), Snapshot(AttachedPermanent, saved), Sacrifice(From(saved)), GainLifeFor(You, Fixed(2)))
 	if err := ApplyEffect(g, effect, c.ID(), a.PlayerID(), nil); err != nil {
 		t.Fatal(err)
 	}

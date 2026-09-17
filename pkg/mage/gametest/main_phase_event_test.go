@@ -18,7 +18,7 @@ func TestBeginningOfFirstMainPhaseTrigger_FiresOnceOnControllerPrecombatMain(t *
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.BeginningOfFirstMainPhaseTrigger(
-					mage.GainLife(2), false,
+					mage.GainLifeFor(mage.You, mage.Fixed(2)), false,
 				)),
 			)
 		})
@@ -43,7 +43,7 @@ func TestBeginningOfPostcombatMainPhaseTrigger_FiresOnControllerPostcombat(t *te
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.BeginningOfPostcombatMainPhaseTrigger(
-					mage.GainLife(1), false,
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false,
 				)),
 			)
 		})

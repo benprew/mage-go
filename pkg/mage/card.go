@@ -946,7 +946,7 @@ func (p *Permanent) CanTapForEffect(g *Game) bool {
 func NewLuckyCharm(name, cost string, color Color) *BaseCard {
 	return NewArtifact(name, cost,
 		WithAbility(WheneverSpellCastTrigger(
-			MayPayMana("{1}", "gain 1 life", GainLife(1)),
+			MayPayMana("{1}", "gain 1 life", GainLifeFor(You, Fixed(1))),
 			false,
 			HasColorCardFilter(color),
 		)),

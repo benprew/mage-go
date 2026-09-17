@@ -16,7 +16,7 @@ func TestWheneverOneOrMoreCreaturesAttack_FiresOncePerCombat(t *testing.T) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.WheneverOneOrMoreCreaturesYouControlAttackTrigger(
-					mage.GainLife(5), false,
+					mage.GainLifeFor(mage.You, mage.Fixed(5)), false,
 				)),
 			)
 		})
@@ -40,7 +40,7 @@ func TestWheneverOneOrMoreCreaturesAttack_NoFireIfNoneAttack(t *testing.T) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.WheneverOneOrMoreCreaturesYouControlAttackTrigger(
-					mage.GainLife(5), false,
+					mage.GainLifeFor(mage.You, mage.Fixed(5)), false,
 				)),
 			)
 		})

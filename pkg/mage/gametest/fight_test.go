@@ -44,7 +44,7 @@ func registerFightCards() {
 			mage.Register("Test On-Death Self Watcher", func() mage.Card {
 				return mage.NewCreature("Test On-Death Self Watcher", "{1}{W}", 1, 2,
 					mage.WithActivatedAbility(
-						mage.OnTargetDiesThisTurn(mage.GainLife(3)),
+						mage.OnTargetDiesThisTurn(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 						mage.Tap(),
 						mage.WithTarget(mage.TargetCreature()),
 					))

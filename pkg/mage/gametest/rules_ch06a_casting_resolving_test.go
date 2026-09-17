@@ -136,32 +136,32 @@ func registerCh06Cards() {
 		reg("Ch06 Spell Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 Spell Watcher", "{2}{U}", 1, 1,
 				mage.WithAbility(mage.WheneverSpellCastTrigger(
-					mage.GainLife(1), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
 		})
 		reg("Ch06 Upkeep Gainer", func() mage.Card {
 			return mage.NewCreature("Ch06 Upkeep Gainer", "{1}{W}", 1, 1,
 				mage.WithAbility(mage.BeginningOfUpkeepTrigger(
-					mage.GainLife(1), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
 		})
 		reg("Ch06 Death Counter", func() mage.Card {
 			return mage.NewEnchantment("Ch06 Death Counter", "{B}",
 				mage.WithAbility(mage.AnyCreatureDiesTrigger(
-					mage.GainLife(1), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
 		})
 		reg("Ch06 ETB Gainer", func() mage.Card {
 			return mage.NewCreature("Ch06 ETB Gainer", "{2}{W}", 2, 2,
 				mage.WithAbility(mage.EntersBattlefieldTrigger(
-					mage.GainLife(3), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(3)), false)))
 		})
 		reg("Ch06 LTB Gainer", func() mage.Card {
 			return mage.NewCreature("Ch06 LTB Gainer", "{2}{B}", 2, 2,
 				mage.WithAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
-					mage.GainLife(2), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(2)), false)))
 		})
 		reg("Ch06 Death Regen", func() mage.Card {
 			return mage.NewCreature("Ch06 Death Regen", "{2}{G}", 2, 2,
 				mage.WithAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
-					mage.GainLife(5), false)),
+					mage.GainLifeFor(mage.You, mage.Fixed(5)), false)),
 				mage.WithActivatedAbility(
 					mage.RegenerateSource(),
 					mage.ManaCostOf("{G}")))
@@ -185,12 +185,12 @@ func registerCh06Cards() {
 		reg("Ch06 Damage Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 Damage Watcher", "{2}{U}", 0, 4,
 				mage.WithAbility(mage.WhenDamageDealtToThisTrigger(
-					mage.GainLife(1), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
 		})
 		reg("Ch06 High Life Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 High Life Watcher", "{3}{W}{W}", 2, 4,
 				mage.WithAbility(mage.NewTriggered(core.EvtUpkeep, false,
-					mage.GainLife(10),
+					mage.GainLifeFor(mage.You, mage.Fixed(10)),
 				).SetCondition(func(evt *core.GameEvent, g mage.GameReader, sourceID, controllerID uuid.UUID) bool {
 					if evt.PlayerID != controllerID {
 						return false
@@ -210,12 +210,12 @@ func registerCh06Cards() {
 			return mage.NewCreature("Ch06 Artifact Death Watch", "{2}", 1, 1,
 				mage.WithCardType(core.TypeArtifact),
 				mage.WithAbility(mage.AnyCreatureDiesTrigger(
-					mage.GainLife(1), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
 		})
 		reg("Ch06 APNAP A Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 APNAP A Watcher", "{1}{W}", 1, 1,
 				mage.WithAbility(mage.WheneverSpellCastTrigger(
-					mage.GainLife(2), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(2)), false)))
 		})
 		reg("Ch06 APNAP B Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 APNAP B Watcher", "{1}{U}", 1, 1,
@@ -225,7 +225,7 @@ func registerCh06Cards() {
 		reg("Ch06 Sorcery Artifact", func() mage.Card {
 			return mage.NewArtifact("Ch06 Sorcery Artifact", "{2}",
 				mage.WithAbility(mage.NewActivatedAbility(
-					mage.GainLife(3),
+					mage.GainLifeFor(mage.You, mage.Fixed(3)),
 					mage.GenericCost(1),
 					mage.WithSorcerySpeed())))
 		})

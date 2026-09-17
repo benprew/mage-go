@@ -169,7 +169,7 @@ func TestDeclareAttackers(t *testing.T) {
 			mage.Register(watcher, func() mage.Card {
 				// "Whenever a green creature attacks, you gain 5 life."
 				trig := mage.NewTriggered(core.EvtDeclaredAttacker, false,
-					mage.GainLife(5)).
+					mage.GainLifeFor(mage.You, mage.Fixed(5))).
 					SetCondition(func(evt *core.GameEvent, g mage.GameReader, _, _ uuid.UUID) bool {
 						atk := g.FindPermanent(evt.SourceID)
 						if atk == nil {

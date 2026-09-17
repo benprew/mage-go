@@ -270,7 +270,7 @@ func TestTapCreatureCost(t *testing.T) {
 		mage.Register(name, func() mage.Card {
 			return mage.NewArtifact(name, "{2}",
 				mage.WithAbility(mage.NewActivatedAbility(
-					mage.GainLife(2),
+					mage.GainLifeFor(mage.You, mage.Fixed(2)),
 					mage.TapCreatureCost(),
 				)),
 			)
@@ -452,7 +452,7 @@ func TestCostReduction(t *testing.T) {
 	if !mage.CardRegistered(spellName) {
 		mage.Register(spellName, func() mage.Card {
 			return mage.NewSorcery(spellName, "{2}{U}",
-				mage.NewSpellAbility(mage.GainLife(5)),
+				mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(5))),
 			)
 		})
 	}

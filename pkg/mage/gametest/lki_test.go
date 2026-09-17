@@ -20,7 +20,7 @@ func TestLKI_DeathTriggerReadsOpponentController(t *testing.T) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
 				mage.WithAbility(mage.NewTriggered(core.EvtZoneChange, false,
-					mage.GainLife(1),
+					mage.GainLifeFor(mage.You, mage.Fixed(1)),
 				).SetConditionData(mage.AndTriggerCond{Conditions: []mage.TriggerConditionData{
 					mage.EventZoneChangeMatches{From: core.ZoneBattlefield, To: core.ZoneGraveyard},
 					mage.EventSourceWasOfType{Type: core.TypeCreature},

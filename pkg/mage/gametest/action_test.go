@@ -58,7 +58,7 @@ func TestUnifiedActionCompatibilityWrappers(t *testing.T) {
 		mage.Register(abilityName, func() mage.Card {
 			return mage.NewArtifact(abilityName, "{1}",
 				mage.WithActivatedAbility(
-					mage.GainLife(1),
+					mage.GainLifeFor(mage.You, mage.Fixed(1)),
 					mage.Tap(),
 				),
 			)

@@ -98,7 +98,7 @@ func TestComposableDefinitionValidation(t *testing.T) {
 }
 
 func TestComposableMetadata(t *testing.T) {
-	effect := Sequence(GainLife(2), IfState(ControlsNone(IsLand), Sacrifice(This)))
+	effect := Sequence(GainLifeFor(You, Fixed(2)), IfState(ControlsNone(IsLand), Sacrifice(This)))
 	metadata := InspectDefinition(effect)
 	if metadata.Role != "sequence" || len(metadata.Children) != 2 || metadata.Children[1].Role != "resolution-branch" {
 		t.Fatalf("metadata = %+v", metadata)
@@ -216,7 +216,7 @@ func TestComposableRegistrationBoundary(t *testing.T) {
 func TestComposableCloneOutstandingState(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
-	c := NewCreature("Watcher", "", 1, 1, WithAbility(WhenState(ControlsNone(IsLand), GainLife(1))))
+	c := NewCreature("Watcher", "", 1, 1, WithAbility(WhenState(ControlsNone(IsLand), GainLifeFor(You, Fixed(1)))))
 	g.PutOnBattlefield(c, a.PlayerID())
 	g.CheckStateTriggers()
 	g.PutTriggersOnStack()
@@ -256,7 +256,7 @@ func TestComposableConditionTruthTable(t *testing.T) {
 func TestComposableTransientCharacteristics(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
-	c := NewCreature("Watcher", "{G}", 1, 1, WithAbility(WhenState(Controls(HasColorFilter(Blue)), GainLife(1))))
+	c := NewCreature("Watcher", "{G}", 1, 1, WithAbility(WhenState(Controls(HasColorFilter(Blue)), GainLifeFor(You, Fixed(1)))))
 	g.PutOnBattlefield(c, a.PlayerID())
 	g.ChangeObjectColor(c.ID(), Blue)
 	g.ChangeObjectColor(c.ID(), Green)

@@ -154,7 +154,7 @@ func TestCombatDamage(t *testing.T) {
 					mage.WithSubTypes("Horror"),
 					mage.WithAbility(
 						mage.NewTriggered(core.EvtDamageDealt, false,
-							mage.GainLifeAmount(mage.EventAmountValue()),
+							mage.GainLifeFor(mage.You, mage.EventAmountValue()),
 						).SetConditionData(mage.EventSourceIsSelf{}),
 					),
 				)
@@ -239,7 +239,7 @@ func TestCombatDamage(t *testing.T) {
 			mage.Register(name, func() mage.Card {
 				// Whenever CARDNAME deals combat damage to a player, you gain 2 life.
 				trig := mage.NewTriggered(core.EvtDamageDealt, false,
-					mage.GainLife(2)).
+					mage.GainLifeFor(mage.You, mage.Fixed(2))).
 					SetCondition(func(evt *core.GameEvent, g mage.GameReader, sourceID, _ uuid.UUID) bool {
 						if evt.SourceID != sourceID {
 							return false

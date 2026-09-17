@@ -17,7 +17,7 @@ func basicLandTypeTestGame(t *testing.T) (*Game, Player, *Permanent, *Permanent,
 	sourceCard.SetOwner(player.PlayerID())
 	source := g.PutOnBattlefield(sourceCard, player.PlayerID())
 
-	printedAbility := NewActivatedAbility(GainLife(1), ManaCostOf("{1}"))
+	printedAbility := NewActivatedAbility(GainLifeFor(You, Fixed(1)), ManaCostOf("{1}"))
 	landCard := NewLand("Utility Mountain",
 		WithSubTypes("Mountain"),
 		WithManaAbility(Red),

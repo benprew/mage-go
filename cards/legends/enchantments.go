@@ -776,7 +776,7 @@ func registerEnchantments() {
 		return NewEnchantment("Lifeblood", "{2}{W}{W}",
 			WithAbility(
 				WhenOpponentPermanentBecomesTappedTrigger(
-					mage.GainLife(1), false,
+					GainLife(You, Fixed(1)), false,
 					And(IsLand, HasSubType("Mountain")),
 				),
 			),
@@ -983,7 +983,7 @@ func registerEnchantments() {
 		return NewAura("Spirit Link", "{W}",
 			WithAbility(
 				NewTriggered(EvtDamageDealt, false,
-					GainLifeAmount(EventAmountValue()),
+					GainLife(You, EventAmountValue()),
 				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)

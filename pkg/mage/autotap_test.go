@@ -369,7 +369,7 @@ func TestActivateAbilityByIndex_SetsXValue(t *testing.T) {
 
 	// Create a creature with an activated ability: {0}: gain 1 life
 	card := NewCreature("Test Creature", "{G}", 1, 1,
-		WithAbility(NewActivatedAbility(GainLife(1), ManaCostOf("{0}"))),
+		WithAbility(NewActivatedAbility(GainLifeFor(You, Fixed(1)), ManaCostOf("{0}"))),
 	)
 	card.SetOwner(pid)
 	perm := g.PutOnBattlefield(card, pid)
@@ -983,7 +983,7 @@ func TestAutoTapForCost_FactoryNotTappedForOwnAbility(t *testing.T) {
 	// ability. Avoids importing the cards package into engine tests.
 	factory := NewLand("Mishra's Factory",
 		WithManaAbility(Colorless),
-		WithActivatedAbility(GainLife(1), GenericCost(1)),
+		WithActivatedAbility(GainLifeFor(You, Fixed(1)), GenericCost(1)),
 	)
 	factory.SetOwner(pid)
 	fperm := g.PutOnBattlefield(factory, pid)
@@ -1012,7 +1012,7 @@ func TestAutoTapForCost_PrefersBasicOverFactory(t *testing.T) {
 
 	factory := NewLand("Mishra's Factory",
 		WithManaAbility(Colorless),
-		WithActivatedAbility(GainLife(1), GenericCost(1)),
+		WithActivatedAbility(GainLifeFor(You, Fixed(1)), GenericCost(1)),
 	)
 	factory.SetOwner(pid)
 	fperm := g.PutOnBattlefield(factory, pid)
@@ -1039,7 +1039,7 @@ func TestAutoTapForCost_StripMinePreservedForGeneric(t *testing.T) {
 
 	strip := NewLand("Strip Mine",
 		WithManaAbility(Colorless),
-		WithActivatedAbility(GainLife(1), Tap()), // stand-in utility ability
+		WithActivatedAbility(GainLifeFor(You, Fixed(1)), Tap()), // stand-in utility ability
 	)
 	strip.SetOwner(pid)
 	sperm := g.PutOnBattlefield(strip, pid)
@@ -1066,7 +1066,7 @@ func TestAutoTapForCost_FallsBackWhenSourceIsOnlyOption(t *testing.T) {
 
 	factory := NewLand("Mishra's Factory",
 		WithManaAbility(Colorless),
-		WithActivatedAbility(GainLife(1), GenericCost(1)),
+		WithActivatedAbility(GainLifeFor(You, Fixed(1)), GenericCost(1)),
 	)
 	factory.SetOwner(pid)
 	fperm := g.PutOnBattlefield(factory, pid)
@@ -1222,7 +1222,7 @@ func TestAutoTapForCost_TapCostHardExcludesSource(t *testing.T) {
 	// Land with {T}, {1}: gain 1 — when activated, both {T} and {1} are paid.
 	utility := NewLand("Utility Land",
 		WithManaAbility(Colorless),
-		WithActivatedAbility(GainLife(1), Tap(), WithCost(GenericCost(1))),
+		WithActivatedAbility(GainLifeFor(You, Fixed(1)), Tap(), WithCost(GenericCost(1))),
 	)
 	utility.SetOwner(pid)
 	uperm := g.PutOnBattlefield(utility, pid)

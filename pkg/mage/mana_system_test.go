@@ -80,7 +80,7 @@ func TestManaSystem_TapForMana_And_Events(t *testing.T) {
 	p1ID := p1.PlayerID()
 
 	watcher := NewEnchantment("Tapped for Mana Watcher", "{0}",
-		WithAbility(NewTriggered(EvtTappedForMana, false, GainLife(1))),
+		WithAbility(NewTriggered(EvtTappedForMana, false, GainLifeFor(You, Fixed(1)))),
 	)
 	watcher.SetOwner(p1ID)
 	g.PutOnBattlefield(watcher, p1ID)

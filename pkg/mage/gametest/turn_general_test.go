@@ -145,7 +145,7 @@ func TestTurnPhases(t *testing.T) {
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtUpkeep,
 						false,
-						mage.GainLife(1),
+						mage.GainLifeFor(mage.You, mage.Fixed(1)),
 					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
 						return evt.PlayerID == controllerID
 					})),

@@ -451,7 +451,7 @@ func registerArtifacts() {
 
 	Register("Soul Net", func() Card {
 		return NewArtifact("Soul Net", "{1}",
-			WithAbility(AnyCreatureDiesTrigger(mage.GainLife(1), true)),
+			WithAbility(AnyCreatureDiesTrigger(GainLife(You, Fixed(1)), true)),
 		)
 	})
 

@@ -77,3 +77,25 @@ func TestTypedDelayedComposition(t *testing.T) {
 		t.Fatal("delayed composition lost metadata")
 	}
 }
+
+func TestTypedLifeComposition(t *testing.T) {
+	gain := dsl.GainLife(dsl.You, dsl.Fixed(2))
+	member := dsl.BindPermanent("member")
+	cards := []mage.Card{
+		mage.NewSorcery("Direct", "", mage.WithAbility(dsl.Spell(gain))),
+		mage.NewSorcery("Sequence", "", mage.WithAbility(dsl.Spell(dsl.Sequence(gain, dsl.LoseLife(dsl.You, dsl.Fixed(1)))))),
+		mage.NewSorcery("Loop", "", mage.WithAbility(dsl.Spell(dsl.ForEach(dsl.ControlledPermanents(dsl.IsCreature), member, gain)))),
+		mage.NewSorcery("Modes", "", mage.WithAbility(dsl.SpellModes(dsl.ModeOf("Life", gain), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+		mage.NewCreature("Trigger", "", 1, 1, mage.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), gain))),
+		mage.NewCreature("Activation", "", 1, 1, mage.WithAbility(dsl.Activate(dsl.Costs(), gain))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition("Life composition", card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info := dsl.InspectDefinition(dsl.Sequence(gain, dsl.LoseLife(dsl.You, dsl.Fixed(1))))
+	if len(info.Children) != 2 || info.Children[0].Properties.LifeGain != 2 || info.Children[0].Text != "gain 2 life for you" {
+		t.Fatalf("life metadata = %+v", info)
+	}
+}

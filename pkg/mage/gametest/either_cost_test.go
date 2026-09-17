@@ -17,7 +17,7 @@ func registerEitherCostCards() {
 		if !mage.CardRegistered("Test Branching Cost Spell") {
 			mage.Register("Test Branching Cost Spell", func() mage.Card {
 				return mage.NewSorcery("Test Branching Cost Spell", "{2}{B}",
-					mage.NewSpellAbility(mage.GainLife(2)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(2))),
 					mage.WithAdditionalCost(mage.EitherCost(
 						mage.DiscardCost(1),
 						mage.ManaCostOf("{5}"),

@@ -7,6 +7,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // fightBetween implements CR 701.13 between two arbitrary permanents. Both must
@@ -1421,7 +1422,7 @@ func registerSpells() {
 		return NewSorcery("Grapple with Death", "{1}{B}{G}",
 			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature)),
 				DestroyTargetPermanent(),
-				GainLife(1),
+				dsl.GainLife(dsl.You, dsl.Fixed(1)),
 			),
 		)
 	})
@@ -2181,7 +2182,7 @@ func registerSpells() {
 						return nil
 					},
 				),
-				GainLife(1),
+				dsl.GainLife(dsl.You, dsl.Fixed(1)),
 			)),
 		)
 	})
@@ -2478,7 +2479,7 @@ func registerSpells() {
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCardsInYourGraveyard(2, IsCreatureCard)},
 				ReturnFromGraveyardToHandTarget(),
-				GainLife(2),
+				dsl.GainLife(dsl.You, dsl.Fixed(2)),
 			),
 		)
 	})
@@ -2490,7 +2491,7 @@ func registerSpells() {
 	Register("Pursue the Past", func() Card {
 		return NewSorcery("Pursue the Past", "{R}{W}",
 			NewSpellAbility(
-				GainLife(2),
+				dsl.GainLife(dsl.You, dsl.Fixed(2)),
 				FuncEffect(
 					"you may discard a card; if you do, draw two cards",
 					EffectProperties{Outcome: OutcomeBenefit},
@@ -2898,7 +2899,7 @@ func registerSpells() {
 				[]CardType{TypeCreature},
 				[]string{"Pest"},
 			),
-			AttacksTrigger(GainLife(1), false),
+			AttacksTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false),
 		)
 		return NewSorcery("Send in the Pest", "{1}{B}",
 			NewSpellAbility(

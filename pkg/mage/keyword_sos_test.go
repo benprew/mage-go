@@ -168,7 +168,7 @@ func TestPrepared_CastPreparedModalCopyUsesChosenMode(t *testing.T) {
 			},
 			{
 				Label:   "Gain 3 life",
-				Effects: []Effect{GainLife(3)},
+				Effects: []Effect{GainLifeFor(You, Fixed(3))},
 			},
 		}))
 		return c

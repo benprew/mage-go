@@ -8,43 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// gainLifeEffect gains life for the controller.
-type gainLifeEffect struct {
-	amount int
-}
-
-// GainLife creates an effect that gains life for the controller.
-func GainLife(amount int) Effect {
-	return &gainLifeEffect{amount: amount}
-}
-
-// GainLifeStep returns the Effect for use in pipelines/ForEach/Modal.
-func GainLifeStep(amount int) Effect { return &gainLifeEffect{amount: amount} }
-
-func (e *gainLifeEffect) Text() string {
-	return fmt.Sprintf("gain %d life", e.amount)
-}
-func (e *gainLifeEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit, LifeGain: e.amount}
-}
-
-// gainLifeDynamicEffect gains life for the controller from a dynamic ValueSource.
-type gainLifeDynamicEffect struct {
-	amount ValueSource
-}
-
-// GainLifeAmount creates an effect that gains life for the controller equal to a dynamic value.
-func GainLifeAmount(amount ValueSource) Effect {
-	return &gainLifeDynamicEffect{amount: amount}
-}
-
-func (e *gainLifeDynamicEffect) Text() string {
-	return "gain " + e.amount.Text() + " life"
-}
-func (e *gainLifeDynamicEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
 // gainLifeTargetEffect gains life for a target player (or controller as fallback).
 type gainLifeTargetEffect struct {
 	amount ValueSource
@@ -102,23 +65,6 @@ func (e *poisonTargetPlayerEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-// loseLifeDynamicEffect causes the controller to lose life from a dynamic ValueSource.
-type loseLifeDynamicEffect struct {
-	amount ValueSource
-}
-
-// LoseLifeAmount creates an effect that causes the controller to lose life equal to a dynamic value.
-func LoseLifeAmount(amount ValueSource) Effect {
-	return &loseLifeDynamicEffect{amount: amount}
-}
-
-func (e *loseLifeDynamicEffect) Text() string {
-	return "lose " + e.amount.Text() + " life"
-}
-func (e *loseLifeDynamicEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
 // loseLifeTargetEffect causes a target player (or the controller if no target)
 // to lose life equal to a dynamic value. Used for "target opponent loses N life".
 type loseLifeTargetEffect struct {
@@ -136,23 +82,6 @@ func (e *loseLifeTargetEffect) Text() string {
 	return "target player loses " + e.amount.Text() + " life"
 }
 func (e *loseLifeTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-// loseLifeEffect causes the controller to lose life.
-type loseLifeEffect struct {
-	amount int
-}
-
-// LoseLife creates an effect that causes the controller to lose life.
-func LoseLife(amount int) Effect {
-	return &loseLifeEffect{amount: amount}
-}
-
-func (e *loseLifeEffect) Text() string {
-	return fmt.Sprintf("you lose %d life", e.amount)
-}
-func (e *loseLifeEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
@@ -421,18 +350,6 @@ func (e *sacrificeOrDamageEffect) Properties() EffectProperties { return EffectP
 
 // --- Apply methods (moved from executor.go) ---
 
-func (e *gainLifeEffect) Apply(ctx *EffectContext) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	ctx.Game.PlayerGainLife(p, e.amount)
-	if !ctx.Game.IsLichActive(ctx.Controller) {
-		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: e.amount})
-	}
-	return nil
-}
-
 func (e *poisonTargetPlayerEffect) Apply(ctx *EffectContext) error {
 	var playerIDs []uuid.UUID
 	switch {
@@ -448,22 +365,6 @@ func (e *poisonTargetPlayerEffect) Apply(ctx *EffectContext) error {
 			continue
 		}
 		p.AddPoisonCounters(e.amount)
-	}
-	return nil
-}
-
-func (e *gainLifeDynamicEffect) Apply(ctx *EffectContext) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	if amount <= 0 {
-		return nil
-	}
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	ctx.Game.PlayerGainLife(p, amount)
-	if !ctx.Game.IsLichActive(ctx.Controller) {
-		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: ctx.Controller, Amount: amount})
 	}
 	return nil
 }
@@ -484,28 +385,6 @@ func (e *gainLifeTargetEffect) Apply(ctx *EffectContext) error {
 	if !ctx.Game.IsLichActive(targetPlayer.PlayerID()) {
 		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
 	}
-	return nil
-}
-
-func (e *loseLifeDynamicEffect) Apply(ctx *EffectContext) error {
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	if amount <= 0 {
-		return nil
-	}
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	ctx.Game.PlayerLoseLife(p, amount)
-	return nil
-}
-
-func (e *loseLifeEffect) Apply(ctx *EffectContext) error {
-	p := ctx.Game.GetPlayer(ctx.Controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	ctx.Game.PlayerLoseLife(p, e.amount)
 	return nil
 }
 

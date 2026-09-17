@@ -19,7 +19,7 @@ func registerPerTurnTrackerCards() {
 		if !mage.CardRegistered("Test Discard Self") {
 			mage.Register("Test Discard Self", func() mage.Card {
 				return mage.NewSorcery("Test Discard Self", "{B}",
-					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(1))),
 					mage.WithAdditionalCost(mage.DiscardCost(1)),
 				)
 			})
@@ -28,7 +28,7 @@ func registerPerTurnTrackerCards() {
 		if !mage.CardRegistered("Test Gain 3 Life") {
 			mage.Register("Test Gain 3 Life", func() mage.Card {
 				return mage.NewSorcery("Test Gain 3 Life", "{W}",
-					mage.NewSpellAbility(mage.GainLife(3)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 				)
 			})
 		}
@@ -49,7 +49,7 @@ func registerPerTurnTrackerCards() {
 		if !mage.CardRegistered("Test Exile Graveyard Cost") {
 			mage.Register("Test Exile Graveyard Cost", func() mage.Card {
 				return mage.NewSorcery("Test Exile Graveyard Cost", "{B}",
-					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(1))),
 					mage.WithAdditionalCost(mage.ExileFromGraveyardCost(1)),
 				)
 			})

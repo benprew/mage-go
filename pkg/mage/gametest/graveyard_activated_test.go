@@ -32,7 +32,7 @@ func registerGraveyardActivatedCards() {
 				return mage.NewCreature("Test Accomplice", "{1}{B}", 2, 2,
 					mage.WithSubTypes("Human", "Rogue"),
 					mage.WithGraveyardActivatedAbility(
-						mage.GainLife(2),
+						mage.GainLifeFor(mage.You, mage.Fixed(2)),
 						mage.ManaCostOf("{3}{B}"),
 						mage.WithCost(mage.ExileSelfFromGraveyardCost()),
 					),

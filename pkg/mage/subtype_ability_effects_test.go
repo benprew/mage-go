@@ -186,7 +186,7 @@ func TestAddSubtypesChecksCardTypeAtItsLayerFourTimestamp(t *testing.T) {
 func TestAddBasicLandSubtypeRetainsRulesTextAndAddsIntrinsicMana(t *testing.T) {
 	player := NewBasePlayer("Alice")
 	g := NewGame(player, NewBasePlayer("Bob"))
-	printed := NewActivatedAbility(GainLife(1), ManaCostOf("{1}"))
+	printed := NewActivatedAbility(GainLifeFor(You, Fixed(1)), ManaCostOf("{1}"))
 	card := NewLand("Utility Mountain",
 		WithSubTypes("Mountain"),
 		WithManaAbility(Red),
@@ -212,7 +212,7 @@ func abilityRemovalTestPermanent(t *testing.T) (*Game, Player, *Permanent, Abili
 	t.Helper()
 	player := NewBasePlayer("Alice")
 	g := NewGame(player, NewBasePlayer("Bob"))
-	printed := NewActivatedAbility(GainLife(1), ManaCostOf("{1}"))
+	printed := NewActivatedAbility(GainLifeFor(You, Fixed(1)), ManaCostOf("{1}"))
 	card := NewCreature("Skilled Creature", "{2}", 2, 2,
 		WithKeyword(Indestructible),
 		WithKeyword(DoesNotUntapKW),
@@ -246,7 +246,7 @@ func TestRemoveAllAbilitiesRemovesAndRestoresPrintedAbilities(t *testing.T) {
 
 func TestRemoveAllAbilitiesUsesLayerSixTimestampOrder(t *testing.T) {
 	newGrantedAbility := func(target *Permanent) Ability {
-		ability := NewActivatedAbility(GainLife(2), ManaCostOf("{2}"))
+		ability := NewActivatedAbility(GainLifeFor(You, Fixed(2)), ManaCostOf("{2}"))
 		ability.SetSource(target.ID())
 		ability.SetController(target.ControllerID())
 		return ability

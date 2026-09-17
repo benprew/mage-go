@@ -19,7 +19,7 @@ func registerCastAltTestCards() {
 		if !mage.CardRegistered("Cast-Alt Heal") {
 			mage.Register("Cast-Alt Heal", func() mage.Card {
 				return mage.NewSorcery("Cast-Alt Heal", "{2}{W}{W}",
-					mage.NewSpellAbility(mage.GainLife(5)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(5))),
 				)
 			})
 		}
@@ -37,7 +37,7 @@ func registerCastAltTestCards() {
 		if !mage.CardRegistered("Cast-Alt Flashback Heal") {
 			mage.Register("Cast-Alt Flashback Heal", func() mage.Card {
 				return mage.NewSorcery("Cast-Alt Flashback Heal", "{2}{W}",
-					mage.NewSpellAbility(mage.GainLife(3)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 					mage.WithFlashback(core.ParseManaCost("{4}{W}")),
 				)
 			})
@@ -45,7 +45,7 @@ func registerCastAltTestCards() {
 		if !mage.CardRegistered("Cast-Alt Atomic Failure") {
 			mage.Register("Cast-Alt Atomic Failure", func() mage.Card {
 				return mage.NewSorcery("Cast-Alt Atomic Failure", "{2}{R}",
-					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(1))),
 					mage.WithAdditionalCost(mage.LifePayCost(100)),
 					mage.WithFlashback(core.ParseManaCost("{R}")),
 				)
@@ -54,7 +54,7 @@ func registerCastAltTestCards() {
 		if !mage.CardRegistered("Cast-Alt Combined Mana") {
 			mage.Register("Cast-Alt Combined Mana", func() mage.Card {
 				return mage.NewSorcery("Cast-Alt Combined Mana", "{3}",
-					mage.NewSpellAbility(mage.GainLife(1)),
+					mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(1))),
 					mage.WithAdditionalCost(mage.ManaCostOf("{W}")),
 					mage.WithFlashback(core.ParseManaCost("{1}")),
 				)

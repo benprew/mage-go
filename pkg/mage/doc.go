@@ -240,6 +240,22 @@
 // While selects members at each modification's layer. Constructor input lists
 // are copied. Captured references survive phasing but not a zone round trip.
 //
+// # Typed Life Instructions
+//
+// Card authors use dsl.GainLife(subject, amount) and dsl.LoseLife(subject, amount).
+// [GainLifeFor] and [LoseLifeFor] implement these instructions. Use [You] for
+// the stored resolving controller, even if the source changes controller.
+// Amounts use the original resolution context, including its targets. An
+// absent recipient or a nonpositive amount does nothing. Life gain uses the
+// existing replacement path; life loss uses [PlayerLoseLife]. Definitions
+// contain no resolution state and can be shared across cloned games.
+//
+// Fixed positive gains retain their AI life-gain amount. Dynamic amounts are
+// not evaluated during inspection. Both instructions expose their subject and
+// amount to definition validation and work in sequences, loops, and modes.
+// The old controller-only fixed, dynamic, and Step constructors are removed.
+// Targeted and string-variable life helpers remain for their binding slices.
+//
 // # Delayed Turn-Step Triggers
 //
 // [AtNext] creates a one-shot delayed trigger during resolution. It accepts

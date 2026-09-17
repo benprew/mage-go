@@ -140,7 +140,7 @@ func TestCostReductionSelfByGraveyardCount(t *testing.T) {
 	jolt := "TC Tiny Instant"
 	if !mage.CardRegistered(jolt) {
 		mage.Register(jolt, func() mage.Card {
-			return mage.NewInstant(jolt, "{U}", mage.NewSpellAbility(mage.GainLife(1)))
+			return mage.NewInstant(jolt, "{U}", mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(1))))
 		})
 	}
 	isInstantOrSorcery := mage.NewCardFilter("instant or sorcery", func(c mage.Card) bool {
@@ -339,7 +339,7 @@ func TestCostReductionIfControlsMatching(t *testing.T) {
 	if !mage.CardRegistered(winged) {
 		mage.Register(winged, func() mage.Card {
 			return mage.NewSorcery(winged, "{2}{U}{U}",
-				mage.NewSpellAbility(mage.GainLife(1)),
+				mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(1))),
 				mage.WithSelfCostReduction(
 					mage.FixedAmount(2),
 					mage.CondControlsMatching(mage.HasKeywordFilter(core.Flying)),

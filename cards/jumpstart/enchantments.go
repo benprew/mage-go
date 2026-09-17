@@ -698,7 +698,7 @@ func registerEnchantments() {
 				}),
 			),
 			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
-				GainLifeAmount(EventAmountValue()), false,
+				dsl.GainLife(dsl.You, EventAmountValue()), false,
 			)),
 		)
 	})
@@ -752,7 +752,7 @@ func registerEnchantments() {
 				false, noncreatureCard,
 			).AddTarget(TargetCreatureYouControl())),
 			WithAbility(WheneverLandEntersBattlefieldTrigger(
-				GainLife(3), false,
+				dsl.GainLife(dsl.You, dsl.Fixed(3)), false,
 			).AndConditionData(EventSourceControlledByController{})),
 		)
 	})

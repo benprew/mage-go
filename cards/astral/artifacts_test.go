@@ -18,7 +18,7 @@ func registerPandoraTestCards() {
 		return mage.NewCreature(pandoraTestCreature, "{3}{W}", 3, 4,
 			mage.WithSubTypes("Angel"),
 			mage.WithKeyword(core.Flying),
-			mage.WithAbility(mage.EntersBattlefieldTrigger(mage.GainLife(3), false)),
+			mage.WithAbility(mage.EntersBattlefieldTrigger(mage.GainLifeFor(mage.You, mage.Fixed(3)), false)),
 		)
 	})
 }

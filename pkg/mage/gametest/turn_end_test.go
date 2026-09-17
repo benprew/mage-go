@@ -28,7 +28,7 @@ func TestEndStep(t *testing.T) {
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtEndStep,
 						false,
-						mage.GainLife(5),
+						mage.GainLifeFor(mage.You, mage.Fixed(5)),
 					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
 						return evt.PlayerID == controllerID
 					})),
@@ -59,7 +59,7 @@ func TestEndStep(t *testing.T) {
 					mage.WithAbility(mage.NewTriggered(
 						core.EvtEndStep,
 						false,
-						mage.GainLife(3),
+						mage.GainLifeFor(mage.You, mage.Fixed(3)),
 					).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
 						return evt.PlayerID == controllerID
 					})),

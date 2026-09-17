@@ -255,7 +255,7 @@ func TestNewModalSpell_HonorsSuppliedTargetForChosenMode(t *testing.T) {
 	spell := NewInstant("Modal Target Test", "{0}", nil)
 	spell.AddAbility(NewModalSpell([]Mode{
 		{Label: "target player", Targets: []Target{TargetPlayer()}, Effects: []Effect{GainLifeTarget(Fixed(1))}},
-		{Label: "no target", Effects: []Effect{GainLife(1)}},
+		{Label: "no target", Effects: []Effect{GainLifeFor(You, Fixed(1))}},
 	}))
 	spell.SetOwner(a.PlayerID())
 	a.AddToHand(spell)
@@ -276,7 +276,7 @@ func TestNewModalActivated_TargetsOnlyChosenMode(t *testing.T) {
 		g, a, _ := newModalGame()
 		source := NewArtifact("Modal Source", "{0}")
 		source.AddAbility(NewModalActivated(GenericCost(0), []Mode{
-			{Label: "gain life", Effects: []Effect{GainLife(2)}},
+			{Label: "gain life", Effects: []Effect{GainLifeFor(You, Fixed(2))}},
 			{Label: "damage target", Targets: []Target{TargetDamageAnyTarget()}, Effects: []Effect{DealDamage(Fixed(1))}},
 		}))
 		source.SetOwner(a.PlayerID())
@@ -296,7 +296,7 @@ func TestNewModalActivated_TargetsOnlyChosenMode(t *testing.T) {
 		g, a, b := newModalGame()
 		source := NewArtifact("Modal Source", "{0}")
 		source.AddAbility(NewModalActivated(GenericCost(0), []Mode{
-			{Label: "gain life", Effects: []Effect{GainLife(2)}},
+			{Label: "gain life", Effects: []Effect{GainLifeFor(You, Fixed(2))}},
 			{Label: "damage target", Targets: []Target{TargetDamageAnyTarget()}, Effects: []Effect{DealDamage(Fixed(1))}},
 		}))
 		source.SetOwner(a.PlayerID())

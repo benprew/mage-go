@@ -7,6 +7,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -122,7 +123,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(IsTapped), CompositeEffects(
 				"destroy tapped creature; gain 1 life per flying creature you control",
 				DestroyTarget(),
-				GainLifeAmount(CountBattlefield(SelectController(), And(IsCreature, HasKeywordFilter(Flying)))),
+				dsl.GainLife(dsl.You, CountBattlefield(SelectController(), And(IsCreature, HasKeywordFilter(Flying)))),
 			)),
 		)
 	})
@@ -149,7 +150,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetDamageAnyTarget(), CompositeEffects(
 				"deal 3 damage and gain 3 life",
 				DealDamage(Fixed(3)),
-				GainLife(3),
+				dsl.GainLife(dsl.You, dsl.Fixed(3)),
 			)),
 		)
 	})
@@ -253,7 +254,7 @@ func registerSpells() {
 				"+1/+1 counter, first strike, gain 2 life",
 				AddCounters(P1P1, Fixed(1)),
 				GrantKeyword(FirstStrike),
-				GainLife(2),
+				dsl.GainLife(dsl.You, dsl.Fixed(2)),
 			)),
 		)
 	})
@@ -523,7 +524,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"2 damage, gain 2 life",
 				DealDamage(Fixed(2)),
-				GainLife(2),
+				dsl.GainLife(dsl.You, dsl.Fixed(2)),
 			)),
 		)
 	})
@@ -1809,7 +1810,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+2/+2 and gain 1 life per attacking creature you control",
 				Boost(Fixed(2), Fixed(2)),
-				GainLifeAmount(CountBattlefield(SelectController(), And(IsCreature, IsAttacking))),
+				dsl.GainLife(dsl.You, CountBattlefield(SelectController(), And(IsCreature, IsAttacking))),
 			)),
 		)
 	})
@@ -1831,7 +1832,7 @@ func registerSpells() {
 			NewMultiTargetSpell(
 				[]Target{TargetUpToNCreatures(2)},
 				Boost(Fixed(1), Fixed(2)).Targeting(ToAllTargets()),
-				GainLife(2),
+				dsl.GainLife(dsl.You, dsl.Fixed(2)),
 			),
 		)
 	})
@@ -1928,7 +1929,7 @@ func registerSpells() {
 						}
 						oppCreature := targets[0]
 						yourCreature := targets[1]
-						if err := ApplyEffect(g, OnPermanentDiesThisTurn(oppCreature, GainLife(3)), sourceID, controller, nil); err != nil {
+						if err := ApplyEffect(g, OnPermanentDiesThisTurn(oppCreature, dsl.GainLife(dsl.You, dsl.Fixed(3))), sourceID, controller, nil); err != nil {
 							return err
 						}
 						fightBetween(g, yourCreature, oppCreature)

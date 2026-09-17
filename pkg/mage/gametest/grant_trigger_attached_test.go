@@ -22,7 +22,7 @@ func registerGrantTriggerAttachedCards() {
 						mage.GrantTriggeredAbilityToAttached(
 							core.EvtUpkeep, false,
 							mage.EventPlayerIsController{},
-							mage.GainLife(1),
+							mage.GainLifeFor(mage.You, mage.Fixed(1)),
 						),
 					),
 				)

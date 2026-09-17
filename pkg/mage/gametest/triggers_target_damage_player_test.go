@@ -35,7 +35,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		// effect for testability.)
 		reg("Trig Target First", func() mage.Card {
 			trig := mage.WheneverBecomesTargetFirstTimeEachTurnTrigger(
-				mage.GainLife(1), false)
+				mage.GainLifeFor(mage.You, mage.Fixed(1)), false)
 			return mage.NewCreature("Trig Target First", "{1}{U}", 2, 2,
 				mage.WithAbility(trig))
 		})
@@ -65,7 +65,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		reg("Trig Combat Watcher", func() mage.Card {
 			return mage.NewEnchantment("Trig Combat Watcher", "{1}{U}",
 				mage.WithAbility(mage.WheneverPermanentDealsCombatDamageToPlayerTrigger(
-					mage.GainLife(1), false, mage.IsCreature)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false, mage.IsCreature)))
 		})
 
 		// "Whenever an artifact creature you control deals combat damage to
@@ -74,7 +74,7 @@ func registerTriggerTargetDamagePlayerCards() {
 			filter := mage.And(mage.IsArtifact, mage.IsCreature)
 			return mage.NewEnchantment("Trig Artifact Combat Watcher", "{2}{U}",
 				mage.WithAbility(mage.WheneverPermanentDealsCombatDamageToPlayerTrigger(
-					mage.GainLife(2), false, filter)))
+					mage.GainLifeFor(mage.You, mage.Fixed(2)), false, filter)))
 		})
 
 		// "When enchanted creature deals damage to a player, you gain 1 life."
@@ -83,7 +83,7 @@ func registerTriggerTargetDamagePlayerCards() {
 		reg("Trig Curiosity-Like", func() mage.Card {
 			return mage.NewAura("Trig Curiosity-Like", "{U}",
 				mage.WithAbility(mage.WheneverEnchantedPermanentDealsDamageToPlayerTrigger(
-					mage.GainLife(1), false)))
+					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
 		})
 
 		// Vanilla non-artifact attacker.

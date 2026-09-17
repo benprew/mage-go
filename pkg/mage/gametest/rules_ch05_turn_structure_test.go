@@ -210,7 +210,7 @@ func TestCR507_2_PriorityAtBeginningOfCombat(t *testing.T) {
 	if !mage.CardRegistered(healName) {
 		mage.Register(healName, func() mage.Card {
 			return mage.NewInstant(healName, "{W}",
-				mage.NewSpellAbility(mage.GainLife(3)))
+				mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))))
 		})
 	}
 	tg := NewTestGame(t)
@@ -295,7 +295,7 @@ func TestCR508_3a_WhenAttacksTrigger(t *testing.T) {
 		mage.Register(atkTrigName, func() mage.Card {
 			return mage.NewCreature(atkTrigName, "{1}{R}", 2, 2,
 				mage.WithSubTypes("Bear"),
-				mage.WithAbility(mage.AttacksTrigger(mage.GainLife(3), false)))
+				mage.WithAbility(mage.AttacksTrigger(mage.GainLifeFor(mage.You, mage.Fixed(3)), false)))
 		})
 	}
 	t.Run("trigger fires when source attacks", func(t *testing.T) {
@@ -823,7 +823,7 @@ func TestCR509_3f_CharacteristicChangeNoRetroTrigger(t *testing.T) {
 	if !mage.CardRegistered(colorWatcherName) {
 		mage.Register(colorWatcherName, func() mage.Card {
 			trig := mage.NewTriggered(core.EvtDeclaredBlocker, false,
-				mage.GainLife(2)).
+				mage.GainLifeFor(mage.You, mage.Fixed(2))).
 				SetCondition(func(evt *core.GameEvent, gr mage.GameReader, _, _ uuid.UUID) bool {
 					blk := gr.FindPermanent(evt.SourceID)
 					if blk == nil {
@@ -880,7 +880,7 @@ func TestCR509_3g_AttacksAndIsntBlockedTrigger(t *testing.T) {
 				mage.WithSubTypes("Bear"),
 				mage.WithAbility(
 					mage.NewTriggered(core.EvtBlockersDecl, false,
-						mage.GainLife(3)).
+						mage.GainLifeFor(mage.You, mage.Fixed(3))).
 						SetCondition(func(_ *core.GameEvent, gr mage.GameReader, sourceID, _ uuid.UUID) bool {
 							if !gr.IsAttackingInCombat(sourceID) {
 								return false

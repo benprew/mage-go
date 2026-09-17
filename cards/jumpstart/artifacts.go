@@ -3,6 +3,8 @@ package jumpstart
 import (
 	"github.com/google/uuid"
 
+	"github.com/benprew/mage-go/pkg/mage/dsl"
+
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
@@ -54,7 +56,7 @@ func registerArtifacts() {
 	Register("Bubbling Cauldron", func() Card {
 		return NewArtifact("Bubbling Cauldron", "{2}",
 			WithActivatedAbility(
-				GainLife(4),
+				dsl.GainLife(dsl.You, dsl.Fixed(4)),
 				GenericCost(1),
 				WithCost(Tap()),
 				WithCost(SacrificeCreatureCost()),

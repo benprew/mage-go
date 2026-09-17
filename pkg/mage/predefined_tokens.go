@@ -33,7 +33,7 @@ func newFoodToken() *BaseCard {
 	tok := NewToken("Food", 0, 0, []CardType{TypeArtifact}, []string{"Food"})
 	tok.colorOverride = []Color{Colorless}
 	tok.AddAbility(NewActivatedAbility(
-		GainLife(3),
+		GainLifeFor(You, Fixed(3)),
 		GenericCost(2),
 		WithCost(Tap()),
 		WithCost(SacrificeSourceCost()),

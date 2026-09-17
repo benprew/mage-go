@@ -17,7 +17,7 @@ func registerModal() {
 			WithActivatedAbility(
 				ModalEffect("deal 1 damage or gain 1 life",
 					DealDamageToPlayersStep(Fixed(1), SelectEachOpponent()),
-					GainLifeStep(1),
+					GainLife(You, Fixed(1)),
 				),
 				ManaCostOf("{1}"),
 			),

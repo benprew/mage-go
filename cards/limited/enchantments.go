@@ -584,7 +584,7 @@ func registerEnchantments() {
 	Register("Lifetap", func() Card {
 		return NewEnchantment("Lifetap", "{U}{U}",
 			WithAbility(WhenOpponentPermanentBecomesTappedTrigger(
-				mage.GainLife(1), false,
+				GainLife(You, Fixed(1)), false,
 				And(IsLand, HasSubType("Forest")),
 			)),
 		)
@@ -751,7 +751,7 @@ func registerEnchantments() {
 					Pipeline("remove a vitality counter and gain 1 life",
 						EffectProperties{Outcome: OutcomeBenefit},
 						RemoveCounters(Vitality, 1),
-						GainLifeStep(1),
+						GainLife(You, Fixed(1)),
 					), nil,
 				), false).SetConditionData(SourceHasCounterCond{CounterType: Vitality, MinCount: 1})),
 		)

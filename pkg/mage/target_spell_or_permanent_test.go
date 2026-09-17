@@ -26,7 +26,7 @@ func TestTargetSpellOrPermanentIncludesBothZones(t *testing.T) {
 
 func TestTargetSpellOrPermanentExcludesAbilities(t *testing.T) {
 	g, a, _ := newRandomTargetGame()
-	source := NewArtifact("Ability Source", "{0}", WithActivatedAbility(GainLife(1), GenericCost(0)))
+	source := NewArtifact("Ability Source", "{0}", WithActivatedAbility(GainLifeFor(You, Fixed(1)), GenericCost(0)))
 	source.SetOwner(a.PlayerID())
 	permanent := g.PutOnBattlefield(source, a.PlayerID())
 	if err := g.ActivateAbilityByIndex(a.PlayerID(), permanent.ID(), 0, nil); err != nil {

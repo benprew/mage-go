@@ -16,7 +16,7 @@ func TestGenericTriggered(t *testing.T) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewCreature(name, "{2}{G}", 3, 3,
 					mage.WithSubTypes("Beast"),
-					mage.WithAbility(mage.EntersBattlefieldTrigger(mage.GainLife(3), false)),
+					mage.WithAbility(mage.EntersBattlefieldTrigger(mage.GainLifeFor(mage.You, mage.Fixed(3)), false)),
 				)
 			})
 		}

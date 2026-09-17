@@ -52,7 +52,7 @@ func registerCh07aCards() {
 				return mage.NewCreature("Ch07a Death Watcher", "{1}{B}", 1, 1,
 					mage.WithSubTypes("Zombie"),
 					mage.WithAbility(mage.AnyCreatureDiesTrigger(
-						mage.GainLife(1),
+						mage.GainLifeFor(mage.You, mage.Fixed(1)),
 						false,
 					)),
 				)

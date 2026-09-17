@@ -521,9 +521,6 @@ var (
 
 	// Damage / life
 
-	GainLifeAmount = mage.GainLifeAmount
-
-	LoseLifeAmount            = mage.LoseLifeAmount
 	GainLifeTarget            = mage.GainLifeTarget
 	TargetPlayerLoseLife      = mage.TargetPlayerLoseLife
 	PoisonTargetPlayer        = mage.PoisonTargetPlayer
@@ -532,7 +529,6 @@ var (
 	DealDamageToPlayersStep   = mage.DealDamageToPlayersStep
 	DealDamageStep            = mage.DealDamageStep
 	DealDamageToSourceStep    = mage.DealDamageToSourceStep
-	GainLifeStep              = mage.GainLifeStep
 	DealDamageToAllCreatures  = mage.DealDamageToAllCreatures
 	SacrificeCreatureOrDamage = mage.SacrificeCreatureOrDamage
 

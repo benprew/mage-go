@@ -595,7 +595,7 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(
-				DiesTrigger(mage.GainLife(2), false),
+				DiesTrigger(GainLife(You, Fixed(2)), false),
 			),
 		)
 	})

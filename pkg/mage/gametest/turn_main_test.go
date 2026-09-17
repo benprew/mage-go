@@ -24,7 +24,7 @@ func init() {
 			return mage.NewSorcery(
 				"TurnStructureMain Healing Salve Sorcery",
 				"{W}",
-				mage.NewSpellAbility(mage.GainLife(3)),
+				mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 			)
 		})
 	}

@@ -18,7 +18,7 @@ func registerWraithbloom() {
 			// put a +1/+1 counter on Wraithbloom Cultivator.
 			WithAbility(DiesCreatureTrigger(
 				CompositeEffects("gain 1 life and put a +1/+1 counter on this",
-					mage.GainLife(1),
+					GainLife(You, Fixed(1)),
 					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				),
 				false, PermanentFilter{},

@@ -3,8 +3,6 @@ package fallen_empires
 import (
 	"math/rand"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -41,7 +39,7 @@ func registerArtifacts() {
 		c.AddAbility(NewModalActivated(GenericCost(1), []Mode{
 			{
 				Label:   "You gain 2 life",
-				Effects: []Effect{mage.GainLife(2)},
+				Effects: []Effect{GainLife(You, Fixed(2))},
 			},
 			{
 				Label:   "Prevent the next 2 damage that would be dealt to any target this turn",

@@ -952,7 +952,7 @@ func registerCreatures() {
 				GenericCost(0),
 			),
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
-				LoseLifeAmount(HalfRoundUp(PlayerLifeValue())), false)),
+				LoseLife(You, HalfRoundUp(PlayerLifeValue())), false)),
 		)
 	})
 

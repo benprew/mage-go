@@ -43,7 +43,7 @@ func TestAddLifeGainModifier_DoubleLifegain(t *testing.T) {
 	if !mage.CardRegistered(triggerName) {
 		mage.Register(triggerName, func() mage.Card {
 			return mage.NewSorcery(triggerName, "{W}",
-				mage.NewSpellAbility(mage.GainLife(3)),
+				mage.NewSpellAbility(mage.GainLifeFor(mage.You, mage.Fixed(3))),
 			)
 		})
 	}

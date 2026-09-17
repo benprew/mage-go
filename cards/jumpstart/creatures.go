@@ -123,7 +123,7 @@ func registerCreatures() {
 		return NewCreature("Angel of Mercy", "{4}{W}", 3, 3,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(mage.GainLife(3), false)),
+			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(3)), false)),
 		)
 	})
 
@@ -318,7 +318,7 @@ func registerCreatures() {
 	Register("Bulwark Giant", func() Card {
 		return NewCreature("Bulwark Giant", "{5}{W}", 3, 6,
 			WithSubTypes("Giant", "Soldier"),
-			WithAbility(EntersBattlefieldTrigger(mage.GainLife(5), false)),
+			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(5)), false)),
 		)
 	})
 
@@ -2035,7 +2035,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				CompositeEffects("put +1/+1 counter on this creature and gain 2 life",
 					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
-					mage.GainLife(2),
+					GainLife(You, Fixed(2)),
 				),
 				ManaCostOf("{1}{B}"),
 				WithCost(SacrificeCreatureCost()),
@@ -3161,7 +3161,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CompositeEffects("draw two cards and lose 2 life",
 					DrawCards(Fixed(2)),
-					mage.LoseLife(2),
+					LoseLife(You, Fixed(2)),
 				),
 				false,
 			)),
@@ -3178,7 +3178,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CompositeEffects("draw a card and lose 1 life",
 					DrawCards(Fixed(1)),
-					mage.LoseLife(1),
+					LoseLife(You, Fixed(1)),
 				),
 				false,
 			)),
@@ -3226,13 +3226,13 @@ func registerCreatures() {
 			WithSubTypes("Vampire", "Shaman"),
 			WithKeyword(Flying),
 			WithAbility(NewTriggered(EvtZoneChange, true,
-				mage.GainLife(3),
+				GainLife(You, Fixed(3)),
 			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 				EventSourceWasOfType{Type: TypeCreature},
 				EventPlayerIsNotController{},
 			}})),
-			WithAbility(WheneverOpponentDiscardsTrigger(mage.GainLife(3), true)),
+			WithAbility(WheneverOpponentDiscardsTrigger(GainLife(You, Fixed(3)), true)),
 		)
 	})
 
@@ -3490,7 +3490,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CompositeEffects("draw a card and lose 1 life",
 					DrawCards(Fixed(1)),
-					mage.LoseLife(1),
+					LoseLife(You, Fixed(1)),
 				),
 				false,
 			)),
@@ -5778,7 +5778,7 @@ func registerCreatures() {
 		return NewCreature("Ravenous Baloth", "{2}{G}{G}", 4, 4,
 			WithSubTypes("Beast"),
 			WithActivatedAbility(
-				mage.GainLife(4),
+				GainLife(You, Fixed(4)),
 				SacrificeMatchingCost(HasSubType("Beast"), "Sacrifice a Beast"),
 			),
 		)
@@ -6044,7 +6044,7 @@ func registerCreatures() {
 	Register("Sylvan Brushstrider", func() Card {
 		return NewCreature("Sylvan Brushstrider", "{2}{G}", 3, 2,
 			WithSubTypes("Beast"),
-			WithAbility(EntersBattlefieldTrigger(mage.GainLife(2), false)),
+			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(2)), false)),
 		)
 	})
 
@@ -6074,7 +6074,7 @@ func registerCreatures() {
 	Register("Thragtusk", func() Card {
 		return NewCreature("Thragtusk", "{4}{G}", 5, 3,
 			WithSubTypes("Beast"),
-			WithAbility(EntersBattlefieldTrigger(mage.GainLife(5), false)),
+			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(5)), false)),
 			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
 				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
 				false,
@@ -6532,7 +6532,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(Haste),
 			WithActivatedAbility(
-				mage.GainLife(3),
+				GainLife(You, Fixed(3)),
 				ManaCostOf("{2}"),
 				WithCost(TapCost(This)),
 				WithCost(SacrificeSourceCost()),
