@@ -282,6 +282,16 @@
 // values created by [WithManaAbility] or [WithMultiManaAbility]. It also
 // identifies activated abilities that combine a tap cost with only [AddMana]
 // or [AddAnyMana] effects.
+// [Sequence] and [CompositeEffects] retain that profile, including nested
+// sequences. Each AddAnyMana instruction keeps its own color choice.
+// Target declarations exclude an ability from this production profile.
+//
+// A targetless [Activate] body with unconditional mana instructions resolves
+// immediately. A tap cost is not required. Other instructions in its sequence
+// also resolve immediately, but exclude that body from automatic planning.
+// Tapped-for-mana events require a tap cost. Restrictions on non-mana abilities
+// do not stop these mana abilities. Conditional and modal mana classification
+// still require separate adapters.
 //
 // [SolveMana] and [CanSolveMana] search a unified model of all mana abilities
 // on permanents. This model includes targetless mana abilities with both a mana

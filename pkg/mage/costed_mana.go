@@ -77,7 +77,7 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 	if ability.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if ability.timing == TimingStepOnly && ability.stepOnly != 0 && g.turns.Step() != ability.stepOnly {
+	if ability.timing == TimingStepOnly && g.turns.Step() != ability.stepOnly {
 		return false
 	}
 	if ability.limits.MaxActivationsPerTurn > 0 && ability.activationsThisTurn >= ability.limits.MaxActivationsPerTurn {
@@ -101,18 +101,37 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 }
 
 func activatedManaEffects(effects []Effect) ([]ManaProduction, bool) {
-	productions := make([]ManaProduction, 0, len(effects))
+	productions, onlyMana := sequentialManaProductions(effects)
+	if !onlyMana {
+		return nil, false
+	}
+	return productions, len(productions) > 0
+}
+
+// sequentialManaProductions reads only instructions that execute unconditionally.
+// The planner must reject a body with instructions that it cannot execute.
+func sequentialManaProductions(effects []Effect) ([]ManaProduction, bool) {
+	var productions []ManaProduction
+	onlyMana := len(effects) > 0
 	for _, effect := range effects {
 		switch add := effect.(type) {
 		case *addManaEffect:
 			productions = append(productions, ManaProduction{Color: add.color, Amount: add.amount})
 		case *addAnyManaEffect:
 			productions = append(productions, ManaProduction{Color: AnyColor, Amount: add.amount})
+		case *sequenceEffect:
+			nested, pure := sequentialManaProductions(add.effects)
+			productions = append(productions, nested...)
+			onlyMana = onlyMana && pure
+		case *compositeEffect:
+			nested, pure := sequentialManaProductions(add.effects)
+			productions = append(productions, nested...)
+			onlyMana = onlyMana && pure
 		default:
-			return nil, false
+			onlyMana = false
 		}
 	}
-	return productions, len(productions) > 0
+	return productions, onlyMana
 }
 
 func plannedManaChoiceAvailable(productions []ManaProduction, bonuses []ManaBonusColor, action ManaTap) bool {

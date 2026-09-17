@@ -47,3 +47,17 @@ func TestTypedLayerComposition(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestTypedManaComposition(t *testing.T) {
+	ability := dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)),
+		dsl.Sequence(dsl.AddMana(core.Blue, 1), dsl.Sequence(dsl.AddMana(core.Green, 1))),
+	)
+	card := mage.NewLand("Typed mana", mage.WithAbility(ability))
+	if err := mage.ValidateCardDefinition("Typed mana", card); err != nil {
+		t.Fatal(err)
+	}
+	productions := mage.ManaProductionsForAbility(ability)
+	if len(productions) != 2 || productions[0].Color != core.Blue || productions[1].Color != core.Green {
+		t.Fatalf("productions = %+v", productions)
+	}
+}

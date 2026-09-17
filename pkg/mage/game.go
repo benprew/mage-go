@@ -3393,25 +3393,15 @@ func abilityManaProductions(a Ability, g GameReader, sourceID uuid.UUID) []ManaP
 // that behaves as a tap-for-mana ability — exactly one cost (tapping the source)
 // and all effects are AddMana / AddAnyMana. Returns nil if the shape doesn't match.
 func activatedManaProductions(a *SimpleActivatedAbility) []ManaProduction {
-	if len(a.costs) != 1 {
+	if len(a.costs) != 1 || len(a.targets) != 0 {
 		return nil
 	}
 	if _, ok := a.costs[0].(*tap); !ok {
 		return nil
 	}
-	if len(a.effects) == 0 {
+	productions, ok := activatedManaEffects(a.effects)
+	if !ok {
 		return nil
-	}
-	var productions []ManaProduction
-	for _, e := range a.effects {
-		switch d := e.(type) {
-		case *addManaEffect:
-			productions = append(productions, ManaProduction{Color: d.color, Amount: d.amount})
-		case *addAnyManaEffect:
-			productions = append(productions, ManaProduction{Color: AnyColor, Amount: d.amount})
-		default:
-			return nil
-		}
 	}
 	return productions
 }
@@ -3720,7 +3710,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if perm.ControllerID() == playerID && isSAA && saa.IsOpponentOnlyAbility() {
 		return fmt.Errorf("only opponents may activate this ability")
 	}
-	if perm.HasAttr(AttrCantActivateNonManaAbilities) {
+	if perm.HasAttr(AttrCantActivateNonManaAbilities) && unconditionalManaAmount(aa.Effects(), aa.Targets()) == 0 {
 		return fmt.Errorf("non-mana activated abilities of %s are prevented", perm.Name())
 	}
 	if !aa.CanActivate(playerID, g) {
@@ -3809,15 +3799,17 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
 
-	if produced := tappedForManaAmount(aa, actionEffects, actionTargets); produced > 0 {
+	if produced := unconditionalManaAmount(actionEffects, actionTargets); produced > 0 {
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,
 			SourceID: perm.ID(),
 			PlayerID: playerID,
-			Flag:     true,
+			Flag:     hasTapCost,
 		})
 		g.ResolveStackObject(obj)
-		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
+		if hasTapCost {
+			g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
+		}
 		return nil
 	}
 
@@ -3854,32 +3846,14 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	return nil
 }
 
-func tappedForManaAmount(ability ActivatedAbility, effects []Effect, targets []Target) int {
+func unconditionalManaAmount(effects []Effect, targets []Target) int {
 	if len(targets) != 0 {
 		return 0
 	}
-	hasTapCost := false
-	for _, cost := range ability.Costs() {
-		if _, ok := cost.(*tap); ok {
-			hasTapCost = true
-			break
-		}
-	}
-	if !hasTapCost {
-		return 0
-	}
+	productions, _ := sequentialManaProductions(effects)
 	amount := 0
-	for _, effect := range effects {
-		switch add := effect.(type) {
-		case *addManaEffect:
-			if add.amount > 0 {
-				amount += add.amount
-			}
-		case *addAnyManaEffect:
-			if add.amount > 0 {
-				amount += add.amount
-			}
-		}
+	for _, production := range productions {
+		amount += max(production.Amount, 0)
 	}
 	return amount
 }

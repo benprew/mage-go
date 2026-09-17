@@ -280,7 +280,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		return false
 	}
 	if perm := g.FindPermanent(a.source); perm != nil {
-		if perm.HasAttr(AttrCantActivate) || perm.HasAttr(AttrCantActivateNonManaAbilities) {
+		if perm.HasAttr(AttrCantActivate) || (perm.HasAttr(AttrCantActivateNonManaAbilities) && unconditionalManaAmount(a.effects, a.targets) == 0) {
 			return false
 		}
 		if perm.ControllerID() != controller && !a.permission.AnyPlayerMayUse {
