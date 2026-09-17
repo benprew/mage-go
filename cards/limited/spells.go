@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -75,21 +77,16 @@ func registerSpells() {
 		)
 	})
 
+	// Choose one —
+	// • Target player gains 3 life.
+	// • Prevent the next 3 damage that would be dealt to any target this turn.
 	Register("Healing Salve", func() Card {
-		c := NewInstant("Healing Salve", "{W}", nil)
-		c.AddAbility(NewModalSpell([]Mode{
-			{
-				Label:   "Target player gains 3 life",
-				Targets: []Target{TargetPlayer()},
-				Effects: []Effect{HealingSalveGainEffect()},
-			},
-			{
-				Label:   "Prevent the next 3 damage that would be dealt to any target this turn",
-				Targets: []Target{TargetDamageAnyTarget()},
-				Effects: []Effect{HealingSalvePreventionEffect()},
-			},
-		}))
-		return c
+		player := TargetPlayer("player")
+		recipient := TargetDamageRecipient("recipient")
+		return NewInstant("Healing Salve", "{W}", WithAbility(SpellModes(
+			ModeOf("Target player gains 3 life", GainLife(player, Fixed(3)), WithTargets(player)),
+			ModeOf("Prevent the next 3 damage that would be dealt to any target this turn", PreventNextDamage(recipient, Fixed(3)), WithTargets(recipient)),
+		)))
 	})
 
 	Register("Armageddon", func() Card {
@@ -136,15 +133,19 @@ func registerSpells() {
 
 	// ===== BLUE SPELLS =====
 
+	// Oracle: "Target player draws three cards."
 	Register("Ancestral Recall", func() Card {
+		player := TargetPlayer("player")
 		return NewInstant("Ancestral Recall", "{U}",
-			NewTargetedSpell(TargetPlayer(), AncestralRecallEffect()),
+			Spell(Draw(player, Fixed(3)), WithTargets(player)),
 		)
 	})
 
+	// Oracle: "Target player draws X cards."
 	Register("Braingeyser", func() Card {
+		player := TargetPlayer("player")
 		return NewSorcery("Braingeyser", "{X}{U}{U}",
-			NewTargetedSpell(TargetPlayer(), DrawCards(XValue())),
+			Spell(Draw(player, XValue()), WithTargets(player)),
 		)
 	})
 
@@ -185,7 +186,7 @@ func registerSpells() {
 
 	Register("Twiddle", func() Card {
 		return NewInstant("Twiddle", "{U}",
-			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TwiddleEffect()),
+			NewTargetedSpell(mage.TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TwiddleEffect()),
 		)
 	})
 
@@ -203,7 +204,7 @@ func registerSpells() {
 
 	Register("Sleight of Mind", func() Card {
 		return NewInstant("Sleight of Mind", "{U}",
-			NewTargetedSpell(TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
+			NewTargetedSpell(mage.TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
 		)
 	})
 
@@ -282,7 +283,7 @@ func registerSpells() {
 
 	Register("Mind Twist", func() Card {
 		return NewSorcery("Mind Twist", "{X}{B}",
-			NewTargetedSpell(TargetPlayer(), DiscardCards(XValue())),
+			NewTargetedSpell(mage.TargetPlayer(), DiscardCards(XValue())),
 		)
 	})
 
@@ -446,7 +447,7 @@ func registerSpells() {
 
 	Register("Stream of Life", func() Card {
 		return NewSorcery("Stream of Life", "{X}{G}",
-			NewTargetedSpell(TargetPlayer(), GainLifeTarget(XValue())),
+			NewTargetedSpell(mage.TargetPlayer(), GainLifeTarget(XValue())),
 		)
 	})
 
@@ -573,7 +574,7 @@ func registerSpells() {
 	Register("Word of Command", func() Card {
 		return NewInstant("Word of Command", "{B}{B}",
 			// TODO: convert to pipeline — complex hand/cast manipulation
-			NewTargetedSpell(TargetPlayer(), FuncEffect(
+			NewTargetedSpell(mage.TargetPlayer(), FuncEffect(
 				"look at opponent's hand and force them to play a card",
 				EffectProperties{},
 				func(g *Game, _, controller uuid.UUID, targets []uuid.UUID) error {
@@ -626,7 +627,7 @@ func registerSpells() {
 	Register("Natural Selection", func() Card {
 		return NewInstant("Natural Selection", "{G}",
 			// TODO: convert to pipeline — needs library manipulation steps
-			NewTargetedSpell(TargetPlayer(), FuncEffect(
+			NewTargetedSpell(mage.TargetPlayer(), FuncEffect(
 				"look at top 3 cards of target player's library, rearrange them",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -656,7 +657,7 @@ func registerSpells() {
 	Register("Mana Short", func() Card {
 		// TODO Also drain player's mana pool
 		return NewInstant("Mana Short", "{2}{U}",
-			NewTargetedSpell(TargetPlayer(), TapAllLands()),
+			NewTargetedSpell(mage.TargetPlayer(), TapAllLands()),
 		)
 	})
 
@@ -664,7 +665,7 @@ func registerSpells() {
 	// Target player activates a mana ability of each land they control. Then that player loses all unspent mana and you add the mana lost this way.
 	Register("Drain Power", func() Card {
 		return NewSorcery("Drain Power", "{U}{U}",
-			NewTargetedSpell(TargetPlayer(), TapAllLands()),
+			NewTargetedSpell(mage.TargetPlayer(), TapAllLands()),
 		)
 	})
 
@@ -697,7 +698,7 @@ func registerSpells() {
 	// TODO implement "Also blocks if able"
 	Register("Blaze of Glory", func() Card {
 		return NewInstant("Blaze of Glory", "{W}",
-			NewTargetedSpell(TargetCreature(), GrantKeyword(CanBlockAny)),
+			NewTargetedSpell(TargetCreature(), mage.GrantKeyword(CanBlockAny)),
 		)
 	})
 
@@ -748,13 +749,13 @@ func registerSpells() {
 
 	Register("Magical Hack", func() Card {
 		return NewInstant("Magical Hack", "{U}",
-			NewTargetedSpell(TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
+			NewTargetedSpell(mage.TargetPermanent(), ReplaceKeywordEffect(Swampwalk, Forestwalk)),
 		)
 	})
 
 	Register("Jump", func() Card {
 		return NewInstant("Jump", "{U}",
-			NewTargetedSpell(TargetCreature(), GrantKeyword(Flying)),
+			NewTargetedSpell(TargetCreature(), mage.GrantKeyword(Flying)),
 		)
 	})
 

@@ -3,6 +3,8 @@ package jumpstart
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -47,7 +49,7 @@ func thrivingLand(name string, onColor Color) Card {
 					p.ManaPool().Add(c, 1)
 					return nil
 				}),
-			Tap(),
+			TapCost(This),
 		),
 	)
 }
@@ -64,7 +66,7 @@ func registerLands() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
 			),
@@ -80,12 +82,12 @@ func registerLands() {
 		return NewLand("Mirrodin's Core",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
-				AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
-				Tap(),
+				mage.AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
+				TapCost(This),
 			),
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
-				Tap(),
+				TapCost(This),
 				WithCost(RemoveCountersCost(Charge, 1)),
 			),
 		)
@@ -101,7 +103,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				AddMana(Black, 2),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeCreatureCost()),
 			),
 		)
@@ -117,7 +119,7 @@ func registerLands() {
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				ManaCostOf("{1}{U}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreatureYouControl(HasSubType("Wizard"))),
 			),
 		)
@@ -187,7 +189,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 			),
 		)

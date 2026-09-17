@@ -60,8 +60,8 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTargetPermanent(),
 				ManaCostOf("{W}{W}"),
-				WithCost(Tap()),
-				WithTarget(TargetPermanent(HasColorFilter(Black))),
+				WithCost(TapCost(This)),
+				WithTarget(mage.TargetPermanent(HasColorFilter(Black))),
 			),
 		)
 	})
@@ -102,7 +102,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
 				ProdigalSorcererEffect(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
@@ -117,7 +117,7 @@ func registerCreatures() {
 			),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 			// When you control no Islands, sacrifice Pirate Ship.
@@ -230,7 +230,7 @@ func registerCreatures() {
 			// {T}: Destroy target tapped creature
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(IsTapped)),
 			),
 		)
@@ -245,7 +245,7 @@ func registerCreatures() {
 			WithSubTypes("Vampire"),
 			WithKeyword(Flying),
 			// Whenever a creature dealt damage by Sengir Vampire this turn dies, put a +1/+1 counter on Sengir Vampire
-			WithAbility(CreatureDealtDamageBySourceDiesTrigger(AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
+			WithAbility(CreatureDealtDamageBySourceDiesTrigger(mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -324,7 +324,7 @@ func registerCreatures() {
 			// {T}: Target creature with power 2 or less can't be blocked this turn.
 			WithActivatedAbility(
 				MakeUnblockableUntilEndOfTurn(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasPowerLTE(2))),
 			),
 		)
@@ -343,7 +343,7 @@ func registerCreatures() {
 			WithSubTypes("Goblin", "Warrior"),
 			// {R}: Goblin Balloon Brigade gains flying until end of turn.
 			WithActivatedAbility(
-				GrantKeyword(Flying).Targeting(ToSource()),
+				mage.GrantKeyword(Flying).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -484,7 +484,7 @@ func registerCreatures() {
 		return NewCreature("Fungusaur", "{3}{G}", 2, 2,
 			WithSubTypes("Fungus", "Dinosaur"),
 			// Whenever Fungusaur is dealt damage, put a +1/+1 counter on it.
-			WithAbility(WhenDamageDealtToThisTrigger(AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
+			WithAbility(WhenDamageDealtToThisTrigger(mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -689,9 +689,9 @@ func registerCreatures() {
 				SetConditionData(SourceAttackedOrBlockedThisTurn{})),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Beast (max 7 total). Upkeep only.
 			WithActivatedAbility(
-				AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(7),
+				mage.AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(7),
 				XManaCost(),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithUpkeepOnly(),
 			),
 		)
@@ -756,7 +756,7 @@ func registerCreatures() {
 			// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
@@ -768,7 +768,7 @@ func registerCreatures() {
 			// {T}: Untap target land
 			WithActivatedAbility(
 				UntapTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetLand()),
 			),
 		)
@@ -808,7 +808,7 @@ func registerCreatures() {
 							return nil
 						}
 						targetID := targets[0]
-						if err := ApplyEffect(g, GrantKeyword(MustAttack), sourceID, controller, targets); err != nil {
+						if err := ApplyEffect(g, mage.GrantKeyword(MustAttack), sourceID, controller, targets); err != nil {
 							return err
 						}
 						g.RegisterDelayedTrigger(&DelayedTrigger{
@@ -831,7 +831,7 @@ func registerCreatures() {
 						})
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(validTarget)),
 				mage.WithActivationCondition(func(g *Game, _ *Permanent, controller uuid.UUID) bool {
 					step := g.GetStep()
@@ -875,18 +875,22 @@ func registerCreatures() {
 	// For each 1 damage that would be dealt to this creature, if it has a +1/+1 counter on it, remove a +1/+1 counter from it and prevent that 1 damage.
 	// {R}: Prevent the next 1 damage that would be dealt to this creature this turn.
 	// {R}{R}{R}: Put a +1/+1 counter on this creature. Activate only during your upkeep.
+	// This creature enters with X +1/+1 counters on it.
+	// For each 1 damage that would be dealt to this creature, if it has a +1/+1 counter on it, remove a +1/+1 counter from it and prevent that 1 damage.
+	// {R}: Prevent the next 1 damage that would be dealt to this creature this turn.
+	// {R}{R}{R}: Put a +1/+1 counter on this creature. Activate only during your upkeep.
 	Register("Rock Hydra", func() Card {
 		return NewCreature("Rock Hydra", "{X}{R}{R}", 0, 0,
 			WithSubTypes("Hydra"),
 			WithAbility(EntersWithXCounters(P1P1)),
 			WithStaticAbility(PreventDamageToSourceByRemovingCounters(P1P1)),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{R}{R}{R}"),
 				WithUpkeepOnly(),
 			),
 			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(1)).Targeting(ToSource()),
+				PreventNextDamage(This, Fixed(1)),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -971,7 +975,7 @@ func registerCreatures() {
 			WithSubTypes("Dwarf"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasSubType("Wall"))),
 			),
 		)
@@ -988,7 +992,7 @@ func registerCreatures() {
 					DealDamage(Fixed(2)),
 					DealDamageToPlayers(Fixed(3), SelectController()),
 				),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)

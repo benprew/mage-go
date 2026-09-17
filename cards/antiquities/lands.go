@@ -3,6 +3,8 @@ package antiquities
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -48,7 +50,7 @@ func registerLands() {
 			),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasSubType("Assembly-Worker"))),
 			),
 		)
@@ -76,9 +78,9 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetPermanent(IsLand)),
+				WithTarget(mage.TargetPermanent(IsLand)),
 			),
 		)
 	})
@@ -107,7 +109,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -136,7 +138,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -165,7 +167,7 @@ func registerLands() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})

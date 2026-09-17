@@ -3,6 +3,8 @@ package thedark
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -24,7 +26,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTarget(),
 				ManaCostOf("{1}{W}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature(HasColorFilter(Black))),
 			),
 		)
@@ -51,7 +53,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Cleric"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetAuraAttachedToCreatureYouControl()),
 			),
 		)
@@ -67,7 +69,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Cleric"),
 			WithActivatedAbility(
 				GainControl().While(ControlSourceExists{}, ControlSourceTapped{}).TapMaintained(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreatureOpponentControls()),
 			),
 		)
@@ -92,13 +94,13 @@ func registerCreatures() {
 			WithSubTypes("Human", "Cleric"),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetPlayerOrPlaneswalker()),
 			),
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				ManaCostOf("{1}{W}{W}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreatureOpponentControls()),
 			),
 		)
@@ -151,7 +153,7 @@ func registerCreatures() {
 			WithAbility(BlocksOrBlockedByDamagedCreatureTrigger(
 				CompositeEffects("gets +2/+0 and gains trample until end of turn",
 					Boost(Fixed(2), Fixed(0)).Targeting(ToSource()).Until(EndOfTurn),
-					GrantKeyword(Trample).Targeting(ToSource()),
+					mage.GrantKeyword(Trample).Targeting(ToSource()),
 				),
 			)),
 		)
@@ -166,7 +168,7 @@ func registerCreatures() {
 			WithSubTypes("Merfolk", "Assassin"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasKeywordFilter(Islandwalk))),
 			),
 		)
@@ -195,7 +197,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(HalfXRoundedDown()),
 				XManaCost(),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithEffect(DealDamageToPlayers(HalfXRoundedUp(), SelectController())),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -253,9 +255,9 @@ func registerCreatures() {
 			WithActivatedAbility(
 				ExileTargetCardFromGraveyardStep(),
 				ManaCostOf("{B}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCardInAnyGraveyard(IsArtifactCard)),
-				WithEffect(GainLife(2)),
+				WithEffect(mage.GainLife(2)),
 			),
 		)
 	})
@@ -319,7 +321,7 @@ func registerCreatures() {
 			WithSubTypes("Goblin"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature(HasSubType("Wall"))),
 			),
@@ -345,7 +347,7 @@ func registerCreatures() {
 			WithSubTypes("Goblin", "Wizard"),
 			WithActivatedAbility(
 				PutFromHandOntoBattlefield(AndCardFilter(HasSubTypeCardFilter("Goblin"), IsPermanentCard)),
-				Tap(),
+				TapCost(This),
 			),
 			WithActivatedAbility(
 				GrantProtectionTarget(White),
@@ -377,7 +379,7 @@ func registerCreatures() {
 			WithSubTypes("Orc", "Warrior"),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)).Targeting(ToOtherMatching(HasSubType("Orc"))).Until(EndOfTurn),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeMatchingCost(Or(HasSubType("Orc"), HasSubType("Goblin")), "Sacrifice another Orc or Goblin")),
 			),
 		)
@@ -417,7 +419,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				RegenerateTarget(),
 				ManaCostOf("{G}{G}{G}{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -444,8 +446,8 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTarget(),
 				ManaCostOf("{G}{G}"),
-				WithCost(Tap()),
-				WithTarget(TargetPermanent(IsAuraOnLand)),
+				WithCost(TapCost(This)),
+				WithTarget(mage.TargetPermanent(IsAuraOnLand)),
 			),
 		)
 	})
@@ -467,7 +469,7 @@ func registerCreatures() {
 					GainControl().While(ControlSourceExists{}),
 				),
 				ManaCostOf("{2}{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetArtifact()),
 			),
 		)
@@ -482,14 +484,14 @@ func registerCreatures() {
 		return NewCreature("Scarwood Hag", "{1}{G}", 1, 1,
 			WithSubTypes("Hag"),
 			WithActivatedAbility(
-				GrantKeyword(Forestwalk),
+				mage.GrantKeyword(Forestwalk),
 				ManaCostOf("{G}{G}{G}{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 			WithActivatedAbility(
 				RevokeKeyword(Forestwalk),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -505,7 +507,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTarget(),
 				ManaCostOf("{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetArtifact()),
 			),
@@ -524,8 +526,8 @@ func registerCreatures() {
 					SelectController(),
 					ManaCostOf("{1}{G}"),
 					"Pay {1}{G} for first strike?",
-					GrantKeyword(FirstStrike).Targeting(ToSource()).Until(EndOfTurn),
-					GrantKeyword(FirstStrike).Targeting(ToBlockingOrBlockedBySource()).Until(EndOfTurn),
+					mage.GrantKeyword(FirstStrike).Targeting(ToSource()).Until(EndOfTurn),
+					mage.GrantKeyword(FirstStrike).Targeting(ToBlockingOrBlockedBySource()).Until(EndOfTurn),
 				),
 			)),
 		)
@@ -541,7 +543,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				FightTarget(),
 				ManaCostOf("{G}{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -557,12 +559,12 @@ func registerCreatures() {
 			WithActivatedAbility(
 				CompositeEffects(
 					"Target creature can't be regenerated this turn. Damage that would be dealt to that creature this turn can't be prevented or dealt instead to another permanent or player. When the creature dies this turn, exile the creature.",
-					GrantKeyword(CantRegenerate).Targeting(ToTarget()).Until(EndOfTurn),
-					GrantKeyword(AttrDamageCantBePreventedOrRedirected).Targeting(ToTarget()).Until(EndOfTurn),
+					mage.GrantKeyword(CantRegenerate).Targeting(ToTarget()).Until(EndOfTurn),
+					mage.GrantKeyword(AttrDamageCantBePreventedOrRedirected).Targeting(ToTarget()).Until(EndOfTurn),
 					OnTargetDiesThisTurn(ExileEventSourceEffect()),
 				),
 				ManaCostOf("{G}{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -577,12 +579,12 @@ func registerCreatures() {
 		return NewCreature("Wormwood Treefolk", "{3}{G}{G}", 4, 4,
 			WithSubTypes("Treefolk"),
 			WithActivatedAbility(
-				GrantKeyword(Forestwalk).Targeting(ToSource()),
+				mage.GrantKeyword(Forestwalk).Targeting(ToSource()),
 				ManaCostOf("{G}{G}"),
 				WithEffect(DealDamageToPlayers(Fixed(2), SelectController())),
 			),
 			WithActivatedAbility(
-				GrantKeyword(Swampwalk).Targeting(ToSource()),
+				mage.GrantKeyword(Swampwalk).Targeting(ToSource()),
 				ManaCostOf("{B}{B}"),
 				WithEffect(DealDamageToPlayers(Fixed(2), SelectController())),
 			),
@@ -640,7 +642,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(Defender),
 			WithActivatedAbility(
-				AddCounters(P0P1, ExiledCardManaValue()).Targeting(ToSource()),
+				mage.AddCounters(P0P1, ExiledCardManaValue()).Targeting(ToSource()),
 				ExileMatchingCardFromGraveyardCost(IsCreatureCard, "Exile a creature card from your graveyard"),
 			),
 		)
@@ -657,7 +659,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				PreventDamageToYouByCreaturesWithFlying(),
 				ManaCostOf("{6}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})

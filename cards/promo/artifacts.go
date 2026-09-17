@@ -17,10 +17,8 @@ func registerArtifacts() {
 	Register("Mana Crypt", func() Card {
 		return NewArtifact("Mana Crypt", "{0}",
 			WithAbility(BeginningOfUpkeepTrigger(
-				IfElse("flip a coin",
-					FlipCoinCond{},
-					nil,
-					DealDamageToPlayers(Fixed(3), SelectController()),
+				FlipCoin(You,
+					OnLoss(DealDamageToPlayers(Fixed(3), SelectController())),
 				), false,
 			)),
 			WithMultiManaAbility(ManaProduction{Color: core.Colorless, Amount: 2}),

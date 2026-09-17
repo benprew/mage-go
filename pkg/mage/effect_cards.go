@@ -45,29 +45,6 @@ func (e *drawCardsTargetEffect) Text() string {
 }
 func (e *drawCardsTargetEffect) Properties() EffectProperties { return e.props }
 
-// drawCardsActivePlayerEffect draws cards for the active player (e.g. Howling Mine).
-type drawCardsActivePlayerEffect struct {
-	props  EffectProperties
-	amount ValueSource
-}
-
-// DrawCardsActivePlayer creates an effect that draws cards for the active player.
-func DrawCardsActivePlayer(amount ValueSource) Effect {
-	drawCount := 0
-	if fv, ok := amount.(fixedValue); ok {
-		drawCount = fv.n
-	}
-	return &drawCardsActivePlayerEffect{
-		props:  EffectProperties{Outcome: OutcomeBenefit, DrawCount: drawCount},
-		amount: amount,
-	}
-}
-
-func (e *drawCardsActivePlayerEffect) Text() string {
-	return "that player draws an additional card"
-}
-func (e *drawCardsActivePlayerEffect) Properties() EffectProperties { return e.props }
-
 // discardCardsEffect forces a player to discard cards. By default the player
 // is read from ctx.Targets[0] (the spell's chosen target). Use Targeting to
 // override with a PlayerSelector — for example, SelectEachOpponent() for
@@ -467,18 +444,6 @@ func (e *drawCardsTargetEffect) Apply(ctx *EffectContext) error {
 		for range amount {
 			ctx.Game.PlayerDrawCard(p)
 		}
-	}
-	return nil
-}
-
-func (e *drawCardsActivePlayerEffect) Apply(ctx *EffectContext) error {
-	active := ctx.Game.ActivePlayerObj()
-	if active == nil {
-		return ErrPlayerNotFound
-	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, active.PlayerID(), ctx.Targets)
-	for range amount {
-		ctx.Game.PlayerDrawCard(active)
 	}
 	return nil
 }

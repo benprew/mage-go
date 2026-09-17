@@ -32,7 +32,7 @@ func registerSpells() {
 	// • Return target Island to its owner's hand.
 	Register("Active Volcano", func() Card {
 		c := NewInstant("Active Volcano", "{R}",
-			NewTargetedSpell(TargetPermanent(), Pipeline(
+			NewTargetedSpell(mage.TargetPermanent(), Pipeline(
 				"destroy target blue permanent or return target Island to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
 				ModalEffect("choose one",
@@ -136,7 +136,7 @@ func registerSpells() {
 	// Return target permanent to its owner's hand.
 	Register("Boomerang", func() Card {
 		return NewInstant("Boomerang", "{U}{U}",
-			NewTargetedSpell(TargetPermanent(), BoomerangEffect()),
+			NewTargetedSpell(mage.TargetPermanent(), BoomerangEffect()),
 		)
 	})
 
@@ -347,7 +347,7 @@ func registerSpells() {
 	// • Return target Mountain to its owner's hand.
 	Register("Flash Flood", func() Card {
 		c := NewInstant("Flash Flood", "{U}",
-			NewTargetedSpell(TargetPermanent(), Pipeline(
+			NewTargetedSpell(mage.TargetPermanent(), Pipeline(
 				"destroy target red permanent or return target Mountain to its owner's hand",
 				EffectProperties{Outcome: OutcomeDetriment},
 				ModalEffect("choose one",
@@ -801,7 +801,7 @@ func registerSpells() {
 		return NewSorcery("Part Water", "{X}{X}{U}",
 			NewMultiTargetSpell(
 				[]Target{TargetXCreatures()},
-				GrantKeyword(Islandwalk).Targeting(mage.ToAllTargets()),
+				mage.GrantKeyword(Islandwalk).Targeting(mage.ToAllTargets()),
 			),
 		)
 	})
@@ -839,7 +839,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(),
 				Pipeline("first strike + rampage 2 unless target already has rampage",
 					EffectProperties{Outcome: OutcomeBenefit},
-					GrantKeyword(FirstStrike),
+					mage.GrantKeyword(FirstStrike),
 					GrantAbility(RampageTrigger(2)).Unless(TargetHasRampageCond{}),
 				),
 			),
@@ -1068,7 +1068,7 @@ func registerSpells() {
 	// Storm Seeker deals damage to target player equal to the number of cards in that player's hand.
 	Register("Storm Seeker", func() Card {
 		return NewInstant("Storm Seeker", "{3}{G}",
-			NewTargetedSpell(TargetPlayer(), HandSizeDamageEffect(0, true)),
+			NewTargetedSpell(mage.TargetPlayer(), HandSizeDamageEffect(0, true)),
 		)
 	})
 
@@ -1273,7 +1273,7 @@ func registerSpells() {
 	// Look at the top five cards of target player's library. You may then have that player shuffle that library.
 	Register("Visions", func() Card {
 		return NewSorcery("Visions", "{W}",
-			NewTargetedSpell(TargetPlayer(), FuncEffect(
+			NewTargetedSpell(mage.TargetPlayer(), FuncEffect(
 				"look at the top five cards of target player's library; you may have that player shuffle",
 				EffectProperties{},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {

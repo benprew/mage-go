@@ -3,6 +3,8 @@ package arabian
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -52,7 +54,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Noble"),
 			WithActivatedAbility(
 				DestroyTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(
 					Or(HasSubType("Djinn"), HasSubType("Efreet")),
 				)),
@@ -125,9 +127,9 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("Only if tapped",
 					SourceIsTapped{},
-					EffectIfPaid(
-						ManaCostOf("{U}{U}{U}"),
-						UntapSource()),
+					IfPaid(You,
+						Costs(Mana("{U}{U}{U}")),
+						Untap(This)),
 					nil,
 				), false,
 			)),
@@ -145,7 +147,7 @@ func registerCreatures() {
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					GainLife(2),
+					mage.GainLife(2),
 				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
 			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
@@ -166,7 +168,7 @@ func registerCreatures() {
 					ControlSourceTapped{},
 					ControlTargetPowerLESource{},
 				).TapMaintained(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreatureWithPowerLESource()),
 			),
 		)
@@ -231,7 +233,7 @@ func registerCreatures() {
 			WithSubTypes("Human"),
 			WithActivatedAbility(
 				SindbadEffect(),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -287,7 +289,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
@@ -412,7 +414,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Wizard", "Sorcerer"),
 			WithActivatedAbility(
 				SorceressQueenEffect(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetOtherCreature()),
 			),
 		)
@@ -435,7 +437,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Rogue"),
 			WithActivatedAbility(
 				GainControl().While(ControlSourceControlledByEffectController{}),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{1}{R}{R}")),
 				WithTarget(TargetArtifact()),
 			),
@@ -444,13 +446,10 @@ func registerCreatures() {
 
 	// Oracle: "{R}: Tap target Wall."
 	Register("Ali Baba", func() Card {
+		target := TargetPermanent("Wall", HasSubType("Wall"))
 		return NewCreature("Ali Baba", "{R}", 1, 1,
 			WithSubTypes("Human", "Rogue"),
-			WithActivatedAbility(
-				Tap(),
-				ManaCostOf("{R}"),
-				WithTarget(TargetCreature(HasSubType("Wall"))),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")), Tap(target), WithTargets(target))),
 		)
 	})
 
@@ -498,7 +497,7 @@ func registerCreatures() {
 			WithSubTypes("Jackal"),
 			WithActivatedAbility(
 				HurrJackalEffect(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -521,13 +520,11 @@ func registerCreatures() {
 				Pipeline("flip coin or remove from combat",
 					EffectProperties{},
 					SnapshotPermanent(SelectSource, "self"),
-					IfElse("remove from combat and tap if lost",
-						NotTriggerCond{Inner: FlipCoinCond{}},
-						&PipelineData{Steps: []Effect{
+					FlipCoin(You,
+						OnLoss(&PipelineData{Steps: []Effect{
 							RemoveFromCombatGathered("self"),
 							TapGathered("self"),
-						}},
-						nil,
+						}}),
 					),
 				), false,
 			)),
@@ -559,14 +556,12 @@ func registerCreatures() {
 				Pipeline("flip a coin; if you lose, remove from combat and it can't block this turn",
 					EffectProperties{},
 					SnapshotPermanent(SelectSource, "self"),
-					IfElse("on lost flip, remove from combat and revoke can-block",
-						FlipCoinCond{},
-						nil,
-						Pipeline("remove from combat and revoke can-block",
+					FlipCoin(You,
+						OnLoss(Pipeline("remove from combat and revoke can-block",
 							EffectProperties{},
 							RemoveFromCombatGathered("self"),
 							RevokeKeyword(AttrCanBlock).Targeting(ToSource()),
-						),
+						)),
 					),
 				), false,
 			)),
@@ -723,7 +718,7 @@ func registerCreatures() {
 			WithSubTypes("Plant"),
 			WithActivatedAbility(
 				SetPowerUntilEndOfTurn(0, SelectTarget),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
@@ -735,7 +730,7 @@ func registerCreatures() {
 			WithSubTypes("Wolf"),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -753,9 +748,9 @@ func registerCreatures() {
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse("Only if tapped",
 					SourceIsTapped{},
-					EffectIfPaid(
-						ManaCostOf("{1}"),
-						UntapSource()),
+					IfPaid(You,
+						Costs(Mana("{1}")),
+						Untap(This)),
 					nil,
 				), false,
 			)),

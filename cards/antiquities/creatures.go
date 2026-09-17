@@ -3,6 +3,8 @@ package antiquities
 import (
 	"fmt"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -61,7 +63,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				ManaCostOf("{W}{W}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
 			),
 		)
@@ -75,7 +77,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(2)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(IsArtifact)),
 			),
 		)
@@ -111,7 +113,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Artificer"),
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeArtifactCost()),
 			),
 		)
@@ -156,8 +158,8 @@ func registerCreatures() {
 						g.ApplyContinuousEffects()
 						return nil
 					}),
-				Tap(),
-				WithTarget(TargetPermanent(IsArtifact)),
+				TapCost(This),
+				WithTarget(mage.TargetPermanent(IsArtifact)),
 			),
 		)
 	})
@@ -184,7 +186,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithCost(&sacrificeArtifactCaptureCMCCost{}),
 			),
 		)
@@ -215,8 +217,8 @@ func registerCreatures() {
 						g.ApplyContinuousEffects()
 						return nil
 					}),
-				Tap(),
-				WithTarget(TargetPermanent(And(IsArtifact, Not(IsCreature)))),
+				TapCost(This),
+				WithTarget(mage.TargetPermanent(And(IsArtifact, Not(IsCreature)))),
 			),
 		)
 	})
@@ -282,8 +284,8 @@ func registerCreatures() {
 		return NewCreature("Dwarven Weaponsmith", "{1}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Artificer"),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1)),
-				Tap(),
+				mage.AddCounters(P1P1, Fixed(1)),
+				TapCost(This),
 				WithCost(SacrificeArtifactCost()),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
@@ -304,13 +306,12 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("flip coin: win=draw, lose=counter own artifact spell",
 					EffectProperties{},
-					IfElse("flip coin",
-						FlipCoinCond{},
-						DrawCards(Fixed(1)),
-						CounterSpell(),
+					FlipCoin(You,
+						OnWin(Draw(You, Fixed(1))),
+						OnLoss(CounterSpell()),
 					),
 				),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetOwnSpellOnStack(IsArtifactCard)),
 			),
 		)
@@ -324,7 +325,7 @@ func registerCreatures() {
 			WithSubTypes("Orc"),
 			WithActivatedAbility(
 				DealDamage(Fixed(2)),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeArtifactCost()),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -389,7 +390,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Druid"),
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
-					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				).
 					SetConditionData(OpponentCastSpellOfType{Type: TypeArtifact}),
 			),
@@ -428,7 +429,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithAbility(
 				NewTriggered(EvtBeginCombat, false,
-					GrantKeyword(Banding).Targeting(ToSource()).Until(EndOfCombat),
+					mage.GrantKeyword(Banding).Targeting(ToSource()).Until(EndOfCombat),
 				).SetConditionData(EventPlayerIsController{}),
 			),
 			// When blocked by a Wall, destroy that Wall at end of combat
@@ -490,9 +491,9 @@ func registerCreatures() {
 			)),
 			// {X}, {T}: Put up to X +1/+0 counters on Clockwork Avian (max 4 total). Upkeep only.
 			WithActivatedAbility(
-				AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(4),
+				mage.AddCounters(P1P0, XValue()).Targeting(ToSource()).Max(4),
 				XManaCost(),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithUpkeepOnly(),
 			),
 		)
@@ -540,7 +541,7 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
 			),
 		)
@@ -594,7 +595,7 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(
-				DiesTrigger(GainLife(2), false),
+				DiesTrigger(mage.GainLife(2), false),
 			),
 		)
 	})

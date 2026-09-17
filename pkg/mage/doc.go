@@ -192,6 +192,44 @@
 // Use one sequence inside an ability or mode. Legacy containers do not merge
 // branch results or share saved values across separate ApplyEffect calls.
 //
+// # Typed Targets and Resolution Control
+//
+// The DSL exports [DeclarePermanentTarget] as TargetPermanent and
+// [DeclarePlayerTarget] as TargetPlayer. Declare a binding once, pass it to
+// [WithTargets], and use it as the subject of an effect. [Spell], [Activate],
+// [WhenEvent], and [At] accept these declarations. [ModeOf] keeps targets in
+// their mode. [DeclarePermanentTargets] creates a collection for [DestroyEach].
+// Partial target illegality preserves the other bindings. Spell copies keep
+// independent choices. Multiple variable target groups still need explicit
+// selection boundaries and are rejected during definition validation.
+//
+// [ForEach] captures battlefield incarnations once. It runs the same resolving
+// body for each member in a separate binding frame. The body can read outer
+// bindings. Its assignments do not leave the loop or reach the next iteration.
+// Use [DestroyEach] for simultaneous destruction; a loop is sequential.
+//
+// [FlipCoin] accepts [OnWin] and [OnLoss] branches. It uses the game's random
+// source once at resolution. An omitted branch has no effect. Coin flips are
+// not conditions. Branch assignments do not reach later instructions.
+//
+// [ControllerOf] reads the current controller of a permanent reference.
+// [IfPaid] and [UnlessPaid] offer this player, or another [PlayerRef], an
+// explicit [Costs] group. They use the existing total-cost transaction.
+// IfPaid runs its body after a successful payment. UnlessPaid runs its body
+// after a declined or failed payment. The body keeps the original resolving
+// controller. An absent player has no effect. These operations do not capture
+// a trigger's earlier player.
+//
+// [OnlyAsSorcery], [OnlyDuring], [OnlyOnYourTurn], [ActivationLimit], and
+// [ActivationIf] are closed activation options. The existing activation path
+// checks them before payment. Conflicting timing or limit options are rejected.
+//
+// [Until] installs captured [ModifyPT], [ModifyEachPT], and
+// [GrantKeywordModification] values in the existing layer system. [Static]
+// installs dynamic modifications from [While]. [PreventNextDamage] installs
+// a shield in the existing replacement pipeline. These adapters do not yet
+// cover every layer, duration, replacement rule, or legacy constructor.
+//
 // # Damage-Source Choices
 //
 // Effects that state "a source of your choice" do not target. The player

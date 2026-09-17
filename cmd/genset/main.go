@@ -421,10 +421,7 @@ func landStub(c Card) string {
 
 var creaturesFileTmpl = template.Must(template.New("creatures").Parse(`package {{.Pkg}}
 
-import (
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
-)
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
 
 func init() {
 	registerCreatures()
@@ -465,47 +462,21 @@ func writeCreatures(dir, pkg string, groups []colorGroup) {
 	}
 }
 
-// needsCoreImport checks if any card in the list uses core types (SuperTypes, CardTypes, etc.)
-func needsCoreImport(cards []Card) bool {
-	for _, c := range cards {
-		if isLegendary(c) || isWorld(c) || isArtifactCreature(c) {
-			return true
-		}
-	}
-	return false
-}
-
 func writeFileWithCards(dir, pkg, filename, funcName string, cards []Card, stubFn func(Card) string) {
 	path := filepath.Join(dir, filename)
 	f, _ := os.Create(path)
 	defer f.Close()
 
-	if needsCoreImport(cards) {
-		fmt.Fprintf(f, `package %s
+	fmt.Fprintf(f, `package %s
 
-import (
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
-)
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
 
 func init() {
-	%s()
+ %s()
 }
 
 func %s() {
 `, pkg, funcName, funcName)
-	} else {
-		fmt.Fprintf(f, `package %s
-
-import . "github.com/benprew/mage-go/pkg/mage"
-
-func init() {
-	%s()
-}
-
-func %s() {
-`, pkg, funcName, funcName)
-	}
 
 	for _, c := range cards {
 		fmt.Fprintf(f, "\n%s\n", stubFn(c))

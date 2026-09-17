@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"slices"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -105,7 +107,7 @@ func registerCreatures() {
 		return NewCreature("Alabaster Mage", "{1}{W}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithActivatedAbility(
-				GrantKeyword(Lifelink).Targeting(ToTarget()).Until(EndOfTurn),
+				mage.GrantKeyword(Lifelink).Targeting(ToTarget()).Until(EndOfTurn),
 				ManaCostOf("{1}{W}"),
 				WithTarget(TargetControlledCreature()),
 			),
@@ -121,7 +123,7 @@ func registerCreatures() {
 		return NewCreature("Angel of Mercy", "{4}{W}", 3, 3,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(GainLife(3), false)),
+			WithAbility(EntersBattlefieldTrigger(mage.GainLife(3), false)),
 		)
 	})
 
@@ -199,7 +201,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithActivatedAbility(
 				Boost(Fixed(1), Fixed(1)).Targeting(ToTarget()).Until(EndOfTurn),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
 			),
 		)
@@ -215,7 +217,7 @@ func registerCreatures() {
 			WithSubTypes("Archon"),
 			WithKeyword(Flying),
 			WithAbility(DiesTrigger(ExileTarget(), false).
-				AddTarget(TargetPermanent())),
+				AddTarget(mage.TargetPermanent())),
 		)
 	})
 
@@ -272,7 +274,7 @@ func registerCreatures() {
 			WithSubTypes("Spirit"),
 			WithKeyword(Flying),
 			WithAbility(WheneverEnchantmentCastTrigger(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -316,7 +318,7 @@ func registerCreatures() {
 	Register("Bulwark Giant", func() Card {
 		return NewCreature("Bulwark Giant", "{5}{W}", 3, 6,
 			WithSubTypes("Giant", "Soldier"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(5), false)),
+			WithAbility(EntersBattlefieldTrigger(mage.GainLife(5), false)),
 		)
 	})
 
@@ -328,7 +330,7 @@ func registerCreatures() {
 		return NewCreature("Cathar's Companion", "{2}{W}", 3, 1,
 			WithSubTypes("Dog"),
 			WithAbility(WheneverYouCastSpellTrigger(
-				GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
+				mage.GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
 				false,
 				NewCardFilter("noncreature card", func(c Card) bool {
 					return !c.HasType(TypeCreature)
@@ -454,7 +456,7 @@ func registerCreatures() {
 					return nil
 				})),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
 				ManaCostOf("{3}{W}"),
 				WithTarget(TargetCreature()),
 			),
@@ -711,8 +713,8 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithAbility(EntersWithXCounters(P1P1)),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
-				Tap(),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				TapCost(This),
 			),
 			WithActivatedAbility(
 				FuncEffect(
@@ -729,7 +731,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(RemoveCountersCost(P1P1, 1)),
 			),
 		)
@@ -785,7 +787,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DestroyTargetPermanent(),
 				SacrificeSourceCost(),
-				WithTarget(TargetPermanent(IsEnchantment)),
+				WithTarget(mage.TargetPermanent(IsEnchantment)),
 			),
 		)
 	})
@@ -1187,7 +1189,7 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{1}{U}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -1404,7 +1406,7 @@ func registerCreatures() {
 			WithSubTypes("Spirit"),
 			WithKeyword(Flash),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtZoneChange, false, Tap()).
+			WithAbility(NewTriggered(EvtZoneChange, false, mage.Tap()).
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 					perm := g.FindPermanent(evt.SourceID)
 					if perm == nil {
@@ -1440,7 +1442,7 @@ func registerCreatures() {
 			WithSubTypes("Squid", "Illusion"),
 			WithKeyword(Flying),
 			WithAbility(NewTriggered(EvtCardDrawn, false,
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource())).
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource())).
 				SetConditionData(EventPlayerIsController{})),
 		)
 	})
@@ -1523,7 +1525,7 @@ func registerCreatures() {
 			WithKeyword(Flash),
 			WithKeyword(Flying),
 			WithCastTarget(TargetCreature(HasSubType("Spirit"))),
-			WithETBEffect(GrantKeyword(Hexproof).Targeting(ToTarget()).Until(EndOfTurn)),
+			WithETBEffect(mage.GrantKeyword(Hexproof).Targeting(ToTarget()).Until(EndOfTurn)),
 			WithStaticAbility(CastAsThoughHadFlash(spiritCard)),
 		)
 	})
@@ -1555,8 +1557,8 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
-				WithTarget(TargetPlayer()),
+				TapCost(This),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -1688,7 +1690,7 @@ func registerCreatures() {
 			WithAbility(AnyCreatureDiesTrigger(
 				MillTargetPlayer(Fixed(1)),
 				false,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -1720,7 +1722,7 @@ func registerCreatures() {
 	Register("Sigiled Starfish", func() Card {
 		return NewCreature("Sigiled Starfish", "{1}{U}", 0, 3,
 			WithSubTypes("Starfish"),
-			WithActivatedAbility(Scry(Fixed(1)), Tap()),
+			WithActivatedAbility(Scry(Fixed(1)), TapCost(This)),
 		)
 	})
 
@@ -1784,7 +1786,7 @@ func registerCreatures() {
 			WithAbility(NewTriggered(EvtDamageDealt, false,
 				MillTargetPlayer(EventAmountValue()),
 			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(TargetPlayer())),
+				AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -1812,8 +1814,8 @@ func registerCreatures() {
 			WithActivatedAbility(
 				MillTargetPlayer(Fixed(2)),
 				ManaCostOf("{U}"),
-				WithCost(Tap()),
-				WithTarget(TargetPlayer()),
+				WithCost(TapCost(This)),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -1830,7 +1832,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				MillTargetPlayer(Fixed(4)),
 				false,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -1991,7 +1993,7 @@ func registerCreatures() {
 			WithSubTypes("Zombie", "Bat"),
 			WithKeyword(Flying),
 			WithActivatedAbility(
-				GrantKeyword(Haste).Targeting(ToSource()),
+				mage.GrantKeyword(Haste).Targeting(ToSource()),
 				GenericCost(1),
 			),
 		)
@@ -2019,7 +2021,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -2032,8 +2034,8 @@ func registerCreatures() {
 			WithSubTypes("Vampire"),
 			WithActivatedAbility(
 				CompositeEffects("put +1/+1 counter on this creature and gain 2 life",
-					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
-					GainLife(2),
+					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+					mage.GainLife(2),
 				),
 				ManaCostOf("{1}{B}"),
 				WithCost(SacrificeCreatureCost()),
@@ -2049,7 +2051,7 @@ func registerCreatures() {
 		return NewCreature("Bloodbond Vampire", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman", "Ally"),
 			WithAbility(WheneverYouGainLifeTrigger(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
 		)
 	})
 
@@ -2077,7 +2079,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -2127,7 +2129,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -2338,7 +2340,7 @@ func registerCreatures() {
 			WithAbility(DiesTrigger(
 				MayPayMana("{B}", "target player discards a card", DiscardCards(Fixed(1))),
 				false,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -2477,7 +2479,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPlayer())),
+			).AddTarget(mage.TargetPlayer())),
 		)
 	})
 
@@ -2560,7 +2562,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{B}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeCreatureCost()),
 			),
 		)
@@ -2766,7 +2768,7 @@ func registerCreatures() {
 		return NewCreature("Kalastria Nightwatch", "{4}{B}", 4, 5,
 			WithSubTypes("Vampire", "Warrior", "Ally"),
 			WithAbility(WheneverYouGainLifeTrigger(
-				GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn), false)),
+				mage.GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn), false)),
 		)
 	})
 
@@ -2786,7 +2788,7 @@ func registerCreatures() {
 				false,
 			)),
 			WithActivatedAbility(
-				GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
+				mage.GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
 				GenericCost(1),
 				WithCost(SacrificeCreatureCost()),
 			),
@@ -2801,7 +2803,7 @@ func registerCreatures() {
 		return NewCreature("Lawless Broker", "{2}{B}", 3, 2,
 			WithSubTypes("Aetherborn", "Rogue"),
 			WithAbility(DiesTrigger(
-				AddCounters(P1P1, Fixed(1)),
+				mage.AddCounters(P1P1, Fixed(1)),
 				false,
 			).AddTarget(TargetCreatureYouControl())),
 		)
@@ -3124,7 +3126,7 @@ func registerCreatures() {
 		return NewCreature("Phyrexian Broodlings", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Minion"),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				GenericCost(1),
 				WithCost(SacrificeCreatureCost()),
 			),
@@ -3142,7 +3144,7 @@ func registerCreatures() {
 			WithKeyword(Flying),
 			WithActivatedAbility(
 				Boost(Fixed(-2), Fixed(-2)).Until(EndOfTurn),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature()),
 			),
@@ -3159,7 +3161,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CompositeEffects("draw two cards and lose 2 life",
 					DrawCards(Fixed(2)),
-					LoseLife(2),
+					mage.LoseLife(2),
 				),
 				false,
 			)),
@@ -3176,7 +3178,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CompositeEffects("draw a card and lose 1 life",
 					DrawCards(Fixed(1)),
-					LoseLife(1),
+					mage.LoseLife(1),
 				),
 				false,
 			)),
@@ -3224,13 +3226,13 @@ func registerCreatures() {
 			WithSubTypes("Vampire", "Shaman"),
 			WithKeyword(Flying),
 			WithAbility(NewTriggered(EvtZoneChange, true,
-				GainLife(3),
+				mage.GainLife(3),
 			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 				EventSourceWasOfType{Type: TypeCreature},
 				EventPlayerIsNotController{},
 			}})),
-			WithAbility(WheneverOpponentDiscardsTrigger(GainLife(3), true)),
+			WithAbility(WheneverOpponentDiscardsTrigger(mage.GainLife(3), true)),
 		)
 	})
 
@@ -3387,9 +3389,9 @@ func registerCreatures() {
 		return NewCreature("Swarm of Bloodflies", "{4}{B}", 0, 0,
 			WithSubTypes("Insect"),
 			WithKeyword(Flying),
-			WithAbility(ETBEffect(AddCounters(P1P1, Fixed(2)).Targeting(ToSource()))),
+			WithAbility(ETBEffect(mage.AddCounters(P1P1, Fixed(2)).Targeting(ToSource()))),
 			WithAbility(NewTriggered(EvtZoneChange, false,
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 			).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 				EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 				EventSourceWasOfType{Type: TypeCreature},
@@ -3419,9 +3421,9 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeMatchingCost(HasSubType("Food"), "Sacrifice a Food")),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -3488,7 +3490,7 @@ func registerCreatures() {
 			WithAbility(EntersBattlefieldTrigger(
 				CompositeEffects("draw a card and lose 1 life",
 					DrawCards(Fixed(1)),
-					LoseLife(1),
+					mage.LoseLife(1),
 				),
 				false,
 			)),
@@ -3517,7 +3519,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -3741,7 +3743,7 @@ func registerCreatures() {
 			WithSubTypes("Goblin", "Warrior"),
 			WithActivatedAbility(
 				DealDamage(Fixed(4)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 				WithActivationCondition(func(g *Game, src *Permanent, _ uuid.UUID) bool {
 					if src == nil {
@@ -3852,7 +3854,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(XValue()),
 				ManaCostOf("{X}{R}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -3988,7 +3990,7 @@ func registerCreatures() {
 			WithKeyword(Haste),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -4126,7 +4128,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(2)),
 				ManaCostOf("{R}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(ExileFromGraveyardCost(2)),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -4268,7 +4270,7 @@ func registerCreatures() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -4556,7 +4558,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				ManaCostOf("{1}{R}{R}"),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -4734,7 +4736,7 @@ func registerCreatures() {
 			WithKeyword(Defender),
 			WithActivatedAbility(
 				DealDamageToPlayers(Fixed(1), SelectEachOpponent()),
-				Tap(),
+				TapCost(This),
 			),
 			WithAbility(WheneverYouCastSpellTrigger(
 				FuncEffect("untap this creature",
@@ -4784,7 +4786,7 @@ func registerCreatures() {
 				DestroyTargetArtifact(),
 				ManaCostOf("{R}"),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetPermanent(IsArtifact)),
+				WithTarget(mage.TargetPermanent(IsArtifact)),
 			),
 		)
 	})
@@ -5135,7 +5137,7 @@ func registerCreatures() {
 						return nil
 					}),
 				false,
-			).AddTarget(TargetPermanent(IsLand, HasSubType("Forest")))),
+			).AddTarget(mage.TargetPermanent(IsLand, HasSubType("Forest")))),
 		)
 	})
 
@@ -5199,7 +5201,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Warrior"),
 			WithStaticAbility(PreventBlockByPowerLessThanSource(IsCreature)),
 			WithAbility(WheneverPermanentEntersBattlefieldTrigger(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				false,
 				IsCreature,
 			).AndConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
@@ -5323,7 +5325,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -5354,7 +5356,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -5369,7 +5371,7 @@ func registerCreatures() {
 			WithSubTypes("Hydra", "Beast"),
 			WithAbility(EntersWithXCounters(P1P1)),
 			WithActivatedAbility(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{3}"),
 				WithAnyPlayerMay(),
 			),
@@ -5413,7 +5415,7 @@ func registerCreatures() {
 				),
 				ManaCostOf("{1}{G}"),
 				WithCost(RemoveCountersCost(P1P1, 1)),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -5482,7 +5484,7 @@ func registerCreatures() {
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID && evt.Flag && g.GetPlayer(evt.TargetID) != nil
 				}).
-				AddTarget(TargetPermanent(Or(IsCreature, IsLand)))),
+				AddTarget(mage.TargetPermanent(Or(IsCreature, IsLand)))),
 		)
 	})
 
@@ -5494,7 +5496,7 @@ func registerCreatures() {
 		return NewCreature("Ironshell Beetle", "{1}{G}", 1, 1,
 			WithSubTypes("Insect"),
 			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P1, Fixed(1)),
+				mage.AddCounters(P1P1, Fixed(1)),
 				false,
 			).AddTarget(TargetCreature())),
 		)
@@ -5552,7 +5554,7 @@ func registerCreatures() {
 		return NewCreature("Nessian Hornbeetle", "{1}{G}", 2, 2,
 			WithSubTypes("Insect"),
 			WithAbility(NewTriggered(EvtBeginCombat, false,
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 			).SetCondition(func(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool {
 				if evt.PlayerID != controllerID {
 					return false
@@ -5704,7 +5706,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -5776,7 +5778,7 @@ func registerCreatures() {
 		return NewCreature("Ravenous Baloth", "{2}{G}{G}", 4, 4,
 			WithSubTypes("Beast"),
 			WithActivatedAbility(
-				GainLife(4),
+				mage.GainLife(4),
 				SacrificeMatchingCost(HasSubType("Beast"), "Sacrifice a Beast"),
 			),
 		)
@@ -5800,7 +5802,7 @@ func registerCreatures() {
 			WithSubTypes("Elf", "Druid"),
 			WithSuperTypes(SuperLegendary),
 			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToAllTargets()),
+				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToAllTargets()),
 				false,
 			).AddTarget(TargetUpToNCreatures(2))),
 			WithStaticAbility(FuncContinuousEffect(LayerAbility, WhileOnBattlefield,
@@ -5820,7 +5822,7 @@ func registerCreatures() {
 						if p == nil {
 							continue
 						}
-						ab := NewActivatedAbility(AddMana(Green, 1), Tap())
+						ab := NewActivatedAbility(AddMana(Green, 1), TapCost(This))
 						ab.SetSource(p.ID())
 						ab.SetController(p.ControllerID())
 						p.RuntimeAbilities = append(p.RuntimeAbilities, WrapGrantedAbility(ab))
@@ -5926,7 +5928,7 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -6042,7 +6044,7 @@ func registerCreatures() {
 	Register("Sylvan Brushstrider", func() Card {
 		return NewCreature("Sylvan Brushstrider", "{2}{G}", 3, 2,
 			WithSubTypes("Beast"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(2), false)),
+			WithAbility(EntersBattlefieldTrigger(mage.GainLife(2), false)),
 		)
 	})
 
@@ -6072,7 +6074,7 @@ func registerCreatures() {
 	Register("Thragtusk", func() Card {
 		return NewCreature("Thragtusk", "{4}{G}", 5, 3,
 			WithSubTypes("Beast"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(5), false)),
+			WithAbility(EntersBattlefieldTrigger(mage.GainLife(5), false)),
 			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
 				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
 				false,
@@ -6195,7 +6197,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Boost(Fixed(5), Fixed(5)).Until(EndOfTurn),
 				ManaCostOf("{8}"),
-				WithEffect(GrantKeyword(Trample).Until(EndOfTurn)),
+				WithEffect(mage.GrantKeyword(Trample).Until(EndOfTurn)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -6291,7 +6293,7 @@ func registerCreatures() {
 					}
 					return nil
 				},
-			), false).AddTarget(TargetPermanent())),
+			), false).AddTarget(mage.TargetPermanent())),
 		)
 	})
 
@@ -6451,7 +6453,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(XValue()),
 				XManaCost(),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(RemoveXCountersFromSourceCost(P1P1)),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -6530,9 +6532,9 @@ func registerCreatures() {
 			WithCardType(TypeArtifact),
 			WithKeyword(Haste),
 			WithActivatedAbility(
-				GainLife(3),
+				mage.GainLife(3),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeSourceCost()),
 			),
 			WithActivatedAbility(
@@ -6577,7 +6579,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				DealDamage(Fixed(3)),
 				ManaCostOf("{5}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -6699,7 +6701,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToBattlefield(),
 				ManaCostOf("{4}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCardInYourGraveyard(NewCardFilter("artifact creature card", func(c Card) bool {
 					return c.HasType(TypeArtifact) && c.HasType(TypeCreature)
 				}))),
@@ -6750,7 +6752,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -6805,7 +6807,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				MakeUnblockableUntilEndOfTurn(),
 				ManaCostOf("{3}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)

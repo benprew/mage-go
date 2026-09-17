@@ -1995,6 +1995,16 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
 	// Track target zone when targeted, needed for CR 608.2b
+	if obj.targetIncarnations == nil {
+		for _, id := range obj.Targets {
+			if p := g.FindPermanent(id); p != nil {
+				if obj.targetIncarnations == nil {
+					obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
+				}
+				obj.targetIncarnations[id] = p.incarnationID
+			}
+		}
+	}
 	obj.TargetZones = make(map[uuid.UUID]Zone, len(obj.Targets))
 	for _, t := range obj.Targets {
 		obj.TargetZones[t] = g.zoneOfTarget(t)
@@ -2064,7 +2074,12 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 			if obj.TargetSource != nil {
 				sourceCard = obj.TargetSource
 			}
-			if g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec) {
+			incarnationLegal := true
+			if incarnation, ok := obj.targetIncarnations[t]; ok {
+				p := g.FindPermanent(t)
+				incarnationLegal = p != nil && p.incarnationID == incarnation
+			}
+			if incarnationLegal && g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec) {
 				resolvedTargets[i] = t
 				anyLegal = true
 				continue

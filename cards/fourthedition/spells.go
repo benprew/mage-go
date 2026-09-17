@@ -48,7 +48,7 @@ func registerSpells() {
 	Register("Fissure", func() Card {
 		return NewInstant("Fissure", "{3}{R}{R}",
 			NewTargetedSpell(
-				TargetPermanent(Or(IsCreature, IsLand)),
+				mage.TargetPermanent(Or(IsCreature, IsLand)),
 				FissureEffect(),
 			),
 		)

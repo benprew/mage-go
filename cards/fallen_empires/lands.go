@@ -19,7 +19,7 @@ func sacLandFactory(name string, color Color) func() Card {
 			WithManaAbility(color),
 			WithActivatedAbility(
 				AddMana(color, 2),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -71,7 +71,7 @@ func storageLandFactory(name string, color Color) func() Card {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})

@@ -15,6 +15,10 @@ type definitionEdge struct {
 	value any
 }
 type definitionNode struct {
+	isolatedBindings   bool
+	localBindingScope  bool
+	targetDeclaration  *targetDeclaration
+	targetRead         *targetDeclaration
 	Role, Text         string
 	children           []definitionEdge
 	problem            string
@@ -97,7 +101,32 @@ func describeDefinition(v any) definitionNode {
 		}
 	}
 	switch e := v.(type) {
+	case *StaticAbilityHolder:
+		for i, effect := range e.Effects {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("rules[%d]", i), effect})
+		}
+	case *ModalSpellAbility:
+		n.children = append(n.children, modeEdges(e.modes)...)
+	case *ActionDefinition:
+		for i, restriction := range e.dslRestrictions {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), restriction})
+		}
+		n.children = append(n.children, declaredTargetNodes(e.targets)...)
+		if len(e.modes) > 0 {
+			n.children = append(n.children, modeEdges(e.modes)...)
+		} else {
+			addEffects(e.effects)
+		}
 	case *GenericTriggered:
+		n.children = append(n.children, declaredTargetNodes(e.targets)...)
+		if e.eventDefinition != nil {
+			n.Role = "event-trigger"
+			n.children = append(n.children, definitionEdge{"event", e.eventDefinition})
+		}
+		if e.stepDefinition != nil {
+			n.Role = "step-trigger"
+			n.children = append(n.children, definitionEdge{"step", e.stepDefinition})
+		}
 		if e.dslState {
 			n.Role = "state-trigger"
 			n.battlefieldSource = true
@@ -106,11 +135,7 @@ func describeDefinition(v any) definitionNode {
 		if len(e.modes) == 0 {
 			addEffects(e.effects)
 		}
-		for i, m := range e.modes {
-			for j, eff := range m.Effects {
-				n.children = append(n.children, definitionEdge{fmt.Sprintf("modes[%d].effects[%d]", i, j), eff})
-			}
-		}
+		n.children = append(n.children, modeEdges(e.modes)...)
 	case interface{ Effects() []Effect }:
 		addEffects(e.Effects())
 	case *RegisterDelayedTriggerData:
@@ -150,7 +175,7 @@ func InspectDefinition(value any) DefinitionMetadata {
 	}
 	n := describeDefinition(value)
 	out := DefinitionMetadata{Role: n.Role, Text: n.Text}
-	if e, ok := value.(Effect); ok {
+	if e, ok := value.(EffectMetadata); ok {
 		out.Properties = e.Properties()
 		out.Properties.AIRoles = slices.Clone(out.Properties.AIRoles)
 		if out.Text == "" {
@@ -170,7 +195,8 @@ func ValidateCardDefinition(name string, card Card) error {
 		return fmt.Errorf("%s: card: supply a card definition", name)
 	}
 	var assigned map[*PermanentBinding]bool
-	var names map[string]*PermanentBinding
+	var names map[string]any
+	var targets map[*targetDeclaration]bool
 	var visit func(any, string, bool, map[any]bool)
 	visit = func(value any, path string, spell bool, active map[any]bool) {
 		fail := func(message string) { problems = append(problems, fmt.Errorf("%s: %s: %s", name, path, message)) }
@@ -178,7 +204,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			fail("supply a non-nil expression")
 			return
 		}
-		if reflect.TypeOf(value).Comparable() {
+		if reflect.ValueOf(value).Comparable() {
 			if active[value] {
 				fail("remove cyclic definition dependency")
 				return
@@ -187,11 +213,37 @@ func ValidateCardDefinition(name string, card Card) error {
 			defer delete(active, value)
 		}
 		n := describeDefinition(value)
-		if n.bindingScope {
-			outerAssigned, outerNames := assigned, names
+		if n.isolatedBindings {
+			outer := assigned
+			assigned = maps.Clone(assigned)
+			defer func() { assigned = outer }()
+		}
+		if n.localBindingScope {
+			outerAssigned, outerTargets := assigned, targets
 			assigned = make(map[*PermanentBinding]bool)
-			names = make(map[string]*PermanentBinding)
-			defer func() { assigned, names = outerAssigned, outerNames }()
+			targets = make(map[*targetDeclaration]bool)
+			defer func() { assigned, targets = outerAssigned, outerTargets }()
+		}
+		if n.bindingScope {
+			outerAssigned, outerNames, outerTargets := assigned, names, targets
+			assigned = make(map[*PermanentBinding]bool)
+			names = make(map[string]any)
+			targets = make(map[*targetDeclaration]bool)
+			defer func() { assigned, names, targets = outerAssigned, outerNames, outerTargets }()
+		}
+		if n.targetDeclaration != nil {
+			b := n.targetDeclaration
+			if prior, ok := names[b.name]; ok && prior != b {
+				fail("duplicate target binding name: " + b.name)
+			}
+			if targets[b] {
+				fail("declare each target binding only once")
+			}
+			names[b.name] = b
+			targets[b] = true
+		}
+		if n.targetRead != nil && !targets[n.targetRead] {
+			fail("target binding requires a declaration in this ability")
 		}
 		if n.bindingDeclaration != nil {
 			binding := n.bindingDeclaration
@@ -221,8 +273,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 	}
 	for i, a := range card.Abilities() {
+		targets = make(map[*targetDeclaration]bool)
 		assigned = make(map[*PermanentBinding]bool)
-		names = make(map[string]*PermanentBinding)
+		names = make(map[string]any)
 		spell := card.HasType(TypeInstant) || card.HasType(TypeSorcery) || (!nilDefinition(a) && a.Type() == AbilitySpell)
 		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool))
 	}
@@ -263,7 +316,7 @@ func (r *Registry) ValidateDefinitions() error {
 
 func definitionSequential(value any) bool {
 	switch value.(type) {
-	case *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot:
+	case *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot, *permanentLoop:
 		return true
 	default:
 		return false

@@ -3,6 +3,8 @@ package fourthedition
 import (
 	"fmt"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -100,12 +102,9 @@ func registerEnchantments() {
 	// Enchantment
 	// {U}{U}: Tap target creature without flying.
 	Register("Flood", func() Card {
+		target := TargetPermanent("creature without flying", And(IsCreature, NotHasKeywordFilter(Flying)))
 		return NewEnchantment("Flood", "{U}",
-			WithActivatedAbility(
-				Tap(),
-				ManaCostOf("{U}{U}"),
-				WithTarget(TargetCreature(NotHasKeywordFilter(Flying))),
-			),
+			WithAbility(Activate(Costs(Mana("{U}{U}")), Tap(target), WithTargets(target))),
 		)
 	})
 
@@ -118,7 +117,7 @@ func registerEnchantments() {
 		return NewAura("Living Artifact", "{G}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
-				AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
+				mage.AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
 			).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.TargetID == controllerID && evt.Amount > 0
 			})),
@@ -147,7 +146,7 @@ func registerEnchantments() {
 	// At the beginning of the upkeep of enchanted enchantment's controller, that player may pay any amount of mana. This Aura deals 2 damage to that player. Prevent X of that damage, where X is the amount of mana that player paid this way.
 	Register("Power Leak", func() Card {
 		return NewAura("Power Leak", "{1}{U}",
-			WithCastTarget(TargetPermanent(IsEnchantment)),
+			WithCastTarget(mage.TargetPermanent(IsEnchantment)),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				FuncEffect("enchanted enchantment's controller may pay mana to prevent that much of 2 damage",
 					EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(2)},

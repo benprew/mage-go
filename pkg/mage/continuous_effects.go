@@ -1486,7 +1486,7 @@ func (e *preventDamageRuleContinuous) IsActive(g *Game) bool {
 	return true
 }
 
-func (e *preventDamageRuleContinuous) Apply(ctx *EffectContext) error {
+func (e *preventDamageRuleContinuous) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	toFilter := e.toFactory(e.sourceID)
 	g.effects.AddCycleReplacement(&damagePreventionRuleReplacement{
@@ -1541,7 +1541,7 @@ func (e *preventNoncombatDamageToControllerContinuous) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
 }
 
-func (e *preventNoncombatDamageToControllerContinuous) Apply(ctx *EffectContext) error {
+func (e *preventNoncombatDamageToControllerContinuous) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	src := g.FindPermanent(e.sourceID)
 	if src == nil {
@@ -1589,7 +1589,7 @@ func (e *doppelgangerCopyEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.doppelgangerID) != nil
 }
 
-func (e *doppelgangerCopyEffect) Apply(ctx *EffectContext) error {
+func (e *doppelgangerCopyEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	perm := g.MutablePermanent(e.doppelgangerID)
 	if perm == nil {

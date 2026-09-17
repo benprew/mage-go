@@ -157,7 +157,7 @@ func TestTurnStructureBeginning_Upkeep_TriggerResolvesBeforeDraw(t *testing.T) {
 				mage.WithAbility(mage.NewTriggered(
 					core.EvtUpkeep,
 					false,
-					mage.DrawCardsActivePlayer(mage.Fixed(1)),
+					mage.DrawFor(mage.ActivePlayer, mage.Fixed(1)),
 				).SetCondition(func(evt *core.GameEvent, _ mage.GameReader, _, controllerID uuid.UUID) bool {
 					return evt.PlayerID == controllerID
 				})),

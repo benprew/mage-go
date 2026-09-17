@@ -8,10 +8,12 @@ import (
 
 // StackObject represents something on the stack (spell or ability).
 type StackObject struct {
-	sourceIncarnation uuid.UUID
-	stateKey          stateTriggerKey
-	ID                uuid.UUID
-	Card              Card // non-nil for spells
+	// Target incarnations are immutable after stack insertion and shared by clones.
+	targetIncarnations map[uuid.UUID]uuid.UUID
+	sourceIncarnation  uuid.UUID
+	stateKey           stateTriggerKey
+	ID                 uuid.UUID
+	Card               Card // non-nil for spells
 	// ColorOverride is a layer-5 color-changing effect applied to this spell.
 	// It is carried to the permanent the spell becomes, but is not copiable.
 	ColorOverride *[]Color

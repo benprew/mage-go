@@ -3,6 +3,8 @@ package thedark
 import (
 	"slices"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -138,7 +140,7 @@ func registerEnchantments() {
 	Register("Dark Heart of the Wood", func() Card {
 		return NewEnchantment("Dark Heart of the Wood", "{B}{G}",
 			WithActivatedAbility(
-				GainLife(3),
+				mage.GainLife(3),
 				GenericCost(0),
 				WithCost(SacrificeMatchingCost(And(IsLand, HasSubType("Forest")), "Sacrifice a Forest")),
 			),

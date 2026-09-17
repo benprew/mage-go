@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -36,7 +38,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Boost(Fixed(-1), Fixed(0)).Targeting(ToAllMatching(IsCreature)),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -71,7 +73,7 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetDamageSource()),
 			),
@@ -84,9 +86,9 @@ func registerArtifacts() {
 	Register("Fountain of Youth", func() Card {
 		return NewArtifact("Fountain of Youth", "{0}",
 			WithActivatedAbility(
-				GainLife(1),
+				mage.GainLife(1),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -97,8 +99,8 @@ func registerArtifacts() {
 	Register("Living Armor", func() Card {
 		return NewArtifact("Living Armor", "{4}",
 			WithActivatedAbility(
-				AddCounters(P0P1, TargetPermanentManaValue()),
-				Tap(),
+				mage.AddCounters(P0P1, TargetPermanentManaValue()),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature()),
 			),
@@ -134,10 +136,10 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(XManaCost()),
 				WithTarget(TargetSpellOnStack()),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -206,7 +208,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{3}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature(IsAttacking)),
 			),
 		)
@@ -220,7 +222,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				ManaCostOf("{5}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCardInYourGraveyard(IsEnchantmentCard)),
 			),
 		)
@@ -234,7 +236,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
 				ManaCostOf("{1}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(LifePayCost(1)),
 			),
 		)
@@ -281,9 +283,9 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -294,8 +296,8 @@ func registerArtifacts() {
 	Register("Tower of Coireall", func() Card {
 		return NewArtifact("Tower of Coireall", "{2}",
 			WithActivatedAbility(
-				GrantKeyword(CantBeBlockedByWalls),
-				Tap(),
+				mage.GrantKeyword(CantBeBlockedByWalls),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -350,9 +352,9 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{3}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithYourTurnOnly(),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -371,7 +373,7 @@ func registerArtifacts() {
 							return nil
 						}
 						targetID := targets[0]
-						grant := GrantKeyword(Islandwalk)
+						grant := mage.GrantKeyword(Islandwalk)
 						if err := ApplyEffect(g, grant, sourceID, controller, targets); err != nil {
 							return err
 						}

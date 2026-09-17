@@ -3,6 +3,8 @@ package limited
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -39,7 +41,7 @@ func registerArtifacts() {
 			// {T}, Sacrifice: Add 3 mana of any one color
 			WithActivatedAbility(
 				AddAnyMana(3, Green),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -58,7 +60,7 @@ func registerArtifacts() {
 			// {T}: Add {C}{C}{C}
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
-				Tap(),
+				TapCost(This),
 			),
 			// {3}: Untap Basalt Monolith
 			WithActivatedAbility(
@@ -74,16 +76,16 @@ func registerArtifacts() {
 			// {T}: Add {C}{C}{C}
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
-				Tap(),
+				TapCost(This),
 			),
 			// At the beginning of your upkeep, you may pay {4}. If you do, untap Mana Vault.
 			WithAbility(BeginningOfUpkeepTrigger(
 				IfElse(
 					"Only if tapped",
 					SourceIsTapped{},
-					EffectIfPaid(
-						ManaCostOf("{4}"),
-						UntapSource(),
+					IfPaid(You,
+						Costs(Mana("{4}")),
+						Untap(This),
 					), nil),
 				true)),
 			// At the beginning of your draw step, if Mana Vault is tapped, it deals 1 damage to you.
@@ -100,7 +102,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
 				GenericCost(4),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -113,22 +115,18 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DisruptingScepterEffect(),
 				GenericCost(3),
-				WithCost(Tap()),
-				WithTarget(TargetPlayer()),
+				WithCost(TapCost(This)),
+				WithTarget(mage.TargetPlayer()),
 				WithYourTurnOnly(),
 			),
 		)
 	})
 
+	// {1}, {T}: Tap target artifact, creature, or land.
 	Register("Icy Manipulator", func() Card {
+		target := TargetPermanent("permanent", Or(IsArtifact, IsCreature, IsLand))
 		return NewArtifact("Icy Manipulator", "{4}",
-			// {1}, {T}: Tap target permanent
-			WithActivatedAbility(
-				Tap(),
-				GenericCost(1),
-				WithCost(Tap()),
-				WithTarget(TargetPermanent(Or(IsArtifact, IsCreature, IsLand))),
-			),
+			WithAbility(Activate(Costs(Mana("{1}"), TapCost(This)), Tap(target), WithTargets(target))),
 		)
 	})
 
@@ -138,7 +136,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				GenericCost(3),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
@@ -150,7 +148,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				TheHiveEffect(),
 				GenericCost(5),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -171,7 +169,7 @@ func registerArtifacts() {
 
 	Register("Howling Mine", func() Card {
 		return NewArtifact("Howling Mine", "{2}",
-			WithAbility(BeginningOfEachDrawStepTrigger(DrawCardsActivePlayer(Fixed(1)), false)),
+			WithAbility(BeginningOfEachDrawStepTrigger(Draw(ActivePlayer, Fixed(1)), false)),
 		)
 	})
 
@@ -314,8 +312,8 @@ func registerArtifacts() {
 				FuncEffect("look at target player's hand", EffectProperties{}, func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
 					return nil
 				}),
-				Tap(),
-				WithTarget(TargetPlayer()),
+				TapCost(This),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -326,7 +324,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				HelmOfChatzukEffect(),
 				GenericCost(1),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -352,10 +350,10 @@ func registerArtifacts() {
 			WithStaticAbility(CyclopeanTombEffect()),
 			// {2}, {T}: Put a mire counter on target non-Swamp land.
 			WithActivatedAbility(
-				AddCounters(Mire, Fixed(1)),
+				mage.AddCounters(Mire, Fixed(1)),
 				GenericCost(2),
-				WithCost(Tap()),
-				WithTarget(TargetPermanent(IsLand, Not(HasSubType("Swamp")))),
+				WithCost(TapCost(This)),
+				WithTarget(mage.TargetPermanent(IsLand, Not(HasSubType("Swamp")))),
 			),
 		)
 	})
@@ -398,7 +396,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				NevinyrralsDiskEffect(),
 				GenericCost(1),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -411,7 +409,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -424,7 +422,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				AddPreventionShieldToControllerStep(2),
 				GenericCost(3),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -453,7 +451,7 @@ func registerArtifacts() {
 
 	Register("Soul Net", func() Card {
 		return NewArtifact("Soul Net", "{1}",
-			WithAbility(AnyCreatureDiesTrigger(GainLife(1), true)),
+			WithAbility(AnyCreatureDiesTrigger(mage.GainLife(1), true)),
 		)
 	})
 
@@ -463,7 +461,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				ChaosOrbEffect(),
 				GenericCost(1),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})

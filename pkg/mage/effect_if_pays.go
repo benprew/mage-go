@@ -33,13 +33,6 @@ func newIfPlayerPays(payer PlayerSelector, cost Cost, text, prompt string, ifPai
 	}
 }
 
-// EffectIfPaid creates an effect that prompts the controller to pay the given
-// cost. If they accept and payment succeeds, effect resolves.
-func EffectIfPaid(cost Cost, effect Effect) Effect {
-	prompt := fmt.Sprintf("%s if you %s", effect.Text(), cost.Text())
-	return newIfPlayerPays(SelectController(), cost, prompt, prompt, effect, nil)
-}
-
 func (e *ifPlayerPaysEffect) Text() string { return e.text }
 
 func (e *ifPlayerPaysEffect) Properties() EffectProperties {

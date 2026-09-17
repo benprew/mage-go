@@ -3,6 +3,8 @@ package legends
 import (
 	"fmt"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -19,9 +21,9 @@ func manaBattery(name string, color Color) Card {
 	return NewArtifact(name, "{4}",
 		// {2}, {T}: Put a charge counter on this artifact.
 		WithActivatedAbility(
-			AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
+			mage.AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
 			ManaCostOf("{2}"),
-			WithCost(Tap()),
+			WithCost(TapCost(This)),
 		),
 		// {T}, Remove any number of charge counters: Add colored mana = counters removed + 1
 		WithActivatedAbility(
@@ -46,7 +48,7 @@ func manaBattery(name string, color Color) Card {
 					return nil
 				},
 			),
-			Tap(),
+			TapCost(This),
 		),
 	)
 }
@@ -76,7 +78,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{5}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -106,7 +108,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetControlledPermanent()),
 			),
 		)
@@ -122,7 +124,7 @@ func registerArtifacts() {
 			WithAbility(EntersBattlefieldTrigger(
 				ForEachPermanent(
 					And(IsCreature, IsLegendary),
-					Tap(),
+					mage.Tap(),
 					"tap all legendary creatures",
 				), false)),
 		)
@@ -196,7 +198,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -247,7 +249,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{2}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreatureYouControl()),
 			),
 		)
@@ -306,7 +308,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{4}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
 			),
@@ -345,7 +347,7 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithUpkeepOnly(),
 				WithTarget(TargetOpponent()),
@@ -390,12 +392,9 @@ func registerArtifacts() {
 	// Artifact
 	// {T}: Tap target artifact.
 	Register("Relic Barrier", func() Card {
+		target := TargetPermanent("artifact", IsArtifact)
 		return NewArtifact("Relic Barrier", "{2}",
-			WithActivatedAbility(
-				Tap(),
-				Tap(),
-				WithTarget(TargetArtifact()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), Tap(target), WithTargets(target))),
 		)
 	})
 
@@ -429,7 +428,7 @@ func registerArtifacts() {
 					},
 				),
 				ManaCostOf("{4}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -500,7 +499,7 @@ func registerArtifacts() {
 						}
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
@@ -516,9 +515,9 @@ func registerArtifacts() {
 		return NewArtifact("Triassic Egg", "{4}",
 			// {3}, {T}: Put a hatchling counter
 			WithActivatedAbility(
-				AddCounters(Hatchling, Fixed(1)).Targeting(ToSource()),
+				mage.AddCounters(Hatchling, Fixed(1)).Targeting(ToSource()),
 				ManaCostOf("{3}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 			// Sacrifice: put creature from hand onto battlefield or reanimate from graveyard
 			// Activate only if there are two or more hatchling counters
@@ -583,7 +582,7 @@ func registerArtifacts() {
 		return NewArtifact("Voodoo Doll", "{6}",
 			// Upkeep: put a pin counter
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Pin, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Pin, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			// End step: if untapped, destroy and deal damage
 			WithAbility(
@@ -644,7 +643,7 @@ func registerArtifacts() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)

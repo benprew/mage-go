@@ -3,6 +3,8 @@ package arabian
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/benprew/mage-go/pkg/catalog"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -102,7 +104,7 @@ func registerArtifacts() {
 						g.SetDrawReplacement(controller, x)
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{X}")),
 			),
 		)
@@ -113,7 +115,7 @@ func registerArtifacts() {
 		return NewArtifact("Aladdin's Ring", "{8}",
 			WithActivatedAbility(
 				AladdinsRingEffect(),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{8}")),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -215,7 +217,7 @@ func registerArtifacts() {
 					UntapGathered("t"),
 					RemoveFromCombatGathered("t"),
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreatureYouControl(IsAttacking)),
 			),
@@ -227,7 +229,7 @@ func registerArtifacts() {
 		return NewArtifact("Flying Carpet", "{4}",
 			WithActivatedAbility(
 				FlyingCarpetEffect(),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
 			),
@@ -239,7 +241,7 @@ func registerArtifacts() {
 		return NewArtifact("Jandor's Ring", "{6}",
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{2}")),
 				WithCost(&discardLastDrawnCost{}),
 			),
@@ -251,7 +253,7 @@ func registerArtifacts() {
 		return NewArtifact("Jandor's Saddlebags", "{2}",
 			WithActivatedAbility(
 				UntapTarget(),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{3}")),
 				WithTarget(TargetCreature()),
 			),
@@ -296,7 +298,7 @@ func registerArtifacts() {
 						p.DrawCard()
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -331,7 +333,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				ManaCostOf("{2}"),
-				WithTarget(TargetPermanent(Or(IsAuraOnLand, IsLand))),
+				WithTarget(mage.TargetPermanent(Or(IsAuraOnLand, IsLand))),
 			),
 		)
 		c.SetModes([]string{
@@ -357,7 +359,7 @@ func registerArtifacts() {
 				Pipeline("grant islandwalk, destroy self if creature dies",
 					EffectProperties{Outcome: OutcomeBenefit},
 					SnapshotPermanent(SelectTarget, "t"),
-					GrantKeyword(Islandwalk),
+					mage.GrantKeyword(Islandwalk),
 					&RegisterDelayedTriggerData{
 						EventType:     EvtZoneChange,
 						MatchEventVar: "t",
@@ -366,7 +368,7 @@ func registerArtifacts() {
 						Effects:       []Effect{DestroyTarget()},
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(ManaCostOf("{2}")),
 				WithTarget(TargetCreature()),
 			),

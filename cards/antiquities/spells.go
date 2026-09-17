@@ -3,6 +3,8 @@ package antiquities
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -38,7 +40,7 @@ func registerSpells() {
 	Register("Hurkyl's Recall", func() Card {
 		return NewInstant("Hurkyl's Recall", "{1}{U}",
 			// TODO: convert to pipeline — needs "bounce all matching owned by target player" step
-			NewTargetedSpell(TargetPlayer(), FuncEffect(
+			NewTargetedSpell(mage.TargetPlayer(), FuncEffect(
 				"return all artifacts target player owns to their hand",
 				EffectProperties{Outcome: OutcomeDetriment},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
@@ -118,7 +120,7 @@ func registerSpells() {
 	Register("Drafna's Restoration", func() Card {
 		return NewSorcery("Drafna's Restoration", "{U}",
 			// TODO: convert to pipeline — needs "choose cards from graveyard" iterative step
-			NewTargetedSpell(TargetPlayer(), FuncEffect(
+			NewTargetedSpell(mage.TargetPlayer(), FuncEffect(
 				"put artifact cards from graveyard on top of library",
 				EffectProperties{Outcome: OutcomeBenefit},
 				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {

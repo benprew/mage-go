@@ -3,6 +3,8 @@ package limited
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -383,7 +385,7 @@ func registerEnchantments() {
 
 	Register("Feedback", func() Card {
 		return NewAura("Feedback", "{2}{U}",
-			WithCastTarget(TargetPermanent(IsEnchantment)),
+			WithCastTarget(mage.TargetPermanent(IsEnchantment)),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
 				DealDamageToPlayers(Fixed(1), SelectAttachedController()), false,
 			)),
@@ -413,7 +415,7 @@ func registerEnchantments() {
 		return NewAura("Farmstead", "{W}{W}{W}",
 			WithCastTarget(TargetLand()),
 			WithAbility(BeginningOfUpkeepTrigger(
-				EffectIfPaid(ManaCostOf("{W}{W}"), GainLife(1)),
+				IfPaid(You, Costs(Mana("{W}{W}")), GainLife(You, Fixed(1))),
 				false)),
 		)
 	})
@@ -582,7 +584,7 @@ func registerEnchantments() {
 	Register("Lifetap", func() Card {
 		return NewEnchantment("Lifetap", "{U}{U}",
 			WithAbility(WhenOpponentPermanentBecomesTappedTrigger(
-				GainLife(1), false,
+				mage.GainLife(1), false,
 				And(IsLand, HasSubType("Forest")),
 			)),
 		)
@@ -737,7 +739,7 @@ func registerEnchantments() {
 		return NewAura("Living Artifact", "{G}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
-				AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
+				mage.AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
 			).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.TargetID == controllerID && evt.Amount > 0
 			})),

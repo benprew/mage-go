@@ -58,12 +58,19 @@ func (r *regenerationReplacement) Clone() ReplacementEffect {
 // ---------------------------------------------------------------------------
 
 type preventionShieldReplacement struct {
+	targetIncarnation uuid.UUID
 	replacementBase
 	targetID  uuid.UUID
 	remaining int
 }
 
 func (r *preventionShieldReplacement) Matches(a Action, g GameReader) bool {
+	if r.targetIncarnation != uuid.Nil {
+		p := g.FindPermanent(r.targetID)
+		if p == nil || p.incarnationID != r.targetIncarnation {
+			return false
+		}
+	}
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
 		return act.PlayerID() == r.targetID

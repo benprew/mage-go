@@ -169,31 +169,6 @@ func (e *PreventDamageToGatheredData) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-// GrantAttrToGatheredData grants an attr to a var-bound permanent.
-type GrantAttrToGatheredData struct {
-	VarName string
-	Attr    Attr
-}
-
-func GrantAttrToGathered(v string, a Attr) Effect {
-	return &GrantAttrToGatheredData{VarName: v, Attr: a}
-}
-
-func (e *GrantAttrToGatheredData) Text() string                 { return "" }
-func (e *GrantAttrToGatheredData) Properties() EffectProperties { return EffectProperties{} }
-
-func (e *GrantAttrToGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.MutablePermanent(id)
-	if perm != nil {
-		perm.GrantBaseAttr(e.Attr)
-	}
-	return nil
-}
-
 // ---------------------------------------------------------------------------
 // RegisterDelayedTrigger: register a delayed trigger from a pipeline
 // ---------------------------------------------------------------------------
@@ -248,21 +223,6 @@ func (e *RegisterDelayedTriggerData) Apply(ctx *EffectContext) error {
 	}
 	ctx.Game.RegisterDelayedTrigger(dt)
 	return nil
-}
-
-// ---------------------------------------------------------------------------
-// FlipCoin condition
-// ---------------------------------------------------------------------------
-
-// FlipCoinCond flips a coin for the controller; true = heads (win).
-//
-// Resolution-only: each evaluation is a fresh flip, so this must never be
-// used in trigger or state-trigger condition slots, which can be evaluated
-// more than once. Use it inside IfElse during effect resolution.
-type FlipCoinCond struct{}
-
-func (c FlipCoinCond) CheckTriggerCond(_ *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
-	return g.FlipCoin(controllerID)
 }
 
 // ---------------------------------------------------------------------------

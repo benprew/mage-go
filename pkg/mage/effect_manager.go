@@ -10,9 +10,8 @@ import (
 
 // ContinuousEffect represents an ongoing effect on the game.
 type ContinuousEffect interface {
-	Text() string
-	Properties() EffectProperties
-	Apply(*EffectContext) error
+	EffectMetadata
+	ApplyContinuous(*EffectContext) error
 	GetLayer() Layer
 	GetDuration() Duration
 	IsActive(g *Game) bool
@@ -138,7 +137,7 @@ func (e *funcContinuousEffect) IsActive(g *Game) bool {
 	return g.FindPermanent(e.sourceID) != nil
 }
 
-func (e *funcContinuousEffect) Apply(ctx *EffectContext) error {
+func (e *funcContinuousEffect) ApplyContinuous(ctx *EffectContext) error {
 	return e.apply(ctx.Game, e.sourceID)
 }
 
@@ -171,7 +170,7 @@ func (e *attachedEffect) IsActive(g *Game) bool {
 	return src != nil && src.IsAttached()
 }
 
-func (e *attachedEffect) Apply(ctx *EffectContext) error {
+func (e *attachedEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	src := g.FindPermanent(e.sourceID)
 	if src == nil || !src.IsAttached() {
@@ -266,7 +265,7 @@ func (e *targetEffect) IsActive(g *Game) bool {
 	return true
 }
 
-func (e *targetEffect) Apply(ctx *EffectContext) error {
+func (e *targetEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	target := g.MutablePermanent(e.targetID)
 	if target == nil {
@@ -550,7 +549,7 @@ func (em *EffectManager) Apply(g *Game) {
 
 	for _, effect := range em.effects {
 		if effect.GetLayer() == LayerCopy && effect.IsActive(g) {
-			_ = effect.Apply(&EffectContext{Game: g})
+			_ = effect.ApplyContinuous(&EffectContext{Game: g})
 			em.syncAttrDeltas(g)
 		}
 	}
@@ -563,7 +562,7 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
-				_ = e.Apply(&EffectContext{Game: g})
+				_ = e.ApplyContinuous(&EffectContext{Game: g})
 				em.syncAttrDeltas(g)
 			}
 		}
@@ -655,7 +654,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 			if effect.GetLayer() != LayerControl || !controlEffectActive(effect, g, false) {
 				continue
 			}
-			_ = effect.Apply(&EffectContext{Game: g})
+			_ = effect.ApplyContinuous(&EffectContext{Game: g})
 		}
 		next := make(map[uuid.UUID]uuid.UUID, len(g.zones.battlefield))
 		stable := true
@@ -682,7 +681,7 @@ func (em *EffectManager) applyControlLayer(g *Game) {
 		if effect.GetLayer() != LayerControl || !controlEffectActive(effect, g, true) {
 			continue
 		}
-		_ = effect.Apply(&EffectContext{Game: g})
+		_ = effect.ApplyContinuous(&EffectContext{Game: g})
 	}
 	g.layer2Controllers = nil
 }

@@ -3,6 +3,8 @@ package antiquities
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -167,7 +169,7 @@ func registerEnchantments() {
 			WithActivatedAbility(
 				DestroyTarget(),
 				SacrificeCreatureCost(),
-				WithTarget(TargetPermanent(IsArtifact)),
+				WithTarget(mage.TargetPermanent(IsArtifact)),
 				WithUpkeepOnly(),
 				WithOncePerTurn(),
 			),
@@ -227,7 +229,7 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an artifact an opponent controls becomes tapped or an opponent activates an
 	// artifact's ability without {T} in its activation cost, you gain 1 life.
-	powerleechEffect := GainLife(1)
+	powerleechEffect := mage.GainLife(1)
 	Register("Powerleech", func() Card {
 		return NewEnchantment("Powerleech", "{G}{G}",
 			// Trigger when opponent's artifact becomes tapped

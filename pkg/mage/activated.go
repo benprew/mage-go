@@ -196,6 +196,7 @@ type ActionDefinition struct {
 	activatedThisTurn   bool // Tracks whether this ability has been activated this turn
 	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
 	activationConds     []ActivationCondition
+	dslRestrictions     []activationRestriction
 	aiHints             []AIHint
 	modes               []Mode
 }
@@ -292,7 +293,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if a.timing == TimingStepOnly && a.stepOnly != 0 && g.turns.Step() != a.stepOnly {
+	if a.timing == TimingStepOnly && g.turns.Step() != a.stepOnly {
 		return false
 	}
 	if a.limits.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.limits.MaxActivationsPerTurn {

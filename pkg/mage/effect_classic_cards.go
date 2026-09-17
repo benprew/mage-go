@@ -18,11 +18,9 @@ func BoomerangEffect() Effect { return ReturnToHandTarget() }
 // BottleOfSuleimanEffect flips a coin, creating a 5/5 flying Djinn artifact
 // creature token on a win or dealing 5 damage to the controller on a loss.
 func BottleOfSuleimanEffect() Effect {
-	return IfElse(
-		"flip coin: 5/5 Djinn or 5 damage",
-		FlipCoinCond{},
-		CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying),
-		DealDamageToPlayers(Fixed(5), SelectController()),
+	return FlipCoin(You,
+		OnWin(CreateToken("Djinn", 5, 5, []CardType{TypeArtifact, TypeCreature}, []string{"Djinn"}, Flying)),
+		OnLoss(DealDamageToPlayers(Fixed(5), SelectController())),
 	)
 }
 

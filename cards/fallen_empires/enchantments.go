@@ -3,6 +3,8 @@ package fallen_empires
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -55,7 +57,7 @@ func registerEnchantments() {
 	Register("Fungal Bloom", withExpansion(func() Card {
 		return NewEnchantment("Fungal Bloom", "{G}{G}",
 			WithActivatedAbility(
-				AddCounters(Spore, Fixed(1)),
+				mage.AddCounters(Spore, Fixed(1)),
 				ManaCostOf("{G}{G}"),
 				WithTarget(TargetCreature(HasSubType("Fungus"))),
 			),

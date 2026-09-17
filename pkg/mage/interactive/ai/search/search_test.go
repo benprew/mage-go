@@ -1065,7 +1065,7 @@ func TestApplySpellCast_MultiEffect_DrawAndDamage(t *testing.T) {
 	multiSpell := mage.NewSorcery("Arcane Blast", "{1}{R}",
 		mage.NewTargetedSpell(mage.TargetDamageAnyTarget(),
 			mage.DealDamage(mage.Fixed(3)),
-			mage.DrawCardsActivePlayer(mage.Fixed(2)),
+			mage.DrawFor(mage.ActivePlayer, mage.Fixed(2)),
 		),
 	)
 	multiSpell.SetOwner(pa.PlayerID())

@@ -3,6 +3,8 @@ package arabian
 import (
 	"strings"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -60,57 +62,12 @@ func registerEnchantments() {
 	// It can't be regenerated. If two or more creatures are tied for least power, you choose
 	// one of them. When there are no creatures on the battlefield, sacrifice Drop of Honey."
 	Register("Drop of Honey", func() Card {
+		selected := BindPermanent("least-power creature")
 		return NewEnchantment("Drop of Honey", "{G}",
-			WithAbility(
-				BeginningOfUpkeepTrigger(
-					// TODO: convert to pipeline — needs find-minimum-power-creature + choose-among-tied primitives
-					FuncEffect("destroy least power creature or sacrifice self",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							creatures := g.FilterBattlefield(IsCreature)
-							if len(creatures) == 0 {
-								src := g.FindPermanent(sourceID)
-								if src != nil {
-									g.DoSacrifice(src)
-								}
-								return nil
-							}
-							// Find minimum power
-							minPower := creatures[0].CurrentPower(g)
-							for _, c := range creatures[1:] {
-								pw := c.CurrentPower(g)
-								if pw < minPower {
-									minPower = pw
-								}
-							}
-							// Collect tied creatures
-							var tied []*Permanent
-							for _, c := range creatures {
-								if c.CurrentPower(g) == minPower {
-									tied = append(tied, c)
-								}
-							}
-							var target *Permanent
-							if len(tied) == 1 {
-								target = tied[0]
-							} else {
-								p := g.GetPlayer(controller)
-								if p != nil {
-									target = p.ChoosePermanent(tied, "destroy", g)
-								}
-							}
-							if target != nil {
-								// Can't be regenerated
-								if mt := g.MutablePermanent(target.ID()); mt != nil {
-									mt.GrantBaseAttr(CantRegenerate)
-								}
-								g.DestroyPermanent(target)
-							}
-							return nil
-						}), false,
-				),
-			),
-			// "When there are no creatures on the battlefield, sacrifice Drop of Honey."
+			WithAbility(At(YourUpkeep, Sequence(
+				ChoosePermanent(You, LowestPower(MatchingPermanents(IsCreature)), selected),
+				DestroyWithoutRegeneration(From(selected)),
+			))),
 			WithAbility(WhenState(BattlefieldHasNone(IsCreature), Sacrifice(This))),
 		)
 	})
@@ -265,7 +222,7 @@ func registerEnchantments() {
 		return NewAura("Unstable Mutation", "{U}",
 			WithAbility(StaticAbility(BoostAttached(3, 3, AttachAura))),
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				AddCounters(M1M1, Fixed(1)).Targeting(ToAttached()), false,
+				mage.AddCounters(M1M1, Fixed(1)).Targeting(ToAttached()), false,
 			)),
 		)
 	})

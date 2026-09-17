@@ -152,8 +152,6 @@ type (
 	OrTriggerCond                          = mage.OrTriggerCond
 	EventTargetHasSubType                  = mage.EventTargetHasSubType
 
-	FlipCoinCond = mage.FlipCoinCond
-
 	RegisterDelayedTriggerData = mage.RegisterDelayedTriggerData
 	SourceHasCounterCond       = mage.SourceHasCounterCond
 	TargetHasRampageCond       = mage.TargetHasRampageCond
@@ -416,16 +414,16 @@ var (
 	ChooseRandomCreatureSubtypeFromTargetLibrary = mage.ChooseRandomCreatureSubtypeFromTargetLibrary
 
 	// Removal / combat
-	DestroyTarget                             = mage.DestroyTarget
-	DestroyTargetPermanent                    = mage.DestroyTargetPermanent
-	ExileTarget                               = mage.ExileTarget
-	DestroyTargetNoRegen                      = mage.DestroyTargetNoRegen
-	DestroyTargetArtifact                     = mage.DestroyTargetArtifact
-	DestroyTargetNoRegenStep                  = mage.DestroyTargetNoRegenStep
-	RegenerateTarget                          = mage.RegenerateTarget
-	RegenerateGathered                        = mage.RegenerateGathered
-	PreventDamageToTarget                     = mage.PreventDamageToTarget
-	Tap                                       = mage.Tap
+	DestroyTarget            = mage.DestroyTarget
+	DestroyTargetPermanent   = mage.DestroyTargetPermanent
+	ExileTarget              = mage.ExileTarget
+	DestroyTargetNoRegen     = mage.DestroyTargetNoRegen
+	DestroyTargetArtifact    = mage.DestroyTargetArtifact
+	DestroyTargetNoRegenStep = mage.DestroyTargetNoRegenStep
+	RegenerateTarget         = mage.RegenerateTarget
+	RegenerateGathered       = mage.RegenerateGathered
+	PreventDamageToTarget    = mage.PreventDamageToTarget
+
 	UntapSource                               = mage.UntapSource
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	TapGathered                               = mage.TapGathered
@@ -480,51 +478,51 @@ var (
 	ForEachBlockerOfSourceMatching            = mage.ForEachBlockerOfSourceMatching
 	ForEachControlledPermanent                = mage.ForEachControlledPermanent
 	DrawCards                                 = mage.DrawCards
-	DrawCardsActivePlayer                     = mage.DrawCardsActivePlayer
-	DiscardHand                               = mage.DiscardHand
-	AnteLibraryTop                            = mage.AnteLibraryTop
-	ExchangeTargetAnteCardWithLibraryTop      = mage.ExchangeTargetAnteCardWithLibraryTop
-	MillTargetPlayer                          = mage.MillTargetPlayer
-	CopySpellOnStack                          = mage.CopySpellOnStack
-	DoubleTargetPower                         = mage.DoubleTargetPower
-	PreventAllCombatDamage                    = mage.PreventAllCombatDamage
-	PreventCombatDamageToAndByTarget          = mage.PreventCombatDamageToAndByTarget
-	ForcefieldEffect                          = mage.ForcefieldEffect
-	CloneTarget                               = mage.CloneTarget
-	BlackViseEffect                           = mage.BlackViseEffect
-	TheRackEffect                             = mage.TheRackEffect
-	CompositeEffects                          = mage.CompositeEffects
-	IfSourceTapped                            = mage.IfSourceTapped
-	GrantProtectionTarget                     = mage.GrantProtectionTarget
-	PreventDamageToYouByCreaturesWithFlying   = mage.PreventDamageToYouByCreaturesWithFlying
-	FightTarget                               = mage.FightTarget
-	PutFromHandOntoBattlefield                = mage.PutFromHandOntoBattlefield
-	ChangeColorEffect                         = mage.ChangeColorEffect
-	DestroyAllCreatures                       = mage.DestroyAllCreatures
-	DestroyAllCreaturesNoRegen                = mage.DestroyAllCreaturesNoRegen
-	DestroyAllEnchantments                    = mage.DestroyAllEnchantments
-	ChaosOrbEffect                            = mage.ChaosOrbEffect
-	DestroyAllLands                           = mage.DestroyAllLands
-	DestroyAllMatching                        = mage.DestroyAllMatching
-	DestroyAllMatchingNoRegen                 = mage.DestroyAllMatchingNoRegen
-	DestroyGatheredNoRegen                    = mage.DestroyGatheredNoRegen
-	DestroyGathered                           = mage.DestroyGathered
-	DestroyTargetStep                         = mage.DestroyTargetStep
-	ExileTargetStep                           = mage.ExileTargetStep
-	ExileTargetCardFromGraveyard              = mage.ExileTargetCardFromGraveyard
-	DestroyAttachedStep                       = mage.DestroyAttachedStep
-	BalanceEffect                             = mage.BalanceEffect
-	CounterSpell                              = mage.CounterSpell
-	CounterSpellIfColor                       = mage.CounterSpellIfColor
-	CounterSpellIfXMeetsCMC                   = mage.CounterSpellIfXMeetsCMC
-	CounterUnlessPay                          = mage.CounterUnlessPay
-	HandSizeDamageEffect                      = mage.HandSizeDamageEffect
-	ReturnToHandTarget                        = mage.ReturnToHandTarget
+
+	DiscardHand                             = mage.DiscardHand
+	AnteLibraryTop                          = mage.AnteLibraryTop
+	ExchangeTargetAnteCardWithLibraryTop    = mage.ExchangeTargetAnteCardWithLibraryTop
+	MillTargetPlayer                        = mage.MillTargetPlayer
+	CopySpellOnStack                        = mage.CopySpellOnStack
+	DoubleTargetPower                       = mage.DoubleTargetPower
+	PreventAllCombatDamage                  = mage.PreventAllCombatDamage
+	PreventCombatDamageToAndByTarget        = mage.PreventCombatDamageToAndByTarget
+	ForcefieldEffect                        = mage.ForcefieldEffect
+	CloneTarget                             = mage.CloneTarget
+	BlackViseEffect                         = mage.BlackViseEffect
+	TheRackEffect                           = mage.TheRackEffect
+	CompositeEffects                        = mage.CompositeEffects
+	IfSourceTapped                          = mage.IfSourceTapped
+	GrantProtectionTarget                   = mage.GrantProtectionTarget
+	PreventDamageToYouByCreaturesWithFlying = mage.PreventDamageToYouByCreaturesWithFlying
+	FightTarget                             = mage.FightTarget
+	PutFromHandOntoBattlefield              = mage.PutFromHandOntoBattlefield
+	ChangeColorEffect                       = mage.ChangeColorEffect
+	DestroyAllCreatures                     = mage.DestroyAllCreatures
+	DestroyAllCreaturesNoRegen              = mage.DestroyAllCreaturesNoRegen
+	DestroyAllEnchantments                  = mage.DestroyAllEnchantments
+	ChaosOrbEffect                          = mage.ChaosOrbEffect
+	DestroyAllLands                         = mage.DestroyAllLands
+	DestroyAllMatching                      = mage.DestroyAllMatching
+	DestroyAllMatchingNoRegen               = mage.DestroyAllMatchingNoRegen
+	DestroyGatheredNoRegen                  = mage.DestroyGatheredNoRegen
+	DestroyGathered                         = mage.DestroyGathered
+	DestroyTargetStep                       = mage.DestroyTargetStep
+	ExileTargetStep                         = mage.ExileTargetStep
+	ExileTargetCardFromGraveyard            = mage.ExileTargetCardFromGraveyard
+	DestroyAttachedStep                     = mage.DestroyAttachedStep
+	BalanceEffect                           = mage.BalanceEffect
+	CounterSpell                            = mage.CounterSpell
+	CounterSpellIfColor                     = mage.CounterSpellIfColor
+	CounterSpellIfXMeetsCMC                 = mage.CounterSpellIfXMeetsCMC
+	CounterUnlessPay                        = mage.CounterUnlessPay
+	HandSizeDamageEffect                    = mage.HandSizeDamageEffect
+	ReturnToHandTarget                      = mage.ReturnToHandTarget
 
 	// Damage / life
-	GainLife                  = mage.GainLife
-	GainLifeAmount            = mage.GainLifeAmount
-	LoseLife                  = mage.LoseLife
+
+	GainLifeAmount = mage.GainLifeAmount
+
 	LoseLifeAmount            = mage.LoseLifeAmount
 	GainLifeTarget            = mage.GainLifeTarget
 	TargetPlayerLoseLife      = mage.TargetPlayerLoseLife
@@ -539,28 +537,28 @@ var (
 	SacrificeCreatureOrDamage = mage.SacrificeCreatureOrDamage
 
 	// P/T modification
-	Boost                                  = mage.Boost
-	BoostSelf                              = mage.BoostSelf
-	SetPTUntilEndOfTurn                    = mage.SetPTUntilEndOfTurn
-	SetPowerUntilEndOfTurn                 = mage.SetPowerUntilEndOfTurn
-	GrantKeyword                           = mage.GrantKeyword
-	GrantAbility                           = mage.GrantAbility
-	GrantType                              = mage.GrantType
-	RevokeKeyword                          = mage.RevokeKeyword
-	RevokeKeywords                         = mage.RevokeKeywords
-	RevokeLandwalk                         = mage.RevokeLandwalk
-	AddCounters                            = mage.AddCounters
-	RemoveCounters                         = mage.RemoveCounters
-	MoveCountersFromSourceToTarget         = mage.MoveCountersFromSourceToTarget
-	ToAttached                             = mage.ToAttached
-	ToTarget                               = mage.ToTarget
-	ToAllTargets                           = mage.ToAllTargets
-	ToSource                               = mage.ToSource
-	ToBlockingOrBlockedBySource            = mage.ToBlockingOrBlockedBySource
-	ToGathered                             = mage.ToGathered
-	ToMatching                             = mage.ToMatching
-	ToOtherMatching                        = mage.ToOtherMatching
-	GrantAttrToGathered                    = mage.GrantAttrToGathered
+	Boost                  = mage.Boost
+	BoostSelf              = mage.BoostSelf
+	SetPTUntilEndOfTurn    = mage.SetPTUntilEndOfTurn
+	SetPowerUntilEndOfTurn = mage.SetPowerUntilEndOfTurn
+
+	GrantAbility   = mage.GrantAbility
+	GrantType      = mage.GrantType
+	RevokeKeyword  = mage.RevokeKeyword
+	RevokeKeywords = mage.RevokeKeywords
+	RevokeLandwalk = mage.RevokeLandwalk
+
+	RemoveCounters                 = mage.RemoveCounters
+	MoveCountersFromSourceToTarget = mage.MoveCountersFromSourceToTarget
+	ToAttached                     = mage.ToAttached
+	ToTarget                       = mage.ToTarget
+	ToAllTargets                   = mage.ToAllTargets
+	ToSource                       = mage.ToSource
+	ToBlockingOrBlockedBySource    = mage.ToBlockingOrBlockedBySource
+	ToGathered                     = mage.ToGathered
+	ToMatching                     = mage.ToMatching
+	ToOtherMatching                = mage.ToOtherMatching
+
 	DiscardRandom                          = mage.DiscardRandom
 	ReturnSourceFromGraveyardToBattlefield = mage.ReturnSourceFromGraveyardToBattlefield
 	ExileEventSourceEffect                 = mage.ExileEventSourceEffect
@@ -598,8 +596,6 @@ var (
 	SourceHasManaAbilitiesOpponentLandsCouldProduce = mage.SourceHasManaAbilitiesOpponentLandsCouldProduce
 	DiscardToLibraryReplacement                     = mage.DiscardToLibraryReplacement
 
-	// TODO remove instances of EffectIfPaid and UnlessTargetPays and replace with IfPlayerPays
-	EffectIfPaid     = mage.EffectIfPaid
 	UnlessTargetPays = mage.UnlessTargetPays
 	IfPlayerPays     = mage.IfPlayerPays
 )
@@ -685,29 +681,29 @@ var (
 // =============================================================================
 
 var (
-	TargetCreatureOpponentControls          = mage.TargetCreatureOpponentControls
-	TargetPlayerOrPlaneswalker              = mage.TargetPlayerOrPlaneswalker
-	TargetCreature                          = mage.TargetCreature
-	TargetNCreatures                        = mage.TargetNCreatures
-	TargetXCreatures                        = mage.TargetXCreatures
-	TargetUpToXCreatures                    = mage.TargetUpToXCreatures
-	TargetOneToXCreatures                   = mage.TargetOneToXCreatures
-	TargetRandom                            = mage.TargetRandom
-	TargetRandomCount                       = mage.TargetRandomCount
-	TargetRandomActivePlayerExchangePair    = mage.TargetRandomActivePlayerExchangePair
-	TargetOtherCreature                     = mage.TargetOtherCreature
-	TargetArtifact                          = mage.TargetArtifact
-	TargetDamageAnyTarget                   = mage.TargetDamageAnyTarget
-	TargetDamageSource                      = mage.TargetDamageSource
-	TargetCreatureWithPowerLESource         = mage.TargetCreatureWithPowerLESource
-	TargetCreatureYouControl                = mage.TargetCreatureYouControl
-	TargetAuraAttachedToCreatureYouControl  = mage.TargetAuraAttachedToCreatureYouControl
-	TargetUpToNCreaturesOpponentControls    = mage.TargetUpToNCreaturesOpponentControls
-	TargetPermanent                         = mage.TargetPermanent
-	TargetSpellOrPermanent                  = mage.TargetSpellOrPermanent
-	TargetCreatureOfSourceChosenSubtype     = mage.TargetCreatureOfSourceChosenSubtype
-	TargetXPermanents                       = mage.TargetXPermanents
-	TargetPlayer                            = mage.TargetPlayer
+	TargetCreatureOpponentControls         = mage.TargetCreatureOpponentControls
+	TargetPlayerOrPlaneswalker             = mage.TargetPlayerOrPlaneswalker
+	TargetCreature                         = mage.TargetCreature
+	TargetNCreatures                       = mage.TargetNCreatures
+	TargetXCreatures                       = mage.TargetXCreatures
+	TargetUpToXCreatures                   = mage.TargetUpToXCreatures
+	TargetOneToXCreatures                  = mage.TargetOneToXCreatures
+	TargetRandom                           = mage.TargetRandom
+	TargetRandomCount                      = mage.TargetRandomCount
+	TargetRandomActivePlayerExchangePair   = mage.TargetRandomActivePlayerExchangePair
+	TargetOtherCreature                    = mage.TargetOtherCreature
+	TargetArtifact                         = mage.TargetArtifact
+	TargetDamageAnyTarget                  = mage.TargetDamageAnyTarget
+	TargetDamageSource                     = mage.TargetDamageSource
+	TargetCreatureWithPowerLESource        = mage.TargetCreatureWithPowerLESource
+	TargetCreatureYouControl               = mage.TargetCreatureYouControl
+	TargetAuraAttachedToCreatureYouControl = mage.TargetAuraAttachedToCreatureYouControl
+	TargetUpToNCreaturesOpponentControls   = mage.TargetUpToNCreaturesOpponentControls
+
+	TargetSpellOrPermanent              = mage.TargetSpellOrPermanent
+	TargetCreatureOfSourceChosenSubtype = mage.TargetCreatureOfSourceChosenSubtype
+	TargetXPermanents                   = mage.TargetXPermanents
+
 	TargetCreatureInHand                    = mage.TargetCreatureInHand
 	TargetSpellOnStack                      = mage.TargetSpellOnStack
 	TargetOwnSpellOnStack                   = mage.TargetOwnSpellOnStack

@@ -3,6 +3,8 @@ package fallen_empires
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -18,14 +20,14 @@ func moneychangerFactory() Card {
 	return NewCreature("Icatian Moneychanger", "{W}", 0, 2,
 		WithSubTypes("Human"),
 		// Enters with three credit counters
-		WithAbility(ETBEffect(AddCounters(Credit, Fixed(3)).Targeting(ToSource()))),
+		WithAbility(ETBEffect(mage.AddCounters(Credit, Fixed(3)).Targeting(ToSource()))),
 		// When this creature enters, it deals 3 damage to you
 		WithAbility(EntersBattlefieldTrigger(
 			DealDamageToPlayers(Fixed(3), SelectController()), false,
 		)),
 		// At the beginning of your upkeep, put a credit counter on it
 		WithAbility(BeginningOfUpkeepTrigger(
-			AddCounters(Credit, Fixed(1)).Targeting(ToSource()), false,
+			mage.AddCounters(Credit, Fixed(1)).Targeting(ToSource()), false,
 		)),
 		// Sacrifice: gain 1 life per credit counter (only during upkeep)
 		WithActivatedAbility(
@@ -131,11 +133,11 @@ func registerCreatures() {
 		return NewCreature("Icatian Infantry", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 			WithActivatedAbility(
-				GrantKeyword(FirstStrike).Targeting(ToSource()),
+				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
 				GenericCost(1),
 			),
 			WithActivatedAbility(
-				GrantKeyword(Banding).Targeting(ToSource()),
+				mage.GrantKeyword(Banding).Targeting(ToSource()),
 				GenericCost(1),
 			),
 		)
@@ -150,11 +152,11 @@ func registerCreatures() {
 		return NewCreature("Icatian Javelineers", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
 			// Enters with a javelin counter
-			WithAbility(ETBEffect(AddCounters(Javelin, Fixed(1)).Targeting(ToSource()))),
+			WithAbility(ETBEffect(mage.AddCounters(Javelin, Fixed(1)).Targeting(ToSource()))),
 			// {T}, Remove a javelin counter: deals 1 damage to any target
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithCost(RemoveCountersCost(Javelin, 1)),
 				WithTarget(TargetDamageAnyTarget()),
 			),
@@ -219,9 +221,9 @@ func registerCreatures() {
 		return NewCreature("Icatian Scout", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier", "Scout"),
 			WithActivatedAbility(
-				GrantKeyword(FirstStrike),
+				mage.GrantKeyword(FirstStrike),
 				GenericCost(1),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -250,7 +252,7 @@ func registerCreatures() {
 			WithSubTypes("Human", "Cleric", "Knight"),
 			WithAbility(ProtectionFromColor(Black)),
 			WithActivatedAbility(
-				GrantKeyword(FirstStrike).Targeting(ToSource()),
+				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
 				ManaCostOf("{W}"),
 			),
 			WithActivatedAbility(
@@ -286,7 +288,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("gain shroud, skip next untap, and tap",
 					EffectProperties{Outcome: OutcomeBenefit},
-					GrantKeyword(Shroud).Targeting(ToSource()),
+					mage.GrantKeyword(Shroud).Targeting(ToSource()),
 					StunCreature().Targeting(ToSource()),
 					FuncEffect("tap this creature", EffectProperties{},
 						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
@@ -313,7 +315,7 @@ func registerCreatures() {
 		return NewCreature("Homarid", "{2}{U}", 2, 2,
 			WithSubTypes("Homarid"),
 			// ETB with 1 tide counter
-			WithAbility(ETBEffect(AddCounters(Tide, Fixed(1)).Targeting(ToSource()))),
+			WithAbility(ETBEffect(mage.AddCounters(Tide, Fixed(1)).Targeting(ToSource()))),
 			// At the beginning of your upkeep, put a tide counter on this creature.
 			// Also handle "whenever there are four or more tide counters, remove all."
 			// TODO: convert to pipeline — needs AddCounters + conditional counter reset (threshold check)
@@ -358,13 +360,10 @@ func registerCreatures() {
 	// 2/1
 	// {U}: Tap target green creature.
 	Register("Homarid Shaman", withExpansion(func() Card {
+		target := TargetPermanent("green creature", And(IsCreature, HasColorFilter(Green)))
 		return NewCreature("Homarid Shaman", "{2}{U}{U}", 2, 1,
 			WithSubTypes("Homarid", "Shaman"),
-			WithActivatedAbility(
-				Tap(),
-				ManaCostOf("{U}"),
-				WithTarget(TargetCreature(HasColorFilter(Green))),
-			),
+			WithAbility(Activate(Costs(Mana("{U}")), Tap(target), WithTargets(target))),
 		)
 	}))
 
@@ -378,7 +377,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				Pipeline("gain shroud, skip next untap, and tap",
 					EffectProperties{Outcome: OutcomeBenefit},
-					GrantKeyword(Shroud).Targeting(ToSource()),
+					mage.GrantKeyword(Shroud).Targeting(ToSource()),
 					StunCreature().Targeting(ToSource()),
 					FuncEffect("tap this creature", EffectProperties{},
 						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
@@ -401,7 +400,7 @@ func registerCreatures() {
 		return NewCreature("River Merfolk", "{U}{U}", 2, 1,
 			WithSubTypes("Merfolk"),
 			WithActivatedAbility(
-				GrantKeyword(Mountainwalk).Targeting(ToSource()),
+				mage.GrantKeyword(Mountainwalk).Targeting(ToSource()),
 				ManaCostOf("{U}"),
 			),
 		)
@@ -428,9 +427,9 @@ func registerCreatures() {
 		return NewCreature("Svyelunite Priest", "{1}{U}", 1, 1,
 			WithSubTypes("Merfolk", "Cleric"),
 			WithActivatedAbility(
-				GrantKeyword(Shroud),
+				mage.GrantKeyword(Shroud),
 				ManaCostOf("{U}{U}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 				WithUpkeepOnly(),
 			),
@@ -454,7 +453,7 @@ func registerCreatures() {
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(And(IsLand, HasSubType("Island")))),
 			// {U}: This creature gains flying until end of turn.
 			WithActivatedAbility(
-				GrantKeyword(Flying).Targeting(ToSource()),
+				mage.GrantKeyword(Flying).Targeting(ToSource()),
 				ManaCostOf("{U}"),
 			),
 		)
@@ -470,7 +469,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				CounterUnlessPay("{1}"),
 				ManaCostOf("{U}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetSpellOnStack()),
 			),
 		)
@@ -509,8 +508,8 @@ func registerCreatures() {
 		return NewCreature("Armor Thrull", "{2}{B}", 1, 3,
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
-				AddCounters(P1P2, Fixed(1)),
-				Tap(),
+				mage.AddCounters(P1P2, Fixed(1)),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature()),
 			),
@@ -526,7 +525,7 @@ func registerCreatures() {
 			WithSubTypes("Thrull"),
 			WithActivatedAbility(
 				AddMana(Black, 2),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 			),
 		)
@@ -640,7 +639,7 @@ func registerCreatures() {
 			WithSubTypes("Cleric", "Knight"),
 			WithAbility(ProtectionFromColor(White)),
 			WithActivatedAbility(
-				GrantKeyword(FirstStrike).Targeting(ToSource()),
+				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
 				ManaCostOf("{B}"),
 			),
 			WithActivatedAbility(
@@ -765,17 +764,16 @@ func registerCreatures() {
 	// 1/1
 	// {1}: Flip a coin. If you win the flip, target Orc creature gets +2/+0 until end of turn. If you lose the flip, it gets -0/-2 until end of turn.
 	Register("Orcish Captain", withExpansion(func() Card {
+		orc := TargetPermanent("Orc", And(IsCreature, HasSubType("Orc")))
 		return NewCreature("Orcish Captain", "{R}", 1, 1,
 			WithSubTypes("Orc", "Warrior"),
-			WithActivatedAbility(
-				IfElse("flip a coin",
-					FlipCoinCond{},
-					Boost(Fixed(2), Fixed(0)),
-					Boost(Fixed(0), Fixed(-2)),
+			WithAbility(Activate(Costs(Mana("{1}")),
+				FlipCoin(You,
+					OnWin(Until(EndOfTurn, ModifyPT(orc, Fixed(2), Fixed(0)))),
+					OnLoss(Until(EndOfTurn, ModifyPT(orc, Fixed(0), Fixed(-2)))),
 				),
-				GenericCost(1),
-				WithTarget(TargetCreature(HasSubType("Orc"))),
-			),
+				WithTargets(orc),
+			)),
 		)
 	}))
 
@@ -801,7 +799,7 @@ func registerCreatures() {
 			// Can't block white creatures with power 2 or greater
 			WithStaticAbility(SourceCanBlockOnly(Or(Not(HasColorFilter(White)), HasPowerLTE(1)))),
 			WithActivatedAbility(
-				GrantKeyword(FirstStrike).Targeting(ToSource()),
+				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
 				ManaCostOf("{R}"),
 			),
 		)
@@ -844,7 +842,7 @@ func registerCreatures() {
 		return NewCreature("Elvish Farmer", "{1}{G}", 0, 2,
 			WithSubTypes("Elf"),
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithActivatedAbility(
 				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
@@ -885,7 +883,7 @@ func registerCreatures() {
 						return nil
 					}),
 				ManaCostOf("{1}{G}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -911,7 +909,7 @@ func registerCreatures() {
 		return NewCreature("Feral Thallid", "{3}{G}{G}{G}", 6, 3,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithActivatedAbility(
 				RegenerateSource(),
@@ -929,7 +927,7 @@ func registerCreatures() {
 		return NewCreature("Spore Flower", "{G}{G}", 0, 1,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithActivatedAbility(
 				PreventAllCombatDamage(),
@@ -947,7 +945,7 @@ func registerCreatures() {
 		return NewCreature("Thallid", "{G}", 1, 1,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithActivatedAbility(
 				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
@@ -967,7 +965,7 @@ func registerCreatures() {
 		return NewCreature("Thallid Devourer", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithActivatedAbility(
 				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
@@ -1008,7 +1006,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeMatchingIncludingSourceCost(And(IsCreature, HasColorFilter(Green)), "Sacrifice a green creature")),
 				WithTarget(TargetLand()),
 			),
@@ -1024,7 +1022,7 @@ func registerCreatures() {
 		return NewCreature("Thorn Thallid", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),

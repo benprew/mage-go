@@ -3,6 +3,8 @@ package fourthedition
 import (
 	"math/rand"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -110,7 +112,7 @@ func registerCreatures() {
 			WithActivatedAbility(
 				AddMana(Colorless, 3),
 				ManaCostOf("{U}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -151,9 +153,9 @@ func registerCreatures() {
 					IfElse(
 						"Only if tapped",
 						SourceIsTapped{},
-						EffectIfPaid(
-							SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands"),
-							UntapSource()),
+						IfPaid(You,
+							Costs(SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands")),
+							Untap(This)),
 						nil),
 					false),
 			),
@@ -222,7 +224,7 @@ func registerCreatures() {
 					},
 				),
 				ManaCostOf("{B}{B}{B}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetOpponent()),
 				WithYourTurnOnly(),
 			),
@@ -297,9 +299,9 @@ func registerCreatures() {
 				),
 			),
 			WithActivatedAbility(
-				GrantKeyword(Mountainwalk).Targeting(ToTarget()),
+				mage.GrantKeyword(Mountainwalk).Targeting(ToTarget()),
 				ManaCostOf("{1}{R}{R}"),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -362,7 +364,7 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
+				TapCost(This),
 				WithTarget(&stoneGiantTarget{}),
 			),
 		)
@@ -420,8 +422,8 @@ func registerCreatures() {
 						return nil
 					},
 				),
-				Tap(),
-				WithTarget(TargetPermanent(IsLand)),
+				TapCost(This),
+				WithTarget(mage.TargetPermanent(IsLand)),
 			),
 		)
 	})

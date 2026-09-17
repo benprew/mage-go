@@ -21,7 +21,7 @@ func registerLands() {
 					DrawCards(Fixed(2)),
 					DiscardCards(Fixed(3)).Targeting(SelectController()),
 				),
-				Tap(),
+				TapCost(This),
 			),
 		)
 	})
@@ -47,7 +47,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(IsAttacking)),
 				WithStepOnly(EndCombat),
 			),
@@ -73,7 +73,7 @@ func registerLands() {
 						g.PlayerGainLife(p, sacrificed.Toughness)
 						return nil
 					}),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeCreatureCost()),
 			),
 		)
@@ -85,7 +85,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				RegenerateTarget(),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasSubType("Elephant"))),
 			),
 		)
@@ -96,7 +96,7 @@ func registerLands() {
 		return NewLand("Island of Wak-Wak",
 			WithActivatedAbility(
 				SetPowerUntilEndOfTurn(0, SelectTarget),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
 			),
 		)
@@ -109,7 +109,7 @@ func registerLands() {
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				mage.WithActivationCondition(func(g *Game, _ *Permanent, controller uuid.UUID) bool {
 					p := g.GetPlayer(controller)
 					return p != nil && len(p.Hand()) == 7
@@ -124,7 +124,7 @@ func registerLands() {
 		return NewLand("Oasis",
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
-				Tap(),
+				TapCost(This),
 				WithTarget(TargetCreature()),
 			),
 		)

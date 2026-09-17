@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"slices"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -127,25 +129,13 @@ func registerEnchantments() {
 	// Enchanted creature doesn't untap during your untap step if this Aura has a pupa counter on it.
 	// At the beginning of your upkeep, remove a pupa counter from this Aura. If you can't, sacrifice it, put a +1/+1 counter on enchanted creature, and that creature gains flying.
 	Register("Cocoon", func() Card {
+		host := BindPermanent("host")
 		return NewAura("Cocoon", "{G}",
 			WithCastTarget(TargetControlledCreature()),
-			// TODO: convert to pipeline — needs TapAttached + AddCountersToSource primitives
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("tap enchanted creature and add pupa counters",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.MutablePermanent(sourceID)
-						if src == nil || src.AttachedTo == uuid.Nil {
-							return nil
-						}
-						target := g.FindPermanent(src.AttachedTo)
-						if target != nil {
-							g.TapPermanent(target)
-						}
-						src.AddCounter(Pupa, 3)
-						return nil
-					}), false,
-			)),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				Tap(AttachedPermanent),
+				AddCounters(This, Pupa, Fixed(3)),
+			))),
 			WithStaticAbility(
 				AttachedEffect(LayerAbility, func(g *Game, source, target *Permanent) error {
 					// Only prevent untap while this Aura has pupa counters
@@ -159,15 +149,12 @@ func registerEnchantments() {
 				IfElse("remove pupa counter or sacrifice and boost",
 					SourceHasCounterCond{CounterType: Pupa, MinCount: 1},
 					RemoveCounters(Pupa, 1),
-					&PipelineData{
-						Steps: []Effect{
-							SnapshotAttached("host"),
-							Sacrifice(This),
-							AddCounters(P1P1, Fixed(1)).Targeting(ToGathered("host")),
-							GrantAttrToGathered("host", Flying),
-						},
-						Txt: "sacrifice Cocoon, boost creature",
-					},
+					Sequence(
+						Snapshot(AttachedPermanent, host),
+						Sacrifice(This),
+						AddCounters(From(host), P1P1, Fixed(1)),
+						Until(Indefinite, GrantKeyword(From(host), Flying)),
+					),
 				), false,
 			)),
 		)
@@ -235,7 +222,7 @@ func registerEnchantments() {
 	Register("Divine Intervention", func() Card {
 		return NewEnchantment("Divine Intervention", "{6}{W}{W}",
 			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(Intervention, Fixed(2)).Targeting(ToSource()), false,
+				mage.AddCounters(Intervention, Fixed(2)).Targeting(ToSource()), false,
 			)),
 			WithAbility(BeginningOfUpkeepTrigger(
 				RemoveCounters(Intervention, 1), false,
@@ -776,7 +763,7 @@ func registerEnchantments() {
 						return nil
 					}),
 				DiscardCost(1),
-				WithTarget(TargetPlayer()),
+				WithTarget(mage.TargetPlayer()),
 				WithAnyPlayerMay(),
 			),
 		)
@@ -789,7 +776,7 @@ func registerEnchantments() {
 		return NewEnchantment("Lifeblood", "{2}{W}{W}",
 			WithAbility(
 				WhenOpponentPermanentBecomesTappedTrigger(
-					GainLife(1), false,
+					mage.GainLife(1), false,
 					And(IsLand, HasSubType("Mountain")),
 				),
 			),
@@ -1010,7 +997,7 @@ func registerEnchantments() {
 		return NewAura("Spirit Shackle", "{B}{B}",
 			WithAbility(
 				NewTriggered(EvtTapped, false,
-					AddCounters(M0M2, Fixed(1)).Targeting(ToAttached()),
+					mage.AddCounters(M0M2, Fixed(1)).Targeting(ToAttached()),
 				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
@@ -1071,7 +1058,7 @@ func registerEnchantments() {
 	Register("Takklemaggot", func() Card {
 		return NewAura("Takklemaggot", "{2}{B}{B}",
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				AddCounters(M0M1, Fixed(1)).Targeting(ToAttached()), false,
+				mage.AddCounters(M0M1, Fixed(1)).Targeting(ToAttached()), false,
 			)),
 		)
 	})

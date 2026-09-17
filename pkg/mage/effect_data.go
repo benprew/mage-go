@@ -11,6 +11,7 @@ import (
 // dispatch so intermediate values (snapshotted permanent properties, chosen
 // IDs, etc.) can flow between steps without closures.
 type EffectContext struct {
+	targetBindings    map[*targetDeclaration][]capturedPermanent
 	sourceIncarnation uuid.UUID
 	sourceCaptured    bool
 	Game              *Game

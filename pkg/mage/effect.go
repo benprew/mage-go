@@ -9,11 +9,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// EffectMetadata supplies diagnostics without an execution method.
+type EffectMetadata interface {
+	Text() string
+	Properties() EffectProperties
+}
+
 // ResolvingEffect executes one resolving instruction. Use ApplyEffect to
 // supply its game and source context.
 type ResolvingEffect interface {
-	Text() string
-	Properties() EffectProperties
+	EffectMetadata
 	Apply(*EffectContext) error
 }
 
@@ -110,6 +115,8 @@ func mergeEffectProperties(dst *EffectProperties, src EffectProperties) {
 	dst.ToughnessBoost += src.ToughnessBoost
 	dst.IsBounce = dst.IsBounce || src.IsBounce
 	dst.Taps = dst.Taps || src.Taps
+	dst.Destroys = dst.Destroys || src.Destroys
+	dst.Regenerates = dst.Regenerates || src.Regenerates
 	dst.TokenPower += src.TokenPower
 	dst.TokenToughness += src.TokenToughness
 	if dst.GrantedKeyword == 0 {
@@ -146,6 +153,21 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 		Vars:                make(map[string]any),
 		DamageDistribution:  g.resolution.DamageDistribution(),
 		CounterDistribution: g.resolution.CounterDistribution(),
+	}
+	for i, spec := range g.resolution.targetSpecs {
+		if i >= len(targets) {
+			break
+		}
+		if b, ok := spec.(*targetDeclaration); ok && targets[i] != uuid.Nil {
+			if ctx.targetBindings == nil {
+				ctx.targetBindings = make(map[*targetDeclaration][]capturedPermanent)
+			}
+			value := capturedPermanent{id: targets[i]}
+			if p := g.FindPermanent(targets[i]); p != nil {
+				value.incarnation = p.incarnationID
+			}
+			ctx.targetBindings[b] = append(ctx.targetBindings[b], value)
+		}
 	}
 	ctx.sourceCaptured = true
 	ctx.sourceIncarnation = g.resolution.sourceIncarnation

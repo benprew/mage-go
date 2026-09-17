@@ -3,6 +3,8 @@ package antiquities
 import (
 	"github.com/google/uuid"
 
+	mage "github.com/benprew/mage-go/pkg/mage"
+
 	"github.com/benprew/mage-go/pkg/catalog"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -20,7 +22,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				PreventDamageToTarget(Fixed(1)),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetDamageAnyTarget()),
 			),
 		)
@@ -36,7 +38,7 @@ func registerArtifacts() {
 	Register("Armageddon Clock", func() Card {
 		return NewArtifact("Armageddon Clock", "{6}",
 			WithAbility(BeginningOfUpkeepTrigger(
-				AddCounters(Doom, Fixed(1)).Targeting(ToSource()), false,
+				mage.AddCounters(Doom, Fixed(1)).Targeting(ToSource()), false,
 			)),
 			WithAbility(
 				NewTriggered(EvtDrawStep, false,
@@ -83,7 +85,7 @@ func registerArtifacts() {
 					Until(WhileOnBattlefield).
 					WhileSourceTapped(),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetControlledCreature()),
 			),
 		)
@@ -98,10 +100,10 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				Pipeline("put +1/+1 counter and make artifact",
 					EffectProperties{Outcome: OutcomeBenefit},
-					AddCounters(P1P1, Fixed(1)),
+					mage.AddCounters(P1P1, Fixed(1)),
 					GrantType(TypeArtifact),
 				),
-				Tap(),
+				TapCost(This),
 				WithCost(SacrificeSourceCost()),
 				WithTarget(TargetCreature(Not(IsArtifact))),
 			),
@@ -146,7 +148,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				XManaCost(),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -196,7 +198,7 @@ func registerArtifacts() {
 		return NewArtifact("Feldon's Cane", "{1}",
 			WithActivatedAbility(
 				ShuffleGraveyardIntoLibrary(),
-				Tap(),
+				TapCost(This),
 				WithCost(ExileSourceCost()),
 			),
 		)
@@ -225,7 +227,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(1),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -270,7 +272,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 			),
 		)
 	})
@@ -294,8 +296,8 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				MillstoneEffect(),
 				GenericCost(2),
-				WithCost(Tap()),
-				WithTarget(TargetPlayer()),
+				WithCost(TapCost(This)),
+				WithTarget(mage.TargetPlayer()),
 			),
 		)
 	})
@@ -309,7 +311,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				ReturnToHandTarget(),
 				GenericCost(6),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetControlledPermanent()),
 			),
 		)
@@ -361,7 +363,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				StaffOfZegonEffect(),
 				GenericCost(3),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -375,7 +377,7 @@ func registerArtifacts() {
 		return NewArtifact("Tablet of Epityr", "{1}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, true,
-					EffectIfPaid(ManaCostOf("{1}"), GainLife(1)),
+					IfPaid(You, Costs(Mana("{1}")), GainLife(You, Fixed(1))),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
@@ -488,7 +490,7 @@ func registerArtifacts() {
 						return nil
 					}),
 				GenericCost(3),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 			// When Tawnos's Coffin leaves the battlefield, return exiled creature
@@ -527,7 +529,7 @@ func registerArtifacts() {
 			WithActivatedAbility(
 				TawnosWandEffect(),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature(HasPowerLTE(2))),
 			),
 		)
@@ -546,7 +548,7 @@ func registerArtifacts() {
 					Until(WhileOnBattlefield).
 					WhileSourceTapped(),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetCreature()),
 			),
 		)
@@ -571,7 +573,7 @@ func registerArtifacts() {
 		return NewArtifact("Urza's Chalice", "{1}",
 			WithAbility(
 				NewTriggered(EvtSpellCast, true,
-					EffectIfPaid(ManaCostOf("{1}"), GainLife(1)),
+					IfPaid(You, Costs(Mana("{1}")), GainLife(You, Fixed(1))),
 				).
 					SetConditionData(SpellCastIsType{Type: TypeArtifact}),
 			),
@@ -586,7 +588,7 @@ func registerArtifacts() {
 		return NewArtifact("Urza's Miter", "{3}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, true,
-					EffectIfPaid(ManaCostOf("{3}"), DrawCards(Fixed(1))),
+					IfPaid(You, Costs(Mana("{3}")), Draw(You, Fixed(1))),
 				).
 					SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 						EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
@@ -628,7 +630,7 @@ func registerArtifacts() {
 					),
 				),
 				GenericCost(4),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithTarget(TargetPermanentOpponentOwns(Not(IsToken))),
 			),
 		)

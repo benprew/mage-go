@@ -1,6 +1,7 @@
 # Regular, Composable Card DSL
 
-Status: Proposed
+Status: In progress. See the [implementation inventory](composable-dsl-implementation.md)
+for supported adapters, verification, and remaining acceptance work.
 
 ## Summary
 

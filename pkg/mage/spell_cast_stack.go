@@ -52,6 +52,9 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		CastZone:          opts.CastZone,
 		ExileOnLeaveStack: opts.ExileOnLeaveStack,
 	}
+	if modal, ok := getModalSpellAbility(card); ok {
+		obj.TargetSpecs = expandTargetSpecs(modal.Modes()[modeChoice].Targets, targets, opts.XValue)
+	}
 	if opts.SnapshotCast {
 		obj.CastContext = g.snapshotCastContext(opts.Controller)
 	}

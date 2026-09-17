@@ -107,8 +107,9 @@ func registerSpells() {
 
 	// Oracle: "Destroy target permanent."
 	Register("Desert Twister", func() Card {
+		target := TargetPermanent("permanent", AnyPermanent)
 		return NewSorcery("Desert Twister", "{4}{G}{G}",
-			NewTargetedSpell(TargetPermanent(), DestroyTargetPermanent()),
+			Spell(Destroy(target), WithTargets(target)),
 		)
 	})
 

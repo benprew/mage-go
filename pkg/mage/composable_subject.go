@@ -2,6 +2,7 @@ package mage
 
 // PermanentRef identifies one battlefield incarnation.
 type PermanentRef interface {
+	DamageRecipientRef
 	permanentRef()
 	resolvePermanent(*EffectContext) (*Permanent, bool)
 }

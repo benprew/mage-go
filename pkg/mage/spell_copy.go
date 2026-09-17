@@ -2,6 +2,7 @@ package mage
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -52,17 +53,23 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	}
 
 	cp := &StackObject{
-		ID:           uuid.New(),
-		Card:         copiedCard,
-		Controller:   controller,
-		IsAbility:    original.IsAbility,
-		XValue:       original.XValue,
-		ModeChoice:   original.ModeChoice,
-		EventAmount:  original.EventAmount,
-		IsCopy:       true,
-		CastZone:     original.CastZone,
-		CastContext:  original.CastContext,
-		TargetSource: copiedCard,
+		ID:                 uuid.New(),
+		Card:               copiedCard,
+		Controller:         controller,
+		IsAbility:          original.IsAbility,
+		XValue:             original.XValue,
+		ModeChoice:         original.ModeChoice,
+		EventAmount:        original.EventAmount,
+		IsCopy:             true,
+		CastZone:           original.CastZone,
+		CastContext:        original.CastContext,
+		TargetSource:       copiedCard,
+		sourceIncarnation:  original.sourceIncarnation,
+		EventSourceID:      original.EventSourceID,
+		targetIncarnations: maps.Clone(original.targetIncarnations),
+	}
+	if copiedCard == nil {
+		cp.TargetSource = original.TargetSource
 	}
 	if copiedCard != nil {
 		cp.SourceID = copiedCard.ID()
@@ -96,6 +103,34 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 
 	if mayChooseNewTargets && copiedCard != nil {
 		g.repromptTargetsForCopy(cp, copiedCard)
+		if cp.targetIncarnations == nil {
+			cp.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
+		}
+		for i, id := range cp.Targets {
+			if i >= len(original.Targets) || original.Targets[i] != id {
+				delete(cp.targetIncarnations, id)
+				if p := g.FindPermanent(id); p != nil {
+					cp.targetIncarnations[id] = p.incarnationID
+				}
+			}
+		}
+	}
+
+	if mayChooseNewTargets {
+		remap := func(values map[uuid.UUID]int) map[uuid.UUID]int {
+			if len(values) == 0 {
+				return nil
+			}
+			result := make(map[uuid.UUID]int, len(values))
+			for i, old := range original.Targets {
+				if i < len(cp.Targets) {
+					result[cp.Targets[i]] += values[old]
+				}
+			}
+			return result
+		}
+		cp.DamageDistribution = remap(original.DamageDistribution)
+		cp.CounterDistribution = remap(original.CounterDistribution)
 	}
 
 	g.pushStack(cp)
@@ -118,7 +153,7 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 			return
 		}
 		mode := ms.Modes()[modeIdx]
-		newTargets := g.promptTargetsForList(controller.PlayerID(), card, mode.Targets)
+		newTargets := g.retargetCopyGroups(copyObj, card, mode.Targets)
 		if copyObj.ModalTargets == nil {
 			copyObj.ModalTargets = make([][]uuid.UUID, len(ms.Modes()))
 		}
@@ -135,10 +170,44 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 		if len(sa.Targets()) == 0 {
 			continue
 		}
-		newTargets := g.promptTargetsForList(controller.PlayerID(), card, sa.Targets())
+		newTargets := g.retargetCopyGroups(copyObj, card, sa.Targets())
 		copyObj.Targets = newTargets
 		return
 	}
+}
+
+// retargetCopyGroups preserves each copied group's count and original choices on cancellation.
+func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Target) []uuid.UUID {
+	specs := expandTargetSpecs(declarations, obj.Targets, obj.XValue)
+	out := slices.Clone(obj.Targets)
+	offset := 0
+	for _, spec := range declarations {
+		count := 0
+		for offset+count < len(specs) && specs[offset+count] == spec {
+			count++
+		}
+		if count == 0 {
+			continue
+		}
+		old := obj.Targets[offset : offset+count]
+		possible := spec.Possible(obj.Controller, card, g)
+		chosen := g.GetPlayer(obj.Controller).ChooseTargets(possible, count, count, g)
+		valid := len(chosen) == count
+		seen := make(map[uuid.UUID]bool, count)
+		for i, id := range chosen {
+			if i >= count || seen[id] || (id != old[i] && !slices.Contains(possible, id)) {
+				valid = false
+				break
+			}
+			seen[id] = true
+		}
+		if valid {
+			copy(out[offset:offset+count], chosen)
+		}
+		offset += count
+	}
+	obj.TargetSpecs = specs
+	return out
 }
 
 // promptTargetsForList walks a flat list of Targets and prompts the

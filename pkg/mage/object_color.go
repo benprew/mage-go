@@ -77,7 +77,7 @@ func (e *objectColorEffect) IsActive(g *Game) bool {
 	target := g.FindPermanentIncludingPhased(e.targetID)
 	return target != nil && target.incarnationID == e.incarnationID
 }
-func (e *objectColorEffect) Apply(ctx *EffectContext) error {
+func (e *objectColorEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	target := g.MutablePermanentIncludingPhased(e.targetID)
 	if target == nil || target.incarnationID != e.incarnationID {

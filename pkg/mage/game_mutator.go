@@ -94,11 +94,6 @@ type GameReader interface {
 	FindCardAnywhere(uuid.UUID) Card
 	GetArtifactUntapMax() int
 	HypotheticalMana(uuid.UUID) int
-	// FlipCoin is NOT a pure query: each call is a fresh flip (and consumes
-	// scripted test results). It exists here so FlipCoinCond can run at effect
-	// resolution; never call it from trigger or state-trigger conditions,
-	// which may be evaluated repeatedly.
-	FlipCoin(uuid.UUID) bool
 }
 
 // Compile-time check that *Game satisfies GameReader and all sub-interfaces.
@@ -373,14 +368,21 @@ func (g *Game) HasRegenerationShield(id uuid.UUID) bool {
 
 // AddPreventionShield adds a damage prevention shield to the specified permanent or player.
 func (g *Game) AddPreventionShield(id uuid.UUID, amount int) {
+	if amount <= 0 {
+		return
+	}
+	var incarnation uuid.UUID
+	if p := g.FindPermanent(id); p != nil {
+		incarnation = p.incarnationID
+	}
 	// Find existing prevention shield for this target and add to it
 	for _, r := range g.effects.replacements {
-		if ps, ok := r.(*preventionShieldReplacement); ok && ps.targetID == id {
+		if ps, ok := r.(*preventionShieldReplacement); ok && ps.targetID == id && ps.targetIncarnation == incarnation {
 			ps.remaining += amount
 			return
 		}
 	}
-	g.effects.AddReplacement(&preventionShieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, targetID: id, remaining: amount})
+	g.effects.AddReplacement(&preventionShieldReplacement{replacementBase: replacementBase{duration: EndOfTurn}, targetID: id, targetIncarnation: incarnation, remaining: amount})
 }
 
 // AddForcefieldShield adds a Forcefield shield for the specified player against

@@ -1,6 +1,7 @@
 package custom
 
 import (
+	mage "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -17,8 +18,8 @@ func registerWraithbloom() {
 			// put a +1/+1 counter on Wraithbloom Cultivator.
 			WithAbility(DiesCreatureTrigger(
 				CompositeEffects("gain 1 life and put a +1/+1 counter on this",
-					GainLife(1),
-					AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+					mage.GainLife(1),
+					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
 				),
 				false, PermanentFilter{},
 			)),
@@ -28,7 +29,7 @@ func registerWraithbloom() {
 			WithActivatedAbility(
 				ReturnFromGraveyardToBattlefield(),
 				GenericCost(2),
-				WithCost(Tap()),
+				WithCost(TapCost(This)),
 				WithCost(RemoveCountersCost(P1P1, 3)),
 				WithTarget(TargetCreatureInYourGraveyard()),
 			),

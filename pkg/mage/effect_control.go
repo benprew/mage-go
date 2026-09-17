@@ -116,7 +116,7 @@ func (e *attachedControlEffect) IsActive(g *Game) bool {
 	source := g.FindPermanent(e.SourceID())
 	return source != nil && source.IsAttached() && g.FindPermanent(source.AttachedTo) != nil
 }
-func (e *attachedControlEffect) Apply(ctx *EffectContext) error {
+func (e *attachedControlEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	source := g.FindPermanent(e.SourceID())
 	if source == nil {
@@ -134,7 +134,7 @@ func (e *attachedControlEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (e *controlContinuousEffect) Apply(ctx *EffectContext) error {
+func (e *controlContinuousEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
 	target := g.MutablePermanent(e.targetID)
 	if target != nil {

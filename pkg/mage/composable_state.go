@@ -152,13 +152,14 @@ func StateConditionFunc(label string, dependencies []StateDependency, fn func(St
 }
 
 // WhenState uses the existing pending-trigger and stack lifecycle.
-func WhenState(condition StateCondition, effect ResolvingEffect) TriggeredAbility {
+func WhenState(condition StateCondition, effect ResolvingEffect, options ...TriggerOption) TriggeredAbility {
 	t := NewStateTriggered(false, effect)
 	t.stateDefinition = condition
 	t.dslState = true
 	t.Condition = func(_ *GameEvent, g GameReader, source, controller uuid.UUID) bool {
 		return condition.checkState(g, StateContext{SourceID: source, ControllerID: controller})
 	}
+	applyTriggerOptions(t, options)
 	return t
 }
 
