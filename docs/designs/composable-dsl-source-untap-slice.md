@@ -55,8 +55,8 @@ canonical expression.
 
 ## Remaining families
 
-`UntapTarget` and `UntapTargetStep` retain positional-target callers and are not
-removed. `TapAttachedCreature` remains: migration needs a separate audit of
+`UntapTarget` and `UntapTargetStep` remained after this slice. The later
+[target-untap slice](composable-dsl-target-untap-slice.md) removes them. `TapAttachedCreature` remains: migration needs a separate audit of
 last-known attachment information when the Aura leaves before its trigger
 resolves (CR 608.2h). The current `AttachedPermanent` adapter reads a live source;
 this slice does not certify that behavior for departed Auras. No damage, target,

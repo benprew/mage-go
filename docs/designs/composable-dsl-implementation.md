@@ -323,7 +323,8 @@ the captured incarnation through control changes and phasing, and rejects a
 returned or absent source. Stun counters, untap events, cloned games, metadata,
 validation, and public composition have focused coverage.
 
-Positional-target untap helpers remain. Aura tap migration also remains open:
+Positional-target untap helpers were later removed by the target-untap slice
+below. Aura tap migration remains open:
 `AttachedPermanent` currently reads a live source and needs a separate audit of
 last-known attachment information for departed Auras under CR 608.2h.
 
@@ -337,3 +338,33 @@ last-known attachment information for departed Auras under CR 608.2h.
 - `make lint` passed with zero issues; optional cache writes were blocked by
   the sandbox. Its unrelated Secrets of Strixhaven import change was reverted.
 - `git diff --check` passed.
+
+## Target-untap action family
+
+Completed the [target-untap slice](composable-dsl-target-untap-slice.md) within
+later action slice 2. All seven production callers and the ward test fixture
+now use typed target or saved-member references. `UntapTarget`,
+`UntapTargetStep`, their DSL exports, and the private positional executor are
+removed. Untap resolves a typed reference directly through `Game.UntapPermanent`.
+
+Whimsy uses the bounded `ChooseRandomPermanent` saved-binding adapter from
+choice slice 3. Legacy event triggers can add typed declarations with
+`GenericTriggered.WithTargets`. A failing regression exposed a missing target
+incarnation map in stack clones; the clone now retains that immutable map.
+The parity document records every caller, metadata changes, and remaining gaps.
+Disharmony and Reset's documented timing restrictions remain outside this slice.
+Tap-or-untap, attachment, gathered-string, and untap-skipping families remain open.
+
+## Verification for the target-untap slice
+
+- Focused untap, random binding, copy, trigger, ward, public composition, and
+  compile-fail tests passed.
+- All five affected card-package suites passed.
+- `go test ./pkg/mage/... -short -count=1` passed.
+- `go test ./... -count=1` passed, including registered-definition validation,
+  all card packages, and long AI simulations.
+- `go build ./...` and `go vet ./...` passed.
+- `make lint` passed with zero issues. Optional cache writes were blocked by
+  the sandbox. Its unrelated Secrets of Strixhaven import change was reverted.
+- `git diff --check` passed. No calls or definitions of either removed untap
+  helper remain; the forge command's unrelated `UntapTarget` enum remains.

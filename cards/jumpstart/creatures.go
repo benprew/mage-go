@@ -5478,13 +5478,14 @@ func registerCreatures() {
 	// 3/1
 	// Whenever this creature deals combat damage to a player, untap target creature or land.
 	Register("Initiate's Companion", func() Card {
+		permanent := TargetPermanent("creature or land", Or(IsCreature, IsLand))
 		return NewCreature("Initiate's Companion", "{1}{G}", 3, 1,
 			WithSubTypes("Cat"),
-			WithAbility(NewTriggered(EvtDamageDealt, false, UntapTarget()).
+			WithAbility(NewTriggered(EvtDamageDealt, false, Untap(permanent)).
 				SetCondition(func(evt *GameEvent, g GameReader, sourceID, _ uuid.UUID) bool {
 					return evt.SourceID == sourceID && evt.Flag && g.GetPlayer(evt.TargetID) != nil
 				}).
-				AddTarget(mage.TargetPermanent(Or(IsCreature, IsLand)))),
+				WithTargets(permanent)),
 		)
 	})
 

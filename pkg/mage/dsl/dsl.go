@@ -426,8 +426,6 @@ var (
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	TapGathered                               = mage.TapGathered
 	FightGathered                             = mage.FightGathered
-	UntapTarget                               = mage.UntapTarget
-	UntapTargetStep                           = mage.UntapTargetStep
 	UntapGathered                             = mage.UntapGathered
 	MakeUnblockableUntilEndOfTurn             = mage.MakeUnblockableUntilEndOfTurn
 	TapAttachedCreature                       = mage.TapAttachedCreature

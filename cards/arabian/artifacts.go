@@ -250,13 +250,9 @@ func registerArtifacts() {
 
 	// Oracle: "{3}, {T}: Untap target creature."
 	Register("Jandor's Saddlebags", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Jandor's Saddlebags", "{2}",
-			WithActivatedAbility(
-				UntapTarget(),
-				TapCost(This),
-				WithCost(ManaCostOf("{3}")),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This), ManaCostOf("{3}")), Untap(creature), WithTargets(creature))),
 		)
 	})
 

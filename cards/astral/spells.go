@@ -5,6 +5,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 const whimsyActionCount = 18
@@ -14,7 +15,11 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 	case 0: // Boomerang
 		return ApplyEffect(g, ApplyToRandomPermanent(BoomerangEffect(), Not(IsEnchanted)), sourceID, controllerID, nil)
 	case 1: // Twiddle — untap
-		return ApplyEffect(g, ApplyToRandomPermanent(UntapTarget(), And(IsTapped, Or(IsArtifact, IsCreature, IsLand))), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("random permanent")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.And(dsl.IsTapped, dsl.Or(dsl.IsArtifact, dsl.IsCreature, dsl.IsLand))), chosen),
+			dsl.Untap(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 2: // Twiddle — tap
 		return ApplyEffect(g, ApplyToRandomPermanent(Tap(), And(IsUntapped, Or(IsArtifact, IsCreature, IsLand))), sourceID, controllerID, nil)
 	case 3: // Aladdin's Ring

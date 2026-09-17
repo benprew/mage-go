@@ -6,22 +6,6 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// untapTargetEffect untaps a target permanent.
-type untapTargetEffect struct{}
-
-// UntapTarget creates an effect that untaps a target permanent.
-func UntapTarget() Effect {
-	return &untapTargetEffect{}
-}
-
-// UntapTargetStep returns the Effect for use as a pipeline/ForEach inner step.
-func UntapTargetStep() Effect { return &untapTargetEffect{} }
-
-func (e *untapTargetEffect) Text() string { return "untap target permanent" }
-func (e *untapTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
 // tapAttachedCreatureEffect taps the creature attached to the source aura.
 type tapAttachedCreatureEffect struct{}
 
@@ -289,18 +273,6 @@ func (*tap) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	ctx.Game.TapPermanent(perm)
-	return nil
-}
-
-func (*untapTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for untap")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.UntapPermanent(perm)
 	return nil
 }
 

@@ -217,9 +217,11 @@ func TestActOfTreason(t *testing.T) {
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain", 3)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Act of Treason")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Act of Treason", "Grizzly Bears")
-	g.StopAt(1, core.BeginCombat)
+	g.Attack(2, gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(3, core.PrecombatMain, gametest.PlayerA, "Act of Treason", "Grizzly Bears")
+	g.StopAt(3, core.BeginCombat)
 	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
 	g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Haste, true)
 }
 

@@ -174,13 +174,14 @@ func registerSpells() {
 	// Untap target attacking creature and remove it from combat. Gain control of that creature until end of turn.
 	// XXX: timing restriction (only before blockers) not enforced
 	Register("Disharmony", func() Card {
+		creature := TargetPermanent("attacking creature", And(IsCreature, IsAttacking))
 		return NewInstant("Disharmony", "{2}{R}",
-			NewTargetedSpell(TargetCreature(IsAttacking), CompositeEffects(
+			Spell(CompositeEffects(
 				"untap target attacking creature, remove from combat, gain control until end of turn",
-				UntapTarget(),
+				Untap(creature),
 				RemoveFromCombat(),
 				GainControl().Until(EndOfTurn),
-			)),
+			), WithTargets(creature)),
 		)
 	})
 
@@ -1002,13 +1003,9 @@ func registerSpells() {
 	// Untap all lands you control.
 	// XXX: timing restriction not enforced
 	Register("Reset", func() Card {
+		land := BindPermanent("land")
 		return NewInstant("Reset", "{U}{U}",
-			NewSpellAbility(ForEachControlledPermanent(
-				SelectController(),
-				IsLand,
-				UntapTargetStep(),
-				"untap all lands you control",
-			)),
+			Spell(ForEach(ControlledPermanents(IsLand), land, Untap(From(land)))),
 		)
 	})
 

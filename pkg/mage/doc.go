@@ -266,8 +266,14 @@
 // Stun counters and untap events use the existing action path. Positional
 // targets do not change the subject. Definitions retain benefit metadata and
 // expose the subject to validation. Spell-only sources are rejected.
-// The old source-only untap constructor is removed. Target and attachment
-// helpers remain for their separate migration families.
+// Use dsl.Untap(target) with dsl.TargetPermanent and dsl.WithTargets for
+// targeted instructions. Target legality is checked before resolution. A copy
+// can select new targets without changing the original bindings. Cloned stack
+// objects retain the target incarnations captured when targets were selected.
+// [GenericTriggered.WithTargets] adds typed declarations to legacy triggers.
+// Use [ForEach] with [ControlledPermanents] and a saved member for land loops.
+// The source-only and positional-target untap constructors are removed.
+// Attachment and tap-or-untap helpers remain for separate migration families.
 //
 // # Typed Life Instructions
 //
@@ -454,6 +460,13 @@
 // remaining values. Random selection functions for graveyards, hands, players,
 // colors, permanents, spells, damage targets, and coin flips use this
 // function.
+//
+// [ChooseRandomPermanent] saves one random member of a [PermanentSet] in a
+// [PermanentBinding]. Use it in [Sequence], then read the result with [From].
+// It selects at resolution through [RandIntn]; it does not declare a target.
+// An empty set clears the binding and does not use a random value. Each choice
+// captures a battlefield incarnation. Definition inspection does not select a
+// member. Saved values and random queues remain separate in cloned games.
 //
 // [RandomPlayer] and [RandomPermanent] return nil if no valid choices exist.
 // [RandomSpellOrPermanent] and [RandomDamageTarget] return [uuid.Nil] if no

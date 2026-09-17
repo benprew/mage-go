@@ -96,13 +96,14 @@ func registerSpells() {
 	// Sorcery
 	// Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.
 	Register("Act of Treason", func() Card {
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
 		return NewSorcery("Act of Treason", "{2}{R}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
+			dsl.Spell(dsl.CompositeEffects(
 				"gain control until end of turn, untap, gains haste",
 				gainControlUntilEOT(),
-				UntapTarget(),
+				dsl.Untap(creature),
 				GrantKeyword(Haste),
-			)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 

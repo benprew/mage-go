@@ -406,6 +406,7 @@ func TestDisharmony(t *testing.T) {
 		g.Execute()
 		// Bears should be under PlayerA's control
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+		g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
 	})
 }
 

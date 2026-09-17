@@ -762,15 +762,13 @@ func registerCreatures() {
 		)
 	})
 
+	// {T}: Untap target land.
 	Register("Ley Druid", func() Card {
+		land := TargetPermanent("land", IsLand)
 		return NewCreature("Ley Druid", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
 			// {T}: Untap target land
-			WithActivatedAbility(
-				UntapTarget(),
-				TapCost(This),
-				WithTarget(TargetLand()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), Untap(land), WithTargets(land))),
 		)
 	})
 

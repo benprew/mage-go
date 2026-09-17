@@ -148,3 +148,24 @@ func TestTypedSourceUntapComposition(t *testing.T) {
 		t.Fatalf("untap metadata = %+v", info)
 	}
 }
+
+func TestTypedTargetUntapComposition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	saved := dsl.BindPermanent("random creature")
+	random := dsl.Sequence(dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), saved), dsl.Untap(dsl.From(saved)))
+	cards := []mage.Card{
+		dsl.NewInstant("Spell", "", dsl.Spell(dsl.Untap(target), dsl.WithTargets(target))),
+		dsl.NewCreature("Activation", "", 1, 1, dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.Untap(target), dsl.WithTargets(target)))),
+		dsl.NewCreature("Trigger", "", 1, 1, dsl.WithAbility(dsl.At(dsl.YourUpkeep, dsl.Untap(target), dsl.WithTargets(target)))),
+		dsl.NewInstant("Mode", "", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Untap", dsl.Untap(target), dsl.WithTargets(target)), dsl.ModeOf("Random", random)))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info := dsl.InspectDefinition(random)
+	if info.Properties.Outcome != mage.OutcomeBenefit || len(info.Children) != 2 || info.Children[0].Role != "random-permanent-choice" {
+		t.Fatalf("metadata = %+v", info)
+	}
+}

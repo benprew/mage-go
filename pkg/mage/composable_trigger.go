@@ -146,3 +146,9 @@ func At(pattern TurnStepPattern, effect ResolvingEffect, options ...TriggerOptio
 	applyTriggerOptions(t, options)
 	return t
 }
+
+// WithTargets adds typed targets to a legacy event trigger.
+func (t *GenericTriggered) WithTargets(bindings ...TargetBinding) *GenericTriggered {
+	WithTargets(bindings...).applyTrigger(t)
+	return t
+}

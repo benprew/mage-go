@@ -70,3 +70,33 @@ func (e *permanentChoice) Apply(ctx *EffectContext) error {
 func (e *permanentChoice) inspectDefinition() definitionNode {
 	return definitionNode{Role: "permanent-choice", bindingWrite: e.binding, children: []definitionEdge{{"player", e.player}, {"subjects", e.subjects}, {"binding", e.binding}}}
 }
+
+// ChooseRandomPermanent saves one random member at resolution.
+// An empty set clears the binding and does not use a random value.
+func ChooseRandomPermanent(subjects PermanentSet, binding *PermanentBinding) ResolvingEffect {
+	return &randomPermanentChoice{subjects, binding}
+}
+
+type randomPermanentChoice struct {
+	subjects PermanentSet
+	binding  *PermanentBinding
+}
+
+func (*randomPermanentChoice) Text() string                 { return "choose a random permanent" }
+func (*randomPermanentChoice) Properties() EffectProperties { return EffectProperties{} }
+func (e *randomPermanentChoice) Apply(ctx *EffectContext) error {
+	if ctx.Game.resolution.permanentBindings == nil {
+		ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)
+	}
+	delete(ctx.Game.resolution.permanentBindings, e.binding)
+	candidates := e.subjects.resolvePermanents(ctx)
+	if len(candidates) == 0 {
+		return nil
+	}
+	selected := candidates[ctx.Game.RandIntn(len(candidates))]
+	ctx.Game.resolution.permanentBindings[e.binding] = capturedPermanent{selected.ID(), selected.incarnationID}
+	return nil
+}
+func (e *randomPermanentChoice) inspectDefinition() definitionNode {
+	return definitionNode{Role: "random-permanent-choice", bindingWrite: e.binding, children: []definitionEdge{{"subjects", e.subjects}, {"binding", e.binding}}}
+}

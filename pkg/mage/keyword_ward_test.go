@@ -93,8 +93,9 @@ func TestWard_DoesNotTriggerOnOwnSpell(t *testing.T) {
 
 	// A casts a friendly (untap) on her own warded creature.
 	g.TapPermanent(wp)
+	target := DeclarePermanentTarget("creature", IsCreature)
 	untap := NewInstant("Self Untap", "{U}",
-		NewTargetedSpell(TargetCreature(), UntapTarget()))
+		Spell(UntapPermanent(target), WithTargets(target)))
 	untap.SetOwner(a.PlayerID())
 	a.AddToHand(untap)
 	a.chooseQueue = [][]uuid.UUID{{wp.ID()}}

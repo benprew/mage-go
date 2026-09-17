@@ -113,8 +113,9 @@ var (
 )
 
 var (
-	ChoosePermanent = mage.ChoosePermanent
-	LowestPower     = mage.LowestPower
+	ChoosePermanent       = mage.ChoosePermanent
+	ChooseRandomPermanent = mage.ChooseRandomPermanent
+	LowestPower           = mage.LowestPower
 )
 
 type (

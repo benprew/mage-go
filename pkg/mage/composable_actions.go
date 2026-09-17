@@ -104,7 +104,7 @@ func Exile(subject PermanentRef) ResolvingEffect {
 
 // UntapPermanent untaps the selected battlefield incarnation.
 func UntapPermanent(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: UntapTarget(), verb: "untap"}
+	return &untapPermanentEffect{subject}
 }
 
 // DrawFor draws individual cards for the selected player. An absent player has no effect.
@@ -310,4 +310,20 @@ func (e *lifeAction) Apply(ctx *EffectContext) error {
 
 func (e *lifeAction) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+}
+
+type untapPermanentEffect struct{ subject PermanentRef }
+
+func (e *untapPermanentEffect) Text() string { return "untap " + InspectDefinition(e.subject).Text }
+func (*untapPermanentEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+func (e *untapPermanentEffect) Apply(ctx *EffectContext) error {
+	if p, ok := e.subject.resolvePermanent(ctx); ok {
+		ctx.Game.UntapPermanent(p)
+	}
+	return nil
+}
+func (e *untapPermanentEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
 }
