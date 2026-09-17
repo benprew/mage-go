@@ -259,7 +259,6 @@ var (
 	IncreaseSpellCostForColor                                           = mage.IncreaseSpellCostForColor
 	ChangeSubTypesForAll                                                = mage.ChangeSubTypesForAll
 	BecomesBasicLandTargetEffect                                        = mage.BecomesBasicLandTargetEffect
-	BecomesBasicLandTargetUntilSourceLeaves                             = mage.BecomesBasicLandTargetUntilSourceLeaves
 	BecomesBasicLandsEffect                                             = mage.BecomesBasicLandsEffect
 	SetSubtypes                                                         = mage.SetSubtypes
 	AddSubtypes                                                         = mage.AddSubtypes

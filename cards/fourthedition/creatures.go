@@ -387,8 +387,9 @@ func registerCreatures() {
 	// Creature — Avatar
 	// */*
 	// As long as Gaea's Liege isn't attacking, its power and toughness are each equal to the number of Forests you control. As long as Gaea's Liege is attacking, its power and toughness are each equal to the number of Forests defending player controls.
-	// {T}: Target land becomes a Forest until Gaea's Liege leaves the battlefield.
+	// {T}: Target land becomes a Forest until this creature leaves the battlefield.
 	Register("Gaea's Liege", func() Card {
+		land := TargetPermanent("land", IsLand)
 		return NewCreature("Gaea's Liege", "{3}{G}{G}{G}", 0, 0,
 			WithSubTypes("Avatar"),
 			WithStaticAbility(
@@ -408,23 +409,10 @@ func registerCreatures() {
 					return nil
 				}),
 			),
-			WithActivatedAbility(
-				FuncEffect(
-					"target land becomes a Forest until this creature leaves the battlefield",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						ce := BecomesBasicLandTargetUntilSourceLeaves(targets[0], "Forest")
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-						return nil
-					},
-				),
-				TapCost(This),
-				WithTarget(mage.TargetPermanent(IsLand)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				UntilSourceLeaves(This, SetSubtypeFamily(land, SubtypeLand, "Forest")),
+				WithTargets(land),
+			)),
 		)
 	})
 

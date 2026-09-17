@@ -3,6 +3,8 @@ package mage
 import (
 	"fmt"
 
+	"github.com/google/uuid"
+
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
@@ -230,11 +232,13 @@ func Static(rules ...StaticRule) *StaticAbilityHolder {
 
 type composedLayerEffect struct {
 	effectSource
-	layer         Layer
-	duration      Duration
-	rule          *continuousRule
-	modifications []*layerModification
-	captured      []capturedModification
+	layer             Layer
+	duration          Duration
+	rule              *continuousRule
+	modifications     []*layerModification
+	captured          []capturedModification
+	sourceBound       bool
+	sourceIncarnation uuid.UUID
 }
 
 func (e *composedLayerEffect) Text() string                 { return "continuous modification" }
@@ -242,6 +246,10 @@ func (e *composedLayerEffect) Properties() EffectProperties { return EffectPrope
 func (e *composedLayerEffect) GetLayer() Layer              { return e.layer }
 func (e *composedLayerEffect) GetDuration() Duration        { return e.duration }
 func (e *composedLayerEffect) IsActive(g *Game) bool {
+	if e.sourceBound {
+		p := g.FindPermanentIncludingPhased(e.sourceID)
+		return p != nil && p.incarnationID == e.sourceIncarnation
+	}
 	if e.rule == nil {
 		return true
 	}
@@ -284,13 +292,26 @@ func (e *composedLayerEffect) inspectDefinition() definitionNode {
 type untilEffect struct {
 	duration      Duration
 	modifications []ContinuousModification
+	sourceBound   bool
 }
 
 // Until captures subjects and values at resolution and installs all layers together.
 func Until(duration Duration, modifications ...ContinuousModification) ResolvingEffect {
-	return &untilEffect{duration, append([]ContinuousModification(nil), modifications...)}
+	return &untilEffect{duration: duration, modifications: append([]ContinuousModification(nil), modifications...)}
 }
-func (e *untilEffect) Text() string { return "apply temporary modifications" }
+
+// UntilSourceLeaves captures modifications until this source leaves the battlefield.
+// Phasing does not end this duration. An absent or returned source has no effect.
+func UntilSourceLeaves(_ sourceRef, modifications ...ContinuousModification) ResolvingEffect {
+	return &untilEffect{duration: Indefinite, modifications: append([]ContinuousModification(nil), modifications...), sourceBound: true}
+}
+
+func (e *untilEffect) Text() string {
+	if e.sourceBound {
+		return "apply modifications until this source leaves the battlefield"
+	}
+	return "apply temporary modifications"
+}
 func (e *untilEffect) Properties() EffectProperties {
 	p := EffectProperties{Outcome: OutcomeBenefit}
 	for _, value := range e.modifications {
@@ -313,6 +334,10 @@ func (e *untilEffect) Properties() EffectProperties {
 }
 func (e *untilEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "until", Text: e.Text()}
+	if e.sourceBound {
+		n.Role = "until-source-leaves"
+		n.children = append(n.children, definitionEdge{"source", This})
+	}
 	if len(e.modifications) == 0 {
 		n.problem = "supply at least one modification"
 	}
@@ -325,9 +350,17 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	return n
 }
 func (e *untilEffect) Apply(ctx *EffectContext) error {
+	var sourceIncarnation uuid.UUID
+	if e.sourceBound {
+		source := ctx.Game.FindPermanentIncludingPhased(ctx.SourceID)
+		if source == nil || (ctx.sourceCaptured && source.incarnationID != ctx.sourceIncarnation) {
+			return nil
+		}
+		sourceIncarnation = source.incarnationID
+	}
 	var effects []*composedLayerEffect
 	for _, layer := range []Layer{LayerType, LayerColor, LayerAbility, LayerPT} {
-		entry := &composedLayerEffect{layer: layer, duration: e.duration}
+		entry := &composedLayerEffect{layer: layer, duration: e.duration, sourceBound: e.sourceBound, sourceIncarnation: sourceIncarnation}
 		entry.SetSourceID(ctx.SourceID)
 		for _, value := range e.modifications {
 			m := value.modification()

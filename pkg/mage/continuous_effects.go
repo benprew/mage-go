@@ -858,13 +858,6 @@ func applyBecomesBasicLand(g *Game, target *Permanent, subtypes []string) {
 	applySetSubtypes(g, target, SubtypeLand, subtypes)
 }
 
-// BecomesBasicLandTargetUntilSourceLeaves applies a basic-land-type change
-// until the effect's source changes zones. It remains active while the source
-// is phased out because phasing is not a zone change.
-func BecomesBasicLandTargetUntilSourceLeaves(targetID uuid.UUID, subtypes ...string) ContinuousEffect {
-	return BecomesBasicLandTargetEffect(targetID, Indefinite, subtypes...)
-}
-
 func isLandSubtype(subtype string) bool {
 	switch subtype {
 	case "Cave", "Desert", "Forest", "Gate", "Island", "Lair", "Locus", "Mine", "Mountain", "Plains", "Planet", "Power-Plant", "Sphere", "Swamp", "Tower", "Town", "Urza's":

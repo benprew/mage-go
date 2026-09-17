@@ -329,11 +329,14 @@ func TestBecomesBasicLandTargetEffectSuppressesAndRestoresPrintedStaticAbilities
 	}
 }
 
-func TestBecomesBasicLandTargetUntilSourceLeavesSurvivesPhasing(t *testing.T) {
-	g, _, source, land, _ := basicLandTypeTestGame(t)
-	effect := BecomesBasicLandTargetUntilSourceLeaves(land.ID(), "Forest")
-	effect.SetSourceID(source.ID())
-	g.AddContinuousEffect(effect)
+func TestComposableSourceDurationLandSourcePhasing(t *testing.T) {
+	g, player, source, land, _ := basicLandTypeTestGame(t)
+	target := DeclarePermanentTarget("land", IsLand)
+	g.resolution.targetSpecs = []Target{target.targetSpec()}
+	effect := UntilSourceLeaves(This, SetSubtypeFamily(target, SubtypeLand, "Forest"))
+	if err := ApplyEffect(g, effect, source.ID(), player.PlayerID(), []uuid.UUID{land.ID()}); err != nil {
+		t.Fatal(err)
+	}
 
 	phased := g.PhaseOut(source.ID())
 	g.ApplyContinuousEffects()
@@ -348,11 +351,14 @@ func TestBecomesBasicLandTargetUntilSourceLeavesSurvivesPhasing(t *testing.T) {
 	}
 }
 
-func TestBecomesBasicLandTargetEffectSurvivesTargetPhasing(t *testing.T) {
-	g, _, source, land, _ := basicLandTypeTestGame(t)
-	effect := BecomesBasicLandTargetUntilSourceLeaves(land.ID(), "Forest")
-	effect.SetSourceID(source.ID())
-	g.AddContinuousEffect(effect)
+func TestComposableSourceDurationLandTargetPhasing(t *testing.T) {
+	g, player, source, land, _ := basicLandTypeTestGame(t)
+	target := DeclarePermanentTarget("land", IsLand)
+	g.resolution.targetSpecs = []Target{target.targetSpec()}
+	effect := UntilSourceLeaves(This, SetSubtypeFamily(target, SubtypeLand, "Forest"))
+	if err := ApplyEffect(g, effect, source.ID(), player.PlayerID(), []uuid.UUID{land.ID()}); err != nil {
+		t.Fatal(err)
+	}
 
 	phased := g.PhaseOut(land.ID())
 	g.ApplyContinuousEffects()

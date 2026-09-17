@@ -172,7 +172,7 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 	ctx.sourceCaptured = true
 	ctx.sourceIncarnation = g.resolution.sourceIncarnation
 	if !g.resolution.sourceCaptured {
-		if p := g.FindPermanent(sourceID); p != nil {
+		if p := g.FindPermanentIncludingPhased(sourceID); p != nil {
 			ctx.sourceIncarnation = p.incarnationID
 		}
 	}

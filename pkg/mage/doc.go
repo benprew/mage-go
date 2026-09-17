@@ -240,6 +240,23 @@
 // While selects members at each modification's layer. Constructor input lists
 // are copied. Captured references survive phasing but not a zone round trip.
 //
+// # Source-Exit Duration
+//
+// Use dsl.UntilSourceLeaves(dsl.This, modifications...) for modifications that
+// last until their source leaves the battlefield. It accepts the same layer
+// modifications as [Until]. Subjects and values are captured once at resolution.
+// The source must be the battlefield incarnation stored by the ability. An
+// absent source or a source that left and returned does not start the effect.
+// Source control changes and phasing do not end this duration. The source can
+// already be phased out when the ability resolves. A captured subject retains
+// its modification through phasing but not through a zone change.
+//
+// The existing effect manager removes all installed layers when the source
+// leaves. Cloned games keep separate effect lists. Registration rejects empty
+// modification lists, invalid bindings, and use by a spell-only source. This
+// duration does not express "for as long as" conditions such as source control
+// or a tapped source; those conditions need their own lifetime adapters.
+//
 // # Typed Life Instructions
 //
 // Card authors use dsl.GainLife(subject, amount) and dsl.LoseLife(subject, amount).
@@ -532,7 +549,7 @@
 // effect ends.
 //
 // For effects that last until the source leaves the battlefield, use
-// [BecomesBasicLandTargetUntilSourceLeaves]. This effect persists if the source
+// [UntilSourceLeaves] with [SetSubtypeFamily]. This effect persists if the source
 // phases out. [BecomesBasicLandAttachedEffect] and
 // [BecomesChosenBasicLandAttachedEffect] apply to land Auras.
 // [BecomesBasicLandsEffect] applies this layer-4 change to all permanents that

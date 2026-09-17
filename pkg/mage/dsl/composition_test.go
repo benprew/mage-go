@@ -48,6 +48,35 @@ func TestTypedLayerComposition(t *testing.T) {
 	}
 }
 
+func TestTypedSourceDurationComposition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	saved := dsl.BindPermanent("saved")
+	effect := dsl.Sequence(dsl.Snapshot(target, saved),
+		dsl.UntilSourceLeaves(dsl.This,
+			dsl.SetColors(dsl.From(saved), core.Blue),
+			dsl.ModifyPT(dsl.From(saved), dsl.Fixed(2), dsl.Fixed(3)),
+			dsl.GrantKeyword(dsl.From(saved), core.Flying),
+		),
+	)
+	cards := []mage.Card{
+		mage.NewCreature("Activation", "", 1, 1, mage.WithAbility(dsl.Activate(dsl.Costs(), effect, dsl.WithTargets(target)))),
+		mage.NewCreature("Trigger", "", 1, 1, mage.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), effect, dsl.WithTargets(target)))),
+		mage.NewCreature("Modes", "", 1, 1, mage.WithAbility(dsl.ActivateModes(dsl.Costs(), dsl.ModeOf("Modify", effect, dsl.WithTargets(target)), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+		mage.NewCreature("Loop", "", 1, 1, mage.WithAbility(dsl.Activate(dsl.Costs(), dsl.ForEach(dsl.ControlledPermanents(dsl.IsCreature), saved,
+			dsl.UntilSourceLeaves(dsl.This, dsl.ModifyPT(dsl.From(saved), dsl.Fixed(1), dsl.Fixed(1))),
+		)))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition("Source duration", card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info := dsl.InspectDefinition(effect).Children[1]
+	if info.Role != "until-source-leaves" || len(info.Children) != 4 || info.Properties.PowerBoost != 2 || info.Properties.ToughnessBoost != 3 || info.Properties.GrantedKeyword != core.Flying {
+		t.Fatalf("duration metadata = %+v", info)
+	}
+}
+
 func TestTypedManaComposition(t *testing.T) {
 	ability := dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)),
 		dsl.Sequence(dsl.AddMana(core.Blue, 1), dsl.Sequence(dsl.AddMana(core.Green, 1))),

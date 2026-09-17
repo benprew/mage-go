@@ -16,7 +16,7 @@ sacrifice and coin-flip actions in CR 701.
 | Typed bindings | Permanent/player/damage target declarations, one variable collection group, saved permanents, modal scope, copy and retarget adapters | Multiple variable groups, card/stack references, other saved-value domains, divided-value declarations, explicit branch results |
 | Actions | Typed sacrifice, destruction, simultaneous destruction, exile, tap, untap, draw, discard, life, counters, and controller lookup | Typed damage sources with LKI, all remaining legacy callers, result amounts, other action families |
 | Choices | Typed permanent choice, lowest-power selection, coin branches, sequential loops, and paid/unpaid branches over total-cost transactions | Card choices, search/reveal/order bindings, visibility contracts, payment/action result bindings |
-| Continuous effects | Typed PT, keyword, color, and subtype-family modifications; captured temporary membership; dynamic static membership | Other modifications and durations, dependency audit, complete compound-effect identity contract |
+| Continuous effects | Typed PT, keyword, color, and subtype-family modifications; captured temporary membership; dynamic static membership; source-exit duration | Other modifications and durations, dependency audit, complete compound-effect identity contract |
 | Triggers | Source enters/dies, upkeep/draw/end-step patterns, typed targets, intervening-if, captured `AtNext` turn-step triggers | Event participant bindings, other event patterns, reflexive/event-based delayed capture, linked state |
 | Spells and activations | Closed spell/activation/target/mode options, explicit costs, timing/limit/state restrictions, sequential mana inspection and immediate activation | Remaining legacy builders and callers, complete mana-ability surface, all casting/copy variants |
 | Replacements | Typed recipient prevention shield over the existing pipeline | General typed replacement/prevention rules and outcomes |
@@ -286,3 +286,29 @@ Targeted, event-player, and string-variable life helpers remain open.
 - `make lint` passed with zero issues. The sandbox prevented some optional
   cache writes; checks still completed successfully.
 - `git diff --check` passed.
+
+## Source-exit duration family
+
+Completed the [source-exit duration slice](composable-dsl-source-duration-slice.md)
+within later continuous-effect slice 4. `UntilSourceLeaves(This, ...)` uses the
+existing layer installation and source-removal paths. It captures source and
+subject incarnations, membership, and amounts, survives phasing, and keeps cloned
+games isolated. Gaea's Liege now uses a typed land binding and this duration.
+All callers of `BecomesBasicLandTargetUntilSourceLeaves` migrated, and its engine
+and DSL exports are removed. Source absence or return before resolution now
+correctly prevents installation; focused failing regressions preceded the fix.
+Other continuous-effect families remain open.
+
+## Verification for the source-exit duration slice
+
+- Focused duration, card, public composition, and compile-fail tests passed.
+- `go test ./cards/fourthedition -count=1` passed.
+- `go test ./pkg/mage/... -short -count=1` passed.
+- `go test ./... -short -count=1` passed, including all card packages and
+  registered-definition validation.
+- `go build ./...` and `go vet ./...` passed.
+- `make lint` passed with zero issues. Its unrelated import formatting change
+  in Secrets of Strixhaven was reverted.
+- `git diff --check` passed.
+
+Long AI simulations were not rerun; this slice changes no AI executor.
