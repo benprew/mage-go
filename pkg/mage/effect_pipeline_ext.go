@@ -72,28 +72,6 @@ func (e *TapGatheredData) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-// UntapGatheredData untaps a var-bound permanent.
-type UntapGatheredData struct{ VarName string }
-
-func UntapGathered(v string) Effect { return &UntapGatheredData{VarName: v} }
-
-func (e *UntapGatheredData) Text() string { return "untap" }
-func (e *UntapGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
-func (e *UntapGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm != nil {
-		ctx.Game.UntapPermanent(perm)
-	}
-	return nil
-}
-
 // DealDamageToGatheredData deals damage to a var-bound permanent.
 type DealDamageToGatheredData struct {
 	VarName string

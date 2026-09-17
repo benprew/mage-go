@@ -199,6 +199,9 @@
 // [WithTargets], and use it as the subject of an effect. [Spell], [Activate],
 // [WhenEvent], and [At] accept these declarations. [ModeOf] keeps targets in
 // their mode. [DeclarePermanentTargets] creates a collection for [DestroyEach].
+// [TargetYouControl] restricts a singular or collection permanent target to
+// the ability controller's permanents. The restriction applies during target
+// selection and resolution; it is not an effect-time subject filter.
 // Partial target illegality preserves the other bindings. Spell copies keep
 // independent choices. Multiple variable target groups still need explicit
 // selection boundaries and are rejected during definition validation.
@@ -272,7 +275,7 @@
 // objects retain the target incarnations captured when targets were selected.
 // [GenericTriggered.WithTargets] adds typed declarations to legacy triggers.
 // Use [ForEach] with [ControlledPermanents] and a saved member for land loops.
-// The source-only and positional-target untap constructors are removed.
+// The source-only, positional-target, and string-bound untap constructors are removed.
 // Attachment and tap-or-untap helpers remain for separate migration families.
 //
 // # Typed Life Instructions
@@ -337,9 +340,13 @@
 // has trample, it assigns remaining damage to the defending player or
 // planeswalker. Damage events record the total damage assigned and dealt,
 // including excess damage above lethal toughness.
-// [PreventCombatDamageToAndBy] installs an end-of-turn replacement effect
-// preventing all combat damage dealt to and dealt by a specified creature;
-// [PreventCombatDamageToAndByTarget] provides the resolving card effect.
+// [PreventCombatDamageToAndBy] accepts a [PermanentRef] and installs prevention
+// through [Game.PreventCombatDamageToAndBy]. It prevents all combat damage to
+// and by that battlefield incarnation until end of turn. It does not remove
+// the subject from combat or prevent noncombat damage. Control changes and
+// phasing cycles keep the shield; a zone change does not. A missing subject
+// does nothing. This instruction works even if an earlier untap was replaced
+// by removing a stun counter. The old positional-target constructor is removed.
 //
 // # Targeting Helpers
 //

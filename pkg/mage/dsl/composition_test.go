@@ -169,3 +169,29 @@ func TestTypedTargetUntapComposition(t *testing.T) {
 		t.Fatalf("metadata = %+v", info)
 	}
 }
+
+func TestTypedCombatPreventionComposition(t *testing.T) {
+	target := dsl.TargetPermanent("attacker", dsl.And(dsl.IsCreature, dsl.IsAttacking), dsl.TargetYouControl())
+	member := dsl.BindPermanent("member")
+	group := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature, dsl.TargetYouControl())
+	cards := []mage.Card{
+		dsl.NewInstant("Target", "", dsl.Spell(dsl.Sequence(dsl.Untap(target), dsl.PreventCombatDamageToAndBy(target)), dsl.WithTargets(target))),
+		dsl.NewInstant("Collection", "", dsl.Spell(dsl.ForEach(group, member, dsl.PreventCombatDamageToAndBy(dsl.From(member))), dsl.WithTargets(group))),
+		dsl.NewCreature("Trigger", "", 1, 1, dsl.WithAbility(dsl.At(dsl.YourUpkeep, dsl.PreventCombatDamageToAndBy(dsl.This)))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, subject := range []dsl.PermanentRef{nil, dsl.TargetPermanent("undeclared", dsl.IsCreature)} {
+		card := dsl.NewInstant("Invalid", "", dsl.Spell(dsl.PreventCombatDamageToAndBy(subject)))
+		if err := mage.ValidateCardDefinition(card.Name(), card); err == nil {
+			t.Fatal("invalid prevention subject accepted")
+		}
+	}
+	info := dsl.InspectDefinition(dsl.PreventCombatDamageToAndBy(target))
+	if info.Role != "install-combat-prevention" || info.Properties.Outcome != mage.OutcomeBenefit || len(info.Children) != 1 {
+		t.Fatalf("metadata=%+v", info)
+	}
+}

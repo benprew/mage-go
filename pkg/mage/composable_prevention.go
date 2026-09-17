@@ -93,3 +93,26 @@ func (e *preventionInstallation) Apply(ctx *EffectContext) error {
 func (e *preventionInstallation) inspectDefinition() definitionNode {
 	return definitionNode{Role: "install-prevention", Text: e.Text(), children: []definitionEdge{{"recipient", e.recipient}, {"amount", e.amount}}}
 }
+
+// PreventCombatDamageToAndBy prevents combat damage to and by the subject this turn.
+func PreventCombatDamageToAndBy(subject PermanentRef) ResolvingEffect {
+	return &combatPreventionInstallation{subject}
+}
+
+type combatPreventionInstallation struct{ subject PermanentRef }
+
+func (*combatPreventionInstallation) Text() string {
+	return "prevent combat damage to and by permanent this turn"
+}
+func (*combatPreventionInstallation) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+func (e *combatPreventionInstallation) Apply(ctx *EffectContext) error {
+	if permanent, ok := e.subject.resolvePermanent(ctx); ok {
+		ctx.Game.PreventCombatDamageToAndBy(permanent.ID())
+	}
+	return nil
+}
+func (e *combatPreventionInstallation) inspectDefinition() definitionNode {
+	return definitionNode{Role: "install-combat-prevention", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}

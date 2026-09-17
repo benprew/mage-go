@@ -3,6 +3,7 @@ package dsl
 import "github.com/benprew/mage-go/pkg/mage"
 
 type CoinBranch = mage.CoinBranch
+type PermanentTargetOption = mage.PermanentTargetOption
 
 var (
 	FlipCoin        = mage.FlipCoin
@@ -34,6 +35,8 @@ type (
 
 var (
 	TargetPermanent            = mage.DeclarePermanentTarget
+	TargetYouControl           = mage.TargetYouControl
+	PreventCombatDamageToAndBy = mage.PreventCombatDamageToAndBy
 	TargetPlayer               = mage.DeclarePlayerTarget
 	WithTargets                = mage.WithTargets
 	Spell                      = mage.Spell

@@ -368,3 +368,37 @@ Tap-or-untap, attachment, gathered-string, and untap-skipping families remain op
   the sandbox. Its unrelated Secrets of Strixhaven import change was reverted.
 - `git diff --check` passed. No calls or definitions of either removed untap
   helper remain; the forge command's unrelated `UntapTarget` enum remains.
+
+## Gathered untap and combat-prevention family
+
+Completed the [gathered-untap slice](composable-dsl-gathered-untap-slice.md).
+Ebony Horse, the only string-bound untap caller, now uses a typed target and
+`Untap`. `UntapGathered` and `UntapGatheredData` are removed. The unused
+positional combat-prevention constructor is replaced by the typed
+`PreventCombatDamageToAndBy(subject)` instruction. `TargetYouControl()` adds
+an inspected controller restriction to singular and collection target bindings.
+
+A failing card regression proved that removing Ebony Horse's target from combat
+was wrong. Its target now stays in combat, with combat damage to and by it
+prevented for the turn. A separate failing engine regression proved that the
+old prevention shield followed a returned card. The shield now retains and
+checks its battlefield incarnation. Stun replacement does not stop the following
+prevention instruction. The existing replacement, clone, and duration paths remain.
+
+Attachment tap, tap-or-untap, untap-skipping, other string-bound actions, and
+general damage-source LKI remain open. The capability and caller table records
+the exact scope; this does not complete the general replacement family.
+
+## Verification for the gathered-untap slice
+
+- Focused Ebony Horse, combat-prevention lifetime, controlled-target,
+  public composition, and compile-fail tests passed.
+- `go test ./cards/arabian -count=1` passed.
+- `go test ./pkg/mage/... -short -count=1` passed.
+- `go test ./... -count=1` passed, including registered definitions, all card
+  packages, and long AI simulations.
+- `go build ./...` and `go vet ./...` passed.
+- `make lint` passed with zero issues. Optional cache writes were blocked by
+  the sandbox. Its unrelated Secrets of Strixhaven import change was reverted.
+- `git diff --check` passed. No Go references to the removed constructors or
+  executor types remain.

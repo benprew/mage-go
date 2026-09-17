@@ -329,9 +329,14 @@ func (g *Game) SetPreventCombatDamage() {
 
 // PreventCombatDamageToAndBy adds a replacement effect preventing all combat damage dealt to and dealt by creatureID this turn.
 func (g *Game) PreventCombatDamageToAndBy(creatureID uuid.UUID) {
+	permanent := g.FindPermanent(creatureID)
+	if permanent == nil {
+		return
+	}
 	g.effects.AddReplacement(&creatureCombatDamagePreventionReplacement{
 		replacementBase: replacementBase{sourceID: uuid.Nil, duration: EndOfTurn},
 		creatureID:      creatureID,
+		incarnation:     permanent.incarnationID,
 	})
 }
 

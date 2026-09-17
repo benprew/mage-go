@@ -35,8 +35,10 @@ func (b *targetDeclaration) Max() int                                       { re
 type PermanentTargetBinding struct{ *targetDeclaration }
 
 // DeclarePermanentTarget declares one permanent target. DSL exports it as TargetPermanent.
-func DeclarePermanentTarget(name string, filter PermanentFilter) *PermanentTargetBinding {
-	return &PermanentTargetBinding{&targetDeclaration{name, TargetPermanent(filter)}}
+func DeclarePermanentTarget(name string, filter PermanentFilter, options ...PermanentTargetOption) *PermanentTargetBinding {
+	spec := TargetPermanent(filter).(*PermanentTarget)
+	applyPermanentTargetOptions(spec, options)
+	return &PermanentTargetBinding{&targetDeclaration{name, spec}}
 }
 func (*PermanentTargetBinding) permanentRef() {}
 func (b *PermanentTargetBinding) resolvePermanent(ctx *EffectContext) (*Permanent, bool) {
@@ -135,6 +137,9 @@ func declaredTargetNodes(targets []Target) []definitionEdge {
 }
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
+	if spec, ok := b.spec.(*PermanentTarget); ok && spec.controllerOnly {
+		n.children = append(n.children, definitionEdge{"controller", targetYouControlOption{}})
+	}
 	if b.name == "" {
 		n.problem = "supply a target binding name"
 	}
@@ -185,11 +190,12 @@ func firstTargetValue(values []capturedPermanent) (capturedPermanent, bool) {
 type PermanentTargetsBinding struct{ *targetDeclaration }
 
 // DeclarePermanentTargets declares a bounded collection of permanent targets.
-func DeclarePermanentTargets(name string, minimum, maximum int, filter PermanentFilter) *PermanentTargetsBinding {
+func DeclarePermanentTargets(name string, minimum, maximum int, filter PermanentFilter, options ...PermanentTargetOption) *PermanentTargetsBinding {
 	if minimum < 0 || maximum < minimum {
 		panic("targets: require 0 <= minimum <= maximum")
 	}
 	spec := &PermanentTarget{BaseTarget: BaseTarget{min: minimum, max: maximum}, Filters: []PermanentFilter{filter}}
+	applyPermanentTargetOptions(spec, options)
 	return &PermanentTargetsBinding{&targetDeclaration{name, spec}}
 }
 func (*PermanentTargetsBinding) permanentSet() {}
@@ -225,4 +231,29 @@ func (c targetGroupContract) inspectDefinition() definitionNode {
 		n.problem = "multiple variable target groups require recorded selection boundaries"
 	}
 	return n
+}
+
+// PermanentTargetOption adds a restriction to a permanent target declaration.
+type PermanentTargetOption interface {
+	permanentTargetOption()
+	applyPermanentTarget(*PermanentTarget)
+}
+
+type targetYouControlOption struct{}
+
+// TargetYouControl restricts targets to permanents controlled by the ability controller.
+func TargetYouControl() PermanentTargetOption                          { return targetYouControlOption{} }
+func (targetYouControlOption) permanentTargetOption()                  {}
+func (targetYouControlOption) applyPermanentTarget(t *PermanentTarget) { t.controllerOnly = true }
+func applyPermanentTargetOptions(t *PermanentTarget, options []PermanentTargetOption) {
+	for _, option := range options {
+		if nilDefinition(option) {
+			panic("targets: supply a non-nil permanent target option")
+		}
+		option.applyPermanentTarget(t)
+	}
+}
+
+func (targetYouControlOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-controller", Text: "you control"}
 }

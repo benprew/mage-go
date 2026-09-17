@@ -206,21 +206,13 @@ func registerArtifacts() {
 
 	// Oracle: "{2}, {T}: Untap target attacking creature you control. Prevent all combat
 	// damage that would be dealt to and dealt by that creature this turn."
-	// Combat damage prevention achieved via RemoveFromCombat — once removed, no damage
-	// is assigned to or by the creature.
 	Register("Ebony Horse", func() Card {
+		creature := TargetPermanent("attacking creature you control", And(IsCreature, IsAttacking), TargetYouControl())
 		return NewArtifact("Ebony Horse", "{3}",
-			WithActivatedAbility(
-				Pipeline("untap and remove from combat",
-					EffectProperties{Outcome: OutcomeBenefit},
-					SnapshotPermanent(SelectTarget, "t"),
-					UntapGathered("t"),
-					RemoveFromCombatGathered("t"),
-				),
-				TapCost(This),
-				WithCost(ManaCostOf("{2}")),
-				WithTarget(TargetCreatureYouControl(IsAttacking)),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This)),
+				Sequence(Untap(creature), PreventCombatDamageToAndBy(creature)),
+				WithTargets(creature),
+			)),
 		)
 	})
 

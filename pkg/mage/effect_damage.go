@@ -238,30 +238,6 @@ func (e *preventAllCombatDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
-// preventCombatDamageToAndByTargetEffect prevents all combat damage dealt to and by target creature this turn (Maze of Ith).
-type preventCombatDamageToAndByTargetEffect struct{}
-
-// PreventCombatDamageToAndByTarget creates an effect preventing all combat damage dealt to and by target creature this turn.
-func PreventCombatDamageToAndByTarget() Effect {
-	return &preventCombatDamageToAndByTargetEffect{}
-}
-
-func (e *preventCombatDamageToAndByTargetEffect) Text() string {
-	return "prevent all combat damage that would be dealt to and dealt by target creature this turn"
-}
-
-func (e *preventCombatDamageToAndByTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *preventCombatDamageToAndByTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	ctx.Game.PreventCombatDamageToAndBy(ctx.Targets[0])
-	return nil
-}
-
 type preventDamageToYouByCreaturesWithFlyingEffect struct{}
 
 // PreventDamageToYouByCreaturesWithFlying prevents all damage that would be dealt to the controller this turn by creatures with flying.

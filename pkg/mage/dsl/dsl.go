@@ -426,7 +426,6 @@ var (
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	TapGathered                               = mage.TapGathered
 	FightGathered                             = mage.FightGathered
-	UntapGathered                             = mage.UntapGathered
 	MakeUnblockableUntilEndOfTurn             = mage.MakeUnblockableUntilEndOfTurn
 	TapAttachedCreature                       = mage.TapAttachedCreature
 	TapOrUntapTarget                          = mage.TapOrUntapTarget
@@ -482,7 +481,6 @@ var (
 	CopySpellOnStack                        = mage.CopySpellOnStack
 	DoubleTargetPower                       = mage.DoubleTargetPower
 	PreventAllCombatDamage                  = mage.PreventAllCombatDamage
-	PreventCombatDamageToAndByTarget        = mage.PreventCombatDamageToAndByTarget
 	ForcefieldEffect                        = mage.ForcefieldEffect
 	CloneTarget                             = mage.CloneTarget
 	BlackViseEffect                         = mage.BlackViseEffect

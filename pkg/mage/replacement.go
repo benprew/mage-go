@@ -207,10 +207,15 @@ func (r *fogReplacement) Clone() ReplacementEffect {
 
 type creatureCombatDamagePreventionReplacement struct {
 	replacementBase
-	creatureID uuid.UUID
+	creatureID  uuid.UUID
+	incarnation uuid.UUID
 }
 
-func (r *creatureCombatDamagePreventionReplacement) Matches(a Action, _ GameReader) bool {
+func (r *creatureCombatDamagePreventionReplacement) Matches(a Action, g GameReader) bool {
+	p := g.FindPermanent(r.creatureID)
+	if p == nil || p.incarnationID != r.incarnation {
+		return false
+	}
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
 		return act.IsCombatDamage() && act.ActionSource() == r.creatureID

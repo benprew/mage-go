@@ -107,7 +107,7 @@ func TestFlyingCarpet(t *testing.T) {
 }
 
 func TestEbonyHorse(t *testing.T) {
-	t.Run("untaps_and_removes_from_combat", func(t *testing.T) {
+	t.Run("untaps_and_prevents_combat_damage", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ebony Horse")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // 3/3
@@ -118,10 +118,11 @@ func TestEbonyHorse(t *testing.T) {
 		g.ActivateAbility(1, core.DeclareBlockers, gametest.PlayerA, "Ebony Horse", "Hill Giant")
 		g.StopAt(1, core.PostcombatMain)
 		g.Execute()
-		// Hill Giant removed from combat — no damage dealt, both survive
+		// Prevention keeps both creatures alive.
 		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
 		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 1)
 		g.AssertLife(gametest.PlayerB, 20)
+		g.AssertTapped(gametest.PlayerA, "Hill Giant", false)
 	})
 }
 
