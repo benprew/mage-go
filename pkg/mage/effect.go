@@ -247,6 +247,10 @@ type EffectProperties struct {
 	TokenToughness int     // token creature toughness; 0 if not a token-creation effect
 	GrantedKeyword Keyword // non-zero when effect grants a keyword to a creature
 
+	// SacrificesSource is true if this effect sacrifices its own source
+	// permanent, so the AI can tell a creature that won't survive the turn.
+	SacrificesSource bool
+
 	AIRoles               []AIRole           // strategic roles for otherwise opaque effects
 	Timing                AITiming           // preferred strategic timing
 	TargetPurposeOverride AITargetPurpose    // overrides inferred targeting purpose when non-zero

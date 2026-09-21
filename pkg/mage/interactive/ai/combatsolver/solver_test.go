@@ -125,6 +125,22 @@ func TestSolveAttack_OverwhelmingForceVsLowLifeOpponent(t *testing.T) {
 	}
 }
 
+func TestSolveAttack_BallLightningAttacksIntoBlocker(t *testing.T) {
+	g, pa, pb := makeGame()
+	// Ball Lightning is sacrificed at the end step anyway, so losing it to a
+	// block costs nothing — staying home wastes its 6 damage.
+	ball := makePerm("Ball Lightning", "{R}{R}{R}", 6, 1, pa.PlayerID(),
+		mage.WithKeyword(core.Trample),
+		mage.WithAbility(mage.BeginningOfEachEndStepTrigger(mage.SacrificeSource(), false)))
+	bear := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
+	g.AddToBattlefield(ball, bear)
+
+	r := SolveAttack(g, pa.PlayerID(), defaultOpts())
+	if !slices.Contains(r.Attackers, ball.ID()) {
+		t.Errorf("want Ball Lightning to attack into a blocker, got %v (score=%d)", r.Attackers, r.Score)
+	}
+}
+
 func TestSolveAttack_DeadlineHit(t *testing.T) {
 	g, pa, pb := makeGame()
 	// Stack many small creatures so enumeration takes meaningful time.
@@ -322,6 +338,23 @@ func TestSolveDefense_FavorableTrade(t *testing.T) {
 		if b.BlockerID != blk.ID() || b.AttackerID != atk.ID() {
 			t.Errorf("invalid block assignment: %+v", b)
 		}
+	}
+}
+
+func TestSolveDefense_DontTradeForBallLightning(t *testing.T) {
+	g, pa, pb := makeGame()
+	// Ball Lightning dies at the end step anyway, so killing it gains nothing.
+	// At 20 life, blocking with the 4/4 only trades it away to save 4 life.
+	ball := makePerm("Ball Lightning", "{R}{R}{R}", 6, 1, pa.PlayerID(),
+		mage.WithKeyword(core.Trample),
+		mage.WithAbility(mage.BeginningOfEachEndStepTrigger(mage.SacrificeSource(), false)))
+	knight := makePerm("Knight", "{2}{W}{W}", 4, 4, pb.PlayerID())
+	g.AddToBattlefield(ball, knight)
+	g.ExecuteAttackers(pa.PlayerID(), []uuid.UUID{ball.ID()})
+
+	r := SolveDefense(g, pb.PlayerID(), defaultOpts())
+	if len(r.Blocks) != 0 {
+		t.Errorf("want no block on Ball Lightning, got %+v (score=%d)", r.Blocks, r.Score)
 	}
 }
 

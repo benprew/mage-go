@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
 )
 
@@ -29,6 +30,9 @@ func combatLeafEval(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 
 	boardScale := w.Board / 2.0
 	for _, perm := range g.FilterBattlefield(mage.IsCreature) {
+		if sacrificedAtEndStep(perm) {
+			continue
+		}
 		var v float64
 		switch perm.ControllerID() {
 		case playerID:
@@ -58,6 +62,25 @@ func combatLeafEval(g *mage.Game, playerID uuid.UUID, w eval.Weights) int {
 	score += float64(g.CountBattlefield(mage.And(ownLand, mage.IsUntapped))) * w.Tempo
 
 	return int(score)
+}
+
+// sacrificedAtEndStep reports whether perm unconditionally sacrifices itself
+// at the beginning of the end step, like Ball Lightning. Combat always comes
+// before that end step, so such a creature is gone by the next turn whatever
+// happens in combat and has no board value to protect or to destroy.
+func sacrificedAtEndStep(perm *mage.Permanent) bool {
+	for _, a := range perm.RuntimeAbilities {
+		t, ok := a.(*mage.GenericTriggered)
+		if !ok || !t.CheckEventType(core.EvtEndStep) || t.Condition != nil || t.IsOptional() {
+			continue
+		}
+		for _, e := range t.Effects() {
+			if e.Properties().SacrificesSource {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // evalNonCreatureValue is a thin local wrapper that approximates
