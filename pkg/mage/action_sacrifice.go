@@ -203,8 +203,10 @@ type sacrificeSourceEffect struct{}
 // SacrificeSource creates an effect that sacrifices the source permanent.
 func SacrificeSource() Effect { return &sacrificeSourceEffect{} }
 
-func (*sacrificeSourceEffect) Text() string                 { return "sacrifice this permanent" }
-func (*sacrificeSourceEffect) Properties() EffectProperties { return EffectProperties{} }
+func (*sacrificeSourceEffect) Text() string { return "sacrifice this permanent" }
+func (*sacrificeSourceEffect) Properties() EffectProperties {
+	return EffectProperties{SacrificesSource: true}
+}
 func (*sacrificeSourceEffect) Apply(ctx *EffectContext) error {
 	if perm := ctx.Game.FindPermanent(ctx.SourceID); perm != nil && perm.ControllerID() == ctx.Controller {
 		ctx.Game.DoSacrifice(perm)
