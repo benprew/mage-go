@@ -631,6 +631,34 @@ func TestPowerSink(t *testing.T) {
 		// PlayerA has mana to pay X=1, so spell should resolve
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 5, 5)
 	})
+
+	t.Run("controller taps an untapped land to pay X", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Power Sink")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
+		g.CastInResponseToWithX(gametest.PlayerB, "Power Sink", 1)
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 5, 5)
+		g.AssertTapped(gametest.PlayerA, "Mountain", true)
+	})
+
+	t.Run("controller who can't pay has spell countered and lands tapped", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Giant Growth")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Power Sink")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Giant Growth", "Grizzly Bears")
+		g.CastInResponseToWithX(gametest.PlayerB, "Power Sink", 2)
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
+		g.AssertTapped(gametest.PlayerA, "Mountain", true)
+	})
 }
 
 func TestTwiddle(t *testing.T) {
