@@ -604,6 +604,21 @@ func TestGoblinWizard(t *testing.T) {
 		// Protection from white prevents block/damage from White Knight
 		g.AssertLife(gametest.PlayerB, 18)
 	})
+
+	t.Run("protection from white ends at end of turn", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Wizard")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mountain")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Hero")
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Swords to Plowshares")
+
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Goblin Wizard", 1, "Goblin Hero")
+		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Swords to Plowshares", "Goblin Hero")
+		g.StopAt(2, core.BeginCombat)
+		g.Execute()
+
+		g.AssertPermanentCount(gametest.PlayerA, "Goblin Hero", 0)
+	})
 }
 
 func TestPreacher(t *testing.T) {

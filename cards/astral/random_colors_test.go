@@ -65,6 +65,34 @@ func TestRainbowKnightsEntersWithPermanentRandomProtection(t *testing.T) {
 	}
 }
 
+// The random protection must actually stop spells of the chosen color, not
+// merely be listed among the knight's abilities.
+func TestRainbowKnightsRandomProtectionBlocksThatColor(t *testing.T) {
+	t.Run("spell of the chosen color can't target it", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetRandomResults([]int{3}) // red, as in the test above
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rainbow Knights")
+		g.ResolveStack()
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Rainbow Knights")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rainbow Knights", 1)
+	})
+
+	t.Run("spells of other colors still can", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.SetRandomResults([]int{3})
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Rainbow Knights")
+		g.ResolveStack()
+		g.AddCard(core.ZoneHand, gametest.PlayerB, "Swords to Plowshares")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Swords to Plowshares", "Rainbow Knights")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerA, "Rainbow Knights", 0)
+	})
+}
+
 func TestRainbowKnightsFirstStrikeUntilEndOfTurn(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.SetRandomResults([]int{0})

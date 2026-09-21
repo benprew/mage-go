@@ -39,6 +39,9 @@ type ProtectionAbility struct {
 	BaseAbility
 	FromColors []Color
 	Filter     CardFilter
+	// ExemptCardID names one card this protection never stops: the Ward that
+	// grants it ("This effect doesn't remove this Aura").
+	ExemptCardID uuid.UUID
 }
 
 // ProtectionFromColor creates a static ability granting protection from a single color.
@@ -126,13 +129,20 @@ func ProtectionFromAll() *ProtectionAbility {
 
 // Blocks returns true if this protection prevents interaction with the given card.
 func (pa *ProtectionAbility) Blocks(card Card) bool {
+	if pa.exempts(card) {
+		return false
+	}
 	return pa.Filter.Match(card)
+}
+
+func (pa *ProtectionAbility) exempts(card Card) bool {
+	return card != nil && pa.ExemptCardID != uuid.Nil && card.ID() == pa.ExemptCardID
 }
 
 // BlocksInGame evaluates color protection against the source object's current
 // colors. Other protection qualities continue to use their CardFilter.
 func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
-	if card == nil {
+	if card == nil || pa.exempts(card) {
 		return false
 	}
 	if len(pa.FromColors) == 0 || g == nil {

@@ -312,30 +312,50 @@ func registerEnchantments() {
 		})
 	}
 
+	// Black Ward {W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has protection from black. This effect doesn't remove this Aura.
 	Register("Black Ward", func() Card {
 		return NewAura("Black Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Black, AttachAura)),
 		)
 	})
 
+	// Blue Ward {W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has protection from blue. This effect doesn't remove this Aura.
 	Register("Blue Ward", func() Card {
 		return NewAura("Blue Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Blue, AttachAura)),
 		)
 	})
 
+	// Green Ward {W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has protection from green. This effect doesn't remove this Aura.
 	Register("Green Ward", func() Card {
 		return NewAura("Green Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Green, AttachAura)),
 		)
 	})
 
+	// Red Ward {W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has protection from red. This effect doesn't remove this Aura.
 	Register("Red Ward", func() Card {
 		return NewAura("Red Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(Red, AttachAura)),
 		)
 	})
 
+	// White Ward {W}
+	// Enchantment — Aura
+	// Enchant creature
+	// Enchanted creature has protection from white. This effect doesn't remove this Aura.
 	Register("White Ward", func() Card {
 		return NewAura("White Ward", "{W}",
 			WithStaticAbility(GrantProtectionToAttached(White, AttachAura)),

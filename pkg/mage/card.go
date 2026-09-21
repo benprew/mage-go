@@ -783,8 +783,10 @@ func (p *Permanent) HasProtectionFrom(card Card) bool {
 	if p.FaceDown {
 		return false // face-down creatures have no protection
 	}
+	// Protection granted by another permanent arrives wrapped by
+	// WrapGrantedAbility, so it has to be unwrapped before the type check.
 	for _, a := range p.RuntimeAbilities {
-		if pa, ok := a.(*ProtectionAbility); ok {
+		if pa, ok := UnwrapAbility(a).(*ProtectionAbility); ok {
 			if pa.Blocks(card) {
 				return true
 			}
@@ -800,7 +802,7 @@ func (p *Permanent) HasProtectionFromInGame(card Card, g *Game) bool {
 		return false
 	}
 	for _, a := range p.RuntimeAbilities {
-		if pa, ok := a.(*ProtectionAbility); ok && pa.BlocksInGame(card, g) {
+		if pa, ok := UnwrapAbility(a).(*ProtectionAbility); ok && pa.BlocksInGame(card, g) {
 			return true
 		}
 	}
