@@ -720,21 +720,14 @@ func registerEnchantments() {
 							if p == nil {
 								return nil
 							}
-							for range 3 {
+							var candidates []Card
+							for _, c := range p.Library() {
+								if isBasicLand(c) {
+									candidates = append(candidates, c)
+								}
+							}
+							for _, card := range p.ChooseCardsFromLibrary(candidates, 3, "search for up to three basic land cards", g) {
 								lib := p.Library()
-								var candidates []Card
-								for _, c := range lib {
-									if isBasicLand(c) {
-										candidates = append(candidates, c)
-									}
-								}
-								if len(candidates) == 0 {
-									break
-								}
-								card := p.ChooseCardFromLibrary(candidates, "search for basic land", g)
-								if card == nil {
-									break
-								}
 								newLib := make([]Card, 0, len(lib)-1)
 								for _, c := range lib {
 									if c.ID() != card.ID() {

@@ -105,6 +105,10 @@ type Player interface {
 	ChooseCardFromGraveyard(candidates []Card, reason string, g GameReader) Card
 	ChooseManaColor(reason string) Color
 	ChooseCardFromLibrary(candidates []Card, reason string, g GameReader) Card
+	// ChooseCardsFromLibrary picks up to maximum distinct cards from a
+	// pre-filtered library candidate list, for searches that find "up to N"
+	// cards. The player may stop early, so the result can be empty.
+	ChooseCardsFromLibrary(candidates []Card, maximum int, reason string, g GameReader) []Card
 	ChooseNumber(minimum, maximum int, reason string) int
 
 	// ChooseString asks the player to pick one option from a string list,
@@ -406,6 +410,12 @@ func (p *BasePlayer) ChooseCardFromLibrary(candidates []Card, reason string, g G
 		return candidates[0]
 	}
 	return nil
+}
+
+// ChooseCardsFromLibrary takes the first maximum candidates, like
+// ChooseCardFromLibrary takes the first one.
+func (p *BasePlayer) ChooseCardsFromLibrary(candidates []Card, maximum int, reason string, g GameReader) []Card {
+	return candidates[:min(maximum, len(candidates))]
 }
 
 func (p *BasePlayer) ChooseNumber(minimum, maximum int, reason string) int {

@@ -2,6 +2,7 @@ package interactive
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -301,6 +302,38 @@ func (p *HumanPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 		}
 	}
 	return candidates[0]
+}
+
+// ChooseCardsFromLibrary asks for one card at a time and adds a "Done" option
+// with a zero ID, so a frontend that lists options needs no change to let the
+// player stop early. Cards of the same name are interchangeable in a library,
+// so each name is offered once.
+func (p *HumanPlayer) ChooseCardsFromLibrary(candidates []mage.Card, maximum int, reason string, g mage.GameReader) []mage.Card {
+	remaining := slices.Clone(candidates)
+	var chosen []mage.Card
+	for len(chosen) < maximum && len(remaining) > 0 {
+		var opts []ChoiceOption
+		offered := make(map[string]bool)
+		for _, c := range remaining {
+			if offered[c.Name()] {
+				continue
+			}
+			offered[c.Name()] = true
+			opts = append(opts, ChoiceOption{ID: c.ID(), Label: c.Name() + " " + c.ManaCost().String()})
+		}
+		opts = append(opts, ChoiceOption{Label: "Done"})
+		resp := p.requestChoice(ChoiceRequest{Type: ChoiceCardFromLibrary, Reason: reason, Options: opts})
+		i := -1
+		if len(resp.SelectedIDs) > 0 {
+			i = slices.IndexFunc(remaining, func(c mage.Card) bool { return c.ID() == resp.SelectedIDs[0] })
+		}
+		if i < 0 {
+			break
+		}
+		chosen = append(chosen, remaining[i])
+		remaining = slices.Delete(remaining, i, i+1)
+	}
+	return chosen
 }
 
 func (p *HumanPlayer) ChooseMayAbility(description string) bool {

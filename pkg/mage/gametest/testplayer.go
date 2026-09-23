@@ -425,6 +425,23 @@ func (tp *TestPlayer) ChooseCardFromLibrary(candidates []mage.Card, reason strin
 	return candidates[0]
 }
 
+// ChooseCardsFromLibrary picks one card at a time like ChooseCardFromLibrary
+// until it has maximum cards or meets a queued StopChoosingFromLibrary.
+func (tp *TestPlayer) ChooseCardsFromLibrary(candidates []mage.Card, maximum int, reason string, g mage.GameReader) []mage.Card {
+	remaining := slices.Clone(candidates)
+	var chosen []mage.Card
+	for len(chosen) < maximum && len(remaining) > 0 {
+		if len(tp.chooseFromLibrary) > 0 && tp.chooseFromLibrary[0] == "" {
+			tp.chooseFromLibrary = tp.chooseFromLibrary[1:]
+			break
+		}
+		c := tp.ChooseCardFromLibrary(remaining, reason, g)
+		chosen = append(chosen, c)
+		remaining = slices.DeleteFunc(remaining, func(r mage.Card) bool { return r.ID() == c.ID() })
+	}
+	return chosen
+}
+
 // AddScryDecision queues a scry placement. `bottom` lists card names to put on
 // the bottom of the library in placement order (last name becomes the new
 // bottom card). `topOrder` lists the remaining card names in the order they
