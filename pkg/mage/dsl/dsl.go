@@ -478,7 +478,6 @@ var (
 	DestroyGathered                         = mage.DestroyGathered
 	ExileTargetStep                         = mage.ExileTargetStep
 	ExileTargetCardFromGraveyard            = mage.ExileTargetCardFromGraveyard
-	DestroyAttachedStep                     = mage.DestroyAttachedStep
 	BalanceEffect                           = mage.BalanceEffect
 	CounterSpell                            = mage.CounterSpell
 	CounterSpellIfColor                     = mage.CounterSpellIfColor

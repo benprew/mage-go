@@ -153,6 +153,7 @@ var (
 	AtNext                   = mage.AtNext
 	AtNextModes              = mage.AtNextModes
 	AttachedControllerUpkeep = mage.AttachedControllerUpkeep
+	AttachedBecomesTapped    = mage.AttachedBecomesTapped
 	TurnStepBegins           = mage.TurnStepBegins
 	EachEndStep              = mage.EachEndStep
 	YourEndStep              = mage.YourEndStep

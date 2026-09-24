@@ -177,6 +177,9 @@ All casting and activations follow the locked total-cost transaction model:
 * **Definition of Mana Ability (CR 605.1a, 605.3b)**:
   * An activated ability is a mana ability if it doesn't require a target, could put mana into a player's pool, and isn't a loyalty ability.
   * A tap cost is **not** strictly required by the rules. Targetless activations with unconditional mana instructions resolve **immediately without using the stack**.
+* **Tap Transitions (CR 603.2e, 701.26a)**:
+  * `TapPermanent` emits `EvtTapped` only when an untapped permanent becomes tapped. Repeated calls on a tapped permanent do not trigger abilities.
+  * `AttachedBecomesTapped` captures the event permanent at detection through the existing trigger capture path. Pending triggers, copies, and delayed effects keep that incarnation independently of later attachment changes.
 * **Tapped-for-Mana Events**:
   * `EvtTappedForMana` fires only when a mana ability having a {T} cost produces mana (CR 106.12a). Normal tap actions without mana produce only `EvtTapped`.
 * **Automatic Solver**:

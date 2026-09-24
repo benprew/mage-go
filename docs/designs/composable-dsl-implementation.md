@@ -21,6 +21,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] **Glorious Decay**: Audit damage mode and graveyard target before retiring `DestroyTargetArtifact`.
 - [ ] **Positional Return Helpers**: Continue positional return helper migrations. Witch Hunter's separate damage ability awaits damage-source LKI. Audit Rakalite's delayed source identity and Prismari Charm's modes before retiring `ReturnToHandTarget`.
 - [x] **Divine Offering**: Add `ManaValueOf`, capture with `SnapshotNumber`, and migrate destruction and controller life gain to typed actions. Retire the sole-caller helpers `DestroyTargetStep` and `GainLifeControllerFromVar`.
+- [x] **Blight Attachment-Tap Capture**: Add `AttachedBecomesTapped`, capture the event land before trigger placement, migrate Blight, and retire `DestroyAttachedStep` and `DestroyAttachedData`. Correct repeated tap-event emission.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -53,7 +54,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 ### Event & Delayed Capture
 - [ ] General future event capture and general delayed events/reflexive triggers remain open.
-- [ ] Continue individual attachment tap and regeneration caller audits before migrating those cards.
+- [x] Resolve the Blight attachment-tap audit: event-time permanent capture uses existing trigger records; `TapPermanent` now emits events only on a tap transition.
+- [ ] Continue attachment-tap audits for Psychic Venom, Kudzu, Artifact Possession, and Relic Bind, plus remaining regeneration callers. Damage identity, attachment manipulation, and modal/player-or-planeswalker targeting remain separate work.
 
 ## Remaining DSL Families (Architectural Scope)
 
@@ -113,3 +115,23 @@ Oracle source: `cards/legends/LEG.json`. Rules contract: repository Comprehensiv
 Separate audit finding: `ParseManaCost("{2/W}").CMC()` returns 0 instead of 2. The parser supports two-color hybrid symbols but not monocolored hybrid symbols. Full monocolored-hybrid parsing/payment support remains an engine gap outside this slice; `ManaValueOf` does not correct or claim support for unrepresented mana symbols. General copying and zone-LKI audits remain open.
 
 Validation: focused mana-value, Divine Offering, composition, and compile-fail tests; `go test ./pkg/mage/... ./cards/legends -short -count=1`; `go test ./cards/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` passed with zero failures (lint: zero issues). No Go declarations or callers remain for either retired export.
+
+
+## Completed Slice: Blight Attachment-Tap Capture
+
+- [x] Add and export `AttachedBecomesTapped(PermanentBinding)` with binding inspection, registration validation, modal composition, and compile-time category checks.
+- [x] Fix `Game.TapPermanent` to require an untapped-to-tapped transition. `TestTapPermanentRequiresTransition` first failed with two triggers for one transition; it also checks that a later transition can trigger again.
+- [x] Migrate Blight and remove the sole-caller `DestroyAttachedStep` constructor and `DestroyAttachedData` executor. No Go declarations or callers remain.
+
+| Oracle clause / retired API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Enchant land” | Existing `WithCastTarget(TargetLand())` remains the Aura casting restriction. | Existing target validation; `TestRegisteredDefinitions` |
+| “When enchanted land becomes tapped” | `WhenEvent(AttachedBecomesTapped(land), ...)`; capture at detection, before pending-trigger placement; no trigger targets. Tap source must be the attachment; unattached and phased sources do not trigger. | `TestAttachedBecomesTappedCapture`, `TestAttachedBecomesTappedDelayedModes`, `TestTapPermanentRequiresTransition` |
+| “destroy it.” / `DestroyAttachedStep` (Blight only) | `Destroy(From(land))`; destroy the captured incarnation even if the Aura moves or leaves. Ignore a returned land or phased-out host; allow regeneration and indestructible. Uses the shared destruction executor and exposes destruction metadata. | `TestBlightCapturesTappedLand`: normal resolution, Aura move/departure, land return, regeneration, indestructible. Move, departure, and return cases failed with the old definition. |
+| Event bindings, copies, and composition | Existing `eventPermanentCapture` and resolution frames preserve separate occurrences, pending and stack clones, copied controllers, phasing, control changes, and delayed capture. Registration rejects missing/empty bindings and cross-ability reads. | `TestAttachedBecomesTappedCapture`, `TestAttachedBecomesTappedDelayedModes`, `TestAttachedBecomesTappedValidation`, `TestAttachedBecomesTappedComposition`, `TestClosedExpressionRoles` |
+
+Oracle source: `cards/legends/LEG.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 603.2e (becomes), 603.3 (pending triggers), 400.7 (new objects), 701.8 (destroy), and 701.26a (tap). The new adapter uses the existing event detector, captured-permanent records, pending trigger and copy paths, and destruction executor. The only engine behavior fix is the tap-transition guard.
+
+`WhenAttachedBecomesTappedTrigger` remains for four production callers: Psychic Venom, Kudzu, Artifact Possession, and Relic Bind. Their outstanding damage, attachment, and modal audits are not resolved by this slice. Blight's file retains unrelated legacy definitions and engine imports.
+
+Validation: focused tap-transition, attachment-capture, Blight, composition, and compile-fail tests; `go test ./pkg/mage/... ./cards/legends -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

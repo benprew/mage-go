@@ -364,28 +364,6 @@ func (e *RemoveFromCombatGatheredData) Apply(ctx *EffectContext) error {
 // Attached permanent operations
 // ---------------------------------------------------------------------------
 
-// DestroyAttachedData destroys the permanent the source is attached to.
-type DestroyAttachedData struct{}
-
-func DestroyAttachedStep() Effect { return &DestroyAttachedData{} }
-
-func (e *DestroyAttachedData) Text() string { return "destroy enchanted permanent" }
-func (e *DestroyAttachedData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (*DestroyAttachedData) Apply(ctx *EffectContext) error {
-	src := ctx.Game.FindPermanent(ctx.SourceID)
-	if src == nil || src.AttachedTo == uuid.Nil {
-		return nil
-	}
-	target := ctx.Game.FindPermanent(src.AttachedTo)
-	if target != nil {
-		ctx.Game.DestroyPermanent(target)
-	}
-	return nil
-}
-
 // GrantAttrToAttachedData grants an attribute/keyword to the attached permanent permanently.
 type GrantAttrToAttachedData struct {
 	Attr Keyword

@@ -696,7 +696,7 @@ func (g *Game) TapPermanent(perm *Permanent) {
 		return
 	}
 	perm = g.MutablePermanent(perm.ID())
-	if perm == nil {
+	if perm == nil || perm.Tapped {
 		return
 	}
 	perm.Tapped = true

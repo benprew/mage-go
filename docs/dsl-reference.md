@@ -240,6 +240,7 @@ Triggers on rules events dispatched by the engine:
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
   * `OpponentLosesLife(playerBinding)`: Opponent loses life (can chain `.WithAmount(binding)`).
   * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
+  * `AttachedBecomesTapped(hostBinding)`: Captures the attached permanent when it becomes tapped. Read with `From(hostBinding)`; it is not a target. Attachment moves and source departure do not change the captured incarnation.
 
 ### State Triggers (`WhenState`)
 Triggers whenever game state becomes true (CR 603.8):

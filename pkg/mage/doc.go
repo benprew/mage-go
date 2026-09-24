@@ -50,6 +50,9 @@
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
 // The saved number remains available after the permanent leaves.
 //
+// [AttachedBecomesTapped] saves the event permanent before trigger placement.
+// Read it with [From] so attachment changes cannot redirect the effect.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

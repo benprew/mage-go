@@ -93,12 +93,11 @@ func registerEnchantments() {
 	// Enchant land
 	// When enchanted land becomes tapped, destroy it.
 	Register("Blight", func() Card {
+		land := BindPermanent("land")
 		return NewAura("Blight", "{B}{B}",
 			WithCastTarget(TargetLand()),
 			WithAbility(
-				WhenAttachedBecomesTappedTrigger(
-					DestroyAttachedStep(), false,
-				),
+				WhenEvent(AttachedBecomesTapped(land), Destroy(From(land))),
 			),
 		)
 	})
