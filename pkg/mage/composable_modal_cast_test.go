@@ -15,7 +15,7 @@ func modalValidationSpell(typed bool) *BaseCard {
 		mountain := DeclarePermanentTarget("mountain", HasSubType("Mountain"))
 		ability = SpellModes(ModeOf("Destroy red", Destroy(red), WithTargets(red)), ModeOf("Return Mountain", ReturnToHand(mountain), WithTargets(mountain)))
 	} else {
-		ability = NewModalSpell([]Mode{{Label: "Destroy red", Targets: []Target{TargetPermanent(HasColorFilter(Red))}, Effects: []Effect{DestroyTargetPermanent()}}, {Label: "Return Mountain", Targets: []Target{TargetPermanent(HasSubType("Mountain"))}, Effects: []Effect{ReturnToHandTarget()}}})
+		ability = NewModalSpell([]Mode{{Label: "Destroy red", Targets: []Target{TargetPermanent(HasColorFilter(Red))}, Effects: []Effect{DestroyTarget()}}, {Label: "Return Mountain", Targets: []Target{TargetPermanent(HasSubType("Mountain"))}, Effects: []Effect{ReturnToHandTarget()}}})
 	}
 	return NewInstant("Modal validation", "{1}", WithAbility(ability))
 }

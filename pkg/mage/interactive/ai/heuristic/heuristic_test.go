@@ -603,8 +603,9 @@ func TestAutoSelectTargets_GenericRemovalPrefersCreatureOverLand(t *testing.T) {
 	threat := makePerm("Zephyr Falcon", "{1}{U}", 1, 1, pb.PlayerID(), mage.WithKeyword(core.Flying))
 	g.AddToBattlefield(forestPerm, threat)
 
+	target := mage.DeclarePermanentTarget("permanent", mage.AnyPermanent)
 	card := mage.NewSorcery("Desert Twister", "{4}{G}{G}",
-		mage.NewTargetedSpell(mage.TargetPermanent(), mage.DestroyTargetPermanent()),
+		mage.WithAbility(mage.Spell(mage.Destroy(target), mage.WithTargets(target))),
 	)
 	card.SetOwner(pa.PlayerID())
 	pa.AddToHand(card)

@@ -396,7 +396,6 @@ var (
 
 	// Removal / combat
 	DestroyTarget            = mage.DestroyTarget
-	DestroyTargetPermanent   = mage.DestroyTargetPermanent
 	DestroyTargetNoRegen     = mage.DestroyTargetNoRegen
 	DestroyTargetArtifact    = mage.DestroyTargetArtifact
 	DestroyTargetNoRegenStep = mage.DestroyTargetNoRegenStep

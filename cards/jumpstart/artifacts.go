@@ -365,15 +365,14 @@ func registerArtifacts() {
 	// {T}: Add {C}.
 	// {7}, {T}, Sacrifice this artifact: Destroy target permanent.
 	Register("Unstable Obelisk", func() Card {
+		target := dsl.TargetPermanent("permanent", dsl.AnyPermanent)
 		return NewArtifact("Unstable Obelisk", "{3}",
 			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 1}),
-			WithActivatedAbility(
-				DestroyTargetPermanent(),
-				GenericCost(7),
-				WithCost(Tap()),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetPermanent()),
-			),
+			WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{7}"), dsl.TapCost(dsl.This), dsl.SacrificeSourceCost()),
+				dsl.Destroy(target),
+				dsl.WithTargets(target),
+			)),
 		)
 	})
 

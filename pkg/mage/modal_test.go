@@ -85,7 +85,7 @@ func TestNewModalSpell_Mode0DestroysOwnCreature(t *testing.T) {
 		{
 			Label:   "Destroy target permanent",
 			Targets: []Target{TargetPermanent()},
-			Effects: []Effect{DestroyTargetPermanent()},
+			Effects: []Effect{DestroyTarget()},
 		},
 	})
 	spell.AddAbility(ms)
@@ -134,7 +134,7 @@ func TestNewModalSpell_Mode1DestroysAnyPermanent(t *testing.T) {
 		{
 			Label:   "Destroy target permanent",
 			Targets: []Target{TargetPermanent()},
-			Effects: []Effect{DestroyTargetPermanent()},
+			Effects: []Effect{DestroyTarget()},
 		},
 	})
 	spell.AddAbility(ms)
@@ -222,7 +222,7 @@ func TestNewModalSpell_StackObjectRecordsMode(t *testing.T) {
 		{
 			Label:   "any",
 			Targets: []Target{TargetPermanent()},
-			Effects: []Effect{DestroyTargetPermanent()},
+			Effects: []Effect{DestroyTarget()},
 		},
 	}))
 	spell.SetOwner(a.PlayerID())

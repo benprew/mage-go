@@ -54,15 +54,16 @@ func registerCreatures() {
 		)
 	})
 
+	// {W}{W}, {T}: Destroy target black permanent.
 	Register("Northern Paladin", func() Card {
+		target := TargetPermanent("black permanent", HasColorFilter(Black))
 		return NewCreature("Northern Paladin", "{2}{W}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
-			WithActivatedAbility(
-				DestroyTargetPermanent(),
-				ManaCostOf("{W}{W}"),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPermanent(HasColorFilter(Black))),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{W}{W}"), TapCost(This)),
+				Destroy(target),
+				WithTargets(target),
+			)),
 		)
 	})
 

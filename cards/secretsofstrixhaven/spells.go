@@ -1419,11 +1419,12 @@ func registerSpells() {
 	// Sorcery
 	// Destroy target artifact or creature. You gain 1 life.
 	Register("Grapple with Death", func() Card {
+		target := dsl.TargetPermanent("artifact or creature", dsl.Or(dsl.IsArtifact, dsl.IsCreature))
 		return NewSorcery("Grapple with Death", "{1}{B}{G}",
-			NewTargetedSpell(TargetPermanent(Or(IsArtifact, IsCreature)),
-				DestroyTargetPermanent(),
-				dsl.GainLife(dsl.You, dsl.Fixed(1)),
-			),
+			WithAbility(dsl.Spell(
+				dsl.Sequence(dsl.Destroy(target), dsl.GainLife(dsl.You, dsl.Fixed(1))),
+				dsl.WithTargets(target),
+			)),
 		)
 	})
 

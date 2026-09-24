@@ -454,20 +454,12 @@ func registerSpells() {
 	// • Destroy target creature with flying.
 	// • Destroy target enchantment.
 	Register("Crushing Canopy", func() Card {
-		c := NewInstant("Crushing Canopy", "{2}{G}", nil)
-		c.AddAbility(NewModalSpell([]Mode{
-			{
-				Label:   "Destroy target creature with flying",
-				Targets: []Target{TargetCreature(HasKeywordFilter(Flying))},
-				Effects: []Effect{DestroyTarget()},
-			},
-			{
-				Label:   "Destroy target enchantment",
-				Targets: []Target{TargetPermanent(IsEnchantment)},
-				Effects: []Effect{DestroyTargetPermanent()},
-			},
-		}))
-		return c
+		creature := dsl.TargetPermanent("flying creature", dsl.And(dsl.IsCreature, dsl.HasKeywordFilter(Flying)))
+		enchantment := dsl.TargetPermanent("enchantment", dsl.IsEnchantment)
+		return NewInstant("Crushing Canopy", "{2}{G}", WithAbility(dsl.SpellModes(
+			dsl.ModeOf("Destroy target creature with flying", dsl.Destroy(creature), dsl.WithTargets(creature)),
+			dsl.ModeOf("Destroy target enchantment", dsl.Destroy(enchantment), dsl.WithTargets(enchantment)),
+		)))
 	})
 
 	// Dance with Devils {3}{R}

@@ -785,13 +785,14 @@ func registerCreatures() {
 	// 2/2
 	// Sacrifice this creature: Destroy target enchantment.
 	Register("Ronom Unicorn", func() Card {
+		enchantment := TargetPermanent("enchantment", IsEnchantment)
 		return NewCreature("Ronom Unicorn", "{1}{W}", 2, 2,
 			WithSubTypes("Unicorn"),
-			WithActivatedAbility(
-				DestroyTargetPermanent(),
-				SacrificeSourceCost(),
-				WithTarget(mage.TargetPermanent(IsEnchantment)),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeSourceCost()),
+				Destroy(enchantment),
+				WithTargets(enchantment),
+			)),
 		)
 	})
 
@@ -3149,12 +3150,10 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, destroy target creature an opponent controls.
 	Register("Ravenous Chupacabra", func() Card {
+		creature := TargetPermanent("opponent creature", IsCreature, TargetOpponentControls())
 		return NewCreature("Ravenous Chupacabra", "{2}{B}{B}", 2, 2,
 			WithSubTypes("Beast", "Horror"),
-			WithAbility(EntersBattlefieldTrigger(
-				DestroyTargetPermanent(),
-				false,
-			).AddTarget(TargetPermanentOpponentControls(IsCreature))),
+			WithAbility(WhenEvent(Enters(This), Destroy(creature), WithTargets(creature))),
 		)
 	})
 

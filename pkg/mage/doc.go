@@ -53,6 +53,10 @@
 // [AttachedBecomesTapped] saves the event permanent before trigger placement.
 // Read it with [From] so attachment changes cannot redirect the effect.
 //
+// Targeted destruction uses [Destroy] with a typed permanent target. Declare
+// that target with [WithTargets] on the spell, mode, trigger, or activation.
+// The target filter supplies the restriction; the action allows regeneration.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

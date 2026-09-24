@@ -22,6 +22,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] **Positional Return Helpers**: Continue positional return helper migrations. Witch Hunter's separate damage ability awaits damage-source LKI. Audit Rakalite's delayed source identity and Prismari Charm's modes before retiring `ReturnToHandTarget`.
 - [x] **Divine Offering**: Add `ManaValueOf`, capture with `SnapshotNumber`, and migrate destruction and controller life gain to typed actions. Retire the sole-caller helpers `DestroyTargetStep` and `GainLifeControllerFromVar`.
 - [x] **Blight Attachment-Tap Capture**: Add `AttachedBecomesTapped`, capture the event land before trigger placement, migrate Blight, and retire `DestroyAttachedStep` and `DestroyAttachedData`. Correct repeated tap-event emission.
+- [x] **Targeted Permanent Destruction**: Migrate all six production `DestroyTargetPermanent` callers to typed `Destroy` targets and retire the export. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -135,3 +136,26 @@ Oracle source: `cards/legends/LEG.json`. Rules contract: repository Comprehensiv
 `WhenAttachedBecomesTappedTrigger` remains for four production callers: Psychic Venom, Kudzu, Artifact Possession, and Relic Bind. Their outstanding damage, attachment, and modal audits are not resolved by this slice. Blight's file retains unrelated legacy definitions and engine imports.
 
 Validation: focused tap-transition, attachment-capture, Blight, composition, and compile-fail tests; `go test ./pkg/mage/... ./cards/legends -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Targeted Permanent Destruction
+
+- [x] Migrate Northern Paladin, Ronom Unicorn, Unstable Obelisk, Ravenous Chupacabra, Crushing Canopy, and Grapple with Death to typed permanent targets and `Destroy`.
+- [x] Retire `DestroyTargetPermanent` from the engine and `dsl` exports. No Go declarations or callers remain.
+- [x] Audit the existing target, payment, modal, and destruction adapters. No engine fix or new DSL constructor is required for these callers.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Northern Paladin: “{W}{W}, {T}: Destroy target black permanent.” | `Activate(Costs(Mana("{W}{W}"), TapCost(This)), Destroy(target), WithTargets(target))`; black filter, either controller, normal tap and mana payment. | `TestNorthernPaladin`; typed target and activation contract tests |
+| Ronom Unicorn: “Sacrifice this creature: Destroy target enchantment.” | `Activate` with `SacrificeSourceCost`, enchantment target, and `Destroy`; select the target before sacrificing the source. No source characteristics are needed at resolution. | `TestRonomUnicorn`; existing transactional activation tests |
+| Unstable Obelisk: “{7}, {T}, Sacrifice this artifact: Destroy target permanent.” | `Activate` with mana, tap, and sacrifice costs; `AnyPermanent` typed target; destruction survives source departure. Its separate “{T}: Add {C}.” ability is unchanged. | `TestUnstableObelisk`; existing transactional activation tests |
+| Ravenous Chupacabra: “When this creature enters, destroy target creature an opponent controls.” | `WhenEvent(Enters(This), Destroy(creature), WithTargets(creature))` with `TargetOpponentControls`; mandatory target at trigger placement, stored controller, legality rechecked at resolution. | `TestRavenousChupacabra_DestroysOnETB`; `TestTypedOpponentTargetCandidatesAndActivation`, `TestTypedOpponentTargetCopy`, `TestTypedOpponentTargetTriggerController` |
+| Crushing Canopy: “Choose one — • Destroy target creature with flying. • Destroy target enchantment.” | `SpellModes` with two `ModeOf` definitions; each has its own typed target and `Destroy`. Only the selected mode supplies targets. Both former destruction helper calls are migrated. | `TestCrushingCanopy_DestroyFlying`, `TestCrushingCanopy_DestroyEnchantment`; `TestModalCastRejectsTargetsBeforePayment`, `TestModalCastKeepsModeAndTargets` |
+| Grapple with Death: “Destroy target artifact or creature. You gain 1 life.” | `Spell(Sequence(Destroy(target), GainLife(You, Fixed(1))), WithTargets(target))`; artifact-or-creature target; gain still occurs if destruction fails, but not if the sole target is illegal. | `TestGrappleWithDeath`, `TestGrappleWithDeathTypedDefinition`, `TestGrappleWithDeathOutcomes`: destruction, indestructible, regeneration, illegal target, returned target, own artifact |
+| Five test-only helper calls: three legacy modal tests, one legacy/typed modal comparison fixture, one AI removal fixture | Legacy modal fixtures use the remaining `DestroyTarget` positional executor to retain coverage of `NewModalSpell`. The AI fixture uses typed `Spell` and `Destroy`, retaining detrimental/destruction metadata and threat preference. | `TestNewModalSpell*`, `TestModalCast*`, `TestAutoSelectTargets_GenericRemovalPrefersCreatureOverLand` |
+
+All migrated targets identify the captured battlefield incarnation. They cannot destroy a later incarnation of the same card. Destruction uses the existing executor, permits regeneration, and respects indestructible. No damage-source LKI is required. The internal `destroyTargetPermanentEffect` remains for `DestroyTargetLand` and `DestroyTargetArtifact`; those helpers and other positional destruction callers are outside this slice. The changed card files retain unrelated legacy definitions and imports.
+
+Oracle sources: `data/LEA.json`, `data/JMP.json`, and `data/SOS.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 400.7 (new objects), 601–602 (targets and payment), 603.3 (trigger placement), 608.2b (target legality), and 701.8 (destroy). The Grapple definition test failed before migration because the target was untyped; its new outcome tests passed against the legacy implementation and preserve that behavior.
+
+Validation: focused card, modal, target, compile-fail, and AI tests; all three affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` passed with zero failures (lint: zero issues).
