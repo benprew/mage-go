@@ -113,6 +113,9 @@ Continuous effects are evaluated by `EffectManager.Apply` across the official 7-
 * **Static Whole-Step Replacements (CR 614.10b)**:
   * Fasting-style step replacements skip the entire draw step (suppressing normal card draw, step events, and priority).
   * The resulting action (e.g. gaining 2 life) occurs first in the next step that actually occurs.
+  * `Static(SkipDrawStepForLife(amount))` follows the source's current controller and ability availability. Phasing disables the rule; return to the battlefield creates a new rule for the new incarnation.
+  * Pending gains keep the player who skipped the step through control changes, source departure, and game cloning. They use the event-aware life gain executor and report actual replacement outcomes.
+  * Low-level explicit replacement records remain tied to their captured incarnation. A record with no incarnation cannot become active when the card enters later. These records are executor test fixtures, not the card-author API.
 
 ---
 

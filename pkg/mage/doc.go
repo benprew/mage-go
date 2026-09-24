@@ -42,6 +42,10 @@
 //   - Durable Incarnations: Battlefield permanents track a unique incarnation ID
 //     independent of their physical card UUID to prevent leave-and-return reference confusion.
 //
+// Draw-step replacements use [Static] with [SkipDrawStepForLife]. The rule
+// follows the current controller and remains active only while the source has
+// the ability. A pending gain keeps the player who skipped the step.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

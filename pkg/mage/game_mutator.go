@@ -543,22 +543,6 @@ func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
 	})
 }
 
-// AddFastingReplacement permits the current source controller to skip draw-step
-// entry. The player who skips the step gains 2 life in the next step that occurs.
-// The registration applies only to the current source incarnation. An absent
-// source registers nothing. The first argument is retained for compatibility.
-func (g *Game) AddFastingReplacement(_, sourceID uuid.UUID) {
-	source := g.FindPermanentIncludingPhased(sourceID)
-	if source == nil {
-		return
-	}
-	g.effects.AddReplacement(&drawStepLifeReplacement{
-		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		incarnation:     source.incarnationID,
-		amount:          2,
-	})
-}
-
 // SetDeepWaterActive activates Deep Water for playerID until end of turn.
 func (g *Game) SetDeepWaterActive(playerID uuid.UUID) {
 	g.effects.Rules.SetDeepWaterActive(playerID)

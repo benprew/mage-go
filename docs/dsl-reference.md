@@ -378,7 +378,7 @@ Spell(
 ### Fasting (Static Replacement + Upkeep Counters + Event Trigger)
 ```go
 // Skip draw step for life
-WithStaticAbility(Static(SkipDrawStepForLife(2)))
+WithAbility(Static(SkipDrawStepForLife(2)))
 
 // Put hunger counter, destroy if threshold reached
 WithAbility(At(YourUpkeep, Sequence(

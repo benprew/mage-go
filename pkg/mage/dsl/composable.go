@@ -253,4 +253,5 @@ var (
 )
 
 // SkipDrawStepForLife creates an optional draw-step replacement for Static.
+// The gain occurs first in the next step that occurs, even if the source leaves.
 var SkipDrawStepForLife = mage.SkipDrawStepForLife

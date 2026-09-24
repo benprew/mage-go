@@ -12,8 +12,7 @@ func TestFastingReplacementCurrentController(t *testing.T) {
 	a := &acceptingMayPlayer{NewBasePlayer("A")}
 	b := &acceptingMayPlayer{NewBasePlayer("B")}
 	g := NewGame(a, b)
-	source := g.PutOnBattlefield(NewEnchantment("Draw step replacement", ""), a.PlayerID())
-	g.AddFastingReplacement(a.PlayerID(), source.ID())
+	source := g.PutOnBattlefield(NewEnchantment("Draw step replacement", "", WithAbility(Static(SkipDrawStepForLife(2)))), a.PlayerID())
 	assertScope := func(game *Game, controller, opponent uuid.UUID) {
 		t.Helper()
 		if got := game.effects.ApplyReplacements(&beginDrawStepAction{playerID: opponent}, game); got == nil {
@@ -47,13 +46,19 @@ func TestFastingReplacementSourceLifetime(t *testing.T) {
 	a := &acceptingMayPlayer{NewBasePlayer("A")}
 	g := NewGame(a, NewBasePlayer("B"))
 	card := NewEnchantment("Draw step replacement", "")
-	g.AddFastingReplacement(a.PlayerID(), card.ID())
+	g.effects.AddReplacement(&drawStepLifeReplacement{
+		replacementBase: replacementBase{sourceID: card.ID(), duration: WhileOnBattlefield},
+		amount:          2,
+	})
 	source := g.PutOnBattlefield(card, a.PlayerID())
 	action := &beginDrawStepAction{playerID: a.PlayerID()}
 	if g.effects.ApplyReplacements(action, g) == nil {
 		t.Fatal("absent-source registration applied to a later permanent")
 	}
-	g.AddFastingReplacement(a.PlayerID(), source.ID())
+	g.effects.AddReplacement(&drawStepLifeReplacement{
+		replacementBase: replacementBase{sourceID: source.ID(), duration: WhileOnBattlefield},
+		incarnation:     source.incarnationID, amount: 2,
+	})
 	clone := g.Clone()
 	g.PhaseOut(source.ID())
 	if g.effects.ApplyReplacements(action, g) == nil {
@@ -71,7 +76,10 @@ func TestFastingReplacementSourceLifetime(t *testing.T) {
 	if clone.effects.ApplyReplacements(action, clone) != nil {
 		t.Fatal("source departure changed clone registration")
 	}
-	g.AddFastingReplacement(a.PlayerID(), card.ID())
+	g.effects.AddReplacement(&drawStepLifeReplacement{
+		replacementBase: replacementBase{sourceID: card.ID(), duration: WhileOnBattlefield},
+		incarnation:     g.FindPermanent(card.ID()).incarnationID, amount: 2,
+	})
 	if g.effects.ApplyReplacements(action, g) != nil {
 		t.Fatal("new registration did not apply to the returned source")
 	}

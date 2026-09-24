@@ -38,7 +38,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
 
 ### Life Gain & Payment Boundaries
-- [ ] Migrate the nine legacy replacement registration calls in `fasting_step_test.go`, `fasting_controller_test.go`, and `replacement_life_outcome_test.go` before retiring `AddFastingReplacement`. Preserve absent registration, explicit lifetime, and pending-gain tests; no production card callers remain.
+- [x] Migrate the nine legacy replacement registration calls in `fasting_step_test.go`, `fasting_controller_test.go`, and `replacement_life_outcome_test.go`; retire `AddFastingReplacement`. Six integration registrations now use `Static(SkipDrawStepForLife(2))`. Three explicit lifetime registrations use private executor records, preserving absent incarnation, phasing, leave-and-return, and clone assertions. No engine gap or production card migration remains for this helper.
 - [ ] Audit card callback `PlayerGainLife` callers and direct `GainLife` mutations for missing events. The low-level API intentionally retains its no-event contract; callers that already emit events must not receive duplicates. The singular DSL and string-variable executors report actual outcomes through one shared event path.
 - [ ] Audit life-gain replacement ordering and recipient/source identity. Legacy amount modifiers still run before the general replacement pipeline.
 - [ ] Establish simultaneous collection gain and replacement handling, including events that must observe all final life totals.
@@ -79,3 +79,15 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 - [ ] Maintain the High-Leverage 3-Tier Testing Model (exhaustive Tier 1 engine tests, 100% Tier 2 `TestRegisteredDefinitions` static validation, and Tier 3 risk-based card tests).
 - [ ] Add exact caller migration evidence for each unfinished family, remove obsolete exports only after all callers have replacements, and close the mutable author surface before marking the full design complete.
+
+## Completed Slice: Fasting Registration Retirement
+
+| Retired API and callers | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| `Game.AddFastingReplacement`: three step-test calls, one controller-test call, two life-outcome-test calls | `Static(SkipDrawStepForLife(2))`; no targets; optional whole draw-step replacement for the current controller; gain first in the next actual step. No damage LKI is needed. Static inspection and benefit metadata remain unchanged. | `TestFastingSkipsWholeStep`, `TestFastingDrawStepEligibility`, `TestFastingGainWaitsThroughSkippedSteps`, `TestFastingReplacementCurrentController`, `TestReplacementLifeGainOutcomes`, `TestFastingLifeGainRequiresAcceptedDrawStep` |
+| Three explicit lifetime-test calls | Private `drawStepLifeReplacement` records with explicit `WhileOnBattlefield` duration and captured incarnation; a missing incarnation stays inactive. These fixtures test the executor independently of static rule regeneration. | `TestFastingReplacementSourceLifetime` |
+| Fasting Oracle: “If you would begin your draw step, you may skip that step instead. If you do, you gain 2 life.” | Existing `cards/thedark` definition already uses `Static(SkipDrawStepForLife(2))`; no card change required. CR 614.10–614.10b in the repository rules remain the contract. | Existing `TestStaticDrawStepReplacement*` engine tests and `TestDrawStepReplacementComposition` author-surface validation |
+
+No Go callers or declaration of the retired API remain. General typed replacement rules and the other life-gain audits remain open.
+
+Validation: focused Fasting, static replacement, and life-outcome tests; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

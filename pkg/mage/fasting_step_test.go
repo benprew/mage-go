@@ -14,10 +14,9 @@ func TestFastingSkipsWholeStep(t *testing.T) {
 	g := NewGame(a, b)
 	g.turns.SetTurn(3)
 	g.turns.SetStep(Upkeep)
-	card := NewEnchantment("Fasting replacement", "")
+	card := NewEnchantment("Fasting replacement", "", WithAbility(Static(SkipDrawStepForLife(2))))
 	card.SetOwner(a.PlayerID())
 	source := g.PutOnBattlefield(card, a.PlayerID())
-	g.AddFastingReplacement(a.PlayerID(), source.ID())
 	g.PutOnBattlefield(NewEnchantment("Draw watcher", "", WithAbility(At(EachDrawStep, DrawFor(You, Fixed(1))))), a.PlayerID())
 	for range 6 {
 		a.AddToLibrary(NewLand("Card"))
@@ -70,10 +69,9 @@ func TestFastingDrawStepEligibility(t *testing.T) {
 			b := NewBasePlayer("B")
 			g := NewGame(a, b)
 			g.turns.SetTurn(3)
-			card := NewEnchantment("Fasting replacement", "")
+			card := NewEnchantment("Fasting replacement", "", WithAbility(Static(SkipDrawStepForLife(2))))
 			card.SetOwner(a.PlayerID())
 			source := g.PutOnBattlefield(card, a.PlayerID())
-			g.AddFastingReplacement(a.PlayerID(), source.ID())
 			for range 3 {
 				a.AddToLibrary(NewLand("Card"))
 				b.AddToLibrary(NewLand("Card"))
@@ -113,8 +111,7 @@ func TestFastingGainWaitsThroughSkippedSteps(t *testing.T) {
 	g := NewGame(a, NewBasePlayer("B"))
 	g.turns.SetTurn(3)
 	for range 2 {
-		source := g.PutOnBattlefield(NewEnchantment("Fasting replacement", ""), a.PlayerID())
-		g.AddFastingReplacement(a.PlayerID(), source.ID())
+		g.PutOnBattlefield(NewEnchantment("Fasting replacement", "", WithAbility(Static(SkipDrawStepForLife(2)))), a.PlayerID())
 	}
 	g.RunStepWithPriority(Draw)
 	if a.Life() != 20 {

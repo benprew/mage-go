@@ -62,11 +62,12 @@ func TestReplacementLifeGainOutcomes(t *testing.T) {
 				g := NewGame(a, b)
 				watcher := NewEnchantment("Watcher", "", WithAbility(WheneverYouGainLifeTrigger(
 					LoseLifeFor(You, ValueAtResolution(EventAmountValue())), false)))
+				if path == "fasting" {
+					WithAbility(Static(SkipDrawStepForLife(2)))(watcher)
+				}
 				g.PutOnBattlefield(watcher, a.PlayerID())
 				source := g.PutOnBattlefield(NewCreature("Damage source", "", 2, 2), b.PlayerID())
-				if path == "fasting" {
-					g.AddFastingReplacement(a.PlayerID(), watcher.ID())
-				} else {
+				if path == "reverse-damage" {
 					g.AddReverseDamageShield(a.PlayerID(), source.ID())
 				}
 				if scenario.double {
@@ -150,8 +151,7 @@ func TestFastingLifeGainRequiresAcceptedDrawStep(t *testing.T) {
 			}
 			b := NewBasePlayer("B")
 			g := NewGame(a, b)
-			source := g.PutOnBattlefield(NewEnchantment("Draw replacement", ""), a.PlayerID())
-			g.AddFastingReplacement(a.PlayerID(), source.ID())
+			g.PutOnBattlefield(NewEnchantment("Draw replacement", "", WithAbility(Static(SkipDrawStepForLife(2)))), a.PlayerID())
 			playerID := a.PlayerID()
 			if scenario == "other-player" {
 				playerID = b.PlayerID()
