@@ -184,14 +184,14 @@ func registerSpells() {
 	// Instant
 	// Destroy target artifact. You gain life equal to its mana value.
 	Register("Divine Offering", func() Card {
+		artifact := TargetPermanent("artifact", IsArtifact)
+		value := BindNumber("mana value")
 		return NewInstant("Divine Offering", "{1}{W}",
-			NewTargetedSpell(TargetArtifact(),
-				Pipeline("destroy target artifact; you gain life equal to its mana value",
-					EffectProperties{Outcome: OutcomeDetriment},
-					SnapshotPermanent(SelectTarget, "victim"),
-					DestroyTargetStep(),
-					GainLifeControllerFromVar("victim.cmc"),
-				)),
+			Spell(Sequence(
+				SnapshotNumber(ManaValueOf(artifact), value),
+				Destroy(artifact),
+				GainLife(You, FromNumber(value)),
+			), WithTargets(artifact)),
 		)
 	})
 

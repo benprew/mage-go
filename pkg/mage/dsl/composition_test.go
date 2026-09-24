@@ -473,3 +473,26 @@ func TestWitchHunterReturnComposition(t *testing.T) {
 		t.Fatal("return effect lost bounce metadata")
 	}
 }
+
+func TestManaValueComposition(t *testing.T) {
+	target := dsl.TargetPermanent("artifact", dsl.IsArtifact)
+	number := dsl.BindNumber("mana value")
+	body := dsl.Sequence(dsl.SnapshotNumber(dsl.ManaValueOf(target), number), dsl.Destroy(target), dsl.GainLife(dsl.You, dsl.FromNumber(number)))
+	member := dsl.BindPermanent("member")
+	cards := []mage.Card{
+		dsl.NewInstant("Spell", "", dsl.WithAbility(dsl.Spell(body, dsl.WithTargets(target)))),
+		dsl.NewArtifact("Activation", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body, dsl.WithTargets(target)))),
+		dsl.NewArtifact("Trigger", "", dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), body, dsl.WithTargets(target)))),
+		dsl.NewInstant("Mode", "", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Offering", body, dsl.WithTargets(target)), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+		dsl.NewInstant("Loop", "", dsl.WithAbility(dsl.Spell(dsl.ForEach(dsl.MatchingPermanents(dsl.IsArtifact), member, dsl.GainLife(dsl.You, dsl.ManaValueOf(dsl.From(member))))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info := dsl.InspectDefinition(body)
+	if !info.Properties.Destroys || info.Children[0].Children[0].Text != "mana value of subject" {
+		t.Fatalf("metadata = %+v", info)
+	}
+}

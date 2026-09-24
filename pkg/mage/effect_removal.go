@@ -17,9 +17,6 @@ func DestroyTarget() Effect {
 	return &destroyTargetEffect{}
 }
 
-// DestroyTargetStep returns the Effect for use as a pipeline/ForEach inner step.
-func DestroyTargetStep() Effect { return &destroyTargetEffect{} }
-
 func (e *destroyTargetEffect) Text() string { return "destroy target" }
 func (e *destroyTargetEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}

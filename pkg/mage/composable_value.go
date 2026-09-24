@@ -58,3 +58,20 @@ func (v permanentResolutionValue) resolveValue(ctx *EffectContext) int {
 func (v permanentResolutionValue) inspectDefinition() definitionNode {
 	return definitionNode{Role: "permanent-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
 }
+
+// ManaValueOf reads the permanent's mana value. An absent permanent supplies zero.
+func ManaValueOf(subject PermanentRef) ResolutionValue { return permanentManaValue{subject} }
+
+type permanentManaValue struct{ subject PermanentRef }
+
+func (v permanentManaValue) Text() string { return "mana value of subject" }
+func (v permanentManaValue) resolveValue(ctx *EffectContext) int {
+	p, ok := v.subject.resolvePermanent(ctx)
+	if !ok {
+		return 0
+	}
+	return p.Card.ManaCost().CMC()
+}
+func (v permanentManaValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "permanent-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
+}

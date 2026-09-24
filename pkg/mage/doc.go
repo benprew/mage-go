@@ -46,6 +46,10 @@
 // follows the current controller and remains active only while the source has
 // the ability. A pending gain keeps the player who skipped the step.
 //
+// Use [ManaValueOf] to read a permanent through its typed reference. Use
+// [SnapshotNumber] before [Destroy] when a later instruction needs that value.
+// The saved number remains available after the permanent leaves.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

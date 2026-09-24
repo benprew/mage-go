@@ -251,11 +251,6 @@ func GainLifeFromVar(playerVar, amountVar string) Effect {
 	return &GainLifeVarData{PlayerVar: playerVar, AmountVar: amountVar}
 }
 
-// GainLifeControllerFromVar gains life for the controller from a context variable amount.
-func GainLifeControllerFromVar(amountVar string) Effect {
-	return &GainLifeVarData{AmountVar: amountVar}
-}
-
 func (e *GainLifeVarData) Text() string { return "gain life" }
 func (e *GainLifeVarData) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}

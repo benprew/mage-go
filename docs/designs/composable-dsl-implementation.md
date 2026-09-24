@@ -20,12 +20,16 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] **Neyith of the Dire Hunt**: Audit combat trigger, optional hybrid payment, power doubling, and end-of-combat blocking requirement before removing `TargetMustBeBlockedIfAble`.
 - [ ] **Glorious Decay**: Audit damage mode and graveyard target before retiring `DestroyTargetArtifact`.
 - [ ] **Positional Return Helpers**: Continue positional return helper migrations. Witch Hunter's separate damage ability awaits damage-source LKI. Audit Rakalite's delayed source identity and Prismari Charm's modes before retiring `ReturnToHandTarget`.
+- [x] **Divine Offering**: Add `ManaValueOf`, capture with `SnapshotNumber`, and migrate destruction and controller life gain to typed actions. Retire the sole-caller helpers `DestroyTargetStep` and `GainLifeControllerFromVar`.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
 
 ### Zone LKI Retention
 - [ ] Audit zone LKI retention after final cleanup and damage source/recipient incarnation before claiming exact damage-condition adapters. The legacy card-ID cache still resets on final cleanup and can be replaced by a later departure of the same card. Typed counter and attachment histories have their own durable incarnation records; general damage references do not.
+
+### Mana-Cost Representation
+- [ ] Support monocolored hybrid symbols in the shared parser and payment path. `ParseManaCost("{2/W}").CMC()` currently returns 0 instead of 2. The typed mana-value adapter reuses this service; it does not add symbol support.
 
 ### Prepared Spell Payment
 - [ ] Resolve prepared spell mana payment before migrating Infirmary Healer's prepared Stream of Life factory. `WithPreparedSpell` installs a zero-cost activated ability, and `CastPreparedSpellCopy` pushes a copy without paying its mana cost. The current X=0 test supplies no mana; a failing cost regression is still required.
@@ -91,3 +95,21 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 No Go callers or declaration of the retired API remain. General typed replacement rules and the other life-gain audits remain open.
 
 Validation: focused Fasting, static replacement, and life-outcome tests; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+## Completed Slice: Divine Offering Mana-Value Capture
+
+- [x] Add and export `ManaValueOf(PermanentRef)` with typed subject inspection, registration validation, and compile-time rejection of players and collections.
+- [x] Migrate Divine Offering to `Spell`, a typed artifact target, `SnapshotNumber`, `Destroy`, and `GainLife(You, FromNumber(...))`.
+- [x] Retire `DestroyTargetStep` and `GainLifeControllerFromVar` from both engine and author surfaces. Each had exactly one caller, Divine Offering. Retain the shared destruction and string-player life executors for other callers.
+
+| Oracle clause / retired API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Destroy target artifact.” / `DestroyTargetStep` | `Destroy(artifact)` with `TargetPermanent("artifact", IsArtifact)` and `WithTargets`; either player's artifact; ordinary spell target legality, incarnation checks, and regeneration. Destruction metadata remains available. | `TestDivineOffering`, `TestDivineOfferingOutcomes`, `TestDivineOfferingTypedDefinition` |
+| “You gain life equal to its mana value.” / `GainLifeControllerFromVar` | `SnapshotNumber(ManaValueOf(artifact), value)` before destruction, then `GainLife(You, FromNumber(value))`; stored spell controller gains through the existing event/replacement path even if destruction fails. No gain if the only target is illegal. The number survives departure without a card-ID LKI lookup. | `TestDivineOfferingOutcomes`: destruction, indestructible, regeneration, own artifact, illegal target, leave-and-return, zero mana value, and X |
+| Typed mana value and saved value | Reuse `PermanentRef.resolvePermanent`, `ManaCost.CMC()`, and number frames. Live values exclude phased/absent/new incarnations; saved numbers remain unchanged. Typed target groups and cloned resolutions retain independent values. | `TestManaValueOfPermanent`, `TestManaValueOfTargetClone`, `TestManaValueOfValidation`, `TestManaValueComposition`, `TestClosedExpressionRoles` |
+
+Oracle source: `cards/legends/LEG.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 202.3/202.3e (mana value and X), 400.7 (new objects), and 608.2b/608.2h (target legality and object information). No underlying engine change was needed for this migration; the new adapter uses the existing mana-cost representation. Tests first failed for the missing constructor and the legacy untyped card target.
+
+Separate audit finding: `ParseManaCost("{2/W}").CMC()` returns 0 instead of 2. The parser supports two-color hybrid symbols but not monocolored hybrid symbols. Full monocolored-hybrid parsing/payment support remains an engine gap outside this slice; `ManaValueOf` does not correct or claim support for unrepresented mana symbols. General copying and zone-LKI audits remain open.
+
+Validation: focused mana-value, Divine Offering, composition, and compile-fail tests; `go test ./pkg/mage/... ./cards/legends -short -count=1`; `go test ./cards/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` passed with zero failures (lint: zero issues). No Go declarations or callers remain for either retired export.

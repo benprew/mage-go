@@ -335,6 +335,7 @@ Operations taking amounts accept `ResolutionValue`:
 
 * `Fixed(n)`: Static constant integer.
 * `XValue()`: The X announced during casting or activation.
+* `ManaValueOf(PermanentRef)`: Current mana value from the permanent's card; absent references supply zero. X contributes zero on the battlefield. Use `SnapshotNumber` before moving the permanent when a later instruction needs that value. This adapter uses the existing `ManaCost.CMC()` service and does not add mana-symbol support.
 * `PowerOf(PermanentRef)`: Current power of the permanent at resolution.
 * `ToughnessOf(PermanentRef)`: Current toughness of the permanent at resolution.
 * `CountersOn(PermanentRef, CounterType)`: Current count of counters on the live permanent.

@@ -235,6 +235,7 @@ var (
 type ResolutionValue = mage.ResolutionValue
 
 var (
+	ManaValueOf       = mage.ManaValueOf
 	PowerOf           = mage.PowerOf
 	ToughnessOf       = mage.ToughnessOf
 	ValueAtResolution = mage.ValueAtResolution

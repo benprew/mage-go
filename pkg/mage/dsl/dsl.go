@@ -429,7 +429,6 @@ var (
 	ChangeOwnerGathered                       = mage.ChangeOwnerGathered // for ante cards
 	MoveExiledGatheredToGraveyard             = mage.MoveExiledGatheredToGraveyard
 	GainLifeFromVar                           = mage.GainLifeFromVar
-	GainLifeControllerFromVar                 = mage.GainLifeControllerFromVar
 	ModalEffect                               = mage.ModalEffect
 	ModalTriggerEffect                        = mage.ModalTriggerEffect
 	MayPayMana                                = mage.MayPayMana
@@ -477,7 +476,6 @@ var (
 	DestroyAllMatchingNoRegen               = mage.DestroyAllMatchingNoRegen
 	DestroyGatheredNoRegen                  = mage.DestroyGatheredNoRegen
 	DestroyGathered                         = mage.DestroyGathered
-	DestroyTargetStep                       = mage.DestroyTargetStep
 	ExileTargetStep                         = mage.ExileTargetStep
 	ExileTargetCardFromGraveyard            = mage.ExileTargetCardFromGraveyard
 	DestroyAttachedStep                     = mage.DestroyAttachedStep
