@@ -57,6 +57,8 @@
 // that target with [WithTargets] on the spell, mode, trigger, or activation.
 // The target filter supplies the restriction; the action allows regeneration.
 // Land destruction uses [IsLand] with the same target and action constructors.
+// To destroy all lands, use [DestroyEach] with [MatchingPermanents] and [IsLand].
+// The collection is selected at resolution and does not include phased permanents.
 //
 // # Further Documentation
 //

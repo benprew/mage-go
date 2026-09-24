@@ -91,9 +91,10 @@ func registerSpells() {
 		)))
 	})
 
+	// Destroy all lands.
 	Register("Armageddon", func() Card {
 		return NewSorcery("Armageddon", "{3}{W}",
-			NewSpellAbility(DestroyAllLands()),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(IsLand)))),
 		)
 	})
 
@@ -456,12 +457,10 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy all Islands.
 	Register("Tsunami", func() Card {
 		return NewSorcery("Tsunami", "{3}{G}",
-			NewSpellAbility(DestroyAllMatching(
-				HasSubType("Island"),
-				"destroy all Islands",
-			)),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Island"))))),
 		)
 	})
 

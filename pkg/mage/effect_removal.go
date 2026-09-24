@@ -37,11 +37,6 @@ func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
 }
 
-// DestroyAllLands destroys all lands (Armageddon).
-func DestroyAllLands() Effect {
-	return DestroyAllMatching(IsLand, "destroy all lands")
-}
-
 // DestroyAllEnchantments destroys all enchantments (Tranquility).
 func DestroyAllEnchantments() Effect {
 	return DestroyAllMatching(IsEnchantment, "destroy all enchantments")

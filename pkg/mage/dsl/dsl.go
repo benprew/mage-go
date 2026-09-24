@@ -469,7 +469,6 @@ var (
 	DestroyAllCreaturesNoRegen              = mage.DestroyAllCreaturesNoRegen
 	DestroyAllEnchantments                  = mage.DestroyAllEnchantments
 	ChaosOrbEffect                          = mage.ChaosOrbEffect
-	DestroyAllLands                         = mage.DestroyAllLands
 	DestroyAllMatching                      = mage.DestroyAllMatching
 	DestroyAllMatchingNoRegen               = mage.DestroyAllMatchingNoRegen
 	DestroyGatheredNoRegen                  = mage.DestroyGatheredNoRegen

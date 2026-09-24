@@ -385,6 +385,17 @@ WithAbility(Spell(Destroy(land), WithTargets(land)))
 
 The target can be a land controlled by either player. `Destroy` allows regeneration.
 
+### All Lands or Islands
+```go
+WithAbility(Spell(DestroyEach(MatchingPermanents(IsLand))))
+WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Island")))))
+```
+
+These spells have no targets. The collection includes both players' matching
+permanents at resolution, excludes phased-out permanents, and is destroyed as
+one simultaneous group. Regeneration and indestructible still apply. Island
+matching uses the subtype, including nonbasic Islands, rather than the card name.
+
 ### Fasting (Static Replacement + Upkeep Counters + Event Trigger)
 ```go
 // Skip draw step for life

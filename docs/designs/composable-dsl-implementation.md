@@ -24,6 +24,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Blight Attachment-Tap Capture**: Add `AttachedBecomesTapped`, capture the event land before trigger placement, migrate Blight, and retire `DestroyAttachedStep` and `DestroyAttachedData`. Correct repeated tap-event emission.
 - [x] **Targeted Permanent Destruction**: Migrate all six production `DestroyTargetPermanent` callers to typed `Destroy` targets and retire the export. See the completed slice below.
 - [x] **Targeted Land Destruction**: Migrate Sinkhole, Stone Rain, and Ice Storm to typed land targets and `Destroy`; retire `NewLandDestruction` and `DestroyTargetLand`. No engine blocker. See the completed slice below.
+- [x] **Land-Wide Destruction**: Migrate Armageddon and Tsunami to typed `DestroyEach` collections; retire `DestroyAllLands`. No engine blocker. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -176,3 +177,21 @@ Validation: focused card, modal, target, compile-fail, and AI tests; all three a
 Oracle source: `data/LEA.json`; full text is now above each registration. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 400.7 (new objects), 608.2b (target legality), and 701.8 (destruction and regeneration). The new definition test failed for all three cards before migration because their land targets were untyped. These single-action cards use the existing engine contract tests and registration validation instead of additional game simulations. The changed card file retains unrelated legacy definitions and imports. Other destruction migrations and engine blockers remain open.
 
 Validation: focused land-definition and destruction tests; `go test ./cards/limited -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `go build ./...`; `go vet ./...`; `make test`; and `make lint` all passed with zero failures (lint: zero issues).
+
+## Completed Slice: Land-Wide Destruction
+
+- [x] Migrate Armageddon and Tsunami to `Spell(DestroyEach(MatchingPermanents(filter)))` through `pkg/mage/dsl`.
+- [x] Retire `DestroyAllLands` from the engine and author surface after migrating its sole caller, Armageddon. Only compile-fail fixtures mention the removed Go export.
+- [x] Audit collection selection and simultaneous destruction. Existing adapters and `Game.DestroyPermanents` support these cards; no new constructor or engine fix is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Armageddon: “Destroy all lands.” / sole `DestroyAllLands` caller | `DestroyEach(MatchingPermanents(IsLand))`; all lands of both players, selected at resolution, without targets. Printed cost and sorcery timing remain unchanged. | `TestLandSweepersTypedDefinitions`, `TestDestroyEachMatchingLands`, existing `TestAlphaDestroyEffects` and Consecrate Land tests |
+| Tsunami: “Destroy all Islands.” / `DestroyAllMatching` caller | `DestroyEach(MatchingPermanents(HasSubType("Island")))`; both players' Islands, including nonbasic Islands; subtype matching does not depend on the card name. | `TestLandSweepersTypedDefinitions`, `TestDestroyEachMatchingLands` |
+| Collection execution and metadata | The existing `destroyEachEffect` selects current, unphased permanents and calls `DestroyPermanents` once. Regeneration and indestructible apply. No targets, saved references, or source LKI are needed. Detrimental, mass, and destruction metadata remain available. | `TestDestroyEachMatchingLands`: empty collection, later entries, both controllers, subtype exclusion, indestructible, regeneration, phasing, and clone isolation; `TestDeathObservationSimultaneousAndClone`: grouped observation and departing death-trigger sources |
+
+Oracle source: `data/LEA.json`; full Oracle text is above each registration. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 608.2c (instructions), 701.8 (destruction and regeneration), and 702.26b (phasing). The new definition test failed for both legacy definitions before migration. These declarative spells reuse engine contract tests and universal registration validation instead of new card simulations.
+
+`DestroyAllMatching` remains for other callers, including non-land destruction. Other destruction helpers, unrelated legacy definitions/imports in the changed card file, and the listed engine blockers remain open.
+
+Validation: focused definition, collection, and simultaneous-destruction tests; `go test ./cards/limited -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1` (including retired-export compile-fail fixtures); `go build ./...`; `go vet ./...`; `make test`; and `make lint` all passed with zero failures (lint: zero issues).
