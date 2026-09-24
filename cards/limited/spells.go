@@ -297,8 +297,12 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy target land.
 	Register("Sinkhole", func() Card {
-		return NewLandDestruction("Sinkhole", "{B}{B}")
+		land := TargetPermanent("land", IsLand)
+		return NewSorcery("Sinkhole", "{B}{B}",
+			WithAbility(Spell(Destroy(land), WithTargets(land))),
+		)
 	})
 
 	// XXX: missing destroy mode — Oracle is modal: "Counter target blue spell" / "Destroy target blue permanent"
@@ -377,8 +381,12 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy target land.
 	Register("Stone Rain", func() Card {
-		return NewLandDestruction("Stone Rain", "{2}{R}")
+		land := TargetPermanent("land", IsLand)
+		return NewSorcery("Stone Rain", "{2}{R}",
+			WithAbility(Spell(Destroy(land), WithTargets(land))),
+		)
 	})
 
 	Register("Flashfires", func() Card {
@@ -457,8 +465,12 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy target land.
 	Register("Ice Storm", func() Card {
-		return NewLandDestruction("Ice Storm", "{2}{G}")
+		land := TargetPermanent("land", IsLand)
+		return NewSorcery("Ice Storm", "{2}{G}",
+			WithAbility(Spell(Destroy(land), WithTargets(land))),
+		)
 	})
 
 	// Target player gains X life.

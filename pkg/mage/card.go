@@ -957,12 +957,6 @@ func NewLuckyCharm(name, cost string, color Color) *BaseCard {
 	)
 }
 
-// NewLandDestruction creates a sorcery that destroys target land
-// (e.g. Stone Rain, Sinkhole, Ice Storm).
-func NewLandDestruction(name, cost string) *BaseCard {
-	return NewSorcery(name, cost, NewTargetedSpell(TargetLand(), DestroyTargetLand()))
-}
-
 // NewBoostAura creates an aura enchantment that gives the enchanted creature
 // +power/+toughness (e.g. Holy Strength, Unholy Strength, Giant Growth-style auras).
 func NewBoostAura(name, cost string, power, toughness int) *BaseCard {

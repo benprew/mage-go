@@ -56,6 +56,7 @@
 // Targeted destruction uses [Destroy] with a typed permanent target. Declare
 // that target with [WithTargets] on the spell, mode, trigger, or activation.
 // The target filter supplies the restriction; the action allows regeneration.
+// Land destruction uses [IsLand] with the same target and action constructors.
 //
 // # Further Documentation
 //

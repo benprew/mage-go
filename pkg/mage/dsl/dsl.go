@@ -174,7 +174,6 @@ var (
 	NewInstant                    = mage.NewInstant
 	NewSorcery                    = mage.NewSorcery
 	NewLand                       = mage.NewLand
-	NewLandDestruction            = mage.NewLandDestruction
 	NewAura                       = mage.NewAura
 	NewBoostAura                  = mage.NewBoostAura
 	WithAuraAIProfile             = mage.WithAuraAIProfile

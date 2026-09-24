@@ -23,6 +23,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Divine Offering**: Add `ManaValueOf`, capture with `SnapshotNumber`, and migrate destruction and controller life gain to typed actions. Retire the sole-caller helpers `DestroyTargetStep` and `GainLifeControllerFromVar`.
 - [x] **Blight Attachment-Tap Capture**: Add `AttachedBecomesTapped`, capture the event land before trigger placement, migrate Blight, and retire `DestroyAttachedStep` and `DestroyAttachedData`. Correct repeated tap-event emission.
 - [x] **Targeted Permanent Destruction**: Migrate all six production `DestroyTargetPermanent` callers to typed `Destroy` targets and retire the export. See the completed slice below.
+- [x] **Targeted Land Destruction**: Migrate Sinkhole, Stone Rain, and Ice Storm to typed land targets and `Destroy`; retire `NewLandDestruction` and `DestroyTargetLand`. No engine blocker. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -159,3 +160,19 @@ All migrated targets identify the captured battlefield incarnation. They cannot 
 Oracle sources: `data/LEA.json`, `data/JMP.json`, and `data/SOS.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 400.7 (new objects), 601–602 (targets and payment), 603.3 (trigger placement), 608.2b (target legality), and 701.8 (destroy). The Grapple definition test failed before migration because the target was untyped; its new outcome tests passed against the legacy implementation and preserve that behavior.
 
 Validation: focused card, modal, target, compile-fail, and AI tests; all three affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Targeted Land Destruction
+
+- [x] Migrate all three `NewLandDestruction` callers to `NewSorcery`, `Spell`, `TargetPermanent("land", IsLand)`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Retire `NewLandDestruction` from the engine and author surface, and retire the engine-only `DestroyTargetLand` export after migrating its test fixture. No Go declarations or callers remain.
+- [x] Audit the existing typed target and destruction adapters. No new constructor or engine behavior fix is needed. The shared `destroyTargetPermanentEffect` remains for `DestroyTargetArtifact`.
+
+| Oracle clause / retired API and callers | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Sinkhole, Stone Rain, Ice Storm: “Destroy target land.” / all three `NewLandDestruction` callers | `Spell(Destroy(land), WithTargets(land))` with `TargetPermanent("land", IsLand)`; one land controlled by either player, including nonbasic lands; printed costs and sorcery timing remain unchanged. The action allows regeneration and respects indestructible. | `TestLandDestructionTypedDefinitions` checks all three typed definitions, land-only candidates from both controllers, and detrimental/destruction metadata; existing `TestAlphaDestroyEffects` covers Sinkhole resolution. |
+| `DestroyTargetLand`: `NewLandDestruction` and the Stone Rain fixture in `rules_ch03_card_types_test.go` | Typed land target and `Destroy`; target legality and captured incarnation are checked by the existing spell/target services. No source LKI is required. The fixture retains its existing cost and sorcery type. | `TestTypedTargetGroups`, `TestTypedTargetCopyAndClone`, `TestTargetIncarnationAfterReturn`, `TestComposedRemovalMetadata`; existing card-type rules suite. |
+
+Oracle source: `data/LEA.json`; full text is now above each registration. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 400.7 (new objects), 608.2b (target legality), and 701.8 (destruction and regeneration). The new definition test failed for all three cards before migration because their land targets were untyped. These single-action cards use the existing engine contract tests and registration validation instead of additional game simulations. The changed card file retains unrelated legacy definitions and imports. Other destruction migrations and engine blockers remain open.
+
+Validation: focused land-definition and destruction tests; `go test ./cards/limited -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `go build ./...`; `go vet ./...`; `make test`; and `make lint` all passed with zero failures (lint: zero issues).

@@ -27,11 +27,6 @@ type destroyTargetPermanentEffect struct {
 	text string
 }
 
-// DestroyTargetLand creates an effect that destroys a target land (e.g. Stone Rain, Sinkhole).
-func DestroyTargetLand() Effect {
-	return &destroyTargetPermanentEffect{text: "destroy target land"}
-}
-
 // DestroyTargetArtifact creates an effect that destroys a target artifact (e.g. Shatter).
 func DestroyTargetArtifact() Effect {
 	return &destroyTargetPermanentEffect{text: "destroy target artifact"}

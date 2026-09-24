@@ -377,6 +377,14 @@ Spell(
 )
 ```
 
+### Targeted Land Destruction
+```go
+land := TargetPermanent("land", IsLand)
+WithAbility(Spell(Destroy(land), WithTargets(land)))
+```
+
+The target can be a land controlled by either player. `Destroy` allows regeneration.
+
 ### Fasting (Static Replacement + Upkeep Counters + Event Trigger)
 ```go
 // Skip draw step for life

@@ -89,8 +89,9 @@ func ch03RegisterCards() {
 			)
 		}},
 		{"Stone Rain", func() mage.Card {
+			land := mage.DeclarePermanentTarget("land", mage.IsLand)
 			return mage.NewSorcery("Stone Rain", "{2}{R}",
-				mage.NewTargetedSpell(mage.TargetLand(), mage.DestroyTargetLand()),
+				mage.WithAbility(mage.Spell(mage.Destroy(land), mage.WithTargets(land))),
 			)
 		}},
 		{"Control Magic", func() mage.Card {
