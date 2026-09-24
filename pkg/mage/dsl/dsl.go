@@ -466,11 +466,9 @@ var (
 	PutFromHandOntoBattlefield              = mage.PutFromHandOntoBattlefield
 	ChangeColorEffect                       = mage.ChangeColorEffect
 	DestroyAllCreatures                     = mage.DestroyAllCreatures
-	DestroyAllCreaturesNoRegen              = mage.DestroyAllCreaturesNoRegen
 	DestroyAllEnchantments                  = mage.DestroyAllEnchantments
 	ChaosOrbEffect                          = mage.ChaosOrbEffect
 	DestroyAllMatching                      = mage.DestroyAllMatching
-	DestroyAllMatchingNoRegen               = mage.DestroyAllMatchingNoRegen
 	DestroyGatheredNoRegen                  = mage.DestroyGatheredNoRegen
 	DestroyGathered                         = mage.DestroyGathered
 	ExileTargetStep                         = mage.ExileTargetStep

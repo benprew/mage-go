@@ -102,6 +102,8 @@ var (
 	Destroy = mage.Destroy
 	// DestroyEach destroys all permanents in a PermanentSet simultaneously.
 	DestroyEach = mage.DestroyEach
+	// DestroyEachWithoutRegeneration destroys the set without regeneration.
+	DestroyEachWithoutRegeneration = mage.DestroyEachWithoutRegeneration
 	// DestroyWithoutRegeneration destroys the permanent and forbids regeneration.
 	DestroyWithoutRegeneration = mage.DestroyWithoutRegeneration
 	// Exile moves the referenced permanent to exile.

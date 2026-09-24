@@ -496,3 +496,23 @@ func TestManaValueComposition(t *testing.T) {
 		t.Fatalf("metadata = %+v", info)
 	}
 }
+
+func TestCollectionNoRegenerationComposition(t *testing.T) {
+	body := dsl.DestroyEachWithoutRegeneration(dsl.MatchingPermanents(dsl.IsCreature))
+	cards := []mage.Card{
+		dsl.NewSorcery("Spell", "", dsl.Spell(body)),
+		dsl.NewSorcery("Sequence", "", dsl.Spell(dsl.Sequence(body, dsl.Draw(dsl.You, dsl.Fixed(1))))),
+		dsl.NewArtifact("Activation", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body))),
+		dsl.NewCreature("Trigger", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), body))),
+		dsl.NewSorcery("Modes", "", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Destroy", body), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	invalid := dsl.NewSorcery("Missing set", "", dsl.Spell(dsl.DestroyEachWithoutRegeneration(nil)))
+	if err := mage.ValidateCardDefinition(invalid.Name(), invalid); err == nil {
+		t.Fatal("accepted nil collection")
+	}
+}

@@ -4,8 +4,9 @@ import "github.com/google/uuid"
 
 // DestroyPermanentAction represents a permanent about to be destroyed.
 type DestroyPermanentAction struct {
-	source      uuid.UUID
-	permanentID uuid.UUID
+	cannotRegenerate bool
+	source           uuid.UUID
+	permanentID      uuid.UUID
 }
 
 func NewDestroyPermanentAction(source, permanentID uuid.UUID) *DestroyPermanentAction {

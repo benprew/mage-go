@@ -25,6 +25,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Targeted Permanent Destruction**: Migrate all six production `DestroyTargetPermanent` callers to typed `Destroy` targets and retire the export. See the completed slice below.
 - [x] **Targeted Land Destruction**: Migrate Sinkhole, Stone Rain, and Ice Storm to typed land targets and `Destroy`; retire `NewLandDestruction` and `DestroyTargetLand`. No engine blocker. See the completed slice below.
 - [x] **Land-Wide Destruction**: Migrate Armageddon and Tsunami to typed `DestroyEach` collections; retire `DestroyAllLands`. No engine blocker. See the completed slice below.
+- [x] **Collection Destruction Without Regeneration**: Add `DestroyEachWithoutRegeneration`, migrate Wrath of God and Shatterstorm, and retire both collection no-regeneration helpers. Resolve the action-scoping engine gap with a regression test first. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -41,6 +42,10 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 ### Damage-Source Identity & LKI
 - [ ] Retain source incarnation and last-known characteristics through the existing damage and replacement pipeline, including death, return, and copying. `DamageSystem.ExecuteDamageToPlayer` and `ExecuteDamageToCreature` use `FindPermanent(sourceID)` for lifelink and deathtouch. Protection in `DealDamageToPermanent` also looks up the physical card ID; `LookupObject` prefers a live object with that ID. Add regressions for returned sources and departed sources with granted keywords before adding the typed adapter.
+
+### Destruction Regeneration Scope
+- [x] Keep the collection no-regeneration prohibition on each destruction action; preserve permanent characteristics and simultaneous death snapshots.
+- [ ] Audit singular positional no-regeneration executors, which still grant `CantRegenerate`, before claiming action-scoped semantics for that family.
 
 ### Untap Skipping
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
@@ -195,3 +200,23 @@ Oracle source: `data/LEA.json`; full Oracle text is above each registration. Rul
 `DestroyAllMatching` remains for other callers, including non-land destruction. Other destruction helpers, unrelated legacy definitions/imports in the changed card file, and the listed engine blockers remain open.
 
 Validation: focused definition, collection, and simultaneous-destruction tests; `go test ./cards/limited -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1` (including retired-export compile-fail fixtures); `go build ./...`; `go vet ./...`; `make test`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Collection Destruction Without Regeneration
+
+- [x] Add and export `DestroyEachWithoutRegeneration(PermanentSet)` with collection inspection, destruction metadata, registration validation, composition tests, and compile-time category checks.
+- [x] Migrate Wrath of God and Shatterstorm and retire `DestroyAllCreaturesNoRegen`, `DestroyAllMatchingNoRegen`, and their private executor. Only retired-export compile-fail fixtures mention those Go APIs.
+- [x] Resolve the collection engine gap: forbid regeneration on the destruction action instead of granting the permanent a keyword. `TestCollectionNoRegenerationPreservesCharacteristics` first failed against the legacy executor because the last-known creature incorrectly had `CantRegenerate`; it passed after the minimal action/replacement fix, before helper retirement.
+
+| Oracle clause / retired API and callers | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Wrath of God: “Destroy all creatures. They can't be regenerated.” / sole `DestroyAllCreaturesNoRegen` card caller | `Spell(DestroyEachWithoutRegeneration(MatchingPermanents(IsCreature)))`; both players' creatures selected at resolution, no targets, printed cost and sorcery timing preserved. | `TestLandSweepersTypedDefinitions`, `TestDestroyEachWithoutRegenerationCollections` |
+| Shatterstorm: “Destroy all artifacts. They can't be regenerated.” / sole direct `DestroyAllMatchingNoRegen` card caller (the other caller was the retired creature helper) | `Spell(DestroyEachWithoutRegeneration(MatchingPermanents(IsArtifact)))`; both players' artifacts, no targets; indestructible and phasing apply. | `TestShatterstormTypedDefinition`, existing `TestShatterstorm`, `TestDestroyEachWithoutRegenerationCollections` |
+| “They can't be regenerated.” / private collection executor | Shared `destroyEachEffect` calls the existing simultaneous destruction service with an action-local prohibition. Regeneration replacements decline that action. Permanent characteristics and the pre-death snapshot remain unchanged. | `TestCollectionNoRegenerationPreservesCharacteristics`; collection tests cover empty sets, later entries, exclusions, shields, both controllers, phasing, indestructible, and clone isolation. |
+| Simultaneous deaths and composed definitions | Reuse the existing zone-change batch, target/set resolution, replacement pipeline, and definition visitor. No source LKI is required. Detrimental and mass metadata remain; `Destroys` is now correctly exposed. | `TestNoRegenerationSimultaneousDeathObservation` covers departing observers, final death counts, and state-trigger atomicity; `TestCollectionNoRegenerationComposition` covers spells, sequences, activations, triggers, modes, and invalid nil collections; compile-fail fixtures reject singular/player subjects and retired exports. |
+
+Oracle sources: `data/LEA.json` and `cards/antiquities/ATQ.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 701.8 (destroy), 701.19c (regeneration prohibition), 603.6c (death observation), and 702.26b (phasing). Both typed-definition tests failed against the legacy card definitions before migration. These declarative cards reuse engine contract tests and universal registration validation.
+
+The changed card files retain unrelated legacy definitions and imports. Singular positional no-regeneration executors still grant `CantRegenerate`; their migration and action-scope audit remain separate work. The general damage/zone-LKI blockers are unchanged.
+
+Validation: focused regression and typed-definition tests; both affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

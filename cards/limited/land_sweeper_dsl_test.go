@@ -12,6 +12,7 @@ func TestLandSweepersTypedDefinitions(t *testing.T) {
 		filter mage.PermanentFilter
 	}{
 		{"Armageddon", mage.IsLand},
+		{"Wrath of God", mage.IsCreature},
 		{"Tsunami", mage.HasSubType("Island")},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -26,8 +27,12 @@ func TestLandSweepersTypedDefinitions(t *testing.T) {
 			if len(ability.Targets()) != 0 || len(ability.Effects()) != 1 {
 				t.Fatal("expected one effect without targets")
 			}
+			role := "destroy-each"
+			if tc.name == "Wrath of God" {
+				role = "destroy-each-without-regeneration"
+			}
 			info := mage.InspectDefinition(ability.Effects()[0])
-			if info.Role != "destroy-each" || len(info.Children) != 1 || info.Children[0].Role != "permanent-set" || info.Children[0].Text != tc.filter.Text() {
+			if info.Role != role || len(info.Children) != 1 || info.Children[0].Role != "permanent-set" || info.Children[0].Text != tc.filter.Text() {
 				t.Fatalf("missing typed destruction collection: %+v", info)
 			}
 			if !info.Properties.Destroys || !info.Properties.Mass || info.Properties.Outcome != mage.OutcomeDetriment {

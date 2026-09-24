@@ -196,7 +196,7 @@ func registerSpells() {
 	// Destroy all artifacts. They can't be regenerated.
 	Register("Shatterstorm", func() Card {
 		return NewSorcery("Shatterstorm", "{2}{R}{R}",
-			NewSpellAbility(DestroyAllMatchingNoRegen(IsArtifact, "destroy all artifacts; they can't be regenerated")),
+			Spell(DestroyEachWithoutRegeneration(MatchingPermanents(IsArtifact))),
 		)
 	})
 

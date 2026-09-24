@@ -150,6 +150,7 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 * `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).
 * `DestroyWithoutRegeneration(PermanentRef)`: Destroys the permanent (forbids regeneration).
 * `DestroyEach(PermanentSet)`: Simultaneously destroys all permanents in the set.
+* `DestroyEachWithoutRegeneration(PermanentSet)`: Simultaneously destroys the set without regeneration. Indestructible still applies; the instruction does not change permanent keywords.
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
 * `Tap(PermanentRef)`: Taps the permanent.
 * `Untap(PermanentRef)`: Untaps the permanent.

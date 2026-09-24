@@ -96,6 +96,7 @@ Continuous effects are evaluated by `EffectManager.Apply` across the official 7-
   * A permanent that leaves and returns has a new instance and can trigger independently.
 * **Simultaneous Batch Observation**:
   * Mass destruction (`DestroyPermanents`) preserves the pre-destruction battlefield snapshot for leave-the-battlefield triggers.
+  * `DestroyEachWithoutRegeneration` uses the same batch with an action-scoped regeneration prohibition (CR 701.8, 701.19c). It does not add keywords to permanents or their last-known characteristics. Indestructible and other destruction replacements still apply.
   * Zero-toughness state-based deaths share the same observation batch.
   * Conditions evaluate against the pre-batch state; trigger effects resolve against the current game state.
 

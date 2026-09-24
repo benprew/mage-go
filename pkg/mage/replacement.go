@@ -22,7 +22,7 @@ type regenerationReplacement struct {
 
 func (r *regenerationReplacement) Matches(a Action, g GameReader) bool {
 	da, ok := a.(*DestroyPermanentAction)
-	if !ok {
+	if !ok || da.cannotRegenerate {
 		return false
 	}
 	if da.PermanentID() != r.permanentID {

@@ -63,23 +63,6 @@ func DestroyAllCreatures() Effect {
 	return DestroyAllMatching(IsCreature, "destroy all creatures")
 }
 
-// destroyAllMatchingNoRegenEffect destroys all matching permanents with "can't be regenerated".
-type destroyAllMatchingNoRegenEffect struct {
-	filter PermanentFilter
-	text   string
-}
-
-// DestroyAllMatchingNoRegen creates an effect that destroys all permanents matching the filter.
-// The destroyed permanents can't be regenerated (e.g. Shatterstorm).
-func DestroyAllMatchingNoRegen(filter PermanentFilter, text string) Effect {
-	return &destroyAllMatchingNoRegenEffect{filter: filter, text: text}
-}
-
-func (e *destroyAllMatchingNoRegenEffect) Text() string { return e.text }
-func (e *destroyAllMatchingNoRegenEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
-}
-
 // destroyTargetNoRegenEffect destroys a target permanent, preventing regeneration.
 type destroyTargetNoRegenEffect struct{}
 
@@ -91,11 +74,6 @@ func DestroyTargetNoRegen() Effect {
 
 // DestroyTargetNoRegenStep returns the Effect for use in pipelines/ForEach.
 func DestroyTargetNoRegenStep() Effect { return &destroyTargetNoRegenEffect{} }
-
-// DestroyAllCreaturesNoRegen destroys all creatures; they can't be regenerated (e.g. Wrath of God).
-func DestroyAllCreaturesNoRegen() Effect {
-	return DestroyAllMatchingNoRegen(IsCreature, "destroy all creatures (can't be regenerated)")
-}
 
 func (e *destroyTargetNoRegenEffect) Text() string {
 	return "destroy target (can't be regenerated)"
@@ -176,19 +154,6 @@ func (*destroyTargetPermanentEffect) Apply(ctx *EffectContext) error {
 
 func (e *destroyAllMatchingEffect) Apply(ctx *EffectContext) error {
 	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	ctx.Game.DestroyPermanents(toDestroy)
-	return nil
-}
-
-func (e *destroyAllMatchingNoRegenEffect) Apply(ctx *EffectContext) error {
-	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	for _, p := range toDestroy {
-		p = ctx.Game.MutablePermanent(p.ID())
-		if p == nil {
-			continue
-		}
-		p.GrantBaseAttr(CantRegenerate)
-	}
 	ctx.Game.DestroyPermanents(toDestroy)
 	return nil
 }

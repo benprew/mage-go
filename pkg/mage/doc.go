@@ -59,6 +59,8 @@
 // Land destruction uses [IsLand] with the same target and action constructors.
 // To destroy all lands, use [DestroyEach] with [MatchingPermanents] and [IsLand].
 // The collection is selected at resolution and does not include phased permanents.
+// Use [DestroyEachWithoutRegeneration] when the instruction forbids regeneration.
+// This restriction applies to the action and does not change permanent keywords.
 //
 // # Further Documentation
 //

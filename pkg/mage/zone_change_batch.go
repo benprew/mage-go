@@ -38,6 +38,10 @@ func isBattlefieldLeaveEvent(evt *GameEvent) bool {
 // DestroyPermanents destroys the permanents as one simultaneous action.
 // Replacement effects can prevent the destruction of individual permanents.
 func (g *Game) DestroyPermanents(permanents []*Permanent) {
+	g.destroyPermanents(permanents, false)
+}
+
+func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool) {
 	if len(permanents) == 0 {
 		return
 	}
@@ -50,7 +54,9 @@ func (g *Game) DestroyPermanents(permanents []*Permanent) {
 				continue
 			}
 			seen[p.ID()] = true
-			if !current.HasKeyword(Indestructible) && g.effects.ApplyReplacements(NewDestroyPermanentAction(uuid.Nil, p.ID()), g) != nil {
+			action := NewDestroyPermanentAction(uuid.Nil, p.ID())
+			action.cannotRegenerate = cannotRegenerate
+			if !current.HasKeyword(Indestructible) && g.effects.ApplyReplacements(action, g) != nil {
 				destroy = append(destroy, current)
 			}
 		}

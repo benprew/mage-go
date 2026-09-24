@@ -514,9 +514,10 @@ func registerSpells() {
 
 	// ===== COLORLESS SPELLS =====
 
+	// Destroy all creatures. They can't be regenerated.
 	Register("Wrath of God", func() Card {
 		return NewSorcery("Wrath of God", "{2}{W}{W}",
-			NewSpellAbility(DestroyAllCreaturesNoRegen()),
+			Spell(DestroyEachWithoutRegeneration(MatchingPermanents(IsCreature))),
 		)
 	})
 

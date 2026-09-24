@@ -246,20 +246,39 @@ func (s matchingPermanentSet) inspectDefinition() definitionNode {
 	return definitionNode{Role: "permanent-set", Text: s.filter.Text()}
 }
 
-type destroyEachEffect struct{ subjects PermanentSet }
+type destroyEachEffect struct {
+	subjects         PermanentSet
+	cannotRegenerate bool
+}
 
 // DestroyEach performs one simultaneous destruction group through the engine.
-func DestroyEach(subjects PermanentSet) ResolvingEffect { return &destroyEachEffect{subjects} }
-func (*destroyEachEffect) Text() string                 { return "destroy each permanent" }
+func DestroyEach(subjects PermanentSet) ResolvingEffect {
+	return &destroyEachEffect{subjects: subjects}
+}
+
+// DestroyEachWithoutRegeneration destroys the set without regeneration.
+func DestroyEachWithoutRegeneration(subjects PermanentSet) ResolvingEffect {
+	return &destroyEachEffect{subjects: subjects, cannotRegenerate: true}
+}
+func (e *destroyEachEffect) Text() string {
+	if e.cannotRegenerate {
+		return "destroy each permanent; they can't be regenerated"
+	}
+	return "destroy each permanent"
+}
 func (*destroyEachEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true, Mass: true}
 }
 func (e *destroyEachEffect) Apply(ctx *EffectContext) error {
-	ctx.Game.DestroyPermanents(e.subjects.resolvePermanents(ctx))
+	ctx.Game.destroyPermanents(e.subjects.resolvePermanents(ctx), e.cannotRegenerate)
 	return nil
 }
 func (e *destroyEachEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "destroy-each", children: []definitionEdge{{"subjects", e.subjects}}}
+	role := "destroy-each"
+	if e.cannotRegenerate {
+		role = "destroy-each-without-regeneration"
+	}
+	return definitionNode{Role: role, Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
 }
 
 // GainLifeFor gains life for the selected player through the existing life action.
