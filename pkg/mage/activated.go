@@ -195,8 +195,10 @@ type ActionDefinition struct {
 	permission          ActivationPermission
 	activatedThisTurn   bool // Tracks whether this ability has been activated this turn
 	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
+	staticGrant         bool
 	activationConds     []ActivationCondition
 	dslRestrictions     []activationRestriction
+	dslCaptures         []activationCapture
 	aiHints             []AIHint
 	modes               []Mode
 }
@@ -280,7 +282,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 		return false
 	}
 	if perm := g.FindPermanent(a.source); perm != nil {
-		if perm.HasAttr(AttrCantActivate) || (perm.HasAttr(AttrCantActivateNonManaAbilities) && unconditionalManaAmount(a.effects, a.targets) == 0) {
+		if perm.HasAttr(AttrCantActivate) || (perm.HasAttr(AttrCantActivateNonManaAbilities) && !canProduceMana(a.effects, a.targets)) {
 			return false
 		}
 		if perm.ControllerID() != controller && !a.permission.AnyPlayerMayUse {
@@ -296,7 +298,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.timing == TimingStepOnly && g.turns.Step() != a.stepOnly {
 		return false
 	}
-	if a.limits.MaxActivationsPerTurn > 0 && a.activationsThisTurn >= a.limits.MaxActivationsPerTurn {
+	if a.limits.MaxActivationsPerTurn > 0 && a.activationCount(g) >= a.limits.MaxActivationsPerTurn {
 		return false
 	}
 	if a.limits.OncePerTurn && a.activatedThisTurn {
@@ -338,6 +340,26 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	}
 
 	return true
+}
+
+func (a *ActionDefinition) activationCount(g *Game) int {
+	if a.staticGrant {
+		return g.trackers.Turn.grantedActivations[a.id]
+	}
+	return a.activationsThisTurn
+}
+
+func (a *ActionDefinition) markActivatedInGame(g *Game) {
+	if a.staticGrant {
+		if a.limits.MaxActivationsPerTurn > 0 {
+			if g.trackers.Turn.grantedActivations == nil {
+				g.trackers.Turn.grantedActivations = make(map[uuid.UUID]int)
+			}
+			g.trackers.Turn.grantedActivations[a.id]++
+		}
+		return
+	}
+	a.MarkActivated()
 }
 
 // MarkActivated sets the once-per-turn flag. Called after the ability is paid for.

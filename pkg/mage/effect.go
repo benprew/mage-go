@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -139,11 +140,21 @@ func mergeEffectProperties(dst *EffectProperties, src EffectProperties) {
 // effect's Apply method. This is the canonical entry point for Effect resolution
 // from engine code that holds a *Game directly.
 func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
+	return applyEffectWithCaptures(g, e, sourceID, controller, targets, nil, nil)
+}
+
+func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID, numbers map[*NumberBinding]int, permanents map[*PermanentBinding]capturedPermanent) error {
 	if e == nil {
 		return nil
 	}
+	savedNumbers := g.resolution.numberBindings
+	g.resolution.numberBindings = maps.Clone(numbers)
+	defer func() { g.resolution.numberBindings = savedNumbers }()
+	savedPlayers := g.resolution.playerBindings
+	g.resolution.playerBindings = nil
+	defer func() { g.resolution.playerBindings = savedPlayers }()
 	savedBindings := g.resolution.permanentBindings
-	g.resolution.permanentBindings = nil
+	g.resolution.permanentBindings = maps.Clone(permanents)
 	defer func() { g.resolution.permanentBindings = savedBindings }()
 	ctx := &EffectContext{
 		Game:                g,
@@ -351,8 +362,8 @@ const (
 // fixedValue is a ValueSource that always returns a constant.
 type fixedValue struct{ n int }
 
-// Fixed creates a ValueSource that always returns the constant n.
-func Fixed(n int) ValueSource                                                { return fixedValue{n: n} }
+// Fixed supplies the constant n to legacy and context-aware value consumers.
+func Fixed(n int) fixedValue                                                 { return fixedValue{n: n} }
 func (v fixedValue) Resolve(_ GameReader, _, _ uuid.UUID, _ []uuid.UUID) int { return v.n }
 func (v fixedValue) Text() string                                            { return fmt.Sprintf("%d", v.n) }
 

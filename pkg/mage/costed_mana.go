@@ -80,7 +80,7 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 	if ability.timing == TimingStepOnly && g.turns.Step() != ability.stepOnly {
 		return false
 	}
-	if ability.limits.MaxActivationsPerTurn > 0 && ability.activationsThisTurn >= ability.limits.MaxActivationsPerTurn {
+	if ability.limits.MaxActivationsPerTurn > 0 && ability.activationCount(g) >= ability.limits.MaxActivationsPerTurn {
 		return false
 	}
 	if ability.limits.OncePerTurn && ability.activatedThisTurn {
@@ -115,6 +115,12 @@ func sequentialManaProductions(effects []Effect) ([]ManaProduction, bool) {
 	onlyMana := len(effects) > 0
 	for _, effect := range effects {
 		switch add := effect.(type) {
+		case *manaAmountEffect:
+			if amount, ok := add.amount.(fixedValue); ok && amount.n > 0 {
+				productions = append(productions, ManaProduction{Color: add.color, Amount: amount.n})
+			} else {
+				onlyMana = false
+			}
 		case *addManaEffect:
 			productions = append(productions, ManaProduction{Color: add.color, Amount: add.amount})
 		case *addAnyManaEffect:

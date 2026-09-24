@@ -406,12 +406,13 @@ func registerEnchantments() {
 	// Enchantment
 	// Sacrifice a Swamp: Regenerate target black creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Horror of Horrors", func() Card {
+		creature := TargetPermanent("black creature", And(IsCreature, HasColorFilter(Black)))
 		return NewEnchantment("Horror of Horrors", "{3}{B}{B}",
-			WithActivatedAbility(
-				RegenerateTarget(),
-				SacrificeMatchingCost(And(IsLand, HasSubType("Swamp")), "Sacrifice a Swamp"),
-				WithTarget(TargetCreature(HasColorFilter(Black))),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(And(IsLand, HasSubType("Swamp")), "Sacrifice a Swamp")),
+				Regenerate(creature),
+				WithTargets(creature),
+			)),
 		)
 	})
 
@@ -983,7 +984,7 @@ func registerEnchantments() {
 		return NewAura("Spirit Link", "{W}",
 			WithAbility(
 				NewTriggered(EvtDamageDealt, false,
-					GainLife(You, EventAmountValue()),
+					GainLife(You, ValueAtResolution(EventAmountValue())),
 				).SetConditionData(SourceIsAttachedToEventSource{}),
 			),
 		)
@@ -1104,14 +1105,8 @@ func registerEnchantments() {
 	// {R}{R}{R}: Regenerate enchanted creature.
 	Register("The Brute", func() Card {
 		return NewAura("The Brute", "{1}{R}",
-			WithStaticAbility(
-				BoostAttached(1, 0, AttachAura),
-				GrantActivatedAbilityToAttached(
-					RegenerateSource(),
-					ManaCostOf("{R}{R}{R}"),
-					AttachAura,
-				),
-			),
+			WithAbility(Activate(Costs(Mana("{R}{R}{R}")), Regenerate(AttachedPermanent))),
+			WithStaticAbility(BoostAttached(1, 0, AttachAura)),
 		)
 	})
 

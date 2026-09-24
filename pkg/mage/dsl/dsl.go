@@ -236,7 +236,6 @@ var (
 	StaticAbility                                                       = mage.StaticAbility
 	GrantAbilityToAttached                                              = mage.GrantAbilityToAttached
 	GrantActivatedAbilityToAttached                                     = mage.GrantActivatedAbilityToAttached
-	GrantActivatedAbilityToAll                                          = mage.GrantActivatedAbilityToAll
 	GrantTriggeredAbilityToAll                                          = mage.GrantTriggeredAbilityToAll
 	NewManaFlareAbility                                                 = mage.NewManaFlareAbility
 	NewAttachedManaBonusAbility                                         = mage.NewAttachedManaBonusAbility
@@ -314,7 +313,6 @@ var (
 	FrankensteinsMonsterAbility                                         = mage.FrankensteinsMonsterAbility
 	NamelessRaceAbility                                                 = mage.NamelessRaceAbility
 	ETBEffect                                                           = mage.ETBEffect
-	AnyCreatureDiesTrigger                                              = mage.AnyCreatureDiesTrigger
 	BeginningOfEachDrawStepTrigger                                      = mage.BeginningOfEachDrawStepTrigger
 	BeginningOfEachUpkeepTrigger                                        = mage.BeginningOfEachUpkeepTrigger
 	WheneverLandEntersBattlefieldTrigger                                = mage.WheneverLandEntersBattlefieldTrigger
@@ -373,40 +371,24 @@ var (
 	WormsOfTheEarthEffect                        = mage.WormsOfTheEarthEffect
 	OnTargetDiesThisTurn                         = mage.OnTargetDiesThisTurn
 	AladdinsRingEffect                           = mage.AladdinsRingEffect
-	AncestralRecallEffect                        = mage.AncestralRecallEffect
 	BerserkEffect                                = mage.BerserkEffect
-	BloodLustEffect                              = mage.BloodLustEffect
-	BoomerangEffect                              = mage.BoomerangEffect
 	BottleOfSuleimanEffect                       = mage.BottleOfSuleimanEffect
 	CrumbleEffect                                = mage.CrumbleEffect
-	DisenchantEffect                             = mage.DisenchantEffect
-	DisruptingScepterEffect                      = mage.DisruptingScepterEffect
-	FissureEffect                                = mage.FissureEffect
-	FlyingCarpetEffect                           = mage.FlyingCarpetEffect
-	FogEffect                                    = mage.FogEffect
-	GiantGrowthEffect                            = mage.GiantGrowthEffect
-	HealingSalveGainEffect                       = mage.HealingSalveGainEffect
 	HealingSalvePreventionEffect                 = mage.HealingSalvePreventionEffect
-	HelmOfChatzukEffect                          = mage.HelmOfChatzukEffect
 	HurrJackalEffect                             = mage.HurrJackalEffect
 	LaceEffect                                   = mage.LaceEffect
 	LesserWerewolfCounterEffect                  = mage.LesserWerewolfCounterEffect
 	LightningBoltEffect                          = mage.LightningBoltEffect
-	MillstoneEffect                              = mage.MillstoneEffect
 	NevinyrralsDiskEffect                        = mage.NevinyrralsDiskEffect
 	PandorasBoxEffect                            = mage.PandorasBoxEffect
 	ProdigalSorcererEffect                       = mage.ProdigalSorcererEffect
 	SindbadEffect                                = mage.SindbadEffect
 	SorceressQueenEffect                         = mage.SorceressQueenEffect
-	StaffOfZegonEffect                           = mage.StaffOfZegonEffect
 	SwordsToPlowsharesEffect                     = mage.SwordsToPlowsharesEffect
 	TawnosWandEffect                             = mage.TawnosWandEffect
 	TheHiveEffect                                = mage.TheHiveEffect
-	TwiddleEffect                                = mage.TwiddleEffect
-	UnsummonEffect                               = mage.UnsummonEffect
 	ApplyToRandomPermanent                       = mage.ApplyToRandomPermanent
 	ApplyToRandomSpellOrPermanent                = mage.ApplyToRandomSpellOrPermanent
-	ApplyToRandomPlayer                          = mage.ApplyToRandomPlayer
 	ApplyToRandomDamageTarget                    = mage.ApplyToRandomDamageTarget
 	SetSourceChosenColorAtRandom                 = mage.SetSourceChosenColorAtRandom
 	ChangeSourceToRandomColor                    = mage.ChangeSourceToRandomColor
@@ -415,20 +397,15 @@ var (
 	// Removal / combat
 	DestroyTarget            = mage.DestroyTarget
 	DestroyTargetPermanent   = mage.DestroyTargetPermanent
-	ExileTarget              = mage.ExileTarget
 	DestroyTargetNoRegen     = mage.DestroyTargetNoRegen
 	DestroyTargetArtifact    = mage.DestroyTargetArtifact
 	DestroyTargetNoRegenStep = mage.DestroyTargetNoRegenStep
-	RegenerateTarget         = mage.RegenerateTarget
-	RegenerateGathered       = mage.RegenerateGathered
 	PreventDamageToTarget    = mage.PreventDamageToTarget
 
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
-	TapGathered                               = mage.TapGathered
 	FightGathered                             = mage.FightGathered
 	MakeUnblockableUntilEndOfTurn             = mage.MakeUnblockableUntilEndOfTurn
 	TapAttachedCreature                       = mage.TapAttachedCreature
-	TapOrUntapTarget                          = mage.TapOrUntapTarget
 	ReturnFromGraveyardToBattlefield          = mage.ReturnFromGraveyardToBattlefield
 	ReturnTargetFromAnyGraveyardToBattlefield = mage.ReturnTargetFromAnyGraveyardToBattlefield
 	ReturnFromGraveyardToHandTarget           = mage.ReturnFromGraveyardToHandTarget
@@ -456,16 +433,15 @@ var (
 	ModalEffect                               = mage.ModalEffect
 	ModalTriggerEffect                        = mage.ModalTriggerEffect
 	MayPayMana                                = mage.MayPayMana
-	Scry                                      = mage.Scry
+	Scry                                      = mage.ScryAtResolution
+	Surveil                                   = mage.SurveilAtResolution
 	AddPreventionShieldToControllerStep       = mage.AddPreventionShieldToControllerStep
 	AddReverseDamageShieldStep                = mage.AddReverseDamageShieldStep
 	AddContinuousEffectsStep                  = mage.AddContinuousEffectsStep
 	VarPlayer                                 = mage.VarPlayer
 	TapAllLands                               = mage.TapAllLands
 	RemoveFromCombat                          = mage.RemoveFromCombat
-	RegenerateSource                          = mage.RegenerateSource
 	StunCreature                              = mage.StunCreature
-	SkipNextUntapTarget                       = mage.SkipNextUntapTarget
 	ReplaceKeywordEffect                      = mage.ReplaceKeywordEffect
 	ForEachCombatOpponent                     = mage.ForEachCombatOpponent
 	ForEachPermanent                          = mage.ForEachPermanent
@@ -549,7 +525,6 @@ var (
 	ToMatching                     = mage.ToMatching
 	ToOtherMatching                = mage.ToOtherMatching
 
-	DiscardRandom                          = mage.DiscardRandom
 	ReturnSourceFromGraveyardToBattlefield = mage.ReturnSourceFromGraveyardToBattlefield
 	ExileEventSourceEffect                 = mage.ExileEventSourceEffect
 	TheFallenUpkeepEffect                  = mage.TheFallenUpkeepEffect
@@ -615,6 +590,7 @@ var (
 	NotHasKeywordFilter      = mage.NotHasKeywordFilter
 	IsID                     = mage.IsID
 	IsBandedWith             = mage.IsBandedWith
+	IsPlaneswalker           = mage.IsPlaneswalker
 	IsCreature               = mage.IsCreature
 	IsCreatureCard           = mage.IsCreatureCard
 	IsEnchantmentCard        = mage.IsEnchantmentCard
@@ -651,6 +627,7 @@ var (
 	NotID                    = mage.NotID
 	PowerGreaterThan         = mage.PowerGreaterThan
 	CondCreatureDiedThisTurn = mage.CondCreatureDiedThisTurn
+	CondControlsMatching     = mage.CondControlsMatching
 	SpellHasKeyword          = mage.SpellHasKeyword
 	SpellHasSubType          = mage.SpellHasSubType
 	SpellsAnd                = mage.SpellsAnd
@@ -891,6 +868,8 @@ const (
 
 // Event types
 const (
+	EvtScry              = core.EvtScry
+	EvtSurveil           = core.EvtSurveil
 	EvtZoneChange        = core.EvtZoneChange
 	EvtBlockersDecl      = core.EvtBlockersDecl
 	EvtEndStep           = core.EvtEndStep
@@ -1014,6 +993,7 @@ const (
 	Dream        = core.Dream
 	Sleep        = core.Sleep
 	Glyph        = core.Glyph
+	Loyalty      = core.Loyalty
 	Pupa         = core.Pupa
 	Intervention = core.Intervention
 	Credit       = core.Credit
@@ -1100,19 +1080,27 @@ const (
 )
 
 var (
-	This               = mage.This
-	Sacrifice          = mage.Sacrifice
-	WhenState          = mage.WhenState
-	Controls           = mage.Controls
-	ControlsNone       = mage.ControlsNone
+	// This represents the source permanent or spell hosting the ability.
+	This = mage.This
+	// Sacrifice creates a resolving effect instructing the controller to sacrifice the permanent.
+	Sacrifice = mage.Sacrifice
+	// WhenState constructs a state-triggered ability from a pure StateCondition (CR 603.8).
+	WhenState = mage.WhenState
+	// Controls returns true if the ability controller controls at least one matching permanent.
+	Controls = mage.Controls
+	// ControlsNone returns true if the ability controller controls no matching permanents.
+	ControlsNone = mage.ControlsNone
+	// BattlefieldHasNone returns true if neither player controls a matching permanent.
 	BattlefieldHasNone = mage.BattlefieldHasNone
 	AllConditions      = mage.AllConditions
 	AnyCondition       = mage.AnyCondition
 	NotCondition       = mage.NotCondition
 	StateConditionFunc = mage.StateConditionFunc
-	IfState            = mage.IfState
-	Sequence           = mage.Sequence
-	InspectDefinition  = mage.InspectDefinition
+	// IfState branches resolution-time execution based on a pure StateCondition.
+	IfState = mage.IfState
+	// Sequence executes a list of resolving effects in order, threading a single resolution frame.
+	Sequence          = mage.Sequence
+	InspectDefinition = mage.InspectDefinition
 )
 
 // Saved permanent expressions.

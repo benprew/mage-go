@@ -24,7 +24,7 @@ func auditStateGame() (*Game, *BasePlayer, *Permanent) {
 func TestAuditStateTriggerTransient(t *testing.T) {
 	g, a, p := auditStateGame()
 	g.CheckStateTriggers()
-	if err := ApplyEffect(g, CompositeEffects("", DiscardHand(), DrawCards(Fixed(1))), p.ID(), a.PlayerID(), nil); err != nil {
+	if err := ApplyEffect(g, CompositeEffects("", DiscardEntireHand(You), DrawCards(Fixed(1))), p.ID(), a.PlayerID(), nil); err != nil {
 		t.Fatal(err)
 	}
 	g.CheckStateTriggers()
@@ -37,14 +37,14 @@ func TestAuditStateTriggerLifecycle(t *testing.T) {
 	for _, finish := range []string{"resolve", "counter", "remove"} {
 		t.Run(finish, func(t *testing.T) {
 			g, a, p := auditStateGame()
-			if err := ApplyEffect(g, DiscardHand(), p.ID(), a.PlayerID(), nil); err != nil {
+			if err := ApplyEffect(g, DiscardEntireHand(You), p.ID(), a.PlayerID(), nil); err != nil {
 				t.Fatal(err)
 			}
 			g.CheckStateTriggers()
 			g.PutTriggersOnStack()
 			a.AddToHand(NewLand("Temporary"))
 			g.CheckStateTriggers()
-			if err := ApplyEffect(g, DiscardHand(), p.ID(), a.PlayerID(), nil); err != nil {
+			if err := ApplyEffect(g, DiscardEntireHand(You), p.ID(), a.PlayerID(), nil); err != nil {
 				t.Fatal(err)
 			}
 			g.CheckStateTriggers()
@@ -127,7 +127,7 @@ func TestAuditReplacementAffectedPlayerChooses(t *testing.T) {
 
 func TestAuditStateTriggerCloneAndReentry(t *testing.T) {
 	g, a, p := auditStateGame()
-	if err := ApplyEffect(g, DiscardHand(), p.ID(), a.PlayerID(), nil); err != nil {
+	if err := ApplyEffect(g, DiscardEntireHand(You), p.ID(), a.PlayerID(), nil); err != nil {
 		t.Fatal(err)
 	}
 	g.PutTriggersOnStack()
@@ -152,7 +152,7 @@ func TestAuditSimultaneousDeathTriggers(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
 			g := NewGame(a, b)
-			watcher := NewCreature("Watcher", "", 1, 1, WithAbility(AnyCreatureDiesTrigger(GainLifeFor(You, Fixed(1)), false)))
+			watcher := NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(You, Fixed(1)))))
 			other := NewCreature("Other", "", 1, 1)
 			watcher.SetOwner(a.PlayerID())
 			other.SetOwner(b.PlayerID())
@@ -182,7 +182,7 @@ func TestAuditSimultaneousDeathTriggers(t *testing.T) {
 
 func TestAuditStateTriggerRearmsBeforeStateBasedActions(t *testing.T) {
 	g, a, p := auditStateGame()
-	if err := ApplyEffect(g, DiscardHand(), p.ID(), a.PlayerID(), nil); err != nil {
+	if err := ApplyEffect(g, DiscardEntireHand(You), p.ID(), a.PlayerID(), nil); err != nil {
 		t.Fatal(err)
 	}
 	g.PutTriggersOnStack()

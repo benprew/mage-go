@@ -176,6 +176,14 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return fmt.Errorf("can't cast a land")
 	}
 
+	selection, err := g.prepareModalSpellSelection(g.GetPlayer(playerID), card, targets, xValue, "")
+	if err != nil {
+		return err
+	}
+	if selection != nil {
+		targets = selection.targets
+	}
+
 	var mana ManaCost
 	if alternateMC != nil {
 		mana = *alternateMC
@@ -215,6 +223,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
+		ModalSelection:    selection,
 		Card:              card,
 		Controller:        playerID,
 		Targets:           targets,

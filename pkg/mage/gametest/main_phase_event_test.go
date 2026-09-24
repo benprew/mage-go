@@ -3,22 +3,21 @@ package gametest
 import (
 	"testing"
 
-	"github.com/google/uuid"
-
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // EvtMainPhase fires once per main phase, with Flag distinguishing precombat
-// (true) from postcombat (false). BeginningOfFirstMainPhaseTrigger fires only
+// (true) from postcombat (false). The typed first-main pattern fires only
 // during the controller's precombat main phase. Used by Black Market.
-func TestBeginningOfFirstMainPhaseTrigger_FiresOnceOnControllerPrecombatMain(t *testing.T) {
+func TestTypedFirstMainPhase_FiresOnceOnControllerPrecombatMain(t *testing.T) {
 	const cardName = "EVTMAIN First Main Sentinel"
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
-				mage.WithAbility(mage.BeginningOfFirstMainPhaseTrigger(
-					mage.GainLifeFor(mage.You, mage.Fixed(2)), false,
+				mage.WithAbility(dsl.At(dsl.YourFirstMainPhase,
+					dsl.GainLife(dsl.You, dsl.Fixed(2)),
 				)),
 			)
 		})
@@ -37,13 +36,13 @@ func TestBeginningOfFirstMainPhaseTrigger_FiresOnceOnControllerPrecombatMain(t *
 }
 
 // Postcombat-main trigger fires only on the controller's postcombat main.
-func TestBeginningOfPostcombatMainPhaseTrigger_FiresOnControllerPostcombat(t *testing.T) {
+func TestTypedPostcombatMainPhase_FiresOnControllerPostcombat(t *testing.T) {
 	const cardName = "EVTMAIN Postcombat Sentinel"
 	if !mage.CardRegistered(cardName) {
 		mage.Register(cardName, func() mage.Card {
 			return mage.NewEnchantment(cardName, "{0}",
-				mage.WithAbility(mage.BeginningOfPostcombatMainPhaseTrigger(
-					mage.GainLifeFor(mage.You, mage.Fixed(1)), false,
+				mage.WithAbility(dsl.At(dsl.YourPostcombatMainPhase,
+					dsl.GainLife(dsl.You, dsl.Fixed(1)),
 				)),
 			)
 		})
@@ -57,5 +56,3 @@ func TestBeginningOfPostcombatMainPhaseTrigger_FiresOnControllerPostcombat(t *te
 	// Only A's postcombat main on turn 1 fires (turn 2 stops at PrecombatMain).
 	tg.AssertLife(PlayerA, 21)
 }
-
-var _ = uuid.UUID{} // keep import stable in case future test wants it

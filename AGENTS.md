@@ -18,8 +18,7 @@ make lint                                  # lint (run after making changes and 
 ## Code Style
 
 - Avoid inline comments; comments explain "why" not "what"
-- Function header comments for public functions are good
-- TDD: write test first, implement, confirm tests pass
+- High-leverage testing: exhaustive engine contract tests; risk-based card tests (TDD for complex cards; skip simulation tests for declarative cards)
 
 ## Cardinal Rules
 
@@ -27,15 +26,15 @@ make lint                                  # lint (run after making changes and 
 
 2. **Never simplify.** Every condition, restriction, and edge case matters. A simplified implementation is a **wrong** implementation. If the engine can't support something, mark with `// XXX:` and ask — never silently simplify.
 
-3. **TDD.** Write a failing test first, then implement.
+3. **High-leverage testing.** Exhaustive engine tests prove the primitives; automated registration validation checks 100% of cards. Use TDD for non-trivial cards (multi-step rules, custom triggers, unusual edge cases). Skip boilerplate simulation tests for purely declarative cards (vanilla, French vanilla, standard single-verb spells).
 
 ## Card Implementation Guide
 
-**Read `pkg/mage/doc.go` first** — comprehensive reference for the engine API: card constructors, effects, targets, filters, costs, abilities, continuous effects, layers, attrs, replacement effects, and `*Game` methods.
-
-**Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
-
-**Replacement effects**: See "Replacement Effect System" in `doc.go`. Most cards use `*Game` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.).
+- **Card DSL Reference**: `docs/dsl-reference.md` — comprehensive reference for the card author DSL: constructors, subjects, selectors, targets, actions, triggers, spells, activations, costs, continuous effects, and durations.
+- **Rules & Engine Contracts**: `docs/engine-rules-contracts.md` — technical reference for Continuous Layers 1–7, LKI, state triggers, replacement pipelines, life payment boundaries, and cleanup.
+- **Subsystem Architecture**: `pkg/mage/doc.go` — high-level package overview and subsystem ownership (`Game`, `ZoneSystem`, `TurnSystem`, etc.).
+- **Comprehensive Rules**: `docs/comprehensive-rules.md` (~9200 lines). Use `docs/comprehensive-rules-index.md` to find sections by line number, then read just that section.
+- **Replacement effects**: See `docs/engine-rules-contracts.md#replacement-and-prevention-pipeline-cr-614616`. Most cards use `*Game` proxy methods (`AddPreventionShield`, `AddRegenerationShield`, etc.).
 
 ## Set Implementation
 

@@ -552,13 +552,14 @@ func NewEquipment(name, cost string, opts ...CardOption) *BaseCard {
 
 // Permanent represents a card on the battlefield.
 type Permanent struct {
-	Card               Card
-	incarnationID      uuid.UUID
-	computedController uuid.UUID
-	baseController     uuid.UUID
-	Tapped             bool
-	PhasedOut          bool // true when phased out (treated as though it doesn't exist)
-	Damage             int
+	Card                Card
+	incarnationID       uuid.UUID
+	attachedIncarnation uuid.UUID
+	computedController  uuid.UUID
+	baseController      uuid.UUID
+	Tapped              bool
+	PhasedOut           bool // true when phased out (treated as though it doesn't exist)
+	Damage              int
 	// Counters is a fixed-size array indexed by CounterType, so cloning a
 	// Permanent is a memcpy instead of a map allocation. Absent counters are
 	// zero. To iterate, loop over [0, NumCounters) and skip zeros.
@@ -809,8 +810,11 @@ func (p *Permanent) HasProtectionFromInGame(card Card, g *Game) bool {
 	return false
 }
 
-// CanBeTargetedBy checks hexproof, shroud, and protection.
+// CanBeTargetedBy checks phasing, hexproof, shroud, and protection.
 func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *Game) bool {
+	if p.PhasedOut {
+		return false
+	}
 	if p.HasKeyword(Shroud) {
 		return false
 	}

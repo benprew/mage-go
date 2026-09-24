@@ -910,66 +910,7 @@ missing test coverage, and confirmed engine defects. Correct a defect in a
 separate engine change when exact migration depends on it. Unaffected families
 can proceed independently.
 
-## First Vertical Slice: State Triggers and Sacrifice
-
-This slice changes the card-facing grammar. The separate state-trigger and
-sacrifice correctness fixes below are dependencies for affected callers, not
-new trigger or action subsystems within the refactor.
-
-### Add
-
-- `StateCondition`
-- `StateConditionFunc`
-- `WhenState`
-- `Controls`
-- `ControlsNone`
-- `BattlefieldHasNone`
-- `AllConditions`
-- `AnyCondition`
-- `NotCondition`
-- the permanent-subject abstraction
-- `This`
-- `Sacrifice(subject)`
-- adapters to corrected existing state-trigger and sacrifice paths
-
-### Remove after migrating callers
-
-- `SacrificeIfControls`
-- `SacrificeIfControlsAbility`
-- `SacrificeUnlessLand`
-- `SacrificeUnlessLandAbility`
-- public DSL access to `NewStateTriggered`
-- `SacrificeSource`
-- `SacrificeSourceStep`
-- `ControllerHasNoPermanentMatching`
-- `NoBattlefieldPermanentMatching`
-
-Do not remove `SacrificeTarget`, `SacrificeTargetStep`, or
-`SacrificeGathered` in this slice. Remove them in the typed-binding slice after
-`TargetPermanent`, `BindPermanent`, and `From` cover every caller. This keeps
-the first slice small and prevents a temporary untyped replacement.
-
-Keep sacrifice costs, including `SacrificeSourceCost` and
-`SacrificeMatchingCost`. Costs are a separate DSL role.
-
-### Migrate cards
-
-- Goblins of the Flarg
-- Vodalian Knights
-- Giant Shark
-- Pirate Ship
-- Sea Serpent
-- Dandân
-- Island Fish Jasconius
-- Merchant Ship
-- Serendib Djinn
-- Drop of Honey
-- Mana Vortex
-- Jihad
-
-Use the new API when Seasinger is implemented.
-
-## Later Vertical Slices
+## Vertical Slices
 
 1. Add typed target and saved-value adapters over existing resolution contexts.
    Define scope and validation; adapt existing copy and retargeting paths.
@@ -1095,6 +1036,27 @@ imports repository-wide. Re-exporting mutable engine types is not completion
 of the package boundary.
 
 ## Testing and Acceptance Criteria
+
+### High-Leverage 3-Tier Testing Model
+
+Testing uses a three-tier pyramid designed to maximize confidence and speed while eliminating repetitive boilerplate:
+
+1. **Tier 1: Exhaustive Engine Contract Tests (Combinatorial & Heavy)**:
+   All semantic primitives (`Sacrifice`, `Destroy`, `Exile`, `Untap`, `Draw`, `Mill`, `GainLife`), layer evaluations (Layers 1–7), continuous durations (`Until`, `While`, `UntilSourceLeaves`), replacement pipelines (CR 614–616), state triggers (CR 603.8), and payment transactions are exhaustively verified in `pkg/mage/` and `pkg/mage/gametest/`. These tests cover edge cases: leave-and-return object incarnations, phasing status, clone isolation, APNAP priority, and rollback. Card authors must be able to trust that a verified engine primitive behaves correctly in all game states without duplicating basic contract tests in card packages.
+
+2. **Tier 2: Universal Static Card Validation (Instant & 100% Coverage)**:
+   `TestRegisteredDefinitions` executes across 100% of registered cards at compile/test time with zero game-simulation cost. It validates definite assignment (producers precede consumers), checks binding scopes and duplicate labels, verifies non-empty sequences and legal mode counts, and rejects nil expressions. Compile-fail test suites (`testdata/compilefail`) enforce that category errors are caught by the Go compiler.
+
+3. **Tier 3: Risk-Based Card Tests (Targeted & High-Leverage)**:
+   Individual card scenario tests (`gametest.NewTestGame`) are reserved for high-risk cards:
+   - **Do NOT write boilerplate game tests for**:
+     - Vanilla creatures (Grizzly Bears, Savannah Lions).
+     - French vanilla creatures with basic keywords (Serra Angel, Giant Spider).
+     - Standard, single-primitive spells and abilities that directly map to proven engine verbs (e.g., Lightning Bolt, Shatter, Giant Growth).
+   - **DO write focused card tests for**:
+     - Cards with complex, multi-clause, or unusual Oracle rules (e.g., Balance, Fasting, Erosion, Chains of Mephistopheles, Drop of Honey, Ali from Cairo).
+     - Cards introducing new DSL combinators or exercising edge-case interactions.
+     - Confirmed bug reproductions or subtle timing/intervening-if clauses.
 
 The checklist below names behaviors to preserve, not tests that must all be
 written again. Link existing passing tests first, strengthen weak assertions,

@@ -189,7 +189,7 @@ func CondCardLeftYourGraveyardThisTurn() SpellCondition {
 func CondControlsMatching(f PermanentFilter) SpellCondition {
 	return func(g *Game, controller uuid.UUID, _ Card, _ uuid.UUID) bool {
 		for _, p := range g.zones.battlefield {
-			if p.ControllerID() != controller {
+			if p.PhasedOut || p.ControllerID() != controller {
 				continue
 			}
 			if f.Match(p, g) {

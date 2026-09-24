@@ -31,21 +31,14 @@ func registerSpells() {
 	// • Destroy target blue permanent.
 	// • Return target Island to its owner's hand.
 	Register("Active Volcano", func() Card {
-		c := NewInstant("Active Volcano", "{R}",
-			NewTargetedSpell(mage.TargetPermanent(), Pipeline(
-				"destroy target blue permanent or return target Island to its owner's hand",
-				EffectProperties{Outcome: OutcomeDetriment},
-				ModalEffect("choose one",
-					DestroyTarget(),
-					ReturnToHandTarget(),
-				),
+		permanent := TargetPermanent("blue permanent", HasColorFilter(Blue))
+		land := TargetPermanent("Island", HasSubType("Island"))
+		return NewInstant("Active Volcano", "{R}",
+			WithAbility(SpellModes(
+				ModeOf("Destroy target blue permanent", Destroy(permanent), WithTargets(permanent)),
+				ModeOf("Return target Island to its owner's hand", ReturnToHand(land), WithTargets(land)),
 			)),
 		)
-		c.SetModes([]string{
-			"Destroy target blue permanent",
-			"Return target Island to its owner's hand",
-		})
-		return c
 	})
 
 	// Alabaster Potion {X}{W}{W}
@@ -124,10 +117,11 @@ func registerSpells() {
 	// Blood Lust {1}{R}
 	// Instant
 	// If target creature has toughness 5 or greater, it gets +4/-4 until end of turn. Otherwise, it gets +4/-X until end of turn, where X is its toughness minus 1.
-	// TODO: convert to pipeline — needs conditional TemporaryBoost based on current toughness
 	Register("Blood Lust", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
+		change := MinValue(Fixed(0), MaxValue(Fixed(-4), SubtractValues(Fixed(1), ToughnessOf(creature))))
 		return NewInstant("Blood Lust", "{1}{R}",
-			NewTargetedSpell(TargetCreature(), BloodLustEffect()),
+			Spell(Until(EndOfTurn, ModifyPT(creature, Fixed(4), change)), WithTargets(creature)),
 		)
 	})
 
@@ -135,8 +129,9 @@ func registerSpells() {
 	// Instant
 	// Return target permanent to its owner's hand.
 	Register("Boomerang", func() Card {
+		permanent := TargetPermanent("permanent", AnyPermanent)
 		return NewInstant("Boomerang", "{U}{U}",
-			NewTargetedSpell(mage.TargetPermanent(), BoomerangEffect()),
+			Spell(ReturnToHand(permanent), WithTargets(permanent)),
 		)
 	})
 
@@ -224,14 +219,15 @@ func registerSpells() {
 	// Sorcery
 	// Tap target untapped creature you control. If you do, add an amount of {C} equal to that creature's mana value.
 	Register("Energy Tap", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, IsUntapped), TargetYouControl())
 		return NewSorcery("Energy Tap", "{U}",
-			NewTargetedSpell(TargetCreatureYouControl(IsUntapped), Pipeline(
+			WithAbility(Spell(Pipeline(
 				"tap target untapped creature you control; add {C} equal to its mana value",
 				EffectProperties{Outcome: OutcomeBenefit},
 				SnapshotPermanent(SelectTarget, "creature"),
-				TapGathered("creature"),
+				Tap(creature),
 				AddManaFromVar(Colorless, "creature.cmc"),
-			)),
+			), WithTargets(creature))),
 		)
 	})
 
@@ -347,21 +343,14 @@ func registerSpells() {
 	// • Destroy target red permanent.
 	// • Return target Mountain to its owner's hand.
 	Register("Flash Flood", func() Card {
-		c := NewInstant("Flash Flood", "{U}",
-			NewTargetedSpell(mage.TargetPermanent(), Pipeline(
-				"destroy target red permanent or return target Mountain to its owner's hand",
-				EffectProperties{Outcome: OutcomeDetriment},
-				ModalEffect("choose one",
-					DestroyTarget(),
-					ReturnToHandTarget(),
-				),
+		permanent := TargetPermanent("red permanent", HasColorFilter(Red))
+		land := TargetPermanent("Mountain", HasSubType("Mountain"))
+		return NewInstant("Flash Flood", "{U}",
+			WithAbility(SpellModes(
+				ModeOf("Destroy target red permanent", Destroy(permanent), WithTargets(permanent)),
+				ModeOf("Return target Mountain to its owner's hand", ReturnToHand(land), WithTargets(land)),
 			)),
 		)
-		c.SetModes([]string{
-			"Destroy target red permanent",
-			"Return target Mountain to its owner's hand",
-		})
-		return c
 	})
 
 	// Force Spike {U}
@@ -536,7 +525,7 @@ func registerSpells() {
 						TargetID:      controller, // pass controller as target for life gain
 						MatchTargetID: wallID,     // only fire when the wall receives damage
 						Persistent:    true,       // fires each time this turn
-						Effects:       []Effect{GainLife(You, EventAmountValue())},
+						Effects:       []Effect{GainLife(You, ValueAtResolution(EventAmountValue()))},
 					})
 					return nil
 				},

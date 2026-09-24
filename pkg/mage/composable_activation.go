@@ -16,8 +16,17 @@ type activationRestriction struct {
 
 func (activationRestriction) activationOption() {}
 func (o activationRestriction) applyActivation(a *ActionDefinition) {
+	combinedTiming := false
+	step := o.step
 	for _, prior := range a.dslRestrictions {
 		if prior.kind == o.kind && o.kind != "condition" {
+			if o.kind == "timing" && ((prior.timing == TimingStepOnly && o.timing == YourTurnOnly) || (prior.timing == YourTurnOnly && o.timing == TimingStepOnly)) {
+				combinedTiming = true
+				if prior.timing == TimingStepOnly {
+					step = prior.step
+				}
+				continue
+			}
 			panic("activation: conflicting " + o.kind + " options")
 		}
 	}
@@ -27,6 +36,12 @@ func (o activationRestriction) applyActivation(a *ActionDefinition) {
 			panic("activation: supply a valid turn step")
 		}
 		a.timing, a.stepOnly = o.timing, o.step
+		if combinedTiming {
+			a.timing, a.stepOnly = TimingStepOnly, step
+			a.activationConds = append(a.activationConds, func(g *Game, _ *Permanent, controller uuid.UUID) bool {
+				return g.ActivePlayerObj().PlayerID() == controller
+			})
+		}
 	case "limit":
 		if o.limit <= 0 {
 			panic("activation: supply a positive limit")
@@ -47,29 +62,71 @@ func (o activationRestriction) applyActivation(a *ActionDefinition) {
 	a.dslRestrictions = append(a.dslRestrictions, o)
 }
 
+// ActivationTimingOption sets timing for an activation or a static grant.
+type ActivationTimingOption interface {
+	ActivationOption
+	GrantedActivationOption
+	ModalActivationOption
+}
+
+type activationTiming struct{ activationRestriction }
+
+func (activationTiming) grantedActivationOption() {}
+func (o activationTiming) applyGrantedActivation(a *ActionDefinition) {
+	o.applyActivation(a)
+}
+
 // OnlyAsSorcery requires a main phase, the player's turn, and an empty stack.
-func OnlyAsSorcery() ActivationOption {
-	return activationRestriction{kind: "timing", timing: TimingSorcery}
+func OnlyAsSorcery() ActivationTimingOption {
+	return activationTiming{activationRestriction{kind: "timing", timing: TimingSorcery}}
 }
 
 // OnlyDuring restricts activation to the specified turn step.
-func OnlyDuring(step PhaseStep) ActivationOption {
-	return activationRestriction{kind: "timing", timing: TimingStepOnly, step: step}
+func OnlyDuring(step PhaseStep) ActivationTimingOption {
+	return activationTiming{activationRestriction{kind: "timing", timing: TimingStepOnly, step: step}}
 }
 
 // OnlyOnYourTurn restricts activation to the controller's turn.
-func OnlyOnYourTurn() ActivationOption {
-	return activationRestriction{kind: "timing", timing: YourTurnOnly}
+func OnlyOnYourTurn() ActivationTimingOption {
+	return activationTiming{activationRestriction{kind: "timing", timing: YourTurnOnly}}
 }
 
-// ActivationLimit uses the existing per-turn activation counter.
-func ActivationLimit(maximum int) ActivationOption {
-	return activationRestriction{kind: "limit", limit: maximum}
+// ActivationLimitOption sets a per-turn limit for an activation or a static grant.
+type ActivationLimitOption interface {
+	ActivationOption
+	GrantedActivationOption
+	ModalActivationOption
+}
+
+type activationLimit struct{ activationRestriction }
+
+func (activationLimit) grantedActivationOption() {}
+func (o activationLimit) applyGrantedActivation(a *ActionDefinition) {
+	o.applyActivation(a)
+}
+
+// ActivationLimit restricts the number of activations each turn.
+func ActivationLimit(maximum int) ActivationLimitOption {
+	return activationLimit{activationRestriction{kind: "limit", limit: maximum}}
+}
+
+// ActivationConditionOption sets a condition for an activation or a static grant.
+type ActivationConditionOption interface {
+	ActivationOption
+	GrantedActivationOption
+	ModalActivationOption
+}
+
+type activationStateCondition struct{ activationRestriction }
+
+func (activationStateCondition) grantedActivationOption() {}
+func (o activationStateCondition) applyGrantedActivation(a *ActionDefinition) {
+	o.applyActivation(a)
 }
 
 // ActivationIf checks a pure condition before payment through the activation path.
-func ActivationIf(condition StateCondition) ActivationOption {
-	return activationRestriction{kind: "condition", condition: condition}
+func ActivationIf(condition StateCondition) ActivationConditionOption {
+	return activationStateCondition{activationRestriction{kind: "condition", condition: condition}}
 }
 
 func (o activationRestriction) inspectDefinition() definitionNode {
@@ -79,3 +136,12 @@ func (o activationRestriction) inspectDefinition() definitionNode {
 	}
 	return n
 }
+
+func (activationTiming) modalActivationOption()                     {}
+func (o activationTiming) applyModalActivation(a *ActionDefinition) { o.applyActivation(a) }
+
+func (activationLimit) modalActivationOption()                     {}
+func (o activationLimit) applyModalActivation(a *ActionDefinition) { o.applyActivation(a) }
+
+func (activationStateCondition) modalActivationOption()                     {}
+func (o activationStateCondition) applyModalActivation(a *ActionDefinition) { o.applyActivation(a) }

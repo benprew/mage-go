@@ -9,14 +9,16 @@ Implement the requested cards under `cards/`. Do not add engine behavior under `
 
 ## Workflow
 
-1. Read each complete Oracle comment, `pkg/mage/doc.go`, and the closest implemented cards and tests.
+1. Read each complete Oracle comment, `docs/dsl-reference.md`, and the closest implemented cards and tests.
 2. Use `docs/comprehensive-rules-index.md` to locate rules needed for uncertain behavior. Oracle text and the comprehensive rules are authoritative.
-3. Add a test for each distinct behavior or restriction and confirm that it fails for the expected reason. A purely declarative use of an already-tested primitive may not need another test.
-4. Make the smallest complete card-level change that passes the tests. Use existing engine APIs.
+3. Determine testing requirement using the **High-Leverage Testing Model**:
+   - **Skip game-simulation tests** for purely declarative cards: vanilla creatures, French vanilla creatures with standard keywords (e.g. Flying, Trample, Vigilance), and simple single-verb spells/abilities that directly map to proven engine primitives. These rely on exhaustive engine contract tests and automated registration validation (`TestRegisteredDefinitions`).
+   - **Write focused tests first (TDD)** for non-trivial cards: complex multi-clause rules, unusual conditions, intervening-if clauses, custom triggers, or mechanics that exercise engine boundaries. Confirm that the test fails before implementing.
+4. Make the smallest complete card-level change that satisfies Oracle requirements. Use existing composable DSL APIs (`pkg/mage/dsl`).
 5. Run verification in order:
-   - focused: the new tests with `-count=1`;
+   - focused: newly added card tests with `-count=1` (if applicable);
    - package: `go test ./cards/<package>/ -count=1`;
-   - card regression: `go test ./cards/... -short -count=1`;
+   - card regression & registration validation: `go test ./cards/... -short -count=1` (validates all card definitions through `TestRegisteredDefinitions`);
    - final: `go build ./...`, `go vet ./cards/<package>/`, and `make lint`.
 
 Keep the full Oracle text immediately above `Register()` and remove the genset TODO only when implementation is complete. Implement every condition, choice, target restriction, zone, duration, and rules-relevant word.

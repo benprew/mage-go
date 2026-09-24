@@ -125,7 +125,8 @@ func TestTurnPhases(t *testing.T) {
 			t.Errorf("CR 500.5: pool should empty at end of Upkeep, had %d mana remaining", got)
 		}
 
-		// And again across Draw → PrecombatMain.
+		// Use a later turn so that the draw step occurs.
+		tg.Turn = 3
 		pool.Add(core.Red, 2)
 		tg.RunStepWithPriority(core.Draw)
 		if got := pool.TotalMana(); got != 0 {

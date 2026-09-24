@@ -171,45 +171,12 @@ func registerEnchantments() {
 	// When you draw a card, destroy this enchantment.
 	Register("Fasting", func() Card {
 		return NewEnchantment("Fasting", "{W}",
-			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect(
-					"put a hunger counter on Fasting, then destroy it if it has five or more hunger counters",
-					EffectProperties{},
-					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm == nil {
-							return nil
-						}
-						perm.AddCounter(Hunger, 1)
-						if perm.Counters[Hunger] >= 5 {
-							g.DestroyPermanent(perm)
-						}
-						return nil
-					},
-				),
-				false,
-			)),
-			WithAbility(EntersBattlefieldTrigger(FuncEffect(
-				"register Fasting draw replacement",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					g.AddFastingReplacement(controller, sourceID)
-					return nil
-				},
-			), false)),
-			WithAbility(NewTriggered(EvtCardDrawn, false,
-				FuncEffect(
-					"destroy Fasting",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							g.DestroyPermanent(perm)
-						}
-						return nil
-					},
-				),
-			).SetConditionData(EventPlayerIsController{})),
+			WithAbility(At(YourUpkeep, Sequence(
+				AddCounters(This, Hunger, Fixed(1)),
+				IfState(SourceHasCounters(Hunger, 5), Destroy(This)),
+			))),
+			WithAbility(Static(SkipDrawStepForLife(2))),
+			WithAbility(WhenEvent(ControllerDrawsCard(BindPlayer("drawer")), Destroy(This))),
 		)
 	})
 

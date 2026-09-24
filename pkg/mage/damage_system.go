@@ -94,8 +94,12 @@ func (ds *DamageSystem) ResetPerCycle() {
 
 // ClearEndOfTurn resets all turn-scoped damage state.
 func (ds *DamageSystem) ClearEndOfTurn() {
-	ds.damageReflection = make(map[uuid.UUID]damageReflectionEntry)
+	ds.expireEndOfTurnEffects()
 	ds.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
+}
+
+func (ds *DamageSystem) expireEndOfTurnEffects() {
+	ds.damageReflection = make(map[uuid.UUID]damageReflectionEntry)
 }
 
 // SetDamageReflection sets a one-shot damage reflection for a player (Eye for an Eye).
@@ -217,6 +221,9 @@ func (ds *DamageSystem) DealDamageToPlayer(g *Game, p Player, amount int, source
 
 // ExecuteDamageToPlayer applies damage to a player after all replacements have been applied.
 func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) {
+	if a.Amount() <= 0 {
+		return
+	}
 	p := g.GetPlayer(a.PlayerID())
 	if p == nil {
 		return
@@ -295,7 +302,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.ControllerID())
 		if srcPlayer != nil {
-			srcPlayer.GainLife(amount)
+			g.gainLifeWithEvent(srcPlayer, amount)
 		}
 	}
 	if src != nil && src.FaceDown {
@@ -337,6 +344,9 @@ func (ds *DamageSystem) DealDamageToPermanent(g *Game, perm *Permanent, amount i
 
 // ExecuteDamageToCreature applies damage to a creature after all replacements have been applied.
 func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureAction) {
+	if a.Amount() <= 0 {
+		return
+	}
 	perm := g.MutablePermanent(a.PermanentID())
 	if perm == nil {
 		return
@@ -382,7 +392,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	if src != nil && src.HasKeyword(Lifelink) {
 		srcPlayer := g.GetPlayer(src.ControllerID())
 		if srcPlayer != nil {
-			g.PlayerGainLife(srcPlayer, amount)
+			g.gainLifeWithEvent(srcPlayer, amount)
 		}
 	}
 	if perm.FaceDown {

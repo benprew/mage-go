@@ -1,7 +1,6 @@
 package fallen_empires
 
 import (
-	mage "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -46,8 +45,9 @@ func registerSpells() {
 	// Sorcery
 	// Target player discards two cards at random.
 	Register("Hymn to Tourach", withExpansion(func() Card {
+		player := TargetPlayer("player")
 		return NewSorcery("Hymn to Tourach", "{B}{B}",
-			NewTargetedSpell(mage.TargetPlayer(), DiscardRandom(2)),
+			Spell(DiscardAtRandom(player, Fixed(2)), WithTargets(player)),
 		)
 	}))
 

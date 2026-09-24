@@ -997,28 +997,7 @@ func regeneratesAttachedTarget(ab mage.ActivatedAbility, source, target *mage.Pe
 	if source.AttachedTo != target.ID() {
 		return false
 	}
-	return effectsRegenerateAttached(ab.Effects(), nil)
-}
-
-func effectsRegenerateAttached(effects []mage.Effect, attachedVars map[string]bool) bool {
-	for _, effect := range effects {
-		switch e := effect.(type) {
-		case *mage.SnapshotAttachedData:
-			if attachedVars == nil {
-				attachedVars = make(map[string]bool)
-			}
-			attachedVars[e.StoreAs] = true
-		case *mage.RegenerateGatheredData:
-			if attachedVars[e.VarName] {
-				return true
-			}
-		case *mage.PipelineData:
-			if effectsRegenerateAttached(e.Steps, maps.Clone(attachedVars)) {
-				return true
-			}
-		}
-	}
-	return false
+	return mage.RegeneratesAttachment(ab)
 }
 
 // bestHoldableInstant returns the highest-value castable instant in hand worth

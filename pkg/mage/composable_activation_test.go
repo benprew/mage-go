@@ -42,6 +42,10 @@ func TestComposableActivationRestrictions(t *testing.T) {
 func TestComposableActivationOptionValidation(t *testing.T) {
 	for _, options := range [][]ActivationOption{
 		{OnlyAsSorcery(), OnlyDuring(Upkeep)},
+		{OnlyDuring(Upkeep), OnlyDuring(Upkeep)},
+		{OnlyOnYourTurn(), OnlyOnYourTurn()},
+		{OnlyDuring(Upkeep), OnlyOnYourTurn(), OnlyDuring(EndStep)},
+		{OnlyOnYourTurn(), OnlyDuring(Upkeep), OnlyOnYourTurn()},
 		{OnlyOnYourTurn(), OnlyAsSorcery()},
 		{ActivationLimit(1), ActivationLimit(2)},
 		{ActivationLimit(0)},

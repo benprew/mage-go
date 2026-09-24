@@ -13,17 +13,37 @@ type keywordGrantEffect interface {
 	KeywordGrantTarget() mage.TargetSelector
 }
 
+type indexedKeywordGrantEffect interface {
+	KeywordGrantTargetIndex([]mage.Target) (int, bool)
+}
+
+type keywordGrant struct {
+	selector mage.TargetSelector
+	index    int
+	indexed  bool
+}
+
+func (grant keywordGrant) recipients(g *mage.Game, controllerID, sourceID uuid.UUID, targets []uuid.UUID) ([]uuid.UUID, bool) {
+	if grant.indexed {
+		if grant.index < 0 || grant.index >= len(targets) || targets[grant.index] == uuid.Nil {
+			return nil, false
+		}
+		return targets[grant.index : grant.index+1], true
+	}
+	return keywordGrantRecipients(g, controllerID, sourceID, grant.selector, targets)
+}
+
 // AbilityActivationIsRedundant reports whether an activation would only grant
 // keywords that every recipient already has or is already set to receive from
 // an object on the stack. Effects with any additional strategic result are
 // never classified as redundant.
-func AbilityActivationIsRedundant(g *mage.Game, controllerID, sourceID uuid.UUID, effects []mage.Effect, targets []uuid.UUID) bool {
-	grants, ok := pureKeywordGrants(effects)
+func AbilityActivationIsRedundant(g *mage.Game, controllerID, sourceID uuid.UUID, effects []mage.Effect, targets []uuid.UUID, targetSpecs ...mage.Target) bool {
+	grants, ok := pureKeywordGrants(effects, targetSpecs)
 	if !ok {
 		return false
 	}
 	for i, grant := range grants {
-		recipients, ok := keywordGrantRecipients(g, controllerID, sourceID, grant.KeywordGrantTarget(), targets)
+		recipients, ok := grant.recipients(g, controllerID, sourceID, targets)
 		if !ok || len(recipients) == 0 {
 			return false
 		}
@@ -40,33 +60,46 @@ func AbilityActivationIsRedundant(g *mage.Game, controllerID, sourceID uuid.UUID
 // NonRedundantKeywordGrantTargets removes candidates for which a pure keyword-
 // granting activation would have no effect. Other kinds of abilities return
 // the candidates unchanged.
-func NonRedundantKeywordGrantTargets(g *mage.Game, controllerID, sourceID uuid.UUID, effects []mage.Effect, candidates []uuid.UUID) []uuid.UUID {
-	if _, ok := pureKeywordGrants(effects); !ok {
+func NonRedundantKeywordGrantTargets(g *mage.Game, controllerID, sourceID uuid.UUID, effects []mage.Effect, candidates []uuid.UUID, targetSpecs ...mage.Target) []uuid.UUID {
+	if len(targetSpecs) > 1 {
+		return candidates
+	}
+	if _, ok := pureKeywordGrants(effects, targetSpecs); !ok {
 		return candidates
 	}
 	result := make([]uuid.UUID, 0, len(candidates))
 	for _, candidate := range candidates {
-		if !AbilityActivationIsRedundant(g, controllerID, sourceID, effects, []uuid.UUID{candidate}) {
+		if !AbilityActivationIsRedundant(g, controllerID, sourceID, effects, []uuid.UUID{candidate}, targetSpecs...) {
 			result = append(result, candidate)
 		}
 	}
 	return result
 }
 
-func pureKeywordGrants(effects []mage.Effect) ([]keywordGrantEffect, bool) {
+func pureKeywordGrants(effects []mage.Effect, targetSpecs []mage.Target) ([]keywordGrant, bool) {
 	if len(effects) == 0 {
 		return nil, false
 	}
-	grants := make([]keywordGrantEffect, 0, len(effects))
+	grants := make([]keywordGrant, 0, len(effects))
 	for _, effect := range effects {
 		props := effect.Properties()
-		grant, ok := effect.(keywordGrantEffect)
-		if !ok || props.GrantedKeyword == 0 || props.DamageValue != nil || props.DrawCount != 0 ||
+		if props.GrantedKeyword == 0 || props.DamageValue != nil || props.DrawCount != 0 ||
 			props.LifeGain != 0 || props.PowerBoost != 0 || props.ToughnessBoost != 0 || props.IsBounce ||
 			props.Taps || props.Regenerates || props.TokenPower != 0 || props.TokenToughness != 0 {
 			return nil, false
 		}
-		grants = append(grants, grant)
+		switch grant := effect.(type) {
+		case keywordGrantEffect:
+			grants = append(grants, keywordGrant{selector: grant.KeywordGrantTarget()})
+		case indexedKeywordGrantEffect:
+			index, ok := grant.KeywordGrantTargetIndex(targetSpecs)
+			if !ok {
+				return nil, false
+			}
+			grants = append(grants, keywordGrant{index: index, indexed: true})
+		default:
+			return nil, false
+		}
 	}
 	return grants, true
 }
@@ -77,11 +110,11 @@ func keywordAlreadyGranted(g *mage.Game, targetID uuid.UUID, keyword core.Attr) 
 	}
 	for _, obj := range g.StackObjects() {
 		for _, effect := range obj.Effects {
-			grant, ok := effect.(keywordGrantEffect)
+			grants, ok := pureKeywordGrants([]mage.Effect{effect}, obj.TargetSpecs)
 			if !ok || effect.Properties().GrantedKeyword != keyword {
 				continue
 			}
-			recipients, ok := keywordGrantRecipients(g, obj.Controller, obj.SourceID, grant.KeywordGrantTarget(), obj.Targets)
+			recipients, ok := grants[0].recipients(g, obj.Controller, obj.SourceID, obj.Targets)
 			if ok && containsID(recipients, targetID) {
 				return true
 			}

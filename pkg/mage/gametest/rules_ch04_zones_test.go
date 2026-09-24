@@ -11,6 +11,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // ===== one-time registration guard =====
@@ -40,8 +41,9 @@ func registerCh04Cards() {
 		}
 		if !mage.CardRegistered("Zone Test Exiler") {
 			mage.Register("Zone Test Exiler", func() mage.Card {
+				target := dsl.TargetPermanent("creature", dsl.IsCreature)
 				return mage.NewInstant("Zone Test Exiler", "{W}",
-					mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTarget()),
+					dsl.WithAbility(dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))),
 				)
 			})
 		}

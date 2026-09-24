@@ -1,0 +1,418 @@
+# Card Author Composable DSL Reference
+
+This document is the authoritative, comprehensive reference for the composable card Domain-Specific Language (DSL) in `mage-go`.
+
+Cards import `pkg/mage/dsl` (and `pkg/mage/core` for enums/types). All card definitions, abilities, costs, targets, and effects are built using the typed combinators exported by `dsl`.
+
+---
+
+## Table of Contents
+
+1. [Core Design Principles](#1-core-design-principles)
+2. [Card Registration & Lifecycle](#2-card-registration--lifecycle)
+3. [Subjects and Selectors](#3-subjects-and-selectors)
+4. [Target Declarations](#4-target-declarations)
+5. [Pure State Conditions & Filters](#5-pure-state-conditions--filters)
+6. [Resolving Effects (Actions & Verbs)](#6-resolving-effects-actions--verbs)
+7. [Control Flow, Choices, and Branches](#7-control-flow-choices-and-branches)
+8. [Saved Bindings & Snapshots](#8-saved-bindings--snapshots)
+9. [Triggered Abilities](#9-triggered-abilities)
+10. [Spells, Activations, and Costs](#10-spells-activations-and-costs)
+11. [Continuous Effects, Modifications, and Durations](#11-continuous-effects-modifications-and-durations)
+12. [Replacements and Prevention](#12-replacements-and-prevention)
+13. [Values and Dynamic Calculations](#13-values-and-dynamic-calculations)
+14. [Representative Card Implementations](#14-representative-card-implementations)
+
+---
+
+## 1. Core Design Principles
+
+1. **One Concept, One Function**: Functions do not bundle multiple concepts into their names (e.g. use `WhenState(Controls(HasSubType("Dwarf")), Sacrifice(This))` instead of legacy `SacrificeIfControls`).
+2. **Compile-Time Rejection over Runtime Panics**: Sealed Go interfaces distinguish roles. You cannot pass a `PlayerRef` to `Destroy`, use a `ResolvingEffect` as a cost, or install a resolving effect as a static rule.
+3. **Registration Validation**: Value-dependent constraints (empty sequences, duplicate binding names, unbound variable reads) fail during card registration with clear diagnostics identifying the card and expression path.
+4. **Typed Bindings over String Maps**: Target declarations and resolution-time captures use Go variables (`creature := TargetPermanent("creature", IsCreature)`), avoiding string-key dictionaries.
+5. **No Universal Object Identity**: Physical card IDs are distinguished from rules objects. `PermanentRef` resolves only the captured battlefield incarnation. Phasing preserves incarnation; zone changes (leave-and-return) create a brand-new object.
+
+---
+
+## 2. Card Registration & Lifecycle
+
+Cards register in `init()` in their set package:
+
+```go
+func init() {
+    Register("Grizzly Bears", NewGrizzlyBears)
+}
+```
+
+Card factories construct a card blueprint. Characteristics and abilities are added via builder methods:
+
+```go
+func NewGrizzlyBears() Card {
+    return NewCreature("Grizzly Bears", "{1}{G}", 2, 2).
+        WithSubTypes("Bear")
+}
+```
+
+For non-creature cards:
+* `NewInstant(name, manaCost)`
+* `NewSorcery(name, manaCost)`
+* `NewEnchantment(name, manaCost)`
+* `NewArtifact(name, manaCost)`
+* `NewLand(name)`
+
+Abilities are attached with `.WithAbility(...)`, `.WithManaAbility(...)`, or `.WithStaticAbility(...)`.
+
+---
+
+## 3. Subjects and Selectors
+
+Operations accept explicit subjects rather than baking the subject into the verb name:
+
+### Singular Subjects (`PermanentRef`)
+* `This`: The permanent or spell hosting the ability. For battlefield actions, resolves the battlefield incarnation.
+* `AttachedPermanent`: The permanent to which the source Aura/Equipment is currently attached. If the source left the battlefield, reads the last attachment via Last-Known Information (CR 608.2h).
+* `From(binding)`: The permanent captured in a `PermanentBinding` (from a target declaration or earlier `Snapshot`).
+* `LowestPower(PermanentSet)`: Selects the permanent with the lowest power among a set.
+
+### Permanent Sets (`PermanentSet`)
+* `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
+* `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
+* `WithoutPermanent(set, ref)`: Excludes one specific permanent (e.g. `WithoutPermanent(MatchingPermanents(HasSubType("Zombie")), This)`).
+
+### Player Selectors (`PlayerRef` and `PlayerSet`)
+* `You`: The stored resolving controller of the spell or ability.
+* `ActivePlayer`: The player whose turn it currently is.
+* `FromPlayer(binding)`: The player captured in a `PlayerBinding` (from target, snapshot, or event pattern).
+* `ControllerOf(permanentRef)`: The player who controls the referenced permanent at resolution time.
+* `EachPlayer`: Collection of all players in active-player-first order.
+* `OpponentsOf(playerRef)`: All opponents of the specified player (for 2-player, the single opponent).
+
+---
+
+## 4. Target Declarations
+
+Targets are declared as typed bindings and attached to abilities using `WithTargets(...)`:
+
+```go
+target := TargetPermanent("creature", IsCreature)
+
+Spell(
+    DealDamage(This, target, Fixed(3)),
+    WithTargets(target),
+)
+```
+
+### Permanent Targets
+* `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
+* `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
+* Target Options:
+  * `TargetYouControl()`: Target must be controlled by the ability controller.
+  * `TargetYouOwn()`: Target must be owned by the ability controller.
+  * `TargetOpponentControls()`: Target must be controlled by an opponent.
+  * `TargetOpponentOnly()`: Target must be an opponent (for player targets).
+  * `TargetChosenByOpponent()`: The opponent makes the target choice when the ability is put on the stack.
+
+### Player Targets
+* `TargetPlayer(label, options...)`: Declares a target player.
+* `TargetDamageRecipient(label, filter, options...)`: Declares a target creature or player.
+
+---
+
+## 5. Pure State Conditions & Filters
+
+State conditions must be **pure functions** of game state (no random choices, mutations, or player prompts):
+
+### State Conditions (`StateCondition`)
+* `Controls(filter)`: Ability controller controls at least one permanent matching filter (includes source).
+* `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
+* `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
+* `SourceHasCounters(counter, min)`: The source permanent has at least `min` counters of the specified type.
+* Logical combinators:
+  * `AllConditions(conds...)`: Logical AND.
+  * `AnyCondition(conds...)`: Logical OR.
+  * `NotCondition(cond)`: Logical NOT.
+* `StateConditionFunc(desc, deps, fn)`: Pure read-only escape hatch with declared dependencies.
+
+### Permanent & Card Filters (`PermanentFilter`, `CardFilter`)
+* Type filters: `IsCreature`, `IsArtifact`, `IsLand`, `IsEnchantment`, `IsPlaneswalker`, `IsToken`, `IsNonToken`.
+* Characteristic filters: `HasSubType("Dwarf")`, `HasColorFilter(Red)`, `HasKeywordFilter(Flying)`.
+* Combinators: `And(filters...)`, `Or(filters...)`, `Not(filter)`.
+
+---
+
+## 6. Resolving Effects (Actions & Verbs)
+
+Resolving effects implement `ResolvingEffect` and mutate the game during resolution:
+
+### Permanent Actions
+* `Sacrifice(PermanentRef)`: Stored controller sacrifices the permanent. Fails if they no longer control it.
+* `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).
+* `DestroyWithoutRegeneration(PermanentRef)`: Destroys the permanent (forbids regeneration).
+* `DestroyEach(PermanentSet)`: Simultaneously destroys all permanents in the set.
+* `Exile(PermanentRef)`: Moves the permanent to the exile zone.
+* `Tap(PermanentRef)`: Taps the permanent.
+* `Untap(PermanentRef)`: Untaps the permanent.
+* `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
+
+### Player Actions
+* `Draw(PlayerRef, ResolutionValue)`: Instructs player to draw cards.
+* `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
+* `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
+* `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand.
+* `DiscardEntireHand(PlayerRef)`: Discards all cards in the player's hand.
+* `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
+* `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.
+* `LoseLife(PlayerRef, ResolutionValue)`: Causes player to lose life.
+* `LoseLifeEach(PlayerSet, ResolutionValue)`: Causes each player in the set to lose life.
+
+### Damage Actions
+* `DealDamage(DamageSourceRef, DamageRecipientRef, ResolutionValue)`: Deals damage.
+* `PreventNextDamage(DamageRecipientRef, ResolutionValue)`: Installs a prevention shield on creature or player.
+* `PreventAllCombatDamage()`: Prevents all combat damage for the turn (Fog).
+* `PreventCombatDamageToAndBy(PermanentRef)`: Prevents combat damage to and by a specific permanent.
+
+### Counter Actions
+* `AddCounters(PermanentRef, CounterType, ResolutionValue)`: Adds counters through the replacement pipeline.
+* `RemoveCountersFrom(PermanentRef, CounterType, ResolutionValue)`: Removes up to the specified count.
+* `RemoveAllCounters(PermanentRef, CounterType)`: Removes all counters of that kind.
+
+### Library & Mana Actions
+* `ScryAtResolution(ResolutionValue)`: Scries cards equal to the amount.
+* `SurveilAtResolution(ResolutionValue)`: Surveils cards equal to the amount.
+* `AddManaAmount(Color, ResolutionValue)`: Adds mana of the specified color to the pool.
+
+---
+
+## 7. Control Flow, Choices, and Branches
+
+* `Sequence(effects...)`: Executes resolving effects in order, threading a single resolution frame.
+* `ForEach(set, memberBinding, body)`: Iterates sequentially over permanents in the set.
+* `FlipCoin(playerRef, OnWin(effect), OnLoss(effect))`: Resolves a coin flip through the game's deterministic RNG.
+* `IfState(condition, effect)`: Resolution-time branch based on pure game state.
+* `IfPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body only if paid.
+* `UnlessPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body if declined/unpaid.
+* `ChoosePermanent(playerRef, set, binding)`: Player chooses a permanent at resolution, storing it in `binding`.
+* `ChooseRandomPermanent(set, binding)`: Selects a random permanent from the set at resolution.
+* `ChooseRandomPlayer(playerSet, binding)`: Selects a random player from the set at resolution.
+
+---
+
+## 8. Saved Bindings & Snapshots
+
+Bindings bridge resolution steps without string dictionaries:
+
+```go
+host := BindPermanent("host")
+
+Sequence(
+    Snapshot(AttachedPermanent, host),
+    Sacrifice(This),
+    AddCounters(From(host), P1P1, Fixed(1)),
+)
+```
+
+* `BindPermanent(label)`: Declares a permanent binding variable.
+* `BindPlayer(label)`: Declares a player binding variable.
+* `BindNumber(label)`: Declares a numeric binding variable.
+* `Snapshot(subject, binding)`: Captures the subject's current battlefield incarnation.
+* `SnapshotPlayer(subject, binding)`: Captures a player reference at resolution.
+* `SnapshotNumber(value, binding)`: Evaluates and freezes a numeric value at resolution.
+* `From(binding)` / `FromPlayer(binding)` / `FromNumber(binding)`: Reads the saved value in later instructions.
+
+---
+
+## 9. Triggered Abilities
+
+Use distinct constructors for distinct trigger lifecycles:
+
+### Event Triggers (`WhenEvent`)
+Triggers on rules events dispatched by the engine:
+* `WhenEvent(EventPattern, ResolvingEffect, ...TriggerOption)`
+* Event patterns:
+  * `Enters(This)`: Source enters the battlefield.
+  * `Dies(This)`: Source dies (moves from battlefield to graveyard).
+  * `CreatureDies()`: Any creature dies.
+  * `CreatureYouControlDies()`: A creature controlled by ability controller dies.
+  * `DealsDamage(source, amountBinding)`: Source deals damage to anything; captures amount.
+  * `DealsDamageToPlayer(source, playerBinding)`: Source deals damage to player; captures player.
+  * `DealsDamageToOpponent(source, playerBinding)`: Source deals damage to opponent.
+  * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
+  * `OpponentLosesLife(playerBinding)`: Opponent loses life (can chain `.WithAmount(binding)`).
+  * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
+
+### State Triggers (`WhenState`)
+Triggers whenever game state becomes true (CR 603.8):
+* `WhenState(StateCondition, ResolvingEffect, ...TriggerOption)`
+* Arming & Suppression: Triggers immediately when state is true (even between resolution instructions). Stays suppressed while its instance is pending, on the stack, or resolving. Rearms after that instance leaves the stack.
+
+### Turn-Step Triggers (`At` and `AtNext`)
+Triggers at step transitions:
+* `At(TurnStepPattern, ResolvingEffect, ...TriggerOption)`: Recurring step triggers (`YourUpkeep`, `EachUpkeep`, `EachEndStep`, `YourFirstMainPhase`, `YourPostcombatMainPhase`).
+* `AtNext(DelayedStepPattern, ResolvingEffect, ...DelayedStepOption)`: **One-shot delayed trigger** installed during resolution.
+  * Options: `WithTargets(...)`, `WithInterveningIf(condition)`.
+  * `TurnStepBegins(step, playerBinding)`: Captures the future step's active player.
+
+### Modal Triggers
+* `WhenEventModes(pattern, modes...)`: Choose a mode when the trigger is placed on stack.
+* `AtModes(stepPattern, modes...)`: Modal turn-step trigger.
+* `AtNextModes(stepPattern, modalOptions...)`: Modal one-shot delayed step trigger.
+
+---
+
+## 10. Spells, Activations, and Costs
+
+### Spells
+* `Spell(ResolvingEffect, ...SpellOption)`: Instants and sorceries.
+* `SpellModes(modes...)`: Modal spells.
+* Options: `WithTargets(...)`, `WithAdditionalCost(cost)`, `WithSelfCostReduction(condition, amount)`.
+
+### Activated Abilities
+* `Activate(CostGroup, ResolvingEffect, ...ActivationOption)`: Standard activation.
+* `ActivateModes(CostGroup, modes...)`: Choose-one activated ability.
+* Costs (`Costs(...)`):
+  * `Mana(costString)`: Mana payment (e.g. `Mana("{1}{U}")`).
+  * `TapCost(This)`: {T} tap cost.
+  * `SacrificeSourceCost()`: Sacrifice source as cost.
+  * `LifePayCost(amount)`: Pay life (permits paying exact life total CR 119.4).
+  * `RemoveCountersCost(counter, count)`: Remove counters from source.
+  * `DiscardRandomCost(count)`: Discard cards at random.
+* Activation Options:
+  * `WithTargets(...)`: Declares target bindings.
+  * `OnlyAsSorcery()`: Sorcery-speed timing.
+  * `OnlyDuring(step)`: Restricts activation to specific step (e.g. `Upkeep`).
+  * `OnlyOnYourTurn()`: Active player only.
+  * `ActivationLimit(maxPerTurn)`: Max activations per turn.
+  * `ActivationIf(condition)`: Pure state condition required to activate.
+  * `CaptureNumberBeforePayment(value, binding)`: Saves amount before mana production & cost payment.
+  * `CapturePermanentBeforePayment(subject, binding)`: Saves permanent (e.g. attachment) before sacrifice cost.
+
+---
+
+## 11. Continuous Effects, Modifications, and Durations
+
+Continuous effects are broken down into **modifications** and their **durations**:
+
+### Continuous Modifications (`ContinuousModification`)
+* `ModifyPT(subject, powerValue, toughnessValue)`: Power/toughness boost (Layer 7c).
+* `ModifyEachPT(permanentSet, powerValue, toughnessValue)`: Team boost.
+* `GrantKeyword(subject, keyword)`: Grants keyword ability (Layer 6).
+* `GrantEachKeyword(permanentSet, keyword)`: Grants keyword to set.
+* `SetColors(subject, colors...)`: Replaces colors (Layer 5).
+* `SetEachColors(permanentSet, colors...)`: Replaces colors for set.
+* `SetSubtypeFamily(subject, family, subtypes...)`: Replaces one subtype family (Layer 4).
+* `AddSubtypeFamily(subject, family, subtypes...)`: Adds subtypes within a family (Layer 4).
+* `ActivatedAbilityModification(subject, costs, effect, options...)`: Grants activated ability (Layer 6).
+* `ActivatedModesModification(subject, costs, options...)`: Grants modal activated ability.
+
+### Durations & Installation
+* `Until(Duration, modifications...)`: Installs temporary continuous effects (e.g. `EndOfTurn`, `EndOfCombat`, `Indefinite`).
+* `UntilSourceLeaves(This, modifications...)`: Effect lasts until the source leaves the battlefield.
+* `While(condition, modifications...)`: Static conditional continuous effect.
+* `Static(rules...)`: Installs static rules on the permanent.
+
+### Static Ability Grants
+* `GrantActivatedAbility(subject, costs, body, options...)`: Statically grants an ability to a single subject (e.g. `AttachedPermanent`).
+* `GrantEachActivatedAbility(set, costs, body, options...)`: Statically grants an ability to each permanent in a set.
+* `GrantEachActivatedModes(set, costs, options...)`: Statically grants a modal ability.
+
+---
+
+## 12. Replacements and Prevention
+
+* `PreventNextDamage(recipient, amount)`: Installs a prevention shield on permanent or player.
+* `SkipNextUntap(PermanentRef)`: Prevents untap during the controller's next untap step.
+* `SkipNextUntapOf(PermanentRef, PlayerRef)`: Prevents untap during the specified player's next untap step.
+* `SkipDrawStepForLife(amount)`: Static rule to skip draw step and gain life (CR 614.10b).
+* `EntersWithNCounters(counter, count)`: Replacement effect placing counters as the permanent enters.
+* `Regenerate(PermanentRef)`: Installs a regeneration shield on the target or source.
+
+---
+
+## 13. Values and Dynamic Calculations
+
+Operations taking amounts accept `ResolutionValue`:
+
+* `Fixed(n)`: Static constant integer.
+* `XValue()`: The X announced during casting or activation.
+* `PowerOf(PermanentRef)`: Current power of the permanent at resolution.
+* `ToughnessOf(PermanentRef)`: Current toughness of the permanent at resolution.
+* `CountersOn(PermanentRef, CounterType)`: Current count of counters on the live permanent.
+* `SourceCounters(CounterType)`: Counters on the source permanent, or its last-known count if departed.
+* `CreaturesDiedThisTurn()`: Number of creatures that died this turn across all players.
+* Arithmetic:
+  * `SubtractValues(a, b)`: $a - b$.
+  * `MinValue(a, b)`: $\min(a, b)$.
+  * `MaxValue(a, b)`: $\max(a, b)$.
+* Adapters:
+  * `ValueAtResolution(legacyValueSource)`: Adapts legacy value sources.
+
+---
+
+## 14. Representative Card Implementations
+
+### Goblins of the Flarg (State Trigger)
+```go
+WithAbility(WhenState(
+    Controls(HasSubType("Dwarf")),
+    Sacrifice(This),
+))
+```
+
+### Island-Dependent Creatures (State Trigger with Negation)
+```go
+WithAbility(WhenState(
+    ControlsNone(HasSubType("Island")),
+    Sacrifice(This),
+))
+```
+
+### Blood Divination (Additional Cost Spell)
+```go
+Spell(
+    Draw(You, Fixed(3)),
+    WithAdditionalCost(SacrificeCreatureCost()),
+)
+```
+
+### Fasting (Static Replacement + Upkeep Counters + Event Trigger)
+```go
+// Skip draw step for life
+WithStaticAbility(Static(SkipDrawStepForLife(2)))
+
+// Put hunger counter, destroy if threshold reached
+WithAbility(At(YourUpkeep, Sequence(
+    AddCounters(This, Hunger, Fixed(1)),
+    IfState(SourceHasCounters(Hunger, 5), Destroy(This)),
+)))
+
+// Destroy if controller draws a card
+WithAbility(WhenEvent(
+    ControllerDrawsCard(BindPlayer("drawer")),
+    Destroy(This),
+))
+```
+
+### Thrull Retainer (Activation Capture Before Sacrifice)
+```go
+host := BindPermanent("host")
+WithAbility(Activate(
+    Costs(SacrificeSourceCost()),
+    Regenerate(From(host)),
+    CapturePermanentBeforePayment(AttachedPermanent, host),
+))
+```
+
+### Erosion (Attachment Event Capture + Payment Branch)
+```go
+land := BindPermanent("land")
+player := BindPlayer("player")
+
+WithAbility(WhenEvent(
+    AttachedControllerUpkeep(land, player),
+    UnlessPaid(FromPlayer(player),
+        Costs(EitherCost(Mana("{1}"), LifePayCost(1))),
+        Destroy(From(land)),
+    ),
+))
+```

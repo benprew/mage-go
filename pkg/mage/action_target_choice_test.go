@@ -119,13 +119,10 @@ func TestCastSpell_OpponentChoiceCannotSelectIllegalTarget(t *testing.T) {
 
 func TestOpponentChosenTarget_RechecksControlRestrictionAtResolution(t *testing.T) {
 	g, a, b := newTriggerTargetGame()
+	firstTarget := DeclarePermanentTarget("first", IsCreature, TargetYouControl())
+	secondTarget := DeclarePermanentTarget("second", IsCreature, TargetOpponentControls(), TargetChosenByOpponent())
 	source := NewArtifact("Arena Analog", "{0}",
-		WithActivatedAbility(
-			tapThenFightPipeline(),
-			Tap(),
-			WithTarget(TargetCreatureYouControl()),
-			WithTarget(TargetOpponentChoice(TargetCreatureOpponentControls())),
-		),
+		WithAbility(Activate(Costs(TapCost(This)), tapThenFightPipeline(firstTarget, secondTarget), WithTargets(firstTarget, secondTarget))),
 	)
 	source.SetOwner(a.PlayerID())
 	sourcePerm := g.PutOnBattlefield(source, a.PlayerID())

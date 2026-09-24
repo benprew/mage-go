@@ -19,19 +19,6 @@ func (e *tapAttachedCreatureEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Taps: true}
 }
 
-// tapOrUntapTargetEffect lets you tap or untap a target permanent.
-type tapOrUntapTargetEffect struct{}
-
-// TapOrUntapTarget creates an effect that toggles a target permanent's tapped state (e.g. Twiddle).
-func TapOrUntapTarget() Effect {
-	return &tapOrUntapTargetEffect{}
-}
-
-func (e *tapOrUntapTargetEffect) Text() string {
-	return "Tap or untap target permanent"
-}
-func (e *tapOrUntapTargetEffect) Properties() EffectProperties { return EffectProperties{} }
-
 // tapAllLandsEffect taps all lands target player controls.
 type tapAllLandsEffect struct{}
 
@@ -134,26 +121,8 @@ func (e *replaceKeywordEffect) Text() string {
 }
 func (e *replaceKeywordEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// regenerateSourceEffect sets a regeneration shield on the source.
-type regenerateSourceEffect struct{}
-
-// RegenerateSource creates an effect that sets a regeneration shield on the source permanent.
-func RegenerateSource() Effect {
-	return &regenerateSourceEffect{}
-}
-
-func (e *regenerateSourceEffect) Text() string { return "Regenerate ~" }
-func (e *regenerateSourceEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
-}
-
 // regenerateTargetEffect sets a regeneration shield on the target.
 type regenerateTargetEffect struct{}
-
-// RegenerateTarget creates an effect that sets a regeneration shield on a target creature.
-func RegenerateTarget() Effect {
-	return &regenerateTargetEffect{}
-}
 
 func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
 func (e *regenerateTargetEffect) Properties() EffectProperties {
@@ -190,12 +159,6 @@ type stunEffect struct {
 // .Targeting(...) to apply to the source.
 func StunCreature() *stunEffect {
 	return &stunEffect{selector: TargetSelector{Kind: KindTarget}}
-}
-
-// SkipNextUntapTarget creates the explicit one-shot untap-skipping effect.
-// StunCreature is retained as its compatibility name.
-func SkipNextUntapTarget() *stunEffect {
-	return StunCreature()
 }
 
 // Targeting sets which permanent the stun applies to.
@@ -288,27 +251,6 @@ func (*tapAttachedCreatureEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (*tapOrUntapTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	caster := ctx.Game.GetPlayer(ctx.Controller)
-	if caster == nil {
-		return nil
-	}
-	mode := caster.ChooseMode([]string{"Tap", "Untap"}, "Twiddle")
-	if mode == 0 {
-		ctx.Game.TapPermanent(perm)
-	} else {
-		ctx.Game.UntapPermanent(perm)
-	}
-	return nil
-}
-
 func (*tapAllLandsEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return nil
@@ -375,15 +317,6 @@ func (e *replaceKeywordEffect) Apply(ctx *EffectContext) error {
 	eff.SetSourceID(ctx.SourceID)
 	ctx.Game.AddContinuousEffect(eff)
 	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-func (*regenerateSourceEffect) Apply(ctx *EffectContext) error {
-	perm := ctx.Game.FindPermanent(ctx.SourceID)
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.AddRegenerationShield(ctx.SourceID)
 	return nil
 }
 

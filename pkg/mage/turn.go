@@ -29,6 +29,16 @@ func (g *Game) RunTurn(stopTurn int, stopStep PhaseStep) bool {
 // It sets the step, applies continuous effects, performs step-specific actions,
 // then runs a priority round (unless the step has no priority, e.g. Untap).
 func (g *Game) RunStepWithPriority(step PhaseStep) {
+	if step == Draw {
+		if g.turns.Turn() == 1 && g.turns.ActivePlayerIndex() == 0 && len(g.players) == 2 {
+			return
+		}
+		g.effects.Apply(g)
+		action := &beginDrawStepAction{playerID: g.ActivePlayerObj().PlayerID()}
+		if g.effects.ApplyReplacements(action, g) == nil {
+			return
+		}
+	}
 	g.turns.SetStep(step)
 
 	// CR 500.5: any unspent mana empties as the step/phase ends.
@@ -57,6 +67,8 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		addEngineTiming(&engineTimingApplyEffectsNs, time.Since(phaseStart))
 	}
 
+	g.applyPendingStepLifeGains()
+
 	switch step {
 	case Untap:
 		g.doUntap()
@@ -67,11 +79,6 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		g.runPriorityRound(false)
 
 	case Draw:
-		// CR 103.8a: In a two-player game, the player who plays first
-		// skips the draw step of their first turn.
-		if g.turns.Turn() == 1 && g.turns.ActivePlayerIndex() == 0 && len(g.players) == 2 {
-			return
-		}
 		g.doDrawNormalDraw()
 		g.doDrawActions()
 		g.runPriorityRound(false)
@@ -139,8 +146,8 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 
 	case Cleanup:
 		if g.doCleanupActions() {
-			// CR 514.3a: triggers fired during cleanup — players get priority,
-			// then another cleanup step begins.
+			// CR 514.3a: state-based actions or triggers require priority
+			// before another cleanup step begins.
 			g.trackers.Turn.IncrementCleanupPriorityRounds()
 			g.runPriorityRound(false)
 			g.RunStepWithPriority(Cleanup)
@@ -179,4 +186,14 @@ func (g *Game) doEndStepActions() {
 		PlayerID: active.PlayerID(),
 	})
 	g.PutTriggersOnStack()
+}
+
+func (g *Game) applyPendingStepLifeGains() {
+	gains := g.turns.pendingStepLifeGains
+	g.turns.pendingStepLifeGains = nil
+	for _, gain := range gains {
+		if player := g.GetPlayer(gain.playerID); player != nil {
+			g.gainLifeWithEvent(player, gain.amount)
+		}
+	}
 }

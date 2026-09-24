@@ -218,13 +218,10 @@ func registerArtifacts() {
 
 	// Oracle: "{2}, {T}: Target creature gains flying until end of turn."
 	Register("Flying Carpet", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Flying Carpet", "{4}",
-			WithActivatedAbility(
-				FlyingCarpetEffect(),
-				TapCost(This),
-				WithCost(ManaCostOf("{2}")),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, Flying)), WithTargets(creature))),
 		)
 	})
 

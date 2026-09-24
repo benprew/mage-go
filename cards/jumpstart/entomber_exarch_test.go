@@ -24,19 +24,20 @@ func TestEntomberExarch_ReturnCreatureFromGraveyard(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Hill Giant", 0)
 }
 
-// Mode 0 with no creature card in graveyard: trigger still goes on the
-// stack with the chosen mode but resolves to nothing (no legal target).
-// CR 603.3c: a mode whose targets can't be legally chosen is still chosable;
-// the ability resolves with no effect at the target step.
-func TestEntomberExarch_Mode0NoCreaturesInGraveyard(t *testing.T) {
+// CR 603.3c excludes the return mode when its required target is absent.
+func TestEntomberExarch_NoCreaturesInGraveyard(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Swamp", 4)
 	g.AddCard(ZoneHand, gametest.PlayerA, "Entomber Exarch")
+	g.AddCard(ZoneHand, gametest.PlayerB, "Mountain")
 	g.ChooseMode(gametest.PlayerA, 0)
+	g.ChooseTarget(gametest.PlayerA, "PlayerB")
+	g.ChooseFromLibrary(gametest.PlayerA, "Mountain")
 	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Entomber Exarch")
 	g.StopAt(1, PostcombatMain)
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Entomber Exarch", 1)
+	g.AssertGraveyardCount(gametest.PlayerB, "Mountain", 1)
 }
 
 // Mode 1: target opponent reveals their hand; you pick a noncreature card;
@@ -47,7 +48,7 @@ func TestEntomberExarch_OpponentDiscardsNoncreature(t *testing.T) {
 	g.AddCard(ZoneHand, gametest.PlayerA, "Entomber Exarch")
 	g.AddCard(ZoneHand, gametest.PlayerB, "Mountain")
 	g.AddCard(ZoneHand, gametest.PlayerB, "Grizzly Bears")
-	g.ChooseMode(gametest.PlayerA, 1)
+	g.ChooseMode(gametest.PlayerA, 0)
 	g.ChooseTarget(gametest.PlayerA, "PlayerB")
 	g.ChooseFromLibrary(gametest.PlayerA, "Mountain")
 	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Entomber Exarch")
@@ -64,7 +65,7 @@ func TestEntomberExarch_Mode1NoNoncreaturesInHand(t *testing.T) {
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Swamp", 4)
 	g.AddCard(ZoneHand, gametest.PlayerA, "Entomber Exarch")
 	g.AddCard(ZoneHand, gametest.PlayerB, "Grizzly Bears")
-	g.ChooseMode(gametest.PlayerA, 1)
+	g.ChooseMode(gametest.PlayerA, 0)
 	g.ChooseTarget(gametest.PlayerA, "PlayerB")
 	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Entomber Exarch")
 	g.StopAt(1, PostcombatMain)

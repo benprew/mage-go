@@ -11,8 +11,12 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
+	manaProduced      int
+	manaTracking      bool
 	targetSpecs       []Target
 	permanentBindings map[*PermanentBinding]capturedPermanent
+	playerBindings    map[*PlayerBinding]uuid.UUID
+	numberBindings    map[*NumberBinding]int
 	sourceIncarnation uuid.UUID
 	sourceCaptured    bool
 	// X value for the currently resolving spell or activation
@@ -104,6 +108,8 @@ func (s *ResolutionState) SetColorOverride(sourceID uuid.UUID, override *[]Color
 func (s *ResolutionState) Clear() {
 	s.targetSpecs = nil
 	s.permanentBindings = nil
+	s.playerBindings = nil
+	s.numberBindings = nil
 	s.currentX = 0
 	s.currentMode = 0
 	s.currentEventAmount = 0
@@ -164,7 +170,11 @@ func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard =
 // Clone creates an independent deep copy of ResolutionState.
 func (s *ResolutionState) Clone() ResolutionState {
 	c := ResolutionState{
+		manaProduced:           s.manaProduced,
+		manaTracking:           s.manaTracking,
 		permanentBindings:      maps.Clone(s.permanentBindings),
+		playerBindings:         maps.Clone(s.playerBindings),
+		numberBindings:         maps.Clone(s.numberBindings),
 		targetSpecs:            append([]Target(nil), s.targetSpecs...),
 		sourceIncarnation:      s.sourceIncarnation,
 		sourceCaptured:         s.sourceCaptured,

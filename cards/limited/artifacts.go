@@ -111,14 +111,10 @@ func registerArtifacts() {
 	// Artifact
 	// {3}, {T}: Target player discards a card. Activate only during your turn.
 	Register("Disrupting Scepter", func() Card {
+		target := TargetPlayer("player")
 		return NewArtifact("Disrupting Scepter", "{3}",
-			WithActivatedAbility(
-				DisruptingScepterEffect(),
-				GenericCost(3),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPlayer()),
-				WithYourTurnOnly(),
-			),
+			WithAbility(Activate(Costs(Mana("{3}"), TapCost(This)),
+				Discard(target, Fixed(1)), WithTargets(target), OnlyOnYourTurn())),
 		)
 	})
 
@@ -318,15 +314,12 @@ func registerArtifacts() {
 		)
 	})
 
+	// {1}, {T}: Target creature gains banding until end of turn. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding a player controls are blocking or being blocked by a creature, that player divides that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
 	Register("Helm of Chatzuk", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Helm of Chatzuk", "{1}",
-			// {1}, {T}: Target creature gains banding until end of turn.
-			WithActivatedAbility(
-				HelmOfChatzukEffect(),
-				GenericCost(1),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, Banding)), WithTargets(creature))),
 		)
 	})
 
@@ -449,9 +442,12 @@ func registerArtifacts() {
 		return NewLuckyCharm("Wooden Sphere", "{1}", Green)
 	})
 
+	// Whenever a creature dies, you may pay {1}. If you do, you gain 1 life.
 	Register("Soul Net", func() Card {
 		return NewArtifact("Soul Net", "{1}",
-			WithAbility(AnyCreatureDiesTrigger(GainLife(You, Fixed(1)), true)),
+			WithAbility(WhenEvent(CreatureDies(),
+				IfPaid(You, Costs(Mana("{1}")), GainLife(You, Fixed(1))),
+			)),
 		)
 	})
 

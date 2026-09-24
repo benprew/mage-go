@@ -154,7 +154,7 @@ func TestCombatDamage(t *testing.T) {
 					mage.WithSubTypes("Horror"),
 					mage.WithAbility(
 						mage.NewTriggered(core.EvtDamageDealt, false,
-							mage.GainLifeFor(mage.You, mage.EventAmountValue()),
+							mage.GainLifeFor(mage.You, mage.ValueAtResolution(mage.EventAmountValue())),
 						).SetConditionData(mage.EventSourceIsSelf{}),
 					),
 				)

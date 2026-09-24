@@ -292,28 +292,24 @@ func registerArtifacts() {
 	// Artifact
 	// {2}, {T}: Target player mills two cards.
 	Register("Millstone", func() Card {
+		player := TargetPlayer("player")
 		return NewArtifact("Millstone", "{2}",
-			WithActivatedAbility(
-				MillstoneEffect(),
-				GenericCost(2),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPlayer()),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This)),
+				Mill(player, Fixed(2)), WithTargets(player))),
 		)
 	})
 
 	// Obelisk of Undoing {1}
 	// Artifact
 	// {6}, {T}: Return target permanent you both own and control to your hand.
-	// Target checks both "own AND control" per Oracle via ControlledPermanentTarget
 	Register("Obelisk of Undoing", func() Card {
+		permanent := TargetPermanent("permanent", AnyPermanent, TargetYouOwn(), TargetYouControl())
 		return NewArtifact("Obelisk of Undoing", "{1}",
-			WithActivatedAbility(
-				ReturnToHandTarget(),
-				GenericCost(6),
-				WithCost(TapCost(This)),
-				WithTarget(TargetControlledPermanent()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{6}"), TapCost(This)),
+				ReturnToHand(permanent),
+				WithTargets(permanent),
+			)),
 		)
 	})
 
@@ -359,13 +355,10 @@ func registerArtifacts() {
 	// Artifact
 	// {3}, {T}: Target creature gets -2/-0 until end of turn.
 	Register("Staff of Zegon", func() Card {
+		target := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Staff of Zegon", "{4}",
-			WithActivatedAbility(
-				StaffOfZegonEffect(),
-				GenericCost(3),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(ManaCostOf("{3}"), TapCost(This)),
+				Until(EndOfTurn, ModifyPT(target, Fixed(-2), Fixed(0))), WithTargets(target))),
 		)
 	})
 

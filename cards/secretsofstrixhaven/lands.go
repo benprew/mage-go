@@ -161,8 +161,7 @@ func registerLands() {
 		//
 		// XXX: The static ability "Lands with the chosen name have '{T}: Add {C}'" would require
 		// granting a new mana ability to all permanents matching the chosen name — a form of
-		// dynamic GrantActivatedAbilityToAll keyed on a runtime-chosen string. The engine's
-		// GrantActivatedAbilityToAll continuous effect uses a PermanentFilter, but there's no
+		// dynamic ability grant keyed on a runtime-chosen string. There is no
 		// mechanism to bind a Named(perm.ChosenSubtype) filter that closes over the source's
 		// runtime state and survives the per-cycle reset correctly.
 		//

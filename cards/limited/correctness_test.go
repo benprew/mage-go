@@ -662,13 +662,23 @@ func TestPowerSink(t *testing.T) {
 }
 
 func TestTwiddle(t *testing.T) {
+	t.Run("may decline", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+		g.AddCard(core.ZoneHand, gametest.PlayerA, "Twiddle")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Twiddle", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Hill Giant", false)
+	})
+
 	t.Run("can untap a tapped permanent", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Icy Manipulator")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
 		g.ActivateAbility(1, core.Upkeep, gametest.PlayerA, "Icy Manipulator", "Hill Giant")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Twiddle")
-		g.ChooseMode(gametest.PlayerA, 1) // choose "Untap"
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Twiddle", "Hill Giant")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
@@ -679,7 +689,6 @@ func TestTwiddle(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Twiddle")
-		g.ChooseMode(gametest.PlayerA, 0) // choose "Tap"
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Twiddle", "Hill Giant")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()

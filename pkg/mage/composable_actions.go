@@ -99,7 +99,12 @@ func DestroyWithoutRegeneration(subject PermanentRef) ResolvingEffect {
 
 // Exile exiles the selected battlefield incarnation.
 func Exile(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: ExileTarget(), verb: "exile"}
+	return &subjectAction{permanent: subject, effect: &exileTargetEffect{}, verb: "exile"}
+}
+
+// ReturnToHand returns the selected permanent to its owner's hand.
+func ReturnToHand(subject PermanentRef) ResolvingEffect {
+	return &subjectAction{permanent: subject, effect: ReturnToHandTarget(), verb: "return to owner's hand"}
 }
 
 // UntapPermanent untaps the selected battlefield incarnation.
@@ -108,13 +113,41 @@ func UntapPermanent(subject PermanentRef) ResolvingEffect {
 }
 
 // DrawFor draws individual cards for the selected player. An absent player has no effect.
-func DrawFor(subject PlayerRef, amount ValueSource) ResolvingEffect {
-	return &subjectAction{player: subject, effect: DrawCards(amount), amount: amount, verb: "draw for"}
+func DrawFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
+	return &drawSubjectEffect{subject, amount}
+}
+
+type drawSubjectEffect struct {
+	subject PlayerRef
+	amount  ResolutionValue
+}
+
+func (e *drawSubjectEffect) Text() string                 { return "draw for " + InspectDefinition(e.subject).Text }
+func (e *drawSubjectEffect) Properties() EffectProperties { return drawAmountProperties(e.amount) }
+func (e *drawSubjectEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+}
+func (e *drawSubjectEffect) Apply(ctx *EffectContext) error {
+	id, ok := e.subject.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	amount := e.amount.resolveValue(ctx)
+	child := *ctx
+	child.Targets = []uuid.UUID{id}
+	return DrawCards(Fixed(amount)).Apply(&child)
+}
+func drawAmountProperties(amount ResolutionValue) EffectProperties {
+	p := EffectProperties{Outcome: OutcomeBenefit}
+	if value, ok := amount.(fixedValue); ok {
+		p.DrawCount = value.n
+	}
+	return p
 }
 
 // Discard lets the selected player discard through the existing choice and replacement paths.
-func Discard(subject PlayerRef, amount ValueSource) ResolvingEffect {
-	return &subjectAction{player: subject, effect: DiscardCards(amount), amount: amount, verb: "discard for"}
+func Discard(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
+	return &discardSubjectEffect{subject, amount}
 }
 
 // PlayerSet selects a collection of players when an operation starts.
@@ -147,25 +180,30 @@ func (allPlayersRef) inspectDefinition() definitionNode {
 
 type drawEachEffect struct {
 	subjects PlayerSet
-	amount   ValueSource
+	amount   ResolutionValue
 }
 
 // DrawEach draws cards for each selected player, using individual draw actions.
-func DrawEach(subjects PlayerSet, amount ValueSource) ResolvingEffect {
+// It reads the amount once before the first draw.
+func DrawEach(subjects PlayerSet, amount ResolutionValue) ResolvingEffect {
 	return &drawEachEffect{subjects, amount}
 }
 func (e *drawEachEffect) Text() string { return "draw for each player" }
 func (e *drawEachEffect) Properties() EffectProperties {
-	p := DrawCards(e.amount).Properties()
+	p := drawAmountProperties(e.amount)
 	p.Mass = true
 	return p
 }
 func (e *drawEachEffect) Apply(ctx *EffectContext) error {
 	ids := e.subjects.resolvePlayers(ctx)
+	if len(ids) == 0 {
+		return nil
+	}
+	amount := e.amount.resolveValue(ctx)
 	for _, id := range ids {
 		child := *ctx
 		child.Targets = []uuid.UUID{id}
-		if err := DrawCards(e.amount).Apply(&child); err != nil {
+		if err := DrawCards(Fixed(amount)).Apply(&child); err != nil {
 			return err
 		}
 	}
@@ -225,18 +263,18 @@ func (e *destroyEachEffect) inspectDefinition() definitionNode {
 }
 
 // GainLifeFor gains life for the selected player through the existing life action.
-func GainLifeFor(subject PlayerRef, amount ValueSource) ResolvingEffect {
+func GainLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount, gain: true}
 }
 
 // LoseLifeFor loses life for the selected player through the existing life action.
-func LoseLifeFor(subject PlayerRef, amount ValueSource) ResolvingEffect {
+func LoseLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount}
 }
 
 // AddCountersTo adds counters through the existing replacement action.
-func AddCountersTo(subject PermanentRef, counter core.CounterType, amount ValueSource) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: AddCounters(counter, amount), amount: amount, verb: "add counters to"}
+func AddCountersTo(subject PermanentRef, counter core.CounterType, amount ResolutionValue) ResolvingEffect {
+	return &counterSubjectEffect{subject, counter, amount}
 }
 
 // TapSubject taps one battlefield incarnation through the normal tap action.
@@ -263,7 +301,7 @@ func TapCost(sourceRef) Cost { return Tap() }
 
 type lifeAction struct {
 	subject PlayerRef
-	amount  ValueSource
+	amount  ResolutionValue
 	gain    bool
 }
 
@@ -296,7 +334,7 @@ func (e *lifeAction) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	// The recipient must not replace targets used to calculate the amount.
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.amount.resolveValue(ctx)
 	if amount <= 0 {
 		return nil
 	}

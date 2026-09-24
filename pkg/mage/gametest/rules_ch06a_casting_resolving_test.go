@@ -12,6 +12,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,9 +62,9 @@ func registerCh06Cards() {
 					mage.CounterSpell()))
 		})
 		reg("Ch06 Exile Spell", func() mage.Card {
+			target := dsl.TargetPermanent("creature", dsl.IsCreature)
 			return mage.NewInstant("Ch06 Exile Spell", "{W}",
-				mage.NewTargetedSpell(mage.TargetCreature(),
-					mage.ExileTarget()))
+				dsl.WithAbility(dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))))
 		})
 		reg("Ch06 Destroy Spell", func() mage.Card {
 			return mage.NewInstant("Ch06 Destroy Spell", "{1}{B}",
@@ -145,8 +146,8 @@ func registerCh06Cards() {
 		})
 		reg("Ch06 Death Counter", func() mage.Card {
 			return mage.NewEnchantment("Ch06 Death Counter", "{B}",
-				mage.WithAbility(mage.AnyCreatureDiesTrigger(
-					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
+				mage.WithAbility(dsl.WhenEvent(dsl.CreatureDies(),
+					dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 		})
 		reg("Ch06 ETB Gainer", func() mage.Card {
 			return mage.NewCreature("Ch06 ETB Gainer", "{2}{W}", 2, 2,
@@ -162,9 +163,7 @@ func registerCh06Cards() {
 			return mage.NewCreature("Ch06 Death Regen", "{2}{G}", 2, 2,
 				mage.WithAbility(mage.PutIntoGraveyardFromBattlefieldTrigger(
 					mage.GainLifeFor(mage.You, mage.Fixed(5)), false)),
-				mage.WithActivatedAbility(
-					mage.RegenerateSource(),
-					mage.ManaCostOf("{G}")))
+				dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.This))))
 		})
 		reg("Ch06 Haste Pinger", func() mage.Card {
 			return mage.NewCreature("Ch06 Haste Pinger", "{2}{R}", 1, 1,
@@ -202,15 +201,13 @@ func registerCh06Cards() {
 		reg("Ch06 Regen Skeleton", func() mage.Card {
 			return mage.NewCreature("Ch06 Regen Skeleton", "{1}{B}", 1, 1,
 				mage.WithSubTypes("Skeleton"),
-				mage.WithActivatedAbility(
-					mage.RegenerateSource(),
-					mage.ManaCostOf("{B}")))
+				dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{B}")), dsl.Regenerate(dsl.This))))
 		})
 		reg("Ch06 Artifact Death Watch", func() mage.Card {
 			return mage.NewCreature("Ch06 Artifact Death Watch", "{2}", 1, 1,
 				mage.WithCardType(core.TypeArtifact),
-				mage.WithAbility(mage.AnyCreatureDiesTrigger(
-					mage.GainLifeFor(mage.You, mage.Fixed(1)), false)))
+				mage.WithAbility(dsl.WhenEvent(dsl.CreatureDies(),
+					dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 		})
 		reg("Ch06 APNAP A Watcher", func() mage.Card {
 			return mage.NewCreature("Ch06 APNAP A Watcher", "{1}{W}", 1, 1,

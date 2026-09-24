@@ -143,7 +143,7 @@ func TestEntomberExarch_Mode2OpponentDiscardsNoncreature(t *testing.T) {
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Swamp", 4)
 	g.AddCard(ZoneHand, gametest.PlayerB, "Lightning Bolt")
 	g.AddCard(ZoneHand, gametest.PlayerB, "Grizzly Bears")
-	g.ChooseMode(gametest.PlayerA, 1)
+	g.ChooseMode(gametest.PlayerA, 0)
 	g.ChooseFromLibrary(gametest.PlayerA, "Lightning Bolt")
 	g.CastSpell(1, PrecombatMain, gametest.PlayerA, "Entomber Exarch")
 	g.StopAt(1, EndStep)

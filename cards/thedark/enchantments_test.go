@@ -94,9 +94,9 @@ func TestFasting(t *testing.T) {
 
 		// On turn 1 (upkeep 1): Fasting gets counter 1. Draw step skipped on turn 1 (CR 103.8a for player playing first).
 		// On turn 3 (upkeep 2): Fasting gets counter 2.
-		// Draw: choose to skip draw step. Life +2 = 22.
+		// The skipped draw step gives 2 life when the main phase starts.
 		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
-		g.StopAt(3, core.PrecombatMain)
+		g.StopAt(3, core.BeginCombat)
 		g.Execute()
 
 		g.AssertCounterCount(gametest.PlayerA, "Fasting", core.Hunger, 2)

@@ -114,11 +114,23 @@ func TestBronzeTabletDeclinedPaymentSwapsOwnership(t *testing.T) {
 	}
 }
 
-func TestBronzeTabletCannotPayAtTenLife(t *testing.T) {
+func TestBronzeTabletCanPayAtTenLife(t *testing.T) {
 	g, tablet, target := bronzeTabletTestGame(t)
 	g.SetLife(gametest.PlayerB, 10)
 	activateBronzeTablet(t, g, tablet, target)
-	g.AssertLife(gametest.PlayerB, 10)
+	g.AssertLife(gametest.PlayerB, 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Bronze Tablet", 1)
+	g.AssertExileCount("Owned Target", 1)
+	if g.FindCardAnywhere(target.ID()).Owner() != g.GetPlayer(gametest.PlayerB).PlayerID() {
+		t.Fatal("paid branch changed target ownership")
+	}
+}
+
+func TestBronzeTabletCannotPayBelowTenLife(t *testing.T) {
+	g, tablet, target := bronzeTabletTestGame(t)
+	g.SetLife(gametest.PlayerB, 9)
+	activateBronzeTablet(t, g, tablet, target)
+	g.AssertLife(gametest.PlayerB, 9)
 	if g.FindCardAnywhere(tablet.ID()).Owner() != g.GetPlayer(gametest.PlayerB).PlayerID() ||
 		g.FindCardAnywhere(target.ID()).Owner() != g.GetPlayer(gametest.PlayerA).PlayerID() {
 		t.Fatal("unpayable branch did not exchange ownership")

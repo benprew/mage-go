@@ -636,6 +636,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 		}
 		if !att.HasSubType("Aura") {
 			att.AttachedTo = uuid.Nil
+			att.attachedIncarnation = uuid.Nil
 		}
 	}
 }
@@ -673,6 +674,11 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 		}
 	}
 
+	if isCreature {
+		g.trackers.Turn.RecordCreatureDeath()
+		g.recordCreatureDeath(controller)
+	}
+
 	graveyardEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
@@ -682,11 +688,6 @@ func (g *Game) DestroyPermanent(perm *Permanent) {
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
-
-	if isCreature {
-		g.trackers.Turn.RecordCreatureDeath()
-		g.recordCreatureDeath(controller)
-	}
 }
 
 // TapPermanent taps a permanent and fires the EvtTapped event.
@@ -772,6 +773,11 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 		}
 	}
 
+	if isCreature {
+		g.trackers.Turn.RecordCreatureDeath()
+		g.recordCreatureDeath(controller)
+	}
+
 	graveyardEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
@@ -781,11 +787,6 @@ func (g *Game) PutPermanentIntoGraveyard(perm *Permanent) {
 	}
 	g.FireEvent(graveyardEvt)
 	g.checkAbilitiesForEvent(selfAbilities, &graveyardEvt, permID, controller)
-
-	if isCreature {
-		g.trackers.Turn.RecordCreatureDeath()
-		g.recordCreatureDeath(controller)
-	}
 }
 
 // MoveFromGraveyard removes a card from the graveyard of a player.
@@ -924,37 +925,53 @@ func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
 // effects that cause direct life loss (CR 119.3). Damage that causes life loss
 // fires EvtLifeLost separately from executeDamageToPlayer.
 func (g *Game) PlayerLoseLife(p Player, amount int) {
+	g.playersLoseLife([]Player{p}, amount)
+}
+
+// playersLoseLife changes all life totals before events can observe them.
+func (g *Game) playersLoseLife(players []Player, amount int) {
 	if amount <= 0 {
 		return
 	}
-	p.LoseLife(amount)
-	g.FireEvent(GameEvent{
-		Type:     EvtLifeLost,
-		PlayerID: p.PlayerID(),
-		Amount:   amount,
-	})
+	for _, p := range players {
+		p.LoseLife(amount)
+	}
+	for _, p := range players {
+		g.FireEvent(GameEvent{
+			Type:     EvtLifeLost,
+			PlayerID: p.PlayerID(),
+			Amount:   amount,
+		})
+	}
 }
 
-// PlayerGainLife handles life gain with replacement effects (Lich) and
-// life-gain amount modifiers (Rhox Faithmender — "If you would gain
-// life, you gain twice that much life instead.").
+// PlayerGainLife applies modifiers and replacements without event dispatch.
 func (g *Game) PlayerGainLife(p Player, amount int) {
+	g.applyLifeGain(p, amount)
+}
+
+func (g *Game) gainLifeWithEvent(p Player, amount int) {
+	if gained := g.applyLifeGain(p, amount); gained > 0 {
+		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: p.PlayerID(), Amount: gained})
+	}
+}
+
+// applyLifeGain returns the amount gained after replacement processing.
+func (g *Game) applyLifeGain(p Player, amount int) int {
 	if amount <= 0 {
-		return
+		return 0
 	}
 	amount = g.ApplyLifeGainModifiers(p.PlayerID(), amount)
 	if amount <= 0 {
-		return
+		return 0
 	}
 	action := NewLifeGainAction(uuid.Nil, p.PlayerID(), amount)
 	result := g.effects.ApplyReplacements(action, g)
-	if result == nil {
-		return // Lich or other replacement consumed it
+	if gain, ok := result.(*LifeGainAction); ok && gain.Amount() > 0 {
+		p.GainLife(gain.Amount())
+		return gain.Amount()
 	}
-	// If the result is still a LifeGainAction, gain the life
-	if lga, ok := result.(*LifeGainAction); ok {
-		p.GainLife(lga.Amount())
-	}
+	return 0
 }
 
 // BouncePermanentToHand removes a permanent from the battlefield and adds the
@@ -1126,7 +1143,7 @@ func (g *Game) drawCardRaw(p Player) (Card, bool) {
 	return c, ok
 }
 
-// PerformScry executes the scry action for N cards (CR 701.18).
+// PerformScry executes the scry action for N cards (CR 701.22).
 // The player examines the top N cards of the library.
 // The player can put any number of these cards on the bottom of the library.
 // The player puts the remaining cards on top of the library in any order.
@@ -1142,6 +1159,7 @@ func (g *Game) PerformScry(p Player, n int) int {
 	}
 	lib := p.Library()
 	if len(lib) == 0 {
+		g.FireEvent(GameEvent{Type: EvtScry, PlayerID: p.PlayerID()})
 		return 0
 	}
 	count := min(n, len(lib))
@@ -1175,7 +1193,7 @@ func (g *Game) PerformScry(p Player, n int) int {
 	return count
 }
 
-// PerformSurveil implements surveil N (CR 701.42): the player looks at the top
+// PerformSurveil implements surveil N (CR 701.25): the player looks at the top
 // N cards of their library, then puts any number of them into their graveyard
 // and the rest on top of their library in any order. If the library has fewer
 // than N cards, the player surveils however many are present. Returns the
@@ -1190,6 +1208,7 @@ func (g *Game) PerformSurveil(p Player, n int) int {
 	}
 	lib := p.Library()
 	if len(lib) == 0 {
+		g.FireEvent(GameEvent{Type: EvtSurveil, PlayerID: p.PlayerID()})
 		return 0
 	}
 	count := min(n, len(lib))
@@ -1216,6 +1235,7 @@ func (g *Game) PerformSurveil(p Player, n int) int {
 			p.AddToGraveyard(c)
 		}
 	}
+	g.FireEvent(GameEvent{Type: EvtSurveil, PlayerID: p.PlayerID(), Amount: count})
 	return count
 }
 
@@ -1350,6 +1370,7 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	}
 
 	src.AttachedTo = targetID
+	src.attachedIncarnation = target.incarnationID
 	target.Attachments = append(target.Attachments, sourceID)
 
 	g.effects.Apply(g)
@@ -1437,6 +1458,9 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 		observer = before
 	}
 	for _, perm := range observer.zones.battlefield {
+		if perm.PhasedOut {
+			continue
+		}
 		observer.syncAbilityContext(perm)
 		for _, a := range perm.RuntimeAbilities {
 			ta, ok := UnwrapAbility(a).(TriggeredAbility)
@@ -1459,10 +1483,11 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 			}
 			if ta.CheckTrigger(&evt, observer) {
 				g.queuePendingTrigger(&pendingTrigger{
-					ability:    ta,
-					event:      &evt,
-					sourceID:   perm.ID(),
-					controller: perm.ControllerID(),
+					eventCaptures: captureDetectedTriggerEvent(ta, &evt, observer, perm.ID()),
+					ability:       ta,
+					event:         &evt,
+					sourceID:      perm.ID(),
+					controller:    perm.ControllerID(),
 				})
 			}
 		}
@@ -1550,7 +1575,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 				remaining = append(remaining, dt)
 				continue
 			}
-			if dt.MatchFlag && !evt.Flag {
+			if (dt.MatchFlag && !evt.Flag) || (dt.matchFlagFalse && evt.Flag) {
 				remaining = append(remaining, dt)
 				continue
 			}
@@ -1573,6 +1598,10 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 					remaining = append(remaining, dt)
 					continue
 				}
+			}
+			if dt.interveningCondition != nil && !dt.interveningCondition.checkState(g, StateContext{SourceID: dt.SourceID, ControllerID: dt.Controller}) {
+				remaining = append(remaining, dt)
+				continue
 			}
 			g.triggers.AddPending(&pendingTrigger{
 				delayed:           dt,
@@ -1677,44 +1706,75 @@ func (g *Game) PutTriggersOnStack() {
 			SourceID:          pt.sourceID,
 			IsAbility:         true,
 		}
-		if dt := pt.delayed; dt != nil {
+		if dt := pt.delayed; dt != nil && len(dt.modes) == 0 {
 			obj.Effects = append([]Effect(nil), dt.Effects...)
 			obj.Targets = []uuid.UUID{dt.TargetID}
+			if len(dt.targets) > 0 {
+				var legal bool
+				obj.Targets, legal = g.chooseTriggerTargets(pt, dt.targets)
+				if !legal {
+					continue
+				}
+				obj.TargetSpecs = expandTargetSpecs(dt.targets, obj.Targets, obj.XValue)
+				obj.TargetSource = targetSource
+			}
 			obj.EventAmount = pt.event.Amount
 			obj.EventSourceID = pt.event.SourceID
+			captureTriggerEventEffects(pt, obj)
 			g.pushStack(obj)
 			continue
 		}
-		// CR 603.1f / 603.3d: a modal triggered ability picks its mode as it
-		// goes on the stack, then gathers targets only for that mode. Push the
-		// chosen mode's effects/targets onto the stack object and skip the
-		// legacy declared-targets and event-derived auto-binding paths below.
-		if gt, ok := pt.ability.(*GenericTriggered); ok && gt.IsModal() {
+		// CR 603.3c permits only modes with available required targets.
+		var modes []Mode
+		if dt := pt.delayed; dt != nil {
+			modes = dt.modes
+			obj.EventAmount = pt.event.Amount
+			obj.EventSourceID = pt.event.SourceID
+		} else if gt, ok := pt.ability.(*GenericTriggered); ok {
+			modes = gt.Modes()
+		}
+		if len(modes) > 0 {
 			ctrl := g.GetPlayer(pt.controller)
-			modes := gt.Modes()
-			labels := make([]string, len(modes))
-			for i, m := range modes {
-				labels[i] = m.Label
-			}
-			idx := 0
-			if ctrl != nil {
-				reason := "modal trigger"
-				if c := g.FindCardAnywhere(pt.sourceID); c != nil {
-					reason = c.Name()
+			var labels []string
+			var indices []int
+			for i, mode := range modes {
+				legal := true
+				for _, target := range mode.Targets {
+					if len(uniqueTargetCandidates(target.Possible(pt.controller, targetSource, g))) < target.Min() {
+						legal = false
+						break
+					}
 				}
-				idx = ctrl.ChooseMode(labels, reason)
-				if idx < 0 || idx >= len(modes) {
-					idx = 0
+				if legal {
+					labels = append(labels, mode.Label)
+					indices = append(indices, i)
 				}
 			}
+			if len(indices) == 0 || ctrl == nil {
+				continue
+			}
+			reason := "modal trigger"
+			if targetSource != nil {
+				reason = targetSource.Name()
+			}
+			choice := ctrl.ChooseMode(labels, reason)
+			if choice < 0 || choice >= len(indices) {
+				continue
+			}
+			idx := indices[choice]
 			chosen := modes[idx]
 			obj.Effects = append(obj.Effects, chosen.Effects...)
 			obj.ModeChoice = idx
 			if len(chosen.Targets) > 0 {
-				obj.Targets = g.chooseTriggerTargets(pt, chosen.Targets)
+				var legal bool
+				obj.Targets, legal = g.chooseTriggerTargets(pt, chosen.Targets)
+				if !legal {
+					continue
+				}
 				obj.TargetSpecs = expandTargetSpecs(chosen.Targets, obj.Targets, obj.XValue)
 				obj.TargetSource = targetSource
 			}
+			captureTriggerEventEffects(pt, obj)
 			g.pushStack(obj)
 			continue
 		}
@@ -1725,7 +1785,11 @@ func (g *Game) PutTriggersOnStack() {
 		// triggers without declared targets fall through to the auto-bind so
 		// existing card behavior is preserved.
 		if declared := pt.ability.Targets(); len(declared) > 0 {
-			obj.Targets = g.chooseTriggerTargets(pt, declared)
+			var legal bool
+			obj.Targets, legal = g.chooseTriggerTargets(pt, declared)
+			if !legal {
+				continue
+			}
 			if pt.event != nil && pt.event.Amount != 0 {
 				if gt, ok := pt.ability.(*GenericTriggered); ok {
 					switch gt.eventType {
@@ -1741,6 +1805,7 @@ func (g *Game) PutTriggersOnStack() {
 			}
 			obj.TargetSpecs = expandTargetSpecs(declared, obj.Targets, obj.XValue)
 			obj.TargetSource = targetSource
+			captureTriggerEventEffects(pt, obj)
 			g.pushStack(obj)
 			continue
 		}
@@ -1793,6 +1858,8 @@ func (g *Game) PutTriggersOnStack() {
 					}
 					obj.EventAmount = pt.event.Amount
 					obj.EventSourceID = pt.event.SourceID
+				case EvtScry, EvtSurveil:
+					obj.EventAmount = pt.event.Amount
 				case EvtTappedForMana:
 					if pt.event.PlayerID != uuid.Nil {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
@@ -1869,69 +1936,68 @@ func (g *Game) PutTriggersOnStack() {
 						obj.Targets = []uuid.UUID{pt.event.PlayerID}
 					}
 				}
+				// Typed event subjects are not targets (CR 115.1d).
+				if gt.eventDefinition != nil {
+					obj.Targets = nil
+				}
 			}
 		}
+		captureTriggerEventEffects(pt, obj)
 		g.pushStack(obj)
 	}
 	g.triggers.ClearPending()
 }
 
-// chooseTriggerTargets prompts the trigger's controller to choose targets for
-// each declared Target on the triggered ability. Returns the flat list of
-// chosen UUIDs that becomes the StackObject's Targets.
-//
-// If a Target has no legal candidates, it is skipped (a placeholder uuid.Nil
-// is appended for required targets so positional indexing in effects survives,
-// matching the convention used elsewhere). The trigger may still resolve and
-// later fizzle via the normal isTargetStillLegal check at resolution time.
-func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) []uuid.UUID {
+// chooseTriggerTargets returns false when a required target group cannot be chosen.
+// CR 603.3d removes such a trigger before a player receives priority.
+func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, bool) {
 	controller := g.GetPlayer(pt.controller)
 	sourceCard := g.FindCardAnywhere(pt.sourceID)
 	var out []uuid.UUID
 	for _, t := range declared {
 		if pair, ok := t.(*randomActivePlayerExchangePairTarget); ok {
-			out = append(out, pair.chooseForTrigger(pt.controller, sourceCard, g)...)
+			chosen := pair.chooseForTrigger(pt.controller, sourceCard, g)
+			if len(chosen) < t.Min() {
+				return nil, false
+			}
+			out = append(out, chosen...)
 			continue
 		}
 		if random, ok := t.(*randomTarget); ok {
 			chosen := g.chooseRandomTargets(pt.controller, sourceCard, random, 0)
-			if len(chosen) == 0 && t.Min() > 0 {
-				out = append(out, uuid.Nil)
-			} else {
-				out = append(out, chosen...)
+			if len(chosen) < t.Min() {
+				return nil, false
 			}
+			out = append(out, chosen...)
 			continue
 		}
 		t.Reset()
 		possible := t.Possible(pt.controller, sourceCard, g)
+		if len(possible) < t.Min() {
+			return nil, false
+		}
 		if len(possible) == 0 {
-			if t.Min() > 0 {
-				out = append(out, uuid.Nil)
-			}
 			continue
 		}
-		var chosen []uuid.UUID
-		// Some targets specify that the *opponent* (not the trigger's
-		// controller) chooses from the legal target set, e.g. Mausoleum
-		// Turnkey ("of an opponent's choice"). Such targets implement the
-		// OpponentChoosesTarget marker interface; we route the prompt to
-		// the opposing player.
 		chooser := controller
-		if oct, ok := t.(interface{ OpponentChoosesTarget() bool }); ok && oct.OpponentChoosesTarget() {
+		if isOpponentChosenTarget(t) {
 			if opp := g.GetOpponent(pt.controller); opp != nil {
 				chooser = opp
 			}
 		}
+		var chosen []uuid.UUID
 		if chooser != nil {
 			chosen = chooser.ChooseTargets(possible, t.Min(), t.Max(), g)
 		}
 		if len(chosen) == 0 && t.Min() > 0 {
-			chosen = possible[:1]
+			chosen = possible[:t.Min()]
 		}
-		_ = t.Choose(pt.controller, sourceCard, g, chosen)
+		if err := t.Choose(pt.controller, sourceCard, g, chosen); err != nil {
+			return nil, false
+		}
 		out = append(out, chosen...)
 	}
-	return out
+	return out, true
 }
 
 func reverseTriggers(s []*pendingTrigger) {
@@ -2040,6 +2106,16 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controlle
 
 // ResolveStackObject resolves a single stack object.
 func (g *Game) ResolveStackObject(obj *StackObject) {
+	g.resolveStackObject(obj)
+}
+
+func (g *Game) resolveStackObject(obj *StackObject) (produced int) {
+	previousMana, previousTracking := g.resolution.manaProduced, g.resolution.manaTracking
+	g.resolution.manaProduced, g.resolution.manaTracking = 0, true
+	defer func() {
+		produced = g.resolution.manaProduced
+		g.resolution.manaProduced, g.resolution.manaTracking = previousMana, previousTracking
+	}()
 	oldIncarnation, oldCaptured := g.resolution.sourceIncarnation, g.resolution.sourceCaptured
 	g.resolution.sourceIncarnation, g.resolution.sourceCaptured = obj.sourceIncarnation, true
 	defer func() { g.resolution.sourceIncarnation, g.resolution.sourceCaptured = oldIncarnation, oldCaptured }()
@@ -2098,7 +2174,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 	defer g.resolution.Begin(obj)()
 	for _, eff := range obj.Effects {
-		_ = ApplyEffect(g, eff, obj.SourceID, obj.Controller, resolvedTargets)
+		_ = applyEffectWithCaptures(g, eff, obj.SourceID, obj.Controller, resolvedTargets, obj.capturedNumbers, obj.capturedPermanents)
 	}
 	g.resolution.ClearDistributions()
 
@@ -2125,6 +2201,7 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 
 		g.cleanupSpell(obj)
 	}
+	return
 }
 
 // Move spell to graveyard/exile as appropriate. Used for resolving cast
@@ -2367,13 +2444,21 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if xValue < 0 {
 		return fmt.Errorf("x cannot be negative")
 	}
-	targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
-	targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
-	if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
+	selection, err := g.prepareModalSpellSelection(p, card, targets, xValue, "")
+	if err != nil {
 		return err
 	}
-	if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
-		return err
+	if selection != nil {
+		targets = selection.targets
+	} else {
+		targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
+		targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
+		if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
+			return err
+		}
+		if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
+			return err
+		}
 	}
 
 	mc := card.ManaCost()
@@ -2469,18 +2554,24 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		Card:         card,
-		Controller:   playerID,
-		Targets:      targets,
-		XValue:       xValue,
-		CastZone:     ZoneHand,
-		SnapshotCast: true,
+		ModalSelection: selection,
+		Card:           card,
+		Controller:     playerID,
+		Targets:        targets,
+		XValue:         xValue,
+		CastZone:       ZoneHand,
+		SnapshotCast:   true,
 	})
 	return err
 }
 
 // CheckStateBasedActions checks and processes state-based actions.
 func (g *Game) CheckStateBasedActions() {
+	g.checkStateBasedActions()
+}
+
+func (g *Game) checkStateBasedActions() bool {
+	performed := false
 	for {
 		actions := false
 
@@ -2557,6 +2648,7 @@ func (g *Game) CheckStateBasedActions() {
 						continue
 					}
 					p.AttachedTo = uuid.Nil
+					p.attachedIncarnation = uuid.Nil
 					actions = true
 				}
 			}
@@ -2633,10 +2725,12 @@ func (g *Game) CheckStateBasedActions() {
 		if !actions {
 			break
 		}
+		performed = true
 	}
 
 	// Put any pending triggers on the stack
 	g.PutTriggersOnStack()
+	return performed
 }
 
 // UntapPermanent untaps the given permanent unless it has a stun counter
@@ -2666,8 +2760,8 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 	return true
 }
 
-// SkipNextUntap causes the specific battlefield object to skip its next untap
-// attempt during its then-controller's untap step.
+// SkipNextUntap prevents untapping during the next untap step of the current
+// controller. Repeated applications expire during that same step.
 func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 	if g.FindPermanent(permanentID) == nil {
 		return
@@ -2679,14 +2773,12 @@ func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
 	if p == nil || !p.Tapped {
 		return false
 	}
-	if g.turns.ConsumeSkipNextUntap(p.ID()) {
-		return false
-	}
 	return g.UntapPermanent(p)
 }
 
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
+	capturedUntap := g.turns.consumeCapturedUntap(active.PlayerID())
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
 
@@ -2710,8 +2802,8 @@ func (g *Game) doUntap() {
 
 	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == active.PlayerID() {
-			if p.HasAttr(AttrDoesNotUntap) {
-				// Does not untap — skip
+			if g.turns.ConsumeSkipNextUntap(p.ID()) || capturedUntap[p.ID()] || p.HasAttr(AttrDoesNotUntap) {
+				// The restriction expires even when no untap is possible.
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
 				// Player may choose not to untap, but only when staying tapped
 				// still maintains a continuous effect on a target that remains
@@ -3112,7 +3204,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 }
 
 // doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
-// Returns true if triggers were placed on the stack (requiring priority + another cleanup).
+// It returns true if state-based actions or triggers require another cleanup step.
 func (g *Game) doCleanupActions() bool {
 	active := g.ActivePlayerObj()
 	g.FireEvent(GameEvent{
@@ -3129,12 +3221,12 @@ func (g *Game) doCleanupActions() bool {
 		}
 		g.PlayerDiscard(p, chosen[0].ID())
 	}
-	// Clear damage from all creatures
+	// CR 514.2 includes phased-out permanents in damage removal.
 	for _, p := range g.zones.battlefield {
 		if p.Damage == 0 {
 			continue
 		}
-		p = g.MutablePermanent(p.ID())
+		p = g.MutablePermanentIncludingPhased(p.ID())
 		if p == nil {
 			continue
 		}
@@ -3148,29 +3240,37 @@ func (g *Game) doCleanupActions() bool {
 	g.effects.RemoveEndOfTurn()
 	g.effects.Apply(g)
 	g.effects.ClearReplacementsEndOfTurn()
-	g.zones.ClearEndOfTurn()
-	g.damage.ClearEndOfTurn()
+	g.zones.ClearExileInstead()
+	g.damage.expireEndOfTurnEffects()
 	g.effects.Rules.ClearEndOfTurn()
 	// Clear non-persistent delayed triggers (they only last "this turn")
 	g.triggers.ClearEndOfTurn()
+	// CR 514.3a keeps turn history available during cleanup priority.
+	performed := g.checkStateBasedActions()
+	if performed || !g.stack.IsEmpty() {
+		return true
+	}
+	// Pending cleanup abilities can still need departure information.
+	g.zones.ClearLKI()
 	g.trackers.Turn.ResetForNewTurn(active.PlayerID())
+	g.damage.ClearEndOfTurn()
 	// Clear last-drawn-card tracking for all players
 	for _, p := range g.players {
 		p.ClearLastDrawnCard()
 	}
 	for _, p := range g.zones.battlefield {
+		p = g.MutablePermanentIncludingPhased(p.ID())
 		// Clear activation tracking (Charge counters used for per-turn counts)
 		p.Counters[Charge] = 0
-		// Reset once-per-turn activated abilities
+		// Cloned games can share abilities before this reset.
+		p.RuntimeAbilities = clonePaymentAbilities(p.RuntimeAbilities)
 		for _, a := range p.RuntimeAbilities {
 			if aa, ok := UnwrapAbility(a).(*SimpleActivatedAbility); ok {
 				aa.ResetActivation()
 			}
 		}
 	}
-	// MTG 514.3a: if triggers fire during cleanup, put them on stack
-	g.PutTriggersOnStack()
-	return !g.stack.IsEmpty()
+	return false
 }
 
 // Run executes the game until the stop condition.
@@ -3713,7 +3813,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if perm.ControllerID() == playerID && isSAA && saa.IsOpponentOnlyAbility() {
 		return fmt.Errorf("only opponents may activate this ability")
 	}
-	if perm.HasAttr(AttrCantActivateNonManaAbilities) && unconditionalManaAmount(aa.Effects(), aa.Targets()) == 0 {
+	if perm.HasAttr(AttrCantActivateNonManaAbilities) && !canProduceMana(aa.Effects(), aa.Targets()) {
 		return fmt.Errorf("non-mana activated abilities of %s are prevented", perm.Name())
 	}
 	if !aa.CanActivate(playerID, g) {
@@ -3726,19 +3826,38 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	var modalTargets [][]uuid.UUID
 	if modal, ok := aa.(interface{ Modes() []Mode }); ok && len(modal.Modes()) > 0 {
 		modes := modal.Modes()
+		var available []Mode
+		var indices []int
+		for i, mode := range modes {
+			legal := true
+			for _, target := range mode.Targets {
+				if len(uniqueTargetCandidates(target.Possible(playerID, perm.Card, g))) < target.Min() {
+					legal = false
+					break
+				}
+			}
+			if legal {
+				available = append(available, mode)
+				indices = append(indices, i)
+			}
+		}
+		if len(available) == 0 {
+			return fmt.Errorf("no legal activation mode")
+		}
 		chooser := g.GetPlayer(playerID)
 		if effectChooser, ok := chooser.(EffectModeChooser); ok {
-			modeChoice = effectChooser.ChooseModeWithEffects(modes, perm.Card.Name(), g)
+			modeChoice = effectChooser.ChooseModeWithEffects(available, perm.Card.Name(), g)
 		} else if chooser != nil {
-			labels := make([]string, len(modes))
-			for i, mode := range modes {
+			labels := make([]string, len(available))
+			for i, mode := range available {
 				labels[i] = mode.Label
 			}
 			modeChoice = chooser.ChooseMode(labels, perm.Card.Name())
 		}
-		if modeChoice < 0 || modeChoice >= len(modes) {
-			modeChoice = 0
+		if modeChoice < 0 || modeChoice >= len(available) {
+			return fmt.Errorf("invalid activation mode choice")
 		}
+		modeChoice = indices[modeChoice]
 		mode := modes[modeChoice]
 		actionTargets = mode.Targets
 		actionEffects = mode.Effects
@@ -3786,30 +3905,37 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if err != nil {
 		return fmt.Errorf("cannot pay activation costs: %w", err)
 	}
+	var capturedNumbers map[*NumberBinding]int
+	var capturedPermanents map[*PermanentBinding]capturedPermanent
+	if definition, ok := aa.(*ActionDefinition); ok {
+		capturedNumbers, capturedPermanents = definition.captureValues(g, perm, playerID, actionTargets, targets)
+	}
 	if err := payment.Commit(); err != nil {
 		return err
 	}
 
 	// Mark once-per-turn abilities as used
 	if saa, ok := aa.(*SimpleActivatedAbility); ok {
-		saa.MarkActivated()
+		saa.markActivatedInGame(g)
 	}
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
+	obj.capturedNumbers = capturedNumbers
+	obj.capturedPermanents = capturedPermanents
 	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.resolution.X())
 	obj.sourceIncarnation = perm.incarnationID
 	obj.TargetSource = perm.Card
 	obj.ModeChoice = modeChoice
 	obj.ModalTargets = modalTargets
 
-	if produced := unconditionalManaAmount(actionEffects, actionTargets); produced > 0 {
+	if canProduceMana(actionEffects, actionTargets) {
 		g.FireEvent(GameEvent{
 			Type:     EvtAbilityActivated,
 			SourceID: perm.ID(),
 			PlayerID: playerID,
 			Flag:     hasTapCost,
 		})
-		g.ResolveStackObject(obj)
+		produced := g.resolveStackObject(obj)
 		if hasTapCost {
 			g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		}
@@ -3847,18 +3973,6 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	g.fireBecomesTargetEvents(obj, true)
 
 	return nil
-}
-
-func unconditionalManaAmount(effects []Effect, targets []Target) int {
-	if len(targets) != 0 {
-		return 0
-	}
-	productions, _ := sequentialManaProductions(effects)
-	amount := 0
-	for _, production := range productions {
-		amount += max(production.Amount, 0)
-	}
-	return amount
 }
 
 // ResolveTopOfStack resolves just the top item on the stack.

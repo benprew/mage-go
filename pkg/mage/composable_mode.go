@@ -46,11 +46,30 @@ func modeValues(modes []ModeDefinition) []Mode {
 // SpellModes creates a spell that chooses one mode through the existing casting path.
 func SpellModes(modes ...ModeDefinition) *ModalSpellAbility { return NewModalSpell(modeValues(modes)) }
 
+// ModalActivationOption is a mode or a restriction for a modal activation.
+type ModalActivationOption interface {
+	modalActivationOption()
+	applyModalActivation(*ActionDefinition)
+}
+
+func (ModeDefinition) modalActivationOption() {}
+func (m ModeDefinition) applyModalActivation(a *ActionDefinition) {
+	a.modes = append(a.modes, m.mode)
+}
+
 // ActivateModes creates a modal activation with the existing payment transaction.
-func ActivateModes(costs CostGroup, modes ...ModeDefinition) *ActionDefinition {
+func ActivateModes(costs CostGroup, options ...ModalActivationOption) *ActionDefinition {
 	a := Activate(costs, nil)
 	a.effects = nil
-	a.modes = modeValues(modes)
+	for _, option := range options {
+		if nilDefinition(option) {
+			panic("modal activation: supply a non-nil option")
+		}
+		option.applyModalActivation(a)
+	}
+	if len(a.modes) < 2 {
+		panic("modes: supply at least two mode bodies")
+	}
 	return a
 }
 func (m ModeDefinition) inspectDefinition() definitionNode {
@@ -69,4 +88,26 @@ func modeEdges(modes []Mode) []definitionEdge {
 		result = append(result, definitionEdge{fmt.Sprintf("modes[%d]", i), ModeDefinition{m}})
 	}
 	return result
+}
+
+// WhenEventModes creates an event trigger with one mode chosen at stack placement.
+func WhenEventModes(pattern EventPattern, modes ...ModeDefinition) TriggeredAbility {
+	if nilDefinition(pattern) {
+		panic("event: supply a pattern")
+	}
+	t := pattern.makeTrigger(nil)
+	t.eventDefinition = pattern
+	t.effects = nil
+	return t.WithModes(modeValues(modes)...)
+}
+
+// AtModes creates a turn-step trigger with one mode chosen at stack placement.
+func AtModes(pattern TurnStepPattern, modes ...ModeDefinition) TriggeredAbility {
+	if nilDefinition(pattern) {
+		panic("step: supply a pattern")
+	}
+	t := pattern.makeStepTrigger(nil)
+	t.stepDefinition = pattern
+	t.effects = nil
+	return t.WithModes(modeValues(modes)...)
 }

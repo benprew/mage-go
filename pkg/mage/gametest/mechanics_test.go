@@ -5,6 +5,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // ===== Counter Annihilation SBA (704.5q) =====
@@ -415,8 +416,9 @@ func TestExileZoneMetadata(t *testing.T) {
 	targetName := "Exile Target"
 	if !mage.CardRegistered(exilerName) {
 		mage.Register(exilerName, func() mage.Card {
+			target := dsl.TargetPermanent("creature", dsl.IsCreature)
 			return mage.NewSorcery(exilerName, "{W}",
-				mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTarget()),
+				dsl.WithAbility(dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))),
 			)
 		})
 	}

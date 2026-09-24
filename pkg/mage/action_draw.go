@@ -20,3 +20,11 @@ func NewDrawCardAction(source, playerID uuid.UUID, isNormalDraw bool) *DrawCardA
 func (a *DrawCardAction) ActionSource() uuid.UUID { return a.source }
 func (a *DrawCardAction) PlayerID() uuid.UUID     { return a.playerID }
 func (a *DrawCardAction) IsNormalDraw() bool      { return a.isNormalDraw }
+
+// beginDrawStepAction permits replacement before the draw step starts.
+type beginDrawStepAction struct {
+	playerID uuid.UUID
+}
+
+func (a *beginDrawStepAction) ActionSource() uuid.UUID { return uuid.Nil }
+func (a *beginDrawStepAction) PlayerID() uuid.UUID     { return a.playerID }

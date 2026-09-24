@@ -84,29 +84,11 @@ func registerEnchantments() {
 	// At the beginning of your first main phase, add {B} for each charge counter on this enchantment.
 	Register("Black Market", func() Card {
 		return NewEnchantment("Black Market", "{3}{B}{B}",
-			WithAbility(AnyCreatureDiesTrigger(
-				AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
-				false,
+			WithAbility(dsl.WhenEvent(dsl.CreatureDies(),
+				dsl.AddCounters(dsl.This, Charge, dsl.Fixed(1)),
 			)),
-			WithAbility(BeginningOfFirstMainPhaseTrigger(
-				FuncEffect("add {B} for each charge counter on this enchantment",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.FindPermanent(sourceID)
-						if src == nil {
-							return nil
-						}
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						n := int(src.Counters[Charge])
-						for range n {
-							p.ManaPool().Add(Black, 1)
-						}
-						return nil
-					}),
-				false,
+			WithAbility(dsl.At(dsl.YourFirstMainPhase,
+				dsl.AddManaAmount(Black, dsl.SourceCounters(Charge)),
 			)),
 		)
 	})
@@ -374,9 +356,10 @@ func registerEnchantments() {
 	// Enchantment
 	// Whenever an opponent loses life, you gain that much life.
 	Register("Exquisite Blood", func() Card {
-		return NewEnchantment("Exquisite Blood", "{4}{B}",
-			WithAbility(WheneverOpponentLosesLifeTrigger(
-				GainLifeTarget(EventAmountValue()), false)),
+		player, amount := dsl.BindPlayer("opponent"), dsl.BindNumber("lost")
+		return dsl.NewEnchantment("Exquisite Blood", "{4}{B}",
+			dsl.WithAbility(dsl.WhenEvent(dsl.OpponentLosesLife(player).WithAmount(amount),
+				dsl.GainLife(dsl.You, dsl.FromNumber(amount)))),
 		)
 	})
 
@@ -698,7 +681,7 @@ func registerEnchantments() {
 				}),
 			),
 			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
-				dsl.GainLife(dsl.You, EventAmountValue()), false,
+				dsl.GainLife(dsl.You, dsl.ValueAtResolution(EventAmountValue())), false,
 			)),
 		)
 	})
@@ -767,7 +750,7 @@ func registerEnchantments() {
 					spellCastCasterSelector{},
 					ManaCostOf("{1}"),
 					"Pay {1} to prevent the opponent's Rhystic Study draw?",
-					drawSelfCard(1),
+					dsl.Draw(dsl.You, dsl.Fixed(1)),
 				),
 				true,
 			).SetConditionData(EventPlayerIsOpponent{})),

@@ -119,16 +119,11 @@ func (e *destroyTargetNoRegenEffect) Text() string {
 	return "destroy target (can't be regenerated)"
 }
 func (e *destroyTargetNoRegenEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
 }
 
 // exileTargetEffect exiles a target permanent (removes from game).
 type exileTargetEffect struct{}
-
-// ExileTarget creates an effect that exiles a target permanent.
-func ExileTarget() Effect {
-	return &exileTargetEffect{}
-}
 
 // ExileTargetStep returns the Effect for use as a pipeline/ForEach inner step.
 func ExileTargetStep() Effect { return &exileTargetEffect{} }

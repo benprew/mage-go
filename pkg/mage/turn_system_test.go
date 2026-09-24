@@ -166,7 +166,7 @@ func TestTurnSystem_SkipNextUntap(t *testing.T) {
 	}
 
 	ts.SkipNextUntap(permID)
-	ts.SkipNextUntap(permID) // 2 skips queued
+	ts.SkipNextUntap(permID)
 
 	if !ts.HasSkipNextUntap(permID) {
 		t.Error("expected skip next untap active")
@@ -175,11 +175,8 @@ func TestTurnSystem_SkipNextUntap(t *testing.T) {
 	if !ts.ConsumeSkipNextUntap(permID) {
 		t.Error("expected first skip consumed")
 	}
-	if !ts.HasSkipNextUntap(permID) {
-		t.Error("expected 1 skip remaining")
-	}
-	if !ts.ConsumeSkipNextUntap(permID) {
-		t.Error("expected second skip consumed")
+	if ts.ConsumeSkipNextUntap(permID) {
+		t.Error("repeated applications must expire in the same step")
 	}
 	if ts.HasSkipNextUntap(permID) {
 		t.Error("expected 0 skips remaining")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // ============================================================
@@ -96,10 +97,7 @@ func TestCR704_5f_ZeroToughnessNoRegeneration(t *testing.T) {
 		mage.Register(regenName, func() mage.Card {
 			return mage.NewCreature(regenName, "{2}{G}", 3, 1,
 				mage.WithSubTypes("Troll"),
-				mage.WithActivatedAbility(
-					mage.RegenerateSource(),
-					mage.ManaCostOf("{G}"),
-				),
+				dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.This))),
 			)
 		})
 	}
@@ -193,10 +191,7 @@ func TestCR704_5g_RegenerationSavesFromLethalDamage(t *testing.T) {
 		mage.Register(defName, func() mage.Card {
 			return mage.NewCreature(defName, "{2}{G}", 3, 3,
 				mage.WithSubTypes("Troll"),
-				mage.WithActivatedAbility(
-					mage.RegenerateSource(),
-					mage.ManaCostOf("{G}"),
-				),
+				dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.This))),
 			)
 		})
 	}
@@ -276,10 +271,7 @@ func TestCR704_5h_RegenerationSavesFromDeathtouch(t *testing.T) {
 		mage.Register(defName, func() mage.Card {
 			return mage.NewCreature(defName, "{2}{G}", 3, 3,
 				mage.WithSubTypes("Troll"),
-				mage.WithActivatedAbility(
-					mage.RegenerateSource(),
-					mage.ManaCostOf("{G}"),
-				),
+				dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.This))),
 			)
 		})
 	}

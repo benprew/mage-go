@@ -8,6 +8,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 var ch07aOnce sync.Once
@@ -28,8 +29,9 @@ func registerCh07aCards() {
 		}
 		if !mage.CardRegistered("Ch07a Exile Spell") {
 			mage.Register("Ch07a Exile Spell", func() mage.Card {
+				target := dsl.TargetPermanent("creature", dsl.IsCreature)
 				return mage.NewInstant("Ch07a Exile Spell", "{1}{W}",
-					mage.NewTargetedSpell(mage.TargetCreature(), mage.ExileTarget()),
+					dsl.WithAbility(dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))),
 				)
 			})
 		}
@@ -42,8 +44,9 @@ func registerCh07aCards() {
 		}
 		if !mage.CardRegistered("Ch07a Random Discard Spell") {
 			mage.Register("Ch07a Random Discard Spell", func() mage.Card {
+				player := mage.DeclarePlayerTarget("player")
 				return mage.NewSorcery("Ch07a Random Discard Spell", "{1}{B}",
-					mage.NewTargetedSpell(mage.TargetPlayer(), mage.DiscardRandom(1)),
+					mage.WithAbility(mage.Spell(mage.DiscardAtRandom(player, mage.Fixed(1)), mage.WithTargets(player))),
 				)
 			})
 		}
@@ -51,9 +54,8 @@ func registerCh07aCards() {
 			mage.Register("Ch07a Death Watcher", func() mage.Card {
 				return mage.NewCreature("Ch07a Death Watcher", "{1}{B}", 1, 1,
 					mage.WithSubTypes("Zombie"),
-					mage.WithAbility(mage.AnyCreatureDiesTrigger(
-						mage.GainLifeFor(mage.You, mage.Fixed(1)),
-						false,
+					mage.WithAbility(dsl.WhenEvent(dsl.CreatureDies(),
+						dsl.GainLife(dsl.You, dsl.Fixed(1)),
 					)),
 				)
 			})
@@ -672,7 +674,7 @@ func TestCR701_21_SacrificeRegenerationDoesNotApply(t *testing.T) {
 		mage.Register(sacrificeMe, func() mage.Card {
 			return mage.NewCreature(sacrificeMe, "{1}{B}", 1, 1,
 				mage.WithSubTypes("Skeleton"),
-				mage.WithActivatedAbility(mage.RegenerateSource(), mage.ManaCostOf("{B}")),
+				dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{B}")), dsl.Regenerate(dsl.This))),
 			)
 		})
 	}

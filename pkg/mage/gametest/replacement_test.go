@@ -8,6 +8,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 // registerOnce guards one-time test card registration for replacement tests.
@@ -29,10 +30,7 @@ func registerReplacementTestCards() {
 			mage.Register("Regenerating Troll", func() mage.Card {
 				return mage.NewCreature("Regenerating Troll", "{2}{G}", 3, 3,
 					mage.WithSubTypes("Troll"),
-					mage.WithActivatedAbility(
-						mage.RegenerateSource(),
-						mage.ManaCostOf("{G}"),
-					),
+					dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.This))),
 				)
 			})
 		}

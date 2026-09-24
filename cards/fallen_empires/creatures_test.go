@@ -611,8 +611,8 @@ func TestIcatianMoneychanger_SacrificeGainsLife(t *testing.T) {
 	// Turn 3 (PlayerA) upkeep: upkeep trigger goes on the stack and, per CR
 	//   117.1b / 603.6, active player gets priority only after TBAs and
 	//   triggers have been placed. The trigger resolves first (+1 → 5),
-	//   then PlayerA activates the sacrifice ability (sorcery speed, empty
-	//   stack). Gain 5 life: 17 + 5 = 22.
+	//   then PlayerA activates the sacrifice ability with an empty stack.
+	//   Gain 5 life: 17 + 5 = 22.
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Icatian Moneychanger")
 	g.ActivateAbility(3, Upkeep, gametest.PlayerA, "Icatian Moneychanger")

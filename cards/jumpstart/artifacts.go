@@ -20,18 +20,16 @@ func registerArtifacts() {
 	// {U}, Sacrifice this artifact: Return target creature to its owner's hand.
 	// {1}, Sacrifice this artifact: Draw a card.
 	Register("Aether Spellbomb", func() Card {
-		return NewArtifact("Aether Spellbomb", "{1}",
-			WithActivatedAbility(
-				ReturnToHandTarget(),
-				ManaCostOf("{U}"),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCreature()),
-			),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				GenericCost(1),
-				WithCost(SacrificeSourceCost()),
-			),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewArtifact("Aether Spellbomb", "{1}",
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{U}"), dsl.SacrificeSourceCost()),
+				dsl.ReturnToHand(creature), dsl.WithTargets(creature),
+			)),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{1}"), dsl.SacrificeSourceCost()),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			)),
 		)
 	})
 

@@ -362,7 +362,7 @@ func (s *Strategy) considerAbilityActivation(p mage.Player, g *mage.Game) *inter
 			continue
 		}
 		targets, ok := s.autoSelectAbilityTargets(p, g, perm, ab)
-		if !ok || ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), ab.Effects(), targets) {
+		if !ok || ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), ab.Effects(), targets, ab.Targets()...) {
 			continue
 		}
 		score := eval.AbilityQuality(ab, p, g)
@@ -398,7 +398,7 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 	var targets []uuid.UUID
 	for _, t := range ab.Targets() {
 		possible := t.Possible(playerID, perm.Card, g)
-		possible = ai.NonRedundantKeywordGrantTargets(g, playerID, perm.ID(), ab.Effects(), possible)
+		possible = ai.NonRedundantKeywordGrantTargets(g, playerID, perm.ID(), ab.Effects(), possible, ab.Targets()...)
 		if len(possible) == 0 {
 			return nil, false
 		}

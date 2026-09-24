@@ -167,7 +167,7 @@ func (t *GenericTriggered) AddTarget(tgt Target) *GenericTriggered {
 
 // WithModes declares the trigger as modal (CR 603.1f). When the trigger is put
 // on the stack, the engine prompts Player.ChooseMode for the mode index
-// (CR 603.1f) and then gathers targets only for that mode's Targets list
+// in the list of legal modes (CR 603.3c). It then gathers targets from that mode's list
 // (CR 603.3d). Only the chosen mode's Effects are pushed onto the stack
 // object, so resolution runs only the selected mode.
 //
@@ -423,16 +423,6 @@ func BeginningOfFirstMainPhaseTrigger(effect Effect, optional bool) *GenericTrig
 		}})
 }
 
-// BeginningOfPostcombatMainPhaseTrigger fires at the beginning of the
-// controller's postcombat main phase.
-func BeginningOfPostcombatMainPhaseTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtMainPhase, optional, effect).
-		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-			EventPlayerIsController{},
-			EventFlagIsFalse{},
-		}})
-}
-
 // BeginningOfEachUpkeepTrigger fires at the beginning of every player's upkeep.
 func BeginningOfEachUpkeepTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtUpkeep, optional, effect)
@@ -520,17 +510,6 @@ func WheneverLandEntersBattlefieldTrigger(effect Effect, optional bool) *Generic
 	return WheneverPermanentEntersBattlefieldTrigger(effect, optional, IsLand)
 }
 
-// AnyCreatureDiesTrigger fires when any creature dies (regardless of controller).
-// Fires on EvtZoneChange (BF -> GY) with a was-creature LKI predicate
-// (CR 700.4 / 603.6c).
-func AnyCreatureDiesTrigger(effect Effect, optional bool) *GenericTriggered {
-	return NewTriggered(EvtZoneChange, optional, effect).
-		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-			EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
-			EventSourceWasOfType{Type: TypeCreature},
-		}})
-}
-
 // CreatureDealtDamageBySourceDiesTrigger fires when a creature that was dealt
 // damage by the source permanent this turn dies (e.g. Sengir Vampire).
 func CreatureDealtDamageBySourceDiesTrigger(effect Effect, optional bool) *GenericTriggered {
@@ -584,9 +563,8 @@ func WheneverYouLoseLifeTrigger(effect Effect, optional bool) *GenericTriggered 
 		SetConditionData(EventPlayerIsController{})
 }
 
-// WheneverOpponentLosesLifeTrigger fires whenever an opponent loses life
-// (CR 119.9; used by Exquisite Blood). evt.Amount is the amount lost.
-func WheneverOpponentLosesLifeTrigger(effect Effect, optional bool) *GenericTriggered {
+// wheneverOpponentLosesLifeTrigger uses the existing life-loss event path.
+func wheneverOpponentLosesLifeTrigger(effect Effect, optional bool) *GenericTriggered {
 	return NewTriggered(EvtLifeLost, optional, effect).
 		SetConditionData(EventPlayerIsOpponent{})
 }

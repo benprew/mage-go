@@ -98,9 +98,8 @@ func (g *Game) RandomSpellOrPermanent() uuid.UUID {
 // EvtDiscard via Game.PlayerDiscard, so triggers like Liliana's Caress see
 // every card individually.
 //
-// Unlike the existing DiscardRandom Effect (which targets an opponent),
-// this primitive operates on a specific player and is suitable for self-
-// discard ("you discard ... at random", as on Goblin Lore).
+// This method uses the non-effect discard path. Use the DiscardAtRandom
+// constructor for card effects that must apply discard replacements.
 func (g *Game) DiscardAtRandom(p Player, n int) []Card {
 	if p == nil || n <= 0 {
 		return nil

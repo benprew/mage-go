@@ -56,6 +56,11 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 		}
 	}
 
+	if isCreature {
+		g.trackers.Turn.RecordCreatureDeath()
+		g.recordCreatureDeath(controller)
+	}
+
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,
@@ -77,11 +82,6 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 	}
 	g.FireEvent(sacEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)
-
-	if isCreature {
-		g.trackers.Turn.RecordCreatureDeath()
-		g.recordCreatureDeath(controller)
-	}
 }
 
 // sacrificePermanents sacrifices up to count permanents the player controls.
@@ -161,7 +161,7 @@ func SacrificeCreatureCost() Cost {
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	found := 0
 	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
+		if !p.PhasedOut && p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
 			found++
 			if found >= c.count {
 				return true
@@ -179,7 +179,7 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	for i := 0; i < c.count; i++ {
 		var candidates []*Permanent
 		for _, p := range g.zones.battlefield {
-			if p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
+			if !p.PhasedOut && p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
 				candidates = append(candidates, p)
 			}
 		}

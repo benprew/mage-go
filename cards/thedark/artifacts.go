@@ -21,12 +21,10 @@ func registerArtifacts() {
 	// Artifact
 	// {3}: Target creature doesn't untap during its controller's next untap step.
 	Register("Barl's Cage", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Barl's Cage", "{4}",
-			WithActivatedAbility(
-				SkipNextUntapTarget(),
-				ManaCostOf("{3}"),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{3}")),
+				SkipNextUntap(creature), WithTargets(creature))),
 		)
 	})
 

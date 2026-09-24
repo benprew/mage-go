@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 
 	mage "github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -13,37 +14,20 @@ func init() {
 }
 
 // moneychangerFactory creates Icatian Moneychanger.
-// Sacrifice ability reads counters before sacrificing, so it's handled in FuncEffect
-// rather than using SacrificeSourceCost (which would destroy the permanent before
-// the effect could read its counter count).
 func moneychangerFactory() Card {
+	credits := BindNumber("credits")
 	return NewCreature("Icatian Moneychanger", "{W}", 0, 2,
 		WithSubTypes("Human"),
-		// Enters with three credit counters
-		WithAbility(ETBEffect(mage.AddCounters(Credit, Fixed(3)).Targeting(ToSource()))),
-		// When this creature enters, it deals 3 damage to you
+		WithAbility(EntersWithNCounters(Credit, 3)),
 		WithAbility(EntersBattlefieldTrigger(
 			DealDamageToPlayers(Fixed(3), SelectController()), false,
 		)),
-		// At the beginning of your upkeep, put a credit counter on it
-		WithAbility(BeginningOfUpkeepTrigger(
-			mage.AddCounters(Credit, Fixed(1)).Targeting(ToSource()), false,
+		WithAbility(At(YourUpkeep, AddCounters(This, Credit, Fixed(1)))),
+		WithAbility(Activate(Costs(SacrificeSourceCost()),
+			GainLife(You, FromNumber(credits)),
+			CaptureNumberBeforePayment(CountersOn(This, Credit), credits),
+			OnlyDuring(core.Upkeep), OnlyOnYourTurn(),
 		)),
-		// Sacrifice: gain 1 life per credit counter (only during upkeep)
-		WithActivatedAbility(
-			Pipeline("sacrifice, gain 1 life for each credit counter",
-				EffectProperties{Outcome: OutcomeBenefit},
-				SnapshotPermanent(SelectSource, "src"),
-				SnapshotSourceCounter(Credit, "credits"),
-				Sacrifice(This),
-				IfVarGT("gain life if credits > 0", "credits", 0,
-					GainLifeFromVar("src.controller", "credits"),
-					nil,
-				),
-			),
-			GenericCost(0),
-			WithUpkeepOnly(),
-		),
 	)
 }
 
@@ -285,21 +269,13 @@ func registerCreatures() {
 					}),
 				false,
 			)),
-			WithActivatedAbility(
-				Pipeline("gain shroud, skip next untap, and tap",
-					EffectProperties{Outcome: OutcomeBenefit},
-					mage.GrantKeyword(Shroud).Targeting(ToSource()),
-					StunCreature().Targeting(ToSource()),
-					FuncEffect("tap this creature", EffectProperties{},
-						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-							if source := g.FindPermanent(sourceID); source != nil {
-								g.TapPermanent(source)
-							}
-							return nil
-						}),
+			WithAbility(Activate(Costs(Mana("{U}")),
+				Sequence(
+					Until(EndOfTurn, GrantKeyword(This, Shroud)),
+					SkipNextUntapOf(This, You),
+					Tap(This),
 				),
-				ManaCostOf("{U}"),
-			),
+			)),
 		)
 	}))
 
@@ -316,26 +292,8 @@ func registerCreatures() {
 			WithSubTypes("Homarid"),
 			// ETB with 1 tide counter
 			WithAbility(ETBEffect(mage.AddCounters(Tide, Fixed(1)).Targeting(ToSource()))),
-			// At the beginning of your upkeep, put a tide counter on this creature.
-			// Also handle "whenever there are four or more tide counters, remove all."
-			// TODO: convert to pipeline — needs AddCounters + conditional counter reset (threshold check)
-			WithAbility(BeginningOfUpkeepTrigger(
-				FuncEffect("put a tide counter on Homarid and check for reset",
-					EffectProperties{Outcome: OutcomeUnknown},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						src := g.MutablePermanent(sourceID)
-						if src == nil {
-							return nil
-						}
-						src.AddCounter(Tide, 1)
-						// Whenever there are four or more tide counters, remove all
-						if src.Counters[Tide] >= 4 {
-							src.RemoveCounter(Tide, int(src.Counters[Tide]))
-						}
-						return nil
-					}),
-				false,
-			)),
+			WithAbility(At(YourUpkeep, AddCounters(This, Tide, Fixed(1)))),
+			WithAbility(WhenState(SourceHasCounters(Tide, 4), RemoveAllCounters(This, Tide))),
 			// As long as there is exactly one tide counter, -1/-1
 			// As long as there are exactly three tide counters, +1/+1
 			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
@@ -374,21 +332,13 @@ func registerCreatures() {
 	Register("Homarid Warrior", withExpansion(func() Card {
 		return NewCreature("Homarid Warrior", "{4}{U}", 3, 3,
 			WithSubTypes("Homarid", "Warrior"),
-			WithActivatedAbility(
-				Pipeline("gain shroud, skip next untap, and tap",
-					EffectProperties{Outcome: OutcomeBenefit},
-					mage.GrantKeyword(Shroud).Targeting(ToSource()),
-					StunCreature().Targeting(ToSource()),
-					FuncEffect("tap this creature", EffectProperties{},
-						func(g *Game, sourceID, _ uuid.UUID, _ []uuid.UUID) error {
-							if source := g.FindPermanent(sourceID); source != nil {
-								g.TapPermanent(source)
-							}
-							return nil
-						}),
+			WithAbility(Activate(Costs(Mana("{U}")),
+				Sequence(
+					Until(EndOfTurn, GrantKeyword(This, Shroud)),
+					SkipNextUntapOf(This, You),
+					Tap(This),
 				),
-				ManaCostOf("{U}"),
-			),
+			)),
 		)
 	}))
 
@@ -841,9 +791,7 @@ func registerCreatures() {
 	Register("Elvish Farmer", withExpansion(func() Card {
 		return NewCreature("Elvish Farmer", "{1}{G}", 0, 2,
 			WithSubTypes("Elf"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
-			)),
+			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
 			WithActivatedAbility(
 				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
 				RemoveCountersCost(Spore, 3),
@@ -908,13 +856,8 @@ func registerCreatures() {
 	Register("Feral Thallid", withExpansion(func() Card {
 		return NewCreature("Feral Thallid", "{3}{G}{G}{G}", 6, 3,
 			WithSubTypes("Fungus"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
-			)),
-			WithActivatedAbility(
-				RegenerateSource(),
-				RemoveCountersCost(Spore, 3),
-			),
+			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
+			WithAbility(Activate(Costs(RemoveCountersCost(Spore, 3)), Regenerate(This))),
 		)
 	}))
 
@@ -926,9 +869,7 @@ func registerCreatures() {
 	Register("Spore Flower", withExpansion(func() Card {
 		return NewCreature("Spore Flower", "{G}{G}", 0, 1,
 			WithSubTypes("Fungus"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
-			)),
+			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
 			WithActivatedAbility(
 				PreventAllCombatDamage(),
 				RemoveCountersCost(Spore, 3),
@@ -944,9 +885,7 @@ func registerCreatures() {
 	Register("Thallid", withExpansion(func() Card {
 		return NewCreature("Thallid", "{G}", 1, 1,
 			WithSubTypes("Fungus"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
-			)),
+			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
 			WithActivatedAbility(
 				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
 				RemoveCountersCost(Spore, 3),
@@ -964,9 +903,7 @@ func registerCreatures() {
 	Register("Thallid Devourer", withExpansion(func() Card {
 		return NewCreature("Thallid Devourer", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
-			)),
+			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
 			WithActivatedAbility(
 				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
 				RemoveCountersCost(Spore, 3),
@@ -1021,9 +958,7 @@ func registerCreatures() {
 	Register("Thorn Thallid", withExpansion(func() Card {
 		return NewCreature("Thorn Thallid", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Spore, Fixed(1)).Targeting(ToSource()), false,
-			)),
+			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				RemoveCountersCost(Spore, 3),

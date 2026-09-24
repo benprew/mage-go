@@ -34,19 +34,54 @@ func (p sourceEventPattern) inspectDefinition() definitionNode {
 	return definitionNode{Role: "event-pattern", Text: label, battlefieldSource: true}
 }
 
+type creatureDiesPattern struct{ controllerOnly bool }
+
+// CreatureDies matches any creature moving from the battlefield to a graveyard.
+// It includes the source and uses the creature's type before it leaves.
+func CreatureDies() EventPattern { return creatureDiesPattern{} }
+
+// CreatureYouControlDies matches a creature controlled by you before it dies.
+func CreatureYouControlDies() EventPattern { return creatureDiesPattern{controllerOnly: true} }
+
+func (creatureDiesPattern) eventPattern() {}
+func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	t := NewTriggered(EvtZoneChange, false, effect).
+		SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
+			EventSourceWasOfType{Type: TypeCreature},
+		}})
+	if p.controllerOnly {
+		t.AndConditionData(EventPlayerIsController{})
+	}
+	return t
+}
+func (p creatureDiesPattern) inspectDefinition() definitionNode {
+	text := "a creature dies"
+	if p.controllerOnly {
+		text = "a creature you control dies"
+	}
+	return definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
+}
+
 // TurnStepPattern describes a turn-step boundary.
 type TurnStepPattern interface {
 	turnStepPattern()
 	makeStepTrigger(ResolvingEffect) *GenericTriggered
-	delayedStep() (EventType, bool)
+	delayedStep(uuid.UUID) *DelayedTrigger
 }
 type stepPattern struct {
 	event          EventType
 	controllerOnly bool
 }
 
-func (stepPattern) turnStepPattern()                 {}
-func (p stepPattern) delayedStep() (EventType, bool) { return p.event, p.controllerOnly }
+func (stepPattern) turnStepPattern() {}
+func (p stepPattern) delayedStep(controller uuid.UUID) *DelayedTrigger {
+	t := &DelayedTrigger{EventType: p.event}
+	if p.controllerOnly {
+		t.MatchPlayerID = controller
+	}
+	return t
+}
 
 // EachEndStep matches the beginning of each end step.
 var EachEndStep = stepPattern{EvtEndStep, false}
@@ -81,6 +116,35 @@ func (p stepPattern) inspectDefinition() definitionNode {
 	return definitionNode{Role: "turn-step-pattern", Text: label}
 }
 
+type mainPhasePattern struct{ first bool }
+
+// YourFirstMainPhase matches the beginning of your first main phase.
+var YourFirstMainPhase = mainPhasePattern{first: true}
+
+// YourPostcombatMainPhase matches the beginning of each of your postcombat main phases.
+var YourPostcombatMainPhase = mainPhasePattern{}
+
+func (mainPhasePattern) turnStepPattern() {}
+func (p mainPhasePattern) makeStepTrigger(effect ResolvingEffect) *GenericTriggered {
+	t := NewTriggered(EvtMainPhase, false, effect).SetConditionData(EventPlayerIsController{})
+	if p.first {
+		t.AndConditionData(EventFlagIsTrue{})
+	} else {
+		t.AndConditionData(EventFlagIsFalse{})
+	}
+	return t
+}
+func (p mainPhasePattern) delayedStep(controller uuid.UUID) *DelayedTrigger {
+	return &DelayedTrigger{EventType: EvtMainPhase, MatchPlayerID: controller, MatchFlag: p.first, matchFlagFalse: !p.first}
+}
+func (p mainPhasePattern) inspectDefinition() definitionNode {
+	text := "your postcombat main phase"
+	if p.first {
+		text = "your first main phase"
+	}
+	return definitionNode{Role: "turn-step-pattern", Text: text}
+}
+
 // TriggerOption is a closed option for triggered abilities.
 type TriggerOption interface {
 	triggerOption()
@@ -100,8 +164,10 @@ func (o targetOptions) applyTrigger(t *GenericTriggered) {
 type interveningIfOption struct{ condition StateCondition }
 
 // WithInterveningIf checks the condition at detection and again at resolution.
-func WithInterveningIf(condition StateCondition) TriggerOption { return interveningIfOption{condition} }
-func (interveningIfOption) triggerOption()                     {}
+func WithInterveningIf(condition StateCondition) interveningIfOption {
+	return interveningIfOption{condition}
+}
+func (interveningIfOption) triggerOption() {}
 func (o interveningIfOption) applyTrigger(t *GenericTriggered) {
 	if nilDefinition(o.condition) {
 		panic("intervening-if: supply a condition")

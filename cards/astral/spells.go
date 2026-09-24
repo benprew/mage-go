@@ -13,7 +13,11 @@ const whimsyActionCount = 18
 func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) error {
 	switch action {
 	case 0: // Boomerang
-		return ApplyEffect(g, ApplyToRandomPermanent(BoomerangEffect(), Not(IsEnchanted)), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen permanent")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.Not(dsl.IsEnchanted)), chosen),
+			dsl.ReturnToHand(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 1: // Twiddle — untap
 		chosen := dsl.BindPermanent("random permanent")
 		return ApplyEffect(g, dsl.Sequence(
@@ -25,19 +29,39 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 	case 3: // Aladdin's Ring
 		return ApplyEffect(g, ApplyToRandomDamageTarget(AladdinsRingEffect()), sourceID, controllerID, nil)
 	case 4: // Ancestral Recall
-		return ApplyEffect(g, ApplyToRandomPlayer(AncestralRecallEffect()), sourceID, controllerID, nil)
+		chosen := dsl.BindPlayer("random player")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPlayer(dsl.EachPlayer, chosen),
+			dsl.Draw(dsl.FromPlayer(chosen), dsl.Fixed(3)),
+		), sourceID, controllerID, nil)
 	case 5: // Crumble
 		return ApplyEffect(g, ApplyToRandomPermanent(CrumbleEffect(), IsArtifact), sourceID, controllerID, nil)
 	case 6: // Disenchant
-		return ApplyEffect(g, ApplyToRandomPermanent(DisenchantEffect(), Or(IsArtifact, IsEnchantment)), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen permanent")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.Or(dsl.IsArtifact, dsl.IsEnchantment)), chosen),
+			dsl.Destroy(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 7: // Healing Salve — gain life
-		return ApplyEffect(g, ApplyToRandomPlayer(HealingSalveGainEffect()), sourceID, controllerID, nil)
+		chosen := dsl.BindPlayer("random player")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPlayer(dsl.EachPlayer, chosen),
+			dsl.GainLife(dsl.FromPlayer(chosen), dsl.Fixed(3)),
+		), sourceID, controllerID, nil)
 	case 8: // Healing Salve — prevent damage
 		return ApplyEffect(g, ApplyToRandomDamageTarget(HealingSalvePreventionEffect()), sourceID, controllerID, nil)
 	case 9: // Fissure
-		return ApplyEffect(g, ApplyToRandomPermanent(FissureEffect(), Or(IsCreature, IsLand)), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen permanent")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.Or(dsl.IsCreature, dsl.IsLand)), chosen),
+			dsl.DestroyWithoutRegeneration(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 10: // Millstone
-		return ApplyEffect(g, ApplyToRandomPlayer(MillstoneEffect()), sourceID, controllerID, nil)
+		chosen := dsl.BindPlayer("random player")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPlayer(dsl.EachPlayer, chosen),
+			dsl.Mill(dsl.FromPlayer(chosen), dsl.Fixed(2)),
+		), sourceID, controllerID, nil)
 	case 11: // The Hive
 		return ApplyEffect(g, TheHiveEffect(), sourceID, controllerID, nil)
 	case 12: // Nevinyrral's Disk
@@ -47,9 +71,13 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 	case 14: // Pandora's Box
 		return ApplyEffect(g, PandorasBoxEffect(), sourceID, controllerID, nil)
 	case 15: // Disrupting Scepter
-		return ApplyEffect(g, ApplyToRandomPlayer(DisruptingScepterEffect()), sourceID, controllerID, nil)
+		chosen := dsl.BindPlayer("random player")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPlayer(dsl.EachPlayer, chosen),
+			dsl.Discard(dsl.FromPlayer(chosen), dsl.Fixed(1)),
+		), sourceID, controllerID, nil)
 	case 16: // Fog
-		return ApplyEffect(g, FogEffect(), sourceID, controllerID, nil)
+		return ApplyEffect(g, PreventAllCombatDamage(), sourceID, controllerID, nil)
 	case 17: // Sindbad
 		return ApplyEffect(g, SindbadEffect(), sourceID, controllerID, nil)
 	}

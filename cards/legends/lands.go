@@ -57,16 +57,11 @@ func registerLands() {
 	// {T}: Add {W}.
 	// {T}: Return target legendary creature to its owner's hand.
 	Register("Karakas", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, IsLegendary))
 		return NewLand("Karakas",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(White),
-			WithActivatedAbility(
-				ReturnToHandTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(NewPermanentFilter("legendary", func(p *Permanent, _ *Game) bool {
-					return p.Card.HasSuperType(SuperLegendary)
-				}))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), ReturnToHand(creature), WithTargets(creature))),
 		)
 	})
 

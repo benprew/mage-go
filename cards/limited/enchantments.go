@@ -718,15 +718,11 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)
+	// {G}: Regenerate enchanted creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Regeneration", func() Card {
 		return NewAura("Regeneration", "{1}{G}",
-			WithStaticAbility(
-				GrantActivatedAbilityToAttached(
-					RegenerateSource(),
-					ManaCostOf("{G}"),
-					AttachAura,
-				),
-			),
+			WithAbility(Activate(Costs(Mana("{G}")), Regenerate(AttachedPermanent))),
 		)
 	})
 

@@ -35,6 +35,20 @@ func newIfPlayerPays(payer PlayerSelector, cost Cost, text, prompt string, ifPai
 
 func (e *ifPlayerPaysEffect) Text() string { return e.text }
 
+func (e *ifPlayerPaysEffect) inspectDefinition() definitionNode {
+	n := definitionNode{
+		Role: "legacy-payment-branch", Text: e.Text(),
+		children: []definitionEdge{{"payer", e.payer}, {"cost", e.cost}},
+	}
+	if e.ifPaid != nil {
+		n.children = append(n.children, definitionEdge{"paid", e.ifPaid})
+	}
+	if e.ifNotPaid != nil {
+		n.children = append(n.children, definitionEdge{"unpaid", e.ifNotPaid})
+	}
+	return n
+}
+
 func (e *ifPlayerPaysEffect) Properties() EffectProperties {
 	var props EffectProperties
 	if e.ifPaid != nil {

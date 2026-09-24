@@ -312,10 +312,12 @@ These each add one orthogonal capability. They're ordered by dependency depth.
   castability). Defer until at least three cards demand it.
 
 ### 3.2 Loyalty counters / planeswalker primitive
-- Settle the Score (`spells.go:1618`). Today only the exile half is implemented.
-- **Scope:** introducing planeswalkers is a sizable subsystem (loyalty counter
-  type, redirect-damage rules CR 306.7, attack-planeswalker option). Defer; for
-  Settle the Score in the meantime, leave the `// XXX:` and ship the exile half.
+- Settle the Score implements both Oracle clauses. Its typed spell exiles the
+  creature, then chooses a controlled planeswalker at resolution and adds two
+  loyalty counters through the replacement-aware counter action.
+- See `settle_the_score_test.go`, `settle_the_score_dsl_test.go`, and
+  `docs/designs/composable-dsl-settle-score-slice.md` for evidence. This card
+  does not require general planeswalker combat or loyalty-activation support.
 
 ### 3.3 Cast-without-paying-many-spells from exile (Etali, Primal Storm)
 - `creatures.go:3746`. The plumbing problem is that
@@ -402,7 +404,7 @@ These each add one orthogonal capability. They're ordered by dependency depth.
 | Thirst for Knowledge | spells.go:1730 | branching discard cost (small, card-local) |
 | Primeval Bounty | enchantments.go:693 | composes 1.5 + landfall + cast-spell triggers |
 | Gonti, Lord of Luxury | creatures.go:2483 | 3.1 (defer) |
-| Settle the Score | spells.go:1618 | 3.2 (defer) |
+| Settle the Score | spells.go | 3.2 (implemented) |
 | Etali, Primal Storm | creatures.go:3746 | 3.3 (after 1.3) |
 | Gargoyle-class alt-cost | creatures.go:3063 | 3.4 |
 | Ormos | creatures.go:1304 | 3.5 (after 1.5) |

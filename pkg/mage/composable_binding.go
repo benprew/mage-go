@@ -31,17 +31,31 @@ func (r savedPermanentRef) resolvePermanent(ctx *EffectContext) (*Permanent, boo
 
 type attachedPermanentRef struct{}
 
-// AttachedPermanent reads the current attachment of the source incarnation.
+// AttachedPermanent reads the attachment of the source incarnation.
+// A departed source supplies its last attachment; a returned host is absent.
 var AttachedPermanent = attachedPermanentRef{}
 
 func (attachedPermanentRef) permanentRef() {}
 func (attachedPermanentRef) resolvePermanent(ctx *EffectContext) (*Permanent, bool) {
 	source, ok := This.resolvePermanent(ctx)
-	if !ok {
+	var host capturedPermanent
+	if ok {
+		host = capturedPermanent{id: source.AttachedTo, incarnation: source.attachedIncarnation}
+	} else if ctx.sourceCaptured {
+		source = ctx.Game.FindPermanentIncludingPhased(ctx.SourceID)
+		if source != nil && source.incarnationID == ctx.sourceIncarnation {
+			host = capturedPermanent{id: source.AttachedTo, incarnation: source.attachedIncarnation}
+		} else {
+			host = ctx.Game.zones.departedAttachments[ctx.sourceIncarnation]
+		}
+	} else {
 		return nil, false
 	}
-	p := ctx.Game.FindPermanent(source.AttachedTo)
-	return p, p != nil && !p.PhasedOut
+	p := ctx.Game.FindPermanent(host.id)
+	if p == nil || (host.incarnation != uuid.Nil && p.incarnationID != host.incarnation) {
+		return nil, false
+	}
+	return p, true
 }
 
 type permanentSnapshot struct {
@@ -88,3 +102,5 @@ func (attachedPermanentRef) inspectDefinition() definitionNode {
 func (e *permanentSnapshot) inspectDefinition() definitionNode {
 	return definitionNode{Role: "snapshot", bindingWrite: e.binding, children: []definitionEdge{{"subject", e.subject}, {"binding", e.binding}}}
 }
+
+func (b *PermanentBinding) bindingName() string { return b.name }

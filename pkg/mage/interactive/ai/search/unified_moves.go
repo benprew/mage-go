@@ -116,7 +116,7 @@ func expandAbility(g *mage.Game, p mage.Player, info mage.ActivatableInfo) []Mov
 	}
 	targets := aa.Targets()
 	if len(targets) == 0 {
-		if ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), aa.Effects(), nil) {
+		if ai.AbilityActivationIsRedundant(g, playerID, perm.ID(), aa.Effects(), nil, aa.Targets()...) {
 			return nil
 		}
 		return []Move{{

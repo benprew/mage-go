@@ -36,18 +36,6 @@ func TestApplyToRandomSpellOrPermanent(t *testing.T) {
 	}
 }
 
-func TestApplyToRandomPlayer(t *testing.T) {
-	g, a, b := randomTestGame()
-	g.SetRandomResults([]int{1})
-
-	if err := ApplyEffect(g, ApplyToRandomPlayer(GainLifeTarget(Fixed(2))), a.PlayerID(), a.PlayerID(), nil); err != nil {
-		t.Fatalf("apply random player effect: %v", err)
-	}
-	if a.Life() != a.StartingLife() || b.Life() != b.StartingLife()+2 {
-		t.Fatalf("life totals = A %d, B %d", a.Life(), b.Life())
-	}
-}
-
 func TestApplyToRandomDamageTarget(t *testing.T) {
 	g, a, _ := randomTestGame()
 	creature := addRandomTargetCreature(g, a, "Creature")

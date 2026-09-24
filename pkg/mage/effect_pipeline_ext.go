@@ -47,30 +47,8 @@ func (e *SnapshotAttachedData) Apply(ctx *EffectContext) error {
 }
 
 // ---------------------------------------------------------------------------
-// Gathered-permanent operations: tap, untap, damage, regen, prevention
+// Gathered-permanent operations: damage, regen, prevention
 // ---------------------------------------------------------------------------
-
-// TapGatheredData taps a var-bound permanent.
-type TapGatheredData struct{ VarName string }
-
-func TapGathered(v string) Effect { return &TapGatheredData{VarName: v} }
-
-func (e *TapGatheredData) Text() string { return "tap" }
-func (e *TapGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *TapGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm != nil {
-		ctx.Game.TapPermanent(perm)
-	}
-	return nil
-}
 
 // DealDamageToGatheredData deals damage to a var-bound permanent.
 type DealDamageToGatheredData struct {
@@ -100,25 +78,6 @@ func (e *DealDamageToGatheredData) Apply(ctx *EffectContext) error {
 	if perm != nil {
 		ctx.Game.DealDamageToPermanent(perm, amount, ctx.SourceID)
 	}
-	return nil
-}
-
-// RegenerateGatheredData adds a regeneration shield to a var-bound permanent.
-type RegenerateGatheredData struct{ VarName string }
-
-func RegenerateGathered(v string) Effect { return &RegenerateGatheredData{VarName: v} }
-
-func (e *RegenerateGatheredData) Text() string { return "regenerate" }
-func (e *RegenerateGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
-}
-
-func (e *RegenerateGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	ctx.Game.AddRegenerationShield(id)
 	return nil
 }
 

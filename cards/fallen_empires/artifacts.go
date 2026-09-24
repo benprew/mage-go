@@ -1,8 +1,6 @@
 package fallen_empires
 
 import (
-	"math/rand"
-
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -111,14 +109,12 @@ func registerArtifacts() {
 	// Artifact
 	// {2}, {T}, Discard a card at random: Regenerate target creature.
 	Register("Draconian Cylix", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Draconian Cylix", "{3}",
-			WithActivatedAbility(
-				RegenerateTarget(),
-				GenericCost(2),
-				WithCost(TapCost(This)),
-				WithCost(DiscardRandomCost(1)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{2}"), TapCost(This), DiscardRandomCost(1)),
+				Regenerate(creature), WithTargets(creature),
+			)),
 		)
 	}))
 
@@ -154,34 +150,12 @@ func registerArtifacts() {
 	// Ring of Renewal {5}
 	// Artifact
 	// {5}, {T}: Discard a card at random, then draw two cards.
-	// TODO: convert to pipeline — needs DiscardRandom targeting controller (not opponent) + DrawCards step
 	Register("Ring of Renewal", withExpansion(func() Card {
 		return NewArtifact("Ring of Renewal", "{5}",
-			WithActivatedAbility(
-				FuncEffect(
-					"discard a card at random, then draw two cards",
-					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						// Discard a card at random
-						hand := p.Hand()
-						if len(hand) > 0 {
-							idx := rand.Intn(len(hand))
-							p.DiscardCard(hand[idx].ID())
-						}
-						// Then draw two cards
-						for range 2 {
-							g.PlayerDrawCard(p)
-						}
-						return nil
-					},
-				),
-				GenericCost(5),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{5}"), TapCost(This)),
+				Sequence(DiscardAtRandom(You, Fixed(1)), Draw(You, Fixed(2))),
+			)),
 		)
 	}))
 

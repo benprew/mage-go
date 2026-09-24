@@ -139,3 +139,88 @@ make lint
 ```
 
 Lint reported zero issues. Long simulations were not run.
+
+## Modal spell target validation
+
+The modal target gap blocks the Active
+Volcano and Flash Flood migration. A temporary test rejected wrong colors,
+wrong land subtypes, and targets from the other mode. Eight cases failed with
+both the legacy definitions and typed `SpellModes` definitions. `CastSpellByName`
+validates `card.CastTargets()` before costs, but the modal target list is chosen
+later in `prepareSpellStackPayload`. The illegal casts returned success.
+The temporary migration was removed. Select the mode before target validation
+and payment in a separate engine slice, with failure-atomicity and copy tests.
+
+
+## Milling direction correction
+
+The typed milling slice added distinct-card Thought Scour regressions. These
+exposed that `millTargetPlayerEffect.Apply` removed the last library entry,
+while `BasePlayer.DrawCard` and library setup use index zero as the top.
+`TestMillTargetPlayerUsesLibraryTop` failed before the shared executor was
+corrected to remove index zero. `TestComposableMillContextAndClone` also checks
+the exact remaining card and clone isolation. Existing equal-card mill tests
+verified counts but did not establish direction.
+
+`Mill(PlayerRef, ResolutionValue)` now adapts to that corrected executor and
+preserves the original amount-evaluation frame. Existing mill modifiers remain
+in use. The executor still writes player zones directly. General zone-change
+replacement handling, zone events, milled-card results, and affected-player
+replacement ordering are not certified by this slice.
+
+## Typed entry return choices
+
+Emancipation Angel and Storm Sculptor now compose `WhenEvent`,
+`ChoosePermanent`, and `ReturnToHand` through the DSL. Their old cast targets
+violated the non-targeted resolution-choice requirement. Card regressions cover
+source inclusion, shroud, resolution-time eligibility, owner destination, and
+opposing copies. See the [slice record](composable-dsl-completed/composable-dsl-entry-return-choice-slice.md).
+
+The migration exposed a separate engine defect: implicit event subjects in the
+legacy target list could stop an untargeted typed entry trigger after source
+exit. `PutTriggersOnStack` now removes those implicit targets for typed event
+patterns; explicit targets and legacy constructors retain their existing paths.
+`TestComposableEntryTriggerHasNoImplicitTarget` and
+`TestComposableDeathTriggerHasNoImplicitTarget` validate the correction.
+Gap `typed-event-implicit-target` is resolved. General event participant bindings
+and legacy event-target separation remain outside this slice.
+
+## Static activated grants: Zombie Master slice
+
+The [completed grant slice](composable-dsl-completed/composable-dsl-zombie-master-grant-slice.md)
+adds `GrantEachActivatedAbility` and `WithoutPermanent`. It reuses the existing
+layer-6 effect manager, runtime grant wrapper, activation payment and copy
+paths, and mana planner. Definitions have separate binding scopes; recipient
+source/controller and clone behavior have focused tests. The legacy
+`GrantActivatedAbilityToAll` helper had one production caller, Zombie Master,
+and incorrectly restricted its regeneration grant to creatures. That caller
+now uses the typed rule and the legacy export is removed. Other noncreature
+Zombies receive regeneration; swampwalk retains its creature restriction.
+Targeted/modal grants, activation limits, persistent grants, and attachment
+capture remain unverified by this slice and are tracked separately.
+
+The subsequent [targeted grant slice](composable-dsl-completed/composable-dsl-granted-target-slice.md)
+adds `WithTargets` to the same constructor through `GrantedActivationOption`.
+Focused tests verify recipient source/controller, payment rollback, target
+legality and incarnation, partial target legality, independent recipients,
+retargeted copies, donor/recipient departure, clones, and targeted mana stack
+timing. The existing target and activation executors need no behavior change.
+The closed option type excludes activation limits and other restrictions;
+runtime grant IDs are rebuilt in layer evaluation, so usage-limit lifetime
+must be audited before those options are exposed. Modal, persistent, temporary,
+and attachment grant contracts remain open.
+
+## Static grant limits and source phasing
+
+The [static grant limit slice](composable-dsl-completed/composable-dsl-granted-limit-slice.md)
+supersedes the earlier limit restriction. Granted runtime abilities previously
+received new IDs and empty counters at each layer evaluation. Stable grant IDs
+now distinguish the effect, donor incarnation, and recipient incarnation;
+committed counts live in the cloned, turn-scoped tracker. Both manual activation
+and mana planning check that count.
+
+A focused regression also showed that the effect manager deleted a donor's
+continuous effect during phasing. Its source-presence pruning now includes
+phased-out permanents; applicability still excludes phased-out grant donors.
+The grant resumes on phasing in and retains its count. This is a prerequisite
+engine correction, not a change to the grant's subject or activation semantics.

@@ -213,11 +213,11 @@ func registerCreatures() {
 	// Flying
 	// When this creature dies, exile target permanent.
 	Register("Archon of Justice", func() Card {
+		permanent := TargetPermanent("permanent", AnyPermanent)
 		return NewCreature("Archon of Justice", "{3}{W}{W}", 4, 4,
 			WithSubTypes("Archon"),
 			WithKeyword(Flying),
-			WithAbility(DiesTrigger(ExileTarget(), false).
-				AddTarget(mage.TargetPermanent())),
+			WithAbility(WhenEvent(Dies(This), Exile(permanent), WithTargets(permanent))),
 		)
 	})
 
@@ -345,11 +345,14 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, return a permanent you control to its owner's hand.
 	Register("Emancipation Angel", func() Card {
+		returned := BindPermanent("permanent to return")
 		return NewCreature("Emancipation Angel", "{1}{W}{W}", 3, 3,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
-			WithCastTarget(TargetControlledPermanent()),
-			WithETBEffect(ReturnToHandTarget()),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				ChoosePermanent(You, ControlledPermanents(AnyPermanent), returned),
+				ReturnToHand(From(returned)),
+			))),
 		)
 	})
 
@@ -874,39 +877,17 @@ func registerCreatures() {
 		})
 		return NewCreature("Trusty Retriever", "{3}{W}", 2, 3,
 			WithSubTypes("Dog"),
-			WithAbility(EntersBattlefieldTrigger(
-				ModalTriggerEffect("Trusty Retriever ETB", []ModalTriggerMode{
-					{
-						Label: "Put a +1/+1 counter on this creature",
-						Resolve: func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							if perm := g.MutablePermanent(sourceID); perm != nil {
-								perm.AddCounter(P1P1, 1)
-								g.ApplyContinuousEffects()
-							}
-							return nil
-						},
-					},
-					{
-						Label: "Return target artifact or enchantment card from your graveyard to your hand",
-						Resolve: func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 || targets[0] == uuid.Nil {
-								return nil
-							}
-							p := g.GetPlayer(controller)
-							if p == nil {
-								return nil
-							}
-							picked, ok := p.RemoveFromGraveyard(targets[0])
-							if !ok {
-								return nil
-							}
-							p.AddToHand(picked)
-							return nil
-						},
-					},
-				}),
-				false,
-			).AddTarget(TargetCardInYourGraveyard(artifactOrEnchantmentCard))),
+			WithAbility(EntersBattlefieldTrigger(nil, false).WithModes(
+				Mode{
+					Label:   "Put a +1/+1 counter on this creature",
+					Effects: []Effect{AddCounters(This, P1P1, Fixed(1))},
+				},
+				Mode{
+					Label:   "Return target artifact or enchantment card from your graveyard to your hand",
+					Targets: []Target{TargetCardInYourGraveyard(artifactOrEnchantmentCard)},
+					Effects: []Effect{ReturnFromGraveyardToHandTarget()},
+				},
+			)),
 		)
 	})
 
@@ -1199,10 +1180,10 @@ func registerCreatures() {
 	// 2/2
 	// When this creature enters, return target creature an opponent controls to its owner's hand.
 	Register("Exclusion Mage", func() Card {
+		creature := TargetPermanent("creature", IsCreature, TargetOpponentControls())
 		return NewCreature("Exclusion Mage", "{2}{U}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
-			WithCastTarget(TargetPermanentOpponentControls(IsCreature)),
-			WithETBEffect(ReturnToHandTarget()),
+			WithAbility(WhenEvent(Enters(This), ReturnToHand(creature), WithTargets(creature))),
 		)
 	})
 
@@ -1685,12 +1666,10 @@ func registerCreatures() {
 	// 2/3
 	// Whenever this creature or another creature dies, target player mills a card.
 	Register("Selhoff Occultist", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Selhoff Occultist", "{2}{U}", 2, 3,
 			WithSubTypes("Human", "Rogue"),
-			WithAbility(AnyCreatureDiesTrigger(
-				MillTargetPlayer(Fixed(1)),
-				false,
-			).AddTarget(mage.TargetPlayer())),
+			WithAbility(WhenEvent(CreatureDies(), Mill(player, Fixed(1)), WithTargets(player))),
 		)
 	})
 
@@ -1750,11 +1729,14 @@ func registerCreatures() {
 	// This creature can't be blocked.
 	// When this creature enters, return a creature you control to its owner's hand.
 	Register("Storm Sculptor", func() Card {
+		returned := BindPermanent("permanent to return")
 		return NewCreature("Storm Sculptor", "{3}{U}", 3, 2,
 			WithSubTypes("Merfolk", "Wizard"),
 			WithKeyword(UnblockableKW),
-			WithCastTarget(TargetControlledCreature()),
-			WithETBEffect(ReturnToHandTarget()),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				ChoosePermanent(You, ControlledPermanents(IsCreature), returned),
+				ReturnToHand(From(returned)),
+			))),
 		)
 	})
 
@@ -1781,12 +1763,12 @@ func registerCreatures() {
 	// 2/1
 	// Whenever this creature deals damage, target player mills that many cards.
 	Register("Towering-Wave Mystic", func() Card {
+		amount := BindNumber("damage amount")
+		target := TargetPlayer("player")
 		return NewCreature("Towering-Wave Mystic", "{1}{U}", 2, 1,
 			WithSubTypes("Merfolk", "Wizard"),
-			WithAbility(NewTriggered(EvtDamageDealt, false,
-				MillTargetPlayer(EventAmountValue()),
-			).SetConditionData(EventSourceIsSelf{}).
-				AddTarget(mage.TargetPlayer())),
+			WithAbility(WhenEvent(DealsDamage(This, amount),
+				Mill(target, FromNumber(amount)), WithTargets(target))),
 		)
 	})
 
@@ -1809,14 +1791,11 @@ func registerCreatures() {
 	// 1/4
 	// {U}, {T}: Target player mills two cards.
 	Register("Vedalken Entrancer", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Vedalken Entrancer", "{3}{U}", 1, 4,
 			WithSubTypes("Vedalken", "Wizard"),
-			WithActivatedAbility(
-				MillTargetPlayer(Fixed(2)),
-				ManaCostOf("{U}"),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPlayer()),
-			),
+			WithAbility(Activate(Costs(Mana("{U}"), TapCost(This)),
+				Mill(player, Fixed(2)), WithTargets(player))),
 		)
 	})
 
@@ -1826,13 +1805,11 @@ func registerCreatures() {
 	// Defender (This creature can't attack.)
 	// When this creature enters, target player mills four cards. (They put the top four cards of their library into their graveyard.)
 	Register("Wall of Lost Thoughts", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Wall of Lost Thoughts", "{1}{U}", 0, 4,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
-			WithAbility(EntersBattlefieldTrigger(
-				MillTargetPlayer(Fixed(4)),
-				false,
-			).AddTarget(mage.TargetPlayer())),
+			WithAbility(WhenEvent(Enters(This), Mill(player, Fixed(4)), WithTargets(player))),
 		)
 	})
 
@@ -1935,24 +1912,13 @@ func registerCreatures() {
 	// 0/1
 	// Whenever Blood Artist or another creature dies, target opponent loses 1 life and you gain 1 life.
 	Register("A-Blood Artist", func() Card {
+		opponent := TargetPlayer("opponent", TargetOpponentOnly())
 		return NewCreature("A-Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
-			WithAbility(AnyCreatureDiesTrigger(
-				FuncEffect("target opponent loses 1 life and you gain 1 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(1)
-							}
-						}
-						if cp := g.GetPlayer(controller); cp != nil {
-							g.PlayerGainLife(cp, 1)
-						}
-						return nil
-					}),
-				false,
-			).AddTarget(TargetOpponent())),
+			WithAbility(WhenEvent(CreatureDies(),
+				Sequence(LoseLife(opponent, Fixed(1)), GainLife(You, Fixed(1))),
+				WithTargets(opponent),
+			)),
 		)
 	})
 
@@ -2004,24 +1970,13 @@ func registerCreatures() {
 	// 0/1
 	// Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
 	Register("Blood Artist", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Blood Artist", "{1}{B}", 0, 1,
 			WithSubTypes("Vampire"),
-			WithAbility(AnyCreatureDiesTrigger(
-				FuncEffect("target player loses 1 life and you gain 1 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(1)
-							}
-						}
-						if cp := g.GetPlayer(controller); cp != nil {
-							g.PlayerGainLife(cp, 1)
-						}
-						return nil
-					}),
-				false,
-			).AddTarget(mage.TargetPlayer())),
+			WithAbility(WhenEvent(CreatureDies(),
+				Sequence(LoseLife(player, Fixed(1)), GainLife(You, Fixed(1))),
+				WithTargets(player),
+			)),
 		)
 	})
 
@@ -2461,25 +2416,14 @@ func registerCreatures() {
 	// Flying
 	// Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
 	Register("Falkenrath Noble", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Falkenrath Noble", "{3}{B}", 2, 2,
 			WithSubTypes("Vampire", "Noble"),
 			WithKeyword(Flying),
-			WithAbility(AnyCreatureDiesTrigger(
-				FuncEffect("target player loses 1 life and you gain 1 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(1)
-							}
-						}
-						if cp := g.GetPlayer(controller); cp != nil {
-							g.PlayerGainLife(cp, 1)
-						}
-						return nil
-					}),
-				false,
-			).AddTarget(mage.TargetPlayer())),
+			WithAbility(WhenEvent(CreatureDies(),
+				Sequence(LoseLife(player, Fixed(1)), GainLife(You, Fixed(1))),
+				WithTargets(player),
+			)),
 		)
 	})
 
@@ -2729,9 +2673,8 @@ func registerCreatures() {
 	Register("Gristle Grinner", func() Card {
 		return NewCreature("Gristle Grinner", "{4}{B}", 3, 3,
 			WithSubTypes("Zombie"),
-			WithAbility(AnyCreatureDiesTrigger(
-				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()).Until(EndOfTurn),
-				false,
+			WithAbility(WhenEvent(CreatureDies(),
+				Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(2))),
 			)),
 		)
 	})
@@ -4780,14 +4723,14 @@ func registerCreatures() {
 	// 2/1
 	// {R}, Sacrifice this creature: Destroy target artifact.
 	Register("Torch Fiend", func() Card {
+		artifact := TargetPermanent("artifact", IsArtifact)
 		return NewCreature("Torch Fiend", "{1}{R}", 2, 1,
 			WithSubTypes("Devil"),
-			WithActivatedAbility(
-				DestroyTargetArtifact(),
-				ManaCostOf("{R}"),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(mage.TargetPermanent(IsArtifact)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{R}"), SacrificeSourceCost()),
+				Destroy(artifact),
+				WithTargets(artifact),
+			)),
 		)
 	})
 
@@ -6592,11 +6535,11 @@ func registerCreatures() {
 	// 3/3
 	// When this creature enters, destroy target nonland permanent an opponent controls.
 	Register("Meteor Golem", func() Card {
+		target := TargetPermanent("nonland permanent", Not(IsLand), TargetOpponentControls())
 		return NewCreature("Meteor Golem", "{7}", 3, 3,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
-			WithAbility(EntersBattlefieldTrigger(DestroyTarget(), false).
-				AddTarget(TargetPermanentOpponentControls(Not(IsLand)))),
+			WithAbility(WhenEvent(Enters(This), Destroy(target), WithTargets(target))),
 		)
 	})
 

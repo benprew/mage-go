@@ -5,6 +5,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -16,14 +17,19 @@ func applyFaerieDragonAction(g *Game, sourceID, controllerID uuid.UUID, action i
 	case 0: // Berserk
 		return ApplyEffect(g, ApplyToRandomPermanent(BerserkEffect(), IsCreature), sourceID, controllerID, nil)
 	case 1: // Twiddle
-		permanent := g.RandomPermanent(Or(IsArtifact, IsCreature, IsLand))
-		player := g.GetPlayer(controllerID)
-		if permanent == nil || player == nil || !player.ChooseMayAbility("tap or untap the chosen permanent") {
-			return nil
-		}
-		return ApplyEffect(g, TwiddleEffect(), sourceID, controllerID, []uuid.UUID{permanent.ID()})
+		chosen := dsl.BindPermanent("chosen permanent")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.Or(dsl.IsArtifact, dsl.IsCreature, dsl.IsLand)), chosen),
+			dsl.MayTapOrUntap(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 2: // Blood Lust
-		return ApplyEffect(g, ApplyToRandomPermanent(BloodLustEffect(), IsCreature), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen creature")
+		subject := dsl.From(chosen)
+		change := dsl.MinValue(dsl.Fixed(0), dsl.MaxValue(dsl.Fixed(-4), dsl.SubtractValues(dsl.Fixed(1), dsl.ToughnessOf(subject))))
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), chosen),
+			dsl.Until(EndOfTurn, dsl.ModifyPT(subject, dsl.Fixed(4), change)),
+		), sourceID, controllerID, nil)
 	case 3: // Lifelace
 		return ApplyEffect(g, ApplyToRandomSpellOrPermanent(LaceEffect(Green)), sourceID, controllerID, nil)
 	case 4: // Purelace
@@ -32,12 +38,26 @@ func applyFaerieDragonAction(g *Game, sourceID, controllerID uuid.UUID, action i
 		return ApplyEffect(g, ApplyToRandomSpellOrPermanent(LaceEffect(Red)), sourceID, controllerID, nil)
 	case 6: // Lightning Bolt
 		return ApplyEffect(g, ApplyToRandomDamageTarget(LightningBoltEffect()), sourceID, controllerID, nil)
-	case 7: // Flying Carpet
-		return ApplyEffect(g, ApplyToRandomPermanent(FlyingCarpetEffect(), IsCreature), sourceID, controllerID, nil)
-	case 8: // Giant Growth
-		return ApplyEffect(g, ApplyToRandomPermanent(GiantGrowthEffect(), IsCreature), sourceID, controllerID, nil)
-	case 9: // Helm of Chatzuk
-		return ApplyEffect(g, ApplyToRandomPermanent(HelmOfChatzukEffect(), IsCreature), sourceID, controllerID, nil)
+	case 7, 9:
+		keyword := Flying
+		if action == 9 {
+			keyword = Banding
+		}
+		chosen := dsl.BindPermanent("chosen creature")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), chosen),
+			dsl.Until(EndOfTurn, dsl.GrantKeyword(dsl.From(chosen), keyword)),
+		), sourceID, controllerID, nil)
+	case 8, 14:
+		power, toughness := 3, 3
+		if action == 14 {
+			power, toughness = -2, 0
+		}
+		chosen := dsl.BindPermanent("chosen creature")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), chosen),
+			dsl.Until(EndOfTurn, dsl.ModifyPT(dsl.From(chosen), dsl.Fixed(power), dsl.Fixed(toughness))),
+		), sourceID, controllerID, nil)
 	case 10: // Deathlace
 		return ApplyEffect(g, ApplyToRandomSpellOrPermanent(LaceEffect(Black)), sourceID, controllerID, nil)
 	case 11: // Thoughtlace
@@ -46,10 +66,12 @@ func applyFaerieDragonAction(g *Game, sourceID, controllerID uuid.UUID, action i
 		return ApplyEffect(g, ApplyToRandomPermanent(HurrJackalEffect(), IsCreature), sourceID, controllerID, nil)
 	case 13: // Tawnos's Wand
 		return ApplyEffect(g, ApplyToRandomPermanent(TawnosWandEffect(), And(IsCreature, HasPowerLTE(2))), sourceID, controllerID, nil)
-	case 14: // Staff of Zegon
-		return ApplyEffect(g, ApplyToRandomPermanent(StaffOfZegonEffect(), IsCreature), sourceID, controllerID, nil)
 	case 15: // Unsummon
-		return ApplyEffect(g, ApplyToRandomPermanent(UnsummonEffect(), IsCreature), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen creature")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), chosen),
+			dsl.ReturnToHand(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 16: // Prodigal Sorcerer
 		return ApplyEffect(g, ApplyToRandomDamageTarget(ProdigalSorcererEffect()), sourceID, controllerID, nil)
 	case 17: // Sorceress Queen

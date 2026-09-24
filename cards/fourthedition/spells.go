@@ -46,11 +46,9 @@ func registerSpells() {
 	// Instant
 	// Destroy target creature or land. It can't be regenerated.
 	Register("Fissure", func() Card {
+		target := TargetPermanent("creature or land", Or(IsCreature, IsLand))
 		return NewInstant("Fissure", "{3}{R}{R}",
-			NewTargetedSpell(
-				mage.TargetPermanent(Or(IsCreature, IsLand)),
-				FissureEffect(),
-			),
+			WithAbility(Spell(DestroyWithoutRegeneration(target), WithTargets(target))),
 		)
 	})
 

@@ -295,11 +295,11 @@ func registerSpells() {
 	// Instant
 	// Return target nonland permanent to its owner's hand. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
 	Register("Banishing Betrayal", func() Card {
-		return NewInstant("Banishing Betrayal", "{1}{U}",
-			NewTargetedSpell(
-				TargetPermanent(Not(IsLand)),
-				ReturnToHandTarget(),
-				Surveil(Fixed(1)),
+		nonland := dsl.TargetPermanent("nonland permanent", dsl.Not(dsl.IsLand))
+		return dsl.NewInstant("Banishing Betrayal", "{1}{U}",
+			dsl.Spell(
+				dsl.Sequence(dsl.ReturnToHand(nonland), dsl.Surveil(dsl.Fixed(1))),
+				dsl.WithTargets(nonland),
 			),
 		)
 	})
@@ -2935,53 +2935,19 @@ func registerSpells() {
 	// • Exile target creature with power 2 or less.
 	// • Each opponent loses 3 life and you gain 3 life.
 	Register("Silverquill Charm", func() Card {
-		c := NewInstant("Silverquill Charm", "{W}{B}", nil)
-		c.AddAbility(NewModalSpell([]Mode{
-			{
-				Label:   "Put two +1/+1 counters on target creature",
-				Targets: []Target{TargetCreature()},
-				Effects: []Effect{FuncEffect(
-					"put two +1/+1 counters on target creature",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
-						g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
-						return nil
-					},
-				)},
-			},
-			{
-				Label:   "Exile target creature with power 2 or less",
-				Targets: []Target{TargetCreature(HasPowerLTE(2))},
-				Effects: []Effect{ExileTarget()},
-			},
-			{
-				Label: "Each opponent loses 3 life and you gain 3 life",
-				Effects: []Effect{FuncEffect(
-					"each opponent loses 3 life and you gain 3 life",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						opp := g.GetOpponent(controller)
-						if opp != nil {
-							g.PlayerLoseLife(opp, 3)
-						}
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.PlayerGainLife(p, 3)
-						}
-						return nil
-					},
-				)},
-			},
-		}))
-		return c
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		smallCreature := dsl.TargetPermanent("small creature", dsl.And(dsl.IsCreature, dsl.HasPowerLTE(2)))
+		return dsl.NewInstant("Silverquill Charm", "{W}{B}", dsl.WithAbility(dsl.SpellModes(
+			dsl.ModeOf("Put two +1/+1 counters on target creature",
+				dsl.AddCounters(creature, P1P1, dsl.Fixed(2)), dsl.WithTargets(creature)),
+			dsl.ModeOf("Exile target creature with power 2 or less",
+				dsl.Exile(smallCreature), dsl.WithTargets(smallCreature)),
+			dsl.ModeOf("Each opponent loses 3 life and you gain 3 life",
+				dsl.Sequence(
+					dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(3)),
+					dsl.GainLife(dsl.You, dsl.Fixed(3)),
+				)),
+		)))
 	})
 
 	// Snarl Song {5}{G}
@@ -3595,8 +3561,9 @@ func registerSpells() {
 	// Instant
 	// Exile target creature.
 	Register("Wander Off", func() Card {
+		target := dsl.TargetPermanent("exile subject", dsl.IsCreature)
 		return NewInstant("Wander Off", "{3}{B}",
-			NewTargetedSpell(TargetCreature(), ExileTarget()),
+			dsl.WithAbility(dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))),
 		)
 	})
 

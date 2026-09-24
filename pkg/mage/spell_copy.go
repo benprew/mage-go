@@ -47,7 +47,7 @@ func (g *Game) CopyStackObjectDirect(obj *StackObject, controller uuid.UUID, may
 
 func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayChooseNewTargets bool) *StackObject {
 	var copiedCard Card
-	if original.Card != nil {
+	if original.Card != nil && !original.IsAbility {
 		copiedCard = original.Card.Copy()
 		copiedCard.SetOwner(controller)
 	}
@@ -65,11 +65,16 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		CastContext:        original.CastContext,
 		TargetSource:       copiedCard,
 		sourceIncarnation:  original.sourceIncarnation,
+		capturedNumbers:    maps.Clone(original.capturedNumbers),
+		capturedPermanents: maps.Clone(original.capturedPermanents),
 		EventSourceID:      original.EventSourceID,
 		targetIncarnations: maps.Clone(original.targetIncarnations),
 	}
 	if copiedCard == nil {
 		cp.TargetSource = original.TargetSource
+		if cp.TargetSource == nil {
+			cp.TargetSource = original.Card
+		}
 	}
 	if copiedCard != nil {
 		cp.SourceID = copiedCard.ID()
@@ -101,8 +106,13 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		maps.Copy(cp.CounterDistribution, original.CounterDistribution)
 	}
 
-	if mayChooseNewTargets && copiedCard != nil {
-		g.repromptTargetsForCopy(cp, copiedCard)
+	if mayChooseNewTargets {
+		if cp.IsAbility {
+			declarations := slices.Compact(slices.Clone(cp.TargetSpecs))
+			cp.Targets = g.retargetCopyGroups(cp, cp.TargetSource, declarations)
+		} else if copiedCard != nil {
+			g.repromptTargetsForCopy(cp, copiedCard)
+		}
 		if cp.targetIncarnations == nil {
 			cp.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
 		}
@@ -214,14 +224,19 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 // controller for choices. Used by spell-copy reprompts and by the modal
 // cast-target gather.
 func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard Card, targets []Target) []uuid.UUID {
+	return g.promptTargetsForListWithX(controller, sourceCard, targets, g.resolution.X())
+}
+
+func (g *Game) promptTargetsForListWithX(controller uuid.UUID, sourceCard Card, targets []Target, x int) []uuid.UUID {
 	if g.GetPlayer(controller) == nil {
 		return nil
 	}
 	var out []uuid.UUID
 	for _, t := range targets {
+		minimum, maximum := TargetBounds(t, x)
 		if random, ok := t.(*randomTarget); ok {
-			chosen := g.chooseRandomTargets(controller, sourceCard, random, g.resolution.X())
-			if len(chosen) == 0 && t.Min() > 0 {
+			chosen := g.chooseRandomTargets(controller, sourceCard, random, x)
+			if len(chosen) == 0 && minimum > 0 {
 				out = append(out, uuid.Nil)
 			} else {
 				out = append(out, chosen...)
@@ -231,7 +246,7 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard Card, targe
 		t.Reset()
 		possible := t.Possible(controller, sourceCard, g)
 		if len(possible) == 0 {
-			if t.Min() > 0 {
+			if minimum > 0 {
 				out = append(out, uuid.Nil)
 			}
 			continue
@@ -242,9 +257,9 @@ func (g *Game) promptTargetsForList(controller uuid.UUID, sourceCard Card, targe
 		}
 		var chosen []uuid.UUID
 		if chooser != nil {
-			chosen = chooser.ChooseTargets(possible, t.Min(), t.Max(), g)
+			chosen = chooser.ChooseTargets(possible, minimum, maximum, g)
 		}
-		if len(chosen) == 0 && t.Min() > 0 {
+		if len(chosen) == 0 && minimum > 0 {
 			chosen = possible[:1]
 		}
 		_ = t.Choose(controller, sourceCard, g, chosen)

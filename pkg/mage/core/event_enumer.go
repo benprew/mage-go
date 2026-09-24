@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _EventTypeName = "ZoneChangeDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDeclEndOfCombatBecameUntappedMainPhaseCleanupScryDiscardSacrificeBecomesTargetAttackersDeclaredCombatDamageDealtCreatureBlocksEntersAttackingEntersBlockingFightCardsLeftGraveyardTappedForMana"
+const _EventTypeName = "ZoneChangeDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDeclEndOfCombatBecameUntappedMainPhaseCleanupScryDiscardSacrificeBecomesTargetAttackersDeclaredCombatDamageDealtCreatureBlocksEntersAttackingEntersBlockingFightCardsLeftGraveyardTappedForManaSurveil"
 
-var _EventTypeIndex = [...]uint16{0, 10, 26, 41, 52, 62, 70, 79, 88, 104, 110, 116, 122, 130, 141, 148, 154, 164, 176, 187, 201, 210, 217, 221, 228, 237, 250, 267, 284, 298, 313, 327, 332, 350, 363}
+var _EventTypeIndex = [...]uint16{0, 10, 26, 41, 52, 62, 70, 79, 88, 104, 110, 116, 122, 130, 141, 148, 154, 164, 176, 187, 201, 210, 217, 221, 228, 237, 250, 267, 284, 298, 313, 327, 332, 350, 363, 370}
 
-const _EventTypeLowerName = "zonechangedeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachupkeepdrawstepbegincombatendsteptappedlandplayedblockersdeclendofcombatbecameuntappedmainphasecleanupscrydiscardsacrificebecomestargetattackersdeclaredcombatdamagedealtcreatureblocksentersattackingentersblockingfightcardsleftgraveyardtappedformana"
+const _EventTypeLowerName = "zonechangedeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachupkeepdrawstepbegincombatendsteptappedlandplayedblockersdeclendofcombatbecameuntappedmainphasecleanupscrydiscardsacrificebecomestargetattackersdeclaredcombatdamagedealtcreatureblocksentersattackingentersblockingfightcardsleftgraveyardtappedformanasurveil"
 
 func (i EventType) String() string {
 	if i < 0 || i >= EventType(len(_EventTypeIndex)-1) {
@@ -58,9 +58,10 @@ func _EventTypeNoOp() {
 	_ = x[EvtFight-(31)]
 	_ = x[EvtCardsLeftGraveyard-(32)]
 	_ = x[EvtTappedForMana-(33)]
+	_ = x[EvtSurveil-(34)]
 }
 
-var _EventTypeValues = []EventType{EvtZoneChange, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl, EvtEndOfCombat, EvtBecameUntapped, EvtMainPhase, EvtCleanup, EvtScry, EvtDiscard, EvtSacrifice, EvtBecomesTarget, EvtAttackersDeclared, EvtCombatDamageDealt, EvtCreatureBlocks, EvtEntersAttacking, EvtEntersBlocking, EvtFight, EvtCardsLeftGraveyard, EvtTappedForMana}
+var _EventTypeValues = []EventType{EvtZoneChange, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl, EvtEndOfCombat, EvtBecameUntapped, EvtMainPhase, EvtCleanup, EvtScry, EvtDiscard, EvtSacrifice, EvtBecomesTarget, EvtAttackersDeclared, EvtCombatDamageDealt, EvtCreatureBlocks, EvtEntersAttacking, EvtEntersBlocking, EvtFight, EvtCardsLeftGraveyard, EvtTappedForMana, EvtSurveil}
 
 var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeName[0:10]:         EvtZoneChange,
@@ -131,6 +132,8 @@ var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeLowerName[332:350]: EvtCardsLeftGraveyard,
 	_EventTypeName[350:363]:      EvtTappedForMana,
 	_EventTypeLowerName[350:363]: EvtTappedForMana,
+	_EventTypeName[363:370]:      EvtSurveil,
+	_EventTypeLowerName[363:370]: EvtSurveil,
 }
 
 var _EventTypeNames = []string{
@@ -168,6 +171,7 @@ var _EventTypeNames = []string{
 	_EventTypeName[327:332],
 	_EventTypeName[332:350],
 	_EventTypeName[350:363],
+	_EventTypeName[363:370],
 }
 
 // EventTypeString retrieves an enum value from the enum constants string name.

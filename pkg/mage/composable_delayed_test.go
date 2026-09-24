@@ -120,7 +120,7 @@ func TestComposableDelayedTargetFrames(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	target := DeclarePermanentTarget("creature", IsCreature)
-	effect := AtNext(EachEndStep, Sequence(Destroy(target), GainLifeFor(You, XValue())))
+	effect := AtNext(EachEndStep, Sequence(Destroy(target), GainLifeFor(You, ValueAtResolution(XValue()))))
 	first, second := NewCreature("First", "", 2, 2), NewCreature("Second", "", 2, 2)
 	for i, card := range []Card{first, second} {
 		card.SetOwner(a.PlayerID())

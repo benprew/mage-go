@@ -451,15 +451,12 @@ func registerCreatures() {
 
 	// Clay Statue {4}
 	// Artifact Creature — Golem
-	// {2}: Regenerate Clay Statue.
+	// {2}: Regenerate this creature.
 	Register("Clay Statue", func() Card {
 		return NewCreature("Clay Statue", "{4}", 3, 1,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				RegenerateSource(),
-				GenericCost(2),
-			),
+			WithAbility(Activate(Costs(Mana("{2}")), Regenerate(This))),
 		)
 	})
 

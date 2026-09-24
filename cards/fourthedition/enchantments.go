@@ -80,21 +80,14 @@ func registerEnchantments() {
 	// Enchant land
 	// At the beginning of the upkeep of enchanted land's controller, destroy that land unless that player pays {1} or 1 life.
 	Register("Erosion", func() Card {
+		land := BindPermanent("land")
+		player := BindPlayer("upkeep player")
 		return NewAura("Erosion", "{U}{U}{U}",
 			WithCastTarget(TargetLand()),
-			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				Pipeline("destroy enchanted land unless its controller pays {1} or 1 life",
-					EffectProperties{Outcome: OutcomeDetriment},
-					SnapshotAttached("land"),
-					IfPlayerPays(
-						VarPlayer("land.controller"),
-						EitherCost(ManaCostOf("{1}"), LifePayCost(1)),
-						"pay {1} or 1 life",
-						nil,
-						DestroyGathered("land"),
-					),
-				), false),
-			),
+			WithAbility(WhenEvent(AttachedControllerUpkeep(land, player),
+				UnlessPaid(FromPlayer(player), Costs(EitherCost(Mana("{1}"), LifePayCost(1))),
+					Destroy(From(land))),
+			)),
 		)
 	})
 

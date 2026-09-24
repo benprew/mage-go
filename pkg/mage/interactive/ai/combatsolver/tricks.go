@@ -24,6 +24,8 @@ type trickPairing struct {
 // from the available pool so it can't be double-counted.
 type handPump struct {
 	power, toughness, cost int
+	source                 mage.Card
+	target                 mage.Target
 }
 
 // abilityPump is a mana-only activated ability that pumps a target creature
@@ -124,8 +126,10 @@ func applyPumpToFlip(g *mage.Game, playerID uuid.UUID, ours, enemy *mage.Permane
 		unitChoices = append(unitChoices, i)
 	}
 	spellChoices := []int{-1}
-	for i := range *handPumps {
-		spellChoices = append(spellChoices, i)
+	for i, spell := range *handPumps {
+		if slices.Contains(spell.target.Possible(playerID, spell.source, g), ours.ID()) {
+			spellChoices = append(spellChoices, i)
+		}
 	}
 
 	for _, unitIdx := range unitChoices {
@@ -263,7 +267,8 @@ func pumpBoost(effects []mage.Effect) (power, toughness int) {
 
 // gatherHandPumps collects affordable "+X/+Y" combat tricks from the player's
 // hand as one-shot pump options. Only instants the solver classifies as
-// RolePump and that target a creature are included.
+// RolePump and that have one singular target are included.
+// Check target legality for each combatant before use.
 func gatherHandPumps(g *mage.Game, playerID uuid.UUID) []handPump {
 	p := g.GetPlayer(playerID)
 	if p == nil {
@@ -277,28 +282,27 @@ func gatherHandPumps(g *mage.Game, playerID uuid.UUID) []handPump {
 		if !g.CanAfford(playerID, card.ManaCost(), mage.SpellContextForCard(card)) {
 			continue
 		}
-		power, toughness, targetsCreature := pumpSpellBoost(card)
-		if !targetsCreature || (power <= 0 && toughness <= 0) {
+		power, toughness, target := pumpSpellBoost(card)
+		if target == nil || (power <= 0 && toughness <= 0) {
 			continue
 		}
-		pumps = append(pumps, handPump{power: power, toughness: toughness, cost: card.ManaCost().CMC()})
+		pumps = append(pumps, handPump{power: power, toughness: toughness, cost: card.ManaCost().CMC(), source: card, target: target})
 	}
 	return pumps
 }
 
-// pumpSpellBoost extracts the total +power/+toughness a pump spell grants and
-// whether it targets a creature (so it can be aimed at one of our combatants).
-func pumpSpellBoost(card mage.Card) (power, toughness int, targetsCreature bool) {
+// pumpSpellBoost reads the fixed boost and its single target declaration.
+func pumpSpellBoost(card mage.Card) (power, toughness int, target mage.Target) {
 	for _, ab := range card.Abilities() {
 		def, ok := ab.(*mage.ActionDefinition)
 		if !ok || def.Kind() != mage.ActionSpell {
 			continue
 		}
-		for _, t := range def.Targets() {
-			if _, ok := t.(*mage.CreatureTarget); ok {
-				targetsCreature = true
-			}
+		targets := def.Targets()
+		if target != nil || len(targets) != 1 || targets[0].Min() != 1 || targets[0].Max() != 1 {
+			return 0, 0, nil
 		}
+		target = targets[0]
 		for _, e := range def.Effects() {
 			props := e.Properties()
 			if props.PowerBoost > 0 {
@@ -309,7 +313,7 @@ func pumpSpellBoost(card mage.Card) (power, toughness int, targetsCreature bool)
 			}
 		}
 	}
-	return power, toughness, targetsCreature
+	return power, toughness, target
 }
 
 // defenderPairings maps each of the player's blocks to the (blocker, attacker)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 	"github.com/benprew/mage-go/pkg/mage/interactive"
 	"github.com/benprew/mage-go/pkg/mage/interactive/ai"
 	"github.com/benprew/mage-go/pkg/mage/interactive/eval"
@@ -449,10 +450,7 @@ func TestEvaluateCombatOutcome_DeathtouchTradesWithBig(t *testing.T) {
 // regenerator builds a creature with a "{B}: Regenerate" activated ability.
 func regenerator(name string, power, toughness int, owner uuid.UUID) *mage.Permanent {
 	return makePerm(name, "{1}{B}", power, toughness, owner,
-		mage.WithActivatedAbility(
-			mage.RegenerateSource(),
-			mage.ManaCostOf("{B}"),
-		),
+		dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{B}")), dsl.Regenerate(dsl.This))),
 	)
 }
 
@@ -551,8 +549,9 @@ func TestPriorityAction_CastsRegenerationSpellOnDoomedCreature(t *testing.T) {
 	g.SetStep(core.DeclareBlockers)
 	addLands(g, pa, "Plains", 1)
 
+	creature := mage.DeclarePermanentTarget("creature", mage.IsCreature)
 	ward := mage.NewInstant("Death Ward", "{W}",
-		mage.NewTargetedSpell(mage.TargetCreature(), mage.RegenerateTarget()),
+		mage.WithAbility(mage.Spell(mage.Regenerate(creature), mage.WithTargets(creature))),
 	)
 	ward.SetOwner(pa.PlayerID())
 	pa.AddToHand(ward)
@@ -580,40 +579,90 @@ func TestPriorityAction_CastsRegenerationSpellOnDoomedCreature(t *testing.T) {
 }
 
 func TestPriorityAction_ActivatesAttachedRegenerationOnDoomedHost(t *testing.T) {
-	g, pa, pb := makeGame()
-	g.SetStep(core.DeclareBlockers)
+	for _, tc := range []struct {
+		name      string
+		ability   func() mage.CardOption
+		land      string
+		mana      int
+		otherHost bool
+		want      bool
+	}{
+		{name: "Thrull Retainer", want: true, ability: func() mage.CardOption {
+			host := dsl.BindPermanent("host")
+			return mage.WithAbility(dsl.Activate(dsl.Costs(dsl.SacrificeSourceCost()), dsl.Regenerate(dsl.From(host)), dsl.CapturePermanentBeforePayment(dsl.AttachedPermanent, host)))
+		}},
+		{name: "Regeneration", land: "Forest", mana: 1, want: true, ability: func() mage.CardOption {
+			return mage.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.AttachedPermanent)))
+		}},
+		{name: "The Brute", land: "Mountain", mana: 3, want: true, ability: func() mage.CardOption {
+			return mage.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{R}{R}{R}")), dsl.Regenerate(dsl.AttachedPermanent)))
+		}},
+		{name: "different host", otherHost: true, want: false, ability: func() mage.CardOption {
+			return mage.WithAbility(dsl.Activate(dsl.Costs(), dsl.Regenerate(dsl.AttachedPermanent)))
+		}},
+		{name: "unaffordable", want: false, ability: func() mage.CardOption {
+			return mage.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{G}")), dsl.Regenerate(dsl.AttachedPermanent)))
+		}},
+		{name: "captured sacrifice", want: true, ability: func() mage.CardOption {
+			host := dsl.BindPermanent("host")
+			return mage.WithAbility(dsl.Activate(dsl.Costs(dsl.SacrificeSourceCost()), dsl.Regenerate(dsl.From(host)), dsl.CapturePermanentBeforePayment(dsl.AttachedPermanent, host)))
+		}},
+		{name: "other capture", want: false, ability: func() mage.CardOption {
+			host := dsl.BindPermanent("host")
+			return mage.WithAbility(dsl.Activate(dsl.Costs(), dsl.Regenerate(dsl.From(host)), dsl.CapturePermanentBeforePayment(dsl.This, host)))
+		}},
+		{name: "overwritten capture", want: false, ability: func() mage.CardOption {
+			host := dsl.BindPermanent("host")
+			return mage.WithAbility(dsl.Activate(dsl.Costs(), dsl.Sequence(dsl.Snapshot(dsl.This, host), dsl.Regenerate(dsl.From(host))), dsl.CapturePermanentBeforePayment(dsl.AttachedPermanent, host)))
+		}},
+		{name: "unrelated recipient", want: false, ability: func() mage.CardOption { return mage.WithAbility(dsl.Activate(dsl.Costs(), dsl.Regenerate(dsl.This))) }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g, pa, pb := makeGame()
+			g.SetStep(core.DeclareBlockers)
 
-	host := makePerm("Retained Guard", "{1}{W}", 2, 2, pa.PlayerID())
-	retainerCard := mage.NewAura("Test Retainer", "{B}",
-		mage.WithActivatedAbility(
-			mage.Pipeline("Regenerate enchanted creature",
-				mage.EffectProperties{},
-				mage.SnapshotAttached("attached"),
-				mage.RegenerateGathered("attached"),
-			),
-			mage.SacrificeSourceCost(),
-		),
-	)
-	retainerCard.SetOwner(pa.PlayerID())
-	attacker := makePerm("Hill Giant", "{3}{R}", 3, 3, pb.PlayerID())
-	g.AddToBattlefield(host, attacker)
-	retainer := g.PutOnBattlefield(retainerCard, pa.PlayerID())
-	g.Attach(retainer.ID(), host.ID())
+			host := makePerm("Retained Guard", "{1}{W}", 2, 2, pa.PlayerID())
+			var retainerCard mage.Card = mage.NewAura("Test Retainer", "{B}", tc.ability())
+			if tc.name == "Regeneration" || tc.name == "The Brute" || tc.name == "Thrull Retainer" {
+				retainerCard = createCard(t, tc.name, pa.PlayerID())
+			}
+			if tc.mana > 0 {
+				addLands(g, pa, tc.land, tc.mana)
+			}
+			retainerCard.SetOwner(pa.PlayerID())
+			attacker := makePerm("Craw Wurm", "{4}{G}{G}", 6, 4, pb.PlayerID())
+			g.AddToBattlefield(host, attacker)
+			retainer := g.PutOnBattlefield(retainerCard, pa.PlayerID())
+			if tc.otherHost {
+				other := makePerm("Other host", "", 2, 2, pa.PlayerID())
+				g.AddToBattlefield(other)
+				g.Attach(retainer.ID(), other.ID())
+			} else {
+				g.Attach(retainer.ID(), host.ID())
+			}
 
-	g.GetCombat().AddAttacker(attacker.ID(), pa.PlayerID())
-	g.GetCombat().AddBlocker(host.ID(), attacker.ID())
+			g.GetCombat().AddAttacker(attacker.ID(), pa.PlayerID())
+			g.GetCombat().AddBlocker(host.ID(), attacker.ID())
 
-	start := New(ai.MidrangeWeighted)
-	action := start.PriorityAction(pa, g, 0, false)
+			start := New(ai.MidrangeWeighted)
+			action := start.PriorityAction(pa, g, 0, false)
 
-	if action.Type != interactive.ActionActivateAbility {
-		t.Fatalf("expected attached regeneration activation, got %+v", action)
-	}
-	if action.PermanentID != retainer.ID() {
-		t.Fatalf("expected activation from retainer aura, got %v", action.PermanentID)
-	}
-	if len(action.Targets) != 0 {
-		t.Fatalf("expected no targets for attached regeneration ability, got %+v", action.Targets)
+			if !tc.want {
+				if action.Type == interactive.ActionActivateAbility && action.PermanentID == retainer.ID() {
+					t.Fatalf("unexpected regeneration activation: %+v", action)
+				}
+				return
+			}
+			if action.Type != interactive.ActionActivateAbility {
+				t.Fatalf("expected attached regeneration activation, got %+v", action)
+			}
+			if action.PermanentID != retainer.ID() {
+				t.Fatalf("expected activation from retainer aura, got %v", action.PermanentID)
+			}
+			if len(action.Targets) != 0 {
+				t.Fatalf("expected no targets for attached regeneration ability, got %+v", action.Targets)
+			}
+		})
 	}
 }
 
@@ -830,11 +879,14 @@ func TestPriorityAction_DoesNotRegenerateAgainstExile(t *testing.T) {
 	skeleton := regenerator("Drudge Skeletons", 1, 1, pa.PlayerID())
 	g.AddToBattlefield(skeleton)
 
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	spell := dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))
 	g.PushStack(&mage.StackObject{
-		ID:         uuid.New(),
-		Controller: pb.PlayerID(),
-		Effects:    []mage.Effect{mage.ExileTarget()},
-		Targets:    []uuid.UUID{skeleton.ID()},
+		ID:          uuid.New(),
+		Controller:  pb.PlayerID(),
+		Effects:     spell.Effects(),
+		TargetSpecs: spell.Targets(),
+		Targets:     []uuid.UUID{skeleton.ID()},
 	})
 
 	start := New(ai.MidrangeWeighted)

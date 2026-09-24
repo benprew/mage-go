@@ -81,13 +81,14 @@ func registerLands() {
 
 	// Oracle: "{T}: Add {C}. {T}: Regenerate target Elephant."
 	Register("Elephant Graveyard", func() Card {
+		elephant := TargetPermanent("elephant", HasSubType("Elephant"))
 		return NewLand("Elephant Graveyard",
 			WithManaAbility(Colorless),
-			WithActivatedAbility(
-				RegenerateTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(HasSubType("Elephant"))),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				Regenerate(elephant),
+				WithTargets(elephant),
+			)),
 		)
 	})
 

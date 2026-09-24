@@ -677,6 +677,64 @@ func TestHelmOfChatzuk(t *testing.T) {
 	})
 }
 
+func TestTemporaryKeywordArtifactsLifetime(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		cost    int
+		keyword core.Attr
+	}{
+		{"Flying Carpet", 2, core.Flying},
+		{"Helm of Chatzuk", 1, core.Banding},
+	} {
+		for _, change := range []string{"source before", "source after", "target before", "target after", "phase cycle", "none"} {
+			t.Run(tc.name+"/"+change, func(t *testing.T) {
+				g := gametest.NewTestGame(t)
+				sourceID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, tc.name)
+				targetID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+				card := g.FindPermanent(targetID).Card
+				a, b := g.GetPlayer(gametest.PlayerA), g.GetPlayer(gametest.PlayerB)
+				a.ManaPool().Add(core.Colorless, tc.cost)
+				g.SetStep(core.PrecombatMain)
+				if err := g.ActivateAbilityByIndex(a.PlayerID(), sourceID, 0, []uuid.UUID{targetID}); err != nil {
+					t.Fatal(err)
+				}
+				g.AssertTapped(gametest.PlayerA, tc.name, true)
+				if a.ManaPool().TotalMana() != 0 {
+					t.Fatal("activation did not pay the mana cost")
+				}
+				if change == "source before" {
+					g.RemoveFromBattlefield(g.FindPermanent(sourceID))
+				}
+				if change == "target before" {
+					g.RemoveFromBattlefield(g.FindPermanent(targetID))
+					g.PutOnBattlefield(card, b.PlayerID())
+				}
+				g.ResolveStack()
+				if change == "source after" {
+					g.RemoveFromBattlefield(g.FindPermanent(sourceID))
+				}
+				if change == "target after" {
+					g.RemoveFromBattlefield(g.FindPermanent(targetID))
+					g.PutOnBattlefield(card, b.PlayerID())
+				}
+				if change == "phase cycle" {
+					g.PhaseIn(g.PhaseOut(targetID))
+				}
+				g.ApplyContinuousEffects()
+				want := change != "target before" && change != "target after"
+				g.AssertHasAbility(gametest.PlayerB, "Grizzly Bears", tc.keyword, want)
+				clone := g.Clone()
+				clone.GetEffects().RemoveEndOfTurn()
+				clone.ApplyContinuousEffects()
+				if clone.FindPermanent(targetID).HasKeyword(tc.keyword) {
+					t.Fatal("keyword survived end of turn")
+				}
+				g.AssertHasAbility(gametest.PlayerB, "Grizzly Bears", tc.keyword, want)
+			})
+		}
+	}
+}
+
 func TestGlassesOfUrza(t *testing.T) {
 	t.Run("taps_to_look", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

@@ -90,6 +90,7 @@ func registerCreatures() {
 	// {T}: This creature deals 1 damage to target player or planeswalker.
 	// {1}{W}{W}, {T}: Return target creature an opponent controls to its owner's hand.
 	Register("Witch Hunter", func() Card {
+		creature := TargetPermanent("creature", IsCreature, TargetOpponentControls())
 		return NewCreature("Witch Hunter", "{2}{W}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
 			WithActivatedAbility(
@@ -97,12 +98,11 @@ func registerCreatures() {
 				TapCost(This),
 				WithTarget(TargetPlayerOrPlaneswalker()),
 			),
-			WithActivatedAbility(
-				ReturnToHandTarget(),
-				ManaCostOf("{1}{W}{W}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreatureOpponentControls()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}{W}{W}"), TapCost(This)),
+				ReturnToHand(creature),
+				WithTargets(creature),
+			)),
 		)
 	})
 
@@ -115,10 +115,7 @@ func registerCreatures() {
 	Register("Drowned", func() Card {
 		return NewCreature("Drowned", "{1}{U}", 1, 1,
 			WithSubTypes("Zombie"),
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
 
@@ -414,14 +411,14 @@ func registerCreatures() {
 	// 2/2
 	// {G}{G}{G}{G}, {T}: Regenerate target creature.
 	Register("Niall Silvain", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Niall Silvain", "{G}{G}{G}", 2, 2,
 			WithSubTypes("Ouphe"),
-			WithActivatedAbility(
-				RegenerateTarget(),
-				ManaCostOf("{G}{G}{G}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{G}{G}{G}{G}"), TapCost(This)),
+				Regenerate(creature),
+				WithTargets(creature),
+			)),
 		)
 	})
 

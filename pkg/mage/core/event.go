@@ -30,7 +30,7 @@ const (
 	EvtBecameUntapped     // fired when a permanent becomes untapped
 	EvtMainPhase          // fired at the beginning of a main phase
 	EvtCleanup            // fired at the beginning of the cleanup step (CR 514)
-	EvtScry               // fired when a player scries; Amount is the number of cards scried (CR 701.18)
+	EvtScry               // Amount records cards examined, including zero (CR 701.22d).
 	EvtDiscard            // fired when a player discards a card; PlayerID = discarding player, SourceID = card ID
 	EvtSacrifice          // fired when a permanent is sacrificed (named action per CR 701.16); PlayerID = controller, SourceID = sacrificed permanent ID
 	EvtBecomesTarget      // fired when a permanent or player becomes the target of a spell or ability (CR 603.6c, 119.5). SourceID = the spell/ability source (card or permanent), TargetID = the targeted object (permanent or player), PlayerID = the controller of the spell/ability, Flag = true if the source is an activated ability, false if a spell.
@@ -42,6 +42,7 @@ const (
 	EvtFight              // fired once per fight resolution (CR 701.14). SourceID = first fighter, TargetID = second fighter, PlayerID = controller of the fight effect (zero if unknown). Used by "whenever ~ fights" triggers like Neyith of the Dire Hunt.
 	EvtCardsLeftGraveyard // fired once per "burst" when one or more cards leave a player's graveyard for any other zone (exile via cost, return-to-hand, reanimate, etc.). PlayerID = graveyard owner whose cards left, Amount = number of cards that left in this burst. Used by "whenever one or more cards leave your graveyard" triggers (CR 603.10 — multiple cards moving from one zone to another via the same effect form a single zone-change "event group").
 	EvtTappedForMana      // fired after a mana ability with {T} in its cost resolves and produces mana (CR 106.12a). SourceID = tapped permanent, PlayerID = activating player, Amount = mana produced by that ability.
+	EvtSurveil            // Amount records cards examined, including zero (CR 701.25d).
 )
 
 // GameEvent carries data about a game event.

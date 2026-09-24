@@ -468,6 +468,9 @@ func (e *addManaEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	p.ManaPool().Add(e.color, e.amount)
+	if ctx.Game.resolution.manaTracking {
+		ctx.Game.resolution.manaProduced += max(e.amount, 0)
+	}
 	return nil
 }
 
@@ -478,6 +481,9 @@ func (e *addAnyManaEffect) Apply(ctx *EffectContext) error {
 	}
 	color := p.ChooseManaColor("add mana")
 	p.ManaPool().Add(color, e.amount)
+	if ctx.Game.resolution.manaTracking {
+		ctx.Game.resolution.manaProduced += max(e.amount, 0)
+	}
 	return nil
 }
 

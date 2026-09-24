@@ -8,7 +8,7 @@ import (
 )
 
 func TestComposableLifeDynamicMetadata(t *testing.T) {
-	effect := GainLifeFor(You, CountBattlefield(SelectController(), IsCreature))
+	effect := GainLifeFor(You, ValueAtResolution(CountBattlefield(SelectController(), IsCreature)))
 	info := InspectDefinition(effect)
 	if info.Properties.LifeGain != 0 || !strings.Contains(effect.Text(), "creature") {
 		t.Fatalf("dynamic life metadata = %+v, text = %q", info, effect.Text())
@@ -23,7 +23,7 @@ func TestComposableLifeValueContext(t *testing.T) {
 	g := NewGame(a, b)
 	creature := NewCreature("Value source", "{4}", 4, 4)
 	g.PutOnBattlefield(creature, b.PlayerID())
-	effect := GainLifeFor(You, TargetPermanentManaValue())
+	effect := GainLifeFor(You, ValueAtResolution(TargetPermanentManaValue()))
 	if err := ApplyEffect(g, effect, uuid.Nil, a.PlayerID(), []uuid.UUID{creature.ID()}); err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestComposableLifeControllerAndClone(t *testing.T) {
 	g := NewGame(a, b)
 	source := NewCreature("Source", "", 1, 1)
 	g.PutOnBattlefield(source, b.PlayerID())
-	effect := Sequence(LoseLifeFor(You, HalfRoundUp(PlayerLifeValue())), GainLifeFor(You, Fixed(2)))
+	effect := Sequence(LoseLifeFor(You, ValueAtResolution(HalfRoundUp(PlayerLifeValue()))), GainLifeFor(You, Fixed(2)))
 	clone := g.Clone()
 	for _, game := range []*Game{g, clone} {
 		if err := ApplyEffect(game, effect, source.ID(), a.PlayerID(), []uuid.UUID{b.PlayerID()}); err != nil {

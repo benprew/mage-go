@@ -82,13 +82,13 @@ func GeneratePriorityMoves(g *mage.Game, p mage.Player, landsPlayed int, mainPha
 
 func abilityHasNonRedundantUse(g *mage.Game, playerID uuid.UUID, source *mage.Permanent, ability mage.ActivatedAbility) bool {
 	if len(ability.Targets()) == 0 {
-		return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), nil)
+		return !ai.AbilityActivationIsRedundant(g, playerID, source.ID(), ability.Effects(), nil, ability.Targets()...)
 	}
 	if len(ability.Targets()) != 1 {
 		return true
 	}
 	possible := ability.Targets()[0].Possible(playerID, source.Card, g)
-	return len(ai.NonRedundantKeywordGrantTargets(g, playerID, source.ID(), ability.Effects(), possible)) > 0
+	return len(ai.NonRedundantKeywordGrantTargets(g, playerID, source.ID(), ability.Effects(), possible, ability.Targets()...)) > 0
 }
 
 // GenerateAttackerSets produces a pruned set of attacker combinations.

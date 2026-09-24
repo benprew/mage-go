@@ -32,33 +32,70 @@ func TestSkipNextUntapFollowsPermanentAcrossControlChanges(t *testing.T) {
 	}
 }
 
-func TestSkipNextUntapRequiresAnUntapAttemptAndIsCloneSafe(t *testing.T) {
+func TestSkipNextUntapExpiresWithoutUntapAttempt(t *testing.T) {
+	for _, blocked := range []string{"untapped", "attribute", "limit"} {
+		t.Run(blocked, func(t *testing.T) {
+			g, _, _, perm := controllerTestGame(t)
+			g.SetActivePlayerIndex(0)
+			perm.Tapped = blocked != "untapped"
+			if blocked == "attribute" {
+				perm.GrantBaseAttr(AttrDoesNotUntap)
+			}
+			if blocked == "limit" {
+				g.effects.Rules.CreatureUntapMax = 0
+			}
+			g.SkipNextUntap(perm.ID())
+			g.doUntap()
+			if g.turns.HasSkipNextUntap(perm.ID()) {
+				t.Fatal("skip survived the specified untap step")
+			}
+			perm = g.MutablePermanent(perm.ID())
+			perm.RevokeBaseAttr(AttrDoesNotUntap)
+			g.effects.Rules.CreatureUntapMax = -1
+			perm.Tapped = true
+			g.doUntap()
+			if g.FindPermanent(perm.ID()).Tapped {
+				t.Fatal("expired skip blocked a later untap step")
+			}
+		})
+	}
+}
+
+func TestSkipNextUntapRepeatedApplicationsShareOneStep(t *testing.T) {
 	g, _, _, perm := controllerTestGame(t)
-	g.SetActivePlayerIndex(0)
+	perm.Tapped = true
+	g.SkipNextUntap(perm.ID())
 	g.SkipNextUntap(perm.ID())
 	g.doUntap()
-	perm = g.MutablePermanent(perm.ID())
-	perm.Tapped = true
-
-	clone := g.Clone()
-	clone.doUntap()
-	if !clone.FindPermanent(perm.ID()).Tapped {
-		t.Fatal("clone did not consume its skip")
-	}
-	clone.doUntap()
-	if clone.FindPermanent(perm.ID()).Tapped {
-		t.Fatal("clone skip was not consumed")
-	}
 	if !g.FindPermanent(perm.ID()).Tapped {
-		t.Fatal("clone untap leaked to original")
-	}
-	g.doUntap()
-	if !g.FindPermanent(perm.ID()).Tapped {
-		t.Fatal("untapped permanent incorrectly consumed original skip")
+		t.Fatal("permanent untapped during the blocked step")
 	}
 	g.doUntap()
 	if g.FindPermanent(perm.ID()).Tapped {
-		t.Fatal("original skip was not consumed")
+		t.Fatal("repeated applications blocked a second step")
+	}
+}
+
+func TestSkipNextUntapIsCloneSafe(t *testing.T) {
+	g, _, _, perm := controllerTestGame(t)
+	perm.Tapped = true
+	g.SkipNextUntap(perm.ID())
+	clone := g.Clone()
+	clone.doUntap()
+	clone.doUntap()
+	if clone.FindPermanent(perm.ID()).Tapped {
+		t.Fatal("clone skip did not expire")
+	}
+	if !g.FindPermanent(perm.ID()).Tapped || !g.turns.HasSkipNextUntap(perm.ID()) {
+		t.Fatal("clone consumed the original skip or untapped its permanent")
+	}
+	g.doUntap()
+	if !g.FindPermanent(perm.ID()).Tapped {
+		t.Fatal("original lost its skip")
+	}
+	g.doUntap()
+	if g.FindPermanent(perm.ID()).Tapped {
+		t.Fatal("original skip did not expire")
 	}
 }
 
@@ -138,5 +175,65 @@ func TestExchangeControlOfTargetsSharingPermanentTypeRevalidatesPair(t *testing.
 	}
 	if creature.ControllerID() != a.PlayerID() || artifact.ControllerID() != b.PlayerID() {
 		t.Fatal("nonmatching permanent types were exchanged")
+	}
+}
+
+func TestSkipNextUntapOtherUntapsAndStunCounters(t *testing.T) {
+	g, _, _, p := controllerTestGame(t)
+	p.Tapped = true
+	g.SkipNextUntap(p.ID())
+	if !g.UntapPermanent(p) || !g.turns.HasSkipNextUntap(p.ID()) {
+		t.Fatal("restriction blocked an effect untap or expired outside the step")
+	}
+	p = g.MutablePermanent(p.ID())
+	p.Tapped = true
+	p.AddCounter(Stun, 1)
+	g.doUntap()
+	p = g.FindPermanent(p.ID())
+	if !p.Tapped || p.Counters[Stun] != 1 {
+		t.Fatal("blocked untap consumed a stun counter")
+	}
+	g.doUntap()
+	p = g.FindPermanent(p.ID())
+	if !p.Tapped || p.Counters[Stun] != 0 {
+		t.Fatal("next untap did not use the stun counter")
+	}
+	g.doUntap()
+	if g.FindPermanent(p.ID()).Tapped {
+		t.Fatal("permanent did not untap after both restrictions ended")
+	}
+}
+
+func TestSkipNextUntapDepartureAndPhasing(t *testing.T) {
+	for _, change := range []string{"return", "phase cycle", "phased at step"} {
+		t.Run(change, func(t *testing.T) {
+			g, a, _, p := controllerTestGame(t)
+			id := p.ID()
+			p.Tapped = true
+			g.SkipNextUntap(id)
+			switch change {
+			case "return":
+				g.RemoveFromBattlefield(p)
+				g.PutOnBattlefield(p.Card, a.PlayerID()).Tapped = true
+			case "phase cycle":
+				g.PhaseIn(g.PhaseOut(id))
+			case "phased at step":
+				g.PhaseOut(id)
+			}
+			g.doUntap()
+			if change == "phased at step" {
+				g.PhaseIn([]uuid.UUID{id})
+			}
+			if got := g.FindPermanent(id).Tapped; got != (change != "return") {
+				t.Fatalf("tapped = %v after %s", got, change)
+			}
+			if g.turns.HasSkipNextUntap(id) {
+				t.Fatal("restriction survived the step")
+			}
+			g.doUntap()
+			if g.FindPermanent(id).Tapped {
+				t.Fatal("restriction applied to a later step")
+			}
+		})
 	}
 }

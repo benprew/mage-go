@@ -3,8 +3,6 @@ package mage
 import (
 	"fmt"
 
-	. "github.com/benprew/mage-go/pkg/mage/core"
-
 	"github.com/google/uuid"
 )
 
@@ -238,6 +236,10 @@ func (e *preventAllCombatDamageEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 
+func (e *preventAllCombatDamageEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "install-combat-prevention", Text: e.Text()}
+}
+
 type preventDamageToYouByCreaturesWithFlyingEffect struct{}
 
 // PreventDamageToYouByCreaturesWithFlying prevents all damage that would be dealt to the controller this turn by creatures with flying.
@@ -357,10 +359,7 @@ func (e *gainLifeTargetEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-	ctx.Game.PlayerGainLife(targetPlayer, amount)
-	if !ctx.Game.IsLichActive(targetPlayer.PlayerID()) {
-		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: targetPlayer.PlayerID(), Amount: amount})
-	}
+	ctx.Game.gainLifeWithEvent(targetPlayer, amount)
 	return nil
 }
 

@@ -197,34 +197,90 @@ func TestTriggerWithoutDeclaredTarget_PreservesAutoBind(t *testing.T) {
 	}
 }
 
-// TestTriggerWithDeclaredTarget_NoLegalTargets_DoesNotPrompt covers the edge
-// case where no legal targets exist; the controller is not prompted and the
-// trigger's stack object is left with a placeholder so the resolution path
-// still runs (and the effect can detect missing targets).
+// Required targets must be available before a trigger can stay on the stack.
 func TestTriggerWithDeclaredTarget_NoLegalTargets_DoesNotPrompt(t *testing.T) {
 	g, a, _ := newTriggerTargetGame()
-
 	called := false
-	effect := FuncEffect("note target", EffectProperties{},
-		func(g *Game, _, _ uuid.UUID, _ []uuid.UUID) error {
-			called = true
-			return nil
-		})
-
-	// Use an enchant-creature-style filter that no creatures can satisfy.
-	noCreatures := func() Target { return TargetCreature() }
-
+	effect := FuncEffect("note target", EffectProperties{}, func(*Game, uuid.UUID, uuid.UUID, []uuid.UUID) error {
+		called = true
+		return nil
+	})
 	src := NewEnchantment("Synthetic Source 5", "{1}")
 	src.SetOwner(a.PlayerID())
-	src.AddAbility(EntersBattlefieldTrigger(effect, false).AddTarget(noCreatures()))
-
+	src.AddAbility(EntersBattlefieldTrigger(effect, false).AddTarget(TargetCreature()))
 	g.PutOnBattlefield(src, a.PlayerID())
-	g.ResolveStack()
-
-	if len(a.calls) != 0 {
-		t.Errorf("expected no ChooseTargets prompt when no legal targets exist, got %d", len(a.calls))
+	g.PutTriggersOnStack()
+	if g.StackSize() != 0 {
+		t.Fatal("trigger with no legal target remained on the stack")
 	}
-	// Effect should still resolve (with nil/placeholder target); fizzling is
-	// covered by isTargetStillLegal at resolution-time for normal cases.
-	_ = called
+	g.ResolveStack()
+	if len(a.calls) != 0 || called {
+		t.Fatal("impossible target prompted or resolved")
+	}
+}
+
+func TestTriggerRequiredTargetGroups(t *testing.T) {
+	for _, scenario := range []string{"optional empty", "insufficient", "later group empty", "random empty", "modal empty", "legal"} {
+		t.Run(scenario, func(t *testing.T) {
+			g, a, b := newTriggerTargetGame()
+			called := false
+			effect := FuncEffect("note target", EffectProperties{}, func(*Game, uuid.UUID, uuid.UUID, []uuid.UUID) error {
+				called = true
+				return nil
+			})
+			src := NewEnchantment("Source", "")
+			src.SetOwner(a.PlayerID())
+			trigger := EntersBattlefieldTrigger(effect, false)
+			switch scenario {
+			case "optional empty":
+				trigger.AddTarget(TargetUpToNCreatures(1))
+			case "insufficient":
+				g.PutOnBattlefield(NewCreature("Candidate", "", 1, 1), b.PlayerID())
+				trigger.AddTarget(TargetNCreatures(2))
+			case "later group empty":
+				trigger.AddTarget(TargetPlayer()).AddTarget(TargetCreature())
+			case "random empty":
+				trigger.AddTarget(TargetRandom(TargetCreature()))
+			case "modal empty":
+				trigger.WithModes(
+					Mode{Label: "First", Targets: []Target{TargetCreature()}, Effects: []Effect{effect}},
+					Mode{Label: "Second", Targets: []Target{TargetCreature()}, Effects: []Effect{effect}},
+				)
+			case "legal":
+				trigger.AddTarget(TargetPlayer())
+			}
+			src.AddAbility(trigger)
+			g.PutOnBattlefield(src, a.PlayerID())
+			g.PutTriggersOnStack()
+			legal := scenario == "optional empty" || scenario == "legal"
+			if (g.StackSize() == 1) != legal {
+				t.Fatalf("unexpected stack size %d", g.StackSize())
+			}
+			g.ResolveStack()
+			if called != legal {
+				t.Fatal("wrong resolution result")
+			}
+		})
+	}
+}
+
+func TestStateTriggerWithoutLegalTargetRearms(t *testing.T) {
+	g, a, b := newTriggerTargetGame()
+	target := DeclarePermanentTarget("creature", IsCreature)
+	src := NewEnchantment("Watcher", "", WithAbility(WhenState(
+		ControlsNone(IsLand), Destroy(target), WithTargets(target),
+	)))
+	src.SetOwner(a.PlayerID())
+	g.PutOnBattlefield(src, a.PlayerID())
+	g.PutTriggersOnStack()
+	if g.StackSize() != 0 {
+		t.Fatal("impossible state trigger remained on the stack")
+	}
+	creature := NewCreature("Candidate", "", 1, 1)
+	g.PutOnBattlefield(creature, b.PlayerID())
+	g.CheckStateTriggers()
+	g.PutTriggersOnStack()
+	if g.StackSize() != 1 || g.StackPeek().Targets[0] != creature.ID() {
+		t.Fatal("removed state trigger did not rearm")
+	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 var triggerLifeDiscardSacrificeOnce sync.Once
@@ -30,9 +31,10 @@ func registerTriggerLifeDiscardSacrificeCards() {
 
 		// "Whenever an opponent loses life, you gain that much life."
 		reg("Trig Blood Drinker", func() mage.Card {
-			return mage.NewEnchantment("Trig Blood Drinker", "{2}{B}{B}",
-				mage.WithAbility(mage.WheneverOpponentLosesLifeTrigger(
-					mage.GainLifeTarget(mage.EventAmountValue()), false)))
+			player, amount := dsl.BindPlayer("opponent"), dsl.BindNumber("lost")
+			return dsl.NewEnchantment("Trig Blood Drinker", "{2}{B}{B}",
+				dsl.WithAbility(dsl.WhenEvent(dsl.OpponentLosesLife(player).WithAmount(amount),
+					dsl.GainLife(dsl.You, dsl.FromNumber(amount)))))
 		})
 
 		// "Whenever a player loses life, that player draws a card." (sentinel)
@@ -145,9 +147,8 @@ func TestWheneverYouGainLifeTrigger_DoesNotFireOnOpponentGain(t *testing.T) {
 	g.AssertLife(PlayerB, 23)
 }
 
-// TestWheneverOpponentLosesLifeTrigger_FiresOnLifeLoss verifies that an
-// opponent-life-loss trigger fires when an opponent loses life directly.
-func TestWheneverOpponentLosesLifeTrigger_FiresOnLifeLoss(t *testing.T) {
+// TestOpponentLosesLife_FiresOnLifeLoss checks direct life loss.
+func TestOpponentLosesLife_FiresOnLifeLoss(t *testing.T) {
 	registerTriggerLifeDiscardSacrificeCards()
 
 	g := NewTestGame(t)
@@ -163,9 +164,8 @@ func TestWheneverOpponentLosesLifeTrigger_FiresOnLifeLoss(t *testing.T) {
 	g.AssertLife(PlayerA, 21)
 }
 
-// TestWheneverOpponentLosesLifeTrigger_FiresOnDamage verifies that damage to a
-// player (CR 119.9) fires opponent-life-loss triggers.
-func TestWheneverOpponentLosesLifeTrigger_FiresOnDamage(t *testing.T) {
+// TestOpponentLosesLife_FiresOnDamage checks life loss from damage (CR 119.2).
+func TestOpponentLosesLife_FiresOnDamage(t *testing.T) {
 	registerTriggerLifeDiscardSacrificeCards()
 
 	g := NewTestGame(t)

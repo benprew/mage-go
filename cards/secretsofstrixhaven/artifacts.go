@@ -1,10 +1,11 @@
 package secretsofstrixhaven
 
 import (
+	"github.com/google/uuid"
+
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/dsl"
-	"github.com/google/uuid"
 )
 
 func init() {
@@ -55,26 +56,13 @@ func registerArtifacts() {
 	// Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.
 	// {1}{B}{G}, {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.
 	Register("Cauldron of Essence", func() Card {
-		drainEffect := FuncEffect(
-			"each opponent loses 1 life and you gain 1 life",
-			EffectProperties{Outcome: OutcomeBenefit},
-			func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-				opp := g.GetOpponent(controller)
-				if opp != nil {
-					g.PlayerLoseLife(opp, 1)
-				}
-				ctrl := g.GetPlayer(controller)
-				if ctrl != nil {
-					g.PlayerGainLife(ctrl, 1)
-				}
-				return nil
-			},
-		)
 		return NewArtifact("Cauldron of Essence", "{1}{B}{G}",
-			WithAbility(
-				AnyCreatureDiesTrigger(drainEffect, false).
-					AndConditionData(EventPlayerIsController{}),
-			),
+			WithAbility(dsl.WhenEvent(dsl.CreatureYouControlDies(),
+				dsl.Sequence(
+					dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(1)),
+					dsl.GainLife(dsl.You, dsl.Fixed(1)),
+				),
+			)),
 			WithActivatedAbility(
 				ReturnFromGraveyardToBattlefield(),
 				ManaCostOf("{1}{B}{G}"),
@@ -148,8 +136,7 @@ func registerArtifacts() {
 	Register("Resonating Lute", func() Card {
 		// XXX: "Lands you control have '{T}: Add two mana of any one color.
 		// Spend this mana only to cast instant and sorcery spells.'" —
-		// GrantActivatedAbilityToAll only works for creatures, not lands.
-		// Additionally, mana spend restrictions are not supported in the engine.
+		// Mana spend restrictions are not supported in the engine.
 		// The land mana ability grant is not implemented.
 		drawCondition := func(g *Game, src *Permanent, controller uuid.UUID) bool {
 			p := g.GetPlayer(controller)

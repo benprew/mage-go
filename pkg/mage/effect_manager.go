@@ -383,7 +383,8 @@ func (em *EffectManager) SourceTapMaintainedStatus(g *Game, sourceID uuid.UUID) 
 func (em *EffectManager) Remove(sourceID uuid.UUID) {
 	filtered := em.effects[:0]
 	for _, e := range em.effects {
-		if e.SourceID() != sourceID {
+		independent, ok := e.(interface{ survivesSourceExit() bool })
+		if e.SourceID() != sourceID || (ok && independent.survivesSourceExit()) {
 			filtered = append(filtered, e)
 		}
 	}
@@ -541,7 +542,7 @@ func (em *EffectManager) Apply(g *Game) {
 	active := em.effects[:0]
 	for _, e := range em.effects {
 		dur := e.GetDuration()
-		if dur == EndOfTurn || dur == EndOfCombat || dur == Indefinite || g.FindPermanent(e.SourceID()) != nil {
+		if dur == EndOfTurn || dur == EndOfCombat || dur == Indefinite || g.FindPermanentIncludingPhased(e.SourceID()) != nil {
 			active = append(active, e)
 		}
 	}
@@ -784,6 +785,16 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 	}
 	applied := make(map[ReplacementEffect]bool)
 	for action != nil {
+		switch damage := action.(type) {
+		case *DamageToPlayerAction:
+			if damage.Amount() <= 0 {
+				return nil
+			}
+		case *DamageToCreatureAction:
+			if damage.Amount() <= 0 {
+				return nil
+			}
+		}
 		var candidates []ReplacementEffect
 		seen := make(map[ReplacementEffect]bool)
 		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {

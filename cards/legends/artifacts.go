@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	mage "github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 
@@ -287,32 +288,17 @@ func registerArtifacts() {
 	// Artifact
 	// {4}, {T}: Put a matrix counter on target creature and that creature gains "Remove a matrix counter from this creature: Regenerate this creature." Activate only during your upkeep.
 	Register("Life Matrix", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Life Matrix", "{4}",
-			WithActivatedAbility(
-				FuncEffect("put a matrix counter on target creature and grant regeneration",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						target := g.MutablePermanent(targets[0])
-						if target == nil {
-							return nil
-						}
-						target.AddCounter(Matrix, 1)
-						ability := NewActivatedAbility(RegenerateSource(), RemoveCountersCost(Matrix, 1))
-						ability.SetSource(target.ID())
-						ability.SetController(target.ControllerID())
-						target.RuntimeAbilities = append(target.RuntimeAbilities, ability)
-						return nil
-					},
+			WithAbility(Activate(
+				Costs(Mana("{4}"), TapCost(This)),
+				Sequence(
+					AddCounters(creature, Matrix, Fixed(1)),
+					Until(Indefinite, ActivatedAbilityModification(creature,
+						Costs(RemoveCountersCost(Matrix, 1)), Regenerate(This))),
 				),
-				ManaCostOf("{4}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-				WithUpkeepOnly(),
-			),
-			// Grant "Remove a matrix counter: Regenerate" to all creatures with matrix counters
+				WithTargets(creature), OnlyDuring(core.Upkeep), OnlyOnYourTurn(),
+			)),
 		)
 	})
 

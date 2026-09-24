@@ -412,32 +412,6 @@ func PreventBlockingUntilEndOfTurn(permID uuid.UUID) ContinuousEffect {
 // FuncContinuousEffect-based effects (source on battlefield)
 // ---------------------------------------------------------------------------
 
-// GrantActivatedAbilityToAll grants an activated ability to all creatures matching filter.
-func GrantActivatedAbilityToAll(effect Effect, cost Cost, filter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-		for _, p := range g.zones.battlefield {
-			if !p.HasType(TypeCreature) {
-				continue
-			}
-			if p.ID() == sourceID {
-				continue // typically "other" creatures
-			}
-			if !filter.Match(p, g) {
-				continue
-			}
-			ab := NewActivatedAbility(effect, cost)
-			ab.source = p.ID()
-			ab.controller = p.ControllerID()
-			p = g.MutablePermanent(p.ID())
-			if p == nil {
-				continue
-			}
-			p.RuntimeAbilities = append(p.RuntimeAbilities, &grantedByEffect{Ability: ab})
-		}
-		return nil
-	})
-}
-
 // GrantTriggeredAbilityToAll grants a triggered ability to all permanents matching filter.
 // Each permanent gets its own copy of the triggered ability, allowing individual trigger
 // ordering (unlike a single batch trigger). The trigger is constructed from the provided

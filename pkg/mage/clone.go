@@ -2,6 +2,7 @@ package mage
 
 import (
 	"maps"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -31,6 +32,8 @@ func (g *Game) Clone() *Game {
 	c.triggers = g.triggers.Clone()
 	c.mana = g.mana.Clone()
 	c.damage = g.damage.Clone()
+	c.lifeGainModifiers = slices.Clone(g.lifeGainModifiers)
+	c.millModifiers = slices.Clone(g.millModifiers)
 	c.originalOwners = cloneUUIDMap(g.originalOwners)
 	if c.originalOwners == nil {
 		c.originalOwners = make(map[uuid.UUID]uuid.UUID)
@@ -137,6 +140,7 @@ func clonePermanentInto(dst, src *Permanent) {
 	*dst = Permanent{
 		Card:                       src.Card, // shared
 		incarnationID:              src.incarnationID,
+		attachedIncarnation:        src.attachedIncarnation,
 		computedController:         src.computedController,
 		baseController:             src.baseController,
 		Tapped:                     src.Tapped,
@@ -220,6 +224,8 @@ func cloneStackObject(obj *StackObject) *StackObject {
 	clone := &StackObject{
 		targetIncarnations: obj.targetIncarnations,
 		sourceIncarnation:  obj.sourceIncarnation,
+		capturedNumbers:    maps.Clone(obj.capturedNumbers),
+		capturedPermanents: maps.Clone(obj.capturedPermanents),
 		stateKey:           obj.stateKey,
 		ID:                 obj.ID,
 		Card:               obj.Card, // shared Card ref

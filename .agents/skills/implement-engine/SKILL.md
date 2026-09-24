@@ -13,12 +13,12 @@ When card work found the gap, read and preserve the fields defined by [../implem
 
 ## Workflow
 
-1. Read `pkg/mage/doc.go`, the relevant Oracle text, and only the rules sections needed for the capability.
+1. Read `docs/engine-rules-contracts.md` and `docs/dsl-reference.md`, the relevant Oracle text, and only the rules sections needed for the capability.
 2. Find related engine behavior and follow its ownership, state, event, cloning, and test patterns.
 3. Define observable requirements and interactions that distinguish complete behavior from the example card's happy path.
-4. Write focused engine tests and confirm that they fail for the expected reason. Use `gametest` and test-only cards when integration matters.
+4. Write exhaustive engine contract tests (Tier 1 of the testing pyramid) and confirm that they fail for the expected reason. Cover combinatorial edge cases: leave-and-return object identity, phasing status, clone isolation, APNAP priority, replacement rechecks, and rollback. Use `gametest` and synthetic/test-only cards so card authors can trust the primitive without writing duplicate card-level tests.
 5. Implement the smallest coherent reusable change. Add every required engine integration point and expose a concise card-facing API.
-6. Update `pkg/mage/doc.go` for new or changed card-facing behavior.
+6. Update `docs/engine-rules-contracts.md` and/or `docs/dsl-reference.md` for new or changed behavior.
 
 Do not put card-specific policy in the engine. Preserve compatibility when practical and report a necessary breaking API change.
 

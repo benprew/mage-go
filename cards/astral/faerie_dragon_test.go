@@ -102,6 +102,26 @@ func TestFaerieDragonRandomKeywordEffects(t *testing.T) {
 	}
 }
 
+func TestFaerieDragonTemporaryKeywordLifetime(t *testing.T) {
+	for _, tc := range []struct {
+		action  int
+		keyword core.Attr
+	}{{7, core.Flying}, {9, core.Banding}} {
+		t.Run(tc.keyword.String(), func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			sourceID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Faerie Dragon")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+			activateFaerieDragon(t, g, "Faerie Dragon", tc.action, 1)
+			g.RemoveFromBattlefield(g.FindPermanent(sourceID))
+			g.ApplyContinuousEffects()
+			g.AssertHasAbility(gametest.PlayerB, "Grizzly Bears", tc.keyword, true)
+			g.GetEffects().RemoveEndOfTurn()
+			g.ApplyContinuousEffects()
+			g.AssertHasAbility(gametest.PlayerB, "Grizzly Bears", tc.keyword, false)
+		})
+	}
+}
+
 func TestFaerieDragonRandomColorEffects(t *testing.T) {
 	for _, tc := range []struct {
 		action int
@@ -186,7 +206,6 @@ func TestFaerieDragonMayTapOrUntapRandomPermanent(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Faerie Dragon")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Sol Ring")
 		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
-		g.ChooseMode(gametest.PlayerA, 0)
 		activateFaerieDragon(t, g, "Faerie Dragon", 1, 1)
 		g.AssertTapped(gametest.PlayerB, "Sol Ring", true)
 	})
@@ -206,8 +225,112 @@ func TestFaerieDragonMayTapOrUntapRandomPermanent(t *testing.T) {
 		ringID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Sol Ring")
 		g.FindPermanent(ringID).Tapped = true
 		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(true)
-		g.ChooseMode(gametest.PlayerA, 1)
 		activateFaerieDragon(t, g, "Faerie Dragon", 1, 1)
 		g.AssertTapped(gametest.PlayerB, "Sol Ring", false)
+	})
+}
+
+func TestFaerieDragonTemporaryPTLifetime(t *testing.T) {
+	for _, tc := range []struct {
+		name                     string
+		action, power, toughness int
+	}{
+		{"growth", 8, 5, 5}, {"staff", 14, 0, 2}, {"blood lust", 2, 6, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			sourceID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Faerie Dragon")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+			activateFaerieDragon(t, g, "Faerie Dragon", tc.action, 1)
+			g.RemoveFromBattlefield(g.FindPermanent(sourceID))
+			g.ApplyContinuousEffects()
+			g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", tc.power, tc.toughness)
+			g.GetEffects().RemoveEndOfTurn()
+			g.ApplyContinuousEffects()
+			g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 2)
+		})
+	}
+}
+
+func TestFaerieDragonTemporaryPTRandomSubjects(t *testing.T) {
+	for _, action := range []int{8, 14} {
+		t.Run(map[int]string{8: "growth", 14: "staff"}[action], func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			sourceID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Faerie Dragon")
+			activateFaerieDragon(t, g, "Faerie Dragon", action, 0)
+			power, toughness := 4, 6
+			if action == 14 {
+				power, toughness = -1, 3
+			}
+			g.AssertPowerToughness(gametest.PlayerA, "Faerie Dragon", power, toughness)
+			g.RemoveFromBattlefield(g.FindPermanent(sourceID))
+			g.SetRandomResults([]int{1})
+			if err := applyFaerieDragonAction(g.Game, sourceID, g.GetPlayer(gametest.PlayerA).PlayerID(), action); err != nil {
+				t.Fatal(err)
+			}
+			if got := g.RandIntn(2); got != 1 {
+				t.Fatal("empty selection consumed a random value")
+			}
+		})
+	}
+}
+
+func TestFaerieDragonBloodLustBounds(t *testing.T) {
+	for _, tc := range []struct{ toughness, want int }{{-2, -2}, {0, 0}, {1, 1}, {2, 1}, {4, 1}, {5, 1}, {8, 4}} {
+		g := gametest.NewTestGame(t)
+		a := g.GetPlayer(gametest.PlayerA)
+		creature := mage.NewCreature("Subject", "", 2, tc.toughness)
+		g.PutOnBattlefield(creature, a.PlayerID())
+		g.SetRandomResults([]int{0, 1})
+		if err := applyFaerieDragonAction(g.Game, creature.ID(), a.PlayerID(), 2); err != nil {
+			t.Fatal(err)
+		}
+		for range 3 {
+			g.ApplyContinuousEffects()
+		}
+		p := g.FindPermanent(creature.ID())
+		if p.CurrentPower(g.Game) != 6 || p.CurrentToughness(g.Game) != tc.want {
+			t.Fatalf("initial toughness %d: got %d/%d, want 6/%d", tc.toughness, p.CurrentPower(g.Game), p.CurrentToughness(g.Game), tc.want)
+		}
+		if g.RandIntn(2) != 1 {
+			t.Fatal("choice did not consume exactly one random value")
+		}
+	}
+}
+
+func TestFaerieDragonBloodLustEmptySelection(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	source := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+	g.SetRandomResults([]int{1})
+	if err := applyFaerieDragonAction(g.Game, source, g.GetPlayer(gametest.PlayerA).PlayerID(), 2); err != nil {
+		t.Fatal(err)
+	}
+	if g.RandIntn(2) != 1 {
+		t.Fatal("empty selection consumed a random value")
+	}
+}
+
+func TestFaerieDragonUnsummonSelection(t *testing.T) {
+	t.Run("self", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Faerie Dragon")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Sol Ring")
+		activateFaerieDragon(t, g, "Faerie Dragon", 15, 0, 1)
+		g.AssertHandCount(gametest.PlayerA, "Faerie Dragon", 1)
+		g.AssertHandCount(gametest.PlayerB, "Sol Ring", 0)
+		if g.RandIntn(2) != 1 {
+			t.Fatal("selection did not consume exactly one random value")
+		}
+	})
+	t.Run("empty", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		source := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Sol Ring")
+		g.SetRandomResults([]int{1})
+		if err := applyFaerieDragonAction(g.Game, source, g.GetPlayer(gametest.PlayerA).PlayerID(), 15); err != nil {
+			t.Fatal(err)
+		}
+		if g.RandIntn(2) != 1 {
+			t.Fatal("empty selection consumed a random value")
+		}
 	})
 }

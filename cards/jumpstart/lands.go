@@ -114,14 +114,13 @@ func registerLands() {
 	// {T}: Add {C}.
 	// {1}{U}, {T}: Return target Wizard you control to its owner's hand.
 	Register("Riptide Laboratory", func() Card {
+		wizard := TargetPermanent("wizard", HasSubType("Wizard"), TargetYouControl())
 		return NewLand("Riptide Laboratory",
 			WithManaAbility(Colorless),
-			WithActivatedAbility(
-				ReturnToHandTarget(),
-				ManaCostOf("{1}{U}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreatureYouControl(HasSubType("Wizard"))),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}{U}"), TapCost(This)),
+				ReturnToHand(wizard), WithTargets(wizard),
+			)),
 		)
 	})
 

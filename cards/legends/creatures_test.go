@@ -2323,6 +2323,17 @@ func TestPixieQueen(t *testing.T) {
 }
 
 func TestHyperionBlacksmith(t *testing.T) {
+	t.Run("may decline", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hyperion Blacksmith")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Relic Barrier")
+		g.GetPlayer(gametest.PlayerA).QueueMayAbilityChoices(false)
+		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Hyperion Blacksmith", "tap or untap", "Relic Barrier")
+		g.StopAt(3, core.PostcombatMain)
+		g.Execute()
+		g.AssertTapped(gametest.PlayerB, "Relic Barrier", false)
+		g.AssertTapped(gametest.PlayerA, "Hyperion Blacksmith", true)
+	})
 	t.Run("tap target artifact", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hyperion Blacksmith")

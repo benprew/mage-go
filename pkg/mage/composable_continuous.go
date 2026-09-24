@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -16,25 +17,26 @@ type ContinuousModification interface {
 type layerModification struct {
 	subject          PermanentRef
 	subjects         PermanentSet
-	power, toughness ValueSource
+	power, toughness ResolutionValue
 	keyword          Attr
 	layer            Layer
 	colors           []Color
 	family           SubtypeFamily
 	subtypes         []string
 	addSubtypes      bool
+	ability          *ActionDefinition
 }
 
 func (*layerModification) continuousModification()            {}
 func (m *layerModification) modification() *layerModification { return m }
 
 // ModifyPT adds power and toughness to one permanent.
-func ModifyPT(subject PermanentRef, power, toughness ValueSource) ContinuousModification {
+func ModifyPT(subject PermanentRef, power, toughness ResolutionValue) ContinuousModification {
 	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT}
 }
 
 // ModifyEachPT applies a power and toughness modification to a permanent set.
-func ModifyEachPT(subjects PermanentSet, power, toughness ValueSource) ContinuousModification {
+func ModifyEachPT(subjects PermanentSet, power, toughness ResolutionValue) ContinuousModification {
 	return &layerModification{subjects: subjects, power: power, toughness: toughness, layer: LayerPT}
 }
 
@@ -46,6 +48,34 @@ func GrantKeywordModification(subject PermanentRef, keyword Attr) ContinuousModi
 // GrantEachKeyword grants a keyword to each member of a permanent set.
 func GrantEachKeyword(subjects PermanentSet, keyword Attr) ContinuousModification {
 	return &layerModification{subjects: subjects, keyword: keyword, layer: LayerAbility}
+}
+
+// ActivatedAbilityModification gives a permanent an activated ability in layer 6.
+// Install it with Until, UntilSourceLeaves, or While.
+func ActivatedAbilityModification(subject PermanentRef, costs CostGroup, body ResolvingEffect, options ...GrantedActivationOption) ContinuousModification {
+	rule := GrantActivatedAbility(subject, costs, body, options...).(*grantedActivationRule)
+	return &layerModification{subject: subject, ability: rule.ability, layer: LayerAbility}
+}
+
+// ActivatedModesModification gives a permanent a modal activated ability in layer 6.
+// Install it with Until, UntilSourceLeaves, or While. Each mode declares its targets.
+func ActivatedModesModification(subject PermanentRef, costs CostGroup, options ...ModalActivationOption) ContinuousModification {
+	rule := GrantActivatedModes(subject, costs, options...).(*grantedActivationRule)
+	return &layerModification{subject: subject, ability: rule.ability, layer: LayerAbility}
+}
+
+// EachActivatedAbilityModification gives each set member an activated ability.
+// Until captures the set at resolution. While evaluates the set in layer 6.
+func EachActivatedAbilityModification(subjects PermanentSet, costs CostGroup, body ResolvingEffect, options ...GrantedActivationOption) ContinuousModification {
+	rule := GrantEachActivatedAbility(subjects, costs, body, options...).(*grantedActivationRule)
+	return &layerModification{subjects: subjects, ability: rule.ability, layer: LayerAbility}
+}
+
+// EachActivatedModesModification gives each set member a modal activated ability.
+// Each recipient has separate targets, costs, and activation counts.
+func EachActivatedModesModification(subjects PermanentSet, costs CostGroup, options ...ModalActivationOption) ContinuousModification {
+	rule := GrantEachActivatedModes(subjects, costs, options...).(*grantedActivationRule)
+	return &layerModification{subjects: subjects, ability: rule.ability, layer: LayerAbility}
 }
 
 // SetColors replaces a permanent's colors. An empty list makes it colorless.
@@ -85,6 +115,9 @@ func (m *layerModification) inspectDefinition() definitionNode {
 		subject = m.subjects
 	}
 	n := definitionNode{Role: "continuous-modification", Text: m.description(), children: []definitionEdge{{"subject", subject}}}
+	if m.ability != nil {
+		n.children = append(n.children, definitionEdge{"ability", grantedActivationDefinition{m.ability}})
+	}
 	if m.layer == LayerPT {
 		n.children = append(n.children, definitionEdge{"power", m.power}, definitionEdge{"toughness", m.toughness})
 	}
@@ -100,6 +133,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.ability != nil {
+			return "grant activated ability"
+		}
 		return fmt.Sprintf("grant %v", m.keyword)
 	default:
 		return "modify power and toughness"
@@ -124,6 +160,8 @@ type capturedModification struct {
 	family           SubtypeFamily
 	subtypes         []string
 	addSubtypes      bool
+	ability          *ActionDefinition
+	grantID          uuid.UUID
 }
 
 func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
@@ -131,9 +169,12 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
 		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		if m.ability != nil {
+			v.ability, v.grantID = m.ability, uuid.New()
+		}
 		if m.layer == LayerPT {
-			v.power = m.power.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
-			v.toughness = m.toughness.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+			v.power = m.power.resolveValue(ctx)
+			v.toughness = m.toughness.resolveValue(ctx)
 		}
 		result = append(result, v)
 	}
@@ -150,7 +191,11 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 		p.powerBonus += v.power
 		p.toughBonus += v.toughness
 	case LayerAbility:
-		g.effects.GrantAttr(p.ID(), v.keyword)
+		if v.ability != nil {
+			installGrantedActivation(p, v.ability, v.grantID)
+		} else {
+			g.effects.GrantAttr(p.ID(), v.keyword)
+		}
 	case LayerColor:
 		colors := append([]Color(nil), v.colors...)
 		p.ColorOverride = &colors
@@ -209,7 +254,7 @@ func (r *continuousRule) staticEffects() []ContinuousEffect {
 			}
 		}
 		if len(mods) > 0 {
-			effects = append(effects, &composedLayerEffect{layer: layer, duration: WhileOnBattlefield, rule: r, modifications: mods})
+			effects = append(effects, &composedLayerEffect{layer: layer, duration: WhileOnBattlefield, rule: r, modifications: mods, grantID: uuid.New()})
 		}
 	}
 	return effects
@@ -239,12 +284,16 @@ type composedLayerEffect struct {
 	captured          []capturedModification
 	sourceBound       bool
 	sourceIncarnation uuid.UUID
+	grantID           uuid.UUID
 }
 
 func (e *composedLayerEffect) Text() string                 { return "continuous modification" }
 func (e *composedLayerEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *composedLayerEffect) GetLayer() Layer              { return e.layer }
 func (e *composedLayerEffect) GetDuration() Duration        { return e.duration }
+func (e *composedLayerEffect) survivesSourceExit() bool {
+	return e.rule == nil && !e.sourceBound
+}
 func (e *composedLayerEffect) IsActive(g *Game) bool {
 	if e.sourceBound {
 		p := g.FindPermanentIncludingPhased(e.sourceID)
@@ -273,8 +322,12 @@ func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 	child.sourceCaptured = true
 	child.sourceIncarnation = source.incarnationID
 	if e.rule.condition.checkState(ctx.Game, StateContext{SourceID: e.sourceID, ControllerID: child.Controller}) {
-		for _, m := range e.modifications {
+		for i, m := range e.modifications {
 			for _, v := range m.capture(&child) {
+				if v.ability != nil {
+					identity := fmt.Sprintf("%s/%s/%d", source.incarnationID, v.permanent.incarnation, i)
+					v.grantID = uuid.NewSHA1(e.grantID, []byte(identity))
+				}
 				v.apply(ctx.Game, e.layer)
 			}
 		}
@@ -307,10 +360,24 @@ func UntilSourceLeaves(_ sourceRef, modifications ...ContinuousModification) Res
 }
 
 func (e *untilEffect) Text() string {
-	if e.sourceBound {
-		return "apply modifications until this source leaves the battlefield"
+	var descriptions []string
+	for _, m := range e.modifications {
+		if !nilDefinition(m) {
+			descriptions = append(descriptions, m.modification().description())
+		}
 	}
-	return "apply temporary modifications"
+	body := strings.Join(descriptions, "; ")
+	if e.sourceBound {
+		return body + " until this source leaves the battlefield"
+	}
+	switch e.duration {
+	case EndOfTurn:
+		return body + " until end of turn"
+	case EndOfCombat:
+		return body + " until end of combat"
+	default:
+		return body + " indefinitely"
+	}
 }
 func (e *untilEffect) Properties() EffectProperties {
 	p := EffectProperties{Outcome: OutcomeBenefit}
@@ -327,11 +394,42 @@ func (e *untilEffect) Properties() EffectProperties {
 		}
 		if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword
+			if m.keyword == AttrMustBeBlockedIfAble {
+				p.Outcome = OutcomeDetriment
+			}
 		}
 		p.Mass = p.Mass || m.subjects != nil
 	}
 	return p
 }
+
+// KeywordGrantTargetIndex identifies one pure target keyword grant for AI checks.
+// Unknown target boundaries and compound modifications require full evaluation.
+func (e *untilEffect) KeywordGrantTargetIndex(targets []Target) (int, bool) {
+	if e.sourceBound || e.duration != EndOfTurn || len(e.modifications) != 1 || nilDefinition(e.modifications[0]) {
+		return 0, false
+	}
+	m := e.modifications[0].modification()
+	if m.layer != LayerAbility || m.keyword == 0 || m.subjects != nil {
+		return 0, false
+	}
+	subject, ok := m.subject.(*PermanentTargetBinding)
+	if !ok || subject == nil {
+		return 0, false
+	}
+	index := 0
+	for _, target := range targets {
+		if target == subject.targetDeclaration {
+			return index, true
+		}
+		if target.Min() < 0 || target.Min() != target.Max() {
+			return 0, false
+		}
+		index += target.Min()
+	}
+	return 0, false
+}
+
 func (e *untilEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "until", Text: e.Text()}
 	if e.sourceBound {

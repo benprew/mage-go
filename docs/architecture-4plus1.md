@@ -429,7 +429,7 @@ Scryfall
                               -> go test ./... and make lint
 ```
 
-`pkg/mage/doc.go` documents important engine contracts, while `pkg/mage/dsl/dsl.go` is the practical inventory of the card-author-facing surface. Comprehensive-rule details are indexed in `docs/comprehensive-rules-index.md`.
+`pkg/mage/doc.go` provides a high-level package overview, `docs/dsl-reference.md` details the card-author DSL, and `docs/engine-rules-contracts.md` documents continuous layers, LKI, and replacement systems. Comprehensive-rule details are indexed in `docs/comprehensive-rules-index.md`.
 
 ---
 
@@ -567,7 +567,7 @@ The scenarios connect the other four views through representative workflows.
 
 1. Fetch Oracle and catalog data from Scryfall.
 2. Generate set scaffolding with full Oracle comments.
-3. Read `pkg/mage/doc.go`, the DSL and relevant comprehensive-rule sections.
+3. Read `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and relevant comprehensive-rule sections.
 4. Write a failing `gametest.TestGame` scenario.
 5. Compose an existing action/effect/target/cost pipeline, or add exact engine support with engine tests.
 6. Run focused tests, `go test ./...` and `make lint`.

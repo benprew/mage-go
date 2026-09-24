@@ -795,10 +795,12 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
 	BaseTarget
-	controllerOnly bool
-	Filters        []PermanentFilter
-	opponentOnly   bool
-	opponentOwned  bool
+	controllerOnly  bool
+	controllerOwned bool
+	Filters         []PermanentFilter
+	opponentOnly    bool
+	opponentOwned   bool
+	opponentChooses bool
 }
 
 // TargetPermanent creates a target that selects any permanent on the battlefield,
@@ -859,6 +861,9 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 			continue
 		}
 		if t.opponentOnly && p.ControllerID() == controller {
+			continue
+		}
+		if t.controllerOwned && p.Card.Owner() != controller {
 			continue
 		}
 		if t.opponentOwned && p.Card.Owner() == controller {

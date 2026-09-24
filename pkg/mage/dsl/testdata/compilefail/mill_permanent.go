@@ -1,0 +1,4 @@
+package fixture
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+var _ = dsl.Mill(dsl.This, dsl.Fixed(2))
+// ERROR does not implement mage.PlayerRef

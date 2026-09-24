@@ -219,16 +219,13 @@ func registerEnchantments() {
 	// Enchanted creature gets +1/+1.
 	// Sacrifice this Aura: Regenerate enchanted creature.
 	Register("Thrull Retainer", withExpansion(func() Card {
+		host := BindPermanent("host")
 		return NewAura("Thrull Retainer", "{B}",
 			WithStaticAbility(BoostAttached(1, 1, AttachAura)),
-			WithActivatedAbility(
-				Pipeline("Regenerate enchanted creature",
-					EffectProperties{},
-					SnapshotAttached("attached"),
-					RegenerateGathered("attached"),
-				),
-				SacrificeSourceCost(),
-			),
+			WithAbility(Activate(Costs(SacrificeSourceCost()),
+				Regenerate(From(host)),
+				CapturePermanentBeforePayment(AttachedPermanent, host),
+			)),
 		)
 	}))
 

@@ -8,13 +8,13 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func tapThenFightPipeline() Effect {
+func tapThenFightPipeline(first, second PermanentRef) Effect {
 	return Pipeline("tap those creatures; they fight each other",
 		EffectProperties{Outcome: OutcomeDetriment, Taps: true},
 		SnapshotTarget(0, "first"),
 		SnapshotTarget(1, "second"),
-		TapGathered("first"),
-		TapGathered("second"),
+		TapSubject(first),
+		TapSubject(second),
 		FightGathered("first", "second"),
 	)
 }
@@ -28,7 +28,7 @@ func TestTapThenFightPipeline_TapsAndFightsTwoTargets(t *testing.T) {
 	second.SetOwner(b.PlayerID())
 	secondPerm := g.PutOnBattlefield(second, b.PlayerID())
 
-	err := ApplyEffect(g, tapThenFightPipeline(), uuid.New(), a.PlayerID(), []uuid.UUID{firstPerm.ID(), secondPerm.ID()})
+	err := applyTapThenFight(g, a.PlayerID(), []uuid.UUID{firstPerm.ID(), secondPerm.ID()})
 	if err != nil {
 		t.Fatalf("ApplyEffect: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestTapThenFightPipeline_UsesNormalProtectionAndPrevention(t *testing.T) {
 	secondPerm := g.PutOnBattlefield(second, b.PlayerID())
 	g.AddPreventionShield(firstPerm.ID(), 1)
 
-	err := ApplyEffect(g, tapThenFightPipeline(), uuid.New(), a.PlayerID(), []uuid.UUID{firstPerm.ID(), secondPerm.ID()})
+	err := applyTapThenFight(g, a.PlayerID(), []uuid.UUID{firstPerm.ID(), secondPerm.ID()})
 	if err != nil {
 		t.Fatalf("ApplyEffect: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestTapThenFightPipeline_OneIllegalTapsLegalTargetWithoutFight(t *testing.T
 	first.SetOwner(a.PlayerID())
 	firstPerm := g.PutOnBattlefield(first, a.PlayerID())
 
-	err := ApplyEffect(g, tapThenFightPipeline(), uuid.New(), a.PlayerID(), []uuid.UUID{firstPerm.ID(), uuid.Nil})
+	err := applyTapThenFight(g, a.PlayerID(), []uuid.UUID{firstPerm.ID(), uuid.Nil})
 	if err != nil {
 		t.Fatalf("ApplyEffect: %v", err)
 	}
@@ -108,4 +108,11 @@ func TestFightGathered_NoncreatureDoesNotFight(t *testing.T) {
 	if firstPerm.Damage != 0 {
 		t.Fatalf("legal target damage = %d, want no fight damage", firstPerm.Damage)
 	}
+}
+
+func applyTapThenFight(g *Game, controller uuid.UUID, targets []uuid.UUID) error {
+	first := DeclarePermanentTarget("first", IsCreature)
+	second := DeclarePermanentTarget("second", IsCreature)
+	g.resolution.targetSpecs = []Target{first.targetSpec(), second.targetSpec()}
+	return ApplyEffect(g, tapThenFightPipeline(first, second), uuid.New(), controller, targets)
 }

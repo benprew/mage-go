@@ -5,9 +5,7 @@ card effects in this engine. It replaces older closure-based patterns
 (`FuncEffect(func(g *Game, ...) error { ... })`) with composable data values
 that the executor interprets.
 
-If you've read `pkg/mage/doc.go`, this is the practical companion. `doc.go` is
-the broad API reference; this guide focuses specifically on **how to compose
-effects**.
+See `docs/dsl-reference.md` for the comprehensive card-author reference. `pkg/mage/doc.go` provides a high-level package overview; this guide focuses specifically on **how to compose effects**.
 
 ## Execution and composition
 
@@ -469,8 +467,8 @@ tracks which closure patterns still lack DSL equivalents.
 
 ## Where to look next
 
-- **`pkg/mage/doc.go`** — broad engine API: card constructors, costs, options,
-  layers, replacement effects, the `*Game` API surface.
+- **`docs/dsl-reference.md`** — comprehensive card DSL API: card constructors, costs, options, subjects, selectors, and triggers.
+- **`docs/engine-rules-contracts.md`** — continuous layers, replacement effects, LKI, and the `*Game` API surface.
 - **`pkg/mage/effect_pipeline.go`**, **`effect_pipeline_ext.go`** — pipeline
   primitives. Read these when writing a non-trivial card; the public functions
   are short and self-explanatory.

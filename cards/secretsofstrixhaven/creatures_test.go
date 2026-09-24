@@ -1972,8 +1972,8 @@ func TestBertaWiseExtrapolator_FractalAbility(t *testing.T) {
 // artifact creature.
 func TestBiblioplexTomekeeper_BaseStats(t *testing.T) {
 	g := gametest.NewTestGame(t)
-	// ETB: choose "do nothing" (mode index 2)
-	g.ChooseMode(gametest.PlayerA, 2)
+	// The prepared mode is unavailable without a prepared spell.
+	g.ChooseMode(gametest.PlayerA, 1)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Biblioplex Tomekeeper")
 	g.StopAt(1, core.EndStep)
 	g.Execute()

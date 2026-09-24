@@ -121,15 +121,12 @@ func registerCreatures() {
 	// Creature — Spirit
 	// 2/4
 	// Flying
-	// {U}{U}{U}: Regenerate Ghost Ship.
+	// {U}{U}{U}: Regenerate this creature.
 	Register("Ghost Ship", func() Card {
 		return NewCreature("Ghost Ship", "{2}{U}{U}", 2, 4,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{U}{U}{U}"),
-			),
+			WithAbility(Activate(Costs(Mana("{U}{U}{U}")), Regenerate(This))),
 		)
 	})
 
@@ -444,15 +441,12 @@ func registerCreatures() {
 	// Diabolic Machine {7}
 	// Artifact Creature — Construct
 	// 4/4
-	// {3}: Regenerate Diabolic Machine.
+	// {3}: Regenerate this creature.
 	Register("Diabolic Machine", func() Card {
 		return NewCreature("Diabolic Machine", "{7}", 4, 4,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				RegenerateSource(),
-				GenericCost(3),
-			),
+			WithAbility(Activate(Costs(Mana("{3}")), Regenerate(This))),
 		)
 	})
 }

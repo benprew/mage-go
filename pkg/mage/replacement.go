@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ import (
 type regenerationReplacement struct {
 	replacementBase
 	permanentID uuid.UUID
+	incarnation uuid.UUID
 	shields     int
 }
 
@@ -27,7 +29,7 @@ func (r *regenerationReplacement) Matches(a Action, g GameReader) bool {
 		return false
 	}
 	perm := g.FindPermanent(r.permanentID)
-	if perm == nil {
+	if perm == nil || perm.PhasedOut || perm.incarnationID != r.incarnation {
 		return false
 	}
 	return !perm.HasKeyword(CantRegenerate)
@@ -454,11 +456,11 @@ func (r *reverseDamageReplacement) Matches(a Action, _ GameReader) bool {
 
 func (r *reverseDamageReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
+	r.consumed = true
 	p := g.GetPlayer(r.playerID)
 	if p != nil {
-		p.GainLife(act.Amount())
+		g.gainLifeWithEvent(p, act.Amount())
 	}
-	r.consumed = true
 	return nil
 }
 
@@ -800,39 +802,58 @@ func (r *islandSanctuaryReplacement) Clone() ReplacementEffect {
 }
 
 // ---------------------------------------------------------------------------
-// Fasting: optional skip-draw to gain 2 life
+// Optional draw-step replacement with life gain
 // ---------------------------------------------------------------------------
 
-type fastingReplacement struct {
+type drawStepLifeReplacement struct {
 	replacementBase
-	playerID uuid.UUID
+	incarnation uuid.UUID
+	amount      int
+	ruleID      uuid.UUID
 }
 
-func (r *fastingReplacement) Matches(a Action, _ GameReader) bool {
-	act, ok := a.(*DrawCardAction)
+func (r *drawStepLifeReplacement) Matches(a Action, g GameReader) bool {
+	act, ok := a.(*beginDrawStepAction)
+	source := g.FindPermanent(r.sourceID)
+	return ok && source != nil && source.incarnationID == r.incarnation && act.PlayerID() == source.ControllerID()
+}
+
+func (r *drawStepLifeReplacement) Replace(a Action, g *Game) Action {
+	act, ok := a.(*beginDrawStepAction)
 	if !ok {
-		return false
-	}
-	return act.IsNormalDraw() && act.PlayerID() == r.playerID
-}
-
-func (r *fastingReplacement) Replace(a Action, g *Game) Action {
-	p := g.GetPlayer(r.playerID)
-	if p == nil {
 		return a
 	}
-	if !p.ChooseMayAbility("skip your draw step to gain 2 life") {
+	p := g.GetPlayer(act.PlayerID())
+	if p == nil || !p.ChooseMayAbility(fmt.Sprintf("skip your draw step to gain %d life", r.amount)) {
 		return a
 	}
-	g.PlayerGainLife(p, 2)
+	// CR 614.10b puts the gain in the next step that occurs.
+	g.turns.pendingStepLifeGains = append(g.turns.pendingStepLifeGains,
+		LifeGainAction{playerID: act.PlayerID(), amount: r.amount})
 	return nil
 }
 
-func (r *fastingReplacement) IsActive(g GameReader) bool {
-	return g.FindPermanent(r.sourceID) != nil
+func (r *drawStepLifeReplacement) IsActive(g GameReader) bool {
+	source := g.FindPermanent(r.sourceID)
+	if source == nil || source.PhasedOut || source.incarnationID != r.incarnation {
+		return false
+	}
+	if r.ruleID == uuid.Nil {
+		return true
+	}
+	for _, ability := range source.RuntimeAbilities {
+		if holder, ok := UnwrapAbility(ability).(*StaticAbilityHolder); ok {
+			for _, effect := range holder.Effects {
+				if rule, ok := effect.(*drawStepLifeContinuous); ok && rule.ruleID == r.ruleID {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
-func (r *fastingReplacement) Clone() ReplacementEffect {
+func (r *drawStepLifeReplacement) Clone() ReplacementEffect {
 	c := *r
 	return &c
 }

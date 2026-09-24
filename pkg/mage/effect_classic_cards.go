@@ -9,12 +9,6 @@ import (
 // AladdinsRingEffect deals 4 damage to any target.
 func AladdinsRingEffect() Effect { return DealDamage(Fixed(4)) }
 
-// AncestralRecallEffect has a target player draw three cards.
-func AncestralRecallEffect() Effect { return DrawCards(Fixed(3)) }
-
-// BoomerangEffect returns a target permanent to its owner's hand.
-func BoomerangEffect() Effect { return ReturnToHandTarget() }
-
 // BottleOfSuleimanEffect flips a coin, creating a 5/5 flying Djinn artifact
 // creature token on a win or dealing 5 damage to the controller on a loss.
 func BottleOfSuleimanEffect() Effect {
@@ -36,26 +30,8 @@ func CrumbleEffect() Effect {
 	)
 }
 
-// DisenchantEffect destroys a target artifact or enchantment.
-func DisenchantEffect() Effect { return DestroyTargetPermanent() }
-
-// DisruptingScepterEffect has a target player discard a card.
-func DisruptingScepterEffect() Effect { return DiscardCards(Fixed(1)) }
-
-// FissureEffect destroys a target creature or land without regeneration.
-func FissureEffect() Effect { return DestroyTargetNoRegen() }
-
-// FogEffect prevents all combat damage that would be dealt this turn.
-func FogEffect() Effect { return PreventAllCombatDamage() }
-
-// HealingSalveGainEffect has a target player gain 3 life.
-func HealingSalveGainEffect() Effect { return GainLifeTarget(Fixed(3)) }
-
 // HealingSalvePreventionEffect prevents the next 3 damage to a target this turn.
 func HealingSalvePreventionEffect() Effect { return PreventDamageToTarget(Fixed(3)) }
-
-// MillstoneEffect has a target player mill two cards.
-func MillstoneEffect() Effect { return MillTargetPlayer(Fixed(2)) }
 
 // NevinyrralsDiskEffect destroys all artifacts, creatures, and enchantments.
 func NevinyrralsDiskEffect() Effect {
@@ -150,38 +126,6 @@ func BerserkEffect() Effect {
 	)
 }
 
-// BloodLustEffect gives a target creature +4/-4 if its toughness is at least
-// five, or +4/-X where X leaves it with one toughness otherwise.
-func BloodLustEffect() Effect {
-	return FuncEffect("target creature gets +4/-4 or +4/-(toughness-1)", EffectProperties{Outcome: OutcomeDetriment}, func(g *Game, sourceID, _ uuid.UUID, targets []uuid.UUID) error {
-		if len(targets) == 0 {
-			return nil
-		}
-		permanent := g.FindPermanent(targets[0])
-		if permanent == nil {
-			return nil
-		}
-		toughnessChange := -4
-		if toughness := permanent.CurrentToughness(g); toughness < 5 {
-			toughnessChange = -(toughness - 1)
-		}
-		boost := TemporaryBoost(permanent.ID(), 4, toughnessChange)
-		boost.SetSourceID(sourceID)
-		g.AddContinuousEffect(boost)
-		g.ApplyContinuousEffects()
-		return nil
-	})
-}
-
-// FlyingCarpetEffect grants flying to a target creature until end of turn.
-func FlyingCarpetEffect() Effect { return GrantKeyword(Flying) }
-
-// GiantGrowthEffect gives a target creature +3/+3 until end of turn.
-func GiantGrowthEffect() Effect { return Boost(Fixed(3), Fixed(3)) }
-
-// HelmOfChatzukEffect grants banding to a target creature until end of turn.
-func HelmOfChatzukEffect() Effect { return GrantKeyword(Banding) }
-
 // HurrJackalEffect prevents a target creature from regenerating this turn.
 func HurrJackalEffect() Effect { return GrantKeyword(CantRegenerate) }
 
@@ -203,9 +147,6 @@ func ProdigalSorcererEffect() Effect { return DealDamage(Fixed(1)) }
 // until end of turn.
 func SorceressQueenEffect() Effect { return SetPTUntilEndOfTurn(0, 2, SelectTarget) }
 
-// StaffOfZegonEffect gives a target creature -2/-0 until end of turn.
-func StaffOfZegonEffect() Effect { return Boost(Fixed(-2), Fixed(0)) }
-
 // SwordsToPlowsharesEffect exiles a target creature and gives its controller
 // life equal to its power as it last existed on the battlefield.
 func SwordsToPlowsharesEffect() Effect {
@@ -220,9 +161,3 @@ func SwordsToPlowsharesEffect() Effect {
 
 // TawnosWandEffect makes a target creature unblockable until end of turn.
 func TawnosWandEffect() Effect { return MakeUnblockableUntilEndOfTurn() }
-
-// TwiddleEffect taps or untaps a target permanent.
-func TwiddleEffect() Effect { return TapOrUntapTarget() }
-
-// UnsummonEffect returns a target creature to its owner's hand.
-func UnsummonEffect() Effect { return ReturnToHandTarget() }

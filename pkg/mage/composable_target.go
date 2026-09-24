@@ -58,8 +58,31 @@ func (b *PermanentTargetBinding) inspectDefinition() definitionNode {
 type PlayerTargetBinding struct{ *targetDeclaration }
 
 // DeclarePlayerTarget declares one player target. DSL exports it as TargetPlayer.
-func DeclarePlayerTarget(name string) *PlayerTargetBinding {
-	return &PlayerTargetBinding{&targetDeclaration{name, TargetPlayer()}}
+func DeclarePlayerTarget(name string, options ...PlayerTargetOption) *PlayerTargetBinding {
+	spec := TargetPlayer()
+	for _, option := range options {
+		if nilDefinition(option) {
+			panic("targets: supply a non-nil player target option")
+		}
+		spec = option.applyPlayerTarget(spec)
+	}
+	return &PlayerTargetBinding{&targetDeclaration{name, spec}}
+}
+
+// PlayerTargetOption adds a restriction to a player target declaration.
+type PlayerTargetOption interface {
+	playerTargetOption()
+	applyPlayerTarget(Target) Target
+}
+
+type targetOpponentOnlyOption struct{}
+
+// TargetOpponentOnly restricts the target to an opponent of the ability controller.
+func TargetOpponentOnly() PlayerTargetOption                     { return targetOpponentOnlyOption{} }
+func (targetOpponentOnlyOption) playerTargetOption()             {}
+func (targetOpponentOnlyOption) applyPlayerTarget(Target) Target { return TargetOpponent() }
+func (targetOpponentOnlyOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-player", Text: "opponent"}
 }
 func (*PlayerTargetBinding) playerRef() {}
 func (b *PlayerTargetBinding) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
@@ -82,7 +105,7 @@ func targetReadNode(b *targetDeclaration, role string) definitionNode {
 
 type targetOptions struct{ bindings []TargetBinding }
 
-// WithTargets declares the targets of a spell or activated ability.
+// WithTargets declares targets for a spell, activation, or trigger.
 func WithTargets(bindings ...TargetBinding) targetOptions {
 	return targetOptions{append([]TargetBinding(nil), bindings...)}
 }
@@ -137,8 +160,20 @@ func declaredTargetNodes(targets []Target) []definitionEdge {
 }
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
+	if _, ok := b.spec.(*OpponentTarget); ok {
+		n.children = append(n.children, definitionEdge{"player", targetOpponentOnlyOption{}})
+	}
 	if spec, ok := b.spec.(*PermanentTarget); ok && spec.controllerOnly {
 		n.children = append(n.children, definitionEdge{"controller", targetYouControlOption{}})
+	}
+	if spec, ok := b.spec.(*PermanentTarget); ok && spec.opponentOnly {
+		n.children = append(n.children, definitionEdge{"controller", targetOpponentControlsOption{}})
+	}
+	if spec, ok := b.spec.(*PermanentTarget); ok && spec.controllerOwned {
+		n.children = append(n.children, definitionEdge{"owner", targetYouOwnOption{}})
+	}
+	if isOpponentChosenTarget(b.spec) {
+		n.children = append(n.children, definitionEdge{"chooser", targetChosenByOpponentOption{}})
 	}
 	if b.name == "" {
 		n.problem = "supply a target binding name"
@@ -252,8 +287,49 @@ func applyPermanentTargetOptions(t *PermanentTarget, options []PermanentTargetOp
 		}
 		option.applyPermanentTarget(t)
 	}
+	if t.controllerOnly && t.opponentOnly {
+		panic("targets: conflicting controller restrictions")
+	}
 }
 
 func (targetYouControlOption) inspectDefinition() definitionNode {
 	return definitionNode{Role: "target-controller", Text: "you control"}
+}
+
+type targetOpponentControlsOption struct{}
+
+// TargetOpponentControls restricts targets to permanents an opponent controls.
+func TargetOpponentControls() PermanentTargetOption                          { return targetOpponentControlsOption{} }
+func (targetOpponentControlsOption) permanentTargetOption()                  {}
+func (targetOpponentControlsOption) applyPermanentTarget(t *PermanentTarget) { t.opponentOnly = true }
+func (targetOpponentControlsOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-controller", Text: "an opponent controls"}
+}
+
+type targetChosenByOpponentOption struct{}
+
+// TargetChosenByOpponent lets the opponent choose the targets at stack placement.
+func TargetChosenByOpponent() PermanentTargetOption         { return targetChosenByOpponentOption{} }
+func (targetChosenByOpponentOption) permanentTargetOption() {}
+func (targetChosenByOpponentOption) applyPermanentTarget(t *PermanentTarget) {
+	t.opponentChooses = true
+}
+func (targetChosenByOpponentOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-chooser", Text: "opponent"}
+}
+
+// OpponentChoosesTarget reports which player must choose the targets.
+func (t *PermanentTarget) OpponentChoosesTarget() bool { return t.opponentChooses }
+
+// OpponentChoosesTarget keeps the chooser of the enclosed target specification.
+func (b *targetDeclaration) OpponentChoosesTarget() bool { return isOpponentChosenTarget(b.spec) }
+
+type targetYouOwnOption struct{}
+
+// TargetYouOwn restricts targets to permanents owned by the ability controller.
+func TargetYouOwn() PermanentTargetOption                          { return targetYouOwnOption{} }
+func (targetYouOwnOption) permanentTargetOption()                  {}
+func (targetYouOwnOption) applyPermanentTarget(t *PermanentTarget) { t.controllerOwned = true }
+func (targetYouOwnOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-owner", Text: "you own"}
 }

@@ -2,7 +2,6 @@ package mage
 
 import (
 	"fmt"
-	"math/rand"
 
 	"github.com/google/uuid"
 
@@ -75,29 +74,6 @@ func (e *discardCardsEffect) Text() string {
 }
 func (e *discardCardsEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-// discardRandomEffect forces an opponent to discard a card at random.
-type discardRandomEffect struct {
-	amount int
-	sel    PlayerSelector
-}
-
-// DiscardRandom creates an effect that forces a target player (or opponent) to discard cards at random.
-func DiscardRandom(amount int) *discardRandomEffect {
-	return &discardRandomEffect{amount: amount}
-}
-
-func (e *discardRandomEffect) Text() string {
-	return fmt.Sprintf("discard %d card(s) at random", e.amount)
-}
-func (e *discardRandomEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *discardRandomEffect) Targeting(sel PlayerSelector) *discardRandomEffect {
-	e.sel = sel
-	return e
 }
 
 // returnFromGraveyardEffect returns a target creature from graveyard to battlefield.
@@ -237,10 +213,13 @@ func Scry(amount ValueSource) Effect {
 }
 
 func (e *scryEffect) Text() string {
-	if _, ok := e.amount.(xValue); ok {
-		return "scry X"
+	if nilDefinition(e.amount) {
+		return "scry"
 	}
-	return fmt.Sprintf("scry %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return "scry " + e.amount.Text()
+}
+func (e *scryEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "scry", children: []definitionEdge{{"amount", e.amount}}}
 }
 func (e *scryEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
@@ -259,10 +238,13 @@ func Surveil(amount ValueSource) Effect {
 }
 
 func (e *surveilEffect) Text() string {
-	if _, ok := e.amount.(xValue); ok {
-		return "surveil X"
+	if nilDefinition(e.amount) {
+		return "surveil"
 	}
-	return fmt.Sprintf("surveil %d", e.amount.Resolve(nil, uuid.Nil, uuid.Nil, nil))
+	return "surveil " + e.amount.Text()
+}
+func (e *surveilEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "surveil", children: []definitionEdge{{"amount", e.amount}}}
 }
 func (e *surveilEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
@@ -476,28 +458,6 @@ func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-func (e *discardRandomEffect) Apply(ctx *EffectContext) error {
-	var targetPlayer Player
-	if len(ctx.Targets) > 0 {
-		targetPlayer = ctx.Game.GetPlayer(ctx.Targets[0])
-	}
-	if targetPlayer == nil {
-		targetPlayer = ctx.Game.GetOpponent(ctx.Controller)
-	}
-	if targetPlayer == nil {
-		return nil
-	}
-	for i := 0; i < e.amount; i++ {
-		hand := targetPlayer.Hand()
-		if len(hand) == 0 {
-			break
-		}
-		idx := rand.Intn(len(hand))
-		ctx.Game.PlayerDiscardByEffect(targetPlayer, hand[idx].ID(), ctx.SourceID)
-	}
-	return nil
-}
-
 func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
@@ -552,8 +512,8 @@ func (e *millTargetPlayerEffect) Apply(ctx *EffectContext) error {
 		amount := ctx.Game.ApplyMillModifiers(p.PlayerID(), baseAmount)
 		lib := p.Library()
 		for i := 0; i < amount && len(lib) > 0; i++ {
-			card := lib[len(lib)-1]
-			lib = lib[:len(lib)-1]
+			card := lib[0]
+			lib = lib[1:]
 			p.AddToGraveyard(card)
 		}
 		p.SetLibrary(lib)

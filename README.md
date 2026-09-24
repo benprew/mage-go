@@ -58,7 +58,7 @@ The project includes a pipeline for implementing entire card sets:
    go run ./cmd/genset "The Dark" data/DRK.json cards/thedark/
    ```
 
-3. **Implement** cards. Each card is implemented TDD-style: write a failing test that exercises the card's behavior, then implement the card to make it pass. The `pkg/mage/doc.go` file is the comprehensive API reference for all available effects, triggers, targets, and costs.
+3. **Implement** cards. Each card is implemented TDD-style: write a failing test that exercises the card's behavior, then implement the card to make it pass. The `docs/dsl-reference.md` file is the comprehensive API reference for all available effects, triggers, targets, and costs, with `docs/engine-rules-contracts.md` covering deep rules and continuous layer interactions.
 
 4. **Validate** completeness by checking every implementation against Scryfall Oracle text, auditing test coverage, and running the full test suite.
 

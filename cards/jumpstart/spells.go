@@ -124,7 +124,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(IsTapped), CompositeEffects(
 				"destroy tapped creature; gain 1 life per flying creature you control",
 				DestroyTarget(),
-				dsl.GainLife(dsl.You, CountBattlefield(SelectController(), And(IsCreature, HasKeywordFilter(Flying)))),
+				dsl.GainLife(dsl.You, dsl.ValueAtResolution(CountBattlefield(SelectController(), And(IsCreature, HasKeywordFilter(Flying))))),
 			)),
 		)
 	})
@@ -134,12 +134,12 @@ func registerSpells() {
 	// Target creature gets +1/+1 until end of turn.
 	// Draw a card.
 	Register("Aggressive Urge", func() Card {
-		return NewInstant("Aggressive Urge", "{1}{G}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+1/+1 and draw a card",
-				Boost(Fixed(1), Fixed(1)),
-				drawSelfCard(1),
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Aggressive Urge", "{1}{G}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Until(EndOfTurn, dsl.ModifyPT(creature, dsl.Fixed(1), dsl.Fixed(1))),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 
@@ -160,8 +160,9 @@ func registerSpells() {
 	// Sorcery
 	// Exile target creature or enchantment.
 	Register("Angelic Edict", func() Card {
+		target := dsl.TargetPermanent("exile subject", dsl.Or(dsl.IsCreature, dsl.IsEnchantment))
 		return NewSorcery("Angelic Edict", "{4}{W}",
-			NewTargetedSpell(TargetPermanent(Or(IsCreature, IsEnchantment)), ExileTarget()),
+			dsl.WithAbility(dsl.Spell(dsl.Exile(target), dsl.WithTargets(target))),
 		)
 	})
 
@@ -221,10 +222,14 @@ func registerSpells() {
 
 	// Bake into a Pie {2}{B}{B}
 	// Instant
-	// Destroy target creature. Create a Food token.
+	// Destroy target creature. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")
 	Register("Bake into a Pie", func() Card {
-		return NewInstant("Bake into a Pie", "{2}{B}{B}",
-			NewTargetedSpell(TargetCreature(), DestroyTarget(), CreateFoodToken()),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Bake into a Pie", "{2}{B}{B}",
+			dsl.WithAbility(dsl.Spell(
+				dsl.Sequence(dsl.Destroy(creature), dsl.CreateFoodToken()),
+				dsl.WithTargets(creature),
+			)),
 		)
 	})
 
@@ -265,12 +270,12 @@ func registerSpells() {
 	// Target creature gets -4/-0 until end of turn.
 	// Draw a card.
 	Register("Befuddle", func() Card {
-		return NewInstant("Befuddle", "{2}{U}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"-4/-0 and draw a card",
-				Boost(Fixed(-4), Fixed(0)),
-				drawSelfCard(1),
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Befuddle", "{2}{U}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Until(EndOfTurn, dsl.ModifyPT(creature, dsl.Fixed(-4), dsl.Fixed(0))),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 
@@ -284,7 +289,7 @@ func registerSpells() {
 				"1 damage, can't block, draw a card",
 				DealDamage(Fixed(1)),
 				cantBlockThisTurn(),
-				drawSelfCard(1),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
 			)),
 		)
 	})
@@ -294,9 +299,9 @@ func registerSpells() {
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Draw three cards.
 	Register("Blood Divination", func() Card {
-		return NewSorcery("Blood Divination", "{3}{B}",
-			NewSpellAbility(drawSelfCard(3)),
-			WithAdditionalCost(SacrificeCreatureCost()),
+		return dsl.NewSorcery("Blood Divination", "{3}{B}",
+			dsl.Spell(dsl.Draw(dsl.You, dsl.Fixed(3))),
+			dsl.WithAdditionalCost(dsl.SacrificeCreatureCost()),
 		)
 	})
 
@@ -305,9 +310,10 @@ func registerSpells() {
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Destroy target creature.
 	Register("Bone Splinters", func() Card {
-		return NewSorcery("Bone Splinters", "{B}",
-			NewTargetedSpell(TargetCreature(), DestroyTarget()),
-			WithAdditionalCost(SacrificeCreatureCost()),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewSorcery("Bone Splinters", "{B}",
+			dsl.Spell(dsl.Destroy(creature), dsl.WithTargets(creature)),
+			dsl.WithAdditionalCost(dsl.SacrificeCreatureCost()),
 		)
 	})
 
@@ -622,27 +628,17 @@ func registerSpells() {
 
 	// Enlarge {3}{G}{G}
 	// Sorcery
-	// Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able.
+	// Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able. (A creature with trample can deal excess combat damage to the player or planeswalker it's attacking.)
 	Register("Enlarge", func() Card {
-		return NewSorcery("Enlarge", "{3}{G}{G}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+7/+7, trample, must be blocked if able",
-				Boost(Fixed(7), Fixed(7)),
-				GrantKeyword(Trample),
-				FuncEffect(
-					"target creature must be blocked this turn if able",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						eff := TargetMustBeBlockedIfAble(targets[0], EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-						return nil
-					},
+		target := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewSorcery("Enlarge", "{3}{G}{G}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Until(EndOfTurn,
+					dsl.ModifyPT(target, dsl.Fixed(7), dsl.Fixed(7)),
+					dsl.GrantKeyword(target, Trample),
 				),
-			)),
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(target, AttrMustBeBlockedIfAble)),
+			), dsl.WithTargets(target)),
 		)
 	})
 
@@ -664,7 +660,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetSpellOnStack(creatureSpellFilter), CompositeEffects(
 				"counter creature spell, draw a card",
 				CounterSpell(),
-				drawSelfCard(1),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
 			)),
 		)
 	})
@@ -721,7 +717,7 @@ func registerSpells() {
 						return nil
 					},
 				),
-				drawSelfCard(1),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
 			),
 		)
 	})
@@ -883,7 +879,7 @@ func registerSpells() {
 	Register("Goblin Lore", func() Card {
 		return NewSorcery("Goblin Lore", "{1}{R}",
 			NewSpellAbility(
-				drawSelfCard(4),
+				dsl.Draw(dsl.You, dsl.Fixed(4)),
 				FuncEffect("discard three cards at random",
 					EffectProperties{Outcome: OutcomeDetriment},
 					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
@@ -1100,24 +1096,12 @@ func registerSpells() {
 	// Target creature must be blocked this turn if able.
 	// Draw a card.
 	Register("Irresistible Prey", func() Card {
-		return NewSorcery("Irresistible Prey", "{G}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"must be blocked if able, draw a card",
-				FuncEffect(
-					"target creature must be blocked this turn if able",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						eff := TargetMustBeBlockedIfAble(targets[0], EndOfTurn)
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-						return nil
-					},
-				),
-				drawSelfCard(1),
-			)),
+		target := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewSorcery("Irresistible Prey", "{G}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(target, AttrMustBeBlockedIfAble)),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(target)),
 		)
 	})
 
@@ -1173,12 +1157,12 @@ func registerSpells() {
 	// Return target nonland permanent to its owner's hand.
 	// Draw a card.
 	Register("Leave in the Dust", func() Card {
-		return NewInstant("Leave in the Dust", "{3}{U}",
-			NewTargetedSpell(TargetPermanent(Not(IsLand)), CompositeEffects(
-				"bounce nonland permanent and draw a card",
-				ReturnToHandTarget(),
-				drawSelfCard(1),
-			)),
+		nonland := dsl.TargetPermanent("nonland permanent", dsl.Not(dsl.IsLand))
+		return dsl.NewInstant("Leave in the Dust", "{3}{U}",
+			dsl.Spell(dsl.Sequence(
+				dsl.ReturnToHand(nonland),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(nonland)),
 		)
 	})
 
@@ -1709,30 +1693,14 @@ func registerSpells() {
 	// Sorcery
 	// Exile target creature. Put two loyalty counters on a planeswalker you control.
 	Register("Settle the Score", func() Card {
-		return NewSorcery("Settle the Score", "{2}{B}{B}",
-			NewTargetedSpell(TargetCreature(),
-				ExileTarget(),
-				FuncEffect(
-					"put two loyalty counters on a planeswalker you control",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						candidates := g.FilterBattlefield(And(ControlledBy(controller), IsPlaneswalker))
-						if len(candidates) == 0 {
-							return nil
-						}
-						player := g.GetPlayer(controller)
-						if player == nil {
-							return nil
-						}
-						chosen := player.ChoosePermanent(candidates, "planeswalker to gain two loyalty counters", g)
-						if chosen == nil {
-							return nil
-						}
-						g.AddCountersWithReplacement(chosen, Loyalty, 2, sourceID, false)
-						return nil
-					},
-				),
-			),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		walker := dsl.BindPermanent("planeswalker to gain two loyalty counters")
+		return dsl.NewSorcery("Settle the Score", "{2}{B}{B}",
+			dsl.WithAbility(dsl.Spell(dsl.Sequence(
+				dsl.Exile(creature),
+				dsl.ChoosePermanent(dsl.You, dsl.ControlledPermanents(dsl.IsPlaneswalker), walker),
+				dsl.AddCounters(dsl.From(walker), dsl.Loyalty, dsl.Fixed(2)),
+			), dsl.WithTargets(creature))),
 		)
 	})
 
@@ -1811,7 +1779,7 @@ func registerSpells() {
 			NewTargetedSpell(TargetCreature(), CompositeEffects(
 				"+2/+2 and gain 1 life per attacking creature you control",
 				Boost(Fixed(2), Fixed(2)),
-				dsl.GainLife(dsl.You, CountBattlefield(SelectController(), And(IsCreature, IsAttacking))),
+				dsl.GainLife(dsl.You, dsl.ValueAtResolution(CountBattlefield(SelectController(), And(IsCreature, IsAttacking)))),
 			)),
 		)
 	})
@@ -1847,7 +1815,7 @@ func registerSpells() {
 		})
 		return NewInstant("Thirst for Knowledge", "{2}{U}",
 			NewSpellAbility(
-				drawSelfCard(3),
+				dsl.Draw(dsl.You, dsl.Fixed(3)),
 				UnlessTargetPays(
 					SelectController(),
 					&discardCardOfTypeCost{filter: artifactCard, label: "Discard an artifact card"},
@@ -1905,12 +1873,12 @@ func registerSpells() {
 	// Target player mills two cards.
 	// Draw a card.
 	Register("Thought Scour", func() Card {
-		return NewInstant("Thought Scour", "{U}",
-			NewTargetedSpell(TargetPlayer(), CompositeEffects(
-				"target mills two; draw one",
-				MillTargetPlayer(Fixed(2)),
-				drawSelfCard(1),
-			)),
+		player := dsl.TargetPlayer("player")
+		return dsl.NewInstant("Thought Scour", "{U}",
+			dsl.WithAbility(dsl.Spell(dsl.Sequence(
+				dsl.Mill(player, dsl.Fixed(2)),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(player))),
 		)
 	})
 
@@ -1980,10 +1948,11 @@ func registerSpells() {
 
 	// Voyage's End {1}{U}
 	// Instant
-	// Return target creature to its owner's hand. Scry 1.
+	// Return target creature to its owner's hand. Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
 	Register("Voyage's End", func() Card {
-		return NewInstant("Voyage's End", "{1}{U}",
-			NewTargetedSpell(TargetCreature(), ReturnToHandTarget(), Scry(Fixed(1))),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Voyage's End", "{1}{U}",
+			dsl.Spell(dsl.Sequence(dsl.ReturnToHand(creature), dsl.Scry(dsl.Fixed(1))), dsl.WithTargets(creature)),
 		)
 	})
 
@@ -2032,13 +2001,15 @@ func registerSpells() {
 	// Target creature gets +2/+2 and gains trample until end of turn.
 	// Draw a card.
 	Register("Wildsize", func() Card {
-		return NewInstant("Wildsize", "{2}{G}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+2/+2 and trample, draw a card",
-				Boost(Fixed(2), Fixed(2)),
-				GrantKeyword(Trample),
-				drawSelfCard(1),
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Wildsize", "{2}{G}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Until(EndOfTurn,
+					dsl.ModifyPT(creature, dsl.Fixed(2), dsl.Fixed(2)),
+					dsl.GrantKeyword(creature, Trample),
+				),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 
@@ -2047,11 +2018,11 @@ func registerSpells() {
 	// This spell costs {1} less to cast if you control a creature with flying.
 	// Draw two cards.
 	Register("Winged Words", func() Card {
-		return NewSorcery("Winged Words", "{2}{U}",
-			NewSpellAbility(drawSelfCard(2)),
-			WithSelfCostReduction(
-				FixedAmount(1),
-				CondControlsMatching(HasKeywordFilter(Flying)),
+		return dsl.NewSorcery("Winged Words", "{2}{U}",
+			dsl.Spell(dsl.Draw(dsl.You, dsl.Fixed(2))),
+			dsl.WithSelfCostReduction(
+				dsl.FixedAmount(1),
+				dsl.CondControlsMatching(dsl.And(dsl.IsCreature, dsl.HasKeywordFilter(Flying))),
 			),
 		)
 	})
@@ -2076,24 +2047,6 @@ func registerSpells() {
 // the target's controller until end of turn.
 func gainControlUntilEOT() Effect {
 	return GainControl().Until(EndOfTurn)
-}
-
-// drawSelfCard returns an effect that has the spell controller draw N cards.
-func drawSelfCard(n int) Effect {
-	return FuncEffect(
-		"draw cards",
-		EffectProperties{Outcome: OutcomeBenefit, DrawCount: n},
-		func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-			p := g.GetPlayer(controller)
-			if p == nil {
-				return nil
-			}
-			for range n {
-				g.PlayerDrawCard(p)
-			}
-			return nil
-		},
-	)
 }
 
 // cantBlockThisTurn revokes CanBlock from targets[0] until end of turn.

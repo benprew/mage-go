@@ -5,18 +5,23 @@ import (
 	"slices"
 
 	"github.com/google/uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 // ZoneSystem manages the battlefield, exile zone, Last-Known Information (LKI),
 // copy-on-write battlefield sharing, and zone transition bookkeeping.
 type ZoneSystem struct {
-	battlefield              []*Permanent
-	battlefieldShared        bool
-	battlefieldSliceShared   bool
-	ownedPermanents          map[uuid.UUID]struct{}
-	exile                    []ExiledCard
-	enteringPermanent        *Permanent
-	lki                      map[uuid.UUID]*PermanentLKI
+	battlefield            []*Permanent
+	battlefieldShared      bool
+	battlefieldSliceShared bool
+	ownedPermanents        map[uuid.UUID]struct{}
+	exile                  []ExiledCard
+	enteringPermanent      *Permanent
+	lki                    map[uuid.UUID]*PermanentLKI
+	// Delayed abilities can read an old attachment after turn cleanup.
+	departedAttachments      map[uuid.UUID]capturedPermanent
+	departedCounters         map[uuid.UUID][core.NumCounters]uint8
 	castFromExilePermissions []CastableFromExilePermission
 	exileInsteadCards        map[uuid.UUID]uuid.UUID
 }
@@ -30,7 +35,10 @@ func NewZoneSystem() ZoneSystem {
 
 // Clone creates a search clone with copy-on-write battlefield sharing and deep-copied exile.
 func (zs *ZoneSystem) Clone() ZoneSystem {
-	clone := ZoneSystem{}
+	clone := ZoneSystem{
+		departedAttachments: maps.Clone(zs.departedAttachments),
+		departedCounters:    maps.Clone(zs.departedCounters),
+	}
 
 	// Share battlefield permanents copy-on-write. Cap-limiting forces appends in
 	// either branch to allocate a distinct slice header/backing array.
@@ -498,8 +506,24 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 	if p == nil {
 		return
 	}
+	if zs.departedCounters == nil {
+		zs.departedCounters = make(map[uuid.UUID][core.NumCounters]uint8)
+	}
+	zs.departedCounters[p.incarnationID] = p.Counters
 	if zs.lki == nil {
 		zs.lki = make(map[uuid.UUID]*PermanentLKI)
+	}
+	if p.AttachedTo != uuid.Nil {
+		if zs.departedAttachments == nil {
+			zs.departedAttachments = make(map[uuid.UUID]capturedPermanent)
+		}
+		host := capturedPermanent{id: p.AttachedTo, incarnation: p.attachedIncarnation}
+		if host.incarnation == uuid.Nil {
+			if current := zs.FindPermanentIncludingPhased(host.id); current != nil {
+				host.incarnation = current.incarnationID
+			}
+		}
+		zs.departedAttachments[p.incarnationID] = host
 	}
 	isToken := p.IsToken
 	owner := p.Card.Owner()
@@ -552,6 +576,7 @@ func (zs *ZoneSystem) LookupObject(id uuid.UUID, g GameReader) LKIView {
 }
 
 // ClearEndOfTurn clears turn-scoped zone state (LKI and exile-instead riders).
+// Cleanup expires riders on each pass and clears LKI only on its final pass.
 func (zs *ZoneSystem) ClearEndOfTurn() {
 	zs.ClearExileInstead()
 	zs.ClearLKI()

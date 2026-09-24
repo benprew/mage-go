@@ -298,7 +298,7 @@ func registerCreatures() {
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
-				GainLife(You, EventAmountValue()),
+				GainLife(You, ValueAtResolution(EventAmountValue())),
 			).SetConditionData(EventSourceIsSelf{})),
 		)
 	})
@@ -521,7 +521,7 @@ func registerCreatures() {
 					FlipCoin(You,
 						OnLoss(&PipelineData{Steps: []Effect{
 							RemoveFromCombatGathered("self"),
-							TapGathered("self"),
+							Tap(This),
 						}}),
 					),
 				), false,

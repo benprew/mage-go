@@ -279,10 +279,7 @@ func (e *GainLifeVarData) Apply(ctx *EffectContext) error {
 	if p == nil {
 		return nil
 	}
-	ctx.Game.PlayerGainLife(p, amount)
-	if !ctx.Game.IsLichActive(playerID) {
-		ctx.Game.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: playerID, Amount: amount})
-	}
+	ctx.Game.gainLifeWithEvent(p, amount)
 	return nil
 }
 

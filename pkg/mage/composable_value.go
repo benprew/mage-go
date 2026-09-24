@@ -1,0 +1,60 @@
+package mage
+
+// ResolutionValue reads a number from the current resolution context.
+// It cannot be used by legacy instructions that discard binding context.
+type ResolutionValue interface {
+	Text() string
+	resolveValue(*EffectContext) int
+}
+
+func (v fixedValue) resolveValue(_ *EffectContext) int { return v.n }
+
+// ValueAtResolution adapts a legacy value without adding typed binding reads.
+func ValueAtResolution(value ValueSource) ResolutionValue { return legacyResolutionValue{value} }
+
+type legacyResolutionValue struct{ value ValueSource }
+
+func (v legacyResolutionValue) Text() string {
+	if nilDefinition(v.value) {
+		return ""
+	}
+	return v.value.Text()
+}
+func (v legacyResolutionValue) resolveValue(ctx *EffectContext) int {
+	return v.value.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+}
+func (v legacyResolutionValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", children: []definitionEdge{{"value", v.value}}}
+}
+
+type permanentResolutionValue struct {
+	subject   PermanentRef
+	toughness bool
+}
+
+// PowerOf reads current power. An absent permanent supplies zero.
+func PowerOf(subject PermanentRef) ResolutionValue { return permanentResolutionValue{subject: subject} }
+
+// ToughnessOf reads current toughness. An absent permanent supplies zero.
+func ToughnessOf(subject PermanentRef) ResolutionValue {
+	return permanentResolutionValue{subject: subject, toughness: true}
+}
+func (v permanentResolutionValue) Text() string {
+	if v.toughness {
+		return "toughness of subject"
+	}
+	return "power of subject"
+}
+func (v permanentResolutionValue) resolveValue(ctx *EffectContext) int {
+	p, ok := v.subject.resolvePermanent(ctx)
+	if !ok {
+		return 0
+	}
+	if v.toughness {
+		return p.CurrentToughness(ctx.Game)
+	}
+	return p.CurrentPower(ctx.Game)
+}
+func (v permanentResolutionValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "permanent-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
+}

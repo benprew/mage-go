@@ -146,7 +146,7 @@ func TestComposableSourceDurationCapturedMembers(t *testing.T) {
 	host := NewCreature("Host", "", 2, 2)
 	g.PutOnBattlefield(source, a.PlayerID())
 	g.PutOnBattlefield(host, a.PlayerID())
-	effect := UntilSourceLeaves(This, ModifyEachPT(ControlledPermanents(IsCreature), CountBattlefield(SelectController(), IsCreature), Fixed(0)))
+	effect := UntilSourceLeaves(This, ModifyEachPT(ControlledPermanents(IsCreature), ValueAtResolution(CountBattlefield(SelectController(), IsCreature)), Fixed(0)))
 	if err := ApplyEffect(g, effect, source.ID(), a.PlayerID(), nil); err != nil {
 		t.Fatal(err)
 	}

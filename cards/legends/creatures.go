@@ -533,6 +533,7 @@ func registerCreatures() {
 	// When this creature attacks or blocks, at end of combat, sacrifice it and it deals 5 damage to you.
 	// {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.
 	Register("Time Elemental", func() Card {
+		permanent := TargetPermanent("permanent", Not(IsEnchanted))
 		return NewCreature("Time Elemental", "{2}{U}", 0, 2,
 			WithSubTypes("Elemental"),
 			// When attacks: register delayed end-of-combat sacrifice + 5 damage
@@ -547,21 +548,10 @@ func registerCreatures() {
 					Sacrifice(This),
 					DealDamageToPlayers(Fixed(5), SelectController()),
 				), false)),
-			// {2}{U}{U}, {T}: Return target permanent that isn't enchanted to its owner's hand.
-			WithActivatedAbility(
-				ReturnToHandTarget(),
-				ManaCostOf("{2}{U}{U}"),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPermanent(NewPermanentFilter("not enchanted", func(p *Permanent, g *Game) bool {
-					for _, attachID := range p.Attachments {
-						att := g.FindPermanent(attachID)
-						if att != nil && att.HasType(TypeEnchantment) {
-							return false
-						}
-					}
-					return true
-				}))),
-			),
+			WithAbility(Activate(
+				Costs(ManaCostOf("{2}{U}{U}"), TapCost(This)),
+				ReturnToHand(permanent), WithTargets(permanent),
+			)),
 		)
 	})
 
@@ -1089,10 +1079,7 @@ func registerCreatures() {
 	Register("Walking Dead", func() Card {
 		return NewCreature("Walking Dead", "{1}{B}", 1, 1,
 			WithSubTypes("Zombie"),
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
 
@@ -1344,13 +1331,10 @@ func registerCreatures() {
 	// 2/2
 	// {T}: You may tap or untap target artifact an opponent controls.
 	Register("Hyperion Blacksmith", func() Card {
+		target := TargetPermanent("artifact", IsArtifact, TargetOpponentControls())
 		return NewCreature("Hyperion Blacksmith", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Artificer"),
-			WithActivatedAbility(
-				TapOrUntapTarget(),
-				TapCost(This),
-				WithTarget(TargetPermanentOpponentControls(IsArtifact)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), MayTapOrUntap(target), WithTargets(target))),
 		)
 	})
 
@@ -2314,15 +2298,16 @@ func registerCreatures() {
 	// 3/5
 	// {T}: Target player discards a card at random. Activate only during your turn.
 	Register("Gwendlyn Di Corci", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Gwendlyn Di Corci", "{U}{B}{B}{R}", 3, 5,
 			WithSubTypes("Human", "Rogue"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				DiscardRandom(1),
-				TapCost(This),
-				WithTarget(mage.TargetPlayer()),
-				WithYourTurnOnly(),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				DiscardAtRandom(player, Fixed(1)),
+				WithTargets(player),
+				OnlyOnYourTurn(),
+			)),
 		)
 	})
 
@@ -2707,34 +2692,14 @@ func registerCreatures() {
 	// At the beginning of your upkeep, sacrifice Nicol Bolas unless you pay {U}{B}{R}.
 	// Whenever Nicol Bolas deals damage to an opponent, that player discards their hand.
 	Register("Nicol Bolas", func() Card {
+		player := BindPlayer("damaged player")
 		return NewCreature("Nicol Bolas", "{2}{U}{U}{B}{B}{R}{R}", 7, 7,
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
 			WithAbility(SacrificeAtUpkeepUnlessPay("{U}{B}{R}")),
-			WithAbility(NewTriggered(EvtDamageDealt, false, FuncEffect(
-				"that player discards their hand",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					// targets[0] = damaged player (passed by trigger system from EvtDamageDealt.TargetID)
-					if len(targets) == 0 {
-						return nil
-					}
-					p := g.GetPlayer(targets[0])
-					if p == nil {
-						return nil
-					}
-					// Copy hand slice to avoid concurrent modification during removal
-					hand := make([]Card, len(p.Hand()))
-					copy(hand, p.Hand())
-					for _, c := range hand {
-						p.RemoveFromHand(c.ID())
-						p.AddToGraveyard(c)
-					}
-					return nil
-				},
-			)).
-				SetConditionData(EventSourceIsSelfDamageToOpponent{})),
+			WithAbility(WhenEvent(DealsDamageToOpponent(This, player),
+				DiscardEntireHand(FromPlayer(player)))),
 		)
 	})
 
@@ -2785,15 +2750,15 @@ func registerCreatures() {
 	// 2/2
 	// {G}{W}{U}, {T}: Regenerate target creature.
 	Register("Ragnar", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Ragnar", "{G}{W}{U}", 2, 2,
 			WithSubTypes("Human", "Cleric"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				RegenerateTarget(),
-				ManaCostOf("{G}{W}{U}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{G}{W}{U}"), TapCost(This)),
+				Regenerate(creature),
+				WithTargets(creature),
+			)),
 		)
 	})
 

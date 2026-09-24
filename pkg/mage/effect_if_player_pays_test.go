@@ -58,21 +58,28 @@ func TestIfPlayerPaysBranchesAndVarPlayer(t *testing.T) {
 		}
 	})
 
-	t.Run("unpayable", func(t *testing.T) {
-		payer := &acceptingMayPlayer{NewBasePlayer("payer")}
-		payer.SetLife(2)
-		opponent := NewBasePlayer("opponent")
-		g := NewGame(payer, opponent)
-		paid, unpaid := false, false
-		ctx := &EffectContext{Game: g, Vars: map[string]any{"payer": payer.PlayerID()}}
-		effect := IfPlayerPays(VarPlayer("payer"), LifePayCost(2), "pay", branchMarkerEffect{&paid}, branchMarkerEffect{&unpaid})
-		if err := effect.Apply(ctx); err != nil {
-			t.Fatal(err)
-		}
-		if paid || !unpaid || payer.Life() != 2 {
-			t.Fatalf("paid=%v unpaid=%v life=%d", paid, unpaid, payer.Life())
-		}
-	})
+	for _, life := range []int{1, 2} {
+		t.Run(map[int]string{1: "unpayable", 2: "exact"}[life], func(t *testing.T) {
+			payer := &acceptingMayPlayer{NewBasePlayer("payer")}
+			payer.SetLife(life)
+			opponent := NewBasePlayer("opponent")
+			g := NewGame(payer, opponent)
+			paid, unpaid := false, false
+			ctx := &EffectContext{Game: g, Vars: map[string]any{"payer": payer.PlayerID()}}
+			effect := IfPlayerPays(VarPlayer("payer"), LifePayCost(2), "pay", branchMarkerEffect{&paid}, branchMarkerEffect{&unpaid})
+			if err := effect.Apply(ctx); err != nil {
+				t.Fatal(err)
+			}
+			wantPaid := life == 2
+			wantLife := life
+			if wantPaid {
+				wantLife = 0
+			}
+			if paid != wantPaid || unpaid == wantPaid || payer.Life() != wantLife {
+				t.Fatalf("paid=%v unpaid=%v life=%d", paid, unpaid, payer.Life())
+			}
+		})
+	}
 }
 
 func TestIfPlayerPaysRequiresExactlyOnePayer(t *testing.T) {

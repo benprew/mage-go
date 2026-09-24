@@ -64,6 +64,14 @@ func (e *addCountersEffect) Properties() EffectProperties {
 	if e.maxTotal > 0 {
 		return EffectProperties{Outcome: OutcomeBenefit}
 	}
+	if amount, ok := e.amount.(fixedValue); ok && amount.n > 0 {
+		switch e.ct {
+		case P1P1:
+			return EffectProperties{Outcome: OutcomeBenefit}
+		case M1M1:
+			return EffectProperties{Outcome: OutcomeDetriment}
+		}
+	}
 	return EffectProperties{}
 }
 

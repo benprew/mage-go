@@ -56,30 +56,6 @@ func (e *applyToRandomSpellOrPermanentEffect) Apply(ctx *EffectContext) error {
 	return ApplyEffect(ctx.Game, e.effect, ctx.SourceID, ctx.Controller, []uuid.UUID{targetID})
 }
 
-type applyToRandomPlayerEffect struct {
-	effect Effect
-}
-
-// ApplyToRandomPlayer creates an effect that applies effect to one random
-// player. It does nothing when the game has no players.
-func ApplyToRandomPlayer(effect Effect) Effect {
-	return &applyToRandomPlayerEffect{effect: effect}
-}
-
-func (e *applyToRandomPlayerEffect) Text() string {
-	return fmt.Sprintf("apply %s to a random player", e.effect.Text())
-}
-func (e *applyToRandomPlayerEffect) Properties() EffectProperties {
-	return e.effect.Properties()
-}
-func (e *applyToRandomPlayerEffect) Apply(ctx *EffectContext) error {
-	player := ctx.Game.RandomPlayer()
-	if player == nil {
-		return nil
-	}
-	return ApplyEffect(ctx.Game, e.effect, ctx.SourceID, ctx.Controller, []uuid.UUID{player.PlayerID()})
-}
-
 type applyToRandomDamageTargetEffect struct {
 	effect Effect
 }

@@ -71,9 +71,11 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy target artifact or enchantment.
 	Register("Disenchant", func() Card {
+		target := TargetPermanent("artifact or enchantment", Or(IsArtifact, IsEnchantment))
 		return NewInstant("Disenchant", "{1}{W}",
-			NewTargetedSpell(TargetArtifactOrEnchantment(), DisenchantEffect()),
+			WithAbility(Spell(Destroy(target), WithTargets(target))),
 		)
 	})
 
@@ -117,9 +119,11 @@ func registerSpells() {
 		)
 	})
 
+	// Regenerate target creature.
 	Register("Death Ward", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewInstant("Death Ward", "{W}",
-			NewTargetedSpell(TargetCreature(), RegenerateTarget()),
+			Spell(Regenerate(creature), WithTargets(creature)),
 		)
 	})
 
@@ -145,7 +149,7 @@ func registerSpells() {
 	Register("Braingeyser", func() Card {
 		player := TargetPlayer("player")
 		return NewSorcery("Braingeyser", "{X}{U}{U}",
-			Spell(Draw(player, XValue()), WithTargets(player)),
+			Spell(Draw(player, ValueAtResolution(XValue())), WithTargets(player)),
 		)
 	})
 
@@ -155,9 +159,11 @@ func registerSpells() {
 		)
 	})
 
+	// Oracle: "Return target creature to its owner's hand."
 	Register("Unsummon", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewInstant("Unsummon", "{U}",
-			NewTargetedSpell(TargetCreature(), UnsummonEffect()),
+			Spell(ReturnToHand(creature), WithTargets(creature)),
 		)
 	})
 
@@ -184,9 +190,11 @@ func registerSpells() {
 		)
 	})
 
+	// You may tap or untap target artifact, creature, or land.
 	Register("Twiddle", func() Card {
+		target := TargetPermanent("artifact, creature, or land", Or(IsArtifact, IsCreature, IsLand))
 		return NewInstant("Twiddle", "{U}",
-			NewTargetedSpell(mage.TargetPermanent(Or(IsArtifact, IsCreature, IsLand)), TwiddleEffect()),
+			WithAbility(Spell(MayTapOrUntap(target), WithTargets(target))),
 		)
 	})
 
@@ -281,9 +289,11 @@ func registerSpells() {
 		)
 	})
 
+	// Target player discards X cards at random.
 	Register("Mind Twist", func() Card {
+		player := TargetPlayer("player")
 		return NewSorcery("Mind Twist", "{X}{B}",
-			NewTargetedSpell(mage.TargetPlayer(), DiscardCards(XValue())),
+			WithAbility(Spell(DiscardAtRandom(player, ValueAtResolution(XValue())), WithTargets(player))),
 		)
 	})
 
@@ -357,9 +367,13 @@ func registerSpells() {
 		)
 	})
 
+	// Shatter {1}{R}
+	// Instant
+	// Destroy target artifact.
 	Register("Shatter", func() Card {
+		target := TargetPermanent("artifact", IsArtifact)
 		return NewInstant("Shatter", "{1}{R}",
-			NewTargetedSpell(TargetArtifact(), DestroyTargetArtifact()),
+			WithAbility(Spell(Destroy(target), WithTargets(target))),
 		)
 	})
 
@@ -404,9 +418,11 @@ func registerSpells() {
 
 	// ===== GREEN SPELLS =====
 
+	// Target creature gets +3/+3 until end of turn.
 	Register("Giant Growth", func() Card {
+		target := TargetPermanent("creature", IsCreature)
 		return NewInstant("Giant Growth", "{G}",
-			NewTargetedSpell(TargetCreature(), GiantGrowthEffect()),
+			WithAbility(Spell(Until(EndOfTurn, ModifyPT(target, Fixed(3), Fixed(3))), WithTargets(target))),
 		)
 	})
 
@@ -445,15 +461,18 @@ func registerSpells() {
 		return NewLandDestruction("Ice Storm", "{2}{G}")
 	})
 
+	// Target player gains X life.
 	Register("Stream of Life", func() Card {
+		player := TargetPlayer("player")
 		return NewSorcery("Stream of Life", "{X}{G}",
-			NewTargetedSpell(mage.TargetPlayer(), GainLifeTarget(XValue())),
+			WithAbility(Spell(GainLife(player, ValueAtResolution(XValue())), WithTargets(player))),
 		)
 	})
 
+	// Prevent all combat damage that would be dealt this turn.
 	Register("Fog", func() Card {
 		return NewInstant("Fog", "{G}",
-			NewSpellAbility(FogEffect()),
+			WithAbility(Spell(PreventAllCombatDamage())),
 		)
 	})
 
@@ -507,8 +526,9 @@ func registerSpells() {
 	// Instant
 	// Destroy target Wall. It can't be regenerated.
 	Register("Tunnel", func() Card {
+		target := TargetPermanent("Wall", HasSubType("Wall"))
 		return NewInstant("Tunnel", "{R}",
-			NewTargetedSpell(TargetCreature(HasSubType("Wall")), DestroyTargetNoRegen()),
+			WithAbility(Spell(DestroyWithoutRegeneration(target), WithTargets(target))),
 		)
 	})
 

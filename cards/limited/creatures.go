@@ -158,14 +158,11 @@ func registerCreatures() {
 		)
 	})
 
+	// {B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Drudge Skeletons", func() Card {
 		return NewCreature("Drudge Skeletons", "{1}{B}", 1, 1,
 			WithSubTypes("Skeleton"),
-			// {B}: Regenerate Drudge Skeletons.
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
 
@@ -180,11 +177,15 @@ func registerCreatures() {
 		)
 	})
 
+	// Flying
+	// Whenever this creature deals damage to an opponent, that player discards a card at random.
 	Register("Hypnotic Specter", func() Card {
+		player := BindPlayer("damaged opponent")
 		return NewCreature("Hypnotic Specter", "{1}{B}{B}", 2, 2,
 			WithSubTypes("Specter"),
 			WithKeyword(Flying),
-			WithAbility(DealsDamageToOpponentTrigger(DiscardRandom(1), false)),
+			WithAbility(WhenEvent(DealsDamageToOpponent(This, player),
+				DiscardAtRandom(FromPlayer(player), Fixed(1)))),
 		)
 	})
 
@@ -249,15 +250,13 @@ func registerCreatures() {
 		)
 	})
 
+	// Flying (This creature can't be blocked except by creatures with flying or reach.)
+	// {B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Will-o'-the-Wisp", func() Card {
 		return NewCreature("Will-o'-the-Wisp", "{B}", 0, 1,
 			WithSubTypes("Spirit"),
 			WithKeyword(Flying),
-			// {B}: Regenerate Will-o'-the-Wisp.
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
 
@@ -407,17 +406,16 @@ func registerCreatures() {
 		)
 	})
 
+	// {R}: Regenerate this creature.
 	Register("Uthden Troll", func() Card {
 		return NewCreature("Uthden Troll", "{2}{R}", 2, 2,
 			WithSubTypes("Troll"),
-			// {R}: Regenerate Uthden Troll.
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")), Regenerate(This))),
 		)
 	})
 
+	// This creature gets +1/+1 as long as you control a Swamp.
+	// {B}: Regenerate this creature.
 	Register("Sedge Troll", func() Card {
 		return NewCreature("Sedge Troll", "{2}{R}", 2, 2,
 			WithSubTypes("Troll"),
@@ -425,11 +423,7 @@ func registerCreatures() {
 			WithStaticAbility(
 				BoostSelf(1, 1, WhileControlling(And(IsLand, HasSubType("Swamp")))),
 			),
-			// {B}: Regenerate Sedge Troll.
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
 
@@ -590,27 +584,23 @@ func registerCreatures() {
 		)
 	})
 
+	// Defender (This creature can't attack.)
+	// {B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)
 	Register("Wall of Bone", func() Card {
 		return NewCreature("Wall of Bone", "{2}{B}", 1, 4,
 			WithSubTypes("Wall", "Skeleton"),
 			WithKeyword(Defender),
-			// {B}: Regenerate Wall of Bone.
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
 
+	// Defender (This creature can't attack.)
+	// {G}: Regenerate this creature.
 	Register("Wall of Brambles", func() Card {
 		return NewCreature("Wall of Brambles", "{2}{G}", 2, 3,
 			WithSubTypes("Wall", "Plant"),
 			WithKeyword(Defender),
-			// {G}: Regenerate Wall of Brambles.
-			WithActivatedAbility(
-				RegenerateSource(),
-				ManaCostOf("{G}"),
-			),
+			WithAbility(Activate(Costs(Mana("{G}")), Regenerate(This))),
 		)
 	})
 
@@ -707,16 +697,14 @@ func registerCreatures() {
 		)
 	})
 
+	// Defender (This creature can't attack.)
+	// {1}: Regenerate this creature.
 	Register("Living Wall", func() Card {
 		return NewCreature("Living Wall", "{4}", 0, 6,
 			WithSubTypes("Wall"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Defender),
-			// {1}: Regenerate Living Wall.
-			WithActivatedAbility(
-				RegenerateSource(),
-				GenericCost(1),
-			),
+			WithAbility(Activate(Costs(Mana("{1}")), Regenerate(This))),
 		)
 	})
 
@@ -733,18 +721,20 @@ func registerCreatures() {
 		)
 	})
 
+	// Other Zombie creatures have swampwalk. (They can't be blocked as long as defending player controls a Swamp.)
+	// Other Zombies have "{B}: Regenerate this permanent."
 	Register("Zombie Master", func() Card {
 		return NewCreature("Zombie Master", "{1}{B}{B}", 2, 3,
 			WithSubTypes("Zombie"),
-			// Other Zombie creatures have swampwalk and "{B}: Regenerate"
 			WithStaticAbility(
 				GrantKeywordToAll(Swampwalk, HasSubType("Zombie")),
-				GrantActivatedAbilityToAll(
-					RegenerateSource(),
-					ManaCostOf("{B}"),
-					HasSubType("Zombie"),
-				),
 			),
+			WithAbility(Static(
+				GrantEachActivatedAbility(
+					WithoutPermanent(MatchingPermanents(HasSubType("Zombie")), This),
+					Costs(Mana("{B}")), Regenerate(This),
+				),
+			)),
 		)
 	})
 
@@ -845,27 +835,8 @@ func registerCreatures() {
 	Register("Scavenging Ghoul", func() Card {
 		return NewCreature("Scavenging Ghoul", "{3}{B}", 2, 2,
 			WithSubTypes("Zombie"),
-			// End step: put corpse counters equal to creatures that died this turn
-			// TODO: convert to pipeline — needs CreatureDeaths() access as pipeline primitive
-			WithAbility(BeginningOfEachEndStepTrigger(
-				FuncEffect(
-					"put corpse counters on Scavenging Ghoul for each creature that died this turn",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						deaths := g.CreatureDeaths()
-						if deaths > 0 {
-							perm := g.MutablePermanent(sourceID)
-							if perm != nil {
-								perm.AddCounter(Corpse, deaths)
-							}
-						}
-						return nil
-					},
-				),
-				false,
-			)),
-			// Remove a corpse counter: Regenerate
-			WithActivatedAbility(RegenerateSource(), RemoveCountersCost(Corpse, 1)),
+			WithAbility(At(EachEndStep, AddCounters(This, Corpse, CreaturesDiedThisTurn()))),
+			WithAbility(Activate(Costs(RemoveCountersCost(Corpse, 1)), Regenerate(This))),
 		)
 	})
 
@@ -950,7 +921,7 @@ func registerCreatures() {
 				GenericCost(0),
 			),
 			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
-				LoseLife(You, HalfRoundUp(PlayerLifeValue())), false)),
+				LoseLife(You, ValueAtResolution(HalfRoundUp(PlayerLifeValue()))), false)),
 		)
 	})
 

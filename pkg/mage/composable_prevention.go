@@ -70,11 +70,11 @@ func (b *DamageTargetBinding) inspectDefinition() definitionNode {
 
 type preventionInstallation struct {
 	recipient DamageRecipientRef
-	amount    ValueSource
+	amount    ResolutionValue
 }
 
 // PreventNextDamage installs an end-of-turn shield in the existing replacement pipeline.
-func PreventNextDamage(recipient DamageRecipientRef, amount ValueSource) ResolvingEffect {
+func PreventNextDamage(recipient DamageRecipientRef, amount ResolutionValue) ResolvingEffect {
 	return &preventionInstallation{recipient, amount}
 }
 func (e *preventionInstallation) Text() string { return "prevent the next damage this turn" }
@@ -86,7 +86,7 @@ func (e *preventionInstallation) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
-	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	amount := e.amount.resolveValue(ctx)
 	ctx.Game.AddPreventionShield(id, amount)
 	return nil
 }

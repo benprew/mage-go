@@ -23,8 +23,8 @@ import (
 // times, and add corresponding fire sites in Stack.Resolve / Counter,
 // PlayerDiscard, mill helpers.
 //
-// Step E — Refcounted / event-scoped retention. clearLKI fires at
-// end-of-turn cleanup, which is wrong on both ends: too long for
+// Step E — Refcounted / event-scoped retention. ClearLKI runs after
+// final cleanup priority, which is wrong on both ends: too long for
 // transient triggers (a finished trigger doesn't need its source
 // snapshot anymore) and too short for durable references (Banishing
 // Light / Astral Slide / Hazezon Tamar capture an LKI reference and
@@ -131,7 +131,7 @@ func (v livePermanentView) ViewAbilities() []Ability        { return v.p.Runtime
 //
 // LKI is recorded by RemoveFromBattlefield just before the permanent
 // leaves g.battlefield, read via Game.LKI(id) or Game.LookupObject(id),
-// and cleared at end-of-turn cleanup.
+// and cleared after the final cleanup pass. Cleanup priority retains it.
 type PermanentLKI struct {
 	ID        uuid.UUID
 	Name      string

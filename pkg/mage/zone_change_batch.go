@@ -23,6 +23,8 @@ func (g *Game) withZoneChangeBatch(apply func()) {
 	apply()
 	g.triggers.zoneBatch = nil
 	g.effects.Apply(g)
+	// Trigger checks need the completed death count and the former battlefield.
+	batch.before.trackers.Turn.creatureDeaths = g.trackers.Turn.creatureDeaths
 	for _, evt := range batch.events {
 		g.fireEvent(evt, batch.before)
 	}

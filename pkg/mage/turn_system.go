@@ -1,6 +1,9 @@
 package mage
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -10,12 +13,18 @@ import (
 // extra turns queue, turn step scheduling and skips (CR 500.7–500.11), and
 // per-permanent untap skipping.
 type TurnSystem struct {
-	turn          int
-	step          PhaseStep
-	activePlayer  int // index into players
-	extraTurns    []uuid.UUID
-	schedule      *TurnSchedule
-	skipNextUntap map[uuid.UUID]int
+	pendingStepLifeGains []LifeGainAction
+	turn                 int
+	step                 PhaseStep
+	activePlayer         int // index into players
+	extraTurns           []uuid.UUID
+	schedule             *TurnSchedule
+	skipNextUntap        map[uuid.UUID]bool
+	capturedUntap        map[capturedUntapKey]bool
+}
+
+type capturedUntapKey struct {
+	permanent, player uuid.UUID
 }
 
 // NewTurnSystem creates an initialized TurnSystem starting at turn 1.
@@ -23,17 +32,19 @@ func NewTurnSystem() TurnSystem {
 	return TurnSystem{
 		turn:          1,
 		schedule:      newTurnSchedule(),
-		skipNextUntap: make(map[uuid.UUID]int),
+		skipNextUntap: make(map[uuid.UUID]bool),
 	}
 }
 
 // Clone creates an independent deep copy of TurnSystem.
 func (ts TurnSystem) Clone() TurnSystem {
 	clone := TurnSystem{
-		turn:          ts.turn,
-		step:          ts.step,
-		activePlayer:  ts.activePlayer,
-		skipNextUntap: cloneUUIDMap(ts.skipNextUntap),
+		pendingStepLifeGains: slices.Clone(ts.pendingStepLifeGains),
+		turn:                 ts.turn,
+		step:                 ts.step,
+		activePlayer:         ts.activePlayer,
+		skipNextUntap:        cloneUUIDMap(ts.skipNextUntap),
+		capturedUntap:        maps.Clone(ts.capturedUntap),
 	}
 	if len(ts.extraTurns) > 0 {
 		clone.extraTurns = make([]uuid.UUID, len(ts.extraTurns))
@@ -180,33 +191,54 @@ func (ts *TurnSystem) PopNextStep() (PhaseStep, bool) {
 	return ts.Schedule().popNextStep()
 }
 
-// SkipNextUntap causes the specified permanent to skip its next untap attempt.
+// SkipNextUntap prevents untapping during the next untap step of the controller.
 func (ts *TurnSystem) SkipNextUntap(permanentID uuid.UUID) {
 	if ts.skipNextUntap == nil {
-		ts.skipNextUntap = make(map[uuid.UUID]int)
+		ts.skipNextUntap = make(map[uuid.UUID]bool)
 	}
-	ts.skipNextUntap[permanentID]++
+	ts.skipNextUntap[permanentID] = true
 }
 
 // RemoveSkipNextUntap removes any pending untap skips for a permanent that leaves the battlefield.
 func (ts *TurnSystem) RemoveSkipNextUntap(permanentID uuid.UUID) {
 	delete(ts.skipNextUntap, permanentID)
+	for key := range ts.capturedUntap {
+		if key.permanent == permanentID {
+			delete(ts.capturedUntap, key)
+		}
+	}
 }
 
-// ConsumeSkipNextUntap decrements/clears the skip count if active and returns true if untap was skipped.
+// ConsumeSkipNextUntap clears all restrictions for the same next untap step.
 func (ts *TurnSystem) ConsumeSkipNextUntap(permanentID uuid.UUID) bool {
-	if remaining := ts.skipNextUntap[permanentID]; remaining > 0 {
-		if remaining == 1 {
-			delete(ts.skipNextUntap, permanentID)
-		} else {
-			ts.skipNextUntap[permanentID] = remaining - 1
-		}
-		return true
-	}
-	return false
+	pending := ts.skipNextUntap[permanentID]
+	delete(ts.skipNextUntap, permanentID)
+	return pending
 }
 
 // HasSkipNextUntap reports whether the permanent has an active untap skip.
 func (ts *TurnSystem) HasSkipNextUntap(permanentID uuid.UUID) bool {
-	return ts.skipNextUntap[permanentID] > 0
+	return ts.skipNextUntap[permanentID]
+}
+
+func (ts *TurnSystem) skipNextUntapOf(permanentID, playerID uuid.UUID) {
+	if ts.capturedUntap == nil {
+		ts.capturedUntap = make(map[capturedUntapKey]bool)
+	}
+	ts.capturedUntap[capturedUntapKey{permanentID, playerID}] = true
+}
+
+func (ts *TurnSystem) consumeCapturedUntap(playerID uuid.UUID) map[uuid.UUID]bool {
+	var blocked map[uuid.UUID]bool
+	for key := range ts.capturedUntap {
+		if key.player != playerID {
+			continue
+		}
+		if blocked == nil {
+			blocked = make(map[uuid.UUID]bool)
+		}
+		blocked[key.permanent] = true
+		delete(ts.capturedUntap, key)
+	}
+	return blocked
 }

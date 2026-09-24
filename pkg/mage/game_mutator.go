@@ -350,21 +350,28 @@ func (g *Game) PreventDamageToPlayerByCreaturesWithFlying(playerID uuid.UUID) {
 
 // AddRegenerationShield adds a regeneration shield to the specified permanent.
 func (g *Game) AddRegenerationShield(id uuid.UUID) {
-	// Find existing regeneration replacement for this permanent and increment
+	p := g.FindPermanent(id)
+	if p == nil || p.PhasedOut {
+		return
+	}
 	for _, r := range g.effects.replacements {
-		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id {
+		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id && regen.incarnation == p.incarnationID {
 			regen.shields++
 			return
 		}
 	}
-	g.effects.AddReplacement(&regenerationReplacement{replacementBase: replacementBase{duration: EndOfTurn}, permanentID: id, shields: 1})
+	g.effects.AddReplacement(&regenerationReplacement{replacementBase: replacementBase{duration: EndOfTurn}, permanentID: id, incarnation: p.incarnationID, shields: 1})
 }
 
 // HasRegenerationShield reports whether the specified permanent currently has at
 // least one active regeneration shield.
 func (g *Game) HasRegenerationShield(id uuid.UUID) bool {
+	p := g.FindPermanent(id)
+	if p == nil || p.PhasedOut {
+		return false
+	}
 	for _, r := range g.effects.replacements {
-		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id && regen.shields > 0 {
+		if regen, ok := r.(*regenerationReplacement); ok && regen.permanentID == id && regen.incarnation == p.incarnationID && regen.shields > 0 {
 			return true
 		}
 	}
@@ -536,12 +543,19 @@ func (g *Game) AddIslandSanctuaryReplacement(playerID, sourceID uuid.UUID) {
 	})
 }
 
-// AddFastingReplacement registers the Fasting draw replacement: while sourceID is
-// on the battlefield, the controller may skip their draw step to gain 2 life.
-func (g *Game) AddFastingReplacement(playerID, sourceID uuid.UUID) {
-	g.effects.AddReplacement(&fastingReplacement{
+// AddFastingReplacement permits the current source controller to skip draw-step
+// entry. The player who skips the step gains 2 life in the next step that occurs.
+// The registration applies only to the current source incarnation. An absent
+// source registers nothing. The first argument is retained for compatibility.
+func (g *Game) AddFastingReplacement(_, sourceID uuid.UUID) {
+	source := g.FindPermanentIncludingPhased(sourceID)
+	if source == nil {
+		return
+	}
+	g.effects.AddReplacement(&drawStepLifeReplacement{
 		replacementBase: replacementBase{sourceID: sourceID, duration: WhileOnBattlefield},
-		playerID:        playerID,
+		incarnation:     source.incarnationID,
+		amount:          2,
 	})
 }
 

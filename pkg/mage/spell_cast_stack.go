@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -18,6 +20,7 @@ type castStackObjectOptions struct {
 	SnapshotCast      bool
 	PromptTargets     bool
 	ModePrompt        string
+	ModalSelection    *modalSpellSelection
 }
 
 func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, error) {
@@ -30,7 +33,26 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		return nil, ErrPlayerNotFound
 	}
 
-	effects, targets, modalTargets, modeChoice := g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets, opts.ModePrompt)
+	selection := opts.ModalSelection
+	if selection == nil {
+		var err error
+		selection, err = g.prepareModalSpellSelection(controller, card, opts.Targets, opts.XValue, opts.ModePrompt)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var effects []Effect
+	var targets []uuid.UUID
+	var modalTargets [][]uuid.UUID
+	var modeChoice int
+	if selection != nil {
+		effects = selection.effects
+		targets = selection.targets
+		modalTargets = selection.modalTargets
+		modeChoice = selection.mode
+	} else {
+		effects, targets = g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets)
+	}
 	sourceID := opts.SourceID
 	if sourceID == uuid.Nil {
 		sourceID = card.ID()
@@ -59,7 +81,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		obj.CastContext = g.snapshotCastContext(opts.Controller)
 	}
 
-	if modes := card.Modes(); len(modes) > 0 {
+	if modes := card.Modes(); selection == nil && len(modes) > 0 {
 		obj.ModeChoice = controller.ChooseMode(modes, card.Name())
 	}
 
@@ -75,29 +97,50 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	return obj, nil
 }
 
-func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid.UUID, promptTargets bool, modePrompt string) (effects []Effect, resolvedTargets []uuid.UUID, modalTargets [][]uuid.UUID, modeChoice int) {
-	if ms, ok := getModalSpellAbility(card); ok {
-		if modePrompt == "" {
-			modePrompt = card.Name()
-		}
-		if chooser, ok := caster.(EffectModeChooser); ok {
-			modeChoice = chooser.ChooseModeWithEffects(ms.modes, modePrompt, g)
-		} else {
-			modeChoice = caster.ChooseMode(modalLabels(ms), modePrompt)
-		}
-		if modeChoice < 0 || modeChoice >= len(ms.modes) {
-			modeChoice = 0
-		}
-		mode := ms.modes[modeChoice]
-		effects = append(effects, mode.Effects...)
-		if len(targets) == 0 {
-			targets = g.promptTargetsForList(caster.PlayerID(), card, mode.Targets)
-		}
-		modalTargets = make([][]uuid.UUID, len(ms.modes))
-		modalTargets[modeChoice] = targets
-		return effects, targets, modalTargets, modeChoice
-	}
+type modalSpellSelection struct {
+	effects      []Effect
+	targets      []uuid.UUID
+	modalTargets [][]uuid.UUID
+	mode         int
+}
 
+func (g *Game) prepareModalSpellSelection(caster Player, card Card, targets []uuid.UUID, x int, prompt string) (*modalSpellSelection, error) {
+	ms, ok := getModalSpellAbility(card)
+	if !ok {
+		return nil, nil
+	}
+	if prompt == "" {
+		prompt = card.Name()
+	}
+	var choice int
+	if chooser, ok := caster.(EffectModeChooser); ok {
+		choice = chooser.ChooseModeWithEffects(ms.modes, prompt, g)
+	} else {
+		choice = caster.ChooseMode(modalLabels(ms), prompt)
+	}
+	if choice < 0 || choice >= len(ms.modes) {
+		return nil, fmt.Errorf("invalid spell mode")
+	}
+	mode := ms.modes[choice]
+	if len(targets) == 0 {
+		targets = g.promptTargetsForListWithX(caster.PlayerID(), card, mode.Targets, x)
+	} else {
+		targets = g.acquireRandomTargets(caster.PlayerID(), card, mode.Targets, targets, x)
+		targets = g.acquireOpponentChosenTargets(caster.PlayerID(), card, mode.Targets, targets)
+	}
+	if len(mode.Targets) == 0 && len(targets) != 0 {
+		return nil, fmt.Errorf("too many targets for spell mode")
+	}
+	if err := g.validateActionTargets(caster.PlayerID(), card, mode.Targets, targets, x, "spell mode"); err != nil {
+		return nil, err
+	}
+	targets = append([]uuid.UUID(nil), targets...)
+	selected := &modalSpellSelection{effects: append([]Effect(nil), mode.Effects...), targets: targets, mode: choice, modalTargets: make([][]uuid.UUID, len(ms.modes))}
+	selected.modalTargets[choice] = targets
+	return selected, nil
+}
+
+func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid.UUID, promptTargets bool) (effects []Effect, resolvedTargets []uuid.UUID) {
 	targets = append([]uuid.UUID(nil), targets...)
 	for _, a := range card.Abilities() {
 		sa, ok := a.(*SpellAbility)
@@ -115,7 +158,7 @@ func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid
 			targets = append(targets, g.promptTargetsForList(caster.PlayerID(), card, sa.Targets())...)
 		}
 	}
-	return effects, targets, nil, modeChoice
+	return effects, targets
 }
 
 func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card Card, controller Player) {

@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "gap_id": "prepared-spell-mana-payment",
+  "status": "open",
+  "capability": "Pay the prepared spell's casting cost, including declared X, before casting its copy",
+  "affected_cards": ["Infirmary Healer // Stream of Life"],
+  "oracle_requirements": [{"card": "Infirmary Healer // Stream of Life", "text": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nTarget player gains X life."}],
+  "rules_references": ["CR 601.2f–h", "CR 107.3", "CR 707.12"],
+  "required_scenarios": [
+    "Casting Stream of Life with X=0 pays {G}; X=4 pays {4}{G}.",
+    "Insufficient mana or an invalid target leaves mana, prepared state, and stack unchanged.",
+    "A successful cast unprepares the creature and stores X and the selected player.",
+    "A copy of the spell retains X and can change its target independently.",
+    "Casting follows the spell's timing and does not introduce a separate activated-ability stack object."
+  ],
+  "integration_points": ["pkg/mage/keyword_sos.go: WithPreparedSpell and CastPreparedSpellCopy", "pkg/mage/spell_cast_stack.go: pushCastSpellObject", "Existing casting and total-cost transactions"],
+  "evidence": [
+    "Code audit: WithPreparedSpell installs a zero-mana activated ability; CastPreparedSpellCopy directly calls pushCastSpellObject without a mana-payment transaction.",
+    "The existing TestInfirmaryHealer_StreamOfLifeUnprepares uses X=0 without providing mana. This is legacy coverage, not evidence of correct cost payment.",
+    "No new failing payment regression or engine correction is included in the Bake into a Pie migration. Confirm the audit with an engine regression before implementation."
+  ]
+}

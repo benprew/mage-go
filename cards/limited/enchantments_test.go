@@ -942,7 +942,7 @@ func TestRegenerationAura(t *testing.T) {
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Regeneration", "Grizzly Bears")
 		// Activate regeneration shield, then Bolt the creature.
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Regeneration")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()

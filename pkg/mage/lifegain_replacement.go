@@ -4,6 +4,8 @@ import "github.com/google/uuid"
 
 // LifeGainModifierFn rewrites the proposed life-gain amount for a given
 // gaining player. Multiple modifiers compose in registration order.
+// Cloned games share the function. Read game state from g and do not change
+// captured state.
 type LifeGainModifierFn func(g *Game, gainingPlayerID uuid.UUID, amount int) int
 
 // lifeGainModifierEntry pairs a life-gain modifier with its source

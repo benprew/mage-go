@@ -291,7 +291,7 @@ func LifePaymentAmount(cost Cost) int {
 
 func (c *lifePayCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
-	return p != nil && p.Life() > c.amount // must have more life than cost
+	return p != nil && c.amount >= 0 && (c.amount == 0 || p.Life() >= c.amount)
 }
 
 func (c *lifePayCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
