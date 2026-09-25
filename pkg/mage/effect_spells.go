@@ -504,7 +504,7 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 			copy(token.colorOverride, e.colors)
 		}
 		for _, a := range e.abilities {
-			token.AddAbility(a)
+			token.AddAbility(cloneTokenAbility(a))
 		}
 		ctx.Game.PutOnBattlefield(token, ctx.Controller)
 	}
