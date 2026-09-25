@@ -496,6 +496,7 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 	if count <= 0 {
 		count = 1
 	}
+	tokens := make([]Card, 0, count)
 	for i := 0; i < count; i++ {
 		token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
 		token.SetOwner(ctx.Controller)
@@ -506,8 +507,9 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 		for _, a := range e.abilities {
 			token.AddAbility(cloneTokenAbility(a))
 		}
-		ctx.Game.PutOnBattlefield(token, ctx.Controller)
+		tokens = append(tokens, token)
 	}
+	ctx.Game.putTokensOnBattlefieldTogether(tokens, ctx.Controller)
 	return nil
 }
 

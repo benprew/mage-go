@@ -348,6 +348,31 @@ func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
 }
 
 func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
+	perm := g.prepareBattlefieldEntry(card, controller, colors)
+	if perm == nil {
+		return nil
+	}
+	g.registerBattlefieldEntry(perm, colors, colorSourceID)
+	g.completeBattlefieldEntry(perm, controller)
+	return perm
+}
+
+func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID) {
+	permanents := make([]*Permanent, 0, len(cards))
+	for _, card := range cards {
+		if perm := g.prepareBattlefieldEntry(card, controller, nil); perm != nil {
+			permanents = append(permanents, perm)
+		}
+	}
+	for _, perm := range permanents {
+		g.registerBattlefieldEntry(perm, nil, uuid.Nil)
+	}
+	for _, perm := range permanents {
+		g.completeBattlefieldEntry(perm, controller)
+	}
+}
+
+func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color) *Permanent {
 	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
 		return nil
 	}
@@ -455,6 +480,10 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 		}
 	}
 
+	return perm
+}
+
+func (g *Game) registerBattlefieldEntry(perm *Permanent, colors *[]Color, colorSourceID uuid.UUID) {
 	g.zones.AddPermanent(perm)
 	if colors != nil {
 		g.effects.Add(permanentColorEffect(perm, *colors, colorSourceID))
@@ -470,7 +499,9 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 			}
 		}
 	}
+}
 
+func (g *Game) completeBattlefieldEntry(perm *Permanent, controller uuid.UUID) {
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {
@@ -496,8 +527,6 @@ func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color
 		FromZone: ZoneAny,          // engine doesn't model the precise origin of an ETB
 		ToZone:   ZoneBattlefield,
 	})
-
-	return perm
 }
 
 // PutOnBattlefieldAttacking (CR 508.4) puts a creature onto the battlefield and
