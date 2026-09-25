@@ -1724,3 +1724,39 @@ Validation: focused card and shared contract tests; The Dark package tests;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/thedark`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Dwarven Demolition Team Typed Wall Destruction
+
+- [x] Migrate the complete definition to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify the full Oracle comment, mana cost, creature type, and base P/T against `data/LEA.json`.
+- [x] Correct the legacy creature-only target restriction after a failing card regression. Oracle says “target Wall,” so use `HasSubType("Wall")` without `IsCreature`.
+- [x] Audit targeting, tap payment, resolution legality, identity, and destruction against existing contracts. No engine gap or new constructor is required.
+
+The Oracle ability, “{T}: Destroy target Wall,” uses `Costs(TapCost(This))`
+and a typed Wall permanent target. Either player's Wall qualifies, including
+the source if it gains that subtype. CR 109.2 and 205.3m do not restrict this
+target to creatures. Select the target before paying the tap cost. Normal
+creature tap restrictions apply. There is no mana cost, sacrifice cost, or
+sorcery restriction. Resolution checks target legality and incarnation again;
+destruction allows regeneration and respects indestructible.
+
+`TestDwarvenDemolitionTeamNoncreatureWall` failed before migration because the
+legacy ability found no legal target. It now passes and checks that the target
+is destroyed while the source remains. The fixture supplies an enchantment
+with the Wall subtype to isolate the target restriction; it does not test
+general kindred support. Existing shared contracts `TestTypedTargetGroups`,
+`TestTypedTargetValidation`, `TestTypedTargetCopyAndClone`,
+`TestTargetIncarnationAfterReturn`, `TestTypedRegenerationConsumption`,
+`TestComposedRemovalMetadata`, and `TestComposableActivationRestrictions`
+pass and cover the reused services. Rules contracts are CR 109.2, 205.3m,
+400.7, 602, 608.2b, and 701.8.
+
+Dwarven Demolition Team is fully migrated. Legacy destruction and activation
+helpers retain other callers, so no export is retired. The broader action
+migration and unrelated engine blockers remain open.
+
+Validation: focused card and shared contract tests; Limited Edition package;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/limited`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

@@ -930,13 +930,11 @@ func registerCreatures() {
 	// Creature — Dwarf 1/1
 	// {T}: Destroy target Wall.
 	Register("Dwarven Demolition Team", func() Card {
+		wall := TargetPermanent("wall", HasSubType("Wall"))
 		return NewCreature("Dwarven Demolition Team", "{2}{R}", 1, 1,
 			WithSubTypes("Dwarf"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(HasSubType("Wall"))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Destroy(wall), WithTargets(wall))),
 		)
 	})
 
