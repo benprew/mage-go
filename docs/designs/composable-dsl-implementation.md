@@ -45,6 +45,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Procrastinate Tap and Counters**: Add typed `MultiplyValues`, migrate the spell to typed tap and twice-X stun counters, and remove its positional callback. No engine blocker. See the completed slice below.
 - [x] **Controlled Creature Team Boosts**: Migrate Fortify, Inspired Charge, and Assault Formation’s team activation to typed collection modifications and durations; retire `BoostMatchingUntilEndOfTurn`, including its test fixture caller. No engine blocker. See the completed slice below.
 - [x] **Limited Edition Simple Self-Pump Activations**: Migrate Frozen Shade, Granite Gargoyle, Shivan Dragon, Wall of Fire, and Wall of Water to typed activation costs and temporary source modifications. No engine gap; see the completed slice below.
+- [x] **Targeted Instant P/T Boosts**: Migrate Howl from Beyond and Righteousness to typed targets, resolution-time X, and temporary modifications. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -725,3 +726,28 @@ harness tests, universal registration validation through `make test`,
 No export is retired: `Boost`, `ToSource`, and the legacy activation builder still have other callers. Dragon Whelp's activation-count and delayed-sacrifice clauses require a separate audit. Other legacy definitions still require the direct engine import in `cards/limited/creatures.go`.
 
 Validation: focused adapter tests, engine and Limited Edition package tests, `make test`, `go build ./...`, and `make lint` pass with zero failures.
+
+
+## Completed Slice: Targeted Instant P/T Boosts
+
+- [x] Migrate Howl from Beyond and Righteousness to `Spell`, typed permanent targets, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Restore complete Oracle comments from `data/LEA.json` immediately above both registrations.
+- [x] Verify target restrictions, resolution-time X, duration, clone isolation, and returned-object exclusion. Existing target and continuous-effect services require no engine fix.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Howl from Beyond: “Target creature gets +X/+0 until end of turn.” | `TargetPermanent("creature", IsCreature)` and `ModifyPT(creature, ValueAtResolution(XValue()), Fixed(0))` inside `Until(EndOfTurn, ...)`; either controller, instant timing, and {X}{B} retained. X is captured when the effect resolves. | `TestHowlFromBeyond` exercises casting with X=5; `TestTargetedBoostResolution` checks X=0 and X=5 and changes the resolution X afterward. |
+| Righteousness: “Target blocking creature gets +7/+7 until end of turn.” | `TargetPermanent("blocking creature", And(IsCreature, IsBlocking))` and `ModifyPT(creature, Fixed(7), Fixed(7))` with the same duration; either controller, instant timing, and {W} retained. Blocking is a target restriction, not a duration condition. | `TestTargetedBoostTypedDefinitions` checks both controllers and excludes noncreatures and nonblockers; `TestTargetedBoostResolution` checks a creature removed from combat before resolution and a bonus that remains after combat removal. |
+| Both legacy `NewTargetedSpell` / `Boost` calls | Typed targets capture the battlefield incarnation; layer 7c bonuses expire at end of turn and do not follow a returned card. No source LKI is needed. Beneficial, single-subject metadata remains available. | `TestTargetedBoostResolution` checks expiration, clone isolation, and leave-and-return; `TestTargetedBoostComposition` checks public spell, sequence, and modal composition and registration validation. |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 608.2b (target legality), 611.2c (affected objects), and
+613 (power/toughness layers). Both typed-definition tests failed before migration;
+the new resolution cases passed against the legacy definitions and preserve those
+outcomes. No export is retired: the legacy targeted spell and boost constructors
+still have other callers. Other definitions in `cards/limited/spells.go` retain
+their engine import. No outstanding engine blocker is claimed resolved.
+
+Validation: focused card and public DSL tests; full `make test`; `go build ./...`;
+`go vet ./cards/limited`; and `make lint` passed with zero failures (lint: zero
+issues).

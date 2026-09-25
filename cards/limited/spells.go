@@ -507,15 +507,19 @@ func registerSpells() {
 		)
 	})
 
+	// Target creature gets +X/+0 until end of turn.
 	Register("Howl from Beyond", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewInstant("Howl from Beyond", "{X}{B}",
-			NewTargetedSpell(TargetCreature(), Boost(XValue(), Fixed(0))),
+			WithAbility(Spell(Until(EndOfTurn, ModifyPT(creature, ValueAtResolution(XValue()), Fixed(0))), WithTargets(creature))),
 		)
 	})
 
+	// Target blocking creature gets +7/+7 until end of turn.
 	Register("Righteousness", func() Card {
+		creature := TargetPermanent("blocking creature", And(IsCreature, IsBlocking))
 		return NewInstant("Righteousness", "{W}",
-			NewTargetedSpell(TargetCreature(IsBlocking), Boost(Fixed(7), Fixed(7))),
+			WithAbility(Spell(Until(EndOfTurn, ModifyPT(creature, Fixed(7), Fixed(7))), WithTargets(creature))),
 		)
 	})
 

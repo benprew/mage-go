@@ -623,3 +623,22 @@ func TestSelfPumpActivationComposition(t *testing.T) {
 		}
 	}
 }
+
+func TestTargetedBoostComposition(t *testing.T) {
+	creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+	body := dsl.Until(core.EndOfTurn, dsl.ModifyPT(creature, dsl.ValueAtResolution(dsl.XValue()), dsl.Fixed(0)))
+	cards := []mage.Card{
+		dsl.NewInstant("Spell", "{X}{B}", dsl.WithAbility(dsl.Spell(body, dsl.WithTargets(creature)))),
+		dsl.NewInstant("Sequence", "{X}{B}", dsl.WithAbility(dsl.Spell(dsl.Sequence(body, dsl.Draw(dsl.You, dsl.Fixed(1))), dsl.WithTargets(creature)))),
+		dsl.NewInstant("Mode", "{X}{B}", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Boost", body, dsl.WithTargets(creature)), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	props := dsl.InspectDefinition(body).Properties
+	if props.Outcome != mage.OutcomeBenefit || props.Mass {
+		t.Fatalf("targeted boost metadata = %+v", props)
+	}
+}

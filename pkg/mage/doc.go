@@ -43,6 +43,9 @@
 // Use [Activate] with [Mana] costs and [Until] with [ModifyPT] of [This]
 // for a temporary source bonus. Each resolution adds a separate bonus to
 // the original permanent. A returned card does not receive that bonus.
+// Use a typed target with [WithTargets] for a targeted bonus.
+// [ValueAtResolution] captures X when the bonus starts. A blocking restriction
+// belongs to the target filter; it does not end a bonus after resolution.
 //
 // # Engine Principles & Invariants
 //
