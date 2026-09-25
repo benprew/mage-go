@@ -1353,3 +1353,35 @@ Validation: focused card and shared keyword/lifetime tests; Fallen Empires
 package; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/fallen_empires`; `make test`; and `make lint` passed with
 zero failures (lint: zero issues).
+
+
+## Completed Slice: Fallen Empires Targeted Keyword Activations
+
+- [x] Migrate Icatian Scout and Svyelunite Priest from string-bound keyword grants and positional activation targets to typed `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Until(EndOfTurn, GrantKeyword(...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments, mana costs, creature types, and base P/T against `data/FEM.json`; both match exactly.
+- [x] Preserve Svyelunite Priest's controller-upkeep restriction with `OnlyDuring(core.Upkeep)` and `OnlyOnYourTurn()`.
+- [x] Audit target scope, payment, timing, identity, duration, and metadata against the existing engine contracts. No engine gap or new constructor is required.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Scout: “{1}, {T}: Target creature gains first strike until end of turn.” | `Costs(Mana("{1}"), TapCost(This))`, creature target, and temporary `GrantKeyword(creature, FirstStrike)` | `TestIcatianScout_GrantsFirstStrike` |
+| Priest: “{U}{U}, {T}: Target creature gains shroud until end of turn.” | `Costs(Mana("{U}{U}"), TapCost(This))`, creature target, and temporary `GrantKeyword(creature, Shroud)` | `TestSvyelunitePriest_GrantsShroud` |
+| Priest: “Activate only during your upkeep.” / `WithUpkeepOnly` | Combined step and active-player restrictions apply at activation, with no timing recheck at resolution | `TestCombinedActivationTiming` covers both option orders, controller upkeep, opponent upkeep, and other steps |
+| `WithTarget(TargetCreature())` | `TargetPermanent("creature", IsCreature)` and `WithTargets(creature)`; either player's creature, including the source; recheck legality at resolution | Existing typed-target contracts and universal `TestRegisteredDefinitions` |
+| Legacy `mage.GrantKeyword` | Typed layer 6 modification on the captured target incarnation; explicit cleanup expiration, source-independent lifetime, and beneficial keyword metadata | `TestTargetIncarnationAfterReturn`, `TestComposableKeywordSourceExit`, `TestComposableKeywordLayerOrder`, `TestComposableContinuousCapture`, and `TestComposableSelfPumpLifetime` |
+
+These declarative abilities reuse established primitives. Existing card and
+shared contract tests pass; no new simulation test is required. Rules contracts
+are CR 602 (activation), 608.2b (target legality), 400.7 (new objects), 611.2
+(duration), and 613 (layers), using the repository rules effective February 27,
+2026.
+
+Both card definitions are fully migrated. Legacy activation, target, keyword,
+and upkeep helpers retain other callers, so no export is retired. The file
+retains unrelated legacy definitions and its direct engine import. No open
+engine blocker is claimed resolved.
+
+Validation: focused card and shared keyword, target, lifetime, and combined
+timing tests; Fallen Empires package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/fallen_empires`; `make test`; and
+`make lint` passed with zero failures (lint: zero issues).

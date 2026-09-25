@@ -200,14 +200,13 @@ func registerCreatures() {
 	// 1/1
 	// {1}, {T}: Target creature gains first strike until end of turn.
 	Register("Icatian Scout", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Icatian Scout", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier", "Scout"),
-			WithActivatedAbility(
-				mage.GrantKeyword(FirstStrike),
-				GenericCost(1),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, FirstStrike)),
+				WithTargets(creature),
+			)),
 		)
 	}))
 
@@ -371,15 +370,13 @@ func registerCreatures() {
 	// 1/1
 	// {U}{U}, {T}: Target creature gains shroud until end of turn. Activate only during your upkeep. (It can't be the target of spells or abilities.)
 	Register("Svyelunite Priest", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Svyelunite Priest", "{1}{U}", 1, 1,
 			WithSubTypes("Merfolk", "Cleric"),
-			WithActivatedAbility(
-				mage.GrantKeyword(Shroud),
-				ManaCostOf("{U}{U}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-				WithUpkeepOnly(),
-			),
+			WithAbility(Activate(Costs(Mana("{U}{U}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, Shroud)),
+				WithTargets(creature), OnlyDuring(core.Upkeep), OnlyOnYourTurn(),
+			)),
 		)
 	}))
 

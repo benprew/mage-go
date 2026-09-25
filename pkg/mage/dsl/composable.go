@@ -189,8 +189,9 @@ var (
 	TargetOtherThanSource = mage.TargetOtherThanSource
 	// ModifyPT also supports source bonuses paid with RemoveCountersCost.
 	// Install the bonus with Until to set its duration.
-	ModifyPT      = mage.ModifyPT
-	ModifyEachPT  = mage.ModifyEachPT
+	ModifyPT     = mage.ModifyPT
+	ModifyEachPT = mage.ModifyEachPT
+	// GrantKeyword accepts a typed subject; Until supplies the duration.
 	GrantKeyword  = mage.GrantKeywordModification
 	CantBeBlocked = mage.CantBeBlocked
 	// Until installs temporary continuous modifications that expire at duration end (e.g. EndOfTurn).

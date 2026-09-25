@@ -60,6 +60,10 @@
 // [ValueAtResolution] captures X when the bonus starts. A blocking restriction
 // belongs to the target filter; it does not end a bonus after resolution.
 //
+// Icatian Scout and Svyelunite Priest use typed creature targets with
+// [GrantKeywordModification] and [Until] for temporary keyword grants.
+// Combine [OnlyDuring] with [OnlyOnYourTurn] for a controller upkeep restriction.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.
