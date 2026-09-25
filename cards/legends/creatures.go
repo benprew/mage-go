@@ -2727,7 +2727,7 @@ func registerCreatures() {
 		return NewCreature("Princess Lucrezia", "{3}{U}{U}{B}", 5, 4,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Blue),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Blue, Fixed(1)))),
 		)
 	})
 
@@ -2836,7 +2836,7 @@ func registerCreatures() {
 		return NewCreature("Riven Turnbull", "{5}{U}{B}", 5, 7,
 			WithSubTypes("Human", "Advisor"),
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Black),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Black, Fixed(1)))),
 		)
 	})
 
@@ -3006,10 +3006,7 @@ func registerCreatures() {
 		return NewCreature("Sunastian Falconer", "{3}{R}{G}", 4, 4,
 			WithSubTypes("Human", "Shaman"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				AddMana(Colorless, 2),
-				TapCost(This),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(2)))),
 		)
 	})
 

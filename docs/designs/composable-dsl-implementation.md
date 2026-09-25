@@ -2624,3 +2624,38 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Legends Fixed Mana Creatures
+
+- [x] Migrate Princess Lucrezia, Riven Turnbull, and Sunastian Falconer to
+  `Activate(Costs(TapCost(This)), AddManaAmount(color, Fixed(amount)))`
+  through the author DSL.
+- [x] Preserve one blue mana, one black mana, and two colorless mana,
+  respectively, with no targets or additional costs.
+- [x] Verify full Oracle comments, costs, legendary supertypes, creature
+  subtypes, and power/toughness against `data/LEG.json`.
+- [x] Audit immediate resolution, tap payment, summoning sickness, fixed
+  production planning, and clone isolation. No engine fix is required.
+
+These abilities add mana to the activating controller's pool and resolve
+without using the stack. The shared tap-cost and mana services enforce
+summoning sickness and haste, require an untapped source, and support automatic
+mana payment. Fixed typed amounts expose the same production to the planner.
+Rules contracts are CR 302.6, 602, and 605.
+
+Shared `TestComposableMana*` and `TestTypedManaAmount*` pass. They cover
+immediate resolution, tap events, payment failure, planning, clone isolation,
+and definition validation. The Legends package and its existing creature
+checks pass. These are declarative single-action abilities, so no additional
+card simulation test is needed.
+
+This completes one slice of the remaining fixed mana-ability migrations.
+Other cards still use `WithManaAbility`, `WithActivatedAbility`, and `AddMana`,
+so no helper is retired. Dynamic planning and the other mana-family work
+remain open; no engine blocker is marked resolved.
+
+Validation: focused shared contracts; Legends package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
