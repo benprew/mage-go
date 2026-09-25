@@ -2077,3 +2077,42 @@ Validation: focused Rattlechains tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Controller Life-Gain Events and Kalastria Nightwatch
+
+- [x] Add `ControllerGainsLife(playerBinding)` to the typed DSL. Capture the
+  gaining player at event detection without declaring a target.
+- [x] Migrate Kalastria Nightwatch's complete definition to `WhenEvent` and
+  `Until(EndOfTurn, GrantKeyword(This, Flying))`.
+- [x] Verify the full Oracle comment, `{4}{B}` cost, Vampire Warrior Ally
+  subtypes, and 4/5 characteristics against `data/JMP.json`.
+- [x] Audit the existing life-event, trigger capture, and keyword services.
+  No engine fix is required for this adapter.
+
+The pattern matches positive `EvtLifeGained` outcomes for the source's
+controller at detection. Opponent gains, life loss, and gains replaced with
+zero or no gain do not trigger it. Each gain produces one trigger regardless
+of its amount. The saved player remains fixed through control changes, copies,
+source departure, and clones; `You` still uses the resolving controller.
+Kalastria Nightwatch grants flying to its captured source incarnation through
+cleanup. A returned card is a new object; phasing preserves its incarnation.
+Rules contracts are CR 119.9, 400.7, 603.2, 603.3a, 611.2, and 613.
+
+`TestControllerLifeGainEventFiltering`, `Lifecycle`, `SourceIdentity`, and
+`Validation` cover outcomes, controller changes, pending and stack clones,
+copies, modal and delayed composition, phasing, source return, and binding
+scope. DSL composition and compile-failure tests cover the public surface.
+The tests first failed to compile because the new constructor was absent.
+`TestKalastriaNightwatch_GainsFlyingOnLifeGain` passes before and after migration;
+existing keyword and duration contracts cover its declarative body.
+
+This completes one slice of event participant and legacy action migrations.
+Six production `WheneverYouGainLifeTrigger` callers remain: Bloodbond Vampire,
+Malakir Familiar, Cradle of Vitality, Comforting Counsel, Blech, Loafing Pest,
+and Pest Mascot. The helper remains exported. General life-event emission,
+replacement ordering, collection gains, and other engine blockers remain open.
+
+Validation: focused adapter and card tests; engine short tests; Jumpstart
+package tests; all card tests and registration validation; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

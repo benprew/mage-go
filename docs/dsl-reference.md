@@ -266,6 +266,7 @@ Triggers on rules events dispatched by the engine:
   * `DealsDamageToPlayer(source, playerBinding)`: Source deals damage to player; captures player.
   * `DealsDamageToOpponent(source, playerBinding)`: Source deals damage to opponent.
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
+  * `ControllerGainsLife(playerBinding)`: Source controller gains a positive amount of life. Saves that player at event detection without declaring a target. A replaced gain triggers only if life is actually gained. Copies retain the saved player while `You` uses the copy's controller.
   * `OpponentLosesLife(playerBinding)`: Opponent loses life (can chain `.WithAmount(binding)`).
   * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
   * `AttachedBecomesTapped(hostBinding)`: Captures the attached permanent when it becomes tapped. Read with `From(hostBinding)`; it is not a target. Attachment moves and source departure do not change the captured incarnation.

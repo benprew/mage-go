@@ -2711,10 +2711,11 @@ func registerCreatures() {
 	// 4/5
 	// Whenever you gain life, this creature gains flying until end of turn.
 	Register("Kalastria Nightwatch", func() Card {
+		player := BindPlayer("gainer")
 		return NewCreature("Kalastria Nightwatch", "{4}{B}", 4, 5,
 			WithSubTypes("Vampire", "Warrior", "Ally"),
-			WithAbility(WheneverYouGainLifeTrigger(
-				mage.GrantKeyword(Flying).Targeting(ToSource()).Until(EndOfTurn), false)),
+			WithAbility(WhenEvent(ControllerGainsLife(player),
+				Until(EndOfTurn, GrantKeyword(This, Flying)))),
 		)
 	})
 
