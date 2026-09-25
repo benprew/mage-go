@@ -205,6 +205,10 @@ or host is a new incarnation and does not redirect the old reference.
 * `ChooseRandomPermanent(set, binding)`: Selects a random permanent from the set at resolution.
 * `ChooseRandomPlayer(playerSet, binding)`: Selects a random player from the set at resolution.
 
+For a random tap, use `ChooseRandomPermanent(MatchingPermanents(filter), chosen)`
+followed by `Tap(From(chosen))`. The collection excludes phased-out permanents;
+an empty choice consumes no random value. The choice does not declare a target.
+
 ---
 
 ## 8. Saved Bindings & Snapshots

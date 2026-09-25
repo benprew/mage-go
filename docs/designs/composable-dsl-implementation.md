@@ -33,6 +33,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Tabernacle String-Bound Destruction**: Migrate its granted upkeep body to typed payment and source destruction; retire `DestroyGathered`. Correct returned-source identity and include Tabernacle when it is a creature. See the completed slice below.
 - [x] **Rakalite Delayed Return**: Migrate prevention and delayed source return to typed targets, activation, and `AtNext`; preserve the original source incarnation. See the completed slice below.
 - [x] **Aura Entry Tap**: Migrate Paralyze and Waterknot to typed entry triggers and attachment taps; retire `TapAttachedCreature`. Resolve departed and returned attachment identity with existing typed references. See the completed slice below.
+- [x] **Whimsy Random Tap**: Migrate the remaining random-tap branch to typed selection and tap; exclude phased-out candidates. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -363,3 +364,21 @@ Validation: focused Rakalite regressions, `go test ./cards/antiquities -count=1`
 Oracle sources: `data/LEA.json` and `cards/jumpstart/JMP.json`; full Oracle comments precede the registrations. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 303.4m (enchanted object), 400.7 (new objects), and 608.2h (source information at resolution). General damage LKI and other attachment-event audits remain open. Unrelated legacy definitions and direct engine imports remain in both card files.
 
 Validation: focused entry-tap regressions and Waterknot tests; both affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1` (including registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Whimsy Random Tap
+
+- [x] Replace Whimsy's `ApplyToRandomPermanent(Tap(), ...)` branch with `ChooseRandomPermanent`, a saved permanent binding, and `Tap(From(chosen))` through `dsl`.
+- [x] Resolve phased-out membership with the existing typed collection. Before migration, both phased-out regression cases consumed a random result despite having no eligible permanent. No engine fix or new constructor was required.
+
+| Oracle clause / affected caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Whimsy: “Play X random fast effects.” / random-tap branch | Preserve the existing action table and X iterations. Choose one untapped artifact, creature, or land from either player at resolution, then tap its captured incarnation. The choice is not a target, so shroud does not exclude it. | `TestWhimsyRandomTapMembership`; existing `TestWhimsy_EachRandomActionCanBeSelected` and `TestWhimsy_PerformsXIndependentActionsInOrder` |
+| Empty or phased-out candidates | `MatchingPermanents` excludes phased-out objects; an empty choice consumes no randomness. Already tapped permanents and enchantments without an eligible type are excluded. | `TestWhimsyRandomTapMembership`; existing `TestWhimsy_NoEligiblePermanentIsSafe` |
+| Tap action and repeat selection | `Tap` uses the existing tap-transition event path. Later iterations recompute membership, so an already tapped permanent is not selected again. The composed body retains tap/detrimental metadata through `Sequence`. | `TestWhimsyRandomTapEventsAndRepeatedSelection` verifies one trigger, one random choice, and clone isolation; existing `TestTapPermanentRequiresTransition` and typed saved-tap contracts cover the shared executor. |
+
+Oracle source: `cards/astral/PAST.json`; the complete comment remains above registration. The Oracle text does not enumerate the random action table; this slice preserves the repository's existing table and branch restrictions. Rules contract: repository CR 702.26 (phasing), 701.26 (tap and untap), and 400.7 (object identity). Other Whimsy branches remain outside this slice.
+
+No export is retired: `ApplyToRandomPermanent` still has six Faerie Dragon production callers and one engine test. The legacy `Tap()` cost/effect surface also has other callers. Their separate audits and the broader string-bound action checklist remain open.
+
+Validation: the phased-out regression failed before migration and passed afterward; `go test ./cards/astral -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./cards/astral`; and `make lint` passed with zero failures (lint: zero issues).

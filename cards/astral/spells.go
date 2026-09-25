@@ -25,7 +25,11 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 			dsl.Untap(dsl.From(chosen)),
 		), sourceID, controllerID, nil)
 	case 2: // Twiddle — tap
-		return ApplyEffect(g, ApplyToRandomPermanent(Tap(), And(IsUntapped, Or(IsArtifact, IsCreature, IsLand))), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("random permanent")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.And(dsl.IsUntapped, dsl.Or(dsl.IsArtifact, dsl.IsCreature, dsl.IsLand))), chosen),
+			dsl.Tap(dsl.From(chosen)),
+		), sourceID, controllerID, nil)
 	case 3: // Aladdin's Ring
 		return ApplyEffect(g, ApplyToRandomDamageTarget(AladdinsRingEffect()), sourceID, controllerID, nil)
 	case 4: // Ancestral Recall

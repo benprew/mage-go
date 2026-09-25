@@ -46,6 +46,10 @@
 // follows the current controller and remains active only while the source has
 // the ability. A pending gain keeps the player who skipped the step.
 //
+// Use [ChooseRandomPermanent] with [MatchingPermanents] to save a random
+// battlefield reference. Use [TapSubject] with [From] to tap that reference.
+// An empty collection does not consume a random value.
+//
 // Use [ManaValueOf] to read a permanent through its typed reference. Use
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
 // The saved number remains available after the permanent leaves.
