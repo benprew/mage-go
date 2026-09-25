@@ -33,6 +33,10 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		return nil, ErrPlayerNotFound
 	}
 
+	if err := g.checkSpellStep(card); err != nil {
+		return nil, err
+	}
+
 	selection := opts.ModalSelection
 	if selection == nil {
 		var err error
@@ -188,4 +192,13 @@ func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {
 	if card.HasType(TypeSorcery) {
 		g.trackers.Turn.RecordSorceryCast(playerID)
 	}
+}
+
+func (g *Game) checkSpellStep(card Card) error {
+	for _, ability := range card.Abilities() {
+		if action, ok := UnwrapAbility(ability).(*ActionDefinition); ok && action.kind == ActionSpell && action.timing == TimingStepOnly && g.turns.Step() != action.stepOnly {
+			return fmt.Errorf("can only cast %s during %s", card.Name(), action.stepOnly)
+		}
+	}
+	return nil
 }

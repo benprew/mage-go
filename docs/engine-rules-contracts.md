@@ -219,3 +219,19 @@ All casting and activations follow the locked total-cost transaction model:
 * **Ownership vs. Control**:
   * `ChangeOwner` alters card ownership copy-on-write without changing control.
   * When a duel concludes with a victor, `AnteResult` transfers ownership of cards in the ante zone to the winner.
+
+## Spell Step Restrictions (CR 601.3, 707.10)
+
+`Spell(..., OnlyDuring(step))` uses the existing action timing fields. Normal
+casting, alternate-cost and free zone casting, casts of card copies, and
+`GetCastableSpells` enforce the restriction before choices or payment. A rejected
+cast leaves the hand, mana, and stack unchanged. The restriction grants no
+additional casting permission and does not replace normal sorcery timing.
+Either player can satisfy the step restriction. Copying an existing stack spell
+is not casting; neither copying nor resolution checks this restriction again.
+Card copies and cloned games retain the action definition.
+
+Rules baseline: repository Comprehensive Rules effective February 27, 2026.
+Evidence: `TestSpellStepRestriction` (every step, both players, four cast paths),
+`TestSpellStepCopyAndResolution`, `TestSpellStepDoesNotGrantSorceryTiming`,
+`TestSpellStepOptionValidation`, and `TestTeleportCastingRestriction`.

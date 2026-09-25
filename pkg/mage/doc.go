@@ -32,6 +32,10 @@
 // [PlayerReader], [BattlefieldReader], [ResolutionReader], [TurnReader],
 // [CombatReader], [TrackerReader], and [StackReader], which compose into [GameReader].
 //
+// Spell definitions can use OnlyDuring to restrict casting to one turn step.
+// Game checks the restriction before choices and payment. Copies of stack spells
+// and spell resolution do not repeat the casting check.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

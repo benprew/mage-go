@@ -26,21 +26,6 @@ func RemoveFromCombat() Effect { return &removeFromCombatEffect{} }
 func (e *removeFromCombatEffect) Text() string                 { return "Remove target creature from combat" }
 func (e *removeFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// makeUnblockableUntilEndOfTurnEffect makes a target creature unblockable until end of turn.
-type makeUnblockableUntilEndOfTurnEffect struct{}
-
-// MakeUnblockableUntilEndOfTurn creates an effect that makes a target creature unblockable until end of turn.
-func MakeUnblockableUntilEndOfTurn() Effect {
-	return &makeUnblockableUntilEndOfTurnEffect{}
-}
-
-func (e *makeUnblockableUntilEndOfTurnEffect) Text() string {
-	return "Target creature can't be blocked this turn"
-}
-func (e *makeUnblockableUntilEndOfTurnEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
 // preventAttackingUntilEndOfTurnEffect makes a target creature unable to attack
 // for the rest of this turn. Used for instant-speed "target creature can't
 // attack this turn" cards. Per CR 506.4a, if applied after the target has
@@ -246,22 +231,6 @@ func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	ctx.Game.RemoveFromCombat(perm.ID())
-	return nil
-}
-
-func (*makeUnblockableUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := &composedLayerEffect{layer: LayerAbility, duration: EndOfTurn,
-		captured: []capturedModification{{permanent: capturedPermanent{perm.ID(), perm.incarnationID}, cantBeBlocked: true}},
-	}
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
 	return nil
 }
 

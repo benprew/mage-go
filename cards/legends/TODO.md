@@ -52,7 +52,6 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Shelkin Brownie**
 - **Sylvan Library**
 - **Takklemaggot**
-- **Teleport**
 - **Tetsuo Umezawa**
 - **Unholy Citadel**
 - **Voodoo Doll**

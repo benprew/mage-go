@@ -13,16 +13,18 @@ func TestBlockingProhibitionSurvivesAbilityRemoval(t *testing.T) {
 		t.Run(map[bool]string{false: "removal after", true: "removal before"}[removalFirst], func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
 			g := NewGame(a, b)
-			source := g.PutOnBattlefield(NewArtifact("Source", ""), a.PlayerID())
+			target := DeclarePermanentTarget("attacker", IsCreature)
+			source := g.PutOnBattlefield(NewArtifact("Source", "", WithAbility(Activate(Costs(), Until(EndOfTurn, CantBeBlocked(target)), WithTargets(target)))), a.PlayerID())
 			attacker := g.PutOnBattlefield(NewCreature("Attacker", "", 2, 2), a.PlayerID())
 			blocker := g.PutOnBattlefield(NewCreature("Blocker", "", 2, 2), b.PlayerID())
 			remove := func() { g.AddContinuousEffect(RemoveAllAbilities(attacker.ID(), EndOfTurn)) }
 			if removalFirst {
 				remove()
 			}
-			if err := ApplyEffect(g, MakeUnblockableUntilEndOfTurn(), source.ID(), a.PlayerID(), []uuid.UUID{attacker.ID()}); err != nil {
+			if err := g.ActivateAbilityByIndex(a.PlayerID(), source.ID(), 0, []uuid.UUID{attacker.ID()}); err != nil {
 				t.Fatal(err)
 			}
+			g.ResolveTopOfStack()
 			if !removalFirst {
 				remove()
 			}

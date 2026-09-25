@@ -311,7 +311,7 @@ a power increase after resolution does not end the blocking restriction.
 * Activation Options:
   * `WithTargets(...)`: Declares target bindings.
   * `OnlyAsSorcery()`: Sorcery-speed timing.
-  * `OnlyDuring(step)`: Restricts activation to specific step (e.g. `Upkeep`).
+  * `OnlyDuring(step)`: Restricts casting or activation to the specified step (e.g. `DeclareAttackers` or `Upkeep`). Returns `StepTimingOption`, which is accepted by `Spell` and all activation contexts. It adds a restriction; it does not grant permission to cast a sorcery outside normal timing.
   * `OnlyOnYourTurn()`: Active player only.
   * `ActivationLimit(maxPerTurn)`: Max activations per turn.
   * `ActivationIf(condition)`: Pure state condition required to activate.
@@ -478,3 +478,19 @@ WithAbility(WhenEvent(
     ),
 ))
 ```
+
+### Teleport (Spell Step Restriction)
+
+```go
+creature := TargetPermanent("creature", IsCreature)
+Spell(
+    Until(EndOfTurn, CantBeBlocked(creature)),
+    WithTargets(creature),
+    OnlyDuring(core.DeclareAttackers),
+)
+```
+
+The casting restriction applies on either player's turn, before choices and
+payment, including alternate-cost casts and casts of card copies. It does not
+restrict resolution or copying a spell already on the stack. The target may be
+any creature, including a creature that is not attacking.

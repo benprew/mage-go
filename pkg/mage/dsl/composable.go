@@ -47,6 +47,7 @@ type (
 	ActivationOption          = mage.ActivationOption
 	ActivationCaptureOption   = mage.ActivationCaptureOption
 	ActivationTimingOption    = mage.ActivationTimingOption
+	StepTimingOption          = mage.StepTimingOption
 	ActivationConditionOption = mage.ActivationConditionOption
 	ActivationLimitOption     = mage.ActivationLimitOption
 	ModalActivationOption     = mage.ModalActivationOption

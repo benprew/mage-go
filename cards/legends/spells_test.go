@@ -4,6 +4,8 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -122,13 +124,41 @@ func TestTeleport(t *testing.T) {
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // would block
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Teleport")
-		g.CastSpell(3, core.BeginCombat, gametest.PlayerA, "Teleport", "Grizzly Bears")
+		g.CastSpell(3, core.DeclareAttackers, gametest.PlayerA, "Teleport", "Grizzly Bears")
 		g.Attack(3, gametest.PlayerA, "Grizzly Bears")
 		g.Block(3, gametest.PlayerB, "Hill Giant", "Grizzly Bears")
 		g.StopAt(3, core.EndStep)
 		g.Execute()
 		g.AssertLife(gametest.PlayerB, 18) // unblockable, 2 damage
 	})
+}
+
+func TestTeleportCastingRestriction(t *testing.T) {
+	for _, step := range []core.PhaseStep{core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers} {
+		t.Run(step.String(), func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			p := g.GetPlayer(gametest.PlayerB)
+			g.SetStep(step)
+			g.AddCard(core.ZoneHand, gametest.PlayerB, "Teleport")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+			creature := g.FindPermanentByName("Grizzly Bears", g.GetPlayer(gametest.PlayerA).PlayerID())
+			p.ManaPool().Add(core.Blue, 3)
+			err := g.CastSpellByName(p.PlayerID(), "Teleport", []uuid.UUID{creature.ID()})
+			if step == core.DeclareAttackers {
+				if err != nil {
+					t.Fatal(err)
+				}
+				g.ResolveTopOfStack()
+			} else {
+				if err == nil {
+					t.Fatal("Teleport was cast outside declare attackers")
+				}
+				if len(p.Hand()) != 1 || p.ManaPool().TotalMana() != 3 {
+					t.Fatal("illegal cast changed hand or mana")
+				}
+			}
+		})
+	}
 }
 
 func TestEnergyTap(t *testing.T) {

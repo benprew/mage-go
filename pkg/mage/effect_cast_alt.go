@@ -168,6 +168,10 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return fmt.Errorf("card %s not found in %s", cardID, zone)
 	}
 
+	if err := g.checkSpellStep(card); err != nil {
+		return err
+	}
+
 	// CR 117.6: a player can't cast a card with no mana cost using an
 	// alternate cost that doesn't specify an alternative; "without paying
 	// its mana cost" likewise can't be used to cast a card with no mana

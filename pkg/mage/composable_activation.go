@@ -81,9 +81,22 @@ func OnlyAsSorcery() ActivationTimingOption {
 	return activationTiming{activationRestriction{kind: "timing", timing: TimingSorcery}}
 }
 
-// OnlyDuring restricts activation to the specified turn step.
-func OnlyDuring(step PhaseStep) ActivationTimingOption {
-	return activationTiming{activationRestriction{kind: "timing", timing: TimingStepOnly, step: step}}
+// StepTimingOption restricts a spell or activation to one turn step.
+type StepTimingOption interface {
+	ActivationTimingOption
+	SpellOption
+}
+
+type stepTiming struct{ activationTiming }
+
+func (stepTiming) spellOption() {}
+func (o stepTiming) applySpell(a *ActionDefinition) {
+	o.applyActivation(a)
+}
+
+// OnlyDuring restricts casting or activation to the specified turn step.
+func OnlyDuring(step PhaseStep) StepTimingOption {
+	return stepTiming{activationTiming{activationRestriction{kind: "timing", timing: TimingStepOnly, step: step}}}
 }
 
 // OnlyOnYourTurn restricts activation to the controller's turn.
@@ -145,3 +158,9 @@ func (o activationLimit) applyModalActivation(a *ActionDefinition) { o.applyActi
 
 func (activationStateCondition) modalActivationOption()                     {}
 func (o activationStateCondition) applyModalActivation(a *ActionDefinition) { o.applyActivation(a) }
+
+type spellStepDefinition struct{ step PhaseStep }
+
+func (s spellStepDefinition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "spell-step", Text: s.step.String()}
+}

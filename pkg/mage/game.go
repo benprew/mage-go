@@ -2410,6 +2410,10 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		return fmt.Errorf("card %s not found in hand", name)
 	}
 
+	if err := g.checkSpellStep(card); err != nil {
+		return err
+	}
+
 	// CR 307.1, 302.1, 303.1, 301.1 — sorcery-speed timing. Any spell that
 	// is not an instant may be cast only during its controller's main phase,
 	// when the stack is empty, and when that player is the active player
@@ -3588,6 +3592,9 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 	var castable []Card
 	for _, card := range p.Hand() {
 		if card.HasType(TypeLand) {
+			continue
+		}
+		if g.checkSpellStep(card) != nil {
 			continue
 		}
 		// CR 702.8 — Flash lets a spell be cast any time you could cast an instant,

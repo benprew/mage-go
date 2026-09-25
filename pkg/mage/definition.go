@@ -111,7 +111,11 @@ func describeDefinition(v any) definitionNode {
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
 		for i, restriction := range e.dslRestrictions {
-			n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), restriction})
+			if e.kind == ActionSpell {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), spellStepDefinition{restriction.step}})
+			} else {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), restriction})
+			}
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets)...)
 		for i, capture := range e.dslCaptures {

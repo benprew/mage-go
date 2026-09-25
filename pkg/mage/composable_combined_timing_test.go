@@ -12,7 +12,7 @@ func TestCombinedActivationTiming(t *testing.T) {
 			for _, mana := range []bool{false, true} {
 				a, b := NewBasePlayer("A"), NewBasePlayer("B")
 				g := NewGame(a, b)
-				first, second := OnlyDuring(Upkeep), OnlyOnYourTurn()
+				var first, second ActivationTimingOption = OnlyDuring(Upkeep), OnlyOnYourTurn()
 				if reverse {
 					first, second = second, first
 				}

@@ -1178,10 +1178,10 @@ func registerSpells() {
 	// Instant
 	// Cast this spell only during the declare attackers step.
 	// Target creature can't be blocked this turn.
-	// XXX: timing restriction not enforced
 	Register("Teleport", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewInstant("Teleport", "{U}{U}{U}",
-			NewTargetedSpell(TargetCreature(), MakeUnblockableUntilEndOfTurn()),
+			WithAbility(Spell(Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature), OnlyDuring(core.DeclareAttackers))),
 		)
 	})
 

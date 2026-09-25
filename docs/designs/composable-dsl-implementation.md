@@ -64,7 +64,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 ### Temporary Blocking Restrictions
 - [x] Preserve resolved blocking prohibitions through ability removal and source departure. Use the existing combat-restriction storage, keeping printed unblockable abilities removable. `TestBlockingProhibitionSurvivesAbilityRemoval` failed before the fix.
 - [x] Migrate Dwarven Warriors and Suspicious Bookcase to typed targets, activation costs, and `Until(EndOfTurn, CantBeBlocked(creature))`. See the activated blocking slice below. No engine gap.
-- [ ] Migrate Teleport, the remaining production `MakeUnblockableUntilEndOfTurn` caller, after enforcing its declare-attackers-step casting restriction. The shared executor is corrected; the positional export and its engine regression caller remain.
+- [x] Migrate Teleport to typed `Spell`, `OnlyDuring(DeclareAttackers)`, and `Until(EndOfTurn, CantBeBlocked(creature))`. Enforce the casting restriction in normal, alternate, free, and card-copy casting paths and spell availability; retire `MakeUnblockableUntilEndOfTurn`. See the Teleport slice below.
 
 ### Untap Skipping
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
@@ -449,3 +449,28 @@ Oracle sources: `data/LEA.json` and `data/JMP.json`. Rules contract: repository 
 No engine gap was found for these two activations, and no new DSL synonym is needed. `MakeUnblockableUntilEndOfTurn` retains one production caller, Teleport, and one engine regression caller. Its exports and executor remain until Teleport's existing casting-timing gap is resolved. The migrated files retain direct engine imports for unrelated definitions; the immutable author boundary remains open.
 
 Validation: focused Warriors and Bookcase checks passed before migration; affected card packages passed after migration; `go test ./cards/... ./pkg/mage/... -short -count=1` (including registration validation and compile-fail fixtures), `make test`, `go build ./...`, `go vet ./...`, and `make lint` all passed with zero failures (lint: zero issues).
+
+## Completed Slice: Teleport Casting Step and Typed Blocking
+
+- [x] Confirm the engine gap with failing `TestSpellStepRestriction`: existing spell step timing was ignored in every casting path and in `GetCastableSpells`.
+- [x] Check the existing action timing fields before choices and payment in normal and alternate/free casts, and in the shared card-copy casting path. No new timing subsystem is needed.
+- [x] Extend `OnlyDuring` with the closed `StepTimingOption` role, accepted by spells and existing activation contexts. Inspect spell timing as `spell-step`; reject invalid steps and duplicate restrictions.
+- [x] Migrate Teleport and the remaining engine regression caller, then retire the positional constructor, executor, and author export. No Go callers remain.
+
+| Oracle clause / retired API | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Cast this spell only during the declare attackers step.” | `Spell(..., OnlyDuring(core.DeclareAttackers))`; either player's turn; normal, alternate, free, and card-copy casts obey the restriction before choices/payment. This does not grant sorcery timing permission. | `TestSpellStepRestriction` fails before the fix and passes afterward; `TestSpellStepDoesNotGrantSorceryTiming`; `TestTeleportCastingRestriction` |
+| “Target creature can't be blocked this turn.” / Teleport's `MakeUnblockableUntilEndOfTurn` call | Typed creature target plus `Until(EndOfTurn, CantBeBlocked(creature))`; no controller or attacking restriction; captured battlefield incarnation; no damage LKI required; beneficial effect metadata preserved. | `TestTeleport`, `TestTeleportCastingRestriction`, `TestTypedBlockingProhibitionLifetime`, `TestSpellStepComposition` |
+| `TestBlockingProhibitionSurvivesAbilityRemoval` positional helper call | Typed activation and target through the actual activation/resolution path; restriction survives ability removal and source departure, with independent clone expiry. | `TestBlockingProhibitionSurvivesAbilityRemoval` |
+| Casting versus copying and resolution | Card copies retain the restriction; existing stack copies and later resolution do not recheck it. | `TestSpellStepCopyAndResolution` |
+| Author-surface timing | `StepTimingOption` composes with `Spell`; existing activation, modal activation, and grant use remains supported. Activation-only turn options do not become spell options. | `TestSpellStepComposition`, `TestSpellStepOptionValidation`, existing combined/granted timing tests, `spell_activation_turn.go` compile-fail fixture |
+
+Oracle source: `cards/legends/LEG.json`. Rules baseline: repository Comprehensive
+Rules effective February 27, 2026, CR 601.3 and 707.10. Teleport's Oracle comment
+is unchanged; its obsolete timing blocker is removed from the card and set TODO.
+The surrounding Legends file still needs engine imports for unrelated cards.
+
+Validation: focused spell-step, Teleport, blocking, and timing tests;
+`go test ./pkg/mage/... ./cards/... -short -count=1`; `make test`;
+`go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures
+(lint: zero issues).
