@@ -111,14 +111,15 @@ func registerArtifacts() {
 	// {T}: Add {C}{C}{C}.
 	// {3}, {T}, Sacrifice this artifact: Draw three cards.
 	Register("Dreamstone Hedron", func() Card {
-		return NewArtifact("Dreamstone Hedron", "{6}",
-			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 3}),
-			WithActivatedAbility(
-				DrawCards(Fixed(3)),
-				GenericCost(3),
-				WithCost(Tap()),
-				WithCost(SacrificeSourceCost()),
-			),
+		return dsl.NewArtifact("Dreamstone Hedron", "{6}",
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.TapCost(dsl.This)),
+				dsl.AddManaAmount(Colorless, dsl.Fixed(3)),
+			)),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{3}"), dsl.TapCost(dsl.This), dsl.SacrificeSourceCost()),
+				dsl.Draw(dsl.You, dsl.Fixed(3)),
+			)),
 		)
 	})
 
@@ -151,14 +152,15 @@ func registerArtifacts() {
 	// {T}: Add {C}{C}.
 	// {2}, {T}, Sacrifice this artifact: Draw two cards.
 	Register("Hedron Archive", func() Card {
-		return NewArtifact("Hedron Archive", "{4}",
-			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}),
-			WithActivatedAbility(
-				DrawCards(Fixed(2)),
-				GenericCost(2),
-				WithCost(Tap()),
-				WithCost(SacrificeSourceCost()),
-			),
+		return dsl.NewArtifact("Hedron Archive", "{4}",
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.TapCost(dsl.This)),
+				dsl.AddManaAmount(Colorless, dsl.Fixed(2)),
+			)),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{2}"), dsl.TapCost(dsl.This), dsl.SacrificeSourceCost()),
+				dsl.Draw(dsl.You, dsl.Fixed(2)),
+			)),
 		)
 	})
 

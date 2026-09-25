@@ -2759,3 +2759,39 @@ blockers remain open; no author export is retired.
 Validation: focused regression and classification tests; engine short suite;
 Legends package tests; card regression and registration validation; `go build ./...`;
 `go vet ./...`; `make test`; and `make lint` pass with zero failures.
+
+
+## Completed Slice: Dreamstone Hedron and Hedron Archive Typed Activations
+
+- [x] Migrate both complete definitions to the author DSL with `Activate`,
+  grouped `Costs`, `AddManaAmount`, and `Draw`.
+- [x] Preserve three colorless mana and three cards for Dreamstone Hedron,
+  and two colorless mana and two cards for Hedron Archive.
+- [x] Verify full Oracle comments, artifact types, and mana costs against
+  `data/JMP.json`.
+- [x] Audit mana classification, payment, source sacrifice, resolving controller,
+  and draw handling. Existing adapters need no engine fix or new export.
+
+The untargeted mana abilities pay a tap cost and resolve immediately. Their
+fixed production remains available to automatic mana planning. The draw
+abilities pay generic mana, tap, and sacrifice the source before using the
+stack. Draw uses the stored controller after the source leaves and the shared
+replacement and event services. Rules contracts are CR 121, 602, 605, and 608.
+
+`TestDreamstoneHedron` passes before and after migration. Shared
+`TestComposableMana*`, `TestTypedManaAmount*`, `TestTypedDrawAmount*`,
+`TestComposablePayment*`, and `TestActivationSelectionPrefersNonMana` pass.
+They cover immediate mana resolution, tap events, fixed production planning,
+clone isolation, payment failure, draw context and replacement handling, and
+selection of the utility activation beside a typed mana ability. These
+single-action declarations need no duplicate card simulation tests.
+
+This completes one slice of the remaining fixed mana and activation migrations.
+Other cards retain the legacy mana, draw, and activation helpers, so no export
+is retired. No outstanding engine blocker is marked resolved. Unrelated card
+definitions still require this file's engine import.
+
+Validation: focused shared contracts and Dreamstone Hedron test; Jumpstart
+package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
