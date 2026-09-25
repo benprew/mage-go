@@ -652,13 +652,13 @@ func registerCreatures() {
 	// 1/2
 	// {1}{R}: Target Dwarf creature gets +1/+0 until end of turn.
 	Register("Dwarven Lieutenant", withExpansion(func() Card {
+		dwarf := TargetPermanent("dwarf", And(IsCreature, HasSubType("Dwarf")))
 		return NewCreature("Dwarven Lieutenant", "{R}{R}", 1, 2,
 			WithSubTypes("Dwarf", "Soldier"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)),
-				ManaCostOf("{1}{R}"),
-				WithTarget(TargetCreature(HasSubType("Dwarf"))),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{R}")),
+				Until(EndOfTurn, ModifyPT(dwarf, Fixed(1), Fixed(0))),
+				WithTargets(dwarf),
+			)),
 		)
 	}))
 

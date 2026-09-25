@@ -65,6 +65,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Wyluli Wolf Targeted Tap Boost**: Migrate its activation to a typed creature target, tap cost, and explicit end-of-turn P/T modification. Existing adapters cover the full ability; no engine gap. See the completed slice below.
 
 - [x] **Fallen Angel Sacrifice Boost**: Migrate its activation to typed costs and a temporary source modification. Correct source exclusion with the existing sacrifice-cost adapter; see the completed slice below.
+- [x] **Dwarven Lieutenant Subtype Target Boost**: Migrate its activation to a typed Dwarf-creature target, mana cost, and explicit end-of-turn modification. No engine gap; see the completed slice below.
 
 ## Engine Blockers
 
@@ -1230,4 +1231,32 @@ The changed Legends file retains unrelated legacy definitions and imports.
 Validation: focused Fallen Angel and shared sacrifice, source-lifetime, and
 metadata tests; Legends package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).
+
+## Completed Slice: Dwarven Lieutenant Subtype Target Boost
+
+- [x] Migrate the complete Dwarven Lieutenant definition from `WithActivatedAbility`, `Boost`, and positional `TargetCreature` to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check the complete Oracle comment, mana cost, creature types, and base P/T against `data/FEM.json`.
+- [x] Audit target scope, payment, duration, identity, and metadata against existing adapters. No new constructor or engine fix is required.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “{1}{R}:” / `ManaCostOf` | `Activate(Costs(Mana("{1}{R}")), ...)`; instant activation timing, no tap cost or per-turn limit | Existing activation/payment contracts; `TestDwarvenLieutenant_BoostsDwarf` |
+| “Target Dwarf creature” / `TargetCreature(HasSubType("Dwarf"))` | `TargetPermanent("dwarf", And(IsCreature, HasSubType("Dwarf")))` with `WithTargets`; either player's creature, including the source; both type restrictions checked at activation and resolution | Existing shared filter and typed-target contracts; `TestDwarvenLieutenant_BoostsDwarf` covers self-targeting; `TestTargetIncarnationAfterReturn` covers returned-target rejection |
+| “gets +1/+0 until end of turn.” / `Boost` | `Until(EndOfTurn, ModifyPT(dwarf, Fixed(1), Fixed(0)))`; layer 7c bonus on the captured incarnation, independent of source presence and later subtype changes; beneficial single-subject metadata | `TestDwarvenLieutenant_BoostsDwarf`; `TestComposableSelfPumpLifetime`, `TestComposableContinuousCapture`, and `TestTemporaryPTMetadata` cover shared duration, incarnation, clone, and metadata contracts |
+
+This declarative ability uses established primitives and universal
+`TestRegisteredDefinitions` validation. Existing card and shared contract tests
+passed before migration; no new simulation test is required. Rules contracts
+are CR 602 (activation), 608.2b (target legality), 400.7 (new objects),
+611.2 (duration), and 613 (layers), using the repository rules effective
+February 27, 2026.
+
+No export is retired: the legacy constructors retain other callers. The
+Fallen Empires creature file retains unrelated legacy definitions and its
+direct engine import. No outstanding engine blocker is claimed resolved.
+
+Validation: focused Dwarven Lieutenant and shared target, lifetime, metadata,
+and composition tests; Fallen Empires package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/fallen_empires`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).

@@ -49,6 +49,8 @@
 // Fallen Angel uses [SacrificeMatchingIncludingSourceCost] with [IsCreature].
 // The source can pay this cost. The bonus uses its original incarnation.
 // Use a typed target with [WithTargets] for a targeted bonus.
+// Dwarven Lieutenant combines [IsCreature] with [HasSubType] for its Dwarf target.
+// Either player's Dwarf creature can be the target, including the source.
 // Angelic Page combines [IsCreature] with [IsAttacking] or [IsBlocking].
 // Check combat status again at resolution. After resolution, leaving combat
 // does not end the bonus.
