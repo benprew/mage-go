@@ -817,13 +817,15 @@ func TestNitaForumConciliator_ActivatedAbilityExilesFromGraveyard(t *testing.T) 
 func TestNoxiousNewt_DeathtouchAndMana(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Noxious Newt")
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Noxious Newt")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
-	g.StopAt(1, core.EndStep)
+	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertHasAbility(gametest.PlayerA, "Noxious Newt", core.Deathtouch, true)
-	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
+	g.AssertTapped(gametest.PlayerA, "Noxious Newt", true)
+	// The activation script supplies five mana of each color.
+	if got := g.GetPlayer(gametest.PlayerA).ManaPool().CountProducedThisTurn(core.Green); got != 6 {
+		t.Errorf("green mana produced = %d, want 6", got)
+	}
 }
 
 // TestOrysaTideChoreographer_DrawsTwo verifies that when Orysa enters, draw two cards.

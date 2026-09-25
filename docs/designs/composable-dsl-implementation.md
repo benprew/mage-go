@@ -3604,3 +3604,36 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Noxious Newt Typed Mana
+
+- [x] Migrate the complete mana ability to `Activate`,
+  `Costs(TapCost(This))`, and `AddManaAmount(Green, Fixed(1))`.
+- [x] Verify the full Oracle comment, `{1}{G}` casting cost, Salamander
+  subtype, 1/2 stats, and deathtouch against `data/SOS.json`.
+- [x] Strengthen the existing card scenario to check tapping and exact green
+  mana production. The total includes five green mana from the activation script.
+- [x] Audit mana classification and payment. Existing typed adapters support
+  this ability; no engine fix or new export is required.
+
+The untargeted ability adds one green mana to the activating controller's pool
+immediately, without using the stack. The tap cost requires an untapped source
+and enforces summoning sickness. Fixed production remains available to automatic
+payment. Rules contracts are CR 302.6, 602, and 605.1a–605.3b.
+
+`TestNoxiousNewt_DeathtouchAndMana` passes before and after migration with
+its stronger assertions. Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+and `TestComposablePayment*` also pass before and after migration. They cover
+immediate resolution, production, events, automatic planning, clone isolation,
+and failed payment. This declaration uses proven primitives and needs no
+additional simulation test.
+
+This completes one slice of the remaining fixed-mana caller migrations.
+Other cards retain `WithManaAbility`, so its export remains. The broader mana
+family and outstanding engine blockers remain open.
+
+Validation: focused card and shared contract tests; Secrets of Strixhaven
+package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/secretsofstrixhaven`; `make test`; and `make lint` pass
+with zero failures (lint: zero issues).

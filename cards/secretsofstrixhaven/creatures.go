@@ -3166,7 +3166,10 @@ func registerCreatures() {
 		return NewCreature("Noxious Newt", "{1}{G}", 1, 2,
 			WithSubTypes("Salamander"),
 			WithKeyword(Deathtouch),
-			WithManaAbility(Green),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.TapCost(dsl.This)),
+				dsl.AddManaAmount(Green, dsl.Fixed(1)),
+			)),
 		)
 	})
 
