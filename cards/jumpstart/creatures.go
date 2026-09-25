@@ -126,7 +126,7 @@ func registerCreatures() {
 		return NewCreature("Angel of Mercy", "{4}{W}", 3, 3,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(3)), false)),
+			WithAbility(WhenEvent(Enters(This), GainLife(You, Fixed(3)))),
 		)
 	})
 
@@ -306,7 +306,7 @@ func registerCreatures() {
 	Register("Bulwark Giant", func() Card {
 		return NewCreature("Bulwark Giant", "{5}{W}", 3, 6,
 			WithSubTypes("Giant", "Soldier"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(5)), false)),
+			WithAbility(WhenEvent(Enters(This), GainLife(You, Fixed(5)))),
 		)
 	})
 
@@ -5934,7 +5934,7 @@ func registerCreatures() {
 	Register("Sylvan Brushstrider", func() Card {
 		return NewCreature("Sylvan Brushstrider", "{2}{G}", 3, 2,
 			WithSubTypes("Beast"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(2)), false)),
+			WithAbility(WhenEvent(Enters(This), GainLife(You, Fixed(2)))),
 		)
 	})
 
@@ -5964,7 +5964,7 @@ func registerCreatures() {
 	Register("Thragtusk", func() Card {
 		return NewCreature("Thragtusk", "{4}{G}", 5, 3,
 			WithSubTypes("Beast"),
-			WithAbility(EntersBattlefieldTrigger(GainLife(You, Fixed(5)), false)),
+			WithAbility(WhenEvent(Enters(This), GainLife(You, Fixed(5)))),
 			WithAbility(OnLeaveZone(ZoneBattlefield, ZoneAny,
 				CreateColoredToken("Beast", 3, 3, []Color{Green}, []CardType{TypeCreature}, []string{"Beast"}),
 				false,

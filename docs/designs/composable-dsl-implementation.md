@@ -3739,3 +3739,37 @@ Validation: focused card and shared contracts; Antiquities package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/antiquities`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Jumpstart Typed Entry Life-Gain Triggers
+
+- [x] Migrate the entry abilities of Angel of Mercy, Bulwark Giant, Sylvan
+  Brushstrider, and Thragtusk to `WhenEvent(Enters(This), GainLife(You, Fixed(n)))`.
+  Preserve their respective life amounts of 3, 5, 2, and 5.
+- [x] Verify full Oracle comments, costs, types, stats, and Angel of Mercy's
+  flying against `data/JMP.json`.
+- [x] Audit entry detection, controller context, and life-gain outcomes.
+  Existing typed adapters support these abilities; no engine fix is needed.
+
+These mandatory abilities trigger on entry, including entry without casting,
+and have no targets. They gain life for the stored resolving controller even
+if the source leaves before resolution. The shared life action applies existing
+replacement handling and emits the actual positive life-gain outcome.
+Thragtusk's separate leave trigger remains outside this slice.
+
+All four existing card scenarios and shared `TestComposableEntry*`,
+`TestComposableLife*`, `TestTypedSingularLife*`, `TestLifeGainOutcome*`, and
+`TestComposableSourceLifetimes` pass before and after migration. Shared contracts
+cover absent and phased sources, copied triggers, controller context, clone
+isolation, and replaced life gain. These single-action declarations use proven
+primitives and need no additional simulation tests.
+
+This completes the four remaining direct `EntersBattlefieldTrigger(GainLife(...))`
+callers in production cards. Other entry triggers retain the legacy helper, so
+no export is retired. General event capture and life replacement ordering remain
+open; no outstanding engine blocker is marked resolved.
+
+Validation: focused card and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
