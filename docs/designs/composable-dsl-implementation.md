@@ -69,6 +69,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 - [x] **Icatian Targeted Mana Boosts**: Migrate Icatian Lieutenant and Icatian Priest to typed creature targets, mana costs, and explicit end-of-turn P/T modifications. No engine gap; see the completed slice below.
 
+- [x] **Fallen Empires Orders**: Migrate Order of Leitbur and Order of the Ebon Hand to typed first-strike and power-boost activations with explicit end-of-turn durations. No engine gap; see the completed slice below.
+
 ## Engine Blockers
 
 ### Combat Removal
@@ -1292,3 +1294,27 @@ Validation: focused card and shared target, lifetime, and metadata tests;
 Fallen Empires package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/fallen_empires`; `make test`; and
 `make lint` passed with zero failures (lint: zero issues).
+
+## Completed Slice: Fallen Empires Orders
+
+- [x] Migrate both activations on Order of Leitbur and Order of the Ebon Hand from `WithActivatedAbility`, string-bound keyword grants, and `Boost` to `Activate`, `Costs`, and typed source modifications through `pkg/mage/dsl`.
+- [x] Check full Oracle comments, mana costs, creature types, protection colors, and base P/T against `data/FEM.json`; both match exactly.
+- [x] Audit payment, source identity, duration, layers, and metadata against existing adapters. No new constructor or engine fix is required.
+
+| Oracle clause | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “{W}: This creature gains first strike until end of turn.” / corresponding `{B}` ability | `Activate(Costs(Mana(...)), Until(EndOfTurn, GrantKeyword(This, FirstStrike)))`; untargeted layer 6 grant on the source incarnation | `TestOrderOfLeitbur_FirstStrikePump`; `TestComposableKeywordLayerOrder`, `TestComposableKeywordSourceExit`; DSL composition tests |
+| “{W}{W}: This creature gets +1/+0 until end of turn.” / corresponding `{B}{B}` ability | Separate activation with the printed mana cost and `Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0)))`; cumulative layer 7c bonus | `TestComposableSelfPumpLifetime`, `TestComposableContinuousCapture`, `TestTemporaryPTMetadata` |
+| Activation and lifetime | Instant activation timing, no tap cost, target, or activation limit; explicit cleanup expiration and captured source incarnation | Shared activation and continuous-effect contracts; universal `TestRegisteredDefinitions` |
+| Protection and base characteristics | Existing protection abilities, types, costs, and 2/1 base values preserved | Existing Order protection tests; Oracle comparison |
+
+These declarative abilities use established primitives and registration
+validation, so no new simulation test is required. Existing focused card and
+shared lifetime, keyword, and metadata tests passed before migration. Both
+card definitions are migrated. Legacy constructors retain other callers;
+no export is retired and no outstanding engine blocker is claimed resolved.
+
+Validation: focused Order and shared continuous-effect tests; Fallen Empires
+package; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/fallen_empires`; `make test`; and `make lint` passed with
+zero failures (lint: zero issues).

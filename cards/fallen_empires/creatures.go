@@ -235,14 +235,14 @@ func registerCreatures() {
 		return NewCreature("Order of Leitbur", "{W}{W}", 2, 1,
 			WithSubTypes("Human", "Cleric", "Knight"),
 			WithAbility(ProtectionFromColor(Black)),
-			WithActivatedAbility(
-				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
-				ManaCostOf("{W}"),
-			),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{W}{W}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{W}")),
+				Until(EndOfTurn, GrantKeyword(This, FirstStrike)),
+			)),
+			WithAbility(Activate(
+				Costs(Mana("{W}{W}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	}))
 
@@ -588,14 +588,14 @@ func registerCreatures() {
 		return NewCreature("Order of the Ebon Hand", "{B}{B}", 2, 1,
 			WithSubTypes("Cleric", "Knight"),
 			WithAbility(ProtectionFromColor(White)),
-			WithActivatedAbility(
-				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
-				ManaCostOf("{B}"),
-			),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{B}{B}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{B}")),
+				Until(EndOfTurn, GrantKeyword(This, FirstStrike)),
+			)),
+			WithAbility(Activate(
+				Costs(Mana("{B}{B}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	}))
 
