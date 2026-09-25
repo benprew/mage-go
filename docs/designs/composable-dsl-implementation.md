@@ -3040,3 +3040,42 @@ Validation: focused shared contracts and card tests; Arabian Nights package
 tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/arabian`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Jumpstart Fixed Colorless Land Mana
+
+- [x] Migrate the fixed colorless mana abilities on Buried Ruin, Mirrodin's
+  Core, Phyrexian Tower, and Riptide Laboratory from `WithManaAbility` to
+  `Activate`, `Costs(TapCost(This))`, and `AddManaAmount(Colorless, Fixed(1))`.
+- [x] Preserve one colorless mana, a tap cost, and no targets for each ability.
+- [x] Verify full Oracle comments and land types against `data/JMP.json`,
+  including Phyrexian Tower's legendary supertype.
+- [x] Select ability index 0 explicitly in the four existing colorless mana
+  scenarios so utility-ability preference cannot select a different ability.
+- [x] Audit immediate resolution, fixed mana planning, payment, and ability
+  selection. Existing adapters need no engine fix or new export.
+
+Each migrated ability adds one colorless mana to the activating controller's
+pool without using the stack. Automatic payment can use the fixed production,
+and the shared mana service emits the tapped-for-mana event. The separate
+utility costs do not apply to these mana abilities. Rules contracts are
+CR 602 and 605.1a–605.3b.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+`TestComposablePayment*`, and `TestActivationSelectionPrefersNonMana` pass
+before and after migration. They cover immediate resolution, production,
+tap events, automatic payment, clone isolation, failed payment, and ability
+selection. Existing `TestBuriedRuin`, `TestMirrodinsCore`,
+`TestPhyrexianTower`, and `TestRiptideLaboratory` also pass. These declarations
+use proven primitives and need no duplicate card simulation tests.
+
+This completes one slice of the remaining fixed mana caller migrations.
+Riptide Laboratory's complete definition now uses typed abilities. The other
+utility declarations and Thriving lands remain separate work. Other callers
+retain `WithManaAbility`, so its export remains. No outstanding engine blocker
+is marked resolved; unrelated definitions retain this file's engine import.
+
+Validation: focused shared contracts and card tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

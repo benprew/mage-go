@@ -14,7 +14,7 @@ func TestBuriedRuin(t *testing.T) {
 	t.Run("taps for colorless mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Buried Ruin")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Buried Ruin")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Buried Ruin", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
@@ -40,7 +40,7 @@ func TestMirrodinsCore(t *testing.T) {
 	t.Run("taps for colorless mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mirrodin's Core")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mirrodin's Core")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Mirrodin's Core", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
@@ -73,7 +73,7 @@ func TestPhyrexianTower(t *testing.T) {
 	t.Run("taps for colorless mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Tower")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Tower")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Tower", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
@@ -111,7 +111,7 @@ func TestRiptideLaboratory(t *testing.T) {
 	t.Run("taps for colorless mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Riptide Laboratory")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Riptide Laboratory")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Riptide Laboratory", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.GetPlayer(gametest.PlayerA).ManaPool()

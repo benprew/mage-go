@@ -62,7 +62,7 @@ func registerLands() {
 	// {2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.
 	Register("Buried Ruin", func() Card {
 		return NewLand("Buried Ruin",
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithActivatedAbility(
 				ReturnFromGraveyardToHandTarget(),
 				GenericCost(2),
@@ -80,7 +80,7 @@ func registerLands() {
 	// {T}, Remove a charge counter from this land: Add one mana of any color.
 	Register("Mirrodin's Core", func() Card {
 		return NewLand("Mirrodin's Core",
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithActivatedAbility(
 				mage.AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
 				TapCost(This),
@@ -100,7 +100,7 @@ func registerLands() {
 	Register("Phyrexian Tower", func() Card {
 		return NewLand("Phyrexian Tower",
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithActivatedAbility(
 				AddMana(Black, 2),
 				TapCost(This),
@@ -116,7 +116,7 @@ func registerLands() {
 	Register("Riptide Laboratory", func() Card {
 		wizard := TargetPermanent("wizard", HasSubType("Wizard"), TargetYouControl())
 		return NewLand("Riptide Laboratory",
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithAbility(Activate(
 				Costs(Mana("{1}{U}"), TapCost(This)),
 				ReturnToHand(wizard), WithTargets(wizard),
