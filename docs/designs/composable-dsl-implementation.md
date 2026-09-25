@@ -71,6 +71,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 - [x] **Fallen Empires Orders**: Migrate Order of Leitbur and Order of the Ebon Hand to typed first-strike and power-boost activations with explicit end-of-turn durations. No engine gap; see the completed slice below.
 
+- [x] **Fallen Empires Self-Keyword Activations**: Migrate the five remaining mana-only self-keyword activations on Icatian Infantry, River Merfolk, Vodalian Knights, and Orcish Veteran to typed costs and explicit durations. No engine gap; see the completed slice below.
+
 ## Engine Blockers
 
 ### Combat Removal
@@ -1315,6 +1317,39 @@ card definitions are migrated. Legacy constructors retain other callers;
 no export is retired and no outstanding engine blocker is claimed resolved.
 
 Validation: focused Order and shared continuous-effect tests; Fallen Empires
+package; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/fallen_empires`; `make test`; and `make lint` passed with
+zero failures (lint: zero issues).
+
+
+## Completed Slice: Fallen Empires Self-Keyword Activations
+
+- [x] Migrate five activations on four cards from `WithActivatedAbility` and string-bound keyword grants to `Activate`, `Costs(Mana(...))`, and `Until(EndOfTurn, GrantKeyword(This, ...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments, printed mana costs, creature types, and base P/T against `data/FEM.json`; all match exactly.
+- [x] Audit payment, source identity, duration, layers, and metadata against existing adapters. No new constructor or engine fix is required.
+
+| Oracle clause | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Icatian Infantry: “{1}: This creature gains first strike until end of turn.” and its separate banding activation | Separate `Activate` definitions, each with `Mana("{1}")`; `GrantKeyword(This, FirstStrike)` or `GrantKeyword(This, Banding)` inside `Until(EndOfTurn, ...)` | `TestIcatianInfantry_FirstStrike`; shared keyword contracts include banding and clone-local expiry |
+| River Merfolk: “{U}: This creature gains mountainwalk until end of turn.” | `Mana("{U}")` and temporary `GrantKeyword(This, Mountainwalk)` | `TestRiverMerfolk_GainsMountainwalk` |
+| Vodalian Knights: “{U}: This creature gains flying until end of turn.” | `Mana("{U}")` and temporary `GrantKeyword(This, Flying)` | `TestVodalianKnights_GainsFlying`; existing Island restriction and state-trigger tests |
+| Orcish Veteran: “{R}: This creature gains first strike until end of turn.” | `Mana("{R}")` and temporary `GrantKeyword(This, FirstStrike)` | `TestOrcishVeteran_FirstStrike`; existing blocking-restriction tests |
+| Activation and lifetime | Untargeted, instant-speed activation; no tap cost or activation limit. Grant in layer 6 to the captured source incarnation; expire at cleanup. Ability removal follows timestamp order. | `TestComposableKeywordLayerOrder`, `TestComposableKeywordSourceExit`, `TestComposableSelfPumpLifetime`, `TestComposableContinuousCapture`, and universal `TestRegisteredDefinitions` |
+
+These declarative activations reuse established engine primitives. Focused
+card and shared contract tests passed before migration; no new simulation
+tests are required. Existing keyword metadata is supplied by the typed
+continuous modification. Rules contracts are CR 602 (activation), 400.7
+(new objects), 611.2 (duration), and 613 (layers).
+
+This completes the remaining Fallen Empires mana-only self-keyword activations.
+The Infantry and Merfolk definitions are fully migrated. The Knights and
+Veteran retain their separate static restrictions. The file retains unrelated
+legacy definitions and its direct engine import. Legacy keyword and activation
+exports still have callers; no export is retired and no outstanding engine
+blocker is claimed resolved.
+
+Validation: focused card and shared keyword/lifetime tests; Fallen Empires
 package; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/fallen_empires`; `make test`; and `make lint` passed with
 zero failures (lint: zero issues).

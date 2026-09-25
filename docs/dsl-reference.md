@@ -352,6 +352,7 @@ Continuous effects are broken down into **modifications** and their **durations*
   Inspiring Captain and Inspiring Unicorn use the same controlled collection for their +1/+1 trigger bodies. Captain installs it with `WhenEvent(Enters(This), ...)`; Unicorn retains `AttacksTrigger` until a typed attack-event adapter is available. Both capture creatures at resolution and expire at cleanup.
 * `GrantKeyword(subject, keyword)`: Grants keyword ability (Layer 6).
   Order of Leitbur and Order of the Ebon Hand use `Activate(Costs(Mana("{W}")), Until(EndOfTurn, GrantKeyword(This, FirstStrike)))` and the corresponding `{B}` cost. Their separate +1/+0 activations use `ModifyPT(This, Fixed(1), Fixed(0))` with `{W}{W}` or `{B}{B}` and the same explicit end-of-turn duration.
+  Icatian Infantry uses separate `{1}` activations for first strike and banding with the same typed source grant and duration. River Merfolk grants mountainwalk for `{U}`, Vodalian Knights grants flying for `{U}`, and Orcish Veteran grants first strike for `{R}`. These activations have no targets, tap costs, or per-turn limits.
 * `CantBeBlocked(subject)`: Prevents all creatures from blocking the permanent. Install with `Until(EndOfTurn, CantBeBlocked(subject))`; this is a rules restriction, so ability removal does not erase it. Later blockers are also restricted. Source departure does not end the duration, and a returned subject is a new object.
 * `GrantEachKeyword(permanentSet, keyword)`: Grants keyword to set.
 * `SetColors(subject, colors...)`: Replaces colors (Layer 5).

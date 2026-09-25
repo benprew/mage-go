@@ -116,14 +116,12 @@ func registerCreatures() {
 	Register("Icatian Infantry", withExpansion(func() Card {
 		return NewCreature("Icatian Infantry", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
-			WithActivatedAbility(
-				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
-				GenericCost(1),
-			),
-			WithActivatedAbility(
-				mage.GrantKeyword(Banding).Targeting(ToSource()),
-				GenericCost(1),
-			),
+			WithAbility(Activate(Costs(Mana("{1}")),
+				Until(EndOfTurn, GrantKeyword(This, FirstStrike)),
+			)),
+			WithAbility(Activate(Costs(Mana("{1}")),
+				Until(EndOfTurn, GrantKeyword(This, Banding)),
+			)),
 		)
 	}))
 
@@ -349,10 +347,9 @@ func registerCreatures() {
 	Register("River Merfolk", withExpansion(func() Card {
 		return NewCreature("River Merfolk", "{U}{U}", 2, 1,
 			WithSubTypes("Merfolk"),
-			WithActivatedAbility(
-				mage.GrantKeyword(Mountainwalk).Targeting(ToSource()),
-				ManaCostOf("{U}"),
-			),
+			WithAbility(Activate(Costs(Mana("{U}")),
+				Until(EndOfTurn, GrantKeyword(This, Mountainwalk)),
+			)),
 		)
 	}))
 
@@ -402,10 +399,9 @@ func registerCreatures() {
 			// Can't attack unless defending player controls an Island.
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(And(IsLand, HasSubType("Island")))),
 			// {U}: This creature gains flying until end of turn.
-			WithActivatedAbility(
-				mage.GrantKeyword(Flying).Targeting(ToSource()),
-				ManaCostOf("{U}"),
-			),
+			WithAbility(Activate(Costs(Mana("{U}")),
+				Until(EndOfTurn, GrantKeyword(This, Flying)),
+			)),
 		)
 	}))
 
@@ -748,10 +744,9 @@ func registerCreatures() {
 			WithSubTypes("Orc"),
 			// Can't block white creatures with power 2 or greater
 			WithStaticAbility(SourceCanBlockOnly(Or(Not(HasColorFilter(White)), HasPowerLTE(1)))),
-			WithActivatedAbility(
-				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")),
+				Until(EndOfTurn, GrantKeyword(This, FirstStrike)),
+			)),
 		)
 	}))
 
