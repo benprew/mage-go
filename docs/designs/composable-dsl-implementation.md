@@ -3836,3 +3836,35 @@ Validation: focused regressions; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Wall of Blossoms and Phyrexian Rager Typed Entry Draws
+
+- [x] Migrate both complete entry abilities to `WhenEvent(Enters(This), ...)`
+  and `Draw(You, Fixed(1))` through the author DSL.
+- [x] Use `Sequence` for Phyrexian Rager's draw followed by
+  `LoseLife(You, Fixed(1))`.
+- [x] Verify full Oracle comments, mana costs, subtypes, base power/toughness,
+  and Wall of Blossoms's defender against `data/JMP.json`.
+- [x] Remove the implicit source targets that stopped both entry abilities
+  from resolving after source departure. The new regression failed before
+  migration. Existing typed adapters need no engine fix or new constructor.
+
+`TestEntryDrawResolution` covers both cards with the source present or departed,
+an empty library, and a controller different from the card's owner. Entry creates
+one untargeted trigger; its stored controller draws on resolution. Draw events
+occur before Phyrexian Rager's life loss. An empty-library draw still attempts the
+draw and does not skip the life loss; the controller loses the game after
+resolution. The owner and opponent remain unaffected.
+
+Existing cast-path tests and shared typed draw, entry-trigger, sequence, and
+life contracts pass. Shared contracts cover draw replacements, copies, clones,
+source absence, and binding validation. This completes two callers in the
+remaining trigger and action migrations. Other callers retain the legacy
+helpers, so no export is retired. No outstanding engine blocker is marked
+resolved.
+
+Validation: focused regressions and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

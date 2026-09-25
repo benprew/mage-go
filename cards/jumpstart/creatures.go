@@ -3053,12 +3053,11 @@ func registerCreatures() {
 	Register("Phyrexian Rager", func() Card {
 		return NewCreature("Phyrexian Rager", "{2}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Horror"),
-			WithAbility(EntersBattlefieldTrigger(
-				CompositeEffects("draw a card and lose 1 life",
-					DrawCards(Fixed(1)),
+			WithAbility(WhenEvent(Enters(This),
+				Sequence(
+					Draw(You, Fixed(1)),
 					LoseLife(You, Fixed(1)),
 				),
-				false,
 			)),
 		)
 	})
@@ -6036,7 +6035,7 @@ func registerCreatures() {
 		return NewCreature("Wall of Blossoms", "{1}{G}", 0, 4,
 			WithSubTypes("Plant", "Wall"),
 			WithKeyword(Defender),
-			WithAbility(EntersBattlefieldTrigger(DrawCards(Fixed(1)), false)),
+			WithAbility(WhenEvent(Enters(This), Draw(You, Fixed(1)))),
 		)
 	})
 
