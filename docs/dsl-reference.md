@@ -624,3 +624,16 @@ Either player's creature can qualify, regardless of the Aura's controller.
 Check the restriction at activation and resolution. An Aura that leaves or
 phases out no longer qualifies, but another attached Aura can keep the target
 legal. Destruction permits regeneration and respects indestructible.
+
+### Fixed Land Mana Activations
+
+Hammerheim, Karakas, and Pendelhaven use
+`Activate(Costs(TapCost(This)), AddManaAmount(color, Fixed(1)))` for red,
+white, and green mana, respectively. These untargeted abilities resolve
+immediately, emit the tapped-for-mana event, and support automatic payment.
+Their separate utility abilities use the stack.
+
+The test harness prefers non-mana abilities using the engine's
+`IsActivatedManaAbility` classification, including typed fixed and dynamic
+production. Use `ActivateAbilityIndex` to select a particular mana ability
+when a permanent has multiple activated abilities.

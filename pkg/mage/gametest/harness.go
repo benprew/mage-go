@@ -1057,7 +1057,7 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 	// First pass: activated abilities (non-mana)
 	for i, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		if _, isMana := inner.(*mage.ManaAbility); isMana {
+		if mage.IsActivatedManaAbility(inner) {
 			continue
 		}
 		aa, ok := inner.(mage.ActivatedAbility)
@@ -1107,8 +1107,12 @@ func (tg *TestGame) findActivatableAbilityByName(playerID uuid.UUID, permName st
 	// Second pass: mana abilities
 	for i, a := range perm.RuntimeAbilities {
 		inner := mage.UnwrapAbility(a)
-		if _, ok := inner.(*mage.ManaAbility); ok {
-			if !perm.Tapped && perm.CanTapForEffect(tg.Game) {
+		if mage.IsActivatedManaAbility(inner) {
+			if aa, ok := inner.(mage.ActivatedAbility); ok {
+				if aa.CanActivate(playerID, tg.Game) {
+					return perm, i, nil
+				}
+			} else if !perm.Tapped && perm.CanTapForEffect(tg.Game) {
 				return perm, i, nil
 			}
 		}

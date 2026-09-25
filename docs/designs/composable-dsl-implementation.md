@@ -2730,3 +2730,32 @@ Validation: focused regressions and Hammerheim tests; engine short suite; Legend
 package tests; card regression and registration validation; `go build ./...`;
 `go vet ./...`; `make test`; and `make lint` all pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Typed Mana for Hammerheim, Karakas, and Pendelhaven
+
+- [x] Replace the three fixed `WithManaAbility` declarations with `Activate`,
+  `Costs(TapCost(This))`, and `AddManaAmount(color, Fixed(1))`.
+- [x] Verify full Oracle comments and legendary land types against `data/LEG.json`.
+- [x] Resolve the harness selection blocker: use the existing engine mana
+  classification instead of recognizing only the legacy concrete mana type.
+  `TestActivationSelectionPrefersNonMana` failed first for fixed and dynamic
+  typed mana, selecting index 0 instead of the utility ability at index 1.
+- [x] Preserve explicit mana choices in seven existing card scenarios through
+  `ActivateAbilityIndex`, with their behavioral assertions unchanged.
+
+`IsActivatedManaAbility` exposes the existing immediate-resolution classification.
+It recognizes legacy, fixed, dynamic, and mixed mana abilities, excludes spells
+and targeted activations, and does not evaluate dynamic amounts. Harness fallback
+checks activation eligibility for composed mana abilities. Tests cover utility
+preference, mana fallback, and an unavailable tap cost. Existing shared mana
+contracts cover immediate resolution, events, payment, planning, and clone isolation.
+The three lands' utility tests pass before and after migration. Rules contract:
+CR 605.1a and 605.3b. No game-rules executor change was needed.
+
+This closes Hammerheim's remaining mana declaration and one slice of the fixed
+mana caller migrations. Other legacy mana callers and the broader mana-family
+blockers remain open; no author export is retired.
+
+Validation: focused regression and classification tests; engine short suite;
+Legends package tests; card regression and registration validation; `go build ./...`;
+`go vet ./...`; `make test`; and `make lint` pass with zero failures.

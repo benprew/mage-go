@@ -700,7 +700,7 @@ func TestBasaltMonolith(t *testing.T) {
 	t.Run("does not untap during untap step", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Basalt Monolith")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Basalt Monolith")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Basalt Monolith", 0)
 		g.StopAt(3, core.PrecombatMain) // PlayerA's next untap step
 		g.Execute()
 		g.AssertTapped(gametest.PlayerA, "Basalt Monolith", true)

@@ -25,7 +25,7 @@ func TestDwarvenRuins(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Ruins")
 		// Activate the sacrifice ability (second ability)
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dwarven Ruins")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Dwarven Ruins", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Dwarven Ruins", 0)
@@ -36,7 +36,7 @@ func TestEbonStronghold(t *testing.T) {
 	t.Run("sacrifice for two black mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ebon Stronghold")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ebon Stronghold")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Ebon Stronghold", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Ebon Stronghold", 0)
@@ -47,7 +47,7 @@ func TestHavenwoodBattleground(t *testing.T) {
 	t.Run("sacrifice for two green mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Havenwood Battleground")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Havenwood Battleground")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Havenwood Battleground", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Havenwood Battleground", 0)
@@ -58,7 +58,7 @@ func TestRuinsOfTrokair(t *testing.T) {
 	t.Run("sacrifice for two white mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Ruins of Trokair")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ruins of Trokair")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Ruins of Trokair", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Ruins of Trokair", 0)
@@ -69,7 +69,7 @@ func TestSvyeluniteTemple(t *testing.T) {
 	t.Run("sacrifice for two blue mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Svyelunite Temple")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Svyelunite Temple")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Svyelunite Temple", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Svyelunite Temple", 0)

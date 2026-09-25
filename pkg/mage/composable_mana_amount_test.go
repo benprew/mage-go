@@ -137,3 +137,26 @@ func TestTypedManaAmountDirectResolutionHasNoTrackingState(t *testing.T) {
 		t.Fatal("direct effect retained production tracking")
 	}
 }
+
+func TestIsActivatedManaAbility(t *testing.T) {
+	target := DeclarePlayerTarget("player")
+	for _, tc := range []struct {
+		name    string
+		ability Ability
+		want    bool
+	}{
+		{"legacy", NewManaAbility(Green), true},
+		{"fixed", Activate(Costs(TapCost(This)), AddManaAmount(Green, Fixed(1))), true},
+		{"dynamic", Activate(Costs(TapCost(This)), AddManaAmount(Green, PowerOf(This))), true},
+		{"mixed", Activate(Costs(TapCost(This)), Sequence(AddManaAmount(Green, Fixed(1)), GainLifeFor(You, Fixed(1)))), true},
+		{"targeted", Activate(Costs(TapCost(This)), AddManaAmount(Green, Fixed(1)), WithTargets(target)), false},
+		{"non-mana", Activate(Costs(TapCost(This)), GainLifeFor(You, Fixed(1))), false},
+		{"spell", Spell(AddManaAmount(Green, Fixed(1))), false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := IsActivatedManaAbility(tc.ability); got != tc.want {
+				t.Fatalf("classification = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

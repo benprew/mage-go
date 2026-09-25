@@ -44,7 +44,7 @@ func registerLands() {
 		creature := TargetPermanent("creature", IsCreature)
 		return NewLand("Hammerheim",
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Red),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Red, Fixed(1)))),
 			WithAbility(Activate(Costs(TapCost(This)),
 				Until(EndOfTurn, RemoveLandwalk(creature)), WithTargets(creature))),
 		)
@@ -58,7 +58,7 @@ func registerLands() {
 		creature := TargetPermanent("creature", And(IsCreature, IsLegendary))
 		return NewLand("Karakas",
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(White),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(White, Fixed(1)))),
 			WithAbility(Activate(Costs(TapCost(This)), ReturnToHand(creature), WithTargets(creature))),
 		)
 	})
@@ -85,7 +85,7 @@ func registerLands() {
 		})))
 		return NewLand("Pendelhaven",
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Green),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Green, Fixed(1)))),
 			WithAbility(Activate(Costs(TapCost(This)),
 				Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(2))), WithTargets(creature))),
 		)

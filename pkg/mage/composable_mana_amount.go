@@ -42,6 +42,16 @@ func (e *manaAmountEffect) Apply(ctx *EffectContext) error {
 	return AddMana(e.color, amount).Apply(ctx)
 }
 
+// IsActivatedManaAbility uses the same classification as immediate resolution.
+func IsActivatedManaAbility(ability Ability) bool {
+	inner := UnwrapAbility(ability)
+	if _, ok := inner.(*ManaAbility); ok {
+		return true
+	}
+	activated, ok := inner.(ActivatedAbility)
+	return ok && inner.Type() == core.AbilityActivated && canProduceMana(activated.Effects(), activated.Targets())
+}
+
 func canProduceMana(effects []Effect, targets []Target) bool {
 	if len(targets) != 0 {
 		return false

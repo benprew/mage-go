@@ -86,7 +86,7 @@ func TestPhyrexianTower(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Phyrexian Tower")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Tower")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Phyrexian Tower", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.GetPlayer(gametest.PlayerA).ManaPool()
