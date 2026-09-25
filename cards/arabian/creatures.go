@@ -290,11 +290,10 @@ func registerCreatures() {
 
 	// Oracle: "Whenever El-Hajjâj deals damage, you gain that much life."
 	Register("El-Hajjâj", func() Card {
+		amount := BindNumber("damage dealt")
 		return NewCreature("El-Hajjâj", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
-			WithAbility(NewTriggered(EvtDamageDealt, false,
-				GainLife(You, ValueAtResolution(EventAmountValue())),
-			).SetConditionData(EventSourceIsSelf{})),
+			WithAbility(WhenEvent(DealsDamage(This, amount), GainLife(You, FromNumber(amount)))),
 		)
 	})
 
@@ -361,7 +360,7 @@ func registerCreatures() {
 		return NewCreature("Junún Efreet", "{1}{B}{B}", 3, 3,
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{B}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{B}{B}")), Sacrifice(This)))),
 		)
 	})
 
@@ -380,23 +379,7 @@ func registerCreatures() {
 	Register("Khabál Ghoul", func() Card {
 		return NewCreature("Khabál Ghoul", "{2}{B}", 1, 1,
 			WithSubTypes("Zombie"),
-			WithAbility(
-				NewTriggered(EvtEndStep, false,
-					// TODO: convert to pipeline — needs CreatureDeaths() access primitive
-					FuncEffect("put +1/+1 counters for deaths",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							count := g.CreatureDeaths()
-							if count > 0 {
-								perm := g.MutablePermanent(sourceID)
-								if perm != nil {
-									perm.AddCounter(P1P1, count)
-								}
-							}
-							return nil
-						}),
-				),
-			),
+			WithAbility(At(EachEndStep, AddCounters(This, P1P1, CreaturesDiedThisTurn()))),
 		)
 	})
 

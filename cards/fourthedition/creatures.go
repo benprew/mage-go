@@ -107,11 +107,7 @@ func registerCreatures() {
 	Register("Apprentice Wizard", func() Card {
 		return NewCreature("Apprentice Wizard", "{1}{U}{U}", 0, 1,
 			WithSubTypes("Human", "Wizard"),
-			WithActivatedAbility(
-				AddMana(Colorless, 3),
-				ManaCostOf("{U}"),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(Costs(Mana("{U}"), TapCost(This)), AddManaAmount(Colorless, Fixed(3)))),
 		)
 	})
 
@@ -143,17 +139,9 @@ func registerCreatures() {
 			WithKeyword(DoesNotUntapKW),
 			WithStaticAbility(SourceCantAttackUnlessPays(
 				SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands"))),
-			WithAbility(
-				BeginningOfUpkeepTrigger(
-					IfElse(
-						"Only if tapped",
-						SourceIsTapped{},
-						IfPaid(You,
-							Costs(SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands")),
-							Untap(This)),
-						nil),
-					false),
-			),
+			WithAbility(At(YourUpkeep, IfPaid(You,
+				Costs(SacrificeNMatchingCost(2, HasSubType("Island"), "sacrifice two Islands")),
+				Untap(This)))),
 		)
 	})
 
@@ -255,9 +243,7 @@ func registerCreatures() {
 			WithSubTypes("Elemental"),
 			WithKeyword(Trample),
 			WithKeyword(Haste),
-			WithAbility(
-				BeginningOfEachEndStepTrigger(Sacrifice(This), false),
-			),
+			WithAbility(At(EachEndStep, Sacrifice(This))),
 		)
 	})
 

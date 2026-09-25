@@ -444,16 +444,26 @@ func TestElvishHunter_TargetDoesntUntap(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Elvish Hunter")
 	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest", 2) // for {1}{G} cost
-	g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	bearID := g.AddCard(ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+	g.TapPermanent(g.FindPermanent(bearID))
 	// Activate on turn 1 precombat main targeting opponent's Grizzly Bears
 	g.ActivateAbility(1, PrecombatMain, gametest.PlayerA, "Elvish Hunter", "Grizzly Bears")
-	// Tap the Bears so we can observe it not untapping
-	// On turn 2 (PlayerB's turn), Grizzly Bears should not untap
 	g.StopAt(2, PrecombatMain) // PlayerB's turn
 	g.Execute()
-	// Grizzly Bears should still be untapped initially, but the effect prevents untap
-	// Actually Bears aren't tapped yet - we need to tap them first or just check the attr
-	g.AssertHasAbility(gametest.PlayerB, "Grizzly Bears", AttrDoesNotUntap, true)
+	g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+}
+
+func TestElvishScout_UntapsAttackerAndPreventsCombatDamage(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Elvish Scout")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Forest")
+	g.AddCard(ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.ActivateAbility(1, DeclareAttackers, gametest.PlayerA, "Elvish Scout", "Grizzly Bears")
+	g.StopAt(1, PostcombatMain)
+	g.Execute()
+	g.AssertTapped(gametest.PlayerA, "Grizzly Bears", false)
+	g.AssertLife(gametest.PlayerB, 20)
 }
 
 func TestVodalianMage_CountersUnlessControllerPaysOne(t *testing.T) {

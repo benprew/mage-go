@@ -137,12 +137,8 @@ func registerArtifacts() {
 	// {1}, {T}, Sacrifice this artifact: Add two mana of any one color.
 	Register("Implements of Sacrifice", withExpansion(func() Card {
 		return NewArtifact("Implements of Sacrifice", "{2}",
-			WithActivatedAbility(
-				AddAnyMana(2, core.Colorless),
-				GenericCost(1),
-				WithCost(TapCost(This)),
-				WithCost(SacrificeSourceCost()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}"), TapCost(This), SacrificeSourceCost()),
+				AddAnyMana(2, core.Colorless))),
 		)
 	}))
 

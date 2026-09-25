@@ -177,7 +177,7 @@ func registerEnchantments() {
 	// Blue creatures get +1/+1.
 	Register("Sunken City", func() Card {
 		return NewEnchantment("Sunken City", "{U}{U}",
-			WithAbility(SacrificeAtUpkeepUnlessPay("{U}{U}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{U}{U}")), Sacrifice(This)))),
 			WithStaticAbility(
 				BoostAllCreaturesIncludingSelf(1, 1, HasColorFilter(Blue)),
 			),

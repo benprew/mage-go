@@ -118,12 +118,10 @@ func registerLands() {
 	// Oracle: "{T}: Prevent the next 1 damage that would be dealt to target creature
 	// this turn."
 	Register("Oasis", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewLand("Oasis",
-			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(1)),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), PreventNextDamage(creature, Fixed(1)),
+				WithTargets(creature))),
 		)
 	})
 }

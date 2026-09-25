@@ -5,6 +5,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -21,7 +22,7 @@ func registerEnchantments() {
 		return NewEnchantment("Necropolis of Azar", "{2}{B}{B}",
 			WithAbility(
 				NewTriggered(EvtZoneChange, false,
-					AddCounters(Husk, Fixed(1)).Targeting(ToSource()),
+					dsl.AddCounters(dsl.This, Husk, dsl.Fixed(1)),
 				).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 					EventZoneChangeMatches{From: ZoneBattlefield, To: ZoneGraveyard},
 					EventSourceWasOfType{Type: TypeCreature},

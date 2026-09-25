@@ -3,7 +3,6 @@ package fallen_empires
 import (
 	"github.com/google/uuid"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -40,13 +39,11 @@ func registerCreatures() {
 	// 0/2
 	// {1}{W}: Prevent the next 1 damage that would be dealt to any target this turn.
 	Register("Combat Medic", withExpansion(func() Card {
+		recipient := TargetDamageRecipient("recipient")
 		return NewCreature("Combat Medic", "{2}{W}", 0, 2,
 			WithSubTypes("Human", "Cleric", "Soldier"),
-			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(1)),
-				ManaCostOf("{1}{W}"),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{W}")),
+				PreventNextDamage(recipient, Fixed(1)), WithTargets(recipient))),
 		)
 	}))
 
@@ -133,8 +130,7 @@ func registerCreatures() {
 	Register("Icatian Javelineers", withExpansion(func() Card {
 		return NewCreature("Icatian Javelineers", "{W}", 1, 1,
 			WithSubTypes("Human", "Soldier"),
-			// Enters with a javelin counter
-			WithAbility(ETBEffect(mage.AddCounters(Javelin, Fixed(1)).Targeting(ToSource()))),
+			WithAbility(EntersWithNCounters(Javelin, 1)),
 			// {T}, Remove a javelin counter: deals 1 damage to any target
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
@@ -288,7 +284,7 @@ func registerCreatures() {
 		return NewCreature("Homarid", "{2}{U}", 2, 2,
 			WithSubTypes("Homarid"),
 			// ETB with 1 tide counter
-			WithAbility(ETBEffect(mage.AddCounters(Tide, Fixed(1)).Targeting(ToSource()))),
+			WithAbility(EntersWithNCounters(Tide, 1)),
 			WithAbility(At(YourUpkeep, AddCounters(This, Tide, Fixed(1)))),
 			WithAbility(WhenState(SourceHasCounters(Tide, 4), RemoveAllCounters(This, Tide))),
 			// As long as there is exactly one tide counter, -1/-1
@@ -448,14 +444,11 @@ func registerCreatures() {
 	// 1/3
 	// {T}, Sacrifice this creature: Put a +1/+2 counter on target creature.
 	Register("Armor Thrull", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Armor Thrull", "{2}{B}", 1, 3,
 			WithSubTypes("Thrull"),
-			WithActivatedAbility(
-				mage.AddCounters(P1P2, Fixed(1)),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This), SacrificeSourceCost()),
+				AddCounters(creature, P1P2, Fixed(1)), WithTargets(creature))),
 		)
 	}))
 
@@ -466,11 +459,8 @@ func registerCreatures() {
 	Register("Basal Thrull", withExpansion(func() Card {
 		return NewCreature("Basal Thrull", "{B}{B}", 1, 2,
 			WithSubTypes("Thrull"),
-			WithActivatedAbility(
-				AddMana(Black, 2),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-			),
+			WithAbility(Activate(Costs(TapCost(This), SacrificeSourceCost()),
+				AddManaAmount(Black, Fixed(2)))),
 		)
 	}))
 
@@ -683,10 +673,13 @@ func registerCreatures() {
 	// Creature — Goblin Shaman
 	// 0/2
 	// Sacrifice a Goblin: Regenerate target creature.
-	// TODO: implement
 	Register("Goblin Chirurgeon", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Goblin Chirurgeon", "{R}", 0, 2,
 			WithSubTypes("Goblin", "Shaman"),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(And(IsCreature, HasSubType("Goblin")), "Sacrifice a Goblin")),
+				Regenerate(creature), WithTargets(creature))),
 		)
 	}))
 
@@ -796,36 +789,11 @@ func registerCreatures() {
 	// 1/1
 	// {1}{G}, {T}: Target creature doesn't untap during its controller's next untap step.
 	Register("Elvish Hunter", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Elvish Hunter", "{1}{G}", 1, 1,
 			WithSubTypes("Elf", "Archer"),
-			// TODO: convert to pipeline — needs DoesNotUntapStep (creates FuncContinuousEffect with expiry)
-			WithActivatedAbility(
-				FuncEffect("target creature doesn't untap during its controller's next untap step",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						targetID := targets[0]
-						// In 2-player, "controller's next untap step" is 2 game turns from now
-						expiryTurn := g.CurrentTurn() + 2
-						ce := FuncContinuousEffect(LayerAbility, Indefinite, func(g *Game, _ uuid.UUID) error {
-							p := g.FindPermanent(targetID)
-							if p != nil {
-								g.GrantAttr(p.ID(), AttrDoesNotUntap)
-							}
-							return nil
-						}, func(g *Game, _ uuid.UUID) bool {
-							return g.CurrentTurn() <= expiryTurn && g.FindPermanent(targetID) != nil
-						})
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-						return nil
-					}),
-				ManaCostOf("{1}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{G}"), TapCost(This)),
+				SkipNextUntap(creature), WithTargets(creature))),
 		)
 	}))
 
@@ -833,10 +801,12 @@ func registerCreatures() {
 	// Creature — Elf Scout
 	// 1/1
 	// {G}, {T}: Untap target attacking creature you control. Prevent all combat damage that would be dealt to and dealt by it this turn.
-	// TODO: implement
 	Register("Elvish Scout", withExpansion(func() Card {
+		attacker := TargetPermanent("attacking creature you control", And(IsCreature, IsAttacking), TargetYouControl())
 		return NewCreature("Elvish Scout", "{G}", 1, 1,
 			WithSubTypes("Elf", "Scout"),
+			WithAbility(Activate(Costs(Mana("{G}"), TapCost(This)),
+				Sequence(Untap(attacker), PreventCombatDamageToAndBy(attacker)), WithTargets(attacker))),
 		)
 	}))
 
@@ -862,10 +832,7 @@ func registerCreatures() {
 		return NewCreature("Spore Flower", "{G}{G}", 0, 1,
 			WithSubTypes("Fungus"),
 			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
-			WithActivatedAbility(
-				PreventAllCombatDamage(),
-				RemoveCountersCost(Spore, 3),
-			),
+			WithAbility(Activate(Costs(RemoveCountersCost(Spore, 3)), PreventAllCombatDamage())),
 		)
 	}))
 

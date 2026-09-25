@@ -3,8 +3,6 @@ package fallen_empires
 import (
 	"github.com/google/uuid"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -20,12 +18,8 @@ func registerEnchantments() {
 	// At the beginning of your end step, create a 0/1 black Thrull creature token.
 	Register("Breeding Pit", withExpansion(func() Card {
 		return NewEnchantment("Breeding Pit", "{3}{B}",
-			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{B}")),
-			WithAbility(
-				NewTriggered(EvtEndStep, false,
-					CreateToken("Thrull", 0, 1, []CardType{TypeCreature}, []string{"Thrull"}),
-				).SetConditionData(EventPlayerIsController{}),
-			),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{B}{B}")), Sacrifice(This)))),
+			WithAbility(At(YourEndStep, CreateToken("Thrull", 0, 1, []CardType{TypeCreature}, []string{"Thrull"}))),
 		)
 	}))
 
@@ -33,12 +27,10 @@ func registerEnchantments() {
 	// Enchantment
 	// {1}{G}: Target blocking creature gets +0/+1 until end of turn.
 	Register("Elven Fortress", withExpansion(func() Card {
+		blocker := TargetPermanent("blocking creature", And(IsCreature, IsBlocking))
 		return NewEnchantment("Elven Fortress", "{G}",
-			WithActivatedAbility(
-				Boost(Fixed(0), Fixed(1)),
-				ManaCostOf("{1}{G}"),
-				WithTarget(TargetCreature(IsBlocking)),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{G}")),
+				Until(EndOfTurn, ModifyPT(blocker, Fixed(0), Fixed(1))), WithTargets(blocker))),
 		)
 	}))
 
@@ -55,12 +47,10 @@ func registerEnchantments() {
 	// Enchantment
 	// {G}{G}: Put a spore counter on target Fungus.
 	Register("Fungal Bloom", withExpansion(func() Card {
+		fungus := TargetPermanent("Fungus", And(IsCreature, HasSubType("Fungus")))
 		return NewEnchantment("Fungal Bloom", "{G}{G}",
-			WithActivatedAbility(
-				mage.AddCounters(Spore, Fixed(1)),
-				ManaCostOf("{G}{G}"),
-				WithTarget(TargetCreature(HasSubType("Fungus"))),
-			),
+			WithAbility(Activate(Costs(Mana("{G}{G}")),
+				AddCounters(fungus, Spore, Fixed(1)), WithTargets(fungus))),
 		)
 	}))
 

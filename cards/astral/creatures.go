@@ -212,10 +212,9 @@ func registerCreatures() {
 					)
 				},
 			), false)),
-			WithActivatedAbility(
-				GrantKeyword(FirstStrike).Targeting(ToSource()).Until(EndOfTurn),
-				GenericCost(1),
-			),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{1}")),
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(dsl.This, FirstStrike)),
+			)),
 			WithActivatedAbility(FuncEffect(
 				"gets +0/+0, +1/+0, or +2/+0 at random until end of turn",
 				EffectProperties{Outcome: OutcomeBenefit},
