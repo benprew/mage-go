@@ -4158,3 +4158,32 @@ Validation: focused card regressions and shared draw, payment, and activation
 contracts; Jumpstart package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Runed Servitor Typed Death Draws
+
+- [x] Migrate the complete death ability to `WhenEvent(Dies(This), ...)`
+  and `DrawEach(EachPlayer, Fixed(1))` through the author DSL.
+- [x] Remove the callback and implicit trigger target. Draws now occur in
+  active-player-first order, as required by CR 121.2c.
+- [x] Verify the full Oracle comment, `{2}` cost, artifact creature type,
+  Construct subtype, and 2/2 characteristics against `data/JMP.json`.
+- [x] Add a failing regression before migration for the implicit target and
+  incorrect draw order. Existing typed adapters resolve both issues; no
+  engine fix or new constructor is required.
+
+`TestRunedServitorDeathDrawOrder` checks both active players, a controller
+other than the owner, and source return under a different controller before
+resolution. The death trigger is untargeted, belongs to the last controller,
+and draws one card for each player only when it resolves. Draw events occur
+in turn order. The existing combat-death test also passes.
+
+Shared typed draw and death-trigger contracts cover draw amounts, replacement
+handling, empty libraries, source absence, and clone isolation. This completes
+one slice of the remaining trigger and action migrations. Other legacy callers
+and recorded engine blockers remain open; no export is retired.
+
+Validation: focused card regressions and shared contracts; Jumpstart package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

@@ -6503,16 +6503,7 @@ func registerCreatures() {
 		return NewCreature("Runed Servitor", "{2}", 2, 2,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
-			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(FuncEffect(
-				"each player draws a card",
-				EffectProperties{},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					for _, p := range g.AllPlayers() {
-						g.PlayerDrawCard(p)
-					}
-					return nil
-				},
-			), false)),
+			WithAbility(WhenEvent(Dies(This), DrawEach(EachPlayer, Fixed(1)))),
 		)
 	})
 
