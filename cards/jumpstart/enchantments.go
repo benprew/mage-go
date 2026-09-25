@@ -906,7 +906,7 @@ func registerEnchantments() {
 	// Enchanted creature doesn't untap during its controller's untap step.
 	Register("Waterknot", func() Card {
 		return NewAura("Waterknot", "{1}{U}{U}",
-			WithAbility(EntersBattlefieldTrigger(TapAttachedCreature(), false)),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Tap(dsl.AttachedPermanent))),
 			WithStaticAbility(
 				PreventAttachedFromUntapping(AttachAura),
 			),

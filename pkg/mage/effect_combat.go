@@ -6,19 +6,6 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// tapAttachedCreatureEffect taps the creature attached to the source aura.
-type tapAttachedCreatureEffect struct{}
-
-// TapAttachedCreature creates an effect that taps the creature the source aura is attached to.
-func TapAttachedCreature() Effect {
-	return &tapAttachedCreatureEffect{}
-}
-
-func (e *tapAttachedCreatureEffect) Text() string { return "Tap enchanted creature" }
-func (e *tapAttachedCreatureEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Taps: true}
-}
-
 // tapAllLandsEffect taps all lands target player controls.
 type tapAllLandsEffect struct{}
 
@@ -236,18 +223,6 @@ func (*tap) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	ctx.Game.TapPermanent(perm)
-	return nil
-}
-
-func (*tapAttachedCreatureEffect) Apply(ctx *EffectContext) error {
-	src := ctx.Game.FindPermanent(ctx.SourceID)
-	if src == nil || !src.IsAttached() {
-		return nil
-	}
-	target := ctx.Game.FindPermanent(src.AttachedTo)
-	if target != nil {
-		ctx.Game.TapPermanent(target)
-	}
 	return nil
 }
 

@@ -155,9 +155,13 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant creature
+	// When this Aura enters, tap enchanted creature.
+	// Enchanted creature doesn't untap during its controller's untap step.
+	// At the beginning of the upkeep of enchanted creature's controller, that player may pay {4}. If the player does, untap the creature.
 	Register("Paralyze", func() Card {
 		return NewAura("Paralyze", "{B}",
-			WithAbility(EntersBattlefieldTrigger(TapAttachedCreature(), false)),
+			WithAbility(WhenEvent(Enters(This), Tap(AttachedPermanent))),
 			WithStaticAbility(
 				PreventAttachedFromUntapping(AttachAura),
 			),

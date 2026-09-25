@@ -32,6 +32,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Crumble Saved-Value Migration**: Migrate Crumble and Whimsy's Crumble branch to typed controller/mana-value captures and no-regeneration destruction. Retire `CrumbleEffect` and `DestroyGatheredNoRegen`; see the completed slice below.
 - [x] **Tabernacle String-Bound Destruction**: Migrate its granted upkeep body to typed payment and source destruction; retire `DestroyGathered`. Correct returned-source identity and include Tabernacle when it is a creature. See the completed slice below.
 - [x] **Rakalite Delayed Return**: Migrate prevention and delayed source return to typed targets, activation, and `AtNext`; preserve the original source incarnation. See the completed slice below.
+- [x] **Aura Entry Tap**: Migrate Paralyze and Waterknot to typed entry triggers and attachment taps; retire `TapAttachedCreature`. Resolve departed and returned attachment identity with existing typed references. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -345,3 +346,20 @@ Validation: focused Tabernacle tests; `go test ./cards/legends -count=1`; `go te
 Rules contract: repository CR 400.7 and 603.7a–e. No new DSL constructor or engine fix was required. The positional return export remains for Prismari Charm, its engine test callers, and the typed adapter's shared executor. The generic legacy delayed-trigger export still has other callers. Neither is retired by this slice. A separate unprevented planeswalker damage audit finding is recorded above; general damage-source LKI remains open.
 
 Validation: focused Rakalite regressions, `go test ./cards/antiquities -count=1`, `go test ./cards/... -short -count=1`, `make test`, `go build ./...`, `go vet ./cards/antiquities`, and `make lint` all passed with zero failures (lint: zero issues).
+
+## Completed Slice: Aura Entry Tap
+
+- [x] Migrate both production `TapAttachedCreature` callers, Paralyze and Waterknot, to `WhenEvent(Enters(This), Tap(AttachedPermanent))` through the author surface.
+- [x] Retire `TapAttachedCreature` from engine and author exports and remove its private executor. Add negative compile fixtures for both surfaces.
+- [x] Resolve entry-tap source and host identity with existing typed attachment history. Regressions failed before migration for source departure before trigger placement, source departure on the stack, source return, and host return. No engine gap or new constructor was required.
+
+| Oracle clause / retired API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Both Auras: “When this Aura enters, tap enchanted creature.” / both `TapAttachedCreature` calls | `WhenEvent(Enters(This), Tap(AttachedPermanent))`; one nontargeted stack trigger; read the current attachment at resolution or the departed source incarnation's last attachment. Control changes do not prevent tapping. | `TestAuraEntryTapLifetime`: unchanged attachment, moved Aura, departure before placement and resolution, returned Aura, returned host, phased host, phase cycle, control change, and clone isolation. The returned Aura's separate entry trigger is not resolved by the old-trigger assertion. |
+| Typed attachment action | Reuse `TapSubject`, the incarnation-aware `AttachedPermanent` resolver, and `Game.TapPermanent`; preserve detrimental and tap metadata. | `TestAuraEntryTapTypedDefinitions`; existing `TestAttachedPermanentResolutionLifetime`, `TestComposableSavedTapLifetime`, and `TestTapPermanentRequiresTransition`; retired-export compile-fail fixtures. |
+| “Enchant creature” and “Enchanted creature doesn't untap during its controller's untap step.” | Preserve Aura construction, casting targets, and the existing static untap restriction. Costs remain {B} and {1}{U}{U}. | Existing `TestParalyze` and `TestWaterknot`; universal registration validation. |
+| Paralyze's upkeep payment clause | Retain the existing separate callback. Its payment, event-player capture, and attachment identity audit remain outside this entry-tap slice. | Existing `TestParalyze`; no claim that the surrounding callback is fully migrated. |
+
+Oracle sources: `data/LEA.json` and `cards/jumpstart/JMP.json`; full Oracle comments precede the registrations. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 303.4m (enchanted object), 400.7 (new objects), and 608.2h (source information at resolution). General damage LKI and other attachment-event audits remain open. Unrelated legacy definitions and direct engine imports remain in both card files.
+
+Validation: focused entry-tap regressions and Waterknot tests; both affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1` (including registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

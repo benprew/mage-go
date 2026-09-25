@@ -53,6 +53,10 @@
 // destruction. Crumble combines both snapshots with [DestroyWithoutRegeneration]
 // and [GainLifeFor]; the saved controller gains life even if destruction fails.
 //
+// Use [WhenEvent] with [Enters] and [TapSubject] of [AttachedPermanent]
+// to tap an enchanted permanent on entry. The attachment is read at resolution;
+// a departed source uses its last attachment and cannot follow a new incarnation.
+//
 // [AttachedBecomesTapped] saves the event permanent before trigger placement.
 // Read it with [From] so attachment changes cannot redirect the effect.
 //

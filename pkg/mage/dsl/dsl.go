@@ -401,7 +401,6 @@ var (
 	RemoveFromCombatGathered                  = mage.RemoveFromCombatGathered
 	FightGathered                             = mage.FightGathered
 	MakeUnblockableUntilEndOfTurn             = mage.MakeUnblockableUntilEndOfTurn
-	TapAttachedCreature                       = mage.TapAttachedCreature
 	ReturnFromGraveyardToBattlefield          = mage.ReturnFromGraveyardToBattlefield
 	ReturnTargetFromAnyGraveyardToBattlefield = mage.ReturnTargetFromAnyGraveyardToBattlefield
 	ReturnFromGraveyardToHandTarget           = mage.ReturnFromGraveyardToHandTarget

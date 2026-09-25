@@ -156,6 +156,11 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 * `Untap(PermanentRef)`: Untaps the permanent.
 * `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
 
+For an Aura entry trigger, use `WhenEvent(Enters(This), Tap(AttachedPermanent))`.
+The attachment is read at resolution, so moving the Aura changes the affected
+permanent. If the Aura has left, its last attachment is used. A returned Aura
+or host is a new incarnation and does not redirect the old reference.
+
 ### Player Actions
 * `Draw(PlayerRef, ResolutionValue)`: Instructs player to draw cards.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
