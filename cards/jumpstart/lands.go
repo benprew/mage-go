@@ -3,8 +3,6 @@ package jumpstart
 import (
 	"github.com/google/uuid"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -81,10 +79,10 @@ func registerLands() {
 	Register("Mirrodin's Core", func() Card {
 		return NewLand("Mirrodin's Core",
 			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
-			WithActivatedAbility(
-				mage.AddCounters(Charge, Fixed(1)).Targeting(ToSource()),
-				TapCost(This),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddCounters(This, Charge, Fixed(1)),
+			)),
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
 				TapCost(This),

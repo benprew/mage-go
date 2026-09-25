@@ -3669,3 +3669,36 @@ Validation: focused card and shared contract tests; Jumpstart and Promo package
 tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart ./cards/promo`; `make test`; and `make lint` pass
 with zero failures (lint: zero issues).
+
+
+## Completed Slice: Mirrodin's Core Typed Charge Activation
+
+- [x] Migrate the charge-counter ability to `Activate`, `Costs(TapCost(This))`,
+  and `AddCounters(This, Charge, Fixed(1))` through the author DSL.
+- [x] Verify the full Oracle comment and land type against `data/JMP.json`.
+- [x] Remove the land file's last direct engine import.
+- [x] Strengthen `TestMirrodinsCore` to select the charge ability explicitly
+  and assert both the tap cost and exactly one charge counter.
+- [x] Audit the counter and payment adapters. Existing engine services support
+  the ability; no engine fix or new export is required.
+
+The ability has no targets and uses the stack after tapping the land. It puts
+one charge counter on the source incarnation at resolution through the shared
+counter action. It does not produce mana. Rules contracts are CR 602 and 608.
+The separate colorless mana ability is already typed; the any-color mana
+activation remains a legacy definition outside this slice.
+
+The strengthened card test and shared `TestTypedCounterAmount*`,
+`TestComposablePayment*`, and `TestCounterValueIdentity` pass before and after
+migration. Shared contracts cover replacement amounts, absent subjects, source
+identity, clone isolation, and payment atomicity. This single-action declaration
+uses proven primitives and needs no additional simulation test.
+
+This completes one slice of the remaining activation and counter-action caller
+migrations. Other callers retain legacy helpers, so no export is retired and
+no outstanding engine blocker is marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

@@ -49,23 +49,14 @@ func TestMirrodinsCore(t *testing.T) {
 		}
 	})
 
-	t.Run("can stash a charge counter and convert it to colored mana", func(t *testing.T) {
+	t.Run("taps to store a charge counter", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mirrodin's Core")
-		// Activate "put charge counter" ability (ability index 1).
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mirrodin's Core")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Mirrodin's Core", 1)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		perm := g.FindPermanentByName("Mirrodin's Core", g.GetPlayer(gametest.PlayerA).PlayerID())
-		if perm == nil {
-			t.Fatal("Mirrodin's Core not found")
-		}
-		// Charge counter ability should be the second ability — verify counter exists.
-		// Since ActivateAbility picks the first valid ability, we can at least confirm
-		// the card has 3 activated abilities and the test is a smoke test.
-		// Counter may or may not exist depending on which ability was picked first;
-		// real coverage is in the counter test below.
-		_ = perm
+		g.AssertTapped(gametest.PlayerA, "Mirrodin's Core", true)
+		g.AssertCounterCount(gametest.PlayerA, "Mirrodin's Core", core.Charge, 1)
 	})
 }
 
