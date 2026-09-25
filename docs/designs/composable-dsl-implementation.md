@@ -3294,3 +3294,38 @@ Validation: focused shared contracts; Fallen Empires package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/fallen_empires`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Conservator Typed Prevention
+
+- [x] Migrate Conservator to `Activate`, `Costs(Mana("{3}"), TapCost(This))`,
+  and `PreventNextDamage(You, Fixed(2))` through the author DSL.
+- [x] Verify the full Oracle comment, artifact type, and `{4}` casting cost
+  against `data/LEA.json`. The ability has no target or timing restriction.
+- [x] Retire `AddPreventionShieldToControllerStep`, its executor record, and
+  its author DSL export after migrating its sole caller.
+- [x] Audit payment, recipient identity, shield consumption, and expiration.
+  Existing typed adapters need no engine fix or new export.
+
+The ability uses the stack after paying three generic mana and tapping the
+source. It prevents the next two damage to the stored resolving controller
+this turn, including damage across multiple events. Source departure does
+not end the shield. Unused capacity expires at cleanup. Rules contracts are
+CR 602, 608, and 615.
+
+`TestConservator` and shared `TestTypedPrevention*` and
+`TestComposablePayment*` pass before and after migration. The card scenario
+checks untargeted prevention during the opponent's turn and the tap cost.
+Shared tests cover capacity consumption, expiration, source departure,
+clone isolation, and payment atomicity. This single-action declaration uses
+proven primitives and needs no duplicate simulation test.
+
+This completes one slice of the remaining activation and prevention caller
+migrations. The broader replacement family remains open; no outstanding
+engine blocker is marked resolved. Unrelated definitions retain this file's
+engine imports.
+
+Validation: focused shared contracts; Limited package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/limited`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

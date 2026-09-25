@@ -461,11 +461,10 @@ func registerArtifacts() {
 	// {3}, {T}: Prevent the next 2 damage that would be dealt to you this turn.
 	Register("Conservator", func() Card {
 		return NewArtifact("Conservator", "{4}",
-			WithActivatedAbility(
-				AddPreventionShieldToControllerStep(2),
-				GenericCost(3),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}"), TapCost(This)),
+				PreventNextDamage(You, Fixed(2)),
+			)),
 		)
 	})
 

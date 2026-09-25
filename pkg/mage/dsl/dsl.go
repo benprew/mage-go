@@ -431,7 +431,6 @@ var (
 	MayPayMana                                = mage.MayPayMana
 	Scry                                      = mage.ScryAtResolution
 	Surveil                                   = mage.SurveilAtResolution
-	AddPreventionShieldToControllerStep       = mage.AddPreventionShieldToControllerStep
 	AddReverseDamageShieldStep                = mage.AddReverseDamageShieldStep
 	AddContinuousEffectsStep                  = mage.AddContinuousEffectsStep
 	VarPlayer                                 = mage.VarPlayer

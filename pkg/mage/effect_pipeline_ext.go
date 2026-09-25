@@ -235,27 +235,6 @@ func (e *AddColorPreventionData) Apply(ctx *EffectContext) error {
 }
 
 // ---------------------------------------------------------------------------
-// AddPreventionShieldToControllerData adds a damage prevention shield to the controller.
-type AddPreventionShieldToControllerData struct {
-	Amount int
-}
-
-func AddPreventionShieldToControllerStep(amount int) Effect {
-	return &AddPreventionShieldToControllerData{Amount: amount}
-}
-
-func (e *AddPreventionShieldToControllerData) Text() string {
-	return "prevent damage to you"
-}
-func (e *AddPreventionShieldToControllerData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit}
-}
-
-func (e *AddPreventionShieldToControllerData) Apply(ctx *EffectContext) error {
-	ctx.Game.AddPreventionShield(ctx.Controller, e.Amount)
-	return nil
-}
-
 // ReverseDamage step
 // ---------------------------------------------------------------------------
 
