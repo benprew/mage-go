@@ -326,7 +326,7 @@ func registerCreatures() {
 	Register("Sisters of the Flame", func() Card {
 		return NewCreature("Sisters of the Flame", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Shaman"),
-			WithManaAbility(Red),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Red, Fixed(1)))),
 		)
 	})
 

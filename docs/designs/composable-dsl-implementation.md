@@ -3079,3 +3079,37 @@ Validation: focused shared contracts and card tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Sisters of the Flame Typed Mana
+
+- [x] Migrate Fourth Edition's last production `WithManaAbility` declaration
+  to `Activate`, `Costs(TapCost(This))`, and `AddManaAmount(Red, Fixed(1))`.
+- [x] Preserve one red mana, a tap cost, and no targets. The complete card
+  definition uses the author DSL.
+- [x] Verify the full Oracle comment, `{1}{R}{R}` casting cost, Human Shaman
+  subtypes, and 2/2 characteristics against `data/4ED.json`.
+- [x] Audit immediate resolution, fixed mana planning, and tap payment.
+  Existing adapters need no engine fix or new export.
+
+The ability adds one red mana to the activating controller's pool without
+using the stack. Fixed production remains available to automatic payment,
+and the shared mana service emits the tapped-for-mana event. The shared tap
+cost requires an untapped source and enforces summoning sickness and haste.
+Rules contracts are CR 302.6, 602, and 605.1a–605.3b.
+
+`TestSistersOfTheFlame` passes before and after migration and checks tapping
+and red mana production. Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+and `TestComposablePayment*` also pass before and after migration. They cover
+immediate resolution, amounts, tap events, automatic payment, clone isolation,
+and failed payment. This single-action declaration uses proven primitives
+and registration validation; no duplicate card simulation test is required.
+
+This completes the remaining fixed mana declaration in Fourth Edition.
+Other sets retain `WithManaAbility`, so its export remains. The broader mana
+family remains open; no outstanding engine blocker is marked resolved.
+
+Validation: focused shared contracts; Fourth Edition package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/fourthedition`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).
