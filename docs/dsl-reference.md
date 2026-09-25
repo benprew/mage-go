@@ -172,7 +172,7 @@ or host is a new incarnation and does not redirect the old reference.
 * `Draw(PlayerRef, ResolutionValue)`: Instructs player to draw cards.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
-* `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand.
+* `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
 * `DiscardEntireHand(PlayerRef)`: Discards all cards in the player's hand.
 * `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
 * `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.

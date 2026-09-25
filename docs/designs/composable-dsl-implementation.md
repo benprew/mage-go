@@ -14,7 +14,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] **Deep Spawn**: Audit optional upkeep mill payment before migrating the last production `MillTargetPlayer` caller. (Selhoff Occultist, Towering-Wave Mystic, Millstone, and Whimsy's mill branch are migrated; `MillstoneEffect` is retired).
 - [ ] **Cauldron of Essence**: Migrate reanimation ability after typed graveyard references are available. Preserve target selection before sacrifice payment, graveyard ownership, sorcery timing, and return under resolving controller. (Death trigger is migrated; `AnyCreatureDiesTrigger` is retired).
 - [ ] **First Main Phase Callers**: Migrate other first-main callers before retiring `BeginningOfFirstMainPhaseTrigger`: Scathing Shadelock needs typed prepared state and prepared casting audit; Abstract Paintmage needs missing instant/sorcery mana spending restriction.
-- [ ] **Surrounding Card Definitions**: Migrate remaining surrounding definitions for Blindblast, Exclude, Goblin Lore, Thirst for Knowledge, and Rhystic Study. Damage-source LKI, stack references, hidden-zone choices, and event participants still need exact adapters.
+- [x] **Goblin Lore**: Migrate the remaining random-discard callback and spell builder to typed `Spell`, `Sequence`, and `DiscardAtRandom`. See the completed slice below.
+- [ ] **Surrounding Card Definitions**: Migrate remaining surrounding definitions for Blindblast, Exclude, Thirst for Knowledge, and Rhystic Study. Damage-source LKI, stack references, hidden-zone choices, and event participants still need exact adapters.
 - [x] **Explore Land Allowance**: Add `GrantLandPlays(PlayerRef, ResolutionValue)` and migrate Explore to typed `Spell` and `Sequence`. Existing turn allowance and clone services need no engine fix. See the completed slice below.
 - [ ] **Rhystic Study**: Audit optional draw and payer choice order when migrating the trigger. Legacy payment branches expose nested typed effects to inspection/validation; event participant capture remains open.
 - [ ] **Elemental Uprising**: Audit land animation, target-controller restriction, color behavior, and lifetime.
@@ -2486,6 +2487,40 @@ engine blocker is marked resolved, and other callers still need the legacy
 builders and count helper, so no export is retired.
 
 Validation: focused card and shared contract tests; Jumpstart package tests;
+all card tests with `-short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
+
+## Completed Slice: Goblin Lore Typed Draw and Random Discard
+
+- [x] Migrate Goblin Lore to `Spell`, `Sequence`, `Draw`, and
+  `DiscardAtRandom` through the author DSL, removing its engine callback.
+- [x] Preserve the complete Oracle text, sorcery type, and `{1}{R}` mana
+  cost from `data/JMP.json`.
+- [x] Audit instruction order, resolving controller, random selection,
+  discard replacements and events, and short hands. Existing typed services
+  need no engine fix; no engine blocker is marked resolved.
+
+The resolving controller draws four cards before discarding three cards at
+random from their entire current hand. Both actions use the shared engine
+services. Random selection uses the game's random state and permits no card
+choice; discard replacements still apply. If fewer than three cards remain,
+discard as many as possible. The typed action passes the spell source to the
+discard replacement pipeline. Rules contracts are CR 121.2, 608.2c, 609.3,
+and 701.9.
+
+`TestGoblinLore_DrawFourDiscardThreeAtRandom` passes before and after
+migration. Shared `TestTypedRandomDiscard*` and `TestTypedDrawAmount*` pass,
+covering controller and copy context, clone isolation, random consumption,
+replacement handling, events, short hands, ordering, and validation. These
+existing contracts and the card's sequencing test cover this declarative
+migration without duplicate simulation tests.
+
+This completes Goblin Lore's surrounding definition migration. Other card
+callbacks and legacy spell builders remain, so no export is retired.
+
+Validation: focused card and shared draw/discard tests; Jumpstart package tests;
 all card tests with `-short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).

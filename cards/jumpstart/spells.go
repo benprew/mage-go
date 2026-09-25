@@ -848,19 +848,10 @@ func registerSpells() {
 	// Draw four cards, then discard three cards at random.
 	Register("Goblin Lore", func() Card {
 		return NewSorcery("Goblin Lore", "{1}{R}",
-			NewSpellAbility(
+			dsl.Spell(dsl.Sequence(
 				dsl.Draw(dsl.You, dsl.Fixed(4)),
-				FuncEffect("discard three cards at random",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						g.DiscardAtRandom(p, 3)
-						return nil
-					}),
-			),
+				dsl.DiscardAtRandom(dsl.You, dsl.Fixed(3)),
+			)),
 		)
 	})
 
