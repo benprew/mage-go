@@ -614,7 +614,7 @@ func TestTeamBoostComposition(t *testing.T) {
 }
 
 func TestSelfPumpActivationComposition(t *testing.T) {
-	for _, delta := range [][2]int{{1, 1}, {0, 1}, {1, 0}} {
+	for _, delta := range [][2]int{{1, 1}, {0, 1}, {1, 0}, {2, 0}} {
 		body := dsl.Until(core.EndOfTurn, dsl.ModifyPT(dsl.This, dsl.Fixed(delta[0]), dsl.Fixed(delta[1])))
 		card := dsl.NewCreature("Self pump", "", 1, 1,
 			dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{R}")), body)))

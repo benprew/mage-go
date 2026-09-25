@@ -54,6 +54,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Affa Guard Hound Entry Boost**: Migrate the targeted entry boost to `WhenEvent`, `WithTargets`, and temporary `ModifyPT`. Correct target choice timing in the card definition; no engine gap. See the completed slice below.
 - [x] **Shield Wall Team Boost**: Migrate the remaining positional team spell to a typed controlled-creature collection and explicit end-of-turn duration. No engine gap; see the completed slice below.
 - [x] **Jumpstart Single-Target P/T Spells**: Migrate Aegis of the Heavens, Auger Spree, and Last Gasp to typed creature targets and explicit end-of-turn modifications. No engine gap; see the completed slice below.
+- [x] **Jumpstart Simple Self-Pump Activations**: Migrate Dragon Hatchling, Furnace Whelp, Minotaur Sureshot, Molten Ravager, Tibalt’s Rager, and Jousting Dummy to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -956,6 +957,37 @@ retired: `NewTargetedSpell`, `TargetCreature`, and `Boost` retain other callers.
 The remaining positional P/T migrations and recorded engine blockers stay open.
 
 Validation: focused card and shared engine contract tests; Jumpstart package;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` passed with zero
+failures (lint: zero issues).
+
+
+## Completed Slice: Jumpstart Simple Self-Pump Activations
+
+- [x] Migrate six positional `WithActivatedAbility` / `Boost` definitions to `Activate(Costs(Mana(...)), Until(EndOfTurn, ModifyPT(This, ...)))` through `pkg/mage/dsl`.
+- [x] Check complete Oracle comments and printed mana costs against `cards/jumpstart/JMP.json`; all six match exactly.
+- [x] Audit source scope, costs, duration, and metadata. Existing engine services support these abilities; no engine fix or new constructor is required.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Dragon Hatchling, Furnace Whelp, Molten Ravager: “{R}: This creature gets +1/+0 until end of turn.” | `Costs(Mana("{R}"))` and `ModifyPT(This, Fixed(1), Fixed(0))` with explicit end-of-turn duration | `TestDragonHatchling_BoostsForR`, `TestFurnaceWhelp_BoostsForR`, `TestMoltenRavager_BoostsForR` |
+| Minotaur Sureshot: “{1}{R}: This creature gets +1/+0 until end of turn.” | Same source modification with `Costs(Mana("{1}{R}"))` | `TestMinotaurSureshot_BoostsForOneR` |
+| Tibalt’s Rager: “{1}{R}: This creature gets +2/+0 until end of turn.” | `Costs(Mana("{1}{R}"))` and `ModifyPT(This, Fixed(2), Fixed(0))` | `TestTibaltsRager_BoostsForOneR`; `TestSelfPumpActivationComposition` now includes +2/+0 |
+| Jousting Dummy: “{3}: This creature gets +1/+0 until end of turn.” | `Costs(Mana("{3}"))` and the same +1/+0 source modification | `TestJoustingDummy_BoostsPower` |
+| Shared source and duration contract | No targets, tap costs, timing restrictions, or activation limits. Each resolution adds a layer 7c bonus to the original source incarnation. Bonuses expire at cleanup, survive phasing, and remain independent in cloned games. No damage-source LKI is required. Benefit, single-subject, and P/T metadata remain available. | `TestComposableSelfPumpLifetime`, `TestSelfPumpActivationComposition`, `TestTemporaryPTMetadata`; universal `TestRegisteredDefinitions` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 602 (activation), 611.2a (duration), and 613
+(continuous layers). Existing card and shared contract tests passed before
+migration. These declarative abilities need no new card simulations.
+
+No exports are retired: `WithActivatedAbility`, `Boost`, and `ToSource`
+still have other callers. Tibalt’s Rager’s damage trigger and the file’s
+remaining legacy definitions and engine import stay outside this slice.
+No outstanding engine blocker is claimed resolved.
+
+Validation: focused card and shared source-lifetime tests before migration;
+Jumpstart package; `go test ./pkg/mage/... -short -count=1`;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` passed with zero
 failures (lint: zero issues).

@@ -43,6 +43,7 @@
 // Use [Activate] with [Mana] costs and [Until] with [ModifyPT] of [This]
 // for a temporary source bonus. Each resolution adds a separate bonus to
 // the original permanent. A returned card does not receive that bonus.
+// Jumpstart self-pump abilities use this form with explicit mana costs.
 // Use a typed target with [WithTargets] for a targeted bonus.
 // For an entry bonus, put [WithTargets] on [WhenEvent] with [Enters].
 // Choose the target when the trigger goes on the stack. The creature spell

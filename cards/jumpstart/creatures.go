@@ -3815,10 +3815,10 @@ func registerCreatures() {
 		return NewCreature("Dragon Hatchling", "{1}{R}", 0, 1,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
@@ -3978,10 +3978,10 @@ func registerCreatures() {
 		return NewCreature("Furnace Whelp", "{2}{R}{R}", 2, 2,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
@@ -4381,10 +4381,10 @@ func registerCreatures() {
 		return NewCreature("Minotaur Sureshot", "{2}{R}", 2, 3,
 			WithSubTypes("Minotaur", "Archer"),
 			WithKeyword(Reach),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{1}{R}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
@@ -4395,10 +4395,10 @@ func registerCreatures() {
 	Register("Molten Ravager", func() Card {
 		return NewCreature("Molten Ravager", "{2}{R}", 0, 4,
 			WithSubTypes("Elemental"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
@@ -4713,10 +4713,10 @@ func registerCreatures() {
 				DealDamage(Fixed(1)),
 				false,
 			).AddTarget(TargetDamageAnyTarget())),
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{1}{R}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(0))),
+			)),
 		)
 	})
 
@@ -6507,10 +6507,10 @@ func registerCreatures() {
 		return NewCreature("Jousting Dummy", "{2}", 2, 1,
 			WithSubTypes("Scarecrow", "Knight"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()).Until(EndOfTurn),
-				ManaCostOf("{3}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
