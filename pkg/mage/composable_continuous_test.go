@@ -51,3 +51,35 @@ func TestComposableStaticMembership(t *testing.T) {
 		t.Fatal("static clone isolation failed")
 	}
 }
+
+func TestComposableSelfPumpLifetime(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	card := NewCreature("Source", "", 2, 3)
+	card.SetOwner(a.PlayerID())
+	p := g.PutOnBattlefield(card, a.PlayerID())
+	body := Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1)))
+	for range 2 {
+		if err := ApplyEffect(g, body, p.ID(), a.PlayerID(), nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	check := func(game *Game, power, toughness int) {
+		t.Helper()
+		game.ApplyContinuousEffects()
+		got := game.FindPermanent(card.ID())
+		if got.CurrentPower(game) != power || got.CurrentToughness(game) != toughness {
+			t.Fatalf("P/T = %d/%d, want %d/%d", got.CurrentPower(game), got.CurrentToughness(game), power, toughness)
+		}
+	}
+	check(g, 4, 5)
+	clone := g.Clone()
+	clone.effects.RemoveEndOfTurn()
+	check(clone, 2, 3)
+	check(g, 4, 5)
+	g.PhaseIn(g.PhaseOut(p.ID()))
+	check(g, 4, 5)
+	g.RemoveFromBattlefield(g.FindPermanent(p.ID()))
+	g.PutOnBattlefield(card, a.PlayerID())
+	check(g, 2, 3)
+}

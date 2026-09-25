@@ -40,6 +40,10 @@
 // [SetBasePower] changes only base power. Bonuses and counters still apply. [TargetOtherThanSource] excludes the
 // source from a typed permanent target.
 //
+// Use [Activate] with [Mana] costs and [Until] with [ModifyPT] of [This]
+// for a temporary source bonus. Each resolution adds a separate bonus to
+// the original permanent. A returned card does not receive that bonus.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

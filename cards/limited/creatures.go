@@ -167,14 +167,12 @@ func registerCreatures() {
 		)
 	})
 
+	// {B}: This creature gets +1/+1 until end of turn.
 	Register("Frozen Shade", func() Card {
 		return NewCreature("Frozen Shade", "{2}{B}", 0, 1,
 			WithSubTypes("Shade"),
-			// {B}: +1/+1 until end of turn
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
-				ManaCostOf("{B}"),
-			),
+			WithAbility(Activate(Costs(Mana("{B}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1))))),
 		)
 	})
 
@@ -347,15 +345,14 @@ func registerCreatures() {
 		)
 	})
 
+	// Flying
+	// {R}: This creature gets +0/+1 until end of turn.
 	Register("Granite Gargoyle", func() Card {
 		return NewCreature("Granite Gargoyle", "{2}{R}", 2, 2,
 			WithSubTypes("Gargoyle"),
 			WithKeyword(Flying),
-			// {R}: +0/+1 until end of turn
-			WithActivatedAbility(
-				Boost(Fixed(0), Fixed(1)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(0), Fixed(1))))),
 		)
 	})
 
@@ -393,15 +390,14 @@ func registerCreatures() {
 		)
 	})
 
+	// Flying
+	// {R}: This creature gets +1/+0 until end of turn.
 	Register("Shivan Dragon", func() Card {
 		return NewCreature("Shivan Dragon", "{4}{R}{R}", 5, 5,
 			WithSubTypes("Dragon"),
 			WithKeyword(Flying),
-			// {R}: +1/+0 until end of turn (firebreathing)
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))))),
 		)
 	})
 
@@ -603,15 +599,14 @@ func registerCreatures() {
 		)
 	})
 
+	// Defender (This creature can't attack.)
+	// {R}: This creature gets +1/+0 until end of turn.
 	Register("Wall of Fire", func() Card {
 		return NewCreature("Wall of Fire", "{1}{R}{R}", 0, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
-			// {R}: +1/+0 until end of turn
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))))),
 		)
 	})
 
@@ -637,15 +632,14 @@ func registerCreatures() {
 		)
 	})
 
+	// Defender (This creature can't attack.)
+	// {U}: This creature gets +1/+0 until end of turn.
 	Register("Wall of Water", func() Card {
 		return NewCreature("Wall of Water", "{1}{U}{U}", 0, 5,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
-			// {U}: +1/+0 until end of turn
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{U}"),
-			),
+			WithAbility(Activate(Costs(Mana("{U}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))))),
 		)
 	})
 

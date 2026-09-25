@@ -44,6 +44,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Disharmony Casting Window**: Extend `OnlyDuring` to multiple steps and enforce beginning-of-combat or declare-attackers timing. The control-effect adapter remains separate. See the completed slice below.
 - [x] **Procrastinate Tap and Counters**: Add typed `MultiplyValues`, migrate the spell to typed tap and twice-X stun counters, and remove its positional callback. No engine blocker. See the completed slice below.
 - [x] **Controlled Creature Team Boosts**: Migrate Fortify, Inspired Charge, and Assault Formation’s team activation to typed collection modifications and durations; retire `BoostMatchingUntilEndOfTurn`, including its test fixture caller. No engine blocker. See the completed slice below.
+- [x] **Limited Edition Simple Self-Pump Activations**: Migrate Frozen Shade, Granite Gargoyle, Shivan Dragon, Wall of Fire, and Wall of Water to typed activation costs and temporary source modifications. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -705,3 +706,22 @@ migration. The shared Jumpstart files retain imports for other legacy cards.
 Validation: focused card and DSL tests, the Jumpstart package, engine and rules
 harness tests, universal registration validation through `make test`,
 `go build ./...`, `go vet ./cards/jumpstart`, and `make lint`.
+
+## Completed Slice: Limited Edition Simple Self-Pump Activations
+
+- [x] Replace the five simple `Boost(...).Targeting(ToSource())` activations with `Activate(Costs(Mana(...)), Until(EndOfTurn, ModifyPT(This, ...)))` through `pkg/mage/dsl`.
+- [x] Restore complete Oracle comments from `data/LEA.json` immediately above each registration.
+- [x] Verify stacking, expiration, clone isolation, phasing, and returned-object exclusion with `TestComposableSelfPumpLifetime`; verify public composition, registration, and beneficial single-subject P/T metadata with `TestSelfPumpActivationComposition`.
+- [x] Reuse existing activation/payment and continuous-effect services; no engine blocker or new executor was needed.
+
+| Oracle clause / callers | Typed expression and rules contract | Evidence |
+| :--- | :--- | :--- |
+| Frozen Shade: {B}, +1/+1 | `Costs(Mana("{B}"))`; `ModifyPT(This, Fixed(1), Fixed(1))` | Activation/payment contract suite; self-pump composition and lifetime tests |
+| Granite Gargoyle: {R}, +0/+1 | `Costs(Mana("{R}"))`; `ModifyPT(This, Fixed(0), Fixed(1))` | Same contract tests; printed flying retained |
+| Shivan Dragon, Wall of Fire: {R}, +1/+0 | `Costs(Mana("{R}"))`; `ModifyPT(This, Fixed(1), Fixed(0))` | Same contract tests; printed flying/defender retained |
+| Wall of Water: {U}, +1/+0 | `Costs(Mana("{U}"))`; `ModifyPT(This, Fixed(1), Fixed(0))` | Same contract tests; printed defender retained |
+| All five: until end of turn | `Until(EndOfTurn, ...)`, additive layer 7c bonus on the source incarnation, no targets or damage-source LKI | `TestComposableSelfPumpLifetime`, `TestRegisteredDefinitions` |
+
+No export is retired: `Boost`, `ToSource`, and the legacy activation builder still have other callers. Dragon Whelp's activation-count and delayed-sacrifice clauses require a separate audit. Other legacy definitions still require the direct engine import in `cards/limited/creatures.go`.
+
+Validation: focused adapter tests, engine and Limited Edition package tests, `make test`, `go build ./...`, and `make lint` pass with zero failures.

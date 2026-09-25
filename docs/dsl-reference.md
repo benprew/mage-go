@@ -334,7 +334,7 @@ a power increase after resolution does not end the blocking restriction.
 Continuous effects are broken down into **modifications** and their **durations**:
 
 ### Continuous Modifications (`ContinuousModification`)
-* `ModifyPT(subject, powerValue, toughnessValue)`: Power/toughness boost (Layer 7c).
+* `ModifyPT(subject, powerValue, toughnessValue)`: Power/toughness boost (Layer 7c). For a repeatable self-pump activation, use `Activate(Costs(Mana("{R}")), Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))))`. Each resolution adds a separate bonus to the original source incarnation. Frozen Shade, Granite Gargoyle, Shivan Dragon, Wall of Fire, and Wall of Water use this form.
 * `ModifyEachPT(permanentSet, powerValue, toughnessValue)`: Collection power/toughness modification (Layer 7c). For “creatures you control,” use `ControlledPermanents(IsCreature)`. Install with `Until(EndOfTurn, ...)` to capture membership at resolution; later entries and returned cards do not receive the boost. Fortify uses this in `SpellModes`, Inspired Charge in `Spell`, and Assault Formation in `Activate`.
 * `GrantKeyword(subject, keyword)`: Grants keyword ability (Layer 6).
 * `CantBeBlocked(subject)`: Prevents all creatures from blocking the permanent. Install with `Until(EndOfTurn, CantBeBlocked(subject))`; this is a rules restriction, so ability removal does not erase it. Later blockers are also restricted. Source departure does not end the duration, and a returned subject is a new object.

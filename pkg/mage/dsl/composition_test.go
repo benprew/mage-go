@@ -608,3 +608,18 @@ func TestTeamBoostComposition(t *testing.T) {
 		t.Fatalf("team boost metadata lost: %+v", props)
 	}
 }
+
+func TestSelfPumpActivationComposition(t *testing.T) {
+	for _, delta := range [][2]int{{1, 1}, {0, 1}, {1, 0}} {
+		body := dsl.Until(core.EndOfTurn, dsl.ModifyPT(dsl.This, dsl.Fixed(delta[0]), dsl.Fixed(delta[1])))
+		card := dsl.NewCreature("Self pump", "", 1, 1,
+			dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{R}")), body)))
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+		props := dsl.InspectDefinition(body).Properties
+		if props.Outcome != mage.OutcomeBenefit || props.Mass || props.PowerBoost != delta[0] || props.ToughnessBoost != delta[1] {
+			t.Fatalf("self pump metadata lost: %+v", props)
+		}
+	}
+}
