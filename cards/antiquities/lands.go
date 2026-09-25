@@ -19,7 +19,7 @@ func registerLands() {
 	Register("Mishra's Factory", func() Card {
 		creature := TargetPermanent("creature", And(IsCreature, HasSubType("Assembly-Worker")))
 		return NewLand("Mishra's Factory",
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithActivatedAbility(
 				// TODO: convert to pipeline — needs "animate" + "add type/subtype until EOT" steps
 				FuncEffect("become 2/2 Assembly-Worker artifact creature until end of turn",

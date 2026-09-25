@@ -12,13 +12,12 @@ func TestMishrasFactory(t *testing.T) {
 	t.Run("taps for colorless mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mishra's Factory")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Mishra's Factory", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		pool := g.AllPlayers()[0].ManaPool()
-		if pool.CountProducedThisTurn(core.Colorless) < 6 { // 5 auto + 1
-			t.Errorf("expected at least 6 colorless, got %d", pool.CountProducedThisTurn(core.Colorless))
-		}
+		// The activation script supplies ten colorless mana before activation.
+		g.AssertManaProduced(gametest.PlayerA, core.Colorless, 11)
+		g.AssertTapped(gametest.PlayerA, "Mishra's Factory", true)
 	})
 
 	t.Run("becomes 2/2 creature when animated", func(t *testing.T) {

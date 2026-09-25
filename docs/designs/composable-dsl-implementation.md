@@ -3183,3 +3183,38 @@ Validation: focused shared contracts; Arabian Nights package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/arabian`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Mishra's Factory Typed Mana
+
+- [x] Migrate Antiquities' last `WithManaAbility` declaration to `Activate`,
+  `Costs(TapCost(This))`, and `AddManaAmount(Colorless, Fixed(1))`.
+- [x] Preserve one colorless mana, the tap cost, and no targets. Verify the
+  full Oracle comment and land type against `data/ATQ.json`.
+- [x] Correct the existing mana scenario to select ability index 0 explicitly
+  and assert exact production and tapping. The previous default selected the
+  animation ability, and the loose assertion passed on harness-supplied mana.
+- [x] Audit immediate resolution, automatic mana planning, payment, and
+  utility-ability selection. Existing adapters need no engine fix or new export.
+
+The mana ability adds one colorless mana to the activating controller's pool
+without using the stack. Fixed production remains available to automatic
+payment, and the shared mana service emits the tapped-for-mana event. The tap
+cost enforces summoning sickness if the land is a creature. Rules contracts
+are CR 302.6, 602, and 605.1a–605.3b.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+`TestComposablePayment*`, and `TestActivationSelectionPrefersNonMana` pass.
+They cover immediate resolution, production, events, planning, clone isolation,
+failed payment, and utility selection. `TestMishrasFactory` and the Antiquities
+package tests pass. No duplicate simulation test is needed for this declaration.
+
+This completes one slice of the remaining fixed mana caller migrations.
+Factory's animation callback, Workshop's restricted mana, and the Urza lands'
+conditional mana remain separate work. Other sets retain `WithManaAbility`,
+so its export remains. No outstanding engine blocker is marked resolved.
+
+Validation: focused shared contracts; Antiquities package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/antiquities`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).
