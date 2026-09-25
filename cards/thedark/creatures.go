@@ -483,15 +483,13 @@ func registerCreatures() {
 	// 1/1
 	// {G}, {T}, Sacrifice this creature: Destroy target artifact.
 	Register("Scavenger Folk", func() Card {
+		artifact := TargetPermanent("artifact", IsArtifact)
 		return NewCreature("Scavenger Folk", "{G}", 1, 1,
 			WithSubTypes("Human"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				ManaCostOf("{G}"),
-				WithCost(TapCost(This)),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetArtifact()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{G}"), TapCost(This), SacrificeSourceCost()),
+				Destroy(artifact), WithTargets(artifact),
+			)),
 		)
 	})
 

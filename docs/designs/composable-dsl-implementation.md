@@ -1644,3 +1644,39 @@ Validation: focused card and shared contract tests; Antiquities package tests;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Scavenger Folk Typed Sacrifice Activation
+
+- [x] Migrate Scavenger Folk's complete definition from positional destruction and activation helpers to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify the full Oracle comment, mana cost, creature type, and base P/T against `data/DRK.json`.
+- [x] Audit target selection, payment, source departure, target identity, and destruction against existing contracts. No new constructor or engine fix is required.
+
+The Oracle ability, “{G}, {T}, Sacrifice this creature: Destroy target
+artifact,” uses `Costs(Mana("{G}"), TapCost(This), SacrificeSourceCost())`
+and `TargetPermanent("artifact", IsArtifact)`. Select the target before
+payment. Either player's artifact qualifies, including Scavenger Folk itself
+if it becomes an artifact. Tapping and sacrificing are costs; normal creature
+tap restrictions apply. Failed payment rolls back the transaction. The ability
+resolves after its source leaves. A self-target is then absent; other targets
+must still be legal and have the captured incarnation. Destruction allows
+regeneration and respects indestructible. There is no sorcery restriction.
+
+`TestScavengerFolk` passes before and after migration and checks both the
+source sacrifice and the target's destruction. Existing shared contracts
+`TestTypedTargetGroups`, `TestTypedTargetValidation`,
+`TestTypedTargetCopyAndClone`, `TestTargetIncarnationAfterReturn`,
+`TestTypedRegenerationConsumption`, `TestComposedRemovalMetadata`,
+`TestActivateAbility_TotalCostFailureIsAtomic`, and
+`TestActivationNumberCaptureSacrificeAndCopies` pass and cover the reused
+services. This declarative ability needs no duplicate simulation test.
+Rules contracts are CR 400.7, 602, 608.2b, and 701.8.
+
+Scavenger Folk is fully migrated. Legacy helpers retain other callers, so no
+export is retired. The file retains its engine import for unrelated definitions.
+The broader action migration remains open; no engine blocker is claimed resolved.
+
+Validation: focused card and shared contract tests; The Dark package tests;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/thedark`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).
