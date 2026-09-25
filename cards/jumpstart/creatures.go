@@ -4361,9 +4361,8 @@ func registerCreatures() {
 		return NewCreature("Minotaur Skullcleaver", "{2}{R}", 2, 2,
 			WithSubTypes("Minotaur", "Berserker"),
 			WithKeyword(Haste),
-			WithAbility(EntersBattlefieldTrigger(
-				Boost(Fixed(2), Fixed(0)).Targeting(ToSource()),
-				false,
+			WithAbility(WhenEvent(Enters(This),
+				Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(0))),
 			)),
 		)
 	})

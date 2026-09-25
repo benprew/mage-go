@@ -2659,3 +2659,36 @@ Validation: focused shared contracts; Legends package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Minotaur Skullcleaver Typed Entry Boost
+
+- [x] Migrate Minotaur Skullcleaver to `WhenEvent(Enters(This), ...)` and
+  `Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(0)))` through the author DSL.
+- [x] Preserve the full Oracle text, haste, creature types, base P/T, and
+  `{2}{R}` mana cost from `data/JMP.json`.
+- [x] Audit entry timing, source incarnation, and boost lifetime. Existing
+  adapters need no engine fix or new export; no blocker is marked resolved.
+
+The untargeted ability triggers when the creature enters, including entry
+without casting. It gives the source incarnation +2/+0 in layer 7c until
+cleanup. An old trigger cannot boost a returned incarnation. Phasing preserves
+identity, and a resolved boost does not follow a card through a zone change.
+Rules contracts are CR 400.7, 603, 611.2, and 613.
+
+`TestMinotaurSkullcleaver_BoostsOnETB` passes before and after migration.
+Shared `TestComposableEntryTriggerHasNoImplicitTarget`,
+`TestComposableSourceLifetimes`, `TestComposableSourceReentry`,
+`TestComposableSequenceSourceIdentity`, `TestComposableContinuousCapture`,
+and `TestComposableSelfPumpLifetime` pass. They cover untargeted entry,
+source identity, phasing, clone isolation, and temporary-effect expiration.
+This declarative migration needs no duplicate card simulation test.
+
+This completes one slice of the remaining trigger and action migrations.
+Other cards retain the legacy entry trigger and positional boost helpers,
+so no export is retired.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
