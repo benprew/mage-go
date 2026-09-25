@@ -2894,22 +2894,10 @@ func registerCreatures() {
 		return NewCreature("Nocturnal Feeder", "{2}{B}", 2, 1,
 			WithSubTypes("Vampire", "Rogue"),
 			WithKeyword(Flying),
-			WithAbility(DiesTrigger(
-				FuncEffect("each opponent loses 2 life and you gain 2 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, p := range g.AllPlayers() {
-							if p.PlayerID() != controller {
-								p.LoseLife(2)
-							}
-						}
-						if cp := g.GetPlayer(controller); cp != nil {
-							g.PlayerGainLife(cp, 2)
-						}
-						return nil
-					}),
-				false,
-			)),
+			WithAbility(WhenEvent(Dies(This), Sequence(
+				LoseLifeEach(OpponentsOf(You), Fixed(2)),
+				GainLife(You, Fixed(2)),
+			))),
 		)
 	})
 

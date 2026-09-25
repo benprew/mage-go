@@ -3773,3 +3773,34 @@ Validation: focused card and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Nocturnal Feeder Typed Death Drain
+
+- [x] Migrate the complete death ability to `WhenEvent(Dies(This), ...)`,
+  `Sequence`, `LoseLifeEach(OpponentsOf(You), Fixed(2))`, and
+  `GainLife(You, Fixed(2))` through the author DSL.
+- [x] Remove the callback's direct life mutations and implicit trigger target.
+  Existing typed actions and death-event capture support the complete ability;
+  no engine fix or new constructor is required.
+- [x] Verify the full Oracle comment, `{2}{B}` cost, Vampire Rogue subtypes,
+  2/1 characteristics, and flying against `data/JMP.json`.
+- [x] Resolve this card's missing life-loss and life-gain events with a
+  regression that failed before migration.
+
+`TestNocturnalFeederDeathResolution` covers an untargeted death trigger,
+controller identity distinct from ownership, source return under the opponent's
+control before resolution, life loss before gain, and normal, doubled, or
+suppressed life gain. The opponent loses two life, and the stored controller
+gains two life before replacements. A life-loss watcher triggers exactly once;
+the life-gain event reports the actual positive gain. The existing death test
+and shared death, life-event, replacement, and sequence contracts pass.
+
+This completes one card in the life-gain callback audit and remaining trigger
+and action migrations. Other callbacks and general replacement-order blockers
+remain open. No legacy export is retired.
+
+Validation: focused regressions and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
