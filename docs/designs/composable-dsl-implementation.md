@@ -4346,3 +4346,34 @@ Validation: focused card regression and shared contracts; Jumpstart package
 tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+## Completed Slice: Erratic Visionary Typed Draw and Discard Activation
+
+- [x] Migrate the complete ability to `Activate`, explicit `Costs`, and
+  `Sequence(Draw(You, Fixed(1)), Discard(You, Fixed(1)))`.
+- [x] Remove the direct player draw and discard mutations. The shared actions
+  emit draw and discard events and apply the existing replacement services.
+- [x] Verify the full Oracle comment, `{1}{U}` cost, Human Wizard subtypes,
+  and 1/3 characteristics against `data/JMP.json`.
+- [x] Audit the adapters and add a failing card regression before migration.
+  Existing engine services support this ability; no engine fix is required.
+
+`TestErraticVisionaryDrawDiscardPipeline` failed before migration because
+neither event was emitted and the discard-to-library replacement was ignored.
+It now covers draw-before-discard event order, discarding the newly drawn card
+from an initially empty hand, replacement destination, source departure, and
+a controller different from the owner. The activation pays `{1}{U}` and taps
+before stack placement. It has no targets and moves no cards until resolution.
+The stored controller draws and discards even after the source leaves.
+
+The existing activation and cost-reduction tests also pass. Shared draw and
+discard contracts cover choice, amounts, empty and short zones, replacements,
+controller context, copies, clone isolation, and registration validation.
+This completes one slice of the remaining activation and action migrations.
+Other legacy callers and recorded engine blockers remain open; no export is
+retired.
+
+Validation: focused card regression and shared draw/discard contracts;
+Jumpstart package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

@@ -1141,26 +1141,10 @@ func registerCreatures() {
 	Register("Erratic Visionary", func() Card {
 		return NewCreature("Erratic Visionary", "{1}{U}", 1, 3,
 			WithSubTypes("Human", "Wizard"),
-			WithActivatedAbility(
-				FuncEffect(
-					"draw a card, then discard a card",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						p.DrawCard()
-						cards := p.ChooseCardsFromHand(1, "discard a card", g)
-						for _, c := range cards {
-							p.DiscardCard(c.ID())
-						}
-						return nil
-					},
-				),
-				ManaCostOf("{1}{U}"),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}{U}"), TapCost(This)),
+				Sequence(Draw(You, Fixed(1)), Discard(You, Fixed(1))),
+			)),
 		)
 	})
 
