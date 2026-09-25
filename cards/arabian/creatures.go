@@ -711,13 +711,12 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Target creature gets +1/+1 until end of turn."
 	Register("Wyluli Wolf", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Wyluli Wolf", "{1}{G}", 1, 1,
 			WithSubTypes("Wolf"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(1))),
+				WithTargets(creature))),
 		)
 	})
 

@@ -62,6 +62,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Angelic Page Combat Target**: Migrate its tap activation to a typed attacking-or-blocking creature target and end-of-turn P/T modification. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 - [x] **Osai Vultures Counter-Payment Boost**: Migrate its activation to typed counter costs and an explicit temporary source modification. No engine gap; the end-step trigger remains a separate audit. See the completed slice below.
+- [x] **Wyluli Wolf Targeted Tap Boost**: Migrate its activation to a typed creature target, tap cost, and explicit end-of-turn P/T modification. Existing adapters cover the full ability; no engine gap. See the completed slice below.
 
 ## Engine Blockers
 
@@ -1178,3 +1179,26 @@ Validation: focused Osai Vultures tests; Legends package;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; focused engine payment and source-lifetime contracts;
 `make test`; and `make lint` passed with zero failures (lint: zero issues).
+
+## Completed Slice: Wyluli Wolf Targeted Tap Boost
+
+- [x] Migrate Wyluli Wolf from `WithActivatedAbility` / positional `Boost` to `Activate`, `Costs(TapCost(This))`, `TargetPermanent`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check the complete Oracle comment, mana cost, creature type, and base P/T against `cards/arabian/ARN.json`; all match exactly.
+- [x] Audit target scope, payment, identity, duration, and metadata against existing adapters. No new constructor or engine fix is required.
+
+| Oracle clause | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “{T}:” | `Activate(Costs(TapCost(This)), ...)`; normal tap restrictions and instant activation timing, no mana cost or activation limit | Existing activation and tap-cost contracts; `TestWyluliWolf` |
+| “Target creature” | `TargetPermanent("creature", IsCreature)` and `WithTargets`; either player's creature, including the Wolf; target legality and incarnation checked at resolution | Shared typed-target validation and `TestTargetIncarnationAfterReturn`; universal `TestRegisteredDefinitions` |
+| “gets +1/+1 until end of turn.” | `Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(1)))`; layer 7c bonus on the captured target, independent of the source after resolution; expires at cleanup | `TestWyluliWolf` covers the bonus and expiry; `TestComposableContinuousCapture`, `TestComposableSelfPumpLifetime`, and `TestTemporaryPTMetadata` cover shared identity, lifetime, and metadata contracts |
+
+This declarative ability uses established engine primitives and registration
+validation, so no new simulation test is required. Existing card and shared
+contract tests passed before migration. The complete Wyluli Wolf definition
+is migrated. Legacy boost and activation exports still have other callers;
+no export is retired and no outstanding engine blocker is claimed resolved.
+
+Validation: focused Wyluli Wolf and shared target, lifetime, metadata, and
+composition tests; Arabian Nights package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/arabian`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).
