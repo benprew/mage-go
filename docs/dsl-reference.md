@@ -661,3 +661,12 @@ instruction without an implicit first-member conversion. No chosen target means
 no tap or life gain. The target is chosen when the entry trigger goes on the
 stack, and Brightmare itself can be chosen. An already tapped target still
 supplies its current power for life gain. An illegal target prevents resolution.
+
+### Sacrifice for a Source Counter and Life Gain
+
+Blood Host uses `Activate(Costs(Mana("{1}{B}"), SacrificeCreatureCost()),
+Sequence(AddCounters(This, P1P1, Fixed(1)), GainLife(You, Fixed(2))))`.
+The sacrifice cost requires another creature. The ability has no targets or
+tap cost. At resolution, add the counter to the original source incarnation,
+then gain life for the stored controller. An absent source does not prevent
+life gain, and a returned Blood Host does not receive the old ability's counter.

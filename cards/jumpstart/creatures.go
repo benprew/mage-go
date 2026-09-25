@@ -1948,14 +1948,13 @@ func registerCreatures() {
 	Register("Blood Host", func() Card {
 		return NewCreature("Blood Host", "{3}{B}{B}", 3, 3,
 			WithSubTypes("Vampire"),
-			WithActivatedAbility(
-				CompositeEffects("put +1/+1 counter on this creature and gain 2 life",
-					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+			WithAbility(Activate(
+				Costs(Mana("{1}{B}"), SacrificeCreatureCost()),
+				Sequence(
+					AddCounters(This, P1P1, Fixed(1)),
 					GainLife(You, Fixed(2)),
 				),
-				ManaCostOf("{1}{B}"),
-				WithCost(SacrificeCreatureCost()),
-			),
+			)),
 		)
 	})
 

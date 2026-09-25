@@ -4377,3 +4377,33 @@ Validation: focused card regression and shared draw/discard contracts;
 Jumpstart package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+## Completed Slice: Blood Host Typed Sacrifice Counter and Life Gain
+
+- [x] Migrate the complete activation to `Activate`, explicit `Costs`, and
+  `Sequence(AddCounters(This, P1P1, Fixed(1)), GainLife(You, Fixed(2)))`.
+- [x] Preserve the `{1}{B}` payment and sacrifice of another creature through
+  `SacrificeCreatureCost()`. The ability has no target or tap cost.
+- [x] Verify the full Oracle comment, `{3}{B}{B}` cost, Vampire subtype,
+  and 3/3 characteristics against `data/JMP.json`.
+- [x] Correct source identity through the existing typed counter adapter.
+  No engine fix is required and no outstanding engine blocker is closed.
+
+`TestBloodHostSourceLifetime` failed before migration: a returned Blood Host
+received a counter from its old activation. The typed source reference now
+keeps the original battlefield incarnation. The test covers a present,
+departed, and returned source, a controller different from the owner, and
+activation while tapped. Mana and sacrifice are paid before stack placement;
+the counter and life gain wait for resolution. The stored controller gains
+2 life even when the original source is absent. The returned source receives
+no counter.
+
+The existing activation test and shared source-lifetime, counter, life, and
+payment contracts also pass. This completes one slice of the remaining
+activation and action migrations. Other legacy callers and recorded engine
+blockers remain open; no export is retired.
+
+Validation: focused card regression and shared engine contracts; Jumpstart
+package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).
