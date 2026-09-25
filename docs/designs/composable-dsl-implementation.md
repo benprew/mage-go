@@ -3003,3 +3003,40 @@ Validation: focused shared contracts and card tests; Legends package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Arabian Nights Fixed Land Mana
+
+- [x] Migrate Desert, Elephant Graveyard, and Library of Alexandria from
+  `WithManaAbility` to `Activate`, `Costs(TapCost(This))`, and
+  `AddManaAmount(Colorless, Fixed(1))` through the author DSL.
+- [x] Preserve one colorless mana, a tap cost, and no targets for each ability.
+- [x] Match the full Oracle comments to `data/ARN.json`, including Desert's
+  current self-reference, and preserve the land types and Desert subtype.
+- [x] Audit immediate resolution, fixed mana planning, tap payment, and
+  utility-ability selection. Existing adapters need no engine fix or new export.
+
+The mana abilities add one colorless mana to the activating controller's pool
+without using the stack. Automatic payment can use the fixed production, and
+the shared mana service emits the tapped-for-mana event. The mana abilities
+have no step or hand-size restriction. Desert's end-of-combat restriction and
+Library's seven-card condition apply only to their separate utility abilities.
+Rules contracts are CR 602 and 605.1a–605.3b.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+`TestComposablePayment*`, and `TestActivationSelectionPrefersNonMana` pass
+before and after migration. They cover immediate resolution, tap events,
+planning, clone isolation, failed payment, and utility selection. Existing
+`TestDesert`, `TestElephantGraveyard`, and `TestLibraryOfAlexandria` also pass
+before and after migration. These single-action mana declarations use proven
+primitives and need no duplicate card simulation tests.
+
+This completes the three remaining fixed `WithManaAbility` declarations in
+Arabian Nights. City of Brass's any-color mana and the remaining legacy utility
+abilities are separate work. Other sets retain `WithManaAbility`, so its export
+remains. No outstanding engine blocker is marked resolved.
+
+Validation: focused shared contracts and card tests; Arabian Nights package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/arabian`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

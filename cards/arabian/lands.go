@@ -39,12 +39,12 @@ func registerLands() {
 		)
 	})
 
-	// Oracle: "{T}: Add {C}. {T}: Desert deals 1 damage to target attacking creature.
-	// Activate only during the end of combat step."
+	// {T}: Add {C}.
+	// {T}: This land deals 1 damage to target attacking creature. Activate only during the end of combat step.
 	Register("Desert", func() Card {
 		return NewLand("Desert",
 			WithSubTypes("Desert"),
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithActivatedAbility(
 				DealDamage(Fixed(1)),
 				TapCost(This),
@@ -79,11 +79,12 @@ func registerLands() {
 		)
 	})
 
-	// Oracle: "{T}: Add {C}. {T}: Regenerate target Elephant."
+	// {T}: Add {C}.
+	// {T}: Regenerate target Elephant.
 	Register("Elephant Graveyard", func() Card {
 		elephant := TargetPermanent("elephant", HasSubType("Elephant"))
 		return NewLand("Elephant Graveyard",
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithAbility(Activate(
 				Costs(TapCost(This)),
 				Regenerate(elephant),
@@ -102,11 +103,11 @@ func registerLands() {
 		)
 	})
 
-	// Oracle: "{T}: Add {C}. {T}: Draw a card. Activate only if you have exactly
-	// seven cards in hand."
+	// {T}: Add {C}.
+	// {T}: Draw a card. Activate only if you have exactly seven cards in hand.
 	Register("Library of Alexandria", func() Card {
 		return NewLand("Library of Alexandria",
-			WithManaAbility(Colorless),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
 			WithActivatedAbility(
 				DrawCards(Fixed(1)),
 				TapCost(This),

@@ -633,6 +633,11 @@ white, and green mana, respectively. These untargeted abilities resolve
 immediately, emit the tapped-for-mana event, and support automatic payment.
 Their separate utility abilities use the stack.
 
+Desert, Elephant Graveyard, and Library of Alexandria use the same declaration
+with `Colorless` for `{T}: Add {C}`. The mana activation has no target, step,
+or hand-size restriction. Those restrictions belong to the separate utility
+abilities. Automatic payment can use the fixed colorless production.
+
 The test harness prefers non-mana abilities using the engine's
 `IsActivatedManaAbility` classification, including typed fixed and dynamic
 production. Use `ActivateAbilityIndex` to select a particular mana ability
