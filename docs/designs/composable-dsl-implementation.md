@@ -4604,3 +4604,33 @@ Validation: focused card regressions and shared counter-removal and permission
 contracts; Antiquities package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Armageddon Clock Typed Upkeep Counter Trigger
+
+- [x] Migrate the upkeep ability to `At(YourUpkeep, ...)` and
+  `AddCounters(This, Doom, Fixed(1))`.
+- [x] Preserve the mandatory, untargeted trigger at the beginning of the
+  current controller's upkeep, including when that player is not the owner.
+- [x] Verify the full Oracle comment, artifact type, and `{6}` casting cost
+  against `cards/antiquities/ATQ.json`.
+- [x] Correct counter placement on a returned source through the existing
+  typed reference. No engine fix or new constructor is required.
+
+`TestArmageddonClockUpkeepSourceLifetime` failed before migration: returning
+Clock before trigger stack placement or before resolution caused the new
+incarnation to receive the old trigger's counter. Both cases now leave the
+returned Clock without a counter. The test also covers a present source,
+a departed source, a controller different from the owner, controller-only
+upkeep filtering, no targets, and counter placement only at resolution.
+
+The existing turn-path tests and shared counter and trigger contracts pass.
+This completes one slice of the remaining trigger and action migrations.
+The Clock's draw-step damage trigger still needs the damage-source identity
+and LKI audit. Other legacy upkeep callers remain, so no export is retired
+and no outstanding engine blocker is marked resolved.
+
+Validation: focused card regression and shared counter and trigger contracts;
+Antiquities package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

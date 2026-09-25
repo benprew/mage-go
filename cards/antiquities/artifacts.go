@@ -38,8 +38,8 @@ func registerArtifacts() {
 	// only during any upkeep step.
 	Register("Armageddon Clock", func() Card {
 		return NewArtifact("Armageddon Clock", "{6}",
-			WithAbility(BeginningOfUpkeepTrigger(
-				mage.AddCounters(Doom, Fixed(1)).Targeting(ToSource()), false,
+			WithAbility(At(YourUpkeep,
+				AddCounters(This, Doom, Fixed(1)),
 			)),
 			WithAbility(
 				NewTriggered(EvtDrawStep, false,

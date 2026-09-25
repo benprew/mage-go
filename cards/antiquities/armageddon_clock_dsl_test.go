@@ -85,3 +85,52 @@ func TestArmageddonClockActivationRestrictions(t *testing.T) {
 		}
 	}
 }
+
+func TestArmageddonClockUpkeepSourceLifetime(t *testing.T) {
+	for _, scenario := range []string{"present", "leaves", "returns before placement", "returns on stack"} {
+		t.Run(scenario, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			source := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Armageddon Clock")
+			card := g.FindPermanent(source).Card
+			controller := g.GetPlayer(gametest.PlayerB).PlayerID()
+			card.SetOwner(g.GetPlayer(gametest.PlayerA).PlayerID())
+			g.FireEvent(core.GameEvent{Type: core.EvtUpkeep, PlayerID: g.GetPlayer(gametest.PlayerA).PlayerID()})
+			g.PutTriggersOnStack()
+			if g.StackSize() != 0 {
+				t.Fatal("the owner's upkeep must not trigger a Clock controlled by the other player")
+			}
+			g.FireEvent(core.GameEvent{Type: core.EvtUpkeep, PlayerID: controller})
+			returnSource := func() {
+				g.BouncePermanentToHand(g.FindPermanent(source))
+				g.GetPlayer(gametest.PlayerA).RemoveFromHand(source)
+				g.PutOnBattlefield(card, controller)
+			}
+			if scenario == "returns before placement" {
+				returnSource()
+			}
+			g.PutTriggersOnStack()
+			if g.StackSize() != 1 || g.StackPeek().Controller != controller || len(g.StackPeek().Targets) != 0 {
+				t.Fatal("the controller must receive one untargeted upkeep trigger")
+			}
+			if g.FindPermanent(source).Counters[core.Doom] != 0 {
+				t.Fatal("the counter must wait for resolution")
+			}
+			switch scenario {
+			case "leaves":
+				g.BouncePermanentToHand(g.FindPermanent(source))
+			case "returns on stack":
+				returnSource()
+			}
+			g.ResolveStack()
+			if scenario == "leaves" {
+				g.AssertHandCount(gametest.PlayerA, "Armageddon Clock", 1)
+				return
+			}
+			want := 0
+			if scenario == "present" {
+				want = 1
+			}
+			g.AssertCounterCount(gametest.PlayerB, "Armageddon Clock", core.Doom, want)
+		})
+	}
+}
