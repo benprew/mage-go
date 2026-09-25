@@ -16,6 +16,13 @@ func TestMain(m *testing.M) {
 			mage.WithSubTypes("Centaur", "Warrior"),
 		)
 	})
+	for _, subtype := range []string{"Djinn", "Efreet"} {
+		mage.Register("Test Noncreature "+subtype, func() mage.Card {
+			return mage.NewEnchantment("Test Noncreature "+subtype, "{2}",
+				mage.WithSubTypes(subtype),
+			)
+		})
+	}
 	os.Exit(m.Run())
 }
 
@@ -295,6 +302,19 @@ func TestErgRaiders(t *testing.T) {
 }
 
 func TestKingSuleiman(t *testing.T) {
+	for _, subtype := range []string{"Djinn", "Efreet"} {
+		t.Run("noncreature_"+subtype, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			name := "Test Noncreature " + subtype
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "King Suleiman")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, name)
+			g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "King Suleiman", name)
+			g.StopAt(1, core.PostcombatMain)
+			g.Execute()
+			g.AssertGraveyardCount(gametest.PlayerB, name, 1)
+		})
+	}
+
 	t.Run("destroys_djinn", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "King Suleiman")

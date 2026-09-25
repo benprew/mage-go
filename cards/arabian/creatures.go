@@ -48,15 +48,10 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Destroy target Djinn or Efreet."
 	Register("King Suleiman", func() Card {
+		permanent := TargetPermanent("permanent", Or(HasSubType("Djinn"), HasSubType("Efreet")))
 		return NewCreature("King Suleiman", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Noble"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(
-					Or(HasSubType("Djinn"), HasSubType("Efreet")),
-				)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), Destroy(permanent), WithTargets(permanent))),
 		)
 	})
 

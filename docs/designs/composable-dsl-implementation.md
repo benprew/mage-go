@@ -1801,3 +1801,29 @@ Validation: focused engine and DSL contracts; The Dark package;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/thedark`; `make test`; and `make lint` passed with zero
 failures (lint: zero issues).
+
+## Completed Slice: King Suleiman Subtype Targeting
+
+- [x] Migrate King Suleiman's positional destruction activation to typed
+  `TargetPermanent`, `Activate`, `Costs`, `Destroy`, and `WithTargets`.
+- [x] Remove the incorrect creature-only target restriction. Oracle says
+  “target Djinn or Efreet,” so either subtype qualifies without a creature-type
+  or controller restriction (CR 109.2 and 205.3m).
+- [x] Verify the full Oracle comment, mana cost, subtypes, and P/T against
+  `data/ARN.json`.
+- [x] Add noncreature Djinn and Efreet regression cases. Both fail before the
+  migration because no ability can activate, then pass with the typed target.
+  These synthetic subtype fixtures test target scope; they do not claim full
+  Kindred card-type support. Existing cases cover both creature subtypes and
+  rejection of an unrelated creature.
+
+The existing typed target and destruction services supply resolution legality,
+incarnation capture, regeneration, and indestructible behavior. The activation
+keeps its tap cost and uses the stack. No engine fix or new constructor is
+required. Other positional destruction callers remain, so no export is retired.
+This completes one subtype-targeting slice of the outstanding action migrations;
+the broader migration and engine blockers remain open.
+
+Validation: Arabian Nights tests, all card tests and registration validation,
+`go build ./...`, `go vet ./cards/arabian`, `make test`, and `make lint` pass
+with zero failures.
