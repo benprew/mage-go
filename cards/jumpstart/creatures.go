@@ -2006,10 +2006,11 @@ func registerCreatures() {
 	// 3/3
 	// Whenever you gain life, put a +1/+1 counter on this creature.
 	Register("Bloodbond Vampire", func() Card {
+		player := BindPlayer("gainer")
 		return NewCreature("Bloodbond Vampire", "{2}{B}{B}", 3, 3,
 			WithSubTypes("Vampire", "Shaman", "Ally"),
-			WithAbility(WheneverYouGainLifeTrigger(
-				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()), false)),
+			WithAbility(WhenEvent(ControllerGainsLife(player),
+				AddCounters(This, P1P1, Fixed(1)))),
 		)
 	})
 
@@ -2828,17 +2829,13 @@ func registerCreatures() {
 	// Flying, deathtouch
 	// Whenever you gain life, this creature gets +1/+1 until end of turn.
 	Register("Malakir Familiar", func() Card {
+		player := BindPlayer("gainer")
 		return NewCreature("Malakir Familiar", "{2}{B}", 2, 1,
 			WithSubTypes("Bat"),
 			WithKeyword(Flying),
 			WithKeyword(Deathtouch),
-			WithAbility(WheneverYouGainLifeTrigger(
-				FuncEffect("this creature gets +1/+1 until end of turn",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.AddContinuousEffect(TemporaryBoost(sourceID, 1, 1))
-						return nil
-					}), false)),
+			WithAbility(WhenEvent(ControllerGainsLife(player),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1))))),
 		)
 	})
 

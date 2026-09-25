@@ -2116,3 +2116,42 @@ Validation: focused adapter and card tests; engine short tests; Jumpstart
 package tests; all card tests and registration validation; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Bloodbond Vampire and Malakir Familiar Life-Gain Triggers
+
+- [x] Migrate Bloodbond Vampire to `WhenEvent(ControllerGainsLife(player),
+  AddCounters(This, P1P1, Fixed(1)))` through `pkg/mage/dsl`.
+- [x] Migrate Malakir Familiar to the same event pattern with
+  `Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1)))`, removing its direct
+  engine callback and UUID-based temporary boost.
+- [x] Verify complete Oracle comments, mana costs, types, base P/T, and printed
+  keywords against `data/JMP.json`.
+- [x] Audit event filtering, source identity, counter replacement, and temporary
+  P/T lifetime against existing engine contracts. No engine fix is required.
+
+Both abilities trigger once for each positive life-gain event for the source's
+controller, regardless of the amount gained. Opponent gains do not trigger them.
+The trigger captures the original source incarnation. A card that leaves and
+returns is a new object. Bloodbond Vampire places one counter through the
+counter replacement service; the counter has no end-of-turn expiration.
+Malakir Familiar adds a separate layer 7c bonus for each resolution, and the
+bonus expires at cleanup. Flying and deathtouch remain printed abilities.
+Rules contracts are CR 119.9, 400.7, 603.2, 611.2, and 613.
+
+Existing `TestBloodbondVampire_GainsCounterOnLifeGain`,
+`TestBloodbondVampire_NoCounterOnOpponentLifeGain`, and
+`TestMalakirFamiliar_PumpsOnLifeGain` pass before and after migration.
+`TestControllerLifeGainEvent*`, `TestTypedCounterAmount*`,
+`TestComposableCounterMetadata`, and `TestComposableSelfPumpLifetime` cover
+filtering, capture, copies, clones, replacement, stacking, phasing, and duration.
+These declarative compositions need no additional card simulation tests.
+
+This completes the two remaining Jumpstart creature callers of
+`WheneverYouGainLifeTrigger`. Four production callers remain: `Cradle of
+Vitality`, `Comforting Counsel`, `Blech, Loafing Pest`, and `Pest Mascot`. The legacy helper remains exported. General life-event
+emission, replacement ordering, and collection gains remain open.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
