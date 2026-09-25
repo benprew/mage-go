@@ -15,14 +15,10 @@ func registerLands() {
 	// Oracle: "{T}: Draw two cards, then discard three cards."
 	Register("Bazaar of Baghdad", func() Card {
 		return NewLand("Bazaar of Baghdad",
-			WithActivatedAbility(
-				CompositeEffects(
-					"draw 2, discard 3",
-					DrawCards(Fixed(2)),
-					DiscardCards(Fixed(3)).Targeting(SelectController()),
-				),
-				TapCost(This),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				Sequence(Draw(You, Fixed(2)), Discard(You, Fixed(3))),
+			)),
 		)
 	})
 

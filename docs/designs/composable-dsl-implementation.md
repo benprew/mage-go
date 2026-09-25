@@ -3148,3 +3148,38 @@ Validation: focused adapter and shared contract tests; Legends package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Bazaar of Baghdad Typed Draw and Discard
+
+- [x] Migrate Bazaar of Baghdad's complete definition to `Activate`, grouped
+  `Costs(TapCost(This))`, and `Sequence(Draw(You, Fixed(2)), Discard(You, Fixed(3)))`.
+- [x] Preserve the full Oracle text and land type, verified against
+  `data/ARN.json`. The activation has no mana cost or target.
+- [x] Audit instruction order, resolving controller, payment, and partial
+  discard. Existing typed adapters need no engine fix or new export.
+
+The activation uses the stack after paying its tap cost. The stored controller
+first draws two cards, then chooses three cards from the resulting hand to
+discard. If fewer than three cards remain, discard as many as possible. The
+shared draw and discard services apply replacements and emit events. Source
+departure does not stop resolution. Rules contracts are CR 121, 602, 608.2c,
+609.3, and 701.8.
+
+`TestBazaarOfBaghdad` and shared `TestTypedDrawAmount*`,
+`TestTypedDiscardAmount*`, `TestComposablePayment*`, and
+`TestComposableSequenceSourceIdentity` pass before and after migration.
+The shared tests cover controller context, clone isolation, copy context,
+replacement handling, discard choice, short hands, and payment atomicity.
+The existing card scenario covers both draw and discard counts. This migration
+composes proven primitives and needs no duplicate simulation tests.
+
+This completes one slice of the remaining activation and string-bound action
+migrations. Other callers retain the legacy helpers, so no export is retired.
+No outstanding engine blocker is marked resolved. Unrelated definitions retain
+this file's engine imports.
+
+Validation: focused shared contracts; Arabian Nights package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/arabian`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
