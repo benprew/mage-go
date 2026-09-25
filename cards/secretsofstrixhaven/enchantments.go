@@ -5,6 +5,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -51,9 +52,9 @@ func registerEnchantments() {
 	// Whenever you gain life, put a growth counter on this enchantment.
 	// As long as there are five or more growth counters on this enchantment, creatures you control get +3/+3.
 	Register("Comforting Counsel", func() Card {
-		lifeGainTrigger := WheneverYouGainLifeTrigger(
-			AddCounters(Growth, Fixed(1)).Targeting(ToSource()),
-			false,
+		player := dsl.BindPlayer("gainer")
+		lifeGainTrigger := dsl.WhenEvent(dsl.ControllerGainsLife(player),
+			dsl.AddCounters(dsl.This, Growth, dsl.Fixed(1)),
 		)
 		boost := FuncContinuousEffect(LayerPT, WhileOnBattlefield,
 			func(g *Game, sourceID uuid.UUID) error {

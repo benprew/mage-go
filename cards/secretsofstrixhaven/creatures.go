@@ -4558,12 +4558,12 @@ func registerCreatures() {
 	// Trample
 	// Whenever you gain life, put a +1/+1 counter on this creature.
 	Register("Pest Mascot", func() Card {
-		return NewCreature("Pest Mascot", "{1}{B}{G}", 2, 3,
-			WithSubTypes("Pest", "Ape"),
-			WithKeyword(Trample),
-			WithAbility(WheneverYouGainLifeTrigger(
-				AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
-				false,
+		player := dsl.BindPlayer("gainer")
+		return dsl.NewCreature("Pest Mascot", "{1}{B}{G}", 2, 3,
+			dsl.WithSubTypes("Pest", "Ape"),
+			dsl.WithKeyword(Trample),
+			dsl.WithAbility(dsl.WhenEvent(dsl.ControllerGainsLife(player),
+				dsl.AddCounters(dsl.This, P1P1, dsl.Fixed(1)),
 			)),
 		)
 	})

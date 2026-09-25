@@ -2155,3 +2155,44 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Comforting Counsel and Pest Mascot Life-Gain Counters
+
+- [x] Migrate both life-gain triggers to `WhenEvent(ControllerGainsLife(player),
+  AddCounters(This, counter, Fixed(1)))` through `pkg/mage/dsl`.
+- [x] Use `Growth` for Comforting Counsel and `P1P1` for Pest Mascot. Pest
+  Mascot's complete definition now uses the author DSL and keeps trample.
+- [x] Verify full Oracle comments, costs, types, and Pest Mascot's 2/3 base
+  characteristics against `data/SOS.json`.
+- [x] Audit event filtering, source identity, and counter replacement against
+  existing contracts. No engine fix or new constructor is required.
+
+Each positive life-gain event for the source's controller creates one trigger,
+regardless of the amount gained. Opponent gains and gains replaced with zero
+or no gain do not trigger these abilities. The effects have no targets and add
+one counter through the counter replacement service to the captured source
+incarnation. Source departure and return do not redirect an old trigger to the
+new object. Phasing preserves identity. Rules contracts are CR 119.9, 400.7,
+603.2, and 122.
+
+Existing `TestComfortingCounsel`, `TestPestMascot_LifegainCounterTrigger`, and
+`TestPestMascot_NoCounterWithoutLifegain` pass before and after migration.
+Shared `TestControllerLifeGainEvent*`, `TestTypedCounterAmount*`, and
+`TestComposableCounterMetadata` cover event filtering, controller changes,
+copies, clones, source identity, replacement, binding validation, and metadata.
+These declarations reuse tested primitives and registration validation; no new
+card simulation test is required.
+
+This completes the two singular counter triggers in Secrets of Strixhaven.
+Comforting Counsel's conditional static boost remains on its existing callback
+and still needs a separate migration. Two production callers of
+`WheneverYouGainLifeTrigger` remain: Cradle of Vitality and Blech, Loafing Pest.
+The legacy helper remains exported. General life-event emission, replacement
+ordering, and collection handling remain open; no engine blocker is marked
+resolved.
+
+Validation: Secrets of Strixhaven package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/secretsofstrixhaven`; `make test`; and `make lint` pass with
+zero failures (lint: zero issues).
