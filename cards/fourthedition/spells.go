@@ -146,9 +146,7 @@ func registerSpells() {
 	// Attacking creatures get +1/+1 until end of turn.
 	Register("Morale", func() Card {
 		return NewInstant("Morale", "{1}{W}{W}",
-			NewSpellAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToAllMatching(IsAttacking)),
-			),
+			Spell(Until(EndOfTurn, ModifyEachPT(MatchingPermanents(And(IsCreature, IsAttacking)), Fixed(1), Fixed(1)))),
 		)
 	})
 

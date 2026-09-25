@@ -118,7 +118,9 @@
 //
 // Use [Until] with [ModifyEachPT] for a temporary collection boost.
 // [ControlledPermanents] with [IsCreature] selects your creatures at resolution.
-// Later entries and returned cards do not receive the boost.
+// [MatchingPermanents] with [IsCreature] and [IsAttacking] or [IsBlocking]
+// selects combat creatures for either player. Combat removal does not end
+// the boost. Later entries and returned cards do not receive the boost.
 //
 // # Further Documentation
 //

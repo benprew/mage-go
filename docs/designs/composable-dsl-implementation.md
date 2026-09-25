@@ -46,6 +46,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Controlled Creature Team Boosts**: Migrate Fortify, Inspired Charge, and Assault Formation’s team activation to typed collection modifications and durations; retire `BoostMatchingUntilEndOfTurn`, including its test fixture caller. No engine blocker. See the completed slice below.
 - [x] **Limited Edition Simple Self-Pump Activations**: Migrate Frozen Shade, Granite Gargoyle, Shivan Dragon, Wall of Fire, and Wall of Water to typed activation costs and temporary source modifications. No engine gap; see the completed slice below.
 - [x] **Targeted Instant P/T Boosts**: Migrate Howl from Beyond and Righteousness to typed targets, resolution-time X, and temporary modifications. No engine gap; see the completed slice below.
+- [x] **Combat-Wide P/T Boost Spells**: Migrate Army of Allah, Piety, and Morale to typed combat collections and end-of-turn modifications. No engine blocker; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -751,3 +752,32 @@ their engine import. No outstanding engine blocker is claimed resolved.
 Validation: focused card and public DSL tests; full `make test`; `go build ./...`;
 `go vet ./cards/limited`; and `make lint` passed with zero failures (lint: zero
 issues).
+
+
+## Completed Slice: Combat-Wide P/T Boost Spells
+
+- [x] Migrate Army of Allah, Piety, and Morale to `Spell` with `Until(EndOfTurn, ModifyEachPT(...))` through `pkg/mage/dsl`.
+- [x] Check the complete Oracle comments against `data/ARN.json` and `data/4ED.json`; all three already match.
+- [x] Audit combat membership capture and duration using existing collection and continuous-effect services. No engine gap was found.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Army of Allah: “Attacking creatures get +2/+0 until end of turn.” | `MatchingPermanents(And(IsCreature, IsAttacking))`, +2/+0 in layer 7c; instant timing and {1}{W}{W} retained | `TestArmyOfAllah`; `TestCombatBoostResolutionMembership` |
+| Piety: “Blocking creatures get +0/+3 until end of turn.” | `MatchingPermanents(And(IsCreature, IsBlocking))`, +0/+3 in layer 7c; instant timing and {2}{W} retained | `TestPiety`; `TestCombatBoostResolutionMembership` |
+| Morale: “Attacking creatures get +1/+1 until end of turn.” | Same attacking collection, +1/+1 in layer 7c; instant timing and {1}{W}{W} retained | `TestMorale`; `TestCombatBoostResolutionMembership` |
+| All three legacy `NewSpellAbility` / `Boost` / `ToAllMatching` expressions | No targets or controller restriction. Capture the matching permanent incarnations at resolution. Removing a creature from combat before resolution excludes it; removing it afterward does not end the bonus. Later combat participants are excluded. End-of-turn expiry, clone isolation, and returned-object exclusion are preserved. No damage-source LKI is required. | `TestCombatBoostResolutionMembership` tests each spell with either player casting; `TestCombatBoostTypedDefinitions` checks typed duration, registration validity, no targets, beneficial mass metadata, and exact P/T summaries |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 611.2c (affected objects), and 613 (P/T layers).
+The typed-definition checks failed on all three legacy forms before migration;
+the new behavioral cases passed before and after migration. The existing
+collection and duration APIs provide the complete DSL expression, so no new
+constructor or executor is needed. No export is retired: the legacy builders,
+boosts, and selectors still have other callers. The surrounding card files
+retain legacy definitions and imports. No outstanding engine blocker is claimed
+resolved.
+
+Validation: focused migration and card tests; affected card packages; engine
+suite; universal registration validation and full `make test`; `go build ./...`;
+`go vet ./cards/arabian ./cards/fourthedition`; and `make lint` passed with zero
+failures.
