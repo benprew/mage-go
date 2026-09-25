@@ -432,7 +432,7 @@ Operations taking amounts accept `ResolutionValue`:
 * `ToughnessOf(PermanentRef)`: Current toughness of the permanent at resolution.
 * `CountersOn(PermanentRef, CounterType)`: Current count of counters on the live permanent.
 * `SourceCounters(CounterType)`: Counters on the source permanent, or its last-known count if departed.
-* `CountPermanents(PermanentSet)`: Counts the current collection when the value is used. Controlled collections use the resolving controller and exclude phased-out permanents. Use `SnapshotNumber` to preserve an earlier count. Aerial Assault counts controlled flying creatures after its destruction instruction.
+* `CountPermanents(PermanentSet)`: Counts the current collection when the value is used. Controlled collections use the resolving controller and exclude phased-out permanents. Use `SnapshotNumber` to preserve an earlier count. Aerial Assault counts controlled flying creatures after its destruction instruction. Take Heart uses `CountPermanents(ControlledPermanents(And(IsCreature, IsAttacking)))` after its typed end-of-turn +2/+2 boost. Count current attackers when the gain resolves, independently of the creature target's controller or combat status.
 * `CreaturesDiedThisTurn()`: Number of creatures that died this turn across all players.
 * Arithmetic:
   * `MultiplyValues(a, b)`: The product of two resolution values. Use `MultiplyValues(Fixed(2), ValueAtResolution(XValue()))` for twice the announced X. Both operands keep their typed binding context.

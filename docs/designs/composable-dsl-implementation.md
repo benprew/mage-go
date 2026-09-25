@@ -2456,3 +2456,36 @@ Validation: focused regressions and shared discard, player-snapshot, and target
 identity contracts; Jumpstart package tests; all card tests with
 `-short -count=1`; `go build ./...`; `go vet ./cards/jumpstart`; `make test`;
 and `make lint` pass with zero failures.
+
+## Completed Slice: Take Heart Typed Boost and Attacker Count
+
+- [x] Migrate Take Heart to `Spell`, `TargetPermanent`, `WithTargets`,
+  `Sequence`, `Until`, `ModifyPT`, and `CountPermanents` through the author DSL.
+- [x] Replace its legacy controller selector and battlefield count with
+  `ControlledPermanents(And(IsCreature, IsAttacking))`.
+- [x] Preserve the complete Oracle text, instant type, and `{W}` mana cost
+  from `data/JMP.json`.
+- [x] Audit target legality, current combat membership, resolving controller,
+  and temporary boost lifetime. Existing typed services need no engine fix.
+
+Either player's creature may be targeted, whether or not it is attacking.
+The +2/+2 boost applies before life gain and expires at cleanup. Count only
+creatures currently attacking under the resolving controller's control when
+life gain executes. A creature removed from combat before resolution does not
+count. An illegal sole target prevents both instructions; a returned card is
+a new object. Rules contracts are CR 400.7, 506.4, 608.2b–c, and 611.2.
+
+`TestTakeHeartResolution` covers two attackers, removal from combat after
+casting, opponent attackers, and a target that leaves and returns. These
+characterization tests and the existing `TestTakeHeart` pass before and after
+migration. Shared `TestCountPermanents*`, `TestTargetIncarnationAfterReturn`,
+`TestComposableContinuousCapture`, and `TestComposableSelfPumpLifetime` pass.
+
+This completes one slice of the remaining spell and action migrations. No
+engine blocker is marked resolved, and other callers still need the legacy
+builders and count helper, so no export is retired.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+all card tests with `-short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

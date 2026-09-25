@@ -1742,12 +1742,13 @@ func registerSpells() {
 	// Instant
 	// Target creature gets +2/+2 until end of turn. You gain 1 life for each attacking creature you control.
 	Register("Take Heart", func() Card {
-		return NewInstant("Take Heart", "{W}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+2/+2 and gain 1 life per attacking creature you control",
-				Boost(Fixed(2), Fixed(2)),
-				dsl.GainLife(dsl.You, dsl.ValueAtResolution(CountBattlefield(SelectController(), And(IsCreature, IsAttacking)))),
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Take Heart", "{W}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Until(EndOfTurn, dsl.ModifyPT(creature, dsl.Fixed(2), dsl.Fixed(2))),
+				dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.ControlledPermanents(
+					dsl.And(dsl.IsCreature, dsl.IsAttacking)))),
+			), dsl.WithTargets(creature)),
 		)
 	})
 
