@@ -331,14 +331,12 @@ func registerCreatures() {
 		return NewCreature("Fire Elemental", "{3}{R}{R}", 5, 4, WithSubTypes("Elemental"))
 	})
 
+	// {R}: This creature gains flying until end of turn.
 	Register("Goblin Balloon Brigade", func() Card {
 		return NewCreature("Goblin Balloon Brigade", "{R}", 1, 1,
 			WithSubTypes("Goblin", "Warrior"),
-			// {R}: Goblin Balloon Brigade gains flying until end of turn.
-			WithActivatedAbility(
-				mage.GrantKeyword(Flying).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")),
+				Until(EndOfTurn, GrantKeyword(This, Flying)))),
 		)
 	})
 
