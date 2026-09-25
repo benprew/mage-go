@@ -2,6 +2,8 @@
 
 This tracker records engine-only slices for the primitive reuse plan. Card migrations are outside the scope of the current work.
 
+All engine-only work packages in this plan are complete. The card migrations named in the plan remain separate work.
+
 ## F1: Typed fight
 
 - [x] Add `Fight(PermanentRef, PermanentRef)` as a resolving effect that reuses `fightPermanents` and preserves the enclosing resolution context.
@@ -9,11 +11,11 @@ This tracker records engine-only slices for the primitive reuse plan. Card migra
 - [x] Cover absent or changed subjects, battlefield incarnation identity, same-creature damage, and copy/clone isolation in engine tests.
 - [x] Correct the shared helper's self-fight damage to twice the creature's power (CR 701.14c).
 - [x] Audit simultaneous fight damage and damage-trigger observation in the shared damage service. Fight now prepares both damage actions through replacement and prevention, applies both results, then sends damage events and callbacks. `TestFightDamageObserversSeeBothResults` covers the observer state.
-- [ ] Migrate Arena and verify its target and tap behavior. No card changes were made in this slice.
+- Arena migration and its card-level target and tap verification remain for card work.
 
 ## Remaining work packages
 
-- [ ] T1: Immutable token definitions and typed creation.
+- [x] T1: Immutable token definitions and typed creation.
   - [x] Stabilize the shared token entry path: legacy token constructors copy characteristic slices, `NewToken` owns its type and subtype slices, and rejected battlefield entries do not panic. Token status is set by `NewPermanent` before entry processing. Engine regressions cover input mutation and prohibited land-token entry for normal, attacking, and blocking creation.
   - [x] Give each token created by a legacy token effect its own ability instance and ID. Entry setup now assigns the source and controller on that instance without changing the declaration or another token's ability.
   - [x] Make legacy multi-token creation enter as one group. The shared entry path prepares accepted tokens, registers all of them, then processes entry effects and events. `TestCreatedTokensAreVisibleTogetherToEntryTriggers` verifies that each entry observer sees both tokens.
