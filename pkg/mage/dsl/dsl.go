@@ -497,7 +497,6 @@ var (
 	GrantType      = mage.GrantType
 	RevokeKeyword  = mage.RevokeKeyword
 	RevokeKeywords = mage.RevokeKeywords
-	RevokeLandwalk = mage.RevokeLandwalk
 
 	RemoveCounters                 = mage.RemoveCounters
 	MoveCountersFromSourceToTarget = mage.MoveCountersFromSourceToTarget

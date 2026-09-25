@@ -22,3 +22,19 @@ func TestTypedKeywordRemovalComposition(t *testing.T) {
 		}
 	}
 }
+
+func TestTypedLandwalkRemovalComposition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	body := dsl.Until(dsl.EndOfTurn, dsl.RemoveLandwalk(target))
+	cards := []mage.Card{
+		dsl.NewInstant("Spell", "", dsl.Spell(body, dsl.WithTargets(target))),
+		dsl.NewArtifact("Activation", "", dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), body, dsl.WithTargets(target)))),
+		dsl.NewCreature("Trigger", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), body, dsl.WithTargets(target)))),
+		dsl.NewCreature("Static", "", 1, 1, dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.IsCreature), dsl.RemoveLandwalk(dsl.This))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+}

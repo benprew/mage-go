@@ -373,11 +373,17 @@ func RevokeKeywords(kws ...Keyword) *RevokeKeywordEffect {
 // RevokeLandwalk creates an effect that removes all landwalk abilities from a
 // permanent. Defaults to targeting targets[0] until end of turn.
 func RevokeLandwalk() *RevokeKeywordEffect {
-	keywords := make([]Keyword, 0, len(LandwalkAttrs()))
+	return RevokeKeywords(landwalkKeywords()...)
+}
+
+func landwalkKeywords() []Keyword {
+	keywords := make([]Keyword, 0, len(LandwalkAttrs())+1)
 	for kw := range LandwalkAttrs() {
 		keywords = append(keywords, kw)
 	}
-	return RevokeKeywords(keywords...)
+	keywords = append(keywords, LegendaryLandwalk)
+	slices.Sort(keywords)
+	return keywords
 }
 
 func (e *RevokeKeywordEffect) Targeting(sel TargetSelector) *RevokeKeywordEffect {

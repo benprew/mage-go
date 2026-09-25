@@ -2692,3 +2692,41 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Hammerheim and Typed Landwalk Removal
+
+- [x] Add `RemoveLandwalk(PermanentRef)` as a typed layer 6 modification,
+  with target validation, duration installation, and detrimental metadata.
+- [x] Migrate Hammerheim's removal activation to `TargetPermanent`, `Activate`,
+  `Costs`, and `Until(EndOfTurn, ...)`. Verify its complete Oracle comment and
+  legendary land type against `data/LEG.json`.
+- [x] Resolve the landwalk-removal engine gap: the subtype map excludes
+  legendary landwalk. `TestRevokeLandwalkIncludesLegendary` failed before the
+  fix. Both legacy and typed removal now use the complete shared keyword list.
+- [x] Retire `RevokeLandwalk` from the author DSL after migrating its only
+  production caller. The engine helper remains for legacy engine tests.
+
+Either player's creature can be targeted. The activation removes every instance
+of all seven supported landwalk attributes, including Desertwalk and legendary
+landwalk, while preserving unrelated abilities. Later grants apply in timestamp
+order. The resolved effect survives source departure and recipient phasing;
+cleanup ends it, and a returned recipient is a new object. Shared continuous
+services supply capture, cloning, and duration behavior without a new executor.
+Rules contracts are CR 400.7, 608.2b, 611.2, 613.1f, 613.7, and 702.14.
+
+`TestComposableLandwalkRemoval` covers every supported variant with printed and
+repeated granted instances, later grants and removals, and cleanup.
+`TestComposableLandwalkRemovalLifetime` covers source departure, phasing,
+recipient return, and independent clone cleanup. Metadata and author-composition
+tests cover target binding validation and spell, activation, trigger, and static
+contexts. Existing Hammerheim tests cover normal activation and removal of
+mountainwalk supplied by multiple Goblin Kings.
+
+This completes one slice of the remaining continuous-effect and legacy action
+migrations. Hammerheim's separate legacy mana declaration and other card
+migrations remain open.
+
+Validation: focused regressions and Hammerheim tests; engine short suite; Legends
+package tests; card regression and registration validation; `go build ./...`;
+`go vet ./...`; `make test`; and `make lint` all pass with zero failures
+(lint: zero issues).

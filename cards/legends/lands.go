@@ -41,14 +41,12 @@ func registerLands() {
 	// {T}: Add {R}.
 	// {T}: Target creature loses all landwalk abilities until end of turn.
 	Register("Hammerheim", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewLand("Hammerheim",
 			WithSuperTypes(SuperLegendary),
 			WithManaAbility(Red),
-			WithActivatedAbility(
-				RevokeLandwalk().Targeting(ToTarget()).Until(EndOfTurn),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, RemoveLandwalk(creature)), WithTargets(creature))),
 		)
 	})
 

@@ -74,6 +74,7 @@ Continuous effects are evaluated by `EffectManager.Apply` across the official 7-
 * **Layer 6**: Ability adding and ability removing:
   * `GrantKeyword` and `GrantActivatedAbility` add abilities.
   * Typed `RemoveKeyword` uses the existing `RevokeAttr` service to remove all instances of one keyword. Later grants restore the keyword in timestamp order. Temporary removal captures the recipient incarnation, survives source departure and recipient phasing, and expires independently in cloned games. See `TestComposableKeywordRemoval` and `TestComposableKeywordRemovalLifetime`.
+  * Typed `RemoveLandwalk` uses the same removal service for all registered subtype landwalk attributes and `LegendaryLandwalk`. The subtype map alone does not include legendary landwalk. Legacy `RevokeLandwalk` shares the complete list. See `TestRevokeLandwalkIncludesLegendary` and `TestComposableLandwalkRemoval`.
   * `RemoveAllAbilities` strips abilities computed up to its timestamp. Later Layer 6 timestamps can re-grant abilities.
   * `CantRegenerate` represents a regeneration prohibition, not an ability. Ability removal preserves it, regardless of timestamp. The existing attribute storage and duration manager retain the prohibition until expiry (CR 611.2a, 701.19c).
 * **Layer 7**: Power and toughness modifications:
