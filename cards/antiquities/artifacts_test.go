@@ -141,17 +141,21 @@ func TestAmuletOfKroog(t *testing.T) {
 	t.Run("prevents 1 damage to target", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Amulet of Kroog")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
 		// Activate Amulet in response to the Bolt so its shield is in
 		// place before Bolt resolves (CR 117.1b: responses resolve
 		// first, shield applies before damage).
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Grizzly Bears")
-		g.ActivateInResponseTo(gametest.PlayerA, "Amulet of Kroog", "Grizzly Bears")
+		g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Hill Giant")
+		g.ActivateInResponseTo(gametest.PlayerA, "Amulet of Kroog", "Hill Giant")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		// 3 damage - 1 prevented = 2, equals toughness → creature dies
-		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+		g.AssertPermanentCount(gametest.PlayerA, "Hill Giant", 1)
+		giant := g.FindPermanentByName("Hill Giant", g.GetPlayer(gametest.PlayerA).PlayerID())
+		if giant == nil || giant.Damage != 2 {
+			t.Fatal("expected Hill Giant to survive with 2 damage")
+		}
+		g.AssertTapped(gametest.PlayerA, "Amulet of Kroog", true)
 	})
 
 	t.Run("prevents 1 damage to player", func(t *testing.T) {
@@ -162,7 +166,8 @@ func TestAmuletOfKroog(t *testing.T) {
 		g.ActivateInResponseTo(gametest.PlayerA, "Amulet of Kroog", "PlayerA")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
-		g.AssertLife(gametest.PlayerA, 18) // 3 - 1 prevented = 2 damage
+		g.AssertLife(gametest.PlayerA, 18)
+		g.AssertTapped(gametest.PlayerA, "Amulet of Kroog", true)
 	})
 }
 

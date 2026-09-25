@@ -3702,3 +3702,40 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Amulet of Kroog Typed Targeted Prevention
+
+- [x] Migrate the complete ability to `Activate`,
+  `Costs(Mana("{2}"), TapCost(This))`, `TargetDamageRecipient`,
+  `WithTargets`, and `PreventNextDamage(recipient, Fixed(1))`.
+- [x] Verify the full Oracle comment, artifact type, and `{2}` casting cost
+  against `data/ATQ.json`.
+- [x] Strengthen the existing creature scenario so prevention determines
+  survival: Hill Giant survives Lightning Bolt with exactly two damage.
+  Both creature and player scenarios now assert the tap cost.
+- [x] Audit target selection, payment, recipient identity, shield consumption,
+  and expiration. Existing typed adapters need no engine fix or new export.
+
+The ability uses the stack after paying two generic mana and tapping the
+source. It prevents the next one damage to the selected recipient this turn.
+The shared target supports either player's creatures, planeswalkers, and
+players. Target legality is checked again at resolution. A permanent shield
+stays with its captured incarnation; source departure does not end it. Unused
+capacity expires at cleanup.
+
+The strengthened `TestAmuletOfKroog`, `TestRakalite*`,
+`TestTypedPrevention*`, `TestPreventionShieldNewIncarnation`, and
+`TestComposablePayment*` pass before and after migration. Shared contracts
+cover target eligibility, failed payment, source departure, recipient lifetime,
+capacity, expiration, and clone isolation. This single-action declaration uses
+proven primitives and needs no additional simulation test.
+
+This completes one slice of the remaining activation and prevention caller
+migrations. Other cards retain `PreventDamageToTarget`, so its export remains.
+The broader replacement and damage-outcome blockers remain open.
+
+Validation: focused card and shared contracts; Antiquities package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/antiquities`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

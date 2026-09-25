@@ -18,13 +18,13 @@ func registerArtifacts() {
 	// Artifact
 	// {2}, {T}: Prevent the next 1 damage that would be dealt to any target this turn.
 	Register("Amulet of Kroog", func() Card {
+		recipient := TargetDamageRecipient("recipient")
 		return NewArtifact("Amulet of Kroog", "{2}",
-			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(1)),
-				GenericCost(2),
-				WithCost(TapCost(This)),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{2}"), TapCost(This)),
+				PreventNextDamage(recipient, Fixed(1)),
+				WithTargets(recipient),
+			)),
 		)
 	})
 
