@@ -4127,3 +4127,34 @@ Validation: focused shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Mystic Archaeologist Typed Draw Activation
+
+- [x] Migrate the complete activation to `Activate`, `Costs(Mana("{3}{U}{U}"))`,
+  and `Draw(You, Fixed(2))`.
+- [x] Remove the direct player draw callback so each draw uses the shared
+  replacement and event pipeline.
+- [x] Verify the full Oracle comment, `{1}{U}` cost, Human Wizard subtypes,
+  and 2/1 characteristics against `data/JMP.json`.
+- [x] Add a failing regression before migration for missing draw events and
+  bypassed empty-library draw replacements. Existing typed adapters resolve
+  both failures; no engine fix is needed.
+
+`TestMysticArchaeologistDrawPipeline` covers payment before stack placement,
+failed unpaid activation, absence of targets, resolution for a controller
+other than the owner, source departure, a short library, and individual
+empty-library draw replacements. Before migration, successful draws emitted
+no events, and replaced empty draws instead caused a loss. The typed action
+now emits one event per actual draw and applies each replacement separately.
+The existing activation test also passes.
+
+The ability has no tap cost, timing restriction, or activation limit. Its
+stored controller draws two cards at resolution even after the source leaves.
+Shared draw and activation contracts cover the adapters. This completes one
+slice of the remaining activation and action migrations; other legacy callers
+and the recorded engine blockers remain open. No export is retired.
+
+Validation: focused card regressions and shared draw, payment, and activation
+contracts; Jumpstart package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

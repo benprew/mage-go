@@ -1346,22 +1346,10 @@ func registerCreatures() {
 	Register("Mystic Archaeologist", func() Card {
 		return NewCreature("Mystic Archaeologist", "{1}{U}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
-			WithActivatedAbility(
-				FuncEffect(
-					"draw two cards",
-					EffectProperties{Outcome: OutcomeBenefit, DrawCount: 2},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						p.DrawCard()
-						p.DrawCard()
-						return nil
-					},
-				),
-				ManaCostOf("{3}{U}{U}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}{U}{U}")),
+				Draw(You, Fixed(2)),
+			)),
 		)
 	})
 
