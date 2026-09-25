@@ -3537,3 +3537,37 @@ Validation: focused shared contracts; Legends package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Vampire Neonate Typed Drain Activation
+
+- [x] Migrate the complete ability to `Activate`, explicit mana and tap
+  `Costs`, and `Sequence(LoseLifeEach(OpponentsOf(You), Fixed(1)),
+  GainLife(You, Fixed(1)))`.
+- [x] Replace the direct life mutations and event-free `PlayerGainLife`
+  callback with the existing typed actions. No engine fix is required.
+- [x] Verify the full Oracle comment, `{B}` casting cost, Vampire subtype,
+  and 0/3 stats against `data/JMP.json`.
+- [x] Resolve this card's missing life-gain event after a failing regression.
+
+The controller pays two generic mana and taps the source. The untargeted
+ability uses the stack. At resolution, each opponent loses 1 life, then the
+stored controller gains 1 life. Source departure does not stop resolution.
+The gain event reports the actual positive gain after modifiers. Rules
+contracts are CR 302.6, 602, and 608.2c.
+
+`TestVampireNeonateResolution` failed before migration because normal,
+doubled, and post-departure gains emitted no life-gain event. It now covers
+those cases, suppressed gain, loss-before-gain order, exact mana and tap
+payment, untargeted stack placement, and failed payment with no mana or an
+already tapped source. The existing activation scenario and shared payment,
+singular and collection life, life-outcome, and opponent-life-event tests pass.
+
+This completes one card in the life-gain callback audit and remaining
+activation migrations. Other callbacks and replacement-order blockers remain
+open. No legacy export is retired.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

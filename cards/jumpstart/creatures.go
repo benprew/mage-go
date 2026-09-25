@@ -3404,23 +3404,13 @@ func registerCreatures() {
 	Register("Vampire Neonate", func() Card {
 		return NewCreature("Vampire Neonate", "{B}", 0, 3,
 			WithSubTypes("Vampire"),
-			WithActivatedAbility(
-				FuncEffect("each opponent loses 1 life and you gain 1 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, pl := range g.AllPlayers() {
-							if pl.PlayerID() != controller {
-								pl.LoseLife(1)
-							}
-						}
-						if you := g.GetPlayer(controller); you != nil {
-							g.PlayerGainLife(you, 1)
-						}
-						return nil
-					}),
-				ManaCostOf("{2}"),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{2}"), TapCost(This)),
+				Sequence(
+					LoseLifeEach(OpponentsOf(You), Fixed(1)),
+					GainLife(You, Fixed(1)),
+				),
+			)),
 		)
 	})
 
