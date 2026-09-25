@@ -1501,6 +1501,7 @@ func registerCreatures() {
 	// When this creature enters, target Spirit gains hexproof until end of turn.
 	// You may cast Spirit spells as though they had flash.
 	Register("Rattlechains", func() Card {
+		spirit := TargetPermanent("spirit", HasSubType("Spirit"))
 		spiritCard := NewCardFilter("Spirit card", func(c Card) bool {
 			return c.HasSubType("Spirit")
 		})
@@ -1508,8 +1509,9 @@ func registerCreatures() {
 			WithSubTypes("Spirit"),
 			WithKeyword(Flash),
 			WithKeyword(Flying),
-			WithCastTarget(TargetCreature(HasSubType("Spirit"))),
-			WithETBEffect(mage.GrantKeyword(Hexproof).Targeting(ToTarget()).Until(EndOfTurn)),
+			WithAbility(WhenEvent(Enters(This),
+				Until(EndOfTurn, GrantKeyword(spirit, Hexproof)),
+				WithTargets(spirit))),
 			WithStaticAbility(CastAsThoughHadFlash(spiritCard)),
 		)
 	})

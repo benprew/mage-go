@@ -2042,3 +2042,38 @@ Validation: Secretsofstrixhaven package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/secretsofstrixhaven`; `make test`; and `make lint` pass with
 zero failures (lint: zero issues).
+
+## Completed Slice: Rattlechains Entry Hexproof Grant
+
+- [x] Migrate Rattlechains's entry ability from `WithCastTarget`, `WithETBEffect`,
+  and string-bound keyword targeting to `WhenEvent(Enters(This), ...)`,
+  `TargetPermanent`, `WithTargets`, and
+  `Until(EndOfTurn, GrantKeyword(spirit, Hexproof))`.
+- [x] Correct target selection timing: cast the creature without a target, then
+  choose the Spirit when its entry trigger goes on the stack. Entry without
+  casting also triggers the ability, and Rattlechains can target itself.
+- [x] Match “target Spirit” with `HasSubType("Spirit")`, without an added
+  creature or controller restriction. An opponent's noncreature Spirit qualifies.
+- [x] Verify the complete Oracle comment, mana cost, types, base 2/1, flash,
+  flying, and Spirit casting permission against `data/JMP.json`.
+- [x] Audit the typed target, keyword grant, and duration contracts. Existing
+  engine services support this slice; no engine blocker requires a fix.
+
+`TestRattlechainsEntryTarget` failed before migration in all three cases:
+casting without an entry target was rejected, and entry without casting produced
+no trigger for either the self or noncreature Spirit case. All cases now verify
+that the grant waits for trigger resolution and expires at cleanup. The existing
+Rattlechains tests now choose the target for the trigger and still verify the
+Spirit grant and casting Rattlechains during the opponent's combat.
+
+The shared typed-target and keyword contracts cover target incarnation,
+resolution legality, source departure, layer order, and duration. Rules contracts
+are CR 115.1d, 603.3d, 603.6a, 400.7, 608.2b, 611.2a, and 613. The printed
+keywords and existing static Spirit casting permission remain intact; this slice
+completes the entry ability within the outstanding legacy action migrations.
+Other callers still need the legacy APIs, so no export is retired.
+
+Validation: focused Rattlechains tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
