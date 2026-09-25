@@ -148,7 +148,7 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 ### Permanent Actions
 * `Sacrifice(PermanentRef)`: Stored controller sacrifices the permanent. Fails if they no longer control it.
 * `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).
-* `DestroyWithoutRegeneration(PermanentRef)`: Destroys the permanent (forbids regeneration).
+* `DestroyWithoutRegeneration(PermanentRef)`: Destroys the captured permanent without regeneration. The prohibition belongs to this destruction action; it does not change permanent keywords or last-known characteristics. Indestructible still applies.
 * `DestroyEach(PermanentSet)`: Simultaneously destroys all permanents in the set. For multiple card types, use one `MatchingPermanents(Or(...))` collection; a permanent with several matching types is destroyed only once.
 * `DestroyEachWithoutRegeneration(PermanentSet)`: Simultaneously destroys the set without regeneration. Indestructible still applies; the instruction does not change permanent keywords.
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.

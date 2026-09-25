@@ -28,6 +28,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Collection Destruction Without Regeneration**: Add `DestroyEachWithoutRegeneration`, migrate Wrath of God and Shatterstorm, and retire both collection no-regeneration helpers. Resolve the action-scoping engine gap with a regression test first. See the completed slice below.
 - [x] **Filtered Destruction Spells**: Migrate Flashfires, Acid Rain, and Cleanse, the remaining direct card callers of `DestroyAllMatching`, to typed collections. No engine blocker. See the completed slice below.
 - [x] **Remaining Collection Destruction Helpers**: Migrate Nevinyrral's Disk, Tranquility, and Whimsy's Disk branch; retire `NevinyrralsDiskEffect`, `DestroyAllCreatures`, `DestroyAllEnchantments`, and `DestroyAllMatching`. Resolve the Disk's separate destruction batches. See the completed slice below.
+- [x] **Terror and Singular Regeneration Scope**: Migrate Terror to typed destruction and correct all singular no-regeneration executors. Retain legacy exports for the remaining callers; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -48,7 +49,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 ### Destruction Regeneration Scope
 - [x] Resolve repeated destruction and intermediate state observations in the Disk helper. One union collection now uses the existing simultaneous destruction executor.
 - [x] Keep the collection no-regeneration prohibition on each destruction action; preserve permanent characteristics and simultaneous death snapshots.
-- [ ] Audit singular positional no-regeneration executors, which still grant `CantRegenerate`, before claiming action-scoped semantics for that family.
+- [x] Correct singular typed, positional, step, and string-bound no-regeneration execution to use the action-scoped prohibition. Migrate Terror; see the completed slice below.
+- [ ] Migrate remaining no-regeneration callers before retiring positional and string-bound exports: Abu Ja'far needs combat-opponent capture and simultaneous destruction; Detonate needs X-constrained targets and damage-source LKI; Aswan Jaguar needs a chosen-subtype target adapter; Crumble needs its remaining saved-value migration.
 
 ### Untap Skipping
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
@@ -263,3 +265,22 @@ Oracle source: `data/LEA.json`; full Oracle text is above both changed registrat
 No declarations or calls of the retired APIs remain in `cards` or `pkg/mage`, apart from negative compile fixtures. The unrelated `cmd/forge` effect-kind enum named `DestroyAllCreatures` remains. Unrelated legacy definitions/imports in changed card files and all other listed engine blockers remain open.
 
 Validation: both failing engine regressions passed after the minimal helper fix and again after retirement; focused card/collection tests, both affected card packages, `go test ./cards/... -short -count=1`, `go test ./pkg/mage/... -short -count=1` (including compile-fail fixtures), `make test`, `go build ./...`, `go vet ./...`, and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Singular Destruction Without Regeneration and Terror
+
+- [x] Resolve the singular regeneration-scope defect with failing regressions first. Typed, positional, step, and string-bound paths no longer grant `CantRegenerate`.
+- [x] Reuse `Game.destroyPermanents` with one permanent and an action-scoped prohibition. Keep the existing replacement, death observation, and zone services.
+- [x] Migrate Terror to `Spell(DestroyWithoutRegeneration(creature), WithTargets(creature))` with a typed nonartifact, nonblack creature target.
+
+| Oracle clause / affected API | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Terror: “Destroy target nonartifact, nonblack creature. It can't be regenerated.” | Either player's creature; exclude artifacts and all black creatures, including multicolored black creatures. Preserve instant timing and {1}{B}. No source LKI is required. | `TestTerrorTypedDefinition` first failed for the legacy target; verifies registration, typed action, destruction metadata, and target eligibility for both players. |
+| `DestroyWithoutRegeneration`, `DestroyTargetNoRegen`, `DestroyTargetNoRegenStep`, `DestroyGatheredNoRegen` | Shared action-scoped prohibition bypasses regeneration shields without changing permanent characteristics or death LKI. | All four cases of `TestSingularNoRegenerationPreservesCharacteristics` failed before the fix and passed after it. |
+| Typed saved reference and cloning | The existing resolver excludes absent, phased, and returned incarnations; phasing cycles and control changes preserve references. Indestructible survives and retains its shield. | `TestSingularNoRegenerationSavedLifetime`; existing regeneration and collection contract tests. |
+
+Oracle source: `data/LEA.json`; the complete text is above Terror's registration. Rules contract: repository CR 701.8 (destruction), 701.19c (regeneration prohibition), 400.7 (new objects), and 702.26 (phasing). Terror is declarative and uses engine contract tests and registration validation.
+
+No export is retired in this slice. Remaining production callers are Abu Ja'far and Detonate (step), Aswan Jaguar (positional), and Crumble's helper (string-bound). Their combat, target, damage, and saved-value migrations remain open. This fix corrects their regeneration scope without claiming those surrounding definitions are fully audited. General damage and zone-LKI blockers remain open.
+
+Validation: focused engine regressions and Terror definition test; `go test ./cards/limited -count=1`; `go test ./pkg/mage/... ./cards/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

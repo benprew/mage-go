@@ -137,8 +137,7 @@ func (*destroyTargetNoRegenEffect) Apply(ctx *EffectContext) error {
 	if perm.HasKeyword(Indestructible) {
 		return nil
 	}
-	perm.GrantBaseAttr(CantRegenerate)
-	ctx.Game.DestroyPermanent(perm)
+	ctx.Game.destroyPermanents([]*Permanent{perm}, true)
 	return nil
 }
 

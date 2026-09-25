@@ -156,9 +156,10 @@ func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	if e.NoRegen {
-		perm.GrantBaseAttr(CantRegenerate)
+		ctx.Game.destroyPermanents([]*Permanent{perm}, true)
+	} else {
+		ctx.Game.DestroyPermanent(perm)
 	}
-	ctx.Game.DestroyPermanent(perm)
 	return nil
 }
 

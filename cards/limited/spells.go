@@ -225,12 +225,11 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy target nonartifact, nonblack creature. It can't be regenerated.
 	Register("Terror", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, Not(IsArtifact), Not(HasColorFilter(Black))))
 		return NewInstant("Terror", "{1}{B}",
-			NewTargetedSpell(TargetCreature(
-				Not(HasColorFilter(Black)),
-				Not(IsArtifact),
-			), DestroyTargetNoRegen()),
+			Spell(DestroyWithoutRegeneration(creature), WithTargets(creature)),
 		)
 	})
 
