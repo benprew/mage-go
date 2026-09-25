@@ -95,6 +95,7 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ### Dynamic vs. Frozen Membership
 * **Temporary Effects (`Until`)**: Effects modifying characteristics or control capture affected objects **at resolution time** (CR 611.2c). Permanents entering the battlefield later are not included.
+* **Typed Control Change**: `ChangeController(PermanentRef, PlayerRef)` installs only through `Until(EndOfTurn, ...)`. It captures the target incarnation and player at resolution, then applies in Layer 2 timestamp order. Source departure does not end it; a returned target is a new object. The control prohibition and expiry reconciliation use the shared layer service.
 * **Static Effects (`While`, `Static`)**: Static continuous effects continuously recalculate their matching set (CR 611.3a). Permanents entering later receive the boost or ability dynamically.
 
 ---

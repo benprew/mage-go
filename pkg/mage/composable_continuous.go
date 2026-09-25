@@ -17,6 +17,7 @@ type ContinuousModification interface {
 type layerModification struct {
 	subject          PermanentRef
 	subjects         PermanentSet
+	controller       PlayerRef
 	power, toughness ResolutionValue
 	keyword          Attr
 	removeKeyword    bool
@@ -38,6 +39,11 @@ func (m *layerModification) modification() *layerModification { return m }
 // ModifyPT adds power and toughness to one permanent.
 func ModifyPT(subject PermanentRef, power, toughness ResolutionValue) ContinuousModification {
 	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT}
+}
+
+// ChangeController gives one permanent to the selected player until end of turn.
+func ChangeController(subject PermanentRef, controller PlayerRef) ContinuousModification {
+	return &layerModification{subject: subject, controller: controller, layer: LayerControl}
 }
 
 // SetBasePowerToughness sets both base values of one permanent.
@@ -152,10 +158,15 @@ func (m *layerModification) inspectDefinition() definitionNode {
 	if m.layer == LayerPT {
 		n.children = append(n.children, definitionEdge{"power", m.power}, definitionEdge{"toughness", m.toughness})
 	}
+	if m.layer == LayerControl {
+		n.children = append(n.children, definitionEdge{"controller", m.controller})
+	}
 	return n
 }
 func (m *layerModification) description() string {
 	switch m.layer {
+	case LayerControl:
+		return "change controller"
 	case LayerType:
 		if m.addSubtypes {
 			return fmt.Sprintf("add subtypes %v in family %v", m.subtypes, m.family)
@@ -200,6 +211,7 @@ func (m *layerModification) members(ctx *EffectContext) []*Permanent {
 
 type capturedModification struct {
 	permanent        capturedPermanent
+	controller       uuid.UUID
 	power, toughness int
 	keyword          Attr
 	removeKeyword    bool
@@ -220,6 +232,13 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
 		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		if m.layer == LayerControl {
+			controller, ok := m.controller.resolvePlayer(ctx)
+			if !ok {
+				continue
+			}
+			v.controller = controller
+		}
 		if m.ability != nil {
 			v.ability, v.grantID = m.ability, uuid.New()
 		}
@@ -238,6 +257,8 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 	}
 	p = g.MutablePermanent(p.ID())
 	switch layer {
+	case LayerControl:
+		setComputedController(p, v.controller)
 	case LayerPT:
 		if v.setBasePT {
 			toughness := v.toughness
@@ -301,6 +322,9 @@ func (r *continuousRule) inspectDefinition() definitionNode {
 	}
 	for i, m := range r.modifications {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("modifications[%d]", i), m})
+		if !nilDefinition(m) && m.modification().layer == LayerControl {
+			n.problem = "control modification requires Until(EndOfTurn)"
+		}
 	}
 	return n
 }
@@ -312,7 +336,7 @@ func (r *continuousRule) staticEffects() []ContinuousEffect {
 		panic("static: supply at least one modification")
 	}
 	var effects []ContinuousEffect
-	for _, layer := range []Layer{LayerType, LayerColor, LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
 		var mods []*layerModification
 		for _, value := range r.modifications {
 			if nilDefinition(value) {
@@ -456,6 +480,9 @@ func (e *untilEffect) Properties() EffectProperties {
 			continue
 		}
 		m := value.modification()
+		if m.layer == LayerControl {
+			p.Outcome = OutcomeDetriment
+		}
 		if m.setBasePT {
 			p.Outcome = OutcomeDetriment
 		}
@@ -522,6 +549,9 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	}
 	for i, m := range e.modifications {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("modifications[%d]", i), m})
+		if !nilDefinition(m) && m.modification().layer == LayerControl && (e.sourceBound || e.duration != EndOfTurn) {
+			n.problem = "control modification requires Until(EndOfTurn)"
+		}
 	}
 	return n
 }
@@ -535,7 +565,7 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 		sourceIncarnation = source.incarnationID
 	}
 	var effects []*composedLayerEffect
-	for _, layer := range []Layer{LayerType, LayerColor, LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
 		entry := &composedLayerEffect{layer: layer, duration: e.duration, sourceBound: e.sourceBound, sourceIncarnation: sourceIncarnation}
 		entry.SetSourceID(ctx.SourceID)
 		for _, value := range e.modifications {

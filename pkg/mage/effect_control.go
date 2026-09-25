@@ -143,6 +143,10 @@ func (e *controlContinuousEffect) ApplyContinuous(ctx *EffectContext) error {
 	return nil
 }
 
+func setComputedController(target *Permanent, controller uuid.UUID) {
+	target.computedController = controller
+}
+
 func (e *controlContinuousEffect) cloneEffect() ContinuousEffect {
 	clone := *e
 	clone.conditions = append([]ControlConditionData(nil), e.conditions...)

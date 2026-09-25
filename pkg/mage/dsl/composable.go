@@ -193,8 +193,9 @@ var (
 	TargetOtherThanSource = mage.TargetOtherThanSource
 	// ModifyPT also supports source bonuses paid with RemoveCountersCost.
 	// Install the bonus with Until to set its duration.
-	ModifyPT     = mage.ModifyPT
-	ModifyEachPT = mage.ModifyEachPT
+	ModifyPT         = mage.ModifyPT
+	ModifyEachPT     = mage.ModifyEachPT
+	ChangeController = mage.ChangeController
 	// GrantKeyword accepts a typed subject; Until supplies the duration.
 	// Use it in Spell or Activate to grant flying to a creature target.
 	GrantKeyword   = mage.GrantKeywordModification
