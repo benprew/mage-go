@@ -344,9 +344,9 @@ func TestGrantManaAbilityToAttached(t *testing.T) {
 	manaAbilityCount := 0
 	colorsProduced := map[core.Color]bool{}
 	for _, a := range mountain.RuntimeAbilities {
-		if ma, ok := mage.UnwrapAbility(a).(*mage.ManaAbility); ok {
+		if mage.IsActivatedManaAbility(a) {
 			manaAbilityCount++
-			for _, prod := range ma.Productions {
+			for _, prod := range mage.ManaProductionsForAbility(a) {
 				colorsProduced[prod.Color] = true
 			}
 		}

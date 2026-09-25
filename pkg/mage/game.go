@@ -2109,11 +2109,15 @@ func (g *Game) ResolveStackObject(obj *StackObject) {
 	g.resolveStackObject(obj)
 }
 
-func (g *Game) resolveStackObject(obj *StackObject) (produced int) {
+func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Color) {
 	previousMana, previousTracking := g.resolution.manaProduced, g.resolution.manaTracking
+	previousColors := g.resolution.manaColors
+	g.resolution.manaColors = nil
 	g.resolution.manaProduced, g.resolution.manaTracking = 0, true
 	defer func() {
 		produced = g.resolution.manaProduced
+		colors = g.resolution.manaColors
+		g.resolution.manaColors = previousColors
 		g.resolution.manaProduced, g.resolution.manaTracking = previousMana, previousTracking
 	}()
 	oldIncarnation, oldCaptured := g.resolution.sourceIncarnation, g.resolution.sourceCaptured
@@ -3705,8 +3709,8 @@ func (g *Game) GetActivatableAbilities(playerID uuid.UUID) []ActivatableInfo {
 					continue
 				}
 			}
-			// Skip mana abilities - those are handled separately
-			if _, isMana := inner.(*ManaAbility); isMana {
+			// Automatic payment handles these mana abilities.
+			if _, isMana := inner.(*ManaAbility); isMana || abilityManaProductions(inner, g, perm.ID()) != nil {
 				continue
 			}
 			if !aa.CanActivate(playerID, g) {
@@ -3942,8 +3946,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			PlayerID: playerID,
 			Flag:     hasTapCost,
 		})
-		produced := g.resolveStackObject(obj)
-		if hasTapCost {
+		produced, colors := g.resolveStackObject(obj)
+		if hasTapCost && produced > 0 {
+			g.mana.ApplyManaBonuses(g, perm, colors, g.GetPlayer(playerID))
 			g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		}
 		return nil

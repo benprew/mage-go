@@ -3404,3 +3404,50 @@ Validation: focused card regressions and shared contracts; Antiquities and
 Jumpstart package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/antiquities ./cards/jumpstart`;
 `make test`; and `make lint` pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Limited Basic and Dual Land Typed Mana
+
+- [x] Migrate all five basic lands and ten dual lands to `Activate`,
+  `Costs(TapCost(This))`, and `AddManaAmount(color, Fixed(1))`.
+- [x] Preserve basic supertypes, land subtypes, and separate intrinsic mana
+  abilities. Add full Oracle reminder text from `data/LEA.json` and, for
+  Volcanic Island, `data/catalog/LEB.json`.
+- [x] Resolve the explicit typed mana bonus gap after a failing engine
+  regression: retain actual produced colors and call the shared bonus service
+  once when a tap-cost mana ability produces a positive amount.
+- [x] Update test-harness mana supply and attachment ability inspection to
+  recognize typed production through the existing shared APIs.
+- [x] Extend the dual-land automatic-payment regression to cover typed
+  abilities as well as legacy abilities.
+- [x] Resolve ordinary-action enumeration after a failing regression: exclude
+  typed tap-only mana production handled by automatic payment, while keeping
+  utility abilities and sacrifice mana available as explicit actions.
+
+The abilities produce one mana immediately without using the stack. Each
+basic land type provides its own tap ability; dual lands do not produce both
+colors from one tap. The existing tap payment enforces summoning sickness
+when a land is a creature. Rules contracts are CR 305.6, 302.6, and 605.
+
+`TestComposableManaBonuses` failed before the engine fix: explicit activation
+produced one or three red mana instead of three or five with two bonuses.
+It now checks stacked bonuses, zero production, no tap cost, immediate
+resolution, and clone isolation. `TestComposableManaBonusUsesProducedColor`
+checks one matching bonus across repeated production instructions, existing
+pool colors, explicit and automatic payment, one tapped-for-mana event, and
+failed repeat activation. Nested resolution tests verify color and amount
+isolation. Existing Mana Flare and Gauntlet of Might scenarios also pass.
+
+`TestComposableManaOrdinaryActivationChoices` failed with three choices
+instead of two before the enumeration fix. The full search parity test had
+timed out while exploring redundant basic-land mana actions; it passes after
+the fix.
+
+The production total in the event excludes bonus mana. Automatic payment
+keeps its existing bonus path and receives no duplicate bonus. No legacy
+export is retired: other sets and engine fixtures retain `WithManaAbility`.
+The broader mana and event-capture audits remain open.
+
+Validation: focused regressions; Limited package tests; card regression and
+registration validation; `go build ./...`; `go vet ./...`; `make test`; and
+`make lint` pass with zero failures (lint: zero issues).

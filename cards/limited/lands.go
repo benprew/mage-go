@@ -9,7 +9,7 @@ func init() {
 }
 
 func registerLands() {
-	// Basic lands
+	// Basic land types supply their mana abilities (CR 305.6).
 	for _, land := range []struct {
 		name  string
 		color Color
@@ -22,16 +22,21 @@ func registerLands() {
 	} {
 		name := land.name
 		color := land.color
+		// Plains: ({T}: Add {W}.)
+		// Island: ({T}: Add {U}.)
+		// Swamp: ({T}: Add {B}.)
+		// Mountain: ({T}: Add {R}.)
+		// Forest: ({T}: Add {G}.)
 		Register(name, func() Card {
 			return NewLand(name,
 				WithSuperTypes(SuperBasic),
 				WithSubTypes(name),
-				WithManaAbility(color),
+				WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(color, Fixed(1)))),
 			)
 		})
 	}
 
-	// Dual lands - each taps for one of two colors
+	// Each basic land type supplies a separate mana ability (CR 305.6).
 	duals := []struct {
 		name   string
 		sub1   string
@@ -57,11 +62,21 @@ func registerLands() {
 		sub2 := d.sub2
 		color1 := d.color1
 		color2 := d.color2
+		// Badlands: ({T}: Add {B} or {R}.)
+		// Bayou: ({T}: Add {B} or {G}.)
+		// Plateau: ({T}: Add {R} or {W}.)
+		// Savannah: ({T}: Add {G} or {W}.)
+		// Scrubland: ({T}: Add {W} or {B}.)
+		// Taiga: ({T}: Add {R} or {G}.)
+		// Tropical Island: ({T}: Add {G} or {U}.)
+		// Tundra: ({T}: Add {W} or {U}.)
+		// Underground Sea: ({T}: Add {U} or {B}.)
+		// Volcanic Island: ({T}: Add {U} or {R}.)
 		Register(name, func() Card {
 			return NewLand(name,
 				WithSubTypes(sub1, sub2),
-				WithManaAbility(color1),
-				WithManaAbility(color2),
+				WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(color1, Fixed(1)))),
+				WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(color2, Fixed(1)))),
 			)
 		})
 	}

@@ -197,9 +197,14 @@ All casting and activations follow the locked total-cost transaction model:
   * `AttachedBecomesTapped` captures the event permanent at detection through the existing trigger capture path. Pending triggers, copies, and delayed effects keep that incarnation independently of later attachment changes.
 * **Tapped-for-Mana Events**:
   * `EvtTappedForMana` fires only when a mana ability having a {T} cost produces mana (CR 106.12a). Normal tap actions without mana produce only `EvtTapped`.
+* **Typed Mana Bonuses**:
+  * Explicit typed mana activations retain the actual produced colors through resolution and use the shared mana-bonus service once after a tap-cost ability produces a positive amount. Zero production and abilities without a tap cost receive no tap bonus.
+  * Production totals exclude bonus mana. Nested resolutions restore their parent's tracking state, and clones copy the color list. Planned activation keeps its existing bonus path.
+  * Evidence: `TestComposableManaBonuses`, `TestComposableManaBonusUsesProducedColor`, and `TestTypedManaAmountNestedResolution`.
 * **Automatic Solver**:
   * Plans mana abilities, handles color permutations, spending restrictions, and bonus mana distributions.
   * Excludes abilities with targets or mixed non-mana effects from automatic planning.
+  * Ordinary activation choices omit typed tap-only mana production handled by automatic payment. Utility abilities and sacrifice mana remain explicit choices (`TestComposableManaOrdinaryActivationChoices`).
 
 ---
 

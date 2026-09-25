@@ -470,6 +470,9 @@ func (e *addManaEffect) Apply(ctx *EffectContext) error {
 	p.ManaPool().Add(e.color, e.amount)
 	if ctx.Game.resolution.manaTracking {
 		ctx.Game.resolution.manaProduced += max(e.amount, 0)
+		if e.amount > 0 {
+			ctx.Game.resolution.manaColors = appendProducedColor(ctx.Game.resolution.manaColors, e.color)
+		}
 	}
 	return nil
 }
@@ -483,6 +486,9 @@ func (e *addAnyManaEffect) Apply(ctx *EffectContext) error {
 	p.ManaPool().Add(color, e.amount)
 	if ctx.Game.resolution.manaTracking {
 		ctx.Game.resolution.manaProduced += max(e.amount, 0)
+		if e.amount > 0 {
+			ctx.Game.resolution.manaColors = appendProducedColor(ctx.Game.resolution.manaColors, color)
+		}
 	}
 	return nil
 }

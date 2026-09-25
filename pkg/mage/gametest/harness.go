@@ -674,12 +674,13 @@ func (tg *TestGame) untappedManaSupply(playerID uuid.UUID) map[core.Color]int {
 			continue
 		}
 		for _, a := range perm.RuntimeAbilities {
-			inner := mage.UnwrapAbility(a)
-			ma, ok := inner.(*mage.ManaAbility)
-			if !ok {
+			productions := mage.ManaProductionsForAbilityInGame(a, tg.Game, perm.ID())
+			if len(productions) == 0 {
 				continue
 			}
-			out[ma.PrimaryColor()] += ma.ProducedAmount()
+			for _, production := range productions {
+				out[production.Color] += max(production.Amount, 1)
+			}
 			break
 		}
 	}

@@ -119,10 +119,10 @@ func TestTypedManaAmountNestedResolution(t *testing.T) {
 	nested := &StackObject{ID: uuid.New(), Controller: b.PlayerID(), IsAbility: true, Effects: []Effect{AddManaAmount(Blue, Fixed(7))}}
 	body := Sequence(AddManaAmount(Black, Fixed(2)), FuncEffect("resolve nested mana", EffectProperties{}, func(game *Game, _, _ uuid.UUID, _ []uuid.UUID) error { game.ResolveStackObject(nested); return nil }), AddManaAmount(Black, Fixed(3)))
 	outer := &StackObject{ID: uuid.New(), Controller: a.PlayerID(), IsAbility: true, Effects: []Effect{body}}
-	if got := g.resolveStackObject(outer); got != 5 {
-		t.Fatalf("outer production=%d, want 5", got)
+	if got, colors := g.resolveStackObject(outer); got != 5 || len(colors) != 1 || colors[0] != Black {
+		t.Fatalf("outer production=%d, colors=%v, want 5 black", got, colors)
 	}
-	if a.ManaPool().Count(Black) != 5 || b.ManaPool().Count(Blue) != 7 || g.resolution.manaProduced != 0 {
+	if a.ManaPool().Count(Black) != 5 || b.ManaPool().Count(Blue) != 7 || g.resolution.manaProduced != 0 || len(g.resolution.manaColors) != 0 {
 		t.Fatal("nested production escaped its resolution")
 	}
 }

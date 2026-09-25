@@ -12,6 +12,7 @@ import (
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
 	manaProduced      int
+	manaColors        []Color
 	manaTracking      bool
 	targetSpecs       []Target
 	permanentBindings map[*PermanentBinding]capturedPermanent
@@ -171,6 +172,7 @@ func (s *ResolutionState) SetLastExiledCard(c Card)         { s.lastExiledCard =
 func (s *ResolutionState) Clone() ResolutionState {
 	c := ResolutionState{
 		manaProduced:           s.manaProduced,
+		manaColors:             append([]Color(nil), s.manaColors...),
 		manaTracking:           s.manaTracking,
 		permanentBindings:      maps.Clone(s.permanentBindings),
 		playerBindings:         maps.Clone(s.playerBindings),

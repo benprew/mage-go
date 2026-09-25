@@ -184,3 +184,100 @@ func TestComposableManaCostFailureLeavesState(t *testing.T) {
 		t.Fatal("failed mana activation changed resources")
 	}
 }
+
+func TestComposableManaBonuses(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		amount int
+		tap    bool
+		want   int
+	}{
+		{"one mana", 1, true, 3},
+		{"multiple mana", 3, true, 5},
+		{"zero mana", 0, true, 0},
+		{"no tap cost", 1, false, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a, b := NewBasePlayer("A"), NewBasePlayer("B")
+			g := NewGame(a, b)
+			bonus := NewArtifact("Bonuses", "{0}", WithAbility(NewManaFlareAbility(IsLand)), WithAbility(NewManaBonusAbility(IsLand, Red)))
+			bonus.SetOwner(b.PlayerID())
+			g.PutOnBattlefield(bonus, b.PlayerID())
+			cost := Costs(ManaPayment("{0}"))
+			if tc.tap {
+				cost = Costs(TapCost(This))
+			}
+			card := NewLand("Source", WithAbility(Activate(cost, AddManaAmount(Red, Fixed(tc.amount)))))
+			card.SetOwner(a.PlayerID())
+			perm := g.PutOnBattlefield(card, a.PlayerID())
+			clone := g.Clone()
+			if err := clone.ActivateAbilityByIndex(a.PlayerID(), perm.ID(), 0, nil); err != nil {
+				t.Fatal(err)
+			}
+			if got := clone.GetPlayer(a.PlayerID()).ManaPool().Count(Red); got != tc.want {
+				t.Fatalf("red mana = %d, want %d", got, tc.want)
+			}
+			if a.ManaPool().Count(Red) != 0 || g.FindPermanent(perm.ID()).Tapped {
+				t.Fatal("activation changed original game")
+			}
+			if clone.GetStack().Size() != 0 {
+				t.Fatal("mana ability used the stack")
+			}
+		})
+	}
+}
+
+func TestComposableManaBonusUsesProducedColor(t *testing.T) {
+	for _, automatic := range []bool{false, true} {
+		t.Run(map[bool]string{false: "explicit", true: "automatic"}[automatic], func(t *testing.T) {
+			a, b := NewBasePlayer("A"), NewBasePlayer("B")
+			g := NewGame(a, b)
+			addTappedForManaWatcher(g, a)
+			bonus := NewArtifact("Bonus", "{0}", WithAbility(NewManaFlareAbility(IsLand)))
+			bonus.SetOwner(b.PlayerID())
+			g.PutOnBattlefield(bonus, b.PlayerID())
+			card := NewLand("Source", WithAbility(Activate(Costs(TapCost(This)), Sequence(AddManaAmount(Blue, Fixed(1)), AddManaAmount(Blue, Fixed(1))))))
+			card.SetOwner(a.PlayerID())
+			perm := g.PutOnBattlefield(card, a.PlayerID())
+			a.ManaPool().Add(Red, 4)
+			var err error
+			if automatic {
+				err = g.AutoTapForCost(a.PlayerID(), ManaCost{Blue: 3})
+			} else {
+				err = g.ActivateAbilityByIndex(a.PlayerID(), perm.ID(), 0, nil)
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if a.ManaPool().Count(Blue) != 3 || a.ManaPool().Count(Red) != 4 {
+				t.Fatal("bonus must apply once to the produced color")
+			}
+			resolvePendingTriggers(g)
+			if a.Life() != 21 {
+				t.Fatal("expected one tapped-for-mana event")
+			}
+			if err := g.ActivateAbilityByIndex(a.PlayerID(), perm.ID(), 0, nil); err == nil {
+				t.Fatal("tapped source activated")
+			}
+			if a.ManaPool().Count(Blue) != 3 {
+				t.Fatal("failed activation added mana")
+			}
+		})
+	}
+}
+
+func TestComposableManaOrdinaryActivationChoices(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	card := NewLand("Choices",
+		WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Blue, Fixed(1)))),
+		WithAbility(Activate(Costs(TapCost(This)), GainLifeFor(You, Fixed(1)))),
+		WithAbility(Activate(Costs(SacrificeSourceCost()), AddManaAmount(Red, Fixed(2)))),
+	)
+	card.SetOwner(a.PlayerID())
+	g.PutOnBattlefield(card, a.PlayerID())
+	choices := g.GetActivatableAbilities(a.PlayerID())
+	if len(choices) != 2 {
+		t.Fatalf("ordinary activation choices = %d, want utility and sacrifice mana only", len(choices))
+	}
+}
