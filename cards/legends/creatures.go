@@ -237,10 +237,8 @@ func registerCreatures() {
 				).
 					SetConditionData(CreatureDeathsOccurred{}),
 			),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
-				RemoveCountersCost(Carrion, 2),
-			),
+			WithAbility(Activate(Costs(RemoveCountersCost(Carrion, 2)),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1))))),
 		)
 	})
 

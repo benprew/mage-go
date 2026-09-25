@@ -44,6 +44,8 @@
 // for a temporary source bonus. Each resolution adds a separate bonus to
 // the original permanent. A returned card does not receive that bonus.
 // Jumpstart and Legends source bonuses use this form with explicit mana costs.
+// Osai Vultures uses [RemoveCountersCost] to pay two carrion counters
+// before its temporary source bonus resolves.
 // Use a typed target with [WithTargets] for a targeted bonus.
 // Angelic Page combines [IsCreature] with [IsAttacking] or [IsBlocking].
 // Check combat status again at resolution. After resolution, leaving combat

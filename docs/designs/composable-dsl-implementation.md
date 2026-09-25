@@ -61,6 +61,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Jumpstart Triggered Team Boosts**: Migrate Inspiring Captain and Inspiring Unicorn to typed controlled-creature collections and explicit end-of-turn P/T modifications. Captain also uses `WhenEvent(Enters(This), ...)`; Unicorn retains its attack-event wrapper pending that adapter. No engine gap; see the completed slice below.
 - [x] **Angelic Page Combat Target**: Migrate its tap activation to a typed attacking-or-blocking creature target and end-of-turn P/T modification. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
+- [x] **Osai Vultures Counter-Payment Boost**: Migrate its activation to typed counter costs and an explicit temporary source modification. No engine gap; the end-step trigger remains a separate audit. See the completed slice below.
 
 ## Engine Blockers
 
@@ -1150,3 +1151,30 @@ engine imports remain. No outstanding engine blocker is claimed resolved.
 Validation: Jumpstart package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+## Completed Slice: Osai Vultures Counter-Payment Boost
+
+- [x] Migrate the activation from `WithActivatedAbility` / `Boost` to `Activate`, `Costs(RemoveCountersCost(Carrion, 2))`, and `Until(EndOfTurn, ModifyPT(This, ...))` through `pkg/mage/dsl`.
+- [x] Check the full Oracle comment, mana cost, base characteristics, and flying against `cards/legends/LEG.json`; all match exactly.
+- [x] Audit payment, timing, source identity, duration, and metadata. Existing counter-cost and continuous-effect services support this slice; no engine fix or new constructor is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Remove two carrion counters from this creature:” | `Costs(RemoveCountersCost(Carrion, 2))`; source-only payment before resolution, no tap or mana payment, no target or per-turn limit | `TestOsaiVulturesCounterPayment` covers zero, one, two, and four counters; unrelated charge counters; payment before resolution; repeated activations; tapped source on the opponent's upkeep; failed payment preserves counters and stack |
+| “This creature gets +1/+1 until end of turn.” | `Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1)))`; each resolution adds a layer 7c bonus to the original incarnation | `TestOsaiVulturesCounterPayment` checks stacking and expiration; shared `TestComposableSelfPumpLifetime` covers return, phasing, and clone isolation |
+| Typed definition and metadata | Explicit duration, untargeted instant-speed activation, beneficial single-subject +1/+1 metadata | `TestOsaiVulturesTypedActivation`, universal `TestRegisteredDefinitions` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 602 (activation and payment), 611.2a–c (duration and capture), and 613
+(continuous layers). The payment tests passed before migration; the definition
+test first failed because the old effect had the `legacy` role.
+
+No exports are retired: `Boost`, `WithActivatedAbility`, and
+`RemoveCountersCost` retain other callers. Osai Vultures' legacy end-step
+trigger and counter-addition body remain pending a separate trigger audit;
+this slice does not claim their migration or resolve an outstanding engine blocker.
+
+Validation: focused Osai Vultures tests; Legends package;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; focused engine payment and source-lifetime contracts;
+`make test`; and `make lint` passed with zero failures (lint: zero issues).
