@@ -4054,3 +4054,40 @@ Validation: focused card and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Jumpstart Artifact Library Triggers
+
+- [x] Migrate Mana Geode's entry scry to
+  `WhenEvent(Enters(This), Scry(Fixed(1)))`.
+- [x] Migrate Prophetic Prism's entry draw to
+  `WhenEvent(Enters(This), Draw(You, Fixed(1)))`.
+- [x] Migrate Terrarion's battlefield-to-graveyard draw to
+  `WhenEvent(Dies(This), Draw(You, Fixed(1)))`.
+- [x] Verify all three complete Oracle comments, artifact types, and mana
+  costs against `data/JMP.json`.
+- [x] Audit event matching and library actions. Existing typed adapters use
+  the shared trigger, scry, and draw services; no engine fix is required.
+
+All three triggers are mandatory and have no targets. The library action
+uses the stored trigger controller and does not require the source to remain
+on the battlefield. `Dies(This)` matches the source's battlefield-to-graveyard
+transition for noncreature artifacts too, including sacrifice and destruction.
+Terrarion's draw remains a separate triggered ability from its mana ability.
+
+`TestManaGeode`, `TestProphethicPrism`, `TestTerrarion`, and
+`TestTerrarion_SacrificeDrawsCard` pass before and after migration. Shared
+trigger, draw, and library-choice contracts cover source departure, controller
+context, copies, clone isolation, replacements, and scry placement. Universal
+registration validation checks these declarations. These single-action
+triggers need no duplicate simulation tests.
+
+This completes one slice of the remaining trigger and library-action caller
+migrations. The three artifacts' mana abilities remain separate migration
+work. Other cards still use the legacy trigger and action helpers, so no
+export is retired and no outstanding engine blocker is marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

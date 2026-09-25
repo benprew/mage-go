@@ -219,7 +219,7 @@ func registerArtifacts() {
 	Register("Mana Geode", func() Card {
 		return NewArtifact("Mana Geode", "{3}",
 			WithAnyColorMana(),
-			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(1)), false)),
+			dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Scry(dsl.Fixed(1)))),
 		)
 	})
 
@@ -273,7 +273,7 @@ func registerArtifacts() {
 	// {1}, {T}: Add one mana of any color.
 	Register("Prophetic Prism", func() Card {
 		return NewArtifact("Prophetic Prism", "{2}",
-			WithAbility(EntersBattlefieldTrigger(DrawCards(Fixed(1)), false)),
+			dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Draw(dsl.You, dsl.Fixed(1)))),
 			WithActivatedAbility(
 				AddAnyMana(1, Colorless),
 				GenericCost(1),
@@ -347,9 +347,7 @@ func registerArtifacts() {
 				WithCost(Tap()),
 				WithCost(SacrificeSourceCost()),
 			),
-			WithAbility(DiesTrigger(
-				DrawCards(Fixed(1)), false,
-			)),
+			dsl.WithAbility(dsl.WhenEvent(dsl.Dies(dsl.This), dsl.Draw(dsl.You, dsl.Fixed(1)))),
 		)
 	})
 
