@@ -2135,22 +2135,10 @@ func registerCreatures() {
 	Register("Cauldron Familiar", func() Card {
 		return NewCreature("Cauldron Familiar", "{B}", 1, 1,
 			WithSubTypes("Cat"),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("each opponent loses 1 life and you gain 1 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, pl := range g.AllPlayers() {
-							if pl.PlayerID() != controller {
-								pl.LoseLife(1)
-							}
-						}
-						if you := g.GetPlayer(controller); you != nil {
-							g.PlayerGainLife(you, 1)
-						}
-						return nil
-					}),
-				false,
-			)),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				LoseLifeEach(OpponentsOf(You), Fixed(1)),
+				GainLife(You, Fixed(1)),
+			))),
 			WithGraveyardActivatedAbility(
 				FuncEffect("return this card from your graveyard to the battlefield",
 					EffectProperties{Outcome: OutcomeBenefit},

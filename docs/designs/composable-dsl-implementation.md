@@ -3804,3 +3804,35 @@ Validation: focused regressions and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Cauldron Familiar Typed Entry Drain
+
+- [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,
+  `Sequence`, `LoseLifeEach(OpponentsOf(You), Fixed(1))`, and
+  `GainLife(You, Fixed(1))` through the author DSL.
+- [x] Remove the callback's direct life mutations and implicit trigger target.
+  Existing typed adapters support the complete entry ability; no engine fix
+  or new constructor is required.
+- [x] Verify the full Oracle comment, `{B}` cost, Cat subtype, and 1/1
+  characteristics against `data/JMP.json`.
+- [x] Resolve this ability's missing life events and failure to resolve after
+  source departure with a regression that failed before migration.
+
+`TestCauldronFamiliarEntryResolution` covers an untargeted entry trigger,
+controller identity distinct from ownership, source departure before resolution,
+life loss before gain, and normal, doubled, or suppressed life gain. Each
+opponent loses one life; the stored controller gains one life before
+replacements. The life-loss watcher triggers once, and the life-gain event
+reports the actual positive gain. Existing entry and Food-sacrifice return
+tests also pass.
+
+This completes one entry ability in the life-gain callback audit. The separate
+graveyard activation remains for the graveyard-reference migration. General
+life replacement ordering and other callback audits remain open. No legacy
+export is retired and no outstanding engine blocker is marked resolved.
+
+Validation: focused regressions; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
