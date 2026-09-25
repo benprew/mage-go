@@ -111,8 +111,11 @@ func registerSpells() {
 	// Instant
 	// Target creature gets +1/+7 until end of turn.
 	Register("Aegis of the Heavens", func() Card {
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
 		return NewInstant("Aegis of the Heavens", "{1}{W}",
-			NewTargetedSpell(TargetCreature(), Boost(Fixed(1), Fixed(7))),
+			dsl.Spell(dsl.Until(EndOfTurn,
+				dsl.ModifyPT(creature, dsl.Fixed(1), dsl.Fixed(7))),
+				dsl.WithTargets(creature)),
 		)
 	})
 
@@ -215,8 +218,11 @@ func registerSpells() {
 	// Instant
 	// Target creature gets +4/-4 until end of turn.
 	Register("Auger Spree", func() Card {
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
 		return NewInstant("Auger Spree", "{1}{B}{R}",
-			NewTargetedSpell(TargetCreature(), Boost(Fixed(4), Fixed(-4))),
+			dsl.Spell(dsl.Until(EndOfTurn,
+				dsl.ModifyPT(creature, dsl.Fixed(4), dsl.Fixed(-4))),
+				dsl.WithTargets(creature)),
 		)
 	})
 
@@ -1101,8 +1107,11 @@ func registerSpells() {
 	// Instant
 	// Target creature gets -3/-3 until end of turn.
 	Register("Last Gasp", func() Card {
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
 		return NewInstant("Last Gasp", "{1}{B}",
-			NewTargetedSpell(TargetCreature(), Boost(Fixed(-3), Fixed(-3))),
+			dsl.Spell(dsl.Until(EndOfTurn,
+				dsl.ModifyPT(creature, dsl.Fixed(-3), dsl.Fixed(-3))),
+				dsl.WithTargets(creature)),
 		)
 	})
 

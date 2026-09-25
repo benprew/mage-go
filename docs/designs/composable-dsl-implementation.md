@@ -53,6 +53,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Targeted Land Boost Activations**: Migrate Mishra’s Factory’s boost and Pendelhaven to typed targets, tap costs, and temporary P/T modifications. No engine blocker; see the completed slice below.
 - [x] **Affa Guard Hound Entry Boost**: Migrate the targeted entry boost to `WhenEvent`, `WithTargets`, and temporary `ModifyPT`. Correct target choice timing in the card definition; no engine gap. See the completed slice below.
 - [x] **Shield Wall Team Boost**: Migrate the remaining positional team spell to a typed controlled-creature collection and explicit end-of-turn duration. No engine gap; see the completed slice below.
+- [x] **Jumpstart Single-Target P/T Spells**: Migrate Aegis of the Heavens, Auger Spree, and Last Gasp to typed creature targets and explicit end-of-turn modifications. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -934,3 +935,27 @@ blocker is claimed resolved.
 Validation: focused Shield Wall definition and behavior tests; Legends package;
 shared collection and lifetime tests; `go build ./...`; `go vet ./cards/legends`;
 `make test`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Jumpstart Single-Target P/T Spells
+
+- [x] Migrate Aegis of the Heavens, Auger Spree, and Last Gasp from positional `NewTargetedSpell` / `Boost` to `Spell`, `TargetPermanent`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments and mana costs against `cards/jumpstart/JMP.json`; all three match exactly.
+- [x] Audit target scope, incarnation, duration, and signed P/T metadata. Existing engine contracts support the slice; no engine fix or new constructor is required.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Aegis of the Heavens: “Target creature gets +1/+7 until end of turn.” | One typed creature target, +1/+7 at layer 7c, explicit end-of-turn duration; instant and {1}{W} retained | `TestAegisOfTheHeavens` |
+| Auger Spree: “Target creature gets +4/-4 until end of turn.” | Same target and duration, +4/-4; instant and {1}{B}{R} retained | `TestAugerSpree` checks lethal toughness reduction |
+| Last Gasp: “Target creature gets -3/-3 until end of turn.” | Same target and duration, -3/-3; instant and {1}{B} retained | `TestLastGasp` checks lethal toughness reduction |
+| Shared target and duration contract | Either player's creature qualifies. Target legality is checked at resolution; a returned card is a different incarnation. Effects expire at cleanup and retain independent clone state. Signed modifier metadata reports detriment for negative toughness, including mixed-sign changes. | `TestTargetIncarnationAfterReturn`, `TestComposableContinuousCapture`, `TestComposableSelfPumpLifetime`, `TestTemporaryPTMetadata`, and `TestTypedTemporaryPTComposition` |
+
+These declarative spells reuse existing engine contracts, card behavior tests,
+and registration validation. No new simulation tests are needed. No export is
+retired: `NewTargetedSpell`, `TargetCreature`, and `Boost` retain other callers.
+The remaining positional P/T migrations and recorded engine blockers stay open.
+
+Validation: focused card and shared engine contract tests; Jumpstart package;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` passed with zero
+failures (lint: zero issues).
