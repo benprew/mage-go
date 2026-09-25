@@ -129,6 +129,10 @@ Spell(
 * `TargetSpell(label, filters...)`: Declares one spell target on the stack. Card filters restrict legal choices at announcement and resolution.
 * `Counter(spell)`: Counters the referenced spell if it remains legal and can be countered. A copy disappears from the stack when countered. Declare the binding with `WithTargets(spell)`.
 
+### Graveyard Card Targets
+* `TargetGraveyardCard(label, options...)`: Declares one card target in your graveyard by default. `InAnyGraveyard()` permits any player's graveyard. `GraveyardCardFilter(filter)` restricts its characteristics. Declare the binding with `WithTargets(card)`.
+* `ReturnCardToHand(card)`: Moves the bound graveyard card to its owner's hand. A card that leaves and returns to the graveyard is a new object, so the old binding cannot move it.
+
 ---
 
 ## 5. Pure State Conditions & Filters

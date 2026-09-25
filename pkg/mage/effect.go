@@ -176,6 +176,8 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 			value := capturedPermanent{id: targets[i]}
 			if p := g.FindPermanent(targets[i]); p != nil {
 				value.incarnation = p.incarnationID
+			} else if incarnation := g.resolution.targetIncarnations[targets[i]]; incarnation != uuid.Nil {
+				value.incarnation = incarnation
 			}
 			ctx.targetBindings[b] = append(ctx.targetBindings[b], value)
 		}

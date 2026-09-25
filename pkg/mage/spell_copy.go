@@ -121,6 +121,8 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 				delete(cp.targetIncarnations, id)
 				if p := g.FindPermanent(id); p != nil {
 					cp.targetIncarnations[id] = p.incarnationID
+				} else if visit := g.graveyardVisit(id); visit != uuid.Nil {
+					cp.targetIncarnations[id] = visit
 				}
 			}
 		}

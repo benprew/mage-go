@@ -11,15 +11,16 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
-	manaProduced      int
-	manaColors        []Color
-	manaTracking      bool
-	targetSpecs       []Target
-	permanentBindings map[*PermanentBinding]capturedPermanent
-	playerBindings    map[*PlayerBinding]uuid.UUID
-	numberBindings    map[*NumberBinding]int
-	sourceIncarnation uuid.UUID
-	sourceCaptured    bool
+	manaProduced       int
+	manaColors         []Color
+	manaTracking       bool
+	targetSpecs        []Target
+	targetIncarnations map[uuid.UUID]uuid.UUID
+	permanentBindings  map[*PermanentBinding]capturedPermanent
+	playerBindings     map[*PlayerBinding]uuid.UUID
+	numberBindings     map[*NumberBinding]int
+	sourceIncarnation  uuid.UUID
+	sourceCaptured     bool
 	// X value for the currently resolving spell or activation
 	currentX int
 
@@ -77,6 +78,7 @@ func (s *ResolutionState) Begin(obj *StackObject) func() {
 		return func() {}
 	}
 	s.targetSpecs = obj.TargetSpecs
+	s.targetIncarnations = obj.targetIncarnations
 	s.currentX = obj.XValue
 	s.currentMode = obj.ModeChoice
 	s.currentEventAmount = obj.EventAmount
@@ -108,6 +110,7 @@ func (s *ResolutionState) SetColorOverride(sourceID uuid.UUID, override *[]Color
 // Clear resets all resolving state fields to zero values.
 func (s *ResolutionState) Clear() {
 	s.targetSpecs = nil
+	s.targetIncarnations = nil
 	s.permanentBindings = nil
 	s.playerBindings = nil
 	s.numberBindings = nil
@@ -178,6 +181,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
 		targetSpecs:            append([]Target(nil), s.targetSpecs...),
+		targetIncarnations:     maps.Clone(s.targetIncarnations),
 		sourceIncarnation:      s.sourceIncarnation,
 		sourceCaptured:         s.sourceCaptured,
 		currentX:               s.currentX,

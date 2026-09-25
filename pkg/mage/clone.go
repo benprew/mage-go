@@ -95,6 +95,12 @@ func extractBasePlayer(p Player) *BasePlayer {
 	// Copy zones.
 	bp.hand = cloneCardSlice(p.Hand())
 	bp.graveyard = cloneCardSlice(p.Graveyard())
+	if visited, ok := p.(interface{ graveyardVisit(uuid.UUID) uuid.UUID }); ok {
+		bp.graveyardVisits = make(map[uuid.UUID]uuid.UUID, len(bp.graveyard))
+		for _, card := range bp.graveyard {
+			bp.graveyardVisits[card.ID()] = visited.graveyardVisit(card.ID())
+		}
+	}
 	bp.library = cloneCardSlice(p.Library())
 	bp.ante = cloneCardSlice(p.Ante())
 	// Copy mana pool.
@@ -121,6 +127,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	// Copy card slices (sharing Card refs).
 	clone.hand = cloneCardSlice(bp.hand)
 	clone.graveyard = cloneCardSlice(bp.graveyard)
+	clone.graveyardVisits = bp.graveyardVisits
 	clone.library = cloneCardSlice(bp.library)
 	clone.ante = cloneCardSlice(bp.ante)
 	// Copy mana pool state.

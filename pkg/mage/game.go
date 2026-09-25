@@ -2080,18 +2080,38 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 	return ZoneAny
 }
 
+func (g *Game) graveyardVisit(id uuid.UUID) uuid.UUID {
+	for _, player := range g.players {
+		for _, card := range player.Graveyard() {
+			if card.ID() == id {
+				if visited, ok := player.(interface{ graveyardVisit(uuid.UUID) uuid.UUID }); ok {
+					return visited.graveyardVisit(id)
+				}
+			}
+		}
+	}
+	return uuid.Nil
+}
+
 // Used to track game-specific state before pushing object onto stack
 func (g *Game) pushStack(obj *StackObject) {
 	g.chooseRandomCounterDistribution(obj)
 	// Track target zone when targeted, needed for CR 608.2b
-	if obj.targetIncarnations == nil {
-		for _, id := range obj.Targets {
-			if p := g.FindPermanent(id); p != nil {
-				if obj.targetIncarnations == nil {
-					obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
-				}
-				obj.targetIncarnations[id] = p.incarnationID
+	for _, id := range obj.Targets {
+		if _, captured := obj.targetIncarnations[id]; captured {
+			continue
+		}
+		var incarnation uuid.UUID
+		if p := g.FindPermanent(id); p != nil {
+			incarnation = p.incarnationID
+		} else {
+			incarnation = g.graveyardVisit(id)
+		}
+		if incarnation != uuid.Nil {
+			if obj.targetIncarnations == nil {
+				obj.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
 			}
+			obj.targetIncarnations[id] = incarnation
 		}
 	}
 	obj.TargetZones = make(map[uuid.UUID]Zone, len(obj.Targets))
@@ -2179,8 +2199,12 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 			}
 			incarnationLegal := true
 			if incarnation, ok := obj.targetIncarnations[t]; ok {
-				p := g.FindPermanent(t)
-				incarnationLegal = p != nil && p.incarnationID == incarnation
+				if obj.TargetZones[t] == ZoneGraveyard {
+					incarnationLegal = g.graveyardVisit(t) == incarnation
+				} else {
+					p := g.FindPermanent(t)
+					incarnationLegal = p != nil && p.incarnationID == incarnation
+				}
 			}
 			if incarnationLegal && g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec) {
 				resolvedTargets[i] = t

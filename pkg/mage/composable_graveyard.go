@@ -1,0 +1,118 @@
+package mage
+
+import (
+	"slices"
+
+	"github.com/google/uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
+
+// CardRef identifies one card in a nonbattlefield zone.
+type CardRef interface {
+	cardRef()
+	resolveCard(*EffectContext) (Card, bool)
+}
+
+// CardTargetBinding declares one graveyard card target.
+type CardTargetBinding struct{ *targetDeclaration }
+
+// GraveyardTargetOption restricts a graveyard card target.
+type GraveyardTargetOption interface {
+	graveyardTargetOption()
+	applyGraveyardTarget(*graveyardTargetConfig)
+}
+
+type graveyardTargetConfig struct {
+	any     bool
+	filters []CardFilter
+}
+
+type anyGraveyardOption struct{}
+
+// InAnyGraveyard permits a card in any player's graveyard.
+func InAnyGraveyard() GraveyardTargetOption       { return anyGraveyardOption{} }
+func (anyGraveyardOption) graveyardTargetOption() {}
+func (anyGraveyardOption) applyGraveyardTarget(config *graveyardTargetConfig) {
+	config.any = true
+}
+
+type graveyardCardFilterOption struct{ filter CardFilter }
+
+// GraveyardCardFilter restricts the card types allowed by the target.
+func GraveyardCardFilter(filter CardFilter) GraveyardTargetOption {
+	return graveyardCardFilterOption{filter}
+}
+func (graveyardCardFilterOption) graveyardTargetOption() {}
+func (o graveyardCardFilterOption) applyGraveyardTarget(config *graveyardTargetConfig) {
+	config.filters = append(config.filters, o.filter)
+}
+
+// DeclareGraveyardCardTarget declares one target in your graveyard by default.
+func DeclareGraveyardCardTarget(name string, options ...GraveyardTargetOption) *CardTargetBinding {
+	config := graveyardTargetConfig{}
+	for _, option := range options {
+		if nilDefinition(option) {
+			panic("targets: supply a non-nil graveyard target option")
+		}
+		option.applyGraveyardTarget(&config)
+	}
+	for _, filter := range config.filters {
+		if nilDefinition(filter) {
+			panic("targets: supply a non-nil graveyard card filter")
+		}
+	}
+	var spec Target
+	if config.any {
+		spec = TargetCardInAnyGraveyard(slices.Clone(config.filters)...)
+	} else {
+		spec = TargetCardInYourGraveyard(slices.Clone(config.filters)...)
+	}
+	return &CardTargetBinding{&targetDeclaration{name: name, spec: spec}}
+}
+
+func (*CardTargetBinding) cardRef() {}
+func (b *CardTargetBinding) resolveCard(ctx *EffectContext) (Card, bool) {
+	value, ok := firstTargetValue(ctx.targetBindings[b.targetDeclaration])
+	if !ok || value.incarnation == uuid.Nil || ctx.Game.graveyardVisit(value.id) != value.incarnation {
+		return nil, false
+	}
+	for _, player := range ctx.Game.players {
+		for _, card := range player.Graveyard() {
+			if card.ID() == value.id {
+				return card, true
+			}
+		}
+	}
+	return nil, false
+}
+func (b *CardTargetBinding) inspectDefinition() definitionNode {
+	return targetReadNode(b.targetDeclaration, "card-ref")
+}
+
+type returnCardToHandEffect struct{ card CardRef }
+
+// ReturnCardToHand puts the referenced graveyard card into its owner's hand.
+func ReturnCardToHand(card CardRef) ResolvingEffect { return &returnCardToHandEffect{card} }
+func (*returnCardToHandEffect) Text() string        { return "return card to its owner's hand" }
+func (*returnCardToHandEffect) Properties() EffectProperties {
+	return (&returnFromGraveyardToHandTargetEffect{}).Properties()
+}
+func (e *returnCardToHandEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}}}
+}
+func (e *returnCardToHandEffect) Apply(ctx *EffectContext) error {
+	card, ok := e.card.resolveCard(ctx)
+	if !ok {
+		return nil
+	}
+	owner := ctx.Game.GetPlayer(card.Owner())
+	if owner == nil {
+		return nil
+	}
+	moved, _, ok := ctx.Game.MoveFromAnyGraveyard(card.ID(), core.ZoneHand)
+	if ok {
+		owner.AddToHand(moved)
+	}
+	return nil
+}

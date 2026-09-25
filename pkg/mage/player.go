@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"math/rand"
 
 	"github.com/google/uuid"
@@ -156,6 +157,7 @@ type BasePlayer struct {
 	drewFromEmpty   bool // set when a draw is attempted from an empty library
 	hand            []Card
 	graveyard       []Card
+	graveyardVisits map[uuid.UUID]uuid.UUID
 	library         []Card
 	ante            []Card
 	manaPool        *ManaPool
@@ -249,11 +251,28 @@ func (p *BasePlayer) DiscardCard(id uuid.UUID) (Card, bool) {
 
 func (p *BasePlayer) Graveyard() []Card { return p.graveyard }
 
-func (p *BasePlayer) SetGraveyard(cards []Card) { p.graveyard = cards }
+func (p *BasePlayer) SetGraveyard(cards []Card) {
+	p.graveyard = cards
+	for _, card := range cards {
+		p.recordGraveyardVisit(card.ID())
+	}
+}
+
+func (p *BasePlayer) recordGraveyardVisit(id uuid.UUID) {
+	if p.graveyardVisits == nil {
+		p.graveyardVisits = make(map[uuid.UUID]uuid.UUID)
+	} else {
+		p.graveyardVisits = maps.Clone(p.graveyardVisits)
+	}
+	p.graveyardVisits[id] = uuid.New()
+}
+
+func (p *BasePlayer) graveyardVisit(id uuid.UUID) uuid.UUID { return p.graveyardVisits[id] }
 
 func (p *BasePlayer) AddToGraveyard(c Card) {
 	p.assertOwner(c)
 	p.graveyard = append(p.graveyard, c)
+	p.recordGraveyardVisit(c.ID())
 }
 
 func (p *BasePlayer) RemoveFromGraveyard(id uuid.UUID) (Card, bool) {

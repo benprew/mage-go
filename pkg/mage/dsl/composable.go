@@ -20,6 +20,7 @@ var (
 type CoinBranch = mage.CoinBranch
 type PermanentTargetOption = mage.PermanentTargetOption
 type PlayerTargetOption = mage.PlayerTargetOption
+type GraveyardTargetOption = mage.GraveyardTargetOption
 
 var (
 	FlipCoin             = mage.FlipCoin
@@ -45,6 +46,8 @@ type (
 	TargetBinding             = mage.TargetBinding
 	PermanentTargetBinding    = mage.PermanentTargetBinding
 	PlayerTargetBinding       = mage.PlayerTargetBinding
+	CardRef                   = mage.CardRef
+	CardTargetBinding         = mage.CardTargetBinding
 	SpellOption               = mage.SpellOption
 	ActivationOption          = mage.ActivationOption
 	ActivationCaptureOption   = mage.ActivationCaptureOption
@@ -69,6 +72,10 @@ var (
 	PreventCombatDamageToAndBy = mage.PreventCombatDamageToAndBy
 	TargetPlayer               = mage.DeclarePlayerTarget
 	TargetSpell                = mage.DeclareSpellTarget
+	TargetGraveyardCard        = mage.DeclareGraveyardCardTarget
+	InAnyGraveyard             = mage.InAnyGraveyard
+	GraveyardCardFilter        = mage.GraveyardCardFilter
+	ReturnCardToHand           = mage.ReturnCardToHand
 	Counter                    = mage.Counter
 	TargetOpponentOnly         = mage.TargetOpponentOnly
 	// WithTargets binds declared target bindings to a spell, activation, or trigger.
