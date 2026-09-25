@@ -36,6 +36,8 @@ func (o activationRestriction) applyActivation(a *ActionDefinition) {
 		}
 	}
 	switch o.kind {
+	case "permission":
+		a.permission.AnyPlayerMayUse = true
 	case "timing":
 		if o.timing == TimingStepOnly && (o.step < Untap || o.step > Cleanup) {
 			panic("activation: supply a valid turn step")
@@ -74,6 +76,11 @@ func (o activationRestriction) applyActivation(a *ActionDefinition) {
 		}
 	}
 	a.dslRestrictions = append(a.dslRestrictions, o)
+}
+
+// AnyPlayerMayActivate permits each player to activate and pay for the ability.
+func AnyPlayerMayActivate() ActivationOption {
+	return activationRestriction{kind: "permission"}
 }
 
 // ActivationTimingOption sets timing for an activation or a static grant.

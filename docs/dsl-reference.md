@@ -346,6 +346,12 @@ a power increase after resolution does not end the blocking restriction.
   * `OnlyDuring(step, moreSteps...)`: Restricts casting or activation to any specified step (e.g. `DeclareAttackers` or `Upkeep`). Returns `StepTimingOption`, which is accepted by `Spell` and all activation contexts. It adds a restriction; it does not grant permission to cast a sorcery outside normal timing.
   * `OnlyOnYourTurn()`: Active player only.
   * `ActivationLimit(maxPerTurn)`: Max activations per turn.
+  * `AnyPlayerMayActivate()`: Permits either player to activate and pay for
+    the ability. `You` refers to the activator at resolution. Other costs,
+    timing rules, and restrictions still apply. Use this option with `Activate`.
+    Feral Hydra combines it with `Costs(Mana("{3}"))` and
+    `AddCounters(This, P1P1, Fixed(1))`; the counter applies only to the
+    original source incarnation, even when the opponent activates the ability.
   * `ActivationIf(condition)`: Pure state condition required to activate.
   * `CaptureNumberBeforePayment(value, binding)`: Saves amount before mana production & cost payment.
   * `CapturePermanentBeforePayment(subject, binding)`: Saves permanent (e.g. attachment) before sacrifice cost.

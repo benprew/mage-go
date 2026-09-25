@@ -22,18 +22,19 @@ type PermanentTargetOption = mage.PermanentTargetOption
 type PlayerTargetOption = mage.PlayerTargetOption
 
 var (
-	FlipCoin        = mage.FlipCoin
-	OnWin           = mage.OnWin
-	OnLoss          = mage.OnLoss
-	OnlyAsSorcery   = mage.OnlyAsSorcery
-	OnlyDuring      = mage.OnlyDuring
-	OnlyOnYourTurn  = mage.OnlyOnYourTurn
-	ActivationLimit = mage.ActivationLimit
-	ActivationIf    = mage.ActivationIf
-	ControllerOf    = mage.ControllerOf
-	UnlessPaid      = mage.UnlessPaid
-	IfPaid          = mage.IfPaid
-	ForEach         = mage.ForEach
+	FlipCoin             = mage.FlipCoin
+	OnWin                = mage.OnWin
+	OnLoss               = mage.OnLoss
+	OnlyAsSorcery        = mage.OnlyAsSorcery
+	OnlyDuring           = mage.OnlyDuring
+	OnlyOnYourTurn       = mage.OnlyOnYourTurn
+	ActivationLimit      = mage.ActivationLimit
+	ActivationIf         = mage.ActivationIf
+	AnyPlayerMayActivate = mage.AnyPlayerMayActivate
+	ControllerOf         = mage.ControllerOf
+	UnlessPaid           = mage.UnlessPaid
+	IfPaid               = mage.IfPaid
+	ForEach              = mage.ForEach
 )
 
 // Typed subjects and declarations keep choices in the resolving instance.

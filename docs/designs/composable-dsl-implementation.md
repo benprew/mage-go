@@ -4505,3 +4505,39 @@ Validation: Jumpstart package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Feral Hydra Typed Any-Player Activation
+
+- [x] Add `AnyPlayerMayActivate()` as a sealed `Activate` option through the
+  public DSL, using the existing activation permission service.
+- [x] Migrate Feral Hydra to `Activate`, `Costs(Mana("{3}"))`, and
+  `AddCounters(This, P1P1, Fixed(1))` with the new permission option.
+- [x] Verify the full Oracle comment, `{X}{G}` cost, Hydra Beast subtypes,
+  and 0/0 characteristics against `data/JMP.json`.
+- [x] Correct the counter action's source identity through the existing typed
+  reference. No engine behavior fix is required.
+
+`TestFeralHydraCounterSourceLifetime` failed before migration because the old
+activation put a counter on a returned Hydra. It now checks activation by
+either player, payment before resolution, a tapped source, no targets, and
+present, departed, and returned sources. The original battlefield incarnation
+receives the counter; a returned Hydra does not. The existing X-counter entry
+test also passes.
+
+The new shared permission contracts check controller-only defaults, payment
+by the activator, failed payment, repeated activation, stored `You`, timing
+restrictions, and clone isolation. Duplicate permission options fail registration
+validation, and a compile-failure fixture rejects permission options on spells.
+The adapter changes no costs, timing restrictions, or source control.
+
+This completes one slice of the remaining activation and counter migrations.
+The legacy `WithAnyPlayerMay` callers in Armageddon Clock, Ifh-Bíff Efreet,
+and Land's Edge remain separate migrations, so the export is retained.
+The typed option currently applies to `Activate`; modal and granted permission
+options remain future work. No recorded engine blocker is marked resolved.
+
+Validation: focused permission, counter, activation, and compile-time contracts;
+Jumpstart package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

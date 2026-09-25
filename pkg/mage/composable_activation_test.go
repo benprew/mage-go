@@ -94,6 +94,7 @@ func TestComposableActivationRestrictions(t *testing.T) {
 
 func TestComposableActivationOptionValidation(t *testing.T) {
 	for _, options := range [][]ActivationOption{
+		{AnyPlayerMayActivate(), AnyPlayerMayActivate()},
 		{OnlyAsSorcery(), OnlyDuring(Upkeep)},
 		{OnlyDuring(Upkeep), OnlyDuring(Upkeep)},
 		{OnlyOnYourTurn(), OnlyOnYourTurn()},

@@ -5183,11 +5183,11 @@ func registerCreatures() {
 		return NewCreature("Feral Hydra", "{X}{G}", 0, 0,
 			WithSubTypes("Hydra", "Beast"),
 			WithAbility(EntersWithXCounters(P1P1)),
-			WithActivatedAbility(
-				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
-				ManaCostOf("{3}"),
-				WithAnyPlayerMay(),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}")),
+				AddCounters(This, P1P1, Fixed(1)),
+				AnyPlayerMayActivate(),
+			)),
 		)
 	})
 
