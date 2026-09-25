@@ -116,6 +116,10 @@
 // Grants accumulate and remain separate in cloned games. The action does not
 // play a land or change land timing. Explore grants the allowance before drawing.
 //
+// Use [Activate] with [ModifyPT] and [Until] for targeted temporary boosts.
+// Put mana, tap, sacrifice, and discard costs in [Costs]. A source sacrificed
+// to pay a cost does not end the boost on the target.
+//
 // Use [Until] with [ModifyEachPT] for a temporary collection boost.
 // [ControlledPermanents] with [IsCreature] selects your creatures at resolution.
 // [MatchingPermanents] with [IsCreature] and [IsAttacking] or [IsBlocking]

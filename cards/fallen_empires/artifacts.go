@@ -122,14 +122,13 @@ func registerArtifacts() {
 	// Artifact
 	// {1}, {T}, Sacrifice this artifact: Target creature gets +2/+2 until end of turn.
 	Register("Elven Lyre", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Elven Lyre", "{2}",
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(2)),
-				GenericCost(1),
-				WithCost(TapCost(This)),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}"), TapCost(This), SacrificeSourceCost()),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(2), Fixed(2))),
+				WithTargets(creature),
+			)),
 		)
 	}))
 

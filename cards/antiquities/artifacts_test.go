@@ -325,6 +325,9 @@ func TestCoralHelm(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Coral Helm", "Grizzly Bears")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
+		g.AssertGraveyardCount(gametest.PlayerA, "Forest", 1)
+		g.AssertHandCount(gametest.PlayerA, "Forest", 0)
+		g.AssertTapped(gametest.PlayerA, "Coral Helm", false)
 		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4) // 2+2/2+2
 	})
 

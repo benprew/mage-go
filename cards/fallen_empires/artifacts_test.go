@@ -128,6 +128,7 @@ func TestElvenLyre_BoostsCreature(t *testing.T) {
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 4)
 	g.AssertPermanentCount(gametest.PlayerA, "Elven Lyre", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Elven Lyre", 1)
 }
 
 func TestSpiritShield_BoostsWhileTapped(t *testing.T) {

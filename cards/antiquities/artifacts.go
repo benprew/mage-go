@@ -157,13 +157,13 @@ func registerArtifacts() {
 	// Artifact
 	// {3}, Discard a card at random: Target creature gets +2/+2 until end of turn.
 	Register("Coral Helm", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Coral Helm", "{3}",
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(2)),
-				GenericCost(3),
-				WithCost(DiscardRandomCost(1)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}"), DiscardRandomCost(1)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(2), Fixed(2))),
+				WithTargets(creature),
+			)),
 		)
 	})
 

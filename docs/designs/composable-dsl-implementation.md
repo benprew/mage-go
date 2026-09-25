@@ -47,6 +47,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Limited Edition Simple Self-Pump Activations**: Migrate Frozen Shade, Granite Gargoyle, Shivan Dragon, Wall of Fire, and Wall of Water to typed activation costs and temporary source modifications. No engine gap; see the completed slice below.
 - [x] **Targeted Instant P/T Boosts**: Migrate Howl from Beyond and Righteousness to typed targets, resolution-time X, and temporary modifications. No engine gap; see the completed slice below.
 - [x] **Combat-Wide P/T Boost Spells**: Migrate Army of Allah, Piety, and Morale to typed combat collections and end-of-turn modifications. No engine blocker; see the completed slice below.
+- [x] **Targeted Artifact +2/+2 Activations**: Migrate Coral Helm and Elven Lyre to typed targets, cost groups, and end-of-turn modifications. No engine blocker; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -781,3 +782,33 @@ Validation: focused migration and card tests; affected card packages; engine
 suite; universal registration validation and full `make test`; `go build ./...`;
 `go vet ./cards/arabian ./cards/fourthedition`; and `make lint` passed with zero
 failures.
+
+
+## Completed Slice: Targeted Artifact +2/+2 Activations
+
+- [x] Migrate Coral Helm and Elven Lyre to `Activate`, `Costs`, `TargetPermanent`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments against `data/ATQ.json` and `data/FEM.json`; both match exactly.
+- [x] Verify target scope, payment outcomes, timing, and metadata. Existing payment, target, and continuous-effect services support the slice without an engine fix.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Coral Helm: {3}, discard a card at random | `Costs(Mana("{3}"), DiscardRandomCost(1))`; no tap cost or sorcery restriction | `TestCoralHelm` now checks the discarded card in the graveyard, its absence from hand, and the untapped Helm |
+| Elven Lyre: {1}, {T}, sacrifice this artifact | `Costs(Mana("{1}"), TapCost(This), SacrificeSourceCost())`; payment removes the source before resolution | `TestElvenLyre_BoostsCreature` checks the boost and the sacrificed Lyre in the graveyard |
+| Both: target creature gets +2/+2 until end of turn | `TargetPermanent("creature", IsCreature)` and `Until(EndOfTurn, ModifyPT(creature, Fixed(2), Fixed(2)))`; either controller; layer 7c; no source-presence condition or damage-source LKI | `TestArtifactBoostTypedDefinitions` checks typed targets, either controller, noncreature exclusion, instant timing, registration validation, and beneficial single-subject +2/+2 metadata; `TestCoralHelm` checks cleanup expiry |
+
+The definition test failed on both legacy targets before migration. Strengthened
+payment assertions passed before and after migration. Existing
+`TestComposablePaymentAtomicity`, `TestComposableContinuousCapture`, and
+`TestComposableSelfPumpLifetime` cover shared payment and continuous-effect
+contracts, including captured incarnations, expiration, and clone isolation.
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 602 (activation costs), 608.2b (target legality), 611.2c (affected objects),
+and 613 (P/T layers).
+
+No export is retired: `Boost`, legacy activation builders, and positional target
+helpers still have other callers. The remaining artifact abilities retain their
+existing forms. No outstanding engine blocker is claimed resolved.
+
+Validation: focused migration and card tests; affected card packages and engine
+suite; full `make test`; `go build ./...`; `go vet ./cards/antiquities
+./cards/fallen_empires`; and `make lint` passed with zero failures.
