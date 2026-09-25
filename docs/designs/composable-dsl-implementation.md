@@ -48,6 +48,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Targeted Instant P/T Boosts**: Migrate Howl from Beyond and Righteousness to typed targets, resolution-time X, and temporary modifications. No engine gap; see the completed slice below.
 - [x] **Combat-Wide P/T Boost Spells**: Migrate Army of Allah, Piety, and Morale to typed combat collections and end-of-turn modifications. No engine blocker; see the completed slice below.
 - [x] **Targeted Artifact +2/+2 Activations**: Migrate Coral Helm and Elven Lyre to typed targets, cost groups, and end-of-turn modifications. No engine blocker; see the completed slice below.
+- [x] **Antiquities Self-Pump Activations**: Migrate Atog and Dragon Engine to typed costs and source modifications. Correct Atog's source-inclusive artifact sacrifice using the existing cost API. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -812,3 +813,27 @@ existing forms. No outstanding engine blocker is claimed resolved.
 Validation: focused migration and card tests; affected card packages and engine
 suite; full `make test`; `go build ./...`; `go vet ./cards/antiquities
 ./cards/fallen_empires`; and `make lint` passed with zero failures.
+
+
+## Completed Slice: Antiquities Self-Pump Activations
+
+- [x] Migrate Atog and Dragon Engine to `Activate`, `Costs`, and `Until(EndOfTurn, ModifyPT(This, ...))` through `pkg/mage/dsl`.
+- [x] Restore full Oracle comments from `data/ATQ.json` immediately above both registrations.
+- [x] Correct Atog's artifact sacrifice selection. The old `SacrificeArtifactCost` excludes the source; Oracle permits sacrificing Atog if it is an artifact. The existing `SacrificeMatchingIncludingSourceCost` supports this requirement, so no engine fix is needed.
+
+| Oracle clause / caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Atog: Sacrifice an artifact | `Costs(SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact"))`; one artifact controlled by the activating player, including the source if it is an artifact; no tap cost or timing restriction | `TestAtogSacrificePayment` checks own, opposing, phased, and nonartifact candidates, plus an artifact source; source sacrifice failed before migration. Successful payment is checked before resolution, with a tapped source during the opponent's upkeep. |
+| Atog: This creature gets +2/+2 until end of turn | `Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(2)))`; no targets; layer 7c source bonus; absent source has no effect | Existing `TestAtog` checks the bonus and expiry; `TestAtogSacrificePayment` checks source sacrifice and resolution. |
+| Dragon Engine: {2}: This creature gets +1/+0 until end of turn | `Costs(Mana("{2}"))` and the same duration with `ModifyPT(This, Fixed(1), Fixed(0))`; no targets or tap cost | Existing `TestDragonEngine` checks repeated activation and expiry; shared payment contracts cover mana payment. |
+| Both legacy activation / boost definitions | Typed source incarnation and duration; no damage-source LKI required; beneficial single-subject P/T metadata retained | `TestAntiquitiesSelfPumpTypedDefinitions` failed on both legacy effects before migration. Existing `TestComposableSelfPumpLifetime` covers stacking, expiry, clone isolation, phasing, and returned-object exclusion. |
+
+Rules contract: repository Comprehensive Rules, CR 400.7 (new objects), 602
+(activation and costs), 701 (sacrifice), and 613 (P/T layers). The existing cost
+and continuous-effect services support this complete slice. No shared export
+is retired: legacy activation, boost, and sacrifice helpers still have callers.
+The remaining Antiquities abilities and outstanding engine blockers remain open.
+
+Validation: `go test ./cards/antiquities -count=1`; card registration and engine
+regressions through `make test`; `go build ./...`; `go vet ./cards/antiquities`;
+and `make lint` passed with zero failures.

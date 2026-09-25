@@ -265,14 +265,14 @@ func registerCreatures() {
 
 	// Atog {1}{R}
 	// Creature — Atog
-	// Sacrifice an artifact: Atog gets +2/+2 until end of turn.
+	// Sacrifice an artifact: This creature gets +2/+2 until end of turn.
 	Register("Atog", func() Card {
 		return NewCreature("Atog", "{1}{R}", 1, 2,
 			WithSubTypes("Atog"),
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()),
-				SacrificeArtifactCost(),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(2))),
+			)),
 		)
 	})
 
@@ -517,15 +517,13 @@ func registerCreatures() {
 
 	// Dragon Engine {3}
 	// Artifact Creature — Construct
-	// {2}: Dragon Engine gets +1/+0 until end of turn.
+	// {2}: This creature gets +1/+0 until end of turn.
 	Register("Dragon Engine", func() Card {
 		return NewCreature("Dragon Engine", "{3}", 1, 3,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				GenericCost(2),
-			),
+			WithAbility(Activate(Costs(Mana("{2}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))))),
 		)
 	})
 
