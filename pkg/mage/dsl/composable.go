@@ -5,6 +5,7 @@ import "github.com/benprew/mage-go/pkg/mage"
 type NumberBinding = mage.NumberBinding
 
 var (
+	CountPermanents               = mage.CountPermanents
 	CreaturesDiedThisTurn         = mage.CreaturesDiedThisTurn
 	CountersOn                    = mage.CountersOn
 	SourceCounters                = mage.SourceCounters

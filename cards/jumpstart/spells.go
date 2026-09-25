@@ -123,12 +123,13 @@ func registerSpells() {
 	// Sorcery
 	// Destroy target tapped creature. You gain 1 life for each creature you control with flying.
 	Register("Aerial Assault", func() Card {
-		return NewSorcery("Aerial Assault", "{2}{W}",
-			NewTargetedSpell(TargetCreature(IsTapped), CompositeEffects(
-				"destroy tapped creature; gain 1 life per flying creature you control",
-				DestroyTarget(),
-				dsl.GainLife(dsl.You, dsl.ValueAtResolution(CountBattlefield(SelectController(), And(IsCreature, HasKeywordFilter(Flying))))),
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.And(dsl.IsCreature, dsl.IsTapped))
+		return dsl.NewSorcery("Aerial Assault", "{2}{W}",
+			dsl.Spell(dsl.Sequence(
+				dsl.Destroy(creature),
+				dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.ControlledPermanents(
+					dsl.And(dsl.IsCreature, dsl.HasKeywordFilter(Flying))))),
+			), dsl.WithTargets(creature)),
 		)
 	})
 

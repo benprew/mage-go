@@ -420,6 +420,7 @@ Operations taking amounts accept `ResolutionValue`:
 * `ToughnessOf(PermanentRef)`: Current toughness of the permanent at resolution.
 * `CountersOn(PermanentRef, CounterType)`: Current count of counters on the live permanent.
 * `SourceCounters(CounterType)`: Counters on the source permanent, or its last-known count if departed.
+* `CountPermanents(PermanentSet)`: Counts the current collection when the value is used. Controlled collections use the resolving controller and exclude phased-out permanents. Use `SnapshotNumber` to preserve an earlier count. Aerial Assault counts controlled flying creatures after its destruction instruction.
 * `CreaturesDiedThisTurn()`: Number of creatures that died this turn across all players.
 * Arithmetic:
   * `MultiplyValues(a, b)`: The product of two resolution values. Use `MultiplyValues(Fixed(2), ValueAtResolution(XValue()))` for twice the announced X. Both operands keep their typed binding context.

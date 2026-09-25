@@ -2348,3 +2348,38 @@ Validation: focused adapter and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Aerial Assault and Typed Permanent Counts
+
+- [x] Add `CountPermanents(PermanentSet)` as a typed resolution value and expose
+  the collection to definition inspection and binding validation.
+- [x] Migrate Aerial Assault to `Spell`, `WithTargets`, `Sequence`, `Destroy`,
+  and `GainLife` with a typed controlled flying-creature collection.
+- [x] Verify the complete Oracle text, sorcery type, and `{2}{W}` cost against
+  `data/JMP.json`. No engine behavior gap was found or closed in this slice.
+
+The count reads the collection when the value is used. It excludes phased-out
+permanents, uses the resolving controller, and reads the current game's state.
+`SnapshotNumber` preserves an earlier count. Inspection checks collection
+bindings, including nested references, and rejects a nil collection.
+
+Aerial Assault can target either player's tapped creature. Its target must
+remain legal at resolution; an illegal sole target prevents both instructions.
+Destruction permits regeneration and respects indestructible. Life gain counts
+flying creatures after destruction, even when the destroyed creature was your
+own flyer. The existing target, destruction, and life-gain services retain
+incarnation checks and replacement handling (CR 400.7, 608.2b–c, 701.7).
+
+`TestCountPermanents*` first failed because the constructor was absent. Coverage
+includes empty and filtered collections, phasing, return to the battlefield,
+clone isolation, saved counts, nested binding validation, and copied triggers
+with a different controller and later battlefield entries. The author-surface
+composition test checks inspection. The existing Aerial Assault test and the
+new own-flyer sequencing test pass.
+
+This completes one slice of the remaining action and spell migrations. Other
+callers still use the legacy destruction and count helpers; no export is retired.
+
+Validation: engine tests with `-short -count=1`; Jumpstart package tests;
+all card tests with `-short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures.

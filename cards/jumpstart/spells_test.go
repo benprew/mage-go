@@ -1645,3 +1645,16 @@ func TestDanceWithDevils_TokensWithDiesTrigger(t *testing.T) {
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Devil", 2)
 }
+
+func TestAerialAssaultCountsAfterDestroyingOwnFlyer(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Mesa Pegasus")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Aerial Assault")
+	g.Attack(3, gametest.PlayerA, "Mesa Pegasus")
+	g.CastSpell(3, core.PostcombatMain, gametest.PlayerA, "Aerial Assault", "Mesa Pegasus")
+	g.StopAt(3, core.EndStep)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Mesa Pegasus", 1)
+	g.AssertLife(gametest.PlayerA, 20)
+}
