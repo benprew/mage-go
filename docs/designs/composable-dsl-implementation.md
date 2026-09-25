@@ -3503,3 +3503,37 @@ The broader mana and event-capture audits remain open.
 Validation: focused regressions; Limited package tests; card regression and
 registration validation; `go build ./...`; `go vet ./...`; `make test`; and
 `make lint` pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Fire Sprites Typed Mana Conversion
+
+- [x] Migrate Fire Sprites to `Activate`, `Costs(Mana("{G}"), TapCost(This))`,
+  and `AddManaAmount(Red, Fixed(1))`.
+- [x] Verify the full Oracle comment, `{1}{G}` casting cost, Faerie subtype,
+  1/1 stats, and flying against `data/LEG.json`.
+- [x] Strengthen the existing card scenario to activate the ability and check
+  tapping and exact red mana production. The assertion includes the five red
+  mana supplied by the activation script.
+- [x] Audit mana classification and costed automatic planning. Existing DSL
+  adapters and engine services support the complete ability; no engine fix
+  or new export is required.
+
+The controller pays one green mana and taps Fire Sprites to add one red mana.
+The ability has no targets and resolves immediately without using the stack.
+The tap cost enforces summoning sickness. Automatic payment retains the green
+activation cost. Rules contracts are CR 302.6, 602, and 605.1a–605.3b.
+
+The strengthened `TestFireSprites` passes before and after migration. Shared
+`TestComposableMana*`, `TestTypedManaAmount*`, and `TestComposablePayment*`
+pass, including immediate resolution, failed payment, planning, and clone
+isolation. This declaration uses proven primitives and needs no duplicate
+simulation test.
+
+This completes one slice of the remaining mana and activation caller migrations.
+Other cards retain the legacy helpers, so no export is retired. The broader mana
+family and outstanding engine blockers remain open.
+
+Validation: focused shared contracts; Legends package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

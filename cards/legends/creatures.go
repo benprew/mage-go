@@ -1718,11 +1718,10 @@ func registerCreatures() {
 		return NewCreature("Fire Sprites", "{1}{G}", 1, 1,
 			WithSubTypes("Faerie"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				AddMana(Red, 1),
-				ManaCostOf("{G}"),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{G}"), TapCost(This)),
+				AddManaAmount(Red, Fixed(1)),
+			)),
 		)
 	})
 

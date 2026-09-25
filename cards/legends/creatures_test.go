@@ -306,10 +306,13 @@ func TestFireSprites(t *testing.T) {
 	t.Run("is 1/1 flying with {G},{T}: add {R}", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Fire Sprites")
-		g.StopAt(1, core.PrecombatMain)
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Fire Sprites")
+		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPowerToughness(gametest.PlayerA, "Fire Sprites", 1, 1)
 		g.AssertHasAbility(gametest.PlayerA, "Fire Sprites", core.Flying, true)
+		g.AssertTapped(gametest.PlayerA, "Fire Sprites", true)
+		g.AssertManaProduced(gametest.PlayerA, core.Red, 6)
 	})
 }
 
