@@ -59,6 +59,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Legends Targeted Tap P/T Activations**: Migrate Ghosts of the Damned, Pradesh Gypsies, and Tuknir Deathlock to typed targets, grouped costs, and temporary modifications. No engine gap; see the completed slice below.
 - [x] **Limited Self-Pump Activations**: Migrate Fire Drake, Vampire Bats, and Mindful Biomancer to typed mana costs, source modifications, and per-turn activation limits. No engine gap; see the completed slice below.
 - [x] **Jumpstart Triggered Team Boosts**: Migrate Inspiring Captain and Inspiring Unicorn to typed controlled-creature collections and explicit end-of-turn P/T modifications. Captain also uses `WhenEvent(Enters(This), ...)`; Unicorn retains its attack-event wrapper pending that adapter. No engine gap; see the completed slice below.
+- [x] **Angelic Page Combat Target**: Migrate its tap activation to a typed attacking-or-blocking creature target and end-of-turn P/T modification. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -1122,3 +1123,30 @@ Validation: affected card package; focused shared collection, lifetime, and
 trigger tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` passed with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Angelic Page Combat Target
+
+- [x] Migrate Angelic Page from positional `WithActivatedAbility` / `Boost` to `Activate`, `Costs(TapCost(This))`, `TargetPermanent`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle text, mana cost, base characteristics, and flying against `cards/jumpstart/JMP.json`; all match exactly.
+- [x] Audit combat eligibility, target rechecks, source departure, duration, and metadata. Existing engine contracts support this slice; no engine fix or new constructor is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “{T}:” | `Activate(Costs(TapCost(This)), ...)`; normal tap restrictions and instant activation timing | `TestAngelicPageCombatTargets` checks tap payment; existing tap-cost and summoning-sickness contracts |
+| “Target attacking or blocking creature” | `TargetPermanent("creature", And(IsCreature, Or(IsAttacking, IsBlocking)))` with `WithTargets`; either player's combat creature; recheck at resolution | `TestAngelicPageCombatTargets` covers both controllers, attackers and blockers, idle-creature and noncreature exclusion, and removal from combat before resolution |
+| “gets +1/+1 until end of turn.” | `Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(1)))`; layer 7c bonus persists after combat and source departure, expires at cleanup | `TestAngelicPageCombatTargets`, existing `TestAngelicPage`; shared `TestTargetIncarnationAfterReturn` and `TestComposableContinuousCapture` cover incarnation and clone contracts |
+| Typed definition and metadata | One typed target, explicit duration, beneficial single-subject +1/+1 metadata | `TestAngelicPageTypedDefinition`, universal `TestRegisteredDefinitions` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 602 (activation), 608.2b (target legality), 611.2a–c (duration and capture),
+and 613 (continuous layers). New combat behavior cases passed before migration;
+the definition test first failed for the legacy target and effect role.
+
+No exports are retired: `Boost`, `WithActivatedAbility`, `TargetCreature`,
+and combat filters retain other callers. Unrelated Jumpstart definitions and
+engine imports remain. No outstanding engine blocker is claimed resolved.
+
+Validation: Jumpstart package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

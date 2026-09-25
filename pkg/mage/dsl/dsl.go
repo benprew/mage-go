@@ -12,6 +12,10 @@
 // errors are the ground-truth list of what's still missing or what's
 // leaking.
 //
+// For a combat target, combine IsCreature with Or(IsAttacking, IsBlocking).
+// Angelic Page uses this filter with TargetPermanent and WithTargets.
+// Until(EndOfTurn, ModifyPT(...)) keeps the bonus after combat ends.
+//
 // SECTIONS:
 //  1. Domain types cards must name in signatures
 //  2. Registration entry point

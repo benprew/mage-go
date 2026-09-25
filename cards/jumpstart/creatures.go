@@ -199,14 +199,13 @@ func registerCreatures() {
 	// Flying
 	// {T}: Target attacking or blocking creature gets +1/+1 until end of turn.
 	Register("Angelic Page", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, Or(IsAttacking, IsBlocking)))
 		return NewCreature("Angelic Page", "{1}{W}", 1, 1,
 			WithSubTypes("Angel", "Spirit"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToTarget()).Until(EndOfTurn),
-				TapCost(This),
-				WithTarget(TargetCreature(Or(IsAttacking, IsBlocking))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(1))),
+				WithTargets(creature))),
 		)
 	})
 

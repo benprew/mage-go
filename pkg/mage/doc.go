@@ -45,6 +45,9 @@
 // the original permanent. A returned card does not receive that bonus.
 // Jumpstart and Legends source bonuses use this form with explicit mana costs.
 // Use a typed target with [WithTargets] for a targeted bonus.
+// Angelic Page combines [IsCreature] with [IsAttacking] or [IsBlocking].
+// Check combat status again at resolution. After resolution, leaving combat
+// does not end the bonus.
 // For an entry bonus, put [WithTargets] on [WhenEvent] with [Enters].
 // Choose the target when the trigger goes on the stack. The creature spell
 // has no target, and the entered creature can target itself.
