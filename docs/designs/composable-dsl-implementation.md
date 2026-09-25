@@ -2315,6 +2315,35 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
 
+## Completed Slice: Reckless Scholar Typed Draw and Discard
+
+- [x] Migrate the complete activation to `Activate`, `Costs(TapCost(This))`,
+  `TargetPlayer`, `WithTargets`, and `Sequence(Draw(...), Discard(...))`.
+- [x] Remove the callback's direct draw and discard mutations. The shared
+  typed actions preserve replacement handling and publish the action events.
+- [x] Verify the full Oracle comment, `{2}{U}` cost, Human Wizard subtypes,
+  and 2/1 stats against `data/JMP.json`.
+- [x] Resolve missing draw/discard events and skipped discard replacement
+  with a regression that failed before migration. No engine fix is needed.
+
+`TestRecklessScholarDrawDiscardPipeline` covers self and opponent targets,
+source departure, and discard replacement. It checks target capture, tap
+payment, deferred resolution, draw-before-discard event order, and recipient
+identity. With an empty hand, the target discards the card just drawn; a
+replacement can put that card into the library instead of the graveyard.
+The existing turn-path card test also passes. Shared draw and discard
+contracts cover choices, short zones, replacements, amounts, and clone/copy
+isolation.
+
+This completes one slice of the remaining activation and action migrations.
+Other legacy callers remain, so no export is retired. The recorded engine
+blockers remain open.
+
+Validation: focused regressions and shared contract tests; Jumpstart package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Jumpstart Typed Scry Creature Abilities
 
 - [x] Migrate Cloudreader Sphinx, Octoprophet, and Sage's Row Savant to

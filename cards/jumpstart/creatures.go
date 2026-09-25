@@ -1479,31 +1479,14 @@ func registerCreatures() {
 	// 2/1
 	// {T}: Target player draws a card, then discards a card.
 	Register("Reckless Scholar", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Reckless Scholar", "{2}{U}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
-			WithActivatedAbility(
-				FuncEffect(
-					"target player draws a card, then discards a card",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 {
-							return nil
-						}
-						p := g.GetPlayer(targets[0])
-						if p == nil {
-							return nil
-						}
-						p.DrawCard()
-						cards := p.ChooseCardsFromHand(1, "discard a card", g)
-						for _, c := range cards {
-							p.DiscardCard(c.ID())
-						}
-						return nil
-					},
-				),
-				TapCost(This),
-				WithTarget(mage.TargetPlayer()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				Sequence(Draw(player, Fixed(1)), Discard(player, Fixed(1))),
+				WithTargets(player),
+			)),
 		)
 	})
 
