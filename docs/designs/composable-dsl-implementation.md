@@ -1971,3 +1971,40 @@ Validation: focused Kels and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Wildheart Invoker Typed Activation
+
+- [x] Migrate Wildheart Invoker's complete definition to `Activate`, `Costs`,
+  `TargetPermanent`, `WithTargets`, and typed continuous modifications through
+  `pkg/mage/dsl`.
+- [x] Install +5/+5 and trample together with one `Until(EndOfTurn, ...)`,
+  using `ModifyPT` and `GrantKeyword` on the same creature binding.
+- [x] Verify the full Oracle comment, mana cost, Elf Shaman subtypes, and 4/3
+  base characteristics against `data/JMP.json`.
+- [x] Audit target selection, payment, identity, layers, and duration against
+  existing adapters. No engine fix or new constructor is required.
+
+Pay `{8}` to target any creature, including the source or an opponent's
+creature. The ability has no tap cost, timing restriction, or activation limit.
+Target selection precedes payment; resolution checks legality and incarnation
+again. The resolved modifications capture the same target, apply in layers 6
+and 7c, survive source departure, and expire at cleanup. Later activations add
+another +5/+5. A returned target is a new object. Existing metadata reports
+both the power/toughness bonus and trample. Rules contracts are CR 400.7, 602,
+608.2b, 611.2, and 613.
+
+`TestWildheartInvoker_PumpsAndGrantsTrample` passes before and after migration.
+Shared typed-target, copy, incarnation, keyword, continuous capture, source
+lifetime, temporary P/T metadata, and atomic payment contracts pass. This
+simple declaration reuses established primitives and registration validation;
+no new simulation test is required.
+
+This completes one slice of the outstanding legacy action migrations. Other
+cards retain the legacy constructors and direct engine import, so no export
+is retired and no outstanding engine blocker is marked resolved.
+
+Validation: Jumpstart package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

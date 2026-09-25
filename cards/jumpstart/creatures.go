@@ -6134,14 +6134,14 @@ func registerCreatures() {
 	// 4/3
 	// {8}: Target creature gets +5/+5 and gains trample until end of turn. (It can deal excess combat damage to the player or planeswalker it's attacking.)
 	Register("Wildheart Invoker", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Wildheart Invoker", "{2}{G}{G}", 4, 3,
 			WithSubTypes("Elf", "Shaman"),
-			WithActivatedAbility(
-				Boost(Fixed(5), Fixed(5)).Until(EndOfTurn),
-				ManaCostOf("{8}"),
-				WithEffect(mage.GrantKeyword(Trample).Until(EndOfTurn)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{8}")),
+				Until(EndOfTurn,
+					ModifyPT(creature, Fixed(5), Fixed(5)),
+					GrantKeyword(creature, Trample)),
+				WithTargets(creature))),
 		)
 	})
 
