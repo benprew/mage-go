@@ -467,6 +467,14 @@ to the cost group. Either player's qualifying creature can be targeted. The
 restriction is checked again at resolution; regeneration and indestructible
 still apply.
 
+Merfolk Assassin uses `And(IsCreature, HasKeywordFilter(Islandwalk))` with
+`Costs(TapCost(This))`. Savaen Elves uses `IsAuraOnLand` with
+`Costs(Mana("{G}{G}"), TapCost(This))`. `IsAuraOnLand` requires the Aura
+subtype, the enchantment type, and an attachment to a current land permanent.
+Neither the Aura nor its land has a controller restriction. Both activations
+use `Destroy(target)` and `WithTargets(target)`; their filters are checked
+again at resolution.
+
 ### Filtered Permanent Destruction
 ```go
 WithAbility(Spell(DestroyEach(MatchingPermanents(IsLand))))

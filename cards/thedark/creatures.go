@@ -158,13 +158,10 @@ func registerCreatures() {
 	// 1/2
 	// {T}: Destroy target creature with islandwalk.
 	Register("Merfolk Assassin", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasKeywordFilter(Islandwalk)))
 		return NewCreature("Merfolk Assassin", "{U}{U}", 1, 2,
 			WithSubTypes("Merfolk", "Assassin"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(HasKeywordFilter(Islandwalk))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), Destroy(creature), WithTargets(creature))),
 		)
 	})
 
@@ -435,14 +432,10 @@ func registerCreatures() {
 	// 1/1
 	// {G}{G}, {T}: Destroy target Aura attached to a land.
 	Register("Savaen Elves", func() Card {
+		aura := TargetPermanent("aura", IsAuraOnLand)
 		return NewCreature("Savaen Elves", "{G}", 1, 1,
 			WithSubTypes("Elf"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				ManaCostOf("{G}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPermanent(IsAuraOnLand)),
-			),
+			WithAbility(Activate(Costs(Mana("{G}{G}"), TapCost(This)), Destroy(aura), WithTargets(aura))),
 		)
 	})
 

@@ -1444,3 +1444,32 @@ Validation: both card packages, focused shared target and destruction contracts,
 `go test ./cards/... -short -count=1`, `go build ./...`,
 `go vet ./cards/limited ./cards/thedark`, `make test`, and `make lint` passed
 with zero failures (lint: zero issues).
+
+## Completed Slice: Merfolk Assassin and Savaen Elves Destruction Activations
+
+- [x] Migrate both complete definitions from positional destruction and activation helpers to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify full Oracle comments, mana costs, creature types, and base P/T against `data/DRK.json`.
+- [x] Resolve the Aura target-filter blocker: `IsAuraOnLand` now requires the Aura subtype as well as the enchantment type and attachment to a current land. `TestIsAuraOnLand/non-aura_enchantment_on_land` failed before the minimal engine fix.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Merfolk Assassin: “{T}: Destroy target creature with islandwalk.” | `Costs(TapCost(This))`, `TargetPermanent("creature", And(IsCreature, HasKeywordFilter(Islandwalk)))`, and `Destroy(creature)` | `TestMerfolkAssassin` |
+| Savaen Elves: “{G}{G}, {T}: Destroy target Aura attached to a land.” | `Costs(Mana("{G}{G}"), TapCost(This))`, `TargetPermanent("aura", IsAuraOnLand)`, and `Destroy(aura)` | `TestSavaenElves`; `TestIsAuraOnLand` covers Aura, enchantment, attachment, land, and host-presence requirements |
+| Target scope and identity | Either player's qualifying permanent; no controller restriction on the Aura or its host. Recheck filters at resolution and reject returned target incarnations. | Existing typed-target contracts: `TestTypedTargetGroups`, `TestTypedTargetCopyAndClone`, and `TestTargetIncarnationAfterReturn` |
+| Destruction and inspection | Existing destruction executor preserves regeneration, indestructible, and destruction metadata. Instant activation timing; mana and tap costs remain payments. | `TestComposedRemovalMetadata`, shared engine contracts, and universal `TestRegisteredDefinitions` |
+
+The shared filter correction also applies to the existing Pyramids target;
+its land-or-Aura choice is unchanged. No new constructor is needed. These
+single-action definitions use established primitives, so existing card tests
+and the new engine filter regression provide the required coverage. Rules
+contracts are CR 303.4 (Aura subtype), 602 (activation), 608.2b (target
+legality), and 400.7 (new objects), using the repository Comprehensive Rules.
+
+Both card definitions are fully migrated. Legacy destruction, activation,
+and target helpers retain other callers, so no export is retired. The broader
+action migration and unrelated engine blockers remain open.
+
+Validation: focused regression and typed-target tests; The Dark package;
+`go test ./pkg/mage/... -short -count=1`; `go test ./... -short -count=1`
+(including all card registration checks); `go build ./...`; `go vet ./...`;
+`make test`; and `make lint` passed with zero failures (lint: zero issues).
