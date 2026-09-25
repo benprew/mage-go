@@ -447,6 +447,9 @@ func (e *untilEffect) Properties() EffectProperties {
 		}
 		p.Mass = p.Mass || m.subjects != nil
 	}
+	if p.PowerBoost < 0 || p.ToughnessBoost < 0 {
+		p.Outcome = OutcomeDetriment
+	}
 	return p
 }
 

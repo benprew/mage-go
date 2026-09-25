@@ -42,6 +42,7 @@ func TestBoneFlute(t *testing.T) {
 	// Bears 2/2 -> 1/2, Giant 3/3 -> 2/3
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 1, 2)
 	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 2, 3)
+	g.AssertTapped(gametest.PlayerA, "Bone Flute", true)
 }
 
 func TestBookOfRass(t *testing.T) {

@@ -125,6 +125,8 @@
 // [MatchingPermanents] with [IsCreature] and [IsAttacking] or [IsBlocking]
 // selects combat creatures for either player. Combat removal does not end
 // the boost. Later entries and returned cards do not receive the boost.
+// Use [MatchingPermanents] with [IsCreature] for global P/T reductions.
+// Fixed negative P/T summaries report a detrimental outcome.
 //
 // # Further Documentation
 //

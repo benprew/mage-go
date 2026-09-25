@@ -625,7 +625,7 @@ func registerSpells() {
 	// All creatures get -1/-0 until end of turn.
 	Register("Hell Swarm", func() Card {
 		return NewInstant("Hell Swarm", "{B}",
-			NewSpellAbility(Boost(Fixed(-1), Fixed(0)).Targeting(ToAllMatching(IsCreature))),
+			WithAbility(Spell(Until(EndOfTurn, ModifyEachPT(MatchingPermanents(IsCreature), Fixed(-1), Fixed(0))))),
 		)
 	})
 

@@ -348,6 +348,15 @@ Continuous effects are broken down into **modifications** and their **durations*
 * `ActivatedAbilityModification(subject, costs, effect, options...)`: Grants activated ability (Layer 6).
 * `ActivatedModesModification(subject, costs, options...)`: Grants modal activated ability.
 
+For “all creatures get -N/-M until end of turn,” use
+`Until(EndOfTurn, ModifyEachPT(MatchingPermanents(IsCreature), Fixed(-N), Fixed(-M)))`.
+Hell Swarm, Marsh Gas, Languish, and Bone Flute use this form. Both players'
+creatures are included, with no targets. Bone Flute installs the effect through
+`Activate(Costs(Mana("{2}"), TapCost(This)), ...)`. The resolved effect remains
+if the Flute leaves. Temporary-effect metadata reports a detrimental outcome
+when its summed fixed power or toughness modifier is negative; signed values
+and collection metadata remain available to AI inspection.
+
 For “Target creature can't be regenerated this turn,” use a typed creature
 target and `Until(EndOfTurn, GrantKeyword(creature, CantRegenerate))`. The
 prohibition remains after the source leaves. It expires at cleanup and does

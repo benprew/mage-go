@@ -108,9 +108,7 @@ func registerSpells() {
 	// All creatures get -2/-0 until end of turn.
 	Register("Marsh Gas", func() Card {
 		return NewInstant("Marsh Gas", "{B}",
-			NewSpellAbility(
-				Boost(Fixed(-2), Fixed(0)).Targeting(ToAllMatching(IsCreature)),
-			),
+			WithAbility(Spell(Until(EndOfTurn, ModifyEachPT(MatchingPermanents(IsCreature), Fixed(-2), Fixed(0))))),
 		)
 	})
 

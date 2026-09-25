@@ -119,7 +119,11 @@ func TestTypedTemporaryPTComposition(t *testing.T) {
 			}
 		}
 		info := dsl.InspectDefinition(body)
-		if info.Role != "until" || info.Properties.PowerBoost != delta[0] || info.Properties.ToughnessBoost != delta[1] || info.Properties.Outcome != mage.OutcomeBenefit {
+		wantOutcome := mage.OutcomeBenefit
+		if delta[0] < 0 || delta[1] < 0 {
+			wantOutcome = mage.OutcomeDetriment
+		}
+		if info.Role != "until" || info.Properties.PowerBoost != delta[0] || info.Properties.ToughnessBoost != delta[1] || info.Properties.Outcome != wantOutcome {
 			t.Fatalf("power/toughness metadata = %+v", info)
 		}
 		if !strings.Contains(info.Text, "modify power and toughness") || !strings.Contains(info.Text, "until end of turn") {

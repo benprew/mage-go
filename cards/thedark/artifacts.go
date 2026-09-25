@@ -33,11 +33,8 @@ func registerArtifacts() {
 	// {2}, {T}: All creatures get -1/-0 until end of turn.
 	Register("Bone Flute", func() Card {
 		return NewArtifact("Bone Flute", "{3}",
-			WithActivatedAbility(
-				Boost(Fixed(-1), Fixed(0)).Targeting(ToAllMatching(IsCreature)),
-				ManaCostOf("{2}"),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This)),
+				Until(EndOfTurn, ModifyEachPT(MatchingPermanents(IsCreature), Fixed(-1), Fixed(0))))),
 		)
 	})
 

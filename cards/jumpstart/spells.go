@@ -1092,7 +1092,8 @@ func registerSpells() {
 	// All creatures get -4/-4 until end of turn.
 	Register("Languish", func() Card {
 		return NewSorcery("Languish", "{2}{B}{B}",
-			NewSpellAbility(Boost(Fixed(-4), Fixed(-4)).Targeting(ToAllMatching(AnyPermanent)).Until(EndOfTurn)),
+			dsl.WithAbility(dsl.Spell(dsl.Until(EndOfTurn,
+				dsl.ModifyEachPT(dsl.MatchingPermanents(dsl.IsCreature), dsl.Fixed(-4), dsl.Fixed(-4))))),
 		)
 	})
 

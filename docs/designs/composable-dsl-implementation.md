@@ -49,6 +49,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Combat-Wide P/T Boost Spells**: Migrate Army of Allah, Piety, and Morale to typed combat collections and end-of-turn modifications. No engine blocker; see the completed slice below.
 - [x] **Targeted Artifact +2/+2 Activations**: Migrate Coral Helm and Elven Lyre to typed targets, cost groups, and end-of-turn modifications. No engine blocker; see the completed slice below.
 - [x] **Antiquities Self-Pump Activations**: Migrate Atog and Dragon Engine to typed costs and source modifications. Correct Atog's source-inclusive artifact sacrifice using the existing cost API. See the completed slice below.
+- [x] **Global P/T Reductions**: Migrate Hell Swarm, Marsh Gas, Bone Flute, and Languish to typed creature collections and durations. Correct negative temporary P/T metadata after a failing regression; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -837,3 +838,35 @@ The remaining Antiquities abilities and outstanding engine blockers remain open.
 Validation: `go test ./cards/antiquities -count=1`; card registration and engine
 regressions through `make test`; `go build ./...`; `go vet ./cards/antiquities`;
 and `make lint` passed with zero failures.
+
+
+## Completed Slice: Global P/T Reductions
+
+- [x] Migrate all four global reduction callers to `Until(EndOfTurn, ModifyEachPT(MatchingPermanents(IsCreature), ...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments against `data/LEG.json`, `data/4ED.json`, `data/DRK.json`, and `data/JMP.json`; all four match exactly.
+- [x] Resolve the temporary P/T metadata gap: a negative summed fixed power or toughness modifier now reports `OutcomeDetriment`. `TestTemporaryPTMetadata` failed before the minimal `untilEffect.Properties` fix. No rules executor change is required.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Hell Swarm: All creatures get -1/-0 until end of turn | `Spell` with the typed collection and -1/0 modifiers; instant timing and {B} retained | `TestHellSwarm` checks both players' creatures |
+| Marsh Gas: All creatures get -2/-0 until end of turn | Same form with -2/0; instant timing and {B} retained | `TestMarshGas` checks both players and zero resulting power |
+| Bone Flute: {2}, {T}: All creatures get -1/-0 until end of turn | `Activate(Costs(Mana("{2}"), TapCost(This)), ...)`; no targets or sorcery restriction; source departure does not end the effect | `TestBoneFlute` checks both players and now asserts the tap payment; shared transactional payment tests cover mana costs |
+| Languish: All creatures get -4/-4 until end of turn | `Spell` with -4/-4; sorcery timing and {2}{B}{B} retained; the explicit creature filter replaces the legacy selector's implicit creature restriction | `TestLanguishWipes` checks both players' creatures die through state-based actions |
+| All four legacy boost definitions | Both players' unphased creatures captured at resolution; layer 7c; no targets or source LKI; later entries and returned objects excluded; end-of-turn expiry | `TestGlobalReductionTypedDefinitions` checks typed duration, registration, targetlessness, exact signed modifiers, and detrimental mass metadata; existing `TestComposableContinuousCapture`, `TestComposableSelfPumpLifetime`, and `TestCombatBoostResolutionMembership` cover shared lifetime contracts |
+| Typed temporary P/T metadata | Summed fixed negative power or toughness reports detriment for singular and collection effects, including mixed-sign modifiers. Positive and zero summaries retain benefit. No dynamic value evaluation is added | `TestTemporaryPTMetadata` covers both subject cardinalities and both duration constructors; `TestTypedTemporaryPTComposition` checks spell, activation, trigger, sequence, modal, and random-choice composition |
+
+The four definition checks failed on legacy effects before migration. Existing
+card behavior tests and the added Bone Flute tap assertion passed before and
+after migration. These declarative cards reuse engine contracts and registration
+validation rather than adding duplicate simulations. Rules baseline: repository
+Comprehensive Rules effective February 27, 2026, CR 611.2a–c, 613, and 704.
+
+No shared export is retired: `ToAllMatching` still serves Inniaz's flying-attacker
+activation, and `Boost` and the legacy ability builders retain other callers.
+The surrounding files still need their existing engine imports. General compound
+metadata, dynamic-value classification, and other outstanding blockers remain open.
+
+Validation: focused regression and card tests; affected card packages;
+`go test ./pkg/mage/... -short -count=1`; full `make test` (including AI
+simulations and card registration validation); `go build ./...`; `go vet ./...`;
+and `make lint` passed with zero failures. Lint reported zero issues.
