@@ -96,14 +96,15 @@ func registerArtifacts() {
 
 	// ===== UTILITY ARTIFACTS =====
 
+	// Jayemdae Tome {4}
+	// Artifact
+	// {4}, {T}: Draw a card.
 	Register("Jayemdae Tome", func() Card {
 		return NewArtifact("Jayemdae Tome", "{4}",
-			// {4}, {T}: Draw a card
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				GenericCost(4),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{4}"), TapCost(This)),
+				Draw(You, Fixed(1)),
+			)),
 		)
 	})
 

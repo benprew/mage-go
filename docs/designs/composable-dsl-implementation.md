@@ -2795,3 +2795,34 @@ Validation: focused shared contracts and Dreamstone Hedron test; Jumpstart
 package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Arcane Encyclopedia and Jayemdae Tome Typed Draw Activations
+
+- [x] Migrate both complete definitions to the author DSL with `Activate`,
+  grouped `Costs`, `Mana`, `TapCost(This)`, and `Draw(You, Fixed(1))`.
+- [x] Preserve the activation costs of `{3}` and `{4}`, respectively, plus
+  tapping the source. Both abilities draw exactly one card and have no target.
+- [x] Verify full Oracle comments, artifact types, and casting costs against
+  `data/JMP.json` and `data/LEA.json`. Preserve Encyclopedia's Book subtype.
+- [x] Audit payment, resolving controller, and draw handling. Existing adapters
+  need no engine fix or new export; no engine blocker is marked resolved.
+
+Both abilities use the stack after payment. Draw uses the stored resolving
+controller and the shared draw replacement and event services. Source departure
+does not prevent resolution. The tap cost prevents repeated activation while
+tapped. Rules contracts are CR 121, 602, and 608.
+
+`TestArcaneEncyclopedia` passes before and after migration. Shared
+`TestTypedDrawAmount*` and `TestComposablePayment*` also pass before and after
+migration. They cover draw context, copy controller, clone isolation, replacement
+handling, events, empty libraries, and payment atomicity. These single-action
+abilities use proven primitives and need no duplicate card simulation tests.
+
+This completes one slice of the remaining activation and draw migrations.
+Other cards still use the legacy helpers, so no export is retired. Unrelated
+card definitions retain the engine imports in these files.
+
+Validation: focused shared contracts; Jumpstart and Limited package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart ./cards/limited`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

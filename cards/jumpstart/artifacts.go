@@ -37,13 +37,12 @@ func registerArtifacts() {
 	// Artifact — Book
 	// {3}, {T}: Draw a card.
 	Register("Arcane Encyclopedia", func() Card {
-		return NewArtifact("Arcane Encyclopedia", "{3}",
-			WithSubTypes("Book"),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				GenericCost(3),
-				WithCost(Tap()),
-			),
+		return dsl.NewArtifact("Arcane Encyclopedia", "{3}",
+			dsl.WithSubTypes("Book"),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{3}"), dsl.TapCost(dsl.This)),
+				dsl.Draw(dsl.You, dsl.Fixed(1)),
+			)),
 		)
 	})
 
