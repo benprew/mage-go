@@ -130,7 +130,10 @@ func registerArtifacts() {
 	Register("Guardian Idol", func() Card {
 		return NewArtifact("Guardian Idol", "{2}",
 			WithKeyword(EntersTapped),
-			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 1}),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.TapCost(dsl.This)),
+				dsl.AddManaAmount(Colorless, dsl.Fixed(1)),
+			)),
 			WithActivatedAbility(
 				FuncEffect("becomes a 2/2 Golem artifact creature until end of turn",
 					EffectProperties{Outcome: OutcomeBenefit},

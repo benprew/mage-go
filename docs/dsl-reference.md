@@ -644,6 +644,12 @@ The test harness prefers non-mana abilities using the engine's
 production. Use `ActivateAbilityIndex` to select a particular mana ability
 when a permanent has multiple activated abilities.
 
+Guardian Idol and Mana Crypt use `Activate(Costs(TapCost(This)),
+AddManaAmount(Colorless, Fixed(n)))` with one and two mana, respectively.
+These untargeted abilities resolve immediately and support automatic payment.
+Guardian Idol's entry-tapped rule prevents payment of the tap cost until it
+untaps. Its animation ability and Mana Crypt's upkeep ability are separate.
+
 ### Optional Entry Target with a Dependent Value
 
 Brightmare declares `TargetPermanents("creature", 0, 1, IsCreature)` on

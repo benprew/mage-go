@@ -3637,3 +3637,35 @@ Validation: focused card and shared contract tests; Secrets of Strixhaven
 package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/secretsofstrixhaven`; `make test`; and `make lint` pass
 with zero failures (lint: zero issues).
+
+
+## Completed Slice: Guardian Idol and Mana Crypt Typed Mana
+
+- [x] Migrate both fixed colorless mana abilities to `Activate`,
+  `Costs(TapCost(This))`, and `AddManaAmount`: one mana for Guardian Idol
+  and two for Mana Crypt.
+- [x] Verify the full Oracle comments, artifact types, and casting costs
+  against `data/JMP.json` and `data/PHPR.json`.
+- [x] Audit immediate resolution, tap costs, and automatic payment against
+  the shared typed mana contracts. No engine fix or new export is required.
+
+Both untargeted abilities add mana to the activating controller's pool without
+using the stack. Guardian Idol enters tapped and must untap before it can pay
+the tap cost. Its animation ability and Mana Crypt's upkeep coin-flip ability
+remain separate. This slice migrates only the two mana abilities.
+
+`TestGuardianIdol`, `TestManaCrypt*`, `TestComposableMana*`,
+`TestTypedManaAmount*`, and `TestComposablePayment*` pass before and after
+migration. Shared tests cover immediate resolution, fixed production, events,
+automatic planning, clone isolation, and payment. These declarations use proven
+primitives and need no additional simulation tests.
+
+This completes one slice of the remaining fixed-mana caller migrations.
+Mishra's Workshop is the sole remaining production `WithMultiManaAbility`
+caller; its artifact-spell spending restriction needs a typed adapter before
+that helper can be retired. No outstanding engine blocker is marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart and Promo package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart ./cards/promo`; `make test`; and `make lint` pass
+with zero failures (lint: zero issues).

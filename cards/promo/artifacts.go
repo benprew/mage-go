@@ -3,6 +3,7 @@ package promo
 import (
 	. "github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -21,7 +22,10 @@ func registerArtifacts() {
 					OnLoss(DealDamageToPlayers(Fixed(3), SelectController())),
 				), false,
 			)),
-			WithMultiManaAbility(ManaProduction{Color: core.Colorless, Amount: 2}),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.TapCost(dsl.This)),
+				dsl.AddManaAmount(core.Colorless, dsl.Fixed(2)),
+			)),
 		)
 	})
 
