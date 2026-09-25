@@ -316,18 +316,18 @@ func registerArtifacts() {
 	// Rakalite {6}
 	// Artifact
 	// {2}: Prevent the next 1 damage that would be dealt to any target this turn. Return
-	// Rakalite to its owner's hand at the beginning of the next end step.
+	// this artifact to its owner's hand at the beginning of the next end step.
 	Register("Rakalite", func() Card {
+		recipient := TargetDamageRecipient("recipient")
 		return NewArtifact("Rakalite", "{6}",
-			WithActivatedAbility(
-				Pipeline("prevent 1 damage to target; bounce self at next end step",
-					EffectProperties{Outcome: OutcomeBenefit},
-					PreventDamageToTarget(Fixed(1)),
-					RegisterDelayedTriggerStep(EvtEndStep, "", ReturnToHandTarget()),
+			WithAbility(Activate(
+				Costs(Mana("{2}")),
+				Sequence(
+					PreventNextDamage(recipient, Fixed(1)),
+					AtNext(EachEndStep, ReturnToHand(This)),
 				),
-				GenericCost(2),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+				WithTargets(recipient),
+			)),
 		)
 	})
 

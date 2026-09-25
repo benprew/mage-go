@@ -19,7 +19,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] **Elemental Uprising**: Audit land animation, target-controller restriction, color behavior, and lifetime.
 - [ ] **Neyith of the Dire Hunt**: Audit combat trigger, optional hybrid payment, power doubling, and end-of-combat blocking requirement before removing `TargetMustBeBlockedIfAble`.
 - [ ] **Glorious Decay**: Audit damage mode and graveyard target before retiring `DestroyTargetArtifact`.
-- [ ] **Positional Return Helpers**: Continue positional return helper migrations. Witch Hunter's separate damage ability awaits damage-source LKI. Audit Rakalite's delayed source identity and Prismari Charm's modes before retiring `ReturnToHandTarget`.
+- [ ] **Positional Return Helpers**: Continue positional return helper migrations. Witch Hunter's separate damage ability awaits damage-source LKI. Rakalite's delayed source identity audit and migration are complete; audit Prismari Charm's modes before retiring `ReturnToHandTarget`.
 - [x] **Divine Offering**: Add `ManaValueOf`, capture with `SnapshotNumber`, and migrate destruction and controller life gain to typed actions. Retire the sole-caller helpers `DestroyTargetStep` and `GainLifeControllerFromVar`.
 - [x] **Blight Attachment-Tap Capture**: Add `AttachedBecomesTapped`, capture the event land before trigger placement, migrate Blight, and retire `DestroyAttachedStep` and `DestroyAttachedData`. Correct repeated tap-event emission.
 - [x] **Targeted Permanent Destruction**: Migrate all six production `DestroyTargetPermanent` callers to typed `Destroy` targets and retire the export. See the completed slice below.
@@ -31,6 +31,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Terror and Singular Regeneration Scope**: Migrate Terror to typed destruction and correct all singular no-regeneration executors. Retain legacy exports for the remaining callers; see the completed slice below.
 - [x] **Crumble Saved-Value Migration**: Migrate Crumble and Whimsy's Crumble branch to typed controller/mana-value captures and no-regeneration destruction. Retire `CrumbleEffect` and `DestroyGatheredNoRegen`; see the completed slice below.
 - [x] **Tabernacle String-Bound Destruction**: Migrate its granted upkeep body to typed payment and source destruction; retire `DestroyGathered`. Correct returned-source identity and include Tabernacle when it is a creature. See the completed slice below.
+- [x] **Rakalite Delayed Return**: Migrate prevention and delayed source return to typed targets, activation, and `AtNext`; preserve the original source incarnation. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -46,6 +47,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] Test the actual prepared casting entry path: {G} at X=0, {4}{G} at X=4, failed payment and target rollback, stored X, and copied targets.
 
 ### Damage-Source Identity & LKI
+- [ ] Correct unprevented planeswalker damage outcomes separately: `DamageSystem.ExecuteDamageToCreature`, also used for planeswalker recipients, marks damage instead of removing loyalty. Rakalite target eligibility and full prevention work through the existing pipeline; this migration does not claim to resolve downstream unprevented damage outcomes.
 - [ ] Retain source incarnation and last-known characteristics through the existing damage and replacement pipeline, including death, return, and copying. `DamageSystem.ExecuteDamageToPlayer` and `ExecuteDamageToCreature` use `FindPermanent(sourceID)` for lifelink and deathtouch. Protection in `DealDamageToPermanent` also looks up the physical card ID; `LookupObject` prefers a live object with that ID. Add regressions for returned sources and departed sources with granted keywords before adding the typed adapter.
 
 ### Destruction Regeneration Scope
@@ -327,3 +329,19 @@ Oracle source: `cards/legends/LEG.json`, with the full comment preserved above r
 Before migration, regressions failed for both leave-and-return cases and the creature Tabernacle grant. All are card-wiring corrections supported by existing engine APIs; no engine blocker was introduced or deferred. The surrounding legacy continuous trigger-grant constructor remains opaque at factory inspection and is not claimed as a completed typed grant family. Its runtime granted body is typed and inspected. Other grant callers and the broader string-bound action checklist remain open.
 
 Validation: focused Tabernacle tests; `go test ./cards/legends -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Rakalite Delayed Source Return
+
+- [x] Migrate Rakalite to `Activate(Costs(Mana("{2}")), ...)`, `TargetDamageRecipient`, `PreventNextDamage`, and `AtNext(EachEndStep, ReturnToHand(This))`.
+- [x] Resolve its delayed source-identity audit with existing typed capture. Before migration, regressions returned a new incarnation when Rakalite left and returned before activation resolution or before the next end step. Both now pass without an engine change.
+- [x] Replace the old self-name Oracle comment with the full text from `cards/antiquities/ATQ.json` ("Return this artifact ...").
+
+| Oracle clause / legacy caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| "{2}: Prevent the next 1 damage that would be dealt to any target this turn." | Typed activation, generic mana cost, and damage-recipient binding; either player's creature or player and planeswalkers are eligible. The existing prevention executor supplies a one-damage shield. An illegal sole target prevents the entire ability from resolving. | `TestRakaliteTargetsAndPayment`: legal recipient categories, invalid artifact target, insufficient mana rollback, stack use, and prevention; `TestRakaliteDelayedSource`: exact consumption and illegal target. Existing `TestTypedPreventionConsumptionAndClone` and `TestPreventionShieldNewIncarnation` cover shield lifecycle. |
+| "Return this artifact to its owner's hand at the beginning of the next end step." / Rakalite's `RegisterDelayedTriggerStep` and `ReturnToHandTarget` calls | One-shot `AtNext(EachEndStep, ReturnToHand(This))`; no target declaration; retain the activation source incarnation and controller; return to the owner even after a control change. An ability resolving after an end-step event waits for the next event. | `TestRakaliteDelayedSource`: return before activation resolution, before end step, and on delayed stack; absence, phasing, phase cycle, control change, end-step creation, opponent's end step, owner/controller distinction, clone isolation, and one-shot consumption. Existing `TestRakalite` covers repeated activations and shields. |
+
+Rules contract: repository CR 400.7 and 603.7a–e. No new DSL constructor or engine fix was required. The positional return export remains for Prismari Charm, its engine test callers, and the typed adapter's shared executor. The generic legacy delayed-trigger export still has other callers. Neither is retired by this slice. A separate unprevented planeswalker damage audit finding is recorded above; general damage-source LKI remains open.
+
+Validation: focused Rakalite regressions, `go test ./cards/antiquities -count=1`, `go test ./cards/... -short -count=1`, `make test`, `go build ./...`, `go vet ./cards/antiquities`, and `make lint` all passed with zero failures (lint: zero issues).
