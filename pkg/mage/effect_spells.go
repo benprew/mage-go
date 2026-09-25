@@ -123,9 +123,9 @@ func CreateToken(name string, power, toughness int, types []CardType, subTypes [
 		name:      name,
 		power:     power,
 		toughness: toughness,
-		types:     types,
-		subTypes:  subTypes,
-		keywords:  keywords,
+		types:     slices.Clone(types),
+		subTypes:  slices.Clone(subTypes),
+		keywords:  slices.Clone(keywords),
 	}
 }
 
@@ -135,9 +135,9 @@ func CreateTokens(count int, name string, power, toughness int, types []CardType
 		name:      name,
 		power:     power,
 		toughness: toughness,
-		types:     types,
-		subTypes:  subTypes,
-		keywords:  keywords,
+		types:     slices.Clone(types),
+		subTypes:  slices.Clone(subTypes),
+		keywords:  slices.Clone(keywords),
 		count:     count,
 	}
 }
@@ -170,10 +170,10 @@ func CreateColoredToken(name string, power, toughness int, colors []Color, types
 		name:      name,
 		power:     power,
 		toughness: toughness,
-		types:     types,
-		subTypes:  subTypes,
-		keywords:  keywords,
-		colors:    colors,
+		types:     slices.Clone(types),
+		subTypes:  slices.Clone(subTypes),
+		keywords:  slices.Clone(keywords),
+		colors:    slices.Clone(colors),
 	}
 }
 
@@ -205,9 +205,9 @@ func CreateTokenAttacking(name string, power, toughness int, types []CardType, s
 		name:      name,
 		power:     power,
 		toughness: toughness,
-		types:     types,
-		subTypes:  subTypes,
-		keywords:  keywords,
+		types:     slices.Clone(types),
+		subTypes:  slices.Clone(subTypes),
+		keywords:  slices.Clone(keywords),
 	}
 }
 
@@ -221,8 +221,7 @@ func (e *createTokenAttackingEffect) Apply(ctx *EffectContext) error {
 			break
 		}
 	}
-	perm := ctx.Game.PutOnBattlefieldAttacking(token, ctx.Controller, defenderID)
-	perm.IsToken = true
+	ctx.Game.PutOnBattlefieldAttacking(token, ctx.Controller, defenderID)
 	return nil
 }
 
@@ -253,9 +252,9 @@ func CreateTokenBlocking(name string, power, toughness int, types []CardType, su
 		name:      name,
 		power:     power,
 		toughness: toughness,
-		types:     types,
-		subTypes:  subTypes,
-		keywords:  keywords,
+		types:     slices.Clone(types),
+		subTypes:  slices.Clone(subTypes),
+		keywords:  slices.Clone(keywords),
 	}
 }
 
@@ -266,8 +265,7 @@ func (e *createTokenBlockingEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) > 0 {
 		attackerID = ctx.Targets[0]
 	}
-	perm := ctx.Game.PutOnBattlefieldBlocking(token, ctx.Controller, attackerID)
-	perm.IsToken = true
+	ctx.Game.PutOnBattlefieldBlocking(token, ctx.Controller, attackerID)
 	return nil
 }
 
@@ -508,8 +506,7 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 		for _, a := range e.abilities {
 			token.AddAbility(a)
 		}
-		perm := ctx.Game.PutOnBattlefield(token, ctx.Controller)
-		perm.IsToken = true
+		ctx.Game.PutOnBattlefield(token, ctx.Controller)
 	}
 	return nil
 }

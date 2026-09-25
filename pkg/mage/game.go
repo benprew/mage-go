@@ -511,7 +511,7 @@ func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.
 		card.SetOwner(controller)
 	}
 	perm := g.PutOnBattlefield(card, controller)
-	if defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
+	if perm == nil || defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
 		return perm
 	}
 	g.combat.AddAttacker(perm.ID(), defenderID)
@@ -528,7 +528,7 @@ func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.U
 		card.SetOwner(controller)
 	}
 	perm := g.PutOnBattlefield(card, controller)
-	if attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
+	if perm == nil || attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
 		return perm
 	}
 	g.combat.AddBlocker(perm.ID(), attackerID)

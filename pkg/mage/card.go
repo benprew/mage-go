@@ -417,8 +417,8 @@ func NewToken(name string, power, toughness int, types []CardType, subTypes []st
 	c := &BaseCard{
 		id:        uuid.New(),
 		name:      name,
-		types:     types,
-		subTypes:  subTypes,
+		types:     slices.Clone(types),
+		subTypes:  slices.Clone(subTypes),
 		power:     power,
 		toughness: toughness,
 		isToken:   true,
