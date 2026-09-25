@@ -6,6 +6,7 @@ import (
 	mage "github.com/benprew/mage-go/pkg/mage"
 
 	"github.com/benprew/mage-go/pkg/catalog"
+	"github.com/benprew/mage-go/pkg/mage/core"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -30,10 +31,10 @@ func registerArtifacts() {
 
 	// Armageddon Clock {6}
 	// Artifact
-	// At the beginning of your upkeep, put a doom counter on Armageddon Clock.
-	// At the beginning of your draw step, Armageddon Clock deals damage equal to the number of
+	// At the beginning of your upkeep, put a doom counter on this artifact.
+	// At the beginning of your draw step, this artifact deals damage equal to the number of
 	// doom counters on it to each player.
-	// {4}: Remove a doom counter from Armageddon Clock. Any player may activate this ability but
+	// {4}: Remove a doom counter from this artifact. Any player may activate this ability but
 	// only during any upkeep step.
 	Register("Armageddon Clock", func() Card {
 		return NewArtifact("Armageddon Clock", "{6}",
@@ -49,13 +50,12 @@ func registerArtifacts() {
 					),
 				).SetConditionData(EventPlayerIsController{}),
 			),
-			// {4}: Remove a doom counter. Any player may activate this but only during upkeep.
-			WithActivatedAbility(
-				RemoveCounters(Doom, 1),
-				GenericCost(4),
-				WithUpkeepOnly(),
-				WithAnyPlayerMay(),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{4}")),
+				RemoveCountersFrom(This, Doom, Fixed(1)),
+				OnlyDuring(core.Upkeep),
+				AnyPlayerMayActivate(),
+			)),
 		)
 	})
 

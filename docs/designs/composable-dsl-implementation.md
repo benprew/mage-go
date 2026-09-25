@@ -4541,3 +4541,34 @@ Validation: focused permission, counter, activation, and compile-time contracts;
 Jumpstart package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+## Completed Slice: Armageddon Clock Typed Counter Removal Activation
+
+- [x] Migrate the counter-removal activation to `Activate`, `Costs(Mana("{4}"))`,
+  `RemoveCountersFrom(This, Doom, Fixed(1))`, `OnlyDuring(core.Upkeep)`, and
+  `AnyPlayerMayActivate()`.
+- [x] Preserve activation by either player during either upkeep, with no tap
+  cost, target, or requirement that the source have a doom counter.
+- [x] Verify the full Oracle comment, artifact type, and `{6}` casting cost
+  against `cards/antiquities/ATQ.json`.
+- [x] Correct source identity through the existing typed counter adapter.
+  No engine fix is required and no outstanding engine blocker is closed.
+
+`TestArmageddonClockCounterSourceLifetime` failed before migration because
+an old activation removed a doom counter from a returned Clock. It now covers
+both activators, a tapped source, payment before resolution, absence of targets,
+and present, departed, returned, and counter-free sources. A returned Clock
+retains its counters. `TestArmageddonClockActivationRestrictions` checks both
+players during either upkeep, rejects activation outside upkeep, and checks
+failed payment without spending mana or adding an ability to the stack.
+The existing turn-path tests also pass.
+
+This completes one slice of the remaining activation and counter migrations.
+The Clock's separate upkeep and damage triggers remain migration work; damage
+source identity and LKI remain open. Ifh-Bíff Efreet and Land's Edge still use
+`WithAnyPlayerMay`, so the legacy export is retained.
+
+Validation: focused card regressions and shared counter-removal and permission
+contracts; Antiquities package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).
