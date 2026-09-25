@@ -8,10 +8,8 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
-// Brightmare's "tap up to one target creature" should resolve when no
-// creatures exist on the battlefield. Without the up-to-one target, casting
-// would fail with no legal targets.
-func TestBrightmareNoTargetsAvailable(t *testing.T) {
+// Brightmare can enter and resolve its trigger with no chosen target.
+func TestBrightmareNoTargetChosen(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Brightmare")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)

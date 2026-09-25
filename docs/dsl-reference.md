@@ -637,3 +637,15 @@ The test harness prefers non-mana abilities using the engine's
 `IsActivatedManaAbility` classification, including typed fixed and dynamic
 production. Use `ActivateAbilityIndex` to select a particular mana ability
 when a permanent has multiple activated abilities.
+
+### Optional Entry Target with a Dependent Value
+
+Brightmare declares `TargetPermanents("creature", 0, 1, IsCreature)` on
+`WhenEvent(Enters(This), ..., WithTargets(creatures))`. It uses
+`ForEach(creatures, creature, Sequence(Tap(From(creature)),
+GainLife(You, PowerOf(From(creature)))))` with a `BindPermanent` member.
+The collection has at most one member, so the loop preserves the singular
+instruction without an implicit first-member conversion. No chosen target means
+no tap or life gain. The target is chosen when the entry trigger goes on the
+stack, and Brightmare itself can be chosen. An already tapped target still
+supplies its current power for life gain. An illegal target prevents resolution.

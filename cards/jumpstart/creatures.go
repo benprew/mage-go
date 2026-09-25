@@ -285,31 +285,17 @@ func registerCreatures() {
 	// 2/3
 	// When this creature enters, tap up to one target creature. You gain life equal to that creature's power.
 	Register("Brightmare", func() Card {
+		creatures := TargetPermanents("creature", 0, 1, IsCreature)
+		creature := BindPermanent("tapped creature")
 		return NewCreature("Brightmare", "{2}{W}", 2, 3,
 			WithSubTypes("Unicorn"),
-			WithCastTarget(TargetUpToOneCreature()),
-			WithETBEffect(FuncEffect(
-				"tap target creature; gain life equal to its power",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					g.TapPermanent(perm)
-					power := perm.CurrentPower(g)
-					if power > 0 {
-						p := g.GetPlayer(controller)
-						if p != nil {
-							g.PlayerGainLife(p, power)
-						}
-					}
-					return nil
-				}),
-			),
+			WithAbility(WhenEvent(Enters(This),
+				ForEach(creatures, creature, Sequence(
+					Tap(From(creature)),
+					GainLife(You, PowerOf(From(creature))),
+				)),
+				WithTargets(creatures),
+			)),
 		)
 	})
 

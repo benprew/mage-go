@@ -2860,3 +2860,40 @@ Validation: focused shared contracts; Limited and Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/limited ./cards/jumpstart`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+## Completed Slice: Brightmare Optional Entry Target and Life Gain
+
+- [x] Migrate Brightmare's complete definition to `WhenEvent(Enters(This))`,
+  `TargetPermanents`, `WithTargets`, `ForEach`, `Sequence`, `Tap`, `PowerOf`,
+  and `GainLife` through the author DSL.
+- [x] Select zero or one creature when the entry trigger goes on the stack,
+  rather than when casting the creature spell. Entry without casting and
+  targeting Brightmare itself now work.
+- [x] Verify the complete Oracle comment, creature types, stats, and mana cost
+  against `data/JMP.json`.
+- [x] Audit target identity, current power, instruction order, and life-gain
+  events. Existing typed adapters need no engine fix or new constructor.
+
+The bounded collection and explicit loop member preserve singular semantics
+without an implicit first-member conversion. Either player's creature can be
+chosen. Tap first, then read its current power for the trigger controller's
+life gain, even if the target was already tapped. Zero chosen targets produce
+no actions; an illegal or returned target prevents resolution. Negative power
+produces no life gain. Source departure does not end the trigger. Rules
+contracts are CR 107.1b, 400.7, 603.3d, and 608.2b–h.
+
+`TestBrightmareEntryTrigger/self` failed before migration: entry without casting
+produced no trigger on the stack. The regression now covers self and opposing
+targets, zero targets, an already tapped target, source departure, target
+return, power changes before resolution, and negative power. The existing cast
+test now chooses the target for the trigger. The zero-target test remains and
+has an accurate name and comment.
+
+This completes one slice of the remaining action, trigger, and card callback
+life-gain migrations. General event capture and life-collection blockers remain
+open; no legacy export is retired while other callers remain.
+
+Validation: focused card and shared target, loop, tap, and life tests;
+Jumpstart package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

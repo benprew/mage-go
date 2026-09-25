@@ -461,7 +461,8 @@ func TestBrightmare(t *testing.T) {
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Brightmare")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant") // 3/3
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Brightmare", "Hill Giant")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Brightmare")
+	g.ChooseTarget(gametest.PlayerA, "Hill Giant")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertTapped(gametest.PlayerB, "Hill Giant", true)
