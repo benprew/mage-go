@@ -372,7 +372,6 @@ var (
 	AladdinsRingEffect                           = mage.AladdinsRingEffect
 	BerserkEffect                                = mage.BerserkEffect
 	BottleOfSuleimanEffect                       = mage.BottleOfSuleimanEffect
-	CrumbleEffect                                = mage.CrumbleEffect
 	HealingSalvePreventionEffect                 = mage.HealingSalvePreventionEffect
 	HurrJackalEffect                             = mage.HurrJackalEffect
 	LaceEffect                                   = mage.LaceEffect
@@ -465,7 +464,6 @@ var (
 	PutFromHandOntoBattlefield              = mage.PutFromHandOntoBattlefield
 	ChangeColorEffect                       = mage.ChangeColorEffect
 	ChaosOrbEffect                          = mage.ChaosOrbEffect
-	DestroyGatheredNoRegen                  = mage.DestroyGatheredNoRegen
 	DestroyGathered                         = mage.DestroyGathered
 	ExileTargetStep                         = mage.ExileTargetStep
 	ExileTargetCardFromGraveyard            = mage.ExileTargetCardFromGraveyard

@@ -29,6 +29,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Filtered Destruction Spells**: Migrate Flashfires, Acid Rain, and Cleanse, the remaining direct card callers of `DestroyAllMatching`, to typed collections. No engine blocker. See the completed slice below.
 - [x] **Remaining Collection Destruction Helpers**: Migrate Nevinyrral's Disk, Tranquility, and Whimsy's Disk branch; retire `NevinyrralsDiskEffect`, `DestroyAllCreatures`, `DestroyAllEnchantments`, and `DestroyAllMatching`. Resolve the Disk's separate destruction batches. See the completed slice below.
 - [x] **Terror and Singular Regeneration Scope**: Migrate Terror to typed destruction and correct all singular no-regeneration executors. Retain legacy exports for the remaining callers; see the completed slice below.
+- [x] **Crumble Saved-Value Migration**: Migrate Crumble and Whimsy's Crumble branch to typed controller/mana-value captures and no-regeneration destruction. Retire `CrumbleEffect` and `DestroyGatheredNoRegen`; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -50,7 +51,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] Resolve repeated destruction and intermediate state observations in the Disk helper. One union collection now uses the existing simultaneous destruction executor.
 - [x] Keep the collection no-regeneration prohibition on each destruction action; preserve permanent characteristics and simultaneous death snapshots.
 - [x] Correct singular typed, positional, step, and string-bound no-regeneration execution to use the action-scoped prohibition. Migrate Terror; see the completed slice below.
-- [ ] Migrate remaining no-regeneration callers before retiring positional and string-bound exports: Abu Ja'far needs combat-opponent capture and simultaneous destruction; Detonate needs X-constrained targets and damage-source LKI; Aswan Jaguar needs a chosen-subtype target adapter; Crumble needs its remaining saved-value migration.
+- [ ] Migrate remaining no-regeneration callers before retiring positional exports: Abu Ja'far needs combat-opponent capture and simultaneous destruction; Detonate needs X-constrained targets and damage-source LKI; Aswan Jaguar needs a chosen-subtype target adapter. Crumble's saved-value migration is complete and the string-bound no-regeneration constructor is retired.
 
 ### Untap Skipping
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
@@ -284,3 +285,24 @@ Oracle source: `data/LEA.json`; the complete text is above Terror's registration
 No export is retired in this slice. Remaining production callers are Abu Ja'far and Detonate (step), Aswan Jaguar (positional), and Crumble's helper (string-bound). Their combat, target, damage, and saved-value migrations remain open. This fix corrects their regeneration scope without claiming those surrounding definitions are fully audited. General damage and zone-LKI blockers remain open.
 
 Validation: focused engine regressions and Terror definition test; `go test ./cards/limited -count=1`; `go test ./pkg/mage/... ./cards/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Crumble Saved Values
+
+- [x] Migrate Crumble to a typed artifact target, controller and mana-value snapshots, `DestroyWithoutRegeneration`, and `GainLife`.
+- [x] Migrate Whimsy's Crumble branch to `ChooseRandomPermanent` and the same typed sequence.
+- [x] Retire `CrumbleEffect` and `DestroyGatheredNoRegen` from engine and author surfaces. Remove the unused string-bound no-regeneration executor branch; retain ordinary `DestroyGathered` and shared life executors for other callers.
+- [x] Add retired-export compile-fail fixtures for both surfaces. Replace the old gathered no-regeneration regression case with a typed saved permanent.
+
+| Oracle clause / retired API and callers | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Crumble: “Destroy target artifact. It can't be regenerated.” / `CrumbleEffect` | `Spell` with `TargetPermanent("artifact", IsArtifact)` and `DestroyWithoutRegeneration`; either controller; instant timing and {G} unchanged. Action-scoped regeneration prohibition leaves characteristics unchanged. | `TestCrumbleTypedDefinition` first failed for the legacy target; `TestCrumbleOutcomes` and existing `TestCrumble` cover destruction, indestructible, and regeneration. |
+| “That artifact's controller gains life equal to its mana value.” | `SnapshotPlayer(ControllerOf(artifact), controller)` and `SnapshotNumber(ManaValueOf(artifact), value)` before destruction; `GainLife(FromPlayer(controller), FromNumber(value))` afterward. The resolving controller of the artifact gains even if destruction fails. Values survive destruction without general zone LKI. | `TestCrumbleOutcomes` covers opposing and own artifacts, control changes before resolution, illegal and returned targets, zero mana value, and X. Existing `TestPlayerSnapshotLifetime`, `TestManaValueOfPermanent`, and life-outcome contracts cover snapshot lifetime, clone isolation, and gain events/replacements. |
+| Whimsy's Crumble branch / second production `CrumbleEffect` caller | `ChooseRandomPermanent(MatchingPermanents(IsArtifact), chosen)` followed by typed captures and actions. No spell target declaration; preserve random choice at resolution. Empty collections do nothing. | `TestWhimsyCrumble` covers ordinary destruction, regeneration, indestructible, empty collections, controller life gain, and nonartifact exclusion; existing random-action selection tests remain. |
+| `DestroyGatheredNoRegen`: Crumble helper and one engine regression | `DestroyWithoutRegeneration` on a typed target or saved permanent; destruction metadata is now available on the composed card effect. | `TestSingularNoRegenerationPreservesCharacteristics`, `TestSingularNoRegenerationSavedLifetime`, and retired-export compile-fail fixtures. |
+
+Oracle source: `cards/antiquities/ATQ.json`; full text remains above the registration. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 202.3/202.3e (mana value and X), 400.7 (new objects), 608.2b/608.2h (target legality and object information), 701.8 (destruction), and 701.19c (regeneration prohibition). Existing typed adapters and engine contracts provide the complete migration; no engine gap was encountered or claimed resolved. General mana-symbol, damage, and zone-LKI blockers remain open.
+
+No live Go callers or declarations of either retired constructor remain outside negative compile fixtures. Unrelated legacy card definitions and imports remain in the edited files.
+
+Validation: focused Crumble and Whimsy tests; both affected card packages; `go test ./pkg/mage/... ./cards/... -short -count=1` (including universal registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` passed with zero failures (lint: zero issues).

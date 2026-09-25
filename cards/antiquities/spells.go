@@ -29,8 +29,16 @@ func registerSpells() {
 	// Destroy target artifact. It can't be regenerated. That artifact's controller gains life
 	// equal to its mana value.
 	Register("Crumble", func() Card {
+		artifact := TargetPermanent("artifact", IsArtifact)
+		controller := BindPlayer("controller")
+		value := BindNumber("mana value")
 		return NewInstant("Crumble", "{G}",
-			NewTargetedSpell(TargetArtifact(), CrumbleEffect()),
+			Spell(Sequence(
+				SnapshotPlayer(ControllerOf(artifact), controller),
+				SnapshotNumber(ManaValueOf(artifact), value),
+				DestroyWithoutRegeneration(artifact),
+				GainLife(FromPlayer(controller), FromNumber(value)),
+			), WithTargets(artifact)),
 		)
 	})
 

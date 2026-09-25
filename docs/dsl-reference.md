@@ -221,6 +221,10 @@ Sequence(
 * `SnapshotNumber(value, binding)`: Evaluates and freezes a numeric value at resolution.
 * `From(binding)` / `FromPlayer(binding)` / `FromNumber(binding)`: Reads the saved value in later instructions.
 
+Crumble captures `ControllerOf(artifact)` with `SnapshotPlayer` and
+`ManaValueOf(artifact)` with `SnapshotNumber` before `DestroyWithoutRegeneration`.
+Its later `GainLife` reads those saved values, including when destruction fails.
+
 ---
 
 ## 9. Triggered Abilities

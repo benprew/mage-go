@@ -9,7 +9,7 @@ import (
 )
 
 func TestSingularNoRegenerationPreservesCharacteristics(t *testing.T) {
-	for _, kind := range []string{"typed", "positional", "step", "gathered"} {
+	for _, kind := range []string{"typed", "positional", "step", "saved"} {
 		t.Run(kind, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
 			g := NewGame(a, b)
@@ -26,10 +26,9 @@ func TestSingularNoRegenerationPreservesCharacteristics(t *testing.T) {
 				effect = DestroyTargetNoRegen()
 			case "step":
 				effect = DestroyTargetNoRegenStep()
-			case "gathered":
-				ctx.Vars = make(map[string]any)
-				ctx.SetUUID("victim", c.ID())
-				effect = DestroyGatheredNoRegen("victim")
+			case "saved":
+				victim := BindPermanent("victim")
+				effect = Sequence(Snapshot(This, victim), DestroyWithoutRegeneration(From(victim)))
 			}
 			if err := effect.Apply(ctx); err != nil {
 				t.Fatal(err)

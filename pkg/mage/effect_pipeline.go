@@ -128,14 +128,10 @@ func (e *ExileGatheredData) Apply(ctx *EffectContext) error {
 // DestroyGatheredData destroys the permanent stored in a context variable.
 type DestroyGatheredData struct {
 	VarName string
-	NoRegen bool
 }
 
 func DestroyGathered(varName string) Effect {
 	return &DestroyGatheredData{VarName: varName}
-}
-func DestroyGatheredNoRegen(varName string) Effect {
-	return &DestroyGatheredData{VarName: varName, NoRegen: true}
 }
 
 func (e *DestroyGatheredData) Text() string { return "destroy" }
@@ -155,11 +151,7 @@ func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
 	if perm.HasKeyword(Indestructible) {
 		return nil
 	}
-	if e.NoRegen {
-		ctx.Game.destroyPermanents([]*Permanent{perm}, true)
-	} else {
-		ctx.Game.DestroyPermanent(perm)
-	}
+	ctx.Game.DestroyPermanent(perm)
 	return nil
 }
 

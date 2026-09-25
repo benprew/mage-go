@@ -18,18 +18,6 @@ func BottleOfSuleimanEffect() Effect {
 	)
 }
 
-// CrumbleEffect destroys a target artifact without regeneration and gives its
-// controller life equal to its mana value.
-func CrumbleEffect() Effect {
-	return Pipeline(
-		"destroy target artifact; its controller gains life equal to its mana value",
-		EffectProperties{Outcome: OutcomeDetriment},
-		SnapshotPermanent(SelectTarget, "target"),
-		DestroyGatheredNoRegen("target"),
-		GainLifeFromVar("target.controller", "target.cmc"),
-	)
-}
-
 // HealingSalvePreventionEffect prevents the next 3 damage to a target this turn.
 func HealingSalvePreventionEffect() Effect { return PreventDamageToTarget(Fixed(3)) }
 

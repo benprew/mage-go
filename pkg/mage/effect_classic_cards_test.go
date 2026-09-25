@@ -22,7 +22,6 @@ func TestClassicCardEffectsAreReusable(t *testing.T) {
 		{"Lesser Werewolf", LesserWerewolfCounterEffect()},
 		{"Aladdin's Ring", AladdinsRingEffect()},
 		{"Bottle of Suleiman", BottleOfSuleimanEffect()},
-		{"Crumble", CrumbleEffect()},
 		{"Healing Salve prevention", HealingSalvePreventionEffect()},
 		{"Nevinyrral's Disk", DestroyEach(MatchingPermanents(Or(IsArtifact, IsCreature, IsEnchantment)))},
 		{"Pandora's Box", PandorasBoxEffect()},

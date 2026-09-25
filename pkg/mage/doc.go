@@ -49,6 +49,9 @@
 // Use [ManaValueOf] to read a permanent through its typed reference. Use
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
 // The saved number remains available after the permanent leaves.
+// Use [SnapshotPlayer] with [ControllerOf] to save its controller before
+// destruction. Crumble combines both snapshots with [DestroyWithoutRegeneration]
+// and [GainLifeFor]; the saved controller gains life even if destruction fails.
 //
 // [AttachedBecomesTapped] saves the event permanent before trigger placement.
 // Read it with [From] so attachment changes cannot redirect the effect.

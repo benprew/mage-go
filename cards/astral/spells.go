@@ -35,7 +35,16 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 			dsl.Draw(dsl.FromPlayer(chosen), dsl.Fixed(3)),
 		), sourceID, controllerID, nil)
 	case 5: // Crumble
-		return ApplyEffect(g, ApplyToRandomPermanent(CrumbleEffect(), IsArtifact), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("random artifact")
+		controller := dsl.BindPlayer("artifact controller")
+		value := dsl.BindNumber("mana value")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsArtifact), chosen),
+			dsl.SnapshotPlayer(dsl.ControllerOf(dsl.From(chosen)), controller),
+			dsl.SnapshotNumber(dsl.ManaValueOf(dsl.From(chosen)), value),
+			dsl.DestroyWithoutRegeneration(dsl.From(chosen)),
+			dsl.GainLife(dsl.FromPlayer(controller), dsl.FromNumber(value)),
+		), sourceID, controllerID, nil)
 	case 6: // Disenchant
 		chosen := dsl.BindPermanent("chosen permanent")
 		return ApplyEffect(g, dsl.Sequence(
