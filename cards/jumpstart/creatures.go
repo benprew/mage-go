@@ -1385,9 +1385,10 @@ func registerCreatures() {
 		return NewCreature("Oneirophage", "{3}{U}", 1, 2,
 			WithSubTypes("Squid", "Illusion"),
 			WithKeyword(Flying),
-			WithAbility(NewTriggered(EvtCardDrawn, false,
-				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource())).
-				SetConditionData(EventPlayerIsController{})),
+			WithAbility(WhenEvent(
+				ControllerDrawsCard(BindPlayer("drawer")),
+				AddCounters(This, P1P1, Fixed(1)),
+			)),
 		)
 	})
 

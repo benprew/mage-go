@@ -4634,3 +4634,35 @@ Validation: focused card regression and shared counter and trigger contracts;
 Antiquities package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Oneirophage Typed Draw Counter Trigger
+
+- [x] Migrate the complete draw trigger to `WhenEvent`,
+  `ControllerDrawsCard(BindPlayer("drawer"))`, and
+  `AddCounters(This, P1P1, Fixed(1))`.
+- [x] Preserve the mandatory, untargeted trigger for each card drawn by
+  the current controller, including when that player is not the owner.
+- [x] Verify the full Oracle comment, `{3}{U}` cost, Squid Illusion subtypes,
+  1/2 characteristics, and flying against `data/JMP.json`.
+- [x] Correct counter placement on a returned source through the existing
+  typed reference. No engine fix or new constructor is required.
+
+`TestOneirophageDrawSourceLifetime` failed before migration: returning the
+source before trigger stack placement or before resolution gave the new
+incarnation a counter from the old trigger. Both cases now leave the returned
+creature without a counter. The regression also covers a present source,
+a departed source, a controller different from the owner, controller-only
+draw filtering, absence of targets, and counter placement only at resolution.
+
+The existing turn-path test and shared draw-event, counter-amount, and source
+lifetime contracts pass. Shared contracts cover actual and replaced draws,
+phasing, control changes, copies, clone isolation, and registration validation.
+This completes one slice of the remaining trigger and action migrations.
+Other legacy callers and recorded engine blockers remain open; no export
+is retired.
+
+Validation: focused card regression and shared contracts; Jumpstart package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).
