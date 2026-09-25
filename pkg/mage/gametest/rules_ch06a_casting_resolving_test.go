@@ -74,7 +74,7 @@ func registerCh06Cards() {
 		})
 		reg("Ch06 Wrath", func() mage.Card {
 			return mage.NewSorcery("Ch06 Wrath", "{2}{W}{W}",
-				mage.NewSpellAbility(mage.DestroyAllCreatures()))
+				mage.NewSpellAbility(mage.DestroyEach(mage.MatchingPermanents(mage.IsCreature))))
 		})
 		reg("Ch06 Growth", func() mage.Card {
 			return mage.NewInstant("Ch06 Growth", "{G}",

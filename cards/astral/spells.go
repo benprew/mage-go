@@ -65,7 +65,7 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 	case 11: // The Hive
 		return ApplyEffect(g, TheHiveEffect(), sourceID, controllerID, nil)
 	case 12: // Nevinyrral's Disk
-		return ApplyEffect(g, NevinyrralsDiskEffect(), sourceID, controllerID, nil)
+		return ApplyEffect(g, dsl.DestroyEach(dsl.MatchingPermanents(dsl.Or(dsl.IsArtifact, dsl.IsCreature, dsl.IsEnchantment))), sourceID, controllerID, nil)
 	case 13: // Bottle of Suleiman
 		return ApplyEffect(g, BottleOfSuleimanEffect(), sourceID, controllerID, nil)
 	case 14: // Pandora's Box

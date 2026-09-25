@@ -60,6 +60,9 @@
 // To destroy all lands, use [DestroyEach] with [MatchingPermanents] and [IsLand].
 // Use [HasSubType] for a land subtype. Combine [IsCreature] and
 // [HasColorFilter] with [And] to restrict destruction by creature color.
+// Combine type filters with [Or] in one collection to destroy each matching
+// permanent once. Separate destruction actions can consume extra shields and
+// expose intermediate states to triggers.
 // The collection is selected at resolution and does not include phased permanents.
 // Use [DestroyEachWithoutRegeneration] when the instruction forbids regeneration.
 // This restriction applies to the action and does not change permanent keywords.

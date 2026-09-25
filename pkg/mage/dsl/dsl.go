@@ -378,7 +378,6 @@ var (
 	LaceEffect                                   = mage.LaceEffect
 	LesserWerewolfCounterEffect                  = mage.LesserWerewolfCounterEffect
 	LightningBoltEffect                          = mage.LightningBoltEffect
-	NevinyrralsDiskEffect                        = mage.NevinyrralsDiskEffect
 	PandorasBoxEffect                            = mage.PandorasBoxEffect
 	ProdigalSorcererEffect                       = mage.ProdigalSorcererEffect
 	SindbadEffect                                = mage.SindbadEffect
@@ -465,10 +464,7 @@ var (
 	FightTarget                             = mage.FightTarget
 	PutFromHandOntoBattlefield              = mage.PutFromHandOntoBattlefield
 	ChangeColorEffect                       = mage.ChangeColorEffect
-	DestroyAllCreatures                     = mage.DestroyAllCreatures
-	DestroyAllEnchantments                  = mage.DestroyAllEnchantments
 	ChaosOrbEffect                          = mage.ChaosOrbEffect
-	DestroyAllMatching                      = mage.DestroyAllMatching
 	DestroyGatheredNoRegen                  = mage.DestroyGatheredNoRegen
 	DestroyGathered                         = mage.DestroyGathered
 	ExileTargetStep                         = mage.ExileTargetStep

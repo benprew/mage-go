@@ -37,32 +37,6 @@ func (e *destroyTargetPermanentEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
 }
 
-// DestroyAllEnchantments destroys all enchantments (Tranquility).
-func DestroyAllEnchantments() Effect {
-	return DestroyAllMatching(IsEnchantment, "destroy all enchantments")
-}
-
-// destroyAllMatchingEffect destroys all permanents matching a filter.
-type destroyAllMatchingEffect struct {
-	filter PermanentFilter
-	text   string
-}
-
-// DestroyAllMatching creates an effect that destroys all permanents matching the filter.
-func DestroyAllMatching(filter PermanentFilter, text string) Effect {
-	return &destroyAllMatchingEffect{filter: filter, text: text}
-}
-
-func (e *destroyAllMatchingEffect) Text() string { return e.text }
-func (e *destroyAllMatchingEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, Mass: true, Destroys: true}
-}
-
-// DestroyAllCreatures destroys all creatures (board wipe).
-func DestroyAllCreatures() Effect {
-	return DestroyAllMatching(IsCreature, "destroy all creatures")
-}
-
 // destroyTargetNoRegenEffect destroys a target permanent, preventing regeneration.
 type destroyTargetNoRegenEffect struct{}
 
@@ -149,12 +123,6 @@ func (*destroyTargetPermanentEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	ctx.Game.DestroyPermanent(perm)
-	return nil
-}
-
-func (e *destroyAllMatchingEffect) Apply(ctx *EffectContext) error {
-	toDestroy := ctx.Game.FilterBattlefield(And(e.filter, Not(HasKeywordFilter(Indestructible))))
-	ctx.Game.DestroyPermanents(toDestroy)
 	return nil
 }
 

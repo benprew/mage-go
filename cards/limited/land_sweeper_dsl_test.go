@@ -15,6 +15,7 @@ func TestLandSweepersTypedDefinitions(t *testing.T) {
 		{"Wrath of God", mage.IsCreature},
 		{"Tsunami", mage.HasSubType("Island")},
 		{"Flashfires", mage.HasSubType("Plains")},
+		{"Tranquility", mage.IsEnchantment},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			card, err := mage.CreateCard(tc.name)

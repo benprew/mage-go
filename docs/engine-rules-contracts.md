@@ -95,6 +95,7 @@ Continuous effects are evaluated by `EffectManager.Apply` across the official 7-
   * Once that instance leaves the stack (resolved, countered, or removed), the ability rearms and triggers again if the condition is still met.
   * A permanent that leaves and returns has a new instance and can trigger independently.
 * **Simultaneous Batch Observation**:
+  * A union of destruction filters uses one `DestroyEach(MatchingPermanents(Or(...)))` action. Each matching permanent is considered once, so one regeneration shield suffices even if multiple types match. State triggers cannot observe separate type batches.
   * Mass destruction (`DestroyPermanents`) preserves the pre-destruction battlefield snapshot for leave-the-battlefield triggers.
   * `DestroyEachWithoutRegeneration` uses the same batch with an action-scoped regeneration prohibition (CR 701.8, 701.19c). It does not add keywords to permanents or their last-known characteristics. Indestructible and other destruction replacements still apply.
   * Zero-toughness state-based deaths share the same observation batch.

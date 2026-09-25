@@ -154,7 +154,7 @@ func TestInstantAndSorceryAcceptActionParts(t *testing.T) {
 	if !mage.CardRegistered(wrathName) {
 		mage.Register(wrathName, func() mage.Card {
 			return mage.NewSorcery(wrathName, "{2}{W}{W}",
-				mage.DestroyAllCreatures(),
+				mage.DestroyEach(mage.MatchingPermanents(mage.IsCreature)),
 			)
 		})
 	}

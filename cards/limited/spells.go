@@ -449,9 +449,10 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy all enchantments.
 	Register("Tranquility", func() Card {
 		return NewSorcery("Tranquility", "{2}{G}",
-			NewSpellAbility(DestroyAllEnchantments()),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(IsEnchantment)))),
 		)
 	})
 

@@ -160,7 +160,7 @@ func TestAuditSimultaneousDeathTriggers(t *testing.T) {
 			g.PutOnBattlefield(other, b.PlayerID())
 			switch mode {
 			case "wipe":
-				if err := ApplyEffect(g, DestroyAllCreatures(), uuid.Nil, a.PlayerID(), nil); err != nil {
+				if err := ApplyEffect(g, DestroyEach(MatchingPermanents(IsCreature)), uuid.Nil, a.PlayerID(), nil); err != nil {
 					t.Fatal(err)
 				}
 			case "lethal":

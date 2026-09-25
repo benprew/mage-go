@@ -27,6 +27,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Land-Wide Destruction**: Migrate Armageddon and Tsunami to typed `DestroyEach` collections; retire `DestroyAllLands`. No engine blocker. See the completed slice below.
 - [x] **Collection Destruction Without Regeneration**: Add `DestroyEachWithoutRegeneration`, migrate Wrath of God and Shatterstorm, and retire both collection no-regeneration helpers. Resolve the action-scoping engine gap with a regression test first. See the completed slice below.
 - [x] **Filtered Destruction Spells**: Migrate Flashfires, Acid Rain, and Cleanse, the remaining direct card callers of `DestroyAllMatching`, to typed collections. No engine blocker. See the completed slice below.
+- [x] **Remaining Collection Destruction Helpers**: Migrate Nevinyrral's Disk, Tranquility, and Whimsy's Disk branch; retire `NevinyrralsDiskEffect`, `DestroyAllCreatures`, `DestroyAllEnchantments`, and `DestroyAllMatching`. Resolve the Disk's separate destruction batches. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -45,6 +46,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] Retain source incarnation and last-known characteristics through the existing damage and replacement pipeline, including death, return, and copying. `DamageSystem.ExecuteDamageToPlayer` and `ExecuteDamageToCreature` use `FindPermanent(sourceID)` for lifelink and deathtouch. Protection in `DealDamageToPermanent` also looks up the physical card ID; `LookupObject` prefers a live object with that ID. Add regressions for returned sources and departed sources with granted keywords before adding the typed adapter.
 
 ### Destruction Regeneration Scope
+- [x] Resolve repeated destruction and intermediate state observations in the Disk helper. One union collection now uses the existing simultaneous destruction executor.
 - [x] Keep the collection no-regeneration prohibition on each destruction action; preserve permanent characteristics and simultaneous death snapshots.
 - [ ] Audit singular positional no-regeneration executors, which still grant `CantRegenerate`, before claiming action-scoped semantics for that family.
 
@@ -239,3 +241,25 @@ Validation: focused regression and typed-definition tests; both affected card pa
 Oracle sources: `data/LEA.json` and `cards/legends/LEG.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 205.3i (land subtypes), 608.2c (instructions), 701.8 (destruction and regeneration), and 702.26b (phasing). All three typed-definition tests failed against the legacy definitions before migration. These declarative spells reuse engine contract tests and universal registration validation instead of new card simulations. Unrelated legacy definitions and engine imports remain in the changed card files. No engine blocker is claimed resolved by this slice.
 
 Validation: focused typed-definition and filtered-collection tests; both affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Remaining Collection Destruction Helpers
+
+- [x] Migrate Nevinyrral's Disk to `Activate`, typed mana/tap costs, and one `DestroyEach` union collection; migrate Tranquility to `Spell(DestroyEach(...))` and Whimsy's Disk branch to the same union action.
+- [x] Resolve the Disk helper defect under `pkg/mage` after two failing regressions. The old composite destroyed creatures, enchantments, and artifacts in separate batches. Reuse the existing simultaneous executor; no new DSL constructor or zone subsystem is needed.
+- [x] Retire `NevinyrralsDiskEffect`, `DestroyAllCreatures`, `DestroyAllEnchantments`, `DestroyAllMatching`, and the private `destroyAllMatchingEffect` executor from engine and author surfaces. Migrate every test caller and add retired-export compile-fail fixtures.
+
+| Oracle clause / retired API and callers | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Disk: “This artifact enters tapped.” | Preserve `WithKeyword(EntersTapped)`. | Existing `TestNevinyrralsDisk`; `TestDiskTypedActivation` |
+| Disk: “{1}, {T}: Destroy all artifacts, creatures, and enchantments.” / `NevinyrralsDiskEffect` | `Activate(Costs(Mana("{1}"), TapCost(This)), DestroyEach(MatchingPermanents(Or(IsArtifact, IsCreature, IsEnchantment))))`; no targets; includes the Disk; membership selected at resolution. The ability resolves after its source leaves. | `TestDiskTypedActivation`: entry tapped, rejected tapped activation, mana consumption, tap payment, stack placement, late entries, source departure, regeneration, and destruction metadata |
+| Whimsy's Disk branch / second production `NevinyrralsDiskEffect` caller | The same typed union action in the existing random-action callback. Preserve selection and surrounding Whimsy behavior. | `TestWhimsyDiskRegeneration`; existing `TestWhimsy_EachRandomActionCanBeSelected` |
+| Tranquility: “Destroy all enchantments.” / sole direct card caller of `DestroyAllEnchantments` | `Spell(DestroyEach(MatchingPermanents(IsEnchantment)))`; both players' enchantments, no targets; printed cost and sorcery timing unchanged. | `TestLandSweepersTypedDefinitions/Tranquility`; existing `TestAlphaDestroyEffects` |
+| `DestroyAllCreatures`: former Disk constituent and four test calls; `DestroyAllEnchantments`: former Disk constituent and Tranquility; `DestroyAllMatching`: those wrappers and the former Disk artifact constituent | Typed `DestroyEach` collections; keep the existing game-test spell construction paths and engine audit assertions. The classic-effect text fixture now uses the union expression. | Existing `TestDestroyAllCollapse`, action, casting/resolution, and engine audit suites; author compile-fail suite |
+| Union destruction contract | One simultaneous action group destroys each matching permanent once. A single regeneration shield protects a permanent with all three types. State triggers cannot observe partial type batches. No source LKI or saved reference is required. | `TestUnionDestructionRegeneratesOnce` and `TestUnionDestructionIsSimultaneous` failed against the legacy helper, passed after its minimal engine fix, and remain against the canonical typed action after retirement. `TestUnionDestructionMembership` covers empty sets, later entries, both controllers, each included type, excluded lands/planeswalkers, indestructible, phasing, and clone isolation. |
+
+Oracle source: `data/LEA.json`; full Oracle text is above both changed registrations. Whimsy retains its existing random-action definitions apart from the Disk branch. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 602 (activation costs), 608.2c (instructions), 701.8 (destruction), 701.19 (regeneration), and 603.8 (state triggers). Tranquility's new definition check failed against its legacy untyped effect before migration. Detrimental, mass, and destruction metadata remain available.
+
+No declarations or calls of the retired APIs remain in `cards` or `pkg/mage`, apart from negative compile fixtures. The unrelated `cmd/forge` effect-kind enum named `DestroyAllCreatures` remains. Unrelated legacy definitions/imports in changed card files and all other listed engine blockers remain open.
+
+Validation: both failing engine regressions passed after the minimal helper fix and again after retirement; focused card/collection tests, both affected card packages, `go test ./cards/... -short -count=1`, `go test ./pkg/mage/... -short -count=1` (including compile-fail fixtures), `make test`, `go build ./...`, `go vet ./...`, and `make lint` all passed with zero failures (lint: zero issues).

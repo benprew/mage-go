@@ -382,15 +382,14 @@ func registerArtifacts() {
 		)
 	})
 
+	// This artifact enters tapped.
+	// {1}, {T}: Destroy all artifacts, creatures, and enchantments.
 	Register("Nevinyrral's Disk", func() Card {
 		return NewArtifact("Nevinyrral's Disk", "{4}",
 			WithKeyword(EntersTapped),
-			// {1}, {T}: Destroy all artifacts, creatures, and enchantments
-			WithActivatedAbility(
-				NevinyrralsDiskEffect(),
-				GenericCost(1),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(Costs(Mana("{1}"), TapCost(This)),
+				DestroyEach(MatchingPermanents(Or(IsArtifact, IsCreature, IsEnchantment))),
+			)),
 		)
 	})
 

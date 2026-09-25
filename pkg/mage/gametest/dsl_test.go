@@ -121,12 +121,12 @@ func TestGenericTriggered(t *testing.T) {
 }
 
 func TestDestroyAllCollapse(t *testing.T) {
-	t.Run("DestroyAllCreatures still works", func(t *testing.T) {
+	t.Run("DestroyEach selects all creatures", func(t *testing.T) {
 		name := "DSL Wrath"
 		if !mage.CardRegistered(name) {
 			mage.Register(name, func() mage.Card {
 				return mage.NewSorcery(name, "{2}{W}{W}",
-					mage.NewSpellAbility(mage.DestroyAllCreatures()),
+					mage.NewSpellAbility(mage.DestroyEach(mage.MatchingPermanents(mage.IsCreature))),
 				)
 			})
 		}

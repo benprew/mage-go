@@ -24,7 +24,7 @@ func TestClassicCardEffectsAreReusable(t *testing.T) {
 		{"Bottle of Suleiman", BottleOfSuleimanEffect()},
 		{"Crumble", CrumbleEffect()},
 		{"Healing Salve prevention", HealingSalvePreventionEffect()},
-		{"Nevinyrral's Disk", NevinyrralsDiskEffect()},
+		{"Nevinyrral's Disk", DestroyEach(MatchingPermanents(Or(IsArtifact, IsCreature, IsEnchantment)))},
 		{"Pandora's Box", PandorasBoxEffect()},
 		{"Sindbad", SindbadEffect()},
 		{"The Hive", TheHiveEffect()},

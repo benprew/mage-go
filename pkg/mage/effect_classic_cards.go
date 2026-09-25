@@ -33,16 +33,6 @@ func CrumbleEffect() Effect {
 // HealingSalvePreventionEffect prevents the next 3 damage to a target this turn.
 func HealingSalvePreventionEffect() Effect { return PreventDamageToTarget(Fixed(3)) }
 
-// NevinyrralsDiskEffect destroys all artifacts, creatures, and enchantments.
-func NevinyrralsDiskEffect() Effect {
-	return CompositeEffects(
-		"destroy all artifacts, creatures, and enchantments",
-		DestroyAllCreatures(),
-		DestroyAllEnchantments(),
-		DestroyAllMatching(IsArtifact, "destroy all artifacts"),
-	)
-}
-
 // PandorasBoxEffect chooses a random creature card from all libraries, then
 // gives each player who wins a coin flip a token copy of the chosen card.
 func PandorasBoxEffect() Effect {
