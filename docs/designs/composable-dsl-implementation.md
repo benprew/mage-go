@@ -3868,3 +3868,39 @@ Validation: focused regressions and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Living Armor Typed Counter Activation
+
+- [x] Migrate the complete ability to `Activate`, explicit tap and sacrifice
+  `Costs`, `TargetPermanent`, `WithTargets`, and
+  `AddCounters(creature, P0P1, ManaValueOf(creature))`.
+- [x] Verify the full Oracle comment, artifact type, and `{4}` casting cost
+  against `data/DRK.json`.
+- [x] Strengthen `TestLivingArmor` to assert exactly four +0/+1 counters,
+  in addition to the resulting toughness and source sacrifice.
+- [x] Audit target selection, payment, resolution-time values, and counter
+  replacement handling. Existing typed adapters need no engine fix.
+
+The activation selects either player's creature before tapping and sacrificing
+Living Armor. It uses the stack and reads the legal target's mana value at
+resolution. The shared counter action applies counter replacements. The amount
+is not an X mana payment. Source sacrifice does not stop the ability.
+
+The strengthened card test passes before and after migration. Shared
+`TestTypedCounterAmount*`, `TestManaValue*`, `TestTypedTarget*`, and
+`TestComposablePayment*` pass. They cover dynamic amounts, nonpositive amounts,
+replacements, target lifetime, binding validation, and clone isolation. This
+single-action declaration uses proven primitives and needs no new simulation
+test.
+
+This completes one slice of the remaining activation and counter-action caller
+migrations and the last production `TargetPermanentManaValue` call. Engine
+fixtures still use the legacy helper, so its retirement remains separate.
+The shared monocolored-hybrid mana-cost parser blocker remains open; this slice
+uses the existing mana-value service and does not claim to resolve that gap.
+
+Validation: focused card and shared contracts; The Dark package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/thedark`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

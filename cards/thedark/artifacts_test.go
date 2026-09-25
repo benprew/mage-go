@@ -92,14 +92,14 @@ func TestFountainOfYouth(t *testing.T) {
 func TestLivingArmor(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Living Armor")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant") // CMC 4
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
 
-	// Hill Giant is 3/3, CMC 4. Living Armor puts 4 +0/+1 counters on it.
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Living Armor", "Hill Giant")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 
 	g.AssertPowerToughness(gametest.PlayerA, "Hill Giant", 3, 7)
+	g.AssertCounterCount(gametest.PlayerA, "Hill Giant", core.P0P1, 4)
 	g.AssertGraveyardCount(gametest.PlayerA, "Living Armor", 1)
 }
 

@@ -90,13 +90,13 @@ func registerArtifacts() {
 	// Artifact
 	// {T}, Sacrifice this artifact: Put X +0/+1 counters on target creature, where X is that creature's mana value.
 	Register("Living Armor", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Living Armor", "{4}",
-			WithActivatedAbility(
-				mage.AddCounters(P0P1, TargetPermanentManaValue()),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeSourceCost()),
+				AddCounters(creature, P0P1, ManaValueOf(creature)),
+				WithTargets(creature),
+			)),
 		)
 	})
 
