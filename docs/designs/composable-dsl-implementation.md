@@ -1419,3 +1419,28 @@ Validation: focused card and shared target/layer/lifetime tests; Limited and
 Legends package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/limited ./cards/legends`; `make test`; and `make lint` passed
 with zero failures (lint: zero issues).
+
+## Completed Slice: Royal Assassin and Exorcist Destruction Activations
+
+- [x] Migrate Royal Assassin and Exorcist from positional `DestroyTarget`, `WithActivatedAbility`, and `WithTarget` to typed `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify full Oracle text, mana costs, creature types, and base P/T against `data/LEA.json` and `data/DRK.json`. Add Royal Assassin's full Oracle text above registration.
+- [x] Move `TestAlphaRoyalAssassin` from `test.go` to `creatures_test.go` so Go discovers it. Confirm this test and `TestExorcist` pass before migration.
+- [x] Audit the existing target, payment, and destruction adapters. No new constructor or engine fix is required.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Royal Assassin: “{T}: Destroy target tapped creature.” | `Costs(TapCost(This))`, `TargetPermanent("creature", And(IsCreature, IsTapped))`, and `Destroy(creature)` | `TestAlphaRoyalAssassin` |
+| Exorcist: “{1}{W}, {T}: Destroy target black creature.” | `Costs(Mana("{1}{W}"), TapCost(This))`, `TargetPermanent("creature", And(IsCreature, HasColorFilter(Black)))`, and `Destroy(creature)` | `TestExorcist` |
+| Target scope and identity | Either player's qualifying creature; black includes multicolored black creatures. Target legality is checked again at resolution. Captured incarnations prevent destruction of a returned card. | Shared target contracts, including `TestTargetIncarnationAfterReturn`, `TestTypedTargetGroups`, and `TestTypedTargetCopyAndClone` |
+| Destruction | Use the existing destruction executor; regeneration and indestructible still apply. The typed action preserves destruction metadata. | Shared regeneration and indestructible tests; `TestComposedRemovalMetadata` |
+
+These are declarative single-action abilities. Existing engine contracts and
+universal `TestRegisteredDefinitions` cover the shared primitives; no new
+simulation is required. Both card definitions are fully migrated. Other callers
+still use the legacy exports, so no export is retired. The broader action
+migration and all unrelated engine blockers remain open.
+
+Validation: both card packages, focused shared target and destruction contracts,
+`go test ./cards/... -short -count=1`, `go build ./...`,
+`go vet ./cards/limited ./cards/thedark`, `make test`, and `make lint` passed
+with zero failures (lint: zero issues).

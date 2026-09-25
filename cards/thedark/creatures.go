@@ -21,14 +21,11 @@ func registerCreatures() {
 	// 1/1
 	// {1}{W}, {T}: Destroy target black creature.
 	Register("Exorcist", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasColorFilter(Black)))
 		return NewCreature("Exorcist", "{W}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				ManaCostOf("{1}{W}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature(HasColorFilter(Black))),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{W}"), TapCost(This)),
+				Destroy(creature), WithTargets(creature))),
 		)
 	})
 

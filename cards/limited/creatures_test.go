@@ -193,3 +193,17 @@ func TestScavengingGhoul(t *testing.T) {
 		g.AssertCounterCount(gametest.PlayerA, "Scavenging Ghoul", core.Corpse, 0)
 	})
 }
+
+func TestAlphaRoyalAssassin(t *testing.T) {
+	t.Run("Royal Assassin destroys tapped creature", func(t *testing.T) {
+		g := gametest.NewTestGame(t)
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Royal Assassin")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Icy Manipulator")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Icy Manipulator", "Hill Giant")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Royal Assassin", "Hill Giant")
+		g.StopAt(1, core.BeginCombat)
+		g.Execute()
+		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
+	})
+}

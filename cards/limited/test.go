@@ -814,23 +814,6 @@ func TestAlphaProdigalSorcerer(t *testing.T) {
 	})
 }
 
-// ===== ROYAL ASSASSIN =====
-
-func TestAlphaRoyalAssassin(t *testing.T) {
-	t.Run("Royal Assassin destroys tapped creature", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Royal Assassin")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
-		// First tap the Hill Giant (using Icy Manipulator would be ideal, but just set tapped)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Icy Manipulator")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Icy Manipulator", "Hill Giant")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Royal Assassin", "Hill Giant")
-		g.StopAt(1, core.BeginCombat)
-		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerB, "Hill Giant", 0)
-	})
-}
-
 // ===== FLASHFIRES / TSUNAMI =====
 
 func TestAlphaFlashfires(t *testing.T) {

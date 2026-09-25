@@ -224,15 +224,12 @@ func registerCreatures() {
 		)
 	})
 
+	// {T}: Destroy target tapped creature.
 	Register("Royal Assassin", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, IsTapped))
 		return NewCreature("Royal Assassin", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Assassin"),
-			// {T}: Destroy target tapped creature
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(IsTapped)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), Destroy(creature), WithTargets(creature))),
 		)
 	})
 

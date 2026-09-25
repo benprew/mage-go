@@ -458,6 +458,15 @@ WithAbility(Spell(Destroy(land), WithTargets(land)))
 
 The target can be a land controlled by either player. `Destroy` allows regeneration.
 
+### Filtered Destruction Activations
+
+Royal Assassin uses `TargetPermanent("creature", And(IsCreature, IsTapped))`
+and `Activate(Costs(TapCost(This)), Destroy(creature), WithTargets(creature))`.
+Exorcist uses `And(IsCreature, HasColorFilter(Black))` and adds `Mana("{1}{W}")`
+to the cost group. Either player's qualifying creature can be targeted. The
+restriction is checked again at resolution; regeneration and indestructible
+still apply.
+
 ### Filtered Permanent Destruction
 ```go
 WithAbility(Spell(DestroyEach(MatchingPermanents(IsLand))))
