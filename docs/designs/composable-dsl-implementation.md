@@ -1473,3 +1473,34 @@ Validation: focused regression and typed-target tests; The Dark package;
 `go test ./pkg/mage/... -short -count=1`; `go test ./... -short -count=1`
 (including all card registration checks); `go build ./...`; `go vet ./...`;
 `make test`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Alabaster Mage and Emerald Dragonfly Keyword Activations
+
+- [x] Migrate both complete definitions to typed `Activate`, `Costs`, `GrantKeyword`, and `Until(EndOfTurn, ...)` through `pkg/mage/dsl`.
+- [x] Replace Alabaster Mage's positional target with `TargetPermanent`, `TargetYouControl`, and `WithTargets`. Use `This` for Emerald Dragonfly's untargeted grant.
+- [x] Verify full Oracle comments, mana costs, creature types, and base P/T against `data/JMP.json` and `data/LEG.json`.
+- [x] Audit existing target, payment, identity, duration, and layer adapters. No engine gap or new constructor is required.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Alabaster Mage: “{1}{W}: Target creature you control gains lifelink until end of turn.” / `WithActivatedAbility`, positional keyword grant | `Costs(Mana("{1}{W}"))`, a creature target with `TargetYouControl()`, and `Until(EndOfTurn, GrantKeyword(creature, Lifelink))` | `TestAlabasterMage`; typed target contracts |
+| “Target creature you control” / `TargetControlledCreature` | Includes the Mage itself; checks controller and creature type at announcement and resolution. A control change after resolution does not end the grant. | `TestTypedTargetYouOwnCandidates`, `TestTypedTargetYouOwnActivation` cover the shared controller option; `TestTypedTargetGroups` |
+| Emerald Dragonfly: “Flying” | Keep `WithKeyword(Flying)` | Oracle inventory and universal `TestRegisteredDefinitions` |
+| Emerald Dragonfly: “{G}{G}: This creature gains first strike until end of turn.” / source selector | `Costs(Mana("{G}{G}"))`, `GrantKeyword(This, FirstStrike)`, and explicit `Until(EndOfTurn, ...)`; no target, tap cost, or activation limit | `TestEmeraldDragonfly`; `TestComposableSelfPumpLifetime` |
+| Temporary keyword grants | Layer 6 grants capture the recipient incarnation, survive source departure, expire at cleanup, and expose keyword metadata. Returned cards are new objects. | `TestComposableKeywordLayerOrder`, `TestComposableKeywordSourceExit`, `TestComposableContinuousCapture`, `TestTargetIncarnationAfterReturn`, `TestTypedTargetCopyAndClone` |
+
+Both are declarative single-action abilities that reuse proven primitives.
+Existing card and shared engine tests cover the migration; no new simulation
+is required. Rules contracts are CR 602, 608.2b, 400.7, 611.2, and 613.
+The damage-source LKI blocker remains open; this slice grants lifelink through
+the existing layer service and does not change damage execution.
+
+Both definitions are fully migrated. Legacy keyword and activation helpers
+retain other callers, so no export is retired. The files retain engine imports
+for unrelated definitions. The broader action migration remains open.
+
+Validation: focused card and shared target/layer/lifetime tests; Jumpstart and
+Legends package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart ./cards/legends`; `make test`; and `make lint` passed
+with zero failures (lint: zero issues).

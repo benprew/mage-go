@@ -107,13 +107,13 @@ func registerCreatures() {
 	// 2/1
 	// {1}{W}: Target creature you control gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.)
 	Register("Alabaster Mage", func() Card {
+		creature := TargetPermanent("creature", IsCreature, TargetYouControl())
 		return NewCreature("Alabaster Mage", "{1}{W}", 2, 1,
 			WithSubTypes("Human", "Wizard"),
-			WithActivatedAbility(
-				mage.GrantKeyword(Lifelink).Targeting(ToTarget()).Until(EndOfTurn),
-				ManaCostOf("{1}{W}"),
-				WithTarget(TargetControlledCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{W}")),
+				Until(EndOfTurn, GrantKeyword(creature, Lifelink)),
+				WithTargets(creature),
+			)),
 		)
 	})
 

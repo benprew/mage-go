@@ -1705,10 +1705,9 @@ func registerCreatures() {
 		return NewCreature("Emerald Dragonfly", "{1}{G}", 1, 1,
 			WithSubTypes("Insect"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				mage.GrantKeyword(FirstStrike).Targeting(ToSource()),
-				ManaCostOf("{G}{G}"),
-			),
+			WithAbility(Activate(Costs(Mana("{G}{G}")),
+				Until(EndOfTurn, GrantKeyword(This, FirstStrike)),
+			)),
 		)
 	})
 
