@@ -132,6 +132,7 @@ Spell(
 ### Graveyard Card Targets
 * `TargetGraveyardCard(label, options...)`: Declares one card target in your graveyard by default. `InAnyGraveyard()` permits any player's graveyard. `GraveyardCardFilter(filter)` restricts its characteristics. Declare the binding with `WithTargets(card)`.
 * `ReturnCardToHand(card)`: Moves the bound graveyard card to its owner's hand. A card that leaves and returns to the graveyard is a new object, so the old binding cannot move it.
+* `ReturnCardToBattlefield(card, controller)`: Moves the bound graveyard card onto the battlefield under the selected player's control. The card keeps its owner. A stale graveyard binding does nothing.
 
 ---
 

@@ -116,3 +116,34 @@ func (e *returnCardToHandEffect) Apply(ctx *EffectContext) error {
 	}
 	return nil
 }
+
+type returnCardToBattlefieldEffect struct {
+	card       CardRef
+	controller PlayerRef
+}
+
+// ReturnCardToBattlefield puts the referenced graveyard card onto the battlefield.
+func ReturnCardToBattlefield(card CardRef, controller PlayerRef) ResolvingEffect {
+	return &returnCardToBattlefieldEffect{card: card, controller: controller}
+}
+func (*returnCardToBattlefieldEffect) Text() string {
+	return "return card from graveyard to the battlefield"
+}
+func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
+	return (&returnFromAnyGraveyardEffect{}).Properties()
+}
+func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}
+}
+func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
+	card, ok := e.card.resolveCard(ctx)
+	if !ok {
+		return nil
+	}
+	controller, ok := e.controller.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	returnGraveyardCardToBattlefield(ctx.Game, card.ID(), controller)
+	return nil
+}

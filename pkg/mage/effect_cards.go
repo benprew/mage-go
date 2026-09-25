@@ -462,6 +462,13 @@ func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
+	if player := ctx.Game.GetPlayer(ctx.Controller); player != nil {
+		for _, card := range player.Graveyard() {
+			if card.ID() == ctx.Targets[0] && !graveyardCardCanEnter(ctx.Game, card) {
+				return nil
+			}
+		}
+	}
 	card, ok := ctx.Game.MoveFromGraveyard(ctx.Controller, ctx.Targets[0], ZoneBattlefield)
 	if !ok {
 		return nil // target gone
@@ -474,12 +481,27 @@ func (*returnFromAnyGraveyardEffect) Apply(ctx *EffectContext) error {
 	if len(ctx.Targets) == 0 {
 		return fmt.Errorf("no target for reanimate")
 	}
-	card, _, ok := ctx.Game.MoveFromAnyGraveyard(ctx.Targets[0], ZoneBattlefield)
-	if !ok {
-		return nil
-	}
-	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	returnGraveyardCardToBattlefield(ctx.Game, ctx.Targets[0], ctx.Controller)
 	return nil
+}
+
+func returnGraveyardCardToBattlefield(g *Game, cardID, controller uuid.UUID) {
+	for _, player := range g.players {
+		for _, card := range player.Graveyard() {
+			if card.ID() == cardID && !graveyardCardCanEnter(g, card) {
+				return
+			}
+		}
+	}
+	card, _, ok := g.MoveFromAnyGraveyard(cardID, ZoneBattlefield)
+	if !ok {
+		return
+	}
+	g.PutOnBattlefield(card, controller)
+}
+
+func graveyardCardCanEnter(g *Game, card Card) bool {
+	return !card.HasType(TypeLand) || !g.effects.Rules.LandsCantEnter()
 }
 
 func (*exileTargetCardFromGraveyardEffect) Apply(ctx *EffectContext) error {

@@ -48,6 +48,7 @@ Read-only queries are organized into focused domain interfaces: `PlayerReader`, 
 * **Last-Known Information (LKI)**: When an object moves zones or dies, its characteristics immediately prior to the event are recorded. Effects reading source power, attachment status, or colors read this LKI snapshot (CR 608.2h).
 * **Stack References**: Typed spell targets store the stack object's ID. Target legality is checked again at resolution. Removing a spell and casting the same card again does not preserve the old target. `CounterStackObject` counters a spell by this ID; copied spells leave the stack without entering a graveyard. The source-ID counter entry point also handles abilities, including ward.
 * **Graveyard References**: Each graveyard entry records a visit ID on the owning player. The stack captures that ID when a card is targeted. Legality checks and typed card references compare the captured visit with the current visit, so moving a card away and back does not revive its old target. Game clones share visit maps until the next graveyard entry and then copy them.
+* **Graveyard Return to Battlefield**: A typed return checks the graveyard visit before moving the card. The shared graveyard movement service records its departure, and normal battlefield entry creates a new permanent incarnation under the explicitly selected controller. The card keeps its owner and uses normal entry abilities and triggers.
 
 ---
 

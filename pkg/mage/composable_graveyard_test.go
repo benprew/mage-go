@@ -109,3 +109,121 @@ func TestTypedGraveyardTargetScopeAndFilter(t *testing.T) {
 		})
 	}
 }
+
+func TestTypedGraveyardReturnToBattlefieldUsesBindingAndController(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	first := NewCreature("First", "", 1, 1)
+	first.SetOwner(a.PlayerID())
+	second := NewCreature("Second", "", 2, 2, WithKeyword(EntersTapped))
+	second.SetOwner(b.PlayerID())
+	b.AddToGraveyard(second)
+	a.AddToGraveyard(first)
+	player := DeclarePlayerTarget("player")
+	cardTarget := DeclareGraveyardCardTarget("card", InAnyGraveyard(), GraveyardCardFilter(IsCreatureCard))
+	ability := Spell(Sequence(GainLifeFor(player, Fixed(1)), ReturnCardToBattlefield(cardTarget, You)), WithTargets(player, cardTarget))
+	spell := NewSorcery("Recover", "", WithAbility(ability))
+	spell.SetOwner(a.PlayerID())
+	if err := ValidateCardDefinition("Recover", spell); err != nil {
+		t.Fatal(err)
+	}
+	g.pushStack(&StackObject{ID: uuid.New(), SourceID: spell.ID(), Card: spell, Controller: a.PlayerID(), Targets: []uuid.UUID{b.PlayerID(), second.ID()}, TargetSpecs: ability.Targets(), Effects: ability.Effects()})
+	g.ResolveTopOfStack()
+	perm := g.FindPermanent(second.ID())
+	if perm == nil || perm.ControllerID() != a.PlayerID() || perm.Card.Owner() != b.PlayerID() || !perm.Tapped || b.Life() != 21 {
+		t.Fatal("return used the wrong card, controller, or entry path")
+	}
+	if g.FindPermanent(first.ID()) != nil || !slices.ContainsFunc(a.Graveyard(), func(card Card) bool { return card.ID() == first.ID() }) {
+		t.Fatal("return moved an unrelated card")
+	}
+}
+
+func TestTypedGraveyardReturnToBattlefieldUsesChosenController(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	card := NewCreature("Guest", "", 2, 2)
+	card.SetOwner(a.PlayerID())
+	a.AddToGraveyard(card)
+	cardTarget := DeclareGraveyardCardTarget("card")
+	controller := DeclarePlayerTarget("controller")
+	ability := Spell(ReturnCardToBattlefield(cardTarget, controller), WithTargets(cardTarget, controller))
+	spell := NewSorcery("Recover", "", WithAbility(ability))
+	spell.SetOwner(a.PlayerID())
+	g.pushStack(&StackObject{ID: uuid.New(), SourceID: spell.ID(), Card: spell, Controller: a.PlayerID(), Targets: []uuid.UUID{card.ID(), b.PlayerID()}, TargetSpecs: ability.Targets(), Effects: ability.Effects()})
+	g.ResolveTopOfStack()
+	perm := g.FindPermanent(card.ID())
+	if perm == nil || perm.ControllerID() != b.PlayerID() || perm.Card.Owner() != a.PlayerID() {
+		t.Fatal("return did not use the bound controller")
+	}
+}
+
+func TestTypedGraveyardReturnToBattlefieldWhenLandCannotEnter(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	land := NewLand("Blocked Land")
+	land.SetOwner(a.PlayerID())
+	a.AddToGraveyard(land)
+	g.effects.Rules.SetLandsCantEnter(true)
+	target := DeclareGraveyardCardTarget("card")
+	_, obj := graveyardTestSpell(a.PlayerID(), target, ReturnCardToBattlefield(target, You))
+	obj.Targets = []uuid.UUID{land.ID()}
+	g.pushStack(obj)
+	g.ResolveTopOfStack()
+	if g.FindPermanent(land.ID()) != nil || !slices.ContainsFunc(a.Graveyard(), func(card Card) bool { return card.ID() == land.ID() }) {
+		t.Fatal("land left the graveyard despite the entry prohibition")
+	}
+}
+
+func TestTypedGraveyardReturnToBattlefieldRejectsStaleVisit(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	card := NewCreature("Victim", "", 2, 2)
+	card.SetOwner(a.PlayerID())
+	a.AddToGraveyard(card)
+	target := DeclareGraveyardCardTarget("card")
+	_, obj := graveyardTestSpell(a.PlayerID(), target, ReturnCardToBattlefield(target, You))
+	obj.Targets = []uuid.UUID{card.ID()}
+	g.pushStack(obj)
+	clone := g.Clone()
+	clone.ResolveTopOfStack()
+	if clone.FindPermanent(card.ID()) == nil || g.FindPermanent(card.ID()) != nil {
+		t.Fatal("clone did not isolate the return")
+	}
+	moved, ok := g.MoveFromGraveyard(a.PlayerID(), card.ID(), ZoneHand)
+	if !ok {
+		t.Fatal("could not move target")
+	}
+	a.AddToHand(moved)
+	removed, ok := a.RemoveFromHand(card.ID())
+	if !ok {
+		t.Fatal("could not return target")
+	}
+	a.AddToGraveyard(removed)
+	g.ResolveTopOfStack()
+	if g.FindPermanent(card.ID()) != nil || !slices.ContainsFunc(a.Graveyard(), func(found Card) bool { return found.ID() == card.ID() }) {
+		t.Fatal("stale target followed a new graveyard visit")
+	}
+}
+
+func TestTypedGraveyardReturnToBattlefieldValidation(t *testing.T) {
+	target := DeclareGraveyardCardTarget("card")
+	for _, tc := range []struct {
+		name     string
+		body     ResolvingEffect
+		declared []TargetBinding
+		want     string
+	}{
+		{"nil card", ReturnCardToBattlefield(nil, You), nil, ".card"},
+		{"nil controller", ReturnCardToBattlefield(target, nil), []TargetBinding{target}, ".controller"},
+		{"undeclared", ReturnCardToBattlefield(target, You), nil, ".card"},
+		{"valid", ReturnCardToBattlefield(target, You), []TargetBinding{target}, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			card := NewSorcery("Test", "", WithAbility(Spell(tc.body, WithTargets(tc.declared...))))
+			err := ValidateCardDefinition("Test", card)
+			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
+				t.Fatalf("validation error = %v, want %q", err, tc.want)
+			}
+		})
+	}
+}

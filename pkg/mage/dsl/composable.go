@@ -76,6 +76,7 @@ var (
 	InAnyGraveyard             = mage.InAnyGraveyard
 	GraveyardCardFilter        = mage.GraveyardCardFilter
 	ReturnCardToHand           = mage.ReturnCardToHand
+	ReturnCardToBattlefield    = mage.ReturnCardToBattlefield
 	Counter                    = mage.Counter
 	TargetOpponentOnly         = mage.TargetOpponentOnly
 	// WithTargets binds declared target bindings to a spell, activation, or trigger.
