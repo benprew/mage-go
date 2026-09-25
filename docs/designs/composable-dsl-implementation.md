@@ -52,6 +52,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Global P/T Reductions**: Migrate Hell Swarm, Marsh Gas, Bone Flute, and Languish to typed creature collections and durations. Correct negative temporary P/T metadata after a failing regression; see the completed slice below.
 - [x] **Targeted Land Boost Activations**: Migrate Mishra’s Factory’s boost and Pendelhaven to typed targets, tap costs, and temporary P/T modifications. No engine blocker; see the completed slice below.
 - [x] **Affa Guard Hound Entry Boost**: Migrate the targeted entry boost to `WhenEvent`, `WithTargets`, and temporary `ModifyPT`. Correct target choice timing in the card definition; no engine gap. See the completed slice below.
+- [x] **Shield Wall Team Boost**: Migrate the remaining positional team spell to a typed controlled-creature collection and explicit end-of-turn duration. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -908,3 +909,28 @@ Oracle source: `cards/jumpstart/JMP.json`; the complete Oracle comment remains u
 `TestAffaGuardHoundEntryTarget` failed before migration in every case with “not enough targets for spell.” The corrected definition passes, including selecting a creature that entered after casting. The existing flash and cast tests now script the trigger choice explicitly. No exports are retired: `WithETBEffect`, `WithCastTarget`, and `Boost` have other callers. Other positional P/T definitions and unrelated legacy imports in the card file remain outside this slice.
 
 Validation: focused Affa Guard Hound and typed P/T composition tests; `go test ./cards/jumpstart -count=1`; `go test ./cards/... ./pkg/mage/... -short -count=1`; `go build ./...`; `go vet ./...`; `make test`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Shield Wall Team Boost
+
+- [x] Migrate Shield Wall to `Spell(Until(EndOfTurn, ModifyEachPT(ControlledPermanents(IsCreature), Fixed(0), Fixed(2))))` through `pkg/mage/dsl`.
+- [x] Check the complete Oracle comment against `cards/legends/LEG.json`; it matches exactly.
+- [x] Audit controller scope, collection capture, duration, and metadata with existing engine contracts. No engine gap or new constructor is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Creatures you control get +0/+2 until end of turn.” / Shield Wall's positional `Boost` | `ControlledPermanents(IsCreature)` captures the resolving controller's creatures; `ModifyEachPT` installs +0/+2 at layer 7c with `Until(EndOfTurn, ...)`. No targets. Instant timing and {1}{W} remain unchanged. | `TestShieldWall` checks own and opposing creatures and now checks cleanup expiry; both cases passed before and after migration. |
+| Temporary membership and identity | Capture members at resolution; later entries and returned objects do not receive the bonus. No source LKI is required. | Existing `TestComposableContinuousCapture` and `TestComposableSelfPumpLifetime` cover membership, incarnation, expiry, and clone isolation. |
+| Typed spell and AI metadata | Explicit duration and beneficial mass +0/+2 summary; no target declaration. | `TestShieldWallTypedDefinition` checks registration validity, typed duration, targets, and metadata. |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 611.2a–c (duration and captured membership), and 613
+(continuous layers). The explicit creature filter replaces the legacy boost's
+implicit creature restriction. No helper is retired: `Boost`, `ToMatching`,
+and `NewSpellAbility` still have other callers. The surrounding card file
+retains its engine import for unmigrated definitions. No outstanding engine
+blocker is claimed resolved.
+
+Validation: focused Shield Wall definition and behavior tests; Legends package;
+shared collection and lifetime tests; `go build ./...`; `go vet ./cards/legends`;
+`make test`; and `make lint` passed with zero failures (lint: zero issues).

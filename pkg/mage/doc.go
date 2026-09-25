@@ -127,6 +127,7 @@
 //
 // Use [Until] with [ModifyEachPT] for a temporary collection boost.
 // [ControlledPermanents] with [IsCreature] selects your creatures at resolution.
+// Shield Wall uses this collection with a +0/+2 bonus until end of turn.
 // [MatchingPermanents] with [IsCreature] and [IsAttacking] or [IsBlocking]
 // selects combat creatures for either player. Combat removal does not end
 // the boost. Later entries and returned cards do not receive the boost.

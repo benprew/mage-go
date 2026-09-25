@@ -1033,7 +1033,7 @@ func registerSpells() {
 	// Creatures you control get +0/+2 until end of turn.
 	Register("Shield Wall", func() Card {
 		return NewInstant("Shield Wall", "{1}{W}",
-			NewSpellAbility(Boost(Fixed(0), Fixed(2)).Targeting(ToMatching(AnyPermanent))),
+			Spell(Until(EndOfTurn, ModifyEachPT(ControlledPermanents(IsCreature), Fixed(0), Fixed(2)))),
 		)
 	})
 

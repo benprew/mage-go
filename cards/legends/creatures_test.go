@@ -650,17 +650,26 @@ func TestSyphonSoul(t *testing.T) {
 }
 
 func TestShieldWall(t *testing.T) {
-	t.Run("your creatures get +0/+2", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake") // opponent's
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Shield Wall")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shield Wall")
-		g.StopAt(1, core.BeginCombat)
-		g.Execute()
-		g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4) // +0/+2
-		g.AssertPowerToughness(gametest.PlayerB, "Azure Drake", 2, 4)   // not affected
-	})
+	for _, tc := range []struct {
+		name      string
+		turn      int
+		toughness int
+	}{
+		{"your creatures get +0/+2", 1, 4},
+		{"bonus expires at cleanup", 2, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Azure Drake")
+			g.AddCard(core.ZoneHand, gametest.PlayerA, "Shield Wall")
+			g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Shield Wall")
+			g.StopAt(tc.turn, core.BeginCombat)
+			g.Execute()
+			g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, tc.toughness)
+			g.AssertPowerToughness(gametest.PlayerB, "Azure Drake", 2, 4)
+		})
+	}
 }
 
 func TestTransmutation(t *testing.T) {
