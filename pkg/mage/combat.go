@@ -180,11 +180,7 @@ func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
 	return slices.Contains(members, id2)
 }
 
-// RemoveFromCombat removes a permanent from combat (attacker or blocker).
-// Per Oracle text on cards like False Orders and Ydwen Efreet: "Creatures it
-// was blocking that had become blocked by only that creature this combat become
-// unblocked." If the removed creature was the sole blocker, the attacker
-// becomes unblocked (Blocked = false).
+// RemoveFromCombat removes a permanent without changing blocked status.
 func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 	delete(c.Attackers, id)
 	for _, g := range c.Groups {
@@ -198,10 +194,6 @@ func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 			}
 		}
 		g.BlockerIDs = filtered
-		// If this was the only blocker, the attacker becomes unblocked.
-		if len(g.BlockerIDs) == 0 {
-			g.Blocked = false
-		}
 	}
 }
 
@@ -843,4 +835,14 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			g.DealDamageToPermanent(memberPerms[0], totalIncoming, sourceID)
 		}
 	}
+}
+
+// Legacy card effects also make attackers with only this blocker unblocked.
+func (c *Combat) removeFromCombatAndUnblock(id uuid.UUID) {
+	for _, group := range c.Groups {
+		if len(group.BlockerIDs) == 1 && group.BlockerIDs[0] == id {
+			group.Blocked = false
+		}
+	}
+	c.RemoveFromCombat(id)
 }

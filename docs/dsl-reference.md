@@ -155,6 +155,7 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
 * `Tap(PermanentRef)`: Taps the permanent.
 * `Untap(PermanentRef)`: Untaps the permanent.
+* `RemoveFromCombat(PermanentRef)`: Removes the captured permanent from combat. Removing a blocker does not make its attacker unblocked. An absent or different incarnation is unaffected.
 * `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
 
 For an Aura entry trigger, use `WhenEvent(Enters(This), Tap(AttachedPermanent))`.

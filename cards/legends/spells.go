@@ -174,7 +174,7 @@ func registerSpells() {
 			Spell(CompositeEffects(
 				"untap target attacking creature, remove from combat, gain control until end of turn",
 				Untap(creature),
-				RemoveFromCombat(),
+				RemoveFromCombat(creature),
 				GainControl().Until(EndOfTurn),
 			), WithTargets(creature)),
 		)

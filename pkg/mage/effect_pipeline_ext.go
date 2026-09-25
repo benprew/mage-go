@@ -356,7 +356,7 @@ func (e *RemoveFromCombatGatheredData) Apply(ctx *EffectContext) error {
 	if id == uuid.Nil {
 		return nil
 	}
-	ctx.Game.RemoveFromCombat(id)
+	ctx.Game.combat.removeFromCombatAndUnblock(id)
 	return nil
 }
 

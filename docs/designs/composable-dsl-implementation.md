@@ -39,9 +39,14 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Swords to Plowshares Saved-Value Migration**: Migrate the spell and Faerie Dragon’s matching branch to typed controller/power capture, exile, and life gain; retire `SwordsToPlowsharesEffect`. Resolve exile metadata and phased-out random selection; see the completed slice below.
 - [x] **Sorceress Queen Base P/T**: Add typed base power/toughness setting and source exclusion, migrate the Queen and Faerie Dragon’s matching branch, and retire `SorceressQueenEffect`. See the completed slice below.
 - [x] **Base Power Activations**: Add typed `SetBasePower`, migrate Singing Tree and Island of Wak-Wak, and retire `SetPowerUntilEndOfTurn`. See the completed slice below.
+- [x] **Typed Combat Removal**: Add `RemoveFromCombat(PermanentRef)`, migrate Mijae Djinn’s coin-flip body and Disharmony’s removal instruction, and correct shared removal to preserve blocked status. Keep explicit-unblocking legacy callers pending their full audits. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
+
+### Combat Removal
+- [x] Preserve blocked status when the final blocker is removed. Correct the shared combat operation after a failing regression; keep explicit-unblocking legacy effects separate. See the typed combat-removal slice below.
+- [ ] Audit explicit unblocking and historical sole-blocker tracking for False Orders and Ydwen Efreet before retiring their legacy removal helpers.
 
 ### Zone LKI Retention
 - [ ] Audit zone LKI retention after final cleanup and damage source/recipient incarnation before claiming exact damage-condition adapters. The legacy card-ID cache still resets on final cleanup and can be replaced by a later departure of the same card. Typed counter and attachment histories have their own durable incarnation records; general damage references do not.
@@ -569,3 +574,18 @@ Validation: focused base-power and card tests; `go test ./cards/...
 ./pkg/mage/... -short -count=1` (including registration and compile-fail checks);
 `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with
 zero failures (lint: zero issues).
+
+## Completed Slice: Typed Combat Removal
+
+| Existing caller or API | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Mijae Djinn: `SnapshotPermanent` / `RemoveFromCombatGathered` pipeline | `FlipCoin(You, OnLoss(Sequence(RemoveFromCombat(This), Tap(This))))`; attack trigger, no targets, stored controller and source incarnation; no damage LKI required. Exact Oracle comment from `data/ARN.json`. Neutral removal metadata is retained. | `TestMijaeDjinn`, `TestTypedCombatRemovalLifetime`, `TestCombatRemovalComposition` |
+| Disharmony: positional removal instruction | `RemoveFromCombat(creature)` reads its existing typed attacking-creature target. Untap and control instructions are unchanged. Its pre-existing casting-timing gap remains open. | `TestDisharmony`, `TestCombatRemovalComposition` |
+| `Combat.RemoveFromCombat` | Removes combat membership without clearing the attacker's blocked status (CR 509.1h, repository rules effective February 27, 2026). | `TestCombatRemovalKeepsAttackerBlocked` failed for sole-blocker removal before the fix. |
+| Legacy explicit-unblocking effects | False Orders now names the retained engine helper directly; Ydwen Efreet retains its string-bound helper. Both use a private compatibility operation for their explicit unblocking clause. No legacy engine exports are retired while these callers remain. | `TestFalseOrders`, `TestYdwenEfreet` |
+
+The public DSL `RemoveFromCombat` now requires a permanent reference. Composition tests cover saved references, targets, modes, loops, triggers, and activations; validation rejects absent producers, nil subjects, and undeclared targets. Lifetime tests cover absent, returned, phased, and phased-in references and clone isolation for attackers and blockers.
+
+Remaining audits: Ydwen Efreet's full Oracle text includes an explicit unblocking clause omitted from its current comment; migrate that clause together with its turn-long blocking prohibition. False Orders still needs exact defending-player targeting, casting timing, historical sole-blocker tracking, and optional reassignment. The private compatibility operation preserves existing behavior and does not claim to solve those audits. Disharmony's timing and control adapter remain separate. These cards retain their existing legacy surfaces; Mijae Djinn remains DSL-only.
+
+Validation: focused combat-removal and affected card tests; `go test ./pkg/mage/... ./cards/arabian ./cards/legends ./cards/limited -short -count=1`; `go test ./pkg/mage/dsl -count=1` (including player/collection compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures. Lint reported zero issues.

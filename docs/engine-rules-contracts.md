@@ -235,3 +235,11 @@ Rules baseline: repository Comprehensive Rules effective February 27, 2026.
 Evidence: `TestSpellStepRestriction` (every step, both players, four cast paths),
 `TestSpellStepCopyAndResolution`, `TestSpellStepDoesNotGrantSorceryTiming`,
 `TestSpellStepOptionValidation`, and `TestTeleportCastingRestriction`.
+
+## Combat Removal (CR 506.4, 509.1h)
+
+`Combat.RemoveFromCombat` removes attacking or blocking membership without changing an attacker's blocked status. Removing the last blocker does not make that attacker unblocked. Typed `RemovePermanentFromCombat` resolves one battlefield incarnation; absent and phased-out references do nothing. Clone combat state is independent.
+
+Legacy False Orders and Ydwen Efreet effects retain a private explicit-unblocking compatibility path. Historical sole-blocker tracking and the remaining card clauses require separate audits; that path is not the general combat-removal operation.
+
+Regression evidence: `TestCombatRemovalKeepsAttackerBlocked`, `TestTypedCombatRemovalLifetime`, and existing `TestFalseOrders` / `TestYdwenEfreet`. Rules revision: February 27, 2026.

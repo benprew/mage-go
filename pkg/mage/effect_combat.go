@@ -212,7 +212,7 @@ func (*removeFromCombatEffect) Apply(ctx *EffectContext) error {
 	if perm == nil {
 		return nil
 	}
-	ctx.Game.RemoveFromCombat(perm.ID())
+	ctx.Game.combat.removeFromCombatAndUnblock(perm.ID())
 	return nil
 }
 

@@ -507,22 +507,12 @@ func registerCreatures() {
 		)
 	})
 
-	// Oracle: "Whenever Mijae Djinn attacks, flip a coin. If you lose the flip,
-	// remove Mijae Djinn from combat and tap it."
+	// Whenever this creature attacks, flip a coin. If you lose the flip, remove this creature from combat and tap it.
 	Register("Mijae Djinn", func() Card {
 		return NewCreature("Mijae Djinn", "{R}{R}{R}", 6, 3,
 			WithSubTypes("Djinn"),
 			WithAbility(AttacksTrigger(
-				Pipeline("flip coin or remove from combat",
-					EffectProperties{},
-					SnapshotPermanent(SelectSource, "self"),
-					FlipCoin(You,
-						OnLoss(&PipelineData{Steps: []Effect{
-							RemoveFromCombatGathered("self"),
-							Tap(This),
-						}}),
-					),
-				), false,
+				FlipCoin(You, OnLoss(Sequence(RemoveFromCombat(This), Tap(This)))), false,
 			)),
 		)
 	})

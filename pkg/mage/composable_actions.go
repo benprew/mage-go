@@ -384,3 +384,24 @@ func (e *untapPermanentEffect) Apply(ctx *EffectContext) error {
 func (e *untapPermanentEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
 }
+
+// RemovePermanentFromCombat removes the selected incarnation from combat.
+func RemovePermanentFromCombat(subject PermanentRef) ResolvingEffect {
+	return &removePermanentFromCombatEffect{subject: subject}
+}
+
+type removePermanentFromCombatEffect struct{ subject PermanentRef }
+
+func (e *removePermanentFromCombatEffect) Text() string {
+	return "remove from combat " + InspectDefinition(e.subject).Text
+}
+func (e *removePermanentFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *removePermanentFromCombatEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}
+func (e *removePermanentFromCombatEffect) Apply(ctx *EffectContext) error {
+	if permanent, ok := e.subject.resolvePermanent(ctx); ok {
+		ctx.Game.RemoveFromCombat(permanent.ID())
+	}
+	return nil
+}

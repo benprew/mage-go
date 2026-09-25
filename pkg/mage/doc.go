@@ -99,6 +99,9 @@
 // Use [Activate] with [Costs] and [WithTargets] for tap-cost blocking effects.
 // Put power limits in the target filter. Later power changes do not end the effect.
 //
+// Use [RemovePermanentFromCombat] with a typed reference to remove combat
+// membership. An attacker stays blocked when its last blocker is removed.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -429,7 +429,7 @@ var (
 	AddContinuousEffectsStep                  = mage.AddContinuousEffectsStep
 	VarPlayer                                 = mage.VarPlayer
 	TapAllLands                               = mage.TapAllLands
-	RemoveFromCombat                          = mage.RemoveFromCombat
+	RemoveFromCombat                          = mage.RemovePermanentFromCombat
 	StunCreature                              = mage.StunCreature
 	ReplaceKeywordEffect                      = mage.ReplaceKeywordEffect
 	ForEachCombatOpponent                     = mage.ForEachCombatOpponent
