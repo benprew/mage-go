@@ -4248,3 +4248,36 @@ Validation: focused regression and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Gingerbrute Typed Sacrifice Life Gain
+
+- [x] Migrate the life-gain activation to `Activate` and explicit
+  `Costs(Mana("{2}"), TapCost(This), SacrificeSourceCost())`.
+- [x] Preserve `GainLife(You, Fixed(3))` and the existing ability order.
+- [x] Verify the full Oracle comment, `{1}` cost, artifact creature type,
+  Food Golem subtypes, 1/1 stats, and haste against `data/JMP.json`.
+- [x] Audit payment and stored-controller resolution. Existing typed
+  adapters support this ability; no engine fix is required.
+
+The controller pays two generic mana, taps Gingerbrute, and sacrifices it
+before the ability goes on the stack. The ability has no targets or timing
+restriction. The stored controller gains three life at resolution after the
+source has left the battlefield. The shared life action applies replacements
+and emits events for actual life gain.
+
+`TestGingerbrute_HasteAndSacGainsLife` and the existing blocking tests pass
+before and after migration. Shared payment, life-gain, and life-payment
+contracts pass. Universal registration validation checks the declaration.
+This single-action ability uses proven primitives and needs no new simulation
+test.
+
+This completes one slice of the remaining activation migrations. Gingerbrute's
+separate blocking activation still needs a typed restriction adapter. Other
+callers retain legacy helpers; no export is retired and no outstanding engine
+blocker is marked resolved.
+
+Validation: focused card and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

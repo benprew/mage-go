@@ -6363,12 +6363,10 @@ func registerCreatures() {
 			WithSubTypes("Food", "Golem"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Haste),
-			WithActivatedAbility(
+			WithAbility(Activate(
+				Costs(Mana("{2}"), TapCost(This), SacrificeSourceCost()),
 				GainLife(You, Fixed(3)),
-				ManaCostOf("{2}"),
-				WithCost(TapCost(This)),
-				WithCost(SacrificeSourceCost()),
-			),
+			)),
 			WithActivatedAbility(
 				FuncEffect(
 					"this creature can't be blocked this turn except by creatures with haste",
