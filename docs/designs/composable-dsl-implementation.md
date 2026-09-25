@@ -4471,3 +4471,37 @@ Validation: focused shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Inniaz Typed Attacking Flyer Boost Activation
+
+- [x] Migrate Inniaz, the Gale Force's complete boost activation to `Activate`,
+  `Costs(Mana("{2}{W/U}"))`, and `Until(EndOfTurn, ModifyEachPT(...))`.
+- [x] Select all attacking creatures with flying through `MatchingPermanents`
+  and `And(IsCreature, IsAttacking, HasKeywordFilter(Flying))`.
+- [x] Verify the full Oracle comment, casting cost, legendary supertype,
+  Djinn subtype, 4/4 characteristics, and flying against `data/JMP.json`.
+- [x] Audit the existing collection, duration, and activation adapters.
+  No engine fix or new constructor is required.
+
+The ability has no target, tap cost, controller restriction on affected
+creatures, or activation timing restriction. Its hybrid symbol accepts white
+or blue mana. Qualifying creatures are captured at resolution and get +1/+1
+until end of turn. Later changes to flying or combat status do not end the
+resolved bonus; later qualifying creatures do not join the captured set.
+
+Existing Inniaz tests pass before and after migration, including both hybrid
+payment colors and exclusion of nonattackers. Shared continuous-effect,
+activation, payment, and hybrid contracts pass. Registration validation checks
+the declaration. This single-action ability uses proven primitives and needs
+no additional simulation test.
+
+This completes one slice of the remaining activation and collection-action
+migrations. Inniaz's separate combat trigger and control-transfer callback
+remain migration work. Other legacy callers and recorded engine blockers
+remain open; no export is retired.
+
+Validation: Jumpstart package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

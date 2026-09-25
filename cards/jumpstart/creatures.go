@@ -1223,12 +1223,13 @@ func registerCreatures() {
 			WithSubTypes("Djinn"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).
-					Targeting(ToAllMatching(And(IsAttacking, HasKeywordFilter(Flying)))).
-					Until(EndOfTurn),
-				ManaCostOf("{2}{W/U}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{2}{W/U}")),
+				Until(EndOfTurn, ModifyEachPT(
+					MatchingPermanents(And(IsCreature, IsAttacking, HasKeywordFilter(Flying))),
+					Fixed(1), Fixed(1),
+				)),
+			)),
 			WithAbility(
 				// Use the bare "one or more attack" trigger and refine it to
 				// require ≥ 3 flying attackers controlled by the trigger's
