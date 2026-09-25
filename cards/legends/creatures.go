@@ -761,10 +761,10 @@ func registerCreatures() {
 		return NewCreature("Fallen Angel", "{3}{B}{B}", 3, 3,
 			WithSubTypes("Angel"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(1)).Targeting(ToSource()),
-				SacrificeCreatureCost(),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(1))),
+			)),
 		)
 	})
 

@@ -12,6 +12,9 @@
 // errors are the ground-truth list of what's still missing or what's
 // leaking.
 //
+// Fallen Angel uses SacrificeMatchingIncludingSourceCost with IsCreature.
+// This cost permits the source to pay. SacrificeCreatureCost excludes it.
+//
 // For a combat target, combine IsCreature with Or(IsAttacking, IsBlocking).
 // Angelic Page uses this filter with TargetPermanent and WithTargets.
 // Until(EndOfTurn, ModifyPT(...)) keeps the bonus after combat ends.

@@ -64,6 +64,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Osai Vultures Counter-Payment Boost**: Migrate its activation to typed counter costs and an explicit temporary source modification. No engine gap; the end-step trigger remains a separate audit. See the completed slice below.
 - [x] **Wyluli Wolf Targeted Tap Boost**: Migrate its activation to a typed creature target, tap cost, and explicit end-of-turn P/T modification. Existing adapters cover the full ability; no engine gap. See the completed slice below.
 
+- [x] **Fallen Angel Sacrifice Boost**: Migrate its activation to typed costs and a temporary source modification. Correct source exclusion with the existing sacrifice-cost adapter; see the completed slice below.
+
 ## Engine Blockers
 
 ### Combat Removal
@@ -1201,4 +1203,31 @@ no export is retired and no outstanding engine blocker is claimed resolved.
 Validation: focused Wyluli Wolf and shared target, lifetime, metadata, and
 composition tests; Arabian Nights package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/arabian`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Fallen Angel Sacrifice Boost
+
+- [x] Migrate Fallen Angel from `WithActivatedAbility` / string-bound `Boost` to `Activate`, `Costs`, and `Until(EndOfTurn, ModifyPT(This, ...))` through `pkg/mage/dsl`.
+- [x] Correct the legacy cost's exclusion of Fallen Angel itself with `SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")`. No engine fix or new constructor is required.
+- [x] Check the complete Oracle comment, mana cost, creature type, flying, and base P/T against `cards/legends/LEG.json`.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Sacrifice a creature:” / `SacrificeCreatureCost` | `Costs(SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature"))`; controller's unphased creature, including the source; payment before resolution, no mana or tap cost | `TestFallenAngelCanSacrificeItself` first failed because the legacy cost excluded the source; now verifies payment and resolution after source departure on the opponent's upkeep with a tapped source. Existing `TestFallenAngel` covers sacrificing another creature; `TestMatchingSacrificeCostExcludesPhasedPermanents` covers phased exclusions. |
+| “This creature gets +2/+1 until end of turn.” / `Boost(...).Targeting(ToSource())` | `Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(1)))`; layer 7c bonus on the original incarnation; no target or source LKI needed | `TestFallenAngel`; shared `TestComposableSelfPumpLifetime` covers repeated bonuses, expiration, returned source, phasing, and clone isolation |
+| Definition and metadata | Untargeted instant-speed activation; explicit duration; beneficial single-subject +2/+1 metadata | `TestFallenAngelTypedActivation` first failed on the legacy effect role; `TestTemporaryPTMetadata`; universal `TestRegisteredDefinitions` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 602 (activation and costs), 400.7 (new objects), 611.2 (duration), and
+613 (continuous layers). The existing engine supports the exact payment;
+the defect was in card wiring. No outstanding engine blocker is claimed resolved.
+
+Fallen Angel's complete definition is migrated. No export is retired because
+`SacrificeCreatureCost`, `Boost`, and `WithActivatedAbility` retain other callers.
+The changed Legends file retains unrelated legacy definitions and imports.
+
+Validation: focused Fallen Angel and shared sacrifice, source-lifetime, and
+metadata tests; Legends package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
