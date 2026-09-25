@@ -4436,3 +4436,38 @@ Validation: focused card regression and shared engine contracts; Jumpstart
 package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: High Sentinels of Arashin Typed Counter Activation
+
+- [x] Migrate the counter activation to `Activate`, explicit `Costs`,
+  `TargetPermanent`, `WithTargets`, and `AddCounters`.
+- [x] Preserve the `{3}{W}` payment and unrestricted creature target.
+  Either player's creature, including the source, can receive the counter.
+- [x] Verify the full Oracle comment, `{3}{W}` casting cost, Bird Soldier
+  subtypes, 3/4 characteristics, and flying against `data/JMP.json`.
+- [x] Audit target identity, payment, and counter placement. Existing typed
+  adapters support the ability; no engine fix is required.
+
+The ability has no tap cost, activation limit, or timing restriction. Payment
+and target selection occur before stack placement. At resolution, the typed
+binding checks the target's legality and battlefield incarnation, then puts
+one +1/+1 counter on it through the shared counter replacement service.
+Source departure does not prevent resolution on a separate legal target.
+
+Shared target, counter amount, payment, and activation contracts pass. They
+cover zone-change identity, target scope, copies, clone isolation, counter
+replacements, and payment handling. The existing card test for the static
+power/toughness bonus passes before and after migration. Universal registration
+validation checks the activation. This single-action declaration uses proven
+primitives and needs no additional simulation test.
+
+This completes one slice of the remaining activation and positional action
+migrations. The separate static bonus callback remains migration work. Other
+callers retain legacy helpers; no export is retired and no outstanding engine
+blocker is marked resolved.
+
+Validation: focused shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

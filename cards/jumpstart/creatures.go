@@ -426,6 +426,7 @@ func registerCreatures() {
 	// This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it.
 	// {3}{W}: Put a +1/+1 counter on target creature.
 	Register("High Sentinels of Arashin", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("High Sentinels of Arashin", "{3}{W}", 3, 4,
 			WithSubTypes("Bird", "Soldier"),
 			WithKeyword(Flying),
@@ -446,11 +447,11 @@ func registerCreatures() {
 					}
 					return nil
 				})),
-			WithActivatedAbility(
-				mage.AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
-				ManaCostOf("{3}{W}"),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}{W}")),
+				AddCounters(creature, P1P1, Fixed(1)),
+				WithTargets(creature),
+			)),
 		)
 	})
 
