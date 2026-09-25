@@ -15,24 +15,65 @@ func init() {
 func registerArtifacts() {
 	// ===== MOX CYCLE =====
 
-	moxen := []struct {
-		name  string
-		color Color
-	}{
-		{"Mox Pearl", White},
-		{"Mox Sapphire", Blue},
-		{"Mox Jet", Black},
-		{"Mox Ruby", Red},
-		{"Mox Emerald", Green},
-	}
+	// Mox Pearl {0}
+	// Artifact
+	// {T}: Add {W}.
+	Register("Mox Pearl", func() Card {
+		return NewArtifact("Mox Pearl", "{0}",
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(White, Fixed(1)),
+			)),
+		)
+	})
 
-	for _, m := range moxen {
-		name := m.name
-		color := m.color
-		Register(name, func() Card {
-			return NewArtifact(name, "{0}", WithManaAbility(color))
-		})
-	}
+	// Mox Sapphire {0}
+	// Artifact
+	// {T}: Add {U}.
+	Register("Mox Sapphire", func() Card {
+		return NewArtifact("Mox Sapphire", "{0}",
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(Blue, Fixed(1)),
+			)),
+		)
+	})
+
+	// Mox Jet {0}
+	// Artifact
+	// {T}: Add {B}.
+	Register("Mox Jet", func() Card {
+		return NewArtifact("Mox Jet", "{0}",
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(Black, Fixed(1)),
+			)),
+		)
+	})
+
+	// Mox Ruby {0}
+	// Artifact
+	// {T}: Add {R}.
+	Register("Mox Ruby", func() Card {
+		return NewArtifact("Mox Ruby", "{0}",
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(Red, Fixed(1)),
+			)),
+		)
+	})
+
+	// Mox Emerald {0}
+	// Artifact
+	// {T}: Add {G}.
+	Register("Mox Emerald", func() Card {
+		return NewArtifact("Mox Emerald", "{0}",
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(Green, Fixed(1)),
+			)),
+		)
+	})
 
 	// ===== MANA ARTIFACTS =====
 

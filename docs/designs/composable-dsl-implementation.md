@@ -2931,3 +2931,37 @@ Validation: focused shared contracts; Jumpstart and Limited package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart ./cards/limited`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Mox Cycle Typed Mana
+
+- [x] Migrate Mox Pearl, Mox Sapphire, Mox Jet, Mox Ruby, and Mox Emerald
+  from `WithManaAbility` to `Activate`, `Costs(TapCost(This))`, and
+  `AddManaAmount(color, Fixed(1))` through the author DSL.
+- [x] Preserve one white, blue, black, red, or green mana, respectively,
+  with a tap cost and no targets.
+- [x] Add each full Oracle comment directly above its registration and verify
+  its text, artifact type, and `{0}` cost against `data/LEA.json`.
+- [x] Audit immediate resolution, fixed mana planning, payment, and cloning.
+  Existing adapters need no engine fix or new export.
+
+Each ability adds one mana to the activating controller's pool immediately,
+without using the stack. The shared tap cost requires an untapped source;
+fixed production remains available to automatic mana payment. The shared
+mana service emits the tapped-for-mana event. Rules contracts are CR 602
+and 605.1a–605.3b.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`, and
+`TestComposablePayment*` pass before and after migration. They cover immediate
+resolution, production amounts, tap events, planning, clone isolation, and
+failed payment. These single-action declarations use proven primitives and
+need no duplicate card simulation tests.
+
+This completes one slice of the remaining fixed mana caller migrations.
+Other cards retain `WithManaAbility`, so its export remains. No engine blocker
+is marked resolved. Unrelated definitions retain this file's engine import.
+
+Validation: focused shared contracts; Limited package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/limited`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
