@@ -2731,11 +2731,10 @@ func registerCreatures() {
 				MayPayMana("{U/B}", "draw a card", DrawCards(Fixed(1))),
 				false,
 			)),
-			WithActivatedAbility(
-				mage.GrantKeyword(Indestructible).Targeting(ToSource()).Until(EndOfTurn),
-				GenericCost(1),
-				WithCost(SacrificeCreatureCost()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}"), SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				Until(EndOfTurn, GrantKeyword(This, Indestructible)),
+			)),
 		)
 	})
 

@@ -148,6 +148,19 @@ func TestKelsFightFixer_DrawOnSelfSacrifice(t *testing.T) {
 	g.ResolveStack()
 	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
 }
+func TestKelsFightFixer_CanPayWithSelf(t *testing.T) {
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Swamp", 2)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Hill Giant")
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Kels, Fight Fixer")
+	g.ChoosePermanent(gametest.PlayerA, "Kels, Fight Fixer")
+	g.StopAt(1, core.PostcombatMain)
+	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Kels, Fight Fixer", 1)
+	g.AssertHandCount(gametest.PlayerA, "Hill Giant", 1)
+}
+
 func TestKelsFightFixer_SacForIndestructible(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Kels, Fight Fixer")

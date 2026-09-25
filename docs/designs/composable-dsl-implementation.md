@@ -1934,3 +1934,40 @@ Validation: Jumpstart package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Kels, Fight Fixer Sacrifice Activation
+
+- [x] Migrate Kels's activated ability to `Activate`, `Costs`, `Mana`, and
+  `Until(EndOfTurn, GrantKeyword(This, Indestructible))` through `pkg/mage/dsl`.
+- [x] Correct sacrifice eligibility after a failing card regression. Oracle
+  says “Sacrifice a creature,” which includes Kels itself. Use the existing
+  `SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")`.
+- [x] Verify the full Oracle comment, mana cost, legendary supertype, creature
+  types, menace, and base 4/3 characteristics against `data/JMP.json`.
+- [x] Audit payment, source identity, and duration against existing contracts.
+  No new constructor or engine fix is required.
+
+Pay `{1}` and sacrifice one creature you control before the ability resolves.
+The activation has no target, tap cost, timing restriction, or activation limit.
+If Kels remains, the captured source incarnation gains indestructible in layer 6
+until cleanup. Sacrificing Kels still triggers its optional paid draw; the
+indestructible grant has no remaining subject. A returned Kels is a new object.
+
+`TestKelsFightFixer_CanPayWithSelf` failed before migration because no ability
+could activate with Kels as the only creature. It now passes and checks both
+self-sacrifice and the draw after paying for the sacrifice trigger. Existing
+Kels tests cover sacrificing another creature, granting indestructible, and
+accepting or declining the draw. Shared keyword, duration, source capture,
+clone, atomic payment, and phased-sacrifice contracts pass. Rules contracts
+are CR 400.7, 602, 611.2, 613, and 701.21.
+
+This completes the activation slice of the legacy action migrations. Kels's
+sacrifice trigger and payment branch retain their existing builders; their
+migration remains within the outstanding event and payment families. Other
+legacy callers remain, so no export is retired or engine blocker marked resolved.
+
+Validation: focused Kels and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
