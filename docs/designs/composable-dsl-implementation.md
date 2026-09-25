@@ -1535,3 +1535,37 @@ The Dark package; `go test ./pkg/mage/... -short -count=1`;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/thedark`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Radjan Spirit Flying Removal
+
+- [x] Migrate Radjan Spirit's complete definition to typed `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Until(EndOfTurn, RemoveKeyword(...))` through `pkg/mage/dsl`.
+- [x] Verify the full Oracle comment, mana cost, creature type, and base P/T against `data/LEG.json`.
+- [x] Audit target scope, payment, layer order, duration, identity, and inspection against existing contracts. No new constructor or engine fix is required.
+
+The Oracle ability, “{T}: Target creature loses flying until end of turn,”
+uses `Costs(TapCost(This))` and a creature target with no controller restriction.
+Either player's creature, including Radjan Spirit itself, qualifies. The target
+need not have flying. Target legality is checked again at resolution. The
+layer 6 removal removes all flying instances; a later grant can restore flying.
+The resolved removal survives source departure, expires at cleanup, and does
+not affect a returned recipient incarnation. Inspection reports a detrimental
+removal, not a keyword grant.
+
+`TestRadjanSpirit` passed before and after migration. Existing shared contracts
+`TestComposableKeywordRemoval`, `TestComposableKeywordRemovalLifetime`,
+`TestComposableKeywordRemovalMetadata`, `TestTypedKeywordRemovalComposition`,
+and `TestTargetIncarnationAfterReturn` cover the adapter. This declarative
+single-action ability needs no duplicate simulation test. Rules contracts are
+CR 400.7, 602, 608.2b, 611.2, and 613.
+
+Radjan Spirit is fully migrated. `RevokeKeyword` retains production callers,
+so no export is retired. The broader action migration remains open. Tolaria
+and Shelkin Brownie still require exact “bands with other” support; removing
+ordinary banding alone does not satisfy their Oracle text. No unrelated engine
+blocker is claimed resolved.
+
+Validation: focused card and shared adapter tests; Legends package tests;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

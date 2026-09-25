@@ -1958,16 +1958,11 @@ func registerCreatures() {
 	// 3/2
 	// {T}: Target creature loses flying until end of turn.
 	Register("Radjan Spirit", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Radjan Spirit", "{3}{G}", 3, 2,
 			WithSubTypes("Spirit"),
-			WithActivatedAbility(
-				Pipeline("target creature loses flying until end of turn",
-					EffectProperties{Outcome: OutcomeDetriment},
-					RevokeKeyword(Flying),
-				),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, RemoveKeyword(creature, Flying)), WithTargets(creature))),
 		)
 	})
 
