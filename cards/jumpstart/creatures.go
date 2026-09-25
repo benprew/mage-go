@@ -5469,7 +5469,7 @@ func registerCreatures() {
 	Register("Leaf Gilder", func() Card {
 		return NewCreature("Leaf Gilder", "{1}{G}", 2, 1,
 			WithSubTypes("Elf", "Druid"),
-			WithManaAbility(Green),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Green, Fixed(1)))),
 		)
 	})
 

@@ -2897,3 +2897,37 @@ Validation: focused card and shared target, loop, tap, and life tests;
 Jumpstart package tests; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/jumpstart`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Leaf Gilder and Llanowar Elves Typed Mana
+
+- [x] Migrate both complete definitions from `WithManaAbility` to `Activate`,
+  `Costs(TapCost(This))`, and `AddManaAmount(Green, Fixed(1))` through the
+  author DSL.
+- [x] Preserve one green mana, the tap cost, and untargeted activation.
+- [x] Verify Oracle text, casting costs, creature types, and power/toughness
+  against `data/JMP.json` and `data/LEA.json`. Add Llanowar Elves' full Oracle
+  comment above registration.
+- [x] Audit immediate resolution, fixed production planning, and tap payment.
+  Existing adapters need no engine fix or new export.
+
+Both mana abilities resolve immediately and add mana to the activating
+controller's pool. The shared tap-cost and mana services enforce summoning
+sickness and haste, require an untapped source, and support automatic mana
+payment. Rules contracts are CR 302.6, 602, and 605.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`, and
+`TestComposablePayment*` pass before and after migration. They cover immediate
+resolution, tap events, fixed production planning, clone isolation, and failed
+payment. The card definitions are declarative uses of these proven services;
+no duplicate simulation tests are added. The existing Leaf Gilder test only
+checks battlefield setup and is not evidence of mana production.
+
+This completes one slice of the remaining fixed mana caller migrations.
+Other cards still use `WithManaAbility`, so its export is retained. No engine
+blocker is marked resolved. Unrelated definitions retain the engine imports.
+
+Validation: focused shared contracts; Jumpstart and Limited package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart ./cards/limited`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

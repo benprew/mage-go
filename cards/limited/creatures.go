@@ -482,10 +482,11 @@ func registerCreatures() {
 		return NewCreature("Ironroot Treefolk", "{4}{G}", 3, 5, WithSubTypes("Treefolk"))
 	})
 
+	// {T}: Add {G}.
 	Register("Llanowar Elves", func() Card {
 		return NewCreature("Llanowar Elves", "{G}", 1, 1,
 			WithSubTypes("Elf", "Druid"),
-			WithManaAbility(Green),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Green, Fixed(1)))),
 		)
 	})
 
