@@ -2236,3 +2236,38 @@ Validation: Fourth Edition package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/fourthedition`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Moment of Heroism Typed Spell
+
+- [x] Migrate the complete spell definition to `TargetPermanent`, `Spell`,
+  `WithTargets`, and `Until(EndOfTurn, ...)` through `pkg/mage/dsl`.
+- [x] Install +2/+2 and lifelink together with `ModifyPT` and `GrantKeyword`
+  on the same creature binding.
+- [x] Restore the full Oracle comment, including reminder text, and verify
+  the instant type and `{1}{W}` cost against `data/JMP.json`.
+- [x] Audit target identity, layers, payment, and duration against existing
+  engine contracts. No engine fix or new constructor is required.
+
+Either player's creature can be targeted. Resolution checks target legality
+and incarnation again. The modifications capture the recipient at resolution,
+apply in layers 6 and 7c, and expire at cleanup. A later control change does
+not end either effect; lifelink uses the creature's controller when it deals
+damage. A returned target is a new object. Rules contracts are CR 400.7,
+601.2, 608.2b, 611.2, 613, and 702.15.
+
+`TestMomentOfHeroism` passes before and after migration and checks both the
+power/toughness bonus and lifelink. Shared `TestComposableKeywordSourceExit`,
+`TestComposableKeywordLayerOrder`, `TestComposableContinuousCapture`,
+`TestComposableSelfPumpLifetime`, `TestTargetIncarnationAfterReturn`, and
+`TestComposablePaymentAtomicity` pass. This declaration reuses tested
+primitives and registration validation; no new simulation test is required.
+
+This completes one slice of the outstanding action migrations. Other spells
+retain legacy helpers and the file's direct engine import, so no export is
+retired. Damage-source LKI and other engine blockers remain open.
+
+Validation: Jumpstart package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

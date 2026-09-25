@@ -1256,13 +1256,16 @@ func registerSpells() {
 
 	// Moment of Heroism {1}{W}
 	// Instant
-	// Target creature gets +2/+2 and gains lifelink until end of turn.
+	// Target creature gets +2/+2 and gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.)
 	Register("Moment of Heroism", func() Card {
-		return NewInstant("Moment of Heroism", "{1}{W}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+2/+2 and lifelink",
-				Boost(Fixed(2), Fixed(2)),
-				GrantKeyword(Lifelink),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Moment of Heroism", "{1}{W}",
+			dsl.WithAbility(dsl.Spell(
+				dsl.Until(EndOfTurn,
+					dsl.ModifyPT(creature, dsl.Fixed(2), dsl.Fixed(2)),
+					dsl.GrantKeyword(creature, Lifelink),
+				),
+				dsl.WithTargets(creature),
 			)),
 		)
 	})
