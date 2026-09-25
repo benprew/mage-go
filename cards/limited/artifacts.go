@@ -100,19 +100,22 @@ func registerArtifacts() {
 		)
 	})
 
+	// Basalt Monolith {3}
+	// Artifact
+	// This artifact doesn't untap during your untap step.
+	// {T}: Add {C}{C}{C}.
+	// {3}: Untap this artifact.
 	Register("Basalt Monolith", func() Card {
 		return NewArtifact("Basalt Monolith", "{3}",
 			WithKeyword(DoesNotUntapKW),
-			// {T}: Add {C}{C}{C}
-			WithActivatedAbility(
-				AddMana(Colorless, 3),
-				TapCost(This),
-			),
-			// {3}: Untap Basalt Monolith
-			WithActivatedAbility(
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(Colorless, Fixed(3)),
+			)),
+			WithAbility(Activate(
+				Costs(Mana("{3}")),
 				Untap(This),
-				GenericCost(3),
-			),
+			)),
 		)
 	})
 

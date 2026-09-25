@@ -3218,3 +3218,38 @@ Validation: focused shared contracts; Antiquities package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/antiquities`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+## Completed Slice: Basalt Monolith Typed Activations
+
+- [x] Migrate both activated abilities to `Activate` with explicit `Costs`.
+  Use `AddManaAmount(Colorless, Fixed(3))` for mana and `Untap(This)` for untap.
+- [x] Add the full Oracle comment and verify the artifact type and `{3}`
+  casting cost against `data/LEA.json`.
+- [x] Preserve the untap-step restriction, three colorless mana production,
+  tap cost, and separate `{3}` untap cost. Neither ability has targets.
+- [x] Audit mana classification, automatic payment, source identity, and
+  clone isolation. Existing adapters need no engine fix or new export.
+
+The mana ability resolves immediately and supports automatic mana payment.
+The untap ability uses the stack and affects only its captured source
+incarnation. Its payment does not require tapping, so it can be activated
+while the Monolith is tapped. The untap-step restriction does not prevent
+this effect from untapping the artifact. Rules contracts are CR 400.7, 502,
+602, 605, and 608.
+
+`TestBasaltMonolith` passes before and after migration and checks the next
+untap step. Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+`TestComposablePayment*`, `TestComposableSourceUntap*`, and
+`TestActivationSelectionPrefersNonMana` pass before and after migration.
+They cover production, immediate resolution, planning, payment failures,
+source departure and return, phasing, control changes, and clone isolation.
+These declarations use proven primitives; no duplicate simulation test is needed.
+
+This completes one slice of the remaining mana and activation migrations.
+Other cards retain the legacy helpers, so no export is retired. No engine
+blocker is marked resolved. Unrelated definitions retain the engine import.
+
+Validation: focused shared contracts; Limited package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/limited`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).
