@@ -6,6 +6,7 @@ import (
 	_ "github.com/benprew/mage-go/cards/legends"
 	_ "github.com/benprew/mage-go/cards/limited"
 	"github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
 )
 
@@ -191,6 +192,24 @@ func TestGoblinDiggingTeam(t *testing.T) {
 	g.AssertGraveyardCount(gametest.PlayerA, "Goblin Digging Team", 1)
 	g.AssertPermanentCount(gametest.PlayerB, "Wall of Wood", 0)
 	g.AssertGraveyardCount(gametest.PlayerB, "Wall of Wood", 1)
+}
+
+func TestGoblinDiggingTeamNoncreatureWall(t *testing.T) {
+	const wall = "Test Goblin Digging Team Noncreature Wall"
+	dsl.Register(wall, func() dsl.Card {
+		return dsl.NewEnchantment(wall, "{1}", dsl.WithSubTypes("Wall"))
+	})
+
+	g := gametest.NewTestGame(t)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Goblin Digging Team")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, wall)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Goblin Digging Team", wall)
+	g.StopAt(1, core.BeginCombat)
+	g.Execute()
+
+	g.AssertGraveyardCount(gametest.PlayerA, "Goblin Digging Team", 1)
+	g.AssertPermanentCount(gametest.PlayerB, wall, 0)
+	g.AssertGraveyardCount(gametest.PlayerB, wall, 1)
 }
 
 func TestGraveRobbers(t *testing.T) {

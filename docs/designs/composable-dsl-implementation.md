@@ -1680,3 +1680,47 @@ Validation: focused card and shared contract tests; The Dark package tests;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/thedark`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Goblin Digging Team Typed Wall Destruction
+
+- [x] Migrate Goblin Digging Team's complete definition to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify the full Oracle comment, mana cost, creature type, and base P/T against `data/DRK.json`.
+- [x] Correct the legacy creature-only target restriction after a failing card regression. Oracle says “target Wall,” so the typed target uses `HasSubType("Wall")` without `IsCreature`.
+- [x] Audit target scope, payment, source departure, object identity, and destruction. Existing engine services suffice; no engine fix or new constructor is required.
+
+The Oracle ability, “{T}, Sacrifice this creature: Destroy target Wall,”
+uses `Costs(TapCost(This), SacrificeSourceCost())` and a typed Wall
+permanent target. Either player's Wall qualifies. CR 109.2 refers to a
+permanent of the named subtype, and CR 205.3m allows creature subtypes on
+kindreds as well as creatures. Do not add a creature-type restriction.
+
+Select the target before paying the tap and sacrifice costs. Normal creature
+tap restrictions apply. The ability resolves after its source leaves.
+A self-target, possible if the source becomes a Wall, is then absent.
+Other targets must still be legal and have the captured incarnation.
+Destruction allows regeneration and respects indestructible. There is no
+mana cost, sorcery restriction, or regeneration prohibition.
+
+`TestGoblinDiggingTeamNoncreatureWall` failed before migration because the
+legacy ability had no legal target. It now passes and checks source sacrifice
+and target destruction. The test fixture supplies the relevant characteristics
+directly: an enchantment with the Wall subtype. It tests the target restriction,
+not general kindred type support. The existing `TestGoblinDiggingTeam`
+continues to cover a creature Wall.
+
+Shared contracts `TestTypedTargetGroups`, `TestTypedTargetValidation`,
+`TestTypedTargetCopyAndClone`, `TestTargetIncarnationAfterReturn`,
+`TestTypedRegenerationConsumption`, `TestComposedRemovalMetadata`,
+`TestActivateAbility_TotalCostFailureIsAtomic`, and
+`TestActivationNumberCaptureSacrificeAndCopies` cover the reused services.
+Rules contracts are CR 109.2, 205.3m, 400.7, 602, 608.2b, and 701.8.
+
+Goblin Digging Team is fully migrated. Legacy helpers retain other callers,
+including Miracle Worker in the same file, so no export is retired.
+The broader action migration and unrelated engine blockers remain open.
+
+Validation: focused card and shared contract tests; The Dark package tests;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/thedark`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

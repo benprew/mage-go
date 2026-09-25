@@ -308,14 +308,11 @@ func registerCreatures() {
 	// 1/1
 	// {T}, Sacrifice this creature: Destroy target Wall.
 	Register("Goblin Digging Team", func() Card {
+		wall := TargetPermanent("wall", HasSubType("Wall"))
 		return NewCreature("Goblin Digging Team", "{R}", 1, 1,
 			WithSubTypes("Goblin"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCreature(HasSubType("Wall"))),
-			),
+			WithAbility(Activate(Costs(TapCost(This), SacrificeSourceCost()),
+				Destroy(wall), WithTargets(wall))),
 		)
 	})
 
