@@ -3,8 +3,6 @@ package antiquities
 import (
 	"github.com/google/uuid"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -69,16 +67,13 @@ func registerLands() {
 	// Strip Mine
 	// Land
 	// {T}: Add {C}.
-	// {T}, Sacrifice Strip Mine: Destroy target land.
+	// {T}, Sacrifice this land: Destroy target land.
 	Register("Strip Mine", func() Card {
+		land := TargetPermanent("land", IsLand)
 		return NewLand("Strip Mine",
-			WithManaAbility(Colorless),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(mage.TargetPermanent(IsLand)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
+			WithAbility(Activate(Costs(TapCost(This), SacrificeSourceCost()),
+				Destroy(land), WithTargets(land))),
 		)
 	})
 

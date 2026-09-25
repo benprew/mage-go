@@ -1602,3 +1602,45 @@ Validation: focused card and shared adapter tests; Legends package tests;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Strip Mine Typed Activations
+
+- [x] Migrate Strip Mine's complete definition to typed `Activate`, `Costs`, `AddManaAmount`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify the full Oracle comment and land characteristics against `data/ATQ.json`; use the exact wording “Sacrifice this land.”
+- [x] Audit target selection, payment, source departure, target identity, mana classification, and automatic mana planning. Existing services support both abilities; no engine fix or new constructor is required.
+
+The mana ability uses `Costs(TapCost(This))` and
+`AddManaAmount(Colorless, Fixed(1))`. It has no target, resolves immediately,
+and exposes its fixed production to automatic mana planning. The separate
+destruction ability uses `Costs(TapCost(This), SacrificeSourceCost())` and
+`TargetPermanent("land", IsLand)`. Select the target before payment; tapping
+and sacrificing are costs. Either player's land, including Strip Mine itself,
+is a legal target. The ability remains on the stack after its source is
+sacrificed. A self-target is absent at resolution. Other targets are checked
+again for legality and incarnation; regeneration and indestructible still
+apply. There is no mana cost, basic-land restriction, or sorcery restriction.
+
+`TestStripMine` passed before migration and passes afterward with explicit
+ability indices for mana and destruction. Its automatic selector recognizes
+legacy concrete mana abilities, so it selected the new typed mana ability
+when the destruction test omitted an index. The test now specifies its intent.
+Existing contracts `TestTypedManaAmountActivation`,
+`TestTypedManaAmountPlanning`, `TestComposableManaProductionAndResolution`,
+`TestTypedTargetGroups`, `TestTypedTargetCopyAndClone`,
+`TestTargetIncarnationAfterReturn`, `TestComposedRemovalMetadata`,
+`TestActivateAbility_TotalCostFailureIsAtomic`, and
+`TestActivationNumberCaptureSacrificeAndCopies` cover the reused primitives.
+This declarative wiring needs no duplicate simulation. Rules contracts are
+CR 400.7, 602, 605, 608.2b, and 701.8.
+
+Strip Mine is fully migrated, and the land file no longer imports `pkg/mage`
+directly. Unrelated definitions still use mutable aliases from the DSL, so this
+does not close the author boundary. Legacy mana, destruction, and activation
+helpers retain production callers; no export is retired. The broader action
+and mana migrations remain open. No engine blocker is claimed resolved.
+
+Validation: focused card and shared contract tests; Antiquities package tests;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

@@ -460,6 +460,16 @@ WithAbility(Spell(Destroy(land), WithTargets(land)))
 
 The target can be a land controlled by either player. `Destroy` allows regeneration.
 
+### Land Destruction with a Sacrifice Cost
+
+Strip Mine uses `TargetPermanent("land", IsLand)` and
+`Activate(Costs(TapCost(This), SacrificeSourceCost()), Destroy(land), WithTargets(land))`.
+Select the target before paying the tap and sacrifice costs. Either player's
+land can be targeted, including Strip Mine itself. The ability resolves after
+the source leaves; a self-target is then absent. Its separate mana ability uses
+`Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))`, which
+resolves immediately and supports automatic mana planning.
+
 ### Filtered Destruction Activations
 
 Royal Assassin uses `TargetPermanent("creature", And(IsCreature, IsTapped))`

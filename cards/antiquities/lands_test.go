@@ -143,7 +143,7 @@ func TestStripMine(t *testing.T) {
 	t.Run("taps for colorless mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Strip Mine")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Strip Mine")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Strip Mine", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		pool := g.AllPlayers()[0].ManaPool()
@@ -156,8 +156,7 @@ func TestStripMine(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Strip Mine")
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest")
-		// Use the second ability: {T}, Sacrifice: destroy target land
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Strip Mine", "Forest")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Strip Mine", 1, "Forest")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerB, "Forest", 0)
