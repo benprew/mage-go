@@ -613,3 +613,13 @@ Either player's Aura qualifies if its current host is a creature you control.
 The host is not a target. Check the attachment, host type, and host controller
 again at resolution. Moving the Aura to another qualifying creature keeps it
 legal; returning the Aura from another zone creates a new target incarnation.
+
+### Enchanted Creature Destruction
+
+Ramses Overdark uses `TargetPermanent("creature", And(IsCreature, IsEnchanted))`
+with `Activate(Costs(TapCost(This)), Destroy(creature), WithTargets(creature))`.
+`IsEnchanted` requires an attached Aura enchantment; Equipment does not count.
+Either player's creature can qualify, regardless of the Aura's controller.
+Check the restriction at activation and resolution. An Aura that leaves or
+phases out no longer qualifies, but another attached Aura can keep the target
+legal. Destruction permits regeneration and respects indestructible.

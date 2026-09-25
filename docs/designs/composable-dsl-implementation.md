@@ -6,6 +6,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 ## Outstanding Card Migrations
 
+- [x] **Ramses Overdark**: Migrate enchanted-creature destruction to typed targets and activation with the existing `IsEnchanted` filter. See the completed slice below.
 - [ ] **Icatian Moneychanger**: Audit entry damage source identity. (Sacrifice activation with credit counter capture is complete).
 - [ ] **Spore Creatures**: Migrate the five spore creatures' remaining activated definitions after token color, damage-source LKI, and sacrifice-cost audits. Elvish Farmer and Thallid Devourer have pre-existing omitted Saproling-sacrifice abilities; record exact implementations separately from upkeep migration.
 - [ ] **Whirling Dervish**: Audit end-step timing, per-turn opponent-damage condition, and source identity before retiring `DealsDamageToOpponentTrigger`. (It is the remaining production caller; Nicol Bolas is already migrated).
@@ -2560,3 +2561,33 @@ Validation: focused card and shared draw/discard tests; Jumpstart package tests;
 all card tests with `-short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Ramses Overdark Typed Enchanted Target
+
+- [x] Migrate Ramses Overdark to `TargetPermanent`, `And(IsCreature,
+  IsEnchanted)`, `Activate`, `Costs`, `Destroy`, and `WithTargets`.
+- [x] Remove the card-local attachment callback and positional destruction.
+- [x] Verify the full Oracle comment, legendary supertype, creature types,
+  power/toughness, and mana cost against `data/LEG.json`.
+- [x] Audit enchanted status, target lifetime, and destruction with the existing
+  shared adapters. No engine gap or new DSL export is required.
+
+Either player's enchanted creature can be targeted, including the source.
+The Aura's controller is independent of the creature's controller. An attached
+Aura enchantment is required; Equipment does not qualify. Check the target at
+activation and resolution. Removing or phasing out the only Aura makes the
+creature illegal; another Aura can keep it legal. A returned creature is a new
+object. Destruction allows regeneration and respects indestructible. Rules
+contracts are CR 303.4b–e, 400.7, 602.2, 608.2b, and 701.7.
+
+`TestEnchantedTargetResolution` covers either Aura controller, Aura removal,
+Aura phasing, a remaining second Aura, returned target identity, and clone
+isolation. It passes with the existing engine before card migration.
+`TestIsEnchanted*` covers attached Auras and Equipment exclusion.
+`TestRamsesOverdark` passes before and after migration. The definition uses
+only author DSL constructs; unrelated cards retain the file's engine import.
+Other positional destruction callers remain, so no legacy export is retired.
+
+Validation: focused tests; Legends package tests; card registration and engine
+regressions with `-short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures.

@@ -2765,22 +2765,15 @@ func registerCreatures() {
 	// 4/3
 	// {T}: Destroy target enchanted creature.
 	Register("Ramses Overdark", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, IsEnchanted))
 		return NewCreature("Ramses Overdark", "{2}{U}{U}{B}{B}", 4, 3,
 			WithSubTypes("Human", "Assassin"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(NewPermanentFilter("enchanted", func(p *Permanent, g *Game) bool {
-					for _, attachID := range p.Attachments {
-						att := g.FindPermanent(attachID)
-						if att != nil && att.HasType(TypeEnchantment) {
-							return true
-						}
-					}
-					return false
-				}))),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				Destroy(creature),
+				WithTargets(creature),
+			)),
 		)
 	})
 
