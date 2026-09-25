@@ -1462,13 +1462,11 @@ func registerCreatures() {
 	// 1/2
 	// {T}: Destroy target blue creature.
 	Register("Spinal Villain", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasColorFilter(Blue)))
 		return NewCreature("Spinal Villain", "{2}{R}", 1, 2,
 			WithSubTypes("Beast"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetCreature(HasColorFilter(Blue))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Destroy(creature), WithTargets(creature))),
 		)
 	})
 

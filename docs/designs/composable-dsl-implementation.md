@@ -1569,3 +1569,36 @@ Validation: focused card and shared adapter tests; Legends package tests;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Spinal Villain Typed Destruction
+
+- [x] Migrate Spinal Villain from positional destruction and activation helpers to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Verify the complete Oracle comment, mana cost, creature type, and base P/T against `data/LEG.json`.
+- [x] Audit target scope, tap payment, resolution legality, object identity, and destruction behavior against existing adapters. No engine gap or new constructor is required.
+
+The Oracle ability, “{T}: Destroy target blue creature,” uses
+`Costs(TapCost(This))` and `TargetPermanent("creature", And(IsCreature,
+HasColorFilter(Blue)))`. Either player's blue creature qualifies, including a
+multicolored creature or Spinal Villain itself if it becomes blue. There is no
+mana payment, opponent restriction, or regeneration prohibition. Target legality
+is checked again at resolution; a returned creature is a different incarnation.
+The typed action delegates to the existing destruction service, preserving
+regeneration, indestructible, and detrimental effect metadata.
+
+`TestSpinalVillain` passed before and after migration. Shared contracts
+`TestTypedTargetGroups`, `TestTypedTargetValidation`,
+`TestTypedTargetCopyAndClone`, `TestTargetIncarnationAfterReturn`,
+`TestTypedRegenerationConsumption`, and `TestComposableActivationRestrictions`
+cover the reused services. This declarative single-action ability needs no
+new simulation test. Rules contracts are CR 400.7, 602, 608.2b, and 701.8.
+
+Spinal Villain is fully migrated. `DestroyTarget` and the legacy activation
+helpers retain other production callers, so no export is retired. The file
+retains its direct engine import for unrelated definitions. The broader action
+migration remains open; no engine blocker is claimed resolved.
+
+Validation: focused card and shared adapter tests; Legends package tests;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).
