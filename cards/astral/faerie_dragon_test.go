@@ -453,3 +453,44 @@ func TestFaerieDragonSwordsMembership(t *testing.T) {
 		}
 	}
 }
+
+func TestFaerieDragonQueenMembership(t *testing.T) {
+	for _, kind := range []string{"creature", "artifact", "phased", "source", "empty"} {
+		for _, owner := range []gametest.PlayerRef{gametest.PlayerA, gametest.PlayerB} {
+			t.Run(kind+map[gametest.PlayerRef]string{gametest.PlayerA: "/own", gametest.PlayerB: "/opponent"}[owner], func(t *testing.T) {
+				g := gametest.NewTestGame(t)
+				var candidate *mage.Permanent
+				if kind != "empty" {
+					name := "Grizzly Bears"
+					if kind == "artifact" {
+						name = "Sol Ring"
+					}
+					id := g.AddCard(core.ZoneBattlefield, owner, name)
+					candidate = g.FindPermanent(id)
+					candidate.GrantBaseAttr(core.Shroud)
+					candidate.PhasedOut = kind == "phased"
+				}
+				sourceID := g.GetPlayer(gametest.PlayerA).PlayerID()
+				if kind == "source" {
+					sourceID = candidate.ID()
+				}
+				g.SetRandomResults([]int{1, 0})
+				if err := applyFaerieDragonAction(g.Game, sourceID, g.GetPlayer(gametest.PlayerA).PlayerID(), 17); err != nil {
+					t.Fatal(err)
+				}
+				g.ApplyContinuousEffects()
+				eligible := kind == "creature"
+				if candidate != nil && (candidate.CurrentPower(g.Game) == 0 && candidate.CurrentToughness(g.Game) == 2) != eligible {
+					t.Fatal("incorrect base power and toughness")
+				}
+				wantRandom := 1
+				if eligible {
+					wantRandom = 0
+				}
+				if got := g.RandIntn(2); got != wantRandom {
+					t.Fatalf("next random result = %d, want %d", got, wantRandom)
+				}
+			})
+		}
+	}
+}

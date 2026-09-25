@@ -405,16 +405,13 @@ func registerCreatures() {
 		)
 	})
 
-	// Oracle: "{T}: Target creature other than Sorceress Queen has base power and
-	// toughness 0/2 until end of turn."
+	// {T}: Target creature other than this creature has base power and toughness 0/2 until end of turn.
 	Register("Sorceress Queen", func() Card {
+		creature := TargetPermanent("creature", IsCreature, TargetOtherThanSource())
 		return NewCreature("Sorceress Queen", "{1}{B}{B}", 1, 1,
 			WithSubTypes("Human", "Wizard", "Sorcerer"),
-			WithActivatedAbility(
-				SorceressQueenEffect(),
-				TapCost(This),
-				WithTarget(TargetOtherCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, SetBasePowerToughness(creature, Fixed(0), Fixed(2))), WithTargets(creature))),
 		)
 	})
 

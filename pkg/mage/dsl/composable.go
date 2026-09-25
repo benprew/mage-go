@@ -178,15 +178,17 @@ type (
 )
 
 var (
-	SetColors        = mage.SetColors
-	SetEachColors    = mage.SetEachColors
-	SetSubtypeFamily = mage.SetSubtypeFamily
-	AddSubtypeFamily = mage.AddSubtypeFamily
-	GrantEachKeyword = mage.GrantEachKeyword
-	ModifyPT         = mage.ModifyPT
-	ModifyEachPT     = mage.ModifyEachPT
-	GrantKeyword     = mage.GrantKeywordModification
-	CantBeBlocked    = mage.CantBeBlocked
+	SetColors             = mage.SetColors
+	SetEachColors         = mage.SetEachColors
+	SetSubtypeFamily      = mage.SetSubtypeFamily
+	AddSubtypeFamily      = mage.AddSubtypeFamily
+	GrantEachKeyword      = mage.GrantEachKeyword
+	SetBasePowerToughness = mage.SetBasePowerToughness
+	TargetOtherThanSource = mage.TargetOtherThanSource
+	ModifyPT              = mage.ModifyPT
+	ModifyEachPT          = mage.ModifyEachPT
+	GrantKeyword          = mage.GrantKeywordModification
+	CantBeBlocked         = mage.CantBeBlocked
 	// Until installs temporary continuous modifications that expire at duration end (e.g. EndOfTurn).
 	Until = mage.Until
 	// UntilSourceLeaves installs continuous modifications that persist until the source permanent leaves the battlefield.

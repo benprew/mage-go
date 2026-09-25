@@ -36,6 +36,10 @@
 // Game checks the restriction before choices and payment. Copies of stack spells
 // and spell resolution do not repeat the casting check.
 //
+// Use [SetBasePowerToughness] with [Until] to set captured base values.
+// Bonuses and counters still apply. [TargetOtherThanSource] excludes the
+// source from a typed permanent target.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

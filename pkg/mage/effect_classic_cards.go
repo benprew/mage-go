@@ -117,7 +117,3 @@ func LightningBoltEffect() Effect { return DealDamage(Fixed(3)) }
 
 // ProdigalSorcererEffect deals 1 damage to any target.
 func ProdigalSorcererEffect() Effect { return DealDamage(Fixed(1)) }
-
-// SorceressQueenEffect sets a target creature's base power and toughness to 0/2
-// until end of turn.
-func SorceressQueenEffect() Effect { return SetPTUntilEndOfTurn(0, 2, SelectTarget) }

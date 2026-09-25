@@ -108,6 +108,7 @@ Spell(
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
 * Target Options:
   * `TargetYouControl()`: Target must be controlled by the ability controller.
+  * `TargetOtherThanSource()`: Target must be a different permanent from the source.
   * `TargetYouOwn()`: Target must be owned by the ability controller.
   * `TargetOpponentControls()`: Target must be controlled by an opponent.
   * `TargetOpponentOnly()`: Target must be an opponent (for player targets).
@@ -499,3 +500,11 @@ The casting restriction applies on either player's turn, before choices and
 payment, including alternate-cost casts and casts of card copies. It does not
 restrict resolution or copying a spell already on the stack. The target may be
 any creature, including a creature that is not attacking.
+
+### Base Power and Toughness
+
+`Until(EndOfTurn, SetBasePowerToughness(creature, Fixed(0), Fixed(2)))`
+sets both base values through the existing layer executor. It preserves bonuses,
+counters, abilities, types, and colors. Temporary effects capture the subject's
+incarnation and both values at resolution. `While` evaluates them during layer
+evaluation. Base values are not reported as additive boosts in AI metadata.

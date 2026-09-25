@@ -794,6 +794,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
+	excludeSource bool
 	BaseTarget
 	controllerOnly  bool
 	controllerOwned bool
@@ -857,6 +858,9 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if t.excludeSource && sourceCard != nil && p.ID() == sourceCard.ID() {
+			continue
+		}
 		if t.controllerOnly && p.ControllerID() != controller {
 			continue
 		}

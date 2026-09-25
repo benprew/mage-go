@@ -535,3 +535,21 @@ func TestBlockingRestrictionComposition(t *testing.T) {
 		}
 	}
 }
+
+func TestBasePowerToughnessComposition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature, dsl.TargetOtherThanSource())
+	body := dsl.Until(core.EndOfTurn, dsl.SetBasePowerToughness(target, dsl.Fixed(0), dsl.Fixed(2)))
+	for _, card := range []mage.Card{
+		dsl.NewArtifact("Activation", "", dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), body, dsl.WithTargets(target)))),
+		dsl.NewInstant("Spell", "", dsl.WithAbility(dsl.Spell(body, dsl.WithTargets(target)))),
+		dsl.NewCreature("Static", "", 1, 1, dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.IsCreature), dsl.SetBasePowerToughness(dsl.This, dsl.Fixed(0), dsl.Fixed(2)))))),
+	} {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	info := dsl.InspectDefinition(body)
+	if info.Properties.Outcome != mage.OutcomeDetriment || info.Properties.PowerBoost != 0 || info.Properties.ToughnessBoost != 0 {
+		t.Fatalf("metadata = %+v", info)
+	}
+}

@@ -20,6 +20,7 @@ type layerModification struct {
 	power, toughness ResolutionValue
 	keyword          Attr
 	cantBeBlocked    bool
+	setBasePT        bool
 	layer            Layer
 	colors           []Color
 	family           SubtypeFamily
@@ -34,6 +35,11 @@ func (m *layerModification) modification() *layerModification { return m }
 // ModifyPT adds power and toughness to one permanent.
 func ModifyPT(subject PermanentRef, power, toughness ResolutionValue) ContinuousModification {
 	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT}
+}
+
+// SetBasePowerToughness sets both base values of one permanent.
+func SetBasePowerToughness(subject PermanentRef, power, toughness ResolutionValue) ContinuousModification {
+	return &layerModification{subject: subject, power: power, toughness: toughness, layer: LayerPT, setBasePT: true}
 }
 
 // ModifyEachPT applies a power and toughness modification to a permanent set.
@@ -148,6 +154,9 @@ func (m *layerModification) description() string {
 		}
 		return fmt.Sprintf("grant %v", m.keyword)
 	default:
+		if m.setBasePT {
+			return "set base power and toughness"
+		}
 		return "modify power and toughness"
 	}
 }
@@ -167,6 +176,7 @@ type capturedModification struct {
 	power, toughness int
 	keyword          Attr
 	cantBeBlocked    bool
+	setBasePT        bool
 	colors           []Color
 	family           SubtypeFamily
 	subtypes         []string
@@ -179,7 +189,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, cantBeBlocked: m.cantBeBlocked, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
 		if m.ability != nil {
 			v.ability, v.grantID = m.ability, uuid.New()
 		}
@@ -199,8 +209,12 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 	p = g.MutablePermanent(p.ID())
 	switch layer {
 	case LayerPT:
-		p.powerBonus += v.power
-		p.toughBonus += v.toughness
+		if v.setBasePT {
+			p.BasePTOverride = &[2]int{v.power, v.toughness}
+		} else {
+			p.powerBonus += v.power
+			p.toughBonus += v.toughness
+		}
 	case LayerAbility:
 		if v.cantBeBlocked {
 			g.effects.AddCantBeBlockedExceptBy(p.ID(), Not(AnyPermanent))
@@ -399,10 +413,13 @@ func (e *untilEffect) Properties() EffectProperties {
 			continue
 		}
 		m := value.modification()
-		if v, ok := m.power.(fixedValue); ok {
+		if m.setBasePT {
+			p.Outcome = OutcomeDetriment
+		}
+		if v, ok := m.power.(fixedValue); ok && !m.setBasePT {
 			p.PowerBoost += v.n
 		}
-		if v, ok := m.toughness.(fixedValue); ok {
+		if v, ok := m.toughness.(fixedValue); ok && !m.setBasePT {
 			p.ToughnessBoost += v.n
 		}
 		if m.keyword != 0 {

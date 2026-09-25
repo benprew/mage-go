@@ -379,7 +379,6 @@ var (
 	PandorasBoxEffect                            = mage.PandorasBoxEffect
 	ProdigalSorcererEffect                       = mage.ProdigalSorcererEffect
 	SindbadEffect                                = mage.SindbadEffect
-	SorceressQueenEffect                         = mage.SorceressQueenEffect
 	TheHiveEffect                                = mage.TheHiveEffect
 	ApplyToRandomPermanent                       = mage.ApplyToRandomPermanent
 	ApplyToRandomSpellOrPermanent                = mage.ApplyToRandomSpellOrPermanent

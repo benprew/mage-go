@@ -333,3 +333,14 @@ func (targetYouOwnOption) applyPermanentTarget(t *PermanentTarget) { t.controlle
 func (targetYouOwnOption) inspectDefinition() definitionNode {
 	return definitionNode{Role: "target-owner", Text: "you own"}
 }
+
+// TargetOtherThanSource excludes the source card from the target choices.
+func TargetOtherThanSource() PermanentTargetOption { return targetOtherThanSourceOption{} }
+
+type targetOtherThanSourceOption struct{}
+
+func (targetOtherThanSourceOption) permanentTargetOption()                  {}
+func (targetOtherThanSourceOption) applyPermanentTarget(t *PermanentTarget) { t.excludeSource = true }
+func (targetOtherThanSourceOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-exclude-source", Text: "other than this permanent"}
+}

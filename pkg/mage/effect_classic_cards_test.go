@@ -14,7 +14,6 @@ func TestClassicCardEffectsAreReusable(t *testing.T) {
 		{"Berserk", BerserkEffect()},
 		{"Lightning Bolt", LightningBoltEffect()},
 		{"Prodigal Sorcerer", ProdigalSorcererEffect()},
-		{"Sorceress Queen", SorceressQueenEffect()},
 		{"Lifelace", LaceEffect(Green)},
 		{"Lesser Werewolf", LesserWerewolfCounterEffect()},
 		{"Aladdin's Ring", AladdinsRingEffect()},

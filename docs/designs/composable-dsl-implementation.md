@@ -37,6 +37,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Temporary Regeneration Prohibition**: Migrate Hurr Jackal and Faerie Dragon's matching branch, retire `HurrJackalEffect`, and preserve prohibition through source departure and ability removal. See the completed slice below.
 - [x] **Tawnos’s Wand Blocking Restriction**: Add typed `CantBeBlocked`, migrate the Wand and Faerie Dragon’s matching branch, and retire `TawnosWandEffect`. Correct ability-removal and source-departure behavior; see the completed slice below.
 - [x] **Swords to Plowshares Saved-Value Migration**: Migrate the spell and Faerie Dragon’s matching branch to typed controller/power capture, exile, and life gain; retire `SwordsToPlowsharesEffect`. Resolve exile metadata and phased-out random selection; see the completed slice below.
+- [x] **Sorceress Queen Base P/T**: Add typed base power/toughness setting and source exclusion, migrate the Queen and Faerie Dragon’s matching branch, and retire `SorceressQueenEffect`. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -498,3 +499,40 @@ Validation: focused card and engine regressions; affected card packages;
 `go test ./cards/... ./pkg/mage/... -short -count=1` (including registration
 validation and compile-fail fixtures); `make test`; `go build ./...`;
 `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Sorceress Queen Base Power and Toughness
+
+- [x] Add `SetBasePowerToughness(PermanentRef, ResolutionValue, ResolutionValue)`
+  through the existing composed layer executor and base-value override storage.
+- [x] Add `TargetOtherThanSource()` over permanent target selection. Preserve
+  either controller's creatures and allow a different creature with the same name.
+- [x] Migrate both `SorceressQueenEffect` production callers and retire its
+  engine and author exports and redundant text-only test case.
+- [x] Correct Faerie Dragon's phased-out random membership with the existing
+  typed collection. The regression failed for both owners before migration.
+
+| Oracle clause / retired caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Sorceress Queen: “{T}: Target creature other than this creature has base power and toughness 0/2 until end of turn.” | `Activate(Costs(TapCost(This)), Until(EndOfTurn, SetBasePowerToughness(creature, Fixed(0), Fixed(2))), WithTargets(creature))`; creature target with `TargetOtherThanSource()`; either controller; normal target legality recheck. | Existing `TestSorceressQueen` checks 0/2 and expiry; `TestTypedOtherThanSourceTargets` checks source exclusion, same-name creatures, both controllers, and phasing. |
+| Faerie Dragon: “{1}{G}{G}: Play a random effect.” / matching action-table branch | `ChooseRandomPermanent(WithoutPermanent(MatchingPermanents(IsCreature), This), chosen)` followed by typed base P/T setting. No target; shroud does not exclude a choice. Preserve the action table and source exclusion. | `TestFaerieDragonQueenMembership`: either owner, source, creature, noncreature, shroud, phasing, empty set, and random consumption. |
+| Base values and lifetime | Reuse `BasePTOverride`, captured incarnations, and existing duration/clone handling. Preserve bonuses and counters. Preserve detrimental metadata without reporting base values as additive boosts. No damage LKI needed. | `TestTypedBasePowerToughness`: bonuses, counters, overwrite, returned objects, phasing cycle, source departure, control change, and clone-local expiry. `TestBasePowerToughnessComposition`: registration and metadata; player/collection and retired-export compile-fail fixtures. |
+
+Oracle sources: `cards/arabian/ARN.json` and `cards/astral/PAST.json`. The Queen's
+registration comment now matches the inventory's “this creature” wording.
+Faerie Dragon's Oracle does not enumerate its random action table. Rules baseline:
+repository Comprehensive Rules effective February 27, 2026, CR 400.7, 608.2b,
+611.2a–c, 613.4b–c, and 702.26b.
+
+No engine defect blocked these adapters. Source exclusion extends the existing
+permanent target service with the restriction already used by creature targets.
+`SetPTUntilEndOfTurn` remains for its other callers, and `ApplyToRandomPermanent`
+retains two production callers. Broader layer and source-identity audits remain
+open. Arabian card definitions already use `dsl`; Astral retains engine imports
+for unrelated definitions.
+
+Validation: the phased-choice regression failed before migration and passed
+afterward; focused Queen checks; `go test ./pkg/mage/... ./cards/arabian
+./cards/astral -short -count=1`; `make test` (including universal registration
+validation and compile-fail fixtures); `go build ./...`; `go vet ./...`; and
+`make lint` all passed with zero failures (lint: zero issues).
