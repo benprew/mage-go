@@ -61,6 +61,60 @@ func TestTypedBasePowerToughness(t *testing.T) {
 	}
 }
 
+func TestTypedBasePower(t *testing.T) {
+	for _, change := range []string{"none", "phase", "return", "source leaves", "control", "overwrite"} {
+		t.Run(change, func(t *testing.T) {
+			a, b := NewBasePlayer("A"), NewBasePlayer("B")
+			g := NewGame(a, b)
+			source := g.PutOnBattlefield(NewArtifact("Source", ""), a.PlayerID())
+			card := NewCreature("Subject", "", 4, 5)
+			card.SetOwner(a.PlayerID())
+			p := g.PutOnBattlefield(card, a.PlayerID())
+			p.AddCounter(P1P1, 1)
+			saved := BindPermanent("subject")
+			body := Sequence(ChooseRandomPermanent(MatchingPermanents(IsCreature), saved), Until(EndOfTurn,
+				ModifyPT(From(saved), Fixed(3), Fixed(3)),
+				SetBasePower(From(saved), Fixed(0))))
+			if err := ApplyEffect(g, body, source.ID(), a.PlayerID(), nil); err != nil {
+				t.Fatal(err)
+			}
+			check := func(game *Game, power, toughness int) {
+				t.Helper()
+				game.ApplyContinuousEffects()
+				got := game.FindPermanent(card.ID())
+				if got.CurrentPower(game) != power || got.CurrentToughness(game) != toughness {
+					t.Fatalf("P/T = %d/%d, want %d/%d", got.CurrentPower(game), got.CurrentToughness(game), power, toughness)
+				}
+			}
+			check(g, 4, 9)
+			clone := g.Clone()
+			clone.effects.RemoveEndOfTurn()
+			check(clone, 5, 6)
+			check(g, 4, 9)
+			switch change {
+			case "phase":
+				g.PhaseIn(g.PhaseOut(p.ID()))
+			case "return":
+				g.RemoveFromBattlefield(g.FindPermanent(p.ID()))
+				g.PutOnBattlefield(card, a.PlayerID())
+				check(g, 4, 5)
+				return
+			case "source leaves":
+				g.RemoveFromBattlefield(source)
+			case "control":
+				g.AddControlEffect(ControlEffectSpec{SourceID: source.ID(), TargetID: p.ID(), ControllerID: b.PlayerID(), Duration: Indefinite})
+			case "overwrite":
+				if err := ApplyEffect(g, Until(EndOfTurn, SetBasePowerToughness(This, Fixed(7), Fixed(8))), p.ID(), a.PlayerID(), nil); err != nil {
+					t.Fatal(err)
+				}
+				check(g, 11, 12)
+				return
+			}
+			check(g, 4, 9)
+		})
+	}
+}
+
 func TestTypedOtherThanSourceTargets(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
@@ -77,5 +131,30 @@ func TestTypedOtherThanSourceTargets(t *testing.T) {
 	choices = target.Possible(a.PlayerID(), source, g)
 	if len(choices) != 1 || choices[0] != own.ID() {
 		t.Fatalf("choices = %v", choices)
+	}
+}
+
+func TestTypedBasePowerPreservesEarlierToughness(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	p := g.PutOnBattlefield(NewCreature("Subject", "", 4, 5), a.PlayerID())
+	for _, body := range []ResolvingEffect{
+		Until(EndOfTurn, SetBasePowerToughness(This, Fixed(7), Fixed(8))),
+		Until(Indefinite, SetBasePower(This, Fixed(-1))),
+	} {
+		if err := ApplyEffect(g, body, p.ID(), a.PlayerID(), nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.ApplyContinuousEffects()
+	p = g.FindPermanent(p.ID())
+	if p.CurrentPower(g) != -1 || p.CurrentToughness(g) != 8 {
+		t.Fatalf("P/T = %d/%d, want -1/8", p.CurrentPower(g), p.CurrentToughness(g))
+	}
+	g.effects.RemoveEndOfTurn()
+	g.ApplyContinuousEffects()
+	p = g.FindPermanent(p.ID())
+	if p.CurrentPower(g) != -1 || p.CurrentToughness(g) != 5 {
+		t.Fatalf("P/T = %d/%d, want -1/5", p.CurrentPower(g), p.CurrentToughness(g))
 	}
 }

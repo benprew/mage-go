@@ -184,6 +184,7 @@ var (
 	AddSubtypeFamily      = mage.AddSubtypeFamily
 	GrantEachKeyword      = mage.GrantEachKeyword
 	SetBasePowerToughness = mage.SetBasePowerToughness
+	SetBasePower          = mage.SetBasePower
 	TargetOtherThanSource = mage.TargetOtherThanSource
 	ModifyPT              = mage.ModifyPT
 	ModifyEachPT          = mage.ModifyEachPT

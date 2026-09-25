@@ -38,6 +38,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Tawnos’s Wand Blocking Restriction**: Add typed `CantBeBlocked`, migrate the Wand and Faerie Dragon’s matching branch, and retire `TawnosWandEffect`. Correct ability-removal and source-departure behavior; see the completed slice below.
 - [x] **Swords to Plowshares Saved-Value Migration**: Migrate the spell and Faerie Dragon’s matching branch to typed controller/power capture, exile, and life gain; retire `SwordsToPlowsharesEffect`. Resolve exile metadata and phased-out random selection; see the completed slice below.
 - [x] **Sorceress Queen Base P/T**: Add typed base power/toughness setting and source exclusion, migrate the Queen and Faerie Dragon’s matching branch, and retire `SorceressQueenEffect`. See the completed slice below.
+- [x] **Base Power Activations**: Add typed `SetBasePower`, migrate Singing Tree and Island of Wak-Wak, and retire `SetPowerUntilEndOfTurn`. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -536,3 +537,35 @@ afterward; focused Queen checks; `go test ./pkg/mage/... ./cards/arabian
 ./cards/astral -short -count=1`; `make test` (including universal registration
 validation and compile-fail fixtures); `go build ./...`; `go vet ./...`; and
 `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Base Power Activations
+
+- [x] Add `SetBasePower(PermanentRef, ResolutionValue)` through the existing
+  composed layer executor, with explicit duration, inspection, and metadata.
+- [x] Migrate both production `SetPowerUntilEndOfTurn` callers and retire its
+  constructor, executor, and author export. Replace the old UUID-based
+  `SetBasePower` engine constructor, whose only caller was that executor.
+- [x] Preserve base toughness during each layer pass, including after an earlier
+  base P/T effect expires. No separate engine defect blocked this adapter.
+
+| Oracle clause / retired caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Singing Tree: “{T}: Target attacking creature has base power 0 until end of turn.” | `Activate(Costs(TapCost(This)), Until(EndOfTurn, SetBasePower(creature, Fixed(0))), WithTargets(creature))`; creature filter includes `IsAttacking`; either controller; normal selection and resolution rechecks. | Existing `TestSingingTree`: opponent's attacker, unchanged toughness, zero combat damage, and expiry. |
+| Island of Wak-Wak: “{T}: Target creature with flying has base power 0 until end of turn.” | Same activation with a creature-and-flying target filter; no attack restriction or mana cost. | Existing `TestIslandOfWakWak`: opponent's flyer, unchanged toughness, and nonflyer exclusion. |
+| Base power, identity, and lifetime | Existing captured incarnation and duration handling; retain bonuses and counters, preserve current base toughness, and report detrimental metadata without additive boosts. No damage LKI is required. | `TestTypedBasePower`: bonuses, counters, overwrite, return, phasing cycle, source departure, control change, and clone-local expiry. `TestTypedBasePowerPreservesEarlierToughness`: prior base P/T setting and independent expiry. |
+| Author surface | Typed modification composes with spells, activations, and static rules; invalid player and collection subjects fail compilation. | `TestBasePowerComposition`, new compile-fail fixtures, and universal registration validation. |
+
+Oracle source: `cards/arabian/ARN.json`; both full registration comments are
+unchanged. Rules baseline: repository Comprehensive Rules effective February 27,
+2026, CR 400.7, 608.2b, 611.2a–d, and 613.4. The tests first demonstrated the
+missing typed API, then passed after implementation. No live calls or declarations
+of `SetPowerUntilEndOfTurn` remain outside negative compile fixtures. Both card
+files use the `dsl` author surface for these definitions; direct engine imports
+remain for unrelated definitions. `SetPTUntilEndOfTurn`, broader layer
+audits, and the immutable author boundary remain open.
+
+Validation: focused base-power and card tests; `go test ./cards/...
+./pkg/mage/... -short -count=1` (including registration and compile-fail checks);
+`make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with
+zero failures (lint: zero issues).

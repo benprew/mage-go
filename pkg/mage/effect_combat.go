@@ -179,24 +179,6 @@ func (e *setBasePTUntilEndOfTurnEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment}
 }
 
-// setBasePowerUntilEndOfTurnEffect sets a target creature's base power until end of turn.
-type setBasePowerUntilEndOfTurnEffect struct {
-	power int
-}
-
-// SetPowerUntilEndOfTurn creates an effect that sets the target creature's base power
-// until end of turn (e.g. Singing Tree, Island of Wak-Wak: power becomes 0).
-func SetPowerUntilEndOfTurn(power int, target PermanentSelector) Effect {
-	return &setBasePowerUntilEndOfTurnEffect{power: power}
-}
-
-func (e *setBasePowerUntilEndOfTurnEffect) Text() string {
-	return fmt.Sprintf("target creature has base power %d until end of turn", e.power)
-}
-func (e *setBasePowerUntilEndOfTurnEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
 // --- Combat effect executors ---
 
 func (*tap) Apply(ctx *EffectContext) error {
@@ -333,21 +315,6 @@ func (e *setBasePTUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	eff := SetBasePT(perm.ID(), e.power, e.toughness)
-	eff.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(eff)
-	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-func (e *setBasePowerUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return fmt.Errorf("no target for set power")
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	eff := SetBasePower(perm.ID(), e.power)
 	eff.SetSourceID(ctx.SourceID)
 	ctx.Game.AddContinuousEffect(eff)
 	ctx.Game.ApplyContinuousEffects()

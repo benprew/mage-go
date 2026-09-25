@@ -37,7 +37,7 @@
 // and spell resolution do not repeat the casting check.
 //
 // Use [SetBasePowerToughness] with [Until] to set captured base values.
-// Bonuses and counters still apply. [TargetOtherThanSource] excludes the
+// [SetBasePower] changes only base power. Bonuses and counters still apply. [TargetOtherThanSource] excludes the
 // source from a typed permanent target.
 //
 // # Engine Principles & Invariants

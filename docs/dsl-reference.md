@@ -508,3 +508,9 @@ sets both base values through the existing layer executor. It preserves bonuses,
 counters, abilities, types, and colors. Temporary effects capture the subject's
 incarnation and both values at resolution. `While` evaluates them during layer
 evaluation. Base values are not reported as additive boosts in AI metadata.
+
+`Until(EndOfTurn, SetBasePower(creature, Fixed(0)))` changes only base power.
+Base toughness remains subject to other layer effects; it is not captured at
+resolution. This replaces `SetPowerUntilEndOfTurn` for Singing Tree and Island
+of Wak-Wak. The old UUID-based engine `SetBasePower` constructor is replaced
+by this typed modification; install it with an explicit duration.

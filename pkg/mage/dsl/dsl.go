@@ -482,10 +482,9 @@ var (
 	SacrificeCreatureOrDamage = mage.SacrificeCreatureOrDamage
 
 	// P/T modification
-	Boost                  = mage.Boost
-	BoostSelf              = mage.BoostSelf
-	SetPTUntilEndOfTurn    = mage.SetPTUntilEndOfTurn
-	SetPowerUntilEndOfTurn = mage.SetPowerUntilEndOfTurn
+	Boost               = mage.Boost
+	BoostSelf           = mage.BoostSelf
+	SetPTUntilEndOfTurn = mage.SetPTUntilEndOfTurn
 
 	GrantAbility   = mage.GrantAbility
 	GrantType      = mage.GrantType

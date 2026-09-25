@@ -94,12 +94,11 @@ func registerLands() {
 
 	// Oracle: "{T}: Target creature with flying has base power 0 until end of turn."
 	Register("Island of Wak-Wak", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasKeywordFilter(Flying)))
 		return NewLand("Island of Wak-Wak",
-			WithActivatedAbility(
-				SetPowerUntilEndOfTurn(0, SelectTarget),
-				TapCost(This),
-				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, SetBasePower(creature, Fixed(0))),
+				WithTargets(creature))),
 		)
 	})
 

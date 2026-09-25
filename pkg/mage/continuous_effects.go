@@ -324,19 +324,6 @@ func SetBasePT(targetID uuid.UUID, power, toughness int) ContinuousEffect {
 	})
 }
 
-// SetBasePower creates a continuous effect that sets a creature's base power until end of turn,
-// leaving toughness unchanged. Used by Singing Tree and Island of Wak-Wak.
-func SetBasePower(targetID uuid.UUID, power int) ContinuousEffect {
-	return TargetEffect(LayerPT, EndOfTurn, targetID, func(g *Game, target *Permanent) error {
-		currentToughness := target.Card.Toughness()
-		if target.BasePTOverride != nil {
-			currentToughness = target.BasePTOverride[1]
-		}
-		target.BasePTOverride = &[2]int{power, currentToughness}
-		return nil
-	})
-}
-
 // ColorOverride permanently changes a target permanent's color (Lace cycle).
 func ColorOverride(targetID uuid.UUID, color Color) ContinuousEffect {
 	return TargetEffect(LayerColor, Indefinite, targetID, func(g *Game, target *Permanent) error {

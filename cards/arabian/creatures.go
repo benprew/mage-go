@@ -710,13 +710,12 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Target attacking creature has base power 0 until end of turn."
 	Register("Singing Tree", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, IsAttacking))
 		return NewCreature("Singing Tree", "{3}{G}", 0, 3,
 			WithSubTypes("Plant"),
-			WithActivatedAbility(
-				SetPowerUntilEndOfTurn(0, SelectTarget),
-				TapCost(This),
-				WithTarget(TargetCreature(IsAttacking)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, SetBasePower(creature, Fixed(0))),
+				WithTargets(creature))),
 		)
 	})
 
