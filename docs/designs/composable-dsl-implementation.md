@@ -40,6 +40,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Sorceress Queen Base P/T**: Add typed base power/toughness setting and source exclusion, migrate the Queen and Faerie Dragon’s matching branch, and retire `SorceressQueenEffect`. See the completed slice below.
 - [x] **Base Power Activations**: Add typed `SetBasePower`, migrate Singing Tree and Island of Wak-Wak, and retire `SetPowerUntilEndOfTurn`. See the completed slice below.
 - [x] **Typed Combat Removal**: Add `RemoveFromCombat(PermanentRef)`, migrate Mijae Djinn’s coin-flip body and Disharmony’s removal instruction, and correct shared removal to preserve blocked status. Keep explicit-unblocking legacy callers pending their full audits. See the completed slice below.
+- [x] **Disharmony Casting Window**: Extend `OnlyDuring` to multiple steps and enforce beginning-of-combat or declare-attackers timing. The control-effect adapter remains separate. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -580,12 +581,41 @@ zero failures (lint: zero issues).
 | Existing caller or API | Replacement and semantics | Evidence |
 | :--- | :--- | :--- |
 | Mijae Djinn: `SnapshotPermanent` / `RemoveFromCombatGathered` pipeline | `FlipCoin(You, OnLoss(Sequence(RemoveFromCombat(This), Tap(This))))`; attack trigger, no targets, stored controller and source incarnation; no damage LKI required. Exact Oracle comment from `data/ARN.json`. Neutral removal metadata is retained. | `TestMijaeDjinn`, `TestTypedCombatRemovalLifetime`, `TestCombatRemovalComposition` |
-| Disharmony: positional removal instruction | `RemoveFromCombat(creature)` reads its existing typed attacking-creature target. Untap and control instructions are unchanged. Its pre-existing casting-timing gap remains open. | `TestDisharmony`, `TestCombatRemovalComposition` |
+| Disharmony: positional removal instruction | `RemoveFromCombat(creature)` reads its existing typed attacking-creature target. Untap and control instructions are unchanged. Its casting-timing gap is resolved by the Disharmony casting-window slice below. | `TestDisharmony`, `TestCombatRemovalComposition` |
 | `Combat.RemoveFromCombat` | Removes combat membership without clearing the attacker's blocked status (CR 509.1h, repository rules effective February 27, 2026). | `TestCombatRemovalKeepsAttackerBlocked` failed for sole-blocker removal before the fix. |
 | Legacy explicit-unblocking effects | False Orders now names the retained engine helper directly; Ydwen Efreet retains its string-bound helper. Both use a private compatibility operation for their explicit unblocking clause. No legacy engine exports are retired while these callers remain. | `TestFalseOrders`, `TestYdwenEfreet` |
 
 The public DSL `RemoveFromCombat` now requires a permanent reference. Composition tests cover saved references, targets, modes, loops, triggers, and activations; validation rejects absent producers, nil subjects, and undeclared targets. Lifetime tests cover absent, returned, phased, and phased-in references and clone isolation for attackers and blockers.
 
-Remaining audits: Ydwen Efreet's full Oracle text includes an explicit unblocking clause omitted from its current comment; migrate that clause together with its turn-long blocking prohibition. False Orders still needs exact defending-player targeting, casting timing, historical sole-blocker tracking, and optional reassignment. The private compatibility operation preserves existing behavior and does not claim to solve those audits. Disharmony's timing and control adapter remain separate. These cards retain their existing legacy surfaces; Mijae Djinn remains DSL-only.
+Remaining audits: Ydwen Efreet's full Oracle text includes an explicit unblocking clause omitted from its current comment; migrate that clause together with its turn-long blocking prohibition. False Orders still needs exact defending-player targeting, casting timing, historical sole-blocker tracking, and optional reassignment. The private compatibility operation preserves existing behavior and does not claim to solve those audits. Disharmony's control adapter remains separate; its timing is resolved below. These cards retain their existing legacy surfaces; Mijae Djinn remains DSL-only.
 
 Validation: focused combat-removal and affected card tests; `go test ./pkg/mage/... ./cards/arabian ./cards/legends ./cards/limited -short -count=1`; `go test ./pkg/mage/dsl -count=1` (including player/collection compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures. Lint reported zero issues.
+
+
+## Completed Slice: Disharmony Casting Window
+
+- [x] Extend `OnlyDuring(step, moreSteps...)` to accept a union of turn steps.
+- [x] Use the existing action timing checks for spells, activations, and mana
+  abilities. Keep the legacy single-step field and store additional steps in an
+  immutable bit mask. Copy the author-supplied slice before storing the definition.
+- [x] Migrate Disharmony's casting restriction and remove its resolved card and
+  set timing markers. Preserve its full Oracle comment.
+
+| Oracle clause / capability | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Cast this spell only during combat before blockers are declared.” | `OnlyDuring(core.BeginCombat, core.DeclareAttackers)`; either player's turn; no permission to bypass target selection or normal casting rules. | `TestDisharmonyCastingRestriction` failed before migration for main phases, declare blockers, both damage steps, and end of combat. It uses a synthetic attacker to isolate timing from target availability. |
+| Multiple allowed steps | Existing shared action timing checks accept either step before payment in normal, free, alternate-cost, and card-copy casts. Spell availability uses the same restriction. | `TestSpellMultipleStepsRestriction` first failed to compile against the missing API, then passed across every step, both players, and all four paths; rejected casts preserve hand, mana, and stack. |
+| Activation compatibility and definition lifetime | Multiple steps compose with `OnlyOnYourTurn` in either order and with activation limits. Later mutation of the caller's step slice does not change the definition. | `TestMultipleStepActivationRestrictions`; existing activation, granted-activation, and mana contracts. |
+| Copies, resolution, validation, and inspection | Card copies retain timing; stack copies and resolution do not recheck it. Invalid additional steps are rejected. Inspection lists all allowed steps. | `TestSpellStepCopyAndResolution`, `TestSpellStepOptionValidation`, `TestSpellStepComposition`, universal registration validation. |
+| Untap, combat removal, and temporary control | Existing typed attacking-creature target, `Untap`, `RemoveFromCombat`, and legacy control body are unchanged. No damage LKI is required. | `TestDisharmony` and the typed combat-removal contracts. |
+
+Oracle source: `cards/legends/LEG.json`. Rules baseline: repository Comprehensive
+Rules effective February 27, 2026, CR 507, 508, 509.1, and 601.3. Beginning of
+combat remains an allowed step even when there is no legal attacking target.
+The existing timing service needed only a multiple-step representation and shared
+membership check; no casting subsystem was added. No legacy export is retired.
+The typed control adapter and unrelated Legends engine imports remain open.
+
+Validation: focused timing and Disharmony regressions; engine and Legends suites
+with `-short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and
+`make lint` passed with zero failures.

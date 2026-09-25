@@ -318,7 +318,7 @@ a power increase after resolution does not end the blocking restriction.
 * Activation Options:
   * `WithTargets(...)`: Declares target bindings.
   * `OnlyAsSorcery()`: Sorcery-speed timing.
-  * `OnlyDuring(step)`: Restricts casting or activation to the specified step (e.g. `DeclareAttackers` or `Upkeep`). Returns `StepTimingOption`, which is accepted by `Spell` and all activation contexts. It adds a restriction; it does not grant permission to cast a sorcery outside normal timing.
+  * `OnlyDuring(step, moreSteps...)`: Restricts casting or activation to any specified step (e.g. `DeclareAttackers` or `Upkeep`). Returns `StepTimingOption`, which is accepted by `Spell` and all activation contexts. It adds a restriction; it does not grant permission to cast a sorcery outside normal timing.
   * `OnlyOnYourTurn()`: Active player only.
   * `ActivationLimit(maxPerTurn)`: Max activations per turn.
   * `ActivationIf(condition)`: Pure state condition required to activate.
@@ -515,3 +515,8 @@ Base toughness remains subject to other layer effects; it is not captured at
 resolution. This replaces `SetPowerUntilEndOfTurn` for Singing Tree and Island
 of Wak-Wak. The old UUID-based engine `SetBasePower` constructor is replaced
 by this typed modification; install it with an explicit duration.
+
+Disharmony uses `OnlyDuring(core.BeginCombat, core.DeclareAttackers)` for
+“during combat before blockers are declared.” This timing restriction does not
+remove its requirement for an attacking creature target. The constructor copies
+the supplied steps; later caller changes do not change the definition.

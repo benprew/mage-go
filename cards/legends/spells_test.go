@@ -567,3 +567,33 @@ func TestGlyphOfReincarnation(t *testing.T) {
 		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 0)
 	})
 }
+
+func TestDisharmonyCastingRestriction(t *testing.T) {
+	for _, step := range []core.PhaseStep{core.PrecombatMain, core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers, core.FirstStrikeDamage, core.CombatDamage, core.EndCombat, core.PostcombatMain} {
+		t.Run(step.String(), func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			p := g.GetPlayer(gametest.PlayerB)
+			g.SetStep(step)
+			g.AddCard(core.ZoneHand, gametest.PlayerB, "Disharmony")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+			creature := g.FindPermanentByName("Grizzly Bears", g.GetPlayer(gametest.PlayerA).PlayerID())
+			// Keep a target available to test the casting restriction in each step.
+			g.GetCombat().AddAttacker(creature.ID(), p.PlayerID())
+			p.ManaPool().Add(core.Red, 3)
+			err := g.CastSpellByName(p.PlayerID(), "Disharmony", []uuid.UUID{creature.ID()})
+			if step == core.BeginCombat || step == core.DeclareAttackers {
+				if err != nil {
+					t.Fatal(err)
+				}
+				g.ResolveTopOfStack()
+			} else {
+				if err == nil {
+					t.Fatal("Disharmony was cast outside combat before blockers")
+				}
+				if len(p.Hand()) != 1 || p.ManaPool().TotalMana() != 3 {
+					t.Fatal("illegal cast changed hand or mana")
+				}
+			}
+		})
+	}
+}

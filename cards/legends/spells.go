@@ -167,7 +167,6 @@ func registerSpells() {
 	// Instant
 	// Cast this spell only during combat before blockers are declared.
 	// Untap target attacking creature and remove it from combat. Gain control of that creature until end of turn.
-	// XXX: timing restriction (only before blockers) not enforced
 	Register("Disharmony", func() Card {
 		creature := TargetPermanent("attacking creature", And(IsCreature, IsAttacking))
 		return NewInstant("Disharmony", "{2}{R}",
@@ -176,7 +175,7 @@ func registerSpells() {
 				Untap(creature),
 				RemoveFromCombat(creature),
 				GainControl().Until(EndOfTurn),
-			), WithTargets(creature)),
+			), WithTargets(creature), OnlyDuring(core.BeginCombat, core.DeclareAttackers)),
 		)
 	})
 

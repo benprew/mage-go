@@ -31,7 +31,6 @@ This inventory includes unimplemented and partially implemented cards. A reprint
 - **Caverns of Despair**
 - **Chain Lightning**
 - **Chains of Mephistopheles**
-- **Disharmony**
 - **Divine Intervention**
 - **Equinox**
 - **Firestorm Phoenix**

@@ -196,9 +196,19 @@ func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {
 
 func (g *Game) checkSpellStep(card Card) error {
 	for _, ability := range card.Abilities() {
-		if action, ok := UnwrapAbility(ability).(*ActionDefinition); ok && action.kind == ActionSpell && action.timing == TimingStepOnly && g.turns.Step() != action.stepOnly {
-			return fmt.Errorf("can only cast %s during %s", card.Name(), action.stepOnly)
+		if action, ok := UnwrapAbility(ability).(*ActionDefinition); ok && action.kind == ActionSpell && action.timing == TimingStepOnly && !action.allowsStep(g.turns.Step()) {
+			return fmt.Errorf("can only cast %s during %s", card.Name(), (spellStepDefinition{action.stepOnly, actionStepExtras(action)}).inspectDefinition().Text)
 		}
 	}
 	return nil
+}
+
+func actionStepExtras(action *ActionDefinition) []PhaseStep {
+	var steps []PhaseStep
+	for step := Untap; step <= Cleanup; step++ {
+		if action.stepMask&(1<<uint(step)) != 0 {
+			steps = append(steps, step)
+		}
+	}
+	return steps
 }

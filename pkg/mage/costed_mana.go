@@ -77,7 +77,7 @@ func manaSourceActivationAllowed(ability *SimpleActivatedAbility, sourceID uuid.
 	if ability.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if ability.timing == TimingStepOnly && g.turns.Step() != ability.stepOnly {
+	if ability.timing == TimingStepOnly && !ability.allowsStep(g.turns.Step()) {
 		return false
 	}
 	if ability.limits.MaxActivationsPerTurn > 0 && ability.activationCount(g) >= ability.limits.MaxActivationsPerTurn {

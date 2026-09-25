@@ -112,7 +112,7 @@ func describeDefinition(v any) definitionNode {
 	case *ActionDefinition:
 		for i, restriction := range e.dslRestrictions {
 			if e.kind == ActionSpell {
-				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), spellStepDefinition{restriction.step}})
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), spellStepDefinition{restriction.step, restriction.moreSteps}})
 			} else {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), restriction})
 			}

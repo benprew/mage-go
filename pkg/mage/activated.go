@@ -191,6 +191,7 @@ type ActionDefinition struct {
 	targets             []Target
 	timing              TimingRule
 	stepOnly            PhaseStep
+	stepMask            uint32
 	limits              ActivationLimits
 	permission          ActivationPermission
 	activatedThisTurn   bool // Tracks whether this ability has been activated this turn
@@ -295,7 +296,7 @@ func (a *ActionDefinition) CanActivate(controller uuid.UUID, g *Game) bool {
 	if a.timing == YourTurnOnly && g.ActivePlayerObj().PlayerID() != controller {
 		return false
 	}
-	if a.timing == TimingStepOnly && g.turns.Step() != a.stepOnly {
+	if a.timing == TimingStepOnly && !a.allowsStep(g.turns.Step()) {
 		return false
 	}
 	if a.limits.MaxActivationsPerTurn > 0 && a.activationCount(g) >= a.limits.MaxActivationsPerTurn {
@@ -413,4 +414,8 @@ func NewEquipAbility(cost Cost) *EquipAbility {
 	return &EquipAbility{
 		ActionDefinition: *action,
 	}
+}
+
+func (a *ActionDefinition) allowsStep(step PhaseStep) bool {
+	return step == a.stepOnly || (step >= Untap && step <= Cleanup && a.stepMask&(1<<uint(step)) != 0)
 }

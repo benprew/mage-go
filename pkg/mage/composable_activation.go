@@ -1,6 +1,8 @@
 package mage
 
 import (
+	"strings"
+
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -10,6 +12,7 @@ type activationRestriction struct {
 	kind      string
 	timing    TimingRule
 	step      PhaseStep
+	moreSteps []PhaseStep
 	limit     int
 	condition StateCondition
 }
@@ -18,12 +21,14 @@ func (activationRestriction) activationOption() {}
 func (o activationRestriction) applyActivation(a *ActionDefinition) {
 	combinedTiming := false
 	step := o.step
+	moreSteps := o.moreSteps
 	for _, prior := range a.dslRestrictions {
 		if prior.kind == o.kind && o.kind != "condition" {
 			if o.kind == "timing" && ((prior.timing == TimingStepOnly && o.timing == YourTurnOnly) || (prior.timing == YourTurnOnly && o.timing == TimingStepOnly)) {
 				combinedTiming = true
 				if prior.timing == TimingStepOnly {
 					step = prior.step
+					moreSteps = prior.moreSteps
 				}
 				continue
 			}
@@ -59,6 +64,15 @@ func (o activationRestriction) applyActivation(a *ActionDefinition) {
 			return o.condition.checkState(g, StateContext{SourceID: id, ControllerID: controller})
 		})
 	}
+	if o.kind == "timing" && a.timing == TimingStepOnly {
+		a.stepMask = 0
+		for _, extra := range moreSteps {
+			if extra < Untap || extra > Cleanup {
+				panic("activation: supply a valid turn step")
+			}
+			a.stepMask |= 1 << uint(extra)
+		}
+	}
 	a.dslRestrictions = append(a.dslRestrictions, o)
 }
 
@@ -81,7 +95,7 @@ func OnlyAsSorcery() ActivationTimingOption {
 	return activationTiming{activationRestriction{kind: "timing", timing: TimingSorcery}}
 }
 
-// StepTimingOption restricts a spell or activation to one turn step.
+// StepTimingOption restricts a spell or activation to the specified turn steps.
 type StepTimingOption interface {
 	ActivationTimingOption
 	SpellOption
@@ -94,9 +108,9 @@ func (o stepTiming) applySpell(a *ActionDefinition) {
 	o.applyActivation(a)
 }
 
-// OnlyDuring restricts casting or activation to the specified turn step.
-func OnlyDuring(step PhaseStep) StepTimingOption {
-	return stepTiming{activationTiming{activationRestriction{kind: "timing", timing: TimingStepOnly, step: step}}}
+// OnlyDuring restricts casting or activation to any of the specified turn steps.
+func OnlyDuring(step PhaseStep, moreSteps ...PhaseStep) StepTimingOption {
+	return stepTiming{activationTiming{activationRestriction{kind: "timing", timing: TimingStepOnly, step: step, moreSteps: append([]PhaseStep(nil), moreSteps...)}}}
 }
 
 // OnlyOnYourTurn restricts activation to the controller's turn.
@@ -159,8 +173,16 @@ func (o activationLimit) applyModalActivation(a *ActionDefinition) { o.applyActi
 func (activationStateCondition) modalActivationOption()                     {}
 func (o activationStateCondition) applyModalActivation(a *ActionDefinition) { o.applyActivation(a) }
 
-type spellStepDefinition struct{ step PhaseStep }
+type spellStepDefinition struct {
+	step      PhaseStep
+	moreSteps []PhaseStep
+}
 
 func (s spellStepDefinition) inspectDefinition() definitionNode {
-	return definitionNode{Role: "spell-step", Text: s.step.String()}
+	steps := make([]string, 1, 1+len(s.moreSteps))
+	steps[0] = s.step.String()
+	for _, step := range s.moreSteps {
+		steps = append(steps, step.String())
+	}
+	return definitionNode{Role: "spell-step", Text: strings.Join(steps, " or ")}
 }
