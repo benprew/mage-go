@@ -64,6 +64,27 @@ func TestFightSelfDealsTwicePower(t *testing.T) {
 	}
 }
 
+func TestFightDamageObserversSeeBothResults(t *testing.T) {
+	g, a, b := newTriggerTargetGame()
+	first := NewCreature("First", "", 2, 5)
+	first.SetOwner(a.PlayerID())
+	firstPerm := g.PutOnBattlefield(first, a.PlayerID())
+	second := NewCreature("Second", "", 3, 5)
+	second.SetOwner(b.PlayerID())
+	secondPerm := g.PutOnBattlefield(second, b.PlayerID())
+	observations := 0
+	g.damage.SetOnDamageDealt(func(_, _ string, _ int, _ bool) {
+		observations++
+		if firstPerm.Damage != 3 || secondPerm.Damage != 2 {
+			t.Errorf("observer saw damage (%d, %d), want (3, 2)", firstPerm.Damage, secondPerm.Damage)
+		}
+	})
+	fightPermanents(&EffectContext{Game: g, Controller: a.PlayerID()}, firstPerm, secondPerm)
+	if observations != 2 {
+		t.Fatalf("observations = %d, want 2", observations)
+	}
+}
+
 func TestFightBindingValidation(t *testing.T) {
 	first := DeclarePermanentTarget("first", IsCreature)
 	second := DeclarePermanentTarget("second", IsCreature)

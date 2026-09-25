@@ -78,7 +78,8 @@ type Game struct {
 	trackers TrackerSystem
 
 	// DamageSystem owns damage execution, history, aggregation, and reflection.
-	damage DamageSystem
+	damage      DamageSystem
+	damageBatch *damageBatch
 
 	// Mill amount modifiers (CR 614 replacement-style) keyed by source permanent ID.
 	// Each entry maps milled-player ID -> proposed amount -> new amount; modifiers
@@ -1442,6 +1443,10 @@ func (g *Game) DelayedTriggers() []*DelayedTrigger {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	if g.damageBatch != nil {
+		g.damageBatch.events = append(g.damageBatch.events, evt)
+		return
+	}
 	if batch := g.triggers.zoneBatch; batch != nil && isBattlefieldLeaveEvent(&evt) {
 		batch.events = append(batch.events, evt)
 		return

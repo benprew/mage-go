@@ -21,6 +21,23 @@ type DamageSystem struct {
 	onDamageDealt                      func(source, target string, amount int, isCombat bool)
 }
 
+type damageRequest struct {
+	permanent *Permanent
+	amount    int
+	sourceID  uuid.UUID
+}
+
+type damageNotification struct {
+	source, target string
+	amount         int
+	combat         bool
+}
+
+type damageBatch struct {
+	events        []GameEvent
+	notifications []damageNotification
+}
+
 // damageReflectionEntry tracks the Eye for an Eye reflection state for a player.
 type damageReflectionEntry struct {
 	eyeSourceID  uuid.UUID
@@ -327,19 +344,46 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 
 // DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
 func (ds *DamageSystem) DealDamageToPermanent(g *Game, perm *Permanent, amount int, sourceID uuid.UUID) {
+	if action := ds.prepareDamageToPermanent(g, damageRequest{perm, amount, sourceID}); action != nil {
+		g.executeAction(action)
+	}
+}
+
+func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest) Action {
+	perm, amount, sourceID := request.permanent, request.amount, request.sourceID
 	if amount <= 0 {
-		return
+		return nil
 	}
 	sourceCard := g.FindCardAnywhere(sourceID)
 	if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, g) {
-		return
+		return nil
 	}
 	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage)
-	result := g.effects.ApplyReplacements(action, g)
-	if result == nil {
-		return
+	return g.effects.ApplyReplacements(action, g)
+}
+
+// dealSimultaneousDamageToPermanents applies one group of damage before it sends events.
+func (ds *DamageSystem) dealSimultaneousDamageToPermanents(g *Game, requests []damageRequest) {
+	actions := make([]Action, 0, len(requests))
+	for _, request := range requests {
+		if action := ds.prepareDamageToPermanent(g, request); action != nil {
+			actions = append(actions, action)
+		}
 	}
-	g.executeAction(result)
+	batch := &damageBatch{}
+	g.damageBatch = batch
+	for _, action := range actions {
+		g.executeAction(action)
+	}
+	g.damageBatch = nil
+	for _, event := range batch.events {
+		g.FireEvent(event)
+	}
+	for _, notification := range batch.notifications {
+		if ds.onDamageDealt != nil {
+			ds.onDamageDealt(notification.source, notification.target, notification.amount, notification.combat)
+		}
+	}
 }
 
 // ExecuteDamageToCreature applies damage to a creature after all replacements have been applied.
@@ -379,7 +423,11 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		if sc := g.findCardForDamageSource(sourceID); sc != nil {
 			sourceName = sc.Name()
 		}
-		ds.onDamageDealt(sourceName, perm.Name(), amount, ds.resolvingCombatDamage)
+		if g.damageBatch != nil {
+			g.damageBatch.notifications = append(g.damageBatch.notifications, damageNotification{sourceName, perm.Name(), amount, ds.resolvingCombatDamage})
+		} else {
+			ds.onDamageDealt(sourceName, perm.Name(), amount, ds.resolvingCombatDamage)
+		}
 	}
 	src := g.FindPermanent(sourceID)
 	if src != nil && amount > 0 {

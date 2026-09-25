@@ -146,6 +146,9 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 * **Combat Damage Assignment**:
   * Attacking creatures assign lethal damage to each blocker in damage assignment order before assigning damage to the next blocker.
   * Trample assigns excess damage beyond lethal toughness to the defending player/planeswalker.
+* **Fight Damage (CR 701.14)**:
+  * The engine prepares both damage actions through the normal replacement and prevention pipeline, then applies both before it sends damage events and callbacks.
+  * Damage observers see both results of the fight. A creature that fights itself receives one damage action equal to twice its power.
 
 ---
 

@@ -75,9 +75,8 @@ func (e *fightGatheredEffect) Apply(ctx *EffectContext) error {
 func fightPermanents(ctx *EffectContext, first, second *Permanent) {
 	firstPower := first.CurrentPower(ctx.Game)
 	secondPower := second.CurrentPower(ctx.Game)
-	firstCard := ctx.Game.FindCardAnywhere(first.ID())
-	secondCard := ctx.Game.FindCardAnywhere(second.ID())
 	if first.incarnationID == second.incarnationID {
+		firstCard := ctx.Game.FindCardAnywhere(first.ID())
 		if firstPower > 0 && (firstCard == nil || !first.HasProtectionFromInGame(firstCard, ctx.Game)) {
 			ctx.Game.DealDamageToPermanent(first, 2*firstPower, first.ID())
 		}
@@ -85,12 +84,10 @@ func fightPermanents(ctx *EffectContext, first, second *Permanent) {
 		return
 	}
 
-	if firstPower > 0 && (secondCard == nil || !second.HasProtectionFromInGame(firstCard, ctx.Game)) {
-		ctx.Game.DealDamageToPermanent(second, firstPower, first.ID())
-	}
-	if secondPower > 0 && (firstCard == nil || !first.HasProtectionFromInGame(secondCard, ctx.Game)) {
-		ctx.Game.DealDamageToPermanent(first, secondPower, second.ID())
-	}
+	ctx.Game.damage.dealSimultaneousDamageToPermanents(ctx.Game, []damageRequest{
+		{second, firstPower, first.ID()},
+		{first, secondPower, second.ID()},
+	})
 	ctx.Game.FireEvent(GameEvent{
 		Type:     EvtFight,
 		SourceID: first.ID(),
