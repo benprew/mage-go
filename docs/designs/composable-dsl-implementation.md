@@ -2591,3 +2591,36 @@ Other positional destruction callers remain, so no legacy export is retired.
 Validation: focused tests; Legends package tests; card registration and engine
 regressions with `-short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures.
+
+
+## Completed Slice: Jumpstart Sacrifice Debuff Activations
+
+- [x] Migrate Phyrexian Debaser and Plagued Rusalka to typed creature targets,
+  `Activate`, grouped `Costs`, and `Until(EndOfTurn, ModifyPT(...))`.
+- [x] Correct Rusalka's sacrifice cost with the existing
+  `SacrificeMatchingIncludingSourceCost` adapter. It can sacrifice itself.
+- [x] Verify full Oracle comments, costs, types, base P/T, and flying against
+  `data/JMP.json`. No new adapter or engine fix is required.
+
+Both abilities can target either player's creature. Select the target before
+payment and recheck its legality and incarnation at resolution. Debaser pays
+by tapping and sacrificing itself; Rusalka pays `{B}` and sacrifices a creature
+it controls, including itself. The debuff resolves after source departure,
+uses layer 7c, and expires at cleanup. A returned target is a new object.
+Rules contracts are CR 400.7, 602.2, 608.2b, 611.2, and 613.
+
+`TestPlaguedRusalkaSacrificesItself` failed before migration because the ability
+could not activate with Rusalka as its controller's only creature. It now passes
+and verifies source sacrifice and the opponent's -1/-1 debuff. Existing
+`TestPhyrexianDebaser_SacToDebuff` and `TestPlaguedRusalka_SacToDebuff` pass.
+Shared payment, target incarnation, continuous capture, temporary P/T lifetime,
+and phased sacrifice-candidate tests pass.
+
+This completes one slice of the outstanding action migrations. Other callers
+still need the legacy helpers, so no export is retired. No engine blocker is
+marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

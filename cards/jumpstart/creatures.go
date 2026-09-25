@@ -3082,15 +3082,15 @@ func registerCreatures() {
 	// Flying
 	// {T}, Sacrifice this creature: Target creature gets -2/-2 until end of turn.
 	Register("Phyrexian Debaser", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Phyrexian Debaser", "{3}{B}", 2, 2,
 			WithSubTypes("Phyrexian", "Carrier"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(-2), Fixed(-2)).Until(EndOfTurn),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeSourceCost()),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(-2), Fixed(-2))),
+				WithTargets(creature),
+			)),
 		)
 	})
 
@@ -3133,14 +3133,14 @@ func registerCreatures() {
 	// 1/1
 	// {B}, Sacrifice a creature: Target creature gets -1/-1 until end of turn.
 	Register("Plagued Rusalka", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Plagued Rusalka", "{B}", 1, 1,
 			WithSubTypes("Spirit"),
-			WithActivatedAbility(
-				Boost(Fixed(-1), Fixed(-1)).Until(EndOfTurn),
-				ManaCostOf("{B}"),
-				WithCost(SacrificeCreatureCost()),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{B}"), SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(-1), Fixed(-1))),
+				WithTargets(creature),
+			)),
 		)
 	})
 
