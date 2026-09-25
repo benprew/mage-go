@@ -1907,23 +1907,17 @@ func registerSpells() {
 	// Valorous Stance {1}{W}
 	// Instant
 	// Choose one —
-	// • Target creature gains indestructible until end of turn.
+	// • Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.)
 	// • Destroy target creature with toughness 4 or greater.
 	Register("Valorous Stance", func() Card {
-		c := NewInstant("Valorous Stance", "{1}{W}", nil)
-		c.AddAbility(NewModalSpell([]Mode{
-			{
-				Label:   "Target creature gains indestructible until end of turn",
-				Targets: []Target{TargetCreature()},
-				Effects: []Effect{GrantKeyword(Indestructible)},
-			},
-			{
-				Label:   "Destroy target creature with toughness 4 or greater",
-				Targets: []Target{TargetCreature(toughness4OrGreater)},
-				Effects: []Effect{DestroyTarget()},
-			},
-		}))
-		return c
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		tough := dsl.TargetPermanent("tough creature", dsl.And(dsl.IsCreature, dsl.HasToughnessGTE(4)))
+		return dsl.NewInstant("Valorous Stance", "{1}{W}", dsl.WithAbility(dsl.SpellModes(
+			dsl.ModeOf("Target creature gains indestructible until end of turn",
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(creature, Indestructible)), dsl.WithTargets(creature)),
+			dsl.ModeOf("Destroy target creature with toughness 4 or greater",
+				dsl.Destroy(tough), dsl.WithTargets(tough)),
+		)))
 	})
 
 	// Volcanic Fallout {1}{R}{R}
@@ -2198,9 +2192,4 @@ func registerDoublecastDelayedTrigger(g *Game, sourceID, controller uuid.UUID) {
 // instantOrSorcerySpellFilter matches instant or sorcery spells on the stack.
 var instantOrSorcerySpellFilter = NewCardFilter("instant or sorcery spell", func(c Card) bool {
 	return c.HasType(TypeInstant) || c.HasType(TypeSorcery)
-})
-
-// toughness4OrGreater matches creatures with current toughness >= 4.
-var toughness4OrGreater = NewPermanentFilter("toughness 4 or greater", func(p *Permanent, g *Game) bool {
-	return p.CurrentToughness(g) >= 4
 })

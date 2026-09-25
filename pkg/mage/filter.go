@@ -356,6 +356,13 @@ func HasPowerGTE(n int) PermanentFilter {
 	})
 }
 
+// HasToughnessGTE matches permanents with current toughness at least n.
+func HasToughnessGTE(n int) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("with toughness %d or greater", n), func(p *Permanent, g *Game) bool {
+		return p.CurrentToughness(g) >= n
+	})
+}
+
 // IsAuraOnLand matches Aura enchantments attached to land permanents.
 var IsAuraOnLand = NewPermanentFilter("Aura attached to a land", func(p *Permanent, g *Game) bool {
 	if !p.HasType(TypeEnchantment) || !p.HasSubType("Aura") || !p.IsAttached() {

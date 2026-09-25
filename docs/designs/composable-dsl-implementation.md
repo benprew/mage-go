@@ -2311,3 +2311,40 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+## Completed Slice: Valorous Stance Typed Modes and Toughness Filter
+
+- [x] Add `HasToughnessGTE(n)` to the author DSL using the existing current
+  toughness service. Combine it with `IsCreature` for creature targets.
+- [x] Migrate Valorous Stance to `SpellModes`, `ModeOf`, `TargetPermanent`,
+  `WithTargets`, typed `Destroy`, and an end-of-turn `GrantKeyword`.
+- [x] Remove the card-local `toughness4OrGreater` engine callback.
+- [x] Restore the complete Oracle reminder text and verify the instant type
+  and `{1}{W}` cost against `data/JMP.json`.
+- [x] Audit modal selection, target identity, destruction, and keyword duration.
+  No engine behavior fix or outstanding blocker resolution is required.
+
+Choose one mode before selecting its target and paying. Each mode can target
+an opponent's creature or your own. Only the chosen mode supplies targets.
+The destruction mode checks current toughness of at least 4 at casting and
+resolution; it permits regeneration and respects indestructible. The grant
+mode captures the target incarnation, applies indestructible in layer 6, and
+expires at cleanup. Returning a card creates a new object. Rules contracts
+are CR 400.7, 601.2b–c, 608.2b, 611.2, 613, and 701.7.
+
+`TestHasToughnessGTE` first failed to compile because the constructor was
+absent. It now covers the boundary, changing current toughness through
+continuous effects, negative thresholds, and typed modal composition.
+Existing `TestValorousStance_Indestructible` and
+`TestValorousStance_DestroyTough` pass before and after migration. Shared
+`TestTypedModal*`, `TestModalCast*`, `TestTargetIncarnationAfterReturn`,
+`TestComposableKeyword*`, and `TestComposableContinuousCapture` pass.
+
+This completes one slice of the outstanding legacy modal and action migrations.
+The card definition uses the author DSL; unrelated definitions retain the file's
+engine import. Other cards still use the legacy helpers, so no export is retired.
+
+Validation: focused adapter and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

@@ -139,6 +139,7 @@ State conditions must be **pure functions** of game state (no random choices, mu
 ### Permanent & Card Filters (`PermanentFilter`, `CardFilter`)
 * Type filters: `IsCreature`, `IsArtifact`, `IsLand`, `IsEnchantment`, `IsPlaneswalker`, `IsToken`, `IsNonToken`.
 * Characteristic filters: `HasSubType("Dwarf")`, `HasColorFilter(Red)`, `HasKeywordFilter(Flying)`.
+* `HasToughnessGTE(n)`: Matches current toughness at least `n`, including continuous effects and counters. Combine with `IsCreature` for creature targets. Valorous Stance uses this filter in its destruction mode; check it at casting and resolution.
 * Combinators: `And(filters...)`, `Or(filters...)`, `Not(filter)`.
 * `IsAttachedTo(filter)`: Matches attachments whose current, unphased host matches the filter. This does not require an Aura subtype or restrict either controller.
 

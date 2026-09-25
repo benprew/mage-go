@@ -590,6 +590,7 @@ var (
 	CreatedByFilter          = mage.CreatedByFilter
 	HasPowerGTE              = mage.HasPowerGTE
 	HasPowerLTE              = mage.HasPowerLTE
+	HasToughnessGTE          = mage.HasToughnessGTE
 	IsTapped                 = mage.IsTapped
 	IsUntapped               = mage.IsUntapped
 	IsEnchanted              = mage.IsEnchanted
