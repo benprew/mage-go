@@ -4313,3 +4313,36 @@ Validation: focused card regression and shared contracts; Jumpstart package
 tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+## Completed Slice: Towering Titan Typed Sacrifice Trample Activation
+
+- [x] Migrate the sacrifice activation to `Activate`, explicit `Costs`,
+  `SacrificeMatchingIncludingSourceCost`, and
+  `Until(EndOfTurn, GrantEachKeyword(MatchingPermanents(IsCreature), Trample))`.
+- [x] Permit Towering Titan to sacrifice itself if it has defender. The
+  focused regression failed before migration because the legacy cost excluded
+  the source.
+- [x] Verify the full Oracle comment, `{4}{G}{G}` cost, Giant subtype, and
+  0/0 characteristics against `data/JMP.json`.
+- [x] Audit sacrifice payment and the temporary collection grant. Existing
+  typed adapters support this ability; no engine fix is required.
+
+`TestToweringTitanSacrificeTrample` covers source sacrifice after a defender
+grant, sacrifice of another controlled defender, a controller different from
+the owner, payment before resolution, absence of targets, and activation
+while tapped during the opponent's upkeep without mana. Both players' current
+creatures gain trample at resolution, even after the source has been sacrificed.
+Later creatures do not gain trample. The opponent's defender and the
+controller's creature without defender remain on the battlefield.
+
+The existing entry-counter tests and shared keyword, payment, and matching
+sacrifice contracts pass. Shared contracts cover duration expiry, source
+lifetime, clone isolation, and phased sacrifice candidates. This completes
+one slice of the remaining activation migrations. The separate computed entry
+replacement remains unchanged; other legacy callers and recorded engine
+blockers remain open. No export is retired.
+
+Validation: focused card regression and shared contracts; Jumpstart package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

@@ -5963,22 +5963,12 @@ func registerCreatures() {
 				}
 				return total
 			})),
-			WithActivatedAbility(
-				FuncEffect(
-					"all creatures gain trample until end of turn",
-					EffectProperties{Outcome: OutcomeBenefit, Mass: true},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, p := range g.FilterBattlefield(IsCreature) {
-							k := TemporaryKeyword(p.ID(), Trample)
-							k.SetSourceID(sourceID)
-							g.AddContinuousEffect(k)
-						}
-						g.ApplyContinuousEffects()
-						return nil
-					},
-				),
-				SacrificeMatchingCost(And(IsCreature, HasKeywordFilter(Defender)), "Sacrifice a creature with defender"),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(
+					And(IsCreature, HasKeywordFilter(Defender)), "Sacrifice a creature with defender",
+				)),
+				Until(EndOfTurn, GrantEachKeyword(MatchingPermanents(IsCreature), Trample)),
+			)),
 		)
 	})
 
