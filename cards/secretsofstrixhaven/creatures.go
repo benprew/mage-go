@@ -666,15 +666,15 @@ func registerCreatures() {
 	// Lifelink
 	// {1}, Sacrifice this creature: Destroy target artifact or enchantment.
 	Register("Shattered Acolyte", func() Card {
-		return NewCreature("Shattered Acolyte", "{1}{W}", 2, 2,
-			WithSubTypes("Dwarf", "Warlock"),
-			WithKeyword(Lifelink),
-			WithActivatedAbility(
-				DestroyTarget(),
-				ManaCostOf("{1}"),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetArtifactOrEnchantment()),
-			),
+		target := dsl.TargetPermanent("permanent", dsl.Or(dsl.IsArtifact, dsl.IsEnchantment))
+		return dsl.NewCreature("Shattered Acolyte", "{1}{W}", 2, 2,
+			dsl.WithSubTypes("Dwarf", "Warlock"),
+			dsl.WithKeyword(Lifelink),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{1}"), dsl.SacrificeSourceCost()),
+				dsl.Destroy(target),
+				dsl.WithTargets(target),
+			)),
 		)
 	})
 

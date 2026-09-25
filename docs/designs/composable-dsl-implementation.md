@@ -2008,3 +2008,37 @@ Validation: Jumpstart package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Shattered Acolyte Typed Sacrifice Activation
+
+- [x] Migrate Shattered Acolyte's complete definition to the author DSL, with
+  `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy`.
+- [x] Preserve the full Oracle comment, lifelink, mana cost, Dwarf Warlock
+  subtypes, and 2/2 base characteristics from `data/SOS.json`.
+- [x] Audit the target, payment, and destruction adapters. No engine fix or new
+  constructor is required.
+
+The activation costs `{1}` and sacrifice of the source. Its single target can
+be an artifact or enchantment controlled by either player, including the source
+if it has a qualifying type. Choose the target before payment. Destruction
+resolves after sacrifice, checks target legality and incarnation again, and
+allows regeneration and indestructible. A sacrificed self-target is absent.
+There is no tap cost, timing restriction, or activation limit. The typed action
+retains the existing destruction metadata. Rules contracts are CR 400.7, 602,
+608.2b, and 701.7.
+
+Existing `TestShatteredAcolyte_Lifelink` and
+`TestShatteredAcolyte_SacrificeDestroyArtifact` pass before and after migration.
+Shared target validation, copy, incarnation, capture-before-payment, and payment
+contracts also pass. This declaration uses established primitives; it does not
+need a new simulation test.
+
+This completes one slice of the outstanding legacy action migrations. Other
+cards still use the legacy helpers and the file's direct engine import, so no
+export is retired and no engine blocker is marked resolved.
+
+Validation: Secretsofstrixhaven package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/secretsofstrixhaven`; `make test`; and `make lint` pass with
+zero failures (lint: zero issues).
