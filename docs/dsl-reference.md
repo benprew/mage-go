@@ -237,6 +237,11 @@ Crumble captures `ControllerOf(artifact)` with `SnapshotPlayer` and
 `ManaValueOf(artifact)` with `SnapshotNumber` before `DestroyWithoutRegeneration`.
 Its later `GainLife` reads those saved values, including when destruction fails.
 
+Swords to Plowshares captures `ControllerOf(creature)` and `PowerOf(creature)`
+before `Exile(creature)`, then gains life with those saved values. Nonpositive
+power gains no life. `Exile` retains exile targeting metadata through `Sequence`;
+it does not report destruction that regeneration can replace.
+
 ---
 
 ## 9. Triggered Abilities

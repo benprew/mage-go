@@ -85,7 +85,16 @@ func applyFaerieDragonAction(g *Game, sourceID, controllerID uuid.UUID, action i
 	case 17: // Sorceress Queen
 		return ApplyEffect(g, ApplyToRandomPermanent(SorceressQueenEffect(), And(IsCreature, NotID(sourceID))), sourceID, controllerID, nil)
 	case 18: // Swords to Plowshares
-		return ApplyEffect(g, ApplyToRandomPermanent(SwordsToPlowsharesEffect(), IsCreature), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen creature")
+		controller := dsl.BindPlayer("creature controller")
+		power := dsl.BindNumber("creature power")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), chosen),
+			dsl.SnapshotPlayer(dsl.ControllerOf(dsl.From(chosen)), controller),
+			dsl.SnapshotNumber(dsl.PowerOf(dsl.From(chosen)), power),
+			dsl.Exile(dsl.From(chosen)),
+			dsl.GainLife(dsl.FromPlayer(controller), dsl.FromNumber(power)),
+		), sourceID, controllerID, nil)
 	case 19: // Lesser Werewolf
 		return ApplyEffect(g, ApplyToRandomPermanent(LesserWerewolfCounterEffect(), IsCreature), sourceID, controllerID, nil)
 	}

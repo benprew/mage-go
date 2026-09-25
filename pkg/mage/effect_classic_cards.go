@@ -121,15 +121,3 @@ func ProdigalSorcererEffect() Effect { return DealDamage(Fixed(1)) }
 // SorceressQueenEffect sets a target creature's base power and toughness to 0/2
 // until end of turn.
 func SorceressQueenEffect() Effect { return SetPTUntilEndOfTurn(0, 2, SelectTarget) }
-
-// SwordsToPlowsharesEffect exiles a target creature and gives its controller
-// life equal to its power as it last existed on the battlefield.
-func SwordsToPlowsharesEffect() Effect {
-	return Pipeline(
-		"exile target creature. Its controller gains life equal to its power",
-		EffectProperties{Outcome: OutcomeDetriment, TargetPurposeOverride: AITargetExile},
-		SnapshotPermanent(SelectTarget, "victim"),
-		ExileGathered("victim"),
-		GainLifeFromVar("victim.controller", "victim.power"),
-	)
-}

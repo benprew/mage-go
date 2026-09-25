@@ -59,6 +59,9 @@
 // Use [ManaValueOf] to read a permanent through its typed reference. Use
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
 // The saved number remains available after the permanent leaves.
+// Swords to Plowshares saves [PowerOf] and [ControllerOf] before [Exile],
+// then uses the saved values with [GainLifeFor]. Exile metadata stays distinct
+// from destruction metadata when effects are combined.
 // Use [SnapshotPlayer] with [ControllerOf] to save its controller before
 // destruction. Crumble combines both snapshots with [DestroyWithoutRegeneration]
 // and [GainLifeFor]; the saved controller gains life even if destruction fails.

@@ -411,3 +411,45 @@ func TestFaerieDragonWandMembership(t *testing.T) {
 		}
 	}
 }
+
+func TestFaerieDragonSwordsMembership(t *testing.T) {
+	for _, kind := range []string{"creature", "artifact", "phased", "empty"} {
+		for _, owner := range []gametest.PlayerRef{gametest.PlayerA, gametest.PlayerB} {
+			t.Run(kind+map[gametest.PlayerRef]string{gametest.PlayerA: "/own", gametest.PlayerB: "/opponent"}[owner], func(t *testing.T) {
+				g := gametest.NewTestGame(t)
+				var candidate *mage.Permanent
+				if kind != "empty" {
+					name := "Grizzly Bears"
+					if kind == "artifact" {
+						name = "Sol Ring"
+					}
+					id := g.AddCard(core.ZoneBattlefield, owner, name)
+					candidate = g.FindPermanent(id)
+					candidate.GrantBaseAttr(core.Shroud)
+					candidate.PhasedOut = kind == "phased"
+				}
+				g.SetRandomResults([]int{1, 0})
+				if err := applyFaerieDragonAction(g.Game, g.GetPlayer(gametest.PlayerA).PlayerID(), g.GetPlayer(gametest.PlayerA).PlayerID(), 18); err != nil {
+					t.Fatal(err)
+				}
+				g.ApplyContinuousEffects()
+				eligible := kind == "creature"
+				if candidate != nil && (g.FindPermanentIncludingPhased(candidate.ID()) == nil) != eligible {
+					t.Fatal("incorrect exile result")
+				}
+				wantLife := 20
+				if eligible {
+					wantLife = 22
+				}
+				g.AssertLife(owner, wantLife)
+				wantRandom := 1
+				if eligible {
+					wantRandom = 0
+				}
+				if got := g.RandIntn(2); got != wantRandom {
+					t.Fatalf("next random result = %d, want %d", got, wantRandom)
+				}
+			})
+		}
+	}
+}

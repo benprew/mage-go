@@ -380,7 +380,6 @@ var (
 	ProdigalSorcererEffect                       = mage.ProdigalSorcererEffect
 	SindbadEffect                                = mage.SindbadEffect
 	SorceressQueenEffect                         = mage.SorceressQueenEffect
-	SwordsToPlowsharesEffect                     = mage.SwordsToPlowsharesEffect
 	TheHiveEffect                                = mage.TheHiveEffect
 	ApplyToRandomPermanent                       = mage.ApplyToRandomPermanent
 	ApplyToRandomSpellOrPermanent                = mage.ApplyToRandomSpellOrPermanent

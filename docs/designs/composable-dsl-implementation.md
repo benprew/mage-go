@@ -36,6 +36,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Whimsy Random Tap**: Migrate the remaining random-tap branch to typed selection and tap; exclude phased-out candidates. See the completed slice below.
 - [x] **Temporary Regeneration Prohibition**: Migrate Hurr Jackal and Faerie Dragon's matching branch, retire `HurrJackalEffect`, and preserve prohibition through source departure and ability removal. See the completed slice below.
 - [x] **Tawnos’s Wand Blocking Restriction**: Add typed `CantBeBlocked`, migrate the Wand and Faerie Dragon’s matching branch, and retire `TawnosWandEffect`. Correct ability-removal and source-departure behavior; see the completed slice below.
+- [x] **Swords to Plowshares Saved-Value Migration**: Migrate the spell and Faerie Dragon’s matching branch to typed controller/power capture, exile, and life gain; retire `SwordsToPlowsharesEffect`. Resolve exile metadata and phased-out random selection; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -474,3 +475,26 @@ Validation: focused spell-step, Teleport, blocking, and timing tests;
 `go test ./pkg/mage/... ./cards/... -short -count=1`; `make test`;
 `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Swords to Plowshares Saved-Value Migration
+
+- [x] Migrate both production `SwordsToPlowsharesEffect` callers through `dsl` and retire the helper, author export, and redundant text-only test case. Add negative compile fixtures for both surfaces.
+- [x] Preserve controller and effective power before exile with existing typed snapshots. No damage-source LKI or new binding type is needed.
+- [x] Resolve the metadata gap with failing `TestComposableExileMetadata` first: the shared exile executor now reports `AITargetExile`, including through a sequence, without reporting regenerable destruction.
+- [x] Resolve phased-out random membership with the existing typed collection. The corrected regression fails against the legacy branch because it consumes a random choice with no eligible creature; it passes after migration.
+
+| Oracle clause / retired API and callers | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Swords to Plowshares: “Exile target creature. Its controller gains life equal to its power.” / first helper caller | `Spell` with a typed creature target; save `ControllerOf` and `PowerOf`, then `Exile` and `GainLife` from the saved values. Either player's creature; current power and controller at resolution; nonpositive power gains no life. | `TestSwordsToPlowsharesOutcomes`: own/opponent, control change, power increase, zero/negative power, indestructible, departed and returned targets; verifies exile destination and life totals. |
+| Faerie Dragon: “{1}{G}{G}: Play a random effect.” / second helper caller | Preserve the existing action table. `ChooseRandomPermanent(MatchingPermanents(IsCreature), chosen)` followed by the same typed snapshots and actions. No target, so shroud does not prevent selection. Empty and phased-out collections consume no randomness. | `TestFaerieDragonSwordsMembership`: either controller, creature/noncreature, shroud, phasing, empty collection, life gain, and random consumption. |
+| Typed definition and metadata | Existing `SnapshotPlayer`, `SnapshotNumber`, `Exile`, and `GainLife` executors; detrimental/exile metadata survives composition. | `TestSwordsToPlowsharesTypedDefinition`, `TestComposableExileMetadata`, `TestTypedExileComposition`, existing player/number snapshot lifetime and clone tests, and universal registration validation. |
+
+Oracle sources: `data/LEA.json` and `cards/astral/PAST.json`; full Oracle comments precede registration. Faerie Dragon's Oracle does not enumerate its random effects; this slice preserves the repository's action table. Rules baseline: repository Comprehensive Rules effective February 27, 2026, CR 107.1b, 400.7, 608.2b/h, and 702.26b.
+
+No live callers or declarations of `SwordsToPlowsharesEffect` remain outside negative compile fixtures. `ApplyToRandomPermanent` retains three production Faerie Dragon callers and its engine test. The separate Emeritus of Truce prepared spell, other string-bound exile callers, general damage LKI, and mutable author boundary remain open. Both migrated files retain engine imports for unrelated definitions.
+
+Validation: focused card and engine regressions; affected card packages;
+`go test ./cards/... ./pkg/mage/... -short -count=1` (including registration
+validation and compile-fail fixtures); `make test`; `go build ./...`;
+`go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

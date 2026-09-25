@@ -65,9 +65,18 @@ func registerSpells() {
 
 	// ===== WHITE SPELLS =====
 
+	// Exile target creature. Its controller gains life equal to its power.
 	Register("Swords to Plowshares", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
+		controller := BindPlayer("creature controller")
+		power := BindNumber("creature power")
 		return NewInstant("Swords to Plowshares", "{W}",
-			NewTargetedSpell(TargetCreature(), SwordsToPlowsharesEffect()),
+			WithAbility(Spell(Sequence(
+				SnapshotPlayer(ControllerOf(creature), controller),
+				SnapshotNumber(PowerOf(creature), power),
+				Exile(creature),
+				GainLife(FromPlayer(controller), FromNumber(power)),
+			), WithTargets(creature))),
 		)
 	})
 

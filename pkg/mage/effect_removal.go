@@ -64,7 +64,7 @@ func ExileTargetStep() Effect { return &exileTargetEffect{} }
 
 func (e *exileTargetEffect) Text() string { return "exile target permanent" }
 func (e *exileTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
+	return EffectProperties{Outcome: OutcomeDetriment, TargetPurposeOverride: AITargetExile}
 }
 
 // balanceEffect equalizes lands, creatures, and hand sizes.
