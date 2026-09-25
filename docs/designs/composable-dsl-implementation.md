@@ -2315,6 +2315,31 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
 
+## Completed Slice: Bloodhunter Bat Typed Entry Life Loss and Gain
+
+- [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,
+  `TargetPlayer`, `WithTargets`, `Sequence`, `LoseLife`, and `GainLife`.
+- [x] Remove the direct life mutations and event-free `PlayerGainLife` callback.
+  Existing typed actions cover the full ability; no engine fix is required.
+- [x] Verify the full Oracle comment, `{3}{B}` cost, Bat subtype, 2/2 stats,
+  and flying against `data/JMP.json`.
+- [x] Resolve this card's missing life-gain event with a regression that failed
+  before migration.
+
+`TestBloodhunterBatEntryResolution` covers opponent and self targets, target
+selection on the entry trigger, life loss before gain, source departure, and
+normal, doubled, or suppressed life gain. The stored controller gains life;
+the chosen player loses life. The gain event reports the actual positive gain.
+The existing cast-path test also passes.
+
+This completes one card in the life-gain callback audit. Other callbacks and
+replacement-order blockers remain open. No legacy export is retired.
+
+Validation: focused regressions; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Mire Triton Typed Entry Mill and Life Gain
 
 - [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,

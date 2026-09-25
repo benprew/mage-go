@@ -2006,25 +2006,14 @@ func registerCreatures() {
 	// Flying
 	// When this creature enters, target player loses 2 life and you gain 2 life.
 	Register("Bloodhunter Bat", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Bloodhunter Bat", "{3}{B}", 2, 2,
 			WithSubTypes("Bat"),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("target player loses 2 life and you gain 2 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) > 0 {
-							if tp := g.GetPlayer(targets[0]); tp != nil {
-								tp.LoseLife(2)
-							}
-						}
-						if cp := g.GetPlayer(controller); cp != nil {
-							g.PlayerGainLife(cp, 2)
-						}
-						return nil
-					}),
-				false,
-			).AddTarget(mage.TargetPlayer())),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				LoseLife(player, Fixed(2)),
+				GainLife(You, Fixed(2)),
+			), WithTargets(player))),
 		)
 	})
 
