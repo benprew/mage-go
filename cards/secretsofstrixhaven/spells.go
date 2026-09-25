@@ -3104,11 +3104,9 @@ func registerSpells() {
 	// Instant
 	// Destroy target creature with power 3 or greater.
 	Register("Stand Up for Yourself", func() Card {
-		return NewInstant("Stand Up for Yourself", "{2}{W}",
-			NewTargetedSpell(
-				TargetCreature(HasPowerGTE(3)),
-				DestroyTarget(),
-			),
+		creature := dsl.TargetPermanent("creature", dsl.And(dsl.IsCreature, dsl.HasPowerGTE(3)))
+		return dsl.NewInstant("Stand Up for Yourself", "{2}{W}",
+			dsl.WithAbility(dsl.Spell(dsl.Destroy(creature), dsl.WithTargets(creature))),
 		)
 	})
 

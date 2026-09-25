@@ -1827,3 +1827,38 @@ the broader migration and engine blockers remain open.
 Validation: Arabian Nights tests, all card tests and registration validation,
 `go build ./...`, `go vet ./cards/arabian`, `make test`, and `make lint` pass
 with zero failures.
+
+
+## Completed Slice: Stand Up for Yourself Typed Destruction
+
+- [x] Migrate the complete spell definition from `NewTargetedSpell` and
+  `DestroyTarget` to `dsl.Spell`, `TargetPermanent`, `WithTargets`, and `Destroy`.
+- [x] Preserve the creature restriction and current power threshold with
+  `And(IsCreature, HasPowerGTE(3))`. Either player's qualifying creature can
+  be targeted. Check the filter again at resolution.
+- [x] Verify the full Oracle comment, instant card type, and `{2}{W}` mana cost
+  against `data/SOS.json`.
+- [x] Audit the existing target and destruction adapters. No engine fix or new
+  constructor is required.
+
+The existing services preserve target incarnation, copying, clone isolation,
+regeneration, and indestructible behavior (CR 400.7, 601, 608.2b, and 701.8).
+`HasPowerGTE` reads current power, including continuous effects and counters;
+it does not use printed power. Destruction metadata remains available through
+the typed action. The complete definition uses the DSL author surface; other
+cards in the file still require the engine import.
+
+`TestStandUpForYourself` passes. Shared `TestTypedTargetGroups`,
+`TestTypedTargetValidation`, `TestTypedTargetCopyAndClone`,
+`TestTargetIncarnationAfterReturn`, `TestComposedRemovalMetadata`, and
+`TestTypedRegenerationConsumption` pass. This declarative spell reuses existing
+contracts, so no new simulation test is required.
+
+This completes one slice of the outstanding action migrations. Legacy spell
+and destruction helpers retain other callers, so no export is retired and
+no open engine blocker is marked resolved.
+
+Validation: Secrets of Strixhaven package tests; focused shared contracts;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/secretsofstrixhaven`; `make test`; and
+`make lint` pass with zero failures (lint: zero issues).
