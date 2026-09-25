@@ -2873,26 +2873,10 @@ func registerCreatures() {
 		return NewCreature("Mire Triton", "{1}{B}", 2, 1,
 			WithSubTypes("Zombie", "Merfolk"),
 			WithKeyword(Deathtouch),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect("mill two cards and gain 2 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						lib := p.Library()
-						for i := 0; i < 2 && len(lib) > 0; i++ {
-							card := lib[len(lib)-1]
-							lib = lib[:len(lib)-1]
-							p.AddToGraveyard(card)
-						}
-						p.SetLibrary(lib)
-						g.PlayerGainLife(p, 2)
-						return nil
-					}),
-				false,
-			)),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				Mill(You, Fixed(2)),
+				GainLife(You, Fixed(2)),
+			))),
 		)
 	})
 

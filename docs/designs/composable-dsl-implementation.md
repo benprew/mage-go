@@ -2315,6 +2315,33 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
 
+## Completed Slice: Mire Triton Typed Entry Mill and Life Gain
+
+- [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,
+  `Sequence`, `Mill(You, Fixed(2))`, and `GainLife(You, Fixed(2))`.
+- [x] Remove the card callback's direct library updates and event-free
+  `PlayerGainLife` call. Existing engine services need no change.
+- [x] Verify the complete Oracle comment, mana cost, types, power, toughness,
+  and deathtouch against `data/JMP.json`.
+- [x] Resolve this card's library-order, mill-modifier, life-gain-event, and
+  departed-source defects with a regression that failed before migration.
+
+`TestMireTritonEntryResolution` covers top-first milling, empty and one-card
+libraries, doubled milling, doubled and suppressed life gain, mill-before-gain
+order, and source departure before resolution. The entry trigger uses the
+stored controller and still gains life when fewer than two cards can be milled.
+Milling does not count as drawing. The opponent's life and graveyard stay intact.
+The existing cast-path test also passes.
+
+This completes one card in the life-gain callback and milling caller audits.
+General mill replacement ordering, zone-change replacements, and mill events
+remain open as recorded above. No legacy export is retired.
+
+Validation: focused regressions; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Scroll of Avacyn Typed Conditional Life Gain
 
 - [x] Migrate the complete definition to `Activate`, typed mana and sacrifice
