@@ -2383,3 +2383,40 @@ callers still use the legacy destruction and count helpers; no export is retired
 Validation: engine tests with `-short -count=1`; Jumpstart package tests;
 all card tests with `-short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures.
+
+
+## Completed Slice: Launch Party Typed Destruction and Life Loss
+
+- [x] Migrate Launch Party to `Spell`, `TargetPermanent`, `WithTargets`,
+  `Sequence`, `SnapshotPlayer`, `Destroy`, and `LoseLife` through the author DSL.
+- [x] Preserve the creature sacrifice additional cost and complete Oracle text,
+  instant type, and `{3}{B}` mana cost from `data/JMP.json`.
+- [x] Correct the card callback's missing life-loss event by using the existing
+  typed action. No engine behavior fix or new constructor is required.
+- [x] Verify payment, target identity, controller capture, failed destruction,
+  and life-loss triggers with a regression test written before migration.
+
+The spell chooses its creature target before sacrifice payment. The target may
+be either player's creature, including the creature sacrificed as payment.
+An illegal sole target prevents both instructions. Otherwise, capture its
+controller at resolution before destruction; that player loses 2 life even if
+regeneration or indestructible prevents destruction. A later control change
+before resolution changes the player who loses life. A returned target is a
+new object. Rules contracts are CR 119.3, 400.7, 601.2c, 601.2h, and 608.2b–c.
+
+`TestLaunchPartyOutcomes` first failed for destruction, indestructible, and
+regeneration: Exquisite Blood did not trigger because the old callback changed
+life without an event. All eight scenarios now pass, including target departure
+and return, changed control, sacrificing the target, and failed sacrifice
+payment with unchanged hand, mana, and stack. The existing `TestLaunchParty`
+also passes. Shared player-snapshot, target-incarnation, payment, destruction,
+and opponent-life-event tests pass.
+
+This completes one slice of the outstanding action migrations. Other card
+callbacks and legacy helpers remain; no export is retired or engine blocker
+marked resolved.
+
+Validation: focused regressions and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

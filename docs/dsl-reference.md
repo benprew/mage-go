@@ -244,6 +244,13 @@ Crumble captures `ControllerOf(artifact)` with `SnapshotPlayer` and
 `ManaValueOf(artifact)` with `SnapshotNumber` before `DestroyWithoutRegeneration`.
 Its later `GainLife` reads those saved values, including when destruction fails.
 
+Launch Party captures `ControllerOf(creature)` with `SnapshotPlayer` before
+`Destroy(creature)`, then uses `LoseLife(FromPlayer(controller), Fixed(2))`.
+Life loss still occurs if regeneration or indestructible prevents destruction,
+and it emits a life-loss event. Attach `WithAdditionalCost(SacrificeCreatureCost())`
+to the card alongside `Spell`; choose the target before sacrifice payment.
+Sacrificing the sole target makes it illegal, so neither instruction resolves.
+
 Swords to Plowshares captures `ControllerOf(creature)` and `PowerOf(creature)`
 before `Exile(creature)`, then gains life with those saved values. Nonpositive
 power gains no life. `Exile` retains exile targeting metadata through `Sequence`;

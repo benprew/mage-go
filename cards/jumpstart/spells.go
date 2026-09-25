@@ -1121,27 +1121,15 @@ func registerSpells() {
 	// As an additional cost to cast this spell, sacrifice a creature.
 	// Destroy target creature. Its controller loses 2 life.
 	Register("Launch Party", func() Card {
-		return NewInstant("Launch Party", "{3}{B}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"destroy target; its controller loses 2 life",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					ownerID := perm.ControllerID()
-					g.DestroyPermanent(perm)
-					if owner := g.GetPlayer(ownerID); owner != nil {
-						owner.LoseLife(2)
-					}
-					return nil
-				},
-			)),
-			WithAdditionalCost(SacrificeCreatureCost()),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		controller := dsl.BindPlayer("creature controller")
+		return dsl.NewInstant("Launch Party", "{3}{B}",
+			dsl.Spell(dsl.Sequence(
+				dsl.SnapshotPlayer(dsl.ControllerOf(creature), controller),
+				dsl.Destroy(creature),
+				dsl.LoseLife(dsl.FromPlayer(controller), dsl.Fixed(2)),
+			), dsl.WithTargets(creature)),
+			dsl.WithAdditionalCost(dsl.SacrificeCreatureCost()),
 		)
 	})
 
