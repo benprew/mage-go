@@ -62,6 +62,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Jumpstart Triggered Team Boosts**: Migrate Inspiring Captain and Inspiring Unicorn to typed controlled-creature collections and explicit end-of-turn P/T modifications. Captain also uses `WhenEvent(Enters(This), ...)`; Unicorn retains its attack-event wrapper pending that adapter. No engine gap; see the completed slice below.
 - [x] **Angelic Page Combat Target**: Migrate its tap activation to a typed attacking-or-blocking creature target and end-of-turn P/T modification. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
+- [x] **Target Collection Boosts**: Migrate Dauntless Onslaught and Tandem Tactics to typed target collections, spells, and temporary collection boosts. See the completed slice below.
 - [x] **Osai Vultures Counter-Payment Boost**: Migrate its activation to typed counter costs and an explicit temporary source modification. No engine gap; the end-step trigger remains a separate audit. See the completed slice below.
 - [x] **Wyluli Wolf Targeted Tap Boost**: Migrate its activation to a typed creature target, tap cost, and explicit end-of-turn P/T modification. Existing adapters cover the full ability; no engine gap. See the completed slice below.
 
@@ -2346,6 +2347,41 @@ The card definition uses the author DSL; unrelated definitions retain the file's
 engine import. Other cards still use the legacy helpers, so no export is retired.
 
 Validation: focused adapter and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
+## Completed Slice: Dauntless Onslaught and Tandem Tactics Target Collections
+
+- [x] Migrate both complete definitions to `TargetPermanents`, `WithTargets`,
+  `Spell`, and `Until(EndOfTurn, ModifyEachPT(...))` through `pkg/mage/dsl`.
+- [x] Preserve Tandem Tactics' ordered life gain with `Sequence` and
+  `GainLife(You, Fixed(2))`.
+- [x] Verify complete Oracle comments, instant types, and mana costs against
+  `data/JMP.json`.
+- [x] Audit target counts, partial legality, returned incarnations, resolving
+  controller, layers, and duration. Existing adapters need no engine fix.
+
+Each spell can target zero, one, or two creatures controlled by either player.
+At resolution, only legal target incarnations receive the layer 7c boost, which
+expires at cleanup. A returned target is a new object. Tandem Tactics gains life
+after installing the boost, including when cast with zero targets or when only
+one of two targets remains legal. If all chosen targets become illegal, neither
+spell resolves and no life is gained. Rules contracts are CR 400.7, 608.2b–c,
+611.2, and 613.
+
+`TestTargetedBoostsPartialLegality` passes before and after migration. It checks
+both spells with one returned target and with all targets returned, including
+an opponent's creature as the remaining legal target. Existing
+`TestDauntlessOnslaught` and `TestTandemTactics` cover zero, one, and two targets
+and life gain. Shared typed target, copy, clone, continuous capture, duration,
+and life-gain contracts pass.
+
+This completes one slice of the outstanding action migrations. Neither spell
+uses positional `Boost` or `ToAllTargets` now. Other cards retain the legacy
+helpers, so no export is retired or engine blocker marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).

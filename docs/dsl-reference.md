@@ -106,6 +106,12 @@ Spell(
 ### Permanent Targets
 * `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
+  For “up to two target creatures,” use `TargetPermanents("creatures", 0, 2, IsCreature)`
+  with `WithTargets(creatures)`. Dauntless Onslaught and Tandem Tactics pass this
+  collection to `Until(EndOfTurn, ModifyEachPT(creatures, ...))`. Only targets
+  that remain legal receive the boost. A cast with zero targets still resolves;
+  a cast whose chosen targets all become illegal does not resolve. Tandem
+  Tactics gains life after the boost with `Sequence` and `GainLife(You, Fixed(2))`.
 * Target Options:
   * `TargetYouControl()`: Target must be controlled by the ability controller.
   * `TargetOtherThanSource()`: Target must be a different permanent from the source.

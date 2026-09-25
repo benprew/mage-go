@@ -472,11 +472,12 @@ func registerSpells() {
 	// Instant
 	// Up to two target creatures each get +2/+2 until end of turn.
 	Register("Dauntless Onslaught", func() Card {
-		return NewInstant("Dauntless Onslaught", "{2}{W}",
-			NewMultiTargetSpell(
-				[]Target{TargetUpToNCreatures(2)},
-				Boost(Fixed(2), Fixed(2)).Targeting(ToAllTargets()),
-			),
+		creatures := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature)
+		return dsl.NewInstant("Dauntless Onslaught", "{2}{W}",
+			dsl.WithAbility(dsl.Spell(
+				dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(creatures, dsl.Fixed(2), dsl.Fixed(2))),
+				dsl.WithTargets(creatures),
+			)),
 		)
 	})
 
@@ -1756,12 +1757,12 @@ func registerSpells() {
 	// Instant
 	// Up to two target creatures each get +1/+2 until end of turn. You gain 2 life.
 	Register("Tandem Tactics", func() Card {
-		return NewInstant("Tandem Tactics", "{1}{W}",
-			NewMultiTargetSpell(
-				[]Target{TargetUpToNCreatures(2)},
-				Boost(Fixed(1), Fixed(2)).Targeting(ToAllTargets()),
+		creatures := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature)
+		return dsl.NewInstant("Tandem Tactics", "{1}{W}",
+			dsl.WithAbility(dsl.Spell(dsl.Sequence(
+				dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(creatures, dsl.Fixed(1), dsl.Fixed(2))),
 				dsl.GainLife(dsl.You, dsl.Fixed(2)),
-			),
+			), dsl.WithTargets(creatures))),
 		)
 	})
 
