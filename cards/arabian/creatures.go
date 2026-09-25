@@ -491,13 +491,14 @@ func registerCreatures() {
 
 	// Oracle: "{T}: Target creature can't be regenerated this turn."
 	Register("Hurr Jackal", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Hurr Jackal", "{R}", 1, 1,
 			WithSubTypes("Jackal"),
-			WithActivatedAbility(
-				HurrJackalEffect(),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, CantRegenerate)),
+				WithTargets(creature),
+			)),
 		)
 	})
 

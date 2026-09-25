@@ -34,6 +34,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Rakalite Delayed Return**: Migrate prevention and delayed source return to typed targets, activation, and `AtNext`; preserve the original source incarnation. See the completed slice below.
 - [x] **Aura Entry Tap**: Migrate Paralyze and Waterknot to typed entry triggers and attachment taps; retire `TapAttachedCreature`. Resolve departed and returned attachment identity with existing typed references. See the completed slice below.
 - [x] **Whimsy Random Tap**: Migrate the remaining random-tap branch to typed selection and tap; exclude phased-out candidates. See the completed slice below.
+- [x] **Temporary Regeneration Prohibition**: Migrate Hurr Jackal and Faerie Dragon's matching branch, retire `HurrJackalEffect`, and preserve prohibition through source departure and ability removal. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -53,6 +54,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] Retain source incarnation and last-known characteristics through the existing damage and replacement pipeline, including death, return, and copying. `DamageSystem.ExecuteDamageToPlayer` and `ExecuteDamageToCreature` use `FindPermanent(sourceID)` for lifelink and deathtouch. Protection in `DealDamageToPermanent` also looks up the physical card ID; `LookupObject` prefers a live object with that ID. Add regressions for returned sources and departed sources with granted keywords before adding the typed adapter.
 
 ### Destruction Regeneration Scope
+- [x] Preserve turn-long regeneration prohibitions through ability removal. `CantRegenerate` is a rules restriction, not a removable ability; typed duration metadata reports a detrimental effect. See the Hurr Jackal slice below.
 - [x] Resolve repeated destruction and intermediate state observations in the Disk helper. One union collection now uses the existing simultaneous destruction executor.
 - [x] Keep the collection no-regeneration prohibition on each destruction action; preserve permanent characteristics and simultaneous death snapshots.
 - [x] Correct singular typed, positional, step, and string-bound no-regeneration execution to use the action-scoped prohibition. Migrate Terror; see the completed slice below.
@@ -382,3 +384,24 @@ Oracle source: `cards/astral/PAST.json`; the complete comment remains above regi
 No export is retired: `ApplyToRandomPermanent` still has six Faerie Dragon production callers and one engine test. The legacy `Tap()` cost/effect surface also has other callers. Their separate audits and the broader string-bound action checklist remain open.
 
 Validation: the phased-out regression failed before migration and passed afterward; `go test ./cards/astral -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./cards/astral`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Temporary Regeneration Prohibition
+
+- [x] Migrate both production `HurrJackalEffect` callers: Hurr Jackal and Faerie Dragon's Hurr Jackal branch.
+- [x] Retire the helper from engine and author surfaces, remove its redundant text-only test case, and add negative compile fixtures for both exports.
+- [x] Fix ability removal and typed detrimental metadata with failing engine regressions first. Reuse attribute storage, continuous durations, and regeneration replacement handling.
+- [x] Correct source-departure duration and phased-out random membership with existing typed adapters. Card regressions failed before migration and pass afterward.
+
+| Oracle clause / retired API and callers | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Hurr Jackal: “{T}: Target creature can't be regenerated this turn.” / `HurrJackalEffect` | `Activate(Costs(TapCost(This)), Until(EndOfTurn, GrantKeyword(creature, CantRegenerate)), WithTargets(creature))`; either player's creature; tap cost, stack resolution, target legality, and captured incarnation use existing contracts. The restriction remains after source departure and expires at cleanup. | `TestHurrJackal`, `TestHurrJackalTypedDefinition`, existing typed target and duration contract tests |
+| Faerie Dragon: “{1}{G}{G}: Play a random effect.” / second helper caller | Preserve the existing action table. `ChooseRandomPermanent(MatchingPermanents(IsCreature), chosen)` followed by the same typed duration on `From(chosen)`; choose at resolution without targeting, so shroud does not exclude a creature. Exclude phased-out creatures and consume no random choice for an empty collection. | `TestFaerieDragonRegenerationProhibitionMembership`, `TestFaerieDragonRandomKeywordEffects`, `TestFaerieDragonTemporaryKeywordLifetime` |
+| Ability removal and regeneration shields | `IsAbilityAttr(CantRegenerate)` is false. Removing abilities before or after the restriction does not remove it. Shields can still be created but cannot replace destruction while the prohibition applies. | `TestRegenerationProhibitionSurvivesAbilityRemoval`: both timestamp orders, ordinary flying removal, clone-local expiry, destruction with an active prohibition, and successful regeneration after expiry |
+| Typed effect metadata | `Until` reports `OutcomeDetriment` with `GrantedKeyword: CantRegenerate`, preserving the retired helper's AI summary. | `TestComposableRegenerationProhibitionMetadata` |
+
+Oracle sources: `cards/arabian/ARN.json` and `cards/astral/PAST.json`; full registration comments are preserved. Faerie Dragon's Oracle does not enumerate its random action table; this slice preserves the repository's table. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 611.1–611.2 (continuous restrictions and duration), 701.19c (regeneration prohibitions), 400.7 (object identity), and 702.26 (phasing).
+
+No live callers or declarations of `HurrJackalEffect` remain outside negative compile fixtures. `ApplyToRandomPermanent` retains five Faerie Dragon callers and its engine test; it is not retired. Other random branches and broader continuous-effect audits remain open.
+
+Validation: failing card and engine regressions passed after their fixes; affected card packages; `go test ./cards/... ./pkg/mage/... -short -count=1` (including registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

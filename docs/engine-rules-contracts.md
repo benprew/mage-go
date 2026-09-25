@@ -74,6 +74,7 @@ Continuous effects are evaluated by `EffectManager.Apply` across the official 7-
 * **Layer 6**: Ability adding and ability removing:
   * `GrantKeyword` and `GrantActivatedAbility` add abilities.
   * `RemoveAllAbilities` strips abilities computed up to its timestamp. Later Layer 6 timestamps can re-grant abilities.
+  * `CantRegenerate` represents a regeneration prohibition, not an ability. Ability removal preserves it, regardless of timestamp. The existing attribute storage and duration manager retain the prohibition until expiry (CR 611.2a, 701.19c).
 * **Layer 7**: Power and toughness modifications:
   * 7a: Characteristic-defining abilities (CDAs).
   * 7b: Setting base P/T to specific values.

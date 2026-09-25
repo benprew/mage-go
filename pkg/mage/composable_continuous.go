@@ -394,7 +394,7 @@ func (e *untilEffect) Properties() EffectProperties {
 		}
 		if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword
-			if m.keyword == AttrMustBeBlockedIfAble {
+			if m.keyword == AttrMustBeBlockedIfAble || m.keyword == CantRegenerate {
 				p.Outcome = OutcomeDetriment
 			}
 		}

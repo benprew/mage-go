@@ -63,7 +63,11 @@ func applyFaerieDragonAction(g *Game, sourceID, controllerID uuid.UUID, action i
 	case 11: // Thoughtlace
 		return ApplyEffect(g, ApplyToRandomSpellOrPermanent(LaceEffect(Blue)), sourceID, controllerID, nil)
 	case 12: // Hurr Jackal
-		return ApplyEffect(g, ApplyToRandomPermanent(HurrJackalEffect(), IsCreature), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen creature")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.IsCreature), chosen),
+			dsl.Until(EndOfTurn, dsl.GrantKeyword(dsl.From(chosen), CantRegenerate)),
+		), sourceID, controllerID, nil)
 	case 13: // Tawnos's Wand
 		return ApplyEffect(g, ApplyToRandomPermanent(TawnosWandEffect(), And(IsCreature, HasPowerLTE(2))), sourceID, controllerID, nil)
 	case 15: // Unsummon

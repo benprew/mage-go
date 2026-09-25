@@ -373,7 +373,6 @@ var (
 	BerserkEffect                                = mage.BerserkEffect
 	BottleOfSuleimanEffect                       = mage.BottleOfSuleimanEffect
 	HealingSalvePreventionEffect                 = mage.HealingSalvePreventionEffect
-	HurrJackalEffect                             = mage.HurrJackalEffect
 	LaceEffect                                   = mage.LaceEffect
 	LesserWerewolfCounterEffect                  = mage.LesserWerewolfCounterEffect
 	LightningBoltEffect                          = mage.LightningBoltEffect

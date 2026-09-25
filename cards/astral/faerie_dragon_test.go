@@ -106,7 +106,7 @@ func TestFaerieDragonTemporaryKeywordLifetime(t *testing.T) {
 	for _, tc := range []struct {
 		action  int
 		keyword core.Attr
-	}{{7, core.Flying}, {9, core.Banding}} {
+	}{{7, core.Flying}, {9, core.Banding}, {12, core.CantRegenerate}} {
 		t.Run(tc.keyword.String(), func(t *testing.T) {
 			g := gametest.NewTestGame(t)
 			sourceID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Faerie Dragon")
@@ -333,4 +333,41 @@ func TestFaerieDragonUnsummonSelection(t *testing.T) {
 			t.Fatal("empty selection consumed a random value")
 		}
 	})
+}
+
+func TestFaerieDragonRegenerationProhibitionMembership(t *testing.T) {
+	for _, kind := range []string{"creature", "artifact", "phased", "empty"} {
+		for _, owner := range []gametest.PlayerRef{gametest.PlayerA, gametest.PlayerB} {
+			t.Run(kind+map[gametest.PlayerRef]string{gametest.PlayerA: "/own", gametest.PlayerB: "/opponent"}[owner], func(t *testing.T) {
+				g := gametest.NewTestGame(t)
+				var candidate *mage.Permanent
+				if kind != "empty" {
+					name := "Grizzly Bears"
+					if kind == "artifact" {
+						name = "Sol Ring"
+					}
+					id := g.AddCard(core.ZoneBattlefield, owner, name)
+					candidate = g.FindPermanent(id)
+					candidate.GrantBaseAttr(core.Shroud)
+					candidate.PhasedOut = kind == "phased"
+				}
+				g.SetRandomResults([]int{1, 0})
+				if err := applyFaerieDragonAction(g.Game, g.GetPlayer(gametest.PlayerA).PlayerID(), g.GetPlayer(gametest.PlayerA).PlayerID(), 12); err != nil {
+					t.Fatal(err)
+				}
+				g.ApplyContinuousEffects()
+				eligible := kind == "creature"
+				if candidate != nil && candidate.HasKeyword(core.CantRegenerate) != eligible {
+					t.Fatal("incorrect regeneration prohibition")
+				}
+				wantRandom := 1
+				if eligible {
+					wantRandom = 0
+				}
+				if got := g.RandIntn(2); got != wantRandom {
+					t.Fatalf("next random result = %d, want %d", got, wantRandom)
+				}
+			})
+		}
+	}
 }

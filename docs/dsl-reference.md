@@ -323,6 +323,11 @@ Continuous effects are broken down into **modifications** and their **durations*
 * `ActivatedAbilityModification(subject, costs, effect, options...)`: Grants activated ability (Layer 6).
 * `ActivatedModesModification(subject, costs, options...)`: Grants modal activated ability.
 
+For “Target creature can't be regenerated this turn,” use a typed creature
+target and `Until(EndOfTurn, GrantKeyword(creature, CantRegenerate))`. The
+prohibition remains after the source leaves. It expires at cleanup and does
+not prevent the creation of regeneration shields.
+
 ### Durations & Installation
 * `Until(Duration, modifications...)`: Installs temporary continuous effects (e.g. `EndOfTurn`, `EndOfCombat`, `Indefinite`).
 * `UntilSourceLeaves(This, modifications...)`: Effect lasts until the source leaves the battlefield.

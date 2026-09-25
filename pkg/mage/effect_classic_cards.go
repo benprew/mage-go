@@ -104,9 +104,6 @@ func BerserkEffect() Effect {
 	)
 }
 
-// HurrJackalEffect prevents a target creature from regenerating this turn.
-func HurrJackalEffect() Effect { return GrantKeyword(CantRegenerate) }
-
 // LaceEffect changes a target spell or permanent to the requested color.
 func LaceEffect(color Color) Effect { return ChangeColorEffect(color) }
 

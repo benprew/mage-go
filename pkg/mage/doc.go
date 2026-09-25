@@ -49,6 +49,8 @@
 // Use [ChooseRandomPermanent] with [MatchingPermanents] to save a random
 // battlefield reference. Use [TapSubject] with [From] to tap that reference.
 // An empty collection does not consume a random value.
+// Use [Until] with [GrantKeywordModification] and CantRegenerate for a
+// prohibition that lasts until end of turn, even after its source leaves.
 //
 // Use [ManaValueOf] to read a permanent through its typed reference. Use
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
