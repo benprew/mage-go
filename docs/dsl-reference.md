@@ -251,6 +251,11 @@ and it emits a life-loss event. Attach `WithAdditionalCost(SacrificeCreatureCost
 to the card alongside `Spell`; choose the target before sacrifice payment.
 Sacrificing the sole target makes it illegal, so neither instruction resolves.
 
+Assassin's Strike uses the same controller snapshot before `Destroy`, followed
+by `Discard(FromPlayer(controller), Fixed(1))`. The captured player chooses the
+card, and the discard uses the shared replacement and event services. Discard
+still occurs when regeneration or indestructible prevents destruction.
+
 Swords to Plowshares captures `ControllerOf(creature)` and `PowerOf(creature)`
 before `Exile(creature)`, then gains life with those saved values. Nonpositive
 power gains no life. `Exile` retains exile targeting metadata through `Sequence`;

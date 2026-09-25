@@ -187,31 +187,14 @@ func registerSpells() {
 	// Sorcery
 	// Destroy target creature. Its controller discards a card.
 	Register("Assassin's Strike", func() Card {
-		return NewSorcery("Assassin's Strike", "{4}{B}{B}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"destroy target creature; its controller discards a card",
-				EffectProperties{Outcome: OutcomeDetriment},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					ownerID := perm.ControllerID()
-					g.DestroyPermanent(perm)
-					if owner := g.GetPlayer(ownerID); owner != nil {
-						if len(owner.Hand()) > 0 {
-							pick := owner.ChooseCardsFromHand(1, "discard a card", g)
-							for _, c := range pick {
-								owner.DiscardCard(c.ID())
-							}
-						}
-					}
-					return nil
-				},
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		controller := dsl.BindPlayer("creature controller")
+		return dsl.NewSorcery("Assassin's Strike", "{4}{B}{B}",
+			dsl.Spell(dsl.Sequence(
+				dsl.SnapshotPlayer(dsl.ControllerOf(creature), controller),
+				dsl.Destroy(creature),
+				dsl.Discard(dsl.FromPlayer(controller), dsl.Fixed(1)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 

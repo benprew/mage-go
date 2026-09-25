@@ -2420,3 +2420,39 @@ Validation: focused regressions and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Assassin's Strike Typed Destruction and Discard
+
+- [x] Migrate Assassin's Strike to `Spell`, `TargetPermanent`, `WithTargets`,
+  `Sequence`, `SnapshotPlayer`, `Destroy`, and `Discard` through the author DSL.
+- [x] Preserve the complete Oracle text, sorcery type, and `{4}{B}{B}` mana
+  cost from `data/JMP.json`.
+- [x] Replace direct hand mutation with the existing typed discard action to
+  preserve discard replacements and events. No engine fix or new constructor
+  is required.
+- [x] Audit target identity, controller capture, failed destruction, discard
+  choice, replacement handling, and instruction order with a regression
+  written before migration.
+
+The creature's controller is captured at resolution before destruction. That
+player chooses and discards one card even if regeneration or indestructible
+prevents destruction. A control change before resolution changes who discards.
+An illegal sole target prevents both instructions; a returned card is a new
+object. An empty hand does not prevent destruction. Rules contracts are
+CR 400.7, 608.2b–c, 608.2h, 701.8, and 701.9.
+
+`TestAssassinsStrikeOutcomes` first failed because direct hand mutation emitted
+no discard event and bypassed Library of Leng. All nine scenarios now pass:
+destruction, indestructible, regeneration, absent target, returned target,
+changed control, own creature, empty hand, and discard replacement. The tests
+check the chosen card, event player and card identity, and destruction before
+discard. The existing `TestAssassinsStrike` also passes.
+
+This completes one slice of the remaining action and spell migrations. Other
+card callbacks remain; no legacy export is retired or engine blocker marked
+resolved.
+
+Validation: focused regressions and shared discard, player-snapshot, and target
+identity contracts; Jumpstart package tests; all card tests with
+`-short -count=1`; `go build ./...`; `go vet ./cards/jumpstart`; `make test`;
+and `make lint` pass with zero failures.
