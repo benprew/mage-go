@@ -6357,24 +6357,13 @@ func registerCreatures() {
 			WithSubTypes("Gargoyle"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Defender),
-			WithActivatedAbility(
-				FuncEffect(
-					"until end of turn, this creature loses defender and gains flying",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						revoke := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-							g.RevokeAttr(target.ID(), Defender)
-							g.GrantAttr(target.ID(), Flying)
-							return nil
-						})
-						revoke.SetSourceID(sourceID)
-						g.AddContinuousEffect(revoke)
-						g.ApplyContinuousEffects()
-						return nil
-					},
+			WithAbility(Activate(
+				Costs(Mana("{3}")),
+				Until(EndOfTurn,
+					RemoveKeyword(This, Defender),
+					GrantKeyword(This, Flying),
 				),
-				ManaCostOf("{3}"),
-			),
+			)),
 		)
 	})
 

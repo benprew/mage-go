@@ -4025,3 +4025,32 @@ Validation: focused regressions and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Gargoyle Sentinel Typed Keyword Activation
+
+- [x] Migrate the complete activation to `Activate`, `Costs(Mana("{3}"))`,
+  and `Until(EndOfTurn, RemoveKeyword(This, Defender), GrantKeyword(This, Flying))`.
+- [x] Remove the custom layer callback and direct keyword mutations.
+- [x] Verify the full Oracle comment, casting cost, artifact creature type,
+  Gargoyle subtype, 3/3 stats, and printed defender against `data/JMP.json`.
+- [x] Audit payment, source identity, layer ordering, and duration. Existing
+  typed adapters support the ability; no engine fix or new constructor is needed.
+
+The ability has no targets, tap cost, or activation limit. It uses the stack
+after payment. Both keyword changes belong to one layer-6 effect on the
+captured source incarnation and expire at cleanup. They do not affect a
+returned incarnation. The printed defender ability remains on the card.
+
+`TestGargoyleSentinel_GainsFlying` checks both flying and defender after
+activation. Shared `TestComposableKeyword*` and `TestComposablePayment*`
+contracts cover keyword ordering, source lifetime, cleanup, clone isolation,
+and payment rollback. These proven primitives need no duplicate simulation
+test. This completes one slice of the remaining activation and continuous-effect
+caller migrations. Other callers retain legacy helpers; no export is retired
+and no outstanding engine blocker is marked resolved.
+
+Validation: focused card and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
