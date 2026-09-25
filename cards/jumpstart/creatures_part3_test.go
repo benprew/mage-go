@@ -14,22 +14,32 @@ func TestInspiringCaptain(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Inspiring Captain")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 4)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Inspiring Captain")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
 	g.AssertPowerToughness(gametest.PlayerA, "Inspiring Captain", 4, 4)
+	g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 2)
+	g.StopAt(2, core.Upkeep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
 }
 func TestInspiringUnicorn(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Inspiring Unicorn")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
 	g.Attack(3, gametest.PlayerA, "Inspiring Unicorn", "Grizzly Bears")
 	g.StopAt(3, core.DeclareBlockers)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 3, 3)
 	g.AssertPowerToughness(gametest.PlayerA, "Inspiring Unicorn", 3, 3)
+	g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 2)
+	g.StopAt(4, core.Upkeep)
+	g.Execute()
+	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 2)
 }
 func TestIronrootWarlord_PowerEqualsCreatures(t *testing.T) {
 	g := gametest.NewTestGame(t)

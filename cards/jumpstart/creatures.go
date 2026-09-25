@@ -476,9 +476,9 @@ func registerCreatures() {
 	Register("Inspiring Captain", func() Card {
 		return NewCreature("Inspiring Captain", "{3}{W}", 3, 3,
 			WithSubTypes("Human", "Knight"),
-			WithAbility(EntersBattlefieldTrigger(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToMatching(IsCreature)).Until(EndOfTurn),
-				false)),
+			WithAbility(WhenEvent(Enters(This),
+				Until(EndOfTurn, ModifyEachPT(ControlledPermanents(IsCreature), Fixed(1), Fixed(1))),
+			)),
 		)
 	})
 
@@ -490,7 +490,7 @@ func registerCreatures() {
 		return NewCreature("Inspiring Unicorn", "{2}{W}{W}", 2, 2,
 			WithSubTypes("Unicorn"),
 			WithAbility(AttacksTrigger(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToMatching(IsCreature)).Until(EndOfTurn),
+				Until(EndOfTurn, ModifyEachPT(ControlledPermanents(IsCreature), Fixed(1), Fixed(1))),
 				false)),
 		)
 	})

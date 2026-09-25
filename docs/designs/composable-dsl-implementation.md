@@ -58,6 +58,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Legends Simple Mana Self-Pump Activations**: Migrate eight activations across six cards to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
 - [x] **Legends Targeted Tap P/T Activations**: Migrate Ghosts of the Damned, Pradesh Gypsies, and Tuknir Deathlock to typed targets, grouped costs, and temporary modifications. No engine gap; see the completed slice below.
 - [x] **Limited Self-Pump Activations**: Migrate Fire Drake, Vampire Bats, and Mindful Biomancer to typed mana costs, source modifications, and per-turn activation limits. No engine gap; see the completed slice below.
+- [x] **Jumpstart Triggered Team Boosts**: Migrate Inspiring Captain and Inspiring Unicorn to typed controlled-creature collections and explicit end-of-turn P/T modifications. Captain also uses `WhenEvent(Enters(This), ...)`; Unicorn retains its attack-event wrapper pending that adapter. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -1093,3 +1094,31 @@ affected card packages; `go test ./cards/... -short -count=1`;
 focused shared activation, lifetime, cleanup, and composition tests;
 `go build ./...`; `go vet ./cards/thedark ./cards/legends ./cards/secretsofstrixhaven`;
 `make test`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Jumpstart Triggered Team Boosts
+
+- [x] Migrate both +1/+1 team-trigger bodies from positional `Boost` / `ToMatching` to `Until(EndOfTurn, ModifyEachPT(ControlledPermanents(IsCreature), Fixed(1), Fixed(1)))` through `pkg/mage/dsl`.
+- [x] Migrate Inspiring Captain's entry trigger to `WhenEvent(Enters(This), ...)`.
+- [x] Check full Oracle comments, mana costs, and base characteristics against `cards/jumpstart/JMP.json`; both match exactly.
+- [x] Audit controller scope, collection capture, and duration against existing engine contracts. No engine fix or new constructor is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Inspiring Captain: “When this creature enters, creatures you control get +1/+1 until end of turn.” | Mandatory entry trigger, no targets; typed controlled-creature collection and +1/+1 modification with explicit end-of-turn duration | `TestInspiringCaptain` checks the Captain, another friendly creature, opposing-creature exclusion, and cleanup expiry |
+| Inspiring Unicorn: “Whenever this creature attacks, creatures you control get +1/+1 until end of turn.” | Existing mandatory `AttacksTrigger` detects declaration of this source as an attacker; same typed collection and duration | `TestInspiringUnicorn` checks the Unicorn and another friendly creature, opposing-creature exclusion, and cleanup expiry |
+| Collection and lifetime | Use the stored resolving controller. Capture creatures at resolution, including the source if still controlled. Later entries and returned objects do not receive a resolved bonus. Source departure does not end the bonus; expire at cleanup. No damage-source LKI is required. | `TestComposableContinuousCapture`, `TestComposableSelfPumpLifetime`, existing trigger contracts and universal `TestRegisteredDefinitions` |
+
+Both existing card tests were extended with opposing-creature and cleanup
+assertions and passed before migration. The declarative definitions reuse the
+established collection and trigger services; no new simulation tests are needed.
+
+No exports are retired: `Boost`, `ToMatching`, `EntersBattlefieldTrigger`, and
+`AttacksTrigger` retain other callers. The typed attack-event adapter remains
+open under the Triggers family; this slice completes both team-boost bodies,
+not all trigger migrations. No outstanding engine blocker is claimed resolved.
+
+Validation: affected card package; focused shared collection, lifetime, and
+trigger tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` passed with zero
+failures (lint: zero issues).
