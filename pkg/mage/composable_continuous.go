@@ -19,6 +19,7 @@ type layerModification struct {
 	subjects         PermanentSet
 	power, toughness ResolutionValue
 	keyword          Attr
+	removeKeyword    bool
 	cantBeBlocked    bool
 	setBasePT        bool
 	setPowerOnly     bool
@@ -56,6 +57,11 @@ func ModifyEachPT(subjects PermanentSet, power, toughness ResolutionValue) Conti
 // GrantKeywordModification grants a keyword. DSL exports it as GrantKeyword.
 func GrantKeywordModification(subject PermanentRef, keyword Attr) ContinuousModification {
 	return &layerModification{subject: subject, keyword: keyword, layer: LayerAbility}
+}
+
+// RemoveKeyword removes all instances of one keyword from a permanent in layer 6.
+func RemoveKeyword(subject PermanentRef, keyword Attr) ContinuousModification {
+	return &layerModification{subject: subject, keyword: keyword, removeKeyword: true, layer: LayerAbility}
 }
 
 // CantBeBlocked prevents all creatures from blocking the subject.
@@ -158,6 +164,9 @@ func (m *layerModification) description() string {
 		if m.ability != nil {
 			return "grant activated ability"
 		}
+		if m.removeKeyword {
+			return fmt.Sprintf("remove %v", m.keyword)
+		}
 		return fmt.Sprintf("grant %v", m.keyword)
 	default:
 		if m.setPowerOnly {
@@ -184,6 +193,7 @@ type capturedModification struct {
 	permanent        capturedPermanent
 	power, toughness int
 	keyword          Attr
+	removeKeyword    bool
 	cantBeBlocked    bool
 	setBasePT        bool
 	setPowerOnly     bool
@@ -199,7 +209,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
 		if m.ability != nil {
 			v.ability, v.grantID = m.ability, uuid.New()
 		}
@@ -237,6 +247,8 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			g.effects.AddCantBeBlockedExceptBy(p.ID(), Not(AnyPermanent))
 		} else if v.ability != nil {
 			installGrantedActivation(p, v.ability, v.grantID)
+		} else if v.removeKeyword {
+			g.effects.RevokeAttr(p.ID(), v.keyword)
 		} else {
 			g.effects.GrantAttr(p.ID(), v.keyword)
 		}
@@ -439,7 +451,9 @@ func (e *untilEffect) Properties() EffectProperties {
 		if v, ok := m.toughness.(fixedValue); ok && !m.setBasePT {
 			p.ToughnessBoost += v.n
 		}
-		if m.keyword != 0 {
+		if m.removeKeyword {
+			p.Outcome = OutcomeDetriment
+		} else if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword
 			if m.keyword == AttrMustBeBlockedIfAble || m.keyword == CantRegenerate {
 				p.Outcome = OutcomeDetriment
@@ -460,7 +474,7 @@ func (e *untilEffect) KeywordGrantTargetIndex(targets []Target) (int, bool) {
 		return 0, false
 	}
 	m := e.modifications[0].modification()
-	if m.layer != LayerAbility || m.keyword == 0 || m.subjects != nil {
+	if m.layer != LayerAbility || m.keyword == 0 || m.removeKeyword || m.subjects != nil {
 		return 0, false
 	}
 	subject, ok := m.subject.(*PermanentTargetBinding)

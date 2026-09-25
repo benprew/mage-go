@@ -1504,3 +1504,34 @@ Validation: focused card and shared target/layer/lifetime tests; Jumpstart and
 Legends package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart ./cards/legends`; `make test`; and `make lint` passed
 with zero failures (lint: zero issues).
+
+## Completed Slice: Scarwood Hag and Typed Keyword Removal
+
+- [x] Add `RemoveKeyword(PermanentRef, Attr)` as a typed layer 6 modification. Use the existing `RevokeAttr` service; no engine gap or rules-service change is required.
+- [x] Migrate both Scarwood Hag activations to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and explicit `Until(EndOfTurn, ...)` through `pkg/mage/dsl`.
+- [x] Verify the complete Oracle comment, mana cost, creature type, and base P/T against `data/DRK.json`.
+- [x] Cover keyword ordering, removal of multiple grants, unrelated keywords, cleanup, source departure and return, recipient phasing and return, clone isolation, metadata, binding validation, public composition, and compile-time category rejection.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “{G}{G}{G}{G}, {T}: Target creature gains forestwalk until end of turn.” / positional keyword grant | `Costs(Mana("{G}{G}{G}{G}"), TapCost(This))`, a creature target, and `Until(EndOfTurn, GrantKeyword(creature, Forestwalk))` | `TestScarwoodHag/grant_forestwalk` |
+| “{T}: Target creature loses forestwalk until end of turn.” / `RevokeKeyword(Forestwalk)` | `Costs(TapCost(This))` and `Until(EndOfTurn, RemoveKeyword(creature, Forestwalk))` | `TestScarwoodHag/lose_forestwalk`; `TestComposableKeywordRemoval` |
+| Target scope and lifetime | Either player's creature, including the Hag. Shared target services recheck legality at resolution. Removal captures the recipient incarnation; source departure does not end it, phasing preserves it, and a returned recipient is unaffected. | `TestComposableKeywordRemovalLifetime`; existing typed-target contracts |
+| Layer order and duration | Remove every instance of the selected keyword in layer 6. A later grant restores it; a later removal removes it again. Cleanup restores printed abilities. | `TestComposableKeywordRemoval` |
+| Author surface and inspection | Accept a permanent reference, reject players and collections, validate binding scope, report removal as detrimental, and exclude it from the keyword-grant AI shortcut. | `TestComposableKeywordRemovalMetadata`, `TestTypedKeywordRemovalComposition`, `TestClosedExpressionRoles` |
+
+The adapter contract tests initially failed to compile because `RemoveKeyword`
+did not exist. The implementation adds syntax over the established layer and
+incarnation services. No engine blocker is claimed resolved. Rules contracts
+are CR 400.7, 602, 608.2b, 611.2, 613.1f, 613.7, and 702.14.
+
+Scarwood Hag is fully migrated. Legacy `RevokeKeyword` still has callers in
+Arabian Nights and Legends, so its export remains. The broader continuous
+modification and action migrations remain open. Existing card tests cover this
+declarative wiring; new behavior contracts reside in the shared adapter tests.
+
+Validation: focused adapter, public API, compile-failure, and Scarwood Hag tests;
+The Dark package; `go test ./pkg/mage/... -short -count=1`;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/thedark`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

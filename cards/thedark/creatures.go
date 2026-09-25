@@ -468,19 +468,13 @@ func registerCreatures() {
 	// {G}{G}{G}{G}, {T}: Target creature gains forestwalk until end of turn. (It can't be blocked as long as defending player controls a Forest.)
 	// {T}: Target creature loses forestwalk until end of turn.
 	Register("Scarwood Hag", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Scarwood Hag", "{1}{G}", 1, 1,
 			WithSubTypes("Hag"),
-			WithActivatedAbility(
-				mage.GrantKeyword(Forestwalk),
-				ManaCostOf("{G}{G}{G}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
-			WithActivatedAbility(
-				RevokeKeyword(Forestwalk),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{G}{G}{G}{G}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, Forestwalk)), WithTargets(creature))),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, RemoveKeyword(creature, Forestwalk)), WithTargets(creature))),
 		)
 	})
 
