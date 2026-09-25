@@ -2271,3 +2271,43 @@ Validation: Jumpstart package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Arbor Armament and Battlefield Promotion
+
+- [x] Migrate both complete spell definitions to `TargetPermanent`, `Spell`,
+  `WithTargets`, and `Sequence` through `pkg/mage/dsl`.
+- [x] Use typed `AddCounters` for the +1/+1 counter and
+  `Until(EndOfTurn, GrantKeyword(...))` for reach or first strike.
+- [x] Preserve Battlefield Promotion's final `GainLife(You, Fixed(2))` action.
+- [x] Restore full Oracle comments, including reminder text, and verify instant
+  types and mana costs against `data/JMP.json`.
+- [x] Audit existing counter, target, sequence, keyword, and life-gain adapters.
+  No new constructor or engine fix is required.
+
+Either player's creature can be targeted. Resolution checks legality and the
+captured target incarnation. If the sole target is illegal, the spell does not
+resolve, including Battlefield Promotion's life gain. Otherwise, the instructions
+run in printed order: add the counter through the counter replacement service,
+install the layer 6 keyword grant, then gain life for the resolving controller
+where instructed. The counter remains after cleanup; the keyword grant expires.
+A later control change does not end the grant, and a returned card is a new
+object. Rules contracts are CR 122, 400.7, 601.2, 608.2b, 608.2c, 611.2, and 613.
+
+Existing `TestArborArmament` and `TestBattlefieldPromotion` pass before and
+after migration. Shared `TestTypedCounterAmount*`,
+`TestComposableCounterMetadata`, keyword lifetime and layer-order tests,
+`TestTargetIncarnationAfterReturn`, `TestComposableContinuousCapture`,
+`TestComposableSequenceSourceIdentity`, `TestComposablePaymentAtomicity`,
+`TestLifeGainOutcomeEvents`, and `TestComposableLifeGainReplacement` pass.
+These declarations reuse tested primitives; no new simulation test is required.
+
+This completes one slice of the outstanding action migrations. Other callers
+retain the legacy counter, keyword, and spell helpers, so no export is retired.
+The file's direct engine import remains for unrelated definitions. No outstanding
+engine blocker is marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

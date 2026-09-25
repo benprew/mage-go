@@ -171,14 +171,14 @@ func registerSpells() {
 
 	// Arbor Armament {G}
 	// Instant
-	// Put a +1/+1 counter on target creature. That creature gains reach until end of turn.
+	// Put a +1/+1 counter on target creature. That creature gains reach until end of turn. (It can block creatures with flying.)
 	Register("Arbor Armament", func() Card {
-		return NewInstant("Arbor Armament", "{G}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+1/+1 counter and reach",
-				AddCounters(P1P1, Fixed(1)),
-				GrantKeyword(Reach),
-			)),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Arbor Armament", "{G}",
+			dsl.Spell(dsl.Sequence(
+				dsl.AddCounters(creature, P1P1, dsl.Fixed(1)),
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(creature, Reach)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 
@@ -259,15 +259,15 @@ func registerSpells() {
 
 	// Battlefield Promotion {1}{W}
 	// Instant
-	// Put a +1/+1 counter on target creature. That creature gains first strike until end of turn. You gain 2 life.
+	// Put a +1/+1 counter on target creature. That creature gains first strike until end of turn. You gain 2 life. (A creature with first strike deals combat damage before creatures without first strike.)
 	Register("Battlefield Promotion", func() Card {
-		return NewInstant("Battlefield Promotion", "{1}{W}",
-			NewTargetedSpell(TargetCreature(), CompositeEffects(
-				"+1/+1 counter, first strike, gain 2 life",
-				AddCounters(P1P1, Fixed(1)),
-				GrantKeyword(FirstStrike),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewInstant("Battlefield Promotion", "{1}{W}",
+			dsl.Spell(dsl.Sequence(
+				dsl.AddCounters(creature, P1P1, dsl.Fixed(1)),
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(creature, FirstStrike)),
 				dsl.GainLife(dsl.You, dsl.Fixed(2)),
-			)),
+			), dsl.WithTargets(creature)),
 		)
 	})
 
