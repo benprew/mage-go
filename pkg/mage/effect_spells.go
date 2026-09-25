@@ -448,11 +448,8 @@ func (*powerSinkEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	for _, land := range ctx.Game.FilterBattlefield(And(ControlledBy(obj.Controller), IsLand)) {
-		for _, a := range land.RuntimeAbilities {
-			if _, ok := UnwrapAbility(a).(*ManaAbility); ok {
-				ctx.Game.TapPermanent(land)
-				break
-			}
+		if slices.ContainsFunc(land.RuntimeAbilities, IsActivatedManaAbility) {
+			ctx.Game.TapPermanent(land)
 		}
 	}
 	spellController.ManaPool().Clear()

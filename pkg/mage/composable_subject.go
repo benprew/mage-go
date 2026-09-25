@@ -38,7 +38,10 @@ func (e *sacrificeEffect) Text() string {
 	}
 	return "sacrifice permanent"
 }
-func (*sacrificeEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *sacrificeEffect) Properties() EffectProperties {
+	_, source := e.subject.(sourceRef)
+	return EffectProperties{SacrificesSource: source}
+}
 func (e *sacrificeEffect) Apply(ctx *EffectContext) error {
 	if p, ok := e.subject.resolvePermanent(ctx); ok && p.ControllerID() == ctx.Controller {
 		ctx.Game.DoSacrifice(p)

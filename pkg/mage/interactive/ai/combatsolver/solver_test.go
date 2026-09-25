@@ -131,7 +131,7 @@ func TestSolveAttack_BallLightningAttacksIntoBlocker(t *testing.T) {
 	// block costs nothing — staying home wastes its 6 damage.
 	ball := makePerm("Ball Lightning", "{R}{R}{R}", 6, 1, pa.PlayerID(),
 		mage.WithKeyword(core.Trample),
-		mage.WithAbility(mage.BeginningOfEachEndStepTrigger(mage.SacrificeSource(), false)))
+		mage.WithAbility(mage.BeginningOfEachEndStepTrigger(mage.Sacrifice(mage.This), false)))
 	bear := makePerm("Grizzly Bears", "{1}{G}", 2, 2, pb.PlayerID())
 	g.AddToBattlefield(ball, bear)
 
@@ -347,7 +347,7 @@ func TestSolveDefense_DontTradeForBallLightning(t *testing.T) {
 	// At 20 life, blocking with the 4/4 only trades it away to save 4 life.
 	ball := makePerm("Ball Lightning", "{R}{R}{R}", 6, 1, pa.PlayerID(),
 		mage.WithKeyword(core.Trample),
-		mage.WithAbility(mage.BeginningOfEachEndStepTrigger(mage.SacrificeSource(), false)))
+		mage.WithAbility(mage.BeginningOfEachEndStepTrigger(mage.Sacrifice(mage.This), false)))
 	knight := makePerm("Knight", "{2}{W}{W}", 4, 4, pb.PlayerID())
 	g.AddToBattlefield(ball, knight)
 	g.ExecuteAttackers(pa.PlayerID(), []uuid.UUID{ball.ID()})
