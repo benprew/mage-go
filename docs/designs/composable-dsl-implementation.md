@@ -67,6 +67,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Fallen Angel Sacrifice Boost**: Migrate its activation to typed costs and a temporary source modification. Correct source exclusion with the existing sacrifice-cost adapter; see the completed slice below.
 - [x] **Dwarven Lieutenant Subtype Target Boost**: Migrate its activation to a typed Dwarf-creature target, mana cost, and explicit end-of-turn modification. No engine gap; see the completed slice below.
 
+- [x] **Icatian Targeted Mana Boosts**: Migrate Icatian Lieutenant and Icatian Priest to typed creature targets, mana costs, and explicit end-of-turn P/T modifications. No engine gap; see the completed slice below.
+
 ## Engine Blockers
 
 ### Combat Removal
@@ -1260,3 +1262,33 @@ Validation: focused Dwarven Lieutenant and shared target, lifetime, metadata,
 and composition tests; Fallen Empires package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/fallen_empires`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Icatian Targeted Mana Boosts
+
+- [x] Migrate the complete Icatian Lieutenant and Icatian Priest definitions from `WithActivatedAbility`, positional `Boost`, and `TargetCreature` to `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments, mana costs, creature types, and base P/T against `data/FEM.json`; both match exactly.
+- [x] Audit payment, target scope, duration, identity, and metadata against existing adapters. No new constructor or engine fix is required.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Lieutenant: “{1}{W}: Target Soldier creature gets +1/+0 until end of turn.” | `Costs(Mana("{1}{W}"))`, `TargetPermanent("soldier", And(IsCreature, HasSubType("Soldier")))`, and explicit end-of-turn +1/+0 modification | `TestIcatianLieutenant_BoostsSoldier`; shared target and filter contracts |
+| Priest: “{1}{W}{W}: Target creature gets +1/+1 until end of turn.” | `Costs(Mana("{1}{W}{W}"))`, `TargetPermanent("creature", IsCreature)`, and explicit end-of-turn +1/+1 modification | `TestIcatianPriest_BoostsTarget` |
+| Activation and targeting | Instant activation timing, no tap cost or activation limit; either player's qualifying creature, including the source; target restrictions checked again at resolution | Existing activation and typed-target contracts; universal `TestRegisteredDefinitions` |
+| Identity, duration, and metadata | Layer 7c bonus on the captured target incarnation, independent of source presence and later subtype changes; beneficial single-subject metadata | `TestTargetIncarnationAfterReturn`, `TestComposableContinuousCapture`, `TestComposableSelfPumpLifetime`, and `TestTemporaryPTMetadata` |
+
+These declarative abilities use established primitives and registration
+validation. Existing card and shared contract tests passed before migration;
+no new simulation test is required. Rules contracts are CR 602 (activation),
+608.2b (target legality), 400.7 (new objects), 611.2 (duration), and 613
+(layers), using the repository rules effective February 27, 2026.
+
+This completes the remaining Fallen Empires targeted mana-only P/T boost
+activations. Legacy constructors retain other callers, so no export is retired.
+Unrelated definitions and direct engine imports remain. No outstanding engine
+blocker is claimed resolved.
+
+Validation: focused card and shared target, lifetime, and metadata tests;
+Fallen Empires package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/fallen_empires`; `make test`; and
+`make lint` passed with zero failures (lint: zero issues).

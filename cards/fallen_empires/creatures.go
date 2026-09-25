@@ -152,13 +152,13 @@ func registerCreatures() {
 	// 1/2
 	// {1}{W}: Target Soldier creature gets +1/+0 until end of turn.
 	Register("Icatian Lieutenant", withExpansion(func() Card {
+		soldier := TargetPermanent("soldier", And(IsCreature, HasSubType("Soldier")))
 		return NewCreature("Icatian Lieutenant", "{W}{W}", 1, 2,
 			WithSubTypes("Human", "Soldier"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)),
-				ManaCostOf("{1}{W}"),
-				WithTarget(TargetCreature(HasSubType("Soldier"))),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{W}")),
+				Until(EndOfTurn, ModifyPT(soldier, Fixed(1), Fixed(0))),
+				WithTargets(soldier),
+			)),
 		)
 	}))
 
@@ -187,13 +187,13 @@ func registerCreatures() {
 	// 1/1
 	// {1}{W}{W}: Target creature gets +1/+1 until end of turn.
 	Register("Icatian Priest", withExpansion(func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Icatian Priest", "{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)),
-				ManaCostOf("{1}{W}{W}"),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{W}{W}")),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(1))),
+				WithTargets(creature),
+			)),
 		)
 	}))
 

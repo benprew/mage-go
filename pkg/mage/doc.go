@@ -134,6 +134,8 @@
 // to pay a cost does not end the boost on the target.
 // Put subtype and current power/toughness limits in the target filter.
 // These limits are checked again at resolution, not during the boost.
+// Icatian Lieutenant uses a Soldier creature target; Icatian Priest uses any
+// creature target. Both use mana costs and an end-of-turn duration.
 // Ghosts of the Damned and Pradesh Gypsies use negative power modifiers.
 // Tuknir Deathlock uses the same target and duration with a +2/+2 bonus.
 //
