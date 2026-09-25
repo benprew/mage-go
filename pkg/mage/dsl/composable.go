@@ -226,6 +226,7 @@ type (
 
 var (
 	Tap                   = mage.TapSubject
+	Fight                 = mage.Fight
 	TapCost               = mage.TapCost
 	TargetDamageRecipient = mage.DeclareDamageTarget
 	PreventNextDamage     = mage.PreventNextDamage

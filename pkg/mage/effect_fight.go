@@ -10,7 +10,6 @@ import (
 // and the target permanent each deal damage equal to their power to the
 // other. Both must be creatures on the battlefield at resolution; if either
 // has left or is no longer a creature, neither deals damage (CR 701.14b).
-// Source and target deal damage simultaneously.
 type fightTargetEffect struct{}
 
 // FightTarget creates an effect where the source creature and the target
@@ -78,6 +77,13 @@ func fightPermanents(ctx *EffectContext, first, second *Permanent) {
 	secondPower := second.CurrentPower(ctx.Game)
 	firstCard := ctx.Game.FindCardAnywhere(first.ID())
 	secondCard := ctx.Game.FindCardAnywhere(second.ID())
+	if first.incarnationID == second.incarnationID {
+		if firstPower > 0 && (firstCard == nil || !first.HasProtectionFromInGame(firstCard, ctx.Game)) {
+			ctx.Game.DealDamageToPermanent(first, 2*firstPower, first.ID())
+		}
+		ctx.Game.FireEvent(GameEvent{Type: EvtFight, SourceID: first.ID(), TargetID: first.ID(), PlayerID: ctx.Controller})
+		return
+	}
 
 	if firstPower > 0 && (secondCard == nil || !second.HasProtectionFromInGame(firstCard, ctx.Game)) {
 		ctx.Game.DealDamageToPermanent(second, firstPower, first.ID())

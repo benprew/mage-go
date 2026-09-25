@@ -166,9 +166,12 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 * `DestroyEachWithoutRegeneration(PermanentSet)`: Simultaneously destroys the set without regeneration. Indestructible still applies; the instruction does not change permanent keywords.
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
 * `Tap(PermanentRef)`: Taps the permanent.
+* `Fight(PermanentRef, PermanentRef)`: The two referenced creatures fight if both are present and creatures at resolution. A creature fighting itself deals twice its power to itself.
 * `Untap(PermanentRef)`: Untaps the permanent.
 * `RemoveFromCombat(PermanentRef)`: Removes the captured permanent from combat. Removing a blocker does not make its attacker unblocked. An absent or different incarnation is unaffected.
 * `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
+
+For two declared creature targets, use `Spell(Fight(first, second), WithTargets(first, second))`. Each argument reads its own target binding; an absent target prevents the fight.
 
 For an Aura entry trigger, use `WhenEvent(Enters(This), Tap(AttachedPermanent))`.
 The attachment is read at resolution, so moving the Aura changes the affected
