@@ -392,7 +392,7 @@ Continuous effects are broken down into **modifications** and their **durations*
 * `GrantEachKeyword(permanentSet, keyword)`: Grants keyword to set.
 * `SetColors(subject, colors...)`: Replaces colors (Layer 5).
 * `SetEachColors(permanentSet, colors...)`: Replaces colors for set.
-* `SetSubtypeFamily(subject, family, subtypes...)`: Replaces one subtype family (Layer 4).
+* `SetSubtypeFamily(subject, family, subtypes...)`: Replaces one subtype family (Layer 4). Wishful Merfolk combines `SetSubtypeFamily(This, SubtypeCreature, "Human")` and `RemoveKeyword(This, Defender)` in one `Until(EndOfTurn, ...)` activation. This replaces its creature subtypes and removes defender only on the original source incarnation. Both changes expire at cleanup.
 * `AddSubtypeFamily(subject, family, subtypes...)`: Adds subtypes within a family (Layer 4).
 * `ActivatedAbilityModification(subject, costs, effect, options...)`: Grants activated ability (Layer 6).
 * `ActivatedModesModification(subject, costs, options...)`: Grants modal activated ability.

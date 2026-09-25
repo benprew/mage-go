@@ -1831,26 +1831,13 @@ func registerCreatures() {
 		return NewCreature("Wishful Merfolk", "{1}{U}", 3, 2,
 			WithSubTypes("Merfolk"),
 			WithKeyword(Defender),
-			WithActivatedAbility(
-				FuncEffect(
-					"this creature loses defender and becomes a Human until end of turn",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						revoke := TargetEffect(LayerAbility, EndOfTurn, sourceID, func(g *Game, target *Permanent) error {
-							g.RevokeAttr(target.ID(), Defender)
-							return nil
-						})
-						revoke.SetSourceID(sourceID)
-						g.AddContinuousEffect(revoke)
-						sub := BecomesSubType(sourceID, "Human", EndOfTurn)
-						sub.SetSourceID(sourceID)
-						g.AddContinuousEffect(sub)
-						g.ApplyContinuousEffects()
-						return nil
-					},
+			WithAbility(Activate(
+				Costs(Mana("{1}{U}")),
+				Until(EndOfTurn,
+					RemoveKeyword(This, Defender),
+					SetSubtypeFamily(This, SubtypeCreature, "Human"),
 				),
-				ManaCostOf("{1}{U}"),
-			),
+			)),
 		)
 	})
 

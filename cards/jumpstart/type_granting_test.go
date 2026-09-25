@@ -33,6 +33,10 @@ func TestWishfulMerfolk_RevertsAtEOT(t *testing.T) {
 	g.Execute()
 
 	g.AssertHasAbility(gametest.PlayerA, "Wishful Merfolk", Defender, true)
+	p := g.FindPermanentByName("Wishful Merfolk", g.GetPlayer(gametest.PlayerA).PlayerID())
+	if p == nil || !p.HasSubType("Merfolk") || p.HasSubType("Human") {
+		t.Fatal("cleanup must restore the Merfolk subtype")
+	}
 }
 
 func TestScuttlemutt_BecomesChosenColorUntilEOT(t *testing.T) {

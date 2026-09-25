@@ -4732,3 +4732,33 @@ Validation: focused card regression and shared mana contracts; Jumpstart
 package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Wishful Merfolk Typed Subtype and Keyword Activation
+
+- [x] Migrate the full activation to `Activate`, `Costs(Mana("{1}{U}"))`,
+  and one `Until(EndOfTurn, ...)` containing `RemoveKeyword(This, Defender)`
+  and `SetSubtypeFamily(This, SubtypeCreature, "Human")`.
+- [x] Verify the full Oracle comment, casting cost, Merfolk subtype, 3/2
+  characteristics, and defender against `data/JMP.json`.
+- [x] Correct returned-source identity with existing typed references.
+  No engine fix or new constructor is required.
+- [x] Add a failing source-lifetime regression before migration and extend
+  the cleanup test to verify restoration of the Merfolk subtype.
+
+`TestWishfulMerfolkSourceLifetime` failed before migration because the callback
+changed a returned source into a Human. It now covers present, departed, and
+returned sources, payment before resolution, activation while tapped, absence
+of targets, exact subtype replacement, defender removal, and unchanged 3/2
+characteristics. Existing turn-path tests verify both changes expire at cleanup.
+
+This completes one slice of the remaining UUID-based subtype and activation
+migrations. The declaration uses the existing layer 4 and layer 6 adapters;
+shared continuous-effect contracts cover incarnation capture and clone isolation.
+Other legacy callers remain, so no export is retired and no recorded engine
+blocker is marked resolved.
+
+Validation: Jumpstart package tests; focused shared continuous-effect and
+activation contracts; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
