@@ -60,6 +60,7 @@ var (
 	TargetPermanent            = mage.DeclarePermanentTarget
 	TargetYouControl           = mage.TargetYouControl
 	TargetYouOwn               = mage.TargetYouOwn
+	TargetAttachedToYouControl = mage.TargetAttachedToYouControl
 	TargetOpponentControls     = mage.TargetOpponentControls
 	TargetChosenByOpponent     = mage.TargetChosenByOpponent
 	MayTapOrUntap              = mage.MayTapOrUntap

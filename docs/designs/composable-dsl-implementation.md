@@ -1760,3 +1760,44 @@ Validation: focused card and shared contract tests; Limited Edition package;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/limited`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Miracle Worker Attachment Targets
+
+- [x] Add `IsAttachedTo(filter)` and `TargetAttachedToYouControl()` to the typed author surface. Keep host characteristics and host control as separate constraints.
+- [x] Migrate Miracle Worker's complete definition to typed `Activate`, `Costs`, `TargetPermanent`, `WithTargets`, and `Destroy`.
+- [x] Verify the full Oracle comment, mana cost, creature types, and base P/T against `data/DRK.json`.
+- [x] Correct the legacy selector's acceptance of attached non-Aura enchantments after a failing regression. Retire `TargetAuraAttachedToCreatureYouControl` and its private target implementation after migrating its one production caller and one test caller.
+
+The ability, “{T}: Destroy target Aura attached to a creature you control,”
+requires an Aura enchantment attached to a current creature controlled by the
+stored ability controller. The Aura may have either controller. The host is
+not a target, so its targeting restrictions do not apply. Target selection
+precedes tap payment; normal creature tap restrictions apply. Destruction
+allows regeneration and respects indestructible.
+
+The new constraints use the existing permanent-target selection and resolution
+checks. Host type, attachment, and control are checked again at resolution.
+Moving the same Aura to another qualifying creature keeps the target legal.
+A returned Aura is a new incarnation. Phased-out targets and hosts do not
+qualify. A copy uses its own controller for the host-control restriction.
+The new option exposes host-controller inspection metadata.
+
+The non-Aura regression failed against the old selector, passed after its
+minimal predicate fix, and remains in `TestTypedAuraAttachedToCreatureYouControl`
+after retirement. `TestAttachmentTargetResolution` covers opposing Aura
+control, host control and type, attachment moves, detachment, phasing, returned
+incarnations, and clone isolation. `TestAttachmentTargetCopyController` covers
+copy retargeting under another controller. `TestAttachmentTargetComposition`
+checks registration, metadata, and undeclared binding rejection.
+`TestMiracleWorker` covers the card activation and destruction.
+Shared typed-target, incarnation, and destruction contracts also pass.
+
+Rules contracts are CR 400.7, 602, 608.2b, and 701.8. The broader action
+migration and unrelated engine blockers remain open. The creature file retains
+unrelated legacy definitions and its direct engine import.
+
+Validation: focused engine and DSL contracts; The Dark package;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/thedark`; `make test`; and `make lint` passed with zero
+failures (lint: zero issues).

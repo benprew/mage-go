@@ -46,13 +46,14 @@ func registerCreatures() {
 	// 1/1
 	// {T}: Destroy target Aura attached to a creature you control.
 	Register("Miracle Worker", func() Card {
+		aura := TargetPermanent("aura", And(IsEnchantment, HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())
 		return NewCreature("Miracle Worker", "{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
-			WithActivatedAbility(
-				DestroyTarget(),
-				TapCost(This),
-				WithTarget(TargetAuraAttachedToCreatureYouControl()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				Destroy(aura),
+				WithTargets(aura),
+			)),
 		)
 	})
 

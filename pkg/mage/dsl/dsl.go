@@ -602,6 +602,7 @@ var (
 	NotOwnedBy               = mage.NotOwnedBy
 	PrintedInSet             = mage.PrintedInSet
 	IsAuraOnLand             = mage.IsAuraOnLand
+	IsAttachedTo             = mage.IsAttachedTo
 	HasColorFilter           = mage.HasColorFilter
 	HasColorCardFilter       = mage.HasColorCardFilter
 	HasSubTypeCardFilter     = mage.HasSubTypeCardFilter
@@ -633,24 +634,23 @@ var (
 // =============================================================================
 
 var (
-	TargetCreatureOpponentControls         = mage.TargetCreatureOpponentControls
-	TargetPlayerOrPlaneswalker             = mage.TargetPlayerOrPlaneswalker
-	TargetCreature                         = mage.TargetCreature
-	TargetNCreatures                       = mage.TargetNCreatures
-	TargetXCreatures                       = mage.TargetXCreatures
-	TargetUpToXCreatures                   = mage.TargetUpToXCreatures
-	TargetOneToXCreatures                  = mage.TargetOneToXCreatures
-	TargetRandom                           = mage.TargetRandom
-	TargetRandomCount                      = mage.TargetRandomCount
-	TargetRandomActivePlayerExchangePair   = mage.TargetRandomActivePlayerExchangePair
-	TargetOtherCreature                    = mage.TargetOtherCreature
-	TargetArtifact                         = mage.TargetArtifact
-	TargetDamageAnyTarget                  = mage.TargetDamageAnyTarget
-	TargetDamageSource                     = mage.TargetDamageSource
-	TargetCreatureWithPowerLESource        = mage.TargetCreatureWithPowerLESource
-	TargetCreatureYouControl               = mage.TargetCreatureYouControl
-	TargetAuraAttachedToCreatureYouControl = mage.TargetAuraAttachedToCreatureYouControl
-	TargetUpToNCreaturesOpponentControls   = mage.TargetUpToNCreaturesOpponentControls
+	TargetCreatureOpponentControls       = mage.TargetCreatureOpponentControls
+	TargetPlayerOrPlaneswalker           = mage.TargetPlayerOrPlaneswalker
+	TargetCreature                       = mage.TargetCreature
+	TargetNCreatures                     = mage.TargetNCreatures
+	TargetXCreatures                     = mage.TargetXCreatures
+	TargetUpToXCreatures                 = mage.TargetUpToXCreatures
+	TargetOneToXCreatures                = mage.TargetOneToXCreatures
+	TargetRandom                         = mage.TargetRandom
+	TargetRandomCount                    = mage.TargetRandomCount
+	TargetRandomActivePlayerExchangePair = mage.TargetRandomActivePlayerExchangePair
+	TargetOtherCreature                  = mage.TargetOtherCreature
+	TargetArtifact                       = mage.TargetArtifact
+	TargetDamageAnyTarget                = mage.TargetDamageAnyTarget
+	TargetDamageSource                   = mage.TargetDamageSource
+	TargetCreatureWithPowerLESource      = mage.TargetCreatureWithPowerLESource
+	TargetCreatureYouControl             = mage.TargetCreatureYouControl
+	TargetUpToNCreaturesOpponentControls = mage.TargetUpToNCreaturesOpponentControls
 
 	TargetSpellOrPermanent              = mage.TargetSpellOrPermanent
 	TargetCreatureOfSourceChosenSubtype = mage.TargetCreatureOfSourceChosenSubtype

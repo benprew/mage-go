@@ -172,6 +172,9 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	if spec, ok := b.spec.(*PermanentTarget); ok && spec.controllerOwned {
 		n.children = append(n.children, definitionEdge{"owner", targetYouOwnOption{}})
 	}
+	if spec, ok := b.spec.(*PermanentTarget); ok && spec.attachedToControllerOnly {
+		n.children = append(n.children, definitionEdge{"attachment-controller", targetAttachedToYouControlOption{}})
+	}
 	if isOpponentChosenTarget(b.spec) {
 		n.children = append(n.children, definitionEdge{"chooser", targetChosenByOpponentOption{}})
 	}
@@ -343,4 +346,16 @@ func (targetOtherThanSourceOption) permanentTargetOption()                  {}
 func (targetOtherThanSourceOption) applyPermanentTarget(t *PermanentTarget) { t.excludeSource = true }
 func (targetOtherThanSourceOption) inspectDefinition() definitionNode {
 	return definitionNode{Role: "target-exclude-source", Text: "other than this permanent"}
+}
+
+type targetAttachedToYouControlOption struct{}
+
+// TargetAttachedToYouControl restricts targets to attachments on permanents you control.
+func TargetAttachedToYouControl() PermanentTargetOption         { return targetAttachedToYouControlOption{} }
+func (targetAttachedToYouControlOption) permanentTargetOption() {}
+func (targetAttachedToYouControlOption) applyPermanentTarget(t *PermanentTarget) {
+	t.attachedToControllerOnly = true
+}
+func (targetAttachedToYouControlOption) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-attachment-controller", Text: "you control"}
 }

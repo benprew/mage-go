@@ -376,3 +376,11 @@ func CreatedByFilter(id uuid.UUID) PermanentFilter {
 		return p.CreatedBy == id
 	})
 }
+
+// IsAttachedTo matches permanents attached to a host that matches the filter.
+func IsAttachedTo(filter PermanentFilter) PermanentFilter {
+	return NewPermanentFilter("attached to "+filter.Text(), func(p *Permanent, g *Game) bool {
+		host := g.FindPermanent(p.AttachedTo)
+		return host != nil && !host.PhasedOut && filter.Match(host, g)
+	})
+}

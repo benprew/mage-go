@@ -109,6 +109,7 @@ Spell(
 * Target Options:
   * `TargetYouControl()`: Target must be controlled by the ability controller.
   * `TargetOtherThanSource()`: Target must be a different permanent from the source.
+  * `TargetAttachedToYouControl()`: Target must be attached to a permanent controlled by the ability controller. This does not restrict the attachment's controller.
   * `TargetYouOwn()`: Target must be owned by the ability controller.
   * `TargetOpponentControls()`: Target must be controlled by an opponent.
   * `TargetOpponentOnly()`: Target must be an opponent (for player targets).
@@ -139,6 +140,7 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * Type filters: `IsCreature`, `IsArtifact`, `IsLand`, `IsEnchantment`, `IsPlaneswalker`, `IsToken`, `IsNonToken`.
 * Characteristic filters: `HasSubType("Dwarf")`, `HasColorFilter(Red)`, `HasKeywordFilter(Flying)`.
 * Combinators: `And(filters...)`, `Or(filters...)`, `Not(filter)`.
+* `IsAttachedTo(filter)`: Matches attachments whose current, unphased host matches the filter. This does not require an Aura subtype or restrict either controller.
 
 ---
 
@@ -579,3 +581,13 @@ Disharmony uses `OnlyDuring(core.BeginCombat, core.DeclareAttackers)` for
 “during combat before blockers are declared.” This timing restriction does not
 remove its requirement for an attacking creature target. The constructor copies
 the supplied steps; later caller changes do not change the definition.
+
+### Aura Targets on Controlled Creatures
+
+Miracle Worker uses `TargetPermanent("aura", And(IsEnchantment,
+HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())`
+with `Activate(Costs(TapCost(This)), Destroy(aura), WithTargets(aura))`.
+Either player's Aura qualifies if its current host is a creature you control.
+The host is not a target. Check the attachment, host type, and host controller
+again at resolution. Moving the Aura to another qualifying creature keeps it
+legal; returning the Aura from another zone creates a new target incarnation.

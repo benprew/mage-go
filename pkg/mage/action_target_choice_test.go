@@ -153,7 +153,7 @@ func TestOpponentChosenTarget_RechecksControlRestrictionAtResolution(t *testing.
 	}
 }
 
-func TestTargetAuraAttachedToCreatureYouControl(t *testing.T) {
+func TestTypedAuraAttachedToCreatureYouControl(t *testing.T) {
 	g, a, b := newTriggerTargetGame()
 
 	myCreature := NewCreature("My Creature", "{1}", 1, 1)
@@ -174,8 +174,16 @@ func TestTargetAuraAttachedToCreatureYouControl(t *testing.T) {
 	auraOnOppPerm := g.PutOnBattlefield(auraOnOpp, a.PlayerID())
 	auraOnOppPerm.AttachedTo = oppCreaturePerm.ID()
 
-	targetSpec := TargetAuraAttachedToCreatureYouControl()
+	nonAura := NewEnchantment("Attached non-Aura", "")
+	nonAura.SetOwner(a.PlayerID())
+	nonAuraPerm := g.PutOnBattlefield(nonAura, a.PlayerID())
+	nonAuraPerm.AttachedTo = myCreaturePerm.ID()
+
+	targetSpec := DeclarePermanentTarget("aura", And(IsEnchantment, HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())
 	possible := targetSpec.Possible(a.PlayerID(), nil, g)
+	if slices.Contains(possible, nonAuraPerm.ID()) {
+		t.Fatal("non-Aura enchantment is a legal target")
+	}
 
 	if !slices.Contains(possible, auraOnMinePerm.ID()) {
 		t.Fatalf("expected possible targets to contain auraOnMine, got %v", possible)

@@ -794,7 +794,8 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
-	excludeSource bool
+	excludeSource            bool
+	attachedToControllerOnly bool
 	BaseTarget
 	controllerOnly  bool
 	controllerOwned bool
@@ -861,6 +862,12 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 		if t.excludeSource && sourceCard != nil && p.ID() == sourceCard.ID() {
 			continue
 		}
+		if t.attachedToControllerOnly {
+			host := g.FindPermanent(p.AttachedTo)
+			if host == nil || host.PhasedOut || host.ControllerID() != controller {
+				continue
+			}
+		}
 		if t.controllerOnly && p.ControllerID() != controller {
 			continue
 		}
@@ -910,41 +917,6 @@ func TargetLand() Target {
 // Convenience wrapper for TargetPermanent(IsArtifact).
 func TargetArtifact() Target {
 	return TargetPermanent(IsArtifact)
-}
-
-// TargetAuraAttachedToCreatureYouControl creates a target that selects an Aura
-// attached to a creature the controller controls.
-func TargetAuraAttachedToCreatureYouControl() Target {
-	return &auraAttachedToCreatureYouControlTarget{
-		BaseTarget: BaseTarget{min: 1, max: 1},
-	}
-}
-
-type auraAttachedToCreatureYouControlTarget struct {
-	BaseTarget
-}
-
-func (t *auraAttachedToCreatureYouControlTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
-	var result []uuid.UUID
-	for _, p := range g.zones.battlefield {
-		if !p.IsAttached() || (!p.HasType(TypeEnchantment) && !p.HasSubType("Aura")) {
-			continue
-		}
-		host := g.FindPermanent(p.AttachedTo)
-		if host == nil || !host.HasType(TypeCreature) || host.ControllerID() != controller {
-			continue
-		}
-		if !p.CanBeTargetedBy(sourceCard, controller, g) {
-			continue
-		}
-		result = append(result, p.ID())
-	}
-	return result
-}
-
-func (t *auraAttachedToCreatureYouControlTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen []uuid.UUID) error {
-	t.chosen = chosen
-	return nil
 }
 
 // TargetArtifactWithManaValueX creates a target that selects an artifact on the
