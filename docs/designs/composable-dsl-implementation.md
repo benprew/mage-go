@@ -2315,6 +2315,38 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
 
+## Completed Slice: Jumpstart Targeted Counter Triggers
+
+- [x] Migrate Ironshell Beetle to `WhenEvent(Enters(This), ...)`, a typed
+  creature target, `WithTargets`, and `AddCounters(creature, P1P1, Fixed(1))`.
+- [x] Migrate Lawless Broker to the same typed action with `Dies(This)` and
+  `TargetYouControl()` on its creature target.
+- [x] Verify both full Oracle comments, mana costs, creature types, and
+  power/toughness against `data/JMP.json`.
+- [x] Audit the existing trigger, target, and counter adapters. No engine
+  fix is needed to implement these single-action abilities.
+
+The Beetle can target any creature, including itself or an opponent's
+creature. The Broker targets a creature controlled by its stored trigger
+controller. Targets are selected when the trigger goes on the stack and
+checked again at resolution. Counter placement uses the shared replacement
+pipeline and the captured target incarnation.
+
+Both existing card tests pass before and after migration. Shared contracts
+cover typed target validation, controller restrictions, copy/clone isolation,
+trigger bindings, counter amounts, and counter replacement. Registration
+validation checks both declarations. No new simulation tests are needed for
+these single-action definitions.
+
+This completes one slice of the remaining trigger and action migrations.
+Other legacy callers remain, so no export is retired. The recorded engine
+blockers remain open.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Reckless Scholar Typed Draw and Discard
 
 - [x] Migrate the complete activation to `Activate`, `Costs(TapCost(This))`,

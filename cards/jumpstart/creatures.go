@@ -2666,12 +2666,11 @@ func registerCreatures() {
 	// 3/2
 	// When this creature dies, put a +1/+1 counter on target creature you control.
 	Register("Lawless Broker", func() Card {
+		creature := TargetPermanent("creature", IsCreature, TargetYouControl())
 		return NewCreature("Lawless Broker", "{2}{B}", 3, 2,
 			WithSubTypes("Aetherborn", "Rogue"),
-			WithAbility(DiesTrigger(
-				mage.AddCounters(P1P1, Fixed(1)),
-				false,
-			).AddTarget(TargetCreatureYouControl())),
+			WithAbility(WhenEvent(Dies(This), AddCounters(creature, P1P1, Fixed(1)),
+				WithTargets(creature))),
 		)
 	})
 
@@ -5304,12 +5303,11 @@ func registerCreatures() {
 	// 1/1
 	// When this creature enters, put a +1/+1 counter on target creature.
 	Register("Ironshell Beetle", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Ironshell Beetle", "{1}{G}", 1, 1,
 			WithSubTypes("Insect"),
-			WithAbility(EntersBattlefieldTrigger(
-				mage.AddCounters(P1P1, Fixed(1)),
-				false,
-			).AddTarget(TargetCreature())),
+			WithAbility(WhenEvent(Enters(This), AddCounters(creature, P1P1, Fixed(1)),
+				WithTargets(creature))),
 		)
 	})
 
