@@ -12,12 +12,13 @@ func TestDwarvenRuins(t *testing.T) {
 	t.Run("taps for red mana", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Ruins")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Dwarven Ruins")
+		g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Dwarven Ruins", 0)
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Dwarven Ruins", true)
 		pool := g.AllPlayers()[0].ManaPool()
-		if pool.CountProducedThisTurn(core.Red) < 1 {
-			t.Errorf("expected at least 1 red mana, got %d", pool.CountProducedThisTurn(core.Red))
+		if pool.CountProducedThisTurn(core.Red) != 6 {
+			t.Errorf("expected 6 red mana including 5 from the activation script, got %d", pool.CountProducedThisTurn(core.Red))
 		}
 	})
 
@@ -29,6 +30,10 @@ func TestDwarvenRuins(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Dwarven Ruins", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Dwarven Ruins", 1)
+		if got := g.AllPlayers()[0].ManaPool().CountProducedThisTurn(core.Red); got != 7 {
+			t.Errorf("produced mana = %d, want 7 including 5 from the activation script", got)
+		}
 	})
 }
 
@@ -40,6 +45,10 @@ func TestEbonStronghold(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Ebon Stronghold", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Ebon Stronghold", 1)
+		if got := g.AllPlayers()[0].ManaPool().CountProducedThisTurn(core.Black); got != 7 {
+			t.Errorf("produced mana = %d, want 7 including 5 from the activation script", got)
+		}
 	})
 }
 
@@ -51,6 +60,10 @@ func TestHavenwoodBattleground(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Havenwood Battleground", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Havenwood Battleground", 1)
+		if got := g.AllPlayers()[0].ManaPool().CountProducedThisTurn(core.Green); got != 7 {
+			t.Errorf("produced mana = %d, want 7 including 5 from the activation script", got)
+		}
 	})
 }
 
@@ -62,6 +75,10 @@ func TestRuinsOfTrokair(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Ruins of Trokair", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Ruins of Trokair", 1)
+		if got := g.AllPlayers()[0].ManaPool().CountProducedThisTurn(core.White); got != 7 {
+			t.Errorf("produced mana = %d, want 7 including 5 from the activation script", got)
+		}
 	})
 }
 
@@ -73,6 +90,10 @@ func TestSvyeluniteTemple(t *testing.T) {
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		g.AssertPermanentCount(gametest.PlayerA, "Svyelunite Temple", 0)
+		g.AssertGraveyardCount(gametest.PlayerA, "Svyelunite Temple", 1)
+		if got := g.AllPlayers()[0].ManaPool().CountProducedThisTurn(core.Blue); got != 7 {
+			t.Errorf("produced mana = %d, want 7 including 5 from the activation script", got)
+		}
 	})
 }
 

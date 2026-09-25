@@ -16,12 +16,14 @@ func sacLandFactory(name string, color Color) func() Card {
 	return withExpansion(func() Card {
 		return NewLand(name,
 			WithKeyword(EntersTapped),
-			WithManaAbility(color),
-			WithActivatedAbility(
-				AddMana(color, 2),
-				TapCost(This),
-				WithCost(SacrificeSourceCost()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(color, Fixed(1)),
+			)),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeSourceCost()),
+				AddManaAmount(color, Fixed(2)),
+			)),
 		)
 	})
 }

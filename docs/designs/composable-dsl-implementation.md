@@ -3253,3 +3253,44 @@ Validation: focused shared contracts; Limited package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/limited`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Fallen Empires Sacrifice-Land Typed Mana
+
+- [x] Migrate both mana abilities on Dwarven Ruins, Ebon Stronghold,
+  Havenwood Battleground, Ruins of Trokair, and Svyelunite Temple to
+  `Activate`, explicit `Costs`, and `AddManaAmount(color, Fixed(n))`.
+- [x] Preserve entry tapped, one mana for tapping, and two mana for tapping
+  and sacrificing the source. Both abilities have no targets.
+- [x] Verify all five complete Oracle comments and land types against
+  `data/FEM.json`.
+- [x] Strengthen the existing scenarios to check exact mana production and
+  sacrifice to the graveyard. Select Dwarven Ruins' first ability explicitly
+  and assert that it taps.
+- [x] Audit mana classification, source sacrifice, and payment. Existing
+  adapters need no engine fix or new export.
+
+Both abilities resolve immediately without using the stack. The second pays
+both tap and sacrifice costs before adding two mana to the activating
+controller's pool; the departed source is not needed for the fixed amount.
+The tap cost requires an untapped source and enforces summoning sickness if
+the land is a creature. Rules contracts are CR 302.6, 602, and 605.1a–605.3b.
+
+The strengthened five card tests pass before and after migration. Their exact
+production assertions include the five mana of each color supplied by the
+activation script. Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+`TestComposablePayment*`, and `TestActivationSelectionPrefersNonMana` pass
+before and after migration. These cover immediate resolution, fixed production
+planning, events, controller context, clone isolation, and payment.
+
+The one-mana abilities remain available to automatic payment. The planner's
+existing exclusion of sacrifice costs remains; this slice does not extend
+automatic planning to the two-mana abilities. Explicit activation is supported.
+This completes Fallen Empires' remaining `WithManaAbility` caller migration.
+Other sets retain the helper, so its export remains. Storage lands and the
+broader mana family remain open; no engine blocker is marked resolved.
+
+Validation: focused shared contracts; Fallen Empires package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/fallen_empires`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).
