@@ -238,9 +238,9 @@ func registerCh06Cards() {
 		})
 		reg("Ch06 Rally", func() mage.Card {
 			return mage.NewSorcery("Ch06 Rally", "{W}",
-				mage.NewSpellAbility(
-					mage.BoostMatchingUntilEndOfTurn(mage.Fixed(1), mage.Fixed(1),
-						mage.HasColorFilter(core.White))))
+				mage.WithAbility(mage.Spell(mage.Until(core.EndOfTurn,
+					mage.ModifyEachPT(mage.ControlledPermanents(mage.And(mage.IsCreature,
+						mage.HasColorFilter(core.White))), mage.Fixed(1), mage.Fixed(1))))))
 		})
 		reg("Ch06 Living Lands", func() mage.Card {
 			return mage.NewEnchantment("Ch06 Living Lands", "{3}{G}",

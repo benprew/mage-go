@@ -57,10 +57,10 @@ func registerEnchantments() {
 				ManaCostOf("{G}"),
 				WithTarget(TargetCreature(HasKeywordFilter(Defender))),
 			),
-			WithActivatedAbility(
-				BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(1), IsCreature),
-				ManaCostOf("{2}{G}"),
-			),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{2}{G}")),
+				dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(dsl.ControlledPermanents(dsl.IsCreature), dsl.Fixed(0), dsl.Fixed(1))),
+			)),
 		)
 	})
 

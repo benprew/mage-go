@@ -151,11 +151,13 @@ func TestInspiredCharge(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 4)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Inspired Charge")
 	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Inspired Charge")
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 4, 3)
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
 }
 
 func TestExclude(t *testing.T) {
@@ -1029,6 +1031,7 @@ func TestFortify_PowerMode(t *testing.T) {
 func TestFortify_ToughnessMode(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Fortify")
 	g.ChooseMode(gametest.PlayerA, 1)
@@ -1036,6 +1039,7 @@ func TestFortify_ToughnessMode(t *testing.T) {
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 4)
+	g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
 }
 
 func TestValorousStance_Indestructible(t *testing.T) {

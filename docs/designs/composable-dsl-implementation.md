@@ -43,6 +43,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Typed Combat Removal**: Add `RemoveFromCombat(PermanentRef)`, migrate Mijae Djinn’s coin-flip body and Disharmony’s removal instruction, and correct shared removal to preserve blocked status. Keep explicit-unblocking legacy callers pending their full audits. See the completed slice below.
 - [x] **Disharmony Casting Window**: Extend `OnlyDuring` to multiple steps and enforce beginning-of-combat or declare-attackers timing. The control-effect adapter remains separate. See the completed slice below.
 - [x] **Procrastinate Tap and Counters**: Add typed `MultiplyValues`, migrate the spell to typed tap and twice-X stun counters, and remove its positional callback. No engine blocker. See the completed slice below.
+- [x] **Controlled Creature Team Boosts**: Migrate Fortify, Inspired Charge, and Assault Formation’s team activation to typed collection modifications and durations; retire `BoostMatchingUntilEndOfTurn`, including its test fixture caller. No engine blocker. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -678,3 +679,29 @@ untap replacement. `TestProcrastinate` covers all three clauses.
 
 Validation: focused arithmetic, DSL composition, compile-fail, and card tests;
 full `make test`; `go build ./...`; and `make lint`.
+
+
+## Completed Slice: Controlled Creature Team Boosts
+
+| Retired API and callers | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| `BoostMatchingUntilEndOfTurn`: Fortify's two modes | `SpellModes` and `ModeOf`, each installing `Until(EndOfTurn, ModifyEachPT(ControlledPermanents(IsCreature), ...))`; choose exactly one mode; no targets | `TestFortify_PowerMode`, `TestFortify_ToughnessMode`; both assert the opponent's creature is unchanged |
+| Same helper: Inspired Charge | `Spell` with the same typed collection and duration; +2/+1 for controlled creatures only. The old `AnyPermanent` argument implicitly selected creatures; the new filter states that restriction | `TestInspiredCharge`; controller boost and opponent exclusion |
+| Same helper: Assault Formation's final activation | `Activate(Costs(Mana("{2}{G}")), Until(...))`; +0/+1 for controlled creatures; no targets or tap cost | `TestAssaultFormation_TeamBoost`; activated ability index, controller restriction, and end-of-turn expiry |
+| Same helper: `Ch06 Rally` test fixture | Typed `Spell` and `Until` with `ControlledPermanents(And(IsCreature, HasColorFilter(White)))`; preserves the white-creature restriction | `pkg/mage/gametest` suite |
+
+All collections are captured at resolution under CR 611.2c, and modifications
+apply in layer 7c. No damage-source LKI is needed. `TestComposableContinuousCapture`
+checks later entry and leave-and-return identity. `TestTeamBoostComposition`
+checks public DSL composition, registration validation, beneficial outcome,
+collection metadata, and +2/+1 value summaries. Existing engine services support
+the slice without a rules fix. Oracle comments match `data/JMP.json`.
+
+The helper has no remaining Go callers and is removed. Assault Formation's
+unrelated combat-damage static ability and defender activation retain their
+legacy definitions and direct engine import; this slice does not claim their
+migration. The shared Jumpstart files retain imports for other legacy cards.
+
+Validation: focused card and DSL tests, the Jumpstart package, engine and rules
+harness tests, universal registration validation through `make test`,
+`go build ./...`, `go vet ./cards/jumpstart`, and `make lint`.

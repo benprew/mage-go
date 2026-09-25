@@ -109,6 +109,10 @@
 // Grants accumulate and remain separate in cloned games. The action does not
 // play a land or change land timing. Explore grants the allowance before drawing.
 //
+// Use [Until] with [ModifyEachPT] for a temporary collection boost.
+// [ControlledPermanents] with [IsCreature] selects your creatures at resolution.
+// Later entries and returned cards do not receive the boost.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -68,11 +68,6 @@ func BoostUntilEndOfTurn(power, toughness ValueSource, target PermanentSelector)
 	return Boost(power, toughness).Targeting(sel).Until(EndOfTurn)
 }
 
-// BoostMatchingUntilEndOfTurn is a compatibility helper for the older boost API.
-func BoostMatchingUntilEndOfTurn(power, toughness ValueSource, filter PermanentFilter) Effect {
-	return Boost(power, toughness).Targeting(ToMatching(filter)).Until(EndOfTurn)
-}
-
 // resolvePermanents resolves the permanent(s) identified by a TargetSelector.
 func resolvePermanents(ctx *EffectContext, sel TargetSelector) []*Permanent {
 	switch sel.Kind {

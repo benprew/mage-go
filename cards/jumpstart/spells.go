@@ -809,18 +809,13 @@ func registerSpells() {
 	// • Creatures you control get +2/+0 until end of turn.
 	// • Creatures you control get +0/+2 until end of turn.
 	Register("Fortify", func() Card {
-		c := NewInstant("Fortify", "{2}{W}", nil)
-		c.AddAbility(NewModalSpell([]Mode{
-			{
-				Label:   "Creatures you control get +2/+0 until end of turn",
-				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(0), IsCreature)},
-			},
-			{
-				Label:   "Creatures you control get +0/+2 until end of turn",
-				Effects: []Effect{BoostMatchingUntilEndOfTurn(Fixed(0), Fixed(2), IsCreature)},
-			},
-		}))
-		return c
+		creatures := dsl.ControlledPermanents(dsl.IsCreature)
+		return dsl.NewInstant("Fortify", "{2}{W}", dsl.WithAbility(dsl.SpellModes(
+			dsl.ModeOf("Creatures you control get +2/+0 until end of turn",
+				dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(creatures, dsl.Fixed(2), dsl.Fixed(0)))),
+			dsl.ModeOf("Creatures you control get +0/+2 until end of turn",
+				dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(creatures, dsl.Fixed(0), dsl.Fixed(2)))),
+		)))
 	})
 
 	// Funeral Rites {2}{B}
@@ -1032,8 +1027,10 @@ func registerSpells() {
 	// Instant
 	// Creatures you control get +2/+1 until end of turn.
 	Register("Inspired Charge", func() Card {
-		return NewInstant("Inspired Charge", "{2}{W}{W}",
-			NewSpellAbility(BoostMatchingUntilEndOfTurn(Fixed(2), Fixed(1), AnyPermanent)),
+		return dsl.NewInstant("Inspired Charge", "{2}{W}{W}",
+			dsl.WithAbility(dsl.Spell(dsl.Until(dsl.EndOfTurn,
+				dsl.ModifyEachPT(dsl.ControlledPermanents(dsl.IsCreature), dsl.Fixed(2), dsl.Fixed(1)),
+			))),
 		)
 	})
 

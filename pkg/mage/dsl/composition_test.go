@@ -589,3 +589,22 @@ func TestLandPlayAllowanceComposition(t *testing.T) {
 		}
 	}
 }
+
+func TestTeamBoostComposition(t *testing.T) {
+	body := dsl.Until(core.EndOfTurn,
+		dsl.ModifyEachPT(dsl.ControlledPermanents(dsl.IsCreature), dsl.Fixed(2), dsl.Fixed(1)))
+	cards := []mage.Card{
+		dsl.NewInstant("Spell", "", dsl.WithAbility(dsl.Spell(body))),
+		dsl.NewEnchantment("Activation", "", dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{2}{G}")), body))),
+		dsl.NewInstant("Modes", "", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Boost", body), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+	props := dsl.InspectDefinition(body).Properties
+	if props.Outcome != mage.OutcomeBenefit || !props.Mass || props.PowerBoost != 2 || props.ToughnessBoost != 1 {
+		t.Fatalf("team boost metadata lost: %+v", props)
+	}
+}

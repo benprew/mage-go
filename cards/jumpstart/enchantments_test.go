@@ -843,3 +843,27 @@ func TestAssaultFormation_AssignsToughnessAsDamage(t *testing.T) {
 	// 0/3 wall now assigns 3 damage instead of 0.
 	g.AssertLife(gametest.PlayerB, 17)
 }
+
+func TestAssaultFormation_TeamBoost(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		turn      int
+		toughness int
+	}{
+		{"active", 1, 4},
+		{"expired", 2, 3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Assault Formation")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wall of Wood")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Hill Giant")
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
+			g.ActivateAbilityIndex(1, core.PrecombatMain, gametest.PlayerA, "Assault Formation", 2)
+			g.StopAt(tc.turn, core.BeginCombat)
+			g.Execute()
+			g.AssertPowerToughness(gametest.PlayerA, "Wall of Wood", 0, tc.toughness)
+			g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
+		})
+	}
+}
