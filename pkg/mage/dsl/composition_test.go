@@ -85,7 +85,7 @@ func TestTypedTemporaryKeywordComposition(t *testing.T) {
 }
 
 func TestTypedTemporaryPTComposition(t *testing.T) {
-	for _, delta := range [][2]int{{3, 3}, {0, 3}, {-2, 0}} {
+	for _, delta := range [][2]int{{3, 3}, {0, 3}, {-2, 0}, {-1, 0}, {2, 2}} {
 		target := dsl.TargetPermanent("creature", dsl.IsCreature)
 		body := dsl.Until(core.EndOfTurn, dsl.ModifyPT(target, dsl.Fixed(delta[0]), dsl.Fixed(delta[1])))
 		saved := dsl.BindPermanent("chosen creature")

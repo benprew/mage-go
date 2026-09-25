@@ -125,6 +125,8 @@
 // to pay a cost does not end the boost on the target.
 // Put subtype and current power/toughness limits in the target filter.
 // These limits are checked again at resolution, not during the boost.
+// Ghosts of the Damned and Pradesh Gypsies use negative power modifiers.
+// Tuknir Deathlock uses the same target and duration with a +2/+2 bonus.
 //
 // Use [Until] with [ModifyEachPT] for a temporary collection boost.
 // [ControlledPermanents] with [IsCreature] selects your creatures at resolution.

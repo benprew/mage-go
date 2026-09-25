@@ -56,6 +56,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Jumpstart Single-Target P/T Spells**: Migrate Aegis of the Heavens, Auger Spree, and Last Gasp to typed creature targets and explicit end-of-turn modifications. No engine gap; see the completed slice below.
 - [x] **Jumpstart Simple Self-Pump Activations**: Migrate Dragon Hatchling, Furnace Whelp, Minotaur Sureshot, Molten Ravager, Tibalt’s Rager, and Jousting Dummy to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
 - [x] **Legends Simple Mana Self-Pump Activations**: Migrate eight activations across six cards to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
+- [x] **Legends Targeted Tap P/T Activations**: Migrate Ghosts of the Damned, Pradesh Gypsies, and Tuknir Deathlock to typed targets, grouped costs, and temporary modifications. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -1027,3 +1028,34 @@ Validation: focused card and shared source-lifetime tests before migration;
 Legends package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
 passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Legends Targeted Tap P/T Activations
+
+- [x] Migrate all three simple targeted tap P/T activations in Legends from positional `WithActivatedAbility` / `Boost` to `Activate`, `TargetPermanent`, `Costs`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments and printed costs against `cards/legends/LEG.json`; all three match exactly. Preserve other characteristics and abilities.
+- [x] Audit targeting, payment, duration, and signed metadata against existing contracts. No engine fix or new constructor is required.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Ghosts of the Damned: “{T}: Target creature gets -1/-0 until end of turn.” | `Costs(TapCost(This))`, typed creature target, `ModifyPT(creature, Fixed(-1), Fixed(0))`, explicit end-of-turn duration | `TestGhostsOfTheDamned` checks opposing creature reduction and now checks tap payment |
+| Pradesh Gypsies: “{1}{G}, {T}: Target creature gets -2/-0 until end of turn.” | Same target and duration, `Costs(Mana("{1}{G}"), TapCost(This))`, -2/0 modifier | `TestPradeshGypsies` checks opposing creature reduction and now checks tap payment |
+| Tuknir Deathlock: “{R}{G}, {T}: Target creature gets +2/+2 until end of turn.” | Same target and duration, `Costs(Mana("{R}{G}"), TapCost(This))`, +2/+2 modifier | `TestTuknirDeathlock` checks friendly creature boost, retained flying, and now checks tap payment |
+| Shared target, cost, and lifetime contract | Either player's creature, including the source, qualifies. One target is chosen before transactional payment; normal instant activation timing and tap restrictions apply. Legality is rechecked at resolution. Layer 7c effects retain the target incarnation, survive source departure, expire at cleanup, and retain independent clone state. No damage-source LKI is needed. | `TestLandBoostResolution`, `TestTargetIncarnationAfterReturn`, `TestComposableContinuousCapture`, `TestComposableSelfPumpLifetime`; shared payment contracts and registration validation |
+| Signed P/T metadata and composition | Single-subject benefit for +2/+2 and detriment for negative power; explicit duration remains inspectable | `TestTypedTemporaryPTComposition` now includes -1/0 and +2/+2 alongside -2/0 across activation, spell, trigger, sequence, modal, and random-choice contexts; `TestTemporaryPTMetadata` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 602 (activation), 608.2b (target legality),
+611.2a–c (duration and capture), and 613 (continuous layers). Existing card
+behavior tests, including the added tap assertions, passed before migration.
+These declarative abilities reuse shared contracts without new simulations.
+
+No exports are retired: `Boost`, `WithActivatedAbility`, `TargetCreature`, and
+legacy cost constructors retain other callers. Other Legends abilities and
+the file's engine import remain outside this slice. No outstanding engine
+blocker is claimed resolved.
+
+Validation: focused card and shared lifetime tests; Legends package;
+`go test ./cards/... ./pkg/mage/... -short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; `make test`; and `make lint` passed with zero
+failures (lint: zero issues).

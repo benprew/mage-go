@@ -775,13 +775,13 @@ func registerCreatures() {
 	// 0/2
 	// {T}: Target creature gets -1/-0 until end of turn.
 	Register("Ghosts of the Damned", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Ghosts of the Damned", "{1}{B}{B}", 0, 2,
 			WithSubTypes("Spirit"),
-			WithActivatedAbility(
-				Boost(Fixed(-1), Fixed(0)),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(-1), Fixed(0))),
+				WithTargets(creature),
+			)),
 		)
 	})
 
@@ -1920,14 +1920,13 @@ func registerCreatures() {
 	// 1/1
 	// {1}{G}, {T}: Target creature gets -2/-0 until end of turn.
 	Register("Pradesh Gypsies", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Pradesh Gypsies", "{2}{G}", 1, 1,
 			WithSubTypes("Human", "Nomad"),
-			WithActivatedAbility(
-				Boost(Fixed(-2), Fixed(0)),
-				ManaCostOf("{1}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{G}"), TapCost(This)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(-2), Fixed(0))),
+				WithTargets(creature),
+			)),
 		)
 	})
 
@@ -3105,16 +3104,15 @@ func registerCreatures() {
 	// Flying
 	// {R}{G}, {T}: Target creature gets +2/+2 until end of turn.
 	Register("Tuknir Deathlock", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Tuknir Deathlock", "{R}{R}{G}{G}", 2, 2,
 			WithSubTypes("Human", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(2)),
-				ManaCostOf("{R}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{R}{G}"), TapCost(This)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(2), Fixed(2))),
+				WithTargets(creature),
+			)),
 		)
 	})
 

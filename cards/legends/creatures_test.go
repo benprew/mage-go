@@ -1283,6 +1283,7 @@ func TestTuknirDeathlock(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Tuknir Deathlock", "Grizzly Bears")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Tuknir Deathlock", true)
 		g.AssertPowerToughness(gametest.PlayerA, "Tuknir Deathlock", 2, 2)
 		g.AssertHasAbility(gametest.PlayerA, "Tuknir Deathlock", core.Flying, true)
 		// Grizzly Bears should be 4/4 (2+2 / 2+2)
@@ -1963,6 +1964,7 @@ func TestGhostsOfTheDamned(t *testing.T) {
 		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Ghosts of the Damned", "Hill Giant")
 		g.StopAt(1, core.EndStep)
 		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Ghosts of the Damned", true)
 		g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 2, 3)
 	})
 }
@@ -2303,6 +2305,7 @@ func TestPradeshGypsies(t *testing.T) {
 		g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Pradesh Gypsies", "target creature gets -2/-0", "Raging Bull")
 		g.StopAt(3, core.PostcombatMain)
 		g.Execute()
+		g.AssertTapped(gametest.PlayerA, "Pradesh Gypsies", true)
 		g.AssertPowerToughness(gametest.PlayerB, "Raging Bull", 0, 2) // -2/-0 applied
 	})
 }
