@@ -68,6 +68,8 @@ var (
 	MayTapOrUntap              = mage.MayTapOrUntap
 	PreventCombatDamageToAndBy = mage.PreventCombatDamageToAndBy
 	TargetPlayer               = mage.DeclarePlayerTarget
+	TargetSpell                = mage.DeclareSpellTarget
+	Counter                    = mage.Counter
 	TargetOpponentOnly         = mage.TargetOpponentOnly
 	// WithTargets binds declared target bindings to a spell, activation, or trigger.
 	WithTargets = mage.WithTargets

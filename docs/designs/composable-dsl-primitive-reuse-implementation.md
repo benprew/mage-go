@@ -15,7 +15,7 @@ This tracker records engine-only slices for the primitive reuse plan. Card migra
 
 - [ ] T1: Immutable token definitions and typed creation.
 - [x] C1: Temporary control modification. `ChangeController(PermanentRef, PlayerRef)` captures the target incarnation and evaluated controller through the existing `Until` layer path. Registration rejects static, source-bound, and non-end-of-turn installation. Engine tests cover identity, phasing, source departure, timestamps, expiry, control prohibition, copied spells, clones, validation, and AI outcome metadata. Card migration remains outside this tracker’s scope.
-- [ ] S1: Typed spell target and counter action.
+- [x] S1: Typed spell target and counter action. `TargetSpell` binds a stack object by its stack ID, and `Counter` uses that binding through the shared counter service. Filters apply at announcement and resolution. Engine tests cover target order, uncounterable spells, removed and recast subjects, copies, retargeting, clones, mode scope, validation, and compile-time category rejection. The legacy counter path still counters abilities for ward. Card migration remains outside this tracker's scope.
 - [ ] G1: Typed graveyard card target and return to hand.
 - [ ] G2: Typed graveyard return to battlefield.
 

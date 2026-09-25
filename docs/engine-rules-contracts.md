@@ -46,6 +46,7 @@ Read-only queries are organized into focused domain interfaces: `PlayerReader`, 
 * **Leave-and-Return**: When a permanent leaves the battlefield (to exile, graveyard, or hand) and returns, it becomes an entirely new object with a new `incarnationID`. A delayed trigger, continuous effect, or spell targeting the old incarnation will not affect the returned card.
 * **Phasing**: Phasing out does **not** change `incarnationID` and does not cause leave-the-battlefield or enters-the-battlefield triggers. Phased-out permanents are ignored for game actions, but their incarnation is preserved and resumes when they phase in.
 * **Last-Known Information (LKI)**: When an object moves zones or dies, its characteristics immediately prior to the event are recorded. Effects reading source power, attachment status, or colors read this LKI snapshot (CR 608.2h).
+* **Stack References**: Typed spell targets store the stack object's ID. Target legality is checked again at resolution. Removing a spell and casting the same card again does not preserve the old target. `CounterStackObject` counters a spell by this ID; copied spells leave the stack without entering a graveyard. The source-ID counter entry point also handles abilities, including ward.
 
 ---
 

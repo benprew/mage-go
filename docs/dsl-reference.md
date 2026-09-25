@@ -125,6 +125,10 @@ Spell(
 * `TargetPlayer(label, options...)`: Declares a target player.
 * `TargetDamageRecipient(label, filter, options...)`: Declares a target creature or player.
 
+### Spell Targets
+* `TargetSpell(label, filters...)`: Declares one spell target on the stack. Card filters restrict legal choices at announcement and resolution.
+* `Counter(spell)`: Counters the referenced spell if it remains legal and can be countered. A copy disappears from the stack when countered. Declare the binding with `WithTargets(spell)`.
+
 ---
 
 ## 5. Pure State Conditions & Filters

@@ -1096,13 +1096,25 @@ func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) 
 // installed via [RegisterUncounterableStatic] matches — the counter has
 // no effect: the spell stays on the stack.
 func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
-	if obj := g.stack.FindBySourceID(spellID); obj != nil && g.IsSpellUncounterable(obj) {
+	g.counterStackObject(g.stack.FindBySourceID(spellID))
+}
+
+// CounterStackObject counters a spell by its stack object ID.
+func (g *Game) CounterStackObject(id uuid.UUID) {
+	obj := g.stack.FindByID(id)
+	if obj == nil || obj.IsAbility || obj.Card == nil {
 		return
 	}
-	obj := g.stack.RemoveBySourceID(spellID)
-	if obj != nil && obj.Card != nil {
-		owner := g.GetPlayer(obj.Card.Owner())
-		if owner != nil {
+	g.counterStackObject(obj)
+}
+
+func (g *Game) counterStackObject(obj *StackObject) {
+	if obj == nil || g.IsSpellUncounterable(obj) {
+		return
+	}
+	g.stack.RemoveByID(obj.ID)
+	if obj.Card != nil && !obj.IsCopy {
+		if owner := g.GetPlayer(obj.Card.Owner()); owner != nil {
 			owner.AddToGraveyard(obj.Card)
 		}
 	}
@@ -2031,6 +2043,9 @@ func (g *Game) zoneOfTarget(id uuid.UUID) Zone {
 	}
 	if g.FindPermanent(id) != nil {
 		return ZoneBattlefield
+	}
+	if g.stack.FindByID(id) != nil {
+		return ZoneStack
 	}
 	if g.stack.FindBySourceID(id) != nil {
 		return ZoneStack
