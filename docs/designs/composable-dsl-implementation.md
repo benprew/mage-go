@@ -55,6 +55,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Shield Wall Team Boost**: Migrate the remaining positional team spell to a typed controlled-creature collection and explicit end-of-turn duration. No engine gap; see the completed slice below.
 - [x] **Jumpstart Single-Target P/T Spells**: Migrate Aegis of the Heavens, Auger Spree, and Last Gasp to typed creature targets and explicit end-of-turn modifications. No engine gap; see the completed slice below.
 - [x] **Jumpstart Simple Self-Pump Activations**: Migrate Dragon Hatchling, Furnace Whelp, Minotaur Sureshot, Molten Ravager, Tibalt’s Rager, and Jousting Dummy to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
+- [x] **Legends Simple Mana Self-Pump Activations**: Migrate eight activations across six cards to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -991,3 +992,38 @@ Jumpstart package; `go test ./pkg/mage/... -short -count=1`;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` passed with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Legends Simple Mana Self-Pump Activations
+
+- [x] Migrate Carrion Ants, Wall of Opposition, Killer Bees, Arcades Sabboth, Pavel Maliki, and Vaevictis Asmadi to `Activate(Costs(Mana(...)), Until(EndOfTurn, ModifyPT(This, ...)))` through `pkg/mage/dsl`.
+- [x] Check full Oracle comments against `cards/legends/LEG.json`; all six match exactly. Preserve printed costs, keywords, and other abilities.
+- [x] Audit source scope, mana payment, duration, and metadata against existing contracts. No engine fix or new constructor is required.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Carrion Ants: “{1}: This creature gets +1/+1 until end of turn.” | `Costs(Mana("{1}"))`, `ModifyPT(This, Fixed(1), Fixed(1))`, explicit end-of-turn duration | `TestCarrionAnts` verifies repeated activation |
+| Wall of Opposition: “{1}: This creature gets +1/+0 until end of turn.” | Same form with generic mana and +1/+0 | Shared activation and lifetime contracts; registration validation; `TestWallOfOpposition` retains base characteristics coverage |
+| Killer Bees: “{G}: This creature gets +1/+1 until end of turn.” | Same form with green mana and +1/+1 | `TestKillerBees` verifies repeated activation |
+| Arcades Sabboth: “{W}: Arcades Sabboth gets +0/+1 until end of turn.” | Same form with white mana and +0/+1 | Shared activation and lifetime contracts; registration validation; existing `TestArcadesSabboth` covers the separate upkeep ability |
+| Pavel Maliki: “{B}{R}: Pavel Maliki gets +1/+0 until end of turn.” | Same form with both required colors and +1/+0 | `TestPavelMaliki` |
+| Vaevictis Asmadi: three separate {B}, {R}, and {G} +1/+0 activations | Three separate `Activate` definitions, each with its own mana cost and end-of-turn source bonus | `TestVaevictisAsmadi` verifies three cumulative activations and the separate upkeep ability |
+| Shared source identity, duration, and metadata | No targets, tap costs, or activation limits. Each resolution adds a layer 7c bonus to the original source incarnation. Expire at cleanup; retain phasing and clone isolation. Beneficial, single-subject P/T metadata remains available. No damage-source LKI is needed. | `TestComposableSelfPumpLifetime`, `TestSelfPumpActivationComposition`, `TestTemporaryPTMetadata`, universal `TestRegisteredDefinitions` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 602 (activation), 611.2a (duration), and 613
+(continuous layers). Existing focused card and shared contract tests passed
+before migration. These declarative abilities use the established engine
+contracts and registration validation; no new simulation tests are needed.
+
+No export is retired: `WithActivatedAbility`, `Boost`, `ToSource`,
+`GenericCost`, and `ManaCostOf` retain other callers. Legends abilities with
+additional costs, activation limits, or other effects remain separate work.
+Arcades Sabboth's other abilities, Vaevictis Asmadi's upkeep ability, and the
+file's remaining engine imports are outside this slice. No outstanding engine
+blocker is claimed resolved.
+
+Validation: focused card and shared source-lifetime tests before migration;
+Legends package; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/legends`; `make test`; and `make lint`
+passed with zero failures (lint: zero issues).

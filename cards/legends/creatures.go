@@ -686,10 +686,10 @@ func registerCreatures() {
 	Register("Carrion Ants", func() Card {
 		return NewCreature("Carrion Ants", "{2}{B}{B}", 0, 1,
 			WithSubTypes("Insect"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
-				GenericCost(1),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1))),
+			)),
 		)
 	})
 
@@ -1591,10 +1591,10 @@ func registerCreatures() {
 		return NewCreature("Wall of Opposition", "{3}{R}{R}", 0, 6,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				GenericCost(1),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
@@ -1866,10 +1866,10 @@ func registerCreatures() {
 		return NewCreature("Killer Bees", "{1}{G}{G}", 0, 1,
 			WithSubTypes("Insect"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
-				ManaCostOf("{G}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{G}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1))),
+			)),
 		)
 	})
 
@@ -2126,10 +2126,10 @@ func registerCreatures() {
 					return nil
 				}),
 			),
-			WithActivatedAbility(
-				Boost(Fixed(0), Fixed(1)).Targeting(ToSource()),
-				ManaCostOf("{W}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{W}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(0), Fixed(1))),
+			)),
 		)
 	})
 
@@ -2726,10 +2726,10 @@ func registerCreatures() {
 		return NewCreature("Pavel Maliki", "{4}{B}{R}", 5, 3,
 			WithSubTypes("Human"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{B}{R}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{B}{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
@@ -3146,18 +3146,18 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
 			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{R}{G}")),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{B}"),
-			),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-			),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{G}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{B}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
+			WithAbility(Activate(
+				Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
+			WithAbility(Activate(
+				Costs(Mana("{G}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+			)),
 		)
 	})
 
