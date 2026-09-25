@@ -85,6 +85,8 @@
 // Use [CantBeBlocked] with [Until] for a temporary blocking restriction.
 // It uses combat rules, so ability removal does not erase the restriction.
 // The subject keeps its captured incarnation; source departure does not end it.
+// Use [Activate] with [Costs] and [WithTargets] for tap-cost blocking effects.
+// Put power limits in the target filter. Later power changes do not end the effect.
 //
 // # Further Documentation
 //

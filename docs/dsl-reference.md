@@ -295,6 +295,19 @@ Triggers at step transitions:
   * `LifePayCost(amount)`: Pay life (permits paying exact life total CR 119.4).
   * `RemoveCountersCost(counter, count)`: Remove counters from source.
   * `DiscardRandomCost(count)`: Discard cards at random.
+
+For a tap ability that prevents blocking, compose the target, cost, and duration:
+
+```go
+creature := TargetPermanent("creature", And(IsCreature, HasPowerLTE(2)))
+WithAbility(Activate(Costs(TapCost(This)),
+    Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature)))
+```
+
+Dwarven Warriors uses this form. Suspicious Bookcase omits the power filter and
+adds `Mana("{3}")` to `Costs`. Target restrictions are checked on resolution;
+a power increase after resolution does not end the blocking restriction.
+
 * Activation Options:
   * `WithTargets(...)`: Declares target bindings.
   * `OnlyAsSorcery()`: Sorcery-speed timing.

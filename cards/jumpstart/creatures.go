@@ -6743,16 +6743,13 @@ func registerCreatures() {
 	// Defender
 	// {3}, {T}: Target creature can't be blocked this turn.
 	Register("Suspicious Bookcase", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Suspicious Bookcase", "{2}", 0, 4,
 			WithSubTypes("Wall"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Defender),
-			WithActivatedAbility(
-				MakeUnblockableUntilEndOfTurn(),
-				ManaCostOf("{3}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{3}"), TapCost(This)),
+				Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature))),
 		)
 	})
 

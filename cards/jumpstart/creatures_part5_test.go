@@ -209,9 +209,11 @@ func TestSuspiciousBookcase_MakesUnblockable(t *testing.T) {
 	g.SetLife(gametest.PlayerB, 20)
 	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Suspicious Bookcase", "Grizzly Bears")
 	g.Attack(1, gametest.PlayerA, "Grizzly Bears")
+	g.Block(1, gametest.PlayerB, "Craw Wurm", "Grizzly Bears")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertLife(gametest.PlayerB, 18)
+	g.AssertTapped(gametest.PlayerA, "Suspicious Bookcase", true)
 }
 func TestSwarmOfBloodflies_CountersOnETBAndDeath(t *testing.T) {
 	g := gametest.NewTestGame(t)

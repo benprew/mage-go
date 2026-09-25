@@ -799,6 +799,38 @@ func TestDwarvenWarriors(t *testing.T) {
 	})
 }
 
+func TestDwarvenWarriorsPowerChange(t *testing.T) {
+	for _, beforeResolution := range []bool{true, false} {
+		t.Run(map[bool]string{true: "before resolution", false: "after resolution"}[beforeResolution], func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			a := g.GetPlayer(gametest.PlayerA)
+			sourceID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Dwarven Warriors")
+			targetID := g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+			blockerID := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Hill Giant")
+			if err := g.ActivateAbilityByIndex(a.PlayerID(), sourceID, 0, []uuid.UUID{targetID}); err != nil {
+				t.Fatal(err)
+			}
+			if !g.FindPermanent(sourceID).Tapped {
+				t.Fatal("activation did not pay the tap cost")
+			}
+			boost := func() {
+				g.AddContinuousEffect(mage.TemporaryBoost(targetID, 1, 0))
+				g.ApplyContinuousEffects()
+			}
+			if beforeResolution {
+				boost()
+			}
+			g.ResolveStack()
+			if !beforeResolution {
+				boost()
+			}
+			if got := mage.CanBlock(g.FindPermanent(blockerID), g.FindPermanent(targetID), g.Game); got != beforeResolution {
+				t.Fatalf("CanBlock = %v, want %v", got, beforeResolution)
+			}
+		})
+	}
+}
+
 func TestSedgeTroll(t *testing.T) {
 	t.Run("gets +1/+1 while you control a Swamp", func(t *testing.T) {
 		g := gametest.NewTestGame(t)

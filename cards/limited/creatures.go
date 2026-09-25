@@ -318,15 +318,13 @@ func registerCreatures() {
 		)
 	})
 
+	// {T}: Target creature with power 2 or less can't be blocked this turn.
 	Register("Dwarven Warriors", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasPowerLTE(2)))
 		return NewCreature("Dwarven Warriors", "{2}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Warrior"),
-			// {T}: Target creature with power 2 or less can't be blocked this turn.
-			WithActivatedAbility(
-				MakeUnblockableUntilEndOfTurn(),
-				TapCost(This),
-				WithTarget(TargetCreature(HasPowerLTE(2))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature))),
 		)
 	})
 

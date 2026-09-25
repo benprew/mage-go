@@ -63,7 +63,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 
 ### Temporary Blocking Restrictions
 - [x] Preserve resolved blocking prohibitions through ability removal and source departure. Use the existing combat-restriction storage, keeping printed unblockable abilities removable. `TestBlockingProhibitionSurvivesAbilityRemoval` failed before the fix.
-- [ ] Migrate the remaining `MakeUnblockableUntilEndOfTurn` callers (Dwarven Warriors, Suspicious Bookcase, and Teleport) after auditing their full definitions. The shared executor is corrected; the positional export remains.
+- [x] Migrate Dwarven Warriors and Suspicious Bookcase to typed targets, activation costs, and `Until(EndOfTurn, CantBeBlocked(creature))`. See the activated blocking slice below. No engine gap.
+- [ ] Migrate Teleport, the remaining production `MakeUnblockableUntilEndOfTurn` caller, after enforcing its declare-attackers-step casting restriction. The shared executor is corrected; the positional export and its engine regression caller remain.
 
 ### Untap Skipping
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
@@ -429,3 +430,22 @@ Oracle sources: `cards/antiquities/ATQ.json` and `cards/astral/PAST.json`; full 
 No live callers or declarations of `TawnosWandEffect` remain outside negative compile fixtures. `MakeUnblockableUntilEndOfTurn` remains for Dwarven Warriors, Suspicious Bookcase, and Teleport; its executor now uses the corrected captured restriction. Teleport's pre-existing casting-timing gap and the remaining caller migrations are not resolved here. `ApplyToRandomPermanent` retains four Faerie Dragon production callers and its engine test. Other legacy definitions and imports remain outside this slice.
 
 Validation: failing engine and phased-choice regressions passed after the fixes; affected card packages; `go test ./pkg/mage/... ./cards/... -short -count=1` (including universal registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Activated Blocking Restrictions
+
+- [x] Migrate the remaining two activated `MakeUnblockableUntilEndOfTurn` callers, Dwarven Warriors and Suspicious Bookcase, through `pkg/mage/dsl`.
+- [x] Preserve exact Oracle text above registration, target restrictions, tap and mana costs, and end-of-turn duration.
+- [x] Check the Warriors' power boundary before and after resolution, and strengthen the Bookcase test with an actual blocking attempt and tap-cost assertion before migration.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Dwarven Warriors: “{T}: Target creature with power 2 or less can't be blocked this turn.” | `Activate(Costs(TapCost(This)), Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature))`; `TargetPermanent("creature", And(IsCreature, HasPowerLTE(2)))`. Either player's creature; power is checked at selection and resolution. A later power increase does not end the restriction. | `TestDwarvenWarriors`; `TestDwarvenWarriorsPowerChange` covers an opponent's creature, tap payment without mana, and power increasing before versus after resolution. Existing `TestTawnossWandNegative` covers the shared power-filter selection boundary. |
+| Suspicious Bookcase: “Defender” and “{3}, {T}: Target creature can't be blocked this turn.” | Preserve `WithKeyword(Defender)` and the artifact creature Wall definition. `Activate(Costs(Mana("{3}"), TapCost(This)), Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature))` with `TargetPermanent("creature", IsCreature)`; no power or controller restriction. | `TestSuspiciousBookcase_MakesUnblockable` now attempts a block and checks source tapping. Universal `TestRegisteredDefinitions` validates the composed definition. |
+| Shared activation, target, and duration contracts | Existing typed adapters use the activation payment and target-resolution services and the captured combat restriction. Beneficial metadata is preserved. No damage LKI is needed. | `TestBlockingRestrictionComposition`, `TestTypedBlockingProhibitionLifetime`, `TestBlockingProhibitionSurvivesAbilityRemoval`, and existing activation/target contracts cover validation, metadata, incarnation, phasing, source departure, ability removal, later blockers, and clone-local expiry. |
+
+Oracle sources: `data/LEA.json` and `data/JMP.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 602.2 (activation and payment), 608.2b (target recheck), 509.1b (blocking restrictions), and 611.2a–c (duration and affected objects).
+
+No engine gap was found for these two activations, and no new DSL synonym is needed. `MakeUnblockableUntilEndOfTurn` retains one production caller, Teleport, and one engine regression caller. Its exports and executor remain until Teleport's existing casting-timing gap is resolved. The migrated files retain direct engine imports for unrelated definitions; the immutable author boundary remains open.
+
+Validation: focused Warriors and Bookcase checks passed before migration; affected card packages passed after migration; `go test ./cards/... ./pkg/mage/... -short -count=1` (including registration validation and compile-fail fixtures), `make test`, `go build ./...`, `go vet ./...`, and `make lint` all passed with zero failures (lint: zero issues).
