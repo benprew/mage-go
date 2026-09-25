@@ -50,6 +50,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Targeted Artifact +2/+2 Activations**: Migrate Coral Helm and Elven Lyre to typed targets, cost groups, and end-of-turn modifications. No engine blocker; see the completed slice below.
 - [x] **Antiquities Self-Pump Activations**: Migrate Atog and Dragon Engine to typed costs and source modifications. Correct Atog's source-inclusive artifact sacrifice using the existing cost API. See the completed slice below.
 - [x] **Global P/T Reductions**: Migrate Hell Swarm, Marsh Gas, Bone Flute, and Languish to typed creature collections and durations. Correct negative temporary P/T metadata after a failing regression; see the completed slice below.
+- [x] **Targeted Land Boost Activations**: Migrate Mishra’s Factory’s boost and Pendelhaven to typed targets, tap costs, and temporary P/T modifications. No engine blocker; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -870,3 +871,21 @@ Validation: focused regression and card tests; affected card packages;
 `go test ./pkg/mage/... -short -count=1`; full `make test` (including AI
 simulations and card registration validation); `go build ./...`; `go vet ./...`;
 and `make lint` passed with zero failures. Lint reported zero issues.
+
+
+## Completed Slice: Targeted Land Boost Activations
+
+- [x] Migrate Mishra’s Factory’s boost and Pendelhaven to `Activate`, `TargetPermanent`, `Costs(TapCost(This))`, and `Until(EndOfTurn, ModifyPT(...))` through `pkg/mage/dsl`.
+- [x] Audit target restrictions, activation timing, payment, source departure, and duration. Existing engine services support this slice; no engine fix or new constructor is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Mishra’s Factory: “{T}: Target Assembly-Worker creature gets +1/+1 until end of turn.” / positional `Boost` | Typed target with `And(IsCreature, HasSubType("Assembly-Worker"))`; tap cost; +1/+1 at layer 7c until end of turn. Either controller’s creature qualifies; a noncreature Assembly-Worker does not. | Antiquities `TestLandBoostTypedDefinition`, `TestLandBoostResolution`; existing `TestMishrasFactory` |
+| Pendelhaven: “{T}: Target 1/1 creature gets +1/+2 until end of turn.” / positional `Boost` | Typed creature target with current power and toughness each equal to 1; tap cost; +1/+2 at layer 7c until end of turn. No controller restriction. Check target characteristics again at resolution; the resulting 2/3 keeps the bonus. | Legends `TestLandBoostTypedDefinition`, `TestLandBoostResolution`; existing `TestPendelhaven` |
+| Shared target and duration contract | Instant activation timing, one target, tap payment before stack resolution, target legality recheck, and boost survival after source departure. End-of-turn removal in a clone does not remove the original game’s bonus. Single-subject beneficial P/T metadata remains available. No source LKI is needed; the existing typed target and continuous-effect services retain incarnation identity. | Both new test pairs; existing `TestTypedTargetGroups`, `TestTargetIncarnationAfterReturn`, and `TestTypedTemporaryPTComposition` |
+
+Oracle sources: `data/ATQ.json` and `cards/legends/LEG.json`. The full Factory Oracle comment now uses the inventory’s “This land” wording. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 602 (activation), 608.2b (target legality), 611.2a (duration), and 613 (continuous layers).
+
+The new definition tests failed before migration because both legacy targets were untyped. Behavioral tests passed before and after migration. No export is retired: `Boost` and `WithActivatedAbility` still have other callers. Factory animation and mana definitions, Pendelhaven’s mana definition, other positional P/T callers, and unrelated legacy imports remain outside this slice.
+
+Validation: focused land-boost and existing land tests; both affected card packages; `go test ./cards/... ./pkg/mage/... -short -count=1`; `go build ./...`; `go vet ./...`; `make test`; and `make lint` passed with zero failures (lint: zero issues).

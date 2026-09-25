@@ -16,10 +16,10 @@ func registerLands() {
 	// Mishra's Factory
 	// Land
 	// {T}: Add {C}.
-	// {1}: Mishra's Factory becomes a 2/2 Assembly-Worker artifact creature until end of turn.
-	// It's still a land.
+	// {1}: This land becomes a 2/2 Assembly-Worker artifact creature until end of turn. It's still a land.
 	// {T}: Target Assembly-Worker creature gets +1/+1 until end of turn.
 	Register("Mishra's Factory", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasSubType("Assembly-Worker")))
 		return NewLand("Mishra's Factory",
 			WithManaAbility(Colorless),
 			WithActivatedAbility(
@@ -48,11 +48,8 @@ func registerLands() {
 					}),
 				GenericCost(1),
 			),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)),
-				TapCost(This),
-				WithTarget(TargetCreature(HasSubType("Assembly-Worker"))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(1), Fixed(1))), WithTargets(creature))),
 		)
 	})
 
