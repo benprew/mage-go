@@ -2315,6 +2315,39 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
 
+## Completed Slice: Scroll of Avacyn Typed Conditional Life Gain
+
+- [x] Migrate the complete definition to `Activate`, typed mana and sacrifice
+  costs, `Sequence`, `Draw`, `IfState`, `Controls`, and `GainLife`.
+- [x] Replace the card callback's event-free `PlayerGainLife` call with the
+  existing event-aware typed action. No engine change is required.
+- [x] Check for an Angel permanent without an additional creature restriction,
+  as required by CR 109.2.
+- [x] Verify the full Oracle comment, artifact type, and `{1}` mana cost against
+  `data/JMP.json`.
+
+The controller pays `{1}` and sacrifices the artifact before the ability goes
+on the stack. At resolution, that player draws first, then gains 5 life if they
+currently control an Angel. Multiple Angels do not multiply the gain. The
+condition does not use the battlefield state at activation. Life gain reports
+its actual positive amount after modifiers and replacements through the shared
+executor. Rules contracts are CR 109.2, 602.2, and 608.2c.
+
+`TestScrollOfAvacynResolution` failed before migration because successful gains
+emitted no life-gain event. It now covers source sacrifice and mana payment,
+failed payment, draw-before-gain order, no Angel, an opponent's Angel, Angels
+entering or leaving before resolution, multiple Angels, a noncreature Angel
+permanent, and doubled or suppressed gains. Existing `TestScrollOfAvacyn` and
+shared life-outcome, condition, and sacrifice-capture contracts pass.
+
+This completes one card in the life-gain callback audit. Other callbacks and
+the broader replacement-order audit remain open. No legacy export is retired.
+
+Validation: focused regressions and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Valorous Stance Typed Modes and Toughness Filter
 
 - [x] Add `HasToughnessGTE(n)` to the author DSL using the existing current

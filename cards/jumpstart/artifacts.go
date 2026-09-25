@@ -317,27 +317,16 @@ func registerArtifacts() {
 	// Artifact
 	// {1}, Sacrifice this artifact: Draw a card. If you control an Angel, you gain 5 life.
 	Register("Scroll of Avacyn", func() Card {
-		return NewArtifact("Scroll of Avacyn", "{1}",
-			WithActivatedAbility(
-				CompositeEffects("draw a card; if you control an Angel, you gain 5 life",
-					DrawCards(Fixed(1)),
-					FuncEffect("if you control an Angel, you gain 5 life",
-						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p == nil {
-								return nil
-							}
-							for range g.FilterBattlefield(And(IsCreature, HasSubType("Angel"), ControlledBy(controller))) {
-								g.PlayerGainLife(p, 5)
-								return nil
-							}
-							return nil
-						}),
+		return dsl.NewArtifact("Scroll of Avacyn", "{1}",
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{1}"), dsl.SacrificeSourceCost()),
+				dsl.Sequence(
+					dsl.Draw(dsl.You, dsl.Fixed(1)),
+					dsl.IfState(dsl.Controls(dsl.HasSubType("Angel")),
+						dsl.GainLife(dsl.You, dsl.Fixed(5)),
+					),
 				),
-				GenericCost(1),
-				WithCost(SacrificeSourceCost()),
-			),
+			)),
 		)
 	})
 
