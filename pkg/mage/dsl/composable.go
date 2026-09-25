@@ -198,10 +198,12 @@ var (
 	ChangeController = mage.ChangeController
 	// GrantKeyword accepts a typed subject; Until supplies the duration.
 	// Use it in Spell or Activate to grant flying to a creature target.
-	GrantKeyword   = mage.GrantKeywordModification
-	RemoveKeyword  = mage.RemoveKeyword
-	RemoveLandwalk = mage.RemoveLandwalk
-	CantBeBlocked  = mage.CantBeBlocked
+	GrantKeyword        = mage.GrantKeywordModification
+	RemoveKeyword       = mage.RemoveKeyword
+	RemoveLandwalk      = mage.RemoveLandwalk
+	RemoveAbilities     = mage.RemoveAbilities
+	RemoveAbilitiesEach = mage.RemoveAbilitiesEach
+	CantBeBlocked       = mage.CantBeBlocked
 	// Until installs temporary continuous modifications that expire at duration end (e.g. EndOfTurn).
 	Until = mage.Until
 	// UntilSourceLeaves installs continuous modifications that persist until the source permanent leaves the battlefield.

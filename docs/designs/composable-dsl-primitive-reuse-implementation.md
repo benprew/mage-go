@@ -18,3 +18,7 @@ This tracker records engine-only slices for the primitive reuse plan. Card migra
 - [ ] S1: Typed spell target and counter action.
 - [ ] G1: Typed graveyard card target and return to hand.
 - [ ] G2: Typed graveyard return to battlefield.
+
+## Optional follow-up
+
+- [x] Typed ability removal. `RemoveAbilities(PermanentRef)` and `RemoveAbilitiesEach(PermanentSet)` reuse the Layer 6 removal helper. Temporary sets capture incarnations, static sets update dynamically, and later grants restore abilities. Engine tests cover restrictions, source departure, phasing, clone expiry, and validation. No card changes were made.

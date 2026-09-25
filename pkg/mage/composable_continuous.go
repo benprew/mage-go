@@ -22,6 +22,7 @@ type layerModification struct {
 	keyword          Attr
 	removeKeyword    bool
 	removeLandwalk   bool
+	removeAbilities  bool
 	cantBeBlocked    bool
 	setBasePT        bool
 	setPowerOnly     bool
@@ -74,6 +75,16 @@ func RemoveKeyword(subject PermanentRef, keyword Attr) ContinuousModification {
 // RemoveLandwalk removes all landwalk abilities from a permanent in layer 6.
 func RemoveLandwalk(subject PermanentRef) ContinuousModification {
 	return &layerModification{subject: subject, removeLandwalk: true, layer: LayerAbility}
+}
+
+// RemoveAbilities removes all abilities from one permanent in layer 6.
+func RemoveAbilities(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, removeAbilities: true, layer: LayerAbility}
+}
+
+// RemoveAbilitiesEach removes all abilities from each selected permanent in layer 6.
+func RemoveAbilitiesEach(subjects PermanentSet) ContinuousModification {
+	return &layerModification{subjects: subjects, removeAbilities: true, layer: LayerAbility}
 }
 
 // CantBeBlocked prevents all creatures from blocking the subject.
@@ -184,6 +195,9 @@ func (m *layerModification) description() string {
 		if m.removeLandwalk {
 			return "remove all landwalk"
 		}
+		if m.removeAbilities {
+			return "remove all abilities"
+		}
 		if m.removeKeyword {
 			return fmt.Sprintf("remove %v", m.keyword)
 		}
@@ -216,6 +230,7 @@ type capturedModification struct {
 	keyword          Attr
 	removeKeyword    bool
 	removeLandwalk   bool
+	removeAbilities  bool
 	cantBeBlocked    bool
 	setBasePT        bool
 	setPowerOnly     bool
@@ -231,7 +246,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -282,6 +297,8 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			for _, keyword := range landwalkKeywords() {
 				g.effects.RevokeAttr(p.ID(), keyword)
 			}
+		} else if v.removeAbilities {
+			removeAllAbilitiesAtCurrentLayer(g, p)
 		} else if v.removeKeyword {
 			g.effects.RevokeAttr(p.ID(), v.keyword)
 		} else {
@@ -492,7 +509,7 @@ func (e *untilEffect) Properties() EffectProperties {
 		if v, ok := m.toughness.(fixedValue); ok && !m.setBasePT {
 			p.ToughnessBoost += v.n
 		}
-		if m.removeKeyword || m.removeLandwalk {
+		if m.removeKeyword || m.removeLandwalk || m.removeAbilities {
 			p.Outcome = OutcomeDetriment
 		} else if m.keyword != 0 {
 			p.GrantedKeyword = m.keyword
