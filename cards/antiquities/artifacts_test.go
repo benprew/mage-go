@@ -986,3 +986,25 @@ func TestWeakstone(t *testing.T) {
 		g.AssertPowerToughness(gametest.PlayerB, "Hill Giant", 3, 3)
 	})
 }
+
+func TestAshnodsAltarCanSacrificeCreatureSource(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	card, err := mage.CreateCard("Ashnod's Altar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	card.AddType(core.TypeCreature)
+	card.SetOwner(a.PlayerID())
+	source := g.PutOnBattlefield(card, a.PlayerID())
+	source.GrantBaseAttr(core.Haste)
+	if err := g.ActivateAbilityByIndex(a.PlayerID(), source.ID(), 0, nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.FindPermanent(source.ID()) != nil || (len(a.Graveyard()) != 1 || a.Graveyard()[0].ID() != source.ID()) {
+		t.Fatal("creature source was not sacrificed")
+	}
+	if g.StackSize() != 0 || a.ManaPool().Count(core.Colorless) != 2 {
+		t.Fatal("sacrifice mana ability did not produce exactly two mana immediately")
+	}
+}

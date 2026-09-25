@@ -3329,3 +3329,45 @@ Validation: focused shared contracts; Limited package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/limited`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Ashnod's Altar and Phyrexian Tower Sacrifice Mana
+
+- [x] Migrate both sacrifice-for-mana abilities to `Activate`, explicit
+  `Costs`, and `AddManaAmount(color, Fixed(2))`.
+- [x] Correct both sacrifice costs to permit the source when it is a creature,
+  using `SacrificeMatchingIncludingSourceCost(IsCreature, ...)`.
+  Oracle says “a creature,” not “another creature.”
+- [x] Verify the complete Oracle comments, types, and casting costs against
+  `data/ATQ.json` and `data/JMP.json`.
+- [x] Add failing card regressions for sacrificing each creature source;
+  verify departure to the graveyard and immediate, exact mana production.
+- [x] Audit mana classification and payment. Existing engine services and
+  DSL adapters support the required behavior; no engine fix is needed.
+
+Ashnod's Altar sacrifices a creature its controller controls for two colorless
+mana, with no tap cost. Phyrexian Tower requires both tapping and sacrificing
+a creature its controller controls for two black mana. Either source can pay
+its own sacrifice cost if it is a creature. The Tower must also be able to pay
+its tap cost. The regressions grant haste to the creature sources. Both abilities
+have no targets and resolve immediately after payment, even if their source
+has left. Rules contracts are CR 302.6, 602, 605.1a–605.3b, and 701.21.
+
+`TestAshnodsAltarCanSacrificeCreatureSource` and
+`TestPhyrexianTowerCanSacrificeCreatureSource` each failed with
+“cannot activate ability” before migration and pass afterward. Existing card
+scenarios cover sacrificing a separate creature and the Tower's colorless
+ability. Shared `TestComposableMana*`, `TestTypedManaAmount*`, and
+`TestMatchingSacrificeCost*` pass, covering immediate resolution, controller
+context, clone isolation, failed payment, and phased-out sacrifice candidates.
+
+This completes one slice of the remaining mana and activation migrations.
+The planner still excludes sacrifice costs; explicit activation supports these
+abilities. The Tower's separate colorless ability remains available for automatic
+payment. Other legacy callers remain, so no export is retired or broader engine
+blocker marked resolved. Unrelated definitions retain each file's engine import.
+
+Validation: focused card regressions and shared contracts; Antiquities and
+Jumpstart package tests; `go test ./cards/... -short -count=1`;
+`go build ./...`; `go vet ./cards/antiquities ./cards/jumpstart`;
+`make test`; and `make lint` pass with zero failures (lint: zero issues).

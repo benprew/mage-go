@@ -101,11 +101,10 @@ func registerLands() {
 		return NewLand("Phyrexian Tower",
 			WithSuperTypes(SuperLegendary),
 			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
-			WithActivatedAbility(
-				AddMana(Black, 2),
-				TapCost(This),
-				WithCost(SacrificeCreatureCost()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				AddManaAmount(Black, Fixed(2)),
+			)),
 		)
 	})
 

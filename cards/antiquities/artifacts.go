@@ -64,10 +64,10 @@ func registerArtifacts() {
 	// Sacrifice a creature: Add {C}{C}.
 	Register("Ashnod's Altar", func() Card {
 		return NewArtifact("Ashnod's Altar", "{3}",
-			WithActivatedAbility(
-				AddMana(Colorless, 2),
-				SacrificeCreatureCost(),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				AddManaAmount(Colorless, Fixed(2)),
+			)),
 		)
 	})
 
