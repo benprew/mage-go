@@ -43,3 +43,19 @@ func TestTypedArithmeticComposition(t *testing.T) {
 		t.Fatalf("text = %q", value.Text())
 	}
 }
+
+func TestTypedMultiplyComposition(t *testing.T) {
+	target := dsl.TargetPermanent("subject", dsl.IsCreature)
+	value := dsl.MultiplyValues(dsl.Fixed(2), dsl.ValueAtResolution(dsl.XValue()))
+	card := dsl.NewSorcery("Multiply", "{X}{U}", dsl.WithAbility(dsl.Spell(dsl.Sequence(dsl.Tap(target), dsl.AddCounters(target, core.Stun, value)), dsl.WithTargets(target))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	metadata := dsl.InspectDefinition(value)
+	if metadata.Role != "arithmetic-value" || metadata.Text != "multiply" || len(metadata.Children) != 2 {
+		t.Fatalf("metadata = %+v", metadata)
+	}
+	if got := dsl.MultiplyValues(dsl.Fixed(2), dsl.Fixed(3)).Text(); got != "multiply(2, 3)" {
+		t.Fatalf("text = %q", got)
+	}
+}

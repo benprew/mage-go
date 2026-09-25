@@ -42,6 +42,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Base Power Activations**: Add typed `SetBasePower`, migrate Singing Tree and Island of Wak-Wak, and retire `SetPowerUntilEndOfTurn`. See the completed slice below.
 - [x] **Typed Combat Removal**: Add `RemoveFromCombat(PermanentRef)`, migrate Mijae Djinn’s coin-flip body and Disharmony’s removal instruction, and correct shared removal to preserve blocked status. Keep explicit-unblocking legacy callers pending their full audits. See the completed slice below.
 - [x] **Disharmony Casting Window**: Extend `OnlyDuring` to multiple steps and enforce beginning-of-combat or declare-attackers timing. The control-effect adapter remains separate. See the completed slice below.
+- [x] **Procrastinate Tap and Counters**: Add typed `MultiplyValues`, migrate the spell to typed tap and twice-X stun counters, and remove its positional callback. No engine blocker. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -651,3 +652,29 @@ and rejection of permanent/collection subjects.
 Verification: focused engine, DSL, and Jumpstart suites with `-short -count=1`;
 `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed.
 Lint reported zero issues.
+
+## Completed Slice: Procrastinate Tap and Counters
+
+`MultiplyValues(ResolutionValue, ResolutionValue)` extends the existing arithmetic
+node. Both operands resolve in the current frame; inspection preserves their
+binding reads and rejects missing producers, undeclared targets, and nil operands.
+No new engine service or engine blocker was required.
+
+| Migrated caller | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Procrastinate's `NewTargetedSpell`, positional `Tap()`, and counter callback | `Spell(Sequence(Tap(creature), AddCounters(creature, Stun, MultiplyValues(Fixed(2), ValueAtResolution(XValue())))), WithTargets(creature))`. One creature target, normal sorcery timing, tap followed by twice the announced X counters through the existing counter replacement service. No source LKI is required. Typed target identity, legality, and spell-copy X use existing services. | `TestProcrastinate`: X=0, X=3, and stun replacing the next untap. Oracle text matches `cards/secretsofstrixhaven/SOS.json`. |
+| New typed multiplication | Existing arithmetic executor and named operand inspection; signed and zero products; saved-number reads; no mutable definition state. Arithmetic contributes no separate effect summary; tap and counter actions retain their existing metadata. | `TestComposableArithmeticSignedValues`, `TestComposableArithmeticValidation`, `TestComposableMultiplySavedValue`, `TestTypedMultiplyComposition`, and `multiply_legacy.go` compile-fail fixture. |
+
+The focused tests were added before migration. Arithmetic tests first failed
+because the constructor was absent; the expanded card scenarios passed on the
+legacy definition. No shared export was retired: remaining legacy spell, tap,
+and callback callers belong to later slices. The surrounding card file still
+uses legacy engine imports for those definitions.
+
+Oracle clause coverage: `Tap target creature` maps to the target declaration and
+first sequence instruction; `Put twice X stun counters on it` maps to the second
+instruction and multiplication; the reminder text maps to the existing stun
+untap replacement. `TestProcrastinate` covers all three clauses.
+
+Validation: focused arithmetic, DSL composition, compile-fail, and card tests;
+full `make test`; `go build ./...`; and `make lint`.

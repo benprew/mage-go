@@ -60,6 +60,9 @@
 // Use [Until] with [GrantKeywordModification] and CantRegenerate for a
 // prohibition that lasts until end of turn, even after its source leaves.
 //
+// Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
+// twice the announced X with [AddCountersTo] after [TapSubject].
+//
 // Use [ManaValueOf] to read a permanent through its typed reference. Use
 // [SnapshotNumber] before [Destroy] when a later instruction needs that value.
 // The saved number remains available after the permanent leaves.

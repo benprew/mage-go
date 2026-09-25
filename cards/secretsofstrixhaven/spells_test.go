@@ -1192,15 +1192,27 @@ func TestPracticedOffense(t *testing.T) {
 }
 
 func TestProcrastinate(t *testing.T) {
-	t.Run("taps target creature", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Procrastinate")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Procrastinate", "Grizzly Bears")
-		g.StopAt(1, core.EndStep)
-		g.Execute()
-		g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
-	})
+	for _, tc := range []struct {
+		name     string
+		x        int
+		stopTurn int
+		counters int
+	}{
+		{"zero", 0, 1, 0},
+		{"twice X", 3, 1, 6},
+		{"stun replaces untap", 2, 2, 3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			g := gametest.NewTestGame(t)
+			g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
+			g.AddCard(core.ZoneHand, gametest.PlayerA, "Procrastinate")
+			g.CastSpellWithX(1, core.PrecombatMain, gametest.PlayerA, "Procrastinate", tc.x, "Grizzly Bears")
+			g.StopAt(tc.stopTurn, core.EndStep)
+			g.Execute()
+			g.AssertTapped(gametest.PlayerB, "Grizzly Bears", true)
+			g.AssertCounterCount(gametest.PlayerB, "Grizzly Bears", core.Stun, tc.counters)
+		})
+	}
 }
 
 func TestProctorsGaze(t *testing.T) {

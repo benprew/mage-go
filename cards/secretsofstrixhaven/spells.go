@@ -2402,27 +2402,12 @@ func registerSpells() {
 	// Sorcery
 	// Tap target creature. Put twice X stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 	Register("Procrastinate", func() Card {
-		return NewSorcery("Procrastinate", "{X}{U}",
-			NewTargetedSpell(
-				TargetCreature(),
-				Tap(),
-				FuncEffect(
-					"put twice X stun counters on target creature",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) == 0 || targets[0] == uuid.Nil {
-							return nil
-						}
-						perm := g.FindPermanent(targets[0])
-						if perm == nil {
-							return nil
-						}
-						x := g.XValue()
-						perm.AddCounter(Stun, 2*x)
-						return nil
-					},
-				),
-			),
+		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+		return dsl.NewSorcery("Procrastinate", "{X}{U}",
+			dsl.WithAbility(dsl.Spell(dsl.Sequence(
+				dsl.Tap(creature),
+				dsl.AddCounters(creature, Stun, dsl.MultiplyValues(dsl.Fixed(2), dsl.ValueAtResolution(dsl.XValue()))),
+			), dsl.WithTargets(creature))),
 		)
 	})
 

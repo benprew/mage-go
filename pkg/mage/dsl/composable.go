@@ -248,6 +248,7 @@ var (
 	PowerOf           = mage.PowerOf
 	ToughnessOf       = mage.ToughnessOf
 	ValueAtResolution = mage.ValueAtResolution
+	MultiplyValues    = mage.MultiplyValues
 	SubtractValues    = mage.SubtractValues
 	MinValue          = mage.MinValue
 	MaxValue          = mage.MaxValue

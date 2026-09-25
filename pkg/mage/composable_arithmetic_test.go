@@ -13,6 +13,10 @@ func TestComposableArithmeticSignedValues(t *testing.T) {
 		value ResolutionValue
 		want  int
 	}{
+		{"multiply", MultiplyValues(Fixed(2), Fixed(3)), 6},
+		{"multiply negative", MultiplyValues(Fixed(-2), Fixed(3)), -6},
+		{"multiply negatives", MultiplyValues(Fixed(-2), Fixed(-3)), 6},
+		{"multiply zero", MultiplyValues(Fixed(0), Fixed(3)), 0},
 		{"subtract", SubtractValues(Fixed(-2), Fixed(3)), -5},
 		{"subtract negative", SubtractValues(Fixed(2), Fixed(-3)), 5},
 		{"minimum", MinValue(Fixed(-2), Fixed(-3)), -3},
@@ -81,6 +85,10 @@ func TestComposableArithmeticValidation(t *testing.T) {
 	missing := BindPermanent("missing")
 	undeclared := DeclarePermanentTarget("undeclared", IsCreature)
 	for _, value := range []ResolutionValue{
+		MultiplyValues(Fixed(1), nil),
+		MultiplyValues(nil, Fixed(1)),
+		MultiplyValues(Fixed(2), PowerOf(undeclared)),
+		MultiplyValues(Fixed(2), ToughnessOf(From(missing))),
 		SubtractValues(Fixed(1), nil),
 		MinValue(nil, Fixed(0)),
 		MaxValue(Fixed(0), nil),
@@ -96,5 +104,20 @@ func TestComposableArithmeticValidation(t *testing.T) {
 	c := NewCreature("Missing producer", "", 1, 1, WithAbility(Activate(Costs(), Until(EndOfTurn, ModifyPT(This, value, Fixed(0))))))
 	if err := ValidateCardDefinition(c.Name(), c); err == nil || !strings.Contains(err.Error(), "producer") {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestComposableMultiplySavedValue(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	c := NewCreature("Subject", "", 2, 3)
+	g.PutOnBattlefield(c, a.PlayerID())
+	saved := BindNumber("amount")
+	body := Sequence(SnapshotNumber(PowerOf(This), saved), AddCountersTo(This, Stun, MultiplyValues(Fixed(2), FromNumber(saved))))
+	if err := ApplyEffect(g, body, c.ID(), a.PlayerID(), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.FindPermanent(c.ID()).Counters[Stun]; got != 4 {
+		t.Fatalf("counters = %d, want 4", got)
 	}
 }

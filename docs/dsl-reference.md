@@ -388,6 +388,7 @@ Operations taking amounts accept `ResolutionValue`:
 * `SourceCounters(CounterType)`: Counters on the source permanent, or its last-known count if departed.
 * `CreaturesDiedThisTurn()`: Number of creatures that died this turn across all players.
 * Arithmetic:
+  * `MultiplyValues(a, b)`: The product of two resolution values. Use `MultiplyValues(Fixed(2), ValueAtResolution(XValue()))` for twice the announced X. Both operands keep their typed binding context.
   * `SubtractValues(a, b)`: $a - b$.
   * `MinValue(a, b)`: $\min(a, b)$.
   * `MaxValue(a, b)`: $\max(a, b)$.
