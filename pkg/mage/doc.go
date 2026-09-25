@@ -44,6 +44,9 @@
 // for a temporary source bonus. Each resolution adds a separate bonus to
 // the original permanent. A returned card does not receive that bonus.
 // Use a typed target with [WithTargets] for a targeted bonus.
+// For an entry bonus, put [WithTargets] on [WhenEvent] with [Enters].
+// Choose the target when the trigger goes on the stack. The creature spell
+// has no target, and the entered creature can target itself.
 // [ValueAtResolution] captures X when the bonus starts. A blocking restriction
 // belongs to the target filter; it does not end a bonus after resolution.
 //

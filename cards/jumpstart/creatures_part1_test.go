@@ -26,7 +26,8 @@ func TestAffaGuardHound(t *testing.T) {
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Affa Guard Hound")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Plains", 3)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Affa Guard Hound", "Grizzly Bears")
+	g.ChooseTarget(gametest.PlayerA, "Grizzly Bears")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Affa Guard Hound")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertPowerToughness(gametest.PlayerA, "Grizzly Bears", 2, 5)
@@ -36,10 +37,12 @@ func TestAffaGuardHoundFlash(t *testing.T) {
 	g.AddCard(core.ZoneHand, gametest.PlayerB, "Affa Guard Hound")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Plains", 3)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
-	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Affa Guard Hound", "Grizzly Bears")
+	g.ChooseTarget(gametest.PlayerB, "Grizzly Bears")
+	g.CastSpell(1, core.BeginCombat, gametest.PlayerB, "Affa Guard Hound")
 	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerB, "Affa Guard Hound", 1)
+	g.AssertPowerToughness(gametest.PlayerB, "Grizzly Bears", 2, 5)
 }
 func TestAffectionateIndrik_FightsTarget(t *testing.T) {
 	g := gametest.NewTestGame(t)

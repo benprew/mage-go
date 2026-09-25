@@ -48,11 +48,14 @@ func registerCreatures() {
 	// Flash (You may cast this spell any time you could cast an instant.)
 	// When this creature enters, target creature gets +0/+3 until end of turn.
 	Register("Affa Guard Hound", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Affa Guard Hound", "{2}{W}", 2, 2,
 			WithSubTypes("Dog"),
 			WithKeyword(Flash),
-			WithCastTarget(TargetCreature()),
-			WithETBEffect(Boost(Fixed(0), Fixed(3)).Targeting(ToTarget()).Until(EndOfTurn)),
+			WithAbility(WhenEvent(Enters(This),
+				Until(EndOfTurn, ModifyPT(creature, Fixed(0), Fixed(3))),
+				WithTargets(creature),
+			)),
 		)
 	})
 

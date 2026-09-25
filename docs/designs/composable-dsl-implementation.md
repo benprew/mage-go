@@ -51,6 +51,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Antiquities Self-Pump Activations**: Migrate Atog and Dragon Engine to typed costs and source modifications. Correct Atog's source-inclusive artifact sacrifice using the existing cost API. See the completed slice below.
 - [x] **Global P/T Reductions**: Migrate Hell Swarm, Marsh Gas, Bone Flute, and Languish to typed creature collections and durations. Correct negative temporary P/T metadata after a failing regression; see the completed slice below.
 - [x] **Targeted Land Boost Activations**: Migrate Mishra’s Factory’s boost and Pendelhaven to typed targets, tap costs, and temporary P/T modifications. No engine blocker; see the completed slice below.
+- [x] **Affa Guard Hound Entry Boost**: Migrate the targeted entry boost to `WhenEvent`, `WithTargets`, and temporary `ModifyPT`. Correct target choice timing in the card definition; no engine gap. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -889,3 +890,21 @@ Oracle sources: `data/ATQ.json` and `cards/legends/LEG.json`. The full Factory O
 The new definition tests failed before migration because both legacy targets were untyped. Behavioral tests passed before and after migration. No export is retired: `Boost` and `WithActivatedAbility` still have other callers. Factory animation and mana definitions, Pendelhaven’s mana definition, other positional P/T callers, and unrelated legacy imports remain outside this slice.
 
 Validation: focused land-boost and existing land tests; both affected card packages; `go test ./cards/... ./pkg/mage/... -short -count=1`; `go build ./...`; `go vet ./...`; `make test`; and `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Affa Guard Hound Entry Boost
+
+- [x] Migrate Affa Guard Hound from `WithCastTarget` and positional `WithETBEffect(Boost(...))` to `WhenEvent(Enters(This), Until(EndOfTurn, ModifyPT(...)), WithTargets(...))` through `pkg/mage/dsl`.
+- [x] Correct the card definition's premature target requirement. The existing casting, event, typed target, and continuous-effect services support the exact behavior; no engine fix or new constructor is required.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “Flash (You may cast this spell any time you could cast an instant.)” | Preserve `WithKeyword(Flash)` and the printed {2}{W} cost. The creature spell has no targets and can be cast onto an empty battlefield. | `TestAffaGuardHoundFlash`, `TestAffaGuardHoundEntryTarget` |
+| “When this creature enters, target creature gets +0/+3 until end of turn.” / Affa Guard Hound's `WithETBEffect` and positional `Boost` | `WhenEvent(Enters(This), ...)` with a typed creature target; mandatory target choice at trigger placement, after entry. Either controller's creature or the Hound itself qualifies. Entry without casting also triggers. | `TestAffaGuardHoundTypedDefinition`, `TestAffaGuardHoundEntryTarget`, `TestAffaGuardHoundWithoutCasting`; existing `TestAffaGuardHound` |
+| Target identity, duration, and metadata | `Until(EndOfTurn, ModifyPT(creature, Fixed(0), Fixed(3)))`; layer 7c bonus, independent of source survival. A returned or phased-out target is illegal. Expire at cleanup. No damage-source LKI is needed; the existing typed target retains battlefield incarnation. Preserve single-subject beneficial +0/+3 metadata. | Entry-target cases cover source departure, target return, target phasing, and expiry. Definition test excludes noncreatures. `TestTypedTemporaryPTComposition` now includes +0/+3 across supported compositions; existing `TestTypedTargetCopyAndClone` and `TestComposableSelfPumpLifetime` cover independent cloned state. |
+
+Oracle source: `cards/jumpstart/JMP.json`; the complete Oracle comment remains unchanged. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 115.1d and 603.3d (trigger targets), 400.7 (new objects), 608.2b (target legality), and 611.2a–c (continuous duration and capture).
+
+`TestAffaGuardHoundEntryTarget` failed before migration in every case with “not enough targets for spell.” The corrected definition passes, including selecting a creature that entered after casting. The existing flash and cast tests now script the trigger choice explicitly. No exports are retired: `WithETBEffect`, `WithCastTarget`, and `Boost` have other callers. Other positional P/T definitions and unrelated legacy imports in the card file remain outside this slice.
+
+Validation: focused Affa Guard Hound and typed P/T composition tests; `go test ./cards/jumpstart -count=1`; `go test ./cards/... ./pkg/mage/... -short -count=1`; `go build ./...`; `go vet ./...`; `make test`; and `make lint` passed with zero failures (lint: zero issues).
