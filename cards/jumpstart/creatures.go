@@ -1707,10 +1707,10 @@ func registerCreatures() {
 			WithSubTypes("Spirit", "Pirate"),
 			WithKeyword(Flash),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				ManaCostOf("{3}{U}"),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}{U}")),
+				Draw(You, Fixed(1)),
+			)),
 		)
 	})
 
@@ -5249,10 +5249,7 @@ func registerCreatures() {
 	Register("Feral Prowler", func() Card {
 		return NewCreature("Feral Prowler", "{1}{G}", 1, 3,
 			WithSubTypes("Cat"),
-			WithAbility(PutIntoGraveyardFromBattlefieldTrigger(
-				DrawCards(Fixed(1)),
-				false,
-			)),
+			WithAbility(WhenEvent(Dies(This), Draw(You, Fixed(1)))),
 		)
 	})
 

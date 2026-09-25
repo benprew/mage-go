@@ -129,10 +129,11 @@ func TestSpectralSailor(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Spectral Sailor")
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 4)
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mountain", 5)
-	g.ActivateAbility(3, core.PrecombatMain, gametest.PlayerA, "Spectral Sailor")
-	g.StopAt(3, core.PostcombatMain)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 5)
+	g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Spectral Sailor")
+	g.StopAt(1, core.PostcombatMain)
 	g.Execute()
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
 	g.AssertHasAbility(gametest.PlayerA, "Spectral Sailor", core.Flying, true)
 }
 func TestSpectralSailorFlash(t *testing.T) {

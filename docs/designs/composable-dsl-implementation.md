@@ -3935,3 +3935,37 @@ Validation: focused card and shared contracts; The Dark package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/thedark`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Spectral Sailor and Feral Prowler Typed Draw Abilities
+
+- [x] Migrate Spectral Sailor's complete activation to `Activate`,
+  `Costs(Mana("{3}{U}"))`, and `Draw(You, Fixed(1))`.
+- [x] Migrate Feral Prowler's complete death trigger to
+  `WhenEvent(Dies(This), Draw(You, Fixed(1)))`.
+- [x] Verify both full Oracle comments, mana costs, creature types, power,
+  toughness, and printed keywords against `data/JMP.json`.
+- [x] Strengthen the existing card tests to assert the drawn card. The Prowler
+  test now causes its death and also asserts its graveyard destination.
+- [x] Audit the draw, activation, and death-trigger adapters. Existing engine
+  services support both abilities; no engine fix is required.
+
+Both abilities have no targets and draw for their stored controller. The Sailor
+pays its mana cost before its ability goes on the stack. It has no tap cost,
+sorcery restriction, or activation limit. The Prowler's mandatory trigger
+resolves after its source leaves the battlefield. Both use the shared draw
+replacement and event services.
+
+The existing card tests and shared `TestTypedDrawAmount*`,
+`TestComposableDeathTriggerHasNoImplicitTarget`, and `TestComposablePayment*`
+pass. Shared contracts cover controller context, source absence, amounts,
+replacements, copies, binding validation, and payment rollback. These
+single-action abilities need no additional simulation tests.
+
+This completes one slice of the remaining trigger, activation, and action
+caller migrations. Other callers still use the legacy helpers, so no export
+is retired. No outstanding engine blocker is marked resolved.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

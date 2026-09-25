@@ -267,12 +267,14 @@ func TestFeralHydra_EntersWithXCounters(t *testing.T) {
 func TestFeralProwler_DrawsOnDeath(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Feral Prowler")
-	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Forest", 5)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Craw Wurm")
-	g.Attack(1, gametest.PlayerB, "Craw Wurm")
-	// Wait until B's turn
-	g.StopAt(2, core.EndStep)
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Mox Ruby", 5)
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Mountain")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.CastSpell(1, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "Feral Prowler")
+	g.StopAt(1, core.EndStep)
 	g.Execute()
+	g.AssertGraveyardCount(gametest.PlayerA, "Feral Prowler", 1)
+	g.AssertHandCount(gametest.PlayerA, "Mox Ruby", 1)
 }
 func TestFertilid_EntersWithCounters(t *testing.T) {
 	g := gametest.NewTestGame(t)
