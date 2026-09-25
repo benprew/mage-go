@@ -2340,6 +2340,39 @@ Validation: focused regressions; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
 
+## Completed Slice: Book of Rass and Fountain of Youth Typed Activations
+
+- [x] Migrate both complete abilities to `Activate` with explicit `Costs`.
+  Book of Rass uses `Mana("{2}")`, `LifePayCost(2)`, and `Draw(You, Fixed(1))`.
+  Fountain of Youth uses `Mana("{2}")`, `TapCost(This)`, and
+  `GainLife(You, Fixed(1))`.
+- [x] Verify both full Oracle comments, artifact types, and casting costs
+  against `data/DRK.json`.
+- [x] Audit payment, controller context, and action outcomes. Existing typed
+  adapters and engine services support both abilities; no engine fix is needed.
+
+Both abilities have no targets and use the stack after payment. Book of Rass
+has no tap cost or activation limit; paying life is a cost before the draw.
+Fountain of Youth requires an untapped source. The stored controller draws or
+gains life even if the source leaves before resolution. The shared actions
+apply replacements and report actual outcomes through their existing events.
+
+`TestBookOfRass`, `TestFountainOfYouth`, and the shared payment, draw, life,
+life-gain-outcome, and life-payment-boundary tests pass before and after
+migration. Shared contracts cover failed-payment rollback, payment at exactly
+the required life total, controller context, clone isolation, and replacements.
+These single-action declarations use proven primitives and need no duplicate
+simulation tests.
+
+This completes one slice of the remaining activation and action migrations.
+Other callers retain the legacy helpers, so no export is retired. No outstanding
+engine blocker is marked resolved.
+
+Validation: focused card and shared contract tests; The Dark package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/thedark`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Mire Triton Typed Entry Mill and Life Gain
 
 - [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,

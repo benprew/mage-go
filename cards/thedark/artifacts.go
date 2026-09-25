@@ -43,11 +43,10 @@ func registerArtifacts() {
 	// {2}, Pay 2 life: Draw a card.
 	Register("Book of Rass", func() Card {
 		return NewArtifact("Book of Rass", "{6}",
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				ManaCostOf("{2}"),
-				WithCost(LifePayCost(2)),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{2}"), LifePayCost(2)),
+				Draw(You, Fixed(1)),
+			)),
 		)
 	})
 
@@ -80,11 +79,10 @@ func registerArtifacts() {
 	// {2}, {T}: You gain 1 life.
 	Register("Fountain of Youth", func() Card {
 		return NewArtifact("Fountain of Youth", "{0}",
-			WithActivatedAbility(
+			WithAbility(Activate(
+				Costs(Mana("{2}"), TapCost(This)),
 				GainLife(You, Fixed(1)),
-				ManaCostOf("{2}"),
-				WithCost(TapCost(This)),
-			),
+			)),
 		)
 	})
 
