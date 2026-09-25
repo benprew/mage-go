@@ -4091,3 +4091,39 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Chained Brute Typed Untap Activation
+
+- [x] Migrate the complete activation to `Activate`, explicit `Costs`,
+  `Untap(This)`, and `OnlyOnYourTurn()`.
+- [x] Replace the creature-filter callback with `IsCreature` in
+  `SacrificeMatchingCost`, preserving the exclusion of the source.
+- [x] Verify the full Oracle comment, `{1}{R}` cost, Devil subtype, and
+  4/3 characteristics against `data/JMP.json`.
+- [x] Audit sacrifice payment, activation timing, and source lifetime.
+  Existing typed adapters support the ability; no engine fix is needed.
+
+The controller pays one generic mana and sacrifices another creature they
+control before the ability goes on the stack. The activation has no targets,
+tap cost, or per-turn limit. It is available during the controller's turn
+whenever they have priority, without a main-phase or empty-stack restriction.
+Resolution untaps the captured source incarnation through the shared untap
+service, including stun-counter replacement. The printed restriction on
+untapping during the controller's untap step remains in place.
+
+Shared `TestComposableSourceUntap*`, `TestCombinedActivationTiming`,
+`TestComposablePayment*`, and `TestMatchingSacrificeCost*` pass. They cover
+source lifetime, clone isolation, untap events and stun counters, timing,
+payment handling, and exclusion of phased sacrifice candidates. Universal
+registration validation checks the declaration. This single-action ability
+uses proven primitives and needs no additional simulation test.
+
+This completes one slice of the remaining activation and action caller
+migrations. Other callers retain the legacy helpers, so no export is retired
+and no outstanding engine blocker is marked resolved.
+
+Validation: focused shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

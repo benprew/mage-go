@@ -3656,14 +3656,11 @@ func registerCreatures() {
 		return NewCreature("Chained Brute", "{1}{R}", 4, 3,
 			WithSubTypes("Devil"),
 			WithKeyword(DoesNotUntapKW),
-			WithActivatedAbility(
+			WithAbility(Activate(
+				Costs(Mana("{1}"), SacrificeMatchingCost(IsCreature, "Sacrifice another creature")),
 				Untap(This),
-				ManaCostOf("{1}"),
-				WithCost(SacrificeMatchingCost(NewPermanentFilter("another creature", func(p *Permanent, _ *Game) bool {
-					return p.HasType(TypeCreature)
-				}), "Sacrifice another creature")),
-				WithYourTurnOnly(),
-			),
+				OnlyOnYourTurn(),
+			)),
 		)
 	})
 
