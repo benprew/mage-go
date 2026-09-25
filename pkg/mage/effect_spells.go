@@ -496,20 +496,23 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 	if count <= 0 {
 		count = 1
 	}
+	return createTokenBatch(ctx.Game, ctx.Controller, count, e.name, e.power, e.toughness, e.types, e.subTypes, e.colors, e.keywords, e.abilities)
+}
+
+func createTokenBatch(g *Game, player uuid.UUID, count int, name string, power, toughness int, types []CardType, subtypes []string, colors []Color, keywords []Keyword, abilities []Ability) error {
 	tokens := make([]Card, 0, count)
-	for i := 0; i < count; i++ {
-		token := NewToken(e.name, e.power, e.toughness, e.types, e.subTypes, e.keywords...)
-		token.SetOwner(ctx.Controller)
-		if len(e.colors) > 0 {
-			token.colorOverride = make([]Color, len(e.colors))
-			copy(token.colorOverride, e.colors)
+	for range count {
+		token := NewToken(name, power, toughness, types, subtypes, keywords...)
+		token.SetOwner(player)
+		if len(colors) > 0 {
+			token.colorOverride = slices.Clone(colors)
 		}
-		for _, a := range e.abilities {
+		for _, a := range abilities {
 			token.AddAbility(cloneTokenAbility(a))
 		}
 		tokens = append(tokens, token)
 	}
-	ctx.Game.putTokensOnBattlefieldTogether(tokens, ctx.Controller)
+	g.putTokensOnBattlefieldTogether(tokens, player)
 	return nil
 }
 

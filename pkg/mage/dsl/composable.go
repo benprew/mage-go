@@ -21,9 +21,19 @@ type CoinBranch = mage.CoinBranch
 type PermanentTargetOption = mage.PermanentTargetOption
 type PlayerTargetOption = mage.PlayerTargetOption
 type GraveyardTargetOption = mage.GraveyardTargetOption
+type TokenDefinition = mage.TokenDefinition
+type TokenOption = mage.TokenOption
 
 var (
 	FlipCoin             = mage.FlipCoin
+	DefineToken          = mage.DefineToken
+	CreateTokenCopies    = mage.CreateTokenCopies
+	TokenTypes           = mage.TokenTypes
+	TokenSubtypes        = mage.TokenSubtypes
+	TokenColors          = mage.TokenColors
+	TokenPT              = mage.TokenPT
+	TokenKeywords        = mage.TokenKeywords
+	TokenAbilities       = mage.TokenAbilities
 	OnWin                = mage.OnWin
 	OnLoss               = mage.OnLoss
 	OnlyAsSorcery        = mage.OnlyAsSorcery

@@ -4,6 +4,8 @@ This document is the authoritative, comprehensive reference for the composable c
 
 Cards import `pkg/mage/dsl` (and `pkg/mage/core` for enums/types). All card definitions, abilities, costs, targets, and effects are built using the typed combinators exported by `dsl`.
 
+Typed token creation uses `DefineToken(name, options...)` with `TokenTypes`, `TokenSubtypes`, `TokenColors`, `TokenPT`, `TokenKeywords`, and `TokenAbilities`. Creature tokens require `TokenPT`; other tokens omit it. Omit `TokenColors` for a colorless token. `CreateTokenCopies(player, count, definition)` evaluates the player and count at resolution and enters all copies as one group. A nonpositive count creates no tokens. Each token ability has its own binding scope and cannot read a binding from the creating ability.
+
 ---
 
 ## Table of Contents
