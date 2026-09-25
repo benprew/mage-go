@@ -4281,3 +4281,35 @@ Validation: focused card and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Bubbling Cauldron Typed Creature Sacrifice Life Gain
+
+- [x] Migrate the four-life activation to `Activate`, explicit `Costs`,
+  `SacrificeMatchingIncludingSourceCost`, and `GainLife(You, Fixed(4))`.
+- [x] Permit an animated Cauldron to sacrifice itself. The focused regression
+  failed before migration because `SacrificeCreatureCost` excluded the source.
+- [x] Verify both full Oracle abilities, artifact type, and `{2}` casting
+  cost against `data/JMP.json`.
+- [x] Audit payment and stored-controller life gain. Existing typed adapters
+  support this ability; no engine fix or new constructor is required.
+
+`TestBubblingCauldronSacrificeChoice` covers an animated source sacrifice,
+sacrificing another controlled creature, failed unpaid activation, mana and
+tap payment, sacrifice before resolution, absence of targets, and activation
+during the opponent's upkeep. The animated source has haste to permit its tap
+cost. Self-sacrifice puts the Cauldron in its owner's graveyard; its stored
+controller gains four life on resolution. The opponent's creature and the
+controller's noncreature artifact remain in play. The existing card test and
+shared life, payment, and sacrifice contracts also pass.
+
+This completes one slice of the remaining activation migrations. The separate
+Festering Newt activation still needs an actual-life-loss result binding,
+event-aware life actions, and a source-inclusive named-creature sacrifice
+audit. Other callers retain legacy helpers; no export is retired and no
+outstanding engine blocker is marked resolved.
+
+Validation: focused card regression and shared contracts; Jumpstart package
+tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

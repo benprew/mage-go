@@ -52,12 +52,11 @@ func registerArtifacts() {
 	// {1}, {T}, Sacrifice a creature named Festering Newt: Each opponent loses 4 life. You gain life equal to the life lost this way.
 	Register("Bubbling Cauldron", func() Card {
 		return NewArtifact("Bubbling Cauldron", "{2}",
-			WithActivatedAbility(
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{1}"), dsl.TapCost(dsl.This),
+					dsl.SacrificeMatchingIncludingSourceCost(dsl.IsCreature, "Sacrifice a creature")),
 				dsl.GainLife(dsl.You, dsl.Fixed(4)),
-				GenericCost(1),
-				WithCost(Tap()),
-				WithCost(SacrificeCreatureCost()),
-			),
+			)),
 			WithActivatedAbility(
 				FuncEffect("each opponent loses 4 life; you gain that much life",
 					EffectProperties{Outcome: OutcomeDetriment},
