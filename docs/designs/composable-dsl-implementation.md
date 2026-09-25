@@ -57,6 +57,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Jumpstart Simple Self-Pump Activations**: Migrate Dragon Hatchling, Furnace Whelp, Minotaur Sureshot, Molten Ravager, Tibalt’s Rager, and Jousting Dummy to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
 - [x] **Legends Simple Mana Self-Pump Activations**: Migrate eight activations across six cards to typed mana costs and temporary source modifications. No engine gap; see the completed slice below.
 - [x] **Legends Targeted Tap P/T Activations**: Migrate Ghosts of the Damned, Pradesh Gypsies, and Tuknir Deathlock to typed targets, grouped costs, and temporary modifications. No engine gap; see the completed slice below.
+- [x] **Limited Self-Pump Activations**: Migrate Fire Drake, Vampire Bats, and Mindful Biomancer to typed mana costs, source modifications, and per-turn activation limits. No engine gap; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -1059,3 +1060,36 @@ Validation: focused card and shared lifetime tests; Legends package;
 `go test ./cards/... ./pkg/mage/... -short -count=1`; `go build ./...`;
 `go vet ./cards/legends`; `make test`; and `make lint` passed with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Limited Self-Pump Activations
+
+- [x] Migrate Fire Drake, Vampire Bats, and Mindful Biomancer from positional `WithActivatedAbility` / `Boost` to `Activate`, `Costs(Mana(...))`, `Until(EndOfTurn, ModifyPT(This, ...))`, and `ActivationLimit` through `pkg/mage/dsl`.
+- [x] Check complete Oracle comments and printed costs against `cards/thedark/DRK.json`, `cards/legends/LEG.json`, and `data/SOS.json`; all three match exactly.
+- [x] Audit payment, activation limits, source lifetime, duration, and metadata. The existing engine supports this slice; no engine fix or new constructor is required.
+
+| Oracle clause / migrated caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Fire Drake: “{R}: This creature gets +1/+0 until end of turn. Activate only once each turn.” | Red mana payment, +1/+0 source modification, explicit end-of-turn duration, `ActivationLimit(1)` | `TestFireDrake` |
+| Vampire Bats: “{B}: This creature gets +1/+0 until end of turn. Activate no more than twice each turn.” | Black mana payment, +1/+0 source modification, explicit end-of-turn duration, `ActivationLimit(2)` | `TestVampireBats`, `TestVampireBatsActivationLimit` |
+| Mindful Biomancer: “{2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.” | Generic and green mana payment, +2/+2 source modification, explicit end-of-turn duration, `ActivationLimit(1)` | `TestMindfulBiomancer_ActivatedBoost`; entry life gain remains covered by `TestMindfulBiomancer_ETBGainsLife` |
+| Payment and activation limits | No targets or tap costs; activation is allowed during the opponent's upkeep. Failed payment consumes no allowance. Successful activations count before resolution; an excess activation consumes no mana and adds no stack object. Resolution does not reset the limit. Cleanup removes the bonus and resets the limit independently in clones. | New `TestComposableLimitedPumpPayment`, tested before migration for both one and two activations; existing `TestCleanupHistoryCloneAndActivationLimits` and `TestCleanupHistoryPhasedActivationReset` |
+| Source identity, duration, and metadata | Layer 7c bonus on the original source incarnation, with phasing and clone isolation. Beneficial single-subject P/T metadata remains available. | `TestComposableSelfPumpLifetime`; `TestSelfPumpActivationComposition` now includes +2/+2 and limits of one and two; universal `TestRegisteredDefinitions` |
+
+Rules contract: repository Comprehensive Rules effective February 27, 2026,
+CR 400.7 (new objects), 602 and 602.5 (activation restrictions),
+611.2a (duration), and 613 (continuous layers). Existing card behavior tests
+and the new shared payment test passed before migration. These declarative
+abilities reuse shared contracts without new card simulations.
+
+All three direct, mana-only self-pump callers with a hard per-turn activation
+limit are migrated. No exports are retired: `Boost`, `WithActivatedAbility`,
+`WithOncePerTurn`, and `WithMaxActivationsPerTurn` retain other callers.
+Mindful Biomancer's separate entry trigger and remaining direct engine imports
+stay outside this slice. No outstanding engine blocker is claimed resolved.
+
+Validation: focused card and shared contract tests before migration; all three
+affected card packages; `go test ./cards/... -short -count=1`;
+focused shared activation, lifetime, cleanup, and composition tests;
+`go build ./...`; `go vet ./cards/thedark ./cards/legends ./cards/secretsofstrixhaven`;
+`make test`; and `make lint` passed with zero failures (lint: zero issues).

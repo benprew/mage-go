@@ -1064,11 +1064,11 @@ func registerCreatures() {
 		return NewCreature("Vampire Bats", "{B}", 0, 1,
 			WithSubTypes("Bat"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{B}"),
-				WithMaxActivationsPerTurn(2),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{B}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+				ActivationLimit(2),
+			)),
 		)
 	})
 

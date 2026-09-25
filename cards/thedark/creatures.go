@@ -301,11 +301,11 @@ func registerCreatures() {
 		return NewCreature("Fire Drake", "{1}{R}{R}", 1, 2,
 			WithSubTypes("Drake"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-				ManaCostOf("{R}"),
-				WithOncePerTurn(),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{R}")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
+				ActivationLimit(1),
+			)),
 		)
 	})
 

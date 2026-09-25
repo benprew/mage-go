@@ -3149,12 +3149,11 @@ func registerCreatures() {
 			WithSubTypes("Dryad", "Druid"),
 			// When this creature enters, you gain 1 life.
 			WithAbility(EntersBattlefieldTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false)),
-			// {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn.
-			WithActivatedAbility(
-				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()),
-				ManaCostOf("{2}{G}"),
-				WithOncePerTurn(),
-			),
+			dsl.WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{2}{G}")),
+				dsl.Until(EndOfTurn, dsl.ModifyPT(dsl.This, dsl.Fixed(2), dsl.Fixed(2))),
+				dsl.ActivationLimit(1),
+			)),
 		)
 	})
 
