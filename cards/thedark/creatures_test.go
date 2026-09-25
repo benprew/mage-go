@@ -131,8 +131,8 @@ func TestCoalGolem(t *testing.T) {
 	g.AssertPermanentCount(gametest.PlayerA, "Coal Golem", 0)
 	g.AssertGraveyardCount(gametest.PlayerA, "Coal Golem", 1)
 	pool := g.GetPlayer(gametest.PlayerA).ManaPool()
-	if got := pool.CountProducedThisTurn(core.Red); got < 3 {
-		t.Fatalf("want at least 3 red mana produced, got %d", got)
+	if got := pool.CountProducedThisTurn(core.Red); got != 8 {
+		t.Fatalf("want 8 red mana produced (5 supplied plus 3 from Coal Golem), got %d", got)
 	}
 }
 

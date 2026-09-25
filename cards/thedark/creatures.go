@@ -600,11 +600,10 @@ func registerCreatures() {
 		return NewCreature("Coal Golem", "{5}", 3, 3,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				AddMana(Red, 3),
-				GenericCost(3),
-				WithCost(SacrificeSourceCost()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{3}"), SacrificeSourceCost()),
+				AddManaAmount(Red, Fixed(3)),
+			)),
 		)
 	})
 

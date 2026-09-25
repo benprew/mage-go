@@ -4666,3 +4666,39 @@ Validation: focused card regression and shared contracts; Jumpstart package
 tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Coal Golem Typed Sacrifice Mana
+
+- [x] Migrate Coal Golem's activation to `Activate`,
+  `Costs(Mana("{3}"), SacrificeSourceCost())`, and
+  `AddManaAmount(Red, Fixed(3))`.
+- [x] Verify the full Oracle comment, mana cost, artifact creature type,
+  Golem subtype, and 3/3 stats against `data/DRK.json`.
+- [x] Strengthen the existing card test to check exact red mana production
+  and retain its source-sacrifice assertions. The test passes before and
+  after migration.
+- [x] Audit typed mana classification and cost payment. Existing adapters
+  support this activation; no engine fix or new export is needed.
+
+The controller pays three generic mana and sacrifices the source before
+receiving three red mana. The ability has no target or tap cost, so it can
+be activated while the source is tapped or has summoning sickness. It
+resolves immediately without using the stack (CR 605.1a and 605.3b).
+The fixed output uses the activating controller after the source leaves.
+
+The old test accepted the five red mana supplied by the activation harness
+without proving any production by Coal Golem. Its exact assertion now
+requires eight red mana produced: five supplied and three from the ability.
+Shared mana and payment contracts cover immediate resolution, controller
+context, amount validation, clone isolation, and payment failure.
+
+This completes one remaining legacy mana activation. Automatic mana planning
+still excludes this sacrifice ability; explicit activation remains supported.
+Other callers and the broader mana family remain open. No engine blocker
+is marked resolved and no shared export is retired.
+
+Validation: focused card and shared contracts; The Dark package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/thedark`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
