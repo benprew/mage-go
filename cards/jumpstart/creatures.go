@@ -3036,12 +3036,11 @@ func registerCreatures() {
 	Register("Phyrexian Gargantua", func() Card {
 		return NewCreature("Phyrexian Gargantua", "{4}{B}{B}", 4, 4,
 			WithSubTypes("Phyrexian", "Horror"),
-			WithAbility(EntersBattlefieldTrigger(
-				CompositeEffects("draw two cards and lose 2 life",
-					DrawCards(Fixed(2)),
+			WithAbility(WhenEvent(Enters(This),
+				Sequence(
+					Draw(You, Fixed(2)),
 					LoseLife(You, Fixed(2)),
 				),
-				false,
 			)),
 		)
 	})

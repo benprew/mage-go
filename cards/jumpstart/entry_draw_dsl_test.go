@@ -11,16 +11,30 @@ import (
 )
 
 func TestEntryDrawResolution(t *testing.T) {
-	for _, name := range []string{"Wall of Blossoms", "Phyrexian Rager", "Tithebearer Giant"} {
-		for _, scenario := range []string{"present", "departed", "empty library"} {
+	for _, tc := range []struct {
+		name     string
+		draws    int
+		lifeLoss int
+	}{
+		{"Wall of Blossoms", 1, 0},
+		{"Phyrexian Rager", 1, 1},
+		{"Tithebearer Giant", 1, 1},
+		{"Phyrexian Gargantua", 2, 2},
+	} {
+		name := tc.name
+		for _, scenario := range []string{"present", "departed", "empty library", "one-card library"} {
 			t.Run(name+"/"+scenario, func(t *testing.T) {
 				g := gametest.NewTestGame(t)
 				owner := g.GetPlayer(gametest.PlayerA)
 				controller := g.GetPlayer(gametest.PlayerB)
-				wantDraws := 1
-				if scenario == "empty library" {
+				wantDraws := tc.draws
+				switch scenario {
+				case "empty library":
 					wantDraws = 0
-				} else {
+				case "one-card library":
+					wantDraws = 1
+				}
+				for range wantDraws {
 					controller.AddToLibrary(mage.NewArtifact("Drawn card", ""))
 				}
 				drawEvents := 0
@@ -57,17 +71,14 @@ func TestEntryDrawResolution(t *testing.T) {
 					g.ExilePermanent(g.FindPermanent(card.ID()))
 				}
 				g.ResolveStack()
-				wantLife := 20
-				if name != "Wall of Blossoms" {
-					wantLife = 19
-				}
+				wantLife := 20 - tc.lifeLoss
 				if len(controller.Hand()) != wantDraws || drawEvents != wantDraws || controller.Life() != wantLife {
 					t.Errorf("hand/draw events/life = %d/%d/%d, want %d/%d/%d", len(controller.Hand()), drawEvents, controller.Life(), wantDraws, wantDraws, wantLife)
 				}
 				if len(owner.Hand()) != 0 || owner.Life() != 20 {
 					t.Error("entry ability affected the owner instead of the controller")
 				}
-				if controller.IsAlive() != (scenario != "empty library") {
+				if controller.IsAlive() != (wantDraws == tc.draws) {
 					t.Error("incorrect empty-library draw outcome")
 				}
 			})

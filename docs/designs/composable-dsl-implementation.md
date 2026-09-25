@@ -3997,3 +3997,31 @@ Validation: focused regressions and shared contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Phyrexian Gargantua Typed Entry Draw and Life Loss
+
+- [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,
+  `Sequence`, `Draw(You, Fixed(2))`, and `LoseLife(You, Fixed(2))`.
+- [x] Verify the full Oracle comment, `{4}{B}{B}` cost, Phyrexian Horror
+  subtypes, and 4/4 characteristics against `data/JMP.json`.
+- [x] Remove the implicit source target that stopped the ability from resolving
+  after source departure. The extended regression failed before migration.
+- [x] Audit entry, draw, sequence, and life adapters. Existing engine services
+  support the ability; no engine fix or new constructor is required.
+
+`TestEntryDrawResolution` now includes Gargantua with its source present or
+departed, an empty library, and a one-card library. The trigger has no targets
+and draws for its stored controller, who differs from the owner in the test.
+Both draw events occur before the two-life loss. A short or empty library does
+not skip life loss; a failed draw causes game loss after resolution. The owner
+remains unaffected. The existing cast-path test also passes.
+
+This completes one slice of the remaining trigger and action migrations.
+Other callers retain the legacy helpers, so no export is retired. The recorded
+engine blockers remain open.
+
+Validation: focused regressions and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
