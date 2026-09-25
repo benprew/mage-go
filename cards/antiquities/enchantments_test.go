@@ -3,6 +3,8 @@ package antiquities
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -326,6 +328,33 @@ func TestGateToPhyrexia(t *testing.T) {
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
 		g.AssertPermanentCount(gametest.PlayerB, "Ornithopter", 0)
 	})
+}
+
+func TestGateToPhyrexiaCanSacrificeAnimatedSource(t *testing.T) {
+	a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
+	g := mage.NewGame(a, b)
+	gate, err := mage.CreateCard("Gate to Phyrexia")
+	if err != nil {
+		t.Fatal(err)
+	}
+	gate.AddType(core.TypeCreature)
+	gate.SetOwner(a.PlayerID())
+	g.PutOnBattlefield(gate, a.PlayerID())
+	artifact := mage.NewArtifact("Target", "{1}")
+	artifact.SetOwner(b.PlayerID())
+	g.PutOnBattlefield(artifact, b.PlayerID())
+	g.SetActivePlayerIndex(0)
+	g.SetStep(core.Upkeep)
+	if err := g.ActivateAbilityByIndex(a.PlayerID(), gate.ID(), 0, []uuid.UUID{artifact.ID()}); err != nil {
+		t.Fatal(err)
+	}
+	if g.FindPermanent(gate.ID()) != nil || g.FindPermanent(artifact.ID()) == nil || g.StackSize() != 1 {
+		t.Fatal("activation must sacrifice the source before the target is destroyed")
+	}
+	g.ResolveStack()
+	if g.FindPermanent(artifact.ID()) != nil {
+		t.Fatal("ability did not destroy the target after its source left")
+	}
 }
 
 func TestHauntingWind(t *testing.T) {

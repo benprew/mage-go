@@ -1862,3 +1862,42 @@ Validation: Secrets of Strixhaven package tests; focused shared contracts;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/secretsofstrixhaven`; `make test`; and
 `make lint` pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Gate to Phyrexia Typed Activation
+
+- [x] Migrate the complete definition to `Activate`, `Costs`, `TargetPermanent`,
+  `WithTargets`, and `Destroy` through `pkg/mage/dsl`.
+- [x] Preserve “during your upkeep” with `OnlyDuring(core.Upkeep)` and
+  `OnlyOnYourTurn()`, and “only once each turn” with `ActivationLimit(1)`.
+- [x] Verify the full Oracle comment, enchantment type, and `{B}{B}` mana cost
+  against `data/ATQ.json`.
+- [x] Correct the sacrifice cost after a failing card regression: “a creature”
+  includes the source if it becomes a creature. Use the existing
+  `SacrificeMatchingIncludingSourceCost` instead of `SacrificeCreatureCost`,
+  which excludes the source. No engine fix or new constructor is required.
+
+Either player's artifact can be targeted. Choose the target before sacrificing
+one creature you control; the cost has no tap or mana requirement. The ability
+resolves after its source leaves. A sacrificed target is absent at resolution;
+other targets must still be legal and have the captured incarnation. Destruction
+allows regeneration and respects indestructible. Timing is checked at activation,
+not again at resolution. The activation limit resets for the next turn.
+
+`TestGateToPhyrexiaCanSacrificeAnimatedSource` failed with “cannot activate
+ability” before the cost correction and now passes. Its synthetic creature
+source tests sacrifice eligibility and resolution after source departure, not
+an animation effect. The existing `TestGateToPhyrexia` also passes.
+Shared timing, activation-limit cleanup and clone, target identity and copy,
+regeneration, removal metadata, atomic payment, and phased-sacrifice contracts
+pass. Rules contracts are CR 400.7, 602, 608.2b, 701.8, and 701.21.
+
+The enchantment file no longer imports the engine directly. Other definitions
+still use legacy aliases; the author boundary remains open. Legacy helpers
+retain other callers, so no export is retired. This completes one slice of the
+outstanding action migrations; no open engine blocker is claimed resolved.
+
+Validation: Antiquities package tests; focused shared contracts;
+`go test ./cards/... -short -count=1` (including registration validation);
+`go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

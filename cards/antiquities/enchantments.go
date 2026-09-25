@@ -3,7 +3,7 @@ package antiquities
 import (
 	"github.com/google/uuid"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
@@ -165,14 +165,14 @@ func registerEnchantments() {
 	// Sacrifice a creature: Destroy target artifact. Activate only during your upkeep and only
 	// once each turn.
 	Register("Gate to Phyrexia", func() Card {
+		artifact := TargetPermanent("artifact", IsArtifact)
 		return NewEnchantment("Gate to Phyrexia", "{B}{B}",
-			WithActivatedAbility(
-				DestroyTarget(),
-				SacrificeCreatureCost(),
-				WithTarget(mage.TargetPermanent(IsArtifact)),
-				WithUpkeepOnly(),
-				WithOncePerTurn(),
-			),
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				Destroy(artifact),
+				WithTargets(artifact),
+				OnlyDuring(core.Upkeep), OnlyOnYourTurn(), ActivationLimit(1),
+			)),
 		)
 	})
 
