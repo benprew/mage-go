@@ -2826,3 +2826,37 @@ Validation: focused shared contracts; Jumpstart and Limited package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart ./cards/limited`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+
+## Completed Slice: Sol Ring and Unstable Obelisk Typed Mana
+
+- [x] Migrate both fixed colorless mana abilities from `WithMultiManaAbility`
+  to `Activate`, `Costs(TapCost(This))`, and `AddManaAmount`.
+- [x] Preserve two colorless mana for Sol Ring and one for Unstable Obelisk.
+  Both complete definitions now use the author DSL.
+- [x] Add Sol Ring's full Oracle comment and verify both cards' Oracle text,
+  artifact types, and casting costs against `data/LEA.json` and `data/JMP.json`.
+- [x] Audit immediate resolution, mana planning, tap payment, and ability
+  selection. Existing adapters need no engine fix or new export.
+
+The untargeted mana abilities resolve immediately after the tap cost is paid
+and remain available to automatic mana planning. Unstable Obelisk's separate
+seven-mana destruction activation retains its target, tap and sacrifice costs,
+and stack resolution. Rules contracts are CR 602 and 605.1a–605.3b.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`, and
+`TestComposablePayment*` pass before and after migration. They cover immediate
+resolution, production amounts, tap events, fixed production planning, clone
+isolation, and failed payments. `TestUnstableObelisk` also passes before and
+after migration. These declarations use proven primitives and need no duplicate
+card simulation tests.
+
+This completes one slice of the remaining fixed mana caller migrations.
+`WithMultiManaAbility` remains in Guardian Idol, Mana Crypt, and Mishra's
+Workshop, so its export is retained. No outstanding engine blocker is marked
+resolved. Unrelated definitions retain engine imports in these files.
+
+Validation: focused shared contracts; Limited and Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/limited ./cards/jumpstart`; `make test`; and `make lint`
+pass with zero failures (lint: zero issues).

@@ -47,10 +47,15 @@ func registerArtifacts() {
 		)
 	})
 
+	// Sol Ring {1}
+	// Artifact
+	// {T}: Add {C}{C}.
 	Register("Sol Ring", func() Card {
 		return NewArtifact("Sol Ring", "{1}",
-			// {T}: Add {C}{C}
-			WithMultiManaAbility(ManaProduction{Color: Colorless, Amount: 2}),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(Colorless, Fixed(2)),
+			)),
 		)
 	})
 
