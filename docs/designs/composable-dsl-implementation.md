@@ -2965,3 +2965,41 @@ Validation: focused shared contracts; Limited package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/limited`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Tolaria and Urborg Typed Mana
+
+- [x] Migrate the last two Legends `WithManaAbility` declarations to
+  `Activate`, `Costs(TapCost(This))`, and `AddManaAmount(color, Fixed(1))`.
+- [x] Preserve one blue mana for Tolaria and one black mana for Urborg,
+  with a tap cost and no targets.
+- [x] Verify both full Oracle comments and legendary land types against
+  `data/LEG.json`.
+- [x] Audit immediate resolution, fixed mana planning, tap payment, and
+  utility-ability selection. Existing adapters need no engine fix or new export.
+
+Both mana abilities add mana to the activating controller's pool immediately,
+without using the stack. Fixed production remains available to automatic mana
+payment, and the shared mana service emits the tapped-for-mana event. The
+separate utility abilities retain their existing declarations and timing.
+Rules contracts are CR 602 and 605.1a–605.3b.
+
+Shared `TestComposableMana*`, `TestTypedManaAmount*`,
+`TestComposablePayment*`, and `TestActivationSelectionPrefersNonMana` pass
+before and after migration. They cover immediate resolution, production amounts,
+tap events, planning, clone isolation, failed payment, and utility selection.
+Existing `TestTolaria` and `TestUrborg` utility scenarios also pass before and
+after migration. Their mana-named scenarios only check battlefield setup;
+shared engine contracts provide the mana evidence. These declarative changes
+need no duplicate card simulation tests.
+
+This completes the remaining fixed mana declarations in Legends. The broader
+mana family and both utility migrations remain open. In particular, this slice
+does not claim to audit Tolaria's removal of all “bands with other” abilities.
+Other sets retain `WithManaAbility`, so its export remains. No outstanding
+engine blocker is marked resolved.
+
+Validation: focused shared contracts and card tests; Legends package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

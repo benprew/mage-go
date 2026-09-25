@@ -127,7 +127,7 @@ func registerLands() {
 	Register("Tolaria", func() Card {
 		return NewLand("Tolaria",
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Blue),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Blue, Fixed(1)))),
 			WithActivatedAbility(
 				Pipeline("target creature loses banding until end of turn",
 					EffectProperties{Outcome: OutcomeDetriment},
@@ -159,7 +159,7 @@ func registerLands() {
 	Register("Urborg", func() Card {
 		return NewLand("Urborg",
 			WithSuperTypes(SuperLegendary),
-			WithManaAbility(Black),
+			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Black, Fixed(1)))),
 			WithActivatedAbility(
 				FuncEffect(
 					"target creature loses first strike or swampwalk until end of turn",
