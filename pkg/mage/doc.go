@@ -102,6 +102,10 @@
 // Use [RemovePermanentFromCombat] with a typed reference to remove combat
 // membership. An attacker stays blocked when its last blocker is removed.
 //
+// Use [GrantLandPlays] to add to a player's land allowance for this turn.
+// Grants accumulate and remain separate in cloned games. The action does not
+// play a land or change land timing. Explore grants the allowance before drawing.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

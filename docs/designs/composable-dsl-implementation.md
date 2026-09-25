@@ -14,7 +14,8 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] **Deep Spawn**: Audit optional upkeep mill payment before migrating the last production `MillTargetPlayer` caller. (Selhoff Occultist, Towering-Wave Mystic, Millstone, and Whimsy's mill branch are migrated; `MillstoneEffect` is retired).
 - [ ] **Cauldron of Essence**: Migrate reanimation ability after typed graveyard references are available. Preserve target selection before sacrifice payment, graveyard ownership, sorcery timing, and return under resolving controller. (Death trigger is migrated; `AnyCreatureDiesTrigger` is retired).
 - [ ] **First Main Phase Callers**: Migrate other first-main callers before retiring `BeginningOfFirstMainPhaseTrigger`: Scathing Shadelock needs typed prepared state and prepared casting audit; Abstract Paintmage needs missing instant/sorcery mana spending restriction.
-- [ ] **Surrounding Card Definitions**: Migrate remaining surrounding definitions for Blindblast, Exclude, Explore, Goblin Lore, Thirst for Knowledge, and Rhystic Study. Damage-source LKI, stack references, land allowances, hidden-zone choices, and event participants still need exact adapters.
+- [ ] **Surrounding Card Definitions**: Migrate remaining surrounding definitions for Blindblast, Exclude, Goblin Lore, Thirst for Knowledge, and Rhystic Study. Damage-source LKI, stack references, hidden-zone choices, and event participants still need exact adapters.
+- [x] **Explore Land Allowance**: Add `GrantLandPlays(PlayerRef, ResolutionValue)` and migrate Explore to typed `Spell` and `Sequence`. Existing turn allowance and clone services need no engine fix. See the completed slice below.
 - [ ] **Rhystic Study**: Audit optional draw and payer choice order when migrating the trigger. Legacy payment branches expose nested typed effects to inspection/validation; event participant capture remains open.
 - [ ] **Elemental Uprising**: Audit land animation, target-controller restriction, color behavior, and lifetime.
 - [ ] **Neyith of the Dire Hunt**: Audit combat trigger, optional hybrid payment, power doubling, and end-of-combat blocking requirement before removing `TargetMustBeBlockedIfAble`.
@@ -619,3 +620,34 @@ The typed control adapter and unrelated Legends engine imports remain open.
 Validation: focused timing and Disharmony regressions; engine and Legends suites
 with `-short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and
 `make lint` passed with zero failures.
+
+## Completed Slice: Explore Land Allowance
+
+Added `GrantLandPlays(PlayerRef, ResolutionValue)` over `Game.GrantExtraLandPlay`.
+The subject resolves before the amount; absent subjects and nonpositive amounts
+have no effect. The action adds permission for this turn, does not play a land,
+and does not override timing or zone restrictions. Grants accumulate by player,
+clone independently, and clear through existing turn cleanup. No engine blocker
+was found. Static land allowances remain a separate family. Existing
+`TestGrantExtraLandPlay_AllowsSecondLand`, `TestGrantExtraLandPlay_ResetAtEndOfTurn`,
+and `TestGrantExtraLandPlay_Cumulative` establish the shared executor baseline.
+
+| Previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Explore's allowance `FuncEffect` and `NewSpellAbility` | `Spell(Sequence(GrantLandPlays(You, Fixed(1)), Draw(You, Fixed(1))))`; no targets; stored resolving controller; no source LKI required; benefit and draw metadata preserved | `TestExplore_AllowsSecondLand` checks the second land and drawn Plains; `TestGrantLandPlaysLifetime`, `TestGrantLandPlaysAmountAndAbsence` |
+
+| Oracle clause | Expression | Contract and evidence |
+| :--- | :--- | :--- |
+| You may play an additional land this turn. | `GrantLandPlays(You, Fixed(1))` | CR 305.2–305.3, repository rules effective February 27, 2026; cumulative player allowances, cleanup, clone isolation, and absent subjects covered by the adapter tests |
+| Draw a card. | `Draw(You, Fixed(1))` after the grant | Existing draw executor; Explore integration test checks the card in hand |
+
+Oracle text matches `cards/jumpstart/JMP.json`. No legacy export is retired:
+`GrantExtraLandPlay` remains the shared executor. Explore's definition now uses
+`dsl`; other definitions in its file retain engine imports for unrelated work.
+`TestGrantLandPlaysValidation`, `TestLandPlayAllowanceComposition`, and two
+compile-fail fixtures cover binding validation, metadata, lifecycle composition,
+and rejection of permanent/collection subjects.
+
+Verification: focused engine, DSL, and Jumpstart suites with `-short -count=1`;
+`make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed.
+Lint reported zero issues.

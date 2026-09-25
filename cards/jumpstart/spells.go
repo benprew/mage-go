@@ -699,18 +699,11 @@ func registerSpells() {
 	// You may play an additional land this turn.
 	// Draw a card.
 	Register("Explore", func() Card {
-		return NewSorcery("Explore", "{1}{G}",
-			NewSpellAbility(
-				FuncEffect(
-					"you may play an additional land this turn",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						g.GrantExtraLandPlay(controller, 1)
-						return nil
-					},
-				),
+		return dsl.NewSorcery("Explore", "{1}{G}",
+			dsl.WithAbility(dsl.Spell(dsl.Sequence(
+				dsl.GrantLandPlays(dsl.You, dsl.Fixed(1)),
 				dsl.Draw(dsl.You, dsl.Fixed(1)),
-			),
+			))),
 		)
 	})
 

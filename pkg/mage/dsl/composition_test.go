@@ -571,3 +571,21 @@ func TestBasePowerComposition(t *testing.T) {
 		t.Fatalf("metadata = %+v", info)
 	}
 }
+
+func TestLandPlayAllowanceComposition(t *testing.T) {
+	body := dsl.GrantLandPlays(dsl.You, dsl.Fixed(1))
+	member := dsl.BindPermanent("member")
+	cards := []mage.Card{
+		dsl.NewSorcery("Spell", "", dsl.WithAbility(dsl.Spell(body))),
+		dsl.NewArtifact("Activation", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body))),
+		dsl.NewCreature("Trigger", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), body))),
+		dsl.NewSorcery("Sequence", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(body, dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+		dsl.NewSorcery("Mode", "", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Land plays", body), dsl.ModeOf("Draw", dsl.Draw(dsl.You, dsl.Fixed(1)))))),
+		dsl.NewSorcery("Loop", "", dsl.WithAbility(dsl.Spell(dsl.ForEach(dsl.MatchingPermanents(dsl.IsCreature), member, dsl.GrantLandPlays(dsl.ControllerOf(dsl.From(member)), dsl.Fixed(1)))))),
+	}
+	for _, card := range cards {
+		if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+			t.Fatal(err)
+		}
+	}
+}

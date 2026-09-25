@@ -80,6 +80,7 @@ var (
 	ActivePlayer                     = mage.ActivePlayer
 	EachPlayer                       = mage.EachPlayer
 	OpponentsOf                      = mage.OpponentsOf
+	GrantLandPlays                   = mage.GrantLandPlays
 	LoseLifeEach                     = mage.LoseLifeEach
 	MatchingPermanents               = mage.MatchingPermanents
 	WithoutPermanent                 = mage.WithoutPermanent

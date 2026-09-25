@@ -1588,6 +1588,7 @@ func TestExplore_AllowsSecondLand(t *testing.T) {
 	g.StopAt(1, core.BeginCombat)
 	g.Execute()
 	g.AssertPermanentCount(gametest.PlayerA, "Forest", 4)
+	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
 }
 
 // Long Road Home: exile target creature, return at next end step with a

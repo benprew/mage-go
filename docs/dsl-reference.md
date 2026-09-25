@@ -146,6 +146,8 @@ State conditions must be **pure functions** of game state (no random choices, mu
 
 Resolving effects implement `ResolvingEffect` and mutate the game during resolution:
 
+* `GrantLandPlays(PlayerRef, ResolutionValue)`: Adds land plays for the selected player for this turn. Grants accumulate; the amount is read once at resolution. An absent player or nonpositive amount does nothing. This does not play a land, grant access to another zone, or override normal land-play timing.
+
 ### Permanent Actions
 * `Sacrifice(PermanentRef)`: Stored controller sacrifices the permanent. Fails if they no longer control it.
 * `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).
