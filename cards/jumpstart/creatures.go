@@ -5620,10 +5620,10 @@ func registerCreatures() {
 	Register("Ravenous Baloth", func() Card {
 		return NewCreature("Ravenous Baloth", "{2}{G}{G}", 4, 4,
 			WithSubTypes("Beast"),
-			WithActivatedAbility(
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(HasSubType("Beast"), "Sacrifice a Beast")),
 				GainLife(You, Fixed(4)),
-				SacrificeMatchingCost(HasSubType("Beast"), "Sacrifice a Beast"),
-			),
+			)),
 		)
 	})
 

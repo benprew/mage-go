@@ -4217,3 +4217,34 @@ sacrifice contracts; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Ravenous Baloth Typed Sacrifice Life Gain
+
+- [x] Migrate the complete activation to `Activate`, explicit `Costs`,
+  `SacrificeMatchingIncludingSourceCost`, and `GainLife(You, Fixed(4))`.
+- [x] Correct the sacrifice choice to include Ravenous Baloth itself. The
+  focused regression failed before migration because the legacy cost excluded it.
+- [x] Verify the full Oracle comment, `{2}{G}{G}` cost, Beast subtype, and
+  4/4 characteristics against `data/JMP.json`.
+- [x] Audit sacrifice payment and stored-controller life gain. Existing typed
+  adapters support the ability; no engine fix or new constructor is required.
+
+`TestRavenousBalothSacrificeChoice` covers sacrificing the source or another
+controlled Beast, payment before resolution, absence of targets, and life gain
+for a controller different from the owner. The activation works without mana
+while tapped during the opponent's upkeep. Self-sacrifice puts Baloth in its
+owner's graveyard; its stored controller gains four life when the ability
+resolves. The other player's Beast and the controller's non-Beast remain in play.
+The existing life-gain scenario also passes.
+
+Shared typed life, life-gain outcome, payment, and matching-sacrifice contracts
+cover replacements, events, payment handling, and phased sacrifice candidates.
+This completes one slice of the remaining activation and action migrations.
+Other callers retain legacy helpers; no export is retired and no outstanding
+engine blocker is marked resolved.
+
+Validation: focused regression and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
