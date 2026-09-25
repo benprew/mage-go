@@ -4702,3 +4702,33 @@ Validation: focused card and shared contracts; The Dark package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/thedark`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+## Completed Slice: Overgrown Battlement Typed Mana Activation
+
+- [x] Migrate the activation to `Activate`, `Costs(TapCost(This))`, and
+  `AddManaAmount(Green, CountPermanents(ControlledPermanents(...)))` with
+  both creature and defender filters.
+- [x] Verify the full Oracle comment, mana cost, Wall subtype, 0/4 stats,
+  and defender against `data/JMP.json`.
+- [x] Correct mana-ability classification through the existing typed adapter.
+  No engine fix or new constructor is required.
+- [x] Add a failing regression before migration and verify immediate mana
+  production, tap payment, exact filtering, and controller identity.
+
+`TestOvergrownBattlementImmediateMana` failed before migration in all four
+cases because the callback activation used the stack. It now resolves
+immediately and produces one green mana per controlled creature with
+defender, including the source. The regression excludes opposing defenders,
+controlled creatures without defender, and noncreatures with defender. It
+also checks a controller different from the card's owner and verifies that
+only the controller receives mana.
+
+Shared typed mana contracts cover dynamic amounts, mana events, activation
+restrictions, validation, and clone isolation. This completes one remaining
+legacy activation in the mana family. Dynamic automatic mana planning remains
+open; this slice supports explicit activation. No shared export is retired.
+
+Validation: focused card regression and shared mana contracts; Jumpstart
+package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

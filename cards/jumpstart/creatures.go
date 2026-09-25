@@ -5500,24 +5500,11 @@ func registerCreatures() {
 		return NewCreature("Overgrown Battlement", "{1}{G}", 0, 4,
 			WithSubTypes("Wall"),
 			WithKeyword(Defender),
-			WithActivatedAbility(
-				FuncEffect(
-					"add {G} for each creature you control with defender",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						count := g.CountBattlefield(And(IsCreature, ControlledBy(controller), HasKeywordFilter(Defender)))
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						for range count {
-							p.ManaPool().Add(Green, 1)
-						}
-						return nil
-					},
-				),
-				TapCost(This),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				AddManaAmount(Green, CountPermanents(ControlledPermanents(
+					And(IsCreature, HasKeywordFilter(Defender)),
+				))),
+			)),
 		)
 	})
 
