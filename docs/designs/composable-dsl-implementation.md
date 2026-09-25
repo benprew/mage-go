@@ -4187,3 +4187,33 @@ Validation: focused card regressions and shared contracts; Jumpstart package
 tests; `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+
+## Completed Slice: Scarecrone Typed Sacrifice Draw Activation
+
+- [x] Migrate the draw activation to `Activate`, explicit `Costs`,
+  `SacrificeMatchingIncludingSourceCost`, and `Draw(You, Fixed(1))`.
+- [x] Correct the sacrifice choice to include Scarecrone itself. The focused
+  regression failed before migration because the legacy cost excluded it.
+- [x] Verify both full Oracle abilities, `{3}` cost, artifact creature type,
+  Scarecrow subtype, and 1/2 characteristics against `data/JMP.json`.
+- [x] Audit payment, sacrifice selection, and stored controller resolution.
+  Existing typed adapters support the ability; no engine fix is required.
+
+`TestScarecroneSacrificeDraw` covers sacrificing the source or another controlled
+Scarecrow, failed unpaid activation, payment before stack resolution, absence of
+targets, and drawing for a controller different from the owner. The activation
+works while tapped during the opponent's upkeep. Self-sacrifice puts Scarecrone
+in its owner's graveyard, and the stored controller still draws on resolution.
+The other player's Scarecrow and the controller's non-Scarecrow remain in play.
+
+This completes one slice of the remaining activation and action migrations.
+Scarecrone's separate graveyard-return activation awaits typed graveyard
+references. Other callers retain legacy helpers; no export is retired and
+no outstanding engine blocker is marked resolved.
+
+Validation: the focused regression and shared typed draw, payment, and matching
+sacrifice contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

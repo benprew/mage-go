@@ -6516,11 +6516,10 @@ func registerCreatures() {
 		return NewCreature("Scarecrone", "{3}", 1, 2,
 			WithSubTypes("Scarecrow"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				ManaCostOf("{1}"),
-				WithCost(SacrificeMatchingCost(HasSubType("Scarecrow"), "Sacrifice a Scarecrow")),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}"), SacrificeMatchingIncludingSourceCost(HasSubType("Scarecrow"), "Sacrifice a Scarecrow")),
+				Draw(You, Fixed(1)),
+			)),
 			WithActivatedAbility(
 				ReturnFromGraveyardToBattlefield(),
 				ManaCostOf("{4}"),
