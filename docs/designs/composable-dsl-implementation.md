@@ -2315,6 +2315,37 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
 
+## Completed Slice: Jumpstart Typed Scry Creature Abilities
+
+- [x] Migrate Cloudreader Sphinx, Octoprophet, and Sage's Row Savant to
+  `WhenEvent(Enters(This), Scry(Fixed(2)))`.
+- [x] Migrate Sigiled Starfish to
+  `Activate(Costs(TapCost(This)), Scry(Fixed(1)))`.
+- [x] Verify each full Oracle comment, mana cost, creature types, power,
+  toughness, and printed keywords against `data/JMP.json`.
+- [x] Audit the existing scry, trigger, and activation adapters. These
+  single-action abilities use proven engine services; no engine fix is needed.
+
+The entry triggers have no targets and scry for their stored controller.
+The Starfish pays its tap cost before its ability goes on the stack. Scry
+uses the current library at resolution, permits top and bottom placement,
+and handles short or empty libraries through the shared library service.
+
+The four existing card tests pass before and after migration. Shared library
+choice tests cover controller context, amounts, placement, completion events,
+empty libraries, clone isolation, and typed trigger/activation composition.
+Registration validation checks all four declarations. No duplicate simulation
+tests are needed for these single-action definitions.
+
+This completes one slice of the remaining trigger and activation migrations.
+Other cards still use the legacy builders; no export is retired. Hidden-zone
+result bindings and the other recorded blockers remain open.
+
+Validation: focused card and shared contract tests; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).
+
 ## Completed Slice: Bloodhunter Bat Typed Entry Life Loss and Gain
 
 - [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,

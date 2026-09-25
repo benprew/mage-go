@@ -1015,7 +1015,7 @@ func registerCreatures() {
 		return NewCreature("Cloudreader Sphinx", "{4}{U}", 3, 4,
 			WithSubTypes("Sphinx"),
 			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(2)), false)),
+			WithAbility(WhenEvent(Enters(This), Scry(Fixed(2)))),
 		)
 	})
 
@@ -1398,7 +1398,7 @@ func registerCreatures() {
 	Register("Octoprophet", func() Card {
 		return NewCreature("Octoprophet", "{3}{U}", 3, 3,
 			WithSubTypes("Octopus"),
-			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(2)), false)),
+			WithAbility(WhenEvent(Enters(This), Scry(Fixed(2)))),
 		)
 	})
 
@@ -1555,7 +1555,7 @@ func registerCreatures() {
 	Register("Sage's Row Savant", func() Card {
 		return NewCreature("Sage's Row Savant", "{1}{U}", 2, 1,
 			WithSubTypes("Vedalken", "Wizard"),
-			WithAbility(EntersBattlefieldTrigger(Scry(Fixed(2)), false)),
+			WithAbility(WhenEvent(Enters(This), Scry(Fixed(2)))),
 		)
 	})
 
@@ -1692,7 +1692,7 @@ func registerCreatures() {
 	Register("Sigiled Starfish", func() Card {
 		return NewCreature("Sigiled Starfish", "{1}{U}", 0, 3,
 			WithSubTypes("Starfish"),
-			WithActivatedAbility(Scry(Fixed(1)), TapCost(This)),
+			WithAbility(Activate(Costs(TapCost(This)), Scry(Fixed(1)))),
 		)
 	})
 
