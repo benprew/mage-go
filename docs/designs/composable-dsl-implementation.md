@@ -3113,3 +3113,38 @@ Validation: focused shared contracts; Fourth Edition package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/fourthedition`; `make test`; and `make lint` pass with zero
 failures (lint: zero issues).
+
+## Completed Slice: Pendelhaven Exact Current-Stat Filters
+
+- [x] Add `HasPowerEqual(n)` and `HasToughnessEqual(n)` to the author DSL,
+  using the existing current-characteristic services.
+- [x] Replace Pendelhaven's mutable engine callback with
+  `And(IsCreature, HasPowerEqual(1), HasToughnessEqual(1))`.
+- [x] Verify the complete Oracle comment and legendary land type against
+  `data/LEG.json`; preserve both typed activations and their costs.
+- [x] Audit current characteristics, target rechecks, incarnation identity,
+  clone isolation, and temporary boost lifetime. No engine fix is required.
+
+Either player's creature is eligible if its current power and toughness are
+both exactly 1. Check this restriction at activation and resolution. The
+resolved +1/+2 boost lasts until cleanup; it does not end when the creature
+ceases to be 1/1. A returned card is a new object. Rules contracts are CR 400.7,
+602.2, 608.2b, 611.2, and 613.
+
+`TestExactStatsFilters` first failed to compile because the constructors were
+absent. It now covers each characteristic independently, continuous changes,
+negative values, and typed activation composition. `TestExactStatsTargetResolution`
+covers power and toughness changes before resolution, a returned target, and
+clone isolation. Existing `TestPendelhaven`, `TestTargetIncarnationAfterReturn`,
+`TestComposableContinuousCapture`, and `TestComposableSelfPumpLifetime` pass.
+The card's existing boost test passes before and after migration.
+
+This completes one slice of the remaining author-boundary and filter work.
+Pendelhaven now uses only author DSL declarations. Other definitions in the
+file retain mutable callbacks; the wider author boundary remains open. No
+legacy export is retired or outstanding engine blocker marked resolved.
+
+Validation: focused adapter and shared contract tests; Legends package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/legends`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

@@ -80,9 +80,7 @@ func registerLands() {
 	// {T}: Add {G}.
 	// {T}: Target 1/1 creature gets +1/+2 until end of turn.
 	Register("Pendelhaven", func() Card {
-		creature := TargetPermanent("creature", And(IsCreature, NewPermanentFilter("1/1", func(p *Permanent, g *Game) bool {
-			return p.CurrentPower(g) == 1 && p.CurrentToughness(g) == 1
-		})))
+		creature := TargetPermanent("creature", And(IsCreature, HasPowerEqual(1), HasToughnessEqual(1)))
 		return NewLand("Pendelhaven",
 			WithSuperTypes(SuperLegendary),
 			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Green, Fixed(1)))),

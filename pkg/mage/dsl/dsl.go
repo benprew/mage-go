@@ -590,6 +590,8 @@ var (
 	HasPowerGTE              = mage.HasPowerGTE
 	HasPowerLTE              = mage.HasPowerLTE
 	HasToughnessGTE          = mage.HasToughnessGTE
+	HasPowerEqual            = mage.HasPowerEqual
+	HasToughnessEqual        = mage.HasToughnessEqual
 	IsTapped                 = mage.IsTapped
 	IsUntapped               = mage.IsUntapped
 	IsEnchanted              = mage.IsEnchanted

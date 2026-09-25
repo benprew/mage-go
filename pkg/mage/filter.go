@@ -356,6 +356,20 @@ func HasPowerGTE(n int) PermanentFilter {
 	})
 }
 
+// HasPowerEqual matches permanents with current power equal to n.
+func HasPowerEqual(n int) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("with power %d", n), func(p *Permanent, g *Game) bool {
+		return p.CurrentPower(g) == n
+	})
+}
+
+// HasToughnessEqual matches permanents with current toughness equal to n.
+func HasToughnessEqual(n int) PermanentFilter {
+	return NewPermanentFilter(fmt.Sprintf("with toughness %d", n), func(p *Permanent, g *Game) bool {
+		return p.CurrentToughness(g) == n
+	})
+}
+
 // HasToughnessGTE matches permanents with current toughness at least n.
 func HasToughnessGTE(n int) PermanentFilter {
 	return NewPermanentFilter(fmt.Sprintf("with toughness %d or greater", n), func(p *Permanent, g *Game) bool {
