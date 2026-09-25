@@ -125,36 +125,6 @@ func (e *ExileGatheredData) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-// DestroyGatheredData destroys the permanent stored in a context variable.
-type DestroyGatheredData struct {
-	VarName string
-}
-
-func DestroyGathered(varName string) Effect {
-	return &DestroyGatheredData{VarName: varName}
-}
-
-func (e *DestroyGatheredData) Text() string { return "destroy" }
-func (e *DestroyGatheredData) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-
-func (e *DestroyGatheredData) Apply(ctx *EffectContext) error {
-	id := ctx.TryGetUUID(e.VarName)
-	if id == uuid.Nil {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(id)
-	if perm == nil {
-		return nil
-	}
-	if perm.HasKeyword(Indestructible) {
-		return nil
-	}
-	ctx.Game.DestroyPermanent(perm)
-	return nil
-}
-
 // BounceGatheredData returns the permanent stored in a context variable to its owner's hand.
 type BounceGatheredData struct{ VarName string }
 

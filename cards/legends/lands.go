@@ -114,17 +114,11 @@ func registerLands() {
 		return NewLand("The Tabernacle at Pendrell Vale",
 			WithSuperTypes(SuperLegendary),
 			WithStaticAbility(
-				GrantTriggeredAbilityToAll(
+				GrantTriggeredAbilityToAllIncludingSource(
 					EvtUpkeep, false,
 					EventPlayerIsController{},
 					IsCreature,
-					Pipeline("destroy this creature unless you pay {1}",
-						EffectProperties{Outcome: OutcomeDetriment},
-						SnapshotPermanent(SelectSource, "self"),
-						UnlessTargetPays(SelectController(), ManaCostOf("{1}"),
-							"pay {1} or this creature is destroyed",
-							DestroyGathered("self")),
-					),
+					UnlessPaid(You, Costs(Mana("{1}")), Destroy(This)),
 				),
 			),
 		)

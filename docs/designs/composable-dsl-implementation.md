@@ -30,6 +30,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Remaining Collection Destruction Helpers**: Migrate Nevinyrral's Disk, Tranquility, and Whimsy's Disk branch; retire `NevinyrralsDiskEffect`, `DestroyAllCreatures`, `DestroyAllEnchantments`, and `DestroyAllMatching`. Resolve the Disk's separate destruction batches. See the completed slice below.
 - [x] **Terror and Singular Regeneration Scope**: Migrate Terror to typed destruction and correct all singular no-regeneration executors. Retain legacy exports for the remaining callers; see the completed slice below.
 - [x] **Crumble Saved-Value Migration**: Migrate Crumble and Whimsy's Crumble branch to typed controller/mana-value captures and no-regeneration destruction. Retire `CrumbleEffect` and `DestroyGatheredNoRegen`; see the completed slice below.
+- [x] **Tabernacle String-Bound Destruction**: Migrate its granted upkeep body to typed payment and source destruction; retire `DestroyGathered`. Correct returned-source identity and include Tabernacle when it is a creature. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -306,3 +307,23 @@ Oracle source: `cards/antiquities/ATQ.json`; full text remains above the registr
 No live Go callers or declarations of either retired constructor remain outside negative compile fixtures. Unrelated legacy card definitions and imports remain in the edited files.
 
 Validation: focused Crumble and Whimsy tests; both affected card packages; `go test ./pkg/mage/... ./cards/... -short -count=1` (including universal registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` passed with zero failures (lint: zero issues).
+
+## Completed Slice: Tabernacle String-Bound Destruction
+
+- [x] Replace the sole production `DestroyGathered` call with `UnlessPaid(You, Costs(Mana("{1}")), Destroy(This))`.
+- [x] Remove `DestroyGathered` and its executor from the engine and author surfaces; add compile-fail retirement fixtures for both surfaces.
+- [x] Correct the grant to include its source when Tabernacle is a creature, using the existing `GrantTriggeredAbilityToAllIncludingSource` executor.
+- [x] Verify returned-source identity before trigger placement and while on the stack. Existing typed source capture resolves both failures without an engine change.
+
+| Oracle clause / retired API | Replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| “All creatures have” | Existing source-inclusive continuous grant, filtered by `IsCreature`; each creature receives its own trigger. An animated Tabernacle also receives the ability. | `TestTabernacleGrantsToItselfWhenCreature`, `TestTabernacleGrantedSource` |
+| “At the beginning of your upkeep” | Retained upkeep grant and `EventPlayerIsController`; the creature is the source, and its controller at triggering controls the nontargeted ability. | `TestTheTabernacleAtPendrellVale`, `TestTabernacleGrantedSource` |
+| “destroy this creature” / sole `DestroyGathered("self")` caller | `Destroy(This)` uses the captured source incarnation. A returned or phased-out source is unaffected; a control change does not prevent destruction. Regeneration and indestructible apply. Removal of Tabernacle does not cancel an existing trigger. No damage LKI is needed. | `TestTabernacleGrantedSource` covers each case, including departure before trigger placement and after placement. |
+| “unless you pay {1}” | `UnlessPaid(You, Costs(Mana("{1}")), ...)` offers the stored trigger controller an optional payment through the existing transaction. Declined or failed payment runs destruction. The typed body retains detrimental metadata and exposes payment and source children to inspection. | `TestTheTabernacleAtPendrellVale` covers payment, decline, and inability; `TestTabernaclePaymentAfterControlChange` checks payer and exact mana consumption; `TestTabernacleGrantedSource` checks runtime body metadata. |
+
+Oracle source: `cards/legends/LEG.json`, with the full comment preserved above registration. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 118.12a (unless payment), 400.7 (new objects), 603.2b/603.3a (upkeep and trigger controller), and 701.8 (destruction).
+
+Before migration, regressions failed for both leave-and-return cases and the creature Tabernacle grant. All are card-wiring corrections supported by existing engine APIs; no engine blocker was introduced or deferred. The surrounding legacy continuous trigger-grant constructor remains opaque at factory inspection and is not claimed as a completed typed grant family. Its runtime granted body is typed and inspected. Other grant callers and the broader string-bound action checklist remain open.
+
+Validation: focused Tabernacle tests; `go test ./cards/legends -count=1`; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

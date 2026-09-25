@@ -464,7 +464,6 @@ var (
 	PutFromHandOntoBattlefield              = mage.PutFromHandOntoBattlefield
 	ChangeColorEffect                       = mage.ChangeColorEffect
 	ChaosOrbEffect                          = mage.ChaosOrbEffect
-	DestroyGathered                         = mage.DestroyGathered
 	ExileTargetStep                         = mage.ExileTargetStep
 	ExileTargetCardFromGraveyard            = mage.ExileTargetCardFromGraveyard
 	BalanceEffect                           = mage.BalanceEffect

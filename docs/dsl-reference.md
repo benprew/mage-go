@@ -193,6 +193,9 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 * `IfState(condition, effect)`: Resolution-time branch based on pure game state.
 * `IfPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body only if paid.
 * `UnlessPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body if declined/unpaid.
+  For "destroy this creature unless you pay {1}", use
+  `UnlessPaid(You, Costs(Mana("{1}")), Destroy(This))`. A granted trigger
+  keeps its triggering controller and source incarnation through resolution.
 * `ChoosePermanent(playerRef, set, binding)`: Player chooses a permanent at resolution, storing it in `binding`.
 * `ChooseRandomPermanent(set, binding)`: Selects a random permanent from the set at resolution.
 * `ChooseRandomPlayer(playerSet, binding)`: Selects a random player from the set at resolution.

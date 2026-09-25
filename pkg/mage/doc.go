@@ -59,6 +59,8 @@
 // Targeted destruction uses [Destroy] with a typed permanent target. Declare
 // that target with [WithTargets] on the spell, mode, trigger, or activation.
 // The target filter supplies the restriction; the action allows regeneration.
+// Use [UnlessPaid] with [You] and [Destroy] of [This] for a granted
+// upkeep payment. The trigger keeps its controller and source incarnation.
 // Land destruction uses [IsLand] with the same target and action constructors.
 // To destroy all lands, use [DestroyEach] with [MatchingPermanents] and [IsLand].
 // Use [HasSubType] for a land subtype. Combine [IsCreature] and
