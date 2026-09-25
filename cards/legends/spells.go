@@ -21,7 +21,7 @@ func registerSpells() {
 	// Destroy all Forests.
 	Register("Acid Rain", func() Card {
 		return NewSorcery("Acid Rain", "{3}{U}",
-			NewSpellAbility(DestroyAllMatching(And(IsLand, HasSubType("Forest")), "destroy all Forests")),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Forest"))))),
 		)
 	})
 
@@ -150,7 +150,7 @@ func registerSpells() {
 	// Destroy all black creatures.
 	Register("Cleanse", func() Card {
 		return NewSorcery("Cleanse", "{2}{W}{W}",
-			NewSpellAbility(DestroyAllMatching(And(IsCreature, HasColorFilter(Black)), "destroy all black creatures")),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(And(IsCreature, HasColorFilter(Black)))))),
 		)
 	})
 

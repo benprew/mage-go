@@ -58,6 +58,8 @@
 // The target filter supplies the restriction; the action allows regeneration.
 // Land destruction uses [IsLand] with the same target and action constructors.
 // To destroy all lands, use [DestroyEach] with [MatchingPermanents] and [IsLand].
+// Use [HasSubType] for a land subtype. Combine [IsCreature] and
+// [HasColorFilter] with [And] to restrict destruction by creature color.
 // The collection is selected at resolution and does not include phased permanents.
 // Use [DestroyEachWithoutRegeneration] when the instruction forbids regeneration.
 // This restriction applies to the action and does not change permanent keywords.

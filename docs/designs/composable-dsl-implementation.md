@@ -26,6 +26,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Targeted Land Destruction**: Migrate Sinkhole, Stone Rain, and Ice Storm to typed land targets and `Destroy`; retire `NewLandDestruction` and `DestroyTargetLand`. No engine blocker. See the completed slice below.
 - [x] **Land-Wide Destruction**: Migrate Armageddon and Tsunami to typed `DestroyEach` collections; retire `DestroyAllLands`. No engine blocker. See the completed slice below.
 - [x] **Collection Destruction Without Regeneration**: Add `DestroyEachWithoutRegeneration`, migrate Wrath of God and Shatterstorm, and retire both collection no-regeneration helpers. Resolve the action-scoping engine gap with a regression test first. See the completed slice below.
+- [x] **Filtered Destruction Spells**: Migrate Flashfires, Acid Rain, and Cleanse, the remaining direct card callers of `DestroyAllMatching`, to typed collections. No engine blocker. See the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -220,3 +221,21 @@ Oracle sources: `data/LEA.json` and `cards/antiquities/ATQ.json`. Rules contract
 The changed card files retain unrelated legacy definitions and imports. Singular positional no-regeneration executors still grant `CantRegenerate`; their migration and action-scope audit remain separate work. The general damage/zone-LKI blockers are unchanged.
 
 Validation: focused regression and typed-definition tests; both affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Filtered Destruction Spells
+
+- [x] Migrate Flashfires, Acid Rain, and Cleanse to `Spell(DestroyEach(MatchingPermanents(filter)))` through `pkg/mage/dsl`.
+- [x] Verify land subtype and compound creature/color filters against the existing collection executor. No new constructor or engine behavior fix is required.
+- [x] Audit remaining callers: no production card calls `DestroyAllMatching` directly. Keep that export and its executor for `DestroyAllCreatures`, `DestroyAllEnchantments`, and `NevinyrralsDiskEffect`; their migration and the Disk's simultaneous destruction audit remain open.
+
+| Oracle clause / previous caller | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Flashfires: “Destroy all Plains.” / `DestroyAllMatching` | `DestroyEach(MatchingPermanents(HasSubType("Plains")))`; includes both players' basic and nonbasic Plains, selected at resolution by subtype. | `TestLandSweepersTypedDefinitions`, `TestDestroyEachMatchingLands` |
+| Acid Rain: “Destroy all Forests.” / `DestroyAllMatching` | `DestroyEach(MatchingPermanents(HasSubType("Forest")))`; same subtype contract as Flashfires. Removes the redundant land-type conjunction. | `TestFilteredDestructionTypedDefinitions`, `TestDestroyEachMatchingLands` |
+| Cleanse: “Destroy all black creatures.” / `DestroyAllMatching` | `DestroyEach(MatchingPermanents(And(IsCreature, HasColorFilter(Black))))`; includes multicolored black creatures of both players; excludes nonblack creatures and black noncreatures. | `TestFilteredDestructionTypedDefinitions`, `TestDestroyEachMatchingBlackCreatures` |
+| Collection behavior and metadata | One simultaneous destruction group, no targets or source LKI; regeneration and indestructible apply, phased permanents are excluded, and cloned games remain isolated. Printed mana costs and sorcery timing are unchanged. Detrimental, mass, and destruction metadata remain available. | Expanded land-subtype and black-creature engine tests cover empty collections, later entries, exclusions, regeneration, indestructible, phasing, both controllers, and clone isolation; existing `TestDeathObservationSimultaneousAndClone` covers grouped deaths. |
+
+Oracle sources: `data/LEA.json` and `cards/legends/LEG.json`. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 205.3i (land subtypes), 608.2c (instructions), 701.8 (destruction and regeneration), and 702.26b (phasing). All three typed-definition tests failed against the legacy definitions before migration. These declarative spells reuse engine contract tests and universal registration validation instead of new card simulations. Unrelated legacy definitions and engine imports remain in the changed card files. No engine blocker is claimed resolved by this slice.
+
+Validation: focused typed-definition and filtered-collection tests; both affected card packages; `go test ./cards/... -short -count=1`; `go test ./pkg/mage/... -short -count=1`; `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).

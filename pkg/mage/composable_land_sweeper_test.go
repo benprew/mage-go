@@ -7,12 +7,12 @@ import (
 )
 
 func TestDestroyEachMatchingLands(t *testing.T) {
-	for _, islandsOnly := range []bool{false, true} {
+	for _, subtype := range []string{"", "Island", "Plains", "Forest"} {
 		name := "all lands"
 		filter := IsLand
-		if islandsOnly {
-			name = "Islands"
-			filter = HasSubType("Island")
+		if subtype != "" {
+			name = subtype
+			filter = HasSubType(subtype)
 		}
 		t.Run(name, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
@@ -24,7 +24,7 @@ func TestDestroyEachMatchingLands(t *testing.T) {
 			var destroyed, survivors []*Permanent
 			for _, owner := range []*BasePlayer{a, b} {
 				for _, scenario := range []string{"ordinary", "indestructible", "regenerate", "phased", "Mountain", "creature"} {
-					card := NewLand(scenario, WithSubTypes("Island"))
+					card := NewLand(scenario, WithSubTypes(subtype))
 					if scenario == "Mountain" {
 						card = NewLand("Mountain", WithSubTypes("Mountain"))
 					}
@@ -41,7 +41,7 @@ func TestDestroyEachMatchingLands(t *testing.T) {
 					case "phased":
 						p.PhasedOut = true
 					}
-					if scenario == "ordinary" || (scenario == "Mountain" && !islandsOnly) {
+					if scenario == "ordinary" || (scenario == "Mountain" && subtype == "") {
 						destroyed = append(destroyed, p)
 					} else {
 						survivors = append(survivors, p)

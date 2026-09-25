@@ -390,12 +390,10 @@ func registerSpells() {
 		)
 	})
 
+	// Destroy all Plains.
 	Register("Flashfires", func() Card {
 		return NewSorcery("Flashfires", "{3}{R}",
-			NewSpellAbility(DestroyAllMatching(
-				HasSubType("Plains"),
-				"destroy all Plains",
-			)),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Plains"))))),
 		)
 	})
 
