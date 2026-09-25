@@ -1385,3 +1385,37 @@ Validation: focused card and shared keyword, target, lifetime, and combined
 timing tests; Fallen Empires package; `go test ./cards/... -short -count=1`;
 `go build ./...`; `go vet ./cards/fallen_empires`; `make test`; and
 `make lint` passed with zero failures (lint: zero issues).
+
+
+## Completed Slice: Jump and Pixie Queen Flying Grants
+
+- [x] Migrate Jump and Pixie Queen's targeted flying grant to `TargetPermanent`, `WithTargets`, and `Until(EndOfTurn, GrantKeyword(...))` through `pkg/mage/dsl`.
+- [x] Use `Spell` for Jump and `Activate` with explicit mana and tap costs for Pixie Queen. Preserve Pixie Queen's printed flying ability.
+- [x] Verify complete Oracle comments and card characteristics against `data/LEA.json` and `data/LEG.json`.
+- [x] Move the existing `TestJumpGrantsFlying` from `test.go` to `spells_test.go`, so Go discovers and runs both grant and expiration cases. Confirm both cases pass before migrating the definition.
+- [x] Reuse the existing target, layer, duration, and payment services. No engine gap or new constructor is required.
+
+| Oracle clause / previous API | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Jump: “Target creature gains flying until end of turn.” / `NewTargetedSpell`, positional `mage.GrantKeyword(Flying)` | `Spell`, typed creature target, and `Until(EndOfTurn, GrantKeyword(creature, Flying))` | `TestJumpGrantsFlying` checks flying and cleanup expiration |
+| Pixie Queen: “Flying” | Keep `WithKeyword(Flying)` | Oracle inventory and universal `TestRegisteredDefinitions` |
+| Pixie Queen: “{G}{G}{G}, {T}: Target creature gains flying until end of turn.” / `WithActivatedAbility`, `WithCost`, `WithTarget` | `Activate(Costs(Mana("{G}{G}{G}"), TapCost(This)), ...)` with the same typed target and flying body | `TestPixieQueen`, shared activation contracts, and registration validation |
+| “Target creature” | Either player's creature, including Pixie Queen itself; check target legality again at resolution | Shared typed-target contracts, including `TestTargetIncarnationAfterReturn` |
+| “until end of turn” | Layer 6 grant captures the recipient incarnation; source departure does not end it; cleanup removes it | `TestComposableKeywordSourceExit`, `TestComposableKeywordLayerOrder`, `TestComposableContinuousCapture`, and `TestComposableSelfPumpLifetime` |
+
+The adapter reports a beneficial flying grant through existing inspection and
+AI metadata. Rules contracts are CR 601–602, 608.2b, 400.7, 611.2, and 613,
+using the repository rules effective February 27, 2026. Existing contract tests
+cover these declarative definitions; no new simulation is needed.
+
+Both card definitions are fully migrated. Legacy keyword and ability helpers
+still have other callers, so no export is removed. Both files retain direct
+engine imports for unrelated definitions. The broader action migration remains
+open. Blaze of Glory remains separate: its existing definition omits the casting
+window, defending-player target restriction, and mandatory blocking clause;
+this slice does not migrate or approximate those requirements.
+
+Validation: focused card and shared target/layer/lifetime tests; Limited and
+Legends package tests; `go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/limited ./cards/legends`; `make test`; and `make lint` passed
+with zero failures (lint: zero issues).

@@ -1901,15 +1901,12 @@ func registerCreatures() {
 	// Flying
 	// {G}{G}{G}, {T}: Target creature gains flying until end of turn.
 	Register("Pixie Queen", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Pixie Queen", "{2}{G}{G}", 1, 1,
 			WithSubTypes("Faerie"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				mage.GrantKeyword(Flying),
-				ManaCostOf("{G}{G}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(Mana("{G}{G}{G}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, Flying)), WithTargets(creature))),
 		)
 	})
 

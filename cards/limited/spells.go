@@ -796,9 +796,11 @@ func registerSpells() {
 		)
 	})
 
+	// Target creature gains flying until end of turn.
 	Register("Jump", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewInstant("Jump", "{U}",
-			NewTargetedSpell(TargetCreature(), mage.GrantKeyword(Flying)),
+			WithAbility(Spell(Until(EndOfTurn, GrantKeyword(creature, Flying)), WithTargets(creature))),
 		)
 	})
 

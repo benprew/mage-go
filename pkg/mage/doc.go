@@ -63,6 +63,8 @@
 // Icatian Scout and Svyelunite Priest use typed creature targets with
 // [GrantKeywordModification] and [Until] for temporary keyword grants.
 // Combine [OnlyDuring] with [OnlyOnYourTurn] for a controller upkeep restriction.
+// Jump and Pixie Queen use the same typed flying grant in [Spell] and [Activate].
+// Either player's creature can be the target. The grant expires at cleanup.
 //
 // # Engine Principles & Invariants
 //

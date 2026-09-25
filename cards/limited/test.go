@@ -943,33 +943,6 @@ func TestWarpArtifactUpkeepDamage(t *testing.T) {
 	})
 }
 
-// ===== JUMP (Grant flying until end of turn) =====
-
-func TestJumpGrantsFlying(t *testing.T) {
-	t.Run("Jump grants flying until end of turn", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jump")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jump", "Grizzly Bears")
-		g.StopAt(1, core.BeginCombat)
-		g.Execute()
-		// Grizzly Bears should now have flying
-		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, true)
-	})
-
-	t.Run("Jump flying wears off at end of turn", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Jump")
-		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Jump", "Grizzly Bears")
-		// Stop at turn 2 (after cleanup clears EOT effects)
-		g.StopAt(2, core.Upkeep)
-		g.Execute()
-		// Flying should be gone now
-		g.AssertHasAbility(gametest.PlayerA, "Grizzly Bears", core.Flying, false)
-	})
-}
-
 // ===== ANKH OF MISHRA (Damage when land enters) =====
 
 func TestAnkhOfMishraDamageOnLandEntry(t *testing.T) {
