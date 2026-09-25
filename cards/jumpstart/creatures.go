@@ -3362,13 +3362,10 @@ func registerCreatures() {
 	Register("Tithebearer Giant", func() Card {
 		return NewCreature("Tithebearer Giant", "{5}{B}", 4, 5,
 			WithSubTypes("Giant", "Warrior"),
-			WithAbility(EntersBattlefieldTrigger(
-				CompositeEffects("draw a card and lose 1 life",
-					DrawCards(Fixed(1)),
-					LoseLife(You, Fixed(1)),
-				),
-				false,
-			)),
+			WithAbility(WhenEvent(Enters(This), Sequence(
+				Draw(You, Fixed(1)),
+				LoseLife(You, Fixed(1)),
+			))),
 		)
 	})
 

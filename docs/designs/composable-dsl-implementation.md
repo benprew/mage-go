@@ -3969,3 +3969,31 @@ Validation: focused card and shared contract tests; Jumpstart package tests;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
 (lint: zero issues).
+
+
+## Completed Slice: Tithebearer Giant Typed Entry Draw and Life Loss
+
+- [x] Migrate the complete entry ability to `WhenEvent(Enters(This), ...)`,
+  `Sequence`, `Draw(You, Fixed(1))`, and `LoseLife(You, Fixed(1))`.
+- [x] Verify the full Oracle comment, `{5}{B}` cost, Giant Warrior subtypes,
+  and 4/5 characteristics against `data/JMP.json`.
+- [x] Remove the implicit source target that stopped the ability from resolving
+  after source departure. The extended regression failed before migration.
+- [x] Audit the existing entry, draw, sequence, and life adapters. No engine
+  fix or new constructor is required.
+
+`TestEntryDrawResolution` now includes Tithebearer Giant with its source present
+or departed, an empty library, and a controller different from its owner.
+The entry trigger has no targets. Its stored controller draws before losing
+one life. An empty-library draw does not skip life loss, and the controller
+loses the game after resolution. The owner remains unaffected.
+
+The existing cast-path scenario and shared typed draw, entry, sequence, and
+life contracts pass. This completes one slice of the remaining trigger and
+action migrations. Other callers retain the legacy helpers, so no export is
+retired. General engine blockers remain open.
+
+Validation: focused regressions and shared contracts; Jumpstart package tests;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

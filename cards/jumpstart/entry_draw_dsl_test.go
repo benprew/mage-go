@@ -11,7 +11,7 @@ import (
 )
 
 func TestEntryDrawResolution(t *testing.T) {
-	for _, name := range []string{"Wall of Blossoms", "Phyrexian Rager"} {
+	for _, name := range []string{"Wall of Blossoms", "Phyrexian Rager", "Tithebearer Giant"} {
 		for _, scenario := range []string{"present", "departed", "empty library"} {
 			t.Run(name+"/"+scenario, func(t *testing.T) {
 				g := gametest.NewTestGame(t)
@@ -58,7 +58,7 @@ func TestEntryDrawResolution(t *testing.T) {
 				}
 				g.ResolveStack()
 				wantLife := 20
-				if name == "Phyrexian Rager" {
+				if name != "Wall of Blossoms" {
 					wantLife = 19
 				}
 				if len(controller.Hand()) != wantDraws || drawEvents != wantDraws || controller.Life() != wantLife {
