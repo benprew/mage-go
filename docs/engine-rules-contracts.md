@@ -82,6 +82,15 @@ Continuous effects are evaluated by `EffectManager.Apply` across the official 7-
   * 7d: P/T counters (+1/+1, -1/-1).
   * 7e: P/T switching.
 
+### Blocking Restrictions
+
+`CantBeBlocked` uses the existing `AddCantBeBlockedExceptBy` rule storage with
+an empty allowed set. The composed effect captures the subject's incarnation,
+then reinstalls the rule during each continuous-effect pass. Ability removal
+does not erase this rule, and the rule applies to later blockers (CR 509.1b,
+611.2a–c). Printed `UnblockableKW` abilities remain removable. The legacy
+`MakeUnblockableUntilEndOfTurn` executor uses the same captured restriction.
+
 ### Dynamic vs. Frozen Membership
 * **Temporary Effects (`Until`)**: Effects modifying characteristics or control capture affected objects **at resolution time** (CR 611.2c). Permanents entering the battlefield later are not included.
 * **Static Effects (`While`, `Static`)**: Static continuous effects continuously recalculate their matching set (CR 611.3a). Permanents entering later receive the boost or ability dynamically.

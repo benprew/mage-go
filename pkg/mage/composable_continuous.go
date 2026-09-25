@@ -19,6 +19,7 @@ type layerModification struct {
 	subjects         PermanentSet
 	power, toughness ResolutionValue
 	keyword          Attr
+	cantBeBlocked    bool
 	layer            Layer
 	colors           []Color
 	family           SubtypeFamily
@@ -43,6 +44,12 @@ func ModifyEachPT(subjects PermanentSet, power, toughness ResolutionValue) Conti
 // GrantKeywordModification grants a keyword. DSL exports it as GrantKeyword.
 func GrantKeywordModification(subject PermanentRef, keyword Attr) ContinuousModification {
 	return &layerModification{subject: subject, keyword: keyword, layer: LayerAbility}
+}
+
+// CantBeBlocked prevents all creatures from blocking the subject.
+// Install this rules restriction with a duration; it does not grant an ability.
+func CantBeBlocked(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, cantBeBlocked: true, layer: LayerAbility}
 }
 
 // GrantEachKeyword grants a keyword to each member of a permanent set.
@@ -133,6 +140,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.cantBeBlocked {
+			return "can’t be blocked"
+		}
 		if m.ability != nil {
 			return "grant activated ability"
 		}
@@ -156,6 +166,7 @@ type capturedModification struct {
 	permanent        capturedPermanent
 	power, toughness int
 	keyword          Attr
+	cantBeBlocked    bool
 	colors           []Color
 	family           SubtypeFamily
 	subtypes         []string
@@ -168,7 +179,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, cantBeBlocked: m.cantBeBlocked, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
 		if m.ability != nil {
 			v.ability, v.grantID = m.ability, uuid.New()
 		}
@@ -191,7 +202,9 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 		p.powerBonus += v.power
 		p.toughBonus += v.toughness
 	case LayerAbility:
-		if v.ability != nil {
+		if v.cantBeBlocked {
+			g.effects.AddCantBeBlockedExceptBy(p.ID(), Not(AnyPermanent))
+		} else if v.ability != nil {
 			installGrantedActivation(p, v.ability, v.grantID)
 		} else {
 			g.effects.GrantAttr(p.ID(), v.keyword)

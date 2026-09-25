@@ -257,8 +257,9 @@ func (*makeUnblockableUntilEndOfTurnEffect) Apply(ctx *EffectContext) error {
 	if perm == nil {
 		return nil
 	}
-	eff := TemporaryKeyword(perm.ID(), UnblockableKW)
-	eff.SetSourceID(ctx.SourceID)
+	eff := &composedLayerEffect{layer: LayerAbility, duration: EndOfTurn,
+		captured: []capturedModification{{permanent: capturedPermanent{perm.ID(), perm.incarnationID}, cantBeBlocked: true}},
+	}
 	ctx.Game.AddContinuousEffect(eff)
 	ctx.Game.ApplyContinuousEffects()
 	return nil

@@ -69,7 +69,11 @@ func applyFaerieDragonAction(g *Game, sourceID, controllerID uuid.UUID, action i
 			dsl.Until(EndOfTurn, dsl.GrantKeyword(dsl.From(chosen), CantRegenerate)),
 		), sourceID, controllerID, nil)
 	case 13: // Tawnos's Wand
-		return ApplyEffect(g, ApplyToRandomPermanent(TawnosWandEffect(), And(IsCreature, HasPowerLTE(2))), sourceID, controllerID, nil)
+		chosen := dsl.BindPermanent("chosen creature")
+		return ApplyEffect(g, dsl.Sequence(
+			dsl.ChooseRandomPermanent(dsl.MatchingPermanents(dsl.And(dsl.IsCreature, dsl.HasPowerLTE(2))), chosen),
+			dsl.Until(EndOfTurn, dsl.CantBeBlocked(dsl.From(chosen))),
+		), sourceID, controllerID, nil)
 	case 15: // Unsummon
 		chosen := dsl.BindPermanent("chosen creature")
 		return ApplyEffect(g, dsl.Sequence(

@@ -518,13 +518,10 @@ func registerArtifacts() {
 	// Artifact
 	// {2}, {T}: Target creature with power 2 or less can't be blocked this turn.
 	Register("Tawnos's Wand", func() Card {
+		creature := TargetPermanent("creature", And(IsCreature, HasPowerLTE(2)))
 		return NewArtifact("Tawnos's Wand", "{4}",
-			WithActivatedAbility(
-				TawnosWandEffect(),
-				GenericCost(2),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature(HasPowerLTE(2))),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This)),
+				Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature))),
 		)
 	})
 

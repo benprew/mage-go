@@ -90,7 +90,6 @@ func TestFaerieDragonRandomKeywordEffects(t *testing.T) {
 		{"flying", 7, core.Flying},
 		{"banding", 9, core.Banding},
 		{"cant regenerate", 12, core.CantRegenerate},
-		{"unblockable", 13, core.UnblockableKW},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			g := gametest.NewTestGame(t)
@@ -359,6 +358,47 @@ func TestFaerieDragonRegenerationProhibitionMembership(t *testing.T) {
 				eligible := kind == "creature"
 				if candidate != nil && candidate.HasKeyword(core.CantRegenerate) != eligible {
 					t.Fatal("incorrect regeneration prohibition")
+				}
+				wantRandom := 1
+				if eligible {
+					wantRandom = 0
+				}
+				if got := g.RandIntn(2); got != wantRandom {
+					t.Fatalf("next random result = %d, want %d", got, wantRandom)
+				}
+			})
+		}
+	}
+}
+
+func TestFaerieDragonWandMembership(t *testing.T) {
+	for _, kind := range []string{"creature", "large", "artifact", "phased", "empty"} {
+		for _, owner := range []gametest.PlayerRef{gametest.PlayerA, gametest.PlayerB} {
+			t.Run(kind+map[gametest.PlayerRef]string{gametest.PlayerA: "/own", gametest.PlayerB: "/opponent"}[owner], func(t *testing.T) {
+				g := gametest.NewTestGame(t)
+				var candidate *mage.Permanent
+				if kind != "empty" {
+					name := "Grizzly Bears"
+					if kind == "large" {
+						name = "Hill Giant"
+					}
+					if kind == "artifact" {
+						name = "Sol Ring"
+					}
+					id := g.AddCard(core.ZoneBattlefield, owner, name)
+					candidate = g.FindPermanent(id)
+					candidate.GrantBaseAttr(core.Shroud)
+					candidate.PhasedOut = kind == "phased"
+				}
+				g.SetRandomResults([]int{1, 0})
+				if err := applyFaerieDragonAction(g.Game, g.GetPlayer(gametest.PlayerA).PlayerID(), g.GetPlayer(gametest.PlayerA).PlayerID(), 13); err != nil {
+					t.Fatal(err)
+				}
+				g.ApplyContinuousEffects()
+				eligible := kind == "creature"
+				blocker := mage.NewPermanent(mage.NewCreature("Blocker", "", 2, 2), g.GetPlayer(gametest.PlayerB).PlayerID())
+				if candidate != nil && !mage.CanBlock(blocker, candidate, g.Game) != eligible {
+					t.Fatal("incorrect blocking prohibition")
 				}
 				wantRandom := 1
 				if eligible {

@@ -315,6 +315,7 @@ Continuous effects are broken down into **modifications** and their **durations*
 * `ModifyPT(subject, powerValue, toughnessValue)`: Power/toughness boost (Layer 7c).
 * `ModifyEachPT(permanentSet, powerValue, toughnessValue)`: Team boost.
 * `GrantKeyword(subject, keyword)`: Grants keyword ability (Layer 6).
+* `CantBeBlocked(subject)`: Prevents all creatures from blocking the permanent. Install with `Until(EndOfTurn, CantBeBlocked(subject))`; this is a rules restriction, so ability removal does not erase it. Later blockers are also restricted. Source departure does not end the duration, and a returned subject is a new object.
 * `GrantEachKeyword(permanentSet, keyword)`: Grants keyword to set.
 * `SetColors(subject, colors...)`: Replaces colors (Layer 5).
 * `SetEachColors(permanentSet, colors...)`: Replaces colors for set.

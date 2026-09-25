@@ -516,3 +516,22 @@ func TestCollectionNoRegenerationComposition(t *testing.T) {
 		t.Fatal("accepted nil collection")
 	}
 }
+
+func TestBlockingRestrictionComposition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	body := dsl.Until(dsl.EndOfTurn, dsl.CantBeBlocked(target))
+	card := dsl.NewInstant("Blocking restriction", "", dsl.Spell(body, dsl.WithTargets(target)))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	info := dsl.InspectDefinition(body)
+	if info.Properties.Outcome != mage.OutcomeBenefit || len(info.Children) != 1 || info.Children[0].Role != "continuous-modification" {
+		t.Fatalf("metadata = %+v", info)
+	}
+	for _, subject := range []dsl.PermanentRef{nil, target} {
+		invalid := dsl.NewInstant("Invalid", "", dsl.Spell(dsl.Until(dsl.EndOfTurn, dsl.CantBeBlocked(subject))))
+		if err := mage.ValidateCardDefinition(invalid.Name(), invalid); err == nil {
+			t.Fatal("invalid subject accepted")
+		}
+	}
+}

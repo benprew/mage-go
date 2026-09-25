@@ -82,6 +82,10 @@
 // Use [DestroyEachWithoutRegeneration] when the instruction forbids regeneration.
 // This restriction applies to the action and does not change permanent keywords.
 //
+// Use [CantBeBlocked] with [Until] for a temporary blocking restriction.
+// It uses combat rules, so ability removal does not erase the restriction.
+// The subject keeps its captured incarnation; source departure does not end it.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

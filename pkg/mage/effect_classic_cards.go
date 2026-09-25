@@ -133,6 +133,3 @@ func SwordsToPlowsharesEffect() Effect {
 		GainLifeFromVar("victim.controller", "victim.power"),
 	)
 }
-
-// TawnosWandEffect makes a target creature unblockable until end of turn.
-func TawnosWandEffect() Effect { return MakeUnblockableUntilEndOfTurn() }

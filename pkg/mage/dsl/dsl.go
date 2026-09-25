@@ -381,7 +381,6 @@ var (
 	SindbadEffect                                = mage.SindbadEffect
 	SorceressQueenEffect                         = mage.SorceressQueenEffect
 	SwordsToPlowsharesEffect                     = mage.SwordsToPlowsharesEffect
-	TawnosWandEffect                             = mage.TawnosWandEffect
 	TheHiveEffect                                = mage.TheHiveEffect
 	ApplyToRandomPermanent                       = mage.ApplyToRandomPermanent
 	ApplyToRandomSpellOrPermanent                = mage.ApplyToRandomSpellOrPermanent

@@ -35,6 +35,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] **Aura Entry Tap**: Migrate Paralyze and Waterknot to typed entry triggers and attachment taps; retire `TapAttachedCreature`. Resolve departed and returned attachment identity with existing typed references. See the completed slice below.
 - [x] **Whimsy Random Tap**: Migrate the remaining random-tap branch to typed selection and tap; exclude phased-out candidates. See the completed slice below.
 - [x] **Temporary Regeneration Prohibition**: Migrate Hurr Jackal and Faerie Dragon's matching branch, retire `HurrJackalEffect`, and preserve prohibition through source departure and ability removal. See the completed slice below.
+- [x] **Tawnos’s Wand Blocking Restriction**: Add typed `CantBeBlocked`, migrate the Wand and Faerie Dragon’s matching branch, and retire `TawnosWandEffect`. Correct ability-removal and source-departure behavior; see the completed slice below.
 - [ ] **String-Bound Action Migrations**: Continue destruction, return, tap-or-untap, attachment, and other string-bound action migrations where exact typed forms exist.
 
 ## Engine Blockers
@@ -59,6 +60,10 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [x] Keep the collection no-regeneration prohibition on each destruction action; preserve permanent characteristics and simultaneous death snapshots.
 - [x] Correct singular typed, positional, step, and string-bound no-regeneration execution to use the action-scoped prohibition. Migrate Terror; see the completed slice below.
 - [ ] Migrate remaining no-regeneration callers before retiring positional exports: Abu Ja'far needs combat-opponent capture and simultaneous destruction; Detonate needs X-constrained targets and damage-source LKI; Aswan Jaguar needs a chosen-subtype target adapter. Crumble's saved-value migration is complete and the string-bound no-regeneration constructor is retired.
+
+### Temporary Blocking Restrictions
+- [x] Preserve resolved blocking prohibitions through ability removal and source departure. Use the existing combat-restriction storage, keeping printed unblockable abilities removable. `TestBlockingProhibitionSurvivesAbilityRemoval` failed before the fix.
+- [ ] Migrate the remaining `MakeUnblockableUntilEndOfTurn` callers (Dwarven Warriors, Suspicious Bookcase, and Teleport) after auditing their full definitions. The shared executor is corrected; the positional export remains.
 
 ### Untap Skipping
 - [ ] Audit Goblin Rock Sled's last-turn attack condition, then migrate its attack trigger before retiring `StunCreature`. Deep Spawn's optional upkeep mill payment remains open under the milling audit.
@@ -405,3 +410,22 @@ Oracle sources: `cards/arabian/ARN.json` and `cards/astral/PAST.json`; full regi
 No live callers or declarations of `HurrJackalEffect` remain outside negative compile fixtures. `ApplyToRandomPermanent` retains five Faerie Dragon callers and its engine test; it is not retired. Other random branches and broader continuous-effect audits remain open.
 
 Validation: failing card and engine regressions passed after their fixes; affected card packages; `go test ./cards/... ./pkg/mage/... -short -count=1` (including registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
+
+## Completed Slice: Tawnos’s Wand Blocking Restriction
+
+- [x] Add and export `CantBeBlocked(PermanentRef)` as a continuous modification, with typed subject inspection, validation, and player/collection compile-fail fixtures.
+- [x] Migrate Tawnos’s Wand and Faerie Dragon’s matching random branch; retire both author and engine exports of `TawnosWandEffect` and its redundant text-only test case.
+- [x] Correct the shared legacy blocking executor after a failing engine regression: retain the restriction through ability removal and source departure. Reuse `composedLayerEffect`, captured incarnations, durations, and existing combat-restriction storage.
+- [x] Exclude phased-out random candidates using the existing typed collection. Both ownership cases failed before migration because they consumed a random result with no eligible permanent.
+
+| Oracle clause / retired API and callers | Typed replacement and semantics | Evidence |
+| :--- | :--- | :--- |
+| Tawnos’s Wand: “{2}, {T}: Target creature with power 2 or less can't be blocked this turn.” / first `TawnosWandEffect` caller | `Activate(Costs(Mana("{2}"), TapCost(This)), Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature))`; typed creature target with `HasPowerLTE(2)`; either controller; target legality and power rechecked on resolution. A later power increase does not end the restriction. | Existing `TestTawnossWand` and `TestTawnossWandNegative`; `TestTawnosWandResolution` checks exact payment, power before/after resolution, returned and phased targets, source departure, ability removal, and expiry. |
+| Faerie Dragon: “{1}{G}{G}: Play a random effect.” / second helper caller | Preserve its action table. `ChooseRandomPermanent(MatchingPermanents(And(IsCreature, HasPowerLTE(2))), chosen)` followed by `Until(EndOfTurn, CantBeBlocked(From(chosen)))`; no target, so shroud does not exclude the choice. | `TestFaerieDragonWandMembership`: either controller, power boundary, noncreature, phased and empty choices, and random consumption. The old keyword-attribute assertion is replaced by actual block legality. |
+| Blocking restriction and lifetime | Store an empty allowed-blocker set in the existing combat-restriction service. The restriction is not a granted ability. New blockers must also obey it; returned subjects are new objects. Preserve beneficial effect metadata and subject inspection. No damage LKI is required. | `TestBlockingProhibitionSurvivesAbilityRemoval` failed for removal-after and source departure before the fix; both timestamp orders now pass. `TestTypedBlockingProhibitionLifetime` covers incarnation, phasing, control, power, ability removal, later blockers, and clone-local cleanup. `TestBlockingProhibitionPreservesPrintedAbilityRemoval` ensures printed unblockable abilities remain removable. `TestBlockingRestrictionComposition` covers author validation and metadata. |
+
+Oracle sources: `cards/antiquities/ATQ.json` and `cards/astral/PAST.json`; full registration comments are preserved. Faerie Dragon's Oracle does not enumerate its random action table; this slice preserves that table. Rules contract: repository Comprehensive Rules effective February 27, 2026, CR 400.7, 509.1b, and 611.2a–c.
+
+No live callers or declarations of `TawnosWandEffect` remain outside negative compile fixtures. `MakeUnblockableUntilEndOfTurn` remains for Dwarven Warriors, Suspicious Bookcase, and Teleport; its executor now uses the corrected captured restriction. Teleport's pre-existing casting-timing gap and the remaining caller migrations are not resolved here. `ApplyToRandomPermanent` retains four Faerie Dragon production callers and its engine test. Other legacy definitions and imports remain outside this slice.
+
+Validation: failing engine and phased-choice regressions passed after the fixes; affected card packages; `go test ./pkg/mage/... ./cards/... -short -count=1` (including universal registration validation and compile-fail fixtures); `make test`; `go build ./...`; `go vet ./...`; and `make lint` all passed with zero failures (lint: zero issues).
