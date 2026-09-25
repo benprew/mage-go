@@ -2196,3 +2196,43 @@ Validation: Secrets of Strixhaven package tests; focused shared contracts;
 `go test ./cards/... -short -count=1`; `go build ./...`;
 `go vet ./cards/secretsofstrixhaven`; `make test`; and `make lint` pass with
 zero failures (lint: zero issues).
+
+
+## Completed Slice: Cave People Temporary Effects
+
+- [x] Migrate the attack-trigger body to `Until(EndOfTurn, ModifyPT(This,
+  Fixed(1), Fixed(-2)))` through the author DSL.
+- [x] Migrate the mountainwalk activation to `Activate`, `Costs`,
+  `TargetPermanent`, `WithTargets`, and an explicit end-of-turn `GrantKeyword`.
+- [x] Match the full Oracle comment, including reminder text, mana cost, Human
+  subtype, and 1/4 characteristics against `data/4ED.json`.
+- [x] Audit existing target, payment, source capture, layer, and duration
+  contracts. No new constructor or engine fix is required.
+
+The attack trigger gives its captured source incarnation +1/-2 in layer 7c.
+It is mandatory and lasts through the end of the turn, not just combat.
+The activation costs `{1}{R}{R}` and tapping the source. It can target either
+player's creature, including Cave People itself. Target selection precedes
+payment; legality and incarnation are checked again at resolution. Mountainwalk
+is granted in layer 6 and lasts through cleanup even if Cave People leaves.
+A returned recipient is a new object. Rules contracts are CR 400.7, 602, 603,
+608.2b, 611.2, 613, and 702.14.
+
+`TestCavePeople` passes before and after migration, covering the attack boost,
+mountainwalk grant, and interaction with The Brute and Ironclaw Orcs. Shared
+`TestComposableKeywordSourceExit`, `TestComposableKeywordLayerOrder`,
+`TestTargetIncarnationAfterReturn`, `TestComposableContinuousCapture`,
+`TestComposableSelfPumpLifetime`, and `TestComposablePaymentAtomicity` pass.
+These declarative effects reuse established primitives and registration
+validation; no new simulation test is required.
+
+This completes one slice of the remaining string-bound action migrations and
+removes the creature file's last direct engine import. The attack event still
+uses `AttacksTrigger`; its typed event adapter remains separate work. Legacy
+helpers retain other callers, so no export is retired or engine blocker marked
+resolved.
+
+Validation: Fourth Edition package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/fourthedition`; `make test`; and `make lint` pass with zero
+failures (lint: zero issues).

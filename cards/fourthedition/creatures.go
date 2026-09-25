@@ -3,8 +3,6 @@ package fourthedition
 import (
 	"math/rand"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -284,23 +282,23 @@ func registerCreatures() {
 	// Cave People {1}{R}{R}
 	// Creature — Human
 	// 1/4
-	// Whenever Cave People attacks, it gets +1/-2 until end of turn.
-	// {1}{R}{R}, {T}: Target creature gains mountainwalk until end of turn.
+	// Whenever this creature attacks, it gets +1/-2 until end of turn.
+	// {1}{R}{R}, {T}: Target creature gains mountainwalk until end of turn. (It can't be blocked as long as defending player controls a Mountain.)
 	Register("Cave People", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Cave People", "{1}{R}{R}", 1, 4,
 			WithSubTypes("Human"),
 			WithAbility(
 				AttacksTrigger(
-					Boost(Fixed(1), Fixed(-2)).Targeting(ToSource()),
+					Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(-2))),
 					false,
 				),
 			),
-			WithActivatedAbility(
-				mage.GrantKeyword(Mountainwalk).Targeting(ToTarget()),
-				ManaCostOf("{1}{R}{R}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(
+				Costs(Mana("{1}{R}{R}"), TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, Mountainwalk)),
+				WithTargets(creature),
+			)),
 		)
 	})
 
