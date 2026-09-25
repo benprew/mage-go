@@ -1901,3 +1901,36 @@ Validation: Antiquities package tests; focused shared contracts;
 `go test ./cards/... -short -count=1` (including registration validation);
 `go build ./...`; `go vet ./cards/antiquities`; `make test`; and `make lint`
 pass with zero failures (lint: zero issues).
+
+## Completed Slice: Blighted Bat Haste Activation
+
+- [x] Migrate the complete Blighted Bat definition from `WithActivatedAbility`,
+  `GenericCost`, and the positional keyword helper to `Activate`, `Costs`,
+  `Mana`, and `Until(EndOfTurn, GrantKeyword(This, Haste))` through `pkg/mage/dsl`.
+- [x] Verify the full Oracle comment, mana cost, creature types, printed flying,
+  and 2/1 base characteristics against `data/JMP.json`.
+- [x] Audit payment, source identity, duration, and layer behavior against the
+  existing adapters. No engine fix or new constructor is required.
+
+The `{1}` activation has no target, tap cost, timing restriction, or activation
+limit. It grants haste in layer 6 to the captured source incarnation until
+cleanup. A returned card is a new object; phasing preserves the incarnation.
+The legacy helper already defaulted to end of turn; the typed definition makes
+that duration explicit. Printed flying remains separate.
+
+`TestBlightedBat_GainsHaste` and the shared `TestComposableKeywordSourceExit`,
+`TestComposableKeywordLayerOrder`, `TestComposableSelfPumpLifetime`, and
+`TestComposableContinuousCapture` pass. These contracts cover keyword grants,
+timestamp order, incarnation, phasing, expiry, and clone isolation. This simple
+declarative ability uses established primitives and universal registration
+validation, so no new simulation test is required. Rules contracts are CR 602,
+400.7, 611.2, and 613.
+
+This completes one slice of the remaining legacy action migrations. Other cards
+still use the legacy helpers and direct engine import, so no export is retired
+and no outstanding engine blocker is claimed resolved.
+
+Validation: Jumpstart package tests; focused shared contracts;
+`go test ./cards/... -short -count=1`; `go build ./...`;
+`go vet ./cards/jumpstart`; `make test`; and `make lint` pass with zero failures
+(lint: zero issues).

@@ -1961,10 +1961,8 @@ func registerCreatures() {
 		return NewCreature("Blighted Bat", "{2}{B}", 2, 1,
 			WithSubTypes("Zombie", "Bat"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				mage.GrantKeyword(Haste).Targeting(ToSource()),
-				GenericCost(1),
-			),
+			WithAbility(Activate(Costs(Mana("{1}")),
+				Until(EndOfTurn, GrantKeyword(This, Haste)))),
 		)
 	})
 
