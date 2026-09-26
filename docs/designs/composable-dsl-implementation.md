@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Artifact Tap Event Participants
+
+`ArtifactBecomesTapped().WithArtifact(binding).WithController(binding)` is a typed E event pattern for `WhenEvent` and `WhenEventModes` on battlefield permanents. The two captures are optional and independent. The pattern reuses `EvtTapped`, artifact type checks, pending-trigger capture, permanent-incarnation and player binding frames, and stack/game copying. It triggers once for an untapped-to-tapped artifact transition, including an opponent's artifact, and does not match nonartifacts, entering tapped, or a second tap. The controller is fixed at event time; a returned or phased-out artifact is absent from `From(binding)` at resolution. It declares no target. Registration rejects invalid and unbound captures, and the DSL type checks reject crossed binding roles.
+
+Haunting Wind's complete text in `data/ATQ.json` also requires an artifact ability-activation event without a tap cost and damage to the captured controller. This slice supplies only its tap-event participant contract; that card and all production callers remain unchanged. Its Antiquities gap record remains blocked. Synthetic tests first failed because the constructor was missing. They cover type and controller filtering, repeated taps, source and artifact phasing, artifact return, event-time player capture, pending source return, stack copying, game cloning, inspection, scope, and invalid declarations. The next dependency-ready E work is the artifact ability-activation pattern after a fresh contract audit; the P/B collection filter and simultaneous destruction for Vicious Rivalry also remain open.
+
+Focused `TestArtifactBecomesTapped` tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), the reference example build, and `git diff --check` pass. A fresh production search found no `ArtifactBecomesTapped` caller; legacy tap-event exports remain in use. No production card changed.
+
 ## Current Slice: Announced X Life-Payment Binding
 
 `LifePayXCostInto(paid)` is a typed contextual cost for an activated ability or a spell additional cost. It locks the announced X as a fixed life payment before the shared total-cost transaction validates and commits it. The committed amount enters the stack instance's number-binding frame for `FromNumber(paid)` at resolution. Zero and exact-life payments follow CR 119.4; an unpayable or failed total cost leaves the live life total and stack unchanged. Registration checks the binding and producer scope. Existing fixed `LifePayCostInto` and legacy callers remain.

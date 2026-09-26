@@ -839,6 +839,23 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `ArtifactBecomesTapped().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match any artifact when it changes from untapped to tapped. Both methods are optional. `WithArtifact` saves the tapped artifact's battlefield incarnation for `From`; `WithController` saves its controller at the event for `FromPlayer`. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The artifact is not a target. A saved artifact that leaves and returns, or phases out, is absent at resolution. Entering tapped and tapping an already tapped artifact do not match. For example:
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var tapped = dsl.BindPermanent("tapped artifact")
+    var controller = dsl.BindPlayer("tap controller")
+    var _ = dsl.NewEnchantment("Artifact watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.ArtifactBecomesTapped().WithArtifact(tapped).WithController(controller),
+            dsl.Sequence(
+                dsl.AddCounters(dsl.From(tapped), dsl.Charge, dsl.Fixed(1)),
+                dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1))))))
+
+    func main() {}
+    ```
   * `OpponentLandBecomesTapped().OfSubtype(string).WithLand(*PermanentBinding) EventPattern`: Match an opponent-controlled land when it changes from untapped to tapped. Both methods are optional. `OfSubtype` requires a valid land subtype at registration. `WithLand` saves the tapped land's battlefield incarnation for `From` in the trigger body. A land that leaves and returns, or phases out, is absent from that reference. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The condition uses the land's type, subtype, and controller when it becomes tapped. It does not target the land.
     ```go
     package main

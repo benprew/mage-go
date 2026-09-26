@@ -216,6 +216,7 @@ var (
 	AttachedControllerUpkeep  = mage.AttachedControllerUpkeep
 	AttachedBecomesTapped     = mage.AttachedBecomesTapped
 	OpponentLandBecomesTapped = mage.OpponentLandBecomesTapped
+	ArtifactBecomesTapped     = mage.ArtifactBecomesTapped
 	BecomesTapped             = mage.BecomesTapped
 	TurnStepBegins            = mage.TurnStepBegins
 	EachEndStep               = mage.EachEndStep
