@@ -856,6 +856,20 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `ArtifactAbilityActivatedWithoutTapCost().AttachedToSource().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match an activated ability of a battlefield artifact when its activation cost has no `{T}`. `AttachedToSource` optionally requires the artifact to be attached to the trigger source. Either binding is optional. `WithArtifact` saves the battlefield incarnation for `From`; `WithController` saves its controller at activation for `FromPlayer`. A sacrificed artifact has no live permanent reference at resolution, but its saved controller remains available. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var controller = dsl.BindPlayer("artifact controller")
+    var _ = dsl.NewEnchantment("Ability watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.ArtifactAbilityActivatedWithoutTapCost().WithController(controller),
+            dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1)))))
+
+    func main() {}
+    ```
   * `OpponentLandBecomesTapped().OfSubtype(string).WithLand(*PermanentBinding) EventPattern`: Match an opponent-controlled land when it changes from untapped to tapped. Both methods are optional. `OfSubtype` requires a valid land subtype at registration. `WithLand` saves the tapped land's battlefield incarnation for `From` in the trigger body. A land that leaves and returns, or phases out, is absent from that reference. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The condition uses the land's type, subtype, and controller when it becomes tapped. It does not target the land.
     ```go
     package main

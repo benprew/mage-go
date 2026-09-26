@@ -4125,6 +4125,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			Type:     EvtAbilityActivated,
 			SourceID: perm.ID(),
 			PlayerID: playerID,
+			Flag:     true,
 		})
 		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		return nil

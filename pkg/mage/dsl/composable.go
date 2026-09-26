@@ -211,17 +211,18 @@ var (
 	PermanentDies                      = mage.PermanentDies
 	CreatureDies                       = mage.CreatureDies
 	// AtNext creates a one-shot delayed trigger that executes at a future turn step.
-	AtNext                    = mage.AtNext
-	AtNextModes               = mage.AtNextModes
-	AttachedControllerUpkeep  = mage.AttachedControllerUpkeep
-	AttachedBecomesTapped     = mage.AttachedBecomesTapped
-	OpponentLandBecomesTapped = mage.OpponentLandBecomesTapped
-	ArtifactBecomesTapped     = mage.ArtifactBecomesTapped
-	BecomesTapped             = mage.BecomesTapped
-	TurnStepBegins            = mage.TurnStepBegins
-	EachEndStep               = mage.EachEndStep
-	YourEndStep               = mage.YourEndStep
-	EachEndOfCombat           = mage.EachEndOfCombat
+	AtNext                                 = mage.AtNext
+	AtNextModes                            = mage.AtNextModes
+	AttachedControllerUpkeep               = mage.AttachedControllerUpkeep
+	AttachedBecomesTapped                  = mage.AttachedBecomesTapped
+	OpponentLandBecomesTapped              = mage.OpponentLandBecomesTapped
+	ArtifactBecomesTapped                  = mage.ArtifactBecomesTapped
+	ArtifactAbilityActivatedWithoutTapCost = mage.ArtifactAbilityActivatedWithoutTapCost
+	BecomesTapped                          = mage.BecomesTapped
+	TurnStepBegins                         = mage.TurnStepBegins
+	EachEndStep                            = mage.EachEndStep
+	YourEndStep                            = mage.YourEndStep
+	EachEndOfCombat                        = mage.EachEndOfCombat
 	// At constructs a recurring turn-step triggered ability (e.g. YourUpkeep, EachEndStep).
 	At                      = mage.At
 	YourFirstMainPhase      = mage.YourFirstMainPhase
