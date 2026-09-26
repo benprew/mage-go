@@ -31,6 +31,7 @@ type permanentTappedCondition struct {
 }
 
 type permanentAttackingCondition struct{ subject PermanentRef }
+type permanentBlockingCondition struct{ subject PermanentRef }
 
 // PermanentIsAttacking checks current combat membership for the selected permanent.
 func PermanentIsAttacking(subject PermanentRef) StateCondition {
@@ -63,6 +64,43 @@ func (c permanentAttackingCondition) inspectDefinition() definitionNode {
 		n.Text = "source is attacking"
 	case attachedPermanentRef:
 		n.Text = "attached permanent is attacking"
+	default:
+		n.problem = "state condition requires This or AttachedPermanent"
+	}
+	return n
+}
+
+// PermanentIsBlocking checks current combat membership for the selected permanent.
+func PermanentIsBlocking(subject PermanentRef) StateCondition {
+	return permanentBlockingCondition{subject: subject}
+}
+
+func (permanentBlockingCondition) stateCondition() {}
+func (c permanentBlockingCondition) checkState(g GameReader, ctx StateContext) bool {
+	source := g.FindPermanent(ctx.SourceID)
+	if source == nil || source.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && source.incarnationID != ctx.SourceIncarnation) {
+		return false
+	}
+	p := source
+	switch c.subject.(type) {
+	case sourceRef:
+	case attachedPermanentRef:
+		p = g.FindPermanent(source.AttachedTo)
+		if p == nil || source.attachedIncarnation == uuid.Nil || p.incarnationID != source.attachedIncarnation {
+			return false
+		}
+	default:
+		return false
+	}
+	return !p.PhasedOut && g.IsBlockingIncarnation(p.ID(), p.incarnationID)
+}
+func (c permanentBlockingCondition) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "state-condition", battlefieldSource: true}
+	switch c.subject.(type) {
+	case sourceRef:
+		n.Text = "source is blocking"
+	case attachedPermanentRef:
+		n.Text = "attached permanent is blocking"
 	default:
 		n.problem = "state condition requires This or AttachedPermanent"
 	}

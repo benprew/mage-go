@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Referenced Permanent Blocking State
+
+`PermanentIsBlocking(PermanentRef) StateCondition` checks current blocker membership for `This` or `AttachedPermanent` on a battlefield ability. It works in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState`. The sealed role rejects player references at compile time; registration rejects target and saved references in state contexts. It uses the existing blocker-incarnation service, including ordinary declarations and creatures put onto the battlefield blocking. An absent, phased-out, removed, or returned object does not match. The attached form requires the Aura and host incarnations. Clone combat state stays independent. No production card or legacy export changed.
+
+The focused test first failed because the constructor was absent. Synthetic engine and DSL tests cover declaration, removal, attachment, static evaluation, phasing, leave and return, clone isolation, inspection, registration, and compile-time role rejection. Production cards still use legacy blocking conditions and filters or need additional policy such as combat-opponent selection; their gap records remain open. A fresh search found no `PermanentIsBlocking` production use. The next dependency-ready slice is T recorded target-group boundaries, after a fresh audit.
+
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. The standalone public DSL test validates the documented Aura form. No JSON gap record changed because no production card was wired.
+
 ## Current Slice: Referenced Permanent Attacking State
 
 `PermanentIsAttacking(PermanentRef) StateCondition` checks current attacking status for `This` or `AttachedPermanent` on a battlefield ability. It is pure and works in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState`. The combat service now records attacker incarnations on normal and simulated declarations and on creatures that enter attacking. A phased-out, absent, removed, or returned object does not satisfy the condition. The attached form checks both the Aura and host incarnations. Registration rejects target and saved references in this state context; the sealed `PermanentRef` role rejects player references at compile time. Legacy card-ID combat queries and production callers remain.
