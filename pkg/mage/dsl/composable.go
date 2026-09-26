@@ -278,20 +278,21 @@ var (
 	// Static installs static continuous effects and rules on a permanent.
 	Static = mage.Static
 	// AddCounters reads a typed amount before the counter action.
-	AddCounters                              = mage.AddCountersTo
-	RemoveAllCounters                        = mage.RemoveAllCounters
-	RemoveCountersFrom                       = mage.RemoveCountersFrom
-	SourceHasCounters                        = mage.SourceHasCounters
-	SourceTappedCondition                    = mage.SourceTappedCondition
-	PermanentIsTapped                        = mage.PermanentIsTapped
-	PermanentIsAttacking                     = mage.PermanentIsAttacking
-	PermanentIsBlocking                      = mage.PermanentIsBlocking
-	PermanentIsUntapped                      = mage.PermanentIsUntapped
-	SourceUntappedCondition                  = mage.SourceUntappedCondition
-	SourceBlockingCondition                  = mage.SourceBlockingCondition
-	SourceAttackedThisTurnCondition          = mage.SourceAttackedThisTurnCondition
-	SourceAttackedOrBlockedThisTurnCondition = mage.SourceAttackedOrBlockedThisTurnCondition
-	IsYourTurn                               = mage.IsYourTurn
+	AddCounters                                = mage.AddCountersTo
+	RemoveAllCounters                          = mage.RemoveAllCounters
+	RemoveCountersFrom                         = mage.RemoveCountersFrom
+	SourceHasCounters                          = mage.SourceHasCounters
+	SourceTappedCondition                      = mage.SourceTappedCondition
+	PermanentIsTapped                          = mage.PermanentIsTapped
+	PermanentIsAttacking                       = mage.PermanentIsAttacking
+	PermanentIsBlocking                        = mage.PermanentIsBlocking
+	PermanentIsUntapped                        = mage.PermanentIsUntapped
+	SourceUntappedCondition                    = mage.SourceUntappedCondition
+	SourceBlockingCondition                    = mage.SourceBlockingCondition
+	SourceAttackedThisTurnCondition            = mage.SourceAttackedThisTurnCondition
+	SourceAttackedOrBlockedThisTurnCondition   = mage.SourceAttackedOrBlockedThisTurnCondition
+	SourceAttackedOrBlockedThisCombatCondition = mage.SourceAttackedOrBlockedThisCombatCondition
+	IsYourTurn                                 = mage.IsYourTurn
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
 	GainLife = mage.GainLifeFor
 	LoseLife = mage.LoseLifeFor

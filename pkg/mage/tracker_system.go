@@ -18,6 +18,7 @@ type TurnTrackers struct {
 	permDamageReceived           map[uuid.UUID]int
 	attackedOrBlocked            map[uuid.UUID]bool
 	attackedOrBlockedIncarnation map[uuid.UUID]uuid.UUID
+	combatAttackedOrBlocked      map[uuid.UUID]uuid.UUID
 	playerCastSpell              map[uuid.UUID]bool
 	playerAttacked               map[uuid.UUID]bool
 	cardsDrawn                   map[uuid.UUID]int
@@ -62,6 +63,8 @@ func NewTurnTrackers() TurnTrackers {
 // RecordEvent updates turn trackers from an emitted GameEvent.
 func (t *TurnTrackers) RecordEvent(evt *GameEvent) {
 	switch evt.Type {
+	case EvtBeginCombat:
+		t.ResetCombatHistory()
 	case EvtZoneChange:
 		if evt.ToZone != ZoneExile || evt.SourceID == uuid.Nil {
 			return
@@ -295,6 +298,7 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	t.permDamageReceived = nil
 	t.attackedOrBlocked = nil
 	t.attackedOrBlockedIncarnation = nil
+	t.combatAttackedOrBlocked = nil
 	t.playerCastSpell = nil
 	t.playerAttacked = nil
 	t.cardsDrawn = nil
@@ -360,6 +364,18 @@ func (t *TurnTrackers) RecordAttackedOrBlockedIncarnation(permID, incarnation uu
 		t.attackedOrBlockedIncarnation = make(map[uuid.UUID]uuid.UUID)
 	}
 	t.attackedOrBlockedIncarnation[permID] = incarnation
+	if t.combatAttackedOrBlocked == nil {
+		t.combatAttackedOrBlocked = make(map[uuid.UUID]uuid.UUID)
+	}
+	t.combatAttackedOrBlocked[permID] = incarnation
+}
+
+func (t *TurnTrackers) ResetCombatHistory() {
+	t.combatAttackedOrBlocked = nil
+}
+
+func (t *TurnTrackers) PermanentAttackedOrBlockedThisCombat(permID, incarnation uuid.UUID) bool {
+	return incarnation != uuid.Nil && t.combatAttackedOrBlocked[permID] == incarnation
 }
 
 func (t *TurnTrackers) PermanentAttackedOrBlockedIncarnation(permID, incarnation uuid.UUID) bool {
@@ -451,6 +467,7 @@ func (t *TurnTrackers) Clone() TurnTrackers {
 		permDamageReceived:           cloneUUIDMap(t.permDamageReceived),
 		attackedOrBlocked:            cloneUUIDMap(t.attackedOrBlocked),
 		attackedOrBlockedIncarnation: maps.Clone(t.attackedOrBlockedIncarnation),
+		combatAttackedOrBlocked:      maps.Clone(t.combatAttackedOrBlocked),
 		playerCastSpell:              cloneUUIDMap(t.playerCastSpell),
 		playerAttacked:               cloneUUIDMap(t.playerAttacked),
 		cardsDrawn:                   cloneUUIDMap(t.cardsDrawn),

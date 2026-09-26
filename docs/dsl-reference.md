@@ -248,6 +248,16 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `PermanentIsBlocking(subject PermanentRef) StateCondition`: Check whether `This` or `AttachedPermanent` is in combat as a blocker now. A creature put onto the battlefield blocking matches even though it did not block for trigger purposes. An absent, phased-out, removed, or returned object does not match. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects targets and saved bindings in this state context.
 * `SourceAttackedThisTurnCondition()`: The current battlefield source was declared as an attacker this turn. It returns false before an attack, after the source leaves or phases out, or after it returns as a new object. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability.
 * `SourceAttackedOrBlockedThisTurnCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker this turn. It uses the source incarnation and returns false if the source is absent, phased out, or returned as a new object. Turn cleanup clears the history. Use it in pure state contexts such as `IfState`, `While`, `WhenState`, `WithInterveningIf`, and `ActivationIf` on a permanent ability. It does not mean "this combat".
+* `SourceAttackedOrBlockedThisCombatCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker in the current combat. It returns false before a declaration, after the combat phase, for a phased-out or absent source, and after that card returns as a new object. A later combat in the same turn starts with no combat history. Use it in `IfState`, `While`, `WhenState`, `WithInterveningIf`, or `ActivationIf` on a permanent ability. It reads declarations, so a creature put onto the battlefield attacking or blocking does not match.
+
+```go
+func combatHistoryWatcher() dsl.Card {
+    return dsl.NewCreature("Combat History Watcher", "{2}", 2, 2,
+        dsl.WithAbility(dsl.At(dsl.EachEndOfCombat,
+            dsl.IfState(dsl.SourceAttackedOrBlockedThisCombatCondition(),
+                dsl.GainLife(dsl.You, dsl.Fixed(1))))))
+}
+```
 
 ```go
 func historyWatcher() dsl.Card {

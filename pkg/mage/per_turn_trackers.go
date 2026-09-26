@@ -24,6 +24,10 @@ func (g *Game) HasAttackedOrBlockedThisTurnIncarnation(permID, incarnation uuid.
 	return g.trackers.Turn.PermanentAttackedOrBlockedIncarnation(permID, incarnation)
 }
 
+func (g *Game) HasAttackedOrBlockedThisCombatIncarnation(permID, incarnation uuid.UUID) bool {
+	return g.trackers.Turn.PermanentAttackedOrBlockedThisCombat(permID, incarnation)
+}
+
 // PlayerCardsDrawnThisTurn returns the number of cards the given player has
 // drawn this turn.
 func (g *Game) PlayerCardsDrawnThisTurn(playerID uuid.UUID) int {
