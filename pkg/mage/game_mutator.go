@@ -1018,6 +1018,7 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 	g.fireNewBlockerPairs(pairsBefore)
 	g.fireNewBlockerGroups(pairsBefore)
 	g.fireNewlyBlockedAttackers(blockedBefore)
+	g.fireUnblockedAttackers()
 
 	// Mirror doDeclareBlockers: fire EvtBlockersDecl once after all blockers are
 	// assigned, then resolve the resulting triggers. Without this, combat

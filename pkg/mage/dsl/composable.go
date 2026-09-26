@@ -185,6 +185,7 @@ var (
 	LeavesBattlefield               = mage.LeavesBattlefield
 	SpellCast                       = mage.SpellCast
 	Attacks                         = mage.Attacks
+	AttacksUnblocked                = mage.AttacksUnblocked
 	Blocks                          = mage.Blocks
 	BecomesBlocked                  = mage.BecomesBlocked
 	BecomesBlockedBy                = mage.BecomesBlockedBy

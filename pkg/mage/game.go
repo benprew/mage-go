@@ -587,6 +587,19 @@ func (g *Game) attackerIsBlocked(attackerID uuid.UUID) bool {
 	return false
 }
 
+func (g *Game) fireUnblockedAttackers() {
+	for _, group := range g.combat.Groups {
+		if group.Blocked || !g.combat.IsAttacking(group.AttackerID) {
+			continue
+		}
+		attacker := g.FindPermanent(group.AttackerID)
+		if attacker == nil {
+			continue
+		}
+		g.FireEvent(GameEvent{Type: EvtAttacksUnblocked, SourceID: attacker.ID(), PlayerID: attacker.ControllerID(), TargetID: group.DefenderID})
+	}
+}
+
 func (g *Game) blockedAttackersBeforeDeclaration() map[uuid.UUID]bool {
 	before := make(map[uuid.UUID]bool, len(g.combat.Groups))
 	for _, group := range g.combat.Groups {
@@ -3291,6 +3304,7 @@ func (g *Game) doDeclareBlockers() {
 		g.fireNewBlockerPairs(pairsBefore)
 		g.fireNewBlockerGroups(pairsBefore)
 		g.fireNewlyBlockedAttackers(blockedBefore)
+		g.fireUnblockedAttackers()
 		g.FireEvent(GameEvent{
 			Type:     EvtBlockersDecl,
 			PlayerID: nonActive.PlayerID(),
@@ -3363,6 +3377,7 @@ func (g *Game) doDeclareBlockers() {
 	g.fireNewBlockerPairs(pairsBefore)
 	g.fireNewBlockerGroups(pairsBefore)
 	g.fireNewlyBlockedAttackers(blockedBefore)
+	g.fireUnblockedAttackers()
 
 	// Fire EvtBlockersDecl once after all blockers are assigned
 	g.FireEvent(GameEvent{

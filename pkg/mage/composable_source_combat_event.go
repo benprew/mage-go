@@ -4,6 +4,7 @@ import . "github.com/benprew/mage-go/pkg/mage/core"
 
 type sourceCombatEventPattern struct {
 	blocking          bool
+	unblocked         bool
 	defender          *PlayerBinding
 	captureDefender   bool
 	duplicateDefender bool
@@ -12,6 +13,11 @@ type sourceBecomesBlockedPattern struct{}
 
 // Attacks matches the source when it is declared as an attacker.
 func Attacks(sourceRef) sourceCombatEventPattern { return sourceCombatEventPattern{} }
+
+// AttacksUnblocked matches an attacker after legal blockers are declared.
+func AttacksUnblocked(sourceRef) sourceCombatEventPattern {
+	return sourceCombatEventPattern{unblocked: true}
+}
 
 // WithDefendingPlayer saves the player defending against the source attack.
 func (p sourceCombatEventPattern) WithDefendingPlayer(binding *PlayerBinding) sourceCombatEventPattern {
@@ -44,6 +50,9 @@ func (p sourceCombatEventPattern) makeTrigger(effect ResolvingEffect) *GenericTr
 	if p.blocking {
 		return BlocksTrigger(effect, false)
 	}
+	if p.unblocked {
+		return NewTriggered(EvtAttacksUnblocked, false, effect).SetConditionData(EventSourceIsSelf{})
+	}
 	return AttacksTrigger(effect, false)
 }
 
@@ -51,6 +60,8 @@ func (p sourceCombatEventPattern) inspectDefinition() definitionNode {
 	label := "source attacks"
 	if p.blocking {
 		label = "source blocks"
+	} else if p.unblocked {
+		label = "source attacks unblocked"
 	}
 	n := definitionNode{Role: "event-pattern", Text: label, battlefieldSource: true}
 	if p.captureDefender {

@@ -651,6 +651,15 @@ Triggers on rules events dispatched by the engine:
             dsl.GainLife(dsl.You, dsl.Fixed(1)))))
     ```
   * `BecomesBlocked(This)`: Source first becomes blocked in combat. It matches once even when multiple creatures block it, and also matches when a creature enters blocking an unblocked source. It is available in `WhenEvent` and `WhenEventModes` on a battlefield source. It does not bind or target a blocker.
+  * `AttacksUnblocked(This)`: Source is attacking and no creature blocks it when legal blocker declarations finish. A creature that entered attacking can match. Removing every blocker from an already blocked creature does not make it match. Use `.WithDefendingPlayer(*PlayerBinding)` to save the event-time defending player. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. For example:
+
+    ```go
+    defender := dsl.BindPlayer("defender")
+    ability := dsl.WhenEvent(
+        dsl.AttacksUnblocked(dsl.This).WithDefendingPlayer(defender),
+        dsl.Draw(dsl.FromPlayer(defender), dsl.Fixed(1)),
+    )
+    ```
   * `BecomesBlockedBy(This)`: Source becomes blocked by a creature. It matches once for each new attacker and blocker pair, including a creature that enters blocking. Add `.OfSubtype(string)` to require a creature subtype at the event. Add `.WithBlocker(*PermanentBinding)` to save that blocker's battlefield incarnation for the trigger body. The saved blocker is not a target and becomes absent if it leaves and returns or phases out. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield source.
 
     `BlocksOrBecomesBlockedBy(This).OfSubtype(string)` matches one group when the source blocks or becomes blocked by one or more creatures of that subtype. It checks the other creatures at event detection and triggers once for a group with several matches. A creature put onto the battlefield blocking can cause the attacker to match, but it did not itself block. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature.

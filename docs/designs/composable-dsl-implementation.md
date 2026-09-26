@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Unblocked-Attacker Event
+
+`AttacksUnblocked(This)` is a sealed `EventPattern` for `WhenEvent` and `WhenEventModes` on a battlefield source. The engine sends `core.EvtAttacksUnblocked` once for each live attacker that has no legal blocker after blocker declaration settles. The event includes creatures that entered attacking and records the defending player in `TargetID`. `.WithDefendingPlayer(*PlayerBinding)` saves that player in the trigger's instance-local frame. Existing `EvtBlockersDecl`, attack events, and legacy callers remain compatible. The pattern supplies no optional sacrifice or target declaration.
+
+Mindstab Thrull and Necrite requirements were checked against `data/FEM.json` and the Fallen Empires inventory and gap record. Their optional sacrifice, conditional effect, Necrite target, and production wiring remain open; no gap record is closed. The focused contract first failed because `AttacksUnblocked` was absent. It now covers legal blocker settlement in normal and simulated declarations, event-time defender capture, a blocked attacker whose blocker leaves, phased source absence, source return, stack copy, clone isolation, registration errors, and a compile-time role error. No production card was changed. The next dependency-ready slice is the T recorded target-group boundary or the E attack-batch event pattern, after a fresh audit.
+
+`go test ./pkg/mage -run '^TestUnblockedAttack' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. A fresh card search finds no `AttacksUnblocked` production declaration. Legacy attack and blocker completion callers remain; this adapter does not make those cards complete.
+
 ## Current Slice: Attack Defending-Player Capture
 
 `Attacks(This).WithDefendingPlayer(*PlayerBinding)` saves the defending player from the declaration event for `WhenEvent` and `WhenEventModes`. Both normal and simulated attack declarations now put the defending player in `EvtDeclaredAttacker.TargetID`; the trigger captures that event value in its own resolution frame. This adds no target, attack-batch pattern, unblocked-after-blockers pattern, or production card wiring. Existing `Attacks(This)` and legacy exports remain. The engine's two-player attack service supplies a player defender. A future player-or-planeswalker recipient binding needs a distinct typed role.

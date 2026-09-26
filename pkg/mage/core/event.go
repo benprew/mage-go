@@ -46,6 +46,7 @@ const (
 	EvtCreatureBecomesBlocked // SourceID is the attacker when it first becomes blocked (CR 509.3c).
 	EvtCreatureBlockedBy      // SourceID is the attacker and TargetID is one new blocker (CR 509.3d).
 	EvtBlockerGroup           // SourceID is the creature. RelatedIDs are the new creatures that it blocks or that block it. Flag is true when the source blocks.
+	EvtAttacksUnblocked       // SourceID is an attacker that is unblocked after blockers are declared. TargetID is its defending player.
 )
 
 // GameEvent carries data about a game event.
