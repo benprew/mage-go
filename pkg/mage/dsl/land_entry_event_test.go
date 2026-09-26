@@ -29,3 +29,17 @@ func TestLandEntrySubtypeDSL(t *testing.T) {
 		t.Fatalf("inspection: %+v", got)
 	}
 }
+
+func TestLandEntryActorDSL(t *testing.T) {
+	actor := dsl.BindPlayer("actor")
+	controller := dsl.BindPlayer("controller")
+	pattern := dsl.LandEnters().OfSubtype("Swamp").WithActor(actor).WithController(controller)
+	card := dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(pattern,
+		dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(actor), dsl.Fixed(3)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	if got := dsl.InspectDefinition(pattern); got.Role != "event-pattern" {
+		t.Fatalf("inspection: %+v", got)
+	}
+}

@@ -59,6 +59,7 @@ type GameEvent struct {
 	Type       EventType
 	SourceID   uuid.UUID
 	TargetID   uuid.UUID
+	ActorID    uuid.UUID
 	RelatedIDs []uuid.UUID
 	PlayerID   uuid.UUID
 	Amount     int

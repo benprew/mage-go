@@ -177,7 +177,7 @@ func ExileTargetReturnAtEndStep(onReturn ReturnedPermanentModifier) Effect {
 					if !ok {
 						return nil
 					}
-					newPerm := g.PutOnBattlefield(card, owner)
+					newPerm := g.PutOnBattlefieldBy(card, owner, controller)
 					if newPerm != nil && onReturn != nil {
 						onReturn(g, newPerm)
 					}

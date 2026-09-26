@@ -48,7 +48,7 @@ func PandorasBoxEffect() Effect {
 			token := NewToken(copySource.Name(), copySource.Power(), copySource.Toughness(), copySource.Types(), copySource.SubTypes())
 			token.CloneFrom(copySource)
 			token.SetOwner(player.PlayerID())
-			g.PutOnBattlefield(token, player.PlayerID())
+			g.PutOnBattlefieldBy(token, player.PlayerID(), player.PlayerID())
 		}
 		return nil
 	})

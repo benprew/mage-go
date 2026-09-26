@@ -473,7 +473,7 @@ func (*returnFromGraveyardEffect) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil // target gone
 	}
-	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	ctx.Game.PutOnBattlefieldBy(card, ctx.Controller, ctx.Controller)
 	return nil
 }
 
@@ -497,7 +497,7 @@ func returnGraveyardCardToBattlefield(g *Game, cardID, controller uuid.UUID) {
 	if !ok {
 		return
 	}
-	g.PutOnBattlefield(card, controller)
+	g.PutOnBattlefieldBy(card, controller, controller)
 }
 
 func graveyardCardCanEnter(g *Game, card Card) bool {
@@ -557,7 +557,7 @@ func (*returnSourceFromGraveyardToBattlefieldEffect) Apply(ctx *EffectContext) e
 	// was queued.
 	for _, p := range ctx.Game.AllPlayers() {
 		if card, ok := ctx.Game.MoveFromGraveyard(p.PlayerID(), ctx.SourceID, ZoneBattlefield); ok {
-			ctx.Game.PutOnBattlefield(card, p.PlayerID())
+			ctx.Game.PutOnBattlefieldBy(card, p.PlayerID(), ctx.Controller)
 			return nil
 		}
 	}
@@ -706,7 +706,7 @@ func (e *putFromHandOntoBattlefieldEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	if _, ok := p.RemoveFromHand(chosen.ID()); ok {
-		ctx.Game.PutOnBattlefield(chosen, ctx.Controller)
+		ctx.Game.PutOnBattlefieldBy(chosen, ctx.Controller, ctx.Controller)
 	}
 	return nil
 }
@@ -741,7 +741,7 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	}
 	p.SetLibrary(newLib)
 	p.ShuffleLibrary()
-	ctx.Game.PutOnBattlefield(card, ctx.Controller)
+	ctx.Game.PutOnBattlefieldBy(card, ctx.Controller, ctx.Controller)
 	return nil
 }
 

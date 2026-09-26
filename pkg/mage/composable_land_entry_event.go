@@ -13,6 +13,9 @@ type landEntersPattern struct {
 	controller          *PlayerBinding
 	captureController   bool
 	duplicateController bool
+	actor               *PlayerBinding
+	captureActor        bool
+	duplicateActor      bool
 }
 
 // LandEnters matches each land that enters the battlefield.
@@ -36,6 +39,15 @@ func (p landEntersPattern) WithController(binding *PlayerBinding) landEntersPatt
 	return p
 }
 
+// WithActor saves the player who caused the land to enter.
+func (p landEntersPattern) WithActor(binding *PlayerBinding) landEntersPattern {
+	if p.captureActor {
+		p.duplicateActor = true
+	}
+	p.actor, p.captureActor = binding, true
+	return p
+}
+
 func (landEntersPattern) eventPattern() {}
 
 func (p landEntersPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
@@ -46,7 +58,16 @@ func (p landEntersPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered
 	if p.filterSubtype && isLandSubtype(p.subtype) {
 		trigger.AndConditionData(EventSourceHasSubType{SubType: p.subtype})
 	}
+	if p.captureActor {
+		trigger.AndConditionData(entryActorKnown{})
+	}
 	return trigger
+}
+
+type entryActorKnown struct{}
+
+func (entryActorKnown) CheckTriggerCond(event *GameEvent, observer GameReader, _, _ uuid.UUID) bool {
+	return observer.GetPlayer(event.ActorID) != nil
 }
 
 func (p landEntersPattern) inspectDefinition() definitionNode {
@@ -61,20 +82,37 @@ func (p landEntersPattern) inspectDefinition() definitionNode {
 		if p.controller == nil || p.duplicateController {
 			n.problem = "land entry event: supply one controller binding"
 		} else {
-			n.bindingWrite = p.controller
+			n.bindingWrites = append(n.bindingWrites, p.controller)
 			n.children = append(n.children, definitionEdge{"controller", &eventPlayerCapture{binding: p.controller}})
 		}
+	}
+	if p.captureActor {
+		if p.actor == nil || p.duplicateActor {
+			n.problem = "land entry event: supply one actor binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.actor)
+			n.children = append(n.children, definitionEdge{"actor", &eventPlayerCapture{binding: p.actor}})
+		}
+	}
+	if p.captureActor && p.captureController && p.actor == p.controller && p.actor != nil {
+		n.problem = "land entry event: actor and controller need different bindings"
 	}
 	return n
 }
 
 func (p landEntersPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.captureController {
+	if !p.captureController && !p.captureActor {
 		return nil
 	}
-	land := observer.FindPermanent(event.SourceID)
-	if land == nil {
-		return nil
+	var captures []Effect
+	if p.captureController {
+		land := observer.FindPermanent(event.SourceID)
+		if land != nil {
+			captures = append(captures, &eventPlayerCapture{binding: p.controller, player: land.ControllerID()})
+		}
 	}
-	return []Effect{&eventPlayerCapture{binding: p.controller, player: land.ControllerID()}}
+	if p.captureActor {
+		captures = append(captures, &eventPlayerCapture{binding: p.actor, player: event.ActorID})
+	}
+	return captures
 }

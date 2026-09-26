@@ -977,7 +977,7 @@ Triggers on rules events dispatched by the engine:
     ```
 
   * `CreatureDies()`: Any creature dies.
-  * `LandEnters().OfSubtype(string).WithController(*PlayerBinding)`: Match a land entering the battlefield, optionally filter by one land subtype, and optionally save its controller at entry. Both methods are optional. Registration rejects an empty, invalid, or repeated subtype. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding is a player, not a target, and remains fixed after the land or trigger source leaves. For example:
+  * `LandEnters().OfSubtype(string).WithActor(*PlayerBinding).WithController(*PlayerBinding)`: Match a land entering the battlefield. Each method is optional. `OfSubtype` filters by one land subtype. `WithActor` saves the player who put the land onto the battlefield; `WithController` saves its controller at entry. The two players can differ. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. A saved player remains fixed after the land or trigger source leaves. Registration rejects an invalid subtype, missing or repeated binding, or one binding used for both players. An entry without a known actor does not match a pattern with `WithActor`. For example:
 
     ```go
     package example
@@ -985,14 +985,14 @@ Triggers on rules events dispatched by the engine:
     import "github.com/benprew/mage-go/pkg/mage/dsl"
 
     func swampWatcher() dsl.Card {
-        controller := dsl.BindPlayer("entering land controller")
+        actor := dsl.BindPlayer("entry actor")
         return dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.LandEnters().OfSubtype("Swamp").WithController(controller),
-            dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.Fixed(2)))))
+            dsl.LandEnters().OfSubtype("Swamp").WithActor(actor),
+            dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(actor), dsl.Fixed(2)))))
     }
     ```
 
-    This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It captures the entering Swamp's controller, which can differ from its owner. It does not identify a player who instructed another player's land to enter.
+    This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. `PutOnBattlefieldBy(card, controller, actor)` supplies the actor for an effect entry; normal land play supplies its player. The existing `PutOnBattlefield(card, controller)` does not supply an actor.
   * `PermanentDies()`: Any permanent moves from the battlefield to a graveyard. Add `.OfType(core.TypeLand)` or another permanent card type to test the departing object's last-known type. `WithController`, `WithOwner`, and `Nontoken` use the same event-time captures and filters as creature-death patterns. The source must be a battlefield permanent. This pattern is valid in `WhenEvent` and `WhenEventModes` and declares no target. `OfType` accepts creature, land, artifact, enchantment, or planeswalker; registration rejects other types and repeated type filters.
     ```go
     former := dsl.BindPlayer("former land controller")

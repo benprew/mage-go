@@ -350,16 +350,21 @@ func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
-	return g.putOnBattlefield(card, controller, nil, uuid.Nil)
+	return g.putOnBattlefield(card, controller, uuid.Nil, nil, uuid.Nil)
 }
 
-func (g *Game) putOnBattlefield(card Card, controller uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
+// PutOnBattlefieldBy records the player who puts the card onto the battlefield.
+func (g *Game) PutOnBattlefieldBy(card Card, controller, actor uuid.UUID) *Permanent {
+	return g.putOnBattlefield(card, controller, actor, nil, uuid.Nil)
+}
+
+func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
 	perm := g.prepareBattlefieldEntry(card, controller, colors)
 	if perm == nil {
 		return nil
 	}
 	g.registerBattlefieldEntry(perm, colors, colorSourceID)
-	g.completeBattlefieldEntry(perm, controller)
+	g.completeBattlefieldEntry(perm, controller, actor)
 	return perm
 }
 
@@ -374,7 +379,7 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 		g.registerBattlefieldEntry(perm, nil, uuid.Nil)
 	}
 	for _, perm := range permanents {
-		g.completeBattlefieldEntry(perm, controller)
+		g.completeBattlefieldEntry(perm, controller, controller)
 	}
 }
 
@@ -507,7 +512,7 @@ func (g *Game) registerBattlefieldEntry(perm *Permanent, colors *[]Color, colorS
 	}
 }
 
-func (g *Game) completeBattlefieldEntry(perm *Permanent, controller uuid.UUID) {
+func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.UUID) {
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {
@@ -529,6 +534,7 @@ func (g *Game) completeBattlefieldEntry(perm *Permanent, controller uuid.UUID) {
 		Type:     EvtZoneChange,
 		SourceID: perm.ID(),
 		PlayerID: controller,
+		ActorID:  actor,
 		Amount:   g.resolution.X(), // preserve X from resolving spell for ETB triggers
 		FromZone: ZoneAny,          // engine doesn't model the precise origin of an ETB
 		ToZone:   ZoneBattlefield,
@@ -2459,7 +2465,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 	if obj.Card != nil && !obj.IsAbility {
 		// Permanents go to the battlefield instead
 		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
-			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.ColorOverride, obj.SourceID)
+			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
@@ -3741,7 +3747,7 @@ func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
 		return fmt.Errorf("can't play %s: card is from a blocked expansion", card.Name())
 	}
 
-	g.PutOnBattlefield(card, playerID)
+	g.PutOnBattlefieldBy(card, playerID, playerID)
 	g.trackers.Turn.RecordLandPlayed()
 
 	g.FireEvent(GameEvent{

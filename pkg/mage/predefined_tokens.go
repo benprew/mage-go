@@ -85,7 +85,7 @@ func (e *createPredefinedTokenEffect) Apply(ctx *EffectContext) error {
 	for i := 0; i < count; i++ {
 		tok := e.build()
 		tok.SetOwner(ctx.Controller)
-		ctx.Game.PutOnBattlefield(tok, ctx.Controller)
+		ctx.Game.PutOnBattlefieldBy(tok, ctx.Controller, ctx.Controller)
 	}
 	return nil
 }
