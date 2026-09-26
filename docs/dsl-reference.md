@@ -1076,6 +1076,16 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
+  * `OpponentDiscardsCard(playerBinding) EventPattern`: An opponent of the battlefield source controller discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time; a failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes`. The saved player is not a target.
+    ```go
+    func discardWatcher() dsl.Card {
+        discarder := dsl.BindPlayer("discarder")
+        return dsl.NewEnchantment("Discard Watcher", "{1}{B}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.OpponentDiscardsCard(discarder),
+                dsl.LoseLife(dsl.FromPlayer(discarder), dsl.Fixed(2))),
+        ))
+    }
+    ```
   * `ControllerGainsLife(playerBinding)`: Source controller gains a positive amount of life. Saves that player at event detection without declaring a target. A replaced gain triggers only if life is actually gained. Copies retain the saved player while `You` uses the copy's controller.
   * `OpponentLosesLife(playerBinding)`: Opponent loses life (can chain `.WithAmount(binding)`).
   * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
