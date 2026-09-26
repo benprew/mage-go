@@ -32,6 +32,7 @@ func (g *Game) Clone() *Game {
 	c.triggers = g.triggers.Clone()
 	c.mana = g.mana.Clone()
 	c.damage = g.damage.Clone()
+	c.publicReveals = clonePublicReveals(g.publicReveals)
 	c.lifeGainModifiers = slices.Clone(g.lifeGainModifiers)
 	c.millModifiers = slices.Clone(g.millModifiers)
 	c.originalOwners = cloneUUIDMap(g.originalOwners)

@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Public Reveal of a Saved Card
+
+`RevealCard(CardRef) ResolvingEffect` resolves a saved card at instruction time and records a public, copied reveal-time card snapshot. `Game.PublicReveals()` gives all observers the same ordered history without exposing mutable engine state. A saved draw must still have its original hand visit; an absent card, replaced draw, or card that left and returned produces no reveal. Revealing does not move the card. This is a resolving action for spells, activations, and triggers, not an ongoing revealed-card effect or a cost. The `dsl.RevealCard` export has a sealed `CardRef` input; inspection and registration use the existing card-binding dominance checks. Existing `RevealHand`, draw, discard, and production callers remain.
+
+The focused tests first failed because `RevealCard` and `PublicReveals` were absent. Synthetic tests cover public owner and land characteristics, zone preservation, absent and stale references, empty draw, immutable returned history, game clone isolation, registration errors, and compile-time player-reference rejection. Sindbad's complete Oracle text in `data/ARN.json` also requires a land-card condition and conditional discard of the same saved card; its production wiring remains open. No card or gap record was changed. A fresh search found no production `RevealCard` caller. The next dependency-ready slice is a typed card-type predicate for a saved card in a resolving branch, followed by separate card wiring.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. Lint reported zero issues.
+
 ## Current Slice: Saved Hand-Card Discard
 
 `DiscardCard(CardRef) ResolvingEffect` discards a saved card only while its original hand visit remains current. It uses `PlayerDiscardByEffect`, so an effect-discard replacement can change the destination and the normal discard event still occurs. An absent reference, a card in another zone, or a card that leaves and returns to hand does nothing. The adapter works in spell, activation, and trigger bodies. The public `dsl.DiscardCard` alias and its compile-time `CardRef` role are new; existing `Discard(PlayerRef, ResolutionValue)`, `DiscardAtRandom`, and legacy callers remain. No production card changed.

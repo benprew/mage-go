@@ -409,6 +409,7 @@ func drawnCardSpell() dsl.Card {
     return dsl.NewInstant("Synthetic Draw", "{U}",
         dsl.Spell(dsl.Sequence(
             dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawnCard)),
+            dsl.RevealCard(dsl.FromCard(drawnCard)),
             dsl.DiscardCard(dsl.FromCard(drawnCard)),
         )))
 }
@@ -420,7 +421,11 @@ original card remains in that hand visit. `DiscardCard(CardRef) ResolvingEffect`
 discards that exact card if it is still in its owner's hand. It uses effect
 discard replacements and does nothing if the reference is absent or in another
 zone. Use it in spell, activation, and trigger resolving bodies. Hand reveal
-and multi-card draw-result consumers still need typed adapters.
+uses `RevealCard(CardRef) ResolvingEffect`. It shows the referenced card to
+all players and leaves it in its zone. The engine stores a public snapshot in
+`Game.PublicReveals()` in reveal order. This is a record of what was shown,
+not an ongoing effect that keeps a card revealed. An absent reference has no
+effect. Multi-card draw-result consumers remain open.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
