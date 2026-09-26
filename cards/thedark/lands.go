@@ -1,6 +1,6 @@
 package thedark
 
-import . "github.com/benprew/mage-go/pkg/mage"
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
 
 func init() {
 	registerLands()
@@ -20,9 +20,12 @@ func registerLands() {
 	// Maze of Ith
 	// Land
 	// {T}: Untap target attacking creature. Prevent all combat damage that would be dealt to and dealt by that creature this turn.
-	// TODO: implement
 	Register("Maze of Ith", func() Card {
-		return NewLand("Maze of Ith")
+		creature := TargetPermanent("attacking creature", And(IsCreature, IsAttacking))
+		return NewLand("Maze of Ith",
+			WithAbility(Activate(Costs(TapCost(This)),
+				Sequence(Untap(creature), PreventCombatDamageToAndBy(creature)), WithTargets(creature))),
+		)
 	})
 
 	// Safe Haven

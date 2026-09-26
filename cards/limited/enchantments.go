@@ -15,130 +15,131 @@ func init() {
 func registerEnchantments() {
 	// ===== GLOBAL ENCHANTMENTS =====
 
+	// White creatures get +1/+1.
 	Register("Crusade", func() Card {
 		return NewEnchantment("Crusade", "{W}{W}",
-			WithStaticAbility(
-				BoostAllCreaturesIncludingSelf(1, 1, HasColorFilter(White)),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(MatchingPermanents(And(IsCreature, HasColorFilter(White))), Fixed(1), Fixed(1))))),
 		)
 	})
 
+	// Black creatures get +1/+1.
 	Register("Bad Moon", func() Card {
 		return NewEnchantment("Bad Moon", "{1}{B}",
-			WithStaticAbility(
-				BoostAllCreaturesIncludingSelf(1, 1, HasColorFilter(Black)),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(MatchingPermanents(And(IsCreature, HasColorFilter(Black))), Fixed(1), Fixed(1))))),
 		)
 	})
 
+	// Attacking creatures you control get +1/+0.
 	Register("Orcish Oriflamme", func() Card {
 		return NewEnchantment("Orcish Oriflamme", "{3}{R}",
-			WithStaticAbility(
-				BoostControlledCreatures(1, 0, IsAttacking),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(ControlledPermanents(And(IsCreature, IsAttacking)), Fixed(1), Fixed(0))))),
 		)
 	})
 
+	// Untapped creatures you control get +0/+2.
 	Register("Castle", func() Card {
 		return NewEnchantment("Castle", "{3}{W}",
-			WithStaticAbility(
-				BoostControlledCreatures(0, 2, IsUntapped),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(ControlledPermanents(And(IsCreature, IsUntapped)), Fixed(0), Fixed(2))))),
 		)
 	})
 
 	// ===== AURAS (CREATURE ENCHANTMENTS) =====
 
+	// Enchant creature
+	// Enchanted creature gets +1/+2.
 	Register("Holy Strength", func() Card {
-		return NewBoostAura("Holy Strength", "{W}", 1, 2)
+		return NewAura("Holy Strength", "{W}",
+			WithAuraAIProfile(AuraAIProfile{PowerBoost: 1, ToughnessBoost: 2}),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(1), Fixed(2))))),
+		)
 	})
 
+	// Enchant creature
+	// Enchanted creature gets +2/+1.
 	Register("Unholy Strength", func() Card {
-		return NewBoostAura("Unholy Strength", "{B}", 2, 1)
+		return NewAura("Unholy Strength", "{B}",
+			WithAuraAIProfile(AuraAIProfile{PowerBoost: 2, ToughnessBoost: 1}),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(2), Fixed(1))))),
+		)
 	})
 
+	// Enchant creature
+	// Enchanted creature gets -2/-1.
 	Register("Weakness", func() Card {
-		return NewBoostAura("Weakness", "{B}", -2, -1)
+		return NewAura("Weakness", "{B}",
+			WithAuraAIProfile(AuraAIProfile{PowerBoost: -2, ToughnessBoost: -1}),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(-2), Fixed(-1))))),
+		)
 	})
 
+	// Enchant creature
+	// Enchanted creature gets +0/+2.
+	// {W}: Enchanted creature gets +0/+1 until end of turn.
 	Register("Holy Armor", func() Card {
 		return NewAura("Holy Armor", "{W}",
-			WithStaticAbility(
-				BoostAttached(0, 2, AttachAura),
-				GrantActivatedAbilityToAttached(
-					Boost(Fixed(0), Fixed(1)).Targeting(ToSource()),
-					ManaCostOf("{W}"),
-					AttachAura,
-				),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(0), Fixed(2))))),
+			WithAbility(Activate(Costs(Mana("{W}")), Until(EndOfTurn, ModifyPT(AttachedPermanent, Fixed(0), Fixed(1))))),
 		)
 	})
 
+	// Enchant creature
+	// {W}: Enchanted creature gets +1/+1 until end of turn.
 	Register("Blessing", func() Card {
 		return NewAura("Blessing", "{W}{W}",
-			WithStaticAbility(
-				GrantActivatedAbilityToAttached(
-					Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
-					ManaCostOf("{W}"),
-					AttachAura,
-				),
-			),
+			WithAbility(Activate(Costs(Mana("{W}")), Until(EndOfTurn, ModifyPT(AttachedPermanent, Fixed(1), Fixed(1))))),
 		)
 	})
 
+	// Enchant creature
+	// Enchanted creature has first strike.
 	Register("Lance", func() Card {
 		return NewAura("Lance", "{W}",
-			WithStaticAbility(
-				GrantAbilityToAttached(FirstStrike, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantKeyword(AttachedPermanent, FirstStrike)))),
 		)
 	})
 
+	// Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)
+	// Enchanted creature gets +0/+2 and has reach. (It can block creatures with flying.)
 	Register("Web", func() Card {
 		return NewAura("Web", "{G}",
-			WithStaticAbility(
-				BoostAttached(0, 2, AttachAura),
-				GrantAbilityToAttached(Reach, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(0), Fixed(2)), GrantKeyword(AttachedPermanent, Reach)))),
 		)
 	})
 
+	// Enchant creature
+	// {R}: Enchanted creature gets +1/+0 until end of turn.
 	Register("Firebreathing", func() Card {
 		return NewAura("Firebreathing", "{R}",
-			WithStaticAbility(
-				GrantActivatedAbilityToAttached(
-					Boost(Fixed(1), Fixed(0)).Targeting(ToSource()),
-					ManaCostOf("{R}"),
-					AttachAura,
-				),
-			),
+			WithAbility(Activate(Costs(Mana("{R}")), Until(EndOfTurn, ModifyPT(AttachedPermanent, Fixed(1), Fixed(0))))),
 		)
 	})
 
+	// Enchant creature
+	// Enchanted creature has flying.
 	Register("Flight", func() Card {
 		return NewAura("Flight", "{U}",
-			WithStaticAbility(
-				GrantAbilityToAttached(Flying, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantKeyword(AttachedPermanent, Flying)))),
 		)
 	})
 
+	// Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)
+	// Enchanted creature has fear. (It can't be blocked except by artifact creatures and/or black creatures.)
 	Register("Fear", func() Card {
 		return NewAura("Fear", "{B}{B}",
-			WithStaticAbility(
-				GrantAbilityToAttached(Fear, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantKeyword(AttachedPermanent, Fear)))),
 		)
 	})
 
+	// Enchant creature
+	// Enchanted creature has mountainwalk. (It can't be blocked as long as defending player controls a Mountain.)
 	Register("Burrowing", func() Card {
 		return NewAura("Burrowing", "{R}",
-			WithStaticAbility(
-				GrantAbilityToAttached(Mountainwalk, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantKeyword(AttachedPermanent, Mountainwalk)))),
 		)
 	})
 
+	// Enchant creature
+	// Enchanted creature can't be blocked except by Walls.
 	Register("Invisibility", func() Card {
 		return NewAura("Invisibility", "{U}{U}",
 			WithStaticAbility(
@@ -147,6 +148,8 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant creature
+	// All creatures able to block enchanted creature do so.
 	Register("Lure", func() Card {
 		return NewAura("Lure", "{1}{G}{G}",
 			WithStaticAbility(
@@ -283,6 +286,8 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant land
+	// Whenever enchanted land becomes tapped, this Aura deals 2 damage to that land's controller.
 	Register("Psychic Venom", func() Card {
 		return NewAura("Psychic Venom", "{1}{U}",
 			WithCastTarget(TargetLand()),
@@ -370,6 +375,8 @@ func registerEnchantments() {
 
 	// ===== TRIGGERED ENCHANTMENTS =====
 
+	// Enchant creature
+	// At the beginning of the upkeep of enchanted creature's controller, this Aura deals 1 damage to that player.
 	Register("Wanderlust", func() Card {
 		return NewAura("Wanderlust", "{2}{G}",
 			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
@@ -378,6 +385,8 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant land
+	// At the beginning of the upkeep of enchanted land's controller, this Aura deals 1 damage to that player.
 	Register("Cursed Land", func() Card {
 		return NewAura("Cursed Land", "{2}{B}{B}",
 			WithCastTarget(TargetLand()),
@@ -387,6 +396,8 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant enchantment
+	// At the beginning of the upkeep of enchanted enchantment's controller, this Aura deals 1 damage to that player.
 	Register("Feedback", func() Card {
 		return NewAura("Feedback", "{2}{U}",
 			WithCastTarget(mage.TargetPermanent(IsEnchantment)),
@@ -396,6 +407,8 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant artifact
+	// At the beginning of the upkeep of enchanted artifact's controller, this Aura deals 1 damage to that player.
 	Register("Warp Artifact", func() Card {
 		return NewAura("Warp Artifact", "{B}{B}",
 			WithCastTarget(TargetArtifact()),
@@ -415,6 +428,8 @@ func registerEnchantments() {
 		)
 	})
 
+	// Enchant land
+	// Enchanted land has "At the beginning of your upkeep, you may pay {W}{W}. If you do, you gain 1 life."
 	Register("Farmstead", func() Card {
 		return NewAura("Farmstead", "{W}{W}{W}",
 			WithCastTarget(TargetLand()),
@@ -439,23 +454,19 @@ func registerEnchantments() {
 		)
 	})
 
+	// {B}{B}: Counter target green spell.
 	Register("Deathgrip", func() Card {
+		spell := TargetSpell("spell", HasColorCardFilter(Green))
 		return NewEnchantment("Deathgrip", "{B}{B}",
-			WithActivatedAbility(
-				CounterSpellIfColor(Green),
-				ManaCostOf("{B}{B}"),
-				WithTarget(TargetSpellOnStack()),
-			),
+			WithAbility(Activate(Costs(Mana("{B}{B}")), Counter(spell), WithTargets(spell))),
 		)
 	})
 
+	// {G}{G}: Counter target black spell.
 	Register("Lifeforce", func() Card {
+		spell := TargetSpell("spell", HasColorCardFilter(Black))
 		return NewEnchantment("Lifeforce", "{G}{G}",
-			WithActivatedAbility(
-				CounterSpellIfColor(Black),
-				ManaCostOf("{G}{G}"),
-				WithTarget(TargetSpellOnStack()),
-			),
+			WithAbility(Activate(Costs(Mana("{G}{G}")), Counter(spell), WithTargets(spell))),
 		)
 	})
 
@@ -777,30 +788,23 @@ func registerEnchantments() {
 		)
 	})
 
-	// Animate Wall {W}
-	// Enchantment — Aura
 	// Enchant Wall
 	// Enchanted Wall can attack as though it didn't have defender.
 	Register("Animate Wall", func() Card {
 		return NewAura("Animate Wall", "{W}",
 			WithCastTarget(TargetCreature(HasSubType("Wall"))),
-			WithStaticAbility(
-				GrantAbilityToAttached(AttrCanAttack, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantKeyword(AttachedPermanent, AttrCanAttack)))),
 		)
 	})
 
+	// Enchant creature
+	// Enchanted creature gets +X/+Y, where X is half the number of Forests you control, rounded down, and Y is half the number of Forests you control, rounded up.
 	Register("Aspect of Wolf", func() Card {
+		forests := CountBattlefield(SelectController(), HasSubType("Forest"))
+		toughness := ValueAtResolution(HalfRoundUp(forests))
+		power := SubtractValues(ValueAtResolution(forests), toughness)
 		return NewAura("Aspect of Wolf", "{1}{G}",
-			// Enchanted creature gets +X/+Y where X is half Forests you control
-			// (rounded down) and Y is half (rounded up).
-			WithStaticAbility(
-				BoostAttachedByCount(
-					And(IsLand, HasSubType("Forest")),
-					func(n int) int { return n / 2 },
-					func(n int) int { return (n + 1) / 2 },
-				),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, power, toughness)))),
 		)
 	})
 

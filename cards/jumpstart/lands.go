@@ -59,15 +59,10 @@ func registerLands() {
 	// {T}: Add {C}.
 	// {2}, {T}, Sacrifice this land: Return target artifact card from your graveyard to your hand.
 	Register("Buried Ruin", func() Card {
+		card := TargetGraveyardCard("artifact card", GraveyardCardFilter(IsArtifactCard))
 		return NewLand("Buried Ruin",
 			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
-			WithActivatedAbility(
-				ReturnFromGraveyardToHandTarget(),
-				GenericCost(2),
-				WithCost(TapCost(This)),
-				WithCost(SacrificeSourceCost()),
-				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This), SacrificeSourceCost()), ReturnCardToHand(card), WithTargets(card))),
 		)
 	})
 

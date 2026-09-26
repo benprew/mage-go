@@ -97,13 +97,8 @@ func registerSpells() {
 	// Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn.
 	Register("Act of Treason", func() Card {
 		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
-		return NewSorcery("Act of Treason", "{2}{R}",
-			dsl.Spell(dsl.CompositeEffects(
-				"gain control until end of turn, untap, gains haste",
-				gainControlUntilEOT(),
-				dsl.Untap(creature),
-				GrantKeyword(Haste),
-			), dsl.WithTargets(creature)),
+		return dsl.NewSorcery("Act of Treason", "{2}{R}",
+			dsl.Spell(dsl.Sequence(dsl.Until(EndOfTurn, dsl.ChangeController(creature, dsl.You)), dsl.Untap(creature), dsl.Until(EndOfTurn, dsl.GrantKeyword(creature, Haste))), dsl.WithTargets(creature)),
 		)
 	})
 
@@ -214,10 +209,12 @@ func registerSpells() {
 	// Instant
 	// Destroy target creature. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")
 	Register("Bake into a Pie", func() Card {
+		food := dsl.DefineToken("Food", dsl.TokenTypes(TypeArtifact), dsl.TokenSubtypes("Food"),
+			dsl.TokenAbilities(dsl.Activate(dsl.Costs(dsl.Mana("{2}"), dsl.TapCost(dsl.This), dsl.SacrificeSourceCost()), dsl.GainLife(dsl.You, dsl.Fixed(3)))))
 		creature := dsl.TargetPermanent("creature", dsl.IsCreature)
 		return dsl.NewInstant("Bake into a Pie", "{2}{B}{B}",
 			dsl.WithAbility(dsl.Spell(
-				dsl.Sequence(dsl.Destroy(creature), dsl.CreateFoodToken()),
+				dsl.Sequence(dsl.Destroy(creature), dsl.CreateTokenCopies(dsl.You, dsl.Fixed(1), food)),
 				dsl.WithTargets(creature),
 			)),
 		)
@@ -567,8 +564,9 @@ func registerSpells() {
 	// Sorcery
 	// Create two 1/1 red Goblin creature tokens.
 	Register("Dragon Fodder", func() Card {
-		return NewSorcery("Dragon Fodder", "{1}{R}",
-			NewSpellAbility(CreateTokens(2, "Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"})),
+		token := dsl.DefineToken("Goblin", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Goblin"), dsl.TokenColors(Red), dsl.TokenPT(1, 1))
+		return dsl.NewSorcery("Dragon Fodder", "{1}{R}",
+			dsl.Spell(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(2), token)),
 		)
 	})
 
@@ -639,12 +637,9 @@ func registerSpells() {
 	// Counter target creature spell.
 	// Draw a card.
 	Register("Exclude", func() Card {
-		return NewInstant("Exclude", "{2}{U}",
-			NewTargetedSpell(TargetSpellOnStack(creatureSpellFilter), CompositeEffects(
-				"counter creature spell, draw a card",
-				CounterSpell(),
-				dsl.Draw(dsl.You, dsl.Fixed(1)),
-			)),
+		spell := dsl.TargetSpell("creature spell", dsl.IsCreatureCard)
+		return dsl.NewInstant("Exclude", "{2}{U}",
+			dsl.Spell(dsl.Sequence(dsl.Counter(spell), dsl.Draw(dsl.You, dsl.Fixed(1))), dsl.WithTargets(spell)),
 		)
 	})
 
@@ -789,8 +784,9 @@ func registerSpells() {
 	// Sorcery
 	// Create two 2/3 red Minotaur creature tokens with haste.
 	Register("Flurry of Horns", func() Card {
-		return NewSorcery("Flurry of Horns", "{4}{R}",
-			NewSpellAbility(CreateTokens(2, "Minotaur", 2, 3, []CardType{TypeCreature}, []string{"Minotaur"}, Haste)),
+		token := dsl.DefineToken("Minotaur", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Minotaur"), dsl.TokenColors(Red), dsl.TokenPT(2, 3), dsl.TokenKeywords(Haste))
+		return dsl.NewSorcery("Flurry of Horns", "{4}{R}",
+			dsl.Spell(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(2), token)),
 		)
 	})
 
@@ -813,22 +809,9 @@ func registerSpells() {
 	// Sorcery
 	// You draw two cards, lose 2 life, then mill two cards.
 	Register("Funeral Rites", func() Card {
-		return NewSorcery("Funeral Rites", "{2}{B}",
-			NewSpellAbility(FuncEffect(
-				"draw two, lose 2, mill two",
-				EffectProperties{DrawCount: 2},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					g.PlayerDrawCard(p)
-					g.PlayerDrawCard(p)
-					p.LoseLife(2)
-					millSelf(g, p, 2)
-					return nil
-				},
-			)),
+
+		return dsl.NewSorcery("Funeral Rites", "{2}{B}",
+			dsl.Spell(dsl.Sequence(dsl.Draw(dsl.You, dsl.Fixed(2)), dsl.LoseLife(dsl.You, dsl.Fixed(2)), dsl.Mill(dsl.You, dsl.Fixed(2)))),
 		)
 	})
 
@@ -860,8 +843,9 @@ func registerSpells() {
 	// Sorcery
 	// Create four 1/1 red Goblin creature tokens.
 	Register("Goblin Rally", func() Card {
-		return NewSorcery("Goblin Rally", "{3}{R}{R}",
-			NewSpellAbility(CreateTokens(4, "Goblin", 1, 1, []CardType{TypeCreature}, []string{"Goblin"})),
+		token := dsl.DefineToken("Goblin", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Goblin"), dsl.TokenColors(Red), dsl.TokenPT(1, 1))
+		return dsl.NewSorcery("Goblin Rally", "{3}{R}{R}",
+			dsl.Spell(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(4), token)),
 		)
 	})
 
@@ -1020,38 +1004,10 @@ func registerSpells() {
 	// Instant
 	// Draw a card for each creature you control with a +1/+1 counter on it. Those creatures gain indestructible until end of turn.
 	Register("Inspiring Call", func() Card {
-		return NewInstant("Inspiring Call", "{2}{G}",
-			NewSpellAbility(FuncEffect(
-				"draw card per +1/+1 creature; those gain indestructible EOT",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					p := g.GetPlayer(controller)
-					if p == nil {
-						return nil
-					}
-					var matched []*Permanent
-					for _, perm := range g.FilterBattlefield(And(ControlledBy(controller), IsCreature)) {
-						if int(perm.Counters[P1P1]) > 0 {
-							matched = append(matched, perm)
-						}
-					}
-					for range matched {
-						g.PlayerDrawCard(p)
-					}
-					for _, perm := range matched {
-						eff := TargetEffect(LayerAbility, EndOfTurn, perm.ID(), func(g2 *Game, target *Permanent) error {
-							g2.GrantAttr(target.ID(), Indestructible)
-							return nil
-						})
-						eff.SetSourceID(sourceID)
-						g.AddContinuousEffect(eff)
-					}
-					if len(matched) > 0 {
-						g.ApplyContinuousEffects()
-					}
-					return nil
-				},
-			)),
+		counters := dsl.NewPermanentFilter("has a +1/+1 counter", func(p *Permanent, _ *Game) bool { return p.Counters[P1P1] > 0 })
+		creatures := dsl.ControlledPermanents(dsl.And(dsl.IsCreature, counters))
+		return dsl.NewInstant("Inspiring Call", "{2}{G}",
+			dsl.Spell(dsl.Sequence(dsl.Draw(dsl.You, dsl.CountPermanents(creatures)), dsl.Until(EndOfTurn, dsl.GrantEachKeyword(creatures, Indestructible)))),
 		)
 	})
 
@@ -1379,35 +1335,10 @@ func registerSpells() {
 	// Instant
 	// Return target creature you control and target creature you don't control to their owners' hands.
 	Register("Peel from Reality", func() Card {
-		return NewInstant("Peel from Reality", "{1}{U}",
-			NewMultiTargetSpell(
-				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
-				FuncEffect(
-					"return both creatures to their owners' hands",
-					EffectProperties{Outcome: OutcomeUnknown, IsBounce: true},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						for _, tid := range targets {
-							if tid == uuid.Nil {
-								continue
-							}
-							perm := g.FindPermanent(tid)
-							if perm == nil {
-								continue
-							}
-							card := perm.Card
-							owner := card.Owner()
-							if owner == uuid.Nil {
-								owner = perm.ControllerID()
-							}
-							g.RemoveFromBattlefield(perm)
-							if pl := g.GetPlayer(owner); pl != nil {
-								pl.AddToHand(card)
-							}
-						}
-						return nil
-					},
-				),
-			),
+		yours := dsl.TargetPermanent("your creature", dsl.IsCreature, dsl.TargetYouControl())
+		theirs := dsl.TargetPermanent("opponent creature", dsl.IsCreature, dsl.TargetOpponentControls())
+		return dsl.NewInstant("Peel from Reality", "{1}{U}",
+			dsl.Spell(dsl.Sequence(dsl.ReturnToHand(yours), dsl.ReturnToHand(theirs)), dsl.WithTargets(yours, theirs)),
 		)
 	})
 
@@ -1445,8 +1376,9 @@ func registerSpells() {
 	// Instant
 	// Create two 1/1 white Soldier creature tokens.
 	Register("Raise the Alarm", func() Card {
-		return NewInstant("Raise the Alarm", "{1}{W}",
-			NewSpellAbility(CreateTokens(2, "Soldier", 1, 1, []CardType{TypeCreature}, []string{"Soldier"})),
+		token := dsl.DefineToken("Soldier", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Soldier"), dsl.TokenColors(White), dsl.TokenPT(1, 1))
+		return dsl.NewInstant("Raise the Alarm", "{1}{W}",
+			dsl.Spell(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(2), token)),
 		)
 	})
 
@@ -1534,8 +1466,9 @@ func registerSpells() {
 	// Sorcery
 	// Create four 1/1 white Dog creature tokens.
 	Register("Release the Dogs", func() Card {
-		return NewSorcery("Release the Dogs", "{3}{W}",
-			NewSpellAbility(CreateTokens(4, "Dog", 1, 1, []CardType{TypeCreature}, []string{"Dog"})),
+		token := dsl.DefineToken("Dog", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Dog"), dsl.TokenColors(White), dsl.TokenPT(1, 1))
+		return dsl.NewSorcery("Release the Dogs", "{3}{W}",
+			dsl.Spell(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(4), token)),
 		)
 	})
 
@@ -1614,22 +1547,10 @@ func registerSpells() {
 	// This spell costs {2} less to cast if it targets a Dinosaur you control.
 	// Put a +1/+1 counter on target creature you control. Then that creature fights target creature you don't control.
 	Register("Savage Stomp", func() Card {
-		return NewSorcery("Savage Stomp", "{2}{G}",
-			NewMultiTargetSpell(
-				[]Target{TargetCreatureYouControl(), TargetCreatureOpponentControls()},
-				AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
-				FuncEffect(
-					"target creature you control fights target creature you don't control",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-						if len(targets) < 2 {
-							return nil
-						}
-						fightBetween(g, targets[0], targets[1])
-						return nil
-					},
-				),
-			),
+		yours := dsl.TargetPermanent("your creature", dsl.IsCreature, dsl.TargetYouControl())
+		theirs := dsl.TargetPermanent("opponent creature", dsl.IsCreature, dsl.TargetOpponentControls())
+		return dsl.NewSorcery("Savage Stomp", "{2}{G}",
+			dsl.Spell(dsl.Sequence(dsl.AddCounters(yours, P1P1, dsl.Fixed(1)), dsl.Fight(yours, theirs)), dsl.WithTargets(yours, theirs)),
 			WithTargetConditionalCostReduction(2, func(g *Game, controller uuid.UUID, c Card, targets []uuid.UUID) bool {
 				for _, id := range targets {
 					perm := g.FindPermanent(id)
@@ -1748,8 +1669,9 @@ func registerSpells() {
 	// Sorcery
 	// Create two 2/2 blue Drake creature tokens with flying.
 	Register("Talrand's Invocation", func() Card {
-		return NewSorcery("Talrand's Invocation", "{2}{U}{U}",
-			NewSpellAbility(CreateTokens(2, "Drake", 2, 2, []CardType{TypeCreature}, []string{"Drake"}, Flying)),
+		token := dsl.DefineToken("Drake", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Drake"), dsl.TokenColors(Blue), dsl.TokenPT(2, 2), dsl.TokenKeywords(Flying))
+		return dsl.NewSorcery("Talrand's Invocation", "{2}{U}{U}",
+			dsl.Spell(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(2), token)),
 		)
 	})
 
@@ -1986,21 +1908,13 @@ func registerSpells() {
 	// This spell costs {1} less to cast if you control a Wizard.
 	// Counter target spell.
 	Register("Wizard's Retort", func() Card {
-		return NewInstant("Wizard's Retort", "{1}{U}{U}",
-			NewTargetedSpell(TargetSpellOnStack(), CounterSpell()),
-			WithSelfCostReduction(
-				FixedAmount(1),
-				CondControlsMatching(HasSubType("Wizard")),
-			),
+		spell := dsl.TargetSpell("spell")
+		return dsl.NewInstant("Wizard's Retort", "{1}{U}{U}",
+			dsl.Spell(dsl.Counter(spell), dsl.WithTargets(spell)),
+			dsl.WithSelfCostReduction(dsl.FixedAmount(1), dsl.CondControlsMatching(dsl.HasSubType("Wizard"))),
 		)
 	})
 
-}
-
-// gainControlUntilEOT registers a LayerControl continuous effect that switches
-// the target's controller until end of turn.
-func gainControlUntilEOT() Effect {
-	return GainControl().Until(EndOfTurn)
 }
 
 // cantBlockThisTurn revokes CanBlock from targets[0] until end of turn.
@@ -2119,11 +2033,6 @@ func millSelf(g *Game, p Player, n int) {
 	}
 	p.SetLibrary(lib)
 }
-
-// creatureSpellFilter matches creature spells on the stack.
-var creatureSpellFilter = NewCardFilter("creature spell", func(c Card) bool {
-	return c.HasType(TypeCreature)
-})
 
 // registerDoublecastDelayedTrigger sets up a one-shot delayed trigger that
 // fires on the controller's next spell cast. If the cast spell is an instant

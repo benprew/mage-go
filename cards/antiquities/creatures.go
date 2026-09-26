@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	mage "github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
 
@@ -58,14 +59,11 @@ func registerCreatures() {
 	// Creature — Human Artificer
 	// {W}{W}, {T}: Return target artifact card from your graveyard to your hand.
 	Register("Argivian Archaeologist", func() Card {
+		artifact := TargetGraveyardCard("artifact", GraveyardCardFilter(IsArtifactCard))
 		return NewCreature("Argivian Archaeologist", "{1}{W}{W}", 1, 1,
 			WithSubTypes("Human", "Artificer"),
-			WithActivatedAbility(
-				ReturnFromGraveyardToHandTarget(),
-				ManaCostOf("{W}{W}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCardInYourGraveyard(IsArtifactCard)),
-			),
+			WithAbility(Activate(Costs(Mana("{W}{W}"), TapCost(This)),
+				ReturnCardToHand(artifact), WithTargets(artifact))),
 		)
 	})
 
@@ -73,13 +71,11 @@ func registerCreatures() {
 	// Creature — Human Artificer
 	// {T}: Prevent the next 2 damage that would be dealt to target artifact creature this turn.
 	Register("Argivian Blacksmith", func() Card {
+		artifact := TargetPermanent("artifact creature", And(IsArtifact, IsCreature))
 		return NewCreature("Argivian Blacksmith", "{1}{W}{W}", 2, 2,
 			WithSubTypes("Human", "Artificer"),
-			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(2)),
-				TapCost(This),
-				WithTarget(TargetCreature(IsArtifact)),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				PreventNextDamage(artifact, Fixed(2)), WithTargets(artifact))),
 		)
 	})
 
@@ -111,11 +107,10 @@ func registerCreatures() {
 	Register("Sage of Lat-Nam", func() Card {
 		return NewCreature("Sage of Lat-Nam", "{1}{U}", 1, 2,
 			WithSubTypes("Human", "Artificer"),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				TapCost(This),
-				WithCost(SacrificeArtifactCost()),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact")),
+				Draw(You, Fixed(1)),
+			)),
 		)
 	})
 
@@ -225,38 +220,18 @@ func registerCreatures() {
 
 	// Yawgmoth Demon {4}{B}{B}
 	// Creature — Phyrexian Demon
-	// Flying, first strike
-	// At the beginning of your upkeep, you may sacrifice an artifact. If you don't, tap
-	// Yawgmoth Demon and it deals 2 damage to you.
+	// Flying (This creature can't be blocked except by creatures with flying or reach.)
+	// First strike (This creature deals combat damage before creatures without first strike.)
+	// At the beginning of your upkeep, you may sacrifice an artifact. If you don't, tap this creature and
+	// it deals 2 damage to you.
 	Register("Yawgmoth Demon", func() Card {
 		return NewCreature("Yawgmoth Demon", "{4}{B}{B}", 6, 6,
 			WithSubTypes("Phyrexian", "Demon"),
 			WithKeyword(Flying),
 			WithKeyword(FirstStrike),
-			WithAbility(BeginningOfUpkeepTrigger(
-				// TODO: convert to pipeline — needs "may sacrifice or else" branching with interactive choice
-				FuncEffect("sacrifice an artifact or tap and take 2 damage",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						player := g.GetPlayer(controller)
-						if player == nil {
-							return nil
-						}
-						candidates := g.FilterBattlefield(And(ControlledBy(controller), IsArtifact))
-						if len(candidates) > 0 && player.ChooseMayAbility("sacrifice an artifact") {
-							chosen := player.ChoosePermanent(candidates, "sacrifice", g)
-							if chosen != nil {
-								g.DoSacrifice(chosen)
-								return nil
-							}
-						}
-						perm := g.FindPermanent(sourceID)
-						if perm != nil {
-							g.TapPermanent(perm)
-						}
-						g.DealDamageToPlayer(player, 2, sourceID)
-						return nil
-					}), false,
+			WithAbility(At(YourUpkeep,
+				UnlessPaid(You, Costs(SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact")),
+					Sequence(Tap(This), DealDamageToPlayers(Fixed(2), SelectController()))),
 			)),
 		)
 	})
@@ -278,18 +253,17 @@ func registerCreatures() {
 
 	// Dwarven Weaponsmith {1}{R}
 	// Creature — Dwarf Artificer
-	// {T}, Sacrifice an artifact: Put a +1/+1 counter on target creature.
-	// Activate only during your upkeep.
+	// {T}, Sacrifice an artifact: Put a +1/+1 counter on target creature. Activate only during your
+	// upkeep.
 	Register("Dwarven Weaponsmith", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Dwarven Weaponsmith", "{1}{R}", 1, 1,
 			WithSubTypes("Dwarf", "Artificer"),
-			WithActivatedAbility(
-				mage.AddCounters(P1P1, Fixed(1)),
-				TapCost(This),
-				WithCost(SacrificeArtifactCost()),
-				WithTarget(TargetCreature()),
-				WithUpkeepOnly(),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact")),
+				AddCounters(creature, P1P1, Fixed(1)), WithTargets(creature),
+				OnlyDuring(core.Upkeep), OnlyOnYourTurn(),
+			)),
 		)
 	})
 
@@ -319,16 +293,13 @@ func registerCreatures() {
 
 	// Orcish Mechanics {2}{R}
 	// Creature — Orc
-	// {T}, Sacrifice an artifact: Orcish Mechanics deals 2 damage to any target.
+	// {T}, Sacrifice an artifact: This creature deals 2 damage to any target.
 	Register("Orcish Mechanics", func() Card {
+		target := TargetDamageRecipient("recipient")
 		return NewCreature("Orcish Mechanics", "{2}{R}", 1, 1,
 			WithSubTypes("Orc"),
-			WithActivatedAbility(
-				DealDamage(Fixed(2)),
-				TapCost(This),
-				WithCost(SacrificeArtifactCost()),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(Costs(TapCost(This), SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact")),
+				DealDamage(Fixed(2)), WithTargets(target))),
 		)
 	})
 
@@ -384,13 +355,13 @@ func registerCreatures() {
 
 	// Citanul Druid {1}{G}
 	// Creature — Human Druid
-	// Whenever an opponent casts an artifact spell, put a +1/+1 counter on Citanul Druid.
+	// Whenever an opponent casts an artifact spell, put a +1/+1 counter on this creature.
 	Register("Citanul Druid", func() Card {
 		return NewCreature("Citanul Druid", "{1}{G}", 1, 1,
 			WithSubTypes("Human", "Druid"),
 			WithAbility(
 				NewTriggered(EvtSpellCast, false,
-					mage.AddCounters(P1P1, Fixed(1)).Targeting(ToSource()),
+					AddCounters(This, P1P1, Fixed(1)),
 				).
 					SetConditionData(OpponentCastSpellOfType{Type: TypeArtifact}),
 			),
@@ -498,20 +469,17 @@ func registerCreatures() {
 
 	// Colossus of Sardia {9}
 	// Artifact Creature — Golem
-	// Trample
-	// Colossus of Sardia doesn't untap during your untap step.
-	// {9}: Untap Colossus of Sardia. Activate only during your upkeep.
+	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
+	// This creature doesn't untap during your untap step.
+	// {9}: Untap this creature. Activate only during your upkeep.
 	Register("Colossus of Sardia", func() Card {
 		return NewCreature("Colossus of Sardia", "{9}", 9, 9,
 			WithSubTypes("Golem"),
 			WithCardType(TypeArtifact),
 			WithKeyword(Trample),
 			WithKeyword(DoesNotUntapKW),
-			WithActivatedAbility(
-				Untap(This),
-				GenericCost(9),
-				WithUpkeepOnly(),
-			),
+			WithAbility(Activate(Costs(Mana("{9}")), Untap(This),
+				OnlyDuring(core.Upkeep), OnlyOnYourTurn())),
 		)
 	})
 
@@ -529,16 +497,14 @@ func registerCreatures() {
 
 	// Grapeshot Catapult {4}
 	// Artifact Creature — Construct
-	// {T}: Grapeshot Catapult deals 1 damage to target creature with flying.
+	// {T}: This creature deals 1 damage to target creature with flying.
 	Register("Grapeshot Catapult", func() Card {
+		target := TargetPermanent("creature", And(IsCreature, HasKeywordFilter(Flying)))
 		return NewCreature("Grapeshot Catapult", "{4}", 2, 3,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
-			WithActivatedAbility(
-				DealDamage(Fixed(1)),
-				TapCost(This),
-				WithTarget(TargetCreature(HasKeywordFilter(Flying))),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				DealDamage(Fixed(1)), WithTargets(target))),
 		)
 	})
 
@@ -584,13 +550,13 @@ func registerCreatures() {
 
 	// Onulet {3}
 	// Artifact Creature — Construct
-	// When Onulet dies, you gain 2 life.
+	// When this creature dies, you gain 2 life.
 	Register("Onulet", func() Card {
 		return NewCreature("Onulet", "{3}", 2, 2,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(
-				DiesTrigger(GainLife(You, Fixed(2)), false),
+				WhenEvent(Dies(This), GainLife(You, Fixed(2))),
 			),
 		)
 	})
@@ -711,13 +677,13 @@ func registerCreatures() {
 
 	// Su-Chi {4}
 	// Artifact Creature — Construct
-	// When Su-Chi dies, add {C}{C}{C}{C}.
+	// When this creature dies, add {C}{C}{C}{C}.
 	Register("Su-Chi", func() Card {
 		return NewCreature("Su-Chi", "{4}", 4, 4,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(
-				DiesTrigger(AddMana(Colorless, 4), false),
+				WhenEvent(Dies(This), AddManaAmount(Colorless, Fixed(4))),
 			),
 		)
 	})
@@ -807,18 +773,16 @@ func registerCreatures() {
 
 	// Triskelion {6}
 	// Artifact Creature — Construct
-	// Triskelion enters the battlefield with three +1/+1 counters on it.
-	// Remove a +1/+1 counter from Triskelion: It deals 1 damage to any target.
+	// This creature enters with three +1/+1 counters on it.
+	// Remove a +1/+1 counter from this creature: It deals 1 damage to any target.
 	Register("Triskelion", func() Card {
+		target := TargetDamageRecipient("recipient")
 		return NewCreature("Triskelion", "{6}", 1, 1,
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithAbility(EntersWithNCounters(P1P1, 3)),
-			WithActivatedAbility(
-				DealDamage(Fixed(1)),
-				RemoveCountersCost(P1P1, 1),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(Costs(RemoveCountersCost(P1P1, 1)),
+				DealDamage(Fixed(1)), WithTargets(target))),
 		)
 	})
 

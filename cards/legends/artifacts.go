@@ -120,14 +120,11 @@ func registerArtifacts() {
 	// Legendary creatures don't untap during their controllers' untap steps.
 	// When this artifact enters, tap all legendary creatures.
 	Register("Arena of the Ancients", func() Card {
+		legends := MatchingPermanents(And(IsCreature, IsLegendary))
+		creature := BindPermanent("creature")
 		return NewArtifact("Arena of the Ancients", "{3}",
-			WithStaticAbility(PreventUntapForMatching(And(IsCreature, IsLegendary))),
-			WithAbility(EntersBattlefieldTrigger(
-				ForEachPermanent(
-					And(IsCreature, IsLegendary),
-					mage.Tap(),
-					"tap all legendary creatures",
-				), false)),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantEachKeyword(legends, AttrDoesNotUntap)))),
+			WithAbility(WhenEvent(Enters(This), ForEach(legends, creature, Tap(From(creature))))),
 		)
 	})
 

@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
+
 	_ "github.com/benprew/mage-go/cards/limited" // register base cards
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -376,16 +378,22 @@ func TestHolyDay(t *testing.T) {
 }
 
 func TestFlashCounter(t *testing.T) {
-	t.Run("counters target instant", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Flash Counter")
-		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Lightning Bolt", "PlayerA")
-		g.CastInResponseTo(gametest.PlayerA, "Flash Counter")
-		g.StopAt(2, core.BeginCombat)
-		g.Execute()
-		g.AssertLife(gametest.PlayerA, 20) // bolt was countered
-	})
+	g := gametest.NewTestGame(t)
+	a, b := g.GetPlayer(gametest.PlayerA), g.GetPlayer(gametest.PlayerB)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Lightning Bolt")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Flash Counter")
+	b.ManaPool().Add(core.Red, 2)
+	a.ManaPool().Add(core.Blue, 2)
+	g.SetActivePlayerIndex(1)
+	g.SetStep(core.PrecombatMain)
+	if err := g.CastSpellByID(b.PlayerID(), b.Hand()[0].ID(), []uuid.UUID{a.PlayerID()}, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.CastSpellByID(a.PlayerID(), a.Hand()[0].ID(), []uuid.UUID{g.StackPeek().ID}, 0); err != nil {
+		t.Fatal(err)
+	}
+	g.ResolveStack()
+	g.AssertLife(gametest.PlayerA, 20)
 }
 
 func TestForceSpike(t *testing.T) {
@@ -403,17 +411,23 @@ func TestForceSpike(t *testing.T) {
 }
 
 func TestRemoveSoul(t *testing.T) {
-	t.Run("counters creature spell", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Remove Soul")
-		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
-		g.CastInResponseTo(gametest.PlayerA, "Remove Soul")
-		g.StopAt(2, core.BeginCombat)
-		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
-		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
-	})
+	g := gametest.NewTestGame(t)
+	a, b := g.GetPlayer(gametest.PlayerA), g.GetPlayer(gametest.PlayerB)
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Remove Soul")
+	b.ManaPool().Add(core.Green, 2)
+	a.ManaPool().Add(core.Blue, 2)
+	g.SetActivePlayerIndex(1)
+	g.SetStep(core.PrecombatMain)
+	if err := g.CastSpellByID(b.PlayerID(), b.Hand()[0].ID(), nil, 0); err != nil {
+		t.Fatal(err)
+	}
+	if err := g.CastSpellByID(a.PlayerID(), a.Hand()[0].ID(), []uuid.UUID{g.StackPeek().ID}, 0); err != nil {
+		t.Fatal(err)
+	}
+	g.ResolveStack()
+	g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
+	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
 }
 
 func TestBoomerang(t *testing.T) {

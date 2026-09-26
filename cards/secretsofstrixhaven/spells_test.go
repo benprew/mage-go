@@ -1686,17 +1686,23 @@ func TestErode(t *testing.T) {
 }
 
 func TestEssenceScatter(t *testing.T) {
-	t.Run("counters target creature spell", func(t *testing.T) {
-		g := gametest.NewTestGame(t)
-		g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
-		g.AddCard(core.ZoneHand, gametest.PlayerA, "Essence Scatter")
-		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
-		g.CastInResponseTo(gametest.PlayerA, "Essence Scatter", "Grizzly Bears")
-		g.StopAt(2, core.EndStep)
-		g.Execute()
-		g.AssertPermanentCount(gametest.PlayerB, "Grizzly Bears", 0)
-		g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
-	})
+	g := gametest.NewTestGame(t)
+	g.SetStep(core.PrecombatMain)
+	g.AddCard(core.ZoneHand, gametest.PlayerA, "Grizzly Bears")
+	g.AddCard(core.ZoneHand, gametest.PlayerB, "Essence Scatter")
+	a, b := g.GetPlayer(gametest.PlayerA), g.GetPlayer(gametest.PlayerB)
+	a.ManaPool().Add(core.Green, 2)
+	b.ManaPool().Add(core.Blue, 2)
+	if err := g.CastSpellByID(a.PlayerID(), a.Hand()[0].ID(), nil, 0); err != nil {
+		t.Fatal(err)
+	}
+	target := g.StackPeek().ID
+	if err := g.CastSpellByID(b.PlayerID(), b.Hand()[0].ID(), []uuid.UUID{target}, 0); err != nil {
+		t.Fatal(err)
+	}
+	g.ResolveStack()
+	g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 0)
+	g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
 }
 
 func TestFixWhatsBroken(t *testing.T) {

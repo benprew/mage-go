@@ -139,7 +139,7 @@ func registerSpells() {
 	// Oracle: "Sandstorm deals 1 damage to each attacking creature."
 	Register("Sandstorm", func() Card {
 		return NewInstant("Sandstorm", "{G}",
-			NewSpellAbility(DealDamageToAllCreatures(Fixed(1), IsAttacking)),
+			Spell(DealDamageToAllCreatures(Fixed(1), IsAttacking)),
 		)
 	})
 }

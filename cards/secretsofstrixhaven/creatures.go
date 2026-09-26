@@ -202,14 +202,12 @@ func registerCreatures() {
 	// When this creature enters, put a +1/+1 counter on another target creature you control.
 	// At the beginning of combat on your turn, exile up to one target card from a graveyard.
 	Register("Ascendant Dustspeaker", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature, dsl.TargetYouControl(), dsl.TargetOtherThanSource())
 		return NewCreature("Ascendant Dustspeaker", "{4}{W}", 3, 4,
 			WithSubTypes("Orc", "Cleric"),
 			WithKeyword(Flying),
 			// When this creature enters, put a +1/+1 counter on another target creature you control.
-			WithAbility(EntersBattlefieldTrigger(
-				AddCounters(P1P1, Fixed(1)),
-				false,
-			).AddTarget(TargetAnotherCreatureYouControl())),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.AddCounters(target, P1P1, dsl.Fixed(1)), dsl.WithTargets(target))),
 			// At the beginning of combat on your turn, exile up to one target card from a graveyard.
 			WithAbility(NewTriggered(EvtBeginCombat, true,
 				FuncEffect("exile up to one target card from a graveyard",
@@ -251,15 +249,23 @@ func registerCreatures() {
 	Register("Eager Glyphmage", func() Card {
 		return NewCreature("Eager Glyphmage", "{3}{W}", 3, 3,
 			WithSubTypes("Cat", "Cleric"),
-			WithAbility(EntersBattlefieldTrigger(
-				CreateColoredToken("Inkling Token", 1, 1,
-					[]Color{White, Black},
-					[]CardType{TypeCreature},
-					[]string{"Inkling"},
-					Flying,
+			WithAbility(
+				dsl.WhenEvent(
+					dsl.Enters(dsl.This),
+					dsl.CreateTokenCopies(
+						dsl.You,
+						dsl.Fixed(1),
+						dsl.DefineToken(
+							"Inkling Token",
+							dsl.TokenPT(1, 1),
+							dsl.TokenColors(White, Black),
+							dsl.TokenTypes(TypeCreature),
+							dsl.TokenSubtypes("Inkling"),
+							dsl.TokenKeywords(Flying),
+						),
+					),
 				),
-				false,
-			)),
+			),
 		)
 	})
 
@@ -274,34 +280,10 @@ func registerCreatures() {
 	// You may tap or untap target creature. Draw a card.
 	Register("Elite Interceptor // Rejoinder", func() Card {
 		spellFactory := func() Card {
-			return NewSorcery("Rejoinder", "{1}{W}",
-				NewTargetedSpell(TargetCreature(),
-					FuncEffect("you may tap or untap target creature; draw a card",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) > 0 {
-								perm := g.MutablePermanent(targets[0])
-								if perm != nil {
-									p := g.GetPlayer(controller)
-									if p != nil && p.ChooseMayAbility("tap or untap target creature") {
-										if perm.Tapped {
-											perm.Tapped = false
-										} else {
-											g.TapPermanent(perm)
-										}
-									}
-								}
-							}
-							// Draw a card for the controller regardless of tap/untap choice.
-							p := g.GetPlayer(controller)
-							if p != nil {
-								g.PlayerDrawCard(p)
-							}
-							return nil
-						},
-					),
-				),
-			)
+			creature := dsl.TargetPermanent("creature", IsCreature)
+			return NewSorcery("Rejoinder", "{1}{W}", dsl.Spell(dsl.Sequence(
+				dsl.MayTapOrUntap(creature), dsl.Draw(dsl.You, dsl.Fixed(1)),
+			), dsl.WithTargets(creature)))
 		}
 		return NewCreature("Elite Interceptor // Rejoinder", "{W} // {1}{W}", 1, 2,
 			WithSubTypes("Human", "Wizard"),
@@ -321,15 +303,14 @@ func registerCreatures() {
 	// Exile target creature. Its controller gains life equal to its power.
 	Register("Emeritus of Truce // Swords to Plowshares", func() Card {
 		stpFactory := func() Card {
-			return NewInstant("Swords to Plowshares", "{W}",
-				NewTargetedSpell(TargetCreature(), Pipeline(
-					"exile target creature. Its controller gains life equal to its power",
-					EffectProperties{Outcome: OutcomeDetriment},
-					SnapshotPermanent(SelectTarget, "victim"),
-					ExileGathered("victim"),
-					GainLifeFromVar("victim.controller", "victim.power"),
-				)),
-			)
+			creature := dsl.TargetPermanent("creature", IsCreature)
+			controller := dsl.BindPlayer("controller")
+			power := dsl.BindNumber("power")
+			return NewInstant("Swords to Plowshares", "{W}", dsl.Spell(dsl.Sequence(
+				dsl.SnapshotPlayer(dsl.ControllerOf(creature), controller),
+				dsl.SnapshotNumber(dsl.PowerOf(creature), power), dsl.Exile(creature),
+				dsl.GainLife(dsl.FromPlayer(controller), dsl.FromNumber(power)),
+			), dsl.WithTargets(creature)))
 		}
 		castCopy := FuncEffect(
 			"cast a copy of Swords to Plowshares",
@@ -421,13 +402,15 @@ func registerCreatures() {
 	// Sorcery
 	// Target creature gets +1/+0 and gains flying until end of turn.
 	Register("Honorbound Page // Forum's Favor", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature)
 		spellFactory := func() Card {
 			return NewSorcery("Forum's Favor", "{W}",
-				NewTargetedSpell(TargetCreature(),
-					CompositeEffects("target creature gets +1/+0 and gains flying until end of turn",
-						Boost(Fixed(1), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
-						GrantKeyword(Flying).Targeting(ToTarget()).Until(EndOfTurn),
+				dsl.Spell(
+					dsl.Sequence(
+						dsl.Until(EndOfTurn, dsl.ModifyPT(target, dsl.Fixed(1), dsl.Fixed(0))),
+						dsl.Until(EndOfTurn, dsl.GrantKeyword(target, Flying)),
 					),
+					dsl.WithTargets(target),
 				),
 			)
 		}
@@ -531,33 +514,10 @@ func registerCreatures() {
 	// You and target opponent each draw three cards.
 	Register("Joined Researchers // Secret Rendezvous", func() Card {
 		srFactory := func() Card {
-			return NewSorcery("Secret Rendezvous", "{1}{W}{W}",
-				NewTargetedSpell(TargetOpponent(),
-					FuncEffect(
-						"you and target opponent each draw three cards",
-						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							// Controller draws three cards.
-							p := g.GetPlayer(controller)
-							if p != nil {
-								for range 3 {
-									g.PlayerDrawCard(p)
-								}
-							}
-							// Target opponent draws three cards.
-							if len(targets) > 0 {
-								opp := g.GetPlayer(targets[0])
-								if opp != nil {
-									for range 3 {
-										g.PlayerDrawCard(opp)
-									}
-								}
-							}
-							return nil
-						},
-					),
-				),
-			)
+			opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
+			return NewSorcery("Secret Rendezvous", "{1}{W}{W}", dsl.Spell(dsl.Sequence(
+				dsl.Draw(dsl.You, dsl.Fixed(3)), dsl.Draw(opponent, dsl.Fixed(3)),
+			), dsl.WithTargets(opponent)))
 		}
 		castCopy := FuncEffect(
 			"cast a copy of Secret Rendezvous",
@@ -609,7 +569,7 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Cleric"),
 			WithKeyword(Flying),
 			// When this creature enters, surveil 1.
-			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(1)), false)),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Surveil(dsl.Fixed(1)))),
 			// Whenever one or more cards leave your graveyard, this creature gets +1/+1 until end of turn.
 			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
 				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()).Until(EndOfTurn),
@@ -629,13 +589,15 @@ func registerCreatures() {
 	// Sorcery
 	// Target creature gets +1/+0 and gains double strike until end of turn.
 	Register("Quill-Blade Laureate // Twofold Intent", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature)
 		spellFactory := func() Card {
 			return NewSorcery("Twofold Intent", "{1}{W}",
-				NewTargetedSpell(TargetCreature(),
-					CompositeEffects("target creature gets +1/+0 and gains double strike until end of turn",
-						Boost(Fixed(1), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
-						GrantKeyword(DoubleStrike).Targeting(ToTarget()).Until(EndOfTurn),
+				dsl.Spell(
+					dsl.Sequence(
+						dsl.Until(EndOfTurn, dsl.ModifyPT(target, dsl.Fixed(1), dsl.Fixed(0))),
+						dsl.Until(EndOfTurn, dsl.GrantKeyword(target, DoubleStrike)),
 					),
+					dsl.WithTargets(target),
 				),
 			)
 		}
@@ -703,12 +665,10 @@ func registerCreatures() {
 	// One or two target creatures each get +2/+2 until end of turn.
 	Register("Spiritcall Enthusiast // Scrollboost", func() Card {
 		sbFactory := func() Card {
-			return NewSorcery("Scrollboost", "{1}{W}",
-				NewMultiTargetSpell(
-					[]Target{TargetUpToNCreatures(2)},
-					Boost(Fixed(2), Fixed(2)).Targeting(ToAllTargets()).Until(EndOfTurn),
-				),
-			)
+			creatures := dsl.TargetPermanents("creatures", 1, 2, IsCreature)
+			return NewSorcery("Scrollboost", "{1}{W}", dsl.Spell(
+				dsl.Until(EndOfTurn, dsl.ModifyEachPT(creatures, dsl.Fixed(2), dsl.Fixed(2))), dsl.WithTargets(creatures),
+			))
 		}
 		castCopy := FuncEffect(
 			"cast a copy of Scrollboost",
@@ -822,13 +782,18 @@ func registerCreatures() {
 	Register("Campus Composer // Aqueous Aria", func() Card {
 		spellFactory := func() Card {
 			return NewSorcery("Aqueous Aria", "{4}{U}",
-				NewSpellAbility(
-					CreateColoredToken(
-						"Elemental Token", 3, 3,
-						[]Color{Blue, Red},
-						[]CardType{TypeCreature},
-						[]string{"Elemental"},
-						Flying,
+				dsl.Spell(
+					dsl.CreateTokenCopies(
+						dsl.You,
+						dsl.Fixed(1),
+						dsl.DefineToken(
+							"Elemental Token",
+							dsl.TokenPT(3, 3),
+							dsl.TokenColors(Blue, Red),
+							dsl.TokenTypes(TypeCreature),
+							dsl.TokenSubtypes("Elemental"),
+							dsl.TokenKeywords(Flying),
+						),
 					),
 				))
 		}
@@ -920,12 +885,10 @@ func registerCreatures() {
 	// Instant
 	// Target player draws three cards.
 	Register("Emeritus of Ideation // Ancestral Recall", func() Card {
+		target := dsl.TargetPlayer("target")
 		spellFactory := func() Card {
 			return NewInstant("Ancestral Recall", "{U}",
-				NewTargetedSpell(
-					TargetPlayer(),
-					DrawCards(Fixed(3)),
-				))
+				dsl.Spell(dsl.Draw(dsl.You, dsl.Fixed(3)), dsl.WithTargets(target)))
 		}
 		return NewCreature("Emeritus of Ideation // Ancestral Recall", "{3}{U}{U} // {U}", 5, 5,
 			WithSubTypes("Human", "Wizard"),
@@ -976,12 +939,10 @@ func registerCreatures() {
 	// Instant
 	// Target creature gains flying until end of turn.
 	Register("Encouraging Aviator // Jump", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature)
 		spellFactory := func() Card {
 			return NewInstant("Jump", "{U}",
-				NewTargetedSpell(
-					TargetCreature(),
-					GrantKeyword(Flying).Targeting(ToTarget()).Until(EndOfTurn),
-				))
+				dsl.Spell(dsl.Until(EndOfTurn, dsl.GrantKeyword(target, Flying)), dsl.WithTargets(target)))
 		}
 		return NewCreature("Encouraging Aviator // Jump", "{2}{U} // {U}", 2, 3,
 			WithSubTypes("Bird", "Wizard"),
@@ -1144,7 +1105,7 @@ func registerCreatures() {
 			WithSubTypes("Merfolk", "Wizard"),
 			// {T}: Add {U}.
 			// XXX: "Spend this mana only to cast an instant or sorcery spell" restriction not enforced (engine has no mana restriction tagging).
-			WithManaAbility(Blue),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Blue, dsl.Fixed(1)))),
 			// {1}, {T}: Add one mana of any color.
 			// XXX: "Spend this mana only to cast an instant or sorcery spell" restriction not enforced.
 			WithActivatedAbility(
@@ -1239,7 +1200,7 @@ func registerCreatures() {
 	Register("Landscape Painter // Vibrant Idea", func() Card {
 		spellFactory := func() Card {
 			return NewSorcery("Vibrant Idea", "{4}{U}",
-				NewSpellAbility(DrawCards(Fixed(2))))
+				dsl.Spell(dsl.Draw(dsl.You, dsl.Fixed(2))))
 		}
 		return NewCreature("Landscape Painter // Vibrant Idea", "{1}{U} // {4}{U}", 2, 1,
 			WithSubTypes("Merfolk", "Wizard"),
@@ -1373,7 +1334,7 @@ func registerCreatures() {
 			// This spell costs {3} less to cast if creatures you control have total toughness 10 or greater.
 			WithSelfCostReduction(FixedAmount(3), totalToughnessGTE10),
 			// When Orysa enters, draw two cards.
-			WithAbility(EntersBattlefieldTrigger(DrawCards(Fixed(2)), false)),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Draw(dsl.You, dsl.Fixed(2)))),
 		)
 	})
 
@@ -1452,27 +1413,9 @@ func registerCreatures() {
 	// Draw two cards, then discard two cards.
 	Register("Spellbook Seeker // Careful Study", func() Card {
 		spellFactory := func() Card {
-			return NewSorcery("Careful Study", "{U}",
-				NewSpellAbility(CompositeEffects(
-					"draw two cards, then discard two cards",
-					DrawCards(Fixed(2)),
-					FuncEffect(
-						"discard two cards",
-						EffectProperties{},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p == nil {
-								return nil
-							}
-							chosen := p.ChooseCardsFromHand(2, "discard two cards", g)
-							for _, c := range chosen {
-								g.PlayerDiscard(p, c.ID())
-							}
-							return nil
-						},
-					),
-				)),
-			)
+			return NewSorcery("Careful Study", "{U}", dsl.Spell(dsl.Sequence(
+				dsl.Draw(dsl.You, dsl.Fixed(2)), dsl.Discard(dsl.You, dsl.Fixed(2)),
+			)))
 		}
 		return NewCreature("Spellbook Seeker // Careful Study", "{3}{U} // {U}", 3, 3,
 			WithSubTypes("Bird", "Wizard"),
@@ -1558,7 +1501,7 @@ func registerCreatures() {
 			// Increment
 			WithAbility(IncrementTrigger()),
 			// When this creature enters, surveil 2.
-			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(2)), false)),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Surveil(dsl.Fixed(2)))),
 		)
 	})
 
@@ -1573,16 +1516,10 @@ func registerCreatures() {
 	// Sorcery
 	// Put a +1/+1 counter on target creature. You gain 1 life.
 	Register("Adventurous Eater // Have a Bite", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature)
 		spellFactory := func() Card {
 			return NewSorcery("Have a Bite", "{B}",
-				NewTargetedSpell(
-					TargetCreature(),
-					CompositeEffects(
-						"put a +1/+1 counter on target creature; you gain 1 life",
-						AddCounters(P1P1, Fixed(1)),
-						dsl.GainLife(dsl.You, dsl.Fixed(1)),
-					),
-				))
+				dsl.Spell(dsl.Sequence(dsl.AddCounters(target, P1P1, dsl.Fixed(1)), dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(target)))
 		}
 		return NewCreature("Adventurous Eater // Have a Bite", "{2}{B} // {B}", 3, 2,
 			WithSubTypes("Human", "Warlock"),
@@ -1646,10 +1583,7 @@ func registerCreatures() {
 			WithSubTypes("Frog", "Warlock"),
 			WithKeyword(Deathtouch),
 			// {1}{B}: This creature gets +1/+1 until end of turn.
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToSource()),
-				ManaCostOf("{1}{B}"),
-			),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{1}{B}")), dsl.Until(EndOfTurn, dsl.ModifyPT(dsl.This, dsl.Fixed(1), dsl.Fixed(1))))),
 		)
 	})
 
@@ -1662,12 +1596,10 @@ func registerCreatures() {
 	// Sorcery
 	// Return target creature card from your graveyard to your hand.
 	Register("Cheerful Osteomancer // Raise Dead", func() Card {
+		target := dsl.TargetGraveyardCard("target", dsl.GraveyardCardFilter(IsCreatureCard))
 		spellFactory := func() Card {
 			return NewSorcery("Raise Dead", "{B}",
-				NewTargetedSpell(
-					TargetCardInYourGraveyard(IsCreatureCard),
-					ReturnFromGraveyardToHandTarget(),
-				))
+				dsl.Spell(dsl.ReturnCardToHand(target), dsl.WithTargets(target)))
 		}
 		return NewCreature("Cheerful Osteomancer // Raise Dead", "{3}{B} // {B}", 4, 2,
 			WithSubTypes("Orc", "Warlock"),
@@ -1870,20 +1802,7 @@ func registerCreatures() {
 	// Each opponent loses 2 life.
 	Register("Leech Collector // Bloodletting", func() Card {
 		spellFactory := func() Card {
-			return NewSorcery("Bloodletting", "{B}",
-				NewSpellAbility(FuncEffect(
-					"each opponent loses 2 life",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, pl := range g.AllPlayers() {
-							if pl.PlayerID() != controller {
-								g.PlayerLoseLife(pl, 2)
-							}
-						}
-						return nil
-					},
-				)),
-			)
+			return NewSorcery("Bloodletting", "{B}", dsl.Spell(dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(2))))
 		}
 		// Becomes prepared the first time the controller gains life each turn.
 		// "First time" = PlayerLifeGainedThisTurn equals the event amount (prior total was 0).
@@ -2113,13 +2032,15 @@ func registerCreatures() {
 	// Sorcery
 	// Target creature you control gets +2/+0 and gains deathtouch until end of turn.
 	Register("Scathing Shadelock // Venomous Words", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature, dsl.TargetYouControl())
 		spellFactory := func() Card {
 			return NewSorcery("Venomous Words", "{B}",
-				NewTargetedSpell(TargetControlledCreature(),
-					CompositeEffects("target creature you control gets +2/+0 and gains deathtouch until end of turn",
-						Boost(Fixed(2), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
-						GrantKeyword(Deathtouch).Targeting(ToTarget()).Until(EndOfTurn),
+				dsl.Spell(
+					dsl.Sequence(
+						dsl.Until(EndOfTurn, dsl.ModifyPT(target, dsl.Fixed(2), dsl.Fixed(0))),
+						dsl.Until(EndOfTurn, dsl.GrantKeyword(target, Deathtouch)),
 					),
+					dsl.WithTargets(target),
 				))
 		}
 		becomePreparedEffect := FuncEffect(
@@ -2149,27 +2070,10 @@ func registerCreatures() {
 	// Target player draws two cards and loses 2 life.
 	Register("Scheming Silvertongue // Sign in Blood", func() Card {
 		spellFactory := func() Card {
-			return NewSorcery("Sign in Blood", "{B}{B}",
-				NewTargetedSpell(TargetPlayer(),
-					FuncEffect(
-						"target player draws two cards and loses 2 life",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							if len(targets) == 0 {
-								return nil
-							}
-							pl := g.GetPlayer(targets[0])
-							if pl == nil {
-								return nil
-							}
-							for range 2 {
-								g.PlayerDrawCard(pl)
-							}
-							g.PlayerLoseLife(pl, 2)
-							return nil
-						},
-					),
-				))
+			player := dsl.TargetPlayer("player")
+			return NewSorcery("Sign in Blood", "{B}{B}", dsl.Spell(dsl.Sequence(
+				dsl.Draw(player, dsl.Fixed(2)), dsl.LoseLife(player, dsl.Fixed(2)),
+			), dsl.WithTargets(player)))
 		}
 		// At the beginning of your second main phase, if you gained 2 or more life
 		// this turn, this creature becomes prepared.
@@ -2219,26 +2123,10 @@ func registerCreatures() {
 	// When this creature enters, each opponent loses 2 life and you gain 2 life.
 	Register("Sneering Shadewriter", func() Card {
 		return NewCreature("Sneering Shadewriter", "{4}{B}", 3, 3,
-			WithSubTypes("Vampire", "Warlock"),
-			WithKeyword(Flying),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect(
-					"each opponent loses 2 life and you gain 2 life",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, pl := range g.AllPlayers() {
-							if pl.PlayerID() != controller {
-								g.PlayerLoseLife(pl, 2)
-							}
-						}
-						if you := g.GetPlayer(controller); you != nil {
-							g.PlayerGainLife(you, 2)
-						}
-						return nil
-					},
-				),
-				false,
-			)),
+			WithSubTypes("Vampire", "Warlock"), WithKeyword(Flying),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Sequence(
+				dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(2)), dsl.GainLife(dsl.You, dsl.Fixed(2)),
+			))),
 		)
 	})
 
@@ -2324,20 +2212,7 @@ func registerCreatures() {
 	// Add {R}{R}{R}{R}{R}.
 	Register("Blazing Firesinger // Seething Song", func() Card {
 		spellFactory := func() Card {
-			return NewInstant("Seething Song", "{2}{R}",
-				NewSpellAbility(FuncEffect(
-					"add {R}{R}{R}{R}{R}",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						p.ManaPool().Add(Red, 5)
-						return nil
-					},
-				)),
-			)
+			return NewInstant("Seething Song", "{2}{R}", dsl.Spell(dsl.AddManaAmount(Red, dsl.Fixed(5))))
 		}
 		return NewCreature("Blazing Firesinger // Seething Song", "{2}{R} // {2}{R}", 2, 3,
 			WithSubTypes("Dwarf", "Bard"),
@@ -2355,11 +2230,7 @@ func registerCreatures() {
 			WithSubTypes("Spirit", "Knight"),
 			WithKeyword(Haste),
 			// {T}, Discard a card: Draw a card.
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				Tap(),
-				WithCost(DiscardCost(1)),
-			),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This), DiscardCost(1)), dsl.Draw(dsl.You, dsl.Fixed(1)))),
 		)
 	})
 
@@ -2489,9 +2360,10 @@ func registerCreatures() {
 		nonbasicLand := NewPermanentFilter("nonbasic land", func(p *Permanent, _ *Game) bool {
 			return p.HasType(TypeLand) && !p.Card.HasSuperType(SuperBasic)
 		})
+		target := dsl.TargetPermanent("target", nonbasicLand)
 		spellFactory := func() Card {
 			return NewSorcery("Rocket Volley", "{1}{R}",
-				NewTargetedSpell(TargetPermanent(nonbasicLand), DestroyTarget()),
+				dsl.Spell(dsl.Destroy(target), dsl.WithTargets(target)),
 			)
 		}
 		return NewCreature("Maelstrom Artisan // Rocket Volley", "{1}{R}{R} // {1}{R}", 3, 2,
@@ -2882,13 +2754,11 @@ func registerCreatures() {
 	// 4/4
 	// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
 	Register("Zealous Lorecaster", func() Card {
+		target := dsl.TargetGraveyardCard("target", dsl.GraveyardCardFilter(IsInstantOrSorceryCard))
 		return NewCreature("Zealous Lorecaster", "{5}{R}", 4, 4,
 			WithSubTypes("Giant", "Sorcerer"),
 			// When this creature enters, return target instant or sorcery card from your graveyard to your hand.
-			WithAbility(EntersBattlefieldTrigger(
-				ReturnFromGraveyardToHandTarget(),
-				false,
-			).AddTarget(TargetCardInYourGraveyard(IsInstantOrSorceryCard))),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.ReturnCardToHand(target), dsl.WithTargets(target))),
 		)
 	})
 
@@ -2999,9 +2869,10 @@ func registerCreatures() {
 	// Sorcery
 	// Return target card from your graveyard to your hand.
 	Register("Emeritus of Abundance // Regrowth", func() Card {
+		target := dsl.TargetGraveyardCard("target")
 		spellFactory := func() Card {
 			return NewSorcery("Regrowth", "{1}{G}",
-				NewTargetedSpell(TargetCardInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
+				dsl.Spell(dsl.ReturnCardToHand(target), dsl.WithTargets(target)),
 			)
 		}
 		return NewCreature("Emeritus of Abundance // Regrowth", "{2}{G} // {1}{G}", 3, 4,
@@ -3128,9 +2999,10 @@ func registerCreatures() {
 	// Sorcery
 	// Target player gains X life.
 	Register("Infirmary Healer // Stream of Life", func() Card {
+		target := dsl.TargetPlayer("target")
 		spellFactory := func() Card {
 			return NewSorcery("Stream of Life", "{X}{G}",
-				NewTargetedSpell(TargetPlayer(), GainLifeTarget(XValue())),
+				dsl.Spell(dsl.GainLife(target, dsl.ValueAtResolution(XValue())), dsl.WithTargets(target)),
 			)
 		}
 		return NewCreature("Infirmary Healer // Stream of Life", "{1}{G} // {X}{G}", 2, 3,
@@ -3148,7 +3020,7 @@ func registerCreatures() {
 		return NewCreature("Mindful Biomancer", "{1}{G}", 2, 2,
 			WithSubTypes("Dryad", "Druid"),
 			// When this creature enters, you gain 1 life.
-			WithAbility(EntersBattlefieldTrigger(dsl.GainLife(dsl.You, dsl.Fixed(1)), false)),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.GainLife(dsl.You, dsl.Fixed(1)))),
 			dsl.WithAbility(dsl.Activate(
 				dsl.Costs(dsl.Mana("{2}{G}")),
 				dsl.Until(EndOfTurn, dsl.ModifyPT(dsl.This, dsl.Fixed(2), dsl.Fixed(2))),
@@ -3423,36 +3295,8 @@ func registerCreatures() {
 	// {T}: Add an amount of {G} equal to this creature's power.
 	Register("Topiary Lecturer", func() Card {
 		return NewCreature("Topiary Lecturer", "{2}{G}", 1, 2,
-			WithSubTypes("Elf", "Druid"),
-			// Increment
-			WithAbility(IncrementTrigger()),
-			// {T}: Add an amount of {G} equal to this creature's power.
-			// XXX: Implemented as a non-mana activated ability because ManaAbility has a
-			// fixed production list and cannot vary by power. It will not auto-tap during
-			// AI mana payment but resolves correctly via ActivateAbility.
-			WithActivatedAbility(
-				FuncEffect(
-					"add {G} equal to this creature's power",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						perm := g.FindPermanent(sourceID)
-						if perm == nil {
-							return nil
-						}
-						power := perm.CurrentPower(g)
-						if power <= 0 {
-							return nil
-						}
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						p.ManaPool().Add(Green, power)
-						return nil
-					},
-				),
-				Tap(),
-			),
+			WithSubTypes("Elf", "Druid"), WithAbility(IncrementTrigger()),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Green, dsl.PowerOf(dsl.This)))),
 		)
 	})
 
@@ -3549,12 +3393,10 @@ func registerCreatures() {
 	// Sorcery
 	// Put a +1/+1 counter on target creature.
 	Register("Abigale, Poet Laureate // Heroic Stanza", func() Card {
+		target := dsl.TargetPermanent("target", dsl.IsCreature)
 		spellFactory := func() Card {
 			return NewSorcery("Heroic Stanza", "{1}{W/B}",
-				NewTargetedSpell(
-					TargetCreature(),
-					AddCounters(P1P1, Fixed(1)),
-				))
+				dsl.Spell(dsl.AddCounters(target, P1P1, dsl.Fixed(1)), dsl.WithTargets(target)))
 		}
 		// Abigale becomes prepared via creature-spell trigger, not at ETB.
 		// HasPreparedSpell returns false (intended — enters unprepared).
@@ -3741,28 +3583,13 @@ func registerCreatures() {
 	// 3/4
 	// Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.
 	Register("Blech, Loafing Pest", func() Card {
-		isPestBatInsectSnakeSpider := func(perm *Permanent, _ *Game) bool {
-			return perm.HasSubType("Pest") || perm.HasSubType("Bat") ||
-				perm.HasSubType("Insect") || perm.HasSubType("Snake") ||
-				perm.HasSubType("Spider")
-		}
+		player := dsl.BindPlayer("gainer")
+		creature := dsl.BindPermanent("creature")
 		return NewCreature("Blech, Loafing Pest", "{1}{B}{G}", 3, 4,
-			WithSubTypes("Pest"),
-			WithSuperTypes(SuperLegendary),
-			// Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control.
-			WithAbility(WheneverYouGainLifeTrigger(
-				FuncEffect("put +1/+1 counter on each Pest/Bat/Insect/Snake/Spider you control",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						for _, perm := range g.AllBattlefield() {
-							if perm.ControllerID() == controller && isPestBatInsectSnakeSpider(perm, g) {
-								g.AddCountersWithReplacement(perm, P1P1, 1, sourceID, false)
-							}
-						}
-						return nil
-					},
-				),
-				false,
+			WithSubTypes("Pest"), WithSuperTypes(SuperLegendary),
+			WithAbility(dsl.WhenEvent(dsl.ControllerGainsLife(player),
+				dsl.ForEach(dsl.ControlledPermanents(Or(HasSubType("Pest"), HasSubType("Bat"), HasSubType("Insect"), HasSubType("Snake"), HasSubType("Spider"))),
+					creature, dsl.AddCounters(dsl.From(creature), P1P1, dsl.Fixed(1))),
 			)),
 		)
 	})
@@ -4032,44 +3859,12 @@ func registerCreatures() {
 	// Trample
 	// When this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)
 	Register("Fractal Mascot", func() Card {
+		creature := dsl.TargetPermanent("creature", IsCreature, dsl.TargetOpponentControls())
 		return NewCreature("Fractal Mascot", "{4}{G}{U}", 6, 6,
-			WithSubTypes("Fractal", "Elk"),
-			WithKeyword(Trample),
-			WithAbility(EntersBattlefieldTrigger(
-				FuncEffect(
-					"tap target creature an opponent controls and put a stun counter on it",
-					EffectProperties{Outcome: OutcomeDetriment},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						opp := g.GetOpponent(controller)
-						if opp == nil {
-							return nil
-						}
-						candidates := g.FilterBattlefield(And(
-							ControlledBy(opp.PlayerID()),
-							IsCreature,
-						))
-						if len(candidates) == 0 {
-							return nil
-						}
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						chosen := p.ChoosePermanent(candidates, "tap target creature an opponent controls", g)
-						if chosen == nil {
-							return nil
-						}
-						g.TapPermanent(chosen)
-						chosen = g.MutablePermanent(chosen.ID())
-						if chosen == nil {
-							return nil
-						}
-						chosen.AddCounter(Stun, 1)
-						return nil
-					},
-				),
-				false,
-			)),
+			WithSubTypes("Fractal", "Elk"), WithKeyword(Trample),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Sequence(
+				dsl.Tap(creature), dsl.AddCounters(creature, Stun, dsl.Fixed(1)),
+			), dsl.WithTargets(creature))),
 		)
 	})
 
@@ -4208,10 +4003,7 @@ func registerCreatures() {
 			WithSubTypes("Bird", "Cleric"),
 			WithKeyword(Flying),
 			WithKeyword(Haste),
-			WithActivatedAbility(
-				GrantKeyword(Lifelink).Targeting(ToSource()).Until(EndOfTurn),
-				DiscardCost(1),
-			),
+			WithAbility(dsl.Activate(dsl.Costs(DiscardCost(1)), dsl.Until(EndOfTurn, dsl.GrantKeyword(dsl.This, Lifelink)))),
 			// Whenever one or more cards leave your graveyard, put a +1/+1 counter on target creature you control.
 			WithAbility(WheneverOneOrMoreCardsLeaveYourGraveyardTrigger(
 				AddCounters(P1P1, Fixed(1)).Targeting(ToTarget()),
@@ -4229,7 +4021,7 @@ func registerCreatures() {
 		return NewCreature("Imperious Inkmage", "{1}{W}{B}", 3, 3,
 			WithSubTypes("Orc", "Warlock"),
 			WithKeyword(Vigilance),
-			WithAbility(EntersBattlefieldTrigger(Surveil(Fixed(2)), false)),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.Surveil(dsl.Fixed(2)))),
 		)
 	})
 
@@ -4261,34 +4053,11 @@ func registerCreatures() {
 	// Mill a card. Put two +1/+1 counters on target creature. It gains trample until end of turn.
 	Register("Kirol, History Buff // Pack a Punch", func() Card {
 		spellFactory := func() Card {
-			return NewSorcery("Pack a Punch", "{1}{R}{W}",
-				NewTargetedSpell(
-					TargetCreature(),
-					FuncEffect(
-						"mill a card; put two +1/+1 counters on target creature; it gains trample until end of turn",
-						EffectProperties{Outcome: OutcomeBenefit},
-						func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-							p := g.GetPlayer(controller)
-							if p != nil {
-								lib := p.Library()
-								if len(lib) > 0 {
-									p.AddToGraveyard(lib[0])
-									p.SetLibrary(lib[1:])
-								}
-							}
-							if len(targets) == 0 {
-								return nil
-							}
-							perm := g.FindPermanent(targets[0])
-							if perm == nil {
-								return nil
-							}
-							g.AddCountersWithReplacement(perm, P1P1, 2, sourceID, false)
-							g.GrantAttr(perm.ID(), Trample)
-							return nil
-						},
-					),
-				))
+			creature := dsl.TargetPermanent("creature", IsCreature)
+			return NewSorcery("Pack a Punch", "{1}{R}{W}", dsl.Spell(dsl.Sequence(
+				dsl.Mill(dsl.You, dsl.Fixed(1)), dsl.AddCounters(creature, P1P1, dsl.Fixed(2)),
+				dsl.Until(EndOfTurn, dsl.GrantKeyword(creature, Trample)),
+			), dsl.WithTargets(creature)))
 		}
 		// Kirol becomes prepared via graveyard-leave trigger, not at ETB.
 		// HasPreparedSpell returns false (intended — enters unprepared).
@@ -4642,7 +4411,7 @@ func registerCreatures() {
 			WithSubTypes("Dinosaur", "Fractal"),
 			WithKeyword(Flying),
 			WithAbility(EntersWithXCounters(P1P1)),
-			WithAbility(ETBEffect(dsl.GainLife(dsl.You, dsl.Fixed(2)))),
+			WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.GainLife(dsl.You, dsl.Fixed(2)))),
 		)
 	})
 
@@ -5039,11 +4808,7 @@ func registerCreatures() {
 	Register("Tam, Observant Sequencer // Deep Sight", func() Card {
 		spellFactory := func() Card {
 			return NewSorcery("Deep Sight", "{G}{U}",
-				NewSpellAbility(CompositeEffects(
-					"draw a card and gain 1 life",
-					DrawCards(Fixed(1)),
-					dsl.GainLife(dsl.You, dsl.Fixed(1)),
-				)))
+				dsl.Spell(dsl.Sequence(dsl.Draw(dsl.You, dsl.Fixed(1)), dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 		}
 		// Tam becomes prepared via landfall, not at ETB.
 		// HasPreparedSpell returns false (intended — enters unprepared).
@@ -5337,7 +5102,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithCardType(TypeArtifact),
 			// {T}: Add {C}.
-			WithManaAbility(Colorless),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Colorless, dsl.Fixed(1)))),
 			// Grandeur — Discard another card named Page, Loose Leaf: …
 			WithAbility(NewActivatedAbility(
 				grandeurEffect,

@@ -979,6 +979,12 @@ func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx i
 	}
 
 	if r.perm != "" {
+		for _, permanent := range tg.AllBattlefield() {
+			if permanent.Name() == r.perm && permanent.ControllerID() == respPlayerID {
+				tg.resolveResponseStackTargets(permanent.Card, permanent.RuntimeAbilities, respPlayerID, targets)
+				break
+			}
+		}
 		// Ensure responder has enough mana to activate; CR 500.5's
 		// per-step pool empty means pre-turn top-up doesn't survive.
 		respPlayer := tg.GetPlayer(r.player)
@@ -1012,6 +1018,7 @@ func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx i
 		for _, c := range p.Hand() {
 			if c.Name() == r.spell {
 				cardID = c.ID()
+				tg.resolveResponseStackTargets(c, c.Abilities(), respPlayerID, targets)
 				break
 			}
 		}
@@ -1025,6 +1032,36 @@ func (tg *TestGame) buildPriorityActionForResponse(r responseAction, playerIdx i
 		CardID:  cardID,
 		Targets: targets,
 		XValue:  r.xValue,
+	}
+}
+
+// Typed spell targets use the stack object ID. Legacy targets use the card ID.
+func (tg *TestGame) resolveResponseStackTargets(card mage.Card, abilities []mage.Ability, controller uuid.UUID, targets []uuid.UUID) {
+	var specs []mage.Target
+	for _, ability := range abilities {
+		inner := mage.UnwrapAbility(ability)
+		if targeted, ok := inner.(interface{ Targets() []mage.Target }); ok {
+			specs = append(specs, targeted.Targets()...)
+		}
+		if modal, ok := inner.(*mage.ModalSpellAbility); ok {
+			for _, mode := range modal.Modes() {
+				specs = append(specs, mode.Targets...)
+			}
+		}
+	}
+	for _, spec := range specs {
+		possible := spec.Possible(controller, card, tg.Game)
+		for i, id := range targets {
+			if slices.Contains(possible, id) {
+				continue
+			}
+			for _, object := range tg.StackObjects() {
+				if object.SourceID == id && slices.Contains(possible, object.ID) {
+					targets[i] = object.ID
+					break
+				}
+			}
+		}
 	}
 }
 

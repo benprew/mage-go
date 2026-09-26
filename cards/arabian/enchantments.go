@@ -3,8 +3,6 @@ package arabian
 import (
 	"strings"
 
-	mage "github.com/benprew/mage-go/pkg/mage"
-
 	"github.com/google/uuid"
 
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
@@ -212,18 +210,26 @@ func registerEnchantments() {
 	// Oracle: "Enchant creature. Enchanted creature has islandwalk."
 	Register("Fishliver Oil", func() Card {
 		return NewAura("Fishliver Oil", "{1}{U}",
-			WithAbility(StaticAbility(GrantAbilityToAttached(Islandwalk, AttachAura))),
+			WithAbility(Static(While(StateConditionFunc("source on battlefield", []StateDependency{StateBattlefield},
+				func(g StateReader, ctx StateContext) bool {
+					_, present := g.Permanent(ctx.SourceID)
+					return present
+				}), GrantKeyword(AttachedPermanent, Islandwalk)))),
 		)
 	})
 
 	// Oracle: "Enchant creature. Enchanted creature gets +3/+3. At the beginning of the
 	// upkeep of enchanted creature's controller, put a -1/-1 counter on that creature."
 	Register("Unstable Mutation", func() Card {
+		host, player := BindPermanent("host"), BindPlayer("player")
 		return NewAura("Unstable Mutation", "{U}",
-			WithAbility(StaticAbility(BoostAttached(3, 3, AttachAura))),
-			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				mage.AddCounters(M1M1, Fixed(1)).Targeting(ToAttached()), false,
-			)),
+			WithAbility(Static(While(StateConditionFunc("source on battlefield", []StateDependency{StateBattlefield},
+				func(g StateReader, ctx StateContext) bool {
+					_, present := g.Permanent(ctx.SourceID)
+					return present
+				}), ModifyPT(AttachedPermanent, Fixed(3), Fixed(3))))),
+			WithAbility(WhenEvent(AttachedControllerUpkeep(host, player),
+				AddCounters(AttachedPermanent, M1M1, Fixed(1)))),
 		)
 	})
 }

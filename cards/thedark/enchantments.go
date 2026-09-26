@@ -137,11 +137,10 @@ func registerEnchantments() {
 	// Sacrifice a Forest: You gain 3 life.
 	Register("Dark Heart of the Wood", func() Card {
 		return NewEnchantment("Dark Heart of the Wood", "{B}{G}",
-			WithActivatedAbility(
+			WithAbility(Activate(
+				Costs(SacrificeMatchingIncludingSourceCost(HasSubType("Forest"), "Sacrifice a Forest")),
 				GainLife(You, Fixed(3)),
-				GenericCost(0),
-				WithCost(SacrificeMatchingCost(And(IsLand, HasSubType("Forest")), "Sacrifice a Forest")),
-			),
+			)),
 		)
 	})
 
@@ -297,9 +296,8 @@ func registerEnchantments() {
 	// Green creatures have forestwalk. (They can't be blocked as long as defending player controls a Forest.)
 	Register("Hidden Path", func() Card {
 		return NewEnchantment("Hidden Path", "{2}{G}{G}{G}{G}",
-			WithStaticAbility(
-				GrantKeywordToAllIncludingSource(Forestwalk, And(IsCreature, HasColorFilter(Green))),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				GrantEachKeyword(MatchingPermanents(And(IsCreature, HasColorFilter(Green))), Forestwalk)))),
 		)
 	})
 

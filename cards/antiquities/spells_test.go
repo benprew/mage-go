@@ -3,6 +3,8 @@ package antiquities
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -15,10 +17,17 @@ func TestArtifactBlast(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneHand, gametest.PlayerB, "Ornithopter")
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Artifact Blast")
-		g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Ornithopter")
-		g.CastInResponseTo(gametest.PlayerA, "Artifact Blast")
-		g.StopAt(2, core.BeginCombat)
-		g.Execute()
+		a, b := g.GetPlayer(gametest.PlayerA), g.GetPlayer(gametest.PlayerB)
+		g.SetStep(core.PrecombatMain)
+		g.SetActivePlayerIndex(1)
+		if err := g.CastSpellByID(b.PlayerID(), b.Hand()[0].ID(), nil, 0); err != nil {
+			t.Fatal(err)
+		}
+		a.ManaPool().Add(core.Red, 1)
+		if err := g.CastSpellByID(a.PlayerID(), a.Hand()[0].ID(), []uuid.UUID{g.StackPeek().ID}, 0); err != nil {
+			t.Fatal(err)
+		}
+		g.ResolveStack()
 		g.AssertPermanentCount(gametest.PlayerB, "Ornithopter", 0)
 		g.AssertGraveyardCount(gametest.PlayerB, "Ornithopter", 1)
 	})

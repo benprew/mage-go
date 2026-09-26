@@ -53,31 +53,11 @@ func registerEnchantments() {
 	// As long as there are five or more growth counters on this enchantment, creatures you control get +3/+3.
 	Register("Comforting Counsel", func() Card {
 		player := dsl.BindPlayer("gainer")
-		lifeGainTrigger := dsl.WhenEvent(dsl.ControllerGainsLife(player),
-			dsl.AddCounters(dsl.This, Growth, dsl.Fixed(1)),
-		)
-		boost := FuncContinuousEffect(LayerPT, WhileOnBattlefield,
-			func(g *Game, sourceID uuid.UUID) error {
-				src := g.FindPermanent(sourceID)
-				if src == nil {
-					return nil
-				}
-				if src.Counters[Growth] < 5 {
-					return nil
-				}
-				for _, p := range g.FilterBattlefield(And(IsCreature, ControlledBy(src.ControllerID()))) {
-					p = g.MutablePermanent(p.ID())
-					if p == nil {
-						continue
-					}
-					p.BoostPT(3, 3)
-				}
-				return nil
-			},
-		)
 		return NewEnchantment("Comforting Counsel", "{1}{G}",
-			WithAbility(lifeGainTrigger),
-			WithStaticAbility(boost),
+			WithAbility(dsl.WhenEvent(dsl.ControllerGainsLife(player), dsl.AddCounters(dsl.This, Growth, dsl.Fixed(1)))),
+			WithAbility(dsl.Static(dsl.While(dsl.SourceHasCounters(Growth, 5),
+				dsl.ModifyEachPT(dsl.ControlledPermanents(IsCreature), dsl.Fixed(3), dsl.Fixed(3)),
+			))),
 		)
 	})
 
@@ -101,14 +81,22 @@ func registerEnchantments() {
 	// Whenever you attack, if a card left your graveyard this turn, target attacking creature gets +2/+0 until end of turn.
 	Register("Living History", func() Card {
 		return NewEnchantment("Living History", "{1}{R}",
-			WithAbility(EntersBattlefieldTrigger(
-				CreateColoredToken("Spirit Token", 2, 2,
-					[]Color{Red, White},
-					[]CardType{TypeCreature},
-					[]string{"Spirit"},
+			WithAbility(
+				dsl.WhenEvent(
+					dsl.Enters(dsl.This),
+					dsl.CreateTokenCopies(
+						dsl.You,
+						dsl.Fixed(1),
+						dsl.DefineToken(
+							"Spirit Token",
+							dsl.TokenPT(2, 2),
+							dsl.TokenColors(Red, White),
+							dsl.TokenTypes(TypeCreature),
+							dsl.TokenSubtypes("Spirit"),
+						),
+					),
 				),
-				false,
-			)),
+			),
 			WithAbility(WheneverOneOrMoreCreaturesYouControlAttackTrigger(
 				Boost(Fixed(2), Fixed(0)).Targeting(ToTarget()).Until(EndOfTurn),
 				false,
@@ -135,12 +123,10 @@ func registerEnchantments() {
 			}
 			return c.ManaCost().CMC() <= 3
 		})
+		target := dsl.TargetGraveyardCard("target", dsl.GraveyardCardFilter(nonlandMV3OrLess))
 		return NewEnchantment("Primary Research", "{4}{W}",
 			WithAbility(
-				EntersBattlefieldTrigger(
-					ReturnFromGraveyardToBattlefield(),
-					false,
-				).AddTarget(TargetCardInYourGraveyard(nonlandMV3OrLess)),
+				dsl.WhenEvent(dsl.Enters(dsl.This), dsl.ReturnCardToBattlefield(target, dsl.You), dsl.WithTargets(target)),
 			),
 			WithAbility(NewTriggered(EvtEndStep, false,
 				FuncEffect("if a card left your graveyard this turn, draw a card",

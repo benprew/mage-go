@@ -1,9 +1,8 @@
 package promo
 
 import (
-	. "github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
-	"github.com/benprew/mage-go/pkg/mage/dsl"
+	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -17,14 +16,14 @@ func registerArtifacts() {
 	// {T}: Add {C}{C}.
 	Register("Mana Crypt", func() Card {
 		return NewArtifact("Mana Crypt", "{0}",
-			WithAbility(BeginningOfUpkeepTrigger(
+			WithAbility(At(YourUpkeep,
 				FlipCoin(You,
 					OnLoss(DealDamageToPlayers(Fixed(3), SelectController())),
-				), false,
+				),
 			)),
-			dsl.WithAbility(dsl.Activate(
-				dsl.Costs(dsl.TapCost(dsl.This)),
-				dsl.AddManaAmount(core.Colorless, dsl.Fixed(2)),
+			WithAbility(Activate(
+				Costs(TapCost(This)),
+				AddManaAmount(core.Colorless, Fixed(2)),
 			)),
 		)
 	})

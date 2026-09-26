@@ -283,26 +283,15 @@ func registerCreatures() {
 	Register("Homarid", withExpansion(func() Card {
 		return NewCreature("Homarid", "{2}{U}", 2, 2,
 			WithSubTypes("Homarid"),
-			// ETB with 1 tide counter
 			WithAbility(EntersWithNCounters(Tide, 1)),
 			WithAbility(At(YourUpkeep, AddCounters(This, Tide, Fixed(1)))),
 			WithAbility(WhenState(SourceHasCounters(Tide, 4), RemoveAllCounters(This, Tide))),
-			// As long as there is exactly one tide counter, -1/-1
-			// As long as there are exactly three tide counters, +1/+1
-			WithStaticAbility(FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-				src := g.MutablePermanent(sourceID)
-				if src == nil {
-					return nil
-				}
-				count := src.Counters[Tide]
-				switch count {
-				case 1:
-					src.BoostPT(-1, -1)
-				case 3:
-					src.BoostPT(1, 1)
-				}
-				return nil
-			})),
+			WithAbility(Static(
+				While(AllConditions(SourceHasCounters(Tide, 1), NotCondition(SourceHasCounters(Tide, 2))),
+					ModifyPT(This, Fixed(-1), Fixed(-1))),
+				While(AllConditions(SourceHasCounters(Tide, 3), NotCondition(SourceHasCounters(Tide, 4))),
+					ModifyPT(This, Fixed(1), Fixed(1))),
+			)),
 		)
 	}))
 
@@ -772,15 +761,16 @@ func registerCreatures() {
 	// At the beginning of your upkeep, put a spore counter on this creature.
 	// Remove three spore counters from this creature: Create a 1/1 green Saproling creature token.
 	// Sacrifice a Saproling: You gain 2 life.
-	// NOTE: Third ability (Sacrifice a Saproling) skipped — requires SacrificeMatchingCost engine work.
 	Register("Elvish Farmer", withExpansion(func() Card {
 		return NewCreature("Elvish Farmer", "{1}{G}", 0, 2,
 			WithSubTypes("Elf"),
 			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
-			WithActivatedAbility(
-				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
-				RemoveCountersCost(Spore, 3),
-			),
+			WithAbility(Activate(Costs(RemoveCountersCost(Spore, 3)),
+				CreateTokenCopies(You, Fixed(1), DefineToken("Saproling",
+					TokenTypes(TypeCreature), TokenSubtypes("Saproling"), TokenColors(Green), TokenPT(1, 1))),
+			)),
+			WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCost(HasSubType("Saproling"), "Sacrifice a Saproling")),
+				GainLife(You, Fixed(2)))),
 		)
 	}))
 
@@ -845,10 +835,10 @@ func registerCreatures() {
 		return NewCreature("Thallid", "{G}", 1, 1,
 			WithSubTypes("Fungus"),
 			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
-			WithActivatedAbility(
-				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
-				RemoveCountersCost(Spore, 3),
-			),
+			WithAbility(Activate(Costs(RemoveCountersCost(Spore, 3)),
+				CreateTokenCopies(You, Fixed(1), DefineToken("Saproling",
+					TokenTypes(TypeCreature), TokenSubtypes("Saproling"), TokenColors(Green), TokenPT(1, 1))),
+			)),
 		)
 	}))
 
@@ -858,15 +848,16 @@ func registerCreatures() {
 	// At the beginning of your upkeep, put a spore counter on this creature.
 	// Remove three spore counters from this creature: Create a 1/1 green Saproling creature token.
 	// Sacrifice a Saproling: This creature gets +1/+2 until end of turn.
-	// NOTE: Third ability (Sacrifice a Saproling) skipped — requires SacrificeMatchingCost engine work.
 	Register("Thallid Devourer", withExpansion(func() Card {
 		return NewCreature("Thallid Devourer", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Fungus"),
 			WithAbility(At(YourUpkeep, AddCounters(This, Spore, Fixed(1)))),
-			WithActivatedAbility(
-				CreateToken("Saproling", 1, 1, []CardType{TypeCreature}, []string{"Saproling"}),
-				RemoveCountersCost(Spore, 3),
-			),
+			WithAbility(Activate(Costs(RemoveCountersCost(Spore, 3)),
+				CreateTokenCopies(You, Fixed(1), DefineToken("Saproling",
+					TokenTypes(TypeCreature), TokenSubtypes("Saproling"), TokenColors(Green), TokenPT(1, 1))),
+			)),
+			WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCost(HasSubType("Saproling"), "Sacrifice a Saproling")),
+				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(2))))),
 		)
 	}))
 

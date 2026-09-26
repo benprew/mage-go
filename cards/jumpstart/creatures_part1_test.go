@@ -287,16 +287,14 @@ func TestArchonOfRedemption(t *testing.T) {
 }
 func TestArmorcraftJudge_DrawsForCounterCreatures(t *testing.T) {
 	g := gametest.NewTestGame(t)
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Armorcraft Judge")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 4)
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-	g.AddCounters(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears", core.P1P1, 1)
+	bear := g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
+	g.FindPermanent(bear).AddCounter(core.P1P1, 1)
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 5)
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Armorcraft Judge")
-	g.StopAt(1, core.EndStep)
-	g.Execute()
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Armorcraft Judge")
+	g.ResolveStack()
 	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
 }
+
 func TestAshmouthHound_DealsOneToBlocker(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
@@ -510,14 +508,12 @@ func TestCadaverImp_ReturnsCreatureFromGraveyard(t *testing.T) {
 }
 func TestCarvenCaryatid_DrawsOnETB(t *testing.T) {
 	g := gametest.NewTestGame(t)
-	g.AddCard(core.ZoneHand, gametest.PlayerA, "Carven Caryatid")
-	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Forest", 3)
 	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 3)
-	g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Carven Caryatid")
-	g.StopAt(1, core.EndStep)
-	g.Execute()
+	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Carven Caryatid")
+	g.ResolveStack()
 	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
 }
+
 func TestCathersCompanion(t *testing.T) {
 	g := gametest.NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Cathar's Companion")

@@ -19,8 +19,9 @@ func registerSpells() {
 	// Instant
 	// Counter target artifact spell.
 	Register("Artifact Blast", func() Card {
+		artifact := TargetSpell("artifact spell", IsArtifactCard)
 		return NewInstant("Artifact Blast", "{R}",
-			NewTargetedSpell(TargetSpellOnStack(IsArtifactCard), CounterSpell()),
+			Spell(Counter(artifact), WithTargets(artifact)),
 		)
 	})
 
@@ -194,8 +195,9 @@ func registerSpells() {
 	// Sorcery
 	// Return target artifact card from your graveyard to your hand.
 	Register("Reconstruction", func() Card {
+		artifact := TargetGraveyardCard("artifact", GraveyardCardFilter(IsArtifactCard))
 		return NewSorcery("Reconstruction", "{U}",
-			NewTargetedSpell(TargetCardInYourGraveyard(IsArtifactCard), ReturnFromGraveyardToHandTarget()),
+			Spell(ReturnCardToHand(artifact), WithTargets(artifact)),
 		)
 	})
 

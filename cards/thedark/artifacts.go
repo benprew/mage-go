@@ -211,13 +211,10 @@ func registerArtifacts() {
 	// Artifact
 	// {5}, {T}: Return target enchantment card from your graveyard to your hand.
 	Register("Skull of Orm", func() Card {
+		enchantment := TargetGraveyardCard("enchantment", GraveyardCardFilter(IsEnchantmentCard))
 		return NewArtifact("Skull of Orm", "{3}",
-			WithActivatedAbility(
-				ReturnFromGraveyardToHandTarget(),
-				ManaCostOf("{5}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCardInYourGraveyard(IsEnchantmentCard)),
-			),
+			WithAbility(Activate(Costs(Mana("{5}"), TapCost(This)),
+				ReturnCardToHand(enchantment), WithTargets(enchantment))),
 		)
 	})
 
@@ -287,12 +284,10 @@ func registerArtifacts() {
 	// Artifact
 	// {T}: Target creature can't be blocked by Walls this turn.
 	Register("Tower of Coireall", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Tower of Coireall", "{2}",
-			WithActivatedAbility(
-				mage.GrantKeyword(CantBeBlockedByWalls),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				Until(EndOfTurn, GrantKeyword(creature, CantBeBlockedByWalls)), WithTargets(creature))),
 		)
 	})
 

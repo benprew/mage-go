@@ -112,13 +112,10 @@ func registerArtifacts() {
 
 	// Oracle: "{8}, {T}: Aladdin's Ring deals 4 damage to any target."
 	Register("Aladdin's Ring", func() Card {
+		target := TargetDamageRecipient("damage recipient")
 		return NewArtifact("Aladdin's Ring", "{8}",
-			WithActivatedAbility(
-				AladdinsRingEffect(),
-				TapCost(This),
-				WithCost(ManaCostOf("{8}")),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(Costs(Mana("{8}"), TapCost(This)),
+				DealDamage(Fixed(4)), WithTargets(target))),
 		)
 	})
 
@@ -126,12 +123,13 @@ func registerArtifacts() {
 	// create a 5/5 colorless Djinn artifact creature token with flying. If you lose
 	// the flip, Bottle of Suleiman deals 5 damage to you."
 	Register("Bottle of Suleiman", func() Card {
+		djinn := DefineToken("Djinn", TokenTypes(TypeArtifact, TypeCreature),
+			TokenSubtypes("Djinn"), TokenPT(5, 5), TokenKeywords(Flying))
 		return NewArtifact("Bottle of Suleiman", "{4}",
-			WithActivatedAbility(
-				BottleOfSuleimanEffect(),
-				ManaCostOf("{1}"),
-				WithCost(SacrificeSourceCost()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}"), SacrificeSourceCost()), FlipCoin(You,
+				OnWin(CreateTokenCopies(You, Fixed(1), djinn)),
+				OnLoss(DealDamageToPlayers(Fixed(5), SelectController())),
+			))),
 		)
 	})
 
@@ -241,7 +239,7 @@ func registerArtifacts() {
 	Register("Jandor's Saddlebags", func() Card {
 		creature := TargetPermanent("creature", IsCreature)
 		return NewArtifact("Jandor's Saddlebags", "{2}",
-			WithAbility(Activate(Costs(TapCost(This), ManaCostOf("{3}")), Untap(creature), WithTargets(creature))),
+			WithAbility(Activate(Costs(TapCost(This), Mana("{3}")), Untap(creature), WithTargets(creature))),
 		)
 	})
 

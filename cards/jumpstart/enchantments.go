@@ -389,9 +389,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +2/+2.
 	Register("Feral Invocation", func() Card {
-		return NewAura("Feral Invocation", "{2}{G}",
-			WithKeyword(Flash),
-			WithStaticAbility(BoostAttached(2, 2, AttachAura)),
+		return dsl.NewAura("Feral Invocation", "{2}{G}",
+			dsl.WithKeyword(Flash),
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.ModifyPT(dsl.AttachedPermanent, dsl.Fixed(2), dsl.Fixed(2))))),
 		)
 	})
 
@@ -432,9 +432,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +1/+2.
 	Register("Indomitable Will", func() Card {
-		return NewAura("Indomitable Will", "{1}{W}",
-			WithKeyword(Flash),
-			WithStaticAbility(BoostAttached(1, 2, AttachAura)),
+		return dsl.NewAura("Indomitable Will", "{1}{W}",
+			dsl.WithKeyword(Flash),
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.ModifyPT(dsl.AttachedPermanent, dsl.Fixed(1), dsl.Fixed(2))))),
 		)
 	})
 
@@ -444,15 +444,10 @@ func registerEnchantments() {
 	// When this Aura enters, create a 2/2 white Knight creature token with vigilance. (Attacking doesn't cause it to tap.)
 	// Enchanted creature gets +2/+2 and has vigilance.
 	Register("Knightly Valor", func() Card {
-		return NewAura("Knightly Valor", "{4}{W}",
-			WithAbility(EntersBattlefieldTrigger(
-				CreateToken("Knight", 2, 2, []CardType{TypeCreature}, []string{"Knight"}, Vigilance),
-				false,
-			)),
-			WithStaticAbility(
-				BoostAttached(2, 2, AttachAura),
-				GrantAbilityToAttached(Vigilance, AttachAura),
-			),
+		token := dsl.DefineToken("Knight", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Knight"), dsl.TokenColors(White), dsl.TokenPT(2, 2), dsl.TokenKeywords(Vigilance))
+		return dsl.NewAura("Knightly Valor", "{4}{W}",
+			dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This), dsl.CreateTokenCopies(dsl.You, dsl.Fixed(1), token))),
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.ModifyPT(dsl.AttachedPermanent, dsl.Fixed(2), dsl.Fixed(2)), dsl.GrantKeyword(dsl.AttachedPermanent, Vigilance)))),
 		)
 	})
 
@@ -546,11 +541,8 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +2/+2 and has lifelink.
 	Register("Mark of the Vampire", func() Card {
-		return NewAura("Mark of the Vampire", "{3}{B}",
-			WithStaticAbility(
-				BoostAttached(2, 2, AttachAura),
-				GrantAbilityToAttached(Lifelink, AttachAura),
-			),
+		return dsl.NewAura("Mark of the Vampire", "{3}{B}",
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.ModifyPT(dsl.AttachedPermanent, dsl.Fixed(2), dsl.Fixed(2)), dsl.GrantKeyword(dsl.AttachedPermanent, Lifelink)))),
 		)
 	})
 
@@ -690,13 +682,9 @@ func registerEnchantments() {
 	// Enchantment
 	// {1}{B}, Pay 2 life: Return target creature card from your graveyard to your hand.
 	Register("Phyrexian Reclamation", func() Card {
-		return NewEnchantment("Phyrexian Reclamation", "{B}",
-			WithActivatedAbility(
-				ReturnFromGraveyardToHandTarget(),
-				ManaCostOf("{1}{B}"),
-				WithCost(LifePayCost(2)),
-				WithTarget(TargetCardInYourGraveyard(IsCreatureCard)),
-			),
+		card := dsl.TargetGraveyardCard("creature card", dsl.GraveyardCardFilter(dsl.IsCreatureCard))
+		return dsl.NewEnchantment("Phyrexian Reclamation", "{B}",
+			dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.Mana("{1}{B}"), dsl.LifePayCost(2)), dsl.ReturnCardToHand(card), dsl.WithTargets(card))),
 		)
 	})
 
@@ -705,14 +693,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature has "{T}: Create a 1/1 green Elf Warrior creature token."
 	Register("Presence of Gond", func() Card {
-		return NewAura("Presence of Gond", "{2}{G}",
-			WithStaticAbility(
-				GrantActivatedAbilityToAttached(
-					CreateToken("Elf Warrior", 1, 1, []CardType{TypeCreature}, []string{"Elf", "Warrior"}),
-					Tap(),
-					AttachAura,
-				),
-			),
+		token := dsl.DefineToken("Elf Warrior", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Elf", "Warrior"), dsl.TokenColors(Green), dsl.TokenPT(1, 1))
+		return dsl.NewAura("Presence of Gond", "{2}{G}",
+			dsl.WithAbility(dsl.Static(dsl.GrantActivatedAbility(dsl.AttachedPermanent, dsl.Costs(dsl.TapCost(dsl.This)), dsl.CreateTokenCopies(dsl.You, dsl.Fixed(1), token)))),
 		)
 	})
 
@@ -806,11 +789,8 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature has defender and loses flying.
 	Register("Sky Tether", func() Card {
-		return NewAura("Sky Tether", "{W}",
-			WithStaticAbility(
-				GrantAbilityToAttached(Defender, AttachAura),
-				RemoveKeywordFromAttached(Flying, AttachAura),
-			),
+		return dsl.NewAura("Sky Tether", "{W}",
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.GrantKeyword(dsl.AttachedPermanent, Defender), dsl.RemoveKeyword(dsl.AttachedPermanent, Flying)))),
 		)
 	})
 
@@ -820,13 +800,11 @@ func registerEnchantments() {
 	// Enchanted creature gets -2/-2.
 	// At the beginning of the upkeep of enchanted creature's controller, that player loses 2 life.
 	Register("Stab Wound", func() Card {
-		return NewAura("Stab Wound", "{2}{B}",
-			WithStaticAbility(
-				BoostAttached(-2, -2, AttachAura),
-			),
-			WithAbility(BeginningOfAttachedControllerUpkeepTrigger(
-				DealDamageToPlayers(Fixed(2), SelectAttachedController()), false,
-			)),
+		host := dsl.BindPermanent("enchanted creature")
+		player := dsl.BindPlayer("enchanted creature controller")
+		return dsl.NewAura("Stab Wound", "{2}{B}",
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.ModifyPT(dsl.AttachedPermanent, dsl.Fixed(-2), dsl.Fixed(-2))))),
+			dsl.WithAbility(dsl.WhenEvent(dsl.AttachedControllerUpkeep(host, player), dsl.LoseLife(dsl.FromPlayer(player), dsl.Fixed(2)))),
 		)
 	})
 
@@ -934,11 +912,9 @@ func registerEnchantments() {
 	// Enchantment
 	// Discard two cards: Create a 2/2 black Zombie creature token.
 	Register("Zombie Infestation", func() Card {
-		return NewEnchantment("Zombie Infestation", "{1}{B}",
-			WithActivatedAbility(
-				CreateToken("Zombie", 2, 2, []CardType{TypeCreature}, []string{"Zombie"}),
-				DiscardCost(2),
-			),
+		token := dsl.DefineToken("Zombie", dsl.TokenTypes(TypeCreature), dsl.TokenSubtypes("Zombie"), dsl.TokenColors(Black), dsl.TokenPT(2, 2))
+		return dsl.NewEnchantment("Zombie Infestation", "{1}{B}",
+			dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.DiscardCost(2)), dsl.CreateTokenCopies(dsl.You, dsl.Fixed(1), token))),
 		)
 	})
 

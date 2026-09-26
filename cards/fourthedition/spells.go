@@ -57,8 +57,7 @@ func registerSpells() {
 	// Inferno deals 6 damage to each creature and each player.
 	Register("Inferno", func() Card {
 		return NewInstant("Inferno", "{5}{R}{R}",
-			NewSpellAbility(CompositeEffects(
-				"deal 6 damage to each creature and each player",
+			Spell(Sequence(
 				DealDamageToAllCreatures(Fixed(6), PermanentFilter{}),
 				DealDamageToPlayers(Fixed(6), SelectEachPlayer()),
 			)),

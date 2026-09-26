@@ -228,8 +228,8 @@ func registerArtifacts() {
 	// Equip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)
 	Register("Marauder's Axe", func() Card {
 		return NewEquipment("Marauder's Axe", "{2}",
-			WithStaticAbility(BoostAttached(2, 0, AttachEquipment)),
-			WithAbility(NewEquipAbility(ManaCostOf("{2}"))),
+			dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.AnyPermanent), dsl.ModifyPT(dsl.AttachedPermanent, dsl.Fixed(2), dsl.Fixed(0))))),
+			dsl.WithAbility(NewEquipAbility(dsl.ManaCostOf("{2}"))),
 		)
 	})
 

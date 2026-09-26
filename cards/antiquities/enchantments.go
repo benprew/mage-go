@@ -133,30 +133,13 @@ func registerEnchantments() {
 
 	// Energy Flux {2}{U}
 	// Enchantment
-	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you
-	// pay {2}."
+	// All artifacts have "At the beginning of your upkeep, sacrifice this artifact unless you pay {2}."
 	Register("Energy Flux", func() Card {
 		return NewEnchantment("Energy Flux", "{2}{U}",
-			WithStaticAbility(
-				GrantTriggeredAbilityToAll(
-					EvtUpkeep, false,
-					EventPlayerIsController{},
-					IsArtifact,
-					// TODO: convert to pipeline — needs "pay or sacrifice source" conditional
-					FuncEffect("sacrifice this artifact unless you pay {2}",
-						EffectProperties{Outcome: OutcomeDetriment},
-						func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-							perm := g.FindPermanent(sourceID)
-							if perm == nil {
-								return nil
-							}
-							if !g.TryPayMana(controller, "{2}") {
-								g.DoSacrifice(perm)
-							}
-							return nil
-						}),
-				),
-			),
+			WithStaticAbility(GrantTriggeredAbilityToAll(
+				EvtUpkeep, false, EventPlayerIsController{}, IsArtifact,
+				UnlessPaid(You, Costs(Mana("{2}")), Sacrifice(This)),
+			)),
 		)
 	})
 

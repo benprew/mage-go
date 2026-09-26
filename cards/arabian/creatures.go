@@ -117,14 +117,14 @@ func registerCreatures() {
 			WithSubTypes("Fish"),
 			WithKeyword(DoesNotUntapKW),
 			// "At the beginning of your upkeep, you may pay {U}{U}{U}. If you do, untap it."
-			WithAbility(BeginningOfUpkeepTrigger(
+			WithAbility(At(YourUpkeep,
 				IfElse("Only if tapped",
 					SourceIsTapped{},
 					IfPaid(You,
 						Costs(Mana("{U}{U}{U}")),
 						Untap(This)),
 					nil,
-				), false,
+				),
 			)),
 			WithStaticAbility(PreventFromAttackingIfDefendingPlayerControls(HasSubType("Island"))),
 			WithAbility(WhenState(ControlsNone(HasSubType("Island")), Sacrifice(This))),
@@ -214,9 +214,7 @@ func registerCreatures() {
 		return NewCreature("Serendib Efreet", "{2}{U}", 3, 4,
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
-			WithAbility(BeginningOfUpkeepTrigger(
-				DealDamageToPlayers(Fixed(1), SelectController()), false,
-			)),
+			WithAbility(At(YourUpkeep, DealDamageToPlayers(Fixed(1), SelectController()))),
 		)
 	})
 
@@ -350,7 +348,7 @@ func registerCreatures() {
 		return NewCreature("Hasran Ogress", "{B}{B}", 3, 2,
 			WithSubTypes("Ogre"),
 			WithAbility(AttacksTrigger(
-				DamageUnlessPayMana("{2}", 3), false,
+				UnlessPaid(You, Costs(Mana("{2}")), DealDamageToPlayers(Fixed(3), SelectController())), false,
 			)),
 		)
 	})
@@ -368,9 +366,7 @@ func registerCreatures() {
 	Register("Juzám Djinn", func() Card {
 		return NewCreature("Juzám Djinn", "{2}{B}{B}", 5, 5,
 			WithSubTypes("Djinn"),
-			WithAbility(BeginningOfUpkeepTrigger(
-				DealDamageToPlayers(Fixed(1), SelectController()), false,
-			)),
+			WithAbility(At(YourUpkeep, DealDamageToPlayers(Fixed(1), SelectController()))),
 		)
 	})
 
@@ -481,7 +477,7 @@ func registerCreatures() {
 	Register("Kird Ape", func() Card {
 		return NewCreature("Kird Ape", "{R}", 1, 1,
 			WithSubTypes("Ape"),
-			WithStaticAbility(BoostSelf(1, 2, WhileControlling(HasSubType("Forest")))),
+			WithAbility(Static(While(Controls(HasSubType("Forest")), ModifyPT(This, Fixed(1), Fixed(2))))),
 		)
 	})
 
@@ -498,16 +494,11 @@ func registerCreatures() {
 	// Oracle: "When Rukh Egg dies, create a 4/4 red Bird creature token with flying
 	// at the beginning of the next end step."
 	Register("Rukh Egg", func() Card {
+		bird := DefineToken("Bird", TokenTypes(TypeCreature), TokenSubtypes("Bird"),
+			TokenColors(Red), TokenPT(4, 4), TokenKeywords(Flying))
 		return NewCreature("Rukh Egg", "{3}{R}", 0, 3,
 			WithSubTypes("Bird", "Egg"),
-			WithAbility(
-				DiesTrigger(
-					RegisterDelayedTriggerStep(EvtEndStep, "",
-						CreateColoredToken("Bird", 4, 4, []Color{Red}, []CardType{TypeCreature}, []string{"Bird"}, Flying),
-					),
-					false,
-				),
-			),
+			WithAbility(WhenEvent(Dies(This), AtNext(EachEndStep, CreateTokenCopies(You, Fixed(1), bird)))),
 		)
 	})
 
@@ -516,19 +507,10 @@ func registerCreatures() {
 	Register("Ydwen Efreet", func() Card {
 		return NewCreature("Ydwen Efreet", "{R}{R}{R}", 3, 6,
 			WithSubTypes("Efreet"),
-			WithAbility(BlocksTrigger(
-				Pipeline("flip a coin; if you lose, remove from combat and it can't block this turn",
-					EffectProperties{},
-					SnapshotPermanent(SelectSource, "self"),
-					FlipCoin(You,
-						OnLoss(Pipeline("remove from combat and revoke can-block",
-							EffectProperties{},
-							RemoveFromCombatGathered("self"),
-							RevokeKeyword(AttrCanBlock).Targeting(ToSource()),
-						)),
-					),
-				), false,
-			)),
+			WithAbility(BlocksTrigger(FlipCoin(You, OnLoss(Sequence(
+				RemoveFromCombat(This),
+				Until(EndOfTurn, RemoveKeyword(This, AttrCanBlock)),
+			))), false)),
 		)
 	})
 
@@ -624,15 +606,10 @@ func registerCreatures() {
 		return NewCreature("Ifh-Bíff Efreet", "{2}{G}{G}", 3, 3,
 			WithSubTypes("Efreet"),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				CompositeEffects(
-					"Ifh-Bíff Efreet deals 1 damage to each creature with flying and each player",
-					DealDamageToAllCreatures(Fixed(1), HasKeywordFilter(Flying)),
-					DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
-				),
-				ManaCostOf("{G}"),
-				WithAnyPlayerMay(),
-			),
+			WithAbility(Activate(Costs(Mana("{G}")), Sequence(
+				DealDamageToAllCreatures(Fixed(1), HasKeywordFilter(Flying)),
+				DealDamageToPlayers(Fixed(1), SelectEachPlayer()),
+			), AnyPlayerMayActivate())),
 		)
 	})
 
@@ -707,14 +684,14 @@ func registerCreatures() {
 			WithSubTypes("Construct"),
 			WithCardType(TypeArtifact),
 			WithKeyword(DoesNotUntapKW),
-			WithAbility(BeginningOfUpkeepTrigger(
+			WithAbility(At(YourUpkeep,
 				IfElse("Only if tapped",
 					SourceIsTapped{},
 					IfPaid(You,
 						Costs(Mana("{1}")),
 						Untap(This)),
 					nil,
-				), false,
+				),
 			)),
 		)
 	})

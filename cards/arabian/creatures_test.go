@@ -789,7 +789,7 @@ func TestYdwenEfreet(t *testing.T) {
 		g.AssertLife(gametest.PlayerB, 20)
 	})
 
-	t.Run("lose_flip_removed_attacker_hits_through", func(t *testing.T) {
+	t.Run("lose_flip_attacker_remains_blocked", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Ydwen Efreet")  // 3/6
@@ -798,9 +798,9 @@ func TestYdwenEfreet(t *testing.T) {
 		g.Block(1, gametest.PlayerB, "Ydwen Efreet", "Grizzly Bears")
 		g.StopAt(1, core.EndCombat)
 		g.Execute()
-		// Lost flip — removed from combat, attacker hits through
+		// The attacker stays blocked when its blocker leaves combat.
 		g.AssertPermanentCount(gametest.PlayerA, "Grizzly Bears", 1)
-		g.AssertLife(gametest.PlayerB, 18)
+		g.AssertLife(gametest.PlayerB, 20)
 	})
 }
 

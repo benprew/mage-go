@@ -25,30 +25,8 @@ func registerEnchantments() {
 	// Creatures you control get +1/+1 as long as you control no nonartifact, nonwhite creatures.
 	Register("Angelic Voices", func() Card {
 		return NewEnchantment("Angelic Voices", "{2}{W}{W}",
-			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					controller := src.ControllerID()
-					// Check if controller controls any nonartifact, nonwhite creature
-					for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
-						if !perm.HasType(TypeArtifact) && !HasColorFilter(White).Match(perm, g) {
-							return nil // has a nonartifact nonwhite creature, no bonus
-						}
-					}
-					// Boost all creatures you control +1/+1
-					for _, perm := range g.FilterBattlefield(And(IsCreature, ControlledBy(controller))) {
-						m := g.MutablePermanent(perm.ID())
-						if m == nil {
-							continue
-						}
-						m.BoostPT(1, 1)
-					}
-					return nil
-				}),
-			),
+			WithAbility(Static(While(ControlsNone(And(IsCreature, Not(IsArtifact), Not(HasColorFilter(White)))),
+				ModifyEachPT(ControlledPermanents(IsCreature), Fixed(1), Fixed(1))))),
 		)
 	})
 
@@ -165,9 +143,7 @@ func registerEnchantments() {
 	Register("Concordant Crossroads", func() Card {
 		return NewEnchantment("Concordant Crossroads", "{G}",
 			WithSuperTypes(SuperWorld),
-			WithStaticAbility(
-				GrantKeywordToAll(Haste, IsCreature),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantEachKeyword(MatchingPermanents(IsCreature), Haste)))),
 		)
 	})
 
@@ -235,7 +211,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +3/+3.
 	Register("Divine Transformation", func() Card {
-		return NewBoostAura("Divine Transformation", "{2}{W}{W}", 3, 3)
+		return NewAura("Divine Transformation", "{2}{W}{W}",
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(3), Fixed(3))))),
+		)
 	})
 
 	// Dream Coat {U}
@@ -288,9 +266,7 @@ func registerEnchantments() {
 	// Enchanted creature has vigilance.
 	Register("Eternal Warrior", func() Card {
 		return NewAura("Eternal Warrior", "{R}",
-			WithStaticAbility(
-				GrantAbilityToAttached(Vigilance, AttachAura),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantKeyword(AttachedPermanent, Vigilance)))),
 		)
 	})
 
@@ -308,11 +284,10 @@ func registerEnchantments() {
 	// Enchantment
 	// Wall creatures you control get +1/+0 and have banding. (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)
 	Register("Fortified Area", func() Card {
+		walls := ControlledPermanents(And(IsCreature, HasSubType("Wall")))
 		return NewEnchantment("Fortified Area", "{1}{W}{W}",
-			WithStaticAbility(
-				BoostControlledCreatures(1, 0, HasSubType("Wall")),
-				GrantKeywordToControlled(Banding, HasSubType("Wall")),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(walls, Fixed(1), Fixed(0)), GrantEachKeyword(walls, Banding)))),
 		)
 	})
 
@@ -337,7 +312,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +2/+2.
 	Register("Giant Strength", func() Card {
-		return NewBoostAura("Giant Strength", "{R}{R}", 2, 2)
+		return NewAura("Giant Strength", "{R}{R}",
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(2), Fixed(2))))),
+		)
 	})
 
 	// Gravity Sphere {2}{R}
@@ -393,11 +370,7 @@ func registerEnchantments() {
 	// {B}, Pay 2 life: Draw a card.
 	Register("Greed", func() Card {
 		return NewEnchantment("Greed", "{3}{B}",
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				ManaCostOf("{B}"),
-				WithCost(LifePayCost(2)),
-			),
+			WithAbility(Activate(Costs(Mana("{B}"), LifePayCost(2)), Draw(You, Fixed(1)))),
 		)
 	})
 
@@ -420,7 +393,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Enchanted creature gets +2/-2.
 	Register("Immolation", func() Card {
-		return NewBoostAura("Immolation", "{R}", 2, -2)
+		return NewAura("Immolation", "{R}",
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(2), Fixed(-2))))),
+		)
 	})
 
 	// Imprison {B}
@@ -994,12 +969,9 @@ func registerEnchantments() {
 	// Enchant creature
 	// Whenever enchanted creature becomes tapped, put a -0/-2 counter on it.
 	Register("Spirit Shackle", func() Card {
+		host := BindPermanent("host")
 		return NewAura("Spirit Shackle", "{B}{B}",
-			WithAbility(
-				NewTriggered(EvtTapped, false,
-					mage.AddCounters(M0M2, Fixed(1)).Targeting(ToAttached()),
-				).SetConditionData(SourceIsAttachedToEventSource{}),
-			),
+			WithAbility(WhenEvent(AttachedBecomesTapped(host), AddCounters(From(host), M0M2, Fixed(1)))),
 		)
 	})
 
@@ -1105,7 +1077,7 @@ func registerEnchantments() {
 	Register("The Brute", func() Card {
 		return NewAura("The Brute", "{1}{R}",
 			WithAbility(Activate(Costs(Mana("{R}{R}{R}")), Regenerate(AttachedPermanent))),
-			WithStaticAbility(BoostAttached(1, 0, AttachAura)),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(1), Fixed(0))))),
 		)
 	})
 

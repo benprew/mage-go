@@ -110,26 +110,13 @@ func registerEnchantments() {
 		return NewAura("Living Artifact", "{G}",
 			WithCastTarget(TargetArtifact()),
 			WithAbility(NewTriggered(EvtDamageDealt, false,
-				mage.AddCounters(Vitality, EventAmountValue()).Targeting(ToSource()),
+				AddCounters(This, Vitality, ValueAtResolution(EventAmountValue())),
 			).SetCondition(func(evt *GameEvent, _ GameReader, _, controllerID uuid.UUID) bool {
 				return evt.TargetID == controllerID && evt.Amount > 0
 			})),
-			WithAbility(BeginningOfUpkeepTrigger(FuncEffect(
-				"remove a vitality counter from Living Artifact; if you do, gain 1 life",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-					perm := g.MutablePermanent(sourceID)
-					if perm == nil {
-						return nil
-					}
-					if perm.RemoveCounter(Vitality, 1) {
-						if p := g.GetPlayer(controller); p != nil {
-							g.PlayerGainLife(p, 1)
-						}
-					}
-					return nil
-				},
-			), true)),
+			WithAbility(At(YourUpkeep,
+				IfPaid(You, Costs(RemoveCountersCost(Vitality, 1)), GainLife(You, Fixed(1))),
+			)),
 		)
 	})
 
@@ -178,9 +165,9 @@ func registerEnchantments() {
 	Register("Sunken City", func() Card {
 		return NewEnchantment("Sunken City", "{U}{U}",
 			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{U}{U}")), Sacrifice(This)))),
-			WithStaticAbility(
-				BoostAllCreaturesIncludingSelf(1, 1, HasColorFilter(Blue)),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(MatchingPermanents(And(IsCreature, HasColorFilter(Blue))), Fixed(1), Fixed(1)),
+			))),
 		)
 	})
 

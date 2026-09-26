@@ -14,14 +14,11 @@ func registerLands() {
 		first := TargetPermanent("controller creature", IsCreature, TargetYouControl())
 		second := TargetPermanent("opponent creature", IsCreature, TargetOpponentControls(), TargetChosenByOpponent())
 		return NewLand("Arena",
-			WithAbility(Activate(Costs(ManaCostOf("{3}"), TapCost(This)),
-				Pipeline("tap those creatures; they fight each other",
-					EffectProperties{Outcome: OutcomeDetriment, Taps: true},
-					SnapshotTarget(0, "controller creature"),
-					SnapshotTarget(1, "opponent creature"),
+			WithAbility(Activate(Costs(Mana("{3}"), TapCost(This)),
+				Sequence(
 					Tap(first),
 					Tap(second),
-					FightGathered("controller creature", "opponent creature"),
+					Fight(first, second),
 				),
 				WithTargets(first, second),
 			)),

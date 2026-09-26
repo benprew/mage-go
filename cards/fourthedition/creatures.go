@@ -167,7 +167,7 @@ func registerCreatures() {
 			WithSubTypes("Zombie"),
 			WithAbility(
 				NewTriggered(EvtBlockersDecl, false,
-					Boost(Fixed(2), Fixed(0)).Targeting(ToSource()).Until(EndOfCombat),
+					Until(EndOfCombat, ModifyPT(This, Fixed(2), Fixed(0))),
 				).SetConditionData(SourceIsUnblockedAttacker{}),
 			),
 		)
@@ -252,16 +252,13 @@ func registerCreatures() {
 	// 2/2
 	// {1}{R}{R}: Brothers of Fire deals 1 damage to any target and 1 damage to you.
 	Register("Brothers of Fire", func() Card {
+		target := TargetDamageRecipient("any target")
 		return NewCreature("Brothers of Fire", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Human", "Shaman"),
-			WithActivatedAbility(
-				CompositeEffects("deal 1 damage to any target and 1 damage to you",
-					DealDamage(Fixed(1)),
-					DealDamageToPlayers(Fixed(1), SelectController()),
-				),
-				ManaCostOf("{1}{R}{R}"),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(Costs(Mana("{1}{R}{R}")),
+				Sequence(DealDamage(Fixed(1)), DealDamageToPlayers(Fixed(1), SelectController())),
+				WithTargets(target),
+			)),
 		)
 	})
 

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 	. "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
@@ -170,45 +171,19 @@ func registerCreatures() {
 	// Protection from red
 	// Creatures named Ivory Guardians get +1/+1 as long as an opponent controls a nontoken red permanent.
 	Register("Ivory Guardians", func() Card {
+		condition := StateConditionFunc("opponent controls a nontoken red permanent", []StateDependency{StateBattlefield},
+			func(g StateReader, ctx StateContext) bool {
+				for _, permanent := range g.Battlefield() {
+					if permanent.ControllerID() != ctx.ControllerID && !permanent.IsToken() && permanent.HasColor(Red) {
+						return true
+					}
+				}
+				return false
+			})
 		return NewCreature("Ivory Guardians", "{4}{W}{W}", 3, 3,
 			WithSubTypes("Giant", "Cleric"),
 			WithAbility(ProtectionFromColor(Red)),
-			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					// Check if an opponent controls a nontoken red permanent
-					opponentHasRed := false
-					for _, p := range g.AllBattlefield() {
-						if p.ControllerID() == src.ControllerID() {
-							continue
-						}
-						if p.IsToken {
-							continue
-						}
-						if HasColorFilter(Red).Match(p, g) {
-							opponentHasRed = true
-							break
-						}
-					}
-					if !opponentHasRed {
-						return nil
-					}
-					// Boost all creatures named Ivory Guardians (including self)
-					for _, p := range g.AllBattlefield() {
-						if p.HasType(TypeCreature) && p.Card.Name() == "Ivory Guardians" {
-							m := g.MutablePermanent(p.ID())
-							if m == nil {
-								continue
-							}
-							m.BoostPT(1, 1)
-						}
-					}
-					return nil
-				}),
-			),
+			WithAbility(Static(While(condition, ModifyEachPT(MatchingPermanents(And(IsCreature, Named("Ivory Guardians"))), Fixed(1), Fixed(1))))),
 		)
 	})
 
@@ -823,15 +798,11 @@ func registerCreatures() {
 	// 1/1
 	// {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only during your upkeep.
 	Register("Hell's Caretaker", func() Card {
+		creature := TargetGraveyardCard("creature", GraveyardCardFilter(NewCardFilter("creature", func(c Card) bool { return c.HasType(TypeCreature) })))
 		return NewCreature("Hell's Caretaker", "{3}{B}", 1, 1,
 			WithSubTypes("Horror"),
-			WithActivatedAbility(
-				ReturnFromGraveyardToBattlefield(),
-				TapCost(This),
-				WithCost(SacrificeCreatureCost()),
-				WithTarget(TargetCreatureInYourGraveyard()),
-				WithUpkeepOnly(),
-			),
+			WithAbility(Activate(Costs(TapCost(This), SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")),
+				ReturnCardToBattlefield(creature, You), WithTargets(creature), OnlyDuring(core.Upkeep), OnlyOnYourTurn())),
 		)
 	})
 
@@ -1202,30 +1173,19 @@ func registerCreatures() {
 	// Protection from red
 	// This creature gets +1/+1 as long as an opponent controls a nontoken white permanent.
 	Register("Beasts of Bogardan", func() Card {
+		condition := StateConditionFunc("opponent controls a nontoken white permanent", []StateDependency{StateBattlefield},
+			func(g StateReader, ctx StateContext) bool {
+				for _, permanent := range g.Battlefield() {
+					if permanent.ControllerID() != ctx.ControllerID && !permanent.IsToken() && permanent.HasColor(White) {
+						return true
+					}
+				}
+				return false
+			})
 		return NewCreature("Beasts of Bogardan", "{4}{R}", 3, 3,
 			WithSubTypes("Beast"),
 			WithAbility(ProtectionFromColor(Red)),
-			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.MutablePermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.ControllerID() == src.ControllerID() {
-							continue
-						}
-						if p.IsToken {
-							continue
-						}
-						if HasColorFilter(White).Match(p, g) {
-							src.BoostPT(1, 1)
-							return nil
-						}
-					}
-					return nil
-				}),
-			),
+			WithAbility(Static(While(condition, ModifyPT(This, Fixed(1), Fixed(1))))),
 		)
 	})
 
@@ -1341,12 +1301,10 @@ func registerCreatures() {
 	// 1/2
 	// Other Kobold creatures you control get +0/+1 and have trample.
 	Register("Kobold Drill Sergeant", func() Card {
+		kobolds := WithoutPermanent(ControlledPermanents(And(IsCreature, HasSubType("Kobold"))), This)
 		return NewCreature("Kobold Drill Sergeant", "{1}{R}", 1, 2,
 			WithSubTypes("Kobold", "Soldier"),
-			WithStaticAbility(
-				BoostOtherControlledCreatures(0, 1, HasSubType("Kobold")),
-				GrantKeywordToOtherControlled(Trample, HasSubType("Kobold")),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(kobolds, Fixed(0), Fixed(1)), GrantEachKeyword(kobolds, Trample)))),
 		)
 	})
 
@@ -1356,12 +1314,11 @@ func registerCreatures() {
 	// First strike
 	// Other Kobold creatures you control have first strike.
 	Register("Kobold Overlord", func() Card {
+		kobolds := WithoutPermanent(ControlledPermanents(And(IsCreature, HasSubType("Kobold"))), This)
 		return NewCreature("Kobold Overlord", "{1}{R}", 1, 2,
 			WithSubTypes("Kobold"),
 			WithKeyword(FirstStrike),
-			WithStaticAbility(
-				GrantKeywordToOtherControlled(FirstStrike, HasSubType("Kobold")),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), GrantEachKeyword(kobolds, FirstStrike)))),
 		)
 	})
 
@@ -1370,11 +1327,10 @@ func registerCreatures() {
 	// 1/2
 	// Other Kobold creatures you control get +1/+0.
 	Register("Kobold Taskmaster", func() Card {
+		kobolds := WithoutPermanent(ControlledPermanents(And(IsCreature, HasSubType("Kobold"))), This)
 		return NewCreature("Kobold Taskmaster", "{1}{R}", 1, 2,
 			WithSubTypes("Kobold"),
-			WithStaticAbility(
-				BoostOtherControlledCreatures(1, 0, HasSubType("Kobold")),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(kobolds, Fixed(1), Fixed(0))))),
 		)
 	})
 
@@ -2049,15 +2005,11 @@ func registerCreatures() {
 	// 1/2
 	// {B}{R}{G}, {T}: Return target creature card from your graveyard to your hand.
 	Register("Adun Oakenshield", func() Card {
+		creature := TargetGraveyardCard("creature", GraveyardCardFilter(NewCardFilter("creature", func(c Card) bool { return c.HasType(TypeCreature) })))
 		return NewCreature("Adun Oakenshield", "{B}{R}{G}", 1, 2,
 			WithSubTypes("Human", "Knight"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				ReturnFromGraveyardToHandTarget(),
-				ManaCostOf("{B}{R}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(TargetCreatureInYourGraveyard()),
-			),
+			WithAbility(Activate(Costs(Mana("{B}{R}{G}"), TapCost(This)), ReturnCardToHand(creature), WithTargets(creature))),
 		)
 	})
 
@@ -2089,28 +2041,9 @@ func registerCreatures() {
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{G}{W}{U}")),
-			WithStaticAbility(
-				FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
-					src := g.FindPermanent(sourceID)
-					if src == nil {
-						return nil
-					}
-					for _, p := range g.AllBattlefield() {
-						if p.ControllerID() != src.ControllerID() || !p.HasType(TypeCreature) {
-							continue
-						}
-						if !p.Tapped && !g.IsAttackingInCombat(p.ID()) {
-							m := g.MutablePermanent(p.ID())
-							if m == nil {
-								continue
-							}
-							m.BoostPT(0, 2)
-						}
-					}
-					return nil
-				}),
-			),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{G}{W}{U}")), Sacrifice(This)))),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(ControlledPermanents(And(IsCreature, IsUntapped, Not(IsAttacking))), Fixed(0), Fixed(2))))),
 			WithAbility(Activate(
 				Costs(Mana("{W}")),
 				Until(EndOfTurn, ModifyPT(This, Fixed(0), Fixed(1))),
@@ -2181,14 +2114,12 @@ func registerCreatures() {
 	// 2/2
 	// {2}{B}{R}, {T}: Create a 1/1 black and red Demon creature token named Minor Demon.
 	Register("Boris Devilboon", func() Card {
+		demon := DefineToken("Minor Demon", TokenTypes(TypeCreature), TokenSubtypes("Demon"),
+			TokenColors(Black, Red), TokenPT(1, 1))
 		return NewCreature("Boris Devilboon", "{3}{B}{R}", 2, 2,
 			WithSubTypes("Zombie", "Wizard"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				CreateColoredToken("Minor Demon", 1, 1, []Color{Black, Red}, []CardType{TypeCreature}, []string{"Demon"}),
-				ManaCostOf("{2}{B}{R}"),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(Costs(Mana("{2}{B}{R}"), TapCost(This)), CreateTokenCopies(You, Fixed(1), demon))),
 		)
 	})
 
@@ -2204,7 +2135,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
 			WithAbility(RampageTrigger(2)),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{W}{U}{B}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{W}{U}{B}")), Sacrifice(This)))),
 		)
 	})
 
@@ -2418,9 +2349,7 @@ func registerCreatures() {
 		return NewCreature("Jacques le Vert", "{1}{R}{G}{W}", 3, 2,
 			WithSubTypes("Human", "Warrior"),
 			WithSuperTypes(SuperLegendary),
-			WithStaticAbility(
-				BoostControlledCreatures(0, 2, HasColorFilter(Green)),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyEachPT(ControlledPermanents(And(IsCreature, HasColorFilter(Green))), Fixed(0), Fixed(2))))),
 		)
 	})
 
@@ -2512,14 +2441,11 @@ func registerCreatures() {
 	// 2/2
 	// {T}: Prevent the next 2 damage that would be dealt to target creature this turn.
 	Register("Kei Takahashi", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewCreature("Kei Takahashi", "{2}{G}{W}", 2, 2,
 			WithSubTypes("Human", "Cleric"),
 			WithSuperTypes(SuperLegendary),
-			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(2)),
-				TapCost(This),
-				WithTarget(TargetCreature()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), PreventNextDamage(creature, Fixed(2)), WithTargets(creature))),
 		)
 	})
 
@@ -2682,7 +2608,7 @@ func registerCreatures() {
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{U}{B}{R}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{U}{B}{R}")), Sacrifice(This)))),
 			WithAbility(WhenEvent(DealsDamageToOpponent(This, player),
 				DiscardEntireHand(FromPlayer(player)))),
 		)
@@ -2699,7 +2625,7 @@ func registerCreatures() {
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
 			WithKeyword(Trample),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{R}{G}{W}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{R}{G}{W}")), Sacrifice(This)))),
 		)
 	})
 
@@ -3119,7 +3045,7 @@ func registerCreatures() {
 			WithSubTypes("Elder", "Dragon"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithAbility(SacrificeAtUpkeepUnlessPay("{B}{R}{G}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{B}{R}{G}")), Sacrifice(This)))),
 			WithAbility(Activate(
 				Costs(Mana("{B}")),
 				Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))),
@@ -3141,16 +3067,12 @@ func registerCreatures() {
 	// Flying
 	// {B}{R}{G}, {T}: Target player draws a card.
 	Register("Xira Arien", func() Card {
+		player := TargetPlayer("player")
 		return NewCreature("Xira Arien", "{B}{R}{G}", 1, 2,
 			WithSubTypes("Insect", "Wizard"),
 			WithSuperTypes(SuperLegendary),
 			WithKeyword(Flying),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				ManaCostOf("{B}{R}{G}"),
-				WithCost(TapCost(This)),
-				WithTarget(mage.TargetPlayer()),
-			),
+			WithAbility(Activate(Costs(Mana("{B}{R}{G}"), TapCost(This)), Draw(player, Fixed(1)), WithTargets(player))),
 		)
 	})
 

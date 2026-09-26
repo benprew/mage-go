@@ -1,6 +1,6 @@
 package thedark
 
-import . "github.com/benprew/mage-go/pkg/mage"
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
 
 func init() {
 	registerSpells()
@@ -82,10 +82,9 @@ func registerSpells() {
 	// Holy Light {2}{W}
 	// Instant
 	// Nonwhite creatures get -1/-1 until end of turn.
-	// TODO: implement
 	Register("Holy Light", func() Card {
 		return NewInstant("Holy Light", "{2}{W}",
-			NewSpellAbility(),
+			WithAbility(Spell(Until(EndOfTurn, ModifyEachPT(MatchingPermanents(And(IsCreature, Not(HasColorFilter(White)))), Fixed(-1), Fixed(-1))))),
 		)
 	})
 
@@ -122,10 +121,9 @@ func registerSpells() {
 	// Tivadar's Crusade {1}{W}{W}
 	// Sorcery
 	// Destroy all Goblins.
-	// TODO: implement
 	Register("Tivadar's Crusade", func() Card {
 		return NewSorcery("Tivadar's Crusade", "{1}{W}{W}",
-			NewSpellAbility(),
+			WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Goblin"))))),
 		)
 	})
 

@@ -113,9 +113,11 @@ func registerSpells() {
 		)
 	})
 
+	// Return target creature card from your graveyard to the battlefield.
 	Register("Resurrection", func() Card {
+		card := TargetGraveyardCard("card", GraveyardCardFilter(IsCreatureCard))
 		return NewSorcery("Resurrection", "{2}{W}{W}",
-			NewTargetedSpell(TargetCreatureInYourGraveyard(), ReturnFromGraveyardToBattlefield()),
+			WithAbility(Spell(ReturnCardToBattlefield(card, You), WithTargets(card))),
 		)
 	})
 
@@ -163,9 +165,11 @@ func registerSpells() {
 		)
 	})
 
+	// Counter target spell.
 	Register("Counterspell", func() Card {
+		spell := TargetSpell("spell")
 		return NewInstant("Counterspell", "{U}{U}",
-			NewTargetedSpell(TargetSpellOnStack(), CounterSpell()),
+			WithAbility(Spell(Counter(spell), WithTargets(spell))),
 		)
 	})
 
@@ -192,11 +196,17 @@ func registerSpells() {
 		)
 	})
 
-	// XXX: missing destroy mode — Oracle is modal: "Counter target red spell" / "Destroy target red permanent"
-	// Engine doesn't support modal targeting across zones (spell on stack vs permanent on battlefield)
+	// Choose one —
+	// • Counter target red spell.
+	// • Destroy target red permanent.
 	Register("Blue Elemental Blast", func() Card {
+		spell := TargetSpell("spell", HasColorCardFilter(Red))
+		permanent := TargetPermanent("permanent", HasColorFilter(Red))
 		return NewInstant("Blue Elemental Blast", "{U}",
-			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfColor(Red)),
+			WithAbility(SpellModes(
+				ModeOf("Counter target red spell", Counter(spell), WithTargets(spell)),
+				ModeOf("Destroy target red permanent", Destroy(permanent), WithTargets(permanent)),
+			)),
 		)
 	})
 
@@ -228,9 +238,10 @@ func registerSpells() {
 
 	// ===== BLACK SPELLS =====
 
+	// Add {B}{B}{B}.
 	Register("Dark Ritual", func() Card {
 		return NewInstant("Dark Ritual", "{B}",
-			NewSpellAbility(AddMana(Black, 3)),
+			WithAbility(Spell(AddManaAmount(Black, Fixed(3)))),
 		)
 	})
 
@@ -242,9 +253,11 @@ func registerSpells() {
 		)
 	})
 
+	// Return target creature card from your graveyard to your hand.
 	Register("Raise Dead", func() Card {
+		card := TargetGraveyardCard("card", GraveyardCardFilter(IsCreatureCard))
 		return NewSorcery("Raise Dead", "{B}",
-			NewTargetedSpell(TargetCreatureInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
+			WithAbility(Spell(ReturnCardToHand(card), WithTargets(card))),
 		)
 	})
 
@@ -314,22 +327,30 @@ func registerSpells() {
 		)
 	})
 
-	// XXX: missing destroy mode — Oracle is modal: "Counter target blue spell" / "Destroy target blue permanent"
-	// Engine doesn't support modal targeting across zones (spell on stack vs permanent on battlefield)
+	// Choose one —
+	// • Counter target blue spell.
+	// • Destroy target blue permanent.
 	Register("Red Elemental Blast", func() Card {
+		spell := TargetSpell("spell", HasColorCardFilter(Blue))
+		permanent := TargetPermanent("permanent", HasColorFilter(Blue))
 		return NewInstant("Red Elemental Blast", "{R}",
-			NewTargetedSpell(TargetSpellOnStack(), CounterSpellIfColor(Blue)),
+			WithAbility(SpellModes(
+				ModeOf("Counter target blue spell", Counter(spell), WithTargets(spell)),
+				ModeOf("Destroy target blue permanent", Destroy(permanent), WithTargets(permanent)),
+			)),
 		)
 	})
 
 	// ===== RED SPELLS =====
 
+	// Lightning Bolt deals 3 damage to any target.
 	Register("Lightning Bolt", func() Card {
 		return NewInstant("Lightning Bolt", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), LightningBoltEffect()),
 		)
 	})
 
+	// Shock deals 2 damage to any target.
 	Register("Shock", func() Card {
 		return NewInstant("Shock", "{R}",
 			NewTargetedSpell(TargetDamageAnyTarget(), DealDamage(Fixed(2))),
@@ -441,9 +462,11 @@ func registerSpells() {
 		)
 	})
 
+	// Return target card from your graveyard to your hand.
 	Register("Regrowth", func() Card {
+		card := TargetGraveyardCard("card")
 		return NewSorcery("Regrowth", "{1}{G}",
-			NewTargetedSpell(TargetCardInYourGraveyard(), ReturnFromGraveyardToHandTarget()),
+			WithAbility(Spell(ReturnCardToHand(card), WithTargets(card))),
 		)
 	})
 
@@ -532,8 +555,6 @@ func registerSpells() {
 		)
 	})
 
-	// Psionic Blast {2}{U}
-	// Instant
 	// Psionic Blast deals 4 damage to any target and 2 damage to you.
 	Register("Psionic Blast", func() Card {
 		return NewInstant("Psionic Blast", "{2}{U}",

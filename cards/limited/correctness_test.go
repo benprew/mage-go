@@ -168,13 +168,13 @@ func TestGuardianAngel(t *testing.T) {
 }
 
 func TestFirebreathingAura(t *testing.T) {
-	t.Run("grants repeatable +1/+0 activated ability", func(t *testing.T) {
+	t.Run("has repeatable +1/+0 activated ability", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Firebreathing")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Firebreathing", "Grizzly Bears")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Firebreathing")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Firebreathing")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// {R}: +1/+0, activated twice = 2+2/2 = 4/2
@@ -183,13 +183,13 @@ func TestFirebreathingAura(t *testing.T) {
 }
 
 func TestBlessingAura(t *testing.T) {
-	t.Run("grants repeatable +1/+1 activated ability", func(t *testing.T) {
+	t.Run("has repeatable +1/+1 activated ability", func(t *testing.T) {
 		g := gametest.NewTestGame(t)
 		g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears") // 2/2
 		g.AddCard(core.ZoneHand, gametest.PlayerA, "Blessing")
 		g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Blessing", "Grizzly Bears")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
-		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Grizzly Bears")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Blessing")
+		g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Blessing")
 		g.StopAt(1, core.BeginCombat)
 		g.Execute()
 		// {W}: +1/+1, activated twice = 2+2/2+2 = 4/4

@@ -98,6 +98,7 @@ func registerCreatures() {
 		return NewCreature("Merfolk of the Pearl Trident", "{U}", 1, 1, WithSubTypes("Merfolk"))
 	})
 
+	// {T}: This creature deals 1 damage to any target.
 	Register("Prodigal Sorcerer", func() Card {
 		return NewCreature("Prodigal Sorcerer", "{2}{U}", 1, 1,
 			WithSubTypes("Human", "Wizard"),
@@ -126,12 +127,13 @@ func registerCreatures() {
 		)
 	})
 
+	// Flying
+	// At the beginning of your upkeep, sacrifice this creature unless you pay {U}.
 	Register("Phantasmal Forces", func() Card {
 		return NewCreature("Phantasmal Forces", "{3}{U}", 4, 1,
 			WithSubTypes("Illusion"),
 			WithKeyword(Flying),
-			// At the beginning of your upkeep, sacrifice Phantasmal Forces unless you pay {U}.
-			WithAbility(SacrificeAtUpkeepUnlessPay("{U}")),
+			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{U}")), Sacrifice(This)))),
 		)
 	})
 
@@ -409,10 +411,7 @@ func registerCreatures() {
 	Register("Sedge Troll", func() Card {
 		return NewCreature("Sedge Troll", "{2}{R}", 2, 2,
 			WithSubTypes("Troll"),
-			// Sedge Troll gets +1/+1 as long as you control a Swamp.
-			WithStaticAbility(
-				BoostSelf(1, 1, WhileControlling(And(IsLand, HasSubType("Swamp")))),
-			),
+			WithAbility(Static(While(Controls(HasSubType("Swamp")), ModifyPT(This, Fixed(1), Fixed(1))))),
 			WithAbility(Activate(Costs(Mana("{B}")), Regenerate(This))),
 		)
 	})
@@ -426,14 +425,13 @@ func registerCreatures() {
 		)
 	})
 
+	// Other Goblins get +1/+1 and have mountainwalk.
 	Register("Goblin King", func() Card {
+		others := WithoutPermanent(MatchingPermanents(HasSubType("Goblin")), This)
 		return NewCreature("Goblin King", "{1}{R}{R}", 2, 2,
 			WithSubTypes("Goblin"),
-			// Other Goblin creatures get +1/+1 and mountainwalk
-			WithStaticAbility(
-				BoostAllCreatures(1, 1, HasSubType("Goblin"), WhileOnBattlefield),
-				GrantKeywordToAll(Mountainwalk, HasSubType("Goblin")),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(others, Fixed(1), Fixed(1)), GrantEachKeyword(others, Mountainwalk)))),
 		)
 	})
 
@@ -450,6 +448,8 @@ func registerCreatures() {
 		)
 	})
 
+	// Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
+	// At the beginning of your upkeep, this creature deals 8 damage to you unless you pay {G}{G}{G}{G}.
 	Register("Force of Nature", func() Card {
 		return NewCreature("Force of Nature", "{2}{G}{G}{G}{G}", 8, 8,
 			WithSubTypes("Elemental"),
@@ -699,14 +699,13 @@ func registerCreatures() {
 
 	// ===== LORD/ANTHEM CREATURES =====
 
+	// Other Merfolk get +1/+1 and have islandwalk. (They can't be blocked as long as defending player controls an Island.)
 	Register("Lord of Atlantis", func() Card {
+		others := WithoutPermanent(MatchingPermanents(HasSubType("Merfolk")), This)
 		return NewCreature("Lord of Atlantis", "{U}{U}", 2, 2,
 			WithSubTypes("Merfolk"),
-			// Other Merfolk creatures get +1/+1 and islandwalk
-			WithStaticAbility(
-				BoostAllCreatures(1, 1, HasSubType("Merfolk"), WhileOnBattlefield),
-				GrantKeywordToAll(Islandwalk, HasSubType("Merfolk")),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(others, Fixed(1), Fixed(1)), GrantEachKeyword(others, Islandwalk)))),
 		)
 	})
 
@@ -715,29 +714,21 @@ func registerCreatures() {
 	Register("Zombie Master", func() Card {
 		return NewCreature("Zombie Master", "{1}{B}{B}", 2, 3,
 			WithSubTypes("Zombie"),
-			WithStaticAbility(
-				GrantKeywordToAll(Swampwalk, HasSubType("Zombie")),
-			),
 			WithAbility(Static(
-				GrantEachActivatedAbility(
-					WithoutPermanent(MatchingPermanents(HasSubType("Zombie")), This),
-					Costs(Mana("{B}")), Regenerate(This),
-				),
+				While(Controls(AnyPermanent), GrantEachKeyword(WithoutPermanent(MatchingPermanents(And(IsCreature, HasSubType("Zombie"))), This), Swampwalk)),
+				GrantEachActivatedAbility(WithoutPermanent(MatchingPermanents(HasSubType("Zombie")), This), Costs(Mana("{B}")), Regenerate(This)),
 			)),
 		)
 	})
 
 	// ===== MISC CREATURES =====
 
+	// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
 	Register("Samite Healer", func() Card {
+		target := TargetDamageRecipient("target")
 		return NewCreature("Samite Healer", "{1}{W}", 1, 1,
 			WithSubTypes("Human", "Cleric"),
-			// {T}: Prevent the next 1 damage that would be dealt to any target this turn.
-			WithActivatedAbility(
-				PreventDamageToTarget(Fixed(1)),
-				TapCost(This),
-				WithTarget(TargetDamageAnyTarget()),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), PreventNextDamage(target, Fixed(1)), WithTargets(target))),
 		)
 	})
 

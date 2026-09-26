@@ -366,11 +366,10 @@ func registerCreatures() {
 	Register("Orc General", func() Card {
 		return NewCreature("Orc General", "{2}{R}", 2, 2,
 			WithSubTypes("Orc", "Warrior"),
-			WithActivatedAbility(
-				Boost(Fixed(1), Fixed(1)).Targeting(ToOtherMatching(HasSubType("Orc"))).Until(EndOfTurn),
-				TapCost(This),
-				WithCost(SacrificeMatchingCost(Or(HasSubType("Orc"), HasSubType("Goblin")), "Sacrifice another Orc or Goblin")),
-			),
+			WithAbility(Activate(
+				Costs(TapCost(This), SacrificeMatchingCost(Or(HasSubType("Orc"), HasSubType("Goblin")), "Sacrifice another Orc or Goblin")),
+				Until(EndOfTurn, ModifyEachPT(WithoutPermanent(MatchingPermanents(And(IsCreature, HasSubType("Orc"))), This), Fixed(1), Fixed(1))),
+			)),
 		)
 	})
 

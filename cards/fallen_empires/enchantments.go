@@ -19,7 +19,8 @@ func registerEnchantments() {
 	Register("Breeding Pit", withExpansion(func() Card {
 		return NewEnchantment("Breeding Pit", "{3}{B}",
 			WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(Mana("{B}{B}")), Sacrifice(This)))),
-			WithAbility(At(YourEndStep, CreateToken("Thrull", 0, 1, []CardType{TypeCreature}, []string{"Thrull"}))),
+			WithAbility(At(YourEndStep, CreateTokenCopies(You, Fixed(1), DefineToken("Thrull",
+				TokenTypes(TypeCreature), TokenSubtypes("Thrull"), TokenColors(Black), TokenPT(0, 1))))),
 		)
 	}))
 
@@ -47,7 +48,7 @@ func registerEnchantments() {
 	// Enchantment
 	// {G}{G}: Put a spore counter on target Fungus.
 	Register("Fungal Bloom", withExpansion(func() Card {
-		fungus := TargetPermanent("Fungus", And(IsCreature, HasSubType("Fungus")))
+		fungus := TargetPermanent("Fungus", HasSubType("Fungus"))
 		return NewEnchantment("Fungal Bloom", "{G}{G}",
 			WithAbility(Activate(Costs(Mana("{G}{G}")),
 				AddCounters(fungus, Spore, Fixed(1)), WithTargets(fungus))),
@@ -57,9 +58,16 @@ func registerEnchantments() {
 	// Goblin Kites {1}{R}
 	// Enchantment
 	// {R}: Target creature you control with toughness 2 or less gains flying until end of turn. Flip a coin at the beginning of the next end step. If you lose the flip, sacrifice that creature.
-	// TODO: implement
 	Register("Goblin Kites", withExpansion(func() Card {
-		return NewEnchantment("Goblin Kites", "{1}{R}")
+		creature := TargetPermanent("creature", And(IsCreature, Not(HasToughnessGTE(3))), TargetYouControl())
+		saved := BindPermanent("saved creature")
+		return NewEnchantment("Goblin Kites", "{1}{R}",
+			WithAbility(Activate(Costs(Mana("{R}")), Sequence(
+				Until(EndOfTurn, GrantKeyword(creature, Flying)),
+				Snapshot(creature, saved),
+				AtNext(EachEndStep, FlipCoin(You, OnLoss(Sacrifice(From(saved))))),
+			), WithTargets(creature))),
+		)
 	}))
 
 	// Goblin War Drums {2}{R}
@@ -67,9 +75,8 @@ func registerEnchantments() {
 	// Creatures you control have menace. (They can't be blocked except by two or more creatures.)
 	Register("Goblin War Drums", withExpansion(func() Card {
 		return NewEnchantment("Goblin War Drums", "{2}{R}",
-			WithStaticAbility(
-				GrantKeywordToControlled(Menace, AnyPermanent),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				GrantEachKeyword(ControlledPermanents(IsCreature), Menace)))),
 		)
 	}))
 
@@ -78,15 +85,10 @@ func registerEnchantments() {
 	// {2}{R}, Sacrifice two Goblins: Create three 1/1 red Goblin creature tokens.
 	Register("Goblin Warrens", withExpansion(func() Card {
 		return NewEnchantment("Goblin Warrens", "{2}{R}",
-			WithActivatedAbility(
-				CompositeEffects("create three 1/1 red Goblin creature tokens",
-					CreateColoredToken("Goblin", 1, 1, []Color{Red}, []CardType{TypeCreature}, []string{"Goblin"}),
-					CreateColoredToken("Goblin", 1, 1, []Color{Red}, []CardType{TypeCreature}, []string{"Goblin"}),
-					CreateColoredToken("Goblin", 1, 1, []Color{Red}, []CardType{TypeCreature}, []string{"Goblin"}),
-				),
-				ManaCostOf("{2}{R}"),
-				WithCost(SacrificeNMatchingCost(2, HasSubType("Goblin"), "Sacrifice two Goblins")),
-			),
+			WithAbility(Activate(Costs(Mana("{2}{R}"), SacrificeNMatchingCost(2, HasSubType("Goblin"), "Sacrifice two Goblins")),
+				CreateTokenCopies(You, Fixed(3), DefineToken("Goblin",
+					TokenTypes(TypeCreature), TokenSubtypes("Goblin"), TokenColors(Red), TokenPT(1, 1))),
+			)),
 		)
 	}))
 
@@ -211,7 +213,7 @@ func registerEnchantments() {
 	Register("Thrull Retainer", withExpansion(func() Card {
 		host := BindPermanent("host")
 		return NewAura("Thrull Retainer", "{B}",
-			WithStaticAbility(BoostAttached(1, 1, AttachAura)),
+			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(1), Fixed(1))))),
 			WithAbility(Activate(Costs(SacrificeSourceCost()),
 				Regenerate(From(host)),
 				CapturePermanentBeforePayment(AttachedPermanent, host),

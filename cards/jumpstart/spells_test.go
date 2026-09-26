@@ -3,6 +3,8 @@ package jumpstart
 import (
 	"testing"
 
+	"github.com/google/uuid"
+
 	_ "github.com/benprew/mage-go/cards/limited" // register base cards (basic lands, vanilla creatures)
 	"github.com/benprew/mage-go/pkg/mage/core"
 	"github.com/benprew/mage-go/pkg/mage/gametest"
@@ -162,15 +164,24 @@ func TestInspiredCharge(t *testing.T) {
 
 func TestExclude(t *testing.T) {
 	g := gametest.NewTestGame(t)
+	a, b := g.GetPlayer(gametest.PlayerA), g.GetPlayer(gametest.PlayerB)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Island", 3)
 	g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Forest", 2)
 	g.AddCard(core.ZoneHand, gametest.PlayerA, "Exclude")
 	g.AddCard(core.ZoneHand, gametest.PlayerB, "Grizzly Bears")
-	g.CastSpell(2, core.PrecombatMain, gametest.PlayerB, "Grizzly Bears")
-	g.CastInResponseTo(gametest.PlayerA, "Exclude", "Grizzly Bears")
-	g.StopAt(2, core.EndStep)
-	g.Execute()
+	g.AddCard(core.ZoneLibrary, gametest.PlayerA, "Plains", 2)
+	g.SetStep(core.PrecombatMain)
+	g.SetActivePlayerIndex(1)
+	if err := g.CastSpellByID(b.PlayerID(), b.Hand()[0].ID(), nil, 0); err != nil {
+		t.Fatal(err)
+	}
+	target := g.StackPeek().ID
+	if err := g.CastSpellByID(a.PlayerID(), a.Hand()[0].ID(), []uuid.UUID{target}, 0); err != nil {
+		t.Fatal(err)
+	}
+	g.ResolveStack()
 	g.AssertGraveyardCount(gametest.PlayerB, "Grizzly Bears", 1)
+	g.AssertHandCount(gametest.PlayerA, "Plains", 1)
 }
 
 func TestThoughtScour(t *testing.T) {

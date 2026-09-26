@@ -5,6 +5,7 @@ import (
 
 	. "github.com/benprew/mage-go/pkg/mage"
 	. "github.com/benprew/mage-go/pkg/mage/core"
+	"github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
 func init() {
@@ -32,29 +33,19 @@ func slowLand(name string, color1, color2 Color) Card {
 				return nil
 			},
 		))),
-		WithManaAbility(color1),
-		WithManaAbility(color2),
+		WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(color1, dsl.Fixed(1)))),
+		WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(color2, dsl.Fixed(1)))),
 	)
 }
 
-// surveilLand builds the "Strixhaven campus survey land" pattern: always enters
-// tapped; produces color1 (primary) or color2 (secondary) via two separate mana
-// abilities; activated surveil ability costing {manaCost}, {T}.
-//
-// Two separate ManaAbility instances are used (one per color) so that the
-// harness's ActivateAbility picker — which prefers non-mana activated abilities
-// in its first pass — will correctly find the surveil ability when called without
-// a ChooseManaColor override.
+// Keep the mana colors in separate abilities so automatic payment can select
+// either color. The test harness can then select the surveil ability by default.
 func surveilLand(name, manaCost string, color1, color2 Color) Card {
 	return NewLand(name,
 		WithKeyword(EntersTapped),
-		WithManaAbility(color1),
-		WithManaAbility(color2),
-		WithActivatedAbility(
-			Surveil(Fixed(1)),
-			ManaCostOf(manaCost),
-			WithCost(Tap()),
-		),
+		WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(color1, dsl.Fixed(1)))),
+		WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(color2, dsl.Fixed(1)))),
+		WithAbility(dsl.Activate(dsl.Costs(dsl.Mana(manaCost), dsl.TapCost(dsl.This)), dsl.Surveil(dsl.Fixed(1)))),
 	)
 }
 
@@ -115,7 +106,7 @@ func registerLands() {
 		// ("if this isn't a creature") check, and the granted triggered ability on the animated
 		// land is beyond the current animation options (AnimateLandOptions has no trigger slot).
 		return NewLand("Great Hall of the Biblioplex",
-			WithManaAbility(Colorless),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Colorless, dsl.Fixed(1)))),
 			WithActivatedAbility(
 				FuncEffect(
 					"add one mana of any color",
@@ -188,7 +179,7 @@ func registerLands() {
 		))
 		return NewLand("Petrified Hamlet",
 			WithAbility(chooseNameETB),
-			WithManaAbility(Colorless),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Colorless, dsl.Fixed(1)))),
 		)
 	})
 
@@ -210,7 +201,7 @@ func registerLands() {
 				return p != nil && p.Card != nil && HasPreparedSpell(p.Card)
 			})
 		return NewLand("Skycoach Waypoint",
-			WithManaAbility(Colorless),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Colorless, dsl.Fixed(1)))),
 			WithActivatedAbility(
 				FuncEffect("target creature becomes prepared",
 					EffectProperties{},

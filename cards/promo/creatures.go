@@ -1,9 +1,6 @@
 package promo
 
-import (
-	. "github.com/benprew/mage-go/pkg/mage"
-	. "github.com/benprew/mage-go/pkg/mage/core"
-)
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
 
 func init() {
 	registerCreatures()
@@ -34,7 +31,7 @@ func registerCreatures() {
 		return NewCreature("Giant Badger", "{1}{G}{G}", 2, 2,
 			WithSubTypes("Badger"),
 			WithAbility(BlocksTrigger(
-				Boost(Fixed(2), Fixed(2)).Targeting(ToSource()).Until(EndOfTurn), false,
+				Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(2))), false,
 			)),
 		)
 	})

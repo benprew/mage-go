@@ -176,6 +176,7 @@ func registerArtifacts() {
 		)
 	})
 
+	// {3}, {T}: This artifact deals 1 damage to any target.
 	Register("Rod of Ruin", func() Card {
 		return NewArtifact("Rod of Ruin", "{4}",
 			// {3}, {T}: Deal 1 damage to any target
@@ -188,14 +189,11 @@ func registerArtifacts() {
 		)
 	})
 
+	// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp. (It can't be blocked except by creatures with flying or reach.)
 	Register("The Hive", func() Card {
+		wasp := DefineToken("Wasp", TokenTypes(TypeArtifact, TypeCreature), TokenSubtypes("Insect"), TokenPT(1, 1), TokenKeywords(Flying))
 		return NewArtifact("The Hive", "{5}",
-			// {5}, {T}: Create a 1/1 colorless Insect artifact creature token with flying named Wasp.
-			WithActivatedAbility(
-				TheHiveEffect(),
-				GenericCost(5),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(Costs(Mana("{5}"), TapCost(This)), CreateTokenCopies(You, Fixed(1), wasp))),
 		)
 	})
 
@@ -293,6 +291,7 @@ func registerArtifacts() {
 		)
 	})
 
+	// At the beginning of each player's upkeep, this artifact deals 1 damage to that player.
 	Register("Copper Tablet", func() Card {
 		return NewArtifact("Copper Tablet", "{2}",
 			WithAbility(BeginningOfEachUpkeepTrigger(DealDamageToPlayers(Fixed(1), SelectActivePlayer()), false)),

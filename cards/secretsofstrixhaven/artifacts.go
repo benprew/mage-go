@@ -56,21 +56,15 @@ func registerArtifacts() {
 	// Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life.
 	// {1}{B}{G}, {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery.
 	Register("Cauldron of Essence", func() Card {
+		creature := dsl.TargetGraveyardCard("creature", dsl.GraveyardCardFilter(IsCreatureCard))
 		return NewArtifact("Cauldron of Essence", "{1}{B}{G}",
-			WithAbility(dsl.WhenEvent(dsl.CreatureYouControlDies(),
-				dsl.Sequence(
-					dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(1)),
-					dsl.GainLife(dsl.You, dsl.Fixed(1)),
-				),
+			WithAbility(dsl.WhenEvent(dsl.CreatureYouControlDies(), dsl.Sequence(
+				dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(1)), dsl.GainLife(dsl.You, dsl.Fixed(1)),
+			))),
+			WithAbility(dsl.Activate(
+				dsl.Costs(dsl.Mana("{1}{B}{G}"), dsl.TapCost(dsl.This), SacrificeCreatureCost()),
+				dsl.ReturnCardToBattlefield(creature, dsl.You), dsl.WithTargets(creature), dsl.OnlyAsSorcery(),
 			)),
-			WithActivatedAbility(
-				ReturnFromGraveyardToBattlefield(),
-				ManaCostOf("{1}{B}{G}"),
-				WithCost(Tap()),
-				WithCost(SacrificeCreatureCost()),
-				WithTarget(TargetCreatureInYourGraveyard()),
-				WithSorcerySpeed(),
-			),
 		)
 	})
 
@@ -103,11 +97,7 @@ func registerArtifacts() {
 			WithSubTypes("Book"),
 			WithAbility(counterTrigger),
 			WithStaticAbility(costReduction),
-			WithActivatedAbility(
-				DrawCards(Fixed(1)),
-				GenericCost(5),
-				WithCost(Tap()),
-			),
+			WithAbility(dsl.Activate(dsl.Costs(GenericCost(5), dsl.TapCost(dsl.This)), dsl.Draw(dsl.You, dsl.Fixed(1)))),
 		)
 	})
 
@@ -210,7 +200,7 @@ func registerArtifacts() {
 		)
 		return NewArtifact("Tablet of Discovery", "{2}{R}",
 			WithAbility(EntersBattlefieldTrigger(millSelf, false)),
-			WithManaAbility(Red),
+			WithAbility(dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)), dsl.AddManaAmount(Red, dsl.Fixed(1)))),
 			WithAbility(NewMultiManaAbility(ManaProduction{Color: Red, Amount: 2})),
 		)
 	})

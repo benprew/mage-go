@@ -2,6 +2,7 @@ package legends
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/google/uuid"
 
@@ -46,38 +47,16 @@ func registerSpells() {
 	// Choose one —
 	// • Target player gains X life.
 	// • Prevent the next X damage that would be dealt to any target this turn.
-	// TODO: convert to pipeline — needs ModalEffect with XValue-based GainLifeTarget and PreventDamageToTarget
 	Register("Alabaster Potion", func() Card {
-		c := NewInstant("Alabaster Potion", "{X}{W}{W}",
-			NewTargetedSpell(TargetDamageAnyTarget(), FuncEffect(
-				"target player gains X life or prevent the next X damage to any target",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					x := g.XValue()
-					if g.ModeValue() == 0 {
-						// Mode 1: Target player gains X life
-						for _, pl := range g.AllPlayers() {
-							if pl.PlayerID() == targets[0] {
-								g.PlayerGainLife(pl, x)
-								return nil
-							}
-						}
-					} else {
-						// Mode 2: Prevent the next X damage to any target
-						g.AddPreventionShield(targets[0], x)
-					}
-					return nil
-				},
+		player := TargetPlayer("player")
+		recipient := TargetDamageRecipient("damage recipient")
+		x := ValueAtResolution(XValue())
+		return NewInstant("Alabaster Potion", "{X}{W}{W}",
+			WithAbility(SpellModes(
+				ModeOf("Target player gains X life", GainLife(player, x), WithTargets(player)),
+				ModeOf("Prevent the next X damage to any target", PreventNextDamage(recipient, x), WithTargets(recipient)),
 			)),
 		)
-		c.SetModes([]string{
-			"Target player gains X life",
-			"Prevent the next X damage that would be dealt to any target this turn",
-		})
-		return c
 	})
 
 	// All Hallow's Eve {2}{B}{B}
@@ -159,7 +138,7 @@ func registerSpells() {
 	// Prevent all combat damage that would be dealt this turn.
 	Register("Darkness", func() Card {
 		return NewInstant("Darkness", "{B}",
-			NewSpellAbility(PreventAllCombatDamage()),
+			Spell(PreventAllCombatDamage()),
 		)
 	})
 
@@ -170,11 +149,10 @@ func registerSpells() {
 	Register("Disharmony", func() Card {
 		creature := TargetPermanent("attacking creature", And(IsCreature, IsAttacking))
 		return NewInstant("Disharmony", "{2}{R}",
-			Spell(CompositeEffects(
-				"untap target attacking creature, remove from combat, gain control until end of turn",
+			Spell(Sequence(
 				Untap(creature),
 				RemoveFromCombat(creature),
-				GainControl().Until(EndOfTurn),
+				Until(EndOfTurn, ChangeController(creature, You)),
 			), WithTargets(creature), OnlyDuring(core.BeginCombat, core.DeclareAttackers)),
 		)
 	})
@@ -198,8 +176,9 @@ func registerSpells() {
 	// Instant
 	// One or more target creatures become red until end of turn.
 	Register("Dwarven Song", func() Card {
+		creatures := TargetPermanents("creatures", 1, math.MaxInt, IsCreature)
 		return NewInstant("Dwarven Song", "{R}",
-			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Red)),
+			Spell(Until(EndOfTurn, SetEachColors(creatures, Red)), WithTargets(creatures)),
 		)
 	})
 
@@ -326,14 +305,10 @@ func registerSpells() {
 	// Instant
 	// Counter target instant spell.
 	Register("Flash Counter", func() Card {
-		return NewInstant("Flash Counter", "{1}{U}",
-			NewTargetedSpell(
-				TargetSpellOnStack(NewCardFilter("instant", func(c Card) bool {
-					return c.HasType(TypeInstant)
-				})),
-				CounterSpell(),
-			),
-		)
+		spell := TargetSpell("instant spell", NewCardFilter("instant spell", func(c Card) bool {
+			return c.HasType(TypeInstant)
+		}))
+		return NewInstant("Flash Counter", "{1}{U}", Spell(Counter(spell), WithTargets(spell)))
 	})
 
 	// Flash Flood {U}
@@ -585,29 +560,10 @@ func registerSpells() {
 	// Great Defender {W}
 	// Instant
 	// Target creature gets +0/+X until end of turn, where X is its mana value.
-	// TODO: convert to pipeline — needs Boost to support VarInt context binding
 	Register("Great Defender", func() Card {
+		creature := TargetPermanent("creature", IsCreature)
 		return NewInstant("Great Defender", "{W}",
-			NewTargetedSpell(TargetCreature(), FuncEffect(
-				"target creature gets +0/+X until end of turn, where X is its mana value",
-				EffectProperties{Outcome: OutcomeBenefit},
-				func(g *Game, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-					if len(targets) == 0 {
-						return nil
-					}
-					perm := g.FindPermanent(targets[0])
-					if perm == nil {
-						return nil
-					}
-					cmc := perm.Card.ManaCost().CMC()
-					if cmc > 0 {
-						ce := TemporaryBoost(perm.ID(), 0, cmc)
-						ce.SetSourceID(sourceID)
-						g.AddContinuousEffect(ce)
-					}
-					return nil
-				},
-			)),
+			Spell(Until(EndOfTurn, ModifyPT(creature, Fixed(0), ManaValueOf(creature))), WithTargets(creature)),
 		)
 	})
 
@@ -615,8 +571,9 @@ func registerSpells() {
 	// Instant
 	// One or more target creatures become white until end of turn.
 	Register("Heaven's Gate", func() Card {
+		creatures := TargetPermanents("creatures", 1, math.MaxInt, IsCreature)
 		return NewInstant("Heaven's Gate", "{W}",
-			NewTargetedSpell(TargetCreature(), ChangeColorEffect(White)),
+			Spell(Until(EndOfTurn, SetEachColors(creatures, White)), WithTargets(creatures)),
 		)
 	})
 
@@ -664,7 +621,7 @@ func registerSpells() {
 	// Prevent all combat damage that would be dealt this turn.
 	Register("Holy Day", func() Card {
 		return NewInstant("Holy Day", "{W}",
-			NewSpellAbility(PreventAllCombatDamage()),
+			Spell(PreventAllCombatDamage()),
 		)
 	})
 
@@ -975,14 +932,10 @@ func registerSpells() {
 	// Instant
 	// Counter target creature spell.
 	Register("Remove Soul", func() Card {
-		return NewInstant("Remove Soul", "{1}{U}",
-			NewTargetedSpell(
-				TargetSpellOnStack(NewCardFilter("creature spell", func(c Card) bool {
-					return c.HasType(TypeCreature)
-				})),
-				CounterSpell(),
-			),
-		)
+		spell := TargetSpell("creature spell", NewCardFilter("creature spell", func(c Card) bool {
+			return c.HasType(TypeCreature)
+		}))
+		return NewInstant("Remove Soul", "{1}{U}", Spell(Counter(spell), WithTargets(spell)))
 	})
 
 	// Reset {U}{U}
@@ -1023,8 +976,9 @@ func registerSpells() {
 	// Instant
 	// One or more target creatures become blue until end of turn.
 	Register("Sea Kings' Blessing", func() Card {
+		creatures := TargetPermanents("creatures", 1, math.MaxInt, IsCreature)
 		return NewInstant("Sea Kings' Blessing", "{U}",
-			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Blue)),
+			Spell(Until(EndOfTurn, SetEachColors(creatures, Blue)), WithTargets(creatures)),
 		)
 	})
 
@@ -1100,8 +1054,9 @@ func registerSpells() {
 	// Instant
 	// One or more target creatures become green until end of turn.
 	Register("Sylvan Paradise", func() Card {
+		creatures := TargetPermanents("creatures", 1, math.MaxInt, IsCreature)
 		return NewInstant("Sylvan Paradise", "{G}",
-			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Green)),
+			Spell(Until(EndOfTurn, SetEachColors(creatures, Green)), WithTargets(creatures)),
 		)
 	})
 
@@ -1188,8 +1143,9 @@ func registerSpells() {
 	// Instant
 	// One or more target creatures become black until end of turn.
 	Register("Touch of Darkness", func() Card {
+		creatures := TargetPermanents("creatures", 1, math.MaxInt, IsCreature)
 		return NewInstant("Touch of Darkness", "{B}",
-			NewTargetedSpell(TargetCreature(), ChangeColorEffect(Black)),
+			Spell(Until(EndOfTurn, SetEachColors(creatures, Black)), WithTargets(creatures)),
 		)
 	})
 

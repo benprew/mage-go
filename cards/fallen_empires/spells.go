@@ -56,7 +56,8 @@ func registerSpells() {
 	// Create four 1/1 white Citizen creature tokens.
 	Register("Icatian Town", withExpansion(func() Card {
 		return NewSorcery("Icatian Town", "{5}{W}",
-			NewSpellAbility(CreateTokens(4, "Citizen", 1, 1, []CardType{TypeCreature}, []string{"Citizen"})),
+			Spell(CreateTokenCopies(You, Fixed(4), DefineToken("Citizen",
+				TokenTypes(TypeCreature), TokenSubtypes("Citizen"), TokenColors(White), TokenPT(1, 1)))),
 		)
 	}))
 
@@ -74,10 +75,15 @@ func registerSpells() {
 	// Spore Cloud {1}{G}{G}
 	// Instant
 	// Tap all blocking creatures. Prevent all combat damage that would be dealt this turn. Each attacking creature and each blocking creature doesn't untap during its controller's next untap step.
-	// TODO: implement
 	Register("Spore Cloud", withExpansion(func() Card {
+		creature := BindPermanent("combat creature")
+		blocker := BindPermanent("blocker")
 		return NewInstant("Spore Cloud", "{1}{G}{G}",
-			NewSpellAbility(),
+			Spell(Sequence(
+				ForEach(MatchingPermanents(And(IsCreature, IsBlocking)), blocker, Tap(From(blocker))),
+				PreventAllCombatDamage(),
+				ForEach(MatchingPermanents(And(IsCreature, Or(IsAttacking, IsBlocking))), creature, SkipNextUntap(From(creature))),
+			)),
 		)
 	}))
 }

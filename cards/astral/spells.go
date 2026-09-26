@@ -76,11 +76,28 @@ func applyWhimsyAction(g *Game, sourceID, controllerID uuid.UUID, action int) er
 			dsl.Mill(dsl.FromPlayer(chosen), dsl.Fixed(2)),
 		), sourceID, controllerID, nil)
 	case 11: // The Hive
-		return ApplyEffect(g, TheHiveEffect(), sourceID, controllerID, nil)
+		return ApplyEffect(g, dsl.CreateTokenCopies(dsl.You, dsl.Fixed(1),
+			dsl.DefineToken("Wasp",
+				dsl.TokenTypes(TypeArtifact, TypeCreature),
+				dsl.TokenSubtypes("Insect"),
+				dsl.TokenPT(1, 1),
+				dsl.TokenKeywords(Flying),
+			),
+		), sourceID, controllerID, nil)
 	case 12: // Nevinyrral's Disk
 		return ApplyEffect(g, dsl.DestroyEach(dsl.MatchingPermanents(dsl.Or(dsl.IsArtifact, dsl.IsCreature, dsl.IsEnchantment))), sourceID, controllerID, nil)
 	case 13: // Bottle of Suleiman
-		return ApplyEffect(g, BottleOfSuleimanEffect(), sourceID, controllerID, nil)
+		return ApplyEffect(g, dsl.FlipCoin(dsl.You,
+			dsl.OnWin(dsl.CreateTokenCopies(dsl.You, dsl.Fixed(1),
+				dsl.DefineToken("Djinn",
+					dsl.TokenTypes(TypeArtifact, TypeCreature),
+					dsl.TokenSubtypes("Djinn"),
+					dsl.TokenPT(5, 5),
+					dsl.TokenKeywords(Flying),
+				),
+			)),
+			dsl.OnLoss(DealDamageToPlayers(Fixed(5), SelectController())),
+		), sourceID, controllerID, nil)
 	case 14: // Pandora's Box
 		return ApplyEffect(g, PandorasBoxEffect(), sourceID, controllerID, nil)
 	case 15: // Disrupting Scepter

@@ -33,19 +33,14 @@ func registerArtifacts() {
 	// • You gain 2 life.
 	// • Prevent the next 2 damage that would be dealt to any target this turn.
 	Register("Balm of Restoration", withExpansion(func() Card {
-		c := NewArtifact("Balm of Restoration", "{2}")
-		c.AddAbility(NewModalActivated(GenericCost(1), []Mode{
-			{
-				Label:   "You gain 2 life",
-				Effects: []Effect{GainLife(You, Fixed(2))},
-			},
-			{
-				Label:   "Prevent the next 2 damage that would be dealt to any target this turn",
-				Targets: []Target{TargetDamageAnyTarget()},
-				Effects: []Effect{PreventDamageToTarget(Fixed(2))},
-			},
-		}, WithCost(TapCost(This)), WithCost(SacrificeSourceCost())))
-		return c
+		recipient := TargetDamageRecipient("recipient")
+		return NewArtifact("Balm of Restoration", "{2}",
+			WithAbility(ActivateModes(Costs(Mana("{1}"), TapCost(This), SacrificeSourceCost()),
+				ModeOf("You gain 2 life", GainLife(You, Fixed(2))),
+				ModeOf("Prevent the next 2 damage that would be dealt to any target this turn",
+					PreventNextDamage(recipient, Fixed(2)), WithTargets(recipient)),
+			)),
+		)
 	}))
 
 	// Conch Horn {2}

@@ -38,15 +38,12 @@ func registerLands() {
 	// {T}: Add {C}.
 	// {T}: This land deals 1 damage to target attacking creature. Activate only during the end of combat step.
 	Register("Desert", func() Card {
+		creature := TargetPermanent("attacking creature", And(IsCreature, IsAttacking))
 		return NewLand("Desert",
 			WithSubTypes("Desert"),
 			WithAbility(Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))),
-			WithActivatedAbility(
-				DealDamage(Fixed(1)),
-				TapCost(This),
-				WithTarget(TargetCreature(IsAttacking)),
-				WithStepOnly(EndCombat),
-			),
+			WithAbility(Activate(Costs(TapCost(This)), DealDamage(Fixed(1)),
+				WithTargets(creature), OnlyDuring(EndCombat))),
 		)
 	})
 

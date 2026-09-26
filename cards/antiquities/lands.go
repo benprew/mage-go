@@ -83,26 +83,8 @@ func registerLands() {
 	Register("Urza's Mine", func() Card {
 		return NewLand("Urza's Mine",
 			WithSubTypes("Urza's", "Mine"),
-			WithActivatedAbility(
-				// TODO: convert to pipeline — needs conditional mana amount with IfElse
-				FuncEffect("add {C} or {C}{C} with Tron",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						hasPowerPlant := g.AnyBattlefield(And(ControlledBy(controller), HasSubType("Power-Plant")))
-						hasTower := g.AnyBattlefield(And(ControlledBy(controller), HasSubType("Tower")))
-						if hasPowerPlant && hasTower {
-							p.ManaPool().Add(Colorless, 2)
-						} else {
-							p.ManaPool().Add(Colorless, 1)
-						}
-						return nil
-					}),
-				TapCost(This),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				AddManaAmount(Colorless, urzaLandManaAmount("Power-Plant", "Tower", 1)))),
 		)
 	})
 
@@ -112,26 +94,8 @@ func registerLands() {
 	Register("Urza's Power Plant", func() Card {
 		return NewLand("Urza's Power Plant",
 			WithSubTypes("Urza's", "Power-Plant"),
-			WithActivatedAbility(
-				// TODO: convert to pipeline — needs conditional mana amount with IfElse
-				FuncEffect("add {C} or {C}{C} with Tron",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						hasMine := g.AnyBattlefield(And(ControlledBy(controller), HasSubType("Mine")))
-						hasTower := g.AnyBattlefield(And(ControlledBy(controller), HasSubType("Tower")))
-						if hasMine && hasTower {
-							p.ManaPool().Add(Colorless, 2)
-						} else {
-							p.ManaPool().Add(Colorless, 1)
-						}
-						return nil
-					}),
-				TapCost(This),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				AddManaAmount(Colorless, urzaLandManaAmount("Mine", "Tower", 1)))),
 		)
 	})
 
@@ -141,26 +105,17 @@ func registerLands() {
 	Register("Urza's Tower", func() Card {
 		return NewLand("Urza's Tower",
 			WithSubTypes("Urza's", "Tower"),
-			WithActivatedAbility(
-				// TODO: convert to pipeline — needs conditional mana amount with IfElse
-				FuncEffect("add {C} or {C}{C}{C} with Tron",
-					EffectProperties{Outcome: OutcomeBenefit},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						hasMine := g.AnyBattlefield(And(ControlledBy(controller), HasSubType("Mine")))
-						hasPowerPlant := g.AnyBattlefield(And(ControlledBy(controller), HasSubType("Power-Plant")))
-						if hasMine && hasPowerPlant {
-							p.ManaPool().Add(Colorless, 3)
-						} else {
-							p.ManaPool().Add(Colorless, 1)
-						}
-						return nil
-					}),
-				TapCost(This),
-			),
+			WithAbility(Activate(Costs(TapCost(This)),
+				AddManaAmount(Colorless, urzaLandManaAmount("Mine", "Power-Plant", 2)))),
 		)
 	})
+}
+
+func urzaLandManaAmount(first, second string, extra int) ResolutionValue {
+	pair := MinValue(Fixed(1), MinValue(
+		CountPermanents(ControlledPermanents(And(HasSubType("Urza's"), HasSubType(first)))),
+		CountPermanents(ControlledPermanents(And(HasSubType("Urza's"), HasSubType(second)))),
+	))
+	// The DSL has subtraction but no addition operation.
+	return SubtractValues(MultiplyValues(Fixed(extra), pair), Fixed(-1))
 }

@@ -234,17 +234,12 @@ func registerArtifacts() {
 
 	// Ivory Tower {1}
 	// Artifact
-	// At the beginning of your upkeep, you gain X life, where X is the number of cards in
-	// your hand minus 4.
+	// At the beginning of your upkeep, you gain X life, where X is the number of cards in your hand minus
+	// 4.
 	Register("Ivory Tower", func() Card {
 		return NewArtifact("Ivory Tower", "{1}",
-			WithAbility(BeginningOfUpkeepTrigger(
-				Pipeline("gain life equal to hand size minus 4",
-					EffectProperties{},
-					SnapshotPermanent(SelectSource, "src"),
-					SetVarFromHandSize(SelectController(), "excess", 4),
-					GainLifeFromVar("src.controller", "excess"),
-				), false,
+			WithAbility(At(YourUpkeep,
+				GainLife(You, SubtractValues(ValueAtResolution(CountZone(ZoneHand, SelectController(), CardFilter{})), Fixed(4))),
 			)),
 		)
 	})
@@ -254,26 +249,8 @@ func registerArtifacts() {
 	// {2}, {T}: Draw a card, then discard a card.
 	Register("Jalum Tome", func() Card {
 		return NewArtifact("Jalum Tome", "{3}",
-			WithActivatedAbility(
-				// TODO: convert to pipeline — needs "draw then choose discard" step
-				FuncEffect("draw a card, then discard a card",
-					EffectProperties{},
-					func(g *Game, sourceID, controller uuid.UUID, _ []uuid.UUID) error {
-						p := g.GetPlayer(controller)
-						if p == nil {
-							return nil
-						}
-						p.DrawCard()
-						chosen := p.ChooseCardsFromHand(1, "discard", g)
-						for _, card := range chosen {
-							p.RemoveFromHand(card.ID())
-							p.AddToGraveyard(card)
-						}
-						return nil
-					}),
-				GenericCost(2),
-				WithCost(TapCost(This)),
-			),
+			WithAbility(Activate(Costs(Mana("{2}"), TapCost(This)),
+				Sequence(Draw(You, Fixed(1)), Discard(You, Fixed(1))))),
 		)
 	})
 
@@ -282,9 +259,8 @@ func registerArtifacts() {
 	// Attacking creatures get +1/+0.
 	Register("Mightstone", func() Card {
 		return NewArtifact("Mightstone", "{4}",
-			WithStaticAbility(
-				BoostAllCreaturesIncludingSelf(1, 0, IsAttacking),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(MatchingPermanents(And(IsCreature, IsAttacking)), Fixed(1), Fixed(0))))),
 		)
 	})
 
@@ -631,9 +607,8 @@ func registerArtifacts() {
 	// Attacking creatures get -1/-0.
 	Register("Weakstone", func() Card {
 		return NewArtifact("Weakstone", "{4}",
-			WithStaticAbility(
-				BoostAllCreaturesIncludingSelf(-1, 0, IsAttacking),
-			),
+			WithAbility(Static(While(Controls(AnyPermanent),
+				ModifyEachPT(MatchingPermanents(And(IsCreature, IsAttacking)), Fixed(-1), Fixed(0))))),
 		)
 	})
 }
