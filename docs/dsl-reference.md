@@ -840,7 +840,6 @@ Triggers on rules events dispatched by the engine:
     func main() {}
     ```
   * `OpponentLandBecomesTapped().OfSubtype(string) EventPattern`: Match an opponent-controlled land when it changes from untapped to tapped. `OfSubtype` is optional; when present it requires a valid land subtype at registration. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The condition uses the land's type, subtype, and controller when it becomes tapped. It does not target the land.
-
     ```go
     package main
 
@@ -853,7 +852,6 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
-
     ```go
     package main
 
@@ -861,6 +859,19 @@ Triggers on rules events dispatched by the engine:
 
     var _ = dsl.NewCreature("Leaving watcher", "", 1, 1,
         dsl.WithAbility(dsl.WhenEvent(dsl.LeavesBattlefield(dsl.This),
+            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+
+    func main() {}
+    ```
+  * `BecomesTapped(This) EventPattern`: Match the battlefield source when it changes from untapped to tapped. Use it with `WhenEvent` or `WhenEventModes` on a permanent. It does not match entering tapped or a second tap while already tapped. The pending trigger keeps its event-time controller and source incarnation. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var _ = dsl.NewLand("Tap watcher",
+        dsl.WithAbility(dsl.WhenEvent(dsl.BecomesTapped(dsl.This),
             dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 
     func main() {}

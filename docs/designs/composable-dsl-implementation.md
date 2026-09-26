@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Source Becomes Tapped Event
+
+`BecomesTapped(This) EventPattern` is available in `WhenEvent` and `WhenEventModes` on battlefield permanents. It reads the shared `EvtTapped` transition with `EventSourceIsSelf`; `TapPermanent` emits that event only on an untapped-to-tapped change. It has no event-participant binding. Normal pending triggers keep the event-time controller and source incarnation, including through source departure, return, stack copying, and game cloning. Registration rejects a non-battlefield source; the sealed `sourceRef` argument rejects a player reference at compile time.
+
+City of Brass in `data/ARN.json` requires a source tap event, damage to its controller, and any-color mana production. `DealDamageFrom(This, You, Fixed(1))` and `AddManaOfAnyOneColor(Fixed(1))` already supply the latter two actions; this slice supplies the event. Its production definition and the Arabian inventory remain open pending card wiring and audit. No production card or JSON gap record changed. A fresh caller search found no production `BecomesTapped` use; legacy tap-event exports remain in use. The next dependency-ready E work is a typed event participant or filtered tap event after a fresh audit; P variable life payment is also open.
+
+Synthetic contract tests first failed because `BecomesTapped` was absent. They cover source filtering, entry tapped, repeated taps, phasing, absence, departure and return, pending controller and incarnation, target announcement, stack copying, game cloning, inspection, registration, and compile-time role rejection. Focused tests, the short engine and repository suites, DSL registration and closed-role tests, build, vet, and `make test` pass. The first lint run found a shadowed Go built-in in a test; it was renamed and the second lint run passed with zero issues. `git diff --check` passes.
+
 ## Current Slice: Fixed Life-Payment Amount Binding
 
 `LifePayCostInto(amount, paid)` is a typed fixed-life cost for `Activate`, `ActivateModes`, and spell additional costs. It uses the existing prepared total-cost transaction and writes the committed payment to an instance-local `NumberBinding` for `FromNumber` at resolution. Zero and exact-life payments follow CR 119.4. The existing `LifePayCost` and all production callers remain unchanged. Registration rejects negative amounts, nil or unnamed bindings, duplicate paid-life producers, and reads without a producer. Resolution-time `IfPaid` and `UnlessPaid` costs do not support this output; variable X life costs, prevention or replacement of life loss, and card wiring are outside this slice.
