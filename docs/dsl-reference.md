@@ -292,6 +292,20 @@ or host is a new incarnation and does not redirect the old reference.
 
 ### Damage Actions
 * `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption) ResolvingEffect`: Deals one damage action from `This` to a player or battlefield permanent. Use it in `Spell`, `Activate`, or a triggered resolving body. The source keeps its resolving incarnation and last known characteristics after departure. A missing source or recipient has no effect. The current `DealDamage(ValueSource)` remains for unmigrated positional callers.
+* `DamageSourceOf(PermanentRef) DamageSourceRef`: Uses a typed permanent reference as the source of `DealDamageFrom` or `DealDamageEach`. A declared target or `From` snapshot keeps its captured battlefield incarnation; if that permanent has left, the damage instruction uses its departure characteristics and controller. A phased-out or missing permanent without departure information cannot supply damage. The argument must be a `PermanentRef`; player and stack-object references are rejected by Go. This source can be used in a spell, activation, or trigger body.
+
+```go
+other := dsl.TargetPermanent("other creature", dsl.IsCreature)
+ability := dsl.Activate(
+    dsl.Costs(dsl.Mana("{G}{G}"), dsl.TapCost(dsl.This)),
+    dsl.Sequence(
+        dsl.DealDamageFrom(dsl.This, other, dsl.PowerOf(dsl.This)),
+        dsl.DealDamageFrom(dsl.DamageSourceOf(other), dsl.This, dsl.PowerOf(other)),
+    ),
+    dsl.WithTargets(other),
+)
+_ = ability
+```
 * `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. A `PermanentTargetsBinding` with a maximum of one can supply the permanent set when declared with `WithTargets`; an illegal target is absent from the batch. Larger target groups still require recorded target selection boundaries.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
 * `DamageTotalInto(*NumberBinding) DamageEachResultOption`: Saves the sum of damage actually dealt by one `DealDamageEach` instruction after replacement, redirection, and prevention. It writes zero when no damage is dealt. The result is local to the resolving spell or ability. Use `FromNumber` in a later instruction. Each batch can declare this option once.

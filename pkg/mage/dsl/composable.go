@@ -291,6 +291,7 @@ var (
 	TapCost               = mage.TapCost
 	TargetDamageRecipient = mage.DeclareDamageTarget
 	DealDamageFrom        = mage.DealDamageFrom
+	DamageSourceOf        = mage.DamageSourceOf
 	DamageRecipients      = mage.DamageRecipients
 	DealDamageEach        = mage.DealDamageEach
 	DamageTotalInto       = mage.DamageTotalInto

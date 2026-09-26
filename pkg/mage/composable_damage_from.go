@@ -22,6 +22,56 @@ func (sourceRef) resolveDamageSource(ctx *EffectContext) DamageSource {
 	return ctx.Game.CaptureDamageSource(ctx.SourceID)
 }
 
+type permanentDamageSource struct{ subject PermanentRef }
+
+// DamageSourceOf uses one referenced permanent as a damage source.
+func DamageSourceOf(subject PermanentRef) DamageSourceRef {
+	return permanentDamageSource{subject: subject}
+}
+
+func (permanentDamageSource) damageSourceRef() {}
+
+func (r permanentDamageSource) resolveDamageSource(ctx *EffectContext) DamageSource {
+	if nilDefinition(r.subject) {
+		return DamageSource{}
+	}
+	if _, ok := r.subject.(sourceRef); ok {
+		return This.resolveDamageSource(ctx)
+	}
+	var value capturedPermanent
+	switch subject := r.subject.(type) {
+	case *PermanentTargetBinding:
+		value, _ = firstTargetValue(ctx.targetBindings[subject.targetDeclaration])
+	case savedPermanentRef:
+		value = ctx.Game.resolution.permanentBindings[subject.binding]
+	case damageResultPermanent:
+		value = ctx.Game.resolution.damageResultBindings[subject.binding].permanent
+	default:
+		if p, ok := r.subject.resolvePermanent(ctx); ok {
+			return damageSourceFromPermanent(p)
+		}
+		return DamageSource{}
+	}
+	if value.id == uuid.Nil || value.incarnation == uuid.Nil {
+		return DamageSource{}
+	}
+	if p := ctx.Game.FindPermanent(value.id); p != nil && !p.PhasedOut && p.incarnationID == value.incarnation {
+		return damageSourceFromPermanent(p)
+	}
+	if lki := ctx.Game.zones.LKIByIncarnation(value.incarnation); lki != nil && lki.ID == value.id {
+		return damageSourceFromLKI(lki)
+	}
+	return DamageSource{}
+}
+
+func (r permanentDamageSource) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "damage-source-ref", Text: "permanent", children: []definitionEdge{{"permanent", r.subject}}}
+	if nilDefinition(r.subject) {
+		n.problem = "supply a permanent damage source"
+	}
+	return n
+}
+
 type damageFromEffect struct {
 	source               DamageSourceRef
 	recipient            DamageRecipientRef
@@ -113,6 +163,8 @@ func (d damageSourceDefinition) inspectDefinition() definitionNode {
 	case savedDamageSourceRef:
 		return source.inspectDefinition()
 	case damageResultSource:
+		return source.inspectDefinition()
+	case permanentDamageSource:
 		return source.inspectDefinition()
 	}
 	n := definitionNode{Role: "damage-source-ref", Text: "this"}

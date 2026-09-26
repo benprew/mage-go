@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Referenced Permanent Damage Source
+
+`DamageSourceOf(PermanentRef) DamageSourceRef` lets `DealDamageFrom` and `DealDamageEach` use a declared target or saved permanent as their damage source. Target and snapshot references retain their battlefield incarnation; a departed source uses durable departure LKI, while phasing without departure makes it absent. The adapter uses the shared damage executor, inspection, and target scope validation. It does not change production cards or the legacy `DealDamage` signature.
+
+Tracker's complete Oracle text in `data/DRK.json` requires two sequential instructions with different creature sources. This slice supplies the referenced source for the reciprocal instruction; power lookup after a mid-resolution departure and production card wiring still need an exact audit. No card gap is closed by adapter availability. A fresh search found 19 production card files calling legacy `DealDamage` and none using `DamageSourceOf` or `DealDamageFrom`; those exports remain. The next dependency-ready work is recorded target-group boundaries in T, after a fresh audit.
+
+The focused contract first failed because `DamageSourceOf` was absent. Tests now cover live spell targets, departure and return with old controller and lifelink, saved permanent identity, phasing, game clone isolation, scope and nil declaration rejection, and a player-source compile error. The documented DSL example builds. `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass.
+
 ## Current Slice: Each Controlled Attacker Event
 
 `EachCreatureYouControlAttacks().WithAttacker(*PermanentBinding).WithDefendingPlayer(*PlayerBinding)` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches each newly declared creature controlled by the source controller and optionally saves that attacker incarnation and its defending player in the pending trigger. The captures use the existing event and instance-local binding services. A creature entering attacking does not match. The combat service currently records only player defenders; planeswalker and battle defender identity is separate work. No production card or legacy export changed.
