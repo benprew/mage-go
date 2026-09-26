@@ -190,7 +190,10 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 
 // retargetCopyGroups preserves each copied group's count and original choices on cancellation.
 func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Target) []uuid.UUID {
-	specs := expandTargetSpecs(declarations, obj.Targets, obj.XValue)
+	specs := obj.TargetSpecs
+	if len(specs) != len(obj.Targets) {
+		specs = expandTargetSpecs(declarations, obj.Targets, obj.XValue)
+	}
 	out := slices.Clone(obj.Targets)
 	offset := 0
 	for _, spec := range declarations {

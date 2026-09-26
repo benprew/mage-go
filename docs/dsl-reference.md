@@ -114,6 +114,17 @@ Spell(
   that remain legal receive the boost. A cast with zero targets still resolves;
   a cast whose chosen targets all become illegal does not resolve. Tandem
   Tactics gains life after the boost with `Sequence` and `GainLife(You, Fixed(2))`.
+  Spell and ability copies keep the recorded number and position of chosen targets
+  in this group. A copy that chooses new targets cannot move a choice to a
+  different group. Use one variable-size group per ability for now; the flat
+  announcement API cannot distinguish two independent optional groups.
+
+```go
+creatures := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature)
+ability := dsl.Spell(dsl.DestroyEach(creatures), dsl.WithTargets(creatures))
+_ = ability
+```
+
 * Target Options:
   * `TargetYouControl()`: Target must be controlled by the ability controller.
   * `TargetOtherThanSource()`: Target must be a different permanent from the source.
