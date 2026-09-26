@@ -552,6 +552,21 @@ Triggers on rules events dispatched by the engine:
   * `Enters(This)`: Source enters the battlefield.
   * `Dies(This)`: Source dies (moves from battlefield to graveyard).
   * `LeavesBattlefield(This)`: Source moves from the battlefield to any other zone. Destruction, exile, and return to hand match. Phasing does not match. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The pending trigger keeps its controller and source incarnation.
+  * `OneOrMoreCreaturesYouControlAttack().WithCount(*NumberBinding)`: Match once when one or more creatures controlled by this permanent's controller are declared as attackers in one declare attackers step. `WithCount` is optional. It saves the number actually declared for this trigger instance; read it with `FromNumber`. Creatures put onto the battlefield attacking do not count. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var count = dsl.BindNumber("declared attackers")
+    var _ = dsl.NewEnchantment("Attack watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.OneOrMoreCreaturesYouControlAttack().WithCount(count),
+            dsl.GainLife(dsl.You, dsl.FromNumber(count)))))
+
+    func main() {}
+    ```
   * `CreatureYouSacrifice() EventPattern`: Match each creature sacrificed by the source controller, including the source and tokens. It uses the completed sacrifice event and the creature type at sacrifice time. The pattern has no target or sacrificed-object binding. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
 
     ```go

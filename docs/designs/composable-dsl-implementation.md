@@ -1,5 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controlled Attack Group Event
+
+`OneOrMoreCreaturesYouControlAttack().WithCount(*NumberBinding)` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches once when the source controller declares one or more attackers, and its optional count binding saves the number actually declared in that trigger instance. The normal and simulated attack paths send the same completed group event. Zero declarations and creatures put onto the battlefield attacking do not match. Registration rejects a nil or repeated count binding and reads outside its trigger scope. Existing legacy group-trigger exports and production callers remain.
+
+Path of Bravery's full Oracle text was checked in `doc/designs/composable-dsl-migration-jumpstart-gap.json`: its group attack clause needs the count, while its static starting-life comparison and production wiring remain open. Duelist's Heritage also needs a target and optional effect. No JSON gap record is closed by this adapter. Synthetic engine and test-only card tests cover controller matching, one trigger for a two-creature group, the actual count, zero and nondeclaration events, phasing, source departure and return, game clone isolation, registration, normal and simulated declaration. The next dependency-ready slice is T recorded target-group boundaries or a per-attacker E participant after a fresh audit. No production card changed.
+
+`go test ./pkg/mage -run '^TestAttackBatchPattern' -count=1`, the focused test-only card run, `go test ./pkg/mage/... -short -count=1`, the DSL registration and role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. A fresh caller search finds three production uses of the legacy controlled attack-group trigger and no production use of the typed export.
+
+
 ## Current Slice: Unblocked-Attacker Event
 
 `AttacksUnblocked(This)` is a sealed `EventPattern` for `WhenEvent` and `WhenEventModes` on a battlefield source. The engine sends `core.EvtAttacksUnblocked` once for each live attacker that has no legal blocker after blocker declaration settles. The event includes creatures that entered attacking and records the defending player in `TargetID`. `.WithDefendingPlayer(*PlayerBinding)` saves that player in the trigger's instance-local frame. Existing `EvtBlockersDecl`, attack events, and legacy callers remain compatible. The pattern supplies no optional sacrifice or target declaration.

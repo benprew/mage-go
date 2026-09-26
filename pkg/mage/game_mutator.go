@@ -960,7 +960,11 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 	// Fresh search clones haven't run an Apply() cycle yet, so the per-cycle
 	// attack-cost registry may be empty; rebuild it before consulting it.
 	g.effects.Apply(g)
+	declaredCount := 0
 	for _, id := range attackerIDs {
+		if g.combat.IsAttacking(id) {
+			continue
+		}
 		atk := g.FindPermanent(id)
 		if atk == nil || !atk.CanDeclareAsAttacker(g) {
 			continue
@@ -972,6 +976,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 			g.TapPermanent(atk)
 		}
 		g.combat.AddAttacker(id, defender.PlayerID())
+		declaredCount++
 		g.trackers.Turn.RecordAttacked(id)
 		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)
 		g.FireEvent(GameEvent{
@@ -982,6 +987,9 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 		})
 	}
 	g.combat.SnapshotAttackedAlone()
+	if declaredCount > 0 {
+		g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: playerID, Amount: declaredCount})
+	}
 }
 
 // ExecuteBlockers declares blockers from explicit assignments for AI search clones.

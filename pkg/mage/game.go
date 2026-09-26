@@ -3185,6 +3185,7 @@ func (g *Game) doDeclareAttackers() {
 
 	// Auto-add creatures with MustAttack keyword (from Nettling Imp, etc.)
 	declared := make(map[uuid.UUID]bool)
+	declaredCount := 0
 	for _, id := range attackerIDs {
 		declared[id] = true
 	}
@@ -3197,6 +3198,9 @@ func (g *Game) doDeclareAttackers() {
 	}
 
 	for _, id := range attackerIDs {
+		if g.combat.IsAttacking(id) {
+			continue
+		}
 		atk := g.FindPermanent(id)
 		if atk == nil {
 			continue
@@ -3222,6 +3226,7 @@ func (g *Game) doDeclareAttackers() {
 		}
 
 		g.combat.AddAttacker(id, defender.PlayerID())
+		declaredCount++
 		g.trackers.Turn.RecordAttacked(id)
 		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)
 		g.FireEvent(GameEvent{
@@ -3248,11 +3253,11 @@ func (g *Game) doDeclareAttackers() {
 	// CR 506.4 / 603.6e: once-per-combat "whenever one or more creatures
 	// attack" trigger. Fired only if at least one creature was declared as
 	// an attacker. evt.Amount carries the attacker count.
-	if len(g.combat.Groups) > 0 {
+	if declaredCount > 0 {
 		g.FireEvent(GameEvent{
 			Type:     EvtAttackersDeclared,
 			PlayerID: active.PlayerID(),
-			Amount:   len(g.combat.Groups),
+			Amount:   declaredCount,
 		})
 	}
 

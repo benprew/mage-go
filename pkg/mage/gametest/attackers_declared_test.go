@@ -33,6 +33,27 @@ func TestWheneverOneOrMoreCreaturesAttack_FiresOncePerCombat(t *testing.T) {
 	tg.AssertLife(PlayerA, 25)
 }
 
+func TestTypedAttackGroupRealDeclaration(t *testing.T) {
+	const cardName = "Typed Attack Group Watcher"
+	if !mage.CardRegistered(cardName) {
+		mage.Register(cardName, func() mage.Card {
+			count := mage.BindNumber("declared attackers")
+			return mage.NewEnchantment(cardName, "",
+				mage.WithAbility(mage.WhenEvent(
+					mage.OneOrMoreCreaturesYouControlAttack().WithCount(count),
+					mage.GainLifeFor(mage.You, mage.FromNumber(count)))))
+		})
+	}
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, cardName)
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Grizzly Bears")
+	tg.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant")
+	tg.Attack(1, PlayerA, "Grizzly Bears", "Hill Giant")
+	tg.StopAt(1, core.EndStep)
+	tg.Execute()
+	tg.AssertLife(PlayerA, 22)
+}
+
 // Trigger does NOT fire if no creature attacks.
 func TestWheneverOneOrMoreCreaturesAttack_NoFireIfNoneAttack(t *testing.T) {
 	const cardName = "AD No-Attack Sentinel"
