@@ -199,6 +199,7 @@ var (
 	WithSuperTypes                = mage.WithSuperTypes
 	WithAdditionalCost            = mage.WithAdditionalCost
 	LifePayCostInto               = mage.LifePayCostInto
+	LifePayXCostInto              = mage.LifePayXCostInto
 	WithCastTarget                = mage.WithCastTarget
 	WithOncePerTurn               = mage.WithOncePerTurn
 	WithEffect                    = mage.WithEffect

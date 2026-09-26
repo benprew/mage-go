@@ -133,6 +133,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
 		for i, cost := range e.costs {
+			if _, ok := cost.(*xLifePayCost); ok {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if life, ok := cost.(*lifePayCost); ok && life.capture {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
@@ -296,6 +299,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if life, ok := value.(*lifePayCost); ok && life.capture && !nilDefinition(life.paid) && assigned[life.paid] {
 			fail("duplicate paid life binding")
 		}
+		if life, ok := value.(*xLifePayCost); ok && !nilDefinition(life.paid) && assigned[life.paid] {
+			fail("duplicate paid life binding")
+		}
 		if spell && n.battlefieldSource {
 			fail("battlefield source action requires a permanent ability")
 		}
@@ -307,7 +313,8 @@ func ValidateCardDefinition(name string, card Card) error {
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
 			_, paidCounters := edge.value.(*removeAnyCountersCost)
 			life, paidLife := edge.value.(*lifePayCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && !paidCounters && (!paidLife || !life.capture) {
+			_, xPaidLife := edge.value.(*xLifePayCost)
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && !paidCounters && !xPaidLife && (!paidLife || !life.capture) {
 				assigned = before
 			}
 		}

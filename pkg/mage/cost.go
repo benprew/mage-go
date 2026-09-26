@@ -287,6 +287,31 @@ func LifePayCostInto(amount int, paid *NumberBinding) Cost {
 	return &lifePayCost{amount: amount, paid: paid, capture: true}
 }
 
+type xLifePayCost struct{ paid *NumberBinding }
+
+// LifePayXCostInto pays the announced X life and saves the committed amount.
+func LifePayXCostInto(paid *NumberBinding) Cost { return &xLifePayCost{paid: paid} }
+
+func (c *xLifePayCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "life-payment-cost", Text: c.Text(), bindingWrite: c.paid,
+		children: []definitionEdge{{"paid", c.paid}}}
+	if c.paid == nil {
+		n.problem = "supply a non-nil paid life binding"
+	}
+	return n
+}
+
+func (c *xLifePayCost) CanPay(_, controller uuid.UUID, g *Game) bool {
+	return (&lifePayCost{amount: g.resolution.X()}).CanPay(uuid.Nil, controller, g)
+}
+func (c *xLifePayCost) Pay(uuid.UUID, uuid.UUID, *Game) error {
+	return fmt.Errorf("X life payment requires an announced action")
+}
+func (c *xLifePayCost) Text() string { return "Pay X life" }
+func (c *xLifePayCost) resolveActionCost(ctx actionCostContext) Cost {
+	return &lifePayCost{amount: ctx.XValue, paid: c.paid, capture: true}
+}
+
 func (c *lifePayCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "life-payment-cost", Text: c.Text()}
 	if c.capture {

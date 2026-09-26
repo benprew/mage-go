@@ -92,6 +92,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		n.problem = "supply an explicit Costs group"
 	}
 	for i, cost := range c.costs {
+		if _, ok := cost.(*xLifePayCost); ok {
+			n.problem = "paid life value requires an activated ability cost or spell additional cost"
+		}
 		if life, ok := cost.(*lifePayCost); ok && life.capture {
 			n.problem = "paid life value requires an activated ability cost or spell additional cost"
 		}

@@ -1154,6 +1154,15 @@ Triggers at step transitions:
   * `SacrificeCreatureCostWithStats(power, toughness *NumberBinding)`: Sacrifice one creature and save its current power and toughness during payment. Both bindings are required. `FromNumber` reads either value in the resolving body. This cost works in `Activate`, `ActivateModes`, and spell additional costs. An activation excludes its source from the choice.
   * `LifePayCost(amount)`: Pay life (permits paying exact life total CR 119.4).
   * `LifePayCostInto(amount int, paid *NumberBinding) Cost`: Pay a fixed amount of life and save the committed amount for the resolving ability. Use it in `Activate`, `ActivateModes`, or a spell additional cost. Registration rejects a negative amount, a nil or unnamed binding, and duplicate producers. It is not a resolution-time `IfPaid` or `UnlessPaid` cost. Use `FromNumber(paid)` in the body; zero life is a valid payment.
+  * `LifePayXCostInto(paid *NumberBinding) Cost`: Pay the announced X life as a direct activation cost or direct spell additional cost. The cost locks X before payment and saves the committed amount for `FromNumber(paid)` in that stack instance. X must be nonnegative and cannot exceed the payer's life total. This is not a resolution-time payment.
+
+    ```go
+    paid := dsl.BindNumber("life paid")
+    spell := dsl.NewInstant("Variable life", "",
+        dsl.WithAbility(dsl.Spell(dsl.GainLife(dsl.You, dsl.FromNumber(paid)))),
+        dsl.WithAdditionalCost(dsl.LifePayXCostInto(paid)))
+    _ = spell
+    ```
   * `RemoveCountersCost(counter, count)`: Remove counters from source.
   * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
   * `DiscardRandomCost(count)`: Discard cards at random.

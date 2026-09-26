@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Announced X Life-Payment Binding
+
+`LifePayXCostInto(paid)` is a typed contextual cost for an activated ability or a spell additional cost. It locks the announced X as a fixed life payment before the shared total-cost transaction validates and commits it. The committed amount enters the stack instance's number-binding frame for `FromNumber(paid)` at resolution. Zero and exact-life payments follow CR 119.4; an unpayable or failed total cost leaves the live life total and stack unchanged. Registration checks the binding and producer scope. Existing fixed `LifePayCostInto` and legacy callers remain.
+
+The complete Vicious Rivalry text in `data/SOS.json` requires this announcement-time payment, then destruction of all artifacts and creatures with mana value X or less. This slice supplies the payment capture only; its collection filter, production wiring, and full card audit remain. The Secrets of Strixhaven gap record stays blocked. Synthetic tests first failed because the constructor was missing. They cover zero, exact-life, excess-life rejection, separate pending activations, copy and clone isolation, failed-cast rollback, and declaration errors. The next dependency-ready work is the collection filtering and simultaneous destruction prerequisite or another E event participant, after a fresh audit.
+
+Focused `TestPaidXLife` tests, the short engine and repository suites, DSL registration and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh production search found no `LifePayXCostInto` caller and ten existing life-cost references; card wiring remains separate. No production card changed.
+
 ## Current Slice: Opponent Land Tap Participant
 
 `OpponentLandBecomesTapped().WithLand(*PermanentBinding)` saves the tapped opponent-controlled land's battlefield incarnation at detection for a later `From(binding)` read. The optional method composes with `OfSubtype` in `WhenEvent` and `WhenEventModes`. It uses the existing tap event, pending-trigger capture, permanent binding frame, and clone service. The land is not a target; a returned or phased-out incarnation is absent at resolution. Existing production callers and legacy exports remain unchanged.
