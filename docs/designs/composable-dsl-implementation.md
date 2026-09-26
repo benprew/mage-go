@@ -1,5 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Creature-You-Sacrifice Event
+
+`CreatureYouSacrifice() EventPattern` matches each completed creature sacrifice made by the battlefield source's controller, including tokens and the source itself. It uses the existing `EvtSacrifice` payload and pending-trigger service. The pattern is available through `WhenEvent` and `WhenEventModes` and has no participant binding or target. The source's departure LKI supports self-sacrifice; a pending trigger retains its controller and source incarnation through a return. Legacy sacrifice-trigger exports and all production callers remain.
+
+Kels, Fight Fixer's complete Oracle text was checked in `data/JMP.json` and its Jumpstart gap record. This slice supplies its sacrifice-event condition, but hybrid optional payment, its other ability, and production wiring remain separate. The Jumpstart gap record stays open. Focused tests first failed because the constructor was absent. They cover own, opponent, stolen, token, source, and noncreature sacrifices; phasing; pending return identity; copy and clone isolation; untargeted triggers; and registration. The next dependency-ready work is the T recorded target-group boundary or another E event participant after a fresh audit.
+
+`go test ./pkg/mage -run '^TestCreatureYouSacrificeEvent' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. The earlier `cards/custom` and C metadata blockers do not reproduce in this working tree. No gap record is closed because Kels remains unmigrated.
+
+
 ## Current Slice: Spell-Cast Type Event
 
 `SpellCast().OfType(core.CardType)` filters a battlefield source's cast-spell trigger by one nonland type on the event's spell stack object. It composes with color, opponent, and caster options in `WhenEvent` and `WhenEventModes`. Registration rejects land, invalid, or repeated type filters. The existing cast event, stack identity, trigger capture, and clone services supply the contract. The slice adds no spell binding, cast-cost metadata, or production card wiring.

@@ -422,6 +422,24 @@ func (p creatureDiesPattern) captureEventEffects(event *GameEvent, effects []Eff
 	return []Effect{Sequence(&eventPlayerCapture{binding: p.controller, player: event.PlayerID}, Sequence(effects...))}
 }
 
+type creatureYouSacrificePattern struct{}
+
+// CreatureYouSacrifice matches a creature sacrificed by the source controller.
+func CreatureYouSacrifice() EventPattern { return creatureYouSacrificePattern{} }
+
+func (creatureYouSacrificePattern) eventPattern() {}
+
+func (creatureYouSacrificePattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	return NewTriggered(EvtSacrifice, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+		EventPlayerIsController{},
+		EventSacrificedPermanentIsCreature{},
+	}})
+}
+
+func (creatureYouSacrificePattern) inspectDefinition() definitionNode {
+	return definitionNode{Role: "event-pattern", Text: "you sacrifice a creature", battlefieldSource: true}
+}
+
 // TurnStepPattern describes a turn-step boundary.
 type TurnStepPattern interface {
 	turnStepPattern()

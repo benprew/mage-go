@@ -552,6 +552,14 @@ Triggers on rules events dispatched by the engine:
   * `Enters(This)`: Source enters the battlefield.
   * `Dies(This)`: Source dies (moves from battlefield to graveyard).
   * `LeavesBattlefield(This)`: Source moves from the battlefield to any other zone. Destruction, exile, and return to hand match. Phasing does not match. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The pending trigger keeps its controller and source incarnation.
+  * `CreatureYouSacrifice() EventPattern`: Match each creature sacrificed by the source controller, including the source and tokens. It uses the completed sacrifice event and the creature type at sacrifice time. The pattern has no target or sacrificed-object binding. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
+
+    ```go
+    mage.NewCreature("Sacrifice Watcher", "", 1, 1,
+        mage.WithAbility(mage.WhenEvent(
+            mage.CreatureYouSacrifice(),
+            mage.GainLifeFor(mage.You, mage.Fixed(1)))))
+    ```
   * `SpellCast().OfColor(core.Color) EventPattern`: Match a spell cast by any player while the source is on the battlefield. `OfColor` is optional and accepts one of the five Magic colors. It checks the spell's effective color on the stack when the cast event occurs, including color changes. The pattern does not target or bind the spell. Use it in `WhenEvent` or `WhenEventModes`.
   * `SpellCast().OfType(core.CardType) EventPattern`: Match a cast spell of one nonland card type. The filter reads the spell on the stack at cast time, including more than one type. A repeated filter or a land type fails registration. It composes with `OfColor`, `ByOpponent`, and `WithCaster` in `WhenEvent` and `WhenEventModes` on a battlefield source. For example:
     ```go
