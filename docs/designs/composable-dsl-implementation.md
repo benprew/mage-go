@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Resolution-Time Mana-Value Set Threshold
+
+`ManaValueAtMost(PermanentSet, ResolutionValue) PermanentSet` filters a selected battlefield set by mana value at use time. `DestroyEach` consumes the result in one simultaneous destruction batch. The adapter reads `FromNumber` through the current resolution frame, so an announced X life payment supplies its own threshold. It uses the existing permanent mana-value and batch-destruction services. Registration rejects nil inputs and unbound number reads. Existing production callers and legacy exports remain unchanged.
+
+Vicious Rivalry's complete text in `data/SOS.json` requires an additional cost of X life and destruction of all artifacts and creatures with mana value X or less. `LifePayXCostInto` already supplies the cost; this slice supplies the missing collection threshold. Production card wiring and a full card audit remain separate, so its Secrets of Strixhaven gap stays open. Synthetic tests first failed because `ManaValueAtMost` was absent. They cover the zero-cost and exact-threshold members, artifact/creature union, regeneration, phasing, clone isolation, and declaration errors. The next dependency-ready work is another E event participant or a separate P/B collection capability after a fresh audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `ManaValueAtMost` caller. No card or JSON gap record changed.
+
 ## Current Slice: Artifact Ability Activation Without Tap Cost
 
 `ArtifactAbilityActivatedWithoutTapCost().AttachedToSource().WithArtifact(binding).WithController(binding)` is a typed E event pattern for `WhenEvent` and `WhenEventModes` on battlefield permanents. The attachment filter and two captures are optional. The pattern uses the successful `EvtAbilityActivated` event, the artifact type at detection, and instance-local trigger bindings. It captures the artifact controller from departure LKI when an activation sacrifices its source. The direct and automatic mana activation paths now mark their `{T}` cost in that event. The pattern has no target. Registration checks bindings and scope; the sealed binding roles reject crossed types.

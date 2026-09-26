@@ -1463,6 +1463,26 @@ matching uses the subtype, including nonbasic Islands, rather than the card name
 The same rule applies to Plains and Forests. Black creature matching includes
 multicolored black creatures and excludes black permanents that are not creatures.
 
+`ManaValueAtMost(PermanentSet, ResolutionValue) PermanentSet` keeps members
+whose current mana value is no greater than the value read when the set is
+used. It can filter a set for `DestroyEach` in a spell, activation, or trigger.
+The set and value are required. `FromNumber` can read an announced cost payment
+from the same spell or ability instance. For example, this synthetic spell
+uses the X life paid during casting as its destruction threshold:
+
+```go
+paid := dsl.BindNumber("life paid")
+spell := dsl.NewInstant("Sweep", "",
+    dsl.WithAbility(dsl.Spell(dsl.DestroyEach(dsl.ManaValueAtMost(
+        dsl.MatchingPermanents(dsl.Or(dsl.IsArtifact, dsl.IsCreature)),
+        dsl.FromNumber(paid))))),
+    dsl.WithAdditionalCost(dsl.LifePayXCostInto(paid)))
+```
+
+This filter reads the limit once per set evaluation. It does not target or
+change destruction ordering. Existing `DestroyEach` replacement and batch
+rules still apply.
+
 ### Fasting (Static Replacement + Upkeep Counters + Event Trigger)
 ```go
 // Skip draw step for life
