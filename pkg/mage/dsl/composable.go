@@ -283,6 +283,7 @@ type (
 	DamageRecipientRef     = mage.DamageRecipientRef
 	DamageRecipientSet     = mage.DamageRecipientSet
 	DamageTargetBinding    = mage.DamageTargetBinding
+	DamageTargetsBinding   = mage.DamageTargetsBinding
 	DamageResultOption     = mage.DamageResultOption
 	SacrificeResultOption  = mage.SacrificeResultOption
 	DamageEachResultOption = mage.DamageEachResultOption
@@ -292,31 +293,32 @@ type (
 )
 
 var (
-	Tap                   = mage.TapSubject
-	Fight                 = mage.Fight
-	TapCost               = mage.TapCost
-	TargetDamageRecipient = mage.DeclareDamageTarget
-	DealDamageFrom        = mage.DealDamageFrom
-	DamageSourceOf        = mage.DamageSourceOf
-	DamageRecipients      = mage.DamageRecipients
-	DealDamageEach        = mage.DealDamageEach
-	DamageTotalInto       = mage.DamageTotalInto
-	SacrificeAmountInto   = mage.SacrificeAmountInto
-	BindDamageResults     = mage.BindDamageResults
-	BindDamageResult      = mage.BindDamageResult
-	DamageResultsInto     = mage.DamageResultsInto
-	ForEachDamageResult   = mage.ForEachDamageResult
-	DamageResultAmount    = mage.DamageResultAmount
-	DamageResultPlayer    = mage.DamageResultPlayer
-	DamageResultPermanent = mage.DamageResultPermanent
-	DamageResultSource    = mage.DamageResultSource
-	DamageAmountInto      = mage.DamageAmountInto
-	DamagePlayerInto      = mage.DamagePlayerInto
-	DamagePermanentInto   = mage.DamagePermanentInto
-	DamageSourceInto      = mage.DamageSourceInto
-	BindDamageSource      = mage.BindDamageSource
-	FromDamageSource      = mage.FromDamageSource
-	PreventNextDamage     = mage.PreventNextDamage
+	Tap                    = mage.TapSubject
+	Fight                  = mage.Fight
+	TapCost                = mage.TapCost
+	TargetDamageRecipient  = mage.DeclareDamageTarget
+	TargetDamageRecipients = mage.DeclareDamageTargets
+	DealDamageFrom         = mage.DealDamageFrom
+	DamageSourceOf         = mage.DamageSourceOf
+	DamageRecipients       = mage.DamageRecipients
+	DealDamageEach         = mage.DealDamageEach
+	DamageTotalInto        = mage.DamageTotalInto
+	SacrificeAmountInto    = mage.SacrificeAmountInto
+	BindDamageResults      = mage.BindDamageResults
+	BindDamageResult       = mage.BindDamageResult
+	DamageResultsInto      = mage.DamageResultsInto
+	ForEachDamageResult    = mage.ForEachDamageResult
+	DamageResultAmount     = mage.DamageResultAmount
+	DamageResultPlayer     = mage.DamageResultPlayer
+	DamageResultPermanent  = mage.DamageResultPermanent
+	DamageResultSource     = mage.DamageResultSource
+	DamageAmountInto       = mage.DamageAmountInto
+	DamagePlayerInto       = mage.DamagePlayerInto
+	DamagePermanentInto    = mage.DamagePermanentInto
+	DamageSourceInto       = mage.DamageSourceInto
+	BindDamageSource       = mage.BindDamageSource
+	FromDamageSource       = mage.FromDamageSource
+	PreventNextDamage      = mage.PreventNextDamage
 )
 
 var (

@@ -212,6 +212,8 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	}
 	if b.name == "" {
 		n.problem = "supply a target binding name"
+	} else if b.spec == nil || b.spec.Min() < 0 || b.spec.Max() < 1 || b.spec.Min() > b.spec.Max() {
+		n.problem = "supply valid target group bounds"
 	}
 	return n
 }

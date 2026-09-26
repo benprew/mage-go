@@ -1,9 +1,40 @@
 package mage
 
+import "github.com/google/uuid"
+
 // DamageRecipientSet selects players and permanents for one damage instruction.
 type DamageRecipientSet interface {
 	damageRecipientSet()
 	resolveDamageRecipients(*EffectContext, int, DamageSource) []DamageAssignment
+}
+
+// DamageTargetsBinding declares a bounded group of damage recipients.
+type DamageTargetsBinding struct{ *targetDeclaration }
+
+// DeclareDamageTargets declares player, creature, or planeswalker targets.
+func DeclareDamageTargets(name string, minimum, maximum int) *DamageTargetsBinding {
+	spec := &DamageAnyTarget{BaseTarget: BaseTarget{min: minimum, max: maximum}}
+	return &DamageTargetsBinding{&targetDeclaration{name: name, spec: spec}}
+}
+
+func (*DamageTargetsBinding) damageRecipientSet() {}
+func (b *DamageTargetsBinding) inspectDefinition() definitionNode {
+	return targetReadNode(b.targetDeclaration, "damage-recipient-set")
+}
+func (b *DamageTargetsBinding) resolveDamageRecipients(ctx *EffectContext, amount int, source DamageSource) []DamageAssignment {
+	values := ctx.targetBindings[b.targetDeclaration]
+	assignments := make([]DamageAssignment, 0, len(values))
+	for _, value := range values {
+		if player := ctx.Game.GetPlayer(value.id); player != nil {
+			assignments = append(assignments, PlayerDamageAssignment(player, amount, source))
+			continue
+		}
+		permanent := ctx.Game.FindPermanent(value.id)
+		if permanent != nil && !permanent.PhasedOut && value.incarnation != uuid.Nil && permanent.incarnationID == value.incarnation {
+			assignments = append(assignments, PermanentDamageAssignment(permanent, amount, source))
+		}
+	}
+	return assignments
 }
 
 type mixedDamageRecipients struct {

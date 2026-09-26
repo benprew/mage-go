@@ -400,6 +400,7 @@ ability := dsl.Activate(
 _ = ability
 ```
 * `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. Triggered abilities, spells, and activations can use multiple variable-size groups through their respective group announcement paths. An illegal target is absent from the batch.
+* `TargetDamageRecipients(name string, minimum, maximum int) *DamageTargetsBinding`: Declares one bounded target group of players, creatures, and planeswalkers. It is both a `TargetBinding` and a `DamageRecipientSet`. Declare it with `WithTargets`, `WithTargetGroups`, or `WithActivationTargetGroups` as appropriate. Registration rejects invalid bounds. The target announcement rejects duplicate or illegal choices before payment. At resolution, an illegal, phased-out, or returned permanent is absent from the batch; each remaining recipient is dealt damage simultaneously. This collection cannot be used as the singular recipient of `DealDamageFrom`.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
 
 ```go
@@ -407,6 +408,15 @@ targets := dsl.TargetPermanents("creatures", 1, 2, dsl.IsCreature)
 ability := dsl.Spell(
     dsl.DealDamageEach(dsl.This,
         dsl.DamageRecipients(dsl.EachPlayer, targets), dsl.Fixed(1)),
+    dsl.WithTargets(targets),
+)
+_ = ability
+```
+
+```go
+targets := dsl.TargetDamageRecipients("recipients", 1, 2)
+ability := dsl.Spell(
+    dsl.DealDamageEach(dsl.This, targets, dsl.Fixed(1)),
     dsl.WithTargets(targets),
 )
 _ = ability

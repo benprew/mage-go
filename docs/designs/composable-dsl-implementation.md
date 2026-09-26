@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Bounded Mixed Damage Target Group
+
+`TargetDamageRecipients(name, minimum, maximum) *DamageTargetsBinding` declares one target group containing players, creatures, or planeswalkers. The binding is a sealed `DamageRecipientSet` for `DealDamageEach` and a `TargetBinding` for spell, activation, or trigger announcement. It reuses target count and legality checks, recorded target incarnations, stack copy alignment, and the existing simultaneous damage service. Registration rejects invalid bounds and undeclared reads. A returned, phased-out, or illegal permanent leaves the damage batch; legal player targets remain. The legacy singular target and damage exports remain.
+
+Prismari Charm's full text was checked in `data/SOS.json`: its second mode requires one or two distinct damage recipients. This slice supplies that target and damage body, but modal card wiring and the other modes remain outside this run. The Secrets of Strixhaven gap stays open, and no production card changed. A fresh search finds no production `TargetDamageRecipients` caller and 130 occurrences across three legacy damage constructor names; the existing exports remain. Focused tests first failed on the missing constructor. Synthetic tests cover mixed choices, duplicate and illegal announcement before payment, partial legality, leave and return, phasing, prevention, planeswalker loyalty, batch observation, stack copying, cloning, scope validation, and collection-versus-singular compile rejection. The next dependency-ready slice is a P payment output or another T announcement contract after a fresh audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass.
+
 ## Current Slice: Grouped Activation Target Announcement
 
 `WithActivationTargetGroups(bindings...) ActivationOption` declares independent target groups for a nonmodal `Activate` body. `Game.ActivateAbilityByIndexWithTargetGroups(playerID, permanentID, abilityIndex, groups)` accepts one UUID slice per declaration. The activation path validates each group's count and legality before payment, records target-to-declaration alignment on the stack, and carries that alignment through resolution, copying, and cloning. The flat activation path rejects grouped declarations. `WithTargets` and all production callers remain available; no production card was changed.
