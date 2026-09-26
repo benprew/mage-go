@@ -407,13 +407,19 @@ For a single-card result in a spell, activation, or trigger body:
 func drawnCardSpell() dsl.Card {
     drawnCard := dsl.BindCard("drawn card")
     return dsl.NewInstant("Synthetic Draw", "{U}",
-        dsl.Spell(dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawnCard))))
+        dsl.Spell(dsl.Sequence(
+            dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawnCard)),
+            dsl.DiscardCard(dsl.FromCard(drawnCard)),
+        )))
 }
 ```
 
 Hand cards have an engine visit ID. A completed draw creates a new visit;
 discarding the card ends it. `FromCard(drawnCard)` is a `CardRef` while the
-original card remains in that hand visit. Hand reveal, card-specific discard,
+original card remains in that hand visit. `DiscardCard(CardRef) ResolvingEffect`
+discards that exact card if it is still in its owner's hand. It uses effect
+discard replacements and does nothing if the reference is absent or in another
+zone. Use it in spell, activation, and trigger resolving bodies. Hand reveal
 and multi-card draw-result consumers still need typed adapters.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.

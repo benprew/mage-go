@@ -90,6 +90,7 @@ var (
 	InAnyGraveyard             = mage.InAnyGraveyard
 	GraveyardCardFilter        = mage.GraveyardCardFilter
 	ReturnCardToHand           = mage.ReturnCardToHand
+	DiscardCard                = mage.DiscardCard
 	BindCard                   = mage.BindCard
 	FromCard                   = mage.FromCard
 	ReturnCardToBattlefield    = mage.ReturnCardToBattlefield
