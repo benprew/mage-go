@@ -52,6 +52,7 @@ type CombatReader interface {
 	CombatGroups() []*CombatGroup
 	CombatGroupFor(uuid.UUID) *CombatGroup
 	IsAttackingInCombat(uuid.UUID) bool
+	IsAttackingIncarnation(uuid.UUID, uuid.UUID) bool
 	IsBlockingInCombat(uuid.UUID) bool
 	IsBlockingIncarnation(uuid.UUID, uuid.UUID) bool
 	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
@@ -225,6 +226,11 @@ func (g *Game) IsAttackingInCombat(permID uuid.UUID) bool {
 		return false
 	}
 	return g.combat.IsAttacking(permID)
+}
+
+// IsAttackingIncarnation reports whether the battlefield object is attacking.
+func (g *Game) IsAttackingIncarnation(permID, incarnation uuid.UUID) bool {
+	return g.combat != nil && g.combat.IsAttackingIncarnation(permID, incarnation)
 }
 
 // IsBlockingInCombat reports whether the permanent is a declared blocker.
@@ -975,7 +981,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 		if !atk.HasKeyword(Vigilance) {
 			g.TapPermanent(atk)
 		}
-		g.combat.AddAttacker(id, defender.PlayerID())
+		g.combat.AddAttackerIncarnation(id, atk.incarnationID, defender.PlayerID())
 		declaredCount++
 		g.trackers.Turn.RecordAttacked(id)
 		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)

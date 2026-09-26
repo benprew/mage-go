@@ -10,10 +10,11 @@ import (
 
 // Combat manages the combat phase.
 type Combat struct {
-	Groups      []*CombatGroup
-	Attackers   map[uuid.UUID]bool
-	FirstStruck map[uuid.UUID]bool
-	Bands       map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
+	Groups               []*CombatGroup
+	Attackers            map[uuid.UUID]bool
+	AttackerIncarnations map[uuid.UUID]uuid.UUID
+	FirstStruck          map[uuid.UUID]bool
+	Bands                map[uuid.UUID][]uuid.UUID // band leader -> members (all creatures in the band)
 
 	// AttackedAlone records the single creature declared as an attacker during
 	// the most recent declare-attackers step, if exactly one was declared. Used
@@ -44,6 +45,7 @@ func NewCombat() *Combat {
 func (c *Combat) Reset() {
 	c.Groups = nil
 	c.Attackers = make(map[uuid.UUID]bool)
+	c.AttackerIncarnations = nil
 	c.FirstStruck = make(map[uuid.UUID]bool)
 	c.Bands = make(map[uuid.UUID][]uuid.UUID)
 	c.AttackedAlone = uuid.Nil
@@ -51,11 +53,25 @@ func (c *Combat) Reset() {
 }
 
 func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
+	c.AddAttackerIncarnation(attackerID, uuid.Nil, defenderID)
+}
+
+// AddAttackerIncarnation records the battlefield object that attacks.
+func (c *Combat) AddAttackerIncarnation(attackerID, incarnation, defenderID uuid.UUID) {
 	c.Attackers[attackerID] = true
+	if c.AttackerIncarnations == nil {
+		c.AttackerIncarnations = make(map[uuid.UUID]uuid.UUID)
+	}
+	c.AttackerIncarnations[attackerID] = incarnation
 	c.Groups = append(c.Groups, &CombatGroup{
 		AttackerID: attackerID,
 		DefenderID: defenderID,
 	})
+}
+
+// IsAttackingIncarnation checks the object that entered combat.
+func (c *Combat) IsAttackingIncarnation(id, incarnation uuid.UUID) bool {
+	return incarnation != uuid.Nil && c.Attackers[id] && c.AttackerIncarnations[id] == incarnation
 }
 
 func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
@@ -205,6 +221,7 @@ func (c *Combat) IsBandedWith(id1, id2 uuid.UUID) bool {
 // RemoveFromCombat removes a permanent without changing blocked status.
 func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 	delete(c.Attackers, id)
+	delete(c.AttackerIncarnations, id)
 	for _, g := range c.Groups {
 		if g.AttackerID == id {
 			g.AttackerID = uuid.Nil

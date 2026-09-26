@@ -548,7 +548,7 @@ func (g *Game) PutOnBattlefieldAttacking(card Card, controller, defenderID uuid.
 	if perm == nil || defenderID == uuid.Nil || !g.isValidDefender(defenderID) {
 		return perm
 	}
-	g.combat.AddAttacker(perm.ID(), defenderID)
+	g.combat.AddAttackerIncarnation(perm.ID(), perm.incarnationID, defenderID)
 	return perm
 }
 
@@ -3225,7 +3225,7 @@ func (g *Game) doDeclareAttackers() {
 			g.TapPermanent(atk)
 		}
 
-		g.combat.AddAttacker(id, defender.PlayerID())
+		g.combat.AddAttackerIncarnation(id, atk.incarnationID, defender.PlayerID())
 		declaredCount++
 		g.trackers.Turn.RecordAttacked(id)
 		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)

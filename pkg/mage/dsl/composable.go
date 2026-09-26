@@ -263,6 +263,7 @@ var (
 	SourceHasCounters               = mage.SourceHasCounters
 	SourceTappedCondition           = mage.SourceTappedCondition
 	PermanentIsTapped               = mage.PermanentIsTapped
+	PermanentIsAttacking            = mage.PermanentIsAttacking
 	PermanentIsUntapped             = mage.PermanentIsUntapped
 	SourceUntappedCondition         = mage.SourceUntappedCondition
 	SourceBlockingCondition         = mage.SourceBlockingCondition

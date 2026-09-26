@@ -167,6 +167,7 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `SourceHasCounters(counter, min)`: The source permanent has at least `min` counters of the specified type.
 * `SourceTappedCondition()` and `SourceUntappedCondition()`: The current battlefield source is tapped or untapped, respectively. Both return false when the source is absent or phased out. They work in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState` on permanent abilities.
 * `PermanentIsTapped(subject PermanentRef)` and `PermanentIsUntapped(subject PermanentRef)`: Check `This` or `AttachedPermanent` at state evaluation. Both return false if the source or selected permanent is absent or phased out. A returned source or attachment is a new object. Use these conditions in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects target and saved bindings in this state context.
+* `PermanentIsAttacking(subject PermanentRef) StateCondition`: Check whether `This` or `AttachedPermanent` is in combat as an attacker now. A creature put onto the battlefield attacking matches, although it did not attack for trigger purposes. An absent, phased-out, or returned object does not match. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects targets and saved bindings in this state context.
 * `SourceAttackedThisTurnCondition()`: The current battlefield source was declared as an attacker this turn. It returns false before an attack, after the source leaves or phases out, or after it returns as a new object. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability.
 * `SourceBlockingCondition()`: The current battlefield source is blocking now. It returns false when the source is absent, phased out, removed from combat, or a new incarnation of the same card. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability. It does not report whether the source blocked earlier in combat.
 
@@ -188,6 +189,13 @@ var _ = NewAura("Untapped cloak", "",
 var _ = NewCreature("Attack watcher", "", 2, 2,
     WithAbility(WhenEvent(Attacks(This),
         IfState(SourceAttackedThisTurnCondition(), GainLife(You, Fixed(1))))),
+)
+
+var _ = NewCreature("Attacking guardian", "", 2, 2,
+    WithAbility(Static(While(
+        PermanentIsAttacking(This),
+        ModifyPT(This, Fixed(0), Fixed(2)),
+    ))),
 )
 
 var _ = NewCreature("Blocking guardian", "", 2, 2,

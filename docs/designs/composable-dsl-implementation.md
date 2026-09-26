@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Referenced Permanent Attacking State
+
+`PermanentIsAttacking(PermanentRef) StateCondition` checks current attacking status for `This` or `AttachedPermanent` on a battlefield ability. It is pure and works in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState`. The combat service now records attacker incarnations on normal and simulated declarations and on creatures that enter attacking. A phased-out, absent, removed, or returned object does not satisfy the condition. The attached form checks both the Aura and host incarnations. Registration rejects target and saved references in this state context; the sealed `PermanentRef` role rejects player references at compile time. Legacy card-ID combat queries and production callers remain.
+
+The contract first failed because the constructor was absent, then exposed a stale card-ID attack after leave and return. Focused tests cover that regression, removal, phasing, clone isolation, attachment state, static evaluation, registration, normal declaration, and attacking entry. The clone allocation test caught eager allocation of an empty attacker-identity map; lazy allocation restored its budget. `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. A fresh caller search found three `WhileSourceAttacking` uses in two production card files and no `PermanentIsAttacking` production use; other card-ID attacking filters and queries remain. No production card or gap record changed. The next dependency-ready slice is `PermanentIsBlocking(PermanentRef)` for attached and source state, after a fresh audit. Card migration remains separate.
+
 ## Current Slice: Referenced Permanent Damage Source
 
 `DamageSourceOf(PermanentRef) DamageSourceRef` lets `DealDamageFrom` and `DealDamageEach` use a declared target or saved permanent as their damage source. Target and snapshot references retain their battlefield incarnation; a departed source uses durable departure LKI, while phasing without departure makes it absent. The adapter uses the shared damage executor, inspection, and target scope validation. It does not change production cards or the legacy `DealDamage` signature.

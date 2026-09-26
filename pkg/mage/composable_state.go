@@ -30,6 +30,45 @@ type permanentTappedCondition struct {
 	tapped  bool
 }
 
+type permanentAttackingCondition struct{ subject PermanentRef }
+
+// PermanentIsAttacking checks current combat membership for the selected permanent.
+func PermanentIsAttacking(subject PermanentRef) StateCondition {
+	return permanentAttackingCondition{subject: subject}
+}
+
+func (permanentAttackingCondition) stateCondition() {}
+func (c permanentAttackingCondition) checkState(g GameReader, ctx StateContext) bool {
+	source := g.FindPermanent(ctx.SourceID)
+	if source == nil || source.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && source.incarnationID != ctx.SourceIncarnation) {
+		return false
+	}
+	p := source
+	switch c.subject.(type) {
+	case sourceRef:
+	case attachedPermanentRef:
+		p = g.FindPermanent(source.AttachedTo)
+		if p == nil || source.attachedIncarnation == uuid.Nil || p.incarnationID != source.attachedIncarnation {
+			return false
+		}
+	default:
+		return false
+	}
+	return !p.PhasedOut && g.IsAttackingIncarnation(p.ID(), p.incarnationID)
+}
+func (c permanentAttackingCondition) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "state-condition", battlefieldSource: true}
+	switch c.subject.(type) {
+	case sourceRef:
+		n.Text = "source is attacking"
+	case attachedPermanentRef:
+		n.Text = "attached permanent is attacking"
+	default:
+		n.problem = "state condition requires This or AttachedPermanent"
+	}
+	return n
+}
+
 // PermanentIsTapped checks the current source or its attached permanent.
 func PermanentIsTapped(subject PermanentRef) StateCondition {
 	return permanentTappedCondition{subject: subject, tapped: true}

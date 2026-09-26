@@ -296,10 +296,11 @@ func cloneCombat(c *Combat) *Combat {
 		return nil
 	}
 	clone := &Combat{
-		Attackers:     cloneUUIDBoolMap(c.Attackers),
-		FirstStruck:   cloneUUIDBoolMap(c.FirstStruck),
-		AttackedAlone: c.AttackedAlone,
-		BlockedAlone:  c.BlockedAlone,
+		Attackers:            cloneUUIDBoolMap(c.Attackers),
+		AttackerIncarnations: maps.Clone(c.AttackerIncarnations),
+		FirstStruck:          cloneUUIDBoolMap(c.FirstStruck),
+		AttackedAlone:        c.AttackedAlone,
+		BlockedAlone:         c.BlockedAlone,
 	}
 	// Deep copy groups.
 	if len(c.Groups) > 0 {
