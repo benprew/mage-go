@@ -334,7 +334,25 @@ func sacrificeAbility() {
 * `DestroyEach(PermanentSet)`: Simultaneously destroys all permanents in the set. For multiple card types, use one `MatchingPermanents(Or(...))` collection; a permanent with several matching types is destroyed only once.
 * `DestroyEachWithoutRegeneration(PermanentSet)`: Simultaneously destroys the set without regeneration. Indestructible still applies; the instruction does not change permanent keywords.
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
-* `Tap(PermanentRef)`: Taps the permanent.
+* `Tap(PermanentRef, ...TapResultOption) ResolvingEffect`: Taps the referenced battlefield incarnation. `TapAmountInto(*NumberBinding) TapResultOption` saves 1 when it changes from untapped to tapped, or 0 when it is already tapped, absent, phased out, or a returned incarnation. The option may occur once. The result is local to the resolving spell or ability. Existing `Tap(subject)` calls remain valid.
+* `IfPositive(ResolutionValue, ResolvingEffect) ResolvingEffect`: Runs the body only when the value is greater than zero. Use it after an action result in `Sequence`; a binding written only inside its body cannot be read after the branch.
+
+For example, this synthetic activation gains life only when the source becomes tapped during resolution:
+
+```go
+package example
+
+import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func tapAbility() {
+    done := dsl.BindNumber("tap result")
+    ability := dsl.Activate(dsl.Costs(), dsl.Sequence(
+        dsl.Tap(dsl.This, dsl.TapAmountInto(done)),
+        dsl.IfPositive(dsl.FromNumber(done), dsl.GainLife(dsl.You, dsl.Fixed(2))),
+    ))
+    _ = ability
+}
+```
 * `Fight(PermanentRef, PermanentRef)`: The two referenced creatures fight if both are present and creatures at resolution. A creature fighting itself deals twice its power to itself.
 * `Untap(PermanentRef)`: Untaps the permanent.
 * `RemoveFromCombat(PermanentRef)`: Removes the captured permanent from combat. Removing a blocker does not make its attacker unblocked. An absent or different incarnation is unaffected.

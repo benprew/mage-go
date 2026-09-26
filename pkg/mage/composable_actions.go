@@ -297,22 +297,75 @@ func AddCountersTo(subject PermanentRef, counter core.CounterType, amount Resolu
 }
 
 // TapSubject taps one battlefield incarnation through the normal tap action.
-func TapSubject(subject PermanentRef) ResolvingEffect { return &tapSubjectEffect{subject} }
+func TapSubject(subject PermanentRef, options ...TapResultOption) ResolvingEffect {
+	e := &tapSubjectEffect{subject: subject}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyTapResult(e)
+	}
+	return e
+}
 
-type tapSubjectEffect struct{ subject PermanentRef }
+type tapSubjectEffect struct {
+	subject       PermanentRef
+	result        *NumberBinding
+	optionCount   int
+	invalidOption bool
+}
+
+// TapResultOption selects one result for a tap instruction.
+type TapResultOption interface {
+	tapResultOption()
+	applyTapResult(*tapSubjectEffect)
+}
+
+type tapAmountOption struct{ binding *NumberBinding }
+
+// TapAmountInto saves one after a tap transition, or zero otherwise.
+func TapAmountInto(binding *NumberBinding) TapResultOption { return tapAmountOption{binding} }
+func (tapAmountOption) tapResultOption()                   {}
+func (o tapAmountOption) applyTapResult(e *tapSubjectEffect) {
+	e.result = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
 
 func (*tapSubjectEffect) Text() string { return "tap permanent" }
 func (*tapSubjectEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Taps: true}
 }
 func (e *tapSubjectEffect) Apply(ctx *EffectContext) error {
-	if p, ok := e.subject.resolvePermanent(ctx); ok {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
+	if p, ok := e.subject.resolvePermanent(ctx); ok && !p.Tapped {
 		ctx.Game.TapPermanent(p)
+		if e.result != nil {
+			ctx.Game.resolution.numberBindings[e.result] = 1
+		}
 	}
 	return nil
 }
 func (e *tapSubjectEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	if e.invalidOption {
+		n.problem = "supply a non-nil tap result binding"
+	} else if e.optionCount > 1 {
+		n.problem = "supply the tap result binding only once"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }
 
 // TapCost pays by tapping the source. It uses the existing payment transaction.

@@ -286,6 +286,7 @@ type (
 	DamageTargetsBinding   = mage.DamageTargetsBinding
 	DamageResultOption     = mage.DamageResultOption
 	SacrificeResultOption  = mage.SacrificeResultOption
+	TapResultOption        = mage.TapResultOption
 	DamageEachResultOption = mage.DamageEachResultOption
 	DamageSourceBinding    = mage.DamageSourceBinding
 	DamageResultsBinding   = mage.DamageResultsBinding
@@ -304,6 +305,8 @@ var (
 	DealDamageEach         = mage.DealDamageEach
 	DamageTotalInto        = mage.DamageTotalInto
 	SacrificeAmountInto    = mage.SacrificeAmountInto
+	TapAmountInto          = mage.TapAmountInto
+	IfPositive             = mage.IfPositive
 	BindDamageResults      = mage.BindDamageResults
 	BindDamageResult       = mage.BindDamageResult
 	DamageResultsInto      = mage.DamageResultsInto

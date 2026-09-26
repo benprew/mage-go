@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Resolving Tap Action Result
+
+`Tap(PermanentRef, ...TapResultOption)` now accepts `TapAmountInto(*NumberBinding)` and keeps its one-argument form. The option writes 1 only when the referenced battlefield incarnation changes from untapped to tapped through the shared tap action; it writes 0 for an already tapped, absent, phased-out, or returned object. `IfPositive(ResolutionValue, ResolvingEffect)` branches on that saved result inside a resolving `Sequence`. Both are exported through `dsl`. This is an action result, not a tap-cost output or a reflexive trigger. The normal tap event, target binding and legality, resolution-frame number storage, stack copy, clone, inspection, and registration services are reused.
+
+Energy Tap's complete Oracle text was checked in `data/LEG.json`. Its successful-tap condition is now expressible, but its production definition and test remain unchanged. Its Legends gap stays blocked pending card wiring and a full migration audit. A fresh search found no production `TapAmountInto` or `IfPositive` caller; existing `Tap` and cost exports remain. Synthetic tests first failed because the typed option and branch were absent. They cover transition outcome, stale result clearing, phasing, leave and return, target legality, stack copy, game clone, branch scope, registration errors, and compile-time role rejection. The next dependency-ready work is another P payment or action output, after a fresh audit. No production card changed.
+
+Focused tests, short engine and repository tests, DSL registration and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass.
+
 ## Current Slice: Bounded Mixed Damage Target Group
 
 `TargetDamageRecipients(name, minimum, maximum) *DamageTargetsBinding` declares one target group containing players, creatures, or planeswalkers. The binding is a sealed `DamageRecipientSet` for `DealDamageEach` and a `TargetBinding` for spell, activation, or trigger announcement. It reuses target count and legality checks, recorded target incarnations, stack copy alignment, and the existing simultaneous damage service. Registration rejects invalid bounds and undeclared reads. A returned, phased-out, or illegal permanent leaves the damage batch; legal player targets remain. The legacy singular target and damage exports remain.

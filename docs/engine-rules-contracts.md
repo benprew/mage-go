@@ -272,6 +272,15 @@ writes it to that spell or activation's number binding only after the cost
 succeeds. A returned or phased-out choice does not produce a value. The
 resolution-time `IfPaid` and `UnlessPaid` paths do not carry this output.
 
+`Tap(subject, TapAmountInto(binding))` records an action result in the current
+resolution frame. It writes 1 only when the referenced battlefield incarnation
+changes from untapped to tapped; the normal tap action emits its event once.
+An already tapped, phased-out, absent, or returned incarnation writes 0 and
+emits no new tap event. `IfPositive(FromNumber(binding), body)` can test this
+result later in the same `Sequence`. Stack copies and game clones keep their
+resolution frames separate. This result is for a resolving instruction; tap
+costs use the payment transaction.
+
 ---
 
 ## 10. Turn Structure, Cleanup Priority, and History Retention (CR 514)
