@@ -55,7 +55,10 @@ func (a *ActionDefinition) captureValues(g *Game, source *Permanent, controller 
 	ctx := &EffectContext{Game: g, SourceID: source.ID(), Controller: controller, Targets: targets,
 		sourceCaptured: true, sourceIncarnation: source.incarnationID,
 		targetBindings: make(map[*targetDeclaration][]capturedPermanent)}
-	for i, spec := range expandTargetSpecs(specs, targets, g.resolution.X()) {
+	if len(specs) != len(targets) {
+		specs = expandTargetSpecs(specs, targets, g.resolution.X())
+	}
+	for i, spec := range specs {
 		if binding, ok := spec.(*targetDeclaration); ok && targets[i] != uuid.Nil {
 			value := capturedPermanent{id: targets[i]}
 			if p := g.FindPermanent(targets[i]); p != nil {

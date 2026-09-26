@@ -133,6 +133,18 @@ func (o spellTargetGroupsOption) applySpell(a *ActionDefinition) {
 	a.groupedTargets = true
 	applyTargetOptions(a, o.bindings)
 }
+
+type activationTargetGroupsOption struct{ bindings []TargetBinding }
+
+// WithActivationTargetGroups declares separate target groups for an activation.
+func WithActivationTargetGroups(bindings ...TargetBinding) ActivationOption {
+	return activationTargetGroupsOption{bindings: append([]TargetBinding(nil), bindings...)}
+}
+func (activationTargetGroupsOption) activationOption() {}
+func (o activationTargetGroupsOption) applyActivation(a *ActionDefinition) {
+	a.groupedTargets = true
+	applyTargetOptions(a, o.bindings)
+}
 func applyTargetOptions(a *ActionDefinition, bindings []TargetBinding) {
 	for _, b := range bindings {
 		if nilDefinition(b) {

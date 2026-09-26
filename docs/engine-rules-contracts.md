@@ -238,6 +238,13 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
 
 ## 9. Total-Cost Payment Transactions (CR 601.2, 602.2)
 
+Grouped activated abilities announce and validate one target list per declared
+group before payment. The ability stack object stores the chosen target's
+declaration beside each target, so an empty optional group does not take a
+choice from a later group. Copying, retargeting, and resolution use that
+alignment. Invalid group counts or choices leave costs unpaid; a failed
+payment leaves the activation off the stack.
+
 All casting and activations follow the locked total-cost transaction model:
 1. Announce modes, targets, X, and cost choices.
 2. Determine total cost: $\text{Base Cost} + \text{Additional/Alternative Costs} - \text{Reductions}$.

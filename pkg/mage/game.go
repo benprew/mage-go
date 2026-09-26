@@ -4072,6 +4072,18 @@ func (g *Game) CastSpellByID(playerID, cardID uuid.UUID, targets []uuid.UUID, xV
 
 // ActivateAbilityByIndex activates an ability on a permanent by index.
 func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int, targets []uuid.UUID) error {
+	return g.activateAbilityByIndex(playerID, permanentID, abilityIndex, targets, nil)
+}
+
+// ActivateAbilityByIndexWithTargetGroups announces one choice list per target declaration.
+func (g *Game) ActivateAbilityByIndexWithTargetGroups(playerID, permanentID uuid.UUID, abilityIndex int, groups [][]uuid.UUID) error {
+	if groups == nil {
+		return fmt.Errorf("activation target groups are required")
+	}
+	return g.activateAbilityByIndex(playerID, permanentID, abilityIndex, nil, groups)
+}
+
+func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int, targets []uuid.UUID, groups [][]uuid.UUID) error {
 	perm := g.FindPermanent(permanentID)
 	if perm == nil {
 		return ErrPermanentNotFound
@@ -4081,6 +4093,11 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 
 	inner := UnwrapAbility(perm.RuntimeAbilities[abilityIndex])
+	if groups != nil {
+		if _, ok := inner.(*ManaAbility); ok {
+			return fmt.Errorf("mana ability does not declare target groups")
+		}
+	}
 
 	// Handle mana abilities (don't use the stack)
 	if ma, ok := inner.(*ManaAbility); ok {
@@ -4119,6 +4136,13 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	if def, ok := inner.(*ActionDefinition); ok && def.Kind() != ActionActivated {
 		return fmt.Errorf("not an activated ability")
 	}
+	grouped := false
+	if def, ok := inner.(*ActionDefinition); ok {
+		grouped = def.groupedTargets
+	}
+	if grouped != (groups != nil) {
+		return fmt.Errorf("activation target group announcement does not match declaration")
+	}
 	saa, isSAA := inner.(*SimpleActivatedAbility)
 	if perm.ControllerID() != playerID {
 		if !isSAA || !saa.IsAnyPlayerAbility() {
@@ -4137,6 +4161,7 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	actionTargets := aa.Targets()
 	actionEffects := aa.Effects()
+	var alignedTargets []Target
 	modeChoice := -1
 	var modalTargets [][]uuid.UUID
 	if modal, ok := aa.(interface{ Modes() []Mode }); ok && len(modal.Modes()) > 0 {
@@ -4181,20 +4206,31 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		modalTargets[modeChoice] = append([]uuid.UUID(nil), targets...)
 	}
 
+	if grouped {
+		var err error
+		targets, alignedTargets, err = g.prepareTargetGroups(playerID, perm.Card, actionTargets, groups, g.resolution.X(), "ability target group")
+		if err != nil {
+			return err
+		}
+	}
 	// When the caller supplied no targets but the ability's targeting is
 	// forced (e.g. "you", or a single legal target), fill them in here so the
 	// ability doesn't fizzle. The interactive layer relies on this to skip
 	// prompting for targets that offer no real choice.
-	if len(targets) == 0 {
+	if !grouped && len(targets) == 0 {
 		if forced := ForcedActivationTargets(playerID, perm.Card, actionTargets, g); forced != nil {
 			targets = forced
 		}
 	}
-	targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
-	targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
+	if !grouped {
+		targets = g.acquireRandomTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X())
+		targets = g.acquireOpponentChosenTargets(playerID, perm.Card, actionTargets, targets)
+	}
 
-	if err := g.validateActionTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X(), "ability"); err != nil {
-		return err
+	if !grouped {
+		if err := g.validateActionTargets(playerID, perm.Card, actionTargets, targets, g.resolution.X(), "ability"); err != nil {
+			return err
+		}
 	}
 
 	// Lock and validate the total activation cost before changing live state.
@@ -4223,7 +4259,11 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	var capturedNumbers map[*NumberBinding]int
 	var capturedPermanents map[*PermanentBinding]capturedPermanent
 	if definition, ok := aa.(*ActionDefinition); ok {
-		capturedNumbers, capturedPermanents = definition.captureValues(g, perm, playerID, actionTargets, targets)
+		captureSpecs := actionTargets
+		if grouped {
+			captureSpecs = alignedTargets
+		}
+		capturedNumbers, capturedPermanents = definition.captureValues(g, perm, playerID, captureSpecs, targets)
 	}
 	if err := payment.Commit(); err != nil {
 		return err
@@ -4244,6 +4284,9 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedPermanents = capturedPermanents
 	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.resolution.X())
+	if grouped {
+		obj.TargetSpecs = append([]Target(nil), alignedTargets...)
+	}
 	obj.sourceIncarnation = perm.incarnationID
 	obj.TargetSource = perm.Card
 	obj.ModeChoice = modeChoice

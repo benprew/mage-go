@@ -122,7 +122,11 @@ Spell(
   declares independent groups for `Game.CastSpellByNameWithTargetGroups(playerID,
   name, groups, optionalX)`. The cast argument has one UUID slice per declared
   group, including an empty slice for an unchosen optional group. The flat cast
-  path rejects this declaration before payment. `Activate` and delayed
+  path rejects this declaration before payment. `Activate(costs, effect,
+  WithActivationTargetGroups(bindings...))` uses
+  `Game.ActivateAbilityByIndexWithTargetGroups(playerID, permanentID,
+  abilityIndex, groups)` for independent activation target groups. The flat
+  activation path rejects that declaration before payment. Delayed
   declarations still allow only one variable-size group.
 
 ```go
@@ -148,6 +152,24 @@ _ = dsl.NewInstant("Example", "", dsl.WithAbility(ability))
 The cast input `[][]uuid.UUID{{opponentID}, {}, {creatureID}}` chooses only the
 second optional creature group. Each group is checked before costs are paid.
 Its target positions remain fixed through resolution and copying.
+
+An activation can use the same group shape:
+
+```go
+first := dsl.TargetPermanents("first", 0, 1, dsl.IsCreature)
+second := dsl.TargetPermanents("second", 0, 1, dsl.IsCreature)
+member := dsl.BindPermanent("member")
+ability := dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)),
+    dsl.Sequence(dsl.DestroyEach(first),
+        dsl.ForEach(second, member, dsl.Tap(dsl.From(member)))),
+    dsl.WithActivationTargetGroups(first, second))
+_ = dsl.NewArtifact("Example", "", dsl.WithAbility(ability))
+```
+
+The activation input `[][]uuid.UUID{{}, {creatureID}}` selects only the second
+group. Group counts and legal choices are checked before activation costs are
+paid. Copying and resolving the ability keep the group identity and target
+incarnation.
 
 For two independent optional targets on a trigger, declare separate bindings:
 
@@ -377,7 +399,7 @@ ability := dsl.Activate(
 )
 _ = ability
 ```
-* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. Triggered abilities can use multiple variable-size groups; spells and activations still allow one. An illegal target is absent from the batch.
+* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. Triggered abilities, spells, and activations can use multiple variable-size groups through their respective group announcement paths. An illegal target is absent from the batch.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
 
 ```go

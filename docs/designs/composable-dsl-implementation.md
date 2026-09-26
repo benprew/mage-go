@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Grouped Activation Target Announcement
+
+`WithActivationTargetGroups(bindings...) ActivationOption` declares independent target groups for a nonmodal `Activate` body. `Game.ActivateAbilityByIndexWithTargetGroups(playerID, permanentID, abilityIndex, groups)` accepts one UUID slice per declaration. The activation path validates each group's count and legality before payment, records target-to-declaration alignment on the stack, and carries that alignment through resolution, copying, and cloning. The flat activation path rejects grouped declarations. `WithTargets` and all production callers remain available; no production card was changed.
+
+Focused contract tests first failed because both exports were absent. They cover an empty first optional group, legal activation with a tap cost, invalid groups before payment, duplicate choices within one group, the same choice in two groups, copy retargeting, target leave and return, clone isolation, registration rejection of empty declarations, failed-payment rollback, and rejection of a grouped announcement on a mana ability. The shared target, stack-copy, and payment services are the reuse boundary. Modal and delayed group announcement, UI input, and card wiring remain separate. No gap record is closed by this adapter alone. A fresh production search found no `WithActivationTargetGroups` caller; existing activation and legacy targeting callers remain. The next dependency-ready slice is payment-result outputs in P, after a fresh audit of current capabilities and callers.
+
+The focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass.
+
 ## Current Slice: Grouped Spell Target Announcement
 
 `WithTargetGroups(bindings...) SpellOption` marks independent spell target declarations. `Game.CastSpellByNameWithTargetGroups(playerID, name, groups, optionalX)` accepts one chosen UUID slice per declaration. The cast path checks each group's count, legality, and duplicate choices before payment, then records the exact target-to-declaration alignment on the stack object. The flat cast path rejects grouped spells before payment. Resolution, copying, retargeting, and cloning reuse the existing target-frame and target-specification services. `WithTargetGroups` has a sealed spell-only option role; registration rejects an empty declaration. `WithTargets`, the flat cast API, and all production callers remain available.

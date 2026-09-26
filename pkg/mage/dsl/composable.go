@@ -99,6 +99,8 @@ var (
 	WithTargets = mage.WithTargets
 	// WithTargetGroups declares independent spell target groups.
 	WithTargetGroups = mage.WithTargetGroups
+	// WithActivationTargetGroups declares independent activation target groups.
+	WithActivationTargetGroups = mage.WithActivationTargetGroups
 	// Spell constructs the resolving ability of an instant or sorcery card.
 	Spell = mage.Spell
 	// Activate constructs an activated ability from costs, an effect body, and optional restrictions.
