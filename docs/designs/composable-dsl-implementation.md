@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Source Targeted by a Spell
+
+`BecomesTargetOfSpell(This) EventPattern` works in `WhenEvent` and `WhenEventModes` for battlefield sources. It reuses `EvtBecomesTarget` and the existing source-target and spell-event conditions. It has no event participant, target, or stack-object binding. The event service already emits after a successful target announcement; the queued trigger keeps its event-time controller and source incarnation. This slice adds no replacement or payment path.
+
+Departed Deckhand's complete text was checked in `data/JMP.json`. Its first clause needs this spell-only filter; its blocking restriction, activated ability, full migration audit, and production wiring remain separate. The Jumpstart gap record remains blocked. The production card still uses `NewTriggered(EvtBecomesTarget, ...)`, so the legacy surface stays available. Kira's first-time spell-or-ability trigger and stack-object counter remain separate work.
+
+Focused tests failed first because the constructor was absent. Synthetic tests now cover actual spell casting, spell versus ability events, another target, source sacrifice, absence, phasing, source departure and return, game-clone isolation, inspection, registration rejection for a nonbattlefield source, and compile-time rejection of a player source. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The next dependency-ready slice is a T target bound or another E participant after a fresh audit.
+
 ## Current Slice: Opponent-Controlled Creature Death Event
 
 `OpponentCreatureDies()` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches each creature that moves from the battlefield to a graveyard while an opponent of the trigger source controller controls it. The existing zone-change event supplies the former controller and pre-departure creature type. `.WithController(*PlayerBinding)` saves that player in the trigger instance; it is not a target. The pattern composes with existing death filters and captures. It adds no new zone event, result frame, or card policy.

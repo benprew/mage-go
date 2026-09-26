@@ -927,6 +927,17 @@ Triggers on rules events dispatched by the engine:
             dsl.GainLife(dsl.You, dsl.Fixed(1)))))
     ```
   * `BecomesBlocked(This)`: Source first becomes blocked in combat. It matches once even when multiple creatures block it, and also matches when a creature enters blocking an unblocked source. It is available in `WhenEvent` and `WhenEventModes` on a battlefield source. It does not bind or target a blocker.
+  * `BecomesTargetOfSpell(This) EventPattern`: Match the battlefield source when a spell targets it. An activated ability targeting the source does not match. Use it in `WhenEvent` or `WhenEventModes`; the pattern has no target or stack-object binding. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var _ = dsl.NewCreature("Spell watcher", "", 2, 2,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.BecomesTargetOfSpell(dsl.This), dsl.Sacrifice(dsl.This))))
+    ```
   * `AttacksUnblocked(This)`: Source is attacking and no creature blocks it when legal blocker declarations finish. A creature that entered attacking can match. Removing every blocker from an already blocked creature does not make it match. Use `.WithDefendingPlayer(*PlayerBinding)` to save the event-time defending player. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. For example:
 
     ```go
