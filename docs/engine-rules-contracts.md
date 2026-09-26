@@ -302,6 +302,12 @@ frame. Commit reads the chosen permanent's mana value before sacrifice, then
 writes it to that spell or activation's number binding only after the cost
 succeeds. A returned or phased-out choice does not produce a value. The
 resolution-time `IfPaid` and `UnlessPaid` paths do not carry this output.
+`SacrificeMatchingCostWithCard` uses that locked choice and saves the card's
+graveyard visit only after successful payment. The saved card belongs to the
+spell or ability stack frame, including copies and game clones. It remains
+present only while that graveyard visit is current (CR 400.7j). A token has no
+graveyard card to save. Failed payment saves no card. This is a singular cost;
+it does not bind a set of sacrificed objects or their former characteristics.
 
 `Tap(subject, TapAmountInto(binding))` records an action result in the current
 resolution frame. It writes 1 only when the referenced battlefield incarnation

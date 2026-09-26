@@ -2451,7 +2451,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 
 	defer g.resolution.Begin(obj)()
 	for _, eff := range obj.Effects {
-		_ = applyEffectWithCaptures(g, eff, obj.SourceID, obj.Controller, resolvedTargets, obj.capturedNumbers, obj.capturedPermanents)
+		_ = applyEffectWithCaptures(g, eff, obj.SourceID, obj.Controller, resolvedTargets, obj.capturedNumbers, obj.capturedPermanents, obj.capturedCards)
 	}
 	g.resolution.ClearDistributions()
 
@@ -2871,6 +2871,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		CastZone:        ZoneHand,
 		SnapshotCast:    true,
 		CapturedNumbers: payment.payment.paidNumbers,
+		CapturedCards:   payment.payment.paidCards,
 	})
 	return err
 }
@@ -4290,6 +4291,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
 	obj.capturedNumbers = capturedNumbers
+	obj.capturedCards = maps.Clone(payment.paidCards)
 	obj.capturedPermanents = capturedPermanents
 	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.resolution.X())
 	if grouped {

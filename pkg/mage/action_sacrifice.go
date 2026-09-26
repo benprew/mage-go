@@ -133,8 +133,10 @@ type sacrificeMatchingCost struct {
 	paidPower        *NumberBinding
 	paidToughness    *NumberBinding
 	paidManaValue    *NumberBinding
+	paidCard         *CardBinding
 	captureStats     bool
 	captureManaValue bool
+	captureCard      bool
 }
 
 // SacrificeMatchingCost creates a cost that sacrifices another permanent the
@@ -189,9 +191,24 @@ func SacrificeMatchingCostWithManaValue(filter PermanentFilter, text string, val
 	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidManaValue: value, captureManaValue: true}
 }
 
+// SacrificeMatchingCostWithCard saves the sacrificed card in its new graveyard visit.
+func SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *CardBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidCard: card, captureCard: true}
+}
+
 func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
-	if !c.captureStats && !c.captureManaValue {
+	if !c.captureStats && !c.captureManaValue && !c.captureCard {
+		return n
+	}
+	if c.captureCard {
+		if c.text == "" {
+			n.problem = "supply sacrifice text"
+		} else if c.paidCard == nil {
+			n.problem = "supply a non-nil paid card binding"
+		}
+		n.bindingWrites = []savedBinding{c.paidCard}
+		n.children = []definitionEdge{{"card", c.paidCard}}
 		return n
 	}
 	if c.captureManaValue {

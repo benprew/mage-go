@@ -711,6 +711,7 @@ var (
 	SacrificeCreatureCostWithStats                = mage.SacrificeCreatureCostWithStats
 	SacrificeCreatureIncludingSourceCostWithStats = mage.SacrificeCreatureIncludingSourceCostWithStats
 	SacrificeMatchingCostWithManaValue            = mage.SacrificeMatchingCostWithManaValue
+	SacrificeMatchingCostWithCard                 = mage.SacrificeMatchingCostWithCard
 	DiscardRandomCost                             = mage.DiscardRandomCost
 	ExileSourceCost                               = mage.ExileSourceCost
 	SacrificeArtifactCost                         = mage.SacrificeArtifactCost

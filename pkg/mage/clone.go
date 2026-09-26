@@ -240,6 +240,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		targetIncarnations: obj.targetIncarnations,
 		sourceIncarnation:  obj.sourceIncarnation,
 		capturedNumbers:    maps.Clone(obj.capturedNumbers),
+		capturedCards:      maps.Clone(obj.capturedCards),
 		capturedPermanents: maps.Clone(obj.capturedPermanents),
 		stateKey:           obj.stateKey,
 		ID:                 obj.ID,

@@ -12,6 +12,7 @@ type StackObject struct {
 	targetIncarnations map[uuid.UUID]uuid.UUID
 	sourceIncarnation  uuid.UUID
 	capturedNumbers    map[*NumberBinding]int
+	capturedCards      map[*CardBinding]capturedCard
 	capturedPermanents map[*PermanentBinding]capturedPermanent
 	stateKey           stateTriggerKey
 	ID                 uuid.UUID

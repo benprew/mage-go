@@ -299,6 +299,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if life, ok := value.(*lifePayCost); ok && life.capture && !nilDefinition(life.paid) && assigned[life.paid] {
 			fail("duplicate paid life binding")
 		}
+		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.captureCard && !nilDefinition(sacrifice.paidCard) && assigned[sacrifice.paidCard] {
+			fail("duplicate paid card binding")
+		}
 		if life, ok := value.(*xLifePayCost); ok && !nilDefinition(life.paid) && assigned[life.paid] {
 			fail("duplicate paid life binding")
 		}

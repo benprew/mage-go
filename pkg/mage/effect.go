@@ -140,16 +140,19 @@ func mergeEffectProperties(dst *EffectProperties, src EffectProperties) {
 // effect's Apply method. This is the canonical entry point for Effect resolution
 // from engine code that holds a *Game directly.
 func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID) error {
-	return applyEffectWithCaptures(g, e, sourceID, controller, targets, nil, nil)
+	return applyEffectWithCaptures(g, e, sourceID, controller, targets, nil, nil, nil)
 }
 
-func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID, numbers map[*NumberBinding]int, permanents map[*PermanentBinding]capturedPermanent) error {
+func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID, numbers map[*NumberBinding]int, permanents map[*PermanentBinding]capturedPermanent, cards map[*CardBinding]capturedCard) error {
 	if e == nil {
 		return nil
 	}
 	savedNumbers := g.resolution.numberBindings
 	g.resolution.numberBindings = maps.Clone(numbers)
 	defer func() { g.resolution.numberBindings = savedNumbers }()
+	savedCards := g.resolution.cardBindings
+	g.resolution.cardBindings = maps.Clone(cards)
+	defer func() { g.resolution.cardBindings = savedCards }()
 	savedPlayers := g.resolution.playerBindings
 	g.resolution.playerBindings = nil
 	defer func() { g.resolution.playerBindings = savedPlayers }()

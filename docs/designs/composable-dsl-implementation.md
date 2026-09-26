@@ -1,5 +1,35 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Paid Sacrifice Card
+
+`SacrificeMatchingCostWithCard(filter, text, card)` saves the card of one
+chosen, sacrificed permanent in its new graveyard visit. `FromCard(card)` can
+read that card in the resolving spell or activation. A token gives an absent
+card reference, and any later zone move invalidates the visit. The existing
+locked sacrifice choice and prepared payment transaction enforce the chosen
+battlefield incarnation. Card captures now travel in stack frames, copies,
+and game clones; a failed payment clears the capture. This slice adds no
+general paid-permanent LKI, collection payment, or card wiring.
+
+CR 400.7j permits the effect of a spell or ability to find a card moved to a
+public zone by its cost. The Legends Sword of the Ages record requires cards
+of multiple sacrificed creatures and its source, so it remains blocked on a
+collection payment and linked exile. Existing production callers and legacy
+exports remain. The next dependency-ready P work is a paid-object set with
+pre-sacrifice characteristics, or a separate paid-discard card capture after
+a fresh audit. No gap record is closed by this singular adapter.
+
+Focused tests failed first because the constructor was absent. They cover
+spell and activation payment, copy and clone isolation, the graveyard visit
+boundary, phasing and returned choices, rollback on failed payment, and
+registration validation. The public DSL example compiles and validates.
+A fresh search found no production use of the new constructor and seven
+production card files using related sacrifice-cost constructors. Their
+declarations and complete card audits remain separate work. The focused tests,
+short engine and repository suites, DSL registration and closed-role tests,
+`go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and
+`git diff --check` pass.
+
 ## Current Slice: Source-Inclusive Sacrifice Payment Stats
 
 `SacrificeCreatureIncludingSourceCostWithStats(power, toughness)` captures the

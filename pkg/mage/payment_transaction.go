@@ -24,6 +24,7 @@ type costPaymentTransaction struct {
 	manaSolution           *ManaSolution
 	resetDrainedBeforeMana bool
 	paidNumbers            map[*NumberBinding]int
+	paidCards              map[*CardBinding]capturedCard
 }
 
 type costPaymentSpec struct {
@@ -171,9 +172,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 
 func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	tx.paidNumbers = nil
+	tx.paidCards = nil
 	defer func() {
 		if commitErr != nil {
 			tx.paidNumbers = nil
+			tx.paidCards = nil
 		}
 	}()
 	player := tx.game.GetPlayer(tx.controller)
@@ -196,11 +199,15 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	}
 	for _, cost := range tx.costs {
 		var paidPower, paidToughness, paidManaValue int
-		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
+		var paidCardID uuid.UUID
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureCard) {
 			if !sacrifice.CanPay(tx.sourceID, tx.controller, tx.game) || len(sacrifice.selected) != 1 {
 				return fmt.Errorf("cannot pay chosen sacrifice")
 			}
 			chosen := tx.game.FindPermanent(sacrifice.selected[0].id)
+			if sacrifice.captureCard && !chosen.IsToken {
+				paidCardID = chosen.ID()
+			}
 			if sacrifice.captureStats {
 				paidPower = chosen.CurrentPower(tx.game)
 				paidToughness = chosen.CurrentToughness(tx.game)
@@ -211,6 +218,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && sacrifice.captureCard {
+			if tx.paidCards == nil {
+				tx.paidCards = make(map[*CardBinding]capturedCard)
+			}
+			tx.paidCards[sacrifice.paidCard] = capturedCard{id: paidCardID, visit: tx.game.graveyardVisit(paidCardID), zone: ZoneGraveyard}
 		}
 		if life, ok := cost.(*lifePayCost); ok && life.capture && life.paid != nil {
 			if tx.paidNumbers == nil {

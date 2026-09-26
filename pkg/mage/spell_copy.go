@@ -66,6 +66,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		TargetSource:       copiedCard,
 		sourceIncarnation:  original.sourceIncarnation,
 		capturedNumbers:    maps.Clone(original.capturedNumbers),
+		capturedCards:      maps.Clone(original.capturedCards),
 		capturedPermanents: maps.Clone(original.capturedPermanents),
 		EventSourceID:      original.EventSourceID,
 		targetIncarnations: maps.Clone(original.targetIncarnations),

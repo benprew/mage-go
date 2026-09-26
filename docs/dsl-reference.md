@@ -1322,6 +1322,18 @@ Triggers at step transitions:
   * `TapCost(This)`: {T} tap cost.
   * `SacrificeSourceCost()`: Sacrifice source as cost.
   * `SacrificeCreatureCostWithStats(power, toughness *NumberBinding)`: Sacrifice one creature and save its current power and toughness during payment. Both bindings are required. `FromNumber` reads either value in the resolving body. This cost works in `Activate`, `ActivateModes`, and spell additional costs. An activation excludes its source from the choice.
+  * `SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *CardBinding) Cost`: Sacrifice one other matching permanent and save its card in the new graveyard visit. Use `FromCard(card)` in the resolving body of `Spell`, `Activate`, or `ActivateModes`. A token has no card in the graveyard, so its saved reference is absent. A later zone move also makes the saved reference absent. Registration requires a named card binding and nonempty cost text.
+
+    ```go
+    paid := dsl.BindCard("paid creature")
+    spell := dsl.NewInstant("Offering", "",
+        dsl.WithAbility(dsl.Spell(
+            dsl.IfCardHasType(dsl.FromCard(paid), core.TypeCreature,
+                dsl.GainLife(dsl.You, dsl.Fixed(2))))),
+        dsl.WithAdditionalCost(dsl.SacrificeMatchingCostWithCard(
+            dsl.IsCreature, "Sacrifice a creature", paid)))
+    _ = spell
+    ```
   * `LifePayCost(amount)`: Pay life (permits paying exact life total CR 119.4).
   * `LifePayCostInto(amount int, paid *NumberBinding) Cost`: Pay a fixed amount of life and save the committed amount for the resolving ability. Use it in `Activate`, `ActivateModes`, or a spell additional cost. Registration rejects a negative amount, a nil or unnamed binding, and duplicate producers. It is not a resolution-time `IfPaid` or `UnlessPaid` cost. Use `FromNumber(paid)` in the body; zero life is a valid payment.
   * `LifePayXCostInto(paid *NumberBinding) Cost`: Pay the announced X life as a direct activation cost or direct spell additional cost. The cost locks X before payment and saves the committed amount for `FromNumber(paid)` in that stack instance. X must be nonnegative and cannot exceed the payer's life total. This is not a resolution-time payment.
