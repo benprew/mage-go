@@ -212,6 +212,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
 		}
+		if life, ok := cost.(*lifePayCost); ok && life.capture && life.paid != nil {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			tx.paidNumbers[life.paid] = life.amount
+		}
 		if counter, ok := cost.(*removeAnyCountersCost); ok {
 			if tx.paidNumbers == nil {
 				tx.paidNumbers = make(map[*NumberBinding]int)

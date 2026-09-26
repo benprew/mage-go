@@ -239,6 +239,7 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
   * Life costs are verified on an isolated clone before committing.
   * Canceled or failed costs leave live life totals and pending events untouched.
   * Positive life payments emit `EvtLifeLost` through the shared executor; zero payments emit no event.
+  * `LifePayCostInto` writes the committed fixed life payment to the stack instance's number bindings. The value is available to that spell or activated ability at resolution, including its copies. It is absent after failed payment. The binding does not read life loss from another action.
 
 ---
 

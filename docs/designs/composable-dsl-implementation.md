@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Fixed Life-Payment Amount Binding
+
+`LifePayCostInto(amount, paid)` is a typed fixed-life cost for `Activate`, `ActivateModes`, and spell additional costs. It uses the existing prepared total-cost transaction and writes the committed payment to an instance-local `NumberBinding` for `FromNumber` at resolution. Zero and exact-life payments follow CR 119.4. The existing `LifePayCost` and all production callers remain unchanged. Registration rejects negative amounts, nil or unnamed bindings, duplicate paid-life producers, and reads without a producer. Resolution-time `IfPaid` and `UnlessPaid` costs do not support this output; variable X life costs, prevention or replacement of life loss, and card wiring are outside this slice.
+
+Synthetic contract tests first failed because the constructor was absent. They cover activation and spell payment, zero and exact-life boundaries, insufficient-life failure, two pending activations, stack copying, game cloning, and registration scope. The shared cost executor, prepared transaction, stack capture map, and life-payment boundary are the reuse points. The complete Vicious Rivalry requirement in `data/SOS.json` includes a variable life payment that sets X while casting; this fixed-cost adapter does not satisfy it. No gap record or production card changed. A fresh caller search found no production `LifePayCostInto` caller. The next dependency-ready P work is a typed variable life payment with announcement-time X and transaction rollback, after a fresh contract audit.
+
+Focused `TestPaidLifeAmount` tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass. Lint reported zero issues. The final focused test and diff check were repeated after the last test edit.
+
 ## Current Slice: Saved-Card Type Branch
 
 `IfCardHasType(CardRef, core.CardType, ResolvingEffect)` and `IfCardLacksType(CardRef, core.CardType, ResolvingEffect)` are typed resolving branches for a saved hand or graveyard card or a legal graveyard target. Both read current card types through the existing zone-visit reference. An absent card matches neither branch. Inspection and registration reject nil roles, invalid types, missing producers, and a binding that escapes a branch. The existing resolution frame, target legality, and clone services supply identity and isolation. Production cards and legacy exports are unchanged.

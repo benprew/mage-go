@@ -198,6 +198,7 @@ var (
 	WithETBEffect                 = mage.WithETBEffect
 	WithSuperTypes                = mage.WithSuperTypes
 	WithAdditionalCost            = mage.WithAdditionalCost
+	LifePayCostInto               = mage.LifePayCostInto
 	WithCastTarget                = mage.WithCastTarget
 	WithOncePerTurn               = mage.WithOncePerTurn
 	WithEffect                    = mage.WithEffect

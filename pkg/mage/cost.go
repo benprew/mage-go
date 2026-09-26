@@ -272,12 +272,34 @@ func (c *requireCountersCost) Text() string {
 
 // lifePayCost requires paying life.
 type lifePayCost struct {
-	amount int
+	amount  int
+	paid    *NumberBinding
+	capture bool
 }
 
 // LifePayCost creates a cost that requires the controller to pay life.
 func LifePayCost(amount int) Cost {
 	return &lifePayCost{amount: amount}
+}
+
+// LifePayCostInto saves the amount paid by this cost for its resolving ability.
+func LifePayCostInto(amount int, paid *NumberBinding) Cost {
+	return &lifePayCost{amount: amount, paid: paid, capture: true}
+}
+
+func (c *lifePayCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "life-payment-cost", Text: c.Text()}
+	if c.capture {
+		n.bindingWrite = c.paid
+		n.children = []definitionEdge{{"paid", c.paid}}
+		if c.paid == nil {
+			n.problem = "supply a non-nil paid life binding"
+		}
+	}
+	if c.amount < 0 {
+		n.problem = "negative life payment"
+	}
+	return n
 }
 
 // LifePaymentAmount reports the life required by a life-payment cost, or zero
