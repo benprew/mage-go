@@ -1,5 +1,37 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Locked Discard Payment Choice
+
+`DiscardCost(n)` now retains the payer's chosen hand-card IDs in the total-cost
+transaction. Validation uses those IDs on the isolated game, and commit
+discards the same cards without a second choice. It rejects absent or invalid
+choices, checks stale choices before paying mana or life, and leaves the cost
+declaration reusable. Direct legacy `Pay` calls keep their existing choice
+path. This engine prerequisite adds no typed paid-card result, characteristic
+snapshot, or production card wiring.
+
+Land's Edge's complete text was checked in `data/LEG.json`, its Legends
+inventory and JSON gap record, and the discard and cost rules were checked in
+the indexed comprehensive rules. A typed paid-discard characteristic binding
+is the next dependency-ready slice; its player-or-planeswalker damage target
+and card migration remain separate. The Legends gap record stays blocked.
+Existing production callers and legacy exports remain unchanged.
+
+Contract tests first failed because commit selected a different card after
+the validated choice left the hand. Focused tests now cover one choice across
+validation and commit, a stale card, an invalid out-of-hand choice, and reuse
+of a cost declaration. This slice uses the existing payment transaction and
+discard event path.
+
+`go test ./pkg/mage -run '^TestDiscardPayment' -count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues),
+and `git diff --check` pass. The full suite exposed a test-player duplicate-ID
+choice for two same-name cards; the harness now returns distinct matching
+cards, and the Zombie Infestation integration test passes. A fresh search
+found nine production `DiscardCost` calls; they remain compatible and the
+legacy export remains. No JSON gap record was closed.
+
 ## Current Slice: Controller Hand-Size State Condition
 
 `ControllerHandSizeIs(int) StateCondition` compares the ability controller's

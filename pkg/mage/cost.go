@@ -404,7 +404,9 @@ func (c *tapMatchingCost) Text() string { return c.text }
 
 // discardCost requires discarding cards from hand.
 type discardCost struct {
-	amount int
+	amount   int
+	selected []uuid.UUID
+	locked   bool
 }
 
 // DiscardCost creates a cost that requires the controller to discard n cards.
@@ -414,13 +416,43 @@ func DiscardCost(n int) Cost {
 
 func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
-	return p != nil && len(p.Hand()) >= c.amount
+	if p == nil || c.amount < 0 || len(p.Hand()) < c.amount {
+		return false
+	}
+	if !c.locked {
+		return true
+	}
+	if len(c.selected) != c.amount {
+		return false
+	}
+	available := make(map[uuid.UUID]bool, len(p.Hand()))
+	for _, card := range p.Hand() {
+		available[card.ID()] = true
+	}
+	for _, id := range c.selected {
+		if !available[id] {
+			return false
+		}
+		delete(available, id)
+	}
+	return true
 }
 
 func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
+	}
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay chosen discard")
+	}
+	if c.locked {
+		for _, id := range c.selected {
+			if _, ok := g.PlayerDiscard(p, id); !ok {
+				return fmt.Errorf("cannot pay chosen discard")
+			}
+		}
+		return nil
 	}
 	chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
 	for _, card := range chosen {

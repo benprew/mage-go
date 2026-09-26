@@ -341,10 +341,12 @@ func (tp *TestPlayer) ChooseCardsFromHand(amount int, reason string, g mage.Game
 		names := tp.chooseDiscard[0]
 		tp.chooseDiscard = tp.chooseDiscard[1:]
 		var result []mage.Card
+		used := make(map[uuid.UUID]bool, len(names))
 		for _, name := range names {
 			for _, c := range hand {
-				if c.Name() == name {
+				if c.Name() == name && !used[c.ID()] {
 					result = append(result, c)
+					used[c.ID()] = true
 					break
 				}
 			}

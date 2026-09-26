@@ -133,6 +133,23 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 	}
 	for i, cost := range tx.costs {
 		validationCost := cost
+		if discard, ok := cost.(*discardCost); ok {
+			locked := *discard
+			locked.selected = nil
+			locked.locked = true
+			if discard.amount > 0 {
+				payer := tx.game.GetPlayer(tx.controller)
+				if payer == nil {
+					return ErrPlayerNotFound
+				}
+				for _, card := range payer.ChooseCardsFromHand(discard.amount, "discard cost", tx.game) {
+					if card != nil {
+						locked.selected = append(locked.selected, card.ID())
+					}
+				}
+			}
+			validationCost = &locked
+		}
 		if randomDiscard, ok := cost.(*discardRandomCost); ok {
 			validationCost = &discardCost{amount: randomDiscard.amount}
 		}
@@ -166,6 +183,9 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			sacrifice.chooser = nil
 			tx.costs[i] = sacrifice
 		}
+		if _, ok := cost.(*discardCost); ok {
+			tx.costs[i] = validationCost
+		}
 	}
 	return nil
 }
@@ -182,6 +202,11 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	player := tx.game.GetPlayer(tx.controller)
 	if player == nil {
 		return ErrPlayerNotFound
+	}
+	for _, cost := range tx.costs {
+		if discard, ok := cost.(*discardCost); ok && !discard.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay chosen discard")
+		}
 	}
 	if err := tx.game.mana.ApplyManaSolution(tx.game, tx.controller, tx.manaSolution); err != nil {
 		return err

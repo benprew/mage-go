@@ -310,6 +310,15 @@ present only while that graveyard visit is current (CR 400.7j). A token has no
 graveyard card to save. Failed payment saves no card. This is a singular cost;
 it does not bind a set of sacrificed objects or their former characteristics.
 
+`DiscardCost(n)` now keeps the exact hand-card choices made during total-cost
+validation. The payer chooses on the live game once. Validation pays those
+card IDs on its isolated game, and commit uses the same IDs without asking
+again. A choice that is absent from the hand at validation or commit fails
+payment; commit checks it before mana or life payment. The reusable cost
+declaration does not retain a transaction's choices. Direct legacy `Pay`
+calls still choose at the time of payment. This contract does not yet produce
+a typed result for the discarded card or snapshot its characteristics.
+
 `Tap(subject, TapAmountInto(binding))` records an action result in the current
 resolution frame. It writes 1 only when the referenced battlefield incarnation
 changes from untapped to tapped; the normal tap action emits its event once.
