@@ -53,6 +53,7 @@ type CombatReader interface {
 	CombatGroupFor(uuid.UUID) *CombatGroup
 	IsAttackingInCombat(uuid.UUID) bool
 	IsBlockingInCombat(uuid.UUID) bool
+	IsBlockingIncarnation(uuid.UUID, uuid.UUID) bool
 	CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
 }
 
@@ -60,6 +61,7 @@ type CombatReader interface {
 type TrackerReader interface {
 	DamageTakenByPlayer(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
+	HasAttackedThisTurnIncarnation(uuid.UUID, uuid.UUID) bool
 	CreatureDeaths() int
 	GetDamageSources(uuid.UUID) map[uuid.UUID]bool
 	GetBlockedThisTurn(uuid.UUID) []uuid.UUID
@@ -233,6 +235,10 @@ func (g *Game) IsBlockingInCombat(permID uuid.UUID) bool {
 	return g.combat.IsBlocking(permID)
 }
 
+func (g *Game) IsBlockingIncarnation(permID, incarnation uuid.UUID) bool {
+	return g.combat != nil && g.combat.IsBlockingIncarnation(permID, incarnation)
+}
+
 // DamageTakenByPlayer returns the total damage the given player has taken this turn.
 func (g *Game) DamageTakenByPlayer(playerID uuid.UUID) int {
 	return g.trackers.Turn.DamageTaken(playerID)
@@ -241,6 +247,10 @@ func (g *Game) DamageTakenByPlayer(playerID uuid.UUID) int {
 // HasAttackedThisTurn reports whether the permanent with the given ID attacked this turn.
 func (g *Game) HasAttackedThisTurn(permID uuid.UUID) bool {
 	return g.trackers.Turn.Attacked(permID)
+}
+
+func (g *Game) HasAttackedThisTurnIncarnation(permID, incarnation uuid.UUID) bool {
+	return g.trackers.Turn.AttackedIncarnation(permID, incarnation)
 }
 
 // CreatureDeaths returns the number of creatures that died this turn.
@@ -963,6 +973,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 		}
 		g.combat.AddAttacker(id, defender.PlayerID())
 		g.trackers.Turn.RecordAttacked(id)
+		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
@@ -975,6 +986,8 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 // ExecuteBlockers declares blockers from explicit assignments for AI search clones.
 // It mirrors doDeclareBlockers but accepts explicit block assignments.
 func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
+	blockedBefore := g.blockedAttackersBeforeDeclaration()
+	pairsBefore := g.blockerPairsBeforeDeclaration()
 	blockerCount := make(map[uuid.UUID]int)
 	for _, ba := range assignments {
 		blocker := g.FindPermanent(ba.BlockerID)
@@ -994,18 +1007,16 @@ func (g *Game) ExecuteBlockers(assignments []BlockAssignment) {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
-		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
-		g.combat.AddBlocker(ba.BlockerID, ba.AttackerID)
+		g.combat.AddBlockerIncarnation(ba.BlockerID, blocker.incarnationID, ba.AttackerID)
 		g.trackers.Turn.RecordBlocked(ba.BlockerID, ba.AttackerID)
-		g.FireEvent(GameEvent{
-			Type:     EvtDeclaredBlocker,
-			SourceID: ba.BlockerID,
-			TargetID: ba.AttackerID,
-			Flag:     firstForBlocker,
-		})
 	}
+	g.enforceMinimumBlockers()
 	g.combat.SnapshotBlockedAlone()
+	g.fireDeclaredBlockerPairs(pairsBefore)
+	g.fireNewBlockerPairs(pairsBefore)
+	g.fireNewBlockerGroups(pairsBefore)
+	g.fireNewlyBlockedAttackers(blockedBefore)
 
 	// Mirror doDeclareBlockers: fire EvtBlockersDecl once after all blockers are
 	// assigned, then resolve the resulting triggers. Without this, combat

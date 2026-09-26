@@ -10,6 +10,7 @@ var (
 	CountersOn                    = mage.CountersOn
 	SourceCounters                = mage.SourceCounters
 	AddManaAmount                 = mage.AddManaAmount
+	AddManaOfAnyOneColor          = mage.AddManaOfAnyOneColor
 	SnapshotNumber                = mage.SnapshotNumber
 	CaptureNumberBeforePayment    = mage.CaptureNumberBeforePayment
 	CapturePermanentBeforePayment = mage.CapturePermanentBeforePayment
@@ -43,6 +44,7 @@ var (
 	ActivationIf         = mage.ActivationIf
 	AnyPlayerMayActivate = mage.AnyPlayerMayActivate
 	ControllerOf         = mage.ControllerOf
+	ControllerOfSpell    = mage.ControllerOfSpell
 	UnlessPaid           = mage.UnlessPaid
 	IfPaid               = mage.IfPaid
 	ForEach              = mage.ForEach
@@ -51,12 +53,14 @@ var (
 // Typed subjects and declarations keep choices in the resolving instance.
 type (
 	PlayerRef                 = mage.PlayerRef
+	StackObjectRef            = mage.StackObjectRef
 	PlayerSet                 = mage.PlayerSet
 	PermanentSet              = mage.PermanentSet
 	TargetBinding             = mage.TargetBinding
 	PermanentTargetBinding    = mage.PermanentTargetBinding
 	PlayerTargetBinding       = mage.PlayerTargetBinding
 	CardRef                   = mage.CardRef
+	CardBinding               = mage.CardBinding
 	CardTargetBinding         = mage.CardTargetBinding
 	SpellOption               = mage.SpellOption
 	ActivationOption          = mage.ActivationOption
@@ -86,6 +90,8 @@ var (
 	InAnyGraveyard             = mage.InAnyGraveyard
 	GraveyardCardFilter        = mage.GraveyardCardFilter
 	ReturnCardToHand           = mage.ReturnCardToHand
+	BindCard                   = mage.BindCard
+	FromCard                   = mage.FromCard
 	ReturnCardToBattlefield    = mage.ReturnCardToBattlefield
 	Counter                    = mage.Counter
 	TargetOpponentOnly         = mage.TargetOpponentOnly
@@ -170,22 +176,36 @@ var (
 	DealsDamageToOpponent = mage.DealsDamageToOpponent
 	OpponentLosesLife     = mage.OpponentLosesLife
 	ControllerDrawsCard   = mage.ControllerDrawsCard
+	OpponentDrawsCard     = mage.OpponentDrawsCard
 	ControllerGainsLife   = mage.ControllerGainsLife
 	// WhenEvent constructs an event-triggered ability that responds to game events.
-	WhenEvent              = mage.WhenEvent
-	Enters                 = mage.Enters
-	Dies                   = mage.Dies
-	CreatureYouControlDies = mage.CreatureYouControlDies
-	CreatureDies           = mage.CreatureDies
+	WhenEvent                       = mage.WhenEvent
+	Enters                          = mage.Enters
+	Dies                            = mage.Dies
+	LeavesBattlefield               = mage.LeavesBattlefield
+	SpellCast                       = mage.SpellCast
+	Attacks                         = mage.Attacks
+	Blocks                          = mage.Blocks
+	BecomesBlocked                  = mage.BecomesBlocked
+	BecomesBlockedBy                = mage.BecomesBlockedBy
+	BlocksOrBecomesBlockedBy        = mage.BlocksOrBecomesBlockedBy
+	CreatureYouControlDies          = mage.CreatureYouControlDies
+	AnotherCreatureYouControlDies   = mage.AnotherCreatureYouControlDies
+	AnotherCreatureYouControlEnters = mage.AnotherCreatureYouControlEnters
+	AnotherCreatureDies             = mage.AnotherCreatureDies
+	AttachedCreatureDies            = mage.AttachedCreatureDies
+	PermanentDies                   = mage.PermanentDies
+	CreatureDies                    = mage.CreatureDies
 	// AtNext creates a one-shot delayed trigger that executes at a future turn step.
-	AtNext                   = mage.AtNext
-	AtNextModes              = mage.AtNextModes
-	AttachedControllerUpkeep = mage.AttachedControllerUpkeep
-	AttachedBecomesTapped    = mage.AttachedBecomesTapped
-	TurnStepBegins           = mage.TurnStepBegins
-	EachEndStep              = mage.EachEndStep
-	YourEndStep              = mage.YourEndStep
-	EachEndOfCombat          = mage.EachEndOfCombat
+	AtNext                    = mage.AtNext
+	AtNextModes               = mage.AtNextModes
+	AttachedControllerUpkeep  = mage.AttachedControllerUpkeep
+	AttachedBecomesTapped     = mage.AttachedBecomesTapped
+	OpponentLandBecomesTapped = mage.OpponentLandBecomesTapped
+	TurnStepBegins            = mage.TurnStepBegins
+	EachEndStep               = mage.EachEndStep
+	YourEndStep               = mage.YourEndStep
+	EachEndOfCombat           = mage.EachEndOfCombat
 	// At constructs a recurring turn-step triggered ability (e.g. YourUpkeep, EachEndStep).
 	At                      = mage.At
 	YourFirstMainPhase      = mage.YourFirstMainPhase
@@ -233,18 +253,32 @@ var (
 	// Static installs static continuous effects and rules on a permanent.
 	Static = mage.Static
 	// AddCounters reads a typed amount before the counter action.
-	AddCounters        = mage.AddCountersTo
-	RemoveAllCounters  = mage.RemoveAllCounters
-	RemoveCountersFrom = mage.RemoveCountersFrom
-	SourceHasCounters  = mage.SourceHasCounters
+	AddCounters                     = mage.AddCountersTo
+	RemoveAllCounters               = mage.RemoveAllCounters
+	RemoveCountersFrom              = mage.RemoveCountersFrom
+	SourceHasCounters               = mage.SourceHasCounters
+	SourceTappedCondition           = mage.SourceTappedCondition
+	PermanentIsTapped               = mage.PermanentIsTapped
+	PermanentIsUntapped             = mage.PermanentIsUntapped
+	SourceUntappedCondition         = mage.SourceUntappedCondition
+	SourceBlockingCondition         = mage.SourceBlockingCondition
+	SourceAttackedThisTurnCondition = mage.SourceAttackedThisTurnCondition
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
 	GainLife = mage.GainLifeFor
 	LoseLife = mage.LoseLifeFor
 )
 
 type (
-	DamageRecipientRef  = mage.DamageRecipientRef
-	DamageTargetBinding = mage.DamageTargetBinding
+	DamageSourceRef        = mage.DamageSourceRef
+	DamageRecipientRef     = mage.DamageRecipientRef
+	DamageRecipientSet     = mage.DamageRecipientSet
+	DamageTargetBinding    = mage.DamageTargetBinding
+	DamageResultOption     = mage.DamageResultOption
+	SacrificeResultOption  = mage.SacrificeResultOption
+	DamageEachResultOption = mage.DamageEachResultOption
+	DamageSourceBinding    = mage.DamageSourceBinding
+	DamageResultsBinding   = mage.DamageResultsBinding
+	DamageResultBinding    = mage.DamageResultBinding
 )
 
 var (
@@ -252,6 +286,25 @@ var (
 	Fight                 = mage.Fight
 	TapCost               = mage.TapCost
 	TargetDamageRecipient = mage.DeclareDamageTarget
+	DealDamageFrom        = mage.DealDamageFrom
+	DamageRecipients      = mage.DamageRecipients
+	DealDamageEach        = mage.DealDamageEach
+	DamageTotalInto       = mage.DamageTotalInto
+	SacrificeAmountInto   = mage.SacrificeAmountInto
+	BindDamageResults     = mage.BindDamageResults
+	BindDamageResult      = mage.BindDamageResult
+	DamageResultsInto     = mage.DamageResultsInto
+	ForEachDamageResult   = mage.ForEachDamageResult
+	DamageResultAmount    = mage.DamageResultAmount
+	DamageResultPlayer    = mage.DamageResultPlayer
+	DamageResultPermanent = mage.DamageResultPermanent
+	DamageResultSource    = mage.DamageResultSource
+	DamageAmountInto      = mage.DamageAmountInto
+	DamagePlayerInto      = mage.DamagePlayerInto
+	DamagePermanentInto   = mage.DamagePermanentInto
+	DamageSourceInto      = mage.DamageSourceInto
+	BindDamageSource      = mage.BindDamageSource
+	FromDamageSource      = mage.FromDamageSource
 	PreventNextDamage     = mage.PreventNextDamage
 )
 
@@ -279,6 +332,7 @@ type ResolutionValue = mage.ResolutionValue
 
 var (
 	ManaValueOf       = mage.ManaValueOf
+	ManaValueOfSpell  = mage.ManaValueOfSpell
 	PowerOf           = mage.PowerOf
 	ToughnessOf       = mage.ToughnessOf
 	ValueAtResolution = mage.ValueAtResolution

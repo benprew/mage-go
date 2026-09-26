@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/google/uuid"
 
@@ -9,6 +10,7 @@ import (
 )
 
 type castStackObjectOptions struct {
+	CapturedNumbers   map[*NumberBinding]int
 	Card              Card
 	Controller        uuid.UUID
 	Targets           []uuid.UUID
@@ -63,6 +65,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	}
 
 	obj := &StackObject{
+		capturedNumbers:   maps.Clone(opts.CapturedNumbers),
 		ID:                uuid.New(),
 		Card:              card,
 		Controller:        opts.Controller,
@@ -95,6 +98,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	g.FireEvent(GameEvent{
 		Type:     EvtSpellCast,
 		SourceID: sourceID,
+		TargetID: obj.ID,
 		PlayerID: opts.Controller,
 	})
 	g.fireBecomesTargetEvents(obj, false)

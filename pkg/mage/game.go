@@ -3,6 +3,7 @@ package mage
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"math/rand"
 	"slices"
 
@@ -200,7 +201,11 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 // out — the permanent followed by its attachments — so the caller can later
 // phase exactly that set back in with PhaseIn.
 func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
-	return g.zones.PhaseOut(id)
+	phased := g.zones.PhaseOut(id)
+	for _, permanentID := range phased {
+		g.combat.RemoveFromCombat(permanentID)
+	}
+	return phased
 }
 
 // PhaseIn phases the given permanents back onto the battlefield. IDs that are
@@ -560,9 +565,154 @@ func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.U
 	if perm == nil || attackerID == uuid.Nil || !g.combat.IsAttacking(attackerID) {
 		return perm
 	}
-	g.combat.AddBlocker(perm.ID(), attackerID)
+	wasBlocked := g.attackerIsBlocked(attackerID)
+	g.combat.AddBlockerIncarnation(perm.ID(), perm.incarnationID, attackerID)
 	g.trackers.Turn.RecordBlocked(perm.ID(), attackerID)
+	if attacker := g.FindPermanent(attackerID); attacker != nil {
+		g.FireEvent(GameEvent{Type: EvtCreatureBlockedBy, SourceID: attackerID, TargetID: perm.ID(), PlayerID: attacker.ControllerID()})
+		g.FireEvent(GameEvent{Type: EvtBlockerGroup, SourceID: attackerID, RelatedIDs: []uuid.UUID{perm.ID()}, PlayerID: attacker.ControllerID()})
+	}
+	if !wasBlocked {
+		g.fireCreatureBecomesBlocked(attackerID)
+	}
 	return perm
+}
+
+func (g *Game) attackerIsBlocked(attackerID uuid.UUID) bool {
+	for _, group := range g.combat.Groups {
+		if group.AttackerID == attackerID {
+			return group.Blocked
+		}
+	}
+	return false
+}
+
+func (g *Game) blockedAttackersBeforeDeclaration() map[uuid.UUID]bool {
+	before := make(map[uuid.UUID]bool, len(g.combat.Groups))
+	for _, group := range g.combat.Groups {
+		before[group.AttackerID] = group.Blocked
+	}
+	return before
+}
+
+type combatBlockPair struct {
+	attacker uuid.UUID
+	blocker  uuid.UUID
+	object   uuid.UUID
+}
+
+func (g *Game) blockerPairsBeforeDeclaration() map[combatBlockPair]bool {
+	before := make(map[combatBlockPair]bool)
+	for _, group := range g.combat.Groups {
+		for i, blockerID := range group.BlockerIDs {
+			if i < len(group.BlockerIncarnations) {
+				before[combatBlockPair{group.AttackerID, blockerID, group.BlockerIncarnations[i]}] = true
+			}
+		}
+	}
+	return before
+}
+
+func (g *Game) fireNewBlockerPairs(before map[combatBlockPair]bool) {
+	for _, group := range g.combat.Groups {
+		attacker := g.FindPermanent(group.AttackerID)
+		if attacker == nil {
+			continue
+		}
+		for i, blockerID := range group.BlockerIDs {
+			if i >= len(group.BlockerIncarnations) {
+				continue
+			}
+			pair := combatBlockPair{group.AttackerID, blockerID, group.BlockerIncarnations[i]}
+			blocker := g.FindPermanent(blockerID)
+			if before[pair] || blocker == nil || blocker.incarnationID != pair.object {
+				continue
+			}
+			g.FireEvent(GameEvent{Type: EvtCreatureBlockedBy, SourceID: attacker.ID(), TargetID: blockerID, PlayerID: attacker.ControllerID()})
+		}
+	}
+}
+
+func (g *Game) fireNewBlockerGroups(before map[combatBlockPair]bool) {
+	type group struct {
+		source     uuid.UUID
+		blocking   bool
+		controller uuid.UUID
+		related    []uuid.UUID
+	}
+	var groups []group
+	type groupKey struct {
+		source   uuid.UUID
+		blocking bool
+	}
+	indices := make(map[groupKey]int)
+	add := func(source, other, controller uuid.UUID, blocking bool) {
+		key := groupKey{source, blocking}
+		index, ok := indices[key]
+		if !ok {
+			index = len(groups)
+			indices[key] = index
+			groups = append(groups, group{source: source, blocking: blocking, controller: controller})
+		}
+		groups[index].related = append(groups[index].related, other)
+	}
+	for _, combatGroup := range g.combat.Groups {
+		attacker := g.FindPermanent(combatGroup.AttackerID)
+		if attacker == nil || attacker.PhasedOut {
+			continue
+		}
+		for i, blockerID := range combatGroup.BlockerIDs {
+			if i >= len(combatGroup.BlockerIncarnations) {
+				continue
+			}
+			pair := combatBlockPair{combatGroup.AttackerID, blockerID, combatGroup.BlockerIncarnations[i]}
+			blocker := g.FindPermanent(blockerID)
+			if before[pair] || blocker == nil || blocker.PhasedOut || blocker.incarnationID != pair.object {
+				continue
+			}
+			add(attacker.ID(), blockerID, attacker.ControllerID(), false)
+			add(blockerID, attacker.ID(), blocker.ControllerID(), true)
+		}
+	}
+	for _, grouped := range groups {
+		g.FireEvent(GameEvent{Type: EvtBlockerGroup, SourceID: grouped.source, PlayerID: grouped.controller, Flag: grouped.blocking, RelatedIDs: grouped.related})
+	}
+}
+
+func (g *Game) fireDeclaredBlockerPairs(before map[combatBlockPair]bool) {
+	seen := make(map[uuid.UUID]bool)
+	for pair := range before {
+		seen[pair.blocker] = true
+	}
+	for _, group := range g.combat.Groups {
+		for i, blockerID := range group.BlockerIDs {
+			if i >= len(group.BlockerIncarnations) {
+				continue
+			}
+			pair := combatBlockPair{group.AttackerID, blockerID, group.BlockerIncarnations[i]}
+			blocker := g.FindPermanent(blockerID)
+			if before[pair] || blocker == nil || blocker.incarnationID != pair.object {
+				continue
+			}
+			g.FireEvent(GameEvent{Type: EvtDeclaredBlocker, SourceID: blockerID, TargetID: group.AttackerID, PlayerID: blocker.ControllerID(), Flag: !seen[blockerID]})
+			seen[blockerID] = true
+		}
+	}
+}
+
+func (g *Game) fireCreatureBecomesBlocked(attackerID uuid.UUID) {
+	attacker := g.FindPermanent(attackerID)
+	if attacker != nil {
+		g.FireEvent(GameEvent{Type: EvtCreatureBecomesBlocked, SourceID: attackerID, PlayerID: attacker.ControllerID()})
+	}
+}
+
+func (g *Game) fireNewlyBlockedAttackers(before map[uuid.UUID]bool) {
+	for _, group := range g.combat.Groups {
+		if !before[group.AttackerID] && group.Blocked && len(group.BlockerIDs) > 0 {
+			g.fireCreatureBecomesBlocked(group.AttackerID)
+		}
+	}
 }
 
 func (g *Game) isValidDefender(id uuid.UUID) bool {
@@ -757,10 +907,11 @@ func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourc
 		}
 		if ta.CheckTrigger(evt, g) {
 			g.queuePendingTrigger(&pendingTrigger{
-				ability:    ta,
-				event:      evt,
-				sourceID:   sourceID,
-				controller: controller,
+				eventCaptures: captureDetectedTriggerEvent(ta, evt, g, g, sourceID),
+				ability:       ta,
+				event:         evt,
+				sourceID:      sourceID,
+				controller:    controller,
 			})
 		}
 	}
@@ -1321,19 +1472,29 @@ func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
 	g.damage.DealDamageToPlayer(g, p, amount, sourceID)
 }
 
-// executeAction dispatches a post-replacement action to the appropriate executor.
-func (g *Game) executeAction(action Action) {
+// DealDamageToPlayerFromSource keeps the damage source identity after it leaves.
+func (g *Game) DealDamageToPlayerFromSource(p Player, amount int, source DamageSource) {
+	g.damage.DealDamageToPlayerFromSource(g, p, amount, source)
+}
+
+func (g *Game) executeDamageAction(action Action) int {
 	switch a := action.(type) {
 	case *DamageToPlayerAction:
-		g.damage.ExecuteDamageToPlayer(g, a)
+		return g.damage.ExecuteDamageToPlayer(g, a)
 	case *DamageToCreatureAction:
-		g.damage.ExecuteDamageToCreature(g, a)
+		return g.damage.ExecuteDamageToCreature(g, a)
 	}
+	return 0
 }
 
 // DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
 func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID) {
 	g.damage.DealDamageToPermanent(g, perm, amount, sourceID)
+}
+
+// DealDamageToPermanentFromSource keeps the damage source identity after it leaves.
+func (g *Game) DealDamageToPermanentFromSource(perm *Permanent, amount int, source DamageSource) {
+	g.damage.DealDamageToPermanentFromSource(g, perm, amount, source)
 }
 
 // auraHostIsLegal reports whether host satisfies the aura's enchant ability
@@ -1529,7 +1690,7 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 			}
 			if ta.CheckTrigger(&evt, observer) {
 				g.queuePendingTrigger(&pendingTrigger{
-					eventCaptures: captureDetectedTriggerEvent(ta, &evt, observer, perm.ID()),
+					eventCaptures: captureDetectedTriggerEvent(ta, &evt, observer, g, perm.ID()),
 					ability:       ta,
 					event:         &evt,
 					sourceID:      perm.ID(),
@@ -2635,13 +2796,14 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		ModalSelection: selection,
-		Card:           card,
-		Controller:     playerID,
-		Targets:        targets,
-		XValue:         xValue,
-		CastZone:       ZoneHand,
-		SnapshotCast:   true,
+		ModalSelection:  selection,
+		Card:            card,
+		Controller:      playerID,
+		Targets:         targets,
+		XValue:          xValue,
+		CastZone:        ZoneHand,
+		SnapshotCast:    true,
+		CapturedNumbers: payment.payment.paidNumbers,
 	})
 	return err
 }
@@ -3048,6 +3210,7 @@ func (g *Game) doDeclareAttackers() {
 
 		g.combat.AddAttacker(id, defender.PlayerID())
 		g.trackers.Turn.RecordAttacked(id)
+		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)
 		g.FireEvent(GameEvent{
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
@@ -3115,12 +3278,18 @@ func (g *Game) isValidBand(memberIDs []uuid.UUID) bool {
 
 func (g *Game) doDeclareBlockers() {
 	nonActive := g.NonActivePlayerObj()
+	blockedBefore := g.blockedAttackersBeforeDeclaration()
+	pairsBefore := g.blockerPairsBeforeDeclaration()
 	assignments := nonActive.DeclareBlockers(g)
 	if assignments == nil {
 		// Even with no scripted blockers, we may need to enforce
 		// CR 509.1c "must be blocked if able" before firing the event.
 		g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
 		g.combat.SnapshotBlockedAlone()
+		g.fireDeclaredBlockerPairs(pairsBefore)
+		g.fireNewBlockerPairs(pairsBefore)
+		g.fireNewBlockerGroups(pairsBefore)
+		g.fireNewlyBlockedAttackers(blockedBefore)
 		g.FireEvent(GameEvent{
 			Type:     EvtBlockersDecl,
 			PlayerID: nonActive.PlayerID(),
@@ -3170,20 +3339,9 @@ func (g *Game) doDeclareBlockers() {
 		if blockerCount[ba.BlockerID] >= maxBlocks {
 			continue
 		}
-		firstForBlocker := blockerCount[ba.BlockerID] == 0
 		blockerCount[ba.BlockerID]++
-		g.combat.AddBlocker(ba.BlockerID, attackerID)
+		g.combat.AddBlockerIncarnation(ba.BlockerID, blocker.incarnationID, attackerID)
 		g.trackers.Turn.RecordBlocked(ba.BlockerID, attackerID)
-		// CR 509.3a — Flag=true marks the once-per-combat "Whenever ~ blocks"
-		// firing for this blocker; subsequent attackers fire with Flag=false
-		// for "blocks a creature" per-pair triggers only.
-		g.FireEvent(GameEvent{
-			Type:     EvtDeclaredBlocker,
-			SourceID: ba.BlockerID,
-			TargetID: attackerID,
-			PlayerID: nonActive.PlayerID(),
-			Flag:     firstForBlocker,
-		})
 	}
 
 	// Enforce minimum-blocker restrictions (CR 509.1b — Goblin Goon style):
@@ -3200,6 +3358,10 @@ func (g *Game) doDeclareBlockers() {
 	// CR 506.5 — snapshot "blocks alone" once all blockers have been
 	// declared this step.
 	g.combat.SnapshotBlockedAlone()
+	g.fireDeclaredBlockerPairs(pairsBefore)
+	g.fireNewBlockerPairs(pairsBefore)
+	g.fireNewBlockerGroups(pairsBefore)
+	g.fireNewlyBlockedAttackers(blockedBefore)
 
 	// Fire EvtBlockersDecl once after all blockers are assigned
 	g.FireEvent(GameEvent{
@@ -3226,6 +3388,7 @@ func (g *Game) enforceMinimumBlockers() {
 		// blockers, so the attacker was never legally blocked).
 		dropped := group.BlockerIDs
 		group.BlockerIDs = nil
+		group.BlockerIncarnations = nil
 		group.Blocked = false
 		for _, bid := range dropped {
 			// Also clean up the per-turn blocked tracking for this attacker.
@@ -3271,7 +3434,7 @@ func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
 		}
 		for i := 0; i < minN && i < len(candidates); i++ {
 			b := candidates[i]
-			g.combat.AddBlocker(b.ID(), atk.ID())
+			g.combat.AddBlockerIncarnation(b.ID(), b.incarnationID, atk.ID())
 			g.trackers.Turn.RecordBlocked(b.ID(), atk.ID())
 			g.FireEvent(GameEvent{
 				Type:     EvtDeclaredBlocker,
@@ -3996,6 +4159,12 @@ func (g *Game) ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 	if err := payment.Commit(); err != nil {
 		return err
+	}
+	if len(payment.paidNumbers) > 0 {
+		if capturedNumbers == nil {
+			capturedNumbers = make(map[*NumberBinding]int)
+		}
+		maps.Copy(capturedNumbers, payment.paidNumbers)
 	}
 
 	// Mark once-per-turn abilities as used

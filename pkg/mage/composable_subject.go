@@ -24,11 +24,48 @@ func (sourceRef) resolvePermanent(ctx *EffectContext) (*Permanent, bool) {
 	return p, true
 }
 
-type sacrificeEffect struct{ subject PermanentRef }
+type sacrificeEffect struct {
+	subject       PermanentRef
+	result        *NumberBinding
+	invalidOption bool
+	optionCount   int
+}
+
+// SacrificeResultOption selects an output for one sacrifice instruction.
+type SacrificeResultOption interface {
+	sacrificeResultOption()
+	applySacrificeResult(*sacrificeEffect)
+}
+
+type sacrificeAmountOption struct{ binding *NumberBinding }
+
+// SacrificeAmountInto saves one if the permanent was sacrificed, or zero.
+func SacrificeAmountInto(binding *NumberBinding) SacrificeResultOption {
+	return sacrificeAmountOption{binding}
+}
+
+func (sacrificeAmountOption) sacrificeResultOption() {}
+func (o sacrificeAmountOption) applySacrificeResult(e *sacrificeEffect) {
+	e.result = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
 
 // Sacrifice instructs the stored controller to sacrifice the subject.
 // An absent subject or a subject controlled by another player has no effect.
-func Sacrifice(subject PermanentRef) ResolvingEffect { return &sacrificeEffect{subject: subject} }
+func Sacrifice(subject PermanentRef, options ...SacrificeResultOption) ResolvingEffect {
+	e := &sacrificeEffect{subject: subject}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applySacrificeResult(e)
+	}
+	return e
+}
 func (e *sacrificeEffect) Text() string {
 	if _, ok := e.subject.(sourceRef); ok {
 		return "sacrifice this permanent"
@@ -43,8 +80,17 @@ func (e *sacrificeEffect) Properties() EffectProperties {
 	return EffectProperties{SacrificesSource: source}
 }
 func (e *sacrificeEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
 	if p, ok := e.subject.resolvePermanent(ctx); ok && p.ControllerID() == ctx.Controller {
 		ctx.Game.DoSacrifice(p)
+		if e.result != nil {
+			ctx.Game.resolution.numberBindings[e.result] = 1
+		}
 	}
 	return nil
 }

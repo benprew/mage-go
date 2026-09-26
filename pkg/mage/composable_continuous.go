@@ -432,7 +432,7 @@ func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 	child.Controller = source.ControllerID()
 	child.sourceCaptured = true
 	child.sourceIncarnation = source.incarnationID
-	if e.rule.condition.checkState(ctx.Game, StateContext{SourceID: e.sourceID, ControllerID: child.Controller}) {
+	if e.rule.condition.checkState(ctx.Game, StateContext{SourceID: e.sourceID, ControllerID: child.Controller, SourceIncarnation: source.incarnationID}) {
 		for i, m := range e.modifications {
 			for _, v := range m.capture(&child) {
 				if v.ability != nil {

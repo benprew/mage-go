@@ -11,6 +11,34 @@ type manaAmountEffect struct {
 	amount ResolutionValue
 }
 
+type manaAnyOneColorEffect struct{ amount ResolutionValue }
+
+// AddManaOfAnyOneColor adds the full amount in one color chosen at resolution.
+func AddManaOfAnyOneColor(amount ResolutionValue) ResolvingEffect {
+	return &manaAnyOneColorEffect{amount: amount}
+}
+
+func (e *manaAnyOneColorEffect) Text() string {
+	if nilDefinition(e.amount) {
+		return "add mana of any one color"
+	}
+	return fmt.Sprintf("add %s mana of any one color", e.amount.Text())
+}
+func (e *manaAnyOneColorEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *manaAnyOneColorEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"amount", e.amount}}}
+}
+func (e *manaAnyOneColorEffect) Apply(ctx *EffectContext) error {
+	if ctx.Game.GetPlayer(ctx.Controller) == nil {
+		return ErrPlayerNotFound
+	}
+	amount := e.amount.resolveValue(ctx)
+	if amount <= 0 {
+		return nil
+	}
+	return AddAnyMana(amount, core.AnyColor).Apply(ctx)
+}
+
 // AddManaAmount adds mana to the resolving controller's pool.
 // It reads the amount once. A nonpositive amount adds no mana.
 func AddManaAmount(color core.Color, amount ResolutionValue) ResolvingEffect {
@@ -59,6 +87,8 @@ func canProduceMana(effects []Effect, targets []Target) bool {
 	for _, effect := range effects {
 		switch e := effect.(type) {
 		case *manaAmountEffect:
+			return true
+		case *manaAnyOneColorEffect:
 			return true
 		case *addManaEffect:
 			if e.amount > 0 {

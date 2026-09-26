@@ -85,8 +85,8 @@ func fightPermanents(ctx *EffectContext, first, second *Permanent) {
 	}
 
 	ctx.Game.damage.dealSimultaneousDamageToPermanents(ctx.Game, []damageRequest{
-		{second, firstPower, first.ID()},
-		{first, secondPower, second.ID()},
+		{permanent: second, amount: firstPower, sourceID: first.ID(), source: ctx.Game.CaptureDamageSource(first.ID())},
+		{permanent: first, amount: secondPower, sourceID: second.ID(), source: ctx.Game.CaptureDamageSource(second.ID())},
 	})
 	ctx.Game.FireEvent(GameEvent{
 		Type:     EvtFight,

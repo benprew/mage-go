@@ -19,6 +19,7 @@ type ZoneSystem struct {
 	exile                  []ExiledCard
 	enteringPermanent      *Permanent
 	lki                    map[uuid.UUID]*PermanentLKI
+	damageSourceLKI        map[uuid.UUID]*PermanentLKI
 	// Delayed abilities can read an old attachment after turn cleanup.
 	departedAttachments      map[uuid.UUID]capturedPermanent
 	departedCounters         map[uuid.UUID][core.NumCounters]uint8
@@ -72,6 +73,9 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	if len(zs.lki) > 0 {
 		clone.lki = make(map[uuid.UUID]*PermanentLKI, len(zs.lki))
 		maps.Copy(clone.lki, zs.lki)
+	}
+	if len(zs.damageSourceLKI) > 0 {
+		clone.damageSourceLKI = maps.Clone(zs.damageSourceLKI)
 	}
 
 	// Deep copy cast-from-exile permissions.
@@ -532,7 +536,7 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 	}
 	snap := &Permanent{}
 	clonePermanentInto(snap, p)
-	zs.lki[p.ID()] = &PermanentLKI{
+	lki := &PermanentLKI{
 		ID:        p.ID(),
 		Name:      p.Name(),
 		Owner:     owner,
@@ -541,6 +545,15 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 		IsToken:   isToken,
 		Snapshot:  snap,
 	}
+	zs.lki[p.ID()] = lki
+	if zs.damageSourceLKI == nil {
+		zs.damageSourceLKI = make(map[uuid.UUID]*PermanentLKI)
+	}
+	zs.damageSourceLKI[p.incarnationID] = lki
+}
+
+func (zs *ZoneSystem) LKIByIncarnation(incarnation uuid.UUID) *PermanentLKI {
+	return zs.damageSourceLKI[incarnation]
 }
 
 // LKI returns the last-known-information snapshot for a permanent.

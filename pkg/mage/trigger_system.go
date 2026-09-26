@@ -157,6 +157,11 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 		clonedPending = make([]*pendingTrigger, len(ts.pending))
 		for i, pt := range ts.pending {
 			clone := *pt
+			if pt.event != nil {
+				event := *pt.event
+				event.RelatedIDs = append([]uuid.UUID(nil), pt.event.RelatedIDs...)
+				clone.event = &event
+			}
 			clone.delayed = cloneDelayedTrigger(pt.delayed)
 			clonedPending[i] = &clone
 		}

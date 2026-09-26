@@ -52,13 +52,20 @@ func (e *eventPermanentCapture) inspectDefinition() definitionNode {
 	return definitionNode{Role: "event-permanent-capture", bindingWrite: e.binding, children: []definitionEdge{{"permanent", e.binding}}}
 }
 
-func captureDetectedTriggerEvent(ability TriggeredAbility, event *GameEvent, observer GameReader, source uuid.UUID) []Effect {
+func captureDetectedTriggerEvent(ability TriggeredAbility, event *GameEvent, observer GameReader, current *Game, source uuid.UUID) []Effect {
 	if trigger, ok := ability.(*GenericTriggered); ok {
+		var captures []Effect
 		if pattern, ok := trigger.eventDefinition.(interface {
 			captureDetectedEvent(*GameEvent, GameReader, uuid.UUID) []Effect
 		}); ok {
-			return pattern.captureDetectedEvent(event, observer, source)
+			captures = pattern.captureDetectedEvent(event, observer, source)
 		}
+		if pattern, ok := trigger.eventDefinition.(interface {
+			captureDestinationEvent(*GameEvent, *Game) []Effect
+		}); ok {
+			captures = append(captures, pattern.captureDestinationEvent(event, current)...)
+		}
+		return captures
 	}
 	return nil
 }

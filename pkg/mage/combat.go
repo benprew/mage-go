@@ -26,10 +26,11 @@ type Combat struct {
 
 // CombatGroup represents an attacker and its blockers.
 type CombatGroup struct {
-	AttackerID uuid.UUID
-	BlockerIDs []uuid.UUID
-	DefenderID uuid.UUID
-	Blocked    bool
+	AttackerID          uuid.UUID
+	BlockerIDs          []uuid.UUID
+	BlockerIncarnations []uuid.UUID
+	DefenderID          uuid.UUID
+	Blocked             bool
 }
 
 func NewCombat() *Combat {
@@ -58,13 +59,34 @@ func (c *Combat) AddAttacker(attackerID, defenderID uuid.UUID) {
 }
 
 func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
+	c.AddBlockerIncarnation(blockerID, uuid.Nil, attackerID)
+}
+
+// AddBlockerIncarnation records the battlefield object that blocks.
+func (c *Combat) AddBlockerIncarnation(blockerID, incarnation, attackerID uuid.UUID) {
 	for _, g := range c.Groups {
 		if g.AttackerID == attackerID {
 			g.BlockerIDs = append(g.BlockerIDs, blockerID)
+			g.BlockerIncarnations = append(g.BlockerIncarnations, incarnation)
 			g.Blocked = true
 			return
 		}
 	}
+}
+
+// IsBlockingIncarnation checks the object that entered combat.
+func (c *Combat) IsBlockingIncarnation(id, incarnation uuid.UUID) bool {
+	if incarnation == uuid.Nil {
+		return false
+	}
+	for _, group := range c.Groups {
+		for i, blockerID := range group.BlockerIDs {
+			if blockerID == id && i < len(group.BlockerIncarnations) && group.BlockerIncarnations[i] == incarnation {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (c *Combat) IsAttacking(id uuid.UUID) bool {
@@ -188,12 +210,19 @@ func (c *Combat) RemoveFromCombat(id uuid.UUID) {
 			g.AttackerID = uuid.Nil
 		}
 		filtered := g.BlockerIDs[:0]
-		for _, bid := range g.BlockerIDs {
+		incarnations := make([]uuid.UUID, 0, len(g.BlockerIDs))
+		for i, bid := range g.BlockerIDs {
 			if bid != id {
 				filtered = append(filtered, bid)
+				if i < len(g.BlockerIncarnations) {
+					incarnations = append(incarnations, g.BlockerIncarnations[i])
+				} else {
+					incarnations = append(incarnations, uuid.Nil)
+				}
 			}
 		}
 		g.BlockerIDs = filtered
+		g.BlockerIncarnations = incarnations
 	}
 }
 

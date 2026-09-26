@@ -11,16 +11,20 @@ import (
 // ResolutionState encapsulates transient context for spells and abilities
 // that are currently resolving from the stack or being processed during costs.
 type ResolutionState struct {
-	manaProduced       int
-	manaColors         []Color
-	manaTracking       bool
-	targetSpecs        []Target
-	targetIncarnations map[uuid.UUID]uuid.UUID
-	permanentBindings  map[*PermanentBinding]capturedPermanent
-	playerBindings     map[*PlayerBinding]uuid.UUID
-	numberBindings     map[*NumberBinding]int
-	sourceIncarnation  uuid.UUID
-	sourceCaptured     bool
+	manaProduced          int
+	manaColors            []Color
+	manaTracking          bool
+	targetSpecs           []Target
+	targetIncarnations    map[uuid.UUID]uuid.UUID
+	permanentBindings     map[*PermanentBinding]capturedPermanent
+	cardBindings          map[*CardBinding]capturedCard
+	playerBindings        map[*PlayerBinding]uuid.UUID
+	numberBindings        map[*NumberBinding]int
+	damageSourceBindings  map[*DamageSourceBinding]DamageSource
+	damageResultsBindings map[*DamageResultsBinding][]damageOutcome
+	damageResultBindings  map[*DamageResultBinding]damageOutcome
+	sourceIncarnation     uuid.UUID
+	sourceCaptured        bool
 	// X value for the currently resolving spell or activation
 	currentX int
 
@@ -34,7 +38,8 @@ type ResolutionState struct {
 	currentEventSourceID uuid.UUID
 
 	// Card currently being resolved from the stack
-	resolvingCard Card
+	resolvingCard       Card
+	resolvingController uuid.UUID
 
 	// Color state installed before target legality check during resolution
 	resolvingColorSourceID uuid.UUID
@@ -84,6 +89,7 @@ func (s *ResolutionState) Begin(obj *StackObject) func() {
 	s.currentEventAmount = obj.EventAmount
 	s.currentEventSourceID = obj.EventSourceID
 	s.resolvingCard = obj.Card
+	s.resolvingController = obj.Controller
 	s.resolvingTargets = obj.Targets
 	s.resolvingDamageDistribution = obj.DamageDistribution
 	s.resolvingCounterDistribution = obj.CounterDistribution
@@ -112,13 +118,18 @@ func (s *ResolutionState) Clear() {
 	s.targetSpecs = nil
 	s.targetIncarnations = nil
 	s.permanentBindings = nil
+	s.cardBindings = nil
 	s.playerBindings = nil
 	s.numberBindings = nil
+	s.damageSourceBindings = nil
+	s.damageResultsBindings = nil
+	s.damageResultBindings = nil
 	s.currentX = 0
 	s.currentMode = 0
 	s.currentEventAmount = 0
 	s.currentEventSourceID = uuid.Nil
 	s.resolvingCard = nil
+	s.resolvingController = uuid.Nil
 	s.resolvingTargets = nil
 	s.resolvingDamageDistribution = nil
 	s.resolvingCounterDistribution = nil
@@ -178,6 +189,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		manaColors:             append([]Color(nil), s.manaColors...),
 		manaTracking:           s.manaTracking,
 		permanentBindings:      maps.Clone(s.permanentBindings),
+		cardBindings:           maps.Clone(s.cardBindings),
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
 		targetSpecs:            append([]Target(nil), s.targetSpecs...),
@@ -189,12 +201,31 @@ func (s *ResolutionState) Clone() ResolutionState {
 		currentEventAmount:     s.currentEventAmount,
 		currentEventSourceID:   s.currentEventSourceID,
 		resolvingCard:          s.resolvingCard,
+		resolvingController:    s.resolvingController,
 		resolvingColorSourceID: s.resolvingColorSourceID,
 		resolvingCastZone:      s.resolvingCastZone,
 		resolvingCastContext:   s.resolvingCastContext,
 		lastSacrificedID:       s.lastSacrificedID,
 		lastCostReveal:         s.lastCostReveal,
 		lastExiledCard:         s.lastExiledCard,
+	}
+	if len(s.damageSourceBindings) > 0 {
+		c.damageSourceBindings = make(map[*DamageSourceBinding]DamageSource, len(s.damageSourceBindings))
+		for binding, source := range s.damageSourceBindings {
+			c.damageSourceBindings[binding] = cloneDamageSource(source)
+		}
+	}
+	if len(s.damageResultsBindings) > 0 {
+		c.damageResultsBindings = make(map[*DamageResultsBinding][]damageOutcome, len(s.damageResultsBindings))
+		for binding, outcomes := range s.damageResultsBindings {
+			c.damageResultsBindings[binding] = cloneDamageOutcomes(outcomes)
+		}
+	}
+	if len(s.damageResultBindings) > 0 {
+		c.damageResultBindings = make(map[*DamageResultBinding]damageOutcome, len(s.damageResultBindings))
+		for binding, outcome := range s.damageResultBindings {
+			c.damageResultBindings[binding] = cloneDamageOutcome(outcome)
+		}
 	}
 	if s.resolvingColorOverride != nil {
 		colors := append([]Color(nil), (*s.resolvingColorOverride)...)

@@ -703,8 +703,11 @@ var (
 	ExchangeControlOfTargetsSharingPermanentType = mage.ExchangeControlOfTargetsSharingPermanentType
 	XManaCost                                    = mage.XManaCost
 	RemoveCountersCost                           = mage.RemoveCountersCost
+	RemoveAnyCountersCost                        = mage.RemoveAnyCountersCost
 	RequireCountersCost                          = mage.RequireCountersCost
 	SacrificeCreatureCost                        = mage.SacrificeCreatureCost
+	SacrificeCreatureCostWithStats               = mage.SacrificeCreatureCostWithStats
+	SacrificeMatchingCostWithManaValue           = mage.SacrificeMatchingCostWithManaValue
 	DiscardRandomCost                            = mage.DiscardRandomCost
 	ExileSourceCost                              = mage.ExileSourceCost
 	SacrificeArtifactCost                        = mage.SacrificeArtifactCost

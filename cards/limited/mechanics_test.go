@@ -4,7 +4,6 @@ import (
 	"sync"
 	"testing"
 
-	_ "github.com/benprew/mage-go/cards/custom"  // register Wraithbloom Cultivator
 	_ "github.com/benprew/mage-go/cards/limited" // register Alpha cards
 	"github.com/benprew/mage-go/pkg/mage"
 	"github.com/benprew/mage-go/pkg/mage/core"
@@ -114,101 +113,6 @@ func registerTestCards() {
 			)
 		})
 	})
-}
-
-func TestWraithbloomCultivator(t *testing.T) {
-	registerTestCards()
-	tests := []struct {
-		name   string
-		setup  func(*gametest.TestGame)
-		script func(*gametest.TestGame)
-		check  func(*gametest.TestGame)
-	}{
-		{
-			name: "death trigger grants life and counter",
-			setup: func(g *gametest.TestGame) {
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wraithbloom Cultivator")
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-				g.AddCard(core.ZoneHand, gametest.PlayerA, "Doom Blade")
-			},
-			script: func(g *gametest.TestGame) {
-				g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Doom Blade", "Grizzly Bears")
-				g.StopAt(1, core.BeginCombat)
-			},
-			check: func(g *gametest.TestGame) {
-				g.AssertLife(gametest.PlayerA, 21)
-				g.AssertCounterCount(gametest.PlayerA, "Wraithbloom Cultivator", core.P1P1, 1)
-				g.AssertPowerToughness(gametest.PlayerA, "Wraithbloom Cultivator", 3, 4)
-				g.AssertGraveyardCount(gametest.PlayerA, "Grizzly Bears", 1)
-			},
-		},
-		{
-			name: "opponent creature dying does not trigger",
-			setup: func(g *gametest.TestGame) {
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wraithbloom Cultivator")
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerB, "Grizzly Bears")
-				g.AddCard(core.ZoneHand, gametest.PlayerA, "Doom Blade")
-			},
-			script: func(g *gametest.TestGame) {
-				g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Doom Blade", "Grizzly Bears")
-				g.StopAt(1, core.BeginCombat)
-			},
-			check: func(g *gametest.TestGame) {
-				g.AssertLife(gametest.PlayerA, 20)
-				g.AssertCounterCount(gametest.PlayerA, "Wraithbloom Cultivator", core.P1P1, 0)
-				g.AssertPowerToughness(gametest.PlayerA, "Wraithbloom Cultivator", 2, 3)
-			},
-		},
-		{
-			name: "multiple deaths trigger multiple times",
-			setup: func(g *gametest.TestGame) {
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wraithbloom Cultivator")
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Grizzly Bears")
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Elvish Mystic")
-				g.AddCard(core.ZoneHand, gametest.PlayerA, "Doom Blade")
-				g.AddCard(core.ZoneHand, gametest.PlayerA, "Lightning Bolt")
-			},
-			script: func(g *gametest.TestGame) {
-				g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Doom Blade", "Grizzly Bears")
-				g.CastSpell(1, core.PrecombatMain, gametest.PlayerA, "Lightning Bolt", "Elvish Mystic")
-				g.StopAt(1, core.BeginCombat)
-			},
-			check: func(g *gametest.TestGame) {
-				g.AssertLife(gametest.PlayerA, 22) // +1 for each death
-				g.AssertCounterCount(gametest.PlayerA, "Wraithbloom Cultivator", core.P1P1, 2)
-				g.AssertPowerToughness(gametest.PlayerA, "Wraithbloom Cultivator", 4, 5)
-			},
-		},
-		{
-			name: "activated ability reanimates from graveyard",
-			setup: func(g *gametest.TestGame) {
-				g.AddCard(core.ZoneBattlefield, gametest.PlayerA, "Wraithbloom Cultivator")
-				g.AddCard(core.ZoneGraveyard, gametest.PlayerA, "Serra Angel")
-			},
-			script: func(g *gametest.TestGame) {
-				// Manually add 3 counters to simulate previous deaths
-				g.AddCounters(1, core.PrecombatMain, gametest.PlayerA, "Wraithbloom Cultivator", core.P1P1, 3)
-				g.ActivateAbility(1, core.PrecombatMain, gametest.PlayerA, "Wraithbloom Cultivator", "Serra Angel")
-				g.StopAt(1, core.BeginCombat)
-			},
-			check: func(g *gametest.TestGame) {
-				g.AssertPermanentCount(gametest.PlayerA, "Serra Angel", 1)
-				g.AssertGraveyardCount(gametest.PlayerA, "Serra Angel", 0)
-				g.AssertCounterCount(gametest.PlayerA, "Wraithbloom Cultivator", core.P1P1, 0)
-				g.AssertTapped(gametest.PlayerA, "Wraithbloom Cultivator", true)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			g := gametest.NewTestGame(t)
-			tt.setup(g)
-			tt.script(g)
-			g.Execute()
-			tt.check(g)
-		})
-	}
 }
 
 func TestHexproof(t *testing.T) {

@@ -28,6 +28,7 @@ type definitionNode struct {
 	bindingDeclaration savedBinding
 	bindingRead        savedBinding
 	bindingWrite       savedBinding
+	bindingWrites      []savedBinding
 	bindingScope       bool
 }
 type definitionInspector interface{ inspectDefinition() definitionNode }
@@ -63,7 +64,17 @@ func (c *statePredicate) inspectDefinition() definitionNode {
 	return n
 }
 func (e *sacrificeEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	if e.invalidOption {
+		n.problem = "supply a non-nil sacrifice result binding"
+	} else if e.optionCount > 1 {
+		n.problem = "duplicate sacrifice result binding"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }
 func (sourceRef) inspectDefinition() definitionNode {
 	return definitionNode{Role: "permanent-ref", Text: "this", battlefieldSource: true}
@@ -118,6 +129,14 @@ func describeDefinition(v any) definitionNode {
 			}
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets)...)
+		for i, cost := range e.costs {
+			if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
+			if _, ok := cost.(*removeAnyCountersCost); ok {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
+		}
 		for i, capture := range e.dslCaptures {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("captures[%d]", i), capture})
 		}
@@ -276,12 +295,19 @@ func ValidateCardDefinition(name string, card Card) error {
 			visit(edge.value, path+"."+edge.name, spell, active)
 			_, eventTrigger := value.(*GenericTriggered)
 			_, capture := edge.value.(activationCapture)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture {
+			_, paidCost := edge.value.(*sacrificeMatchingCost)
+			_, paidCounters := edge.value.(*removeAnyCountersCost)
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && !paidCounters {
 				assigned = before
 			}
 		}
 		if !nilDefinition(n.bindingWrite) {
 			assigned[n.bindingWrite] = true
+		}
+		for _, binding := range n.bindingWrites {
+			if !nilDefinition(binding) {
+				assigned[binding] = true
+			}
 		}
 	}
 	for i, a := range card.Abilities() {
@@ -289,6 +315,13 @@ func ValidateCardDefinition(name string, card Card) error {
 		assigned = make(map[savedBinding]bool)
 		names = make(map[string]any)
 		spell := card.HasType(TypeInstant) || card.HasType(TypeSorcery) || (!nilDefinition(a) && a.Type() == AbilitySpell)
+		if spell {
+			if base, ok := card.(*BaseCard); ok {
+				for j, cost := range base.AdditionalCosts() {
+					visit(cost, fmt.Sprintf("additional-costs[%d]", j), true, make(map[any]bool))
+				}
+			}
+		}
 		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool))
 	}
 	return errors.Join(problems...)
@@ -328,7 +361,7 @@ func (r *Registry) ValidateDefinitions() error {
 
 func definitionSequential(value any) bool {
 	switch value.(type) {
-	case *nextStepEffect, *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot, *permanentLoop, damageEventPattern, opponentLifeEventPattern, attachedControllerUpkeepPattern, attachedBecomesTappedPattern:
+	case *nextStepEffect, *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot, *permanentLoop, *damageResultLoop, damageEventPattern, opponentLifeEventPattern, attachedControllerUpkeepPattern, attachedBecomesTappedPattern:
 		return true
 	default:
 		return false

@@ -22,9 +22,54 @@ type DamageSystem struct {
 }
 
 type damageRequest struct {
-	permanent *Permanent
-	amount    int
-	sourceID  uuid.UUID
+	permanent   *Permanent
+	incarnation uuid.UUID
+	playerID    uuid.UUID
+	amount      int
+	sourceID    uuid.UUID
+	source      DamageSource
+}
+
+// DamageAssignment identifies one recipient, amount, and captured source.
+type DamageAssignment struct{ request damageRequest }
+
+// PlayerDamageAssignment prepares damage to one player.
+func PlayerDamageAssignment(player Player, amount int, source DamageSource) DamageAssignment {
+	request := damageRequest{amount: amount, source: source, sourceID: source.ID()}
+	if player != nil {
+		request.playerID = player.PlayerID()
+	}
+	return DamageAssignment{request}
+}
+
+// PermanentDamageAssignment prepares damage to one permanent.
+func PermanentDamageAssignment(permanent *Permanent, amount int, source DamageSource) DamageAssignment {
+	request := damageRequest{permanent: permanent, amount: amount, sourceID: source.ID(), source: source}
+	if permanent != nil {
+		request.incarnation = permanent.incarnationID
+	}
+	return DamageAssignment{request}
+}
+
+// DealSimultaneousDamage applies all damage before it sends damage events.
+func (g *Game) DealSimultaneousDamage(assignments ...DamageAssignment) {
+	g.dealSimultaneousDamageTotal(assignments...)
+}
+
+func (g *Game) dealSimultaneousDamageTotal(assignments ...DamageAssignment) int {
+	total := 0
+	for _, outcome := range g.dealSimultaneousDamageOutcomes(assignments...) {
+		total += outcome.amount
+	}
+	return total
+}
+
+func (g *Game) dealSimultaneousDamageOutcomes(assignments ...DamageAssignment) []damageOutcome {
+	requests := make([]damageRequest, 0, len(assignments))
+	for _, assignment := range assignments {
+		requests = append(requests, assignment.request)
+	}
+	return g.damage.dealSimultaneousDamageOutcomes(g, requests)
 }
 
 type damageNotification struct {
@@ -225,25 +270,80 @@ func (ds *DamageSystem) FlushCombatDamageAggregator(g *Game) {
 
 // DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
 func (ds *DamageSystem) DealDamageToPlayer(g *Game, p Player, amount int, sourceID uuid.UUID) {
-	if amount <= 0 {
-		return
+	source := g.CaptureDamageSource(sourceID)
+	if !source.Valid() {
+		source.id = sourceID
 	}
-	action := NewDamageToPlayerAction(sourceID, p.PlayerID(), amount, ds.resolvingCombatDamage)
+	ds.DealDamageToPlayerFromSource(g, p, amount, source)
+}
+
+func (ds *DamageSystem) DealDamageToPlayerFromSource(g *Game, p Player, amount int, source DamageSource) {
+	ds.dealDamageToPlayerFromSource(g, p, amount, source)
+}
+
+func (ds *DamageSystem) dealDamageToPlayerFromSource(g *Game, p Player, amount int, source DamageSource) int {
+	return ds.dealDamageToPlayerFromSourceOutcome(g, p, amount, source).amount
+}
+
+type damageOutcome struct {
+	amount    int
+	playerID  uuid.UUID
+	permanent capturedPermanent
+	source    DamageSource
+}
+
+func executeDamageOutcome(g *Game, action Action) damageOutcome {
+	result := damageOutcome{}
+	if permanentAction, ok := action.(*DamageToCreatureAction); ok {
+		if permanent := g.FindPermanent(permanentAction.PermanentID()); permanent != nil && !permanent.PhasedOut {
+			result.permanent = capturedPermanent{permanent.ID(), permanent.incarnationID}
+		}
+	}
+	dealt := g.executeDamageAction(action)
+	if dealt <= 0 {
+		return damageOutcome{}
+	}
+	result.amount = dealt
+	switch a := action.(type) {
+	case *DamageToPlayerAction:
+		result.source = a.DamageSource()
+	case *DamageToCreatureAction:
+		result.source = a.DamageSource()
+	}
+	if player, ok := action.(*DamageToPlayerAction); ok {
+		result.playerID = player.PlayerID()
+	}
+	return result
+}
+
+func (ds *DamageSystem) dealDamageToPlayerFromSourceOutcome(g *Game, p Player, amount int, source DamageSource) damageOutcome {
+	if amount <= 0 {
+		return damageOutcome{}
+	}
+	action := NewDamageToPlayerAction(source.ID(), p.PlayerID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
-		return
+		return damageOutcome{}
 	}
-	g.executeAction(result)
+	return executeDamageOutcome(g, result)
+}
+
+func (ds *DamageSystem) prepareDamageToPlayer(g *Game, request damageRequest) Action {
+	if request.amount <= 0 || request.playerID == uuid.Nil || g.GetPlayer(request.playerID) == nil {
+		return nil
+	}
+	action := NewDamageToPlayerAction(request.sourceID, request.playerID, request.amount, ds.resolvingCombatDamage).withDamageSource(request.source)
+	return g.effects.ApplyReplacements(action, g)
 }
 
 // ExecuteDamageToPlayer applies damage to a player after all replacements have been applied.
-func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) {
+func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) int {
 	if a.Amount() <= 0 {
-		return
+		return 0
 	}
 	p := g.GetPlayer(a.PlayerID())
 	if p == nil {
-		return
+		return 0
 	}
 	amount := a.Amount()
 	sourceID := a.ActionSource()
@@ -254,7 +354,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 			amount = maxDamage
 		}
 		if amount <= 0 {
-			return
+			return 0
 		}
 	}
 
@@ -268,8 +368,8 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 			Amount:   amount,
 		})
 	}
-	sourceCard := g.findCardForDamageSource(sourceID)
-	isArtifact := sourceCard != nil && sourceCard.HasType(TypeArtifact)
+	source := a.DamageSource()
+	isArtifact := source.HasType(TypeArtifact)
 	g.trackers.Turn.RecordDamageTaken(p.PlayerID(), amount, isArtifact)
 	if sourceID != uuid.Nil {
 		if ds.damageDealtToPlayersByPermanent == nil {
@@ -310,19 +410,26 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 	})
 	if ds.onDamageDealt != nil {
 		sourceName := "unknown"
-		if sc := g.findCardForDamageSource(sourceID); sc != nil {
-			sourceName = sc.Name()
+		if source.Valid() {
+			sourceName = source.Name()
 		}
-		ds.onDamageDealt(sourceName, p.Name(), amount, a.IsCombatDamage())
+		if g.damageBatch != nil {
+			g.damageBatch.notifications = append(g.damageBatch.notifications, damageNotification{sourceName, p.Name(), amount, a.IsCombatDamage()})
+		} else {
+			ds.onDamageDealt(sourceName, p.Name(), amount, a.IsCombatDamage())
+		}
 	}
-	src := g.FindPermanent(sourceID)
-	if src != nil && src.HasKeyword(Lifelink) {
-		srcPlayer := g.GetPlayer(src.ControllerID())
+	if source.HasKeyword(Lifelink) {
+		controller := source.Controller()
+		if controller == uuid.Nil {
+			controller = source.Owner()
+		}
+		srcPlayer := g.GetPlayer(controller)
 		if srcPlayer != nil {
 			g.gainLifeWithEvent(srcPlayer, amount)
 		}
 	}
-	if src != nil && src.FaceDown {
+	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown {
 		g.turnFaceUp(src)
 	}
 	if reflectEntry, ok := ds.GetDamageReflection(p.PlayerID()); ok {
@@ -340,40 +447,88 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 			}
 		}
 	}
+	return amount
 }
 
 // DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
 func (ds *DamageSystem) DealDamageToPermanent(g *Game, perm *Permanent, amount int, sourceID uuid.UUID) {
-	if action := ds.prepareDamageToPermanent(g, damageRequest{perm, amount, sourceID}); action != nil {
-		g.executeAction(action)
+	source := g.CaptureDamageSource(sourceID)
+	if !source.Valid() {
+		source.id = sourceID
 	}
+	ds.DealDamageToPermanentFromSource(g, perm, amount, source)
+}
+
+func (ds *DamageSystem) DealDamageToPermanentFromSource(g *Game, perm *Permanent, amount int, source DamageSource) {
+	ds.dealDamageToPermanentFromSource(g, perm, amount, source)
+}
+
+func (ds *DamageSystem) dealDamageToPermanentFromSource(g *Game, perm *Permanent, amount int, source DamageSource) int {
+	return ds.dealDamageToPermanentFromSourceOutcome(g, perm, amount, source).amount
+}
+
+func (ds *DamageSystem) dealDamageToPermanentFromSourceOutcome(g *Game, perm *Permanent, amount int, source DamageSource) damageOutcome {
+	if action := ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}); action != nil {
+		return executeDamageOutcome(g, action)
+	}
+	return damageOutcome{}
 }
 
 func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest) Action {
 	perm, amount, sourceID := request.permanent, request.amount, request.sourceID
-	if amount <= 0 {
+	if amount <= 0 || perm == nil || perm.PhasedOut {
 		return nil
 	}
-	sourceCard := g.FindCardAnywhere(sourceID)
-	if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, g) {
+	if request.incarnation != uuid.Nil {
+		perm = g.FindPermanent(perm.ID())
+		if perm == nil || perm.incarnationID != request.incarnation || perm.PhasedOut {
+			return nil
+		}
+	}
+	source := request.source
+	if !source.Valid() {
+		source = g.CaptureDamageSource(sourceID)
+	}
+	if protectedFromDamageSource(perm, source) {
 		return nil
 	}
-	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage)
+	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
 	return g.effects.ApplyReplacements(action, g)
 }
 
 // dealSimultaneousDamageToPermanents applies one group of damage before it sends events.
 func (ds *DamageSystem) dealSimultaneousDamageToPermanents(g *Game, requests []damageRequest) {
+	ds.dealSimultaneousDamage(g, requests)
+}
+
+func (ds *DamageSystem) dealSimultaneousDamage(g *Game, requests []damageRequest) int {
+	total := 0
+	for _, outcome := range ds.dealSimultaneousDamageOutcomes(g, requests) {
+		total += outcome.amount
+	}
+	return total
+}
+
+func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damageRequest) []damageOutcome {
 	actions := make([]Action, 0, len(requests))
 	for _, request := range requests {
-		if action := ds.prepareDamageToPermanent(g, request); action != nil {
+		var action Action
+		if request.playerID != uuid.Nil {
+			action = ds.prepareDamageToPlayer(g, request)
+		} else {
+			action = ds.prepareDamageToPermanent(g, request)
+		}
+		if action != nil {
 			actions = append(actions, action)
 		}
 	}
 	batch := &damageBatch{}
 	g.damageBatch = batch
+	outcomes := make([]damageOutcome, 0, len(actions))
 	for _, action := range actions {
-		g.executeAction(action)
+		if outcome := executeDamageOutcome(g, action); outcome.amount > 0 {
+			outcomes = append(outcomes, outcome)
+		}
 	}
 	g.damageBatch = nil
 	for _, event := range batch.events {
@@ -384,21 +539,27 @@ func (ds *DamageSystem) dealSimultaneousDamageToPermanents(g *Game, requests []d
 			ds.onDamageDealt(notification.source, notification.target, notification.amount, notification.combat)
 		}
 	}
+	return outcomes
 }
 
 // ExecuteDamageToCreature applies damage to a creature after all replacements have been applied.
-func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureAction) {
+func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureAction) int {
 	if a.Amount() <= 0 {
-		return
+		return 0
 	}
 	perm := g.MutablePermanent(a.PermanentID())
 	if perm == nil {
-		return
+		return 0
 	}
 	amount := a.Amount()
 	sourceID := a.ActionSource()
 
-	perm.Damage += amount
+	if perm.HasType(TypePlaneswalker) {
+		perm.Counters[Loyalty] -= uint8(min(amount, int(perm.Counters[Loyalty])))
+	}
+	if perm.HasType(TypeCreature) {
+		perm.Damage += amount
+	}
 	if ds.damageDealtBy[perm.ID()] == nil {
 		ds.damageDealtBy[perm.ID()] = make(map[uuid.UUID]bool)
 	}
@@ -420,8 +581,8 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	})
 	if ds.onDamageDealt != nil {
 		sourceName := "unknown"
-		if sc := g.findCardForDamageSource(sourceID); sc != nil {
-			sourceName = sc.Name()
+		if source := a.DamageSource(); source.Valid() {
+			sourceName = source.Name()
 		}
 		if g.damageBatch != nil {
 			g.damageBatch.notifications = append(g.damageBatch.notifications, damageNotification{sourceName, perm.Name(), amount, ds.resolvingCombatDamage})
@@ -429,16 +590,18 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 			ds.onDamageDealt(sourceName, perm.Name(), amount, ds.resolvingCombatDamage)
 		}
 	}
-	src := g.FindPermanent(sourceID)
-	if src != nil && amount > 0 {
-		if src.HasKeyword(Deathtouch) {
-			perm.Damage = perm.CurrentToughness(g)
-		} else if src.HasKeyword(BasiliskTouch) && !perm.HasSubType("Wall") {
-			perm.Damage = perm.CurrentToughness(g)
-		}
+	source := a.DamageSource()
+	if source.HasKeyword(Deathtouch) && amount > 0 && perm.HasType(TypeCreature) {
+		perm.Damage = perm.CurrentToughness(g)
+	} else if source.HasKeyword(BasiliskTouch) && amount > 0 && perm.HasType(TypeCreature) && !perm.HasSubType("Wall") {
+		perm.Damage = perm.CurrentToughness(g)
 	}
-	if src != nil && src.HasKeyword(Lifelink) {
-		srcPlayer := g.GetPlayer(src.ControllerID())
+	if source.HasKeyword(Lifelink) {
+		controller := source.Controller()
+		if controller == uuid.Nil {
+			controller = source.Owner()
+		}
+		srcPlayer := g.GetPlayer(controller)
 		if srcPlayer != nil {
 			g.gainLifeWithEvent(srcPlayer, amount)
 		}
@@ -446,9 +609,10 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	if perm.FaceDown {
 		g.turnFaceUp(perm)
 	}
-	if src != nil && src.FaceDown {
+	if src := g.FindPermanent(sourceID); src != nil && src.incarnationID == source.Incarnation() && src.FaceDown {
 		g.turnFaceUp(src)
 	}
+	return amount
 }
 
 // ---------------------------------------------------------------------------

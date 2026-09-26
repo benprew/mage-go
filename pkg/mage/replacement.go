@@ -497,7 +497,7 @@ func (r *bodyguardReplacement) Matches(a Action, g GameReader) bool {
 
 func (r *bodyguardReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
-	return NewDamageToCreatureAction(act.ActionSource(), r.bodyguardPermID, act.Amount(), act.IsCombatDamage())
+	return NewDamageToCreatureAction(act.ActionSource(), r.bodyguardPermID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
 }
 
 func (r *bodyguardReplacement) IsActive(g GameReader) bool {
@@ -532,7 +532,7 @@ func (r *playerDamageRedirectReplacement) Matches(a Action, g GameReader) bool {
 
 func (r *playerDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
-	return NewDamageToCreatureAction(act.ActionSource(), r.redirectPermID, act.Amount(), act.IsCombatDamage())
+	return NewDamageToCreatureAction(act.ActionSource(), r.redirectPermID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
 }
 
 func (r *playerDamageRedirectReplacement) IsActive(g GameReader) bool {
@@ -571,7 +571,7 @@ func (r *artifactDamageRedirectReplacement) Matches(a Action, g GameReader) bool
 
 func (r *artifactDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
-	return NewDamageToCreatureAction(act.ActionSource(), r.redirectPermID, act.Amount(), act.IsCombatDamage())
+	return NewDamageToCreatureAction(act.ActionSource(), r.redirectPermID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
 }
 
 func (r *artifactDamageRedirectReplacement) IsActive(g GameReader) bool {
@@ -605,7 +605,7 @@ func (r *creatureDamageRedirectReplacement) Matches(a Action, _ GameReader) bool
 func (r *creatureDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToCreatureAction)
 	r.consumed = true
-	return NewDamageToPlayerAction(act.ActionSource(), r.targetPlayerID, act.Amount(), act.IsCombatDamage())
+	return NewDamageToPlayerAction(act.ActionSource(), r.targetPlayerID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
 }
 
 func (r *creatureDamageRedirectReplacement) IsActive(_ GameReader) bool {
@@ -637,7 +637,7 @@ func (r *attackerDamageRedirectReplacement) Matches(a Action, g GameReader) bool
 
 func (r *attackerDamageRedirectReplacement) Replace(a Action, g *Game) Action {
 	act := a.(*DamageToPlayerAction)
-	return NewDamageToCreatureAction(act.ActionSource(), r.absorberPermID, act.Amount(), act.IsCombatDamage())
+	return NewDamageToCreatureAction(act.ActionSource(), r.absorberPermID, act.Amount(), act.IsCombatDamage()).withDamageSource(act.DamageSource())
 }
 
 func (r *attackerDamageRedirectReplacement) IsActive(g GameReader) bool {

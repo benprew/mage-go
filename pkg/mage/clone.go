@@ -313,6 +313,7 @@ func cloneCombat(c *Combat) *Combat {
 			if len(g.BlockerIDs) > 0 {
 				cg.BlockerIDs = make([]uuid.UUID, len(g.BlockerIDs))
 				copy(cg.BlockerIDs, g.BlockerIDs)
+				cg.BlockerIncarnations = slices.Clone(g.BlockerIncarnations)
 			}
 			clone.Groups[i] = cg
 		}

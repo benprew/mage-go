@@ -156,6 +156,15 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 	savedBindings := g.resolution.permanentBindings
 	g.resolution.permanentBindings = maps.Clone(permanents)
 	defer func() { g.resolution.permanentBindings = savedBindings }()
+	savedSources := g.resolution.damageSourceBindings
+	g.resolution.damageSourceBindings = nil
+	defer func() { g.resolution.damageSourceBindings = savedSources }()
+	savedResults := g.resolution.damageResultsBindings
+	g.resolution.damageResultsBindings = nil
+	defer func() { g.resolution.damageResultsBindings = savedResults }()
+	savedItems := g.resolution.damageResultBindings
+	g.resolution.damageResultBindings = nil
+	defer func() { g.resolution.damageResultBindings = savedItems }()
 	ctx := &EffectContext{
 		Game:                g,
 		SourceID:            sourceID,
@@ -174,10 +183,10 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 				ctx.targetBindings = make(map[*targetDeclaration][]capturedPermanent)
 			}
 			value := capturedPermanent{id: targets[i]}
-			if p := g.FindPermanent(targets[i]); p != nil {
-				value.incarnation = p.incarnationID
-			} else if incarnation := g.resolution.targetIncarnations[targets[i]]; incarnation != uuid.Nil {
+			if incarnation := g.resolution.targetIncarnations[targets[i]]; incarnation != uuid.Nil {
 				value.incarnation = incarnation
+			} else if p := g.FindPermanent(targets[i]); p != nil {
+				value.incarnation = p.incarnationID
 			}
 			ctx.targetBindings[b] = append(ctx.targetBindings[b], value)
 		}

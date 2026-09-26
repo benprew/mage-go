@@ -9,7 +9,6 @@ import (
 	_ "github.com/benprew/mage-go/cards/antiquities"
 	_ "github.com/benprew/mage-go/cards/arabian"
 	_ "github.com/benprew/mage-go/cards/astral"
-	_ "github.com/benprew/mage-go/cards/custom"
 	_ "github.com/benprew/mage-go/cards/fallen_empires"
 	_ "github.com/benprew/mage-go/cards/fourthedition"
 	_ "github.com/benprew/mage-go/cards/legends"

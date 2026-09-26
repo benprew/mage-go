@@ -23,6 +23,7 @@ type costPaymentTransaction struct {
 	spellContext           *SpellPaymentContext
 	manaSolution           *ManaSolution
 	resetDrainedBeforeMana bool
+	paidNumbers            map[*NumberBinding]int
 }
 
 type costPaymentSpec struct {
@@ -129,10 +130,29 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		}
 		validation.PlayerLoseLife(player, tx.lifeLoss)
 	}
-	for _, cost := range tx.costs {
+	for i, cost := range tx.costs {
 		validationCost := cost
 		if randomDiscard, ok := cost.(*discardRandomCost); ok {
 			validationCost = &discardCost{amount: randomDiscard.amount}
+		}
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok {
+			sacCopy := *sacrifice
+			sacCopy.selected = make([]capturedPermanent, 0, sacCopy.count)
+			sacCopy.chooser = tx.game.GetPlayer(tx.controller)
+			validationCost = &sacCopy
+		}
+		if counter, ok := cost.(*removeAnyCountersCost); ok {
+			cntCopy := *counter
+			source := tx.game.FindPermanent(tx.sourceID)
+			if source == nil {
+				return fmt.Errorf("cannot pay chosen counter cost: source absent")
+			}
+			payer := tx.game.GetPlayer(tx.controller)
+			cntCopy.count = payer.ChooseNumber(0, int(source.Counters[cntCopy.ct]), cntCopy.Text())
+			cntCopy.incarnation = source.incarnationID
+			cntCopy.locked = true
+			validationCost = &cntCopy
+			tx.costs[i] = &cntCopy
 		}
 		if !validationCost.CanPay(tx.sourceID, tx.controller, validation) {
 			return fmt.Errorf("cannot pay total cost: %s", cost.Text())
@@ -140,11 +160,22 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		if err := validationCost.Pay(tx.sourceID, tx.controller, validation); err != nil {
 			return fmt.Errorf("cannot pay total cost: %w", err)
 		}
+		if sacrifice, ok := validationCost.(*sacrificeMatchingCost); ok {
+			sacrifice.locked = true
+			sacrifice.chooser = nil
+			tx.costs[i] = sacrifice
+		}
 	}
 	return nil
 }
 
-func (tx *costPaymentTransaction) Commit() error {
+func (tx *costPaymentTransaction) Commit() (commitErr error) {
+	tx.paidNumbers = nil
+	defer func() {
+		if commitErr != nil {
+			tx.paidNumbers = nil
+		}
+	}()
 	player := tx.game.GetPlayer(tx.controller)
 	if player == nil {
 		return ErrPlayerNotFound
@@ -164,8 +195,40 @@ func (tx *costPaymentTransaction) Commit() error {
 		tx.game.PlayerLoseLife(player, tx.lifeLoss)
 	}
 	for _, cost := range tx.costs {
+		var paidPower, paidToughness, paidManaValue int
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
+			if !sacrifice.CanPay(tx.sourceID, tx.controller, tx.game) || len(sacrifice.selected) != 1 {
+				return fmt.Errorf("cannot pay chosen sacrifice")
+			}
+			chosen := tx.game.FindPermanent(sacrifice.selected[0].id)
+			if sacrifice.captureStats {
+				paidPower = chosen.CurrentPower(tx.game)
+				paidToughness = chosen.CurrentToughness(tx.game)
+			}
+			if sacrifice.captureManaValue {
+				paidManaValue = chosen.Card.ManaCost().CMC()
+			}
+		}
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		if counter, ok := cost.(*removeAnyCountersCost); ok {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			tx.paidNumbers[counter.paid] = counter.count
+		}
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			if sacrifice.captureStats {
+				tx.paidNumbers[sacrifice.paidPower] = paidPower
+				tx.paidNumbers[sacrifice.paidToughness] = paidToughness
+			}
+			if sacrifice.captureManaValue {
+				tx.paidNumbers[sacrifice.paidManaValue] = paidManaValue
+			}
 		}
 	}
 	for sourceID, paid := range tx.optionalOutcomes {

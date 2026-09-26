@@ -5,6 +5,7 @@ import "github.com/google/uuid"
 // DamageToPlayerAction represents damage about to be dealt to a player.
 type DamageToPlayerAction struct {
 	source       uuid.UUID
+	sourceState  DamageSource
 	playerID     uuid.UUID
 	amount       int
 	combatDamage bool
@@ -19,10 +20,15 @@ func NewDamageToPlayerAction(source, playerID uuid.UUID, amount int, combatDamag
 	}
 }
 
-func (a *DamageToPlayerAction) ActionSource() uuid.UUID { return a.source }
-func (a *DamageToPlayerAction) PlayerID() uuid.UUID     { return a.playerID }
-func (a *DamageToPlayerAction) Amount() int             { return a.amount }
-func (a *DamageToPlayerAction) IsCombatDamage() bool    { return a.combatDamage }
+func (a *DamageToPlayerAction) ActionSource() uuid.UUID    { return a.source }
+func (a *DamageToPlayerAction) DamageSource() DamageSource { return a.sourceState }
+func (a *DamageToPlayerAction) withDamageSource(s DamageSource) *DamageToPlayerAction {
+	a.sourceState = s
+	return a
+}
+func (a *DamageToPlayerAction) PlayerID() uuid.UUID  { return a.playerID }
+func (a *DamageToPlayerAction) Amount() int          { return a.amount }
+func (a *DamageToPlayerAction) IsCombatDamage() bool { return a.combatDamage }
 
 // WithAmount returns a copy with the amount changed.
 func (a *DamageToPlayerAction) WithAmount(amount int) *DamageToPlayerAction {
@@ -34,6 +40,7 @@ func (a *DamageToPlayerAction) WithAmount(amount int) *DamageToPlayerAction {
 // DamageToCreatureAction represents damage about to be dealt to a creature.
 type DamageToCreatureAction struct {
 	source       uuid.UUID
+	sourceState  DamageSource
 	permanentID  uuid.UUID
 	amount       int
 	combatDamage bool
@@ -48,10 +55,15 @@ func NewDamageToCreatureAction(source, permanentID uuid.UUID, amount int, combat
 	}
 }
 
-func (a *DamageToCreatureAction) ActionSource() uuid.UUID { return a.source }
-func (a *DamageToCreatureAction) PermanentID() uuid.UUID  { return a.permanentID }
-func (a *DamageToCreatureAction) Amount() int             { return a.amount }
-func (a *DamageToCreatureAction) IsCombatDamage() bool    { return a.combatDamage }
+func (a *DamageToCreatureAction) ActionSource() uuid.UUID    { return a.source }
+func (a *DamageToCreatureAction) DamageSource() DamageSource { return a.sourceState }
+func (a *DamageToCreatureAction) withDamageSource(s DamageSource) *DamageToCreatureAction {
+	a.sourceState = s
+	return a
+}
+func (a *DamageToCreatureAction) PermanentID() uuid.UUID { return a.permanentID }
+func (a *DamageToCreatureAction) Amount() int            { return a.amount }
+func (a *DamageToCreatureAction) IsCombatDamage() bool   { return a.combatDamage }
 
 // WithAmount returns a copy with the amount changed.
 func (a *DamageToCreatureAction) WithAmount(amount int) *DamageToCreatureAction {

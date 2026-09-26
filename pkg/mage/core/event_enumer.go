@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _EventTypeName = "ZoneChangeDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDeclEndOfCombatBecameUntappedMainPhaseCleanupScryDiscardSacrificeBecomesTargetAttackersDeclaredCombatDamageDealtCreatureBlocksEntersAttackingEntersBlockingFightCardsLeftGraveyardTappedForManaSurveil"
+const _EventTypeName = "ZoneChangeDeclaredAttackerDeclaredBlockerDamageDealtLifeGainedLifeLostCardDrawnSpellCastAbilityActivatedAttachDetachUpkeepDrawStepBeginCombatEndStepTappedLandPlayedBlockersDeclEndOfCombatBecameUntappedMainPhaseCleanupScryDiscardSacrificeBecomesTargetAttackersDeclaredCombatDamageDealtCreatureBlocksEntersAttackingEntersBlockingFightCardsLeftGraveyardTappedForManaSurveilCreatureBecomesBlockedCreatureBlockedByBlockerGroup"
 
-var _EventTypeIndex = [...]uint16{0, 10, 26, 41, 52, 62, 70, 79, 88, 104, 110, 116, 122, 130, 141, 148, 154, 164, 176, 187, 201, 210, 217, 221, 228, 237, 250, 267, 284, 298, 313, 327, 332, 350, 363, 370}
+var _EventTypeIndex = [...]uint16{0, 10, 26, 41, 52, 62, 70, 79, 88, 104, 110, 116, 122, 130, 141, 148, 154, 164, 176, 187, 201, 210, 217, 221, 228, 237, 250, 267, 284, 298, 313, 327, 332, 350, 363, 370, 392, 409, 421}
 
-const _EventTypeLowerName = "zonechangedeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachupkeepdrawstepbegincombatendsteptappedlandplayedblockersdeclendofcombatbecameuntappedmainphasecleanupscrydiscardsacrificebecomestargetattackersdeclaredcombatdamagedealtcreatureblocksentersattackingentersblockingfightcardsleftgraveyardtappedformanasurveil"
+const _EventTypeLowerName = "zonechangedeclaredattackerdeclaredblockerdamagedealtlifegainedlifelostcarddrawnspellcastabilityactivatedattachdetachupkeepdrawstepbegincombatendsteptappedlandplayedblockersdeclendofcombatbecameuntappedmainphasecleanupscrydiscardsacrificebecomestargetattackersdeclaredcombatdamagedealtcreatureblocksentersattackingentersblockingfightcardsleftgraveyardtappedformanasurveilcreaturebecomesblockedcreatureblockedbyblockergroup"
 
 func (i EventType) String() string {
 	if i < 0 || i >= EventType(len(_EventTypeIndex)-1) {
@@ -59,9 +59,12 @@ func _EventTypeNoOp() {
 	_ = x[EvtCardsLeftGraveyard-(32)]
 	_ = x[EvtTappedForMana-(33)]
 	_ = x[EvtSurveil-(34)]
+	_ = x[EvtCreatureBecomesBlocked-(35)]
+	_ = x[EvtCreatureBlockedBy-(36)]
+	_ = x[EvtBlockerGroup-(37)]
 }
 
-var _EventTypeValues = []EventType{EvtZoneChange, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl, EvtEndOfCombat, EvtBecameUntapped, EvtMainPhase, EvtCleanup, EvtScry, EvtDiscard, EvtSacrifice, EvtBecomesTarget, EvtAttackersDeclared, EvtCombatDamageDealt, EvtCreatureBlocks, EvtEntersAttacking, EvtEntersBlocking, EvtFight, EvtCardsLeftGraveyard, EvtTappedForMana, EvtSurveil}
+var _EventTypeValues = []EventType{EvtZoneChange, EvtDeclaredAttacker, EvtDeclaredBlocker, EvtDamageDealt, EvtLifeGained, EvtLifeLost, EvtCardDrawn, EvtSpellCast, EvtAbilityActivated, EvtAttach, EvtDetach, EvtUpkeep, EvtDrawStep, EvtBeginCombat, EvtEndStep, EvtTapped, EvtLandPlayed, EvtBlockersDecl, EvtEndOfCombat, EvtBecameUntapped, EvtMainPhase, EvtCleanup, EvtScry, EvtDiscard, EvtSacrifice, EvtBecomesTarget, EvtAttackersDeclared, EvtCombatDamageDealt, EvtCreatureBlocks, EvtEntersAttacking, EvtEntersBlocking, EvtFight, EvtCardsLeftGraveyard, EvtTappedForMana, EvtSurveil, EvtCreatureBecomesBlocked, EvtCreatureBlockedBy, EvtBlockerGroup}
 
 var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeName[0:10]:         EvtZoneChange,
@@ -134,6 +137,12 @@ var _EventTypeNameToValueMap = map[string]EventType{
 	_EventTypeLowerName[350:363]: EvtTappedForMana,
 	_EventTypeName[363:370]:      EvtSurveil,
 	_EventTypeLowerName[363:370]: EvtSurveil,
+	_EventTypeName[370:392]:      EvtCreatureBecomesBlocked,
+	_EventTypeLowerName[370:392]: EvtCreatureBecomesBlocked,
+	_EventTypeName[392:409]:      EvtCreatureBlockedBy,
+	_EventTypeLowerName[392:409]: EvtCreatureBlockedBy,
+	_EventTypeName[409:421]:      EvtBlockerGroup,
+	_EventTypeLowerName[409:421]: EvtBlockerGroup,
 }
 
 var _EventTypeNames = []string{
@@ -172,6 +181,9 @@ var _EventTypeNames = []string{
 	_EventTypeName[332:350],
 	_EventTypeName[350:363],
 	_EventTypeName[363:370],
+	_EventTypeName[370:392],
+	_EventTypeName[392:409],
+	_EventTypeName[409:421],
 }
 
 // EventTypeString retrieves an enum value from the enum constants string name.

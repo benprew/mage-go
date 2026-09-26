@@ -18,8 +18,113 @@ type StateCondition interface {
 
 // StateContext identifies the source and controller for a condition check.
 type StateContext struct {
-	SourceID     uuid.UUID
-	ControllerID uuid.UUID
+	SourceID          uuid.UUID
+	ControllerID      uuid.UUID
+	SourceIncarnation uuid.UUID
+}
+
+type sourceTappedCondition struct{ tapped bool }
+
+type permanentTappedCondition struct {
+	subject PermanentRef
+	tapped  bool
+}
+
+// PermanentIsTapped checks the current source or its attached permanent.
+func PermanentIsTapped(subject PermanentRef) StateCondition {
+	return permanentTappedCondition{subject: subject, tapped: true}
+}
+
+// PermanentIsUntapped checks the current source or its attached permanent.
+func PermanentIsUntapped(subject PermanentRef) StateCondition {
+	return permanentTappedCondition{subject: subject}
+}
+
+func (permanentTappedCondition) stateCondition() {}
+func (c permanentTappedCondition) checkState(g GameReader, ctx StateContext) bool {
+	source := g.FindPermanent(ctx.SourceID)
+	if source == nil || source.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && source.incarnationID != ctx.SourceIncarnation) {
+		return false
+	}
+	p := source
+	switch c.subject.(type) {
+	case sourceRef:
+	case attachedPermanentRef:
+		p = g.FindPermanent(source.AttachedTo)
+		if p == nil || source.attachedIncarnation == uuid.Nil || p.incarnationID != source.attachedIncarnation {
+			return false
+		}
+	default:
+		return false
+	}
+	return !p.PhasedOut && p.Tapped == c.tapped
+}
+func (c permanentTappedCondition) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "state-condition", battlefieldSource: true}
+	switch c.subject.(type) {
+	case sourceRef:
+		n.Text = "source is tapped"
+	case attachedPermanentRef:
+		n.Text = "attached permanent is tapped"
+	default:
+		n.problem = "state condition requires This or AttachedPermanent"
+	}
+	if !c.tapped {
+		n.Text = strings.Replace(n.Text, "is tapped", "is untapped", 1)
+	}
+	return n
+}
+
+// SourceTappedCondition checks the current battlefield source.
+func SourceTappedCondition() StateCondition { return sourceTappedCondition{tapped: true} }
+
+// SourceUntappedCondition checks the current battlefield source.
+func SourceUntappedCondition() StateCondition { return sourceTappedCondition{tapped: false} }
+
+func (sourceTappedCondition) stateCondition() {}
+func (c sourceTappedCondition) checkState(g GameReader, ctx StateContext) bool {
+	p := g.FindPermanent(ctx.SourceID)
+	return p != nil && !p.PhasedOut && (ctx.SourceIncarnation == uuid.Nil || p.incarnationID == ctx.SourceIncarnation) && p.Tapped == c.tapped
+}
+func (c sourceTappedCondition) inspectDefinition() definitionNode {
+	text := "source is untapped"
+	if c.tapped {
+		text = "source is tapped"
+	}
+	return definitionNode{Role: "state-condition", Text: text, battlefieldSource: true}
+}
+
+type sourceBlockingCondition struct{}
+
+// SourceBlockingCondition checks whether the current source is blocking.
+func SourceBlockingCondition() StateCondition { return sourceBlockingCondition{} }
+
+func (sourceBlockingCondition) stateCondition() {}
+func (sourceBlockingCondition) checkState(g GameReader, ctx StateContext) bool {
+	p := g.FindPermanent(ctx.SourceID)
+	return p != nil && !p.PhasedOut &&
+		(ctx.SourceIncarnation == uuid.Nil || p.incarnationID == ctx.SourceIncarnation) &&
+		g.IsBlockingIncarnation(ctx.SourceID, p.incarnationID)
+}
+func (sourceBlockingCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "source is blocking", battlefieldSource: true}
+}
+
+type sourceAttackedThisTurnCondition struct{}
+
+// SourceAttackedThisTurnCondition checks the current source's attack history.
+func SourceAttackedThisTurnCondition() StateCondition { return sourceAttackedThisTurnCondition{} }
+
+func (sourceAttackedThisTurnCondition) stateCondition() {}
+func (sourceAttackedThisTurnCondition) checkState(g GameReader, ctx StateContext) bool {
+	p := g.FindPermanent(ctx.SourceID)
+	if p == nil || p.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && p.incarnationID != ctx.SourceIncarnation) {
+		return false
+	}
+	return g.HasAttackedThisTurnIncarnation(ctx.SourceID, p.incarnationID)
+}
+func (sourceAttackedThisTurnCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "source attacked this turn", battlefieldSource: true}
 }
 
 // StateDependency declares the data that a callback reads.
@@ -178,7 +283,7 @@ func (e *stateBranch) Text() string {
 }
 func (e *stateBranch) Properties() EffectProperties { return e.effect.Properties() }
 func (e *stateBranch) Apply(ctx *EffectContext) error {
-	if e.condition.checkState(ctx.Game, StateContext{SourceID: ctx.SourceID, ControllerID: ctx.Controller}) {
+	if e.condition.checkState(ctx.Game, StateContext{SourceID: ctx.SourceID, ControllerID: ctx.Controller, SourceIncarnation: ctx.sourceIncarnation}) {
 		return e.effect.Apply(ctx)
 	}
 	return nil

@@ -37,6 +37,43 @@ func (b *SpellTargetBinding) inspectDefinition() definitionNode {
 	return targetReadNode(b.targetDeclaration, "stack-object-ref")
 }
 
+type spellControllerRef struct{ spell StackObjectRef }
+
+type spellManaValue struct{ spell StackObjectRef }
+
+// ManaValueOfSpell reads the referenced spell's mana value on the stack.
+func ManaValueOfSpell(spell StackObjectRef) ResolutionValue { return spellManaValue{spell: spell} }
+func (v spellManaValue) Text() string                       { return "mana value of spell" }
+func (v spellManaValue) resolveValue(ctx *EffectContext) int {
+	spell, ok := v.spell.resolveStackObject(ctx)
+	if !ok {
+		return 0
+	}
+	cost := spell.Card.ManaCost()
+	return cost.CMC() + cost.XCount*spell.XValue
+}
+func (v spellManaValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", Text: v.Text(), children: []definitionEdge{{"spell", v.spell}}}
+}
+
+// ControllerOfSpell reads the current controller of the referenced spell.
+func ControllerOfSpell(spell StackObjectRef) PlayerRef { return spellControllerRef{spell: spell} }
+func (spellControllerRef) playerRef()                  {}
+func (spellControllerRef) damageRecipient()            {}
+func (r spellControllerRef) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
+	spell, ok := r.spell.resolveStackObject(ctx)
+	if !ok {
+		return uuid.Nil, false
+	}
+	return spell.Controller, ctx.Game.GetPlayer(spell.Controller) != nil
+}
+func (r spellControllerRef) resolveRecipient(ctx *EffectContext) (uuid.UUID, bool) {
+	return r.resolvePlayer(ctx)
+}
+func (r spellControllerRef) inspectDefinition() definitionNode {
+	return definitionNode{Role: "player-ref", Text: "spell controller", children: []definitionEdge{{"spell", r.spell}}}
+}
+
 type typedSpellTarget struct {
 	BaseTarget
 	filters []CardFilter

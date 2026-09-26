@@ -92,6 +92,12 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		n.problem = "supply an explicit Costs group"
 	}
 	for i, cost := range c.costs {
+		if _, ok := cost.(*removeAnyCountersCost); ok {
+			n.problem = "paid counter value requires an activated ability cost"
+		}
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
+			n.problem = "paid sacrifice value requires an activated ability cost or spell additional cost"
+		}
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 	}
 	return n

@@ -123,10 +123,18 @@ func (*sacrificeSourceCost) Pay(sourceID, _ uuid.UUID, g *Game) error {
 func (*sacrificeSourceCost) Text() string { return "Sacrifice ~" }
 
 type sacrificeMatchingCost struct {
-	filter        PermanentFilter
-	text          string
-	count         int
-	includeSource bool
+	filter           PermanentFilter
+	text             string
+	count            int
+	includeSource    bool
+	locked           bool
+	selected         []capturedPermanent
+	chooser          Player
+	paidPower        *NumberBinding
+	paidToughness    *NumberBinding
+	paidManaValue    *NumberBinding
+	captureStats     bool
+	captureManaValue bool
 }
 
 // SacrificeMatchingCost creates a cost that sacrifices another permanent the
@@ -158,7 +166,59 @@ func SacrificeCreatureCost() Cost {
 	return SacrificeMatchingCost(IsCreature, "Sacrifice a creature")
 }
 
+// SacrificeCreatureCostWithStats saves the chosen creature's power and
+// toughness during payment. The values belong to this stack object.
+func SacrificeCreatureCostWithStats(power, toughness *NumberBinding) Cost {
+	return &sacrificeMatchingCost{
+		filter: IsCreature, text: "Sacrifice a creature", count: 1,
+		paidPower: power, paidToughness: toughness, captureStats: true,
+	}
+}
+
+// SacrificeMatchingCostWithManaValue saves the chosen permanent's mana value
+// when its controller pays this cost. The source is not a candidate.
+func SacrificeMatchingCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidManaValue: value, captureManaValue: true}
+}
+
+func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
+	if !c.captureStats && !c.captureManaValue {
+		return n
+	}
+	if c.captureManaValue {
+		if c.text == "" {
+			n.problem = "supply sacrifice text"
+		} else if c.paidManaValue == nil {
+			n.problem = "supply a non-nil paid mana value binding"
+		}
+		n.bindingWrites = []savedBinding{c.paidManaValue}
+		n.children = []definitionEdge{{"mana value", c.paidManaValue}}
+		return n
+	}
+	if c.paidPower == nil || c.paidToughness == nil {
+		n.problem = "supply non-nil paid power and toughness bindings"
+	} else if c.paidPower == c.paidToughness {
+		n.problem = "duplicate paid sacrifice binding"
+	}
+	n.bindingWrites = []savedBinding{c.paidPower, c.paidToughness}
+	n.children = []definitionEdge{{"power", c.paidPower}, {"toughness", c.paidToughness}}
+	return n
+}
+
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.locked {
+		if len(c.selected) != c.count {
+			return false
+		}
+		for _, choice := range c.selected {
+			p := g.FindPermanent(choice.id)
+			if p == nil || p.PhasedOut || p.incarnationID != choice.incarnation || p.ControllerID() != controller || (!c.includeSource && p.ID() == sourceID) || !c.filter.Match(p, g) {
+				return false
+			}
+		}
+		return true
+	}
 	found := 0
 	for _, p := range g.zones.battlefield {
 		if !p.PhasedOut && p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
@@ -175,7 +235,18 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	if !c.CanPay(sourceID, controller, g) {
 		return fmt.Errorf("not enough permanents to sacrifice")
 	}
+	if c.locked {
+		for _, choice := range c.selected {
+			p := g.FindPermanent(choice.id)
+			g.CaptureSacrificed(p)
+			g.DoSacrifice(p)
+		}
+		return nil
+	}
 	player := g.GetPlayer(controller)
+	if c.chooser != nil {
+		player = c.chooser
+	}
 	for i := 0; i < c.count; i++ {
 		var candidates []*Permanent
 		for _, p := range g.zones.battlefield {
@@ -189,6 +260,20 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 		chosen := player.ChoosePermanent(candidates, c.text, g)
 		if chosen == nil {
 			return fmt.Errorf("no permanent chosen")
+		}
+		valid := false
+		for _, candidate := range candidates {
+			if chosen.ID() == candidate.ID() && chosen.incarnationID == candidate.incarnationID {
+				chosen = candidate
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("invalid permanent chosen for sacrifice")
+		}
+		if c.selected != nil {
+			c.selected = append(c.selected, capturedPermanent{chosen.ID(), chosen.incarnationID})
 		}
 		g.CaptureSacrificed(chosen)
 		g.DoSacrifice(chosen)
