@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Land-Entry Subtype Filter
+
+`LandEnters().OfSubtype(string)` filters the existing land-entry event by one land subtype at detection. It composes with `.WithController` in `WhenEvent` and `WhenEventModes` on battlefield permanents. The subtype is checked after entry processing through the shared event condition, and a queued trigger keeps its event-time result if the land later leaves. Registration rejects empty, invalid, and repeated land subtypes. The sealed pattern remains an event role; no new event or zone executor is added.
+
+Thelon's Chant and Tourach's Chant require Swamp and Forest entry filters, respectively, as confirmed in `data/FEM.json`. Their text refers to the player who puts the land onto the battlefield. The current entry event records only the land controller, which can be different, so this filter does not complete those cards. Both also need their optional counter-payment branch. Their production definitions and Fallen Empires gap records remain open. Synthetic tests first failed because `OfSubtype` was absent. They cover matching and nonmatching subtypes, owner/controller distinction, land departure before resolution, game clone isolation, registration errors, and DSL inspection. Existing production callers and legacy exports remain unchanged. The next dependency-ready E prerequisite is entry actor identity in the shared zone event, with explicit actor propagation from land-play and effect paths.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass. Lint reports zero issues. No production card or gap record changed.
+
 ## Current Slice: Land-Entry Controller Participant
 
 `LandEnters().WithController(binding)` is a battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It checks the entering permanent's land type after entry processing and saves its computed controller in the pending trigger. The binding is instance-local, is not a target, and survives later source or land departure, copying, and game cloning. The pattern uses the existing zone-entry event and player-binding frame; no new zone subsystem is added. Registration rejects nil, unnamed, duplicate, and unbound player bindings. The sealed role rejects a permanent binding at compile time.

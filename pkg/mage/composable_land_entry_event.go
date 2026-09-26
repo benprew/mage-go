@@ -7,6 +7,9 @@ import (
 )
 
 type landEntersPattern struct {
+	subtype             string
+	filterSubtype       bool
+	duplicateSubtype    bool
 	controller          *PlayerBinding
 	captureController   bool
 	duplicateController bool
@@ -14,6 +17,15 @@ type landEntersPattern struct {
 
 // LandEnters matches each land that enters the battlefield.
 func LandEnters() landEntersPattern { return landEntersPattern{} }
+
+// OfSubtype limits the event to an entering land with this land subtype.
+func (p landEntersPattern) OfSubtype(subtype string) landEntersPattern {
+	if p.filterSubtype {
+		p.duplicateSubtype = true
+	}
+	p.subtype, p.filterSubtype = subtype, true
+	return p
+}
 
 // WithController saves the entering land's controller at the entry event.
 func (p landEntersPattern) WithController(binding *PlayerBinding) landEntersPattern {
@@ -26,15 +38,25 @@ func (p landEntersPattern) WithController(binding *PlayerBinding) landEntersPatt
 
 func (landEntersPattern) eventPattern() {}
 
-func (landEntersPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(EvtZoneChange, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+func (p landEntersPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	trigger := NewTriggered(EvtZoneChange, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
 		EventZoneChangeMatches{From: ZoneAny, To: ZoneBattlefield},
 		EventSourceHasType{Type: TypeLand},
 	}})
+	if p.filterSubtype && isLandSubtype(p.subtype) {
+		trigger.AndConditionData(EventSourceHasSubType{SubType: p.subtype})
+	}
+	return trigger
 }
 
 func (p landEntersPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "a land enters", battlefieldSource: true}
+	if p.filterSubtype {
+		n.Text = "a " + p.subtype + " enters"
+		if p.duplicateSubtype || !isLandSubtype(p.subtype) {
+			n.problem = "land entry event: supply one valid land subtype"
+		}
+	}
 	if p.captureController {
 		if p.controller == nil || p.duplicateController {
 			n.problem = "land entry event: supply one controller binding"
