@@ -412,7 +412,7 @@ func (p creatureDiesPattern) captureDestinationEvent(event *GameEvent, current *
 	if !p.captureCard || p.card == nil {
 		return nil
 	}
-	return []Effect{&eventCardCapture{binding: p.card, value: capturedCard{id: event.SourceID, visit: current.graveyardVisit(event.SourceID)}}}
+	return []Effect{&eventCardCapture{binding: p.card, value: capturedCard{id: event.SourceID, visit: current.graveyardVisit(event.SourceID), zone: ZoneGraveyard}}}
 }
 
 func (p creatureDiesPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {

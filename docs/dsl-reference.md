@@ -391,7 +391,7 @@ permanent. If the Aura has left, its last attachment is used. A returned Aura
 or host is a new incarnation and does not redirect the old reference.
 
 ### Player Actions
-* `Draw(PlayerRef, ResolutionValue, ...DrawResultOption) ResolvingEffect`: Instructs one player to draw cards in a spell, activation, or trigger body. `DrawAmountInto(*NumberBinding) DrawResultOption` saves the number of cards actually drawn by this instruction. It writes zero for an absent player, an empty library, or a fully replaced draw. Read it later in the same `Sequence` with `FromNumber`. `DrawEach` does not accept this option.
+* `Draw(PlayerRef, ResolutionValue, ...DrawResultOption) ResolvingEffect`: Instructs one player to draw cards in a spell, activation, or trigger body. `DrawAmountInto(*NumberBinding) DrawResultOption` saves the number of cards actually drawn by this instruction. It writes zero for an absent player, an empty library, or a fully replaced draw. Read it later in the same `Sequence` with `FromNumber`. `DrawCardInto(*CardBinding) DrawResultOption` saves the card from one completed draw. It requires `Fixed(1)` and cannot be combined with `DrawAmountInto`. `FromCard` refers to that card only during its original hand visit. `DrawEach` does not accept these options.
 
 ```go
 drawn := dsl.BindNumber("drawn")
@@ -401,10 +401,20 @@ ability := dsl.Spell(dsl.Sequence(
 ))
 _ = ability
 ```
-Hand cards now have an engine visit ID. A completed draw creates a new visit;
-discarding the card ends it. The current `Draw` signature saves only the count,
-so a card that needs the identity of a drawn card still needs a typed card-result
-adapter. The example above is valid for a count-based effect in a resolving spell.
+For a single-card result in a spell, activation, or trigger body:
+
+```go
+func drawnCardSpell() dsl.Card {
+    drawnCard := dsl.BindCard("drawn card")
+    return dsl.NewInstant("Synthetic Draw", "{U}",
+        dsl.Spell(dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawnCard))))
+}
+```
+
+Hand cards have an engine visit ID. A completed draw creates a new visit;
+discarding the card ends it. `FromCard(drawnCard)` is a `CardRef` while the
+original card remains in that hand visit. Hand reveal, card-specific discard,
+and multi-card draw-result consumers still need typed adapters.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.

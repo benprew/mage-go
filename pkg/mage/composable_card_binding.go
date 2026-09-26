@@ -1,28 +1,45 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
 
-// CardBinding declares a card saved by an event in one resolution.
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
+
+// CardBinding declares a card saved during one resolution.
 type CardBinding struct{ name string }
 
 // BindCard declares a card binding with a diagnostic name.
 func BindCard(name string) *CardBinding { return &CardBinding{name: name} }
 
-type capturedCard struct{ id, visit uuid.UUID }
+type capturedCard struct {
+	id, visit uuid.UUID
+	zone      core.Zone
+}
 type savedCardRef struct{ binding *CardBinding }
 
-// FromCard reads the saved graveyard visit while the card remains there.
+// FromCard reads the saved card while its zone visit remains current.
 func FromCard(binding *CardBinding) CardRef { return savedCardRef{binding: binding} }
 func (savedCardRef) cardRef()               {}
 func (r savedCardRef) resolveCard(ctx *EffectContext) (Card, bool) {
 	value, ok := ctx.Game.resolution.cardBindings[r.binding]
-	if !ok || value.visit == uuid.Nil || ctx.Game.graveyardVisit(value.id) != value.visit {
+	if !ok || value.visit == uuid.Nil {
 		return nil, false
 	}
 	for _, player := range ctx.Game.players {
-		for _, card := range player.Graveyard() {
-			if card.ID() == value.id {
-				return card, true
+		visitor, hasVisit := player.(interface{ handVisit(uuid.UUID) uuid.UUID })
+		if value.zone == core.ZoneHand && hasVisit && visitor.handVisit(value.id) == value.visit {
+			for _, card := range player.Hand() {
+				if card.ID() == value.id {
+					return card, true
+				}
+			}
+		}
+		if value.zone == core.ZoneGraveyard && ctx.Game.graveyardVisit(value.id) == value.visit {
+			for _, card := range player.Graveyard() {
+				if card.ID() == value.id {
+					return card, true
+				}
 			}
 		}
 	}

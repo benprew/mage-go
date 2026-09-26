@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Drawn-Card Result
+
+`Draw(You, Fixed(1), DrawCardInto(binding))` saves the card from one completed draw in the current resolution frame. `FromCard(binding)` now resolves either a saved hand visit from this result or a saved graveyard visit from a death event. It does not follow a card that leaves and returns. Registration rejects a non-single fixed amount, duplicate or mixed result options, nil bindings, and reads without a producer. The adapter uses `PlayerDrawCard`, hand visits, and the existing card-binding frame. It works in spell, activation, and trigger resolving bodies. `DrawEach`, multi-card result collections, hand reveal, card-specific discard, and card wiring remain open.
+
+Focused tests first failed because `DrawCardInto` was absent. They cover successful and failed draws, replacement, absent and legal targets, hand departure and return, stale-result clearing, stack copying, game clone isolation, and registration errors. Sindbad's Oracle text in `data/ARN.json` and Read the Runes in `data/JMP.json` were checked. Sindbad still needs reveal and conditional discard of the saved card. Read the Runes needs a collection result and per-card choices. Their gap records remain blocked. A fresh production search found no `DrawCardInto` caller; legacy draw callers remain. The next dependency-ready work is a hand-card consumer for reveal or discard, or a multi-card result collection after a fresh audit.
+
+Focused tests with `-count=1`, short engine and repository tests, DSL registration and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. No production card or JSON gap record changed.
+
 ## Current Slice: Hand Visit Identity for Draw Results
 
 `BasePlayer.handVisit(cardID)` is an internal read of a card's current hand visit. `AddToHand` creates a visit, `RemoveFromHand` ends it, and `SetHand` preserves visits for cards that remain while assigning new visits to added cards. Game cloning retains current visits and copies the map on later hand changes. The shared `PlayerDrawCard` path therefore gives a completed draw a hand identity, while a replaced or empty-library draw gives none. This is the zone-identity prerequisite for a typed drawn-card result; no new author export or production card changed. The existing `Draw(PlayerRef, ResolutionValue, ...DrawResultOption)` and `DrawAmountInto(*NumberBinding)` signatures remain the supported count-only API in spells, activations, and triggers.

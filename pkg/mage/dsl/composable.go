@@ -155,6 +155,7 @@ var (
 	Draw           = mage.DrawFor
 	DrawEach       = mage.DrawEach
 	DrawAmountInto = mage.DrawAmountInto
+	DrawCardInto   = mage.DrawCardInto
 	Discard        = mage.Discard
 	// DiscardAtRandom uses a typed player and amount. Ring of Renewal uses You and Fixed(1).
 	DiscardAtRandom   = mage.DiscardAtRandom
