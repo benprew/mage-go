@@ -633,6 +633,16 @@ Triggers on rules events dispatched by the engine:
     func main() {}
     ```
   * `Attacks(This)`: Source is declared as an attacker. A creature put onto the battlefield attacking does not match.
+  * `Attacks(This).WithDefendingPlayer(*PlayerBinding)`: Save the player defending against the source when it is declared as an attacker. Read the saved player with `FromPlayer` in the trigger body. The binding is instance-local and is not a target. It remains the same after the attacker leaves combat or changes controller. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. A creature put onto the battlefield attacking does not match. For example:
+
+    ```go
+    defender := dsl.BindPlayer("defender")
+    dsl.NewCreature("Example", "", 2, 2,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.Attacks(dsl.This).WithDefendingPlayer(defender),
+            dsl.GainLife(dsl.FromPlayer(defender), dsl.Fixed(1)))))
+    ```
+
   * `Blocks(This)`: Source is declared as a blocker. It matches once when the source blocks one or more attackers, after block legality checks finish. A block removed by a minimum-blocker restriction does not match. A creature put onto the battlefield blocking does not match. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature.
 
     ```go

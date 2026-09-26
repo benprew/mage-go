@@ -2,11 +2,26 @@ package mage
 
 import . "github.com/benprew/mage-go/pkg/mage/core"
 
-type sourceCombatEventPattern struct{ blocking bool }
+type sourceCombatEventPattern struct {
+	blocking          bool
+	defender          *PlayerBinding
+	captureDefender   bool
+	duplicateDefender bool
+}
 type sourceBecomesBlockedPattern struct{}
 
 // Attacks matches the source when it is declared as an attacker.
-func Attacks(sourceRef) EventPattern { return sourceCombatEventPattern{} }
+func Attacks(sourceRef) sourceCombatEventPattern { return sourceCombatEventPattern{} }
+
+// WithDefendingPlayer saves the player defending against the source attack.
+func (p sourceCombatEventPattern) WithDefendingPlayer(binding *PlayerBinding) sourceCombatEventPattern {
+	if p.captureDefender {
+		p.duplicateDefender = true
+	}
+	p.defender = binding
+	p.captureDefender = true
+	return p
+}
 
 // Blocks matches the source once when it is declared as a blocker.
 func Blocks(sourceRef) EventPattern { return sourceCombatEventPattern{blocking: true} }
@@ -37,5 +52,21 @@ func (p sourceCombatEventPattern) inspectDefinition() definitionNode {
 	if p.blocking {
 		label = "source blocks"
 	}
-	return definitionNode{Role: "event-pattern", Text: label, battlefieldSource: true}
+	n := definitionNode{Role: "event-pattern", Text: label, battlefieldSource: true}
+	if p.captureDefender {
+		if p.blocking || p.defender == nil || p.duplicateDefender {
+			n.problem = "attack event: supply one defending player binding"
+		} else {
+			n.bindingWrite = p.defender
+			n.children = append(n.children, definitionEdge{"defender", &eventPlayerCapture{binding: p.defender}})
+		}
+	}
+	return n
+}
+
+func (p sourceCombatEventPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
+	if !p.captureDefender {
+		return effects
+	}
+	return []Effect{Sequence(&eventPlayerCapture{binding: p.defender, player: event.TargetID}, Sequence(effects...))}
 }

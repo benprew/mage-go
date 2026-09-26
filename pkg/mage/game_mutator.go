@@ -978,6 +978,7 @@ func (g *Game) ExecuteAttackers(playerID uuid.UUID, attackerIDs []uuid.UUID) {
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
 			PlayerID: playerID,
+			TargetID: defender.PlayerID(),
 		})
 	}
 	g.combat.SnapshotAttackedAlone()

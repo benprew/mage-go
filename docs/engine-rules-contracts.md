@@ -333,6 +333,8 @@ Evidence: `TestSpellStepRestriction` (every step, both players, four cast paths)
 
 ## Combat Removal (CR 506.4, 509.1h)
 
+An `EvtDeclaredAttacker` records its defending player in `TargetID` when the attack is declared. Both the turn path and simulated declaration path supply this value. A typed attack trigger captures it before the stack entry is made, so later combat changes do not change the saved player.
+
 `EvtCreatureBlockedBy` occurs once for each new attacker and blocker pair after legal blocker declarations settle. `BecomesBlockedBy(This)` uses this event and checks the blocker subtype when the event occurs. `WithBlocker` saves that blocker's battlefield incarnation in the pending trigger. A copied trigger and a cloned game keep independent captures. The binding does not follow a blocker that leaves and returns, and a phased-out blocker is absent until it phases in.
 
 `EvtBlockerGroup` reports the new legal combat pairs once per creature after blocker restrictions and requirements settle. `SourceID` identifies that creature; `RelatedIDs` contains the new opposing creatures in combat order. `Flag` is true when the source blocks and false when it becomes blocked. A creature put onto the battlefield blocking produces only the attacker-side event. Existing pairs and pairs removed by restrictions produce no group event. Trigger detection checks the opposing creatures' characteristics at event time; the pending event and its member list are copied for a cloned game. `BlocksOrBecomesBlockedBy(This).OfSubtype(subtype)` uses this event for a filtered "one or more" group (CR 509.3, 509.4).

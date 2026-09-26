@@ -16,7 +16,7 @@ func TestSourceCombatEvents(t *testing.T) {
 		flag  bool
 		make  func(sourceRef) EventPattern
 	}{
-		{"attacks", EvtDeclaredAttacker, false, Attacks},
+		{"attacks", EvtDeclaredAttacker, false, func(ref sourceRef) EventPattern { return Attacks(ref) }},
 		{"blocks", EvtDeclaredBlocker, true, Blocks},
 		{"becomes blocked", EvtCreatureBecomesBlocked, false, BecomesBlocked},
 	} {

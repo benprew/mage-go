@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attack Defending-Player Capture
+
+`Attacks(This).WithDefendingPlayer(*PlayerBinding)` saves the defending player from the declaration event for `WhenEvent` and `WhenEventModes`. Both normal and simulated attack declarations now put the defending player in `EvtDeclaredAttacker.TargetID`; the trigger captures that event value in its own resolution frame. This adds no target, attack-batch pattern, unblocked-after-blockers pattern, or production card wiring. Existing `Attacks(This)` and legacy exports remain. The engine's two-player attack service supplies a player defender. A future player-or-planeswalker recipient binding needs a distinct typed role.
+
+The new focused tests first failed at compile time because the binding method was absent. They cover actual declaration, event-time capture after source departure and return, clone isolation, phasing, source absence, scope validation, and invalid declarations. The relevant inventory cases for Mindstab Thrull and Necrite still need an unblocked-attacker event and successful optional sacrifice; their JSON gaps stay open. Hellrider still needs an each-attacker event and recipient identity. The next dependency-ready work is the T recorded target-group boundary or the E unblocked-attacker event prerequisite, after a fresh audit.
+
+`go test ./pkg/mage -run '^TestAttackDefendingPlayer|^TestSourceCombatEvents' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. No gap record is closed because no production card was migrated.
+
 ## Current Slice: Creature-You-Sacrifice Event
 
 `CreatureYouSacrifice() EventPattern` matches each completed creature sacrifice made by the battlefield source's controller, including tokens and the source itself. It uses the existing `EvtSacrifice` payload and pending-trigger service. The pattern is available through `WhenEvent` and `WhenEventModes` and has no participant binding or target. The source's departure LKI supports self-sacrifice; a pending trigger retains its controller and source incarnation through a return. Legacy sacrifice-trigger exports and all production callers remain.

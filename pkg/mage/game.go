@@ -3215,6 +3215,7 @@ func (g *Game) doDeclareAttackers() {
 			Type:     EvtDeclaredAttacker,
 			SourceID: id,
 			PlayerID: active.PlayerID(),
+			TargetID: defender.PlayerID(),
 		})
 	}
 
