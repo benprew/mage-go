@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Hand Visit Identity for Draw Results
+
+`BasePlayer.handVisit(cardID)` is an internal read of a card's current hand visit. `AddToHand` creates a visit, `RemoveFromHand` ends it, and `SetHand` preserves visits for cards that remain while assigning new visits to added cards. Game cloning retains current visits and copies the map on later hand changes. The shared `PlayerDrawCard` path therefore gives a completed draw a hand identity, while a replaced or empty-library draw gives none. This is the zone-identity prerequisite for a typed drawn-card result; no new author export or production card changed. The existing `Draw(PlayerRef, ResolutionValue, ...DrawResultOption)` and `DrawAmountInto(*NumberBinding)` signatures remain the supported count-only API in spells, activations, and triggers.
+
+The contract tests first failed because `handVisit` did not exist. They cover departure and return, unchanged-hand restore, draw and replacement, discard, and clone isolation. Sindbad's complete Oracle text in `data/ARN.json` needs the actually drawn card for reveal and conditional discard. Read the Runes' complete text in `data/JMP.json` needs per-card choices. Both remain blocked by card-result and choice adapters plus card wiring; their gap records are unchanged. A fresh production search found no typed drawn-card result caller because no such export exists. The next dependency-ready P slice is a typed drawn-card result using the recorded hand visit, with inspection, frame, copy, and registration contracts. This prerequisite has no target, phasing, or replacement-ordering declaration of its own; it uses the existing draw service for those boundaries.
+
 ## Current Slice: Singular Draw Count Result
 
 `Draw(PlayerRef, ResolutionValue, ...DrawResultOption)` now accepts `DrawAmountInto(*NumberBinding)`. The option saves the number of successful individual draws from that instruction in the resolution frame. Empty-library attempts, replaced draws, and absent recipients contribute zero. The two-argument form, `DrawEach`, and all legacy exports remain. The adapter reuses `PlayerDrawCard`, its replacement and event service, and the existing number-binding scope and copy machinery. It does not bind drawn card identities or count a collection draw.

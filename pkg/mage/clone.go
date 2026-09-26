@@ -94,6 +94,12 @@ func extractBasePlayer(p Player) *BasePlayer {
 	}
 	// Copy zones.
 	bp.hand = cloneCardSlice(p.Hand())
+	if visited, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
+		bp.handVisits = make(map[uuid.UUID]uuid.UUID, len(bp.hand))
+		for _, card := range bp.hand {
+			bp.handVisits[card.ID()] = visited.handVisit(card.ID())
+		}
+	}
 	bp.graveyard = cloneCardSlice(p.Graveyard())
 	if visited, ok := p.(interface{ graveyardVisit(uuid.UUID) uuid.UUID }); ok {
 		bp.graveyardVisits = make(map[uuid.UUID]uuid.UUID, len(bp.graveyard))
@@ -126,6 +132,7 @@ func cloneBasePlayer(bp *BasePlayer) *BasePlayer {
 	}
 	// Copy card slices (sharing Card refs).
 	clone.hand = cloneCardSlice(bp.hand)
+	clone.handVisits = bp.handVisits
 	clone.graveyard = cloneCardSlice(bp.graveyard)
 	clone.graveyardVisits = bp.graveyardVisits
 	clone.library = cloneCardSlice(bp.library)

@@ -156,6 +156,7 @@ type BasePlayer struct {
 	lost            bool // true if the player has lost the game (e.g. deck-out)
 	drewFromEmpty   bool // set when a draw is attempted from an empty library
 	hand            []Card
+	handVisits      map[uuid.UUID]uuid.UUID
 	graveyard       []Card
 	graveyardVisits map[uuid.UUID]uuid.UUID
 	library         []Card
@@ -224,16 +225,38 @@ func (p *BasePlayer) Hand() []Card { return p.hand }
 func (p *BasePlayer) AddToHand(c Card) {
 	p.assertOwner(c)
 	p.hand = append(p.hand, c)
+	p.recordHandVisit(c.ID())
 }
 
 func (p *BasePlayer) SetHand(cards []Card) {
+	previous := p.handVisits
 	p.hand = cards
+	p.handVisits = make(map[uuid.UUID]uuid.UUID, len(cards))
+	for _, card := range cards {
+		visit := previous[card.ID()]
+		if visit == uuid.Nil {
+			visit = uuid.New()
+		}
+		p.handVisits[card.ID()] = visit
+	}
 }
+
+func (p *BasePlayer) recordHandVisit(id uuid.UUID) {
+	p.handVisits = maps.Clone(p.handVisits)
+	if p.handVisits == nil {
+		p.handVisits = make(map[uuid.UUID]uuid.UUID)
+	}
+	p.handVisits[id] = uuid.New()
+}
+
+func (p *BasePlayer) handVisit(id uuid.UUID) uuid.UUID { return p.handVisits[id] }
 
 func (p *BasePlayer) RemoveFromHand(id uuid.UUID) (Card, bool) {
 	for i, c := range p.hand {
 		if c.ID() == id {
 			p.hand = removeAt(p.hand, i)
+			p.handVisits = maps.Clone(p.handVisits)
+			delete(p.handVisits, id)
 			return c, true
 		}
 	}
