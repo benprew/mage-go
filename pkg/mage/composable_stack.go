@@ -28,6 +28,9 @@ func (b *SpellTargetBinding) resolveStackObject(ctx *EffectContext) (*StackObjec
 		return nil, false
 	}
 	obj := ctx.Game.stack.FindByID(value.id)
+	if obj == nil {
+		obj = ctx.Game.stack.FindBySourceID(value.id)
+	}
 	return obj, obj != nil && !obj.IsAbility && obj.Card != nil
 }
 func (b *SpellTargetBinding) inspectDefinition() definitionNode {

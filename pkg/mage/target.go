@@ -1042,6 +1042,16 @@ type SpellOnStackTarget struct {
 	controlledByYou bool
 }
 
+// IsSpellOnStackTarget reports whether t targets a spell currently on the stack.
+func IsSpellOnStackTarget(t Target) bool {
+	switch UnwrapTarget(t).(type) {
+	case *SpellOnStackTarget, *typedSpellTarget:
+		return true
+	default:
+		return false
+	}
+}
+
 // TargetSpellOnStack creates a target that selects a spell currently on the stack (for counterspells),
 // optionally narrowed by CardFilter predicates.
 func TargetSpellOnStack(filters ...CardFilter) Target {

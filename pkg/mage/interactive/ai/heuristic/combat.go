@@ -615,7 +615,7 @@ func (s *Strategy) pumpPowerAction(playerID uuid.UUID, g *mage.Game, abilities [
 	for i := range abilities {
 		info := &abilities[i]
 		perm := g.FindPermanent(info.PermanentID)
-		if perm == nil || perm.ID() != source.ID() {
+		if perm == nil || (perm.ID() != source.ID() && perm.AttachedTo != source.ID()) {
 			continue
 		}
 		if info.AbilityIndex < 0 || info.AbilityIndex >= len(perm.RuntimeAbilities) {

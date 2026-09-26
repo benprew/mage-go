@@ -158,20 +158,21 @@ func TestPriorityAction_CountersOpponentSpell(t *testing.T) {
 
 	// Opponent's creature spell is on the stack.
 	dragon := createCard(t, "Grizzly Bears", pb.PlayerID())
-	g.PushStack(&mage.StackObject{
+	stackObj := &mage.StackObject{
 		ID:         uuid.New(),
 		Card:       dragon,
 		Controller: pb.PlayerID(),
 		SourceID:   dragon.ID(),
-	})
+	}
+	g.PushStack(stackObj)
 
 	s := New(ai.ControlWeighted)
 	action := s.PriorityAction(pa, g, 0, false)
 	if action.Type != interactive.ActionCastSpell || action.CardName != "Counterspell" {
 		t.Fatalf("expected Counterspell to be cast in response, got %+v", action)
 	}
-	if len(action.Targets) != 1 || action.Targets[0] != dragon.ID() {
-		t.Fatalf("expected Counterspell to target the opposing spell %v, got %v", dragon.ID(), action.Targets)
+	if len(action.Targets) != 1 || action.Targets[0] != stackObj.ID {
+		t.Fatalf("expected Counterspell to target the opposing spell %v, got %v", stackObj.ID, action.Targets)
 	}
 }
 
@@ -187,12 +188,17 @@ func TestAutoSelectTargets_Counterspell_PicksBestOpposingSpell(t *testing.T) {
 	mine := createCard(t, "Grizzly Bears", pa.PlayerID())
 	cheap := createCard(t, "Grizzly Bears", pb.PlayerID())
 	bomb := createCard(t, "Shivan Dragon", pb.PlayerID())
+	var bombID uuid.UUID
 	for _, sp := range []struct {
 		card mage.Card
 		ctrl uuid.UUID
 	}{{mine, pa.PlayerID()}, {cheap, pb.PlayerID()}, {bomb, pb.PlayerID()}} {
+		objID := uuid.New()
+		if sp.card == bomb {
+			bombID = objID
+		}
 		g.PushStack(&mage.StackObject{
-			ID:         uuid.New(),
+			ID:         objID,
 			Card:       sp.card,
 			Controller: sp.ctrl,
 			SourceID:   sp.card.ID(),
@@ -201,7 +207,7 @@ func TestAutoSelectTargets_Counterspell_PicksBestOpposingSpell(t *testing.T) {
 
 	s := New(ai.ControlWeighted)
 	targets := s.autoSelectTargets(pa, g, counter)
-	if len(targets) != 1 || targets[0] != bomb.ID() {
+	if len(targets) != 1 || targets[0] != bombID {
 		t.Fatalf("Counterspell should target the opponent's highest-value spell (Shivan Dragon), got %v", targets)
 	}
 }

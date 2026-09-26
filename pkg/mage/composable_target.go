@@ -31,6 +31,14 @@ func (*targetDeclaration) Reset()                                           {}
 func (b *targetDeclaration) Min() int                                       { return b.spec.Min() }
 func (b *targetDeclaration) Max() int                                       { return b.spec.Max() }
 
+// UnwrapTarget returns the underlying Target if wrapped in a targetDeclaration.
+func UnwrapTarget(t Target) Target {
+	if td, ok := t.(*targetDeclaration); ok {
+		return td.spec
+	}
+	return t
+}
+
 // PermanentTargetBinding is a singular permanent target reference.
 type PermanentTargetBinding struct{ *targetDeclaration }
 

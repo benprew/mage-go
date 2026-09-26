@@ -1102,7 +1102,7 @@ func TestPriorityAction_PumpsUnblockedAttackerForLethal(t *testing.T) {
 		if action.Type != interactive.ActionActivateAbility {
 			break
 		}
-		if action.PermanentID != wall.ID() {
+		if action.PermanentID != blessing.ID() {
 			t.Fatalf("expected the AI to pump its unblocked attacker for lethal, got %+v", action)
 		}
 		if err := g.ActivateAbilityByIndex(pa.PlayerID(), action.PermanentID, action.AbilityIndex, action.Targets); err != nil {

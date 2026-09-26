@@ -403,14 +403,16 @@ func (s *Strategy) autoSelectAbilityTargets(p mage.Player, g *mage.Game, perm *m
 			return nil, false
 		}
 
-		switch t.(type) {
-		case *mage.SpellOnStackTarget:
+		if mage.IsSpellOnStackTarget(t) {
 			chosen := bestSpellOnStackTargets(g, playerID, possible, 1)
 			if len(chosen) == 0 {
 				return nil, false
 			}
 			targets = append(targets, chosen...)
 			continue
+		}
+
+		switch mage.UnwrapTarget(t).(type) {
 
 		case *mage.DamageAnyTarget:
 			if outcome == mage.OutcomeBenefit {
@@ -602,10 +604,11 @@ func (s *Strategy) selectTargetsForSpec(g *mage.Game, playerID uuid.UUID, t mage
 	n := max(maxTargets, 1)
 	opponent := g.GetOpponent(playerID)
 
-	switch t.(type) {
-	case *mage.SpellOnStackTarget:
+	if mage.IsSpellOnStackTarget(t) {
 		return bestSpellOnStackTargets(g, playerID, possible, n)
+	}
 
+	switch mage.UnwrapTarget(t).(type) {
 	case *mage.DamageAnyTarget:
 		if outcome == mage.OutcomeBenefit {
 			return bestNTargetsForRequirement(g, playerID, possible, eval.TargetPump, 0, true, false, hint.PreferTarget, n)
@@ -798,14 +801,19 @@ func bestSpellOnStackTargets(g *mage.Game, playerID uuid.UUID, possible []uuid.U
 		if obj.IsAbility || obj.Card == nil || obj.Controller == playerID {
 			continue
 		}
-		if !slices.Contains(possible, obj.SourceID) {
+		var targetID uuid.UUID
+		if slices.Contains(possible, obj.ID) {
+			targetID = obj.ID
+		} else if slices.Contains(possible, obj.SourceID) {
+			targetID = obj.SourceID
+		} else {
 			continue
 		}
 		score := max(
 			// Any opposing spell legal to counter is worth at least a floor value, so
 			// a low-cost spell is still a valid target rather than being skipped.
 			eval.SpellValue(obj.Card, g.GetPlayer(obj.Controller), g), 1)
-		ranked = append(ranked, scoredSpell{obj.SourceID, score})
+		ranked = append(ranked, scoredSpell{targetID, score})
 	}
 	sort.SliceStable(ranked, func(i, j int) bool {
 		return ranked[i].score > ranked[j].score
