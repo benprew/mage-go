@@ -74,12 +74,46 @@ type AuraAIProfile struct {
 	StealsControl  bool
 }
 
-// AuraAIProfile returns the AI targeting profile for an aura, if one was set.
+// AuraAIProfile returns the AI targeting profile for an aura, derived from its composable
+// abilities or falling back to an explicit profile set via WithAuraAIProfile.
 func (c *BaseCard) AuraAIProfile() (AuraAIProfile, bool) {
-	if c.auraAIProfile == nil {
+	if profile, ok := c.deriveAuraAIProfile(); ok {
+		return profile, true
+	}
+	if c.auraAIProfile != nil {
+		return *c.auraAIProfile, true
+	}
+	return AuraAIProfile{}, false
+}
+
+func (c *BaseCard) deriveAuraAIProfile() (AuraAIProfile, bool) {
+	if !c.HasSubType("Aura") {
 		return AuraAIProfile{}, false
 	}
-	return *c.auraAIProfile, true
+	var profile AuraAIProfile
+	found := false
+	for _, a := range c.abilities {
+		holder, ok := UnwrapAbility(a).(*StaticAbilityHolder)
+		if !ok {
+			continue
+		}
+		for _, eff := range holder.Effects {
+			if eff.GetLayer() == LayerControl {
+				profile.StealsControl = true
+				found = true
+			}
+			props := eff.Properties()
+			if props.PowerBoost != 0 || props.ToughnessBoost != 0 {
+				profile.PowerBoost += props.PowerBoost
+				profile.ToughnessBoost += props.ToughnessBoost
+				found = true
+			}
+		}
+	}
+	if found {
+		return profile, true
+	}
+	return AuraAIProfile{}, false
 }
 
 // AttrSeeds returns the keyword/attr seeds for this card.

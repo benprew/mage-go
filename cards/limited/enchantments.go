@@ -49,7 +49,6 @@ func registerEnchantments() {
 	// Enchanted creature gets +1/+2.
 	Register("Holy Strength", func() Card {
 		return NewAura("Holy Strength", "{W}",
-			WithAuraAIProfile(AuraAIProfile{PowerBoost: 1, ToughnessBoost: 2}),
 			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(1), Fixed(2))))),
 		)
 	})
@@ -58,7 +57,6 @@ func registerEnchantments() {
 	// Enchanted creature gets +2/+1.
 	Register("Unholy Strength", func() Card {
 		return NewAura("Unholy Strength", "{B}",
-			WithAuraAIProfile(AuraAIProfile{PowerBoost: 2, ToughnessBoost: 1}),
 			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(2), Fixed(1))))),
 		)
 	})
@@ -67,7 +65,6 @@ func registerEnchantments() {
 	// Enchanted creature gets -2/-1.
 	Register("Weakness", func() Card {
 		return NewAura("Weakness", "{B}",
-			WithAuraAIProfile(AuraAIProfile{PowerBoost: -2, ToughnessBoost: -1}),
 			WithAbility(Static(While(Controls(AnyPermanent), ModifyPT(AttachedPermanent, Fixed(-2), Fixed(-1))))),
 		)
 	})

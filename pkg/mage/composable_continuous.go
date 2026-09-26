@@ -398,10 +398,12 @@ type composedLayerEffect struct {
 	grantID           uuid.UUID
 }
 
-func (e *composedLayerEffect) Text() string                 { return "continuous modification" }
-func (e *composedLayerEffect) Properties() EffectProperties { return EffectProperties{} }
-func (e *composedLayerEffect) GetLayer() Layer              { return e.layer }
-func (e *composedLayerEffect) GetDuration() Duration        { return e.duration }
+func (e *composedLayerEffect) Text() string { return "continuous modification" }
+func (e *composedLayerEffect) Properties() EffectProperties {
+	return propertiesFromModifications(e.modifications)
+}
+func (e *composedLayerEffect) GetLayer() Layer       { return e.layer }
+func (e *composedLayerEffect) GetDuration() Duration { return e.duration }
 func (e *composedLayerEffect) survivesSourceExit() bool {
 	return e.rule == nil && !e.sourceBound
 }
@@ -490,13 +492,12 @@ func (e *untilEffect) Text() string {
 		return body + " indefinitely"
 	}
 }
-func (e *untilEffect) Properties() EffectProperties {
+func propertiesFromModifications(modifications []*layerModification) EffectProperties {
 	p := EffectProperties{Outcome: OutcomeBenefit}
-	for _, value := range e.modifications {
-		if nilDefinition(value) {
+	for _, m := range modifications {
+		if m == nil {
 			continue
 		}
-		m := value.modification()
 		if m.layer == LayerControl {
 			p.Outcome = OutcomeDetriment
 		}
@@ -523,6 +524,16 @@ func (e *untilEffect) Properties() EffectProperties {
 		p.Outcome = OutcomeDetriment
 	}
 	return p
+}
+
+func (e *untilEffect) Properties() EffectProperties {
+	var mods []*layerModification
+	for _, value := range e.modifications {
+		if !nilDefinition(value) {
+			mods = append(mods, value.modification())
+		}
+	}
+	return propertiesFromModifications(mods)
 }
 
 // KeywordGrantTargetIndex identifies one pure target keyword grant for AI checks.
