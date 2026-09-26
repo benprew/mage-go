@@ -1105,6 +1105,18 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
+  * `ReceivesDamage(This, amountBinding).WithSourceController(controllerBinding)`: A battlefield source permanent receives positive damage. The pattern saves the final amount and, when requested, the damage source's controller at event time. Use it in `WhenEvent` or `WhenEventModes`. The controller is an event participant, not a target. The amount binding is required; the controller capture is optional. Registration rejects nil, unnamed, and out-of-scope bindings.
+    ```go
+    func damageRecipient() dsl.Card {
+        amount := dsl.BindNumber("damage")
+        controller := dsl.BindPlayer("source controller")
+        return dsl.NewCreature("Damage Recipient", "{4}{U}", 2, 5,
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.ReceivesDamage(dsl.This, amount).WithSourceController(controller),
+                dsl.Mill(dsl.FromPlayer(controller), dsl.FromNumber(amount)),
+            )))
+    }
+    ```
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
   * `OpponentDrawsCard(playerBinding) EventPattern`: An opponent of the source controller draws one card. The pattern saves the drawer in a `PlayerBinding` when the draw occurs. Read it with `FromPlayer` in a `WhenEvent` or `WhenEventModes` body. A draw that is replaced or fails on an empty library does not match. The saved player is not a target.
     ```go

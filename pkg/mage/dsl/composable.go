@@ -184,6 +184,7 @@ var (
 	AtModes                 = mage.AtModes
 	DealsDamage             = mage.DealsDamage
 	ControllerIsDealtDamage = mage.ControllerIsDealtDamage
+	ReceivesDamage          = mage.ReceivesDamage
 	DealsDamageToPlayer     = mage.DealsDamageToPlayer
 	DealsDamageToOpponent   = mage.DealsDamageToOpponent
 	OpponentLosesLife       = mage.OpponentLosesLife

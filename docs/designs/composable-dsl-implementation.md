@@ -1,5 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Permanent Receives Damage Event
+
+`ReceivesDamage(This, amount).WithSourceController(controller)` is a typed battlefield event pattern for `WhenEvent` and `WhenEventModes`. The amount is required; the source-controller capture is optional. It matches each positive damage event whose final permanent recipient is the source and saves the final amount and captured damage source controller in that trigger instance. It reuses the shared damage event, trigger, and binding services. No new damage executor, target, or replacement rule was added.
+
+Belltower Sphinx's complete Oracle text was checked in `data/JMP.json` and its Jumpstart inventory and gap record. This adapter supplies its receives-damage event, amount, and source-controller requirements. Its production declaration and complete migration audit remain open, so the gap record stays blocked. Legacy callers and exports remain unchanged. Focused tests failed first because the constructor was absent. They cover prevention, phasing, source and recipient departure and return, owner/controller separation, simultaneous damage, stack copies, game clones, inspection, and invalid declarations. The next dependency-ready slice is another E event participant or a P/T prerequisite after a fresh audit.
+
+`go test ./pkg/mage -run '^TestReceivesDamage' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff contains only this adapter, its synthetic tests, and documentation. No production card, legacy export, gap record, or unrelated untracked file changed.
+
+
 ## Current Slice: Damage Event Source Controller
 
 `core.GameEvent.SourceControllerID` now records the controller in the captured damage source on each positive `EvtDamageDealt`, for player and permanent recipients. The shared damage executor supplies this event-time identity after replacement and prevention. A source that leaves and returns under another controller cannot change it. No typed event adapter or card declaration changed in this prerequisite slice. Belltower Sphinx's complete text was checked in `data/JMP.json` and the Jumpstart inventory and gap record; its `ReceivesDamage` event pattern, amount and source-controller bindings, and card wiring remain open. The gap record remains blocked. Production callers and legacy exports remain unchanged.
