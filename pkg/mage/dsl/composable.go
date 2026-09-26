@@ -97,6 +97,8 @@ var (
 	TargetOpponentOnly         = mage.TargetOpponentOnly
 	// WithTargets binds declared target bindings to a spell, activation, or trigger.
 	WithTargets = mage.WithTargets
+	// WithTargetGroups declares independent spell target groups.
+	WithTargetGroups = mage.WithTargetGroups
 	// Spell constructs the resolving ability of an instant or sorcery card.
 	Spell = mage.Spell
 	// Activate constructs an activated ability from costs, an effect body, and optional restrictions.

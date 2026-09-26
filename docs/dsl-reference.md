@@ -118,15 +118,36 @@ Spell(
   in this group. A copy that chooses new targets cannot move a choice to a
   different group. `WhenEvent` and `WhenEventModes` can declare multiple
   variable-size groups: the controller chooses each group separately when the
-  trigger goes on the stack. `Spell`, `Activate`, and delayed declarations
-  still allow only one variable-size group because their flat announcement
-  paths cannot distinguish independent group counts.
+  trigger goes on the stack. `Spell(effect, WithTargetGroups(bindings...))`
+  declares independent groups for `Game.CastSpellByNameWithTargetGroups(playerID,
+  name, groups, optionalX)`. The cast argument has one UUID slice per declared
+  group, including an empty slice for an unchosen optional group. The flat cast
+  path rejects this declaration before payment. `Activate` and delayed
+  declarations still allow only one variable-size group.
 
 ```go
 creatures := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature)
 ability := dsl.Spell(dsl.DestroyEach(creatures), dsl.WithTargets(creatures))
 _ = ability
 ```
+
+For a required opponent target and two independent optional creature targets:
+
+```go
+opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
+first := dsl.TargetPermanents("first", 0, 1, dsl.IsCreature)
+second := dsl.TargetPermanents("second", 0, 1, dsl.IsCreature)
+ability := dsl.Spell(dsl.Sequence(
+    dsl.LoseLife(opponent, dsl.Fixed(1)),
+    dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(first, dsl.Fixed(1), dsl.Fixed(1))),
+    dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(second, dsl.Fixed(-1), dsl.Fixed(-1))),
+), dsl.WithTargetGroups(opponent, first, second))
+_ = dsl.NewInstant("Example", "", dsl.WithAbility(ability))
+```
+
+The cast input `[][]uuid.UUID{{opponentID}, {}, {creatureID}}` chooses only the
+second optional creature group. Each group is checked before costs are paid.
+Its target positions remain fixed through resolution and copying.
 
 For two independent optional targets on a trigger, declare separate bindings:
 

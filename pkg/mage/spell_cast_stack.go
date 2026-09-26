@@ -14,6 +14,7 @@ type castStackObjectOptions struct {
 	Card              Card
 	Controller        uuid.UUID
 	Targets           []uuid.UUID
+	TargetSpecs       []Target
 	XValue            int
 	CastZone          Zone
 	SourceID          uuid.UUID
@@ -23,6 +24,27 @@ type castStackObjectOptions struct {
 	PromptTargets     bool
 	ModePrompt        string
 	ModalSelection    *modalSpellSelection
+}
+
+func (g *Game) prepareSpellTargetGroups(controller uuid.UUID, card Card, groups [][]uuid.UUID, x int) ([]uuid.UUID, []Target, error) {
+	specs := card.CastTargets()
+	if len(groups) != len(specs) {
+		return nil, nil, fmt.Errorf("spell requires %d target groups", len(specs))
+	}
+	var targets []uuid.UUID
+	var aligned []Target
+	for i, spec := range specs {
+		chosen := append([]uuid.UUID(nil), groups[i]...)
+		chosen = g.acquireOpponentChosenTargets(controller, card, []Target{spec}, chosen)
+		if err := g.validateActionTargets(controller, card, []Target{spec}, chosen, x, "spell target group"); err != nil {
+			return nil, nil, fmt.Errorf("target group %d: %w", i+1, err)
+		}
+		targets = append(targets, chosen...)
+		for range chosen {
+			aligned = append(aligned, spec)
+		}
+	}
+	return targets, aligned, nil
 }
 
 func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, error) {
@@ -83,6 +105,9 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	}
 	if modal, ok := getModalSpellAbility(card); ok {
 		obj.TargetSpecs = expandTargetSpecs(modal.Modes()[modeChoice].Targets, targets, opts.XValue)
+	}
+	if opts.TargetSpecs != nil {
+		obj.TargetSpecs = append([]Target(nil), opts.TargetSpecs...)
 	}
 	if opts.SnapshotCast {
 		obj.CastContext = g.snapshotCastContext(opts.Controller)

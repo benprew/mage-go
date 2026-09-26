@@ -189,6 +189,7 @@ type ActionDefinition struct {
 	effects             []Effect
 	costs               []Cost
 	targets             []Target
+	groupedTargets      bool
 	timing              TimingRule
 	stepOnly            PhaseStep
 	stepMask            uint32

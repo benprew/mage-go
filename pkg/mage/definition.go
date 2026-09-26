@@ -121,6 +121,9 @@ func describeDefinition(v any) definitionNode {
 	case *ModalSpellAbility:
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
+		if e.groupedTargets && len(e.targets) == 0 {
+			n.problem = "grouped spell targets require declarations"
+		}
 		for i, restriction := range e.dslRestrictions {
 			if e.kind == ActionSpell {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), spellStepDefinition{restriction.step, restriction.moreSteps}})
@@ -128,7 +131,7 @@ func describeDefinition(v any) definitionNode {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), restriction})
 			}
 		}
-		n.children = append(n.children, declaredTargetNodes(e.targets)...)
+		n.children = append(n.children, declaredTargetNodes(e.targets, e.kind == ActionSpell && e.groupedTargets)...)
 		for i, cost := range e.costs {
 			if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})

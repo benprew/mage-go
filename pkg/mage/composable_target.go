@@ -121,6 +121,18 @@ func (targetOptions) spellOption()                          {}
 func (targetOptions) activationOption()                     {}
 func (o targetOptions) applySpell(a *ActionDefinition)      { applyTargetOptions(a, o.bindings) }
 func (o targetOptions) applyActivation(a *ActionDefinition) { applyTargetOptions(a, o.bindings) }
+
+type spellTargetGroupsOption struct{ bindings []TargetBinding }
+
+// WithTargetGroups declares spell targets chosen as separate groups at casting.
+func WithTargetGroups(bindings ...TargetBinding) SpellOption {
+	return spellTargetGroupsOption{bindings: append([]TargetBinding(nil), bindings...)}
+}
+func (spellTargetGroupsOption) spellOption() {}
+func (o spellTargetGroupsOption) applySpell(a *ActionDefinition) {
+	a.groupedTargets = true
+	applyTargetOptions(a, o.bindings)
+}
 func applyTargetOptions(a *ActionDefinition, bindings []TargetBinding) {
 	for _, b := range bindings {
 		if nilDefinition(b) {

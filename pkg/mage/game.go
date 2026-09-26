@@ -2663,6 +2663,15 @@ func chooseModeForStackObject(obj *StackObject, modes []string, chooser Player, 
 
 // CastSpellByName finds a card in player's hand, puts it on the stack.
 func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, xValues ...int) error {
+	return g.castSpellByName(playerID, name, targets, nil, xValues...)
+}
+
+// CastSpellByNameWithTargetGroups casts a spell with one choice slice per declared target group.
+func (g *Game) CastSpellByNameWithTargetGroups(playerID uuid.UUID, name string, groups [][]uuid.UUID, xValues ...int) error {
+	return g.castSpellByName(playerID, name, nil, groups, xValues...)
+}
+
+func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID, groups [][]uuid.UUID, xValues ...int) error {
 	p := g.GetPlayer(playerID)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -2718,13 +2727,31 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if xValue < 0 {
 		return fmt.Errorf("x cannot be negative")
 	}
+	grouped := false
+	for _, ability := range card.Abilities() {
+		if action, ok := ability.(*ActionDefinition); ok && action.kind == ActionSpell && action.groupedTargets {
+			grouped = true
+			break
+		}
+	}
+	if grouped != (groups != nil) {
+		return fmt.Errorf("spell target group announcement does not match declaration")
+	}
+	var aligned []Target
+	if grouped {
+		var err error
+		targets, aligned, err = g.prepareSpellTargetGroups(playerID, card, groups, xValue)
+		if err != nil {
+			return err
+		}
+	}
 	selection, err := g.prepareModalSpellSelection(p, card, targets, xValue, "")
 	if err != nil {
 		return err
 	}
 	if selection != nil {
 		targets = selection.targets
-	} else {
+	} else if !grouped {
 		targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
 		targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
 		if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
@@ -2832,6 +2859,7 @@ func (g *Game) CastSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		Card:            card,
 		Controller:      playerID,
 		Targets:         targets,
+		TargetSpecs:     aligned,
 		XValue:          xValue,
 		CastZone:        ZoneHand,
 		SnapshotCast:    true,
