@@ -671,6 +671,19 @@ func choiceLand() *dsl.BaseCard {
 * `ForEach(set, memberBinding, body)`: Iterates sequentially over permanents in the set.
 * `FlipCoin(playerRef, OnWin(effect), OnLoss(effect))`: Resolves a coin flip through the game's deterministic RNG.
 * `IfState(condition, effect)`: Resolution-time branch based on pure game state.
+* `IsYourTurn() StateCondition`: Checks whether the active player is the stored controller when the condition is evaluated. Use it with `IfState` in a spell, activation, or trigger body; it also works in pure static and state conditions. It does not restrict announcement or activation. For example:
+
+```go
+package example
+
+import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func turnCheck() *dsl.BaseCard {
+    return dsl.NewInstant("Turn check", "{W}",
+        dsl.Spell(dsl.IfState(dsl.IsYourTurn(),
+            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+}
+```
 * `IfPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body only if paid.
 * `UnlessPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body if declined/unpaid.
   For "destroy this creature unless you pay {1}", use

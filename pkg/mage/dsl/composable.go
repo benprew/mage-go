@@ -290,6 +290,7 @@ var (
 	SourceUntappedCondition         = mage.SourceUntappedCondition
 	SourceBlockingCondition         = mage.SourceBlockingCondition
 	SourceAttackedThisTurnCondition = mage.SourceAttackedThisTurnCondition
+	IsYourTurn                      = mage.IsYourTurn
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
 	GainLife = mage.GainLifeFor
 	LoseLife = mage.LoseLifeFor

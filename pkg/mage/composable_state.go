@@ -23,6 +23,20 @@ type StateContext struct {
 	SourceIncarnation uuid.UUID
 }
 
+type yourTurnCondition struct{}
+
+// IsYourTurn checks the active player when the condition is evaluated.
+func IsYourTurn() StateCondition { return yourTurnCondition{} }
+
+func (yourTurnCondition) stateCondition() {}
+func (yourTurnCondition) checkState(g GameReader, ctx StateContext) bool {
+	active := g.ActivePlayerObj()
+	return active != nil && ctx.ControllerID != uuid.Nil && active.PlayerID() == ctx.ControllerID
+}
+func (yourTurnCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "it is your turn"}
+}
+
 type sourceTappedCondition struct{ tapped bool }
 
 type permanentTappedCondition struct {

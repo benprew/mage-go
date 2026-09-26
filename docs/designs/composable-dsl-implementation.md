@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Pure Your-Turn State Condition
+
+`IsYourTurn() StateCondition` compares the current active player with the stored controller in the condition context. It works with `IfState` in spell, activation, and trigger bodies and with the existing pure condition combinators. It reuses `GameReader.ActivePlayerObj` and the existing state-condition evaluator. It adds no turn subsystem, cast restriction, payment, or card wiring. The source can be absent because the turn question concerns the player. Rapier Wit's complete text was checked in `data/SOS.json` and its Secrets of Strixhaven inventory and gap record. This condition supplies its resolution-time turn check; target legality, tap, stun counter, draw, and production card wiring remain a separate migration. The gap record stays open.
+
+Contract tests first failed because `IsYourTurn` was undefined. They cover either active player, stored-controller identity, an absent spell source, clone isolation, inspection, and registration. Existing `OnlyOnYourTurn` and production callers remain. The next dependency-ready work is a P payment output or another small S state predicate after a fresh audit.
+
+`go test ./pkg/mage -run '^TestIsYourTurn' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The reference example compiles. No production card or gap record changed.
+
 ## Current Slice: Source Combat Damage to Player Event
 
 `DealsCombatDamageToPlayer(This, player).WithAmount(amount)` is a typed battlefield event pattern for `WhenEvent` and `WhenEventModes`. It reuses the shared positive damage event, its combat flag, and instance-local player and optional amount captures. The amount is final after prevention. It does not add a damage executor, grouped damage pattern, delayed subscription, or card wiring. Initiate's Companion's complete text was checked in `data/JMP.json` and the Jumpstart inventory and gap record. This pattern supplies its combat-only event requirement; its production declaration still needs a separate card audit and migration, so the gap record stays blocked. Legacy callers and exports remain.
