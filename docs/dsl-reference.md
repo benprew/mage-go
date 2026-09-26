@@ -1085,6 +1085,16 @@ Triggers on rules events dispatched by the engine:
   * `DealsDamage(source, amountBinding)`: Source deals damage to anything; captures amount.
   * `DealsDamageToPlayer(source, playerBinding)`: Source deals damage to player; captures player.
   * `DealsDamageToOpponent(source, playerBinding)`: Source deals damage to opponent.
+  * `ControllerIsDealtDamage(amountBinding) EventPattern`: A battlefield source's controller is dealt positive damage by any source. The pattern saves the actual amount after damage replacement and prevention. Use `FromNumber(amountBinding)` in a `WhenEvent` or `WhenEventModes` body. The damaged player is not a target. Registration rejects a nil or unnamed binding and a read outside the trigger.
+    ```go
+    func damageWatcher() dsl.Card {
+        amount := dsl.BindNumber("damage dealt")
+        return dsl.NewEnchantment("Damage Watcher", "{G}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.ControllerIsDealtDamage(amount),
+                dsl.GainLife(dsl.You, dsl.FromNumber(amount))),
+        ))
+    }
+    ```
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
   * `OpponentDrawsCard(playerBinding) EventPattern`: An opponent of the source controller draws one card. The pattern saves the drawer in a `PlayerBinding` when the draw occurs. Read it with `FromPlayer` in a `WhenEvent` or `WhenEventModes` body. A draw that is replaced or fails on an empty library does not match. The saved player is not a target.
     ```go

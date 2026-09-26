@@ -1,5 +1,15 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controller Receives Damage Event
+
+`ControllerIsDealtDamage(*NumberBinding) EventPattern` matches a positive `EvtDamageDealt` whose final player recipient is the battlefield source's controller at event time. It saves the final amount for `FromNumber` in `WhenEvent` and `WhenEventModes`. The existing damage, replacement, prevention, trigger, and resolution-frame services supply the behavior; no new damage executor or result slot is needed. Registration rejects nil, unnamed, or out-of-scope amount bindings and use on a spell source. The damaged player is not a target.
+
+Living Artifact's complete text was checked in `data/4ED.json` and the Limited inventory and gap record. This slice supplies its missing controller-damage event requirement. Both production definitions still use legacy behavior and need separate wiring and full card audits, so the card gap remains open. The new pattern has no production caller. Existing `WhenDamageDealtToThisTrigger` and other legacy exports remain available. Belltower Sphinx needs a different recipient pattern with damage-source controller LKI and is not covered here. The next dependency-ready E slice is that source-controller participant prerequisite, or a P payment output after a fresh audit.
+
+Synthetic tests first failed because the constructor was absent. Focused tests cover actual post-prevention amount, redirection to a permanent, zero and prevented damage, controller change, phasing, source departure and return, simultaneous events, modal triggers, stack copies, game clones, inspection through registration, and binding scope. The shared event contract is documented in `docs/engine-rules-contracts.md`.
+
+`go test ./pkg/mage -run '^TestControllerIsDealtDamage' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. No production card or untracked inventory was changed.
+
 ## Current Slice: Source Targeted by a Spell
 
 `BecomesTargetOfSpell(This) EventPattern` works in `WhenEvent` and `WhenEventModes` for battlefield sources. It reuses `EvtBecomesTarget` and the existing source-target and spell-event conditions. It has no event participant, target, or stack-object binding. The event service already emits after a successful target announcement; the queued trigger keeps its event-time controller and source incarnation. This slice adds no replacement or payment path.

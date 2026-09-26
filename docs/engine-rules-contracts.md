@@ -207,6 +207,9 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
   * If a damage action's final amount is reduced to zero or less by prevention or modifiers, the damage action terminates before further replacement checks or execution.
   * Zero/negative damage produces **no damage event, damage history, callback, or marked damage**.
   * Later replacements cannot resurrect or increase an absent damage event.
+* **Controller Damage Trigger (CR 120.4, 603.2g, 603.3a)**:
+  * `ControllerIsDealtDamage(amount)` matches each final positive damage event whose recipient is the battlefield source's controller when damage occurs. Redirection to a permanent, full prevention, zero damage, life loss without damage, and a phased-out source produce no match. Each event in a simultaneous damage batch can create a separate trigger.
+  * The trigger saves the final damage amount in its resolution frame. A later source control change or departure does not change the trigger controller or saved amount. Stack copies and game clones keep separate frames.
 * **Lifelink Outcome Routing**:
   * Damage from a permanent with lifelink causes its controller to gain that much life simultaneously with damage execution.
   * Life gained from lifelink routes through the event-aware life gain executor, emitting an `EvtLifeGained` with the actual positive amount after life-gain replacements.

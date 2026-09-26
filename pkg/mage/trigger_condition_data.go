@@ -561,6 +561,12 @@ func (EventTargetIsPlayer) CheckTriggerCond(evt *GameEvent, g GameReader, _, _ u
 	return g.GetPlayer(evt.TargetID) != nil
 }
 
+type EventTargetIsController struct{}
+
+func (EventTargetIsController) CheckTriggerCond(evt *GameEvent, g GameReader, _, controllerID uuid.UUID) bool {
+	return evt.TargetID == controllerID && g.GetPlayer(evt.TargetID) != nil
+}
+
 // EventIsCombatDamage checks evt.Flag, which is set by combat damage events.
 type EventIsCombatDamage struct{}
 
