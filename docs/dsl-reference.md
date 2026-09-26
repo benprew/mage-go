@@ -977,6 +977,16 @@ Triggers on rules events dispatched by the engine:
     ```
 
   * `CreatureDies()`: Any creature dies.
+  * `LandEnters().WithController(*PlayerBinding)`: Match each land entering the battlefield and optionally save its controller at entry. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding is a player, not a target, and remains fixed after the land or trigger source leaves. For example:
+
+    ```go
+    controller := dsl.BindPlayer("entering land controller")
+    dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.LandEnters().WithController(controller),
+        dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.Fixed(2)))))
+    ```
+
+    This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It captures the entering land's controller, which can differ from its owner. It does not identify a player who instructed another player's land to enter.
   * `PermanentDies()`: Any permanent moves from the battlefield to a graveyard. Add `.OfType(core.TypeLand)` or another permanent card type to test the departing object's last-known type. `WithController`, `WithOwner`, and `Nontoken` use the same event-time captures and filters as creature-death patterns. The source must be a battlefield permanent. This pattern is valid in `WhenEvent` and `WhenEventModes` and declares no target. `OfType` accepts creature, land, artifact, enchantment, or planeswalker; registration rejects other types and repeated type filters.
     ```go
     former := dsl.BindPlayer("former land controller")

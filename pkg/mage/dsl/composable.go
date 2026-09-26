@@ -206,6 +206,7 @@ var (
 	CreatureYouControlDies             = mage.CreatureYouControlDies
 	AnotherCreatureYouControlDies      = mage.AnotherCreatureYouControlDies
 	AnotherCreatureYouControlEnters    = mage.AnotherCreatureYouControlEnters
+	LandEnters                         = mage.LandEnters
 	AnotherCreatureDies                = mage.AnotherCreatureDies
 	CreatureYouSacrifice               = mage.CreatureYouSacrifice
 	AttachedCreatureDies               = mage.AttachedCreatureDies

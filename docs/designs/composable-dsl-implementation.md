@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Land-Entry Controller Participant
+
+`LandEnters().WithController(binding)` is a battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It checks the entering permanent's land type after entry processing and saves its computed controller in the pending trigger. The binding is instance-local, is not a target, and survives later source or land departure, copying, and game cloning. The pattern uses the existing zone-entry event and player-binding frame; no new zone subsystem is added. Registration rejects nil, unnamed, duplicate, and unbound player bindings. The sealed role rejects a permanent binding at compile time.
+
+Ankh of Mishra's full Oracle text in `data/4ED.json` requires damage to the entering land's controller. This slice supplies its event and controller participant; typed singular damage is already available. Its production definition still calls `WheneverLandEntersBattlefieldTrigger` and remains unchanged, so the Limited gap record stays open. Thelon's Chant and Tourach's Chant say a player *puts* a land onto the battlefield; this adapter does not claim that actor identity or their counter-payment branch. Their gap record remains open. Focused tests first failed because `LandEnters` was absent. They cover either controller distinct from owner, nonland entry, phased source, source and land return, stack copying, clone isolation, inspection, registration, and compile-time binding roles. No production card or legacy export changed. The next dependency-ready E slice is the entry actor identity prerequisite or another filtered entry participant after a fresh audit.
+
+Focused tests, the short engine and repository suites, DSL registration and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh caller search found no production `LandEnters` use and two production `WheneverLandEntersBattlefieldTrigger` uses. Card wiring remains separate.
+
 ## Current Slice: Resolution-Time Mana-Value Set Threshold
 
 `ManaValueAtMost(PermanentSet, ResolutionValue) PermanentSet` filters a selected battlefield set by mana value at use time. `DestroyEach` consumes the result in one simultaneous destruction batch. The adapter reads `FromNumber` through the current resolution frame, so an announced X life payment supplies its own threshold. It uses the existing permanent mana-value and batch-destruction services. Registration rejects nil inputs and unbound number reads. Existing production callers and legacy exports remain unchanged.
