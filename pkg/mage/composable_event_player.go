@@ -14,6 +14,7 @@ type damageEventPattern struct {
 	amount        *NumberBinding
 	captureAmount bool
 	anyRecipient  bool
+	combatOnly    bool
 }
 
 // DealsDamage matches damage from the source to any recipient.
@@ -26,6 +27,11 @@ func DealsDamage(_ sourceRef, amount *NumberBinding) EventPattern {
 // It saves the damaged player without making that player a target.
 func DealsDamageToPlayer(_ sourceRef, player *PlayerBinding) damageEventPattern {
 	return damageEventPattern{player: player}
+}
+
+// DealsCombatDamageToPlayer matches combat damage from the source to a player.
+func DealsCombatDamageToPlayer(_ sourceRef, player *PlayerBinding) damageEventPattern {
+	return damageEventPattern{player: player, combatOnly: true}
 }
 
 // DealsDamageToOpponent matches damage to an opponent of the source controller.
@@ -43,6 +49,11 @@ func (p damageEventPattern) WithAmount(amount *NumberBinding) EventPattern {
 
 func (damageEventPattern) eventPattern() {}
 func (p damageEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	if p.combatOnly {
+		return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventSourceIsSelf{}, EventTargetIsPlayer{}, EventIsCombatDamage{},
+		}})
+	}
 	if p.anyRecipient {
 		return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(EventSourceIsSelf{})
 	}
@@ -57,6 +68,9 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 	text := "source deals damage to a player"
 	if p.opponentOnly {
 		text = "source deals damage to an opponent"
+	}
+	if p.combatOnly {
+		text = "source deals combat damage to a player"
 	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true,
 		bindingWrite: p.player, children: []definitionEdge{{"player", p.player}}}

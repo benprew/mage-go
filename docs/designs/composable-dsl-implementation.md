@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Source Combat Damage to Player Event
+
+`DealsCombatDamageToPlayer(This, player).WithAmount(amount)` is a typed battlefield event pattern for `WhenEvent` and `WhenEventModes`. It reuses the shared positive damage event, its combat flag, and instance-local player and optional amount captures. The amount is final after prevention. It does not add a damage executor, grouped damage pattern, delayed subscription, or card wiring. Initiate's Companion's complete text was checked in `data/JMP.json` and the Jumpstart inventory and gap record. This pattern supplies its combat-only event requirement; its production declaration still needs a separate card audit and migration, so the gap record stays blocked. Legacy callers and exports remain.
+
+Contract tests first failed because the constructor was absent. They now cover combat versus noncombat events, player versus permanent recipients, final amount after partial prevention, full prevention, phasing, source leave and return, stack copying, game clone isolation, inspection, and invalid declarations. The next dependency-ready work is another filtered E event participant or a P/T prerequisite after a fresh audit.
+
+`go test ./pkg/mage -run '^TestSourceCombatDamageToPlayer' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A public DSL declaration test compiles and validates the reference example. A fresh search found one production `WheneverDealsCombatDamageToPlayerTrigger` caller and two `WheneverPermanentDealsCombatDamageToPlayerTrigger` callers; the latter need a different source-selection pattern. Initiate's Companion and other card wiring remain open. No production card, legacy export, or gap record changed.
+
 ## Current Slice: Permanent Receives Damage Event
 
 `ReceivesDamage(This, amount).WithSourceController(controller)` is a typed battlefield event pattern for `WhenEvent` and `WhenEventModes`. The amount is required; the source-controller capture is optional. It matches each positive damage event whose final permanent recipient is the source and saves the final amount and captured damage source controller in that trigger instance. It reuses the shared damage event, trigger, and binding services. No new damage executor, target, or replacement rule was added.

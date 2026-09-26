@@ -180,18 +180,19 @@ type (
 )
 
 var (
-	WhenEventModes          = mage.WhenEventModes
-	AtModes                 = mage.AtModes
-	DealsDamage             = mage.DealsDamage
-	ControllerIsDealtDamage = mage.ControllerIsDealtDamage
-	ReceivesDamage          = mage.ReceivesDamage
-	DealsDamageToPlayer     = mage.DealsDamageToPlayer
-	DealsDamageToOpponent   = mage.DealsDamageToOpponent
-	OpponentLosesLife       = mage.OpponentLosesLife
-	ControllerDrawsCard     = mage.ControllerDrawsCard
-	OpponentDrawsCard       = mage.OpponentDrawsCard
-	OpponentDiscardsCard    = mage.OpponentDiscardsCard
-	ControllerGainsLife     = mage.ControllerGainsLife
+	WhenEventModes            = mage.WhenEventModes
+	AtModes                   = mage.AtModes
+	DealsDamage               = mage.DealsDamage
+	ControllerIsDealtDamage   = mage.ControllerIsDealtDamage
+	ReceivesDamage            = mage.ReceivesDamage
+	DealsDamageToPlayer       = mage.DealsDamageToPlayer
+	DealsCombatDamageToPlayer = mage.DealsCombatDamageToPlayer
+	DealsDamageToOpponent     = mage.DealsDamageToOpponent
+	OpponentLosesLife         = mage.OpponentLosesLife
+	ControllerDrawsCard       = mage.ControllerDrawsCard
+	OpponentDrawsCard         = mage.OpponentDrawsCard
+	OpponentDiscardsCard      = mage.OpponentDiscardsCard
+	ControllerGainsLife       = mage.ControllerGainsLife
 	// WhenEvent constructs an event-triggered ability that responds to game events.
 	WhenEvent                          = mage.WhenEvent
 	Enters                             = mage.Enters
