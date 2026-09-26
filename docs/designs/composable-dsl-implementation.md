@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Saved-Card Type Branch
+
+`IfCardHasType(CardRef, core.CardType, ResolvingEffect)` and `IfCardLacksType(CardRef, core.CardType, ResolvingEffect)` are typed resolving branches for a saved hand or graveyard card or a legal graveyard target. Both read current card types through the existing zone-visit reference. An absent card matches neither branch. Inspection and registration reject nil roles, invalid types, missing producers, and a binding that escapes a branch. The existing resolution frame, target legality, and clone services supply identity and isolation. Production cards and legacy exports are unchanged.
+
+Sindbad's complete Oracle text was checked in `data/ARN.json`: its drawn card is revealed, then discarded if it is not a land card. The existing draw-card result, reveal, and saved-card discard adapters together with this branch supply those actions; Sindbad still needs separate production wiring and a complete migration audit. The Arabian inventory remains open, and no JSON gap record is changed. Synthetic contracts first failed because the constructors were absent. They cover land and nonland cards, empty draw, hand departure and return, game clone isolation, legal and returned graveyard targets, registration errors, and branch scope. The next dependency-ready work is another P payment output or a separate E event participant, after a fresh audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, the reference example compile, and `git diff --check` pass. A fresh production search found no `IfCardHasType` or `IfCardLacksType` caller; the existing Sindbad definition and legacy exports remain.
+
 ## Current Slice: Public Reveal of a Saved Card
 
 `RevealCard(CardRef) ResolvingEffect` resolves a saved card at instruction time and records a public, copied reveal-time card snapshot. `Game.PublicReveals()` gives all observers the same ordered history without exposing mutable engine state. A saved draw must still have its original hand visit; an absent card, replaced draw, or card that left and returned produces no reveal. Revealing does not move the card. This is a resolving action for spells, activations, and triggers, not an ongoing revealed-card effect or a cost. The `dsl.RevealCard` export has a sealed `CardRef` input; inspection and registration use the existing card-binding dominance checks. Existing `RevealHand`, draw, discard, and production callers remain.

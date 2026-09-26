@@ -336,6 +336,28 @@ func sacrificeAbility() {
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
 * `Tap(PermanentRef, ...TapResultOption) ResolvingEffect`: Taps the referenced battlefield incarnation. `TapAmountInto(*NumberBinding) TapResultOption` saves 1 when it changes from untapped to tapped, or 0 when it is already tapped, absent, phased out, or a returned incarnation. The option may occur once. The result is local to the resolving spell or ability. Existing `Tap(subject)` calls remain valid.
 * `IfPositive(ResolutionValue, ResolvingEffect) ResolvingEffect`: Runs the body only when the value is greater than zero. Use it after an action result in `Sequence`; a binding written only inside its body cannot be read after the branch.
+* `IfCardHasType(CardRef, core.CardType, ResolvingEffect) ResolvingEffect` and `IfCardLacksType(CardRef, core.CardType, ResolvingEffect) ResolvingEffect`: Check a saved hand or graveyard card, or a legal graveyard card target, at resolution. Both skip the body when the reference is absent. The body may read a binding written before the branch; a binding written in the body cannot be read after it. These branches work in resolving spell, activation, and trigger bodies, not in pure state or static conditions.
+
+For example, this synthetic spell reveals one drawn card and discards it if it is not a land card:
+
+```go
+package example
+
+import (
+    dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+func drawRevealDiscard() dsl.ResolvingEffect {
+    drawn := dsl.BindCard("drawn")
+    return dsl.Sequence(
+        dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawn)),
+        dsl.RevealCard(dsl.FromCard(drawn)),
+        dsl.IfCardLacksType(dsl.FromCard(drawn), core.TypeLand,
+            dsl.DiscardCard(dsl.FromCard(drawn))),
+    )
+}
+```
 
 For example, this synthetic activation gains life only when the source becomes tapped during resolution:
 
