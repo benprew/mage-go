@@ -218,6 +218,25 @@ func (sourceAttackedThisTurnCondition) inspectDefinition() definitionNode {
 	return definitionNode{Role: "state-condition", Text: "source attacked this turn", battlefieldSource: true}
 }
 
+type sourceAttackedOrBlockedThisTurnCondition struct{}
+
+// SourceAttackedOrBlockedThisTurnCondition checks this incarnation's turn history.
+func SourceAttackedOrBlockedThisTurnCondition() StateCondition {
+	return sourceAttackedOrBlockedThisTurnCondition{}
+}
+
+func (sourceAttackedOrBlockedThisTurnCondition) stateCondition() {}
+func (sourceAttackedOrBlockedThisTurnCondition) checkState(g GameReader, ctx StateContext) bool {
+	p := g.FindPermanent(ctx.SourceID)
+	if p == nil || p.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && p.incarnationID != ctx.SourceIncarnation) {
+		return false
+	}
+	return g.HasAttackedOrBlockedThisTurnIncarnation(ctx.SourceID, p.incarnationID)
+}
+func (sourceAttackedOrBlockedThisTurnCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "source attacked or blocked this turn", battlefieldSource: true}
+}
+
 // StateDependency declares the data that a callback reads.
 type StateDependency uint8
 

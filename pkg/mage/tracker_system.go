@@ -12,17 +12,18 @@ import (
 // Turn trackers reset after the final cleanup step. They remain available during
 // cleanup priority. The reset preserves selected history, such as attackedLastTurn.
 type TurnTrackers struct {
-	grantedActivations      map[uuid.UUID]int
-	discardCount            map[uuid.UUID]int
-	lifeGained              map[uuid.UUID]int
-	permDamageReceived      map[uuid.UUID]int
-	attackedOrBlocked       map[uuid.UUID]bool
-	playerCastSpell         map[uuid.UUID]bool
-	playerAttacked          map[uuid.UUID]bool
-	cardsDrawn              map[uuid.UUID]int
-	cardsLeftGraveyard      map[uuid.UUID]int
-	cardsPutIntoExile       int
-	exileZoneChangesPending map[uuid.UUID]int
+	grantedActivations           map[uuid.UUID]int
+	discardCount                 map[uuid.UUID]int
+	lifeGained                   map[uuid.UUID]int
+	permDamageReceived           map[uuid.UUID]int
+	attackedOrBlocked            map[uuid.UUID]bool
+	attackedOrBlockedIncarnation map[uuid.UUID]uuid.UUID
+	playerCastSpell              map[uuid.UUID]bool
+	playerAttacked               map[uuid.UUID]bool
+	cardsDrawn                   map[uuid.UUID]int
+	cardsLeftGraveyard           map[uuid.UUID]int
+	cardsPutIntoExile            int
+	exileZoneChangesPending      map[uuid.UUID]int
 
 	landsPlayed      int
 	extraLandPlays   map[uuid.UUID]int
@@ -293,6 +294,7 @@ func (t *TurnTrackers) ResetForNewTurn(activePlayerID uuid.UUID) {
 	t.lifeGained = nil
 	t.permDamageReceived = nil
 	t.attackedOrBlocked = nil
+	t.attackedOrBlockedIncarnation = nil
 	t.playerCastSpell = nil
 	t.playerAttacked = nil
 	t.cardsDrawn = nil
@@ -348,6 +350,20 @@ func (t *TurnTrackers) PermanentDamageReceived(permID uuid.UUID) int {
 
 func (t *TurnTrackers) PermanentAttackedOrBlocked(permID uuid.UUID) bool {
 	return t.attackedOrBlocked[permID]
+}
+
+func (t *TurnTrackers) RecordAttackedOrBlockedIncarnation(permID, incarnation uuid.UUID) {
+	if incarnation == uuid.Nil {
+		return
+	}
+	if t.attackedOrBlockedIncarnation == nil {
+		t.attackedOrBlockedIncarnation = make(map[uuid.UUID]uuid.UUID)
+	}
+	t.attackedOrBlockedIncarnation[permID] = incarnation
+}
+
+func (t *TurnTrackers) PermanentAttackedOrBlockedIncarnation(permID, incarnation uuid.UUID) bool {
+	return incarnation != uuid.Nil && t.attackedOrBlockedIncarnation[permID] == incarnation
 }
 
 func (t *TurnTrackers) PlayerCastSpell(playerID uuid.UUID) bool {
@@ -425,31 +441,32 @@ func (t *TurnTrackers) CleanupPriorityRounds() int {
 // Clone creates an independent deep copy of TurnTrackers.
 func (t *TurnTrackers) Clone() TurnTrackers {
 	c := TurnTrackers{
-		grantedActivations:       cloneUUIDMap(t.grantedActivations),
-		cardsPutIntoExile:        t.cardsPutIntoExile,
-		landsPlayed:              t.landsPlayed,
-		creatureDeaths:           t.creatureDeaths,
-		cleanupPriorityRounds:    t.cleanupPriorityRounds,
-		discardCount:             cloneUUIDMap(t.discardCount),
-		lifeGained:               cloneUUIDMap(t.lifeGained),
-		permDamageReceived:       cloneUUIDMap(t.permDamageReceived),
-		attackedOrBlocked:        cloneUUIDMap(t.attackedOrBlocked),
-		playerCastSpell:          cloneUUIDMap(t.playerCastSpell),
-		playerAttacked:           cloneUUIDMap(t.playerAttacked),
-		cardsDrawn:               cloneUUIDMap(t.cardsDrawn),
-		cardsLeftGraveyard:       cloneUUIDMap(t.cardsLeftGraveyard),
-		exileZoneChangesPending:  cloneUUIDMap(t.exileZoneChangesPending),
-		extraLandPlays:           cloneUUIDMap(t.extraLandPlays),
-		optionalCostPaid:         cloneUUIDMap(t.optionalCostPaid),
-		damageTaken:              cloneUUIDIntMap(t.damageTaken),
-		artifactDamageTaken:      cloneUUIDIntMap(t.artifactDamageTaken),
-		attacked:                 cloneUUIDBoolMap(t.attacked),
-		attackedIncarnation:      maps.Clone(t.attackedIncarnation),
-		blocked:                  cloneBlockedThisTurn(t.blocked),
-		instantsCast:             cloneUUIDIntMap(t.instantsCast),
-		sorceriesCast:            cloneUUIDIntMap(t.sorceriesCast),
-		untappedLandsAtTurnStart: cloneUUIDMap(t.untappedLandsAtTurnStart),
-		timesTargeted:            cloneUUIDMap(t.timesTargeted),
+		grantedActivations:           cloneUUIDMap(t.grantedActivations),
+		cardsPutIntoExile:            t.cardsPutIntoExile,
+		landsPlayed:                  t.landsPlayed,
+		creatureDeaths:               t.creatureDeaths,
+		cleanupPriorityRounds:        t.cleanupPriorityRounds,
+		discardCount:                 cloneUUIDMap(t.discardCount),
+		lifeGained:                   cloneUUIDMap(t.lifeGained),
+		permDamageReceived:           cloneUUIDMap(t.permDamageReceived),
+		attackedOrBlocked:            cloneUUIDMap(t.attackedOrBlocked),
+		attackedOrBlockedIncarnation: maps.Clone(t.attackedOrBlockedIncarnation),
+		playerCastSpell:              cloneUUIDMap(t.playerCastSpell),
+		playerAttacked:               cloneUUIDMap(t.playerAttacked),
+		cardsDrawn:                   cloneUUIDMap(t.cardsDrawn),
+		cardsLeftGraveyard:           cloneUUIDMap(t.cardsLeftGraveyard),
+		exileZoneChangesPending:      cloneUUIDMap(t.exileZoneChangesPending),
+		extraLandPlays:               cloneUUIDMap(t.extraLandPlays),
+		optionalCostPaid:             cloneUUIDMap(t.optionalCostPaid),
+		damageTaken:                  cloneUUIDIntMap(t.damageTaken),
+		artifactDamageTaken:          cloneUUIDIntMap(t.artifactDamageTaken),
+		attacked:                     cloneUUIDBoolMap(t.attacked),
+		attackedIncarnation:          maps.Clone(t.attackedIncarnation),
+		blocked:                      cloneBlockedThisTurn(t.blocked),
+		instantsCast:                 cloneUUIDIntMap(t.instantsCast),
+		sorceriesCast:                cloneUUIDIntMap(t.sorceriesCast),
+		untappedLandsAtTurnStart:     cloneUUIDMap(t.untappedLandsAtTurnStart),
+		timesTargeted:                cloneUUIDMap(t.timesTargeted),
 	}
 	if len(t.attackedLastTurn) > 0 {
 		c.attackedLastTurn = cloneNestedUUIDMap(t.attackedLastTurn)

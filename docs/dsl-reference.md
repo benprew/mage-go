@@ -247,6 +247,16 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `PermanentIsAttacking(subject PermanentRef) StateCondition`: Check whether `This` or `AttachedPermanent` is in combat as an attacker now. A creature put onto the battlefield attacking matches, although it did not attack for trigger purposes. An absent, phased-out, or returned object does not match. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects targets and saved bindings in this state context.
 * `PermanentIsBlocking(subject PermanentRef) StateCondition`: Check whether `This` or `AttachedPermanent` is in combat as a blocker now. A creature put onto the battlefield blocking matches even though it did not block for trigger purposes. An absent, phased-out, removed, or returned object does not match. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects targets and saved bindings in this state context.
 * `SourceAttackedThisTurnCondition()`: The current battlefield source was declared as an attacker this turn. It returns false before an attack, after the source leaves or phases out, or after it returns as a new object. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability.
+* `SourceAttackedOrBlockedThisTurnCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker this turn. It uses the source incarnation and returns false if the source is absent, phased out, or returned as a new object. Turn cleanup clears the history. Use it in pure state contexts such as `IfState`, `While`, `WhenState`, `WithInterveningIf`, and `ActivationIf` on a permanent ability. It does not mean "this combat".
+
+```go
+func historyWatcher() dsl.Card {
+    return dsl.NewCreature("History Watcher", "{2}", 2, 2,
+        dsl.WithAbility(dsl.At(dsl.EachEndStep,
+            dsl.IfState(dsl.SourceAttackedOrBlockedThisTurnCondition(),
+                dsl.GainLife(dsl.You, dsl.Fixed(1))))))
+}
+```
 * `SourceBlockingCondition()`: The current battlefield source is blocking now. It returns false when the source is absent, phased out, removed from combat, or a new incarnation of the same card. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability. It does not report whether the source blocked earlier in combat.
 
 ```go

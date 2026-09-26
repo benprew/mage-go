@@ -32,6 +32,7 @@ This document specifies the internal architecture, subsystem invariants, and Mag
 * **`TriggerSystem`**: Owns pending triggers waiting for stack placement, active `DelayedTrigger` instances, and armed state triggers (CR 603.8).
 * **`ManaSystem`**: Owns mana source discovery, mana ability solver planning, and payment scratch buffers.
 * **`DamageSystem`**: Owns damage execution, combat damage step aggregation, damage history tracking, and damage reflection.
+* **Turn combat history**: Declared attacker and first declared blocker events record the current battlefield incarnation. A pure state query for "attacked or blocked this turn" reads that record. Leaving and returning does not inherit the record; phasing preserves the incarnation but a phased-out source cannot satisfy the battlefield condition. Cleanup clears the record. This does not answer "this combat."
 * **`TrackerSystem`**: Owns turn-scoped observations (`TurnTrackers`) and duel-scoped observations (`DuelTrackers`).
 * **`RandomSource`**: Owns deterministic integer and coin flip queues for tests and AI simulation.
 

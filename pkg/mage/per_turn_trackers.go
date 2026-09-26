@@ -13,6 +13,15 @@ import (
 // at the top of FireEvent.
 func (g *Game) recordPerTurnEvent(evt *GameEvent) {
 	g.trackers.Turn.RecordEvent(evt)
+	if evt.Type == EvtDeclaredAttacker || (evt.Type == EvtDeclaredBlocker && evt.Flag) {
+		if p := g.FindPermanent(evt.SourceID); p != nil {
+			g.trackers.Turn.RecordAttackedOrBlockedIncarnation(evt.SourceID, p.incarnationID)
+		}
+	}
+}
+
+func (g *Game) HasAttackedOrBlockedThisTurnIncarnation(permID, incarnation uuid.UUID) bool {
+	return g.trackers.Turn.PermanentAttackedOrBlockedIncarnation(permID, incarnation)
 }
 
 // PlayerCardsDrawnThisTurn returns the number of cards the given player has
