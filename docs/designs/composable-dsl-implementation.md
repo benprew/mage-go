@@ -1,5 +1,32 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controller Hand-Size State Condition
+
+`ControllerHandSizeIs(int) StateCondition` compares the ability controller's
+current hand size with an exact nonnegative count. It uses `GameReader.GetPlayer`
+and the existing pure state-condition and activation paths. `ActivationIf`
+checks it before payment. It also works in `IfState`, `WhenState`,
+`WithInterveningIf`, and `While`. A missing controller does not match.
+Registration rejects negative counts. No card or legacy export changed.
+
+Library of Alexandria's complete Oracle text was checked in `data/ARN.json`.
+This slice supplies its exact-seven activation restriction; its production
+definition still uses a legacy callback and needs separate card wiring. A
+fresh search found no production `ControllerHandSizeIs` caller and one legacy
+hand-size callback in `cards/arabian/lands.go`. No gap record was closed.
+Other hand-size arithmetic and paid-discard card characteristics remain
+separate work. The next dependency-ready slice is a P paid-discard
+characteristic capture for Land's Edge, after a fresh requirements audit.
+
+Focused tests first failed because the constructor was absent. They cover
+six, seven, and eight cards, current controller distinct from owner, failed
+activation without payment, an accepted activation, source absence for a pure
+state check, a missing controller, clone isolation, inspection, public DSL
+registration, and invalid declaration rejection. Focused tests, short engine
+and repository suites, DSL registration and closed-role tests, `go build ./...`,
+`go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check`
+pass.
+
 ## Current Slice: Singular Paid Sacrifice Card
 
 `SacrificeMatchingCostWithCard(filter, text, card)` saves the card of one

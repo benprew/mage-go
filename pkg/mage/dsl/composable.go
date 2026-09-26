@@ -292,6 +292,7 @@ var (
 	SourceAttackedThisTurnCondition            = mage.SourceAttackedThisTurnCondition
 	SourceAttackedOrBlockedThisTurnCondition   = mage.SourceAttackedOrBlockedThisTurnCondition
 	SourceAttackedOrBlockedThisCombatCondition = mage.SourceAttackedOrBlockedThisCombatCondition
+	ControllerHandSizeIs                       = mage.ControllerHandSizeIs
 	IsYourTurn                                 = mage.IsYourTurn
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
 	GainLife = mage.GainLifeFor

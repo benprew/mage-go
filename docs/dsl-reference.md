@@ -241,6 +241,7 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `Controls(filter)`: Ability controller controls at least one permanent matching filter (includes source).
 * `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
 * `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
+* `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
 * `SourceHasCounters(counter, min)`: The source permanent has at least `min` counters of the specified type.
 * `SourceTappedCondition()` and `SourceUntappedCondition()`: The current battlefield source is tapped or untapped, respectively. Both return false when the source is absent or phased out. They work in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState` on permanent abilities.
 * `PermanentIsTapped(subject PermanentRef)` and `PermanentIsUntapped(subject PermanentRef)`: Check `This` or `AttachedPermanent` at state evaluation. Both return false if the source or selected permanent is absent or phased out. A returned source or attachment is a new object. Use these conditions in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects target and saved bindings in this state context.
@@ -249,6 +250,16 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `SourceAttackedThisTurnCondition()`: The current battlefield source was declared as an attacker this turn. It returns false before an attack, after the source leaves or phases out, or after it returns as a new object. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability.
 * `SourceAttackedOrBlockedThisTurnCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker this turn. It uses the source incarnation and returns false if the source is absent, phased out, or returned as a new object. Turn cleanup clears the history. Use it in pure state contexts such as `IfState`, `While`, `WhenState`, `WithInterveningIf`, and `ActivationIf` on a permanent ability. It does not mean "this combat".
 * `SourceAttackedOrBlockedThisCombatCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker in the current combat. It returns false before a declaration, after the combat phase, for a phased-out or absent source, and after that card returns as a new object. A later combat in the same turn starts with no combat history. Use it in `IfState`, `While`, `WhenState`, `WithInterveningIf`, or `ActivationIf` on a permanent ability. It reads declarations, so a creature put onto the battlefield attacking or blocking does not match.
+
+```go
+func handGate() dsl.Card {
+    return dsl.NewLand("Hand gate", dsl.WithAbility(dsl.Activate(
+        dsl.Costs(dsl.TapCost(dsl.This)),
+        dsl.Draw(dsl.You, dsl.Fixed(1)),
+        dsl.ActivationIf(dsl.ControllerHandSizeIs(7)),
+    )))
+}
+```
 
 ```go
 func combatHistoryWatcher() dsl.Card {

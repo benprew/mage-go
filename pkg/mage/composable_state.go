@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 
@@ -24,6 +25,27 @@ type StateContext struct {
 }
 
 type yourTurnCondition struct{}
+
+type controllerHandSizeCondition struct{ size int }
+
+// ControllerHandSizeIs checks the ability controller's hand when evaluated.
+func ControllerHandSizeIs(size int) StateCondition { return controllerHandSizeCondition{size: size} }
+
+func (controllerHandSizeCondition) stateCondition() {}
+func (c controllerHandSizeCondition) checkState(g GameReader, ctx StateContext) bool {
+	if ctx.ControllerID == uuid.Nil {
+		return false
+	}
+	player := g.GetPlayer(ctx.ControllerID)
+	return player != nil && len(player.Hand()) == c.size
+}
+func (c controllerHandSizeCondition) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "state-condition", Text: fmt.Sprintf("controller hand size is %d", c.size)}
+	if c.size < 0 {
+		n.problem = "hand size must be nonnegative"
+	}
+	return n
+}
 
 // IsYourTurn checks the active player when the condition is evaluated.
 func IsYourTurn() StateCondition { return yourTurnCondition{} }
