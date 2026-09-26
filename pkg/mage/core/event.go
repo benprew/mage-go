@@ -56,14 +56,16 @@ const (
 // ZoneLibrary's zero value and should be ignored — match on the EventType
 // first.
 type GameEvent struct {
-	Type       EventType
-	SourceID   uuid.UUID
-	TargetID   uuid.UUID
-	ActorID    uuid.UUID
-	RelatedIDs []uuid.UUID
-	PlayerID   uuid.UUID
-	Amount     int
-	Flag       bool // context-dependent
-	FromZone   Zone
-	ToZone     Zone
+	Type     EventType
+	SourceID uuid.UUID
+	// SourceControllerID keeps the damage source controller after the source leaves.
+	SourceControllerID uuid.UUID
+	TargetID           uuid.UUID
+	ActorID            uuid.UUID
+	RelatedIDs         []uuid.UUID
+	PlayerID           uuid.UUID
+	Amount             int
+	Flag               bool // context-dependent
+	FromZone           Zone
+	ToZone             Zone
 }

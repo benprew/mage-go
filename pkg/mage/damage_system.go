@@ -402,11 +402,12 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 		}
 	}
 	g.FireEvent(GameEvent{
-		Type:     EvtDamageDealt,
-		SourceID: sourceID,
-		TargetID: p.PlayerID(),
-		Amount:   amount,
-		Flag:     a.IsCombatDamage(),
+		Type:               EvtDamageDealt,
+		SourceID:           sourceID,
+		SourceControllerID: source.Controller(),
+		TargetID:           p.PlayerID(),
+		Amount:             amount,
+		Flag:               a.IsCombatDamage(),
 	})
 	if ds.onDamageDealt != nil {
 		sourceName := "unknown"
@@ -574,10 +575,11 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		ds.damageDealtToPermanentsByPermanent[sourceID][perm.ID()] = true
 	}
 	g.FireEvent(GameEvent{
-		Type:     EvtDamageDealt,
-		SourceID: sourceID,
-		TargetID: perm.ID(),
-		Amount:   amount,
+		Type:               EvtDamageDealt,
+		SourceID:           sourceID,
+		SourceControllerID: a.DamageSource().Controller(),
+		TargetID:           perm.ID(),
+		Amount:             amount,
 	})
 	if ds.onDamageDealt != nil {
 		sourceName := "unknown"

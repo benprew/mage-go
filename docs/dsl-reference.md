@@ -458,6 +458,16 @@ effect. Multi-card draw-result consumers remain open.
 * `LoseLifeEach(PlayerSet, ResolutionValue)`: Causes each player in the set to lose life.
 
 ### Damage Actions
+The engine event payload `core.GameEvent.SourceControllerID uuid.UUID` is available to engine trigger conditions for `EvtDamageDealt`. It records the controller of the damage source captured by the damage action, even if that source leaves before the event is observed. It is set for positive damage to a player or permanent after replacement and prevention. This is an engine integration field; the typed event pattern that will bind it for card declarations is not yet available. An engine condition can read it without looking up the source card again:
+
+```go
+func sourceWasControlledBy(evt *core.GameEvent, player uuid.UUID) bool {
+    return evt.Type == core.EvtDamageDealt && evt.SourceControllerID == player
+}
+```
+
+This example uses `core` from `github.com/benprew/mage-go/pkg/mage/core` and `uuid` from `github.com/google/uuid`.
+
 * `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption) ResolvingEffect`: Deals one damage action from `This` to a player or battlefield permanent. Use it in `Spell`, `Activate`, or a triggered resolving body. The source keeps its resolving incarnation and last known characteristics after departure. A missing source or recipient has no effect. The current `DealDamage(ValueSource)` remains for unmigrated positional callers.
 * `DamageSourceOf(PermanentRef) DamageSourceRef`: Uses a typed permanent reference as the source of `DealDamageFrom` or `DealDamageEach`. A declared target or `From` snapshot keeps its captured battlefield incarnation; if that permanent has left, the damage instruction uses its departure characteristics and controller. A phased-out or missing permanent without departure information cannot supply damage. The argument must be a `PermanentRef`; player and stack-object references are rejected by Go. This source can be used in a spell, activation, or trigger body.
 

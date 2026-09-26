@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Damage Event Source Controller
+
+`core.GameEvent.SourceControllerID` now records the controller in the captured damage source on each positive `EvtDamageDealt`, for player and permanent recipients. The shared damage executor supplies this event-time identity after replacement and prevention. A source that leaves and returns under another controller cannot change it. No typed event adapter or card declaration changed in this prerequisite slice. Belltower Sphinx's complete text was checked in `data/JMP.json` and the Jumpstart inventory and gap record; its `ReceivesDamage` event pattern, amount and source-controller bindings, and card wiring remain open. The gap record remains blocked. Production callers and legacy exports remain unchanged.
+
+Contract tests failed first because the field was absent. They now cover source departure and return, spell controller distinct from owner, full prevention, and a simultaneous batch with both player and permanent recipients. The next dependency-ready slice is a typed `ReceivesDamage(This)` event pattern with event-time amount and source-controller bindings.
+
+`go test ./pkg/mage -run '^TestDamageEvent' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff contains only this engine prerequisite, its tests, and documentation. No production card, legacy export, or untracked inventory changed.
+
 ## Current Slice: Controller Receives Damage Event
 
 `ControllerIsDealtDamage(*NumberBinding) EventPattern` matches a positive `EvtDamageDealt` whose final player recipient is the battlefield source's controller at event time. It saves the final amount for `FromNumber` in `WhenEvent` and `WhenEventModes`. The existing damage, replacement, prevention, trigger, and resolution-frame services supply the behavior; no new damage executor or result slot is needed. Registration rejects nil, unnamed, or out-of-scope amount bindings and use on a spell source. The damaged player is not a target.
