@@ -186,6 +186,7 @@ var (
 	SpellCast                          = mage.SpellCast
 	Attacks                            = mage.Attacks
 	OneOrMoreCreaturesYouControlAttack = mage.OneOrMoreCreaturesYouControlAttack
+	EachCreatureYouControlAttacks      = mage.EachCreatureYouControlAttacks
 	AttacksUnblocked                   = mage.AttacksUnblocked
 	Blocks                             = mage.Blocks
 	BecomesBlocked                     = mage.BecomesBlocked

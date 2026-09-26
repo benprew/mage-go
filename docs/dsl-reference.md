@@ -567,6 +567,23 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `EachCreatureYouControlAttacks().WithAttacker(*PermanentBinding).WithDefendingPlayer(*PlayerBinding)`: Match once per creature you control that is declared as an attacker. Either capture is optional. `From` reads the attacking battlefield incarnation; `FromPlayer` reads the defending player. Both values belong to that trigger instance. A creature put onto the battlefield attacking does not match. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The combat service currently records player defenders only.
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var attacker = dsl.BindPermanent("attacker")
+    var defender = dsl.BindPlayer("defender")
+    var _ = dsl.NewEnchantment("Attack watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.EachCreatureYouControlAttacks().WithAttacker(attacker).WithDefendingPlayer(defender),
+            dsl.Sequence(dsl.Tap(dsl.From(attacker)),
+                dsl.GainLife(dsl.FromPlayer(defender), dsl.Fixed(1))))))
+
+    func main() {}
+    ```
   * `CreatureYouSacrifice() EventPattern`: Match each creature sacrificed by the source controller, including the source and tokens. It uses the completed sacrifice event and the creature type at sacrifice time. The pattern has no target or sacrificed-object binding. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
 
     ```go

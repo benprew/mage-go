@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Each Controlled Attacker Event
+
+`EachCreatureYouControlAttacks().WithAttacker(*PermanentBinding).WithDefendingPlayer(*PlayerBinding)` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches each newly declared creature controlled by the source controller and optionally saves that attacker incarnation and its defending player in the pending trigger. The captures use the existing event and instance-local binding services. A creature entering attacking does not match. The combat service currently records only player defenders; planeswalker and battle defender identity is separate work. No production card or legacy export changed.
+
+Hellrider's complete Oracle text was checked in `data/JMP.json` and its Jumpstart gap record. This slice supplies its per-attacker condition and player-defender capture, but planeswalker-defender capture and production wiring remain open; the gap stays blocked. The focused contract first failed because the constructor was absent. Tests cover two independent attackers, actual declaration, controller matching, leave-and-return attacker identity, source phasing and return, attacker phasing, stack-copy and game-clone isolation, inspection, and registration errors. The next dependency-ready slice is T recorded target-group boundaries or the combat defender union needed for planeswalker attacks, after a fresh audit.
+
+`go test ./pkg/mage -run '^TestEachControlledAttacker' -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, the standalone reference example build, and `git diff --check` pass. A fresh card search finds nine files with legacy attack-trigger construction and no production use of the new typed export. Those callers and their exports remain. No JSON gap is closed by this prerequisite.
+
 ## Current Slice: Controlled Attack Group Event
 
 `OneOrMoreCreaturesYouControlAttack().WithCount(*NumberBinding)` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches once when the source controller declares one or more attackers, and its optional count binding saves the number actually declared in that trigger instance. The normal and simulated attack paths send the same completed group event. Zero declarations and creatures put onto the battlefield attacking do not match. Registration rejects a nil or repeated count binding and reads outside its trigger scope. Existing legacy group-trigger exports and production callers remain.
