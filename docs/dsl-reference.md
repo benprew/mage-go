@@ -322,8 +322,18 @@ ability := dsl.Activate(
 )
 _ = ability
 ```
-* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. A `PermanentTargetsBinding` with a maximum of one can supply the permanent set when declared with `WithTargets`; an illegal target is absent from the batch. Larger target groups still require recorded target selection boundaries.
+* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. One variable-size target group is supported; two variable-size groups in the same ability still require recorded selection boundaries. An illegal target is absent from the batch.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
+
+```go
+targets := dsl.TargetPermanents("creatures", 1, 2, dsl.IsCreature)
+ability := dsl.Spell(
+    dsl.DealDamageEach(dsl.This,
+        dsl.DamageRecipients(dsl.EachPlayer, targets), dsl.Fixed(1)),
+    dsl.WithTargets(targets),
+)
+_ = ability
+```
 * `DamageTotalInto(*NumberBinding) DamageEachResultOption`: Saves the sum of damage actually dealt by one `DealDamageEach` instruction after replacement, redirection, and prevention. It writes zero when no damage is dealt. The result is local to the resolving spell or ability. Use `FromNumber` in a later instruction. Each batch can declare this option once.
 * `BindDamageResults(string) *DamageResultsBinding`, `DamageResultsInto(*DamageResultsBinding) DamageEachResultOption`: Save each final positive damage action from one `DealDamageEach` instruction. The binding is empty if the source or recipients are absent, damage is zero, or all damage is prevented. It can be used with `DamageTotalInto` on the same instruction.
 * `BindDamageResult(string) *DamageResultBinding`, `ForEachDamageResult(*DamageResultsBinding, *DamageResultBinding, ResolvingEffect) ResolvingEffect`: Run a body once for each saved final action, after the complete batch. The body is sequential; it does not deal the batch damage. Each iteration has its own bindings.

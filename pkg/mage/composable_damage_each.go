@@ -23,8 +23,6 @@ func (s mixedDamageRecipients) inspectDefinition() definitionNode {
 		n.problem = "supply a player set"
 	} else if nilDefinition(s.permanents) {
 		n.problem = "supply a permanent set"
-	} else if targets, ok := s.permanents.(*PermanentTargetsBinding); ok && targets.Max() > 1 {
-		n.problem = "multiple permanent targets require recorded target group boundaries"
 	}
 	return n
 }
