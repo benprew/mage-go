@@ -690,41 +690,42 @@ var (
 // =============================================================================
 
 var (
-	SacrificeSourceCost                          = mage.SacrificeSourceCost
-	ManaCostOf                                   = mage.ManaCostOf
-	ParseManaCost                                = core.ParseManaCost
-	WithFrom                                     = mage.WithFrom
-	WithTo                                       = mage.WithTo
-	WithToPlayer                                 = mage.WithToPlayer
-	WithCombatOnly                               = mage.WithCombatOnly
-	WithPlayerOnly                               = mage.WithPlayerOnly
-	GenericCost                                  = mage.GenericCost
-	ManaCostPerTarget                            = mage.ManaCostPerTarget
-	RandomCounterDistribution                    = mage.RandomCounterDistribution
-	ExchangeControlOfTargets                     = mage.ExchangeControlOfTargets
-	ExchangeControlOfTargetsSharingPermanentType = mage.ExchangeControlOfTargetsSharingPermanentType
-	XManaCost                                    = mage.XManaCost
-	RemoveCountersCost                           = mage.RemoveCountersCost
-	RemoveAnyCountersCost                        = mage.RemoveAnyCountersCost
-	RequireCountersCost                          = mage.RequireCountersCost
-	SacrificeCreatureCost                        = mage.SacrificeCreatureCost
-	SacrificeCreatureCostWithStats               = mage.SacrificeCreatureCostWithStats
-	SacrificeMatchingCostWithManaValue           = mage.SacrificeMatchingCostWithManaValue
-	DiscardRandomCost                            = mage.DiscardRandomCost
-	ExileSourceCost                              = mage.ExileSourceCost
-	SacrificeArtifactCost                        = mage.SacrificeArtifactCost
-	SacrificeMatchingCost                        = mage.SacrificeMatchingCost
-	SacrificeMatchingIncludingSourceCost         = mage.SacrificeMatchingIncludingSourceCost
-	SacrificeNMatchingCost                       = mage.SacrificeNMatchingCost
-	LifePayCost                                  = mage.LifePayCost
-	DiscardCost                                  = mage.DiscardCost
-	EitherCost                                   = mage.EitherCost
-	ExileMatchingCardFromGraveyardCost           = mage.ExileMatchingCardFromGraveyardCost
-	DiscardCardsWithDifferentNamesCost           = mage.DiscardCardsWithDifferentNamesCost
-	ExileFromGraveyardCost                       = mage.ExileFromGraveyardCost
-	ExileSelfFromGraveyardCost                   = mage.ExileSelfFromGraveyardCost
-	RemoveXCountersFromSourceCost                = mage.RemoveXCountersFromSourceCost
-	RevealFromHandCost                           = mage.RevealFromHandCost
+	SacrificeSourceCost                           = mage.SacrificeSourceCost
+	ManaCostOf                                    = mage.ManaCostOf
+	ParseManaCost                                 = core.ParseManaCost
+	WithFrom                                      = mage.WithFrom
+	WithTo                                        = mage.WithTo
+	WithToPlayer                                  = mage.WithToPlayer
+	WithCombatOnly                                = mage.WithCombatOnly
+	WithPlayerOnly                                = mage.WithPlayerOnly
+	GenericCost                                   = mage.GenericCost
+	ManaCostPerTarget                             = mage.ManaCostPerTarget
+	RandomCounterDistribution                     = mage.RandomCounterDistribution
+	ExchangeControlOfTargets                      = mage.ExchangeControlOfTargets
+	ExchangeControlOfTargetsSharingPermanentType  = mage.ExchangeControlOfTargetsSharingPermanentType
+	XManaCost                                     = mage.XManaCost
+	RemoveCountersCost                            = mage.RemoveCountersCost
+	RemoveAnyCountersCost                         = mage.RemoveAnyCountersCost
+	RequireCountersCost                           = mage.RequireCountersCost
+	SacrificeCreatureCost                         = mage.SacrificeCreatureCost
+	SacrificeCreatureCostWithStats                = mage.SacrificeCreatureCostWithStats
+	SacrificeCreatureIncludingSourceCostWithStats = mage.SacrificeCreatureIncludingSourceCostWithStats
+	SacrificeMatchingCostWithManaValue            = mage.SacrificeMatchingCostWithManaValue
+	DiscardRandomCost                             = mage.DiscardRandomCost
+	ExileSourceCost                               = mage.ExileSourceCost
+	SacrificeArtifactCost                         = mage.SacrificeArtifactCost
+	SacrificeMatchingCost                         = mage.SacrificeMatchingCost
+	SacrificeMatchingIncludingSourceCost          = mage.SacrificeMatchingIncludingSourceCost
+	SacrificeNMatchingCost                        = mage.SacrificeNMatchingCost
+	LifePayCost                                   = mage.LifePayCost
+	DiscardCost                                   = mage.DiscardCost
+	EitherCost                                    = mage.EitherCost
+	ExileMatchingCardFromGraveyardCost            = mage.ExileMatchingCardFromGraveyardCost
+	DiscardCardsWithDifferentNamesCost            = mage.DiscardCardsWithDifferentNamesCost
+	ExileFromGraveyardCost                        = mage.ExileFromGraveyardCost
+	ExileSelfFromGraveyardCost                    = mage.ExileSelfFromGraveyardCost
+	RemoveXCountersFromSourceCost                 = mage.RemoveXCountersFromSourceCost
+	RevealFromHandCost                            = mage.RevealFromHandCost
 )
 
 // =============================================================================

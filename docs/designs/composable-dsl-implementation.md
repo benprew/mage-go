@@ -1,5 +1,30 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Source-Inclusive Sacrifice Payment Stats
+
+`SacrificeCreatureIncludingSourceCostWithStats(power, toughness)` captures the
+chosen creature's power and toughness before a prepared activation or spell
+additional cost sacrifices it. The source is eligible when it is a creature.
+It uses the existing locked-choice transaction and instance-local paid-number
+frame; no resolving action or global last-sacrificed slot supplies the values.
+The legacy cost constructors and production callers remain unchanged.
+
+Life Chisel's complete Oracle text in `data/LEG.json` requires its animated
+source to be a legal sacrifice choice. This adapter supplies that payment
+case, but the card still needs production wiring and its upkeep restriction.
+Diamond Valley and Fling already have a source-excluding paid-stats cost for
+their printed costs. No gap record is closed by this adapter alone. Focused
+tests first failed at compile time because the constructor was absent; they
+cover a source sacrificed with modified toughness, source return before
+commit, copy and clone isolation, and registration errors. The next
+dependency-ready P work is a general paid-object identity or a different
+payment output after a fresh audit.
+
+`go test ./pkg/mage -run '^TestPaidSourceSacrificeStats' -count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass. Lint
+reported zero issues. No production card changed.
+
 ## Current Slice: Source Attacked or Blocked This Combat
 
 `SourceAttackedOrBlockedThisCombatCondition() StateCondition` reads declared attack or first-block history for the current battlefield source incarnation. It works in pure permanent-source state contexts through `IfState`, `While`, `WhenState`, `WithInterveningIf`, and `ActivationIf`. The existing event and turn tracker services record declarations. A beginning-of-combat event clears the combat record; the end-of-combat step keeps it through trigger resolution and clears it after priority. The separate turn record remains until cleanup. Phasing makes the query false while phased out, and leaving and returning cannot reuse the record. Game clones copy combat history independently. This slice does not add a target-bound condition, a refill counter limit, or card wiring.

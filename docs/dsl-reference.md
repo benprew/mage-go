@@ -758,9 +758,25 @@ ability := Activate(
 _ = NewArtifact("Offering", "", WithAbility(ability))
 ```
 
-These costs do not yet produce a typed paid-permanent value. A resolving
-`SacrificeAmountInto` binding reports a separate action and cannot read this
-payment.
+`SacrificeCreatureIncludingSourceCostWithStats(power, toughness *NumberBinding)`
+uses the same prepared-payment transaction and also permits the source when it
+is a creature. Use it only as an activation cost or spell additional cost.
+It saves the chosen creature's power and toughness immediately before payment
+in the resulting stack instance. The source can leave as payment; the saved
+numbers remain available at resolution.
+
+```go
+power, toughness := BindNumber("paid power"), BindNumber("paid toughness")
+ability := Activate(
+    Costs(SacrificeCreatureIncludingSourceCostWithStats(power, toughness)),
+    GainLifeFor(You, FromNumber(toughness)),
+)
+_ = NewCreature("Offering", "", 2, 2, WithAbility(ability))
+```
+
+Other sacrifice costs do not yet produce a typed paid-permanent value. A
+resolving `SacrificeAmountInto` binding reports a separate action and cannot
+read this payment.
 
 Crumble captures `ControllerOf(artifact)` with `SnapshotPlayer` and
 `ManaValueOf(artifact)` with `SnapshotNumber` before `DestroyWithoutRegeneration`.

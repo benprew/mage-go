@@ -175,6 +175,14 @@ func SacrificeCreatureCostWithStats(power, toughness *NumberBinding) Cost {
 	}
 }
 
+// SacrificeCreatureIncludingSourceCostWithStats lets a creature source pay its own cost.
+func SacrificeCreatureIncludingSourceCostWithStats(power, toughness *NumberBinding) Cost {
+	return &sacrificeMatchingCost{
+		filter: IsCreature, text: "Sacrifice a creature", count: 1, includeSource: true,
+		paidPower: power, paidToughness: toughness, captureStats: true,
+	}
+}
+
 // SacrificeMatchingCostWithManaValue saves the chosen permanent's mana value
 // when its controller pays this cost. The source is not a candidate.
 func SacrificeMatchingCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost {

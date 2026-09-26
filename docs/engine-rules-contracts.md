@@ -289,6 +289,10 @@ For a multi-permanent sacrifice, commit checks all choices before moving any
 of them. The cost declarations remain reusable across payment transactions.
 `SacrificeCreatureCostWithStats` reads the selected creature's current power
 and toughness from the live game immediately before that cost sacrifices it.
+`SacrificeCreatureIncludingSourceCostWithStats` uses the same capture and can
+select the ability source if it is a creature. A source sacrificed to pay its
+own activation remains absent during resolution, while its paid values remain
+in the ability's stack frame.
 After successful payment, the values enter that activation's or spell's
 stack frame, including spells cast with an alternative cost. A failed payment
 creates no frame or paid-stat result. A stack
