@@ -113,29 +113,82 @@ func UntapPermanent(subject PermanentRef) ResolvingEffect {
 }
 
 // DrawFor draws individual cards for the selected player. An absent player has no effect.
-func DrawFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
-	return &drawSubjectEffect{subject, amount}
+func DrawFor(subject PlayerRef, amount ResolutionValue, options ...DrawResultOption) ResolvingEffect {
+	e := &drawSubjectEffect{subject: subject, amount: amount}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyDrawResult(e)
+	}
+	return e
 }
 
 type drawSubjectEffect struct {
-	subject PlayerRef
-	amount  ResolutionValue
+	subject       PlayerRef
+	amount        ResolutionValue
+	result        *NumberBinding
+	optionCount   int
+	invalidOption bool
+}
+
+// DrawResultOption selects one result for a draw instruction.
+type DrawResultOption interface {
+	drawResultOption()
+	applyDrawResult(*drawSubjectEffect)
+}
+
+type drawAmountOption struct{ binding *NumberBinding }
+
+// DrawAmountInto saves the number of cards drawn by one instruction.
+func DrawAmountInto(binding *NumberBinding) DrawResultOption { return drawAmountOption{binding} }
+func (drawAmountOption) drawResultOption()                   {}
+func (o drawAmountOption) applyDrawResult(e *drawSubjectEffect) {
+	e.result = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
 }
 
 func (e *drawSubjectEffect) Text() string                 { return "draw for " + InspectDefinition(e.subject).Text }
 func (e *drawSubjectEffect) Properties() EffectProperties { return drawAmountProperties(e.amount) }
 func (e *drawSubjectEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	if e.invalidOption {
+		n.problem = "supply a non-nil draw result binding"
+	} else if e.optionCount > 1 {
+		n.problem = "supply the draw result binding only once"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }
 func (e *drawSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
 	id, ok := e.subject.resolvePlayer(ctx)
 	if !ok {
 		return nil
 	}
 	amount := e.amount.resolveValue(ctx)
-	child := *ctx
-	child.Targets = []uuid.UUID{id}
-	return DrawCards(Fixed(amount)).Apply(&child)
+	p := ctx.Game.GetPlayer(id)
+	if p == nil {
+		return nil
+	}
+	for range amount {
+		if _, drawn := ctx.Game.PlayerDrawCard(p); drawn && e.result != nil {
+			ctx.Game.resolution.numberBindings[e.result]++
+		}
+	}
+	return nil
 }
 func drawAmountProperties(amount ResolutionValue) EffectProperties {
 	p := EffectProperties{Outcome: OutcomeBenefit}

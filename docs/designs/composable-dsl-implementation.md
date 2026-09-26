@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Draw Count Result
+
+`Draw(PlayerRef, ResolutionValue, ...DrawResultOption)` now accepts `DrawAmountInto(*NumberBinding)`. The option saves the number of successful individual draws from that instruction in the resolution frame. Empty-library attempts, replaced draws, and absent recipients contribute zero. The two-argument form, `DrawEach`, and all legacy exports remain. The adapter reuses `PlayerDrawCard`, its replacement and event service, and the existing number-binding scope and copy machinery. It does not bind drawn card identities or count a collection draw.
+
+The new contract tests first failed because the option did not exist. They cover partial and empty draws, replacement, absent recipients, stale-result clearing, declaration validation, target absence, stack copies, and game clone isolation. Read the Runes' complete text in `data/JMP.json` needs the count of cards drawn this way, but also needs per-card choice and discard-or-sacrifice actions. Sindbad needs the actual card identity. No production card was changed, and neither gap is closed. Existing production `DrawFor` and `DrawEach` calls remain; no production `DrawAmountInto` caller exists. The next dependency-ready P slice is a card-result binding for draws or discards, after auditing zone-visit identity and replacement behavior.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass.
+
 ## Current Slice: Resolving Tap Action Result
 
 `Tap(PermanentRef, ...TapResultOption)` now accepts `TapAmountInto(*NumberBinding)` and keeps its one-argument form. The option writes 1 only when the referenced battlefield incarnation changes from untapped to tapped through the shared tap action; it writes 0 for an already tapped, absent, phased-out, or returned object. `IfPositive(ResolutionValue, ResolvingEffect)` branches on that saved result inside a resolving `Sequence`. Both are exported through `dsl`. This is an action result, not a tap-cost output or a reflexive trigger. The normal tap event, target binding and legality, resolution-frame number storage, stack copy, clone, inspection, and registration services are reused.

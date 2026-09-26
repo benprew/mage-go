@@ -152,9 +152,10 @@ var (
 	// SkipNextUntapOf prevents untapping during the specified player's next untap step.
 	SkipNextUntapOf = mage.SkipNextUntapOf
 	// Draw draws cards for the specified player.
-	Draw     = mage.DrawFor
-	DrawEach = mage.DrawEach
-	Discard  = mage.Discard
+	Draw           = mage.DrawFor
+	DrawEach       = mage.DrawEach
+	DrawAmountInto = mage.DrawAmountInto
+	Discard        = mage.Discard
 	// DiscardAtRandom uses a typed player and amount. Ring of Renewal uses You and Fixed(1).
 	DiscardAtRandom   = mage.DiscardAtRandom
 	DiscardEntireHand = mage.DiscardEntireHand

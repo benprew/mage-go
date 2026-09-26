@@ -391,7 +391,16 @@ permanent. If the Aura has left, its last attachment is used. A returned Aura
 or host is a new incarnation and does not redirect the old reference.
 
 ### Player Actions
-* `Draw(PlayerRef, ResolutionValue)`: Instructs player to draw cards.
+* `Draw(PlayerRef, ResolutionValue, ...DrawResultOption) ResolvingEffect`: Instructs one player to draw cards in a spell, activation, or trigger body. `DrawAmountInto(*NumberBinding) DrawResultOption` saves the number of cards actually drawn by this instruction. It writes zero for an absent player, an empty library, or a fully replaced draw. Read it later in the same `Sequence` with `FromNumber`. `DrawEach` does not accept this option.
+
+```go
+drawn := dsl.BindNumber("drawn")
+ability := dsl.Spell(dsl.Sequence(
+    dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawAmountInto(drawn)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(drawn)),
+))
+_ = ability
+```
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
