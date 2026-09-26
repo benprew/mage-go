@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Opponent Land Tap Participant
+
+`OpponentLandBecomesTapped().WithLand(*PermanentBinding)` saves the tapped opponent-controlled land's battlefield incarnation at detection for a later `From(binding)` read. The optional method composes with `OfSubtype` in `WhenEvent` and `WhenEventModes`. It uses the existing tap event, pending-trigger capture, permanent binding frame, and clone service. The land is not a target; a returned or phased-out incarnation is absent at resolution. Existing production callers and legacy exports remain unchanged.
+
+The Lifetap and Lifeblood inventories confirm the opponent land tap event family; their complete text in `data/4ED.json` and `data/LEG.json` does not require a land participant. This binding extends the shared event contract without completing either unmigrated card. Synthetic tests first failed because `WithLand` was absent. They cover presence, return, phasing, source return with changed controller, stack copying, clone isolation, scope, and invalid declarations. No gap record changed. The next dependency-ready work is another E event participant or P variable payment, after a fresh audit.
+
+Focused tests, the short engine and repository suites, DSL registration and closed-role tests, build, vet, `make test`, `make lint` (zero issues), the standalone DSL example build, and `git diff --check` pass. A fresh production search finds no `OpponentLandBecomesTapped` or `WithLand` caller, so card wiring remains separate.
+
 ## Current Slice: Source Becomes Tapped Event
 
 `BecomesTapped(This) EventPattern` is available in `WhenEvent` and `WhenEventModes` on battlefield permanents. It reads the shared `EvtTapped` transition with `EventSourceIsSelf`; `TapPermanent` emits that event only on an untapped-to-tapped change. It has no event-participant binding. Normal pending triggers keep the event-time controller and source incarnation, including through source departure, return, stack copying, and game cloning. Registration rejects a non-battlefield source; the sealed `sourceRef` argument rejects a player reference at compile time.

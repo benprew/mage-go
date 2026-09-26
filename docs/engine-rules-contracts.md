@@ -137,6 +137,8 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ## 5. State-Triggered Abilities and Simultaneous Deaths (CR 603.8, 603.6c)
 
+* **Opponent Land Tap Event (CR 603.2e)**:
+  * `OpponentLandBecomesTapped().WithLand(binding)` captures the tapped land's battlefield incarnation when its tap transition occurs. The pending trigger keeps that reference through source departure, controller change, stack copying, and game cloning. `From(binding)` is absent if the land leaves and returns or phases out before resolution. The event has no target or payment step.
 * **State Triggers (`WhenState`)**:
   * Trigger immediately when their pure `StateCondition` evaluates to true, including between instructions during resolution.
   * `SourceTappedCondition` and `SourceUntappedCondition` read the current battlefield incarnation. An absent or phased-out source satisfies neither condition. Resolution and static checks reject a different incarnation of the same card when the source incarnation is captured.
