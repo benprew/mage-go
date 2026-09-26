@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Opponent-Controlled Creature Death Event
+
+`OpponentCreatureDies()` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches each creature that moves from the battlefield to a graveyard while an opponent of the trigger source controller controls it. The existing zone-change event supplies the former controller and pre-departure creature type. `.WithController(*PlayerBinding)` saves that player in the trigger instance; it is not a target. The pattern composes with existing death filters and captures. It adds no new zone event, result frame, or card policy.
+
+Sangromancer's full text was checked in `data/JMP.json` and the Jumpstart gap record. This slice supplies its opponent-creature-death filter, and the preceding slice supplies its opponent-discard event. Its optional life gain, complete card audit, and production wiring remain separate. Eternal Thirst also needs granted-trigger authoring and card wiring. No production card or gap record changed. The gap record remains open. A fresh search found no production `OpponentCreatureDies` caller; Sangromancer and Eternal Thirst still use legacy trigger definitions, which remain available.
+
+Contract tests first failed because the constructor was absent. They cover owner/controller separation, control changes, tokens and simultaneous deaths, source death, phasing, nondeath exclusion, event-time controller capture, stack copy, game clone, source departure and return, inspection, and invalid binding declarations. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The next dependency-ready work is a T target-group boundary or another E event participant after a fresh audit.
+
 ## Current Slice: Opponent Discard Event Participant
 
 `OpponentDiscardsCard(*PlayerBinding) EventPattern` matches each completed card discard by an opponent of the battlefield source controller. It captures the discarding player in the trigger instance for `WhenEvent` and `WhenEventModes`; `FromPlayer` reads that value at resolution. It reuses `EvtDiscard`, the existing opponent condition, and pending-trigger player capture. The event participant is not a target. The pattern does not capture the discarded card or create a general discard-result binding. Go rejects a non-player binding; registration rejects nil, unnamed, unbound, and out-of-scope bindings.

@@ -205,6 +205,7 @@ var (
 	BecomesBlockedBy                   = mage.BecomesBlockedBy
 	BlocksOrBecomesBlockedBy           = mage.BlocksOrBecomesBlockedBy
 	CreatureYouControlDies             = mage.CreatureYouControlDies
+	OpponentCreatureDies               = mage.OpponentCreatureDies
 	AnotherCreatureYouControlDies      = mage.AnotherCreatureYouControlDies
 	AnotherCreatureYouControlEnters    = mage.AnotherCreatureYouControlEnters
 	LandEnters                         = mage.LandEnters

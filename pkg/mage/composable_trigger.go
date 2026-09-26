@@ -159,6 +159,7 @@ type creatureDiesPattern struct {
 	filterType        bool
 	duplicateType     bool
 	controllerOnly    bool
+	opponentOnly      bool
 	otherOnly         bool
 	nontokenOnly      bool
 	attachedOnly      bool
@@ -204,6 +205,11 @@ func permanentCardType(cardType CardType) bool {
 // CreatureYouControlDies matches a creature controlled by you before it dies.
 func CreatureYouControlDies() creatureDiesPattern {
 	return creatureDiesPattern{creatureOnly: true, controllerOnly: true}
+}
+
+// OpponentCreatureDies matches a creature an opponent controlled before death.
+func OpponentCreatureDies() creatureDiesPattern {
+	return creatureDiesPattern{creatureOnly: true, opponentOnly: true}
 }
 
 // AnotherCreatureYouControlDies matches a different creature controlled by you before it dies.
@@ -278,6 +284,9 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 	if p.controllerOnly {
 		t.AndConditionData(EventPlayerIsController{})
 	}
+	if p.opponentOnly {
+		t.AndConditionData(EventPlayerIsOpponent{})
+	}
 	if p.otherOnly {
 		t.AndConditionData(EventSourceNotSelf{})
 	}
@@ -333,6 +342,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	text := "a " + subject + " dies"
 	if p.controllerOnly {
 		text = "a " + subject + " you control dies"
+	}
+	if p.opponentOnly {
+		text = "a " + subject + " an opponent controls dies"
 	}
 	if p.otherOnly {
 		text = "another " + subject + " dies"

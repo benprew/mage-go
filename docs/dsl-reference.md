@@ -1020,6 +1020,15 @@ Triggers on rules events dispatched by the engine:
     func main() {}
     ```
   * `CreatureYouControlDies()`: A creature controlled by ability controller dies.
+  * `OpponentCreatureDies()`: A creature controlled by an opponent of the ability controller dies. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The filter uses the dying creature's controller and type before departure. It includes tokens. `.WithController(*PlayerBinding)` saves that controller for the resolving body; it does not declare a target.
+    ```go
+    former := dsl.BindPlayer("former controller")
+    ability := dsl.WhenEvent(
+        dsl.OpponentCreatureDies().WithController(former),
+        dsl.GainLife(dsl.FromPlayer(former), dsl.Fixed(1)),
+    )
+    _ = ability
+    ```
   * `AnotherCreatureYouControlDies()`: A different creature controlled by the ability controller dies. The controller and creature type are checked before departure; the dying creature is not a target.
   * `AnotherCreatureYouControlEnters()`: A different creature enters under the ability controller's control. Add `.Nontoken()` to exclude tokens. The check uses the entering permanent after entry effects and continuous effects apply. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield permanent. The entering creature is not a target.
     ```go
