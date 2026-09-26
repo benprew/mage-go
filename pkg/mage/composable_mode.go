@@ -3,7 +3,10 @@ package mage
 import "fmt"
 
 // ModeDefinition is an immutable mode body and its target declarations.
-type ModeDefinition struct{ mode Mode }
+type ModeDefinition struct {
+	mode    Mode
+	grouped bool
+}
 
 // ModeOption is a closed option for a mode body.
 type ModeOption interface {
@@ -30,7 +33,7 @@ func ModeOf(label string, effect ResolvingEffect, options ...ModeOption) ModeDef
 		}
 		o.applyMode(&m)
 	}
-	return ModeDefinition{m}
+	return ModeDefinition{mode: m}
 }
 func modeValues(modes []ModeDefinition) []Mode {
 	if len(modes) < 2 {
@@ -73,7 +76,7 @@ func ActivateModes(costs CostGroup, options ...ModalActivationOption) *ActionDef
 	return a
 }
 func (m ModeDefinition) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "mode", Text: m.mode.Label, localBindingScope: true, children: declaredTargetNodes(m.mode.Targets)}
+	n := definitionNode{Role: "mode", Text: m.mode.Label, localBindingScope: true, children: declaredTargetNodes(m.mode.Targets, m.grouped)}
 	if m.mode.Label == "" {
 		n.problem = "supply a mode label"
 	}
@@ -82,10 +85,10 @@ func (m ModeDefinition) inspectDefinition() definitionNode {
 	}
 	return n
 }
-func modeEdges(modes []Mode) []definitionEdge {
+func modeEdges(modes []Mode, grouped ...bool) []definitionEdge {
 	result := make([]definitionEdge, 0, len(modes))
 	for i, m := range modes {
-		result = append(result, definitionEdge{fmt.Sprintf("modes[%d]", i), ModeDefinition{m}})
+		result = append(result, definitionEdge{fmt.Sprintf("modes[%d]", i), ModeDefinition{mode: m, grouped: len(grouped) > 0 && grouped[0]}})
 	}
 	return result
 }

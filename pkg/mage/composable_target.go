@@ -154,10 +154,10 @@ func Spell(effect ResolvingEffect, options ...SpellOption) *ActionDefinition {
 	return a
 }
 
-func declaredTargetNodes(targets []Target) []definitionEdge {
+func declaredTargetNodes(targets []Target, grouped ...bool) []definitionEdge {
 	var edges []definitionEdge
 	if len(targets) > 0 {
-		edges = append(edges, definitionEdge{"target-groups", targetGroupContract{targets}})
+		edges = append(edges, definitionEdge{"target-groups", targetGroupContract{targets: targets, grouped: len(grouped) > 0 && grouped[0]}})
 	}
 	for i, t := range targets {
 		if b, ok := t.(*targetDeclaration); ok {
@@ -260,7 +260,10 @@ func (b *PermanentTargetsBinding) inspectDefinition() definitionNode {
 	return targetReadNode(b.targetDeclaration, "permanent-set")
 }
 
-type targetGroupContract struct{ targets []Target }
+type targetGroupContract struct {
+	targets []Target
+	grouped bool
+}
 
 func (c targetGroupContract) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-groups"}
@@ -273,7 +276,7 @@ func (c targetGroupContract) inspectDefinition() definitionNode {
 			variable++
 		}
 	}
-	if typed && variable > 1 {
+	if typed && variable > 1 && !c.grouped {
 		n.problem = "multiple variable target groups require recorded selection boundaries"
 	}
 	return n

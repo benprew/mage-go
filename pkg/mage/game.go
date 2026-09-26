@@ -1931,11 +1931,10 @@ func (g *Game) PutTriggersOnStack() {
 			obj.Targets = []uuid.UUID{dt.TargetID}
 			if len(dt.targets) > 0 {
 				var legal bool
-				obj.Targets, legal = g.chooseTriggerTargets(pt, dt.targets)
+				obj.Targets, obj.TargetSpecs, legal = g.chooseTriggerTargets(pt, dt.targets)
 				if !legal {
 					continue
 				}
-				obj.TargetSpecs = expandTargetSpecs(dt.targets, obj.Targets, obj.XValue)
 				obj.TargetSource = targetSource
 			}
 			obj.EventAmount = pt.event.Amount
@@ -1987,11 +1986,10 @@ func (g *Game) PutTriggersOnStack() {
 			obj.ModeChoice = idx
 			if len(chosen.Targets) > 0 {
 				var legal bool
-				obj.Targets, legal = g.chooseTriggerTargets(pt, chosen.Targets)
+				obj.Targets, obj.TargetSpecs, legal = g.chooseTriggerTargets(pt, chosen.Targets)
 				if !legal {
 					continue
 				}
-				obj.TargetSpecs = expandTargetSpecs(chosen.Targets, obj.Targets, obj.XValue)
 				obj.TargetSource = targetSource
 			}
 			captureTriggerEventEffects(pt, obj)
@@ -2006,7 +2004,7 @@ func (g *Game) PutTriggersOnStack() {
 		// existing card behavior is preserved.
 		if declared := pt.ability.Targets(); len(declared) > 0 {
 			var legal bool
-			obj.Targets, legal = g.chooseTriggerTargets(pt, declared)
+			obj.Targets, obj.TargetSpecs, legal = g.chooseTriggerTargets(pt, declared)
 			if !legal {
 				continue
 			}
@@ -2023,7 +2021,6 @@ func (g *Game) PutTriggersOnStack() {
 					}
 				}
 			}
-			obj.TargetSpecs = expandTargetSpecs(declared, obj.Targets, obj.XValue)
 			obj.TargetSource = targetSource
 			captureTriggerEventEffects(pt, obj)
 			g.pushStack(obj)
@@ -2170,31 +2167,38 @@ func (g *Game) PutTriggersOnStack() {
 
 // chooseTriggerTargets returns false when a required target group cannot be chosen.
 // CR 603.3d removes such a trigger before a player receives priority.
-func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, bool) {
+func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, []Target, bool) {
 	controller := g.GetPlayer(pt.controller)
 	sourceCard := g.FindCardAnywhere(pt.sourceID)
 	var out []uuid.UUID
+	var aligned []Target
 	for _, t := range declared {
 		if pair, ok := t.(*randomActivePlayerExchangePairTarget); ok {
 			chosen := pair.chooseForTrigger(pt.controller, sourceCard, g)
 			if len(chosen) < t.Min() {
-				return nil, false
+				return nil, nil, false
 			}
 			out = append(out, chosen...)
+			for range chosen {
+				aligned = append(aligned, t)
+			}
 			continue
 		}
 		if random, ok := t.(*randomTarget); ok {
 			chosen := g.chooseRandomTargets(pt.controller, sourceCard, random, 0)
 			if len(chosen) < t.Min() {
-				return nil, false
+				return nil, nil, false
 			}
 			out = append(out, chosen...)
+			for range chosen {
+				aligned = append(aligned, t)
+			}
 			continue
 		}
 		t.Reset()
 		possible := t.Possible(pt.controller, sourceCard, g)
 		if len(possible) < t.Min() {
-			return nil, false
+			return nil, nil, false
 		}
 		if len(possible) == 0 {
 			continue
@@ -2212,12 +2216,27 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 		if len(chosen) == 0 && t.Min() > 0 {
 			chosen = possible[:t.Min()]
 		}
+		if _, typed := t.(*targetDeclaration); typed {
+			if len(chosen) < t.Min() || len(chosen) > t.Max() {
+				return nil, nil, false
+			}
+			seen := make(map[uuid.UUID]bool, len(chosen))
+			for _, id := range chosen {
+				if seen[id] || !slices.Contains(possible, id) {
+					return nil, nil, false
+				}
+				seen[id] = true
+			}
+		}
 		if err := t.Choose(pt.controller, sourceCard, g, chosen); err != nil {
-			return nil, false
+			return nil, nil, false
 		}
 		out = append(out, chosen...)
+		for range chosen {
+			aligned = append(aligned, t)
+		}
 	}
-	return out, true
+	return out, aligned, true
 }
 
 func reverseTriggers(s []*pendingTrigger) {

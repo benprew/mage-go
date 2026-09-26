@@ -146,7 +146,7 @@ func describeDefinition(v any) definitionNode {
 			addEffects(e.effects)
 		}
 	case *GenericTriggered:
-		n.children = append(n.children, declaredTargetNodes(e.targets)...)
+		n.children = append(n.children, declaredTargetNodes(e.targets, true)...)
 		if e.eventDefinition != nil {
 			n.Role = "event-trigger"
 			n.children = append(n.children, definitionEdge{"event", e.eventDefinition})
@@ -163,7 +163,7 @@ func describeDefinition(v any) definitionNode {
 		if len(e.modes) == 0 {
 			addEffects(e.effects)
 		}
-		n.children = append(n.children, modeEdges(e.modes)...)
+		n.children = append(n.children, modeEdges(e.modes, true)...)
 	case interface{ Effects() []Effect }:
 		addEffects(e.Effects())
 	case *RegisterDelayedTriggerData:

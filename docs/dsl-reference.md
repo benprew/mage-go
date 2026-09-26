@@ -116,14 +116,37 @@ Spell(
   Tactics gains life after the boost with `Sequence` and `GainLife(You, Fixed(2))`.
   Spell and ability copies keep the recorded number and position of chosen targets
   in this group. A copy that chooses new targets cannot move a choice to a
-  different group. Use one variable-size group per ability for now; the flat
-  announcement API cannot distinguish two independent optional groups.
+  different group. `WhenEvent` and `WhenEventModes` can declare multiple
+  variable-size groups: the controller chooses each group separately when the
+  trigger goes on the stack. `Spell`, `Activate`, and delayed declarations
+  still allow only one variable-size group because their flat announcement
+  paths cannot distinguish independent group counts.
 
 ```go
 creatures := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature)
 ability := dsl.Spell(dsl.DestroyEach(creatures), dsl.WithTargets(creatures))
 _ = ability
 ```
+
+For two independent optional targets on a trigger, declare separate bindings:
+
+```go
+first := dsl.TargetPermanents("first", 0, 1, dsl.IsCreature)
+second := dsl.TargetPermanents("second", 0, 1, dsl.IsCreature)
+member := dsl.BindPermanent("member")
+ability := dsl.WhenEvent(dsl.Enters(dsl.This),
+    dsl.Sequence(
+        dsl.DestroyEach(first),
+        dsl.ForEach(second, member, dsl.Tap(dsl.From(member))),
+    ),
+    dsl.WithTargets(first, second),
+)
+_ = dsl.NewCreature("Example", "", 1, 1, dsl.WithAbility(ability))
+```
+
+Each choice keeps its own group at resolution and on a stack copy. A choice
+in one group does not fill an empty group. The same permanent can be chosen
+once in each group if it is legal for both.
 
 * Target Options:
   * `TargetYouControl()`: Target must be controlled by the ability controller.
@@ -333,7 +356,7 @@ ability := dsl.Activate(
 )
 _ = ability
 ```
-* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. One variable-size target group is supported; two variable-size groups in the same ability still require recorded selection boundaries. An illegal target is absent from the batch.
+* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. Triggered abilities can use multiple variable-size groups; spells and activations still allow one. An illegal target is absent from the batch.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
 
 ```go
