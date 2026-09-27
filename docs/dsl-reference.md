@@ -647,7 +647,16 @@ func damageAbility() {
 }
 ```
 
-`DamageSourceRef` accepts `This` and `FromDamageSource(binding)`. `DamageRecipientRef` accepts `You`, `ActivePlayer`, typed player and permanent references, and `TargetDamageRecipient`. The action rechecks a target's battlefield incarnation at resolution. The result amount is damage dealt, not the recipient's resulting life loss or loyalty loss.
+`DamageSourceRef` accepts `This` and `FromDamageSource(binding)`. `DamageRecipientRef` accepts `You`, `ActivePlayer`, typed player and permanent references, and `TargetDamageRecipient`. `TargetPlayerOrPlaneswalkerDamage(name string) *DamageTargetBinding` declares one player-or-planeswalker target and excludes creatures. It works in `Spell`, `Activate`, and `WhenEvent` through `WithTargets`, and with `DealDamageFrom` or `PreventNextDamage`. The action rechecks a target's battlefield incarnation at resolution. The result amount is damage dealt, not the recipient's resulting life loss or loyalty loss.
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+var recipient = dsl.TargetPlayerOrPlaneswalkerDamage("recipient")
+var spell = dsl.Spell(dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2)), dsl.WithTargets(recipient))
+```
 
 This spell uses one captured source for two sequential damage instructions:
 

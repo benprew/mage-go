@@ -51,6 +51,11 @@ type DamageTargetBinding struct{ *targetDeclaration }
 func DeclareDamageTarget(name string) *DamageTargetBinding {
 	return &DamageTargetBinding{&targetDeclaration{name, TargetDamageAnyTarget()}}
 }
+
+// DeclarePlayerOrPlaneswalkerTarget excludes creatures from this damage target.
+func DeclarePlayerOrPlaneswalkerTarget(name string) *DamageTargetBinding {
+	return &DamageTargetBinding{&targetDeclaration{name, TargetPlayerOrPlaneswalker()}}
+}
 func (*DamageTargetBinding) damageRecipient() {}
 func (b *DamageTargetBinding) resolveRecipient(ctx *EffectContext) (uuid.UUID, bool) {
 	values := ctx.targetBindings[b.targetDeclaration]

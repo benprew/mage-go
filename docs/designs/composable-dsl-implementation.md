@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Player-or-Planeswalker Damage Target
+
+`TargetPlayerOrPlaneswalkerDamage(name string) *DamageTargetBinding` declares one target player or planeswalker. It reuses the established legacy target eligibility rule and typed damage recipient binding, so creatures are excluded at announcement and a phased or returned planeswalker is absent at resolution. It works with `WithTargets` in spells, activations, and event triggers and can feed `DealDamageFrom` or `PreventNextDamage`. The broader any-target declaration remains available. No production card changed.
+
+The focused contract test first failed because the constructor was absent. It now covers player and planeswalker selection, creature exclusion, loyalty damage, phasing, leave and return, clone isolation, missing declaration rejection, and empty label rejection. Land's Edge, Spiteful Prankster, and Hungry Flames were checked against `data/LEG.json` and `data/JMP.json`; their other abilities and production wiring remain. Their gap records stay open. A fresh search found three production `TargetPlayerOrPlaneswalker` callers and no production caller of the new adapter. The legacy export remains. The next dependency-ready slice is T recorded target-group boundaries or another P payment output after a fresh audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Singular Paid Discard Card
 
 `DiscardCardCostInto(*CardBinding)` saves the one chosen discarded card in its
