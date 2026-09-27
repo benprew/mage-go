@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Owner-Filtered Permanent Set
+
+`PermanentsOwnedBy(PlayerRef, PermanentFilter) PermanentSet` selects current battlefield permanents owned by the resolved player, regardless of controller. It works in resolving spell, activation, and trigger bodies through existing set consumers. It reuses the battlefield filter, player binding, and permanent-set inspection paths. Registration rejects a missing or undeclared player reference. No engine zone contract or production card changed.
+
+Hurkyl's Recall's complete text was checked in `data/ATQ.json`. This set supplies its owner-filtered artifact collection, but simultaneous return-to-hand and production wiring remain open. Its definition in `cards/antiquities/spells.go` still uses a targeted spell with a callback. The Antiquities inventory and gap record stay open; no legacy export was removed. Synthetic tests first failed because the constructor was absent. They cover owner/controller separation, type filtering, phasing, departure and return, target binding, stack-copy controller, game-clone isolation, inspection, and declaration validation. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The next dependency-ready work is the simultaneous return action or a separate P/T slice after a fresh audit.
+
 ## Current Slice: Permanent Owner Reference
 
 `OwnerOf(PermanentRef) PlayerRef` is a typed resolving-time owner reference for one battlefield incarnation. It works in spell, activation, and trigger bodies through existing player-consuming instructions, including `SnapshotPlayer`. It reads the card owner from the resolved permanent and remains distinct from `ControllerOf`; absence, phasing, and a returned incarnation yield no player. The existing permanent resolver, player frame, inspection graph, and target scope validation supply the behavior. There is no new engine ownership contract or production card change.

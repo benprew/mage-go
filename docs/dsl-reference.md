@@ -80,6 +80,18 @@ Operations accept explicit subjects rather than baking the subject into the verb
 ### Permanent Sets (`PermanentSet`)
 * `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
 * `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
+* `PermanentsOwnedBy(player PlayerRef, filter PermanentFilter) PermanentSet`: Battlefield permanents owned by the resolved player, regardless of their controllers. Use it in a resolving spell, activation, or trigger body. A zero-value filter selects all permanent types. The set excludes phased-out permanents and reads current battlefield membership when consumed. The player can be `You`, `OwnerOf(...)`, or a declared player target. A missing player yields an empty set.
+
+    ```go
+    func ownedArtifactCount() dsl.Card {
+        player := dsl.TargetPlayer("player")
+        return dsl.NewInstant("Owned artifact count", "{1}{U}",
+            dsl.WithAbility(dsl.Spell(
+                dsl.GainLife(dsl.You,
+                    dsl.CountPermanents(dsl.PermanentsOwnedBy(player, dsl.IsArtifact))),
+                dsl.WithTargets(player))))
+    }
+    ```
 * `BlockingOrBlockedBy(permanentRef) PermanentSet`: Creatures currently blocking or blocked by the referenced permanent. The set uses current combat links and battlefield incarnations when an action reads it. A phased-out, returned, or absent creature is excluded. Use it in a resolving body; `GrantEachKeyword` captures its members when `Until` resolves.
 
     ```go
