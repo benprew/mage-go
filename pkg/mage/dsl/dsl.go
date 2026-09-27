@@ -734,6 +734,7 @@ var (
 	ExileSelfFromGraveyardCost                        = mage.ExileSelfFromGraveyardCost
 	RemoveXCountersFromSourceCost                     = mage.RemoveXCountersFromSourceCost
 	RevealFromHandCost                                = mage.RevealFromHandCost
+	RevealFromHandCostWithCard                        = mage.RevealFromHandCostWithCard
 )
 
 // =============================================================================

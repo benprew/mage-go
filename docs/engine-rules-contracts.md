@@ -381,6 +381,17 @@ saves the one chosen card only in its new graveyard visit. `FromCard(binding)`
 becomes absent after another zone move or when a replacement sends the card
 to a different zone. The committed capture is local to the spell or activation
 frame and follows stack copies and game clones.
+
+`RevealFromHandCostWithCard` locks one matching hand card and its hand visit
+during payment preparation. The same choice is checked during isolated
+validation and live commit, before mana or life is paid. A card that leaves
+and returns has a new hand visit and cannot pay the locked cost. Successful
+payment saves that hand visit in the spell or ability frame. `FromCard` is
+absent after that card leaves hand; stack copies and game clones keep separate
+frames. A successful reveal payment adds one public snapshot to
+`Game.PublicReveals()`; failed validation adds none. This capture applies to a direct cost component. It does not make a
+resolution-time payment or an `EitherCost` branch produce a card binding
+(CR 400.7, 601.2h, 701.20b).
 `DiscardCost` uses `PlayerDiscardByCost` and the shared `DiscardAction`
 replacement pipeline. The action records that the discard pays a cost. A
 replacement that watches all discards can change its destination, and the

@@ -133,6 +133,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
 		for i, cost := range e.costs {
+			if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if _, ok := cost.(*tapNOtherMatchingCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
@@ -320,6 +323,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if discard, ok := value.(*discardCost); ok && discard.captureCard && !nilDefinition(discard.paidCard) && assigned[discard.paidCard] {
 			fail("duplicate paid card binding")
 		}
+		if reveal, ok := value.(*revealFromHandCost); ok && reveal.capture && !nilDefinition(reveal.paidCard) && assigned[reveal.paidCard] {
+			fail("duplicate paid card binding")
+		}
 		if life, ok := value.(*xLifePayCost); ok && !nilDefinition(life.paid) && assigned[life.paid] {
 			fail("duplicate paid life binding")
 		}
@@ -337,11 +343,12 @@ func ValidateCardDefinition(name string, card Card) error {
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
 			exileCost, exilePayment := edge.value.(*exileMatchingCardFromGraveyardCost)
 			_, paidDiscard := edge.value.(*discardCost)
+			reveal, paidReveal := edge.value.(*revealFromHandCost)
 			_, paidCounters := edge.value.(*removeAnyCountersCost)
 			fixedCounter, fixedCounterCost := edge.value.(*removeCountersCost)
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && (!exilePayment || !exileCost.capture) && !paidDiscard && !paidCounters && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) {
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && (!exilePayment || !exileCost.capture) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) {
 				assigned = before
 			}
 		}

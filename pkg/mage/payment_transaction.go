@@ -133,6 +133,35 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 	}
 	for i, cost := range tx.costs {
 		validationCost := cost
+		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
+			payer := tx.game.GetPlayer(tx.controller)
+			if payer == nil {
+				return ErrPlayerNotFound
+			}
+			var matches []Card
+			for _, card := range payer.Hand() {
+				if card.ID() != tx.sourceID && (reveal.filter.IsZero() || reveal.filter.Match(card)) {
+					matches = append(matches, card)
+				}
+			}
+			if len(matches) == 0 {
+				return fmt.Errorf("cannot pay chosen reveal")
+			}
+			chosen := matches[0]
+			if chooser, ok := payer.(interface{ ChooseFromCards([]Card, string) Card }); ok {
+				if selected := chooser.ChooseFromCards(matches, reveal.label); selected != nil {
+					chosen = selected
+				}
+			}
+			locked := *reveal
+			locked.selected = chosen.ID()
+			if visitor, ok := payer.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
+				locked.visit = visitor.handVisit(chosen.ID())
+			}
+			locked.locked = true
+			validationCost = &locked
+			tx.costs[i] = &locked
+		}
 		if discard, ok := cost.(*discardCost); ok {
 			locked := *discard
 			locked.selected = nil
@@ -264,6 +293,9 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	}
 	millTotal := 0
 	for _, cost := range tx.costs {
+		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture && !reveal.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay chosen reveal")
+		}
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture && !exile.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen graveyard exile")
 		}
@@ -340,6 +372,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
+			if tx.paidCards == nil {
+				tx.paidCards = make(map[*CardBinding]capturedCard)
+			}
+			tx.paidCards[reveal.paidCard] = capturedCard{id: reveal.selected, visit: reveal.visit, zone: ZoneHand}
 		}
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
 			if tx.paidNumbers == nil {

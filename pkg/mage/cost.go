@@ -617,8 +617,13 @@ func (c *discardCardsWithDifferentNamesCost) Text() string {
 // Used by "as an additional cost, reveal an X card from your hand"
 // (Wren's Run Vanquisher's first OR branch, etc.).
 type revealFromHandCost struct {
-	filter CardFilter
-	label  string
+	filter   CardFilter
+	label    string
+	paidCard *CardBinding
+	capture  bool
+	selected uuid.UUID
+	visit    uuid.UUID
+	locked   bool
 }
 
 // RevealFromHandCost creates a cost that requires revealing a card from
@@ -636,10 +641,36 @@ func RevealFromHandCost(filter CardFilter, label string) Cost {
 	return &revealFromHandCost{filter: filter, label: label}
 }
 
+// RevealFromHandCostWithCard saves the revealed card for this payment.
+func RevealFromHandCostWithCard(filter CardFilter, label string, card *CardBinding) Cost {
+	return &revealFromHandCost{filter: filter, label: label, paidCard: card, capture: true}
+}
+
+func (c *revealFromHandCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "reveal-cost", Text: c.Text()}
+	if c.capture {
+		if c.paidCard == nil {
+			n.problem = "supply a non-nil paid card binding"
+		}
+		if c.label == "" {
+			n.problem = "supply cost text"
+		}
+		n.bindingWrites = []savedBinding{c.paidCard}
+		n.children = []definitionEdge{{"card", c.paidCard}}
+	}
+	return n
+}
+
 func (c *revealFromHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return false
+	}
+	if c.locked {
+		visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID })
+		if !ok || c.visit == uuid.Nil || visitor.handVisit(c.selected) != c.visit {
+			return false
+		}
 	}
 	for _, card := range p.Hand() {
 		// Skip the card currently being cast (it is no longer in hand
@@ -647,7 +678,7 @@ func (c *revealFromHandCost) CanPay(sourceID, controller uuid.UUID, g *Game) boo
 		if card.ID() == sourceID {
 			continue
 		}
-		if c.filter.IsZero() || c.filter.Match(card) {
+		if (c.filter.IsZero() || c.filter.Match(card)) && (!c.locked || card.ID() == c.selected) {
 			return true
 		}
 	}
@@ -671,6 +702,18 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	if len(matches) == 0 {
 		return fmt.Errorf("no matching card to reveal")
 	}
+	if c.locked {
+		if !c.CanPay(sourceID, controller, g) {
+			return fmt.Errorf("chosen reveal card is absent")
+		}
+		for _, card := range matches {
+			if card.ID() == c.selected {
+				g.resolution.SetLastCostReveal(card)
+				g.recordPublicReveal(card)
+				return nil
+			}
+		}
+	}
 	// Use ChooseCardsFromHand to pick one. For TestPlayer this routes
 	// through scripted choices; for BasePlayer it returns the first.
 	// We delegate the picking by passing the matches as if they were a
@@ -687,6 +730,7 @@ func (c *revealFromHandCost) Pay(sourceID, controller uuid.UUID, g *Game) error 
 	// Reveal the card; no zone change (CR 701.16). The card stays in
 	// hand. Engine clients can observe the reveal via [Game.LastCostReveal].
 	g.resolution.SetLastCostReveal(chosen)
+	g.recordPublicReveal(chosen)
 	return nil
 }
 

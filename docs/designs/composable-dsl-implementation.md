@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Revealed Hand-Card Payment Binding
+
+`RevealFromHandCostWithCard(CardFilter, string, *CardBinding) Cost` saves one card chosen to pay a direct reveal-from-hand cost. The payer chooses once during total-cost preparation; isolated validation and live commit check the same card and hand visit. A successful payment stores the visit in the spell or activation frame and adds one public reveal snapshot; failed validation adds none. `FromCard` is absent after the card leaves and returns to hand. Stack copies and game clones keep their own frames. Registration rejects nil or unnamed bindings, empty cost text, duplicate producers, and reads without a producer. The first focused test failed because the constructor did not exist. Synthetic engine and public DSL tests cover pending activations, stack copies, clones, stale visits, failed total payment, public reveal records, and declaration validation. No production card was changed.
+
+This adapter uses the existing hand-visit, payment, and `CardBinding` services. It supports direct spell additional costs and activated ability costs. It does not expose a result from `EitherCost`, optional reveal costs, or resolution-time payment. The complete text of Wren's Run Vanquisher and Draconic Roar was checked in `data/JMP.json`; both need a separate choice or optional-cost contract before this binding can represent their full costs. Their production `RevealFromHandCost` calls and all other legacy callers remain. No gap record was closed. The next dependency-ready work is a P optional or alternative payment choice with branch-local result capture, or an independent E event-participant slice after a fresh requirements audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Optional Singular Graveyard Card Target
 
 `GraveyardUpToOne() GraveyardTargetOption` changes a `TargetGraveyardCard` declaration from exactly one to zero or one target. It uses the shared target announcement, copy, legality, and graveyard-visit services. It supports typed spells, activations, and triggers, including a trigger with no legal graveyard card. A controller may choose zero even when a card is legal. A chosen card is rechecked at resolution and cannot leave and return to keep its target identity. Registration rejects a repeated option. The declaration remains a singular `CardRef`; no card set or new choice service was added.

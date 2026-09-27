@@ -1852,6 +1852,18 @@ func watchDeparture() dsl.Card {
 
 ## 10. Spells, Activations, and Costs
 
+`RevealFromHandCostWithCard(filter CardFilter, text string, card *CardBinding) Cost` pays a direct spell additional cost or activated ability cost by revealing one matching card from the payer's hand. `FromCard(card)` reads that same card in the resolving body while its hand visit remains current. The payer chooses once during payment preparation. A card that leaves and returns to hand is absent from the binding. Registration requires a named binding and nonempty cost text. This result is local to each spell or ability instance and follows stack copies and game clones. The existing `RevealFromHandCost` remains available for callers that do not need a card binding. This constructor does not declare an optional cost or a choice between costs.
+
+```go
+revealed := dsl.BindCard("revealed creature")
+spell := dsl.NewInstant("Synthetic reveal", "",
+    dsl.WithAbility(dsl.Spell(
+        dsl.IfCardHasType(dsl.FromCard(revealed), core.TypeCreature,
+            dsl.GainLife(dsl.You, dsl.Fixed(1))))),
+    dsl.WithAdditionalCost(dsl.RevealFromHandCostWithCard(
+        dsl.IsCreatureCard, "Reveal a creature card", revealed)))
+```
+
 ### Spells
 * `Spell(ResolvingEffect, ...SpellOption)`: Instants and sorceries.
 * `SpellModes(modes...)`: Modal spells.
