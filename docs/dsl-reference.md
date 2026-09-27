@@ -1166,6 +1166,23 @@ Triggers on rules events dispatched by the engine:
   * `CreatureDies()`: Any creature dies.
   * `EnchantmentYouControlEnters().OfSubtype(string).WithPermanent(*PermanentBinding)`: Match an enchantment that enters under the trigger controller's control, including the source itself if it is an enchantment. Both methods are optional. `OfSubtype` accepts one enchantment subtype, such as `"Aura"`, and checks the effective subtype at entry. `WithPermanent` saves the entering battlefield incarnation for the trigger body. The saved object is not a target. It becomes absent if it leaves and returns or phases out. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. Registration rejects an unknown or nonenchantment subtype, repeated subtype filters, and missing, unnamed, repeated, or unbound captures.
 
+    `IfPermanentHasEnchantmentSubtype(PermanentRef, string, ResolvingEffect) ResolvingEffect` checks an enchantment subtype when a spell, activation, or trigger body resolves. It accepts `This`, a saved permanent from `From`, or another typed permanent reference. A saved permanent uses its current characteristics while it remains on the battlefield and its last known characteristics if it left. A return does not replace the saved incarnation. A phased-out permanent has no current subject. This is a resolution branch, so it does not filter the entry event. Registration rejects a missing subject, an unknown or wrong-family subtype, a missing body, and a saved binding without a producer.
+
+    ```go
+    package example
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    func auraWatcher() dsl.Card {
+        entered := dsl.BindPermanent("entered enchantment")
+        return dsl.NewCreature("Watcher", "", 1, 1,
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.EnchantmentYouControlEnters().WithPermanent(entered),
+                dsl.IfPermanentHasEnchantmentSubtype(dsl.From(entered), "Aura",
+                    dsl.GainLife(dsl.You, dsl.Fixed(1))))))
+    }
+    ```
+
     ```go
     package example
 

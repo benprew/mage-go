@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Resolution-Time Enchantment Subtype Branch
+
+`IfPermanentHasEnchantmentSubtype(PermanentRef, string, ResolvingEffect)` checks a current or saved battlefield incarnation when a spell, activation, or trigger body resolves. For a saved permanent that departed, it reads the `ZoneSystem` LKI snapshot keyed by incarnation; a returned card does not replace that object. A phased-out object has no current subject. The branch uses the existing subtype and resolution services. It adds no token-result or attachment action. Registration checks the sealed permanent role, a known enchantment subtype, body presence, and binding dominance. No production card or legacy export changed.
+
+Ajani's Chosen's complete text was checked in `data/JMP.json`. This branch can express its resolution-time Aura condition, after token creation. Its optional attachment to the created token, token-result binding, full card audit, and production wiring remain open. The Jumpstart inventory and JSON gap stay open. A fresh search found no production caller of `EnchantmentYouControlEnters` or the new branch; Ajani's Chosen still uses its legacy declaration. The next dependency-ready work is the token-result binding prerequisite for optional attachment, or another independent E/P slice after a fresh audit.
+
+The first focused test failed because the constructor was absent. Synthetic and public DSL tests cover matching and nonmatching subtypes, departure LKI with effective characteristics, leave and return, phasing, illegal targets, trigger stack copies, game clones, inspection, and invalid declarations. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Controlled Enchantment Entry Subtype
 
 `EnchantmentYouControlEnters().OfSubtype(string)` is a typed entry-time enchantment subtype filter for battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses the effective entry-subtype condition and existing controlled-enchantment trigger. It composes with `WithPermanent` without changing the captured incarnation. Registration rejects an empty, unknown, wrong-family, or repeated subtype. No production card or legacy export changed.

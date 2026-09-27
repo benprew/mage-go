@@ -77,29 +77,30 @@ type (
 
 var (
 	// TargetPermanent declares a single permanent target matching the filter.
-	TargetPermanent            = mage.DeclarePermanentTarget
-	TargetYouControl           = mage.TargetYouControl
-	TargetYouOwn               = mage.TargetYouOwn
-	TargetAttachedToYouControl = mage.TargetAttachedToYouControl
-	TargetOpponentControls     = mage.TargetOpponentControls
-	TargetChosenByOpponent     = mage.TargetChosenByOpponent
-	MayTapOrUntap              = mage.MayTapOrUntap
-	PreventCombatDamageToAndBy = mage.PreventCombatDamageToAndBy
-	TargetPlayer               = mage.DeclarePlayerTarget
-	TargetSpell                = mage.DeclareSpellTarget
-	TargetGraveyardCard        = mage.DeclareGraveyardCardTarget
-	InAnyGraveyard             = mage.InAnyGraveyard
-	GraveyardCardFilter        = mage.GraveyardCardFilter
-	ReturnCardToHand           = mage.ReturnCardToHand
-	DiscardCard                = mage.DiscardCard
-	RevealCard                 = mage.RevealCard
-	IfCardHasType              = mage.IfCardHasType
-	IfCardLacksType            = mage.IfCardLacksType
-	BindCard                   = mage.BindCard
-	FromCard                   = mage.FromCard
-	ReturnCardToBattlefield    = mage.ReturnCardToBattlefield
-	Counter                    = mage.Counter
-	TargetOpponentOnly         = mage.TargetOpponentOnly
+	TargetPermanent                  = mage.DeclarePermanentTarget
+	TargetYouControl                 = mage.TargetYouControl
+	TargetYouOwn                     = mage.TargetYouOwn
+	TargetAttachedToYouControl       = mage.TargetAttachedToYouControl
+	TargetOpponentControls           = mage.TargetOpponentControls
+	TargetChosenByOpponent           = mage.TargetChosenByOpponent
+	MayTapOrUntap                    = mage.MayTapOrUntap
+	PreventCombatDamageToAndBy       = mage.PreventCombatDamageToAndBy
+	TargetPlayer                     = mage.DeclarePlayerTarget
+	TargetSpell                      = mage.DeclareSpellTarget
+	TargetGraveyardCard              = mage.DeclareGraveyardCardTarget
+	InAnyGraveyard                   = mage.InAnyGraveyard
+	GraveyardCardFilter              = mage.GraveyardCardFilter
+	ReturnCardToHand                 = mage.ReturnCardToHand
+	DiscardCard                      = mage.DiscardCard
+	RevealCard                       = mage.RevealCard
+	IfCardHasType                    = mage.IfCardHasType
+	IfPermanentHasEnchantmentSubtype = mage.IfPermanentHasEnchantmentSubtype
+	IfCardLacksType                  = mage.IfCardLacksType
+	BindCard                         = mage.BindCard
+	FromCard                         = mage.FromCard
+	ReturnCardToBattlefield          = mage.ReturnCardToBattlefield
+	Counter                          = mage.Counter
+	TargetOpponentOnly               = mage.TargetOpponentOnly
 	// WithTargets binds declared target bindings to a spell, activation, or trigger.
 	WithTargets = mage.WithTargets
 	// WithTargetGroups declares independent spell target groups.
