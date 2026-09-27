@@ -1192,13 +1192,14 @@ Triggers on rules events dispatched by the engine:
         ))
     }
   * `DealsDamageToPlayer(source PermanentRef, playerBinding *PlayerBinding).WithAmount(amountBinding)`: `This` or `AttachedPermanent` deals positive damage to a player. The player binding saves the damaged player, not a target. `WithAmount` optionally saves the final damage amount. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. An attached source is checked when damage occurs; queued bindings stay fixed if the attachment or its controller later changes. Registration rejects other source references and invalid bindings.
+  * `DealsDamageToPlayer(source, playerBinding).ToController().WithAmount(amountBinding)`: Filter the player recipient to the trigger controller when damage occurs. `ToController` must follow `DealsDamageToPlayer`; registration rejects it on opponent or combat damage patterns. The damaged player and final amount remain event bindings. Use `This` or `AttachedPermanent` as the source in a battlefield `WhenEvent` or `WhenEventModes` ability.
     ```go
     func attachedDamageWatcher() dsl.Card {
         player := dsl.BindPlayer("damaged player")
         amount := dsl.BindNumber("damage dealt")
         return dsl.NewAura("Damage Watcher", "{W}", dsl.WithAbility(
             dsl.WhenEvent(
-                dsl.DealsDamageToPlayer(dsl.AttachedPermanent, player).WithAmount(amount),
+                dsl.DealsDamageToPlayer(dsl.AttachedPermanent, player).ToController().WithAmount(amount),
                 dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)),
             ),
         ))

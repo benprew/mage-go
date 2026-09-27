@@ -9,13 +9,14 @@ import (
 )
 
 type damageEventPattern struct {
-	source        PermanentRef
-	player        *PlayerBinding
-	opponentOnly  bool
-	amount        *NumberBinding
-	captureAmount bool
-	anyRecipient  bool
-	combatOnly    bool
+	source         PermanentRef
+	player         *PlayerBinding
+	opponentOnly   bool
+	controllerOnly bool
+	amount         *NumberBinding
+	captureAmount  bool
+	anyRecipient   bool
+	combatOnly     bool
 }
 
 // DealsDamage matches damage from the source to any recipient.
@@ -28,6 +29,12 @@ func DealsDamage(source PermanentRef, amount *NumberBinding) EventPattern {
 // It saves the damaged player without making that player a target.
 func DealsDamageToPlayer(source PermanentRef, player *PlayerBinding) damageEventPattern {
 	return damageEventPattern{source: source, player: player}
+}
+
+// ToController matches damage to the trigger controller when damage occurs.
+func (p damageEventPattern) ToController() damageEventPattern {
+	p.controllerOnly = true
+	return p
 }
 
 // DealsCombatDamageToPlayer matches combat damage from the source to a player.
@@ -68,9 +75,11 @@ func (p damageEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggere
 	if _, ok := p.source.(attachedPermanentRef); ok {
 		sourceCondition = EventSourceIsAttachedTo{}
 	}
-	return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-		sourceCondition, EventTargetIsPlayer{},
-	}})
+	conditions := []TriggerConditionData{sourceCondition, EventTargetIsPlayer{}}
+	if p.controllerOnly {
+		conditions = append(conditions, EventTargetIsController{})
+	}
+	return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(AndTriggerCond{Conditions: conditions})
 }
 func (p damageEventPattern) inspectDefinition() definitionNode {
 	text := "source deals damage to a player"
@@ -100,6 +109,13 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 			n.Text = "attached permanent deals damage to a player"
 		default:
 			n.problem = "damage event source requires This or AttachedPermanent"
+		}
+	}
+	if p.controllerOnly {
+		if p.anyRecipient || p.combatOnly || p.opponentOnly {
+			n.problem = "controller damage filter requires DealsDamageToPlayer"
+		} else {
+			n.Text += " to trigger controller"
 		}
 	}
 	if p.captureAmount {

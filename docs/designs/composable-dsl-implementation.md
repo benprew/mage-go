@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Damage to Trigger Controller Filter
+
+`DealsDamageToPlayer(This, player).ToController()` and the `AttachedPermanent` form match positive damage to the battlefield trigger controller at event time. Optional `.WithAmount(amount)` and the player binding retain the final event participants in the pending trigger frame. The filter reuses `EventTargetIsController`, the shared damage event, attachment condition, and existing trigger capture. It adds no damage executor or production card migration. Registration rejects incompatible opponent/combat patterns and unsupported source references. The public DSL declaration compiles.
+
+Synthetic tests first failed because `ToController` was absent. They cover other-player damage, full prevention, event-time control changes, phasing, source departure and return, amount/player capture, stack copies, clone isolation, and declaration validation. Backfire's complete Oracle text was checked in `data/LEG.json`. Its attached creature controller capture, damage action, and card wiring remain open, so the Legends gap record is unchanged. Curious Obsession in Jumpstart retains its legacy attached combat-damage trigger. A fresh search found one legacy `AttachedToDealsDamageToController` caller and one `WheneverEnchantedPermanentDealsDamageToPlayerTrigger` caller; both exports remain. The next dependency-ready E slice is an event-time attached permanent controller binding, after a fresh audit of all callers.
+
+Focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The older missing-package and C metadata blockers recorded below did not recur in this workspace.
+
 ## Current Slice: Attached Permanent Damage to Player Event
 
 `DealsDamageToPlayer(AttachedPermanent, player).WithAmount(amount)` is a typed battlefield event pattern for positive damage from the currently attached permanent to a player. The player is an event participant, and the optional amount is the final amount after prevention. The pattern reuses the shared attachment condition, damage event, pending trigger, and binding frame. It also retains `DealsDamageToPlayer(This, player)`. Registration accepts only `This` or `AttachedPermanent` as the source and rejects invalid bindings. No production card changed. Backfire's complete text was checked in `data/LEG.json`; its "to you" filter, creature controller recipient, damage action, and card wiring remain separate. The Legends gap record stays open. The next dependency-ready E work is the "to you" filter or another event participant after a fresh audit.
