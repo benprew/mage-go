@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Permanent-Set Untap
+
+`UntapEach(PermanentSet) ResolvingEffect` uses the shared singular untap rule for stun counters and a new batch service that completes successful untaps before sending events. It selects one set at resolution, removes duplicates and stale or phased-out incarnations, and ignores already untapped permanents. It works in spell, activation, and trigger bodies; inspection and registration reject a nil or undeclared set, while the sealed role rejects a singular permanent at compile time. No production card or legacy export changed.
+
+Reset's full text in `data/LEG.json` requires untapping all lands its controller controls; Molten Note's full text in `data/SOS.json` requires untapping all creatures its controller controls. Synthetic tests cover simultaneous event observation, stun replacement, absent and phased members, stale and duplicate identities, clone isolation, target-group incarnation, inspection, registration, and the public DSL export. A fresh caller search found Reset still using `ForEach(..., Untap(...))` and Molten Note still using its existing resolution code. Reset also needs a casting-time restriction; Molten Note needs its other spell clauses. Both remain production card wiring. Existing `Untap` and other untap callers remain available; no legacy export was removed. The broad Legends and Secrets of Strixhaven gap records remain open. The next dependency-ready B slice is `AddCountersEach`, after a fresh shared replacement and batch audit.
+
+Validation: focused tests and closed-role checks, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Simultaneous Permanent-Set Tap
 
 `TapEach(PermanentSet) ResolvingEffect` is a typed collection tap for spell, activation, and trigger resolution. It reads one permanent set at resolution, keeps only current untapped battlefield incarnations, and uses `Game.tapPermanentsTogether` so all members become tapped before any tap event fires. Each actual transition emits one tap event. Registration inspects the set and rejects nil or undeclared references; a singular `PermanentRef` cannot be passed to the collection constructor. The effect reports mass tap metadata. It does not supply untapping, target announcement, or a tap-count result.

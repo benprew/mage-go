@@ -569,6 +569,7 @@ func tapAbility() {
 * `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
 * `ReturnEachToHand(PermanentSet) ResolvingEffect`: Returns the selected battlefield incarnations to their owners' hands in one simultaneous instruction. Use it in a spell, activation, or trigger body. It excludes phased-out objects and tokens do not remain in hand. The set is read once at resolution; later returned incarnations are not part of that instruction.
 * `TapEach(PermanentSet) ResolvingEffect`: Taps all untapped, present members of one selected set together in a spell, activation, or trigger body. A tap event fires once per permanent after all members have become tapped. Already tapped, phased-out, absent, and stale incarnations do not cause tap events. The set is read once at resolution. The argument must be a `PermanentSet`, such as `MatchingPermanents` or `TargetPermanents`.
+* `UntapEach(PermanentSet) ResolvingEffect`: Untaps all tapped, present members of one selected set together in a spell, activation, or trigger body. A stun counter on a selected permanent is removed instead of untapping it. Each successful untap sends one event after all successful untaps finish. Untapped, phased-out, absent, and stale incarnations have no effect. The set is read once at resolution.
 
 ```go
 package example
@@ -578,6 +579,11 @@ import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
 func blueTap() dsl.Card {
     return dsl.NewInstant("Blue tap", "", dsl.WithAbility(dsl.Spell(
         dsl.TapEach(dsl.MatchingPermanents(dsl.HasColorFilter(dsl.Blue))))))
+}
+
+func landUntap() dsl.Card {
+    return dsl.NewInstant("Land untap", "", dsl.WithAbility(dsl.Spell(
+        dsl.UntapEach(dsl.ControlledPermanents(dsl.IsLand)))))
 }
 ```
 

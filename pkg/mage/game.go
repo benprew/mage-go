@@ -3150,6 +3150,14 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 	if p == nil {
 		return false
 	}
+	if !g.untapWithoutEvent(p) {
+		return false
+	}
+	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
+	return true
+}
+
+func (g *Game) untapWithoutEvent(p *Permanent) bool {
 	if p.Counters[Stun] > 0 {
 		p.RemoveCounter(Stun, 1)
 		return false
@@ -3158,8 +3166,21 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 		return false
 	}
 	p.Tapped = false
-	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 	return true
+}
+
+// untapPermanentsTogether completes each untap before it sends untap events.
+func (g *Game) untapPermanentsTogether(permanents []*Permanent) {
+	untapped := make([]*Permanent, 0, len(permanents))
+	for _, permanent := range permanents {
+		live := g.MutablePermanent(permanent.ID())
+		if live != nil && g.untapWithoutEvent(live) {
+			untapped = append(untapped, live)
+		}
+	}
+	for _, permanent := range untapped {
+		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: permanent.ID()})
+	}
 }
 
 // SkipNextUntap prevents untapping during the next untap step of the current
