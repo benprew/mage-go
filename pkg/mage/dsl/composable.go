@@ -249,6 +249,7 @@ var (
 	OpponentLosesLife         = mage.OpponentLosesLife
 	PlayerLosesLife           = mage.PlayerLosesLife
 	ControllerDrawsCard       = mage.ControllerDrawsCard
+	ControllerDrawsCardInto   = mage.ControllerDrawsCardInto
 	OpponentDrawsCard         = mage.OpponentDrawsCard
 	PlayerDrawsCard           = mage.PlayerDrawsCard
 	OpponentDiscardsCard      = mage.OpponentDiscardsCard

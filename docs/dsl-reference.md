@@ -1951,6 +1951,17 @@ Triggers on rules events dispatched by the engine:
     }
     ```
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
+  * `ControllerDrawsCardInto(playerBinding, cardBinding) EventPattern`: The source controller completes one draw. The player and the exact drawn card's current hand visit are saved in that trigger. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield source. `FromCard(cardBinding)` is absent if that card leaves the hand and returns before resolution. It does not declare a target. The card binding is limited to the controller's draw so it does not expose another player's hand.
+    ```go
+    func drawWatcher() dsl.Card {
+        drawer := dsl.BindPlayer("drawer")
+        drawn := dsl.BindCard("drawn")
+        return dsl.NewEnchantment("Draw Watcher", "{1}{G}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.ControllerDrawsCardInto(drawer, drawn),
+                dsl.IfCardHasType(dsl.FromCard(drawn), core.TypeLand,
+                    dsl.GainLife(dsl.FromPlayer(drawer), dsl.Fixed(1))))))
+    }
+    ```
   * `PlayerDrawsCard(playerBinding) EventPattern`: Either player completes one card draw. The pattern saves that player when the draw occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source, and read the player with `FromPlayer`. Each completed card draw matches once. A replaced draw or an empty-library attempt does not match. The player binding is not a target.
     ```go
     func anyDrawWatcher() dsl.Card {

@@ -4,6 +4,8 @@ import "github.com/benprew/mage-go/pkg/mage/core"
 
 type playerDrawEventPattern struct {
 	player       *PlayerBinding
+	card         *CardBinding
+	cardCapture  bool
 	anyPlayer    bool
 	opponentOnly bool
 }
@@ -17,6 +19,11 @@ func PlayerDrawsCard(player *PlayerBinding) EventPattern {
 // It saves the player at detection without declaring a target.
 func ControllerDrawsCard(player *PlayerBinding) EventPattern {
 	return playerDrawEventPattern{player: player}
+}
+
+// ControllerDrawsCardInto saves the drawn card for its current hand visit.
+func ControllerDrawsCardInto(player *PlayerBinding, card *CardBinding) EventPattern {
+	return playerDrawEventPattern{player: player, card: card, cardCapture: true}
 }
 
 // OpponentDrawsCard saves the opponent who drew a card when the draw occurs.
@@ -42,9 +49,21 @@ func (p playerDrawEventPattern) inspectDefinition() definitionNode {
 	} else if p.opponentOnly {
 		text = "an opponent draws a card"
 	}
-	return definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true,
+	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true,
 		bindingWrite: p.player, children: []definitionEdge{{"player", p.player}}}
+	if p.card != nil {
+		n.bindingWrites = []savedBinding{p.card}
+		n.children = append(n.children, definitionEdge{"card", p.card})
+	} else if p.cardCapture {
+		n.problem = "supply a non-nil drawn card binding"
+	}
+	return n
 }
 func (p playerDrawEventPattern) captureEventEffects(event *core.GameEvent, effects []Effect) []Effect {
-	return []Effect{Sequence(&eventPlayerCapture{p.player, event.PlayerID}, Sequence(effects...))}
+	captures := []ResolvingEffect{&eventPlayerCapture{p.player, event.PlayerID}}
+	if p.cardCapture {
+		captures = append(captures, &eventCardCapture{binding: p.card, value: capturedCard{id: event.DrawnCardID, visit: event.DrawnCardVisit, zone: core.ZoneHand}})
+	}
+	captures = append(captures, Sequence(effects...))
+	return []Effect{Sequence(captures...)}
 }

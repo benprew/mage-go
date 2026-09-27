@@ -1436,9 +1436,15 @@ func (g *Game) PlayerDrawCard(p Player) (Card, bool) {
 func (g *Game) drawCardRaw(p Player) (Card, bool) {
 	c, ok := p.DrawCard()
 	if ok {
+		var visit uuid.UUID
+		if visitor, hasVisit := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); hasVisit {
+			visit = visitor.handVisit(c.ID())
+		}
 		g.FireEvent(GameEvent{
-			Type:     EvtCardDrawn,
-			PlayerID: p.PlayerID(),
+			Type:           EvtCardDrawn,
+			PlayerID:       p.PlayerID(),
+			DrawnCardID:    c.ID(),
+			DrawnCardVisit: visit,
 		})
 	}
 	return c, ok

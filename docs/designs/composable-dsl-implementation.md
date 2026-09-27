@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controller Drawn-Card Event Capture
+
+`ControllerDrawsCardInto(*PlayerBinding, *CardBinding) EventPattern` saves the source controller and the exact card from each completed draw. `EvtCardDrawn` now carries that card's ID and current hand-visit ID. `FromCard` is absent after the card leaves and returns. The pattern uses `WhenEvent` or `WhenEventModes` on a battlefield source. It has no target and gives no drawn-card binding for opponent or any-player patterns, which preserves hidden-hand access. The existing draw replacement, event, pending-trigger, resolution-frame, and clone services remain responsible for execution. No production card or legacy export changed.
+
+Focused tests first failed because the constructor was absent. Synthetic tests cover distinct draws, empty-library attempts, source phasing, hand departure and return, pending-trigger copying, game cloning, and registration rejection for nil or unproduced bindings. A public DSL declaration compiles. Existing draw-event tests cover replaced draws and source lifecycle. Card wiring remains open; the next dependency-ready work in delivery step 3 is a separate P payment output or T target-announcement contract after a fresh audit. No gap record closes from this adapter alone.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `ControllerDrawsCardInto` caller and two `ControllerDrawsCard` callers in Jumpstart and The Dark; both remain unchanged. The post-lint diff was reviewed.
+
 ## Current Slice: Cast-Event Spell Binding
 
 `BindSpell(name)`, `SpellCast().WithSpell(binding)`, and `FromSpell(binding)` save the cast spell's stack object ID for a battlefield `WhenEvent` or `WhenEventModes` body. The sealed `StackObjectRef` works with existing `Counter`, `ManaValueOfSpell`, and `ControllerOfSpell`. It uses the cast event's stack ID and the instance-local resolution frame. An absent spell is not found by card ID after another cast. Trigger copies keep the binding; game clones copy its frame. This event participant is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. No production card or legacy export changed.
