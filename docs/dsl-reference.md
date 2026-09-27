@@ -1163,7 +1163,6 @@ Triggers on rules events dispatched by the engine:
     _ = watcher
     ```
   * `SpellCast().ByOpponent().WithCaster(*PlayerBinding) EventPattern`: `ByOpponent` matches a caster who is an opponent of the source controller when the spell is cast. `WithCaster` is optional and saves that event player for this trigger instance. Read it with `FromPlayer` in the trigger body. The two filters compose with `OfColor`. A missing or repeated caster binding is rejected at registration. This does not bind or target the spell.
-
     ```go
     package main
 
@@ -1194,6 +1193,20 @@ Triggers on rules events dispatched by the engine:
             dsl.GainLife(dsl.You, dsl.Fixed(1)),
         )),
     )
+
+    func main() {}
+    ```
+  * `SpellCast().WithManaSpent(*NumberBinding) EventPattern`: Save the total mana paid for the cast spell when the cast event occurs. Read it with `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The saved value remains available after the spell leaves the stack. A cast without mana payment saves zero. It composes with `ByOpponent`, `WithCaster`, `OfColor`, `OfType`, and `OfEnchantmentSubtype`. Registration rejects a missing, unnamed, or repeated binding. This synthetic declaration compiles:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var spent = dsl.BindNumber("mana spent")
+    var _ = dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().WithManaSpent(spent),
+        dsl.GainLife(dsl.You, dsl.FromNumber(spent)))))
 
     func main() {}
     ```

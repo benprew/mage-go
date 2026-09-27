@@ -23,6 +23,9 @@ type spellCastPattern struct {
 	caster                      *PlayerBinding
 	captureCaster               bool
 	duplicateCaster             bool
+	manaSpent                   *NumberBinding
+	captureManaSpent            bool
+	duplicateManaSpent          bool
 }
 
 // SpellCast matches a spell cast by any player while this source is on the battlefield.
@@ -41,6 +44,16 @@ func (p spellCastPattern) WithCaster(caster *PlayerBinding) spellCastPattern {
 	}
 	p.caster = caster
 	p.captureCaster = true
+	return p
+}
+
+// WithManaSpent saves the cast spell's paid mana total for this trigger.
+func (p spellCastPattern) WithManaSpent(spent *NumberBinding) spellCastPattern {
+	if p.captureManaSpent {
+		p.duplicateManaSpent = true
+	}
+	p.manaSpent = spent
+	p.captureManaSpent = true
 	return p
 }
 
@@ -130,6 +143,16 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 	if p.duplicateCaster {
 		n.problem = "spell cast event: supply one caster binding"
 	}
+	if p.captureManaSpent {
+		n.bindingWrites = append(n.bindingWrites, p.manaSpent)
+		n.children = append(n.children, definitionEdge{"mana spent", &eventAmountCapture{binding: p.manaSpent}})
+		if p.manaSpent == nil {
+			n.problem = "spell cast event: supply a mana-spent binding"
+		}
+	}
+	if p.duplicateManaSpent {
+		n.problem = "spell cast event: supply one mana-spent binding"
+	}
 	return n
 }
 
@@ -172,10 +195,18 @@ func (c spellCastHasType) CheckTriggerCond(event *GameEvent, reader GameReader, 
 }
 
 func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
-	if !p.captureCaster {
+	if !p.captureCaster && !p.captureManaSpent {
 		return effects
 	}
-	return []Effect{Sequence(&eventPlayerCapture{binding: p.caster, player: event.PlayerID}, Sequence(effects...))}
+	captures := make([]ResolvingEffect, 0, 2)
+	if p.captureCaster {
+		captures = append(captures, &eventPlayerCapture{binding: p.caster, player: event.PlayerID})
+	}
+	if p.captureManaSpent {
+		captures = append(captures, &eventAmountCapture{binding: p.manaSpent, amount: event.CastManaSpent})
+	}
+	captures = append(captures, Sequence(effects...))
+	return []Effect{Sequence(captures...)}
 }
 
 type spellCastHasEffectiveColor struct{ color Color }

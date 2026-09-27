@@ -530,3 +530,7 @@ An `EvtDeclaredAttacker` records its defending player in `TargetID` when the att
 Legacy False Orders and Ydwen Efreet effects retain a private explicit-unblocking compatibility path. Historical sole-blocker tracking and the remaining card clauses require separate audits; that path is not the general combat-removal operation.
 
 Regression evidence: `TestCombatRemovalKeepsAttackerBlocked`, `TestTypedCombatRemovalLifetime`, and existing `TestFalseOrders` / `TestYdwenEfreet`. Rules revision: February 27, 2026.
+
+# Cast-event mana payment capture
+
+`EvtSpellCast` carries `CastManaSpent`, the total mana drained to pay the exact cast stack object's costs. `FireEvent` reads the stack object named by the event's `TargetID` and checks its source card ID before publishing the event. A trigger copies the number into its own resolution frame when it is put on the stack, so later spell departure, trigger copies, and game clones do not change it. A cast with no mana payment records zero.

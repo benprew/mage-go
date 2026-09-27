@@ -62,6 +62,7 @@ type GameEvent struct {
 	SourceIncarnation uuid.UUID
 	// SourceControllerID keeps the damage source controller after the source leaves.
 	SourceControllerID uuid.UUID
+	CastManaSpent      int
 	TargetID           uuid.UUID
 	ActorID            uuid.UUID
 	RelatedIDs         []uuid.UUID

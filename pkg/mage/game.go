@@ -1723,6 +1723,11 @@ func (g *Game) DelayedTriggers() []*DelayedTrigger {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	if evt.Type == EvtSpellCast {
+		if obj := g.stack.FindByID(evt.TargetID); obj != nil && !obj.IsAbility && obj.SourceID == evt.SourceID {
+			evt.CastManaSpent = ManaSpentToCast(obj)
+		}
+	}
 	if isBattlefieldLeaveEvent(&evt) && evt.SourceIncarnation == uuid.Nil {
 		if lki := g.zones.LKI(evt.SourceID); lki != nil && lki.Snapshot != nil {
 			evt.SourceIncarnation = lki.Snapshot.incarnationID

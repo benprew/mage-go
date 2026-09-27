@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Spell-Cast Mana-Spent Event Capture
+
+`SpellCast().WithManaSpent(*NumberBinding)` saves the total mana paid for the exact cast stack object at event time. The sealed battlefield event pattern works in `WhenEvent` and `WhenEventModes`; the trigger body reads the instance-local result with `FromNumber`. The cast payment record, event dispatch, and existing number frame supply the behavior. A cast without mana payment saves zero. No production card or legacy export changed.
+
+Aberrant Manawurm and Ambitious Augmenter's complete text in `data/SOS.json` and the Secrets of Strixhaven inventory require the triggering spell's mana-spent total even after that spell leaves the stack. This slice supplies that capture, but not power/toughness comparison, token copy, or card wiring. Their gap records remain open. A fresh `cards/` search found 14 occurrences of `WheneverYouCastSpellWithManaSpent`, `OpusEffect`, and `Increment`; those legacy helpers remain. The focused test first failed because `WithManaSpent` was absent. Synthetic tests cover mixed-color and zero payment, spell departure, trigger clone isolation, source phasing, inspection, and invalid declarations. The next dependency-ready slice is an E cast-event comparison or distinct P result adapter after a fresh requirements audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Cast-Condition Union
 
 `AnyCast(...CastCondition) CastCondition` combines saved cast facts under the existing `IfCast` spell-body branch. It evaluates to true once when any child is true, including when several children are true. It copies the child list and uses the sealed cast-condition role and existing cast snapshot. Registration rejects empty, nil, and invalid child conditions, as well as use outside a spell. No production card or legacy export changed.
