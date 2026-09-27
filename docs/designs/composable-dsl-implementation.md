@@ -1,6 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Simultaneous Player-Set Hand Discard
+## Current Slice: Simultaneous Hand-Discard Total
+
+`DiscardEach(PlayerSet, ...DiscardEachResultOption)` now accepts `DiscardTotalInto(*NumberBinding)`. The sealed option saves the count of completed card moves in the existing simultaneous hand-discard batch. Replacements run before moves; redirected discards count and prevented discards do not. Empty hands and absent sets write zero to the current resolution frame. Inspection and registration reject nil, unnamed, duplicate, and undominated result bindings. Existing `DiscardEach` calls and all legacy exports remain valid. The action works in spell, activation, and trigger bodies.
+
+The complete Wheel of Fortune text in `data/LEA.json` remains an integration requirement; its production wiring is separate. The focused tests first failed because the option was absent. Synthetic tests cover completed totals, redirected and prevented discards, empty and absent selections, clone isolation, declaration validation, and the public DSL export. Existing batch tests cover simultaneous event observation and replacement preparation. A fresh search found no production `DiscardEach` or `DiscardTotalInto` caller; two `DiscardHand` calls and one `DiscardEntireHand` call remain. No production card or gap record changed. The next dependency-ready work is a distinct batch result or payment output after a fresh requirements audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
+## Previous Slice: Simultaneous Player-Set Hand Discard
 
 `DiscardEach(PlayerSet) ResolvingEffect` selects players and snapshots their hands at resolution. The batch uses the existing effect-discard replacement pipeline, moves accepted cards, then sends discard events after all moves. It is available in spell, activation, and trigger bodies. A singular player does not satisfy the sealed set role; registration checks nil and out-of-scope sets. The adapter does not produce a discard result and leaves `DiscardEntireHand` and all legacy exports intact.
 

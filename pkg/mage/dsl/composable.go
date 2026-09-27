@@ -99,6 +99,7 @@ type (
 	CostGroup                 = mage.CostGroup
 	LifeLossResultOption      = mage.LifeLossResultOption
 	DiscardResultOption       = mage.DiscardResultOption
+	DiscardEachResultOption   = mage.DiscardEachResultOption
 	DestroyEachResultOption   = mage.DestroyEachResultOption
 	DestroyResultOption       = mage.DestroyResultOption
 )
@@ -213,6 +214,7 @@ var (
 	DiscardAtRandom   = mage.DiscardAtRandom
 	DiscardEntireHand = mage.DiscardEntireHand
 	DiscardEach       = mage.DiscardEach
+	DiscardTotalInto  = mage.DiscardTotalInto
 	DiscardAmountInto = mage.DiscardAmountInto
 	// Mill moves cards from the top of the library to the graveyard.
 	Mill = mage.Mill

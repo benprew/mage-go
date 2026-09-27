@@ -7,7 +7,7 @@ import (
 )
 
 // discardHandsTogether moves the selected hands before it sends discard events.
-func (g *Game) discardHandsTogether(ids []uuid.UUID, sourceID uuid.UUID) {
+func (g *Game) discardHandsTogether(ids []uuid.UUID, sourceID uuid.UUID) int {
 	var actions []*DiscardAction
 	seen := make(map[uuid.UUID]bool, len(ids))
 	for _, id := range ids {
@@ -39,4 +39,5 @@ func (g *Game) discardHandsTogether(ids []uuid.UUID, sourceID uuid.UUID) {
 	for _, event := range events {
 		g.FireEvent(event)
 	}
+	return len(events)
 }
