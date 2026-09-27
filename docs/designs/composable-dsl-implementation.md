@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controller Life Versus Starting Life
+
+`ControllerLifeAtLeastStartingLife() StateCondition` reads the ability controller's current and starting life totals at each state check. It works in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState`. A missing controller returns false. The sealed condition role, inspection, and existing state-condition validation apply; it creates no binding and changes no payment or life service. No production card or legacy export changed.
+
+Path of Bravery's full text was checked in `cards/jumpstart/JMP.json`. The predicate supplies its static life threshold, including equality and nondefault starting totals. Its separate one-or-more-attacking-creatures event and production card wiring remain open, so the gap record stays blocked. Focused tests first failed for the missing constructor, then passed for either controller, missing controller, threshold changes, clone isolation, static reevaluation, registration, inspection, and the public DSL export. A fresh production search found no caller of the new predicate. Next dependency-ready work is a separate E attack-batch event or P payment output after a fresh contract audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Departing Permanent Event Binding
 
 `CreatureDies().WithPermanent(*PermanentBinding)` and the other creature/permanent death patterns save the departing battlefield incarnation in each pending trigger. `From(binding)` is absent for battlefield actions after death; `DamageSourceOf(From(binding))` can use that incarnation's departure LKI after the card returns. The binding is a sealed permanent reference, not a target or a graveyard card. It works in battlefield `WhenEvent` and `WhenEventModes` bodies. Registration rejects nil, unnamed, repeated, and unbound captures. The pattern reuses the existing pre-departure zone-change event, event capture effect, resolution frame, and damage-source LKI service; no new event or damage engine contract was needed. No production card or legacy export changed.

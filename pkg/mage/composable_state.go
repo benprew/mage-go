@@ -61,6 +61,25 @@ func (controllerGainedLifeThisTurnCondition) inspectDefinition() definitionNode 
 
 type uniqueHighestLifeCondition struct{}
 
+type controllerLifeAtLeastStartingLifeCondition struct{}
+
+// ControllerLifeAtLeastStartingLife compares current life with its starting total.
+func ControllerLifeAtLeastStartingLife() StateCondition {
+	return controllerLifeAtLeastStartingLifeCondition{}
+}
+
+func (controllerLifeAtLeastStartingLifeCondition) stateCondition() {}
+func (controllerLifeAtLeastStartingLifeCondition) checkState(g GameReader, ctx StateContext) bool {
+	if ctx.ControllerID == uuid.Nil {
+		return false
+	}
+	player := g.GetPlayer(ctx.ControllerID)
+	return player != nil && player.Life() >= player.StartingLife()
+}
+func (controllerLifeAtLeastStartingLifeCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "controller life is at least starting life"}
+}
+
 // HasUniqueHighestLife checks whether one player alone has the most life.
 func HasUniqueHighestLife() StateCondition { return uniqueHighestLifeCondition{} }
 

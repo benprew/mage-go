@@ -374,6 +374,17 @@ _ = card
   )
   _ = ability
   ```
+
+* `ControllerLifeAtLeastStartingLife() StateCondition`: True when the ability controller's current life total is at least that player's starting life total. It reads the player at each check and returns false if the controller is absent. Use it in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, or `While`. It does not select the player with the most life.
+
+  ```go
+  card := dsl.NewEnchantment("Life watcher", "", dsl.WithAbility(dsl.Static(dsl.While(
+      dsl.ControllerLifeAtLeastStartingLife(),
+      dsl.ModifyEachPT(dsl.ControlledPermanents(dsl.IsCreature), dsl.Fixed(1), dsl.Fixed(1)),
+  ))))
+  _ = card
+  ```
+
 * `SourceHasCounters(counter, min)`: The source permanent has at least `min` counters of the specified type.
 * `SourceTappedCondition()` and `SourceUntappedCondition()`: The current battlefield source is tapped or untapped, respectively. Both return false when the source is absent or phased out. They work in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState` on permanent abilities.
 * `PermanentIsTapped(subject PermanentRef)` and `PermanentIsUntapped(subject PermanentRef)`: Check `This` or `AttachedPermanent` at state evaluation. Both return false if the source or selected permanent is absent or phased out. A returned source or attachment is a new object. Use these conditions in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects target and saved bindings in this state context.
