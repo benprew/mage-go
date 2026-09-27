@@ -1,5 +1,34 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Announced-X Counter Payment Capture
+
+`RemoveXCountersFromSourceCostInto(core.CounterType, *NumberBinding) Cost`
+fixes the announced X during activation cost preparation and uses the existing
+locked fixed-counter transaction to remove that many counters. A successful
+commit saves the paid count in the activation's instance-local number frame.
+Zero is valid for a present source; a returned, phased-out, or insufficient
+source cannot pay. The constructor is available in `Activate` and
+`ActivateModes`, but not spell additional costs or resolution-time optional
+payments. Registration checks binding presence, names, duplicate producers,
+scope, and battlefield-source context. The older
+`RemoveXCountersFromSourceCost` and all production callers remain unchanged.
+
+Chamber Sentry's complete text was checked in `data/JMP.json` and the Jumpstart
+gap record. Its X-counter cost and damage clause motivate this capture; typed
+entry replacement, graveyard return, and production wiring remain separate.
+The focused test first failed because the constructor was absent. Synthetic
+tests cover zero and positive X, interleaved activations, stack copies, game
+clones, mutable-X changes after preparation, source return, phasing, failed
+payment, and declaration validation. A public DSL declaration compiles. No
+gap record closes through adapter availability alone. The next
+dependency-ready work is a separate P payment output or T announcement
+contract after a fresh audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL
+registration and closed-role checks, `go test ./... -short -count=1`,
+`go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and
+`git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Singular Life-Loss Result
 
 `LoseLifeForWithResult(PlayerRef, ResolutionValue, ...LifeLossResultOption)` accepts `LifeLostInto(*NumberBinding)` and saves one selected player's actual life loss in the current resolution frame. It reuses `playersLoseLife`, including event dispatch after the life change. Missing or illegal recipients and nonpositive amounts save zero. Inspection and registration check binding presence, names, duplicates, and dominance. The separate `LoseLifeFor` and `dsl.LoseLife` two-argument signatures remain compatible with production callers and first-class function uses. No production card or legacy export changed.

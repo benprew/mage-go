@@ -235,6 +235,41 @@ type removeXCountersCost struct {
 	ct CounterType
 }
 
+type capturedXCountersCost struct {
+	ct   CounterType
+	paid *NumberBinding
+}
+
+// RemoveXCountersFromSourceCostInto saves the counters paid for the announced X.
+func RemoveXCountersFromSourceCostInto(ct CounterType, paid *NumberBinding) Cost {
+	return &capturedXCountersCost{ct: ct, paid: paid}
+}
+
+func (c *capturedXCountersCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "cost", Text: c.Text(), battlefieldSource: true,
+		bindingWrite: c.paid, children: []definitionEdge{{"paid", c.paid}}}
+	if c.paid == nil {
+		n.problem = "supply a non-nil paid counter binding"
+	}
+	return n
+}
+
+func (c *capturedXCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	return (&removeCountersCost{ct: c.ct, amount: g.resolution.X()}).CanPay(sourceID, controller, g)
+}
+
+func (c *capturedXCountersCost) Pay(uuid.UUID, uuid.UUID, *Game) error {
+	return fmt.Errorf("X counter payment requires an announced action")
+}
+
+func (c *capturedXCountersCost) Text() string {
+	return fmt.Sprintf("Remove X %s counters", c.ct)
+}
+
+func (c *capturedXCountersCost) resolveActionCost(ctx actionCostContext) Cost {
+	return &removeCountersCost{ct: c.ct, amount: ctx.XValue, paid: c.paid, capture: true}
+}
+
 // RemoveXCountersFromSourceCost creates a cost that removes X counters of
 // the given type from the source permanent, where X is the activation's
 // X value (set via ActivateAbilityWithX). When X = 0, no counters are

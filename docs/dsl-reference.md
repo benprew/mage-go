@@ -2150,6 +2150,16 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     )
     _ = ability
     ```
+  * `RemoveXCountersFromSourceCostInto(counter core.CounterType, paid *NumberBinding) Cost`: Remove the announced X counters from the source as an activated ability cost. The cost fixes X before payment and locks the source battlefield incarnation. `FromNumber(paid)` reads the committed count in that activation's resolving body. Zero is valid while the source is present. A failed payment saves no value. Registration rejects a nil or unnamed binding, duplicate producers, and spell or resolution-time payment use. The existing `RemoveXCountersFromSourceCost` remains available.
+
+    ```go
+    paid := dsl.BindNumber("removed counters")
+    ability := dsl.Activate(
+        dsl.Costs(dsl.RemoveXCountersFromSourceCostInto(core.P1P1, paid)),
+        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+    )
+    _ = ability
+    ```
   * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
   * `TapNOtherMatchingCost(count int, filter PermanentFilter, text string) Cost`: Choose and tap exactly `count` distinct untapped matching permanents you control, excluding the ability source. Use it in `Costs(...)`, spell additional costs, or resolution-time payment groups. The choices are made once during payment preparation and kept by battlefield incarnation through commit. The other creatures can have summoning sickness; `{T}` on the ability source still uses `TapCost(This)`. Registration requires a positive count and nonempty text. It returns no payment binding.
 

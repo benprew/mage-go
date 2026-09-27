@@ -130,6 +130,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		if _, ok := cost.(*removeAnyCountersCost); ok {
 			n.problem = "paid counter value requires an activated ability cost"
 		}
+		if _, ok := cost.(*capturedXCountersCost); ok {
+			n.problem = "paid counter value requires an activated ability cost"
+		}
 		if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
 			n.problem = "paid counter value requires an activated ability cost"
 		}

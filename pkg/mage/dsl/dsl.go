@@ -706,6 +706,7 @@ var (
 	XManaCost                                         = mage.XManaCost
 	RemoveCountersCost                                = mage.RemoveCountersCost
 	RemoveCountersCostInto                            = mage.RemoveCountersCostInto
+	RemoveXCountersFromSourceCostInto                 = mage.RemoveXCountersFromSourceCostInto
 	RemoveAnyCountersCost                             = mage.RemoveAnyCountersCost
 	RequireCountersCost                               = mage.RequireCountersCost
 	SacrificeCreatureCost                             = mage.SacrificeCreatureCost
