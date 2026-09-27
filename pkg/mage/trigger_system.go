@@ -52,12 +52,13 @@ type stateTriggerKey struct {
 
 // TriggerSystem encapsulates pending triggers, delayed triggers, and armed state triggers.
 type TriggerSystem struct {
-	stateChecksPaused bool
-	zoneBatch         *zoneChangeBatch
-	resolvingState    stateTriggerKey
-	pending           []*pendingTrigger
-	delayed           []*DelayedTrigger
-	armedState        map[stateTriggerKey]bool
+	stateChecksPaused  bool
+	immediateManaDepth int
+	zoneBatch          *zoneChangeBatch
+	resolvingState     stateTriggerKey
+	pending            []*pendingTrigger
+	delayed            []*DelayedTrigger
+	armedState         map[stateTriggerKey]bool
 }
 
 // NewTriggerSystem returns an initialized TriggerSystem.
@@ -187,12 +188,13 @@ func (ts *TriggerSystem) Clone() TriggerSystem {
 		batch = &zoneChangeBatch{before: ts.zoneBatch.before, events: append([]GameEvent(nil), ts.zoneBatch.events...)}
 	}
 	return TriggerSystem{
-		stateChecksPaused: ts.stateChecksPaused,
-		zoneBatch:         batch,
-		resolvingState:    ts.resolvingState,
-		pending:           clonedPending,
-		delayed:           clonedDelayed,
-		armedState:        clonedArmed,
+		stateChecksPaused:  ts.stateChecksPaused,
+		immediateManaDepth: ts.immediateManaDepth,
+		zoneBatch:          batch,
+		resolvingState:     ts.resolvingState,
+		pending:            clonedPending,
+		delayed:            clonedDelayed,
+		armedState:         clonedArmed,
 	}
 }
 

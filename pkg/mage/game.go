@@ -1818,6 +1818,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 
 func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	defer g.CheckStateTriggers()
+	pendingBefore := len(g.triggers.Pending())
 	g.recordPerTurnEvent(&evt)
 	g.recordPerDuelEvent(&evt)
 	observer := g
@@ -1998,6 +1999,42 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	}
 	g.triggers.SetDelayed(remaining)
 	g.queueParadigmRecurringTriggers(&evt)
+	if evt.Type == EvtTappedForMana {
+		g.resolveTappedForManaTriggers(pendingBefore)
+	}
+}
+
+func (g *Game) resolveTappedForManaTriggers(pendingBefore int) {
+	pending := g.triggers.Pending()
+	if pendingBefore >= len(pending) {
+		return
+	}
+	ordinary := append([]*pendingTrigger(nil), pending[:pendingBefore]...)
+	var immediate []*pendingTrigger
+	for _, pt := range pending[pendingBefore:] {
+		gt, ok := pt.ability.(*GenericTriggered)
+		if ok && len(gt.Modes()) == 0 && canProduceMana(gt.Effects(), gt.Targets()) {
+			immediate = append(immediate, pt)
+		} else {
+			ordinary = append(ordinary, pt)
+		}
+	}
+	if len(immediate) == 0 {
+		return
+	}
+	g.triggers.SetPending(immediate)
+	stackBefore := g.StackSize()
+	g.PutTriggersOnStack()
+	var resolving []*StackObject
+	for g.StackSize() > stackBefore {
+		resolving = append(resolving, g.stack.Pop())
+	}
+	g.triggers.immediateManaDepth++
+	for _, obj := range resolving {
+		g.ResolveStackObject(obj)
+	}
+	g.triggers.immediateManaDepth--
+	g.triggers.SetPending(append(ordinary, g.triggers.Pending()...))
 }
 
 // CheckStateTriggers records state triggers that have no pending or active instance.
@@ -3192,7 +3229,9 @@ func (g *Game) checkStateBasedActions() bool {
 	}
 
 	// Put any pending triggers on the stack
-	g.PutTriggersOnStack()
+	if g.triggers.immediateManaDepth == 0 {
+		g.PutTriggersOnStack()
+	}
 	return performed
 }
 

@@ -23,6 +23,9 @@ func TestAddManaToPlayerUsesSavedRecipient(t *testing.T) {
 	if err := g.ActivateAbilityByIndex(b.PlayerID(), land.ID(), 0, nil); err != nil {
 		t.Fatal(err)
 	}
+	if got := b.ManaPool().Count(core.Green); got != 2 {
+		t.Fatalf("immediate recipient green mana = %d, want 2", got)
+	}
 	g.RemoveFromBattlefield(g.FindPermanent(land.ID()))
 	g.PutOnBattlefield(land, a.PlayerID())
 	g.PutTriggersOnStack()
@@ -30,9 +33,6 @@ func TestAddManaToPlayerUsesSavedRecipient(t *testing.T) {
 	clone.ResolveStack()
 	if got := clone.GetPlayer(b.PlayerID()).ManaPool().Count(core.Green); got != 2 {
 		t.Fatalf("clone recipient green mana = %d, want 2", got)
-	}
-	if got := b.ManaPool().Count(core.Green); got != 0 {
-		t.Fatalf("original recipient green mana = %d, want 0", got)
 	}
 	g.ResolveStack()
 	if got := b.ManaPool().Count(core.Green); got != 2 {
