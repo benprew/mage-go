@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Spell-Cast Ownership Filter
+
+`SpellCast().NotOwnedByCaster()` matches a completed cast when the exact cast stack object's card owner differs from the event caster. It composes with existing cast filters in battlefield `WhenEvent` and `WhenEventModes`. The existing cast event, stack identity, trigger lifecycle, and registration inspection supply the behavior; no new engine contract, production card, or legacy export changed. The complete Nita, Forum Conciliator text in `data/SOS.json` needs this filter for its first ability, but graveyard exile, cast permission, replacement exile, and card wiring remain open. No gap record closes. The next dependency-ready work is a separate P payment/result or E event-participant slice after a fresh requirements audit.
+
+Focused tests first failed because the method did not exist. Synthetic tests cover owner versus caster, exact stack identity, real foreign exile casting, failed casting, source phasing, trigger copying, clone isolation, inspection, registration rejection, and a public DSL declaration. The existing `SpellCast` export remains compatible with production callers.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, `go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff and `git diff --check` pass. A fresh production search found no `NotOwnedByCaster` caller; existing cast-event callers remain unchanged.
+
 ## Current Slice: Spell-Cast Origin Zone Filter
 
 `SpellCast().FromZone(core.Zone) EventPattern` matches the origin of the exact cast stack object during `EvtSpellCast`. It reuses `StackObject.CastZone`, the existing cast event and battlefield trigger lifecycle. It composes with caster and other cast filters. Registration rejects duplicate filters, `ZoneStack`, `ZoneAny`, and invalid zones. Normal hand casts and explicit exile casts are covered; failed casts produce no trigger. No production card or legacy export changed. The complete Quandrix, the Proof requirement in the Secrets of Strixhaven inventory needs a hand-cast filter for its cascade grant, but that static grant and card wiring remain open. No gap record closes from this adapter alone. The next dependency-ready work is a separate E ownership filter or P payment/result slice after a fresh requirements audit.

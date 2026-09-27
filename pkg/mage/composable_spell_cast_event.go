@@ -40,10 +40,21 @@ type spellCastPattern struct {
 	castZone                    Zone
 	filterCastZone              bool
 	duplicateCastZone           bool
+	notOwnedByCaster            bool
+	duplicateOwnership          bool
 }
 
 // SpellCast matches a spell cast by any player while this source is on the battlefield.
 func SpellCast() spellCastPattern { return spellCastPattern{} }
+
+// NotOwnedByCaster matches a cast spell whose card belongs to another player.
+func (p spellCastPattern) NotOwnedByCaster() spellCastPattern {
+	if p.notOwnedByCaster {
+		p.duplicateOwnership = true
+	}
+	p.notOwnedByCaster = true
+	return p
+}
 
 // FromZone matches the zone the spell left when it was cast.
 func (p spellCastPattern) FromZone(zone Zone) spellCastPattern {
@@ -170,6 +181,9 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 	if p.filterCastZone {
 		t.AndConditionData(spellCastFromZone{zone: p.castZone})
 	}
+	if p.notOwnedByCaster {
+		t.AndConditionData(spellCastNotOwnedByCaster{})
+	}
 	return t
 }
 
@@ -211,6 +225,12 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 		n.Text += " from " + strings.ToLower(p.castZone.String())
 		if p.duplicateCastZone || !castOriginZone(p.castZone) {
 			n.problem = "spell cast event: supply one valid cast zone"
+		}
+	}
+	if p.notOwnedByCaster {
+		n.Text += " and is not owned by its caster"
+		if p.duplicateOwnership {
+			n.problem = "spell cast event: supply the ownership filter once"
 		}
 	}
 	if p.caster != nil {
@@ -266,6 +286,17 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 type spellCastHasType struct{ cardType CardType }
 
 type spellCastFromZone struct{ zone Zone }
+
+type spellCastNotOwnedByCaster struct{}
+
+func (spellCastNotOwnedByCaster) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.TargetID == uuid.Nil || event.PlayerID == uuid.Nil {
+		return false
+	}
+	object := game.stack.FindByID(event.TargetID)
+	return object != nil && !object.IsAbility && object.Card != nil && object.SourceID == event.SourceID && object.Controller == event.PlayerID && object.Card.Owner() != uuid.Nil && object.Card.Owner() != event.PlayerID
+}
 
 func castOriginZone(zone Zone) bool {
 	switch zone {

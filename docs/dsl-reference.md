@@ -1295,6 +1295,14 @@ Triggers on rules events dispatched by the engine:
         dsl.GainLife(dsl.FromPlayer(caster), dsl.Fixed(1)))))
     ```
 
+  * `SpellCast().NotOwnedByCaster() EventPattern`: Match a completed cast when the cast spell's card owner differs from its caster. The filter reads the exact stack object named by the cast event. It works in battlefield `WhenEvent` and `WhenEventModes`, and composes with `ByOpponent`, `FromZone`, and other cast filters. A copied spell does not create a cast event. Registration rejects a repeated ownership filter. This declaration compiles:
+
+    ```go
+    watcher := dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().NotOwnedByCaster(), dsl.Draw(dsl.You, dsl.Fixed(1)))))
+    _ = watcher
+    ```
+
   * `SpellCast().OfType(core.CardType) EventPattern`: Match a cast spell of one nonland card type. The filter reads the spell on the stack at cast time, including more than one type. A repeated filter or a land type fails registration. It composes with `OfColor`, `ByOpponent`, and `WithCaster` in `WhenEvent` and `WhenEventModes` on a battlefield source. For example:
     ```go
     watcher := dsl.NewCreature("Watcher", "{2}{U}", 1, 2,
