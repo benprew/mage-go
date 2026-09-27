@@ -415,7 +415,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 		activated.markActivatedInGame(g)
 	}
 	g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: true})
-	ms.FireTappedForMana(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions))
+	ms.fireTappedForManaWithTypes(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions), productionTypes(action.Productions))
 	return nil
 }
 
@@ -467,24 +467,34 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 	sourceIncarnation := perm.incarnationID
 	g.TapPermanent(perm)
 	if p := g.GetPlayer(playerID); p != nil {
-		produced := ms.AddManaProductions(g, chosen, p, perm, preferredColor)
+		produced, types := ms.addManaProductionsWithTypes(g, chosen, p, perm, preferredColor)
 		if err := ms.RunManaPostProduction(g, chosenAbility, p, perm); err != nil {
 			return err
 		}
-		ms.FireTappedForMana(g, perm.ID(), sourceIncarnation, playerID, produced)
+		ms.fireTappedForManaWithTypes(g, perm.ID(), sourceIncarnation, playerID, produced, types)
 	}
 	return nil
 }
 
 // AddManaFromAbility resolves a mana ability's productions and post-production effects.
 func (ms *ManaSystem) AddManaFromAbility(g *Game, ma *ManaAbility, p Player, perm *Permanent) (int, error) {
+	produced, _, err := ms.addManaFromAbilityWithTypes(g, ma, p, perm)
+	return produced, err
+}
+
+func (ms *ManaSystem) addManaFromAbilityWithTypes(g *Game, ma *ManaAbility, p Player, perm *Permanent) (int, []Color, error) {
 	productions := ma.currentProductions(g, perm.ID())
-	produced := ms.AddManaProductions(g, productions, p, perm, Colorless)
-	return produced, ms.RunManaPostProduction(g, ma, p, perm)
+	produced, types := ms.addManaProductionsWithTypes(g, productions, p, perm, Colorless)
+	return produced, types, ms.RunManaPostProduction(g, ma, p, perm)
 }
 
 // AddManaProductions adds mana to the player's pool from productions.
 func (ms *ManaSystem) AddManaProductions(g *Game, productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) int {
+	produced, _ := ms.addManaProductionsWithTypes(g, productions, p, perm, preferredColor)
+	return produced
+}
+
+func (ms *ManaSystem) addManaProductionsWithTypes(g *Game, productions []ManaProduction, p Player, perm *Permanent, preferredColor Color) (int, []Color) {
 	var producedColors []Color
 	producedAmount := 0
 	for _, prod := range productions {
@@ -513,7 +523,7 @@ func (ms *ManaSystem) AddManaProductions(g *Game, productions []ManaProduction, 
 		producedColors = appendProducedColor(producedColors, color)
 	}
 	ms.ApplyManaBonuses(g, perm, producedColors, p)
-	return producedAmount
+	return producedAmount, producedColors
 }
 
 // RunManaPostProduction runs follow-up effects from mana production.
@@ -541,6 +551,10 @@ func (ms *ManaSystem) RunManaPostProduction(g *Game, ma *ManaAbility, p Player, 
 
 // FireTappedForMana emits EvtTappedForMana event.
 func (ms *ManaSystem) FireTappedForMana(g *Game, sourceID, sourceIncarnation, playerID uuid.UUID, amount int) {
+	ms.fireTappedForManaWithTypes(g, sourceID, sourceIncarnation, playerID, amount, nil)
+}
+
+func (ms *ManaSystem) fireTappedForManaWithTypes(g *Game, sourceID, sourceIncarnation, playerID uuid.UUID, amount int, types []Color) {
 	if amount <= 0 {
 		return
 	}
@@ -550,7 +564,16 @@ func (ms *ManaSystem) FireTappedForMana(g *Game, sourceID, sourceIncarnation, pl
 		SourceIncarnation: sourceIncarnation,
 		PlayerID:          playerID,
 		Amount:            amount,
+		ManaTypes:         append([]Color(nil), types...),
 	})
+}
+
+func productionTypes(productions []ManaProduction) []Color {
+	var types []Color
+	for _, production := range productions {
+		types = appendProducedColor(types, production.Color)
+	}
+	return types
 }
 
 // ApplyManaBonuses applies any mana bonus abilities when a permanent is tapped for mana.

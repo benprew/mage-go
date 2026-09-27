@@ -1220,7 +1220,6 @@ Triggers on rules events dispatched by the engine:
 * Event patterns:
   * `LandTappedForMana().WithPlayer(*PlayerBinding).WithAmount(*NumberBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. Both captures are optional and independent. `WithPlayer` saves the activating player; `WithAmount` saves the total mana produced by that ability as recorded in the event. Read them with `FromPlayer` and `FromNumber` in the trigger body. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. Each binding belongs to one trigger instance and is not a target. Zero production has no matching event. This captures a number, not the types of mana produced. For example:
   * `LandTappedForMana().WithLand(*PermanentBinding)`: Save the exact land incarnation that produced mana. This optional capture composes with `WithPlayer` and `WithAmount` in `WhenEvent` and `WhenEventModes` on a battlefield permanent. `From(land)` is absent if that land leaves and returns or phases out before resolution. The land is an event participant, not a target. Registration rejects a nil, unnamed, repeated, or unbound land binding. This declaration compiles:
-
     ```go
     land := dsl.BindPermanent("producing land")
     dsl.WhenEvent(
@@ -1235,6 +1234,17 @@ Triggers on rules events dispatched by the engine:
     ability := dsl.WhenEvent(
         dsl.LandTappedForMana().WithPlayer(player).WithAmount(amount),
         dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))
+    ```
+
+  * `LandTappedForMana().OfManaType(core.Color)`: Match a land's tapped-for-mana event only when its mana ability produced the specified type. The type is one of `Colorless`, `White`, `Blue`, `Black`, `Red`, or `Green`; registration rejects `AnyColor`, invalid values, and repeated filters. This filter composes with `WithLand`, `WithPlayer`, and `WithAmount` in battlefield `WhenEvent` and `WhenEventModes` abilities. The type is checked from the event, after the ability chooses its mana color. This declaration compiles:
+
+    ```go
+    player := dsl.BindPlayer("activator")
+    watcher := dsl.NewEnchantment("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.LandTappedForMana().OfManaType(core.Blue).WithPlayer(player),
+        dsl.GainLife(dsl.FromPlayer(player), dsl.Fixed(1)),
+    )))
+    _ = watcher
     ```
 
   * `Enters(This)`: Source enters the battlefield.

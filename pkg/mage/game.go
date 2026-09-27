@@ -4295,9 +4295,10 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		g.TapPermanent(perm)
 		p := g.GetPlayer(playerID)
 		produced := 0
+		var types []Color
 		if p != nil {
 			var err error
-			produced, err = g.mana.AddManaFromAbility(g, ma, p, perm)
+			produced, types, err = g.mana.addManaFromAbilityWithTypes(g, ma, p, perm)
 			if err != nil {
 				return err
 			}
@@ -4309,7 +4310,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			PlayerID:          playerID,
 			Flag:              true,
 		})
-		g.mana.FireTappedForMana(g, perm.ID(), manaSourceIncarnation, playerID, produced)
+		g.mana.fireTappedForManaWithTypes(g, perm.ID(), manaSourceIncarnation, playerID, produced, types)
 		return nil
 	}
 
@@ -4488,7 +4489,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		produced, colors := g.resolveStackObject(obj)
 		if hasTapCost && produced > 0 {
 			g.mana.ApplyManaBonuses(g, perm, colors, g.GetPlayer(playerID))
-			g.mana.FireTappedForMana(g, perm.ID(), obj.sourceIncarnation, playerID, produced)
+			g.mana.fireTappedForManaWithTypes(g, perm.ID(), obj.sourceIncarnation, playerID, produced, colors)
 		}
 		return nil
 	}

@@ -65,6 +65,7 @@ type GameEvent struct {
 	CastManaSpent      int
 	CastColorsSpent    int
 	CastAnnouncedX     int
+	ManaTypes          []Color
 	TargetID           uuid.UUID
 	TargetIncarnation  uuid.UUID
 	ActorID            uuid.UUID
