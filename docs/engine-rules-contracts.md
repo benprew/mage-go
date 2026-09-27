@@ -264,6 +264,8 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ## 7. Damage Execution and Nonpositive Outcomes (CR 120, 120.8)
 
+Positive damage events keep the final damage action's source snapshot through event dispatch, including a simultaneous damage batch. `ReceivesDamage(This, amount).WithSource(source)` captures that snapshot when the trigger is detected. The pending trigger can use its source after a permanent leaves and returns or a spell leaves the stack. The snapshot includes the source controller and characteristics used by later damage; it does not find a new object with the same card ID. Prevention and zero damage send no damage event (CR 400.7, 603.2g, 608.2h).
+
 The `RemoveAnyCountersCost` activation cost chooses a count during payment preparation and locks that count and the source battlefield incarnation. Validation pays the same count on an isolated game. Commit rejects a departed, returned, phased-out, or counter-short source. The paid-number result becomes available only after the chosen removal succeeds; stack copies and game clones retain separate captured values. Zero is a legal choice when the source is present. This cost uses the existing counter-removal payment path and does not add a resolution-time removal action.
 
 `RemoveCountersCostInto` uses that payment transaction for a fixed count. It locks the source incarnation during preparation and saves the count only after commit removes the counters. A departed, returned, phased-out, or counter-short source cannot pay. Zero is valid if the source is present. The saved number belongs to the activation stack instance and follows its copies and game clones. The existing `RemoveCountersCost` signature remains available to production callers.

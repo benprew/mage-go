@@ -84,7 +84,15 @@ type damageNotification struct {
 
 type damageBatch struct {
 	events        []GameEvent
+	sources       []DamageSource
 	notifications []damageNotification
+}
+
+func (g *Game) fireDamageEvent(event GameEvent, source DamageSource) {
+	previous := g.damageEventSource
+	g.damageEventSource = cloneDamageSource(source)
+	defer func() { g.damageEventSource = previous }()
+	g.FireEvent(event)
 }
 
 // damageReflectionEntry tracks the Eye for an Eye reflection state for a player.
@@ -490,7 +498,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 			bySrc[sourceID] += amount
 		}
 	}
-	g.FireEvent(GameEvent{
+	g.fireDamageEvent(GameEvent{
 		Type:               EvtDamageDealt,
 		SourceID:           sourceID,
 		SourceIncarnation:  source.Incarnation(),
@@ -498,7 +506,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 		TargetID:           p.PlayerID(),
 		Amount:             amount,
 		Flag:               a.IsCombatDamage(),
-	})
+	}, source)
 	if ds.onDamageDealt != nil {
 		sourceName := "unknown"
 		if source.Valid() {
@@ -622,8 +630,8 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 		}
 	}
 	g.damageBatch = nil
-	for _, event := range batch.events {
-		g.FireEvent(event)
+	for i, event := range batch.events {
+		g.fireDamageEvent(event, batch.sources[i])
 	}
 	for _, notification := range batch.notifications {
 		if ds.onDamageDealt != nil {
@@ -681,14 +689,14 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		}
 		ds.damageToPermanentsByIncarnation[key][capturedPermanent{perm.ID(), perm.incarnationID}] = true
 	}
-	g.FireEvent(GameEvent{
+	g.fireDamageEvent(GameEvent{
 		Type:               EvtDamageDealt,
 		SourceID:           sourceID,
 		SourceIncarnation:  a.DamageSource().Incarnation(),
 		SourceControllerID: a.DamageSource().Controller(),
 		TargetID:           perm.ID(),
 		Amount:             amount,
-	})
+	}, a.DamageSource())
 	if ds.onDamageDealt != nil {
 		sourceName := "unknown"
 		if source := a.DamageSource(); source.Valid() {

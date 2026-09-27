@@ -1958,7 +1958,7 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
-  * `ReceivesDamage(This, amountBinding).WithSourceController(controllerBinding)`: A battlefield source permanent receives positive damage. The pattern saves the final amount and, when requested, the damage source's controller at event time. Use it in `WhenEvent` or `WhenEventModes`. The controller is an event participant, not a target. The amount binding is required; the controller capture is optional. Registration rejects nil, unnamed, and out-of-scope bindings. The shared event also records the damage source's battlefield incarnation. This existing signature does not expose that source as a DSL binding yet.
+  * `ReceivesDamage(This, amountBinding).WithSourceController(controllerBinding).WithSource(sourceBinding)`: A battlefield source permanent receives positive damage. The pattern saves the final amount and can save the damage source's controller and full damage source snapshot at event detection. Both captures are optional. `FromDamageSource(sourceBinding)` keeps the source's incarnation, controller, and characteristics after it leaves or returns; it also works for a spell that has left the stack. Use the pattern in `WhenEvent` or `WhenEventModes`. These participants are not targets. Registration rejects nil, unnamed, repeated, and out-of-scope source bindings. The amount binding is required.
     ```go
     func damageRecipient() dsl.Card {
         amount := dsl.BindNumber("damage")
@@ -1968,6 +1968,17 @@ Triggers on rules events dispatched by the engine:
                 dsl.ReceivesDamage(dsl.This, amount).WithSourceController(controller),
                 dsl.Mill(dsl.FromPlayer(controller), dsl.FromNumber(amount)),
             )))
+    }
+    ```
+    A synthetic source capture can use the same source in its trigger body:
+    ```go
+    func sourceEcho() dsl.Card {
+        amount := dsl.BindNumber("damage")
+        source := dsl.BindDamageSource("source")
+        return dsl.NewCreature("Source Echo", "", 1, 5,
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.ReceivesDamage(dsl.This, amount).WithSource(source),
+                dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.FromNumber(amount)))))
     }
     ```
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
