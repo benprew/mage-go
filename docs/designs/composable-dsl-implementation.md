@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controller Life-Gain History Condition
+
+`ControllerGainedLifeThisTurn() StateCondition` exposes the existing positive, actual life-gain turn tracker to pure typed declarations. It is valid in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the condition's controller; a missing controller fails, and source departure does not erase history. Replacement that consumes the gain and zero gain do not satisfy it. Game clones keep separate tracker state, and final cleanup clears it. This is an adapter over `TrackerReader`, not a new life-gain executor or numeric value. No production card or legacy export changed.
+
+Secrets of Strixhaven's Infusion inventory and `data/SOS.json` provide the acceptance requirements; Efflorescence and Moseo, Vein's New Dean show the boolean condition, while Moseo also needs the numeric gain amount and card choice/return wiring. CR 119.3 and 119.9 distinguish actual positive gain from zero gain. Focused tests first failed for the missing constructor. They cover consumed and zero gain, controller and absent-source identity, clone isolation, turn reset, resolution and static contexts, public DSL registration, and inspection. Production Infusion callers remain on their current helpers and gap records remain open. The next dependency-ready S slice is a typed numeric life-gain history value or another audited payment/action result; no card wiring was done here.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Creature Death After Damage by Source This Turn
 
 `CreatureDies().DamagedByThisTurn()` is a typed battlefield event pattern for a creature that received positive damage from this source's battlefield incarnation this turn and then dies. It works in `WhenEvent` and `WhenEventModes`; the trigger body is a resolving effect. The filter reads the existing turn-scoped `DamageSystem` history and the zone-change event's new departing `SourceIncarnation` field. `FireEvent` fills that field from departure LKI before a simultaneous leave event is queued. This field is absent for unrelated events. The pattern and damage record are immutable across trigger copies and game clones. Registration rejects the filter on a noncreature death pattern and rejects repeated use. This slice adds no result binding, card-specific rule, or production card wiring.

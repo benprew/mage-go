@@ -26,6 +26,19 @@ type StateContext struct {
 
 type yourTurnCondition struct{}
 
+type controllerGainedLifeThisTurnCondition struct{}
+
+// ControllerGainedLifeThisTurn checks actual life gained in the current turn.
+func ControllerGainedLifeThisTurn() StateCondition { return controllerGainedLifeThisTurnCondition{} }
+
+func (controllerGainedLifeThisTurnCondition) stateCondition() {}
+func (controllerGainedLifeThisTurnCondition) checkState(g GameReader, ctx StateContext) bool {
+	return ctx.ControllerID != uuid.Nil && g.PlayerLifeGainedThisTurn(ctx.ControllerID) > 0
+}
+func (controllerGainedLifeThisTurnCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "controller gained life this turn"}
+}
+
 type uniqueHighestLifeCondition struct{}
 
 // HasUniqueHighestLife checks whether one player alone has the most life.

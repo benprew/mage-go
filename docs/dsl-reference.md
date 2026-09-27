@@ -331,6 +331,14 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
 * `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
 * `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
+* `ControllerGainedLifeThisTurn() StateCondition`: Check whether the ability controller gained a positive amount of life this turn, after life-gain replacement. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the turn tracker, so source departure does not erase the result. A missing controller does not match. The history clears at final cleanup. It does not supply the numeric amount.
+
+```go
+card := dsl.NewInstant("Life history example", "", dsl.WithAbility(dsl.Spell(
+    dsl.IfState(dsl.ControllerGainedLifeThisTurn(), dsl.Draw(dsl.You, dsl.Fixed(1))))))
+_ = card
+```
+
 * `HasUniqueHighestLife() StateCondition`: True when one player has more life than every other player. Ties return false. The condition reads all players at each check and does not depend on the ability controller or source. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`.
 
   ```go
