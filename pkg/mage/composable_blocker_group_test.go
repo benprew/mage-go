@@ -98,3 +98,90 @@ func TestBlocksOrBecomesBlockedByGroupEventTimeSubtype(t *testing.T) {
 		t.Fatalf("phased-out creature matched group: %d", got)
 	}
 }
+
+func TestBlocksOrBecomesBlockedByWithoutSubtype(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	watcher := NewCreature("Watcher", "", 2, 5, WithKeyword(core.CanBlockAny), WithAbility(WhenEvent(
+		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall"), GainLifeFor(You, Fixed(1)))))
+	wall := NewCreature("Wall", "", 1, 2, WithSubTypes("Wall"))
+	human := NewCreature("Human", "", 1, 2, WithSubTypes("Human"))
+	orc := NewCreature("Orc", "", 1, 2, WithSubTypes("Orc"))
+	g.PutOnBattlefield(watcher, a.PlayerID())
+	for _, card := range []Card{wall, human, orc} {
+		g.PutOnBattlefield(card, b.PlayerID())
+	}
+	g.combat.AddAttacker(watcher.ID(), b.PlayerID())
+	g.ExecuteBlockers([]BlockAssignment{{BlockerID: wall.ID(), AttackerID: watcher.ID()}, {BlockerID: human.ID(), AttackerID: watcher.ID()}, {BlockerID: orc.ID(), AttackerID: watcher.ID()}})
+	if got := g.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("mixed group produced life %d, want 21", got)
+	}
+	clone := g.Clone()
+	g.FireEvent(core.GameEvent{Type: core.EvtBlockerGroup, SourceID: watcher.ID(), RelatedIDs: []uuid.UUID{wall.ID()}})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+	if got := g.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("Wall-only group produced life %d", got)
+	}
+	g.PhaseOut(human.ID())
+	g.FireEvent(core.GameEvent{Type: core.EvtBlockerGroup, SourceID: watcher.ID(), RelatedIDs: []uuid.UUID{wall.ID(), human.ID()}})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+	if got := g.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("phased-out creature matched group: %d", got)
+	}
+	if got := clone.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("clone life changed to %d", got)
+	}
+	clone.FireEvent(core.GameEvent{Type: core.EvtBlockerGroup, SourceID: watcher.ID(), RelatedIDs: []uuid.UUID{orc.ID()}})
+	clone.PutTriggersOnStack()
+	clone.ResolveStack()
+	if got := clone.GetPlayer(a.PlayerID()).Life(); got != 22 {
+		t.Fatalf("clone did not match its own group: %d", got)
+	}
+	if got := g.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("clone trigger changed original life to %d", got)
+	}
+	if err := ValidateCardDefinition(watcher.Name(), watcher); err != nil {
+		t.Fatalf("valid pattern rejected: %v", err)
+	}
+}
+
+func TestBlocksOrBecomesBlockedByWithoutSubtypeBlockingAndEventTime(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	watcher := NewCreature("Watcher", "", 2, 5, WithKeyword(core.CanBlockAny), WithAbility(WhenEvent(
+		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall"), GainLifeFor(You, Fixed(1)))))
+	human := NewCreature("Human", "", 1, 2, WithSubTypes("Human"))
+	g.PutOnBattlefield(watcher, a.PlayerID())
+	g.PutOnBattlefield(human, b.PlayerID())
+	g.FireEvent(core.GameEvent{Type: core.EvtBlockerGroup, SourceID: watcher.ID(), Flag: true, RelatedIDs: []uuid.UUID{human.ID()}})
+	human.AddSubType("Wall")
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+	if got := g.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("later subtype change altered pending trigger: %d", got)
+	}
+	g.FireEvent(core.GameEvent{Type: core.EvtBlockerGroup, SourceID: watcher.ID(), Flag: true, RelatedIDs: []uuid.UUID{human.ID()}})
+	g.PutTriggersOnStack()
+	g.ResolveStack()
+	if got := g.GetPlayer(a.PlayerID()).Life(); got != 21 {
+		t.Fatalf("Wall matched blocking group: %d", got)
+	}
+}
+
+func TestBlocksOrBecomesBlockedByWithoutSubtypeValidation(t *testing.T) {
+	patterns := []blockerGroupPattern{
+		BlocksOrBecomesBlockedBy(This).WithoutSubtype(""),
+		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Island"),
+		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall").WithoutSubtype("Orc"),
+		BlocksOrBecomesBlockedBy(This).OfSubtype("Orc").WithoutSubtype("Wall"),
+		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall").OfSubtype("Orc"),
+	}
+	for _, pattern := range patterns {
+		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
+		if err := ValidateCardDefinition(card.Name(), card); err == nil {
+			t.Fatalf("invalid pattern accepted: %+v", pattern)
+		}
+	}
+}

@@ -1183,7 +1183,7 @@ Triggers on rules events dispatched by the engine:
     func main() {}
     ```
 
-    `BlocksOrBecomesBlockedBy(This).OfSubtype(string)` matches one group when the source blocks or becomes blocked by one or more creatures of that subtype. It checks the other creatures at event detection and triggers once for a group with several matches. A creature put onto the battlefield blocking can cause the attacker to match, but it did not itself block. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature.
+    `BlocksOrBecomesBlockedBy(This).OfSubtype(string)` matches one group when the source blocks or becomes blocked by one or more creatures of that subtype. `.WithoutSubtype(string)` matches one group that contains at least one creature without that subtype. The filters are exclusive. Both check the other creatures at event detection and trigger once for a group with several matches. A creature put onto the battlefield blocking can cause the attacker to match, but it did not itself block. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. These group patterns do not capture each opposing creature for a per-pair effect.
 
     ```go
     package main
@@ -1193,6 +1193,19 @@ Triggers on rules events dispatched by the engine:
     var _ = dsl.NewCreature("Orc watcher", "", 2, 2,
         dsl.WithAbility(dsl.WhenEvent(
             dsl.BlocksOrBecomesBlockedBy(dsl.This).OfSubtype("Orc"),
+            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+
+    func main() {}
+    ```
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var _ = dsl.NewCreature("Non-Wall group watcher", "", 2, 4,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.BlocksOrBecomesBlockedBy(dsl.This).WithoutSubtype("Wall"),
             dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 
     func main() {}
