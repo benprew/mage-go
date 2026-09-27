@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Creature Death After Damage by Source This Turn
+
+`CreatureDies().DamagedByThisTurn()` is a typed battlefield event pattern for a creature that received positive damage from this source's battlefield incarnation this turn and then dies. It works in `WhenEvent` and `WhenEventModes`; the trigger body is a resolving effect. The filter reads the existing turn-scoped `DamageSystem` history and the zone-change event's new departing `SourceIncarnation` field. `FireEvent` fills that field from departure LKI before a simultaneous leave event is queued. This field is absent for unrelated events. The pattern and damage record are immutable across trigger copies and game clones. Registration rejects the filter on a noncreature death pattern and rejects repeated use. This slice adds no result binding, card-specific rule, or production card wiring.
+
+Sengir Vampire's complete Oracle text in `data/LEA.json` and Axelrod Gunnarson's in `data/LEG.json` were rechecked against their inventories and CR 400.7, 603.6c, and 603.10a. The tests first failed because the typed filter did not exist. Focused tests now cover dealt and prevented damage, no damage, source and victim leave-and-return, phasing, simultaneous source and victim death, absence of event incarnation, clone isolation, public DSL authoring, and invalid declarations. `go test ./pkg/mage/... -short -count=1` passes. Production Sengir Vampire and Axelrod Gunnarson remain unmigrated; Axelrod also needs a complete typed damage recipient audit. Their gap records stay open. Legacy `EventSourceDamagedBySource` and card-ID damage queries remain for existing callers. The next dependency-ready slice is a distinct event capture or payment/result extension after a fresh requirement audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Turn-Scoped Damage Incarnation History
 
 The damage system now records positive damage to a permanent this turn by both the captured source incarnation and recipient battlefield incarnation. It writes after replacement and prevention in the shared damage action, so prevented damage, absent recipients, and phased-out recipients add no record. Source departure and return, recipient departure and return, LKI cleanup, and phasing preserve the correct identities. Game clones copy the record independently. Final cleanup clears it after all cleanup priority rounds. The existing card-ID turn query and all production callers remain unchanged.

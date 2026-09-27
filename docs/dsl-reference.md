@@ -1543,6 +1543,20 @@ Triggers on rules events dispatched by the engine:
         dsl.GainLife(dsl.You, dsl.Fixed(1)),
     )
     ```
+  * `CreatureDies().DamagedByThisTurn()` matches a dying creature whose departing battlefield incarnation was dealt positive damage by this source's current battlefield incarnation this turn. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. It uses damage after prevention and replacement. A source or creature that leaves and returns has a new incarnation; phasing preserves the incarnation. A simultaneous source death can still trigger. The filter does not target or save the dying creature. Registration rejects this filter on `PermanentDies()` and rejects repeated use.
+    ```go
+    package example
+
+    import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    func damagedCreatureWatcher() dsl.Card {
+        return dsl.NewCreature("Synthetic watcher", "", 1, 5,
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.CreatureDies().DamagedByThisTurn(),
+                dsl.GainLife(dsl.You, dsl.Fixed(1)),
+            )))
+    }
+    ```
   * Creature-death patterns support `.WithoutColor(core.Color)`: Match a creature that did not have the specified color immediately before it died. Supply one of the five Magic colors. This filter can combine with `.Nontoken()` and the existing event bindings. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent.
     ```go
     dsl.WhenEvent(

@@ -1723,6 +1723,11 @@ func (g *Game) DelayedTriggers() []*DelayedTrigger {
 
 // FireEvent dispatches an event and checks triggered abilities.
 func (g *Game) FireEvent(evt GameEvent) {
+	if isBattlefieldLeaveEvent(&evt) && evt.SourceIncarnation == uuid.Nil {
+		if lki := g.zones.LKI(evt.SourceID); lki != nil && lki.Snapshot != nil {
+			evt.SourceIncarnation = lki.Snapshot.incarnationID
+		}
+	}
 	if g.damageBatch != nil {
 		g.damageBatch.events = append(g.damageBatch.events, evt)
 		return

@@ -251,6 +251,8 @@ type creatureDiesPattern struct {
 	maxPowerToughness int
 	filterPT          bool
 	duplicatePT       bool
+	damagedByThisTurn bool
+	duplicateDamage   bool
 }
 
 // CreatureDies matches any creature moving from the battlefield to a graveyard.
@@ -321,6 +323,15 @@ func AnotherCreatureDies() creatureDiesPattern {
 // Nontoken limits the pattern to nontoken permanents before death.
 func (p creatureDiesPattern) Nontoken() creatureDiesPattern {
 	p.nontokenOnly = true
+	return p
+}
+
+// DamagedByThisTurn matches a creature damaged by this source this turn.
+func (p creatureDiesPattern) DamagedByThisTurn() creatureDiesPattern {
+	if p.damagedByThisTurn {
+		p.duplicateDamage = true
+	}
+	p.damagedByThisTurn = true
 	return p
 }
 
@@ -433,7 +444,21 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 	if p.attachedOnly {
 		t.AndConditionData(sourceAttachedToDyingCreature{})
 	}
+	if p.damagedByThisTurn {
+		t.AndConditionData(eventCreatureDamagedBySourceThisTurn{})
+	}
 	return t
+}
+
+type eventCreatureDamagedBySourceThisTurn struct{}
+
+func (eventCreatureDamagedBySourceThisTurn) CheckTriggerCond(event *GameEvent, reader GameReader, sourceID, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.SourceIncarnation == uuid.Nil {
+		return false
+	}
+	source := game.CaptureDamageSource(sourceID)
+	return game.damage.dealtDamageToPermanentThisTurn(source, capturedPermanent{event.SourceID, event.SourceIncarnation})
 }
 
 type eventSourceWasNontoken struct{}
@@ -521,6 +546,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	if p.filterPT {
 		text += " with power or toughness " + strconv.Itoa(p.maxPowerToughness) + " or less"
 	}
+	if p.damagedByThisTurn {
+		text += " after damage by this source this turn"
+	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
 	if p.filterColor && (p.excludedColor < White || p.excludedColor > Green || p.duplicateColor) {
 		n.problem = "death event: supply one valid color"
@@ -547,6 +575,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	}
 	if p.duplicatePT || (p.filterPT && !p.creatureOnly) {
 		n.problem = "death event: supply one creature power or toughness filter"
+	}
+	if p.duplicateDamage || (p.damagedByThisTurn && !p.creatureOnly) {
+		n.problem = "death event: supply one creature damage-history filter"
 	}
 	if p.controller != nil {
 		n.bindingWrite = p.controller
