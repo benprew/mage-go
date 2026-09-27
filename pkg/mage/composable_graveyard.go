@@ -24,8 +24,90 @@ type GraveyardTargetOption interface {
 }
 
 type graveyardTargetConfig struct {
-	any     bool
-	filters []CardFilter
+	any              bool
+	filters          []CardFilter
+	manaValue        TargetNumber
+	manaValueOptions int
+}
+
+// TargetNumber reads a number while targets are chosen or checked.
+type TargetNumber interface {
+	targetNumber()
+	targetValue(*Game, uuid.UUID) int
+}
+
+type fixedTargetNumber struct{ value int }
+
+// FixedTargetNumber supplies one target restriction number.
+func FixedTargetNumber(value int) TargetNumber                   { return fixedTargetNumber{value} }
+func (fixedTargetNumber) targetNumber()                          {}
+func (n fixedTargetNumber) targetValue(_ *Game, _ uuid.UUID) int { return n.value }
+func (n fixedTargetNumber) inspectDefinition() definitionNode {
+	node := definitionNode{Role: "target-number", Text: "fixed target number"}
+	if n.value < 0 {
+		node.problem = "mana value limit must be nonnegative"
+	}
+	return node
+}
+
+type controllerLifeGainedTargetNumber struct{}
+
+// ControllerLifeGainedThisTurn reads actual life gain for the ability controller.
+func ControllerLifeGainedThisTurn() TargetNumber       { return controllerLifeGainedTargetNumber{} }
+func (controllerLifeGainedTargetNumber) targetNumber() {}
+func (controllerLifeGainedTargetNumber) targetValue(g *Game, controller uuid.UUID) int {
+	return g.PlayerLifeGainedThisTurn(controller)
+}
+func (controllerLifeGainedTargetNumber) inspectDefinition() definitionNode {
+	return definitionNode{Role: "target-number", Text: "controller life gained this turn"}
+}
+
+type graveyardManaValueOption struct{ maximum TargetNumber }
+
+// GraveyardCardManaValueAtMost restricts a graveyard target by its current mana value.
+func GraveyardCardManaValueAtMost(maximum TargetNumber) GraveyardTargetOption {
+	return graveyardManaValueOption{maximum}
+}
+func (graveyardManaValueOption) graveyardTargetOption() {}
+func (o graveyardManaValueOption) applyGraveyardTarget(config *graveyardTargetConfig) {
+	config.manaValue = o.maximum
+	config.manaValueOptions++
+}
+
+type manaValueBoundGraveyardTarget struct {
+	inner       Target
+	maximum     TargetNumber
+	optionCount int
+}
+
+func (t *manaValueBoundGraveyardTarget) Possible(controller uuid.UUID, source Card, g *Game) []uuid.UUID {
+	if nilDefinition(t.maximum) || g.GetPlayer(controller) == nil {
+		return nil
+	}
+	limit := t.maximum.targetValue(g, controller)
+	var result []uuid.UUID
+	for _, id := range t.inner.Possible(controller, source, g) {
+		card := g.FindCardAnywhere(id)
+		if card != nil && card.ManaCost().CMC() <= limit {
+			result = append(result, id)
+		}
+	}
+	return result
+}
+func (t *manaValueBoundGraveyardTarget) Choose(c uuid.UUID, card Card, g *Game, chosen []uuid.UUID) error {
+	return t.inner.Choose(c, card, g, chosen)
+}
+func (t *manaValueBoundGraveyardTarget) Chosen() []uuid.UUID { return t.inner.Chosen() }
+func (t *manaValueBoundGraveyardTarget) IsChosen() bool      { return t.inner.IsChosen() }
+func (t *manaValueBoundGraveyardTarget) Min() int            { return t.inner.Min() }
+func (t *manaValueBoundGraveyardTarget) Max() int            { return t.inner.Max() }
+func (t *manaValueBoundGraveyardTarget) Reset()              { t.inner.Reset() }
+func (t *manaValueBoundGraveyardTarget) inspectDefinition() definitionNode {
+	node := definitionNode{Role: "target-restriction", Text: "graveyard card mana value", children: []definitionEdge{{"mana value", t.maximum}}}
+	if nilDefinition(t.maximum) || t.optionCount != 1 {
+		node.problem = "supply one mana value limit"
+	}
+	return node
 }
 
 type anyGraveyardOption struct{}
@@ -67,6 +149,9 @@ func DeclareGraveyardCardTarget(name string, options ...GraveyardTargetOption) *
 		spec = TargetCardInAnyGraveyard(slices.Clone(config.filters)...)
 	} else {
 		spec = TargetCardInYourGraveyard(slices.Clone(config.filters)...)
+	}
+	if config.manaValueOptions > 0 {
+		spec = &manaValueBoundGraveyardTarget{inner: spec, maximum: config.manaValue, optionCount: config.manaValueOptions}
 	}
 	return &CardTargetBinding{&targetDeclaration{name: name, spec: spec}}
 }

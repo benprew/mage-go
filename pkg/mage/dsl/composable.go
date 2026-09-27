@@ -70,6 +70,7 @@ type (
 	CardRef                   = mage.CardRef
 	CardBinding               = mage.CardBinding
 	CardTargetBinding         = mage.CardTargetBinding
+	TargetNumber              = mage.TargetNumber
 	SpellOption               = mage.SpellOption
 	ActivationOption          = mage.ActivationOption
 	ActivationCaptureOption   = mage.ActivationCaptureOption
@@ -100,6 +101,9 @@ var (
 	TargetPlayer                     = mage.DeclarePlayerTarget
 	TargetSpell                      = mage.DeclareSpellTarget
 	TargetGraveyardCard              = mage.DeclareGraveyardCardTarget
+	GraveyardCardManaValueAtMost     = mage.GraveyardCardManaValueAtMost
+	ControllerLifeGainedThisTurn     = mage.ControllerLifeGainedThisTurn
+	FixedTargetNumber                = mage.FixedTargetNumber
 	InAnyGraveyard                   = mage.InAnyGraveyard
 	GraveyardCardFilter              = mage.GraveyardCardFilter
 	ReturnCardToHand                 = mage.ReturnCardToHand

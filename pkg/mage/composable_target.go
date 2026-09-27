@@ -193,6 +193,9 @@ func declaredTargetNodes(targets []Target, grouped ...bool) []definitionEdge {
 }
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
+	if restriction, ok := b.spec.(*manaValueBoundGraveyardTarget); ok {
+		n.children = append(n.children, definitionEdge{"restriction", restriction})
+	}
 	if _, ok := b.spec.(*OpponentTarget); ok {
 		n.children = append(n.children, definitionEdge{"player", targetOpponentOnlyOption{}})
 	}

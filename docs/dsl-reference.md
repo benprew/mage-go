@@ -317,6 +317,20 @@ _ = NewInstant("Value example", "{U}", WithAbility(valueAbility))
 
 ### Graveyard Card Targets
 * `TargetGraveyardCard(label, options...)`: Declares one card target in your graveyard by default. `InAnyGraveyard()` permits any player's graveyard. `GraveyardCardFilter(filter)` restricts its characteristics. Declare the binding with `WithTargets(card)`.
+* `GraveyardCardManaValueAtMost(TargetNumber) GraveyardTargetOption`: Restricts a graveyard card target to cards whose current mana value is at most the supplied number. `ControllerLifeGainedThisTurn() TargetNumber` reads the ability controller's actual life gain this turn; `FixedTargetNumber(int) TargetNumber` supplies a fixed nonnegative limit. These target numbers work only in target declarations. The limit is checked when a spell, activation, or trigger chooses a target and again at resolution. Registration rejects a missing, negative, or repeated limit. The target keeps its graveyard visit, so a card that leaves and returns is still illegal.
+
+```go
+func lifeGainTarget() dsl.Card {
+    card := dsl.TargetGraveyardCard("card",
+        dsl.GraveyardCardFilter(dsl.IsCreatureCard),
+        dsl.GraveyardCardManaValueAtMost(dsl.ControllerLifeGainedThisTurn()))
+    return dsl.NewCreature("Life Gain Watcher", "", 1, 1,
+        dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This),
+            dsl.ReturnCardToBattlefield(card, dsl.You), dsl.WithTargets(card))))
+}
+```
+
+The example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It requires one legal target. An optional target count is separate work.
 * `ReturnCardToHand(card)`: Moves the bound graveyard card to its owner's hand. A card that leaves and returns to the graveyard is a new object, so the old binding cannot move it.
 * `ReturnCardToBattlefield(card, controller)`: Moves the bound graveyard card onto the battlefield under the selected player's control. The card keeps its owner. A stale graveyard binding does nothing.
 
@@ -640,7 +654,7 @@ effect. Multi-card draw-result consumers remain open.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
 * `DiscardEntireHand(PlayerRef, ...DiscardResultOption) ResolvingEffect`: Discards the player's hand at resolution. `DiscardAmountInto(*NumberBinding) DiscardResultOption` saves the number of cards actually discarded by this instruction. A prevented discard does not count; a discard redirected to another zone does count. An absent player or empty hand saves zero. Read the result later in the same spell, activation, or trigger with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated binding.
 * `HandSizeOf(PlayerRef) ResolutionValue`: Reads the selected player's current number of cards in hand when the value is used. It works in resolving spell, activation, and trigger bodies, including after a preceding discard or draw. An absent player supplies zero. A declared player target is rechecked through its target reference; registration rejects a nil, undeclared, or undominated player reference. This value reveals no cards.
-* `LifeGainedThisTurn(PlayerRef) ResolutionValue`: Reads the selected player's total actual positive life gain in the current turn. It works in resolving spell, activation, and trigger bodies and reads the turn tracker when used. Life-gain replacement affects the total; life loss does not subtract from it. A missing player supplies zero. Registration rejects a nil, undeclared, or undominated player reference. The value cannot set target eligibility when targets are announced or serve as a pure static condition.
+* `LifeGainedThisTurn(PlayerRef) ResolutionValue`: Reads the selected player's total actual positive life gain in the current turn. It works in resolving spell, activation, and trigger bodies and reads the turn tracker when used. Life-gain replacement affects the total; life loss does not subtract from it. A missing player supplies zero. Registration rejects a nil, undeclared, or undominated player reference. This resolution value cannot set target eligibility when targets are announced or serve as a pure static condition; use `ControllerLifeGainedThisTurn()` as a `TargetNumber` for the supported target restriction.
 
 ```go
 card := dsl.NewCreature("Life history example", "", 1, 1,
