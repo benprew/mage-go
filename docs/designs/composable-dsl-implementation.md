@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Opponent Artifact Tap Filter
+
+`ArtifactBecomesTapped().ByOpponent()` matches a tap transition only when an opponent controls the artifact at the event. It composes with `WithArtifact` and `WithController` in battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses `EvtTapped`, the event source controller condition, and the pending-trigger capture frame. A repeated filter fails registration. No production card or legacy export changed.
+
+Powerleech's complete text in `data/ATQ.json` requires this tap pattern and the separate opponent artifact activation without `{T}` pattern. Both adapters are now available, but its production declaration and full card validation remain open. Artifact Possession and Haunting Wind have separate attachment and damage requirements. Their Antiquities gap record stays open. A fresh caller search found no production `ArtifactBecomesTapped` use and one `OpponentActivatedArtifactNoTapCost` use. The next dependency-ready work is a P payment output or another E event participant after a fresh audit.
+
+Focused tests first failed because `ByOpponent` was absent. Synthetic tests cover owner/controller distinction, repeated taps, source phasing, tapped artifact return, event-time controller capture, trigger copy, clone isolation, inspection, registration rejection of repeated filters, and a public DSL declaration. Existing artifact tap tests cover type selection, artifact phasing, source departure, and invalid binding scope. Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass with zero failures. The post-lint diff and `git diff --check` pass.
+
 ## Current Slice: Activated Ability Without Tap Cost Filter
 
 `ActivatedAbilityEvent().WithoutTapCost()` filters completed activations by the existing activation-cost flag. It composes with `FromArtifact`, `ByOpponent`, `WithActivator`, and `WithSource` in battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses the event and pending-trigger services, and leaves the separate `ArtifactAbilityActivatedWithoutTapCost` pattern and legacy callers intact. No production card changed.

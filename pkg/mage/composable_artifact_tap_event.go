@@ -13,10 +13,21 @@ type artifactTappedPattern struct {
 	captureController bool
 	duplicateArtifact bool
 	duplicatePlayer   bool
+	opponentOnly      bool
+	duplicateOpponent bool
 }
 
 // ArtifactBecomesTapped matches an artifact that changes from untapped to tapped.
 func ArtifactBecomesTapped() artifactTappedPattern { return artifactTappedPattern{} }
+
+// ByOpponent limits the event to an artifact an opponent controls when it taps.
+func (p artifactTappedPattern) ByOpponent() artifactTappedPattern {
+	if p.opponentOnly {
+		p.duplicateOpponent = true
+	}
+	p.opponentOnly = true
+	return p
+}
 
 // WithArtifact saves the tapped artifact's battlefield incarnation.
 func (p artifactTappedPattern) WithArtifact(binding *PermanentBinding) artifactTappedPattern {
@@ -38,12 +49,22 @@ func (p artifactTappedPattern) WithController(binding *PlayerBinding) artifactTa
 
 func (artifactTappedPattern) eventPattern() {}
 
-func (artifactTappedPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(EvtTapped, false, effect).SetConditionData(EventSourceHasType{Type: TypeArtifact})
+func (p artifactTappedPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	t := NewTriggered(EvtTapped, false, effect).SetConditionData(EventSourceHasType{Type: TypeArtifact})
+	if p.opponentOnly {
+		t.AndConditionData(EventSourceControlledByOpponent{})
+	}
+	return t
 }
 
 func (p artifactTappedPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "artifact becomes tapped", battlefieldSource: true}
+	if p.opponentOnly {
+		n.Text = "opponent artifact becomes tapped"
+	}
+	if p.duplicateOpponent {
+		n.problem = "artifact tap event: supply each filter once"
+	}
 	if p.captureArtifact {
 		if p.artifact == nil || p.duplicateArtifact {
 			n.problem = "artifact tap event: supply one artifact binding"

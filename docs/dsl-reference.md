@@ -1386,7 +1386,7 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
-  * `ArtifactBecomesTapped().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match any artifact when it changes from untapped to tapped. Both methods are optional. `WithArtifact` saves the tapped artifact's battlefield incarnation for `From`; `WithController` saves its controller at the event for `FromPlayer`. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The artifact is not a target. A saved artifact that leaves and returns, or phases out, is absent at resolution. Entering tapped and tapping an already tapped artifact do not match. For example:
+  * `ArtifactBecomesTapped().ByOpponent().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match an artifact when it changes from untapped to tapped. `ByOpponent` is optional and limits the event to an artifact controlled by an opponent of the watcher controller at that time. Both captures are optional. `WithArtifact` saves the tapped artifact's battlefield incarnation for `From`; `WithController` saves its controller at the event for `FromPlayer`. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The artifact is not a target. A saved artifact that leaves and returns, or phases out, is absent at resolution. Entering tapped and tapping an already tapped artifact do not match. Registration rejects a repeated `ByOpponent` filter. For example:
     ```go
     package main
 
@@ -1396,7 +1396,7 @@ Triggers on rules events dispatched by the engine:
     var controller = dsl.BindPlayer("tap controller")
     var _ = dsl.NewEnchantment("Artifact watcher", "",
         dsl.WithAbility(dsl.WhenEvent(
-            dsl.ArtifactBecomesTapped().WithArtifact(tapped).WithController(controller),
+            dsl.ArtifactBecomesTapped().ByOpponent().WithArtifact(tapped).WithController(controller),
             dsl.Sequence(
                 dsl.AddCounters(dsl.From(tapped), dsl.Charge, dsl.Fixed(1)),
                 dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1))))))
