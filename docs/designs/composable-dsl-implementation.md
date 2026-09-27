@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Life-Gain Total
+
+`GainLifeEach(PlayerSet, ResolutionValue, ...LifeGainResultOption)` now accepts `LifeGainedInto(*NumberBinding)`. It saves the sum of actual positive gains after modifiers and replacements in the current resolution frame. The shared batch service still prepares each gain before changing life totals and sends gain events after all totals change. Empty or absent sets and nonpositive amounts write zero. The option works in spell, activation, and trigger bodies; a singular player cannot satisfy the set role. Inspection and registration reject nil, unnamed, duplicate, and undominated bindings. Existing two-argument callers and legacy exports remain valid. No production card changed.
+
+The P action-result inventory requires actual outcomes distinct from attempted amounts. The focused test first failed because `LifeGainedInto` was absent. Synthetic engine and DSL tests cover result consumption in one resolution, replacement outcomes, zero and absent sets, clone isolation, and registration. Existing batch tests cover simultaneous final-total event observation. A fresh search found no production `GainLifeEach` or `LifeGainedInto` caller; existing life-gain author exports remain for unmigrated cards. No JSON gap record is closed by this result alone; complete card wiring remains separate. The next dependency-ready work is another P payment or action output after a fresh audit.
+
+Validation: focused `TestGainLifeEach` tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Unique-Highest-Life Player Reference
 
 `PlayerWithUniqueHighestLife() PlayerRef` selects the sole highest-life player from the current game when a resolving instruction reads it. A tie or missing player is absent, so a singular player action does nothing. The sealed reference works in spell, activation, and trigger bodies wherever `PlayerRef` is accepted, including player damage recipients. It is not a state condition or a captured trigger participant. It reuses current player life totals and the existing singular player-action path; no life engine contract or result frame was needed. No production card or legacy export changed.

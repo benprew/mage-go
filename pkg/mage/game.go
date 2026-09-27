@@ -1208,9 +1208,9 @@ func (g *Game) gainLifeWithEvent(p Player, amount int) {
 }
 
 // playersGainLife applies each gain before observers read life totals.
-func (g *Game) playersGainLife(players []Player, amount int) {
+func (g *Game) playersGainLife(players []Player, amount int) int {
 	if amount <= 0 {
-		return
+		return 0
 	}
 	type gain struct {
 		player Player
@@ -1227,12 +1227,15 @@ func (g *Game) playersGainLife(players []Player, amount int) {
 			gains = append(gains, gain{player, actual})
 		}
 	}
+	total := 0
 	for _, result := range gains {
 		result.player.GainLife(result.amount)
+		total += result.amount
 	}
 	for _, result := range gains {
 		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: result.player.PlayerID(), Amount: result.amount})
 	}
+	return total
 }
 
 // applyLifeGain returns the amount gained after replacement processing.

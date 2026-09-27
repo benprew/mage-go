@@ -99,6 +99,7 @@ type (
 	GrantedActivationOption   = mage.GrantedActivationOption
 	CostGroup                 = mage.CostGroup
 	LifeLossResultOption      = mage.LifeLossResultOption
+	LifeGainResultOption      = mage.LifeGainResultOption
 	DiscardResultOption       = mage.DiscardResultOption
 	DiscardEachResultOption   = mage.DiscardEachResultOption
 	DestroyEachResultOption   = mage.DestroyEachResultOption
@@ -157,6 +158,7 @@ var (
 	GrantLandPlays                   = mage.GrantLandPlays
 	LoseLifeEach                     = mage.LoseLifeEach
 	LifeLostInto                     = mage.LifeLostInto
+	LifeGainedInto                   = mage.LifeGainedInto
 	MatchingPermanents               = mage.MatchingPermanents
 	PermanentsOwnedBy                = mage.PermanentsOwnedBy
 	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy

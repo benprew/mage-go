@@ -322,6 +322,7 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
   * Positive life payments emit `EvtLifeLost` through the shared executor; zero payments emit no event.
   * `LifePayCostInto` writes the committed fixed life payment to the stack instance's number bindings. The value is available to that spell or activated ability at resolution, including its copies. It is absent after failed payment. The binding does not read life loss from another action.
   * `LoseLifeEach(..., LifeLostInto(binding))` writes the total life lost by that set instruction to the current resolution frame. The shared life service changes all selected life totals before it dispatches `EvtLifeLost` events and measures the result before event handlers can change life again. An empty set or nonpositive amount writes zero. The result is separate from life payment and damage results.
+  * `GainLifeEach(..., LifeGainedInto(binding))` writes the sum of prepared positive gain outcomes to the current resolution frame. The shared batch service applies all gains before it sends `EvtLifeGained` events. Replacement and life-gain modifiers change the saved amount; an empty set or nonpositive amount writes zero. The result is separate from life loss and payment.
   * `LifePayXCostInto` resolves the announced X to a fixed life cost before total-cost validation. The locked payment writes its committed amount to the same instance-local number-binding frame. A failed payment does not move the spell or create a stack object.
 
 ---
