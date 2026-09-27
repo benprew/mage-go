@@ -26,8 +26,8 @@ func DealsDamage(source PermanentRef, amount *NumberBinding) EventPattern {
 
 // DealsDamageToPlayer matches damage from the source to either player.
 // It saves the damaged player without making that player a target.
-func DealsDamageToPlayer(_ sourceRef, player *PlayerBinding) damageEventPattern {
-	return damageEventPattern{player: player}
+func DealsDamageToPlayer(source PermanentRef, player *PlayerBinding) damageEventPattern {
+	return damageEventPattern{source: source, player: player}
 }
 
 // DealsCombatDamageToPlayer matches combat damage from the source to a player.
@@ -64,8 +64,12 @@ func (p damageEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggere
 	if p.opponentOnly {
 		return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(EventSourceIsSelfDamageToOpponent{})
 	}
+	sourceCondition := TriggerConditionData(EventSourceIsSelf{})
+	if _, ok := p.source.(attachedPermanentRef); ok {
+		sourceCondition = EventSourceIsAttachedTo{}
+	}
 	return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-		EventSourceIsSelf{}, EventTargetIsPlayer{},
+		sourceCondition, EventTargetIsPlayer{},
 	}})
 }
 func (p damageEventPattern) inspectDefinition() definitionNode {
@@ -84,6 +88,16 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 		case sourceRef:
 		case attachedPermanentRef:
 			n.Text = "attached permanent deals damage"
+		default:
+			n.problem = "damage event source requires This or AttachedPermanent"
+		}
+	}
+	if !p.anyRecipient && !p.combatOnly && !p.opponentOnly {
+		switch p.source.(type) {
+		case sourceRef:
+			n.Text = "source deals damage to a player"
+		case attachedPermanentRef:
+			n.Text = "attached permanent deals damage to a player"
 		default:
 			n.problem = "damage event source requires This or AttachedPermanent"
 		}

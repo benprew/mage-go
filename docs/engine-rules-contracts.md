@@ -218,6 +218,7 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
   * The trigger saves the final damage amount in its resolution frame. A later source control change or departure does not change the trigger controller or saved amount. Stack copies and game clones keep separate frames.
 * **Attached Damage Trigger (CR 120.8, 603.2g, 603.3a)**:
   * `DealsDamage(AttachedPermanent, amount)` checks the current attachment when a positive damage event occurs. It accepts damage to a player or permanent. Prevention and replacement determine the final event amount before capture. A phased-out Aura cannot trigger. The queued trigger keeps its amount and controller if the Aura moves, returns, or changes attachment before resolution.
+  * `DealsDamageToPlayer(AttachedPermanent, player).WithAmount(amount)` uses the same attachment check and also requires a player recipient. It captures the damaged player and final positive amount in each pending trigger. Damage to a permanent, full prevention, and damage while the Aura is phased out do not match. The bindings are event participants and do not declare targets.
 * **Lifelink Outcome Routing**:
   * Damage from a permanent with lifelink causes its controller to gain that much life simultaneously with damage execution.
   * Life gained from lifelink routes through the event-aware life gain executor, emitting an `EvtLifeGained` with the actual positive amount after life-gain replacements.

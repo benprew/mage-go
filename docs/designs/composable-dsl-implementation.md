@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attached Permanent Damage to Player Event
+
+`DealsDamageToPlayer(AttachedPermanent, player).WithAmount(amount)` is a typed battlefield event pattern for positive damage from the currently attached permanent to a player. The player is an event participant, and the optional amount is the final amount after prevention. The pattern reuses the shared attachment condition, damage event, pending trigger, and binding frame. It also retains `DealsDamageToPlayer(This, player)`. Registration accepts only `This` or `AttachedPermanent` as the source and rejects invalid bindings. No production card changed. Backfire's complete text was checked in `data/LEG.json`; its "to you" filter, creature controller recipient, damage action, and card wiring remain separate. The Legends gap record stays open. The next dependency-ready E work is the "to you" filter or another event participant after a fresh audit.
+
+The focused tests first failed at compilation because the constructor accepted only `This`. Synthetic tests cover player versus permanent recipients, unrelated sources, prevention, event-time player and amount, attachment change, source return, phasing, stack copying, game cloning, and registration. A public DSL declaration validates the documented form. Existing production callers remain on their current declarations.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `DealsDamageToPlayer` call, one Jumpstart legacy attached-damage-to-player trigger call, and Backfire's legacy trigger in Legends. Both cards remain unwired.
+
 ## Current Slice: Attached Permanent Damage Event
 
 `DealsDamage(source PermanentRef, amount *NumberBinding) EventPattern` now accepts `AttachedPermanent` as well as its existing `This` source. On a battlefield Aura or Equipment, it matches final positive damage from the currently attached permanent to any recipient and saves the actual event amount in the trigger frame. It reuses the shared damage event, attachment condition, trigger, and binding services. Registration rejects other source references and invalid bindings. No production card or legacy export changed. Spirit Link's complete text was checked in `data/LEG.json`; its production declaration and the Legends gap record remain open for card migration. The next E work is an attached-permanent damage-to-player participant or another filtered event after a fresh audit.
