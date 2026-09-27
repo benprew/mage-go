@@ -266,6 +266,7 @@ var (
 	Blocks                             = mage.Blocks
 	BecomesBlocked                     = mage.BecomesBlocked
 	BecomesTargetOfSpell               = mage.BecomesTargetOfSpell
+	BecomesTargeted                    = mage.BecomesTargeted
 	BecomesBlockedBy                   = mage.BecomesBlockedBy
 	BlocksCreature                     = mage.BlocksCreature
 	BlocksOrBecomesBlockedByCreature   = mage.BlocksOrBecomesBlockedByCreature

@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Source Becomes Targeted by Spell or Ability
+
+`BecomesTargeted(This).ByOpponent().WithController(*PlayerBinding)` is a battlefield `WhenEvent` and `WhenEventModes` pattern. Both options are optional. It matches target announcement for a spell or activated ability, compares the event player with the source controller at detection, and saves that player in the pending trigger's instance-local frame. It reuses `EvtBecomesTarget` and the existing trigger capture service. The older spell-only `BecomesTargetOfSpell` remains. A fresh search found no production caller of either typed pattern; five production `EvtBecomesTarget` declarations remain in Jumpstart and Secrets of Strixhaven, including Tenured Concocter. No production card changed.
+
+Tenured Concocter's complete text in `data/SOS.json` requires the opponent-controlled spell-or-ability event. Its optional draw, Infusion clause, and production wiring remain separate. No gap record closes from adapter availability alone. Synthetic tests first failed because `BecomesTargeted` was absent. They cover spell and ability event kinds, actual activated targeting, opponent filtering, independent event captures, source departure and return, phasing and absence, stack copying, game cloning, inspection, registration, and a public DSL declaration. The next dependency-ready work is a separate P payment output or E event participant after a fresh audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Cast-Event Announced-X Capture
 
 `SpellCast().WithAnnouncedX(*NumberBinding)` saves the cast spell's X value when `EvtSpellCast` occurs. It is available in battlefield `WhenEvent` and `WhenEventModes` bodies and composes with the existing cast filters. `GameEvent.CastAnnouncedX` copies the value from the identified stack object before event dispatch. The pending trigger stores it in its instance-local number frame. The adapter uses the existing cast event and binding services; it adds no casting, payment, or resolution action. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. No production card or legacy export changed.

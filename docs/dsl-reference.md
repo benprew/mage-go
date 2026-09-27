@@ -1485,6 +1485,19 @@ Triggers on rules events dispatched by the engine:
         dsl.WithAbility(dsl.WhenEvent(
             dsl.BecomesTargetOfSpell(dsl.This), dsl.Sacrifice(dsl.This))))
     ```
+  * `BecomesTargeted(This).ByOpponent().WithController(*PlayerBinding)`: Match the battlefield source when a spell or activated ability targets it. `ByOpponent` and `WithController` are optional. The filter compares the targeting object's controller with the source controller when the event occurs. The binding saves that player for this trigger instance; read it with `FromPlayer`. It is not a target or a reference to the stack object. Use this pattern in `WhenEvent` or `WhenEventModes`. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var actor = dsl.BindPlayer("actor")
+    var _ = dsl.NewCreature("Target watcher", "", 2, 2,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.BecomesTargeted(dsl.This).ByOpponent().WithController(actor),
+            dsl.GainLife(dsl.FromPlayer(actor), dsl.Fixed(1)))))
+    ```
   * `AttacksUnblocked(This)`: Source is attacking and no creature blocks it when legal blocker declarations finish. A creature that entered attacking can match. Removing every blocker from an already blocked creature does not make it match. Use `.WithDefendingPlayer(*PlayerBinding)` to save the event-time defending player. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. For example:
 
     ```go
