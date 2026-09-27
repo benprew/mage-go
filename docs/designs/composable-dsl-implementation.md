@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Creature-Death Power Capture
+
+`CreatureDies().WithPower(*NumberBinding)` and the other creature-death patterns save the dying creature's pre-departure power in each pending trigger. The adapter reuses the existing departure view, event detection, and instance-local number binding. It is valid in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects a nil or unnamed binding, a repeated power capture, a general `PermanentDies()` pattern, and reads without a producer. No engine event storage, production card, or legacy export changed.
+
+Death Watch's complete Oracle text was checked in `data/VIS.json` as an acceptance example for power and toughness at death. The public `WithPower` adapter does not complete that card: its Aura, event controller, life-loss, and production wiring need a separate complete migration. Existing set inventories and JSON gaps remain unchanged because none is fully resolved by this capture alone. The next dependency-ready work is a separate E event participant or P payment output after a fresh audit.
+
+The contract tests first failed because `WithPower` was absent. Synthetic tests cover continuous-effect power, departure and return after LKI cleanup, source death in a simultaneous batch, phasing, stack-copy and game-clone isolation, inspection through registration, and invalid declarations. A public DSL test compiles and validates the declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. A fresh production search found no `WithPower` caller; existing death-event and legacy exports remain for unmigrated cards.
+
 ## Current Slice: Death-Event Power or Toughness Filter
 
 `CreatureYouControlDies().PowerOrToughnessAtMost(1)` and the other creature-death patterns filter the departing creature's power **or** toughness before death. The typed adapter uses the existing pre-departure object view, zone-change event, and pending-trigger path. It accepts any integer limit and rejects a repeated filter or use on a general `PermanentDies()` pattern at registration. No engine event storage, production card, or legacy export changed.

@@ -1286,6 +1286,14 @@ Triggers on rules events dispatched by the engine:
     )
     ```
   * Each creature-death pattern supports `.WithToughness(*NumberBinding)`: Save the dying creature's toughness at event detection, including continuous effects. Read the number with `FromNumber` in the trigger body. The value remains fixed after the creature leaves or returns. This is an event value, not a target. It can combine with `.WithController`.
+  * Each creature-death pattern supports `.WithPower(*NumberBinding)`: Save the dying creature's power at event detection, including continuous effects. Read it with `FromNumber` in the trigger body. The value stays fixed after the creature leaves or returns. It can combine with `.WithController`, `.WithOwner`, and `.WithToughness` when each output has a separate binding. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. `PermanentDies()` cannot use this creature-only capture.
+    ```go
+    power := dsl.BindNumber("dying creature power")
+    dsl.WhenEvent(
+        dsl.AnotherCreatureYouControlDies().WithPower(power),
+        dsl.GainLife(dsl.You, dsl.FromNumber(power)),
+    )
+    ```
   * `DealsDamage(source PermanentRef, amountBinding *NumberBinding) EventPattern`: `This` or `AttachedPermanent` deals positive damage to any player or permanent. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding saves the final amount after prevention and replacement in that trigger's frame. `AttachedPermanent` checks the attachment when damage occurs; a later attachment or controller change does not change a queued trigger. Registration rejects other permanent references, nil or unnamed amount bindings, and use outside a battlefield trigger.
     ```go
     func linkedAura() dsl.Card {

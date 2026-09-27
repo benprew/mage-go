@@ -191,6 +191,7 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
   * Phased-out sources do not observe the event. A source that dies in the same destruction batch can observe the other deaths through the existing pre-batch trigger snapshot.
 * **Creature-Death Toughness Capture**:
   * `CreatureDies().WithToughness(binding)` and the controlled-creature variants save the dying creature's toughness when the trigger is detected. Detection uses the pre-batch permanent or its departure LKI, including continuous effects (CR 603.10, 608.2h).
+  * `CreatureDies().WithPower(binding)` and the other creature-death variants use the same detection snapshot for power. Each pending trigger saves its own number before stack placement. Registration rejects this capture on a general permanent-death pattern.
   * The pending trigger stores the number before stack placement. Resolution reads its own number binding, so cleanup, a later incarnation of the same card, stack copies, and game clones do not change the saved value. This capture also applies to a creature's own death trigger.
 
 ---

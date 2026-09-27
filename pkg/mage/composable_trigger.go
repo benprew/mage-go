@@ -169,6 +169,9 @@ type creatureDiesPattern struct {
 	captureController bool
 	owner             *PlayerBinding
 	captureOwner      bool
+	power             *NumberBinding
+	capturePower      bool
+	duplicatePower    bool
 	toughness         *NumberBinding
 	captureToughness  bool
 	card              *CardBinding
@@ -289,6 +292,16 @@ func (p creatureDiesPattern) WithController(controller *PlayerBinding) creatureD
 func (p creatureDiesPattern) WithOwner(owner *PlayerBinding) creatureDiesPattern {
 	p.owner = owner
 	p.captureOwner = true
+	return p
+}
+
+// WithPower saves the creature's power before it dies.
+func (p creatureDiesPattern) WithPower(power *NumberBinding) creatureDiesPattern {
+	if p.capturePower {
+		p.duplicatePower = true
+	}
+	p.power = power
+	p.capturePower = true
 	return p
 }
 
@@ -456,6 +469,15 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	} else if p.captureOwner {
 		n.problem = "death event: supply an owner binding"
 	}
+	if p.power != nil {
+		n.bindingWrites = append(n.bindingWrites, p.power)
+		n.children = append(n.children, definitionEdge{"power", &eventAmountCapture{binding: p.power}})
+	} else if p.capturePower {
+		n.problem = "death event: supply a power binding"
+	}
+	if p.duplicatePower || (p.capturePower && !p.creatureOnly) {
+		n.problem = "death event: supply one power binding on a creature pattern"
+	}
 	if p.toughness != nil {
 		n.bindingWrites = append(n.bindingWrites, p.toughness)
 		n.children = append(n.children, definitionEdge{"toughness", &eventAmountCapture{binding: p.toughness}})
@@ -472,7 +494,7 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 }
 
 func (p creatureDiesPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.captureToughness && !p.captureOwner {
+	if !p.capturePower && !p.captureToughness && !p.captureOwner {
 		return nil
 	}
 	game, ok := observer.(*Game)
@@ -486,6 +508,9 @@ func (p creatureDiesPattern) captureDetectedEvent(event *GameEvent, observer Gam
 	var captures []Effect
 	if p.captureOwner && p.owner != nil {
 		captures = append(captures, &eventPlayerCapture{binding: p.owner, player: view.ViewOwner()})
+	}
+	if p.capturePower && p.power != nil {
+		captures = append(captures, &eventAmountCapture{binding: p.power, amount: view.ViewPower()})
 	}
 	if p.captureToughness && p.toughness != nil {
 		captures = append(captures, &eventAmountCapture{binding: p.toughness, amount: view.ViewToughness()})
