@@ -1912,7 +1912,16 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
-  * `OpponentDiscardsCard(playerBinding) EventPattern`: An opponent of the battlefield source controller discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time; a failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes`. The saved player is not a target.
+  * `PlayerDiscardsCard(*PlayerBinding) EventPattern`: Either player discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time. A failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes` on a battlefield source. The saved player is not a target.
+    ```go
+    func anyDiscardWatcher() dsl.Card {
+        discarder := dsl.BindPlayer("discarder")
+        return dsl.NewEnchantment("Any Discard Watcher", "{1}{B}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.PlayerDiscardsCard(discarder),
+                dsl.GainLife(dsl.FromPlayer(discarder), dsl.Fixed(1)))))
+    }
+    ```
+  * `OpponentDiscardsCard(*PlayerBinding) EventPattern`: An opponent of the battlefield source controller discards one card. It retains the same capture and lifecycle contract as `PlayerDiscardsCard` but filters the event-time player against the source controller.
     ```go
     func discardWatcher() dsl.Card {
         discarder := dsl.BindPlayer("discarder")

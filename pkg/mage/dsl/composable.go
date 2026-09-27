@@ -247,6 +247,7 @@ var (
 	ControllerDrawsCard       = mage.ControllerDrawsCard
 	OpponentDrawsCard         = mage.OpponentDrawsCard
 	OpponentDiscardsCard      = mage.OpponentDiscardsCard
+	PlayerDiscardsCard        = mage.PlayerDiscardsCard
 	ControllerGainsLife       = mage.ControllerGainsLife
 	// WhenEvent constructs an event-triggered ability that responds to game events.
 	WhenEvent                          = mage.WhenEvent
