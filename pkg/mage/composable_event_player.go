@@ -9,14 +9,17 @@ import (
 )
 
 type damageEventPattern struct {
-	source         PermanentRef
-	player         *PlayerBinding
-	opponentOnly   bool
-	controllerOnly bool
-	amount         *NumberBinding
-	captureAmount  bool
-	anyRecipient   bool
-	combatOnly     bool
+	source                    PermanentRef
+	player                    *PlayerBinding
+	opponentOnly              bool
+	controllerOnly            bool
+	sourceController          *PlayerBinding
+	captureSourceController   bool
+	duplicateSourceController bool
+	amount                    *NumberBinding
+	captureAmount             bool
+	anyRecipient              bool
+	combatOnly                bool
 }
 
 // DealsDamage matches damage from the source to any recipient.
@@ -34,6 +37,15 @@ func DealsDamageToPlayer(source PermanentRef, player *PlayerBinding) damageEvent
 // ToController matches damage to the trigger controller when damage occurs.
 func (p damageEventPattern) ToController() damageEventPattern {
 	p.controllerOnly = true
+	return p
+}
+
+// WithSourceController saves the damage source controller when damage occurs.
+func (p damageEventPattern) WithSourceController(binding *PlayerBinding) damageEventPattern {
+	if p.captureSourceController {
+		p.duplicateSourceController = true
+	}
+	p.sourceController, p.captureSourceController = binding, true
 	return p
 }
 
@@ -118,6 +130,15 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 			n.Text += " to trigger controller"
 		}
 	}
+	if p.captureSourceController {
+		if p.anyRecipient || p.combatOnly || p.opponentOnly || p.sourceController == nil || p.duplicateSourceController {
+			n.problem = "damage event requires one source controller binding on DealsDamageToPlayer"
+		} else if p.sourceController == p.player {
+			n.problem = "damage event has duplicate player and source controller binding"
+		} else {
+			n.children = append(n.children, definitionEdge{"source controller", &eventPlayerCapture{binding: p.sourceController}})
+		}
+	}
 	if p.captureAmount {
 		n.children = append(n.children, definitionEdge{"amount", &eventAmountCapture{binding: p.amount}})
 	}
@@ -130,6 +151,9 @@ func (p damageEventPattern) captureEventEffects(event *GameEvent, effects []Effe
 	}
 	if p.captureAmount {
 		captures = append(captures, &eventAmountCapture{p.amount, event.Amount})
+	}
+	if p.captureSourceController {
+		captures = append(captures, &eventPlayerCapture{binding: p.sourceController, player: event.SourceControllerID})
 	}
 	captures = append(captures, Sequence(effects...))
 	return []Effect{Sequence(captures...)}

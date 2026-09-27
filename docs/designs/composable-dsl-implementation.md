@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Damage Source Controller Event Binding
+
+`DealsDamageToPlayer(This or AttachedPermanent, player).WithSourceController(controller)` captures the damage source's controller from the final positive damage event. It composes with `ToController()` and optional `WithAmount(amount)` in battlefield `WhenEvent` and `WhenEventModes` abilities. The capture is an instance-local event participant, not a target. The adapter uses the existing damage event, attachment check, pending trigger, and player-binding frame; no damage engine contract changed. Registration rejects missing, duplicate, shared, unnamed, or out-of-scope bindings and use on other damage patterns. No production card changed.
+
+The synthetic tests first failed because `WithSourceController` was absent. They cover full prevention, phasing, event-time control, source departure and return, stack copies, game clones, and declaration validation. A public DSL test validates the example. Backfire's complete text was checked against `data/LEG.json`: its "to you" filter, attached creature controller, and damage action can now be expressed, but its production declaration remains on the legacy path. The Legends inventory and JSON gap record still describe card wiring and remain open. The legacy `AttachedToDealsDamageToController` caller in Legends and `WheneverEnchantedPermanentDealsDamageToPlayerTrigger` caller in Jumpstart remain, so both exports stay. The next dependency-ready work is a separate E event participant or P payment output after a fresh caller audit.
+
+Focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. No production card, legacy export, inventory, or JSON gap record changed.
+
 ## Current Slice: Damage to Trigger Controller Filter
 
 `DealsDamageToPlayer(This, player).ToController()` and the `AttachedPermanent` form match positive damage to the battlefield trigger controller at event time. Optional `.WithAmount(amount)` and the player binding retain the final event participants in the pending trigger frame. The filter reuses `EventTargetIsController`, the shared damage event, attachment condition, and existing trigger capture. It adds no damage executor or production card migration. Registration rejects incompatible opponent/combat patterns and unsupported source references. The public DSL declaration compiles.

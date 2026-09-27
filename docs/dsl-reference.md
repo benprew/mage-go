@@ -1214,6 +1214,20 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
+  * `DealsDamageToPlayer(source, playerBinding).WithSourceController(controllerBinding)`: Save the damage source's controller when positive damage occurs. Use `This` or `AttachedPermanent` in a battlefield `WhenEvent` or `WhenEventModes` ability. The controller and damaged player are separate event bindings, not targets. `ToController` and `WithAmount` can be combined; call `WithSourceController` before `WithAmount`. Prevention, departure, return, and later control changes do not change a queued capture. Registration rejects nil, repeated, shared, unnamed, and out-of-scope bindings. This option is not supported on other damage patterns.
+    ```go
+    func sourceControllerWatcher() dsl.Card {
+        player := dsl.BindPlayer("damaged player")
+        controller := dsl.BindPlayer("source controller")
+        amount := dsl.BindNumber("damage dealt")
+        return dsl.NewAura("Source Controller Watcher", "{U}", dsl.WithAbility(
+            dsl.WhenEvent(
+                dsl.DealsDamageToPlayer(dsl.AttachedPermanent, player).ToController().WithSourceController(controller).WithAmount(amount),
+                dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.FromNumber(amount)),
+            ),
+        ))
+    }
+    ```
   * `DealsCombatDamageToPlayer(This, playerBinding).WithAmount(amountBinding)`: A battlefield source deals combat damage to a player. Use it in `WhenEvent` or `WhenEventModes`. It saves the damaged player and, when requested, the final positive amount after prevention. The player is an event participant, not a target. Registration rejects nil, unnamed, or out-of-scope bindings. The amount capture is optional.
     ```go
     func combatWatcher() dsl.Card {
