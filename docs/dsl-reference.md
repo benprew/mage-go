@@ -1941,16 +1941,17 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
-  * `ControllerGainsLife(*PlayerBinding) controllerLifeGainEventPattern` and `.WithAmount(*NumberBinding) controllerLifeGainEventPattern`: The source controller gains a positive amount of life. `WithAmount` is optional. The returned sealed pattern is accepted as an `EventPattern`. It saves the player and the actual amount after replacement in this trigger's frame. Read them with `FromPlayer` and `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The bindings are not targets. A replaced gain triggers only if life is actually gained. Copies keep the saved values while `You` uses the copy's controller. Registration rejects nil, unnamed, repeated, and out-of-scope amount bindings. This declaration compiles:
+  * `ControllerGainsLife(*PlayerBinding) lifeGainEventPattern`, `PlayerGainsLife(*PlayerBinding) lifeGainEventPattern`, and `.WithAmount(*NumberBinding) lifeGainEventPattern`: The first pattern matches the source controller's positive life gain; the second matches either player's positive life gain. `WithAmount` is optional. The returned sealed pattern is accepted as an `EventPattern`. It saves the player and the actual amount after replacement in this trigger's frame. Read them with `FromPlayer` and `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The bindings are not targets. A replaced gain triggers only if life is actually gained. Copies keep the saved values while `You` uses the copy's controller. Registration rejects nil, unnamed, repeated, and out-of-scope amount bindings. This declaration compiles:
 
     ```go
     func lifeGainWatcher() dsl.Card {
         player := dsl.BindPlayer("gainer")
         amount := dsl.BindNumber("gained")
         return dsl.NewEnchantment("Life Gain Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.ControllerGainsLife(player).WithAmount(amount),
+            dsl.PlayerGainsLife(player).WithAmount(amount),
             dsl.LoseLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))))
     }
+    ```
   * `OpponentLosesLife(playerBinding)`: Opponent loses life (can chain `.WithAmount(binding)`).
   * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
   * `AttachedBecomesTapped(hostBinding)`: Captures the attached permanent when it becomes tapped. Read with `From(hostBinding)`; it is not a target. Attachment moves and source departure do not change the captured incarnation.

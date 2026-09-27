@@ -278,6 +278,7 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
   * Damage from a permanent with lifelink causes its controller to gain that much life simultaneously with damage execution.
   * Life gained from lifelink routes through the event-aware life gain executor, emitting an `EvtLifeGained` with the actual positive amount after life-gain replacements.
   * `ControllerGainsLife(player).WithAmount(amount)` saves the positive final `EvtLifeGained` amount in the pending trigger. It does not read a later life total or the requested gain. Each trigger and stack copy keeps its own capture.
+  * `PlayerGainsLife(player).WithAmount(amount)` uses the same completed gain event for either player. The saved player and amount belong to that event, regardless of later control changes or a copy's controller. A zero or consumed gain does not match (CR 119.9, 603.2g).
   * A collection gain captures its player set and amount once. It prepares each player's life gain modifier and replacement outcome before changing any life total. All positive gains change life totals before any gain event is sent, so event observers see the final totals. A zero or fully replaced gain sends no event.
   * The turn tracker totals positive `EvtLifeGained` amounts per player. `LifeGainedThisTurn(PlayerRef)` reads that total at effect resolution, including gain after replacement. Zero, consumed gain, and life loss do not add to it. Final cleanup clears the total after priority ends.
 * **Damage Source Identity**:

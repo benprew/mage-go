@@ -2,21 +2,27 @@ package mage
 
 import "github.com/benprew/mage-go/pkg/mage/core"
 
-type controllerLifeGainEventPattern struct {
+type lifeGainEventPattern struct {
 	player          *PlayerBinding
 	amount          *NumberBinding
 	captureAmount   bool
 	duplicateAmount bool
+	controllerOnly  bool
 }
 
 // ControllerGainsLife matches positive life gain by the source controller.
 // It saves the player at detection without declaring a target.
-func ControllerGainsLife(player *PlayerBinding) controllerLifeGainEventPattern {
-	return controllerLifeGainEventPattern{player: player}
+func ControllerGainsLife(player *PlayerBinding) lifeGainEventPattern {
+	return lifeGainEventPattern{player: player, controllerOnly: true}
+}
+
+// PlayerGainsLife saves any player who gains a positive amount of life.
+func PlayerGainsLife(player *PlayerBinding) lifeGainEventPattern {
+	return lifeGainEventPattern{player: player}
 }
 
 // WithAmount saves the amount of life gained when the event occurs.
-func (p controllerLifeGainEventPattern) WithAmount(amount *NumberBinding) controllerLifeGainEventPattern {
+func (p lifeGainEventPattern) WithAmount(amount *NumberBinding) lifeGainEventPattern {
 	if p.captureAmount {
 		p.duplicateAmount = true
 	}
@@ -24,13 +30,20 @@ func (p controllerLifeGainEventPattern) WithAmount(amount *NumberBinding) contro
 	return p
 }
 
-func (controllerLifeGainEventPattern) eventPattern() {}
-func (controllerLifeGainEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(core.EvtLifeGained, false, effect).SetConditionData(EventPlayerIsController{}).
-		AndConditionData(EventAmountGreaterThan{N: 0})
+func (lifeGainEventPattern) eventPattern() {}
+func (p lifeGainEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	trigger := NewTriggered(core.EvtLifeGained, false, effect).SetConditionData(EventAmountGreaterThan{N: 0})
+	if p.controllerOnly {
+		trigger.AndConditionData(EventPlayerIsController{})
+	}
+	return trigger
 }
-func (p controllerLifeGainEventPattern) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "event-pattern", Text: "you gain life", battlefieldSource: true,
+func (p lifeGainEventPattern) inspectDefinition() definitionNode {
+	text := "a player gains life"
+	if p.controllerOnly {
+		text = "you gain life"
+	}
+	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true,
 		bindingWrite: p.player, children: []definitionEdge{{"player", p.player}}}
 	if p.captureAmount {
 		n.bindingWrites = append(n.bindingWrites, p.amount)
@@ -41,7 +54,7 @@ func (p controllerLifeGainEventPattern) inspectDefinition() definitionNode {
 	}
 	return n
 }
-func (p controllerLifeGainEventPattern) captureEventEffects(event *core.GameEvent, effects []Effect) []Effect {
+func (p lifeGainEventPattern) captureEventEffects(event *core.GameEvent, effects []Effect) []Effect {
 	captures := []Effect{&eventPlayerCapture{p.player, event.PlayerID}}
 	if p.captureAmount {
 		captures = append(captures, &eventAmountCapture{p.amount, event.Amount})

@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Any-Player Life-Gain Event
+
+`PlayerGainsLife(*PlayerBinding).WithAmount(*NumberBinding)` matches each positive completed life gain by either player and saves the player and post-replacement amount in its pending trigger. It works in battlefield `WhenEvent` and `WhenEventModes` bodies. The amount option is optional. It reuses `EvtLifeGained`, the existing replacement path, and instance-local event captures. The existing `ControllerGainsLife` shares that implementation and keeps its controller filter. No new life executor, payment timing, target, or replacement rule is added. No production card or legacy export changed.
+
+The E plan requires life-event participants. Synthetic tests first failed because `PlayerGainsLife` was undefined. Focused tests cover both players, post-replacement amount, zero gain, source phasing and departure, stack copies, game clones, inspection, registration, and a public DSL declaration. Existing controller-gain tests cover replacement consumption and controller changes. A fresh production search found six `ControllerGainsLife` callers and no `PlayerGainsLife` caller; all card wiring remains open. No JSON gap record is closed by this adapter. The next dependency-ready work is a separate E participant or P payment output after a fresh audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Controller Life-Gain Amount Capture
 
 `ControllerGainsLife(*PlayerBinding).WithAmount(*NumberBinding)` saves the actual positive life-gain event amount with the gaining player in each pending trigger. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. The adapter uses `EvtLifeGained`, its post-replacement amount, and the existing instance-local event capture frame; it adds no life-gain executor or result store. A zero or consumed gain has no event. Registration rejects nil, unnamed, repeated, duplicate, and out-of-scope amount bindings. The concrete return type of `ControllerGainsLife` enables the optional method while preserving existing `EventPattern` callers. No production card changed.
