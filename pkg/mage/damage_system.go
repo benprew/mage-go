@@ -15,6 +15,8 @@ type DamageSystem struct {
 	damageDealtBy                      map[uuid.UUID]map[uuid.UUID]bool
 	damageDealtToPlayersByPermanent    map[uuid.UUID]map[uuid.UUID]bool
 	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
+	damageToPlayersByIncarnation       map[capturedPermanent]map[uuid.UUID]bool
+	damageToPermanentsByIncarnation    map[capturedPermanent]map[capturedPermanent]bool
 	combatDamageThisStep               map[uuid.UUID]map[uuid.UUID]int
 	combatDamageSourcesThisStep        map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
 	resolvingCombatDamage              bool
@@ -96,6 +98,8 @@ func NewDamageSystem() DamageSystem {
 		damageDealtBy:                      make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPlayersByPermanent:    make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageDealtToPermanentsByPermanent: make(map[uuid.UUID]map[uuid.UUID]bool),
+		damageToPlayersByIncarnation:       make(map[capturedPermanent]map[uuid.UUID]bool),
+		damageToPermanentsByIncarnation:    make(map[capturedPermanent]map[capturedPermanent]bool),
 		combatDamageThisStep:               make(map[uuid.UUID]map[uuid.UUID]int),
 		combatDamageSourcesThisStep:        make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
 	}
@@ -126,6 +130,18 @@ func (ds *DamageSystem) Clone() DamageSystem {
 		clone.damageDealtToPermanentsByPermanent = cloneNestedUUIDMap(ds.damageDealtToPermanentsByPermanent)
 	} else {
 		clone.damageDealtToPermanentsByPermanent = make(map[uuid.UUID]map[uuid.UUID]bool)
+	}
+	if len(ds.damageToPlayersByIncarnation) > 0 {
+		clone.damageToPlayersByIncarnation = make(map[capturedPermanent]map[uuid.UUID]bool, len(ds.damageToPlayersByIncarnation))
+		for source, players := range ds.damageToPlayersByIncarnation {
+			clone.damageToPlayersByIncarnation[source] = maps.Clone(players)
+		}
+	}
+	if len(ds.damageToPermanentsByIncarnation) > 0 {
+		clone.damageToPermanentsByIncarnation = make(map[capturedPermanent]map[capturedPermanent]bool, len(ds.damageToPermanentsByIncarnation))
+		for source, permanents := range ds.damageToPermanentsByIncarnation {
+			clone.damageToPermanentsByIncarnation[source] = maps.Clone(permanents)
+		}
 	}
 	if len(ds.combatDamageThisStep) > 0 {
 		clone.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(ds.combatDamageThisStep))
@@ -226,6 +242,22 @@ func (ds *DamageSystem) HasDealtDamageToPermanent(sourceID, permID uuid.UUID) bo
 		return m[permID]
 	}
 	return false
+}
+
+// HasDealtDamageToPlayerFromSource checks damage from one permanent incarnation.
+func (ds *DamageSystem) HasDealtDamageToPlayerFromSource(source DamageSource, playerID uuid.UUID) bool {
+	if source.Incarnation() == uuid.Nil || playerID == uuid.Nil {
+		return false
+	}
+	return ds.damageToPlayersByIncarnation[capturedPermanent{source.ID(), source.Incarnation()}][playerID]
+}
+
+// HasDealtDamageToPermanentFromSource checks both battlefield incarnations.
+func (ds *DamageSystem) HasDealtDamageToPermanentFromSource(source DamageSource, recipient *Permanent) bool {
+	if source.Incarnation() == uuid.Nil || recipient == nil || recipient.incarnationID == uuid.Nil {
+		return false
+	}
+	return ds.damageToPermanentsByIncarnation[capturedPermanent{source.ID(), source.Incarnation()}][capturedPermanent{recipient.ID(), recipient.incarnationID}]
 }
 
 // DamageDealtBy returns the set of sources that dealt damage to permID this turn.
@@ -379,6 +411,16 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 			ds.damageDealtToPlayersByPermanent[sourceID] = make(map[uuid.UUID]bool)
 		}
 		ds.damageDealtToPlayersByPermanent[sourceID][p.PlayerID()] = true
+	}
+	if source.Incarnation() != uuid.Nil {
+		key := capturedPermanent{source.ID(), source.Incarnation()}
+		if ds.damageToPlayersByIncarnation == nil {
+			ds.damageToPlayersByIncarnation = make(map[capturedPermanent]map[uuid.UUID]bool)
+		}
+		if ds.damageToPlayersByIncarnation[key] == nil {
+			ds.damageToPlayersByIncarnation[key] = make(map[uuid.UUID]bool)
+		}
+		ds.damageToPlayersByIncarnation[key][p.PlayerID()] = true
 	}
 	if a.IsCombatDamage() {
 		if srcPerm := g.FindPermanent(sourceID); srcPerm != nil {
@@ -573,6 +615,16 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 			ds.damageDealtToPermanentsByPermanent[sourceID] = make(map[uuid.UUID]bool)
 		}
 		ds.damageDealtToPermanentsByPermanent[sourceID][perm.ID()] = true
+	}
+	if source := a.DamageSource(); source.Incarnation() != uuid.Nil {
+		key := capturedPermanent{source.ID(), source.Incarnation()}
+		if ds.damageToPermanentsByIncarnation == nil {
+			ds.damageToPermanentsByIncarnation = make(map[capturedPermanent]map[capturedPermanent]bool)
+		}
+		if ds.damageToPermanentsByIncarnation[key] == nil {
+			ds.damageToPermanentsByIncarnation[key] = make(map[capturedPermanent]bool)
+		}
+		ds.damageToPermanentsByIncarnation[key][capturedPermanent{perm.ID(), perm.incarnationID}] = true
 	}
 	g.FireEvent(GameEvent{
 		Type:               EvtDamageDealt,

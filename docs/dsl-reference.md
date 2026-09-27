@@ -559,6 +559,14 @@ effect. Multi-card draw-result consumers remain open.
 * `LoseLifeEach(PlayerSet, ResolutionValue)`: Causes each player in the set to lose life.
 
 ### Damage Actions
+The engine now retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. Engine rules code can call them after a positive damage action, including after the source or recipient leaves. Card declarations do not yet have a typed history predicate. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline; the new engine query does not change their signatures. For example, this resolving spell declaration compiles and uses the same damage pipeline, but the incarnation-specific history query applies only to permanent sources:
+
+```go
+target := dsl.TargetDamageRecipient("recipient")
+spell := dsl.Spell(dsl.DealDamageFrom(dsl.This, target, dsl.Fixed(1)), dsl.WithTargets(target))
+_ = spell
+```
+
 The engine event payload `core.GameEvent.SourceControllerID uuid.UUID` is available to engine trigger conditions for `EvtDamageDealt`. It records the controller of the damage source captured by the damage action, even if that source leaves before the event is observed. It is set for positive damage to a player or permanent after replacement and prevention. This is an engine integration field; the typed event pattern that will bind it for card declarations is not yet available. An engine condition can read it without looking up the source card again:
 
 ```go

@@ -1566,6 +1566,16 @@ func (g *Game) HasDealtDamageToPermanent(sourceID, permID uuid.UUID) bool {
 	return g.damage.HasDealtDamageToPermanent(sourceID, permID)
 }
 
+// HasDealtDamageToPlayerFromSource checks one permanent source incarnation.
+func (g *Game) HasDealtDamageToPlayerFromSource(source DamageSource, playerID uuid.UUID) bool {
+	return g.damage.HasDealtDamageToPlayerFromSource(source, playerID)
+}
+
+// HasDealtDamageToPermanentFromSource checks source and recipient incarnations.
+func (g *Game) HasDealtDamageToPermanentFromSource(source DamageSource, recipient *Permanent) bool {
+	return g.damage.HasDealtDamageToPermanentFromSource(source, recipient)
+}
+
 func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
 	for _, f := range filters {
 		if !f.Match(p, g) {
