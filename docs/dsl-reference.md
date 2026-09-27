@@ -1197,6 +1197,24 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `SpellCast().OfEnchantmentSubtype(string) EventPattern`: Match an enchantment spell with the named enchantment subtype when it is cast. The filter reads the cast stack object, not another copy of the same card. It composes with `OfType(core.TypeEnchantment)`, `OfColor`, `ByOpponent`, and `WithCaster` in battlefield `WhenEvent` and `WhenEventModes` abilities. Registration rejects an unknown or nonenchantment subtype, a repeated subtype filter, or an incompatible `OfType`. It does not target or save the spell.
+
+    ```go
+    package main
+
+    import (
+        "github.com/benprew/mage-go/pkg/mage/core"
+        "github.com/benprew/mage-go/pkg/mage/dsl"
+    )
+
+    func auraWatcher() dsl.Card {
+        return dsl.NewArtifact("Aura Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+            dsl.SpellCast().OfType(core.TypeEnchantment).OfEnchantmentSubtype("Aura"),
+            dsl.Draw(dsl.You, dsl.Fixed(1)))))
+    }
+
+    func main() {}
+    ```
   * `ArtifactBecomesTapped().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match any artifact when it changes from untapped to tapped. Both methods are optional. `WithArtifact` saves the tapped artifact's battlefield incarnation for `From`; `WithController` saves its controller at the event for `FromPlayer`. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The artifact is not a target. A saved artifact that leaves and returns, or phases out, is absent at resolution. Entering tapped and tapping an already tapped artifact do not match. For example:
     ```go
     package main

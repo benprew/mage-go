@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Enchantment Spell-Cast Subtype Filter
+
+`SpellCast().OfEnchantmentSubtype(string)` filters a battlefield `WhenEvent` or `WhenEventModes` trigger by the cast spell's enchantment subtype. It reads the exact stack object named by `EvtSpellCast.TargetID`; an unrelated copy with the same card ID does not match. It composes with the existing type, color, opponent, and caster filters. Registration rejects empty, unknown, nonenchantment, repeated, and type-incompatible declarations. The sealed event-pattern role and existing pending-trigger lifecycle are unchanged. No production card or legacy export changed.
+
+Kor Spiritdancer's complete text was checked in `data/JMP.json` and the Jumpstart inventory. This slice supplies its Aura-cast event filter; its optional draw, static attached-Aura bonus, and production wiring remain open, so the gap record stays blocked. Synthetic engine tests cover exact cast-object identity, non-Aura enchantments, source phasing and absence, game-clone isolation, inspection, and registration rejection. A public DSL test registers a composed declaration. The first focused engine test failed because `OfEnchantmentSubtype` was absent. The next dependency-ready work is a separate cast-time controlled-creature snapshot for Draconic Roar or another independently audited E event participant.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. Kor Spiritdancer still uses the production `WheneverSpellCastTrigger`; the legacy export remains for it and other callers.
+
 ## Current Slice: Optional Revealed Hand-Card Payment
 
 `OptionalRevealFromHandCost(CardFilter, text, prompt string, *NumberBinding, *CardBinding) Cost` combines an optional payment outcome with the existing chosen hand-card reveal capture. It works as a spell additional cost or activated ability cost. The choice occurs during payment preparation. A paid cost records 1 and the selected hand visit in that spell or ability frame; decline or no matching card records 0 and no card. The shared payment transaction validates the locked card again before live payment. A stale hand visit or failed total cost publishes no reveal or result. Stack copies and game clones keep separate values. Registration rejects nil or unnamed bindings, missing text, duplicate producers, and resolution-time use. `OptionalCostInto` still rejects an arbitrary captured inner cost.
