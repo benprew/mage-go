@@ -559,7 +559,17 @@ effect. Multi-card draw-result consumers remain open.
 * `LoseLifeEach(PlayerSet, ResolutionValue)`: Causes each player in the set to lose life.
 
 ### Damage Actions
-The engine now retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. Engine rules code can call them after a positive damage action, including after the source or recipient leaves. Card declarations do not yet have a typed history predicate. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline; the new engine query does not change their signatures. For example, this resolving spell declaration compiles and uses the same damage pipeline, but the incarnation-specific history query applies only to permanent sources:
+The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:
+
+```go
+players := dsl.PlayersDealtDamageBy(dsl.This, dsl.OpponentsOf(dsl.You))
+planeswalkers := dsl.PermanentsDealtDamageBy(dsl.This, dsl.MatchingPermanents(dsl.IsPlaneswalker))
+card := dsl.NewCreature("History source", "", 2, 3, dsl.WithAbility(dsl.At(dsl.YourUpkeep,
+    dsl.DealDamageEach(dsl.This, dsl.DamageRecipients(players, planeswalkers), dsl.Fixed(1)))))
+_ = card
+```
+
+The set filters inspect the source and candidate declarations. Registration rejects missing inputs and undeclared target or binding references. They retain candidate order. They do not expose turn-scoped history or damage from a spell source. For example, this resolving spell declaration uses the damage pipeline, but its spell source does not enter permanent-incarnation history:
 
 ```go
 target := dsl.TargetDamageRecipient("recipient")

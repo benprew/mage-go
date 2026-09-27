@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Damage-History Recipient Sets
+
+`PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` filter current recipients by positive game-long damage from one permanent-source incarnation. They reuse the captured-source resolver and the damage-system history queries. The sets work in resolving spell, activation, and trigger bodies through existing set consumers; together with `DamageRecipients` and `DealDamageEach`, they express The Fallen's upkeep recipient rule without a second damage executor. Spell sources have no permanent incarnation and select nothing. No production card or legacy export changed.
+
+The Fallen's complete Oracle text was checked in `data/DRK.json`. Its production declaration remains unwired; the The Dark inventory and gap record stay open. Existing card-ID history callers remain on their legacy queries. This slice does not add turn-scoped history for Giant Shark, historical departed recipients as action targets, or source selection outside existing `DamageSourceRef` forms. The next dependency-ready work is a separate E event participant or P payment output after a fresh audit.
+
+Focused tests first failed because the typed set constructors were absent. Synthetic and public DSL tests cover player and planeswalker selection, simultaneous damage, full prevention, source and recipient departure and return, phasing, durable LKI, clone isolation, inspection, invalid declarations, and a compile-time role error. `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh production search found no callers of either new set filter; The Fallen's production wiring remains on the legacy path.
+
 ## Current Slice: Permanent Damage History Identity
 
 `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool` read game-long damage history for one captured permanent source incarnation. The permanent query also identifies the recipient incarnation. The shared damage executor records positive final damage after replacement and prevention; game clones copy the records. Tests first failed because the queries were absent, then covered source and recipient departure and return, cleared LKI, prevention, phasing, simultaneous player and permanent damage, and clone isolation. The old card-ID history queries and their production callers remain unchanged.
