@@ -736,6 +736,7 @@ var (
 	RevealFromHandCost                                = mage.RevealFromHandCost
 	RevealFromHandCostWithCard                        = mage.RevealFromHandCostWithCard
 	OptionalCostInto                                  = mage.OptionalCostInto
+	OptionalRevealFromHandCost                        = mage.OptionalRevealFromHandCost
 )
 
 // =============================================================================

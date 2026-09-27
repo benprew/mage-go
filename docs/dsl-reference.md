@@ -1852,6 +1852,20 @@ func watchDeparture() dsl.Card {
 
 ## 10. Spells, Activations, and Costs
 
+`OptionalRevealFromHandCost(filter CardFilter, text, prompt string, paid *NumberBinding, card *CardBinding) Cost` offers one matching hand card as an optional spell additional cost or activated ability cost. The player chooses whether to pay during announcement. If paid, `FromNumber(paid)` is 1 and `FromCard(card)` refers to the chosen hand visit. If declined or no matching card exists, the number is 0 and the card reference is absent. The selected card is revealed on payment. A card that leaves and returns to hand is absent from the saved binding. The payment choice, card, and result belong to each spell or ability instance. Registration requires named bindings, cost text, and prompt text; it rejects duplicate producers and resolution-time costs.
+
+```go
+paid := dsl.BindNumber("paid")
+revealed := dsl.BindCard("revealed")
+spell := dsl.NewInstant("Synthetic reveal", "",
+    dsl.WithAbility(dsl.Spell(dsl.Sequence(
+        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+        dsl.IfCardHasType(dsl.FromCard(revealed), core.TypeCreature,
+            dsl.GainLife(dsl.You, dsl.Fixed(2)))))),
+    dsl.WithAdditionalCost(dsl.OptionalRevealFromHandCost(
+        dsl.IsCreatureCard, "Reveal a creature card", "Reveal a creature?", paid, revealed)))
+```
+
 `OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` offers one direct optional cost during spell additional-cost or activated-ability payment. `FromNumber(paid)` is 1 when the payer accepted and paid the cost, and 0 when the payer declined or could not pay it. The choice and result belong to that spell or activation instance; stack copies and game clones retain their own values. Registration rejects a nil or unnamed binding, empty prompt, nested choice, another captured cost, and resolution-time payment use. This result records payment acceptance; it does not save a card chosen to pay the inner cost.
 
 ```go

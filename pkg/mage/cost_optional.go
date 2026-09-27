@@ -14,10 +14,11 @@ import (
 // reveal a Dragon card from your hand") and similar may-pay additional
 // costs whose payment unlocks a stronger resolution branch.
 type optionalCost struct {
-	inner   Cost
-	prompt  string
-	result  *NumberBinding
-	capture bool
+	inner       Cost
+	prompt      string
+	result      *NumberBinding
+	capture     bool
+	captureCard bool
 }
 
 // OptionalCost creates a "may-pay" wrapper over an inner cost. The prompt
@@ -30,6 +31,14 @@ func OptionalCost(inner Cost, prompt string) Cost {
 // OptionalCostInto saves 1 if the player pays the cost and 0 otherwise.
 func OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost {
 	return &optionalCost{inner: inner, prompt: prompt, result: result, capture: true}
+}
+
+// OptionalRevealFromHandCost saves the payment choice and the revealed card.
+func OptionalRevealFromHandCost(filter CardFilter, label, prompt string, paid *NumberBinding, card *CardBinding) Cost {
+	return &optionalCost{
+		inner:  RevealFromHandCostWithCard(filter, label, card),
+		prompt: prompt, result: paid, capture: true, captureCard: true,
+	}
 }
 
 func (c *optionalCost) inspectDefinition() definitionNode {
@@ -50,8 +59,13 @@ func (c *optionalCost) inspectDefinition() definitionNode {
 		if _, alternate := c.inner.(*eitherCost); alternate {
 			n.problem = "optional payment result requires a direct cost"
 		}
-		if inspector, ok := c.inner.(definitionInspector); ok && len(inspector.inspectDefinition().bindingWrites) != 0 {
+		if inspector, ok := c.inner.(definitionInspector); ok && len(inspector.inspectDefinition().bindingWrites) != 0 && !c.captureCard {
 			n.problem = "optional payment result cannot wrap another captured cost"
+		}
+		if c.captureCard {
+			if reveal, ok := c.inner.(*revealFromHandCost); !ok || !reveal.capture {
+				n.problem = "optional card capture requires a revealed hand-card cost"
+			}
 		}
 	}
 	if c.result != nil {

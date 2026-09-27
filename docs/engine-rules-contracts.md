@@ -399,6 +399,16 @@ commit does not ask again. A failed total payment publishes no result. This
 instance-local outcome does not use the source-wide legacy optional-cost
 tracker. The inner cost must be direct and must not produce another binding
 (CR 118.8b, 601.2b, 601.2h).
+
+`OptionalRevealFromHandCost` combines that locked optional outcome with the
+existing revealed-card payment capture. If the player pays, the same selected
+hand visit is checked during validation and commit and is saved in the current
+payment frame. If the player declines or has no matching card, the outcome is
+zero and no card is saved. Failed validation publishes neither a reveal nor a
+payment result. Stack copies and game clones retain separate frame values.
+This contract applies to one direct reveal cost; it does not cover other
+optional or alternative payment branches (CR 118.8b, 601.2h, 701.20a-b).
+
 `DiscardCost` uses `PlayerDiscardByCost` and the shared `DiscardAction`
 replacement pipeline. The action records that the discard pays a cost. A
 replacement that watches all discards can change its destination, and the
