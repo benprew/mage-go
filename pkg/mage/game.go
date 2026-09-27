@@ -1143,6 +1143,15 @@ func (g *Game) playerDiscardAction(action *DiscardAction) (Card, bool) {
 }
 
 func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
+	c, ok := g.moveDiscardedCard(action)
+	if !ok {
+		return nil, false
+	}
+	g.FireEvent(GameEvent{Type: EvtDiscard, SourceID: c.ID(), PlayerID: action.PlayerID()})
+	return c, true
+}
+
+func (g *Game) moveDiscardedCard(action *DiscardAction) (Card, bool) {
 	p := g.GetPlayer(action.PlayerID())
 	if p == nil {
 		return nil, false
@@ -1156,7 +1165,6 @@ func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
 	} else {
 		p.AddToGraveyard(c)
 	}
-	g.FireEvent(GameEvent{Type: EvtDiscard, SourceID: c.ID(), PlayerID: p.PlayerID()})
 	return c, true
 }
 

@@ -212,6 +212,7 @@ var (
 	// DiscardAtRandom uses a typed player and amount. Ring of Renewal uses You and Fixed(1).
 	DiscardAtRandom   = mage.DiscardAtRandom
 	DiscardEntireHand = mage.DiscardEntireHand
+	DiscardEach       = mage.DiscardEach
 	DiscardAmountInto = mage.DiscardAmountInto
 	// Mill moves cards from the top of the library to the graveyard.
 	Mill = mage.Mill

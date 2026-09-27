@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Player-Set Hand Discard
+
+`DiscardEach(PlayerSet) ResolvingEffect` selects players and snapshots their hands at resolution. The batch uses the existing effect-discard replacement pipeline, moves accepted cards, then sends discard events after all moves. It is available in spell, activation, and trigger bodies. A singular player does not satisfy the sealed set role; registration checks nil and out-of-scope sets. The adapter does not produce a discard result and leaves `DiscardEntireHand` and all legacy exports intact.
+
+Wheel of Fortune's complete text in `data/LEA.json` is “Each player discards their hand, then draws seven cards.” A synthetic declaration combines `DiscardEach(EachPlayer)` with `DrawEach(EachPlayer, Fixed(7))`. Focused tests first failed because the constructor was absent. They cover simultaneous discard-event observation, replacement redirection and prevention, absent sets, selected opponents, game-clone isolation, declaration validation, and the public DSL export. Wheel of Fortune remains production card wiring; Contract from Below also requires a separate ante action. A fresh caller search found three production uses of `DiscardHand` or `DiscardEntireHand` and no `DiscardEach` uses. The next dependency-ready B work is a player-set discard result or another audited batch action.
+
+Validation: focused engine and DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Simultaneous Player-Set Life Gain
 
 `GainLifeEach(PlayerSet, ResolutionValue) ResolvingEffect` uses the existing life modifier and replacement path for each selected player. It captures the set and amount once, prepares all gain outcomes before changing any life total, and sends positive gain events after all life totals change. The sealed player-set role excludes singular player references at compile time. Registration checks the set, amount, and binding scope. Synthetic tests cover final-total event observation, actual replacement outcomes, zero and absent selections, clone isolation, declaration errors, and the public DSL export. The focused test first failed because the constructor was absent. No production card or legacy export changed.
