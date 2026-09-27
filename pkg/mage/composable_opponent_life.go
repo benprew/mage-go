@@ -29,13 +29,43 @@ func (s *opponentsRef) inspectDefinition() definitionNode {
 type loseLifeEachEffect struct {
 	subjects PlayerSet
 	amount   ResolutionValue
+	result   *NumberBinding
+	count    int
+	invalid  bool
+}
+
+// LifeLossResultOption selects the total life lost from one set instruction.
+type LifeLossResultOption interface {
+	lifeLossResultOption()
+	applyLifeLossResult(*loseLifeEachEffect)
+}
+
+type lifeLostOption struct{ binding *NumberBinding }
+
+// LifeLostInto saves the total life lost by the selected players.
+func LifeLostInto(binding *NumberBinding) LifeLossResultOption { return lifeLostOption{binding} }
+func (lifeLostOption) lifeLossResultOption()                   {}
+func (o lifeLostOption) applyLifeLossResult(e *loseLifeEachEffect) {
+	e.result = o.binding
+	e.count++
+	if o.binding == nil {
+		e.invalid = true
+	}
 }
 
 // LoseLifeEach makes each selected player lose the specified amount of life.
 // The instruction reads the amount once in the current resolution frame.
 // It captures the players and amount before it changes life totals.
-func LoseLifeEach(subjects PlayerSet, amount ResolutionValue) ResolvingEffect {
-	return &loseLifeEachEffect{subjects, amount}
+func LoseLifeEach(subjects PlayerSet, amount ResolutionValue, options ...LifeLossResultOption) ResolvingEffect {
+	e := &loseLifeEachEffect{subjects: subjects, amount: amount}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalid = true
+			continue
+		}
+		option.applyLifeLossResult(e)
+	}
+	return e
 }
 
 func (e *loseLifeEachEffect) Text() string {
@@ -49,6 +79,12 @@ func (*loseLifeEachEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
 func (e *loseLifeEachEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
 	ids := e.subjects.resolvePlayers(ctx)
 	if len(ids) == 0 {
 		return nil
@@ -63,9 +99,22 @@ func (e *loseLifeEachEffect) Apply(ctx *EffectContext) error {
 			players = append(players, player)
 		}
 	}
-	ctx.Game.playersLoseLife(players, amount)
+	lost := ctx.Game.playersLoseLife(players, amount)
+	if e.result != nil {
+		ctx.Game.resolution.numberBindings[e.result] = lost
+	}
 	return nil
 }
 func (e *loseLifeEachEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "lose-life-each", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}, {"amount", e.amount}}}
+	n := definitionNode{Role: "lose-life-each", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}, {"amount", e.amount}}}
+	if e.invalid {
+		n.problem = "supply a non-nil life loss result binding"
+	} else if e.count > 1 {
+		n.problem = "supply the life loss result binding only once"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }

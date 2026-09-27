@@ -78,6 +78,7 @@ type (
 	ModalActivationOption     = mage.ModalActivationOption
 	GrantedActivationOption   = mage.GrantedActivationOption
 	CostGroup                 = mage.CostGroup
+	LifeLossResultOption      = mage.LifeLossResultOption
 )
 
 var (
@@ -127,6 +128,7 @@ var (
 	OpponentsOf                      = mage.OpponentsOf
 	GrantLandPlays                   = mage.GrantLandPlays
 	LoseLifeEach                     = mage.LoseLifeEach
+	LifeLostInto                     = mage.LifeLostInto
 	MatchingPermanents               = mage.MatchingPermanents
 	PermanentsOwnedBy                = mage.PermanentsOwnedBy
 	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy

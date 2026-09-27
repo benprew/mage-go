@@ -1158,12 +1158,15 @@ func (g *Game) PlayerLoseLife(p Player, amount int) {
 }
 
 // playersLoseLife changes all life totals before events can observe them.
-func (g *Game) playersLoseLife(players []Player, amount int) {
+func (g *Game) playersLoseLife(players []Player, amount int) int {
 	if amount <= 0 {
-		return
+		return 0
 	}
+	lost := 0
 	for _, p := range players {
+		before := p.Life()
 		p.LoseLife(amount)
+		lost += before - p.Life()
 	}
 	for _, p := range players {
 		g.FireEvent(GameEvent{
@@ -1172,6 +1175,7 @@ func (g *Game) playersLoseLife(players []Player, amount int) {
 			Amount:   amount,
 		})
 	}
+	return lost
 }
 
 // PlayerGainLife applies modifiers and replacements without event dispatch.

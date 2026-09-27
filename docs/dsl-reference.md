@@ -615,7 +615,17 @@ effect. Multi-card draw-result consumers remain open.
 * `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
 * `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.
 * `LoseLife(PlayerRef, ResolutionValue)`: Causes player to lose life.
-* `LoseLifeEach(PlayerSet, ResolutionValue)`: Causes each player in the set to lose life.
+* `LoseLifeEach(PlayerSet, ResolutionValue, ...LifeLossResultOption) ResolvingEffect`: Causes each player in the set to lose life. `LifeLostInto(*NumberBinding) LifeLossResultOption` saves the total life lost by this instruction; the life service measures the loss before it dispatches life-loss events. It writes zero for an empty set or a nonpositive amount. Read the result later in the same spell, activation, or trigger body with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated result binding. This is a life-loss result; it does not include damage dealt by another instruction.
+
+```go
+lost := dsl.BindNumber("life lost")
+body := dsl.Sequence(
+    dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(4), dsl.LifeLostInto(lost)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(lost)),
+)
+card := dsl.NewArtifact("Life result example", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body)))
+_ = card
+```
 
 ### Damage Actions
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:

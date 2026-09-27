@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Life-Loss Result
+
+`LoseLifeEach(PlayerSet, ResolutionValue, ...LifeLossResultOption)` now accepts `LifeLostInto(*NumberBinding)`. The option saves the total life lost by the selected players from that one instruction in its resolution frame. The shared life service measures each total change before it dispatches `EvtLifeLost`; all selected life totals still change before those events. An empty set or nonpositive amount writes zero. Registration rejects nil, unnamed, repeated, and undominated bindings; the sealed option cannot be used as an effect. The existing two-argument call and production callers remain valid.
+
+Bubbling Cauldron's complete second ability was checked in `data/JMP.json`, its Jumpstart inventory and gap record, and CR 119.3 and 119.6. A synthetic declaration combines the set instruction and `GainLife(You, FromNumber(lost))`. Focused tests first failed because `LifeLostInto` was absent. Engine and public DSL tests cover positive, zero, negative, and below-zero life loss, an empty set, two simultaneous recipients, clone frame isolation, declaration validation, and the compile-time role. This adapter supplies the recorded life-loss result requirement. Bubbling Cauldron still uses a legacy callback and cost for its second ability; production wiring is separate, so its gap record stays open. A fresh search found no production `LifeLostInto` caller. Other legacy life and damage callers remain.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The next dependency-ready work is a separate P action-result or T target-group extension after its own requirements audit.
+
 ## Current Slice: Optional Mill Payment
 
 `MillCost(count int) Cost` is a reusable payment component for activated abilities, spell additional costs, and resolution-time `IfPaid`/`UnlessPaid`. It reuses the total-cost transaction, mill modifiers, and shared library-to-graveyard movement. Preparation locks the replacement-adjusted amount; commit rechecks that amount and the available library before mana or life changes. A payment fails when the library cannot supply the full modified amount. A replacement that reduces the amount to zero permits payment. Registration rejects nonpositive counts. No production card or legacy export changed.
