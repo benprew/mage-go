@@ -236,6 +236,7 @@ var (
 	CreatureDies                       = mage.CreatureDies
 	// AtNext creates a one-shot delayed trigger that executes at a future turn step.
 	AtNext                                 = mage.AtNext
+	WhenDiesThisTurn                       = mage.WhenDiesThisTurn
 	AtNextModes                            = mage.AtNextModes
 	AttachedControllerUpkeep               = mage.AttachedControllerUpkeep
 	AttachedBecomesTapped                  = mage.AttachedBecomesTapped

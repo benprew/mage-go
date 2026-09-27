@@ -18,6 +18,7 @@ type DelayedTrigger struct {
 	matchFlagFalse       bool
 	sourceCaptured       bool
 	sourceIncarnation    uuid.UUID
+	matchIncarnation     uuid.UUID
 	EventType            EventType
 	TargetID             uuid.UUID
 	Effects              []Effect

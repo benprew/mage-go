@@ -1830,6 +1830,18 @@ func (g *Game) fireEvent(evt GameEvent, before *Game) {
 	var remaining []*DelayedTrigger
 	for _, dt := range g.triggers.Delayed() {
 		if dt.EventType == evt.Type {
+			if dt.matchIncarnation != uuid.Nil {
+				matched := observer.FindPermanent(evt.SourceID)
+				if matched == nil {
+					if lki := observer.zones.LKI(evt.SourceID); lki != nil {
+						matched = lki.Snapshot
+					}
+				}
+				if matched == nil || matched.incarnationID != dt.matchIncarnation || matched.PhasedOut {
+					remaining = append(remaining, dt)
+					continue
+				}
+			}
 			if dt.MatchEventID != uuid.Nil && evt.SourceID != dt.MatchEventID {
 				remaining = append(remaining, dt)
 				continue

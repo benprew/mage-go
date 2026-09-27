@@ -1657,6 +1657,24 @@ Triggers at step transitions:
   * Options: `WithTargets(...)`, `WithInterveningIf(condition)`.
   * `TurnStepBegins(step, playerBinding)`: Captures the future step's active player.
 
+### Delayed Death Triggers
+
+`WhenDiesThisTurn(PermanentRef, ResolvingEffect) ResolvingEffect` watches one current battlefield incarnation. Use it in a spell, activation, or trigger body. It creates a delayed trigger when the instruction resolves. The trigger fires if that object moves from the battlefield to a graveyard before cleanup, even if the creating source has left. It does not follow a card that leaves and returns. Phasing does not count as death. The trigger uses the stored resolving controller and does not target the watched object again. The body may read bindings produced before this instruction; bindings produced inside the delayed body stay local to it.
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func watchDeath() dsl.Card {
+    watched := dsl.TargetPermanent("watched creature", dsl.IsCreature)
+    return dsl.NewSorcery("Watch Death", "{1}{G}",
+        dsl.Spell(dsl.WhenDiesThisTurn(watched,
+            dsl.GainLife(dsl.You, dsl.Fixed(3))),
+            dsl.WithTargets(watched)))
+}
+```
+
 ### Modal Triggers
 * `WhenEventModes(pattern, modes...)`: Choose a mode when the trigger is placed on stack.
 * `AtModes(stepPattern, modes...)`: Modal turn-step trigger.
