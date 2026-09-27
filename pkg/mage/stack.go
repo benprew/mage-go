@@ -156,8 +156,8 @@ func (ctx *CastContext) DistinctColorsSpent() int {
 		return 0
 	}
 	n := 0
-	for _, v := range ctx.ColorsSpent {
-		if v > 0 {
+	for color, v := range ctx.ColorsSpent {
+		if color >= White && color <= Green && v > 0 {
 			n++
 		}
 	}

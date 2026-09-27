@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Spell-Cast Distinct-Colors Event Capture
+
+`SpellCast().WithColorsSpent(*NumberBinding)` saves the number of distinct colored mana colors spent to cast the exact event spell. It works in battlefield `WhenEvent` and `WhenEventModes` abilities with existing cast filters. `EvtSpellCast.CastColorsSpent` takes the count from that spell's cast context before dispatch; the pending trigger saves it in its instance-local number frame. The shared `DistinctColorsSpent` helper now excludes colorless mana. No production card or legacy export changed.
+
+The complete Magmablood Archaic text was checked in `data/SOS.json`. Its instant-or-sorcery cast bonus requires this event value, but also needs its own entry Converge behavior and production wiring; its gap remains open. Arcane Omens and Archaic's Agony need the distinct-color value for their own spell cast, which this battlefield event capture does not supply. Their gaps remain open. The first focused test failed because `WithColorsSpent` was absent. Synthetic tests cover two colors plus colorless mana, five colors, zero payment, spell and source departure, source phasing, clone isolation, inspection, declaration rejection, and a compile-time role error. The next dependency-ready work is a separate self-cast Converge value or another E event participant after a fresh requirements audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Spell-Cast Mana-Spent Event Capture
 
 `SpellCast().WithManaSpent(*NumberBinding)` saves the total mana paid for the exact cast stack object at event time. The sealed battlefield event pattern works in `WhenEvent` and `WhenEventModes`; the trigger body reads the instance-local result with `FromNumber`. The cast payment record, event dispatch, and existing number frame supply the behavior. A cast without mana payment saves zero. No production card or legacy export changed.

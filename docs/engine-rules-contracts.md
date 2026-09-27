@@ -534,3 +534,5 @@ Regression evidence: `TestCombatRemovalKeepsAttackerBlocked`, `TestTypedCombatRe
 # Cast-event mana payment capture
 
 `EvtSpellCast` carries `CastManaSpent`, the total mana drained to pay the exact cast stack object's costs. `FireEvent` reads the stack object named by the event's `TargetID` and checks its source card ID before publishing the event. A trigger copies the number into its own resolution frame when it is put on the stack, so later spell departure, trigger copies, and game clones do not change it. A cast with no mana payment records zero.
+
+`EvtSpellCast` also carries `CastColorsSpent`, the number of distinct colored mana colors with a positive payment for that same stack object. Colorless mana and zero entries do not count. The cast event fixes this number before dispatch; `SpellCast().WithColorsSpent` copies it into the trigger's own resolution frame. The shared `CastContext.DistinctColorsSpent` calculation supplies the count, including for existing non-DSL callers.

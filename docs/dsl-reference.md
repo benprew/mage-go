@@ -1210,6 +1210,23 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `SpellCast().WithColorsSpent(*NumberBinding) EventPattern`: Save the number of distinct colored mana colors spent for the cast spell. Colorless mana does not count. Read the value with `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The event saves the value before the spell leaves the stack. It composes with cast filters and `WithManaSpent` if the two captures use different bindings. Registration rejects a missing, unnamed, repeated, or out-of-scope binding. This synthetic declaration compiles:
+
+    ```go
+    package main
+
+    import (
+        "github.com/benprew/mage-go/pkg/mage/core"
+        "github.com/benprew/mage-go/pkg/mage/dsl"
+    )
+
+    var colors = dsl.BindNumber("colors spent")
+    var _ = dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().OfType(core.TypeInstant).WithColorsSpent(colors),
+        dsl.GainLife(dsl.You, dsl.FromNumber(colors)))))
+
+    func main() {}
+    ```
   * `SpellCast().OfEnchantmentSubtype(string) EventPattern`: Match an enchantment spell with the named enchantment subtype when it is cast. The filter reads the cast stack object, not another copy of the same card. It composes with `OfType(core.TypeEnchantment)`, `OfColor`, `ByOpponent`, and `WithCaster` in battlefield `WhenEvent` and `WhenEventModes` abilities. Registration rejects an unknown or nonenchantment subtype, a repeated subtype filter, or an incompatible `OfType`. It does not target or save the spell.
 
     ```go

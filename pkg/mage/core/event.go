@@ -63,6 +63,7 @@ type GameEvent struct {
 	// SourceControllerID keeps the damage source controller after the source leaves.
 	SourceControllerID uuid.UUID
 	CastManaSpent      int
+	CastColorsSpent    int
 	TargetID           uuid.UUID
 	ActorID            uuid.UUID
 	RelatedIDs         []uuid.UUID
