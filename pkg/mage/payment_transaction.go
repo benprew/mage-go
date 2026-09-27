@@ -172,6 +172,17 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			validationCost = &cntCopy
 			tx.costs[i] = &cntCopy
 		}
+		if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
+			locked := *counter
+			source := tx.game.FindPermanent(tx.sourceID)
+			if source == nil {
+				return fmt.Errorf("cannot pay counter cost: source absent")
+			}
+			locked.incarnation = source.incarnationID
+			locked.locked = true
+			validationCost = &locked
+			tx.costs[i] = &locked
+		}
 		if !validationCost.CanPay(tx.sourceID, tx.controller, validation) {
 			return fmt.Errorf("cannot pay total cost: %s", cost.Text())
 		}
@@ -204,6 +215,9 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		return ErrPlayerNotFound
 	}
 	for _, cost := range tx.costs {
+		if counter, ok := cost.(*removeCountersCost); ok && counter.capture && !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay locked counter cost")
+		}
 		if discard, ok := cost.(*discardCost); ok && !discard.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen discard")
 		}
@@ -271,6 +285,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 				tx.paidNumbers = make(map[*NumberBinding]int)
 			}
 			tx.paidNumbers[counter.paid] = counter.count
+		}
+		if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			tx.paidNumbers[counter.paid] = counter.amount
 		}
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
 			if tx.paidNumbers == nil {

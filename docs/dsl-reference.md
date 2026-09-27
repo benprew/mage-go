@@ -1480,6 +1480,16 @@ Triggers at step transitions:
     _ = spell
     ```
   * `RemoveCountersCost(counter, count)`: Remove counters from source.
+  * `RemoveCountersCostInto(counter core.CounterType, count int, paid *NumberBinding) Cost`: Remove a fixed nonnegative number of counters from the source as an activated ability cost. `FromNumber(paid)` reads the committed count in that activation's resolving body. Payment locks the source battlefield incarnation; failed payment saves no value. Registration rejects a nil or unnamed binding, a negative count, duplicate producers, and use as a spell additional cost or resolution-time optional cost.
+
+    ```go
+    paid := dsl.BindNumber("paid counters")
+    ability := dsl.Activate(
+        dsl.Costs(dsl.RemoveCountersCostInto(core.Charge, 2, paid)),
+        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+    )
+    _ = ability
+    ```
   * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
   * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice is locked during total-cost validation and reused at commit. Each chosen discard uses the shared replacement action and emits a discard event only when a card is discarded. A replacement that applies only when an effect causes a discard does not apply to this cost.
   * `DiscardCardCostInto(card *CardBinding) Cost`: Discard one chosen card and save its new graveyard visit in the spell or activation frame. Use `FromCard(card)` in the resolving body. The reference is absent if a replacement sends the card to a different zone or it leaves the graveyard before resolution. Registration requires a named binding and a dominating payment producer. This cost uses the same locked choice and replacement path as `DiscardCost(1)`.

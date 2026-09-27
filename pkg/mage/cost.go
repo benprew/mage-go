@@ -171,8 +171,12 @@ func (c *tap) Properties() EffectProperties {
 
 // removeCountersCost requires removing counters from the source.
 type removeCountersCost struct {
-	ct     CounterType
-	amount int
+	ct          CounterType
+	amount      int
+	paid        *NumberBinding
+	capture     bool
+	incarnation uuid.UUID
+	locked      bool
 }
 
 // RemoveCountersCost creates a cost that requires removing n counters of the given type from the source.
@@ -180,12 +184,35 @@ func RemoveCountersCost(ct CounterType, n int) Cost {
 	return &removeCountersCost{ct: ct, amount: n}
 }
 
+// RemoveCountersCostInto saves the number paid by one activation.
+func RemoveCountersCostInto(ct CounterType, n int, paid *NumberBinding) Cost {
+	return &removeCountersCost{ct: ct, amount: n, paid: paid, capture: true}
+}
+
+func (c *removeCountersCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "cost", battlefieldSource: c.capture}
+	if c.capture {
+		n.bindingWrite = c.paid
+		n.children = []definitionEdge{{"paid", c.paid}}
+		if c.paid == nil {
+			n.problem = "supply a non-nil paid counter binding"
+		}
+		if c.amount < 0 {
+			n.problem = "paid counter count cannot be negative"
+		}
+	}
+	return n
+}
+
 func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.FindPermanent(sourceID)
-	return p != nil && int(p.Counters[c.ct]) >= c.amount
+	return p != nil && (!c.locked || p.incarnationID == c.incarnation) && c.amount >= 0 && int(p.Counters[c.ct]) >= c.amount
 }
 
 func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay counter cost")
+	}
 	p := g.MutablePermanent(sourceID)
 	if p == nil {
 		return ErrSourceNotFound

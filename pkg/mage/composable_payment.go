@@ -124,6 +124,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		if _, ok := cost.(*removeAnyCountersCost); ok {
 			n.problem = "paid counter value requires an activated ability cost"
 		}
+		if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
+			n.problem = "paid counter value requires an activated ability cost"
+		}
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
 			n.problem = "paid sacrifice value requires an activated ability cost or spell additional cost"
 		}
