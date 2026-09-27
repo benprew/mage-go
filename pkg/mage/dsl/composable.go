@@ -356,6 +356,7 @@ var (
 	SourceDamagedOpponentThisTurnCondition     = mage.SourceDamagedOpponentThisTurnCondition
 	IsYourTurn                                 = mage.IsYourTurn
 	HasUniqueHighestLife                       = mage.HasUniqueHighestLife
+	PlayerWithUniqueHighestLife                = mage.PlayerWithUniqueHighestLife
 	ControllerLifeAtLeastStartingLife          = mage.ControllerLifeAtLeastStartingLife
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
 	GainLife     = mage.GainLifeFor

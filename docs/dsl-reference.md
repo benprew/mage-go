@@ -375,6 +375,14 @@ _ = card
   _ = ability
   ```
 
+* `PlayerWithUniqueHighestLife() PlayerRef`: Selects the sole player with the most life when a resolving instruction reads the reference. A tie produces an absent player, so the instruction does nothing to that player. Use it where a singular `PlayerRef` is accepted in a spell, activation, or trigger body. It does not save the player at trigger creation or payment.
+
+  ```go
+  card := dsl.NewArtifact("Life selector", "", dsl.WithAbility(dsl.Activate(
+      dsl.Costs(), dsl.GainLife(dsl.PlayerWithUniqueHighestLife(), dsl.Fixed(1)))))
+  _ = card
+  ```
+
 * `ControllerLifeAtLeastStartingLife() StateCondition`: True when the ability controller's current life total is at least that player's starting life total. It reads the player at each check and returns false if the controller is absent. Use it in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, or `While`. It does not select the player with the most life.
 
   ```go

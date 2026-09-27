@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Unique-Highest-Life Player Reference
+
+`PlayerWithUniqueHighestLife() PlayerRef` selects the sole highest-life player from the current game when a resolving instruction reads it. A tie or missing player is absent, so a singular player action does nothing. The sealed reference works in spell, activation, and trigger bodies wherever `PlayerRef` is accepted, including player damage recipients. It is not a state condition or a captured trigger participant. It reuses current player life totals and the existing singular player-action path; no life engine contract or result frame was needed. No production card or legacy export changed.
+
+Ghazbán Ogre's full Oracle text was checked in `data/ARN.json`. `HasUniqueHighestLife()` already supplies its intervening-if condition; this slice supplies its resolution-time player selector. Indefinite control change and production card wiring remain open. The untracked Arabian inventory still calls this selector absent and needs updating during card migration. The focused test first failed because the constructor was absent, then passed for ties, instruction order, resolution-time selection, clone isolation, inspection, registration, and the public DSL role. A fresh production search found no caller of the new selector. No gap record closes through this adapter alone. Next dependency-ready work is a separate P payment output, after its payment transaction audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Controller Life Versus Starting Life
 
 `ControllerLifeAtLeastStartingLife() StateCondition` reads the ability controller's current and starting life totals at each state check. It works in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState`. A missing controller returns false. The sealed condition role, inspection, and existing state-condition validation apply; it creates no binding and changes no payment or life service. No production card or legacy export changed.
