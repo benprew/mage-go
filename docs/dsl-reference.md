@@ -1164,6 +1164,24 @@ Triggers on rules events dispatched by the engine:
     ```
 
   * `CreatureDies()`: Any creature dies.
+  * `EnchantmentYouControlEnters().WithPermanent(*PermanentBinding)`: Match an enchantment that enters under the trigger controller's control, including the source itself if it is an enchantment. `WithPermanent` is optional and saves the entering battlefield incarnation for the trigger body. The saved object is not a target. It becomes absent if it leaves and returns or phases out. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. Registration rejects missing, unnamed, repeated, and unbound captures.
+
+    ```go
+    package example
+
+    import (
+        "github.com/benprew/mage-go/pkg/mage/core"
+        "github.com/benprew/mage-go/pkg/mage/dsl"
+    )
+
+    func enchantmentWatcher() dsl.Card {
+        entered := dsl.BindPermanent("entered enchantment")
+        return dsl.NewCreature("Watcher", "", 1, 1,
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.EnchantmentYouControlEnters().WithPermanent(entered),
+                dsl.AddCounters(dsl.From(entered), core.P1P1, dsl.Fixed(1)))))
+    }
+    ```
   * `LandEnters().OfSubtype(string).WithActor(*PlayerBinding).WithController(*PlayerBinding)`: Match a land entering the battlefield. Each method is optional. `OfSubtype` filters by one land subtype. `WithActor` saves the player who put the land onto the battlefield; `WithController` saves its controller at entry. The two players can differ. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. A saved player remains fixed after the land or trigger source leaves. Registration rejects an invalid subtype, missing or repeated binding, or one binding used for both players. An entry without a known actor does not match a pattern with `WithActor`. For example:
 
     ```go
