@@ -11,6 +11,33 @@ type CastCondition interface {
 	inspectDefinition() definitionNode
 }
 
+type anyCastCondition struct{ conditions []CastCondition }
+
+// AnyCast checks whether one or more saved cast facts are true.
+func AnyCast(conditions ...CastCondition) CastCondition {
+	return anyCastCondition{conditions: append([]CastCondition(nil), conditions...)}
+}
+
+func (anyCastCondition) castCondition() {}
+func (c anyCastCondition) checkCast(ctx *CastContext) bool {
+	for _, condition := range c.conditions {
+		if condition.checkCast(ctx) {
+			return true
+		}
+	}
+	return false
+}
+func (c anyCastCondition) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "cast-condition", Text: "any cast condition"}
+	if len(c.conditions) == 0 {
+		n.problem = "cast condition requires at least one condition"
+	}
+	for _, condition := range c.conditions {
+		n.children = append(n.children, definitionEdge{"condition", condition})
+	}
+	return n
+}
+
 type controlledCreatureSubtypeAtCast struct{ subtype string }
 
 // ControlledCreatureSubtypeAtCast checks the caster's creature control at cast time.

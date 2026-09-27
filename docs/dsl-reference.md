@@ -2214,6 +2214,24 @@ Operations taking amounts accept `ResolutionValue`:
 
 `RevealedSubtypeAtCast(subtype string) CastCondition` reads whether a card with that subtype was revealed while paying an additional cost to cast this spell. It uses the saved cast snapshot, so moving the revealed card later does not change the result. Stack copies retain the cast fact. Registration rejects an empty subtype or use outside a spell ability. It does not read reveals from an activated ability cost.
 
+`AnyCast(conditions ...CastCondition) CastCondition` is true when at least one child cast condition is true. Use it inside `IfCast` in a typed spell body when either cast-time fact permits one effect. It runs that effect once even if several facts are true. The declaration copies its input list. Registration rejects an empty list, a nil child, or an invalid child condition. The sealed `CastCondition` role rejects player, target, and effect arguments at compile time.
+
+```go
+creature := dsl.TargetPermanent("creature", dsl.IsCreature)
+controller := dsl.BindPlayer("creature controller")
+spell := dsl.Spell(dsl.Sequence(
+    dsl.SnapshotPlayer(dsl.ControllerOf(creature), controller),
+    dsl.DealDamageFrom(dsl.This, creature, dsl.Fixed(3)),
+    dsl.IfCast(dsl.AnyCast(
+        dsl.RevealedSubtypeAtCast("Dragon"),
+        dsl.ControlledCreatureSubtypeAtCast("Dragon")),
+        dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.Fixed(3))),
+), dsl.WithTargets(creature))
+_ = spell
+```
+
+The controller snapshot occurs before damage can destroy the creature. If the target is illegal when the spell resolves, the spell does not resolve and no instruction runs (CR 608.2b). A missing or phased-out target supplies no controller.
+
 ```go
 paid := dsl.BindNumber("reveal paid")
 card := dsl.BindCard("revealed Dragon")

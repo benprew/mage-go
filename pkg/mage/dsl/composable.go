@@ -9,6 +9,7 @@ var (
 	ControlledCreatureSubtypeAtCast = mage.ControlledCreatureSubtypeAtCast
 	RevealedSubtypeAtCast           = mage.RevealedSubtypeAtCast
 	IfCast                          = mage.IfCast
+	AnyCast                         = mage.AnyCast
 )
 
 var (

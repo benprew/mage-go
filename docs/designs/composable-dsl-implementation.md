@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Cast-Condition Union
+
+`AnyCast(...CastCondition) CastCondition` combines saved cast facts under the existing `IfCast` spell-body branch. It evaluates to true once when any child is true, including when several children are true. It copies the child list and uses the sealed cast-condition role and existing cast snapshot. Registration rejects empty, nil, and invalid child conditions, as well as use outside a spell. No production card or legacy export changed.
+
+Draconic Roar's full text was checked in `data/JMP.json` and `cards/jumpstart/JMP.json`. A fresh API audit found that `SnapshotPlayer(ControllerOf(target), binding)` already saves the target creature's controller before the first damage instruction. The public DSL test registers that sequence with `AnyCast`; the engine test covers neither, either, and both cast facts, plus stack-copy and game-clone isolation. The first focused test failed because `AnyCast` was undefined. Production Draconic Roar still uses its legacy callback in `cards/jumpstart/spells.go`; its Jumpstart gap and card wiring remain open. The next dependency-ready work is a separate P, T, or E slice after a fresh caller and contract audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues after renaming a shadowed test variable), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Revealed Card Subtype at Cast
 
 `RevealedSubtypeAtCast(string) CastCondition` exposes a card subtype revealed while paying a spell's additional cost. It reads the existing cast snapshot through `IfCast`, and registration rejects empty subtypes and use outside a spell. The cast pipeline now copies the revealed card when it records the snapshot; stack copies and game clones also copy it. A later change to the original card or one copy cannot change another cast fact. The reusable boundary is the existing payment transaction, cast context, and sealed cast-condition role. No production card or legacy export changed.

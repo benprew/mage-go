@@ -26,3 +26,18 @@ func TestRevealedCastConditionPublicDefinition(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAnyCastPublicDefinition(t *testing.T) {
+	target := dsl.TargetPermanent("creature", dsl.IsCreature)
+	controller := dsl.BindPlayer("creature controller")
+	card := dsl.NewInstant("Dragon condition test", "", dsl.Spell(dsl.Sequence(
+		dsl.SnapshotPlayer(dsl.ControllerOf(target), controller),
+		dsl.DealDamageFrom(dsl.This, target, dsl.Fixed(3)),
+		dsl.IfCast(dsl.AnyCast(dsl.RevealedSubtypeAtCast("Dragon"),
+			dsl.ControlledCreatureSubtypeAtCast("Dragon")),
+			dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.Fixed(3))),
+	), dsl.WithTargets(target)))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}
