@@ -1894,6 +1894,14 @@ Triggers on rules events dispatched by the engine:
     }
     ```
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
+  * `SpellCast().WithXInManaCost()`: Match a cast spell whose mana cost contains an `{X}` symbol. The announced value can be zero. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield source. The check reads the spell that caused the cast event, before that spell leaves the stack. Copies placed on the stack without being cast do not cause a cast event. Registration rejects a second use of the filter.
+
+    ```go
+    dsl.NewCreature("X watcher", "{2}{U}", 2, 2, dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().WithXInManaCost(),
+        dsl.Until(dsl.EndOfTurn, dsl.CantBeBlocked(dsl.This)),
+    )))
+    ```
   * `OpponentDrawsCard(playerBinding) EventPattern`: An opponent of the source controller draws one card. The pattern saves the drawer in a `PlayerBinding` when the draw occurs. Read it with `FromPlayer` in a `WhenEvent` or `WhenEventModes` body. A draw that is replaced or fails on an empty library does not match. The saved player is not a target.
     ```go
     func drawWatcher() dsl.Card {

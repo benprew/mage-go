@@ -29,6 +29,8 @@ type spellCastPattern struct {
 	colorsSpent                 *NumberBinding
 	captureColorsSpent          bool
 	duplicateColorsSpent        bool
+	filterXInManaCost           bool
+	duplicateXInManaCost        bool
 }
 
 // SpellCast matches a spell cast by any player while this source is on the battlefield.
@@ -67,6 +69,15 @@ func (p spellCastPattern) WithColorsSpent(spent *NumberBinding) spellCastPattern
 	}
 	p.colorsSpent = spent
 	p.captureColorsSpent = true
+	return p
+}
+
+// WithXInManaCost matches a cast spell whose mana cost has an X symbol.
+func (p spellCastPattern) WithXInManaCost() spellCastPattern {
+	if p.filterXInManaCost {
+		p.duplicateXInManaCost = true
+	}
+	p.filterXInManaCost = true
 	return p
 }
 
@@ -116,6 +127,9 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 	if p.filterEnchantmentSubtype {
 		t.AndConditionData(spellCastHasEnchantmentSubtype{subtype: p.enchantmentSubtype})
 	}
+	if p.filterXInManaCost {
+		t.AndConditionData(spellCastHasXInManaCost{})
+	}
 	return t
 }
 
@@ -145,6 +159,12 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 		family, known := knownSubtypeFamily(p.enchantmentSubtype)
 		if !known || family != SubtypeEnchantment || p.duplicateEnchantmentSubtype || (p.filterType && p.cardType != TypeEnchantment) {
 			n.problem = "spell cast event: supply one compatible enchantment subtype"
+		}
+	}
+	if p.filterXInManaCost {
+		n.Text += " with X in its mana cost"
+		if p.duplicateXInManaCost {
+			n.problem = "spell cast event: supply the X filter once"
 		}
 	}
 	if p.caster != nil {
@@ -180,6 +200,17 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 }
 
 type spellCastHasType struct{ cardType CardType }
+
+type spellCastHasXInManaCost struct{}
+
+func (spellCastHasXInManaCost) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok {
+		return false
+	}
+	object := game.stack.FindByID(event.TargetID)
+	return object != nil && !object.IsAbility && object.SourceID == event.SourceID && object.Card != nil && object.Card.ManaCost().HasX
+}
 
 type spellCastHasEnchantmentSubtype struct{ subtype string }
 

@@ -1,5 +1,32 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Cast Spell Has X in Mana Cost
+
+`SpellCast().WithXInManaCost()` filters a battlefield `WhenEvent` or
+`WhenEventModes` trigger by the cast spell's mana cost. It reads the identified
+spell on the stack when `EvtSpellCast` occurs, so an announced X of zero still
+matches. It reuses the cast event and pending-trigger lifecycle. It creates no
+new binding, damage action, or cast-payment rule. Registration rejects a
+duplicate filter or a source outside the battlefield. Existing callers and
+legacy exports remain unchanged.
+
+Matterbending Mage's complete text was checked in `data/SOS.json` and the
+Secrets of Strixhaven gap inventory. The filter supplies its missing cast
+predicate. Its entry choice, source-specific unblockable duration, complete
+production migration, and card audit remain open. The production definition
+still uses `WheneverYouCastSpellTrigger` with a card filter, so the gap record
+stays blocked. Synthetic tests cover X=0, multiple X symbols, ordinary mana
+costs, phasing, source leave and return, queued-trigger clone isolation,
+inspection, duplicate validation, and a public DSL declaration. The focused
+test first failed because `WithXInManaCost` was absent. The next
+dependency-ready slice is a separate P payment output or T announcement
+contract after a fresh audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short
+-count=1`, DSL registration and closed-role checks, `go test ./... -short
+-count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`
+(zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Announced-X Counter Payment Capture
 
 `RemoveXCountersFromSourceCostInto(core.CounterType, *NumberBinding) Cost`
