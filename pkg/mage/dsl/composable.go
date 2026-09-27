@@ -360,10 +360,12 @@ type (
 )
 
 var (
-	TargetPermanents = mage.DeclarePermanentTargets
-	ModeOf           = mage.ModeOf
-	SpellModes       = mage.SpellModes
-	ActivateModes    = mage.ActivateModes
+	TargetPermanents         = mage.DeclarePermanentTargets
+	TargetPermanentsExactlyX = mage.DeclareXPermanentTargets
+	TargetPermanentsUpToX    = mage.DeclareUpToXPermanentTargets
+	ModeOf                   = mage.ModeOf
+	SpellModes               = mage.SpellModes
+	ActivateModes            = mage.ActivateModes
 )
 
 // ResolutionValue retains typed bindings during value evaluation.

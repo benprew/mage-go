@@ -90,7 +90,7 @@ func (mc ManaCost) Colors() []Color {
 
 // IsZero returns true if the mana cost is empty (e.g., for lands).
 func (mc ManaCost) IsZero() bool {
-	return mc.Generic == 0 && mc.White == 0 && mc.Blue == 0 && mc.Black == 0 && mc.Red == 0 && mc.Green == 0 && len(mc.Hybrid) == 0
+	return mc.Generic == 0 && mc.White == 0 && mc.Blue == 0 && mc.Black == 0 && mc.Red == 0 && mc.Green == 0 && len(mc.Hybrid) == 0 && !mc.HasX
 }
 
 func (mc ManaCost) String() string {

@@ -108,6 +108,17 @@ Spell(
 ### Permanent Targets
 * `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
+* `TargetPermanentsExactlyX(label, filter, options...)`: Declares exactly the announced X as a permanent target set. `TargetPermanentsUpToX(label, filter, options...)` declares zero through X targets. Both return a `PermanentSet` and a target declaration. They work in spells and activations through `WithTargets`; use `WithTargetGroups` or `WithActivationTargetGroups` when another variable group is present. Choose X before targets. The target count stays fixed on a copy, and an illegal target is absent at resolution. The legacy `TargetXPermanents` has a different return type and remains available to unmigrated cards.
+
+```go
+lands := dsl.TargetPermanentsExactlyX("lands", dsl.IsLand)
+member := dsl.BindPermanent("land")
+ability := dsl.Activate(dsl.Costs(dsl.Mana("{X}"), dsl.TapCost(dsl.This)),
+    dsl.ForEach(lands, member, dsl.Untap(dsl.From(member))),
+    dsl.WithTargets(lands))
+_ = dsl.NewArtifact("Example", "", dsl.WithAbility(ability))
+```
+
   For “up to two target creatures,” use `TargetPermanents("creatures", 0, 2, IsCreature)`
   with `WithTargets(creatures)`. Dauntless Onslaught and Tandem Tactics pass this
   collection to `Until(EndOfTurn, ModifyEachPT(creatures, ...))`. Only targets

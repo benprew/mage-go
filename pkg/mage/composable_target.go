@@ -30,6 +30,7 @@ func (*targetDeclaration) IsChosen() bool                                   { re
 func (*targetDeclaration) Reset()                                           {}
 func (b *targetDeclaration) Min() int                                       { return b.spec.Min() }
 func (b *targetDeclaration) Max() int                                       { return b.spec.Max() }
+func (b *targetDeclaration) BoundsForX(x int) (minimum, maximum int)        { return TargetBounds(b.spec, x) }
 
 // UnwrapTarget returns the underlying Target if wrapped in a targetDeclaration.
 func UnwrapTarget(t Target) Target {
@@ -269,6 +270,22 @@ func DeclarePermanentTargets(name string, minimum, maximum int, filter Permanent
 	spec := &PermanentTarget{BaseTarget: BaseTarget{min: minimum, max: maximum}, Filters: []PermanentFilter{filter}}
 	applyPermanentTargetOptions(spec, options)
 	return &PermanentTargetsBinding{&targetDeclaration{name, spec}}
+}
+
+// DeclareXPermanentTargets requires exactly X permanent targets.
+func DeclareXPermanentTargets(name string, filter PermanentFilter, options ...PermanentTargetOption) *PermanentTargetsBinding {
+	return declareXBoundPermanentTargets(name, filter, false, options)
+}
+
+// DeclareUpToXPermanentTargets permits up to X permanent targets.
+func DeclareUpToXPermanentTargets(name string, filter PermanentFilter, options ...PermanentTargetOption) *PermanentTargetsBinding {
+	return declareXBoundPermanentTargets(name, filter, true, options)
+}
+
+func declareXBoundPermanentTargets(name string, filter PermanentFilter, upTo bool, options []PermanentTargetOption) *PermanentTargetsBinding {
+	spec := TargetPermanent(filter).(*PermanentTarget)
+	applyPermanentTargetOptions(spec, options)
+	return &PermanentTargetsBinding{&targetDeclaration{name: name, spec: &countBoundTarget{inner: spec, usesX: !upTo, upToX: upTo}}}
 }
 func (*PermanentTargetsBinding) permanentSet() {}
 func (b *PermanentTargetsBinding) resolvePermanents(ctx *EffectContext) []*Permanent {

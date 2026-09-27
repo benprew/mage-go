@@ -1,6 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Player-or-Planeswalker Damage Target
+## Current Slice: Announced X Permanent Target Sets
+
+`TargetPermanentsExactlyX(name, filter, options...)` and `TargetPermanentsUpToX(name, filter, options...)` declare typed permanent sets whose target count follows announced X. The underlying `targetDeclaration` now forwards `BoundsForX` to the existing target-count service. Spell and activation announcements check counts and distinct legal targets before costs, and stack-aligned target specifications retain group identity for copying and resolution. `ForEach` can consume the legal set. The typed names avoid the legacy `TargetXPermanents` export collision; that export and all production callers remain. The adapter uses the current target and payment paths and adds no new selection or action executor. A failing activation test also found that `ManaCost.IsZero` dropped a pure `{X}` cost before payment; the shared cost check now retains it.
+
+The focused contract tests first failed because the constructors were absent. They cover exact and up-to counts, X=0, duplicate and excess targets, invalid announcement without payment, activation cost rollback, phased and returned targets, clone and stack-copy isolation, and declaration checks. Candelabra of Tawnos and Word of Binding were checked against `data/ATQ.json` and `data/4ED.json`. Their production wiring remains; neither card or its gap record is complete. Per-target payment and divided damage remain separate T work. The next dependency-ready slice is divided-damage announcement or another P payment result, after a fresh caller audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. A fresh search found four production calls to legacy X-target constructors in Fourth Edition and Legends and no production call to the new typed exports. No card or JSON gap record changed.
+
+## Previous Slice: Player-or-Planeswalker Damage Target
 
 `TargetPlayerOrPlaneswalkerDamage(name string) *DamageTargetBinding` declares one target player or planeswalker. It reuses the established legacy target eligibility rule and typed damage recipient binding, so creatures are excluded at announcement and a phased or returned planeswalker is absent at resolution. It works with `WithTargets` in spells, activations, and event triggers and can feed `DealDamageFrom` or `PreventNextDamage`. The broader any-target declaration remains available. No production card changed.
 
