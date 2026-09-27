@@ -152,7 +152,8 @@ var (
 	// Exile moves the referenced permanent to exile.
 	Exile = mage.Exile
 	// ReturnToHand bounces the referenced permanent to its owner's hand.
-	ReturnToHand = mage.ReturnToHand
+	ReturnToHand     = mage.ReturnToHand
+	ReturnEachToHand = mage.ReturnEachToHand
 	// Untap untaps the referenced permanent incarnation.
 	Untap = mage.UntapPermanent
 	// SkipNextUntap prevents the permanent from untapping during its controller's next untap step.

@@ -372,6 +372,24 @@ func (e *destroyEachEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: role, Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
 }
 
+type returnEachToHandEffect struct{ subjects PermanentSet }
+
+// ReturnEachToHand returns all selected permanents to their owners' hands at the same time.
+func ReturnEachToHand(subjects PermanentSet) ResolvingEffect {
+	return &returnEachToHandEffect{subjects: subjects}
+}
+func (*returnEachToHandEffect) Text() string { return "return each permanent to its owner's hand" }
+func (*returnEachToHandEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true, Mass: true}
+}
+func (e *returnEachToHandEffect) Apply(ctx *EffectContext) error {
+	ctx.Game.BouncePermanentsToHand(e.subjects.resolvePermanents(ctx))
+	return nil
+}
+func (e *returnEachToHandEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "return-each-to-hand", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
+}
+
 // GainLifeFor gains life for the selected player through the existing life action.
 func GainLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount, gain: true}

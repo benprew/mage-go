@@ -465,6 +465,21 @@ func tapAbility() {
 * `Untap(PermanentRef)`: Untaps the permanent.
 * `RemoveFromCombat(PermanentRef)`: Removes the captured permanent from combat. Removing a blocker does not make its attacker unblocked. An absent or different incarnation is unaffected.
 * `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
+* `ReturnEachToHand(PermanentSet) ResolvingEffect`: Returns the selected battlefield incarnations to their owners' hands in one simultaneous instruction. Use it in a spell, activation, or trigger body. It excludes phased-out objects and tokens do not remain in hand. The set is read once at resolution; later returned incarnations are not part of that instruction.
+
+```go
+package example
+
+import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func returnOwnedArtifacts() dsl.Card {
+    player := dsl.TargetPlayer("player")
+    return dsl.NewInstant("Return owned artifacts", "{1}{U}", dsl.WithAbility(dsl.Spell(
+        dsl.ReturnEachToHand(dsl.PermanentsOwnedBy(player, dsl.IsArtifact)),
+        dsl.WithTargets(player),
+    )))
+}
+```
 
 For two declared creature targets, use `Spell(Fight(first, second), WithTargets(first, second))`. Each argument reads its own target binding; an absent target prevents the fight.
 

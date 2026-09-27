@@ -67,3 +67,23 @@ func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool)
 		}
 	})
 }
+
+// BouncePermanentsToHand returns one group of battlefield objects to their owners' hands.
+func (g *Game) BouncePermanentsToHand(permanents []*Permanent) {
+	if len(permanents) == 0 {
+		return
+	}
+	g.withZoneChangeBatch(func() {
+		seen := make(map[uuid.UUID]bool, len(permanents))
+		for _, p := range permanents {
+			if p == nil || seen[p.ID()] {
+				continue
+			}
+			current := g.FindPermanent(p.ID())
+			if current != nil && current.incarnationID == p.incarnationID && !current.PhasedOut {
+				seen[p.ID()] = true
+				g.BouncePermanentToHand(current)
+			}
+		}
+	})
+}

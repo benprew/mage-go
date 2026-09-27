@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Permanent Return to Hand
+
+`ReturnEachToHand(PermanentSet) ResolvingEffect` uses the shared `Game.BouncePermanentsToHand` zone-change batch. It selects battlefield incarnations once at resolution and returns each eligible permanent to its owner's hand in one action. Phased-out, absent, returned, and duplicate incarnations are excluded; tokens leave but do not remain in hand. The effect is available in resolving spell, activation, and trigger bodies. Its inspection reports a mass bounce and validates the permanent-set declaration. No card was changed.
+
+Hurkyl's Recall's complete text was checked in `data/ATQ.json`. `PermanentsOwnedBy(targetPlayer, IsArtifact)` and the new action express its collection and simultaneous return, but production wiring remains on the callback path. The Antiquities inventory and JSON gap record remain open. The existing singular `ReturnToHand` and legacy bounce exports remain for production callers. Focused tests first failed because the batch constructor was absent. A later contract test caught stale incarnations claiming a card ID before the current incarnation; the batch now checks incarnation before duplicate suppression. Tests cover owner/controller separation, phasing, incarnation change, tokens, duplicates, clone isolation, one-batch state observation, declaration rejection, and public DSL compilation. `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The next dependency-ready work is a separate P payment output or T divided-damage target contract after a fresh audit.
+
 ## Current Slice: Owner-Filtered Permanent Set
 
 `PermanentsOwnedBy(PlayerRef, PermanentFilter) PermanentSet` selects current battlefield permanents owned by the resolved player, regardless of controller. It works in resolving spell, activation, and trigger bodies through existing set consumers. It reuses the battlefield filter, player binding, and permanent-set inspection paths. Registration rejects a missing or undeclared player reference. No engine zone contract or production card changed.
