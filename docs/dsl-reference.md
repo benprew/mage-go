@@ -1245,6 +1245,15 @@ Triggers on rules events dispatched by the engine:
     _ = ability
     ```
   * `AnotherCreatureYouControlDies()`: A different creature controlled by the ability controller dies. The controller and creature type are checked before departure; the dying creature is not a target.
+  * `CreatureYouControlEnters()`: A creature enters under the ability controller's control, including the ability source itself. It is a sealed `EventPattern` for `WhenEvent` and `WhenEventModes` on battlefield permanents. It supports `.Nontoken()`, `.OfSubtype(string)`, `.HasKeyword(core.Keyword)`, `.WithPermanent(*PermanentBinding)`, and `.WithPower(*NumberBinding)`. The filters read effective entry characteristics. The bindings save an entry incarnation and entry power in the queued trigger. This does not target the entering creature.
+    ```go
+    power := dsl.BindNumber("entry power")
+    ability := dsl.WhenEvent(
+        dsl.CreatureYouControlEnters().HasKeyword(core.Flying).WithPower(power),
+        dsl.GainLife(dsl.You, dsl.FromNumber(power)),
+    )
+    _ = dsl.NewCreature("Watcher", "", 3, 3, dsl.WithAbility(ability))
+    ```
   * `AnotherCreatureYouControlEnters()`: A different creature enters under the ability controller's control. Add `.Nontoken()` to exclude tokens. The check uses the entering permanent after entry effects and continuous effects apply. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield permanent. The entering creature is not a target.
     Add `.HasKeyword(core.Keyword)` to require an effective keyword when the creature enters. It can combine with `.Nontoken()`, `.OfSubtype(string)`, `.WithPermanent`, and `.WithPower`. Registration rejects a nonkeyword attribute or a repeated keyword filter. The filter is checked at entry; later keyword changes do not undo the trigger.
     ```go

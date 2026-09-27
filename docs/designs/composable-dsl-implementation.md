@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Self-Inclusive Controlled-Creature Entry
+
+`CreatureYouControlEnters()` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It includes the source's own entry and shares the existing controlled-creature entry detector, effective-characteristic filters, entry power and incarnation captures, and queued-trigger frame with `AnotherCreatureYouControlEnters()`. It adds no event subsystem or card-specific rule. No production card or legacy export changed. Archon of Redemption's complete text was checked in `data/JMP.json`: this pattern can express its self-entry event, while its other-creature-with-flying branch, optional life-gain choice, full declaration audit, and card wiring remain separate. The Jumpstart inventory and gap record stay open.
+
+The first focused test failed because the constructor was absent. Synthetic and public DSL tests cover self-entry, other controlled entry, opposing control, keyword filtering, entry power capture, phasing, queued source departure and return, clone isolation, inspection, and invalid capture declarations. Existing entry-pattern tests cover stack copies and entrant incarnation. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production caller of `CreatureYouControlEnters`; existing entry and legacy exports remain for unmigrated cards. The next dependency-ready work is a separate E event participant or P payment output after a fresh audit.
+
 ## Current Slice: Creature-Entry Keyword Filter
 
 `AnotherCreatureYouControlEnters().HasKeyword(core.Keyword)` matches another creature entering under the trigger controller's control when it has the keyword after entry effects and continuous effects apply. It uses the existing battlefield entry event, effective permanent attributes, and pending-trigger path. The method is valid in battlefield `WhenEvent` and `WhenEventModes` declarations and composes with the pattern's nontoken, subtype, and capture options. Registration rejects a nonkeyword attribute and a repeated keyword filter. No production card or legacy export changed.

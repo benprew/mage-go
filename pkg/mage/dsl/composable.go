@@ -215,6 +215,7 @@ var (
 	CreatureYouControlDies             = mage.CreatureYouControlDies
 	OpponentCreatureDies               = mage.OpponentCreatureDies
 	AnotherCreatureYouControlDies      = mage.AnotherCreatureYouControlDies
+	CreatureYouControlEnters           = mage.CreatureYouControlEnters
 	AnotherCreatureYouControlEnters    = mage.AnotherCreatureYouControlEnters
 	LandEnters                         = mage.LandEnters
 	LandTappedForMana                  = mage.LandTappedForMana

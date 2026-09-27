@@ -64,6 +64,11 @@ type creatureEntersPattern struct {
 	duplicatePower   bool
 }
 
+// CreatureYouControlEnters matches a creature that enters under your control.
+func CreatureYouControlEnters() creatureEntersPattern {
+	return creatureEntersPattern{controllerOnly: true}
+}
+
 // AnotherCreatureYouControlEnters matches a different creature that enters under your control.
 func AnotherCreatureYouControlEnters() creatureEntersPattern {
 	return creatureEntersPattern{controllerOnly: true, otherOnly: true}
