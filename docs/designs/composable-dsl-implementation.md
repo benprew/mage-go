@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Combat Opponent Set
+
+`BlockingOrBlockedBy(PermanentRef) PermanentSet` selects the creatures currently blocking or blocked by one battlefield incarnation. It reads combat groups at the consuming instruction, excludes phased-out or returned objects, and returns each member once. The set can feed `CountPermanents`, `ForEach`, or a collection modification such as `Until(EndOfTurn, GrantEachKeyword(...))`. Registration rejects an absent declaration; the role excludes player and card references at compile time. It reuses the combat group and permanent-set services. No production card changed.
+
+Spitting Slug's complete text was checked in `data/DRK.json`. This selector supplies the unpaid branch's creature set, but its optional payment and production wiring remain. The Dark inventory and gap record stay open. A fresh search found one production `BlocksOrBecomesBlockedTrigger` and one `ToBlockingOrBlockedBySource` caller, both in Spitting Slug; both legacy exports remain. The next dependency-ready work is a separate E event participant or P payment output after a fresh caller audit.
+
+The focused tests first failed because the constructor was absent. Synthetic tests cover both combat directions, multiple blockers, phasing, leave and return, source incarnation, one grouped trigger, clone isolation, and registration validation. A public DSL declaration test compiles and validates. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Damage Source Controller Event Binding
 
 `DealsDamageToPlayer(This or AttachedPermanent, player).WithSourceController(controller)` captures the damage source's controller from the final positive damage event. It composes with `ToController()` and optional `WithAmount(amount)` in battlefield `WhenEvent` and `WhenEventModes` abilities. The capture is an instance-local event participant, not a target. The adapter uses the existing damage event, attachment check, pending trigger, and player-binding frame; no damage engine contract changed. Registration rejects missing, duplicate, shared, unnamed, or out-of-scope bindings and use on other damage patterns. No production card changed.

@@ -120,6 +120,7 @@ var (
 	GrantLandPlays                   = mage.GrantLandPlays
 	LoseLifeEach                     = mage.LoseLifeEach
 	MatchingPermanents               = mage.MatchingPermanents
+	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy
 	ManaValueAtMost                  = mage.ManaValueAtMost
 	WithoutPermanent                 = mage.WithoutPermanent
 	ActivatedAbilityModification     = mage.ActivatedAbilityModification

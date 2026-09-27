@@ -80,6 +80,16 @@ Operations accept explicit subjects rather than baking the subject into the verb
 ### Permanent Sets (`PermanentSet`)
 * `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
 * `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
+* `BlockingOrBlockedBy(permanentRef) PermanentSet`: Creatures currently blocking or blocked by the referenced permanent. The set uses current combat links and battlefield incarnations when an action reads it. A phased-out, returned, or absent creature is excluded. Use it in a resolving body; `GrantEachKeyword` captures its members when `Until` resolves.
+
+    ```go
+    func combatWatcher() dsl.Card {
+        return dsl.NewCreature("Combat Watcher", "{1}{G}", 2, 4,
+            dsl.WithAbility(dsl.WhenEvent(dsl.BlocksOrBecomesBlockedBy(dsl.This),
+                dsl.Until(dsl.EndOfTurn,
+                    dsl.GrantEachKeyword(dsl.BlockingOrBlockedBy(dsl.This), dsl.FirstStrike)))))
+    }
+    ```
 * `WithoutPermanent(set, ref)`: Excludes one specific permanent (e.g. `WithoutPermanent(MatchingPermanents(HasSubType("Zombie")), This)`).
 
 ### Player Selectors (`PlayerRef` and `PlayerSet`)
