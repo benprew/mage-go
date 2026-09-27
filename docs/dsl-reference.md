@@ -1180,13 +1180,30 @@ Triggers on rules events dispatched by the engine:
     ```
 
     This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. `PutOnBattlefieldBy(card, controller, actor)` supplies the actor for an effect entry; normal land play supplies its player. The existing `PutOnBattlefield(card, controller)` does not supply an actor.
-  * `PermanentDies()`: Any permanent moves from the battlefield to a graveyard. Add `.OfType(core.TypeLand)` or another permanent card type to test the departing object's last-known type. `WithController`, `WithOwner`, and `Nontoken` use the same event-time captures and filters as creature-death patterns. The source must be a battlefield permanent. This pattern is valid in `WhenEvent` and `WhenEventModes` and declares no target. `OfType` accepts creature, land, artifact, enchantment, or planeswalker; registration rejects other types and repeated type filters.
+  * `PermanentDies()`: Any permanent moves from the battlefield to a graveyard. Add `.OfType(core.TypeLand)` or another permanent card type to test the departing object's last-known type. `.YouControlled()` checks the departing permanent's controller against the trigger controller at detection. `.NotSacrificed()` excludes a completed sacrifice. `WithController`, `WithOwner`, and `Nontoken` use the same event-time captures and filters as creature-death patterns. The source must be a battlefield permanent. This pattern is valid in `WhenEvent` and `WhenEventModes` and declares no target. `OfType` accepts creature, land, artifact, enchantment, or planeswalker; registration rejects other types and repeated type filters. Repeating either new filter is invalid at registration.
     ```go
     former := dsl.BindPlayer("former land controller")
     dsl.WhenEvent(
         dsl.PermanentDies().OfType(core.TypeLand).WithController(former),
         dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(former), dsl.Fixed(2)),
     )
+    ```
+    A battlefield artifact can observe only artifacts its controller controlled that died without being sacrificed:
+
+    ```go
+    package example
+
+    import (
+        "github.com/benprew/mage-go/pkg/mage/core"
+        "github.com/benprew/mage-go/pkg/mage/dsl"
+    )
+
+    func artifactWatcher() dsl.Card {
+        former := dsl.BindPlayer("former controller")
+        return dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+            dsl.PermanentDies().OfType(core.TypeArtifact).YouControlled().NotSacrificed().WithController(former),
+            dsl.GainLife(dsl.FromPlayer(former), dsl.Fixed(1)))))
+    }
     ```
   * `AnotherCreatureDies()`: A creature other than the source dies, regardless of its controller.
   * Death patterns accept `.WithCard(*CardBinding)`. `BindCard(name)` declares the binding, and `FromCard(binding)` is a `CardRef` for graveyard actions such as `ReturnCardToHand`. It saves the card's first graveyard visit when the trigger occurs. The reference is absent if a token dies, the card does not enter the graveyard, or it leaves and returns before resolution. This is an event binding, not a target. It works in `WhenEvent` and `WhenEventModes` on a battlefield permanent.

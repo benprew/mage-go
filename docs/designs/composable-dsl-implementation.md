@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Nonsacrifice Death Event Filter
+
+`PermanentDies().YouControlled().NotSacrificed()` filters a completed battlefield-to-graveyard event by the departing permanent's former controller and sacrifice outcome. Both filters also compose with creature-death patterns. The adapter uses the existing zone-change event, its sacrifice flag, departure LKI, and pending-trigger service. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects repeated filters. The pattern does not introduce a target or a result binding. No engine event contract, production card, or legacy export changed.
+
+Urza's Miter's complete Oracle text was checked in `data/ATQ.json`. The new filters, `OfType(TypeArtifact)`, and existing `WithController` express its trigger condition and event-time player. The production declaration in `cards/antiquities/artifacts.go` still uses `NewTriggered` and legacy conditions; it already has an `IfPaid` body. The Antiquities inventory and gap record remain open until card migration verifies the complete declaration. The next dependency-ready work is a separate E event participant or P payment output after a fresh audit.
+
+Contract tests first failed because the new filters were absent. Synthetic tests cover controller versus owner, sacrifice versus destruction, exile replacement, source absence, phasing, departure and return, simultaneous source death, stack copy and game clone isolation, inspection, and registration rejection. A public DSL test compiles and validates the composed declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. No production caller uses either new filter yet; existing exports remain available.
+
 ## Current Slice: Damage-History Recipient Sets
 
 `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` filter current recipients by positive game-long damage from one permanent-source incarnation. They reuse the captured-source resolver and the damage-system history queries. The sets work in resolving spell, activation, and trigger bodies through existing set consumers; together with `DamageRecipients` and `DealDamageEach`, they express The Fallen's upkeep recipient rule without a second damage executor. Spell sources have no permanent incarnation and select nothing. No production card or legacy export changed.

@@ -159,6 +159,7 @@ type creatureDiesPattern struct {
 	filterType        bool
 	duplicateType     bool
 	controllerOnly    bool
+	duplicateControl  bool
 	opponentOnly      bool
 	otherOnly         bool
 	nontokenOnly      bool
@@ -174,6 +175,8 @@ type creatureDiesPattern struct {
 	excludedColor     Color
 	filterColor       bool
 	duplicateColor    bool
+	notSacrificed     bool
+	duplicateOutcome  bool
 }
 
 // CreatureDies matches any creature moving from the battlefield to a graveyard.
@@ -182,6 +185,15 @@ func CreatureDies() creatureDiesPattern { return creatureDiesPattern{creatureOnl
 
 // PermanentDies matches a permanent moving from the battlefield to a graveyard.
 func PermanentDies() creatureDiesPattern { return creatureDiesPattern{} }
+
+// YouControlled limits a death pattern to a permanent you controlled before it died.
+func (p creatureDiesPattern) YouControlled() creatureDiesPattern {
+	if p.controllerOnly {
+		p.duplicateControl = true
+	}
+	p.controllerOnly = true
+	return p
+}
 
 // OfType limits a permanent-death pattern to one permanent card type.
 func (p creatureDiesPattern) OfType(cardType CardType) creatureDiesPattern {
@@ -235,6 +247,15 @@ func (p creatureDiesPattern) WithoutColor(color Color) creatureDiesPattern {
 	}
 	p.excludedColor = color
 	p.filterColor = true
+	return p
+}
+
+// NotSacrificed excludes a death caused by a sacrifice action.
+func (p creatureDiesPattern) NotSacrificed() creatureDiesPattern {
+	if p.notSacrificed {
+		p.duplicateOutcome = true
+	}
+	p.notSacrificed = true
 	return p
 }
 
@@ -296,6 +317,9 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 	if p.filterColor {
 		t.AndConditionData(EventSourceWasNotColor{Color: p.excludedColor})
 	}
+	if p.notSacrificed {
+		t.AndConditionData(deathWasNotSacrifice{})
+	}
 	if p.attachedOnly {
 		t.AndConditionData(sourceAttachedToDyingCreature{})
 	}
@@ -303,6 +327,12 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 }
 
 type eventSourceWasNontoken struct{}
+
+type deathWasNotSacrifice struct{}
+
+func (deathWasNotSacrifice) CheckTriggerCond(event *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
+	return !event.Flag
+}
 
 func (eventSourceWasNontoken) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
 	game, ok := reader.(*Game)
@@ -361,12 +391,21 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	if p.filterColor {
 		text = strings.Replace(text, subject, "non"+strings.ToLower(p.excludedColor.String())+" "+subject, 1)
 	}
+	if p.notSacrificed {
+		text += " and was not sacrificed"
+	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
 	if p.filterColor && (p.excludedColor < White || p.excludedColor > Green || p.duplicateColor) {
 		n.problem = "death event: supply one valid color"
 	}
 	if p.duplicateType || (p.filterType && !permanentCardType(p.permanentType)) {
 		n.problem = "death event: supply one permanent card type"
+	}
+	if p.duplicateOutcome {
+		n.problem = "death event: supply one sacrifice outcome filter"
+	}
+	if p.duplicateControl || (p.controllerOnly && p.opponentOnly) {
+		n.problem = "death event: supply one controller filter"
 	}
 	if p.controller != nil {
 		n.bindingWrite = p.controller
