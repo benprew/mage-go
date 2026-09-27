@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Resolving Spell Distinct-Colors Value
+
+`ColorsSpentToCastThisSpell() ResolutionValue` reads the number of distinct colored mana colors paid to cast the current spell. It is valid in a typed `Spell` body, including a copied spell. It uses the existing cast payment record, `CastContext.DistinctColorsSpent`, resolution state, and stack copy/clone services. Registration rejects activation and trigger use. An absent cast context returns zero in an internal read; a failed payment does not put the spell on the stack. No production card or legacy export changed.
+
+Arcane Omens and Archaic's Agony require this amount according to their complete text in `data/SOS.json`. This slice supplies the amount only; Archaic's Agony still needs excess-damage results and linked play permission. Creature entry Converge abilities need a separate former-spell cast-payment capture. Production wiring and the Secrets of Strixhaven gap records remain open. A fresh caller search found existing legacy `ResolvingCastContext` uses in that set and no production use of this typed value. Synthetic tests cover actual and failed mana payment, colorless and zero colors, spell-copy and game-clone isolation, absent context, inspection, public DSL registration, and rejection outside spell bodies. The first focused run failed because the constructor was absent. The next dependency-ready work is a typed former-cast payment capture for creature entry or another independently audited E event participant.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The diff was reviewed after lint. The final diff check is part of commit review.
+
 ## Current Slice: Spell-Cast Distinct-Colors Event Capture
 
 `SpellCast().WithColorsSpent(*NumberBinding)` saves the number of distinct colored mana colors spent to cast the exact event spell. It works in battlefield `WhenEvent` and `WhenEventModes` abilities with existing cast filters. `EvtSpellCast.CastColorsSpent` takes the count from that spell's cast context before dispatch; the pending trigger saves it in its instance-local number frame. The shared `DistinctColorsSpent` helper now excludes colorless mana. No production card or legacy export changed.

@@ -1227,6 +1227,18 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `ColorsSpentToCastThisSpell() ResolutionValue`: Read the number of distinct colored mana colors paid to cast the resolving spell. Use it in a typed `Spell` body, including a spell copied on the stack. Colorless mana and colors with zero payment do not count. Registration rejects use in an activation or trigger. This value does not read a spell-cast event or a creature's former cast payment. This synthetic declaration compiles:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var _ = dsl.NewInstant("Converge Test", "", dsl.Spell(
+        dsl.Draw(dsl.You, dsl.ColorsSpentToCastThisSpell())))
+
+    func main() {}
+    ```
   * `SpellCast().OfEnchantmentSubtype(string) EventPattern`: Match an enchantment spell with the named enchantment subtype when it is cast. The filter reads the cast stack object, not another copy of the same card. It composes with `OfType(core.TypeEnchantment)`, `OfColor`, `ByOpponent`, and `WithCaster` in battlefield `WhenEvent` and `WhenEventModes` abilities. Registration rejects an unknown or nonenchantment subtype, a repeated subtype filter, or an incompatible `OfType`. It does not target or save the spell.
 
     ```go

@@ -32,6 +32,19 @@ type permanentResolutionValue struct {
 	toughness bool
 }
 
+type selfCastColorsValue struct{}
+
+// ColorsSpentToCastThisSpell reads the resolving spell's saved mana payment.
+func ColorsSpentToCastThisSpell() ResolutionValue { return selfCastColorsValue{} }
+
+func (selfCastColorsValue) Text() string { return "colors of mana spent to cast this spell" }
+func (selfCastColorsValue) resolveValue(ctx *EffectContext) int {
+	return ctx.Game.ResolvingCastContext().DistinctColorsSpent()
+}
+func (v selfCastColorsValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", Text: v.Text()}
+}
+
 // PowerOf reads current power. An absent permanent supplies zero.
 func PowerOf(subject PermanentRef) ResolutionValue { return permanentResolutionValue{subject: subject} }
 

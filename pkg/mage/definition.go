@@ -350,6 +350,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if _, cast := value.(*castBranch); cast && !castBody {
 			fail("cast condition requires a spell ability")
 		}
+		if _, colors := value.(selfCastColorsValue); colors && !castBody {
+			fail("colors spent value requires a spell ability")
+		}
 		for _, edge := range n.children {
 			before := maps.Clone(assigned)
 			visit(edge.value, path+"."+edge.name, spell, active)
