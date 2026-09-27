@@ -24,3 +24,14 @@ func TestControllerLifeGainEventComposition(t *testing.T) {
 		t.Fatalf("metadata = %+v", info)
 	}
 }
+
+func TestControllerLifeGainAmountComposition(t *testing.T) {
+	player := dsl.BindPlayer("gainer")
+	amount := dsl.BindNumber("gained")
+	card := dsl.NewEnchantment("Life Amount", "", dsl.WithAbility(dsl.WhenEvent(
+		dsl.ControllerGainsLife(player).WithAmount(amount),
+		dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}

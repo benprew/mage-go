@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controller Life-Gain Amount Capture
+
+`ControllerGainsLife(*PlayerBinding).WithAmount(*NumberBinding)` saves the actual positive life-gain event amount with the gaining player in each pending trigger. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. The adapter uses `EvtLifeGained`, its post-replacement amount, and the existing instance-local event capture frame; it adds no life-gain executor or result store. A zero or consumed gain has no event. Registration rejects nil, unnamed, repeated, duplicate, and out-of-scope amount bindings. The concrete return type of `ControllerGainsLife` enables the optional method while preserving existing `EventPattern` callers. No production card changed.
+
+Cradle of Vitality in `data/JMP.json` needs the captured amount. Its optional payment, payment-dependent target timing, and production wiring remain separate, so its Jumpstart gap record stays open. Six production `ControllerGainsLife` callers remain and none uses the new amount option. Existing life-gain and trigger exports remain for unmigrated callers. Focused tests first failed because `WithAmount` was unavailable. Synthetic tests cover post-replacement amount, opponent exclusion, independent gains and stack copies, game clones, registration, inspection, and a public DSL declaration. Existing controller life-gain tests cover control changes, source departure and return, phasing, zero and consumed gains, delayed and modal bodies, and copy lifecycle. The next dependency-ready work is P optional-payment output and reflexive target timing, or another E event participant after a fresh audit.
+
+Validation: focused engine and DSL tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Player Draw Event
 
 `PlayerDrawsCard(*PlayerBinding) EventPattern` matches each completed card draw by either player and saves the drawer in that trigger's instance-local frame. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses `EvtCardDrawn`, the existing draw replacement path, and pending-trigger capture. A replaced draw or an empty-library attempt creates no matching event. Registration rejects nil, unnamed, unbound, and out-of-scope bindings. No payment, draw-result binding, or target declaration is added.
