@@ -29,6 +29,7 @@ This document specifies the internal architecture, subsystem invariants, and Mag
 * **`ZoneSystem`**: Owns battlefield storage with copy-on-write (CoW) semantics for AI search, exile storage with visibility metadata, entering-permanent tracking, and Last-Known Information (LKI) snapshots.
 * **`TurnSystem`**: Owns turn counters, current phase and step, active player index, extra turns, `TurnSchedule` lifecycle, and one-shot untap restrictions.
 * **`ResolutionState`**: Owns transient resolution scratch state including X values, chosen modes, event source/amount context, cast-time snapshots (`CastContext`), targets, damage/counter distributions, and cost payment reveals/sacrifices.
+* A graveyard-exile cost that captures mana value locks the chosen card and graveyard visit during total-cost preparation. Commit checks that visit before paying and saves the card's pre-exile mana value in the spell or activation frame only after the exile succeeds. A failed payment does not publish the capture. Stack copies and game clones retain separate frames (CR 118.10, 400.7).
 * **`TriggerSystem`**: Owns pending triggers waiting for stack placement, active `DelayedTrigger` instances, and armed state triggers (CR 603.8).
 * **`ManaSystem`**: Owns mana source discovery, mana ability solver planning, and payment scratch buffers.
 * **`DamageSystem`**: Owns damage execution, combat damage step aggregation, damage history tracking, and damage reflection.

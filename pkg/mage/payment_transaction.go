@@ -183,6 +183,28 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			validationCost = &locked
 			tx.costs[i] = &locked
 		}
+		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
+			locked := *exile
+			payer := tx.game.GetPlayer(tx.controller)
+			var candidates []Card
+			for _, card := range payer.Graveyard() {
+				if exile.filter.Match(card) {
+					candidates = append(candidates, card)
+				}
+			}
+			if len(candidates) == 0 {
+				return fmt.Errorf("cannot pay chosen graveyard exile")
+			}
+			chosen := payer.ChooseCardFromGraveyard(candidates, exile.text, tx.game)
+			if chosen == nil {
+				chosen = candidates[0]
+			}
+			locked.selected = chosen.ID()
+			locked.visit = tx.game.graveyardVisit(chosen.ID())
+			locked.locked = true
+			validationCost = &locked
+			tx.costs[i] = &locked
+		}
 		if !validationCost.CanPay(tx.sourceID, tx.controller, validation) {
 			return fmt.Errorf("cannot pay total cost: %s", cost.Text())
 		}
@@ -215,6 +237,9 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		return ErrPlayerNotFound
 	}
 	for _, cost := range tx.costs {
+		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture && !exile.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay chosen graveyard exile")
+		}
 		if counter, ok := cost.(*removeCountersCost); ok && counter.capture && !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay locked counter cost")
 		}
@@ -240,6 +265,14 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		var paidPower, paidToughness, paidManaValue int
 		var paidCardID uuid.UUID
 		var discardedCardID uuid.UUID
+		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
+			for _, card := range tx.game.GetPlayer(tx.controller).Graveyard() {
+				if card.ID() == exile.selected && tx.game.graveyardVisit(card.ID()) == exile.visit {
+					paidManaValue = card.ManaCost().CMC()
+					break
+				}
+			}
+		}
 		if discard, ok := cost.(*discardCost); ok && discard.captureCard && len(discard.selected) == 1 {
 			discardedCardID = discard.selected[0]
 		}
@@ -261,6 +294,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			tx.paidNumbers[exile.paid] = paidManaValue
 		}
 		if discard, ok := cost.(*discardCost); ok && discard.captureCard {
 			if tx.paidCards == nil {

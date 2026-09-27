@@ -807,8 +807,13 @@ func (c *exileFromGraveyardCost) Text() string {
 }
 
 type exileMatchingCardFromGraveyardCost struct {
-	filter CardFilter
-	text   string
+	filter   CardFilter
+	text     string
+	paid     *NumberBinding
+	capture  bool
+	locked   bool
+	selected uuid.UUID
+	visit    uuid.UUID
 }
 
 // ExileMatchingCardFromGraveyardCost creates a cost that requires the controller
@@ -817,10 +822,34 @@ func ExileMatchingCardFromGraveyardCost(filter CardFilter, text string) Cost {
 	return &exileMatchingCardFromGraveyardCost{filter: filter, text: text}
 }
 
+// ExileMatchingCardFromGraveyardCostInto saves the chosen card's mana value during payment.
+func ExileMatchingCardFromGraveyardCostInto(filter CardFilter, text string, paid *NumberBinding) Cost {
+	return &exileMatchingCardFromGraveyardCost{filter: filter, text: text, paid: paid, capture: true}
+}
+
+func (c *exileMatchingCardFromGraveyardCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "exile-graveyard-cost", Text: c.Text()}
+	if c.capture {
+		n.bindingWrite = c.paid
+		n.children = []definitionEdge{{"paid", c.paid}}
+		if c.paid == nil {
+			n.problem = "supply a non-nil paid mana value binding"
+		} else if c.text == "" {
+			n.problem = "supply exile cost text"
+		}
+	}
+	return n
+}
+
 func (c *exileMatchingCardFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return false
+	}
+	if c.locked {
+		return slices.ContainsFunc(p.Graveyard(), func(card Card) bool {
+			return card.ID() == c.selected && g.graveyardVisit(card.ID()) == c.visit && c.filter.Match(card)
+		})
 	}
 	return slices.ContainsFunc(p.Graveyard(), c.filter.Match)
 }
@@ -839,9 +868,22 @@ func (c *exileMatchingCardFromGraveyardCost) Pay(sourceID, controller uuid.UUID,
 	if len(candidates) == 0 {
 		return fmt.Errorf("no matching card in graveyard to exile")
 	}
-	chosen := p.ChooseCardFromGraveyard(candidates, c.text, g)
-	if chosen == nil {
-		chosen = candidates[0]
+	var chosen Card
+	if c.locked {
+		for _, card := range candidates {
+			if card.ID() == c.selected && g.graveyardVisit(card.ID()) == c.visit {
+				chosen = card
+				break
+			}
+		}
+		if chosen == nil {
+			return fmt.Errorf("chosen graveyard card is absent")
+		}
+	} else {
+		chosen = p.ChooseCardFromGraveyard(candidates, c.text, g)
+		if chosen == nil {
+			chosen = candidates[0]
+		}
 	}
 	removed, ok := g.MoveFromGraveyard(controller, chosen.ID(), ZoneExile)
 	if !ok || removed == nil {

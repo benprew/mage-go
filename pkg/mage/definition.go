@@ -133,6 +133,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
 		for i, cost := range e.costs {
+			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if discard, ok := cost.(*discardCost); ok && discard.captureCard {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
@@ -305,6 +308,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if life, ok := value.(*lifePayCost); ok && life.capture && !nilDefinition(life.paid) && assigned[life.paid] {
 			fail("duplicate paid life binding")
 		}
+		if exile, ok := value.(*exileMatchingCardFromGraveyardCost); ok && exile.capture && !nilDefinition(exile.paid) && assigned[exile.paid] {
+			fail("duplicate paid graveyard exile binding")
+		}
 		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.captureCard && !nilDefinition(sacrifice.paidCard) && assigned[sacrifice.paidCard] {
 			fail("duplicate paid card binding")
 		}
@@ -326,12 +332,13 @@ func ValidateCardDefinition(name string, card Card) error {
 			_, eventTrigger := value.(*GenericTriggered)
 			_, capture := edge.value.(activationCapture)
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
+			exileCost, exilePayment := edge.value.(*exileMatchingCardFromGraveyardCost)
 			_, paidDiscard := edge.value.(*discardCost)
 			_, paidCounters := edge.value.(*removeAnyCountersCost)
 			fixedCounter, fixedCounterCost := edge.value.(*removeCountersCost)
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && !paidDiscard && !paidCounters && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) {
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && (!exilePayment || !exileCost.capture) && !paidDiscard && !paidCounters && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) {
 				assigned = before
 			}
 		}

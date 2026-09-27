@@ -724,6 +724,7 @@ var (
 	DiscardCardCostInto                           = mage.DiscardCardCostInto
 	EitherCost                                    = mage.EitherCost
 	ExileMatchingCardFromGraveyardCost            = mage.ExileMatchingCardFromGraveyardCost
+	ExileMatchingCardFromGraveyardCostInto        = mage.ExileMatchingCardFromGraveyardCostInto
 	DiscardCardsWithDifferentNamesCost            = mage.DiscardCardsWithDifferentNamesCost
 	ExileFromGraveyardCost                        = mage.ExileFromGraveyardCost
 	ExileSelfFromGraveyardCost                    = mage.ExileSelfFromGraveyardCost

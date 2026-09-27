@@ -1493,6 +1493,17 @@ Triggers at step transitions:
   * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
   * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice is locked during total-cost validation and reused at commit. Each chosen discard uses the shared replacement action and emits a discard event only when a card is discarded. A replacement that applies only when an effect causes a discard does not apply to this cost.
   * `DiscardCardCostInto(card *CardBinding) Cost`: Discard one chosen card and save its new graveyard visit in the spell or activation frame. Use `FromCard(card)` in the resolving body. The reference is absent if a replacement sends the card to a different zone or it leaves the graveyard before resolution. Registration requires a named binding and a dominating payment producer. This cost uses the same locked choice and replacement path as `DiscardCost(1)`.
+  * `ExileMatchingCardFromGraveyardCostInto(filter CardFilter, text string, paid *NumberBinding) Cost`: Choose one matching card from the payer's graveyard during payment preparation, exile that same graveyard visit, and save its mana value when payment commits. Use `FromNumber(paid)` in a spell additional cost or an activated ability body. The saved number belongs to that stack instance and its copies. Registration requires a named binding and nonempty cost text. A resolution-time `IfPaid` or `UnlessPaid` cost cannot produce this binding.
+
+```go
+paid := dsl.BindNumber("exiled mana value")
+ability := dsl.Activate(
+    dsl.Costs(dsl.ExileMatchingCardFromGraveyardCostInto(
+        dsl.IsCreatureCard, "Exile a creature card", paid)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+)
+_ = ability
+```
   * `DiscardRandomCost(count)`: Discard cards at random.
 
 ```go

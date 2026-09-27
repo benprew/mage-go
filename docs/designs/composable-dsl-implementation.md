@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Graveyard Exile Payment Mana Value
+
+`ExileMatchingCardFromGraveyardCostInto(CardFilter, string, *NumberBinding) Cost` locks a chosen matching card and its graveyard visit during cost preparation. A successful commit saves the card's pre-exile mana value in the spell or activation frame. The adapter reuses the existing graveyard-exile cost, total-cost transaction, and number-binding frame. It leaves the legacy cost and its callers intact. Necropolis's complete text was checked in `data/DRK.json`; its production wiring and The Dark gap record remain open. This slice does not add a card binding, a chosen graveyard, or a general payment-result API.
+
+Focused tests first failed because the constructor was absent. Synthetic tests cover interleaved activations, stack copying, game cloning, stale graveyard visits, failed payment, inspection, and registration rejection for invalid or unproduced bindings. A public DSL test compiles and validates the declaration. The next dependency-ready work is another P payment output or a T divided-damage announcement contract after a fresh audit.
+
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found one production caller of the legacy graveyard-exile cost (Necropolis) and no production caller of the new constructor; both exports remain available. No production card or JSON gap record changed.
+
 ## Current Slice: Fixed Counter-Payment Capture
 
 `RemoveCountersCostInto(counter core.CounterType, count int, paid *NumberBinding) Cost` removes a fixed nonnegative number of counters from a battlefield source during activation payment and saves the committed count in that activation's number-binding frame. It uses the existing counter cost and total-cost transaction. Preparation locks the source incarnation; a failed commit leaves no capture. Zero requires a present source. The binding follows stack copies and game clones. This slice adds no chosen-count payment, counter replacement rule, card migration, or legacy API retirement. Existing `RemoveCountersCost` callers remain compatible.
