@@ -1224,6 +1224,17 @@ Triggers on rules events dispatched by the engine:
     func main() {}
     ```
   * `CreatureYouControlDies()`: A creature controlled by ability controller dies.
+  * Creature-death patterns support `.PowerOrToughnessAtMost(int)`. The filter compares the creature's power **or** toughness just before it dies. It accepts negative limits and checks continuous effects. It is valid in `WhenEvent` and `WhenEventModes` on battlefield permanents. Registration rejects repeated use and use on `PermanentDies()`.
+
+    ```go
+    opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
+    trigger := dsl.WhenEvent(
+        dsl.CreatureYouControlDies().PowerOrToughnessAtMost(1),
+        dsl.Sequence(dsl.LoseLife(opponent, dsl.Fixed(2)), dsl.GainLife(dsl.You, dsl.Fixed(2))),
+        dsl.WithTargets(opponent),
+    )
+    _ = dsl.NewCreature("Watcher", "", 2, 2, dsl.WithAbility(trigger))
+    ```
   * `OpponentCreatureDies()`: A creature controlled by an opponent of the ability controller dies. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The filter uses the dying creature's controller and type before departure. It includes tokens. `.WithController(*PlayerBinding)` saves that controller for the resolving body; it does not declare a target.
     ```go
     former := dsl.BindPlayer("former controller")

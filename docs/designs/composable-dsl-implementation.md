@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Death-Event Power or Toughness Filter
+
+`CreatureYouControlDies().PowerOrToughnessAtMost(1)` and the other creature-death patterns filter the departing creature's power **or** toughness before death. The typed adapter uses the existing pre-departure object view, zone-change event, and pending-trigger path. It accepts any integer limit and rejects a repeated filter or use on a general `PermanentDies()` pattern at registration. No engine event storage, production card, or legacy export changed.
+
+Arnyn, Deathbloom Botanist's full Oracle text was checked in `data/SOS.json`. This filter supplies its missing 1-or-less event condition; its target-opponent effect can use existing typed instructions. The production definition and Secrets of Strixhaven inventory and gap record remain open until a separate card migration. Tests first failed because the method was absent. Synthetic tests cover either qualifying characteristic, a nonmatching creature, continuous-effect changes, controller filtering, phasing, simultaneous source and subject deaths, graveyard replacement, departure and return, stack copies, clone isolation, inspection, and declaration validation. A public DSL test compiles the trigger and target shape. The next dependency-ready work is a separate E event participant or P payment output after a fresh audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. Arnyn still uses the legacy `DiesCreatureTrigger`; that export remains for this and other production callers.
+
 ## Current Slice: Nonsacrifice Death Event Filter
 
 `PermanentDies().YouControlled().NotSacrificed()` filters a completed battlefield-to-graveyard event by the departing permanent's former controller and sacrifice outcome. Both filters also compose with creature-death patterns. The adapter uses the existing zone-change event, its sacrifice flag, departure LKI, and pending-trigger service. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects repeated filters. The pattern does not introduce a target or a result binding. No engine event contract, production card, or legacy export changed.

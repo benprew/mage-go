@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -177,6 +178,9 @@ type creatureDiesPattern struct {
 	duplicateColor    bool
 	notSacrificed     bool
 	duplicateOutcome  bool
+	maxPowerToughness int
+	filterPT          bool
+	duplicatePT       bool
 }
 
 // CreatureDies matches any creature moving from the battlefield to a graveyard.
@@ -259,6 +263,16 @@ func (p creatureDiesPattern) NotSacrificed() creatureDiesPattern {
 	return p
 }
 
+// PowerOrToughnessAtMost checks the creature's power or toughness before death.
+func (p creatureDiesPattern) PowerOrToughnessAtMost(maximum int) creatureDiesPattern {
+	if p.filterPT {
+		p.duplicatePT = true
+	}
+	p.maxPowerToughness = maximum
+	p.filterPT = true
+	return p
+}
+
 // AttachedCreatureDies matches the creature attached to this source when it dies.
 func AttachedCreatureDies() creatureDiesPattern {
 	return creatureDiesPattern{creatureOnly: true, attachedOnly: true}
@@ -320,6 +334,9 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 	if p.notSacrificed {
 		t.AndConditionData(deathWasNotSacrifice{})
 	}
+	if p.filterPT {
+		t.AndConditionData(eventSourcePowerOrToughnessAtMost{maximum: p.maxPowerToughness})
+	}
 	if p.attachedOnly {
 		t.AndConditionData(sourceAttachedToDyingCreature{})
 	}
@@ -329,6 +346,17 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 type eventSourceWasNontoken struct{}
 
 type deathWasNotSacrifice struct{}
+
+type eventSourcePowerOrToughnessAtMost struct{ maximum int }
+
+func (c eventSourcePowerOrToughnessAtMost) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok {
+		return false
+	}
+	view := game.LookupObject(event.SourceID)
+	return view != nil && (view.ViewPower() <= c.maximum || view.ViewToughness() <= c.maximum)
+}
 
 func (deathWasNotSacrifice) CheckTriggerCond(event *GameEvent, _ GameReader, _, _ uuid.UUID) bool {
 	return !event.Flag
@@ -394,6 +422,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	if p.notSacrificed {
 		text += " and was not sacrificed"
 	}
+	if p.filterPT {
+		text += " with power or toughness " + strconv.Itoa(p.maxPowerToughness) + " or less"
+	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
 	if p.filterColor && (p.excludedColor < White || p.excludedColor > Green || p.duplicateColor) {
 		n.problem = "death event: supply one valid color"
@@ -406,6 +437,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	}
 	if p.duplicateControl || (p.controllerOnly && p.opponentOnly) {
 		n.problem = "death event: supply one controller filter"
+	}
+	if p.duplicatePT || (p.filterPT && !p.creatureOnly) {
+		n.problem = "death event: supply one creature power or toughness filter"
 	}
 	if p.controller != nil {
 		n.bindingWrite = p.controller
