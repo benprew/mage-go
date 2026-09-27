@@ -41,31 +41,51 @@ func (g *Game) DestroyPermanents(permanents []*Permanent) {
 	g.destroyPermanents(permanents, false)
 }
 
-func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool) {
+func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool) int {
 	if len(permanents) == 0 {
-		return
+		return 0
 	}
+	creatureDeaths := 0
 	g.withZoneChangeBatch(func() {
-		var destroy []*Permanent
+		type candidate struct {
+			permanent *Permanent
+			creature  bool
+		}
+		var destroy []candidate
+		initialCreature := make(map[uuid.UUID]bool, len(permanents))
+		for _, p := range permanents {
+			if p != nil {
+				if current := g.FindPermanent(p.ID()); current != nil && current.incarnationID == p.incarnationID {
+					initialCreature[p.ID()] = current.HasType(TypeCreature)
+				}
+			}
+		}
 		seen := make(map[uuid.UUID]bool)
 		for _, p := range permanents {
+			if p == nil {
+				continue
+			}
 			current := g.FindPermanent(p.ID())
-			if current == nil || current.incarnationID != p.incarnationID || seen[p.ID()] {
+			if current == nil || current.incarnationID != p.incarnationID || current.PhasedOut || seen[p.ID()] {
 				continue
 			}
 			seen[p.ID()] = true
 			action := NewDestroyPermanentAction(uuid.Nil, p.ID())
 			action.cannotRegenerate = cannotRegenerate
 			if !current.HasKeyword(Indestructible) && g.effects.ApplyReplacements(action, g) != nil {
-				destroy = append(destroy, current)
+				destroy = append(destroy, candidate{current, initialCreature[p.ID()]})
 			}
 		}
-		for _, p := range destroy {
-			if current := g.FindPermanent(p.ID()); current != nil && current.incarnationID == p.incarnationID {
+		for _, item := range destroy {
+			if current := g.FindPermanent(item.permanent.ID()); current != nil && current.incarnationID == item.permanent.incarnationID {
+				if item.creature {
+					creatureDeaths++
+				}
 				g.PutPermanentIntoGraveyard(current)
 			}
 		}
 	})
+	return creatureDeaths
 }
 
 // BouncePermanentsToHand returns one group of battlefield objects to their owners' hands.

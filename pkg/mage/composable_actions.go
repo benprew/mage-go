@@ -340,16 +340,51 @@ func (s matchingPermanentSet) inspectDefinition() definitionNode {
 type destroyEachEffect struct {
 	subjects         PermanentSet
 	cannotRegenerate bool
+	creatureDeaths   *NumberBinding
+	optionCount      int
+	invalidOption    bool
+}
+
+// DestroyEachResultOption selects a result of one destruction group.
+type DestroyEachResultOption interface {
+	destroyEachResultOption()
+	applyDestroyEachResult(*destroyEachEffect)
+}
+
+type creaturesDiedThisWayOption struct{ binding *NumberBinding }
+
+// CreaturesDiedThisWayInto saves the number of creatures moved to a graveyard by this instruction.
+func CreaturesDiedThisWayInto(binding *NumberBinding) DestroyEachResultOption {
+	return creaturesDiedThisWayOption{binding}
+}
+func (creaturesDiedThisWayOption) destroyEachResultOption() {}
+func (o creaturesDiedThisWayOption) applyDestroyEachResult(e *destroyEachEffect) {
+	e.creatureDeaths = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
 }
 
 // DestroyEach performs one simultaneous destruction group through the engine.
-func DestroyEach(subjects PermanentSet) ResolvingEffect {
-	return &destroyEachEffect{subjects: subjects}
+func DestroyEach(subjects PermanentSet, options ...DestroyEachResultOption) ResolvingEffect {
+	return newDestroyEachEffect(subjects, false, options)
 }
 
 // DestroyEachWithoutRegeneration destroys the set without regeneration.
-func DestroyEachWithoutRegeneration(subjects PermanentSet) ResolvingEffect {
-	return &destroyEachEffect{subjects: subjects, cannotRegenerate: true}
+func DestroyEachWithoutRegeneration(subjects PermanentSet, options ...DestroyEachResultOption) ResolvingEffect {
+	return newDestroyEachEffect(subjects, true, options)
+}
+func newDestroyEachEffect(subjects PermanentSet, cannotRegenerate bool, options []DestroyEachResultOption) ResolvingEffect {
+	e := &destroyEachEffect{subjects: subjects, cannotRegenerate: cannotRegenerate}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyDestroyEachResult(e)
+	}
+	return e
 }
 func (e *destroyEachEffect) Text() string {
 	if e.cannotRegenerate {
@@ -361,7 +396,16 @@ func (*destroyEachEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true, Mass: true}
 }
 func (e *destroyEachEffect) Apply(ctx *EffectContext) error {
-	ctx.Game.destroyPermanents(e.subjects.resolvePermanents(ctx), e.cannotRegenerate)
+	if e.creatureDeaths != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.creatureDeaths] = 0
+	}
+	deaths := ctx.Game.destroyPermanents(e.subjects.resolvePermanents(ctx), e.cannotRegenerate)
+	if e.creatureDeaths != nil {
+		ctx.Game.resolution.numberBindings[e.creatureDeaths] = deaths
+	}
 	return nil
 }
 func (e *destroyEachEffect) inspectDefinition() definitionNode {
@@ -369,7 +413,17 @@ func (e *destroyEachEffect) inspectDefinition() definitionNode {
 	if e.cannotRegenerate {
 		role = "destroy-each-without-regeneration"
 	}
-	return definitionNode{Role: role, Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
+	n := definitionNode{Role: role, Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
+	if e.invalidOption {
+		n.problem = "supply a non-nil destruction result binding"
+	} else if e.optionCount > 1 {
+		n.problem = "supply the destruction result binding only once"
+	}
+	if e.creatureDeaths != nil {
+		n.bindingWrite = e.creatureDeaths
+		n.children = append(n.children, definitionEdge{"creature deaths", e.creatureDeaths})
+	}
+	return n
 }
 
 type returnEachToHandEffect struct{ subjects PermanentSet }

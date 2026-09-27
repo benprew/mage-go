@@ -650,6 +650,19 @@ card := dsl.NewArtifact("Life result example", "", dsl.WithAbility(dsl.Activate(
 _ = card
 ```
 
+### Destruction Actions
+`DestroyEach(PermanentSet, ...DestroyEachResultOption)` and `DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption)` can save a result from one simultaneous destruction group. `CreaturesDiedThisWayInto(*NumberBinding) DestroyEachResultOption` saves the number of selected creatures that this instruction moved from the battlefield to a graveyard. Indestructible, regenerated, absent, phased-out, and noncreature objects do not add to the count. The result is zero for an empty group. Use `FromNumber` later in the same spell, activation, or trigger resolution. Registration rejects a nil, unnamed, repeated, or undominated binding. The existing one-argument calls remain valid. This example compiles:
+
+```go
+deaths := dsl.BindNumber("creatures died this way")
+body := dsl.Sequence(
+    dsl.DestroyEach(dsl.MatchingPermanents(dsl.IsCreature), dsl.CreaturesDiedThisWayInto(deaths)),
+    dsl.DealDamageFrom(dsl.This, dsl.You, dsl.FromNumber(deaths)),
+)
+spell := dsl.NewSorcery("Death count example", "", dsl.WithAbility(dsl.Spell(body)))
+_ = spell
+```
+
 ### Damage Actions
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:
 
