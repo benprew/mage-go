@@ -1679,6 +1679,16 @@ Triggers at step transitions:
   * `TapCost(This)`: {T} tap cost.
   * `SacrificeSourceCost()`: Sacrifice source as cost.
   * `SacrificeCreatureCostWithStats(power, toughness *NumberBinding)`: Sacrifice one creature and save its current power and toughness during payment. Both bindings are required. `FromNumber` reads either value in the resolving body. This cost works in `Activate`, `ActivateModes`, and spell additional costs. An activation excludes its source from the choice.
+  * `SacrificeCreatureCostWithSubtype(subtype string, result *NumberBinding) Cost`: Sacrifice one creature, including the ability source if it is a creature, and save 1 if it had the given creature subtype immediately before payment or 0 otherwise. Use `IfPositive(FromNumber(result), body)` in `Spell`, `Activate`, or `ActivateModes`. The value stays in that spell or ability instance, including copies. Registration requires a creature subtype and a named number binding. This cost is not available inside resolution-time `IfPaid` or `UnlessPaid`.
+
+    ```go
+    matched := dsl.BindNumber("paid Thrull")
+    ability := dsl.Activate(
+        dsl.Costs(dsl.SacrificeCreatureCostWithSubtype("Thrull", matched)),
+        dsl.IfPositive(dsl.FromNumber(matched), dsl.GainLife(dsl.You, dsl.Fixed(1))),
+    )
+    _ = ability
+    ```
   * `SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *CardBinding) Cost`: Sacrifice one other matching permanent and save its card in the new graveyard visit. Use `FromCard(card)` in the resolving body of `Spell`, `Activate`, or `ActivateModes`. A token has no card in the graveyard, so its saved reference is absent. A later zone move also makes the saved reference absent. Registration requires a named card binding and nonempty cost text.
 
     ```go

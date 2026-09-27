@@ -133,9 +133,12 @@ type sacrificeMatchingCost struct {
 	paidPower        *NumberBinding
 	paidToughness    *NumberBinding
 	paidManaValue    *NumberBinding
+	paidSubtype      *NumberBinding
+	subtype          string
 	paidCard         *CardBinding
 	captureStats     bool
 	captureManaValue bool
+	captureSubtype   bool
 	captureCard      bool
 }
 
@@ -185,6 +188,14 @@ func SacrificeCreatureIncludingSourceCostWithStats(power, toughness *NumberBindi
 	}
 }
 
+// SacrificeCreatureCostWithSubtype saves whether the chosen creature had the subtype during payment.
+func SacrificeCreatureCostWithSubtype(subtype string, result *NumberBinding) Cost {
+	return &sacrificeMatchingCost{
+		filter: IsCreature, text: "Sacrifice a creature", count: 1, includeSource: true,
+		subtype: subtype, paidSubtype: result, captureSubtype: true,
+	}
+}
+
 // SacrificeMatchingCostWithManaValue saves the chosen permanent's mana value
 // when its controller pays this cost. The source is not a candidate.
 func SacrificeMatchingCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost {
@@ -198,7 +209,19 @@ func SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *Ca
 
 func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
-	if !c.captureStats && !c.captureManaValue && !c.captureCard {
+	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard {
+		return n
+	}
+	if c.captureSubtype {
+		if c.subtype == "" {
+			n.problem = "supply a creature subtype"
+		} else if family, known := knownSubtypeFamily(c.subtype); known && family != SubtypeCreature {
+			n.problem = "subtype is not a creature subtype"
+		} else if c.paidSubtype == nil {
+			n.problem = "supply a non-nil paid subtype binding"
+		}
+		n.bindingWrites = []savedBinding{c.paidSubtype}
+		n.children = []definitionEdge{{"subtype result", c.paidSubtype}}
 		return n
 	}
 	if c.captureCard {

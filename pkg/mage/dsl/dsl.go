@@ -710,6 +710,7 @@ var (
 	RequireCountersCost                           = mage.RequireCountersCost
 	SacrificeCreatureCost                         = mage.SacrificeCreatureCost
 	SacrificeCreatureCostWithStats                = mage.SacrificeCreatureCostWithStats
+	SacrificeCreatureCostWithSubtype              = mage.SacrificeCreatureCostWithSubtype
 	SacrificeCreatureIncludingSourceCostWithStats = mage.SacrificeCreatureIncludingSourceCostWithStats
 	SacrificeMatchingCostWithManaValue            = mage.SacrificeMatchingCostWithManaValue
 	SacrificeMatchingCostWithCard                 = mage.SacrificeMatchingCostWithCard

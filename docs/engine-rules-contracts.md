@@ -336,6 +336,12 @@ frame. Commit reads the chosen permanent's mana value before sacrifice, then
 writes it to that spell or activation's number binding only after the cost
 succeeds. A returned or phased-out choice does not produce a value. The
 resolution-time `IfPaid` and `UnlessPaid` paths do not carry this output.
+
+`SacrificeCreatureCostWithSubtype` uses the same locked choice and frame. It
+can select the source creature. Commit reads the chosen creature's current
+subtypes before sacrifice and saves 1 for a match or 0 for no match. A failed
+payment saves no value. A stack copy keeps its paid value.
+
 `SacrificeMatchingCostWithCard` uses that locked choice and saves the card's
 graveyard visit only after successful payment. The saved card belongs to the
 spell or ability stack frame, including copies and game clones. It remains

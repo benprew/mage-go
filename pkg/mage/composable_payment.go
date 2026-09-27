@@ -130,7 +130,7 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
 			n.problem = "paid counter value requires an activated ability cost"
 		}
-		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue) {
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype) {
 			n.problem = "paid sacrifice value requires an activated ability cost or spell additional cost"
 		}
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
