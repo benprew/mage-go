@@ -196,6 +196,7 @@ var (
 	ReturnEachToHand = mage.ReturnEachToHand
 	TapEach          = mage.TapEach
 	UntapEach        = mage.UntapEach
+	AddCountersEach  = mage.AddCountersEach
 	// Untap untaps the referenced permanent incarnation.
 	Untap = mage.UntapPermanent
 	// SkipNextUntap prevents the permanent from untapping during its controller's next untap step.

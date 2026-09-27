@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Permanent-Set Counter Placement
+
+`AddCountersEach(PermanentSet, core.CounterType, ResolutionValue) ResolvingEffect` reads one set and amount at resolution. `Game.AddCountersTogether` prepares each live, distinct permanent's counter action through the existing replacement pipeline before placing any counters. It uses game-local mutable permanents for clone isolation. Registration inspects the set and amount and rejects missing inputs, undeclared target groups, and invalid counter types. The sealed set role rejects a singular permanent at compile time. It works in spell, activation, and trigger bodies. It does not provide entry counters, a placement result, or card-specific restrictions.
+
+Germination Practicum's complete text in `data/SOS.json` requires two +1/+1 counters on each creature its controller controls; its Paradigm clause remains separate. Synthetic tests cover counter doubling, replacement observation before placement, phasing, stale and duplicate incarnations, target-group identity, clone isolation, inspection, registration, and the public DSL export. The focused test first failed because `AddCountersEach` was absent. Production Germination Practicum and other collection-counter cards remain unwired; no production card or legacy export changed. The Secrets of Strixhaven gap record stays open. The next dependency-ready B slice is collection life gain or player-set discard after a fresh shared-contract audit.
+
+Validation: focused engine and DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Simultaneous Permanent-Set Untap
 
 `UntapEach(PermanentSet) ResolvingEffect` uses the shared singular untap rule for stun counters and a new batch service that completes successful untaps before sending events. It selects one set at resolution, removes duplicates and stale or phased-out incarnations, and ignores already untapped permanents. It works in spell, activation, and trigger bodies; inspection and registration reject a nil or undeclared set, while the sealed role rejects a singular permanent at compile time. No production card or legacy export changed.

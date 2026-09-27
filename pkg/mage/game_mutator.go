@@ -704,6 +704,44 @@ func (g *Game) AddCountersWithReplacement(perm *Permanent, ct CounterType, n int
 	}
 }
 
+// AddCountersTogether prepares each placement before it changes any counters.
+func (g *Game) AddCountersTogether(perms []*Permanent, ct CounterType, n int, sourceID uuid.UUID) {
+	if n <= 0 {
+		return
+	}
+	type placement struct {
+		id          uuid.UUID
+		incarnation uuid.UUID
+		amount      int
+		counter     CounterType
+	}
+	prepared := make([]placement, 0, len(perms))
+	seen := make(map[uuid.UUID]bool, len(perms))
+	for _, perm := range perms {
+		if perm == nil || seen[perm.ID()] {
+			continue
+		}
+		live := g.FindPermanent(perm.ID())
+		if live == nil || live.incarnationID != perm.incarnationID {
+			continue
+		}
+		seen[perm.ID()] = true
+		result, ok := g.effects.ApplyReplacements(NewAddCountersAction(sourceID, live.ID(), ct, n, false), g).(*AddCountersAction)
+		if !ok || result.Amount() <= 0 {
+			continue
+		}
+		target := g.FindPermanent(result.PermanentID())
+		if target != nil {
+			prepared = append(prepared, placement{target.ID(), target.incarnationID, result.Amount(), result.CounterType()})
+		}
+	}
+	for _, p := range prepared {
+		if target := g.FindPermanent(p.id); target != nil && target.incarnationID == p.incarnation {
+			g.MutablePermanent(p.id).AddCounter(p.counter, p.amount)
+		}
+	}
+}
+
 // AddCounterDoubler registers a counter-doubling replacement effect (CR
 // 614.1c) for the given counter type. The filter restricts which permanents
 // the doubler applies to (e.g. ControlledBy(playerID) for Branching

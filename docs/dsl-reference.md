@@ -962,6 +962,13 @@ This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. A player
 
 ### Counter Actions
 * `AddCounters(PermanentRef, CounterType, ResolutionValue)`: Adds counters through the replacement pipeline.
+* `AddCountersEach(PermanentSet, CounterType, ResolutionValue) ResolvingEffect`: Places the same number of counters on each selected battlefield permanent in one instruction. Use it in a spell, activation, or trigger body. The set and amount are read once at resolution. Each counter placement uses the shared replacement pipeline; all replacements are prepared before any counters change. An absent, phased-out, returned, or duplicate member receives no placement. Registration rejects a missing set or amount, an undeclared set binding, and an invalid counter type. A singular permanent is a Go type error. For example, this synthetic spell declaration compiles:
+
+  ```go
+  dsl.NewSorcery("Counter batch", "", dsl.WithAbility(dsl.Spell(
+      dsl.AddCountersEach(dsl.ControlledPermanents(dsl.IsCreature),
+          dsl.P1P1, dsl.Fixed(2)))))
+  ```
 * `RemoveCountersFrom(PermanentRef, CounterType, ResolutionValue)`: Removes up to the specified count.
 * `RemoveAllCounters(PermanentRef, CounterType)`: Removes all counters of that kind.
 
