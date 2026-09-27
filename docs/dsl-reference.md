@@ -1219,6 +1219,15 @@ Triggers on rules events dispatched by the engine:
 * `WhenEvent(EventPattern, ResolvingEffect, ...TriggerOption)`
 * Event patterns:
   * `LandTappedForMana().WithPlayer(*PlayerBinding).WithAmount(*NumberBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. Both captures are optional and independent. `WithPlayer` saves the activating player; `WithAmount` saves the total mana produced by that ability as recorded in the event. Read them with `FromPlayer` and `FromNumber` in the trigger body. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. Each binding belongs to one trigger instance and is not a target. Zero production has no matching event. This captures a number, not the types of mana produced. For example:
+  * `LandTappedForMana().WithLand(*PermanentBinding)`: Save the exact land incarnation that produced mana. This optional capture composes with `WithPlayer` and `WithAmount` in `WhenEvent` and `WhenEventModes` on a battlefield permanent. `From(land)` is absent if that land leaves and returns or phases out before resolution. The land is an event participant, not a target. Registration rejects a nil, unnamed, repeated, or unbound land binding. This declaration compiles:
+
+    ```go
+    land := dsl.BindPermanent("producing land")
+    dsl.WhenEvent(
+        dsl.LandTappedForMana().WithLand(land),
+        dsl.Tap(dsl.From(land)),
+    )
+    ```
 
     ```go
     player := dsl.BindPlayer("mana player")

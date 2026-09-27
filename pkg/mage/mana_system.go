@@ -401,6 +401,7 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 		return err
 	}
 
+	sourceIncarnation := perm.incarnationID
 	g.TapPermanent(perm)
 	addConcreteMana(player.ManaPool(), action.Productions, action.BonusColors)
 
@@ -413,8 +414,8 @@ func (ms *ManaSystem) ActivatePlannedManaSource(g *Game, playerID uuid.UUID, act
 	case *SimpleActivatedAbility:
 		activated.markActivatedInGame(g)
 	}
-	g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: perm.incarnationID, PlayerID: playerID, Flag: true})
-	ms.FireTappedForMana(g, perm.ID(), playerID, productionsTotalAmount(action.Productions))
+	g.FireEvent(GameEvent{Type: EvtAbilityActivated, SourceID: perm.ID(), SourceIncarnation: sourceIncarnation, PlayerID: playerID, Flag: true})
+	ms.FireTappedForMana(g, perm.ID(), sourceIncarnation, playerID, productionsTotalAmount(action.Productions))
 	return nil
 }
 
@@ -463,13 +464,14 @@ func (ms *ManaSystem) TapForMana(g *Game, playerID, permanentID uuid.UUID, prefe
 	if !perm.CanTapForEffect(g) {
 		return fmt.Errorf("creature has summoning sickness")
 	}
+	sourceIncarnation := perm.incarnationID
 	g.TapPermanent(perm)
 	if p := g.GetPlayer(playerID); p != nil {
 		produced := ms.AddManaProductions(g, chosen, p, perm, preferredColor)
 		if err := ms.RunManaPostProduction(g, chosenAbility, p, perm); err != nil {
 			return err
 		}
-		ms.FireTappedForMana(g, perm.ID(), playerID, produced)
+		ms.FireTappedForMana(g, perm.ID(), sourceIncarnation, playerID, produced)
 	}
 	return nil
 }
@@ -538,15 +540,16 @@ func (ms *ManaSystem) RunManaPostProduction(g *Game, ma *ManaAbility, p Player, 
 }
 
 // FireTappedForMana emits EvtTappedForMana event.
-func (ms *ManaSystem) FireTappedForMana(g *Game, sourceID, playerID uuid.UUID, amount int) {
+func (ms *ManaSystem) FireTappedForMana(g *Game, sourceID, sourceIncarnation, playerID uuid.UUID, amount int) {
 	if amount <= 0 {
 		return
 	}
 	g.FireEvent(GameEvent{
-		Type:     EvtTappedForMana,
-		SourceID: sourceID,
-		PlayerID: playerID,
-		Amount:   amount,
+		Type:              EvtTappedForMana,
+		SourceID:          sourceID,
+		SourceIncarnation: sourceIncarnation,
+		PlayerID:          playerID,
+		Amount:            amount,
 	})
 }
 

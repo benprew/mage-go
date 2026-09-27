@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Tapped-for-Mana Land Incarnation
+
+`LandTappedForMana().WithLand(*PermanentBinding)` saves the exact producing land in each pending battlefield `WhenEvent` or `WhenEventModes` trigger. `From(land)` is absent after departure and return or while phased out. The mana event now records `SourceIncarnation` before production and post-production effects. Its land filter uses that incarnation or departure LKI, rather than a later object with the same card ID. This reuses the existing mana event, trigger capture frame, permanent binding, and copy/clone paths. No production card or legacy author export changed. The engine call `ManaSystem.FireTappedForMana` now takes the captured source incarnation.
+
+The first card requirement is Wild Growth's enchanted-land mana trigger in `data/4ED.json`; it still needs an attached-land filter and triggered mana timing. Mana Flare also needs the types produced by the land. Both need separate card wiring. A fresh search found `NewManaFlareAbility(IsLand)` in `cards/limited/enchantments.go` and no production `LandTappedForMana().WithLand` caller. No gap record closes. The next dependency-ready slice is mana-type event capture or another E participant, after a fresh audit.
+
+Contract tests first failed because `WithLand` was absent. Focused tests cover the event incarnation, trigger capture, source return, phasing, trigger copying, game clone isolation, combined player/amount bindings, registration rejection, and a public DSL declaration. The focused run, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff and `git diff --check` pass.
+
 ## Current Slice: Land Tapped for Mana Amount Capture
 
 `LandTappedForMana().WithAmount(*NumberBinding)` saves the positive `EvtTappedForMana.Amount` in each pending battlefield trigger. It composes with the existing `WithPlayer` capture in `WhenEvent` and `WhenEventModes`. The adapter reuses the mana event, number binding frame, inspection, and stack/game copy paths. Zero production sends no event. This slice does not capture mana types or add a triggered mana-production action; Gauntlet of Might, Mana Flare, and Wild Growth still need those contracts and card wiring. No production card, legacy export, or gap record changed.

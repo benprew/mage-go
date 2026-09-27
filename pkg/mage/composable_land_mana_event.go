@@ -1,14 +1,21 @@
 package mage
 
-import . "github.com/benprew/mage-go/pkg/mage/core"
+import (
+	"github.com/google/uuid"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
+)
 
 type landTappedForManaPattern struct {
 	player          *PlayerBinding
 	amount          *NumberBinding
+	land            *PermanentBinding
 	capturePlayer   bool
 	captureAmount   bool
+	captureLand     bool
 	duplicatePlayer bool
 	duplicateAmount bool
+	duplicateLand   bool
 }
 
 // LandTappedForMana matches a land mana ability that used a tap cost and produced mana.
@@ -32,10 +39,35 @@ func (p landTappedForManaPattern) WithAmount(binding *NumberBinding) landTappedF
 	return p
 }
 
+// WithLand saves the land incarnation that produced the mana.
+func (p landTappedForManaPattern) WithLand(binding *PermanentBinding) landTappedForManaPattern {
+	if p.captureLand {
+		p.duplicateLand = true
+	}
+	p.land, p.captureLand = binding, true
+	return p
+}
+
 func (landTappedForManaPattern) eventPattern() {}
 
 func (landTappedForManaPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(EvtTappedForMana, false, effect).SetConditionData(EventSourceWasOfType{Type: TypeLand})
+	return NewTriggered(EvtTappedForMana, false, effect).SetConditionData(tappedForManaLandSource{})
+}
+
+type tappedForManaLandSource struct{}
+
+func (tappedForManaLandSource) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.SourceIncarnation == uuid.Nil {
+		return false
+	}
+	if land := game.FindPermanent(event.SourceID); land != nil && land.incarnationID == event.SourceIncarnation {
+		return land.HasType(TypeLand)
+	}
+	if lki := game.zones.LKIByIncarnation(event.SourceIncarnation); lki != nil {
+		return lki.HasType(TypeLand)
+	}
+	return false
 }
 
 func (p landTappedForManaPattern) inspectDefinition() definitionNode {
@@ -56,7 +88,22 @@ func (p landTappedForManaPattern) inspectDefinition() definitionNode {
 			n.children = append(n.children, definitionEdge{"amount", &eventAmountCapture{binding: p.amount}})
 		}
 	}
+	if p.captureLand {
+		if p.land == nil || p.duplicateLand {
+			n.problem = "land tapped for mana: supply one land binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.land)
+			n.children = append(n.children, definitionEdge{"land", &eventPermanentCapture{binding: p.land}})
+		}
+	}
 	return n
+}
+
+func (p landTappedForManaPattern) captureDetectedEvent(event *GameEvent, _ GameReader, _ uuid.UUID) []Effect {
+	if !p.captureLand || p.land == nil || event.SourceIncarnation == uuid.Nil {
+		return nil
+	}
+	return []Effect{&eventPermanentCapture{binding: p.land, value: capturedPermanent{event.SourceID, event.SourceIncarnation}}}
 }
 
 func (p landTappedForManaPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {

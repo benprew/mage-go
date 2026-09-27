@@ -4291,6 +4291,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		if perm.Tapped || !perm.CanTapForEffect(g) {
 			return fmt.Errorf("cannot tap %s for mana", perm.Name())
 		}
+		manaSourceIncarnation := perm.incarnationID
 		g.TapPermanent(perm)
 		p := g.GetPlayer(playerID)
 		produced := 0
@@ -4308,7 +4309,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			PlayerID:          playerID,
 			Flag:              true,
 		})
-		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
+		g.mana.FireTappedForMana(g, perm.ID(), manaSourceIncarnation, playerID, produced)
 		return nil
 	}
 
@@ -4487,7 +4488,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		produced, colors := g.resolveStackObject(obj)
 		if hasTapCost && produced > 0 {
 			g.mana.ApplyManaBonuses(g, perm, colors, g.GetPlayer(playerID))
-			g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
+			g.mana.FireTappedForMana(g, perm.ID(), obj.sourceIncarnation, playerID, produced)
 		}
 		return nil
 	}
