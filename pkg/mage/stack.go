@@ -1,6 +1,9 @@
 package mage
 
 import (
+	"maps"
+	"slices"
+
 	. "github.com/benprew/mage-go/pkg/mage/core"
 
 	"github.com/google/uuid"
@@ -93,19 +96,17 @@ type StackObject struct {
 	CastContext *CastContext
 }
 
-// CastContext captures the cast-time snapshot mandated by CR 608.2g for
-// effects that reference values "as you cast this spell". Fields are
-// intentionally minimal — extend as new cards require.
+// CastContext saves cast-time facts for effects that look back at casting.
 //
 // Populated by the cast pipeline immediately after additional costs have
 // been paid (so reveal-style additional costs make it into the snapshot)
 // and immediately before the StackObject is pushed.
 type CastContext struct {
+	// This map keeps creature type apart from other permanents with creature subtypes.
+	ControllerCreatureSubtypesAtCast map[string]bool
 	// ControllerSubtypesAtCast records every subtype present on a permanent
 	// the spell's controller controlled at the moment the spell went on the
-	// stack. Used by cards like Draconic Roar ("controlled a Dragon as you
-	// cast this spell"): a Dragon leaving between cast and resolution must
-	// not flip the condition false.
+	// stack. This includes subtypes on noncreature permanents.
 	ControllerSubtypesAtCast map[string]bool
 
 	// RevealedAtCast lists cards revealed as part of paying additional
@@ -122,6 +123,18 @@ type CastContext struct {
 	// Sentry's "enters with a +1/+1 counter on it for each color of mana
 	// spent to cast it" effect — count distinct colors with value > 0.
 	ColorsSpent map[Color]int
+}
+
+func (ctx *CastContext) clone() *CastContext {
+	if ctx == nil {
+		return nil
+	}
+	return &CastContext{
+		ControllerCreatureSubtypesAtCast: maps.Clone(ctx.ControllerCreatureSubtypesAtCast),
+		ControllerSubtypesAtCast:         maps.Clone(ctx.ControllerSubtypesAtCast),
+		RevealedAtCast:                   slices.Clone(ctx.RevealedAtCast),
+		ColorsSpent:                      maps.Clone(ctx.ColorsSpent),
+	}
 }
 
 // DistinctColorsSpent returns the number of distinct colors of mana that

@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controlled Creature Subtype at Cast
+
+`ControlledCreatureSubtypeAtCast(string) CastCondition` and `IfCast(CastCondition, ResolvingEffect)` expose the existing cast snapshot to typed spell bodies. The snapshot now distinguishes controlled creatures from other permanents with a subtype and is copied for stack copies and game clones. Registration rejects empty or known noncreature subtypes and nonspell use. Synthetic tests cover cast-time presence and absence, later departure and arrival, phasing, inspection, copies, clone isolation, and declaration validation. Draconic Roar's complete text was checked in `data/JMP.json`; its optional reveal branch, damage sequence, target-controller capture, and production wiring remain open. Its Jumpstart gap stays blocked. No production card or legacy export changed. The next dependency-ready work is the separate revealed-at-cast condition or a target-controller capture, after a fresh caller audit.
+
+The first focused test failed because the constructors were absent. Focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Enchantment Spell-Cast Subtype Filter
 
 `SpellCast().OfEnchantmentSubtype(string)` filters a battlefield `WhenEvent` or `WhenEventModes` trigger by the cast spell's enchantment subtype. It reads the exact stack object named by `EvtSpellCast.TargetID`; an unrelated copy with the same card ID does not match. It composes with the existing type, color, opponent, and caster filters. Registration rejects empty, unknown, nonenchantment, repeated, and type-incompatible declarations. The sealed event-pattern role and existing pending-trigger lifecycle are unchanged. No production card or legacy export changed.

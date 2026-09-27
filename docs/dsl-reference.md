@@ -2193,6 +2193,7 @@ Operations taking amounts accept `ResolutionValue`:
 
 * `Fixed(n)`: Static constant integer.
 * `XValue()`: The X announced during casting or activation.
+
 * `ManaValueOf(PermanentRef)`: Current mana value from the permanent's card; absent references supply zero. X contributes zero on the battlefield. Use `SnapshotNumber` before moving the permanent when a later instruction needs that value. This adapter uses the existing `ManaCost.CMC()` service and does not add mana-symbol support.
 * `ManaValueOfSpell(StackObjectRef)`: Current mana value of a spell on the stack. For example, `target := TargetSpell("spell"); ability := Spell(GainLifeFor(You, ManaValueOfSpell(target)), WithTargets(target))` compiles with the typed target and value roles. The value uses the stack object's announced X and the existing mana-cost parser; mana symbols that the parser cannot represent need a separate engine contract.
 * `PowerOf(PermanentRef)`: Current power of the permanent at resolution.
@@ -2208,6 +2209,14 @@ Operations taking amounts accept `ResolutionValue`:
   * `MaxValue(a, b)`: $\max(a, b)$.
 * Adapters:
   * `ValueAtResolution(legacyValueSource)`: Adapts legacy value sources.
+
+`ControlledCreatureSubtypeAtCast(subtype string) CastCondition` reads whether the spell's controller controlled a creature with that subtype when casting completed. Use it only in `IfCast(condition CastCondition, effect ResolvingEffect)` inside a typed spell body. The condition uses the saved cast snapshot even if the creature later leaves, changes controller, or phases out. Registration rejects an empty or known noncreature subtype and use outside a spell ability.
+
+```go
+spell := dsl.NewInstant("Cast condition test", "", dsl.Spell(
+    dsl.IfCast(dsl.ControlledCreatureSubtypeAtCast("Dragon"),
+        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+```
 
 ---
 

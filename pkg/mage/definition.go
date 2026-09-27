@@ -252,8 +252,14 @@ func ValidateCardDefinition(name string, card Card) error {
 	var assigned map[savedBinding]bool
 	var names map[string]any
 	var targets map[*targetDeclaration]bool
+	var castBody bool
 	var visit func(any, string, bool, map[any]bool)
 	visit = func(value any, path string, spell bool, active map[any]bool) {
+		previousCastBody := castBody
+		if action, ok := value.(*ActionDefinition); ok {
+			castBody = action.kind == ActionSpell
+		}
+		defer func() { castBody = previousCastBody }()
 		fail := func(message string) { problems = append(problems, fmt.Errorf("%s: %s: %s", name, path, message)) }
 		if nilDefinition(value) {
 			fail("supply a non-nil expression")
@@ -340,6 +346,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		if spell && n.battlefieldSource {
 			fail("battlefield source action requires a permanent ability")
+		}
+		if _, cast := value.(*castBranch); cast && !castBody {
+			fail("cast condition requires a spell ability")
 		}
 		for _, edge := range n.children {
 			before := maps.Clone(assigned)

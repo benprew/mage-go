@@ -3,6 +3,12 @@ package dsl
 import "github.com/benprew/mage-go/pkg/mage"
 
 type NumberBinding = mage.NumberBinding
+type CastCondition = mage.CastCondition
+
+var (
+	ControlledCreatureSubtypeAtCast = mage.ControlledCreatureSubtypeAtCast
+	IfCast                          = mage.IfCast
+)
 
 var (
 	CountPermanents               = mage.CountPermanents

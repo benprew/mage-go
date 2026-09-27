@@ -179,14 +179,18 @@ func (g *Game) Resolution() *ResolutionState { return &g.resolution }
 // costs are visible in the snapshot.
 func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 	ctx := &CastContext{
-		ControllerSubtypesAtCast: make(map[string]bool),
+		ControllerSubtypesAtCast:         make(map[string]bool),
+		ControllerCreatureSubtypesAtCast: make(map[string]bool),
 	}
 	for _, perm := range g.AllBattlefield() {
-		if perm == nil || perm.ControllerID() != playerID || perm.FaceDown {
+		if perm == nil || perm.ControllerID() != playerID || perm.FaceDown || perm.PhasedOut {
 			continue
 		}
 		for _, st := range perm.computedSubtypes() {
 			ctx.ControllerSubtypesAtCast[st] = true
+			if perm.HasType(TypeCreature) {
+				ctx.ControllerCreatureSubtypesAtCast[st] = true
+			}
 		}
 	}
 	if lastReveal := g.resolution.LastCostReveal(); lastReveal != nil {

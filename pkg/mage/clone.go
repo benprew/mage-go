@@ -255,7 +255,7 @@ func cloneStackObject(obj *StackObject) *StackObject {
 		EventSourceID:      obj.EventSourceID,
 		IsCopy:             obj.IsCopy,
 		CastZone:           obj.CastZone,
-		CastContext:        obj.CastContext,
+		CastContext:        obj.CastContext.clone(),
 	}
 	if obj.ColorOverride != nil {
 		colors := append([]Color(nil), (*obj.ColorOverride)...)
