@@ -28,6 +28,16 @@ type graveyardTargetConfig struct {
 	filters          []CardFilter
 	manaValue        TargetNumber
 	manaValueOptions int
+	upToOneOptions   int
+}
+
+type graveyardUpToOneOption struct{}
+
+// GraveyardUpToOne permits zero or one graveyard card target.
+func GraveyardUpToOne() GraveyardTargetOption         { return graveyardUpToOneOption{} }
+func (graveyardUpToOneOption) graveyardTargetOption() {}
+func (graveyardUpToOneOption) applyGraveyardTarget(config *graveyardTargetConfig) {
+	config.upToOneOptions++
 }
 
 // TargetNumber reads a number while targets are chosen or checked.
@@ -150,10 +160,13 @@ func DeclareGraveyardCardTarget(name string, options ...GraveyardTargetOption) *
 	} else {
 		spec = TargetCardInYourGraveyard(slices.Clone(config.filters)...)
 	}
+	if config.upToOneOptions > 0 {
+		spec.(*GraveyardCardTarget).min = 0
+	}
 	if config.manaValueOptions > 0 {
 		spec = &manaValueBoundGraveyardTarget{inner: spec, maximum: config.manaValue, optionCount: config.manaValueOptions}
 	}
-	return &CardTargetBinding{&targetDeclaration{name: name, spec: spec}}
+	return &CardTargetBinding{&targetDeclaration{name: name, spec: spec, optionalGraveyardCount: config.upToOneOptions}}
 }
 
 func (*CardTargetBinding) cardRef() {}

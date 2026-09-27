@@ -49,12 +49,12 @@ type DamageTargetBinding struct{ *targetDeclaration }
 
 // DeclareDamageTarget declares any damage target. DSL exports it as TargetDamageRecipient.
 func DeclareDamageTarget(name string) *DamageTargetBinding {
-	return &DamageTargetBinding{&targetDeclaration{name, TargetDamageAnyTarget()}}
+	return &DamageTargetBinding{&targetDeclaration{name: name, spec: TargetDamageAnyTarget()}}
 }
 
 // DeclarePlayerOrPlaneswalkerTarget excludes creatures from this damage target.
 func DeclarePlayerOrPlaneswalkerTarget(name string) *DamageTargetBinding {
-	return &DamageTargetBinding{&targetDeclaration{name, TargetPlayerOrPlaneswalker()}}
+	return &DamageTargetBinding{&targetDeclaration{name: name, spec: TargetPlayerOrPlaneswalker()}}
 }
 func (*DamageTargetBinding) damageRecipient() {}
 func (b *DamageTargetBinding) resolveRecipient(ctx *EffectContext) (uuid.UUID, bool) {

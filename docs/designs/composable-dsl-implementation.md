@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Singular Graveyard Card Target
+
+`GraveyardUpToOne() GraveyardTargetOption` changes a `TargetGraveyardCard` declaration from exactly one to zero or one target. It uses the shared target announcement, copy, legality, and graveyard-visit services. It supports typed spells, activations, and triggers, including a trigger with no legal graveyard card. A controller may choose zero even when a card is legal. A chosen card is rechecked at resolution and cannot leave and return to keep its target identity. Registration rejects a repeated option. The declaration remains a singular `CardRef`; no card set or new choice service was added.
+
+Moseo, Vein's New Dean's complete text in `data/SOS.json` and its Secrets of Strixhaven inventory and JSON gap record require “up to one target creature card” with a mana-value limit based on life gained this turn. This slice combines with the existing limit and history adapters to supply that target requirement. Its production card has not been migrated, and its other abilities need a separate complete audit, so the gap record stays open. The first focused test failed because `GraveyardUpToOne` was undefined. Synthetic tests cover zero legal cards, voluntary zero choice, stack copies, clone isolation, selected-target legality after leave and return, composition with a mana-value limit, public DSL registration, and duplicate-option rejection. Existing production callers and legacy exports remain unchanged. The next dependency-ready work is a distinct P payment/result or E event-participant slice after a fresh requirements audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Dynamic Graveyard Card Mana-Value Target Limit
 
 `GraveyardCardManaValueAtMost(TargetNumber) GraveyardTargetOption` limits a typed graveyard-card target by the card's current mana value. The sealed `TargetNumber` role has `ControllerLifeGainedThisTurn()` and `FixedTargetNumber(int)` constructors. The life-gain form reads actual turn history for the ability controller at target announcement and resolution. The existing target service performs both checks, and the existing graveyard-visit binding keeps leave-and-return illegal. This slice adds no target-count option, new life-gain executor, production card declaration, or legacy export change.

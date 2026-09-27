@@ -14,8 +14,9 @@ type TargetBinding interface {
 }
 
 type targetDeclaration struct {
-	name string
-	spec Target
+	name                   string
+	spec                   Target
+	optionalGraveyardCount int
 }
 
 func (*targetDeclaration) targetBinding()       {}
@@ -47,7 +48,7 @@ type PermanentTargetBinding struct{ *targetDeclaration }
 func DeclarePermanentTarget(name string, filter PermanentFilter, options ...PermanentTargetOption) *PermanentTargetBinding {
 	spec := TargetPermanent(filter).(*PermanentTarget)
 	applyPermanentTargetOptions(spec, options)
-	return &PermanentTargetBinding{&targetDeclaration{name, spec}}
+	return &PermanentTargetBinding{&targetDeclaration{name: name, spec: spec}}
 }
 func (*PermanentTargetBinding) permanentRef() {}
 func (b *PermanentTargetBinding) resolvePermanent(ctx *EffectContext) (*Permanent, bool) {
@@ -75,7 +76,7 @@ func DeclarePlayerTarget(name string, options ...PlayerTargetOption) *PlayerTarg
 		}
 		spec = option.applyPlayerTarget(spec)
 	}
-	return &PlayerTargetBinding{&targetDeclaration{name, spec}}
+	return &PlayerTargetBinding{&targetDeclaration{name: name, spec: spec}}
 }
 
 // PlayerTargetOption adds a restriction to a player target declaration.
@@ -193,6 +194,9 @@ func declaredTargetNodes(targets []Target, grouped ...bool) []definitionEdge {
 }
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
+	if b.optionalGraveyardCount > 1 {
+		n.problem = "supply up to one graveyard option once"
+	}
 	if restriction, ok := b.spec.(*manaValueBoundGraveyardTarget); ok {
 		n.children = append(n.children, definitionEdge{"restriction", restriction})
 	}
@@ -272,7 +276,7 @@ func DeclarePermanentTargets(name string, minimum, maximum int, filter Permanent
 	}
 	spec := &PermanentTarget{BaseTarget: BaseTarget{min: minimum, max: maximum}, Filters: []PermanentFilter{filter}}
 	applyPermanentTargetOptions(spec, options)
-	return &PermanentTargetsBinding{&targetDeclaration{name, spec}}
+	return &PermanentTargetsBinding{&targetDeclaration{name: name, spec: spec}}
 }
 
 // DeclareXPermanentTargets requires exactly X permanent targets.

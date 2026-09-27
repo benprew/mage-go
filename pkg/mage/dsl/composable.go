@@ -102,6 +102,7 @@ var (
 	TargetSpell                      = mage.DeclareSpellTarget
 	TargetGraveyardCard              = mage.DeclareGraveyardCardTarget
 	GraveyardCardManaValueAtMost     = mage.GraveyardCardManaValueAtMost
+	GraveyardUpToOne                 = mage.GraveyardUpToOne
 	ControllerLifeGainedThisTurn     = mage.ControllerLifeGainedThisTurn
 	FixedTargetNumber                = mage.FixedTargetNumber
 	InAnyGraveyard                   = mage.InAnyGraveyard

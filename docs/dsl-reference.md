@@ -317,11 +317,13 @@ _ = NewInstant("Value example", "{U}", WithAbility(valueAbility))
 
 ### Graveyard Card Targets
 * `TargetGraveyardCard(label, options...)`: Declares one card target in your graveyard by default. `InAnyGraveyard()` permits any player's graveyard. `GraveyardCardFilter(filter)` restricts its characteristics. Declare the binding with `WithTargets(card)`.
+* `GraveyardUpToOne() GraveyardTargetOption`: Permits zero or one target. It works in typed spells, activations, and triggers. Choosing zero is legal even if a matching card exists. The target body reads an absent card and takes no card action. Registration rejects a repeated option.
 * `GraveyardCardManaValueAtMost(TargetNumber) GraveyardTargetOption`: Restricts a graveyard card target to cards whose current mana value is at most the supplied number. `ControllerLifeGainedThisTurn() TargetNumber` reads the ability controller's actual life gain this turn; `FixedTargetNumber(int) TargetNumber` supplies a fixed nonnegative limit. These target numbers work only in target declarations. The limit is checked when a spell, activation, or trigger chooses a target and again at resolution. Registration rejects a missing, negative, or repeated limit. The target keeps its graveyard visit, so a card that leaves and returns is still illegal.
 
 ```go
 func lifeGainTarget() dsl.Card {
     card := dsl.TargetGraveyardCard("card",
+        dsl.GraveyardUpToOne(),
         dsl.GraveyardCardFilter(dsl.IsCreatureCard),
         dsl.GraveyardCardManaValueAtMost(dsl.ControllerLifeGainedThisTurn()))
     return dsl.NewCreature("Life Gain Watcher", "", 1, 1,
@@ -330,7 +332,7 @@ func lifeGainTarget() dsl.Card {
 }
 ```
 
-The example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It requires one legal target. An optional target count is separate work.
+The example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It can choose no target and still resolve the trigger. A chosen target must remain legal at resolution.
 * `ReturnCardToHand(card)`: Moves the bound graveyard card to its owner's hand. A card that leaves and returns to the graveyard is a new object, so the old binding cannot move it.
 * `ReturnCardToBattlefield(card, controller)`: Moves the bound graveyard card onto the battlefield under the selected player's control. The card keeps its owner. A stale graveyard binding does nothing.
 
