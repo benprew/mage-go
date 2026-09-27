@@ -3,6 +3,7 @@ package mage
 import . "github.com/benprew/mage-go/pkg/mage/core"
 
 type controlledAttackBatchPattern struct {
+	controlled     bool
 	count          *NumberBinding
 	captureCount   bool
 	duplicateCount bool
@@ -10,6 +11,11 @@ type controlledAttackBatchPattern struct {
 
 // OneOrMoreCreaturesYouControlAttack matches one legal declaration group.
 func OneOrMoreCreaturesYouControlAttack() controlledAttackBatchPattern {
+	return controlledAttackBatchPattern{controlled: true}
+}
+
+// OneOrMoreCreaturesAttack matches one attack declaration by either player.
+func OneOrMoreCreaturesAttack() controlledAttackBatchPattern {
 	return controlledAttackBatchPattern{}
 }
 
@@ -25,14 +31,21 @@ func (p controlledAttackBatchPattern) WithCount(count *NumberBinding) controlled
 
 func (controlledAttackBatchPattern) eventPattern() {}
 
-func (controlledAttackBatchPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(EvtAttackersDeclared, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-		EventPlayerIsController{}, EventAmountGreaterThan{N: 0},
-	}})
+func (p controlledAttackBatchPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	if p.controlled {
+		return NewTriggered(EvtAttackersDeclared, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
+			EventPlayerIsController{}, EventAmountGreaterThan{N: 0},
+		}})
+	}
+	return NewTriggered(EvtAttackersDeclared, false, effect).SetConditionData(EventAmountGreaterThan{N: 0})
 }
 
 func (p controlledAttackBatchPattern) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "event-pattern", Text: "one or more creatures you control attack", battlefieldSource: true}
+	text := "one or more creatures attack"
+	if p.controlled {
+		text = "one or more creatures you control attack"
+	}
+	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
 	if p.captureCount {
 		if p.count == nil || p.duplicateCount {
 			n.problem = "attack group: supply one count binding"

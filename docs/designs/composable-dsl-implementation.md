@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Unqualified Attack-Group Event
+
+`OneOrMoreCreaturesAttack().WithCount(*NumberBinding)` matches one completed positive attacker declaration by either player. `WithCount` is optional and saves the declared count in the pending trigger. It uses the existing `EvtAttackersDeclared` event and trigger capture path; no combat engine contract changed. The sealed pattern works in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects invalid count bindings and non-battlefield sources. The existing controller-filtered pattern and legacy callers remain unchanged. No production card changed.
+
+Duelist's Heritage's full text was checked in `cards/jumpstart/JMP.json` and the Jumpstart gap record. The new event pattern supplies its unqualified attack trigger. Its targeted optional double-strike effect and production card wiring remain separate work, so the gap record stays open. The focused test first failed because the constructor was absent. Synthetic tests cover either attack controller, once-per-group behavior, count capture, empty declarations, entering attacking, phasing, departure and return, game clones, inspection, and registration. A fresh search found legacy `WheneverOneOrMoreCreaturesAttackTrigger` production callers in Jumpstart; those callers remain. The next dependency-ready work is another E event participant or P payment output after a fresh audit.
+
+Validation: focused `TestAnyAttackBatch` and existing attack-batch tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Simultaneous Life-Gain Total
 
 `GainLifeEach(PlayerSet, ResolutionValue, ...LifeGainResultOption)` now accepts `LifeGainedInto(*NumberBinding)`. It saves the sum of actual positive gains after modifiers and replacements in the current resolution frame. The shared batch service still prepares each gain before changing life totals and sends gain events after all totals change. Empty or absent sets and nonpositive amounts write zero. The option works in spell, activation, and trigger bodies; a singular player cannot satisfy the set role. Inspection and registration reject nil, unnamed, duplicate, and undominated bindings. Existing two-argument callers and legacy exports remain valid. No production card changed.

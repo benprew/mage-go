@@ -1214,6 +1214,21 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `OneOrMoreCreaturesAttack().WithCount(*NumberBinding)`: Match once when either player declares one or more attackers. `WithCount` is optional and saves the number declared in that event. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. A creature that enters attacking does not count. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var count = dsl.BindNumber("declared attackers")
+    var _ = dsl.NewEnchantment("Attack observer", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.OneOrMoreCreaturesAttack().WithCount(count),
+            dsl.GainLife(dsl.You, dsl.FromNumber(count)))))
+
+    func main() {}
+    ```
   * `EachCreatureYouControlAttacks().WithAttacker(*PermanentBinding).WithDefendingPlayer(*PlayerBinding)`: Match once per creature you control that is declared as an attacker. Either capture is optional. `From` reads the attacking battlefield incarnation; `FromPlayer` reads the defending player. Both values belong to that trigger instance. A creature put onto the battlefield attacking does not match. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The combat service currently records player defenders only.
 
     ```go

@@ -255,6 +255,7 @@ var (
 	SpellCast                          = mage.SpellCast
 	Attacks                            = mage.Attacks
 	OneOrMoreCreaturesYouControlAttack = mage.OneOrMoreCreaturesYouControlAttack
+	OneOrMoreCreaturesAttack           = mage.OneOrMoreCreaturesAttack
 	EachCreatureYouControlAttacks      = mage.EachCreatureYouControlAttacks
 	AttacksUnblocked                   = mage.AttacksUnblocked
 	Blocks                             = mage.Blocks
