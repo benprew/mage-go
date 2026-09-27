@@ -157,6 +157,46 @@ type createOneTokenEffect struct {
 	result *PermanentBinding
 }
 
+type createTokenCopiesIntoEffect struct {
+	player PlayerRef
+	count  ResolutionValue
+	token  TokenDefinition
+	result *CreatedTokensBinding
+}
+
+// CreateTokenCopiesInto saves the accepted incarnations from one token batch.
+func CreateTokenCopiesInto(player PlayerRef, count ResolutionValue, token TokenDefinition, result *CreatedTokensBinding) ResolvingEffect {
+	return &createTokenCopiesIntoEffect{player: player, count: count, token: token, result: result}
+}
+
+func (*createTokenCopiesIntoEffect) Text() string { return "create token copies into result" }
+func (e *createTokenCopiesIntoEffect) Properties() EffectProperties {
+	return (&createTokenCopiesEffect{token: e.token}).Properties()
+}
+func (e *createTokenCopiesIntoEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), bindingWrite: e.result, children: []definitionEdge{{"player", e.player}, {"count", e.count}, {"token", e.token}, {"result", e.result}}}
+}
+func (e *createTokenCopiesIntoEffect) Apply(ctx *EffectContext) error {
+	if ctx.Game.resolution.createdTokenBindings == nil {
+		ctx.Game.resolution.createdTokenBindings = make(map[*CreatedTokensBinding][]capturedPermanent)
+	}
+	delete(ctx.Game.resolution.createdTokenBindings, e.result)
+	player, ok := e.player.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	count := e.count.resolveValue(ctx)
+	if count <= 0 {
+		return nil
+	}
+	d := e.token.(*tokenDefinition)
+	created := createTokenBatchWithResult(ctx.Game, player, count, d.name, d.power, d.toughness, d.types, d.subtypes, d.colors, d.keywords, d.abilities)
+	for _, p := range created {
+		ctx.Game.resolution.createdTokenBindings[e.result] = append(ctx.Game.resolution.createdTokenBindings[e.result], capturedPermanent{p.ID(), p.incarnationID})
+	}
+	return nil
+}
+
 // CreateOneToken saves the created token's battlefield incarnation.
 func CreateOneToken(player PlayerRef, token TokenDefinition, result *PermanentBinding) ResolvingEffect {
 	return &createOneTokenEffect{player: player, token: token, result: result}

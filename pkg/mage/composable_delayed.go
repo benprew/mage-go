@@ -125,6 +125,7 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 	body := &capturedDelayedBody{
 		body:              e.body,
 		permanents:        maps.Clone(ctx.Game.resolution.permanentBindings),
+		createdTokens:     cloneCreatedTokenBindings(ctx.Game.resolution.createdTokenBindings),
 		players:           maps.Clone(ctx.Game.resolution.playerBindings),
 		numbers:           maps.Clone(ctx.Game.resolution.numberBindings),
 		targets:           cloneDelayedTargets(ctx.targetBindings),
@@ -166,6 +167,7 @@ func (e *nextStepEffect) Apply(ctx *EffectContext) error {
 type capturedDelayedBody struct {
 	body              ResolvingEffect
 	permanents        map[*PermanentBinding]capturedPermanent
+	createdTokens     map[*CreatedTokensBinding][]capturedPermanent
 	players           map[*PlayerBinding]uuid.UUID
 	numbers           map[*NumberBinding]int
 	targets           map[*targetDeclaration][]capturedPermanent
@@ -194,6 +196,9 @@ func (e *capturedDelayedBody) Apply(ctx *EffectContext) error {
 	state.permanentBindings = maps.Clone(e.permanents)
 	state.SetX(e.x)
 	defer func() { state.permanentBindings = outer; state.SetX(x) }()
+	outerCreated := state.createdTokenBindings
+	state.createdTokenBindings = cloneCreatedTokenBindings(e.createdTokens)
+	defer func() { state.createdTokenBindings = outerCreated }()
 	child := *ctx
 	child.targetBindings = cloneDelayedTargets(e.targets)
 	if child.targetBindings == nil {

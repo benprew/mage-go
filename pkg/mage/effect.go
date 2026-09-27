@@ -159,6 +159,9 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 	savedBindings := g.resolution.permanentBindings
 	g.resolution.permanentBindings = maps.Clone(permanents)
 	defer func() { g.resolution.permanentBindings = savedBindings }()
+	savedCreated := g.resolution.createdTokenBindings
+	g.resolution.createdTokenBindings = nil
+	defer func() { g.resolution.createdTokenBindings = savedCreated }()
 	savedSources := g.resolution.damageSourceBindings
 	g.resolution.damageSourceBindings = nil
 	defer func() { g.resolution.damageSourceBindings = savedSources }()

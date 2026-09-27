@@ -34,7 +34,10 @@ func (e *permanentLoop) Apply(ctx *EffectContext) error {
 	defer func() { ctx.Game.resolution.playerBindings = outerPlayers }()
 	outer := ctx.Game.resolution.permanentBindings
 	defer func() { ctx.Game.resolution.permanentBindings = outer }()
+	outerCreated := ctx.Game.resolution.createdTokenBindings
+	defer func() { ctx.Game.resolution.createdTokenBindings = outerCreated }()
 	for _, member := range members {
+		ctx.Game.resolution.createdTokenBindings = cloneCreatedTokenBindings(outerCreated)
 		ctx.Game.resolution.numberBindings = maps.Clone(outerNumbers)
 		ctx.Game.resolution.playerBindings = maps.Clone(outerPlayers)
 		frame := maps.Clone(outer)
