@@ -461,8 +461,27 @@ func sacrificeAbility() {
 ```
 * `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).
 * `DestroyWithoutRegeneration(PermanentRef)`: Destroys the captured permanent without regeneration. The prohibition belongs to this destruction action; it does not change permanent keywords or last-known characteristics. Indestructible still applies.
-* `DestroyEach(PermanentSet)`: Simultaneously destroys all permanents in the set. For multiple card types, use one `MatchingPermanents(Or(...))` collection; a permanent with several matching types is destroyed only once.
-* `DestroyEachWithoutRegeneration(PermanentSet)`: Simultaneously destroys the set without regeneration. Indestructible still applies; the instruction does not change permanent keywords.
+* `DestroyEach(PermanentSet, ...DestroyEachResultOption) ResolvingEffect`: Simultaneously destroys all permanents in the set. For multiple card types, use one `MatchingPermanents(Or(...))` collection; a permanent with several matching types is destroyed only once. `PermanentsPutIntoGraveyardThisWayInto(*NumberBinding)` saves the number of selected permanents moved to a graveyard by this instruction, including tokens. It writes zero when none move. It can be read later in the same spell, activation, or trigger body with `FromNumber`. Only one destruction result option is allowed.
+* `DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption) ResolvingEffect`: Simultaneously destroys the set without regeneration and accepts the same result option. Indestructible still applies; the instruction does not change permanent keywords.
+
+This synthetic spell uses exactly X announced Mountain targets and one simultaneous damage instruction:
+
+```go
+package example
+
+import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func eruption() dsl.Card {
+    targets := dsl.TargetPermanentsExactlyX("mountains", dsl.And(dsl.IsLand, dsl.HasSubType("Mountain")))
+    moved := dsl.BindNumber("mountains put into graveyard")
+    return dsl.NewSorcery("Synthetic eruption", "{X}{U}{U}{U}", dsl.WithAbility(dsl.Spell(dsl.Sequence(
+        dsl.DestroyEach(targets, dsl.PermanentsPutIntoGraveyardThisWayInto(moved)),
+        dsl.DealDamageEach(dsl.This,
+            dsl.DamageRecipients(dsl.EachPlayer, dsl.MatchingPermanents(dsl.IsCreature)),
+            dsl.FromNumber(moved)),
+    ), dsl.WithTargets(targets))))
+}
+```
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
 * `Tap(PermanentRef, ...TapResultOption) ResolvingEffect`: Taps the referenced battlefield incarnation. `TapAmountInto(*NumberBinding) TapResultOption` saves 1 when it changes from untapped to tapped, or 0 when it is already tapped, absent, phased out, or a returned incarnation. The option may occur once. The result is local to the resolving spell or ability. Existing `Tap(subject)` calls remain valid.
 * `TapAttachedPermanentCost() Cost`: Pays by tapping the untapped permanent attached to the battlefield ability source. Use it in `Costs` for an activated ability. Payment preparation locks both battlefield incarnations and their attachment; commit fails if either object leaves, phases out, changes attachment, or the host becomes tapped. The cost does not require control of the host and does not apply the creature summoning-sickness rule for the `{T}` symbol. A spell additional cost cannot use this battlefield-source operation. `PermanentIsUntapped(AttachedPermanent)` supplies a separate activation condition when the text requires one.

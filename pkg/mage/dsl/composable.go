@@ -157,11 +157,12 @@ var (
 	// Destroy destroys the targeted or referenced permanent (permits regeneration).
 	Destroy = mage.Destroy
 	// DestroyEach destroys all permanents in a PermanentSet simultaneously.
-	DestroyEach                          = mage.DestroyEach
-	CreaturesDiedThisWayInto             = mage.CreaturesDiedThisWayInto
-	DestroyedThisWayInto                 = mage.DestroyedThisWayInto
-	DestroyWithResult                    = mage.DestroyWithResult
-	DestroyWithoutRegenerationWithResult = mage.DestroyWithoutRegenerationWithResult
+	DestroyEach                           = mage.DestroyEach
+	CreaturesDiedThisWayInto              = mage.CreaturesDiedThisWayInto
+	PermanentsPutIntoGraveyardThisWayInto = mage.PermanentsPutIntoGraveyardThisWayInto
+	DestroyedThisWayInto                  = mage.DestroyedThisWayInto
+	DestroyWithResult                     = mage.DestroyWithResult
+	DestroyWithoutRegenerationWithResult  = mage.DestroyWithoutRegenerationWithResult
 	// DestroyEachWithoutRegeneration destroys the set without regeneration.
 	DestroyEachWithoutRegeneration = mage.DestroyEachWithoutRegeneration
 	// DestroyWithoutRegeneration destroys the permanent and forbids regeneration.

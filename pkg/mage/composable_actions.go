@@ -423,6 +423,7 @@ type destroyEachEffect struct {
 	subjects         PermanentSet
 	cannotRegenerate bool
 	creatureDeaths   *NumberBinding
+	graveyardMoves   *NumberBinding
 	optionCount      int
 	invalidOption    bool
 }
@@ -442,6 +443,21 @@ func CreaturesDiedThisWayInto(binding *NumberBinding) DestroyEachResultOption {
 func (creaturesDiedThisWayOption) destroyEachResultOption() {}
 func (o creaturesDiedThisWayOption) applyDestroyEachResult(e *destroyEachEffect) {
 	e.creatureDeaths = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
+
+type permanentsPutIntoGraveyardThisWayOption struct{ binding *NumberBinding }
+
+// PermanentsPutIntoGraveyardThisWayInto saves the number of selected permanents moved to a graveyard.
+func PermanentsPutIntoGraveyardThisWayInto(binding *NumberBinding) DestroyEachResultOption {
+	return permanentsPutIntoGraveyardThisWayOption{binding}
+}
+func (permanentsPutIntoGraveyardThisWayOption) destroyEachResultOption() {}
+func (o permanentsPutIntoGraveyardThisWayOption) applyDestroyEachResult(e *destroyEachEffect) {
+	e.graveyardMoves = o.binding
 	e.optionCount++
 	if o.binding == nil {
 		e.invalidOption = true
@@ -478,15 +494,23 @@ func (*destroyEachEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true, Mass: true}
 }
 func (e *destroyEachEffect) Apply(ctx *EffectContext) error {
-	if e.creatureDeaths != nil {
+	if e.creatureDeaths != nil || e.graveyardMoves != nil {
 		if ctx.Game.resolution.numberBindings == nil {
 			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
 		}
-		ctx.Game.resolution.numberBindings[e.creatureDeaths] = 0
+		if e.creatureDeaths != nil {
+			ctx.Game.resolution.numberBindings[e.creatureDeaths] = 0
+		}
+		if e.graveyardMoves != nil {
+			ctx.Game.resolution.numberBindings[e.graveyardMoves] = 0
+		}
 	}
 	deaths := ctx.Game.destroyPermanents(e.subjects.resolvePermanents(ctx), e.cannotRegenerate)
 	if e.creatureDeaths != nil {
 		ctx.Game.resolution.numberBindings[e.creatureDeaths] = deaths.creatureDeaths
+	}
+	if e.graveyardMoves != nil {
+		ctx.Game.resolution.numberBindings[e.graveyardMoves] = deaths.destroyed
 	}
 	return nil
 }
@@ -504,6 +528,10 @@ func (e *destroyEachEffect) inspectDefinition() definitionNode {
 	if e.creatureDeaths != nil {
 		n.bindingWrite = e.creatureDeaths
 		n.children = append(n.children, definitionEdge{"creature deaths", e.creatureDeaths})
+	}
+	if e.graveyardMoves != nil {
+		n.bindingWrite = e.graveyardMoves
+		n.children = append(n.children, definitionEdge{"graveyard moves", e.graveyardMoves})
 	}
 	return n
 }
