@@ -1167,7 +1167,21 @@ Triggers on rules events dispatched by the engine:
         dsl.Draw(dsl.FromPlayer(defender), dsl.Fixed(1)),
     )
     ```
-  * `BecomesBlockedBy(This)`: Source becomes blocked by a creature. It matches once for each new attacker and blocker pair, including a creature that enters blocking. Add `.OfSubtype(string)` to require a creature subtype at the event. Add `.WithBlocker(*PermanentBinding)` to save that blocker's battlefield incarnation for the trigger body. The saved blocker is not a target and becomes absent if it leaves and returns or phases out. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield source.
+  * `BecomesBlockedBy(This)`: Source becomes blocked by a creature. It matches once for each new attacker and blocker pair, including a creature that enters blocking. Add `.OfSubtype(string)` to require a creature subtype at the event, or `.WithoutSubtype(string)` to exclude it. These filters are exclusive. Add `.WithBlocker(*PermanentBinding)` to save that blocker's battlefield incarnation for the trigger body. The saved blocker is not a target and becomes absent if it leaves and returns or phases out. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield source.
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var blocker = dsl.BindPermanent("non-Wall blocker")
+    var _ = dsl.NewCreature("Block watcher", "", 2, 2,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.BecomesBlockedBy(dsl.This).WithoutSubtype("Wall").WithBlocker(blocker),
+            dsl.Tap(dsl.From(blocker)))))
+
+    func main() {}
+    ```
 
     `BlocksOrBecomesBlockedBy(This).OfSubtype(string)` matches one group when the source blocks or becomes blocked by one or more creatures of that subtype. It checks the other creatures at event detection and triggers once for a group with several matches. A creature put onto the battlefield blocking can cause the attacker to match, but it did not itself block. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature.
 

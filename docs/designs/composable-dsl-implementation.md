@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Blocked-By Subtype Exclusion
+
+`BecomesBlockedBy(This).WithoutSubtype(string)` is a sealed event-pattern filter for a battlefield source in `WhenEvent` and `WhenEventModes`. It checks the blocking creature's subtype when the per-pair combat event occurs. It composes with `WithBlocker` and rejects empty, wrong-family, repeated, or conflicting subtype filters at registration. The existing blocker event, pending-trigger frame, and captured permanent reference remain the reuse boundary. No production card or legacy export changed.
+
+Venom's complete text in `data/4ED.json` requires a non-Wall creature filter on a blocks-or-becomes-blocked event. This slice supplies the per-blocker exclusion only. Venom still needs a group event participant capture, a non-Wall filter on that group, delayed destruction, and card wiring. No JSON gap record is resolved. Focused tests first failed because `WithoutSubtype` was absent. They now cover legal mixed blocking, event-time subtype capture, stack copies, clone isolation, inspection, and invalid declarations; existing blocker-binding tests cover absence, phasing, leave and return, and source identity. The next dependency-ready E work is group event participant capture for blocks-or-becomes-blocked, after a fresh contract audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh production search found no `BecomesBlockedBy` caller; existing combat event and legacy exports remain available during card migration.
+
 ## Current Slice: Optional Typed Attachment Move
 
 `MayAttach(PermanentRef, PermanentRef)` is a resolving action for spells, activations, and triggers. It resolves two current battlefield incarnations, offers the resolving controller a choice only for a legal move, and sends an accepted move through `Game.Attach`. The shared legality check, timestamp order, continuous effects, and attach event remain in one engine path. An absent, phased-out, returned, illegal, or same-host pair causes no choice or move. Registration checks both sealed permanent references and binding dominance. No production card or legacy export changed.

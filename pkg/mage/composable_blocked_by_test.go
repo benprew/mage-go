@@ -129,3 +129,81 @@ func TestBlockedByPatternValidation(t *testing.T) {
 		t.Fatalf("unbound blocker accepted: %v", err)
 	}
 }
+
+func TestBlockedByPatternWithoutSubtype(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	blocker := BindPermanent("non-Wall blocker")
+	watcher := NewCreature("Watcher", "", 4, 4, WithAbility(WhenEvent(
+		BecomesBlockedBy(This).WithoutSubtype("Wall").WithBlocker(blocker),
+		AddCountersTo(From(blocker), core.P1P1, Fixed(1)))))
+	if err := ValidateCardDefinition(watcher.Name(), watcher); err != nil {
+		t.Fatal(err)
+	}
+	g.PutOnBattlefield(watcher, a.PlayerID())
+	wall := NewCreature("Wall", "", 1, 4, WithSubTypes("Wall"))
+	other := NewCreature("Other", "", 1, 4, WithSubTypes("Human"))
+	g.PutOnBattlefield(wall, b.PlayerID())
+	g.PutOnBattlefield(other, b.PlayerID())
+	g.combat.AddAttacker(watcher.ID(), b.PlayerID())
+	g.ExecuteBlockers([]BlockAssignment{{BlockerID: wall.ID(), AttackerID: watcher.ID()}, {BlockerID: other.ID(), AttackerID: watcher.ID()}})
+	if got := g.FindPermanent(other.ID()).Counters[core.P1P1]; got != 1 {
+		t.Fatalf("non-Wall blocker got %d counters, want 1", got)
+	}
+	if got := g.FindPermanent(wall.ID()).Counters[core.P1P1]; got != 0 {
+		t.Fatalf("Wall blocker got %d counters, want 0", got)
+	}
+}
+
+func TestBlockedByPatternWithoutSubtypeValidation(t *testing.T) {
+	patterns := []EventPattern{
+		BecomesBlockedBy(This).WithoutSubtype(""),
+		BecomesBlockedBy(This).WithoutSubtype("Island"),
+		BecomesBlockedBy(This).WithoutSubtype("Wall").WithoutSubtype("Orc"),
+		BecomesBlockedBy(This).OfSubtype("Orc").WithoutSubtype("Wall"),
+	}
+	for _, pattern := range patterns {
+		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
+		if err := ValidateCardDefinition(card.Name(), card); err == nil {
+			t.Fatal("invalid blocked-by exclusion accepted")
+		}
+	}
+}
+
+func TestBlockedByPatternWithoutSubtypeEventCapture(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+	blocker := BindPermanent("blocker")
+	watcher := NewCreature("Watcher", "", 4, 4, WithAbility(WhenEvent(
+		BecomesBlockedBy(This).WithoutSubtype("Wall").WithBlocker(blocker),
+		AddCountersTo(From(blocker), core.P1P1, Fixed(1)))))
+	g.PutOnBattlefield(watcher, a.PlayerID())
+	human := NewCreature("Human", "", 1, 4, WithSubTypes("Human"))
+	g.PutOnBattlefield(human, b.PlayerID())
+	g.FireEvent(core.GameEvent{Type: core.EvtCreatureBlockedBy, SourceID: watcher.ID(), TargetID: human.ID(), PlayerID: a.PlayerID()})
+	human.AddSubType("Wall")
+	g.PutTriggersOnStack()
+	if g.StackSize() != 1 {
+		t.Fatalf("got %d triggers, want 1", g.StackSize())
+	}
+	if g.CopyStackObjectDirect(g.StackPeek(), b.PlayerID(), false) == nil {
+		t.Fatal("could not copy trigger")
+	}
+	clone := g.Clone()
+	clone.ResolveStack()
+	if got := g.FindPermanent(human.ID()).Counters[core.P1P1]; got != 0 {
+		t.Fatalf("clone changed original blocker: %d", got)
+	}
+	g.ResolveStack()
+	for _, game := range []*Game{g, clone} {
+		if got := game.FindPermanent(human.ID()).Counters[core.P1P1]; got != 2 {
+			t.Fatalf("event-time match or copy lost: %d", got)
+		}
+	}
+	g.PhaseOut(human.ID())
+	g.FireEvent(core.GameEvent{Type: core.EvtCreatureBlockedBy, SourceID: watcher.ID(), TargetID: human.ID(), PlayerID: a.PlayerID()})
+	g.PutTriggersOnStack()
+	if got := g.StackSize(); got != 0 {
+		t.Fatalf("phased-out blocker produced %d triggers", got)
+	}
+}
