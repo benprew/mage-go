@@ -1,5 +1,37 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Sacrifice Subtype Result
+
+`SacrificeSubtypeInto(string, *NumberBinding) SacrificeResultOption` adds an
+action result to the existing singular `Sacrifice(PermanentRef, ...SacrificeResultOption)`
+instruction. It saves 1 only when the referenced permanent is actually
+sacrificed and had the named subtype immediately before it left the battlefield;
+otherwise it saves 0. The action uses the existing permanent reference,
+sacrifice executor, and instance-local number frame. It does not read the
+last-sacrificed slot, perform a cost payment, or create a second sacrifice path.
+The option works in spell, activated, and triggered resolving bodies and cannot
+share one instruction with another sacrifice result option. Registration rejects
+an empty subtype, nil binding, duplicate result option, and a read without a
+dominating producer. No production card or legacy export changed.
+
+Serendib Djinn's complete Oracle text in `data/ARN.json` requires a chosen land
+and damage only if an Island was sacrificed this way. A synthetic declaration
+combines `ChoosePermanent(You, ControlledPermanents(IsLand), land)`, this result,
+`IfPositive`, and `DealDamageFrom`. The production card still uses its legacy
+callback and remains open for a separate card migration and audit. Its Arabian
+inventory and JSON gap record remain open. A fresh caller search found no
+production use of `SacrificeSubtypeInto`; production `Sacrifice` and legacy
+sacrifice callers remain. The next dependency-ready work is another bounded P
+payment output or T target-announcement slice after a fresh API and caller audit.
+
+The focused test first failed because the option was absent. Engine and public
+DSL tests cover Island and non-Island choices, an opponent's Island, absent and
+phased objects, return as a new incarnation, another controller, stale result
+clearing, pending activations, stack copying, game clone isolation, inspection,
+and registration. Focused tests, the short engine suite, DSL registration and
+closed-role tests, short repository suite, build, vet, `make test`, `make lint`,
+and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Attached Aura Collection
 
 `AttachedAuras(PermanentRef) PermanentSet` selects live, unphased Auras attached to one current battlefield incarnation. `CountPermanents` can read the set in a resolving action or a dynamic static Layer 7c value. It uses the existing attachment links and permanent-reference contract. Registration rejects a missing or undeclared host binding. It adds no attachment action, production card, or legacy export.

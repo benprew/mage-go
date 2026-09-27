@@ -66,13 +66,17 @@ func (c *statePredicate) inspectDefinition() definitionNode {
 func (e *sacrificeEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
 	if e.invalidOption {
-		n.problem = "supply a non-nil sacrifice result binding"
+		n.problem = "supply a non-nil sacrifice result binding and a subtype"
 	} else if e.optionCount > 1 {
 		n.problem = "duplicate sacrifice result binding"
 	}
 	if e.result != nil {
 		n.bindingWrite = e.result
 		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	if e.subtypeResult != nil {
+		n.bindingWrite = e.subtypeResult
+		n.children = append(n.children, definitionEdge{"subtype result", e.subtypeResult})
 	}
 	return n
 }

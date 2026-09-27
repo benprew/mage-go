@@ -414,6 +414,7 @@ var (
 	DealDamageEach                      = mage.DealDamageEach
 	DamageTotalInto                     = mage.DamageTotalInto
 	SacrificeAmountInto                 = mage.SacrificeAmountInto
+	SacrificeSubtypeInto                = mage.SacrificeSubtypeInto
 	TapAmountInto                       = mage.TapAmountInto
 	IfPositive                          = mage.IfPositive
 	BindDamageResults                   = mage.BindDamageResults

@@ -506,7 +506,7 @@ Resolving effects implement `ResolvingEffect` and mutate the game during resolut
 * `GrantLandPlays(PlayerRef, ResolutionValue)`: Adds land plays for the selected player for this turn. Grants accumulate; the amount is read once at resolution. An absent player or nonpositive amount does nothing. This does not play a land, grant access to another zone, or override normal land-play timing.
 
 ### Permanent Actions
-* `Sacrifice(PermanentRef, ...SacrificeResultOption)`: Stored controller sacrifices the permanent if it is present, unphased, and still controlled by that player. `SacrificeAmountInto(*NumberBinding)` saves 1 after a successful instruction and 0 otherwise. The result is local to this resolution and can be read by later `FromNumber` expressions in a spell, activation, or trigger body. This is a resolving action result, not a cost-payment capture.
+* `Sacrifice(PermanentRef, ...SacrificeResultOption)`: Stored controller sacrifices the permanent if it is present, unphased, and still controlled by that player. `SacrificeAmountInto(*NumberBinding)` saves 1 after a successful instruction and 0 otherwise. `SacrificeSubtypeInto(string, *NumberBinding)` saves 1 only if the permanent was sacrificed and had the named subtype immediately before it left; it saves 0 otherwise. Use one result option per instruction. The result is local to this resolution and can be read by later `FromNumber` expressions in a spell, activation, or trigger body. This is a resolving action result, not a cost-payment capture.
 
 ```go
 package example
@@ -520,6 +520,24 @@ func sacrificeAbility() {
         GainLife(You, FromNumber(done)),
     ))
     _ = ability
+}
+```
+
+This synthetic triggered ability chooses a land controlled by the trigger controller and uses the completed sacrifice result:
+
+```go
+package example
+
+import . "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func islandSacrificeAbility() TriggeredAbility {
+    land := BindPermanent("chosen land")
+    wasIsland := BindNumber("was Island")
+    return At(YourUpkeep, Sequence(
+        ChoosePermanent(You, ControlledPermanents(IsLand), land),
+        Sacrifice(From(land), SacrificeSubtypeInto("Island", wasIsland)),
+        IfPositive(FromNumber(wasIsland), DealDamageFrom(This, You, Fixed(3))),
+    ))
 }
 ```
 * `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).

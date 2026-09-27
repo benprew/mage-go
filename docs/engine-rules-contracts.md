@@ -491,6 +491,15 @@ result later in the same `Sequence`. Stack copies and game clones keep their
 resolution frames separate. This result is for a resolving instruction; tap
 costs use the payment transaction.
 
+`Sacrifice(subject, SacrificeSubtypeInto(subtype, binding))` uses the same
+singular sacrifice action and saves a result in the current resolution frame.
+It reads the permanent's current subtype immediately before that action moves
+the permanent. It writes 1 only after an eligible permanent is sacrificed and
+had that subtype; absent, phased-out, returned, or differently controlled
+permanents write 0. The result does not use the global last-sacrificed slot.
+Stack copies and game clones keep separate resolution frames. This result is
+for a resolving instruction, not a cost payment (CR 400.7, 608.2h, 701.21a).
+
 ---
 
 ## 10. Turn Structure, Cleanup Priority, and History Retention (CR 514)

@@ -27,6 +27,8 @@ func (sourceRef) resolvePermanent(ctx *EffectContext) (*Permanent, bool) {
 type sacrificeEffect struct {
 	subject       PermanentRef
 	result        *NumberBinding
+	subtypeResult *NumberBinding
+	subtype       string
 	invalidOption bool
 	optionCount   int
 }
@@ -49,6 +51,26 @@ func (o sacrificeAmountOption) applySacrificeResult(e *sacrificeEffect) {
 	e.result = o.binding
 	e.optionCount++
 	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
+
+type sacrificeSubtypeOption struct {
+	subtype string
+	binding *NumberBinding
+}
+
+// SacrificeSubtypeInto saves one if the sacrificed permanent had the subtype.
+func SacrificeSubtypeInto(subtype string, binding *NumberBinding) SacrificeResultOption {
+	return sacrificeSubtypeOption{subtype: subtype, binding: binding}
+}
+
+func (sacrificeSubtypeOption) sacrificeResultOption() {}
+func (o sacrificeSubtypeOption) applySacrificeResult(e *sacrificeEffect) {
+	e.subtype = o.subtype
+	e.subtypeResult = o.binding
+	e.optionCount++
+	if o.binding == nil || o.subtype == "" {
 		e.invalidOption = true
 	}
 }
@@ -80,16 +102,25 @@ func (e *sacrificeEffect) Properties() EffectProperties {
 	return EffectProperties{SacrificesSource: source}
 }
 func (e *sacrificeEffect) Apply(ctx *EffectContext) error {
-	if e.result != nil {
+	if e.result != nil || e.subtypeResult != nil {
 		if ctx.Game.resolution.numberBindings == nil {
 			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
 		}
-		ctx.Game.resolution.numberBindings[e.result] = 0
+		if e.result != nil {
+			ctx.Game.resolution.numberBindings[e.result] = 0
+		}
+		if e.subtypeResult != nil {
+			ctx.Game.resolution.numberBindings[e.subtypeResult] = 0
+		}
 	}
 	if p, ok := e.subject.resolvePermanent(ctx); ok && p.ControllerID() == ctx.Controller {
+		matched := e.subtypeResult != nil && p.HasSubType(e.subtype)
 		ctx.Game.DoSacrifice(p)
 		if e.result != nil {
 			ctx.Game.resolution.numberBindings[e.result] = 1
+		}
+		if matched {
+			ctx.Game.resolution.numberBindings[e.subtypeResult] = 1
 		}
 	}
 	return nil
