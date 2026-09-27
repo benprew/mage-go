@@ -349,6 +349,21 @@ func (em *EffectManager) Add(e ContinuousEffect) {
 	em.effects = append(em.effects, e)
 }
 
+func (em *EffectManager) retimestampAttachment(sourceID uuid.UUID) {
+	// Static abilities use the attachment's new timestamp after a move.
+	ordered := make([]ContinuousEffect, 0, len(em.effects))
+	moved := make([]ContinuousEffect, 0)
+	for _, effect := range em.effects {
+		if _, printed := effect.(*printedAbilityContinuousEffect); printed && effect.SourceID() == sourceID {
+			moved = append(moved, effect)
+		} else {
+			ordered = append(ordered, effect)
+		}
+	}
+	ordered = append(ordered, moved...)
+	em.effects = ordered
+}
+
 // SourceTapMaintainedStatus inspects the tap-maintained continuous effects the
 // given source keeps active by remaining tapped. hasEffect reports whether the
 // source has any such effect at all; targetLives reports whether at least one of

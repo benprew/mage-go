@@ -4,7 +4,7 @@ This document is the authoritative, comprehensive reference for the composable c
 
 Cards import `pkg/mage/dsl` (and `pkg/mage/core` for enums/types). All card definitions, abilities, costs, targets, and effects are built using the typed combinators exported by `dsl`.
 
-The shared engine operation `(*mage.Game).Attach(sourceID, targetID uuid.UUID)` moves an Aura, Equipment, or Fortification between battlefield permanents. It checks the Aura's enchant restriction, protection, and attachment prohibitions before changing either host. An invalid move, including a move to a phased-out host, does nothing. A move to the current host also does nothing. This operation is for engine integrations and existing callers; there is no typed `dsl.Attach` action yet. For example, a synthetic engine test can call:
+The shared engine operation `(*mage.Game).Attach(sourceID, targetID uuid.UUID)` moves an Aura, Equipment, or Fortification between battlefield permanents. It checks the Aura's enchant restriction, protection, and attachment prohibitions before changing either host. A successful move gives its printed static effects a new timestamp; their relative order stays the same. An invalid move, including a move to a phased-out host, does nothing. A move to the current host also does nothing and does not change effect order. This operation is for engine integrations and existing callers; there is no typed `dsl.Attach` action yet. For example, a synthetic engine test can call:
 
 ```go
 host := game.PutOnBattlefield(mage.NewCreature("Host", "", 2, 2), playerID)

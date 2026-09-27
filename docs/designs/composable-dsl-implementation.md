@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attachment Move Timestamp
+
+`Game.Attach(sourceID, targetID)` now moves an attachment's printed static effects to the current end of timestamp order after a successful move. It keeps their relative order. This uses the existing effect manager and attachment legality checks; the public engine signature does not change. Failed and same-host attempts leave the order unchanged. Game clones have independent effect order. The focused synthetic test first failed because a reattached Aura still applied before an earlier Aura. It covers opposing ability grants and removals, same-host and illegal moves, phasing, and clone isolation. No typed author action or production card changed.
+
+Ajani's Chosen's text in `data/JMP.json` requires an optional Aura attachment after token creation. The timestamp prerequisite now supports the shared move, but the typed optional action and card wiring remain open. The Jumpstart inventory and gap record remain open. The next dependency-ready slice is that typed optional attachment action, after an audit of its choice and binding rules.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues after one local style fix), and `git diff --check` pass. A fresh search found 35 `Attach` call sites in production card files; existing engine callers remain. The public signature and all legacy exports stay in place.
+
 ## Current Slice: Attachment Move Legality
 
 `Game.Attach(sourceID, targetID)` now checks attachment source kind, Aura enchant restrictions, protection, and attachment prohibitions before a move. It rejects phased-out or absent participants and same-host moves without changing attachment state. Successful moves record the host incarnation and continue through the shared effect and event paths. This is an engine prerequisite; it adds no typed author action or production card wiring. Synthetic tests first failed on wrong-type Aura hosts, protection, and ordinary creature attachment. They cover failed-move state, same-host behavior, phasing, departure and return, and clone isolation.

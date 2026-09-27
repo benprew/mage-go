@@ -1627,6 +1627,7 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	src.AttachedTo = targetID
 	src.attachedIncarnation = target.incarnationID
 	target.Attachments = append(target.Attachments, sourceID)
+	g.effects.retimestampAttachment(sourceID)
 
 	g.effects.Apply(g)
 
