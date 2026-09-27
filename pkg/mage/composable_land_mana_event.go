@@ -21,6 +21,8 @@ type landTappedForManaPattern struct {
 	manaType        Color
 	filterManaType  bool
 	duplicateType   bool
+	attachedOnly    bool
+	duplicateAttach bool
 }
 
 // LandTappedForMana matches a land mana ability that used a tap cost and produced mana.
@@ -32,6 +34,15 @@ func (p landTappedForManaPattern) OfManaType(manaType Color) landTappedForManaPa
 		p.duplicateType = true
 	}
 	p.manaType, p.filterManaType = manaType, true
+	return p
+}
+
+// OfAttachedLand matches the land attached to the trigger source at event time.
+func (p landTappedForManaPattern) OfAttachedLand() landTappedForManaPattern {
+	if p.attachedOnly {
+		p.duplicateAttach = true
+	}
+	p.attachedOnly = true
 	return p
 }
 
@@ -65,21 +76,28 @@ func (p landTappedForManaPattern) WithLand(binding *PermanentBinding) landTapped
 func (landTappedForManaPattern) eventPattern() {}
 
 func (p landTappedForManaPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(EvtTappedForMana, false, effect).SetConditionData(tappedForManaLandSource{manaType: p.manaType, filterManaType: p.filterManaType})
+	return NewTriggered(EvtTappedForMana, false, effect).SetConditionData(tappedForManaLandSource{manaType: p.manaType, filterManaType: p.filterManaType, attachedOnly: p.attachedOnly})
 }
 
 type tappedForManaLandSource struct {
 	manaType       Color
 	filterManaType bool
+	attachedOnly   bool
 }
 
-func (p tappedForManaLandSource) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+func (p tappedForManaLandSource) CheckTriggerCond(event *GameEvent, reader GameReader, sourceID, _ uuid.UUID) bool {
 	if p.filterManaType && !slices.Contains(event.ManaTypes, p.manaType) {
 		return false
 	}
 	game, ok := reader.(*Game)
 	if !ok || event.SourceIncarnation == uuid.Nil {
 		return false
+	}
+	if p.attachedOnly {
+		source := game.FindPermanent(sourceID)
+		if source == nil || source.AttachedTo != event.SourceID || source.attachedIncarnation != event.SourceIncarnation {
+			return false
+		}
 	}
 	if land := game.FindPermanent(event.SourceID); land != nil && land.incarnationID == event.SourceIncarnation {
 		return land.HasType(TypeLand)
@@ -92,8 +110,14 @@ func (p tappedForManaLandSource) CheckTriggerCond(event *GameEvent, reader GameR
 
 func (p landTappedForManaPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "a land is tapped for mana", battlefieldSource: true}
+	if p.attachedOnly {
+		n.Text = "attached land is tapped for mana"
+	}
 	if p.filterManaType && (p.duplicateType || p.manaType < Colorless || p.manaType >= AnyColor) {
 		n.problem = "land tapped for mana: supply one concrete mana type"
+	}
+	if p.duplicateAttach {
+		n.problem = "land tapped for mana: supply one attached-land filter"
 	}
 	if p.capturePlayer {
 		if p.player == nil || p.duplicatePlayer {

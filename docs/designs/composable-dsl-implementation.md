@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attached Land Tapped-for-Mana Filter
+
+`LandTappedForMana().OfAttachedLand()` matches a tapped-for-mana event only when its producing land incarnation is attached to the battlefield trigger source at event time. It composes with the existing mana-type filter and land, player, and amount captures in `WhenEvent` and `WhenEventModes`. It reuses the mana event and attachment incarnation; it adds no new event or mana executor. Registration rejects a repeated filter, and inspection describes the attached-land pattern. Synthetic tests cover an attached land, another land, a returned incarnation, phasing, attachment changes after detection, trigger copying, game clone isolation, registration, and a public DSL declaration. Focused tests first failed because the method was absent, then passed after implementation. No production card or legacy export changed.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, `go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff and `git diff --check` pass.
+
+Wild Growth's complete text in `data/4ED.json` still needs a typed action that adds mana to the enchanted land's controller with triggered mana timing. Mana Flare still needs a choice from the event-time set of mana types and an action that adds the chosen mana to the activating player. `cards/limited/enchantments.go` still uses `NewAttachedManaBonusAbility` and `NewManaFlareAbility`; neither gap record is closed. The next dependency-ready work is the triggered mana-production contract and typed player recipient, after a focused engine audit.
+
 ## Current Slice: Tapped-for-Mana Type Event and Filter
 
 `EvtTappedForMana.ManaTypes` now records each distinct concrete mana type produced by a tap-cost mana ability. Ordinary taps, direct mana activation, typed immediate activation, and planned payment pass the chosen types through the existing mana service. `LandTappedForMana().OfManaType(core.Color)` is a sealed event filter for battlefield `WhenEvent` and `WhenEventModes`; it composes with the existing land, player, and amount captures. Registration rejects `AnyColor`, invalid types, and duplicate filters. The event copies its type list. Existing production cards and author exports are unchanged.

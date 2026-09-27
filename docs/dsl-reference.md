@@ -1247,6 +1247,18 @@ Triggers on rules events dispatched by the engine:
     _ = watcher
     ```
 
+  * `LandTappedForMana().OfAttachedLand()`: Match only when the land that produced mana is attached to the battlefield source at event time. The filter compares the land's battlefield incarnation, so a returned card does not match an old event. It composes with `OfManaType`, `WithLand`, `WithPlayer`, and `WithAmount` in `WhenEvent` and `WhenEventModes`. Registration rejects a repeated filter. This declaration compiles:
+
+    ```go
+    producer := dsl.BindPlayer("producer")
+    amount := dsl.BindNumber("produced")
+    watcher := dsl.NewAura("Land watcher", "", dsl.WithCastTarget(dsl.TargetLand()), dsl.WithAbility(dsl.WhenEvent(
+        dsl.LandTappedForMana().OfAttachedLand().OfManaType(core.Blue).WithPlayer(producer).WithAmount(amount),
+        dsl.GainLife(dsl.FromPlayer(producer), dsl.FromNumber(amount)),
+    )))
+    _ = watcher
+    ```
+
   * `Enters(This)`: Source enters the battlefield.
   * `Dies(This)`: Source dies (moves from battlefield to graveyard).
   * `LeavesBattlefield(This)`: Source moves from the battlefield to any other zone. Destruction, exile, and return to hand match. Phasing does not match. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The pending trigger keeps its controller and source incarnation.
