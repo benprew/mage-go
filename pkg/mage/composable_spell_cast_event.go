@@ -29,6 +29,9 @@ type spellCastPattern struct {
 	colorsSpent                 *NumberBinding
 	captureColorsSpent          bool
 	duplicateColorsSpent        bool
+	announcedX                  *NumberBinding
+	captureAnnouncedX           bool
+	duplicateAnnouncedX         bool
 	filterXInManaCost           bool
 	duplicateXInManaCost        bool
 }
@@ -69,6 +72,16 @@ func (p spellCastPattern) WithColorsSpent(spent *NumberBinding) spellCastPattern
 	}
 	p.colorsSpent = spent
 	p.captureColorsSpent = true
+	return p
+}
+
+// WithAnnouncedX saves the cast spell's X value when it is cast.
+func (p spellCastPattern) WithAnnouncedX(value *NumberBinding) spellCastPattern {
+	if p.captureAnnouncedX {
+		p.duplicateAnnouncedX = true
+	}
+	p.announcedX = value
+	p.captureAnnouncedX = true
 	return p
 }
 
@@ -196,6 +209,16 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 	if p.duplicateColorsSpent {
 		n.problem = "spell cast event: supply one colors-spent binding"
 	}
+	if p.captureAnnouncedX {
+		n.bindingWrites = append(n.bindingWrites, p.announcedX)
+		n.children = append(n.children, definitionEdge{"announced X", &eventAmountCapture{binding: p.announcedX}})
+		if p.announcedX == nil {
+			n.problem = "spell cast event: supply an announced-X binding"
+		}
+	}
+	if p.duplicateAnnouncedX {
+		n.problem = "spell cast event: supply one announced-X binding"
+	}
 	return n
 }
 
@@ -249,7 +272,7 @@ func (c spellCastHasType) CheckTriggerCond(event *GameEvent, reader GameReader, 
 }
 
 func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
-	if !p.captureCaster && !p.captureManaSpent && !p.captureColorsSpent {
+	if !p.captureCaster && !p.captureManaSpent && !p.captureColorsSpent && !p.captureAnnouncedX {
 		return effects
 	}
 	captures := make([]ResolvingEffect, 0, 4)
@@ -261,6 +284,9 @@ func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect
 	}
 	if p.captureColorsSpent {
 		captures = append(captures, &eventAmountCapture{binding: p.colorsSpent, amount: event.CastColorsSpent})
+	}
+	if p.captureAnnouncedX {
+		captures = append(captures, &eventAmountCapture{binding: p.announcedX, amount: event.CastAnnouncedX})
 	}
 	captures = append(captures, Sequence(effects...))
 	return []Effect{Sequence(captures...)}

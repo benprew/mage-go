@@ -1906,6 +1906,15 @@ Triggers on rules events dispatched by the engine:
     ```
   * `SpellCast().WithXInManaCost()`: Match a cast spell whose mana cost contains an `{X}` symbol. The announced value can be zero. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield source. The check reads the spell that caused the cast event, before that spell leaves the stack. Copies placed on the stack without being cast do not cause a cast event. Registration rejects a second use of the filter.
 
+    `SpellCast().WithAnnouncedX(*NumberBinding)` saves the cast spell's X value when the cast event occurs. Read it with `FromNumber` in the trigger body. It can follow `WithXInManaCost` when the trigger must match only spells with `{X}` in their mana cost. The binding is local to each pending trigger and is not a target. Registration rejects nil, unnamed, repeated, or out-of-scope bindings.
+
+    ```go
+    x := dsl.BindNumber("cast X")
+    watcher := dsl.NewArtifact("X Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().WithXInManaCost().WithAnnouncedX(x),
+        dsl.GainLife(dsl.You, dsl.FromNumber(x)))))
+    ```
+
     ```go
     dsl.NewCreature("X watcher", "{2}{U}", 2, 2, dsl.WithAbility(dsl.WhenEvent(
         dsl.SpellCast().WithXInManaCost(),

@@ -1788,6 +1788,7 @@ func (g *Game) FireEvent(evt GameEvent) {
 		if obj := g.stack.FindByID(evt.TargetID); obj != nil && !obj.IsAbility && obj.SourceID == evt.SourceID {
 			evt.CastManaSpent = ManaSpentToCast(obj)
 			evt.CastColorsSpent = obj.CastContext.DistinctColorsSpent()
+			evt.CastAnnouncedX = obj.XValue
 		}
 	}
 	if isBattlefieldLeaveEvent(&evt) && evt.SourceIncarnation == uuid.Nil {

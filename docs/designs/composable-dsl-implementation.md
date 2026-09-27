@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Cast-Event Announced-X Capture
+
+`SpellCast().WithAnnouncedX(*NumberBinding)` saves the cast spell's X value when `EvtSpellCast` occurs. It is available in battlefield `WhenEvent` and `WhenEventModes` bodies and composes with the existing cast filters. `GameEvent.CastAnnouncedX` copies the value from the identified stack object before event dispatch. The pending trigger stores it in its instance-local number frame. The adapter uses the existing cast event and binding services; it adds no casting, payment, or resolution action. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. No production card or legacy export changed.
+
+The plan's E-family cast-event requirement includes X capture. The complete Matterbending Mage text in `data/SOS.json` needs only the existing `WithXInManaCost` filter, so this capture does not close that gap. Other cast-event consumers can use the value, but their remaining requirements and card wiring need separate audits. The focused test first failed because `WithAnnouncedX` was absent. Synthetic tests cover zero and positive X, spell departure, phasing, source leave and return, stack copying, game cloning, inspection, registration, and the public DSL declaration. The next dependency-ready work is a separate P payment output or E event participant after a fresh audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Player Life-Loss Event
 
 `PlayerLosesLife(*PlayerBinding).WithAmount(*NumberBinding)` matches each positive completed life-loss event for either player. The amount option is optional. It saves the player and event amount in each pending trigger's instance-local frame and works in battlefield `WhenEvent` and `WhenEventModes` bodies. The existing `OpponentLosesLife` keeps its event-time opponent filter and now shares the same pattern implementation. The adapter reuses `EvtLifeLost` and the existing trigger lifecycle. It adds no life-loss executor, payment rule, replacement, or target. No production card or legacy export changed.

@@ -64,6 +64,7 @@ type GameEvent struct {
 	SourceControllerID uuid.UUID
 	CastManaSpent      int
 	CastColorsSpent    int
+	CastAnnouncedX     int
 	TargetID           uuid.UUID
 	ActorID            uuid.UUID
 	RelatedIDs         []uuid.UUID
