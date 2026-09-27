@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Per-Pair Source Blocks Creature
+
+`BlocksCreature(This)` is a sealed battlefield event pattern for `WhenEvent` and `WhenEventModes`. It matches each legal attacker/blocker pair in which the source blocks an attacking creature. `.OfSubtype(string)` and `.WithoutSubtype(string)` inspect that attacker when the pair event occurs. `.WithOpponent(*PermanentBinding)` saves its battlefield incarnation in the pending trigger; it does not announce a target. The adapter uses the existing `EvtDeclaredBlocker`, legal-combat declaration, pending-trigger capture, and resolution-frame clone services. It has no new combat executor. Registration rejects invalid or repeated subtype filters, invalid bindings, and a body read without a producer. The pattern has no resolving-action or static-rule lifecycle.
+
+The complete Venom text in `data/4ED.json` and CR 509.3b, 509.3d, 509.3f, and 509.4 require per-pair matching in both blocking directions. This slice covers only the source-blocks direction. `BecomesBlockedBy(This)` covers the attacker direction separately. A combined per-pair pattern and delayed destruction remain for Venom; the Fourth Edition gap stays open and production wiring is unchanged. The legacy `BlocksTrigger` and `BlocksOrBecomesBlockedTrigger` exports remain because production callers exist. The next dependency-ready slice is the combined per-pair event pattern with one opponent capture across both directions.
+
+The focused tests first failed because `BlocksCreature` was absent. They now cover multiple pairs including a later pair with `Flag=false`, non-Wall filtering, opponent incarnation after return, phasing, clone isolation, inspection through registration, and invalid declarations. `go test ./pkg/mage -run TestBlocksCreature -count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The documentation example compiles with `go build`.
+
 ## Current Slice: Blocker-Group Subtype Exclusion
 
 `BlocksOrBecomesBlockedBy(This).WithoutSubtype(string)` is a sealed event-pattern filter for battlefield `WhenEvent` and `WhenEventModes` declarations. It matches one new blocker group if at least one opposing creature lacks the specified creature subtype at event detection. The existing `EvtBlockerGroup`, pending trigger, source identity, and clone paths remain the reuse boundary. The filter has no result or participant binding. Registration rejects an empty or noncreature subtype and repeated or conflicting filters. No production card or legacy export changed.

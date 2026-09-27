@@ -218,6 +218,7 @@ var (
 	BecomesBlocked                     = mage.BecomesBlocked
 	BecomesTargetOfSpell               = mage.BecomesTargetOfSpell
 	BecomesBlockedBy                   = mage.BecomesBlockedBy
+	BlocksCreature                     = mage.BlocksCreature
 	BlocksOrBecomesBlockedBy           = mage.BlocksOrBecomesBlockedBy
 	CreatureYouControlDies             = mage.CreatureYouControlDies
 	OpponentCreatureDies               = mage.OpponentCreatureDies
