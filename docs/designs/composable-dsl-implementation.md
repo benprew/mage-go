@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Controlled Enchantment Entry Subtype
+
+`EnchantmentYouControlEnters().OfSubtype(string)` is a typed entry-time enchantment subtype filter for battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses the effective entry-subtype condition and existing controlled-enchantment trigger. It composes with `WithPermanent` without changing the captured incarnation. Registration rejects an empty, unknown, wrong-family, or repeated subtype. No production card or legacy export changed.
+
+Ajani's Chosen's complete Oracle text was checked in `data/JMP.json`. Its "If that enchantment is an Aura" clause is a condition during resolution, after token creation, so this entry filter does **not** express that clause. Its optional token attachment and production wiring remain open. The Jumpstart inventory and JSON gap record remain open. The next dependency-ready work is a typed resolution-time subtype condition on a bound permanent, together with the required token-result and attachment contracts, or an independent E/P slice after a fresh audit.
+
+Focused tests first failed because `OfSubtype` was absent. Synthetic and public DSL tests cover effective subtype at entry, controller and owner distinction, source phasing, saved incarnation across departure and return, stack copying, game cloning, inspection, and registration rejection. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `EnchantmentYouControlEnters` caller; existing entry and legacy exports remain for unmigrated cards.
+
 ## Current Slice: Controlled Enchantment Entry
 
 `EnchantmentYouControlEnters().WithPermanent(*PermanentBinding)` is a sealed battlefield event pattern for `WhenEvent` and `WhenEventModes`. It matches an enchantment entering under the trigger controller's control, including the source itself. The optional binding saves the entering battlefield incarnation in the pending trigger frame. The adapter reuses the zone-entry event, effective type and controller checks, and existing permanent capture. It adds no entry replacement or card-specific rule. A saved object is absent after leaving and returning or while phased out. Registration rejects nil, unnamed, repeated, and unbound captures; the typed method excludes player and card bindings.

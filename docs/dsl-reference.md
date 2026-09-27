@@ -1164,7 +1164,7 @@ Triggers on rules events dispatched by the engine:
     ```
 
   * `CreatureDies()`: Any creature dies.
-  * `EnchantmentYouControlEnters().WithPermanent(*PermanentBinding)`: Match an enchantment that enters under the trigger controller's control, including the source itself if it is an enchantment. `WithPermanent` is optional and saves the entering battlefield incarnation for the trigger body. The saved object is not a target. It becomes absent if it leaves and returns or phases out. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. Registration rejects missing, unnamed, repeated, and unbound captures.
+  * `EnchantmentYouControlEnters().OfSubtype(string).WithPermanent(*PermanentBinding)`: Match an enchantment that enters under the trigger controller's control, including the source itself if it is an enchantment. Both methods are optional. `OfSubtype` accepts one enchantment subtype, such as `"Aura"`, and checks the effective subtype at entry. `WithPermanent` saves the entering battlefield incarnation for the trigger body. The saved object is not a target. It becomes absent if it leaves and returns or phases out. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. Registration rejects an unknown or nonenchantment subtype, repeated subtype filters, and missing, unnamed, repeated, or unbound captures.
 
     ```go
     package example
@@ -1178,7 +1178,7 @@ Triggers on rules events dispatched by the engine:
         entered := dsl.BindPermanent("entered enchantment")
         return dsl.NewCreature("Watcher", "", 1, 1,
             dsl.WithAbility(dsl.WhenEvent(
-                dsl.EnchantmentYouControlEnters().WithPermanent(entered),
+                dsl.EnchantmentYouControlEnters().OfSubtype("Aura").WithPermanent(entered),
                 dsl.AddCounters(dsl.From(entered), core.P1P1, dsl.Fixed(1)))))
     }
     ```

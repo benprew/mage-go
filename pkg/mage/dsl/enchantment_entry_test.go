@@ -17,3 +17,13 @@ func TestEnchantmentEntryDeclaration(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestEnchantmentEntrySubtypeDeclaration(t *testing.T) {
+	entered := dsl.BindPermanent("entered Aura")
+	card := dsl.NewCreature("Watcher", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(
+		dsl.EnchantmentYouControlEnters().OfSubtype("Aura").WithPermanent(entered),
+		dsl.AddCounters(dsl.From(entered), core.P1P1, dsl.Fixed(1)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}
