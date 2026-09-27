@@ -26,3 +26,14 @@ func TestBlockerGroupWithoutSubtypeAuthorSurface(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCombatPairAuthorSurface(t *testing.T) {
+	opponent := dsl.BindPermanent("opposing creature")
+	var card dsl.Card = dsl.NewCreature("Pair watcher", "{1}{G}", 2, 4,
+		dsl.WithAbility(dsl.WhenEvent(
+			dsl.BlocksOrBecomesBlockedByCreature(dsl.This).WithoutSubtype("Wall").WithOpponent(opponent),
+			dsl.Tap(dsl.From(opponent)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}

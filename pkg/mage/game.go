@@ -578,6 +578,7 @@ func (g *Game) PutOnBattlefieldBlocking(card Card, controller, attackerID uuid.U
 	g.trackers.Turn.RecordBlocked(perm.ID(), attackerID)
 	if attacker := g.FindPermanent(attackerID); attacker != nil {
 		g.FireEvent(GameEvent{Type: EvtCreatureBlockedBy, SourceID: attackerID, TargetID: perm.ID(), PlayerID: attacker.ControllerID()})
+		g.FireEvent(GameEvent{Type: EvtCombatPair, SourceID: attackerID, TargetID: perm.ID(), PlayerID: attacker.ControllerID()})
 		g.FireEvent(GameEvent{Type: EvtBlockerGroup, SourceID: attackerID, RelatedIDs: []uuid.UUID{perm.ID()}, PlayerID: attacker.ControllerID()})
 	}
 	if !wasBlocked {
@@ -650,6 +651,7 @@ func (g *Game) fireNewBlockerPairs(before map[combatBlockPair]bool) {
 				continue
 			}
 			g.FireEvent(GameEvent{Type: EvtCreatureBlockedBy, SourceID: attacker.ID(), TargetID: blockerID, PlayerID: attacker.ControllerID()})
+			g.FireEvent(GameEvent{Type: EvtCombatPair, SourceID: attacker.ID(), TargetID: blockerID, PlayerID: attacker.ControllerID()})
 		}
 	}
 }
@@ -716,6 +718,7 @@ func (g *Game) fireDeclaredBlockerPairs(before map[combatBlockPair]bool) {
 				continue
 			}
 			g.FireEvent(GameEvent{Type: EvtDeclaredBlocker, SourceID: blockerID, TargetID: group.AttackerID, PlayerID: blocker.ControllerID(), Flag: !seen[blockerID]})
+			g.FireEvent(GameEvent{Type: EvtCombatPair, SourceID: blockerID, TargetID: group.AttackerID, PlayerID: blocker.ControllerID(), Flag: true})
 			seen[blockerID] = true
 		}
 	}

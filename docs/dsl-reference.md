@@ -1199,6 +1199,22 @@ Triggers on rules events dispatched by the engine:
     func main() {}
     ```
 
+    `BlocksOrBecomesBlockedByCreature(This)` matches each new opposing creature when the source blocks it or becomes blocked by it. A blocker assigned to two attackers makes two pair events. A creature that enters blocking can match on the attacker side only. `.OfSubtype(string)` and `.WithoutSubtype(string)` inspect the opposing creature at event detection; use at most one filter. `.WithOpponent(*PermanentBinding)` saves that creature's battlefield incarnation in the pending trigger. The saved creature is not a target. It is absent if it leaves and returns or phases out. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var opponent = dsl.BindPermanent("opposing non-Wall creature")
+    var _ = dsl.NewCreature("Pair watcher", "", 2, 4,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.BlocksOrBecomesBlockedByCreature(dsl.This).WithoutSubtype("Wall").WithOpponent(opponent),
+            dsl.Tap(dsl.From(opponent)))))
+
+    func main() {}
+    ```
+
     `BlocksOrBecomesBlockedBy(This).OfSubtype(string)` matches one group when the source blocks or becomes blocked by one or more creatures of that subtype. `.WithoutSubtype(string)` matches one group that contains at least one creature without that subtype. The filters are exclusive. Both check the other creatures at event detection and trigger once for a group with several matches. A creature put onto the battlefield blocking can cause the attacker to match, but it did not itself block. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. These group patterns do not capture each opposing creature for a per-pair effect.
 
     ```go
