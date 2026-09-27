@@ -37,10 +37,22 @@ type spellCastPattern struct {
 	spell                       *SpellBinding
 	captureSpell                bool
 	duplicateSpell              bool
+	castZone                    Zone
+	filterCastZone              bool
+	duplicateCastZone           bool
 }
 
 // SpellCast matches a spell cast by any player while this source is on the battlefield.
 func SpellCast() spellCastPattern { return spellCastPattern{} }
+
+// FromZone matches the zone the spell left when it was cast.
+func (p spellCastPattern) FromZone(zone Zone) spellCastPattern {
+	if p.filterCastZone {
+		p.duplicateCastZone = true
+	}
+	p.castZone, p.filterCastZone = zone, true
+	return p
+}
 
 // WithSpell saves the cast spell's stack identity for this trigger.
 func (p spellCastPattern) WithSpell(binding *SpellBinding) spellCastPattern {
@@ -155,6 +167,9 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 	if p.filterXInManaCost {
 		t.AndConditionData(spellCastHasXInManaCost{})
 	}
+	if p.filterCastZone {
+		t.AndConditionData(spellCastFromZone{zone: p.castZone})
+	}
 	return t
 }
 
@@ -190,6 +205,12 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 		n.Text += " with X in its mana cost"
 		if p.duplicateXInManaCost {
 			n.problem = "spell cast event: supply the X filter once"
+		}
+	}
+	if p.filterCastZone {
+		n.Text += " from " + strings.ToLower(p.castZone.String())
+		if p.duplicateCastZone || !castOriginZone(p.castZone) {
+			n.problem = "spell cast event: supply one valid cast zone"
 		}
 	}
 	if p.caster != nil {
@@ -243,6 +264,25 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 }
 
 type spellCastHasType struct{ cardType CardType }
+
+type spellCastFromZone struct{ zone Zone }
+
+func castOriginZone(zone Zone) bool {
+	switch zone {
+	case ZoneLibrary, ZoneHand, ZoneBattlefield, ZoneGraveyard, ZoneExile, ZoneCommand, ZoneAnte:
+		return true
+	}
+	return false
+}
+
+func (c spellCastFromZone) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.TargetID == uuid.Nil {
+		return false
+	}
+	object := game.stack.FindByID(event.TargetID)
+	return object != nil && !object.IsAbility && object.Card != nil && object.SourceID == event.SourceID && object.CastZone == c.zone
+}
 
 type spellCastHasXInManaCost struct{}
 

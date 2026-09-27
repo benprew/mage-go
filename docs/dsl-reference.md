@@ -1286,6 +1286,15 @@ Triggers on rules events dispatched by the engine:
             mage.GainLifeFor(mage.You, mage.Fixed(1)))))
     ```
   * `SpellCast().OfColor(core.Color) EventPattern`: Match a spell cast by any player while the source is on the battlefield. `OfColor` is optional and accepts one of the five Magic colors. It checks the spell's effective color on the stack when the cast event occurs, including color changes. The pattern does not target or bind the spell. Use it in `WhenEvent` or `WhenEventModes`.
+  * `SpellCast().FromZone(core.Zone) EventPattern`: Match a spell cast from the given card zone. The filter reads the exact cast stack object's `CastZone` when the cast event occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. It composes with cast filters and captures such as `ByOpponent` and `WithCaster`. Registration rejects a repeated filter, `ZoneStack`, `ZoneAny`, or an invalid zone. A copied spell does not create a cast event. This synthetic declaration compiles:
+
+    ```go
+    caster := dsl.BindPlayer("caster")
+    card := dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().FromZone(core.ZoneHand).WithCaster(caster),
+        dsl.GainLife(dsl.FromPlayer(caster), dsl.Fixed(1)))))
+    ```
+
   * `SpellCast().OfType(core.CardType) EventPattern`: Match a cast spell of one nonland card type. The filter reads the spell on the stack at cast time, including more than one type. A repeated filter or a land type fails registration. It composes with `OfColor`, `ByOpponent`, and `WithCaster` in `WhenEvent` and `WhenEventModes` on a battlefield source. For example:
     ```go
     watcher := dsl.NewCreature("Watcher", "{2}{U}", 1, 2,
