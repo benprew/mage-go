@@ -886,13 +886,15 @@ func (c *exileFromGraveyardCost) Text() string {
 }
 
 type exileMatchingCardFromGraveyardCost struct {
-	filter   CardFilter
-	text     string
-	paid     *NumberBinding
-	capture  bool
-	locked   bool
-	selected uuid.UUID
-	visit    uuid.UUID
+	filter      CardFilter
+	text        string
+	paid        *NumberBinding
+	capture     bool
+	paidCard    *CardBinding
+	captureCard bool
+	locked      bool
+	selected    uuid.UUID
+	visit       uuid.UUID
 }
 
 // ExileMatchingCardFromGraveyardCost creates a cost that requires the controller
@@ -906,6 +908,11 @@ func ExileMatchingCardFromGraveyardCostInto(filter CardFilter, text string, paid
 	return &exileMatchingCardFromGraveyardCost{filter: filter, text: text, paid: paid, capture: true}
 }
 
+// ExileMatchingCardFromGraveyardCostWithCard saves the exiled card in its new exile visit.
+func ExileMatchingCardFromGraveyardCostWithCard(filter CardFilter, text string, paid *CardBinding) Cost {
+	return &exileMatchingCardFromGraveyardCost{filter: filter, text: text, paidCard: paid, captureCard: true}
+}
+
 func (c *exileMatchingCardFromGraveyardCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "exile-graveyard-cost", Text: c.Text()}
 	if c.capture {
@@ -913,6 +920,15 @@ func (c *exileMatchingCardFromGraveyardCost) inspectDefinition() definitionNode 
 		n.children = []definitionEdge{{"paid", c.paid}}
 		if c.paid == nil {
 			n.problem = "supply a non-nil paid mana value binding"
+		} else if c.text == "" {
+			n.problem = "supply exile cost text"
+		}
+	}
+	if c.captureCard {
+		n.bindingWrite = c.paidCard
+		n.children = []definitionEdge{{"paid card", c.paidCard}}
+		if c.paidCard == nil {
+			n.problem = "supply a non-nil paid card binding"
 		} else if c.text == "" {
 			n.problem = "supply exile cost text"
 		}

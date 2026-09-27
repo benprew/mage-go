@@ -1,5 +1,15 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Paid Graveyard Exile Card
+
+`ExileMatchingCardFromGraveyardCostWithCard(CardFilter, string, *CardBinding) Cost` saves the card exiled from the payer's graveyard by a direct spell additional cost or activated ability cost. The prepared-payment transaction locks its graveyard visit; the committed payment captures its new exile visit in the spell or ability frame. `FromCard` is absent after that card leaves exile, even if it returns. Exile now records a visit ID for face-up and face-down entries, and game cloning retains it. This reuses the existing cost choice, exile move, and frame services; it adds no new executor, replacement, or card policy. The legacy cost and its one production caller, Necropolis, remain unchanged. No production card or JSON gap record changed.
+
+Necropolis's complete text in `data/DRK.json` requires the exiled card's mana value for counters. The existing `ExileMatchingCardFromGraveyardCostInto` supplies that number, while this slice supplies card identity for other paid-card rules. Necropolis still needs separate card wiring and a complete audit. This slice excludes choosing an opponent's graveyard, multiple exiled cards, and card references across other zones. The next dependency-ready work is a P collection payment output or the T target-group announcement boundary, after a fresh requirements audit.
+
+Focused tests first failed because the typed constructor was absent. Synthetic tests cover activation and spell costs, locked graveyard visits, exile departure and return, failed-payment rollback, stack copying, game cloning, inspection, registration, and a public DSL declaration. A compile-failure fixture rejects a number binding in the card-binding role.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, `go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff and `git diff --check` pass. A fresh production search found one legacy graveyard-exile cost caller and no new adapter caller.
+
 ## Current Slice: Reverse Turn Damage Source Set
 
 `PermanentsThatDealtDamageToThisTurn(PermanentRef, PermanentSet) PermanentSet` selects current, unphased permanents that dealt positive damage to one recipient incarnation this turn. `This` uses the resolving trigger's captured source incarnation, including after death and return. Other recipient references must resolve to a battlefield permanent. The adapter reads the existing source-and-recipient turn record after the shared damage pipeline; it adds no damage executor or historical card-ID lookup. It works in resolving spell, activation, and trigger bodies and exposes a sealed `PermanentSet` with inspection and registration checks. No production card or legacy export changed.

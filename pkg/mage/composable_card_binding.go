@@ -43,6 +43,11 @@ func (r savedCardRef) resolveCard(ctx *EffectContext) (Card, bool) {
 			}
 		}
 	}
+	if value.zone == core.ZoneExile {
+		if exiled := ctx.Game.FindExiledCard(value.id); exiled != nil && exiled.Visit == value.visit && exiled.VisibleTo(ctx.Controller) {
+			return exiled.Card, true
+		}
+	}
 	return nil, false
 }
 

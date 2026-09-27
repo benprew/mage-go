@@ -38,6 +38,7 @@ var (
 type ExiledCard struct {
 	Card       Card
 	ExiledBy   uuid.UUID // ID of the permanent/spell that caused the exile
+	Visit      uuid.UUID
 	FaceDown   bool
 	RevealedTo []uuid.UUID
 }

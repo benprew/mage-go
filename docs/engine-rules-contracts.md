@@ -268,6 +268,8 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
 
 `RemoveCountersCostInto` uses that payment transaction for a fixed count. It locks the source incarnation during preparation and saves the count only after commit removes the counters. A departed, returned, phased-out, or counter-short source cannot pay. Zero is valid if the source is present. The saved number belongs to the activation stack instance and follows its copies and game clones. The existing `RemoveCountersCost` signature remains available to production callers.
 
+An exiled card has a new visit identity each time it enters exile. `ExileMatchingCardFromGraveyardCostWithCard` locks the chosen graveyard visit during payment preparation and saves the resulting exile visit only after the total cost commits. `FromCard` finds that card while the same exile visit remains present and visible to the resolving controller. Removing and exiling the same physical card again does not restore the old reference. Stack copies and game clones keep the saved visit, while failed payments keep no result (CR 400.7j, 601.2h, 602.2b).
+
 * **Nonpositive Damage Cutoff (CR 120.8)**:
   * If a damage action's final amount is reduced to zero or less by prevention or modifiers, the damage action terminates before further replacement checks or execution.
   * Zero/negative damage produces **no damage event, damage history, callback, or marked damage**.

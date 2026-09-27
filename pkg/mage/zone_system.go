@@ -59,6 +59,7 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 			clone.exile[i] = ExiledCard{
 				Card:       ec.Card, // shared Card ref
 				ExiledBy:   ec.ExiledBy,
+				Visit:      ec.Visit,
 				FaceDown:   ec.FaceDown,
 				RevealedTo: append([]uuid.UUID(nil), ec.RevealedTo...),
 			}
@@ -367,7 +368,7 @@ func (zs *ZoneSystem) Exile() []ExiledCard {
 
 // ExileCard moves a card to the exile zone face up.
 func (zs *ZoneSystem) ExileCard(card Card, exiledBy uuid.UUID) {
-	zs.exile = append(zs.exile, ExiledCard{Card: card, ExiledBy: exiledBy})
+	zs.exile = append(zs.exile, ExiledCard{Card: card, ExiledBy: exiledBy, Visit: uuid.New()})
 }
 
 // ExileCardFaceDown moves a card to the exile zone face down.
@@ -376,6 +377,7 @@ func (zs *ZoneSystem) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedT
 	zs.exile = append(zs.exile, ExiledCard{
 		Card:       card,
 		ExiledBy:   exiledBy,
+		Visit:      uuid.New(),
 		FaceDown:   true,
 		RevealedTo: rev,
 	})

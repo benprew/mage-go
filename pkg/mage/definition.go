@@ -142,7 +142,7 @@ func describeDefinition(v any) definitionNode {
 			if _, ok := cost.(*tapNOtherMatchingCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
+			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if discard, ok := cost.(*discardCost); ok && discard.captureCard {
@@ -329,6 +329,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		if exile, ok := value.(*exileMatchingCardFromGraveyardCost); ok && exile.capture && !nilDefinition(exile.paid) && assigned[exile.paid] {
 			fail("duplicate paid graveyard exile binding")
 		}
+		if exile, ok := value.(*exileMatchingCardFromGraveyardCost); ok && exile.captureCard && !nilDefinition(exile.paidCard) && assigned[exile.paidCard] {
+			fail("duplicate paid card binding")
+		}
 		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.captureCard && !nilDefinition(sacrifice.paidCard) && assigned[sacrifice.paidCard] {
 			fail("duplicate paid card binding")
 		}
@@ -374,7 +377,7 @@ func ValidateCardDefinition(name string, card Card) error {
 			fixedCounter, fixedCounterCost := edge.value.(*removeCountersCost)
 			life, paidLife := edge.value.(*lifePayCost)
 			_, xPaidLife := edge.value.(*xLifePayCost)
-			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && (!exilePayment || !exileCost.capture) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) {
+			if !definitionSequential(value) && (!eventTrigger || edge.name != "event") && !capture && !paidCost && (!exilePayment || (!exileCost.capture && !exileCost.captureCard)) && !paidDiscard && (!paidReveal || !reveal.capture) && !paidCounters && !paidXCounters && (!optionalPayment || !optional.capture) && (!fixedCounterCost || !fixedCounter.capture) && !xPaidLife && (!paidLife || !life.capture) {
 				assigned = before
 			}
 		}
