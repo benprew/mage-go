@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Departing Permanent Event Binding
+
+`CreatureDies().WithPermanent(*PermanentBinding)` and the other creature/permanent death patterns save the departing battlefield incarnation in each pending trigger. `From(binding)` is absent for battlefield actions after death; `DamageSourceOf(From(binding))` can use that incarnation's departure LKI after the card returns. The binding is a sealed permanent reference, not a target or a graveyard card. It works in battlefield `WhenEvent` and `WhenEventModes` bodies. Registration rejects nil, unnamed, repeated, and unbound captures. The pattern reuses the existing pre-departure zone-change event, event capture effect, resolution frame, and damage-source LKI service; no new event or damage engine contract was needed. No production card or legacy export changed.
+
+The E inventory requires an event permanent participant distinct from its destination card. Focused tests first failed because `WithPermanent` was absent. Synthetic tests cover the departed object's former controller and lifelink, return under another controller, simultaneous source and subject death, phased-out watcher suppression, stack-copy and game-clone isolation, inspection, registration, and a public DSL declaration. Existing death-trigger tests cover event filtering and replacement outcomes. A fresh search found no production `WithPermanent` caller and two `DiesCreatureTrigger` callers; other `NewTriggered(EvtZoneChange, ...)` callers need individual audits before migration. No JSON gap record closes through this adapter alone. The next dependency-ready work is a separate P payment output or E event participant after a fresh requirements audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. Review of the post-lint diff and `git diff --check` pass.
+
 ## Current Slice: Player Life-Total Resolution Value
 
 `LifeTotalOf(PlayerRef) ResolutionValue` reads the referenced player's current life total when a resolving instruction uses it. It works in spell, activation, and trigger bodies through the existing player reference and value inspection contracts. An absent reference supplies zero; a declared player target uses the existing resolution-time legality check. Registration rejects nil, undeclared, and undominated references. The typed value does not supply a pure state comparison, life-total exchange, or target-announcement restriction. No production card or legacy author export changed.

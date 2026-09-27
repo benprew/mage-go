@@ -251,40 +251,43 @@ func (p creatureEntersPattern) captureDetectedEvent(event *GameEvent, observer G
 }
 
 type creatureDiesPattern struct {
-	creatureOnly      bool
-	permanentType     CardType
-	filterType        bool
-	duplicateType     bool
-	subtype           string
-	filterSubtype     bool
-	duplicateSubtype  bool
-	controllerOnly    bool
-	duplicateControl  bool
-	opponentOnly      bool
-	otherOnly         bool
-	nontokenOnly      bool
-	attachedOnly      bool
-	controller        *PlayerBinding
-	captureController bool
-	owner             *PlayerBinding
-	captureOwner      bool
-	power             *NumberBinding
-	capturePower      bool
-	duplicatePower    bool
-	toughness         *NumberBinding
-	captureToughness  bool
-	card              *CardBinding
-	captureCard       bool
-	excludedColor     Color
-	filterColor       bool
-	duplicateColor    bool
-	notSacrificed     bool
-	duplicateOutcome  bool
-	maxPowerToughness int
-	filterPT          bool
-	duplicatePT       bool
-	damagedByThisTurn bool
-	duplicateDamage   bool
+	creatureOnly       bool
+	permanentType      CardType
+	filterType         bool
+	duplicateType      bool
+	subtype            string
+	filterSubtype      bool
+	duplicateSubtype   bool
+	controllerOnly     bool
+	duplicateControl   bool
+	opponentOnly       bool
+	otherOnly          bool
+	nontokenOnly       bool
+	attachedOnly       bool
+	controller         *PlayerBinding
+	captureController  bool
+	owner              *PlayerBinding
+	captureOwner       bool
+	power              *NumberBinding
+	capturePower       bool
+	duplicatePower     bool
+	toughness          *NumberBinding
+	captureToughness   bool
+	card               *CardBinding
+	captureCard        bool
+	permanent          *PermanentBinding
+	capturePermanent   bool
+	duplicatePermanent bool
+	excludedColor      Color
+	filterColor        bool
+	duplicateColor     bool
+	notSacrificed      bool
+	duplicateOutcome   bool
+	maxPowerToughness  int
+	filterPT           bool
+	duplicatePT        bool
+	damagedByThisTurn  bool
+	duplicateDamage    bool
 }
 
 // CreatureDies matches any creature moving from the battlefield to a graveyard.
@@ -436,6 +439,16 @@ func (p creatureDiesPattern) WithToughness(toughness *NumberBinding) creatureDie
 func (p creatureDiesPattern) WithCard(card *CardBinding) creatureDiesPattern {
 	p.card = card
 	p.captureCard = true
+	return p
+}
+
+// WithPermanent saves the departing battlefield incarnation for its damage source.
+func (p creatureDiesPattern) WithPermanent(permanent *PermanentBinding) creatureDiesPattern {
+	if p.capturePermanent {
+		p.duplicatePermanent = true
+	}
+	p.permanent = permanent
+	p.capturePermanent = true
 	return p
 }
 
@@ -647,11 +660,20 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	} else if p.captureCard {
 		n.problem = "death event: supply a card binding"
 	}
+	if p.permanent != nil {
+		n.bindingWrites = append(n.bindingWrites, p.permanent)
+		n.children = append(n.children, definitionEdge{"permanent", &eventPermanentCapture{binding: p.permanent}})
+	} else if p.capturePermanent {
+		n.problem = "death event: supply a permanent binding"
+	}
+	if p.duplicatePermanent {
+		n.problem = "death event: supply one permanent binding"
+	}
 	return n
 }
 
 func (p creatureDiesPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.capturePower && !p.captureToughness && !p.captureOwner {
+	if !p.capturePower && !p.captureToughness && !p.captureOwner && !p.capturePermanent {
 		return nil
 	}
 	game, ok := observer.(*Game)
@@ -663,6 +685,9 @@ func (p creatureDiesPattern) captureDetectedEvent(event *GameEvent, observer Gam
 		return nil
 	}
 	var captures []Effect
+	if p.capturePermanent && p.permanent != nil && event.SourceIncarnation != uuid.Nil {
+		captures = append(captures, &eventPermanentCapture{binding: p.permanent, value: capturedPermanent{event.SourceID, event.SourceIncarnation}})
+	}
 	if p.captureOwner && p.owner != nil {
 		captures = append(captures, &eventPlayerCapture{binding: p.owner, player: view.ViewOwner()})
 	}

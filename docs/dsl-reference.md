@@ -1616,6 +1616,23 @@ Triggers on rules events dispatched by the engine:
     }
     ```
   * `AnotherCreatureDies()`: A creature other than the source dies, regardless of its controller.
+  * Death patterns accept `.WithPermanent(*PermanentBinding)`. `From(binding)` names the departing battlefield incarnation in a `WhenEvent` or `WhenEventModes` body. It is absent as a battlefield subject after death. `DamageSourceOf(From(binding))` can use its departure LKI as a damage source, including after the card returns as a new permanent. A phased-out watcher does not trigger. Registration rejects a missing, unnamed, repeated, or unbound capture. This binding is not a target.
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    func watcher() dsl.Card {
+        dead := dsl.BindPermanent("departing creature")
+        return dsl.NewCreature("Watcher", "", 1, 1,
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.AnotherCreatureDies().WithPermanent(dead),
+                dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(dead)), dsl.You, dsl.Fixed(1)))))
+    }
+
+    func main() {}
+    ```
   * Death patterns accept `.WithCard(*CardBinding)`. `BindCard(name)` declares the binding, and `FromCard(binding)` is a `CardRef` for graveyard actions such as `ReturnCardToHand`. It saves the card's first graveyard visit when the trigger occurs. The reference is absent if a token dies, the card does not enter the graveyard, or it leaves and returns before resolution. This is an event binding, not a target. It works in `WhenEvent` and `WhenEventModes` on a battlefield permanent.
 
     ```go
