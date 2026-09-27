@@ -2212,6 +2212,19 @@ Operations taking amounts accept `ResolutionValue`:
 
 `ControlledCreatureSubtypeAtCast(subtype string) CastCondition` reads whether the spell's controller controlled a creature with that subtype when casting completed. Use it only in `IfCast(condition CastCondition, effect ResolvingEffect)` inside a typed spell body. The condition uses the saved cast snapshot even if the creature later leaves, changes controller, or phases out. Registration rejects an empty or known noncreature subtype and use outside a spell ability.
 
+`RevealedSubtypeAtCast(subtype string) CastCondition` reads whether a card with that subtype was revealed while paying an additional cost to cast this spell. It uses the saved cast snapshot, so moving the revealed card later does not change the result. Stack copies retain the cast fact. Registration rejects an empty subtype or use outside a spell ability. It does not read reveals from an activated ability cost.
+
+```go
+paid := dsl.BindNumber("reveal paid")
+card := dsl.BindCard("revealed Dragon")
+spell := dsl.NewInstant("Reveal example", "", dsl.WithAbility(dsl.Spell(
+    dsl.IfCast(dsl.RevealedSubtypeAtCast("Dragon"),
+        dsl.GainLife(dsl.You, dsl.Fixed(3))))),
+    dsl.WithAdditionalCost(dsl.OptionalRevealFromHandCost(
+        dsl.HasSubTypeCardFilter("Dragon"), "Reveal a Dragon card", "Reveal?", paid, card)))
+_ = spell
+```
+
 ```go
 spell := dsl.NewInstant("Cast condition test", "", dsl.Spell(
     dsl.IfCast(dsl.ControlledCreatureSubtypeAtCast("Dragon"),

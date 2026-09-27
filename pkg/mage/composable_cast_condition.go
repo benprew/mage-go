@@ -32,6 +32,25 @@ func (c controlledCreatureSubtypeAtCast) inspectDefinition() definitionNode {
 	return n
 }
 
+type revealedSubtypeAtCast struct{ subtype string }
+
+// RevealedSubtypeAtCast checks cards revealed while the spell was cast.
+func RevealedSubtypeAtCast(subtype string) CastCondition {
+	return revealedSubtypeAtCast{subtype: subtype}
+}
+
+func (revealedSubtypeAtCast) castCondition() {}
+func (c revealedSubtypeAtCast) checkCast(ctx *CastContext) bool {
+	return ctx.RevealedSubtypeAtCast(c.subtype)
+}
+func (c revealedSubtypeAtCast) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "cast-condition", Text: "revealed a " + c.subtype + " card as this spell was cast"}
+	if c.subtype == "" {
+		n.problem = "cast condition requires a subtype"
+	}
+	return n
+}
+
 type castBranch struct {
 	condition CastCondition
 	effect    ResolvingEffect

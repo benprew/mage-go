@@ -2,7 +2,6 @@ package mage
 
 import (
 	"maps"
-	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 
@@ -129,12 +128,25 @@ func (ctx *CastContext) clone() *CastContext {
 	if ctx == nil {
 		return nil
 	}
+	revealed := make([]Card, len(ctx.RevealedAtCast))
+	for i, card := range ctx.RevealedAtCast {
+		revealed[i] = copyCardForCastContext(card)
+	}
 	return &CastContext{
 		ControllerCreatureSubtypesAtCast: maps.Clone(ctx.ControllerCreatureSubtypesAtCast),
 		ControllerSubtypesAtCast:         maps.Clone(ctx.ControllerSubtypesAtCast),
-		RevealedAtCast:                   slices.Clone(ctx.RevealedAtCast),
+		RevealedAtCast:                   revealed,
 		ColorsSpent:                      maps.Clone(ctx.ColorsSpent),
 	}
+}
+
+func copyCardForCastContext(card Card) Card {
+	if card == nil {
+		return nil
+	}
+	cardCopy := card.Copy()
+	cardCopy.SetID(card.ID())
+	return cardCopy
 }
 
 // DistinctColorsSpent returns the number of distinct colors of mana that

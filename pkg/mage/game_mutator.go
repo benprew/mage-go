@@ -194,7 +194,7 @@ func (g *Game) snapshotCastContext(playerID uuid.UUID) *CastContext {
 		}
 	}
 	if lastReveal := g.resolution.LastCostReveal(); lastReveal != nil {
-		ctx.RevealedAtCast = append(ctx.RevealedAtCast, lastReveal)
+		ctx.RevealedAtCast = append(ctx.RevealedAtCast, copyCardForCastContext(lastReveal))
 	}
 	if pl := g.GetPlayer(playerID); pl != nil {
 		if drained := pl.ManaPool().LastDrainedColors; len(drained) > 0 {

@@ -7,6 +7,7 @@ type CastCondition = mage.CastCondition
 
 var (
 	ControlledCreatureSubtypeAtCast = mage.ControlledCreatureSubtypeAtCast
+	RevealedSubtypeAtCast           = mage.RevealedSubtypeAtCast
 	IfCast                          = mage.IfCast
 )
 

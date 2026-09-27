@@ -14,3 +14,15 @@ func TestCastConditionPublicDefinition(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRevealedCastConditionPublicDefinition(t *testing.T) {
+	paid := dsl.BindNumber("reveal paid")
+	revealed := dsl.BindCard("revealed Dragon")
+	card := dsl.NewInstant("Reveal condition test", "", dsl.WithAbility(dsl.Spell(
+		dsl.IfCast(dsl.RevealedSubtypeAtCast("Dragon"), dsl.GainLife(dsl.You, dsl.Fixed(1))))),
+		dsl.WithAdditionalCost(dsl.OptionalRevealFromHandCost(
+			dsl.HasSubTypeCardFilter("Dragon"), "Reveal a Dragon card", "Reveal?", paid, revealed)))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}
