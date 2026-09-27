@@ -850,6 +850,15 @@ Use distinct constructors for distinct trigger lifecycles:
 Triggers on rules events dispatched by the engine:
 * `WhenEvent(EventPattern, ResolvingEffect, ...TriggerOption)`
 * Event patterns:
+  * `LandTappedForMana().WithPlayer(*PlayerBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. `WithPlayer` is optional and saves the activating player when the event occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding is local to each trigger and is not a target. For example:
+
+    ```go
+    player := dsl.BindPlayer("mana player")
+    ability := dsl.WhenEvent(
+        dsl.LandTappedForMana().WithPlayer(player),
+        dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(player), dsl.Fixed(1)))
+    ```
+
   * `Enters(This)`: Source enters the battlefield.
   * `Dies(This)`: Source dies (moves from battlefield to graveyard).
   * `LeavesBattlefield(This)`: Source moves from the battlefield to any other zone. Destruction, exile, and return to hand match. Phasing does not match. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The pending trigger keeps its controller and source incarnation.

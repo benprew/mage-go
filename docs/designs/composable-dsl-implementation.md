@@ -689,6 +689,14 @@ The public engine signature is `core.EvtBlockerGroup` with `core.GameEvent.Relat
 
 This document tracks active, incomplete implementation items, engine blockers, and acceptance criteria for the composable DSL migration. All completed items and historical slice records have been archived in git history.
 
+## Current Slice: Land Tapped for Mana Event Player
+
+`LandTappedForMana().WithPlayer(*PlayerBinding)` is a sealed battlefield event pattern for `WhenEvent` and `WhenEventModes`. It matches the existing positive-production `EvtTappedForMana` only when the mana source is a land, and saves the activating player from the event in the pending trigger's instance frame. `DealDamageFrom(This, FromPlayer(player), Fixed(1))` supplies Manabarbs' complete instruction in a synthetic definition. Its Oracle text was checked in `data/4ED.json`; production card wiring remains unchanged. The public API does not expose a mana replacement, produced-color binding, or mana-trigger shortcut. Mana Flare, Gauntlet of Might, and Wild Growth retain their production requirements. Legacy event and damage callers remain.
+
+The new focused tests first failed because the constructor was absent. They cover both player identities, land versus artifact, zero production, a phased source, source departure and return after a pending trigger, stack copying, clone isolation, inspection, and registration rejection for invalid or unproduced bindings. The existing mana event and damage pipelines supply timing and replacement behavior. The Limited JSON gap remains open because Manabarbs has not been migrated. The next dependency-ready work is a P or T extension from delivery step 3, such as recorded variable target-group boundaries, after a fresh contract audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint`, and `git diff --check` pass in the current tree. A fresh caller search found no production `LandTappedForMana` use; Manabarbs still uses `NewTriggered(EvtTappedForMana, ...)` and positional damage. Earlier missing-package and C-metadata failures recorded below do not recur in this run.
+
 ## Current Run: Final Declared-Blocker Event Timing
 
 `core.EvtDeclaredBlocker` now fires only for new legal blocker and attacker pairs after minimum-blocker restrictions and required blocks settle. Its first pair for a blocker in combat retains `Flag=true`; later pairs use `Flag=false`. Normal declaration and `ExecuteBlockers` use the same final-pair service. This is an engine prerequisite for a typed blocks-or-becomes-blocked-by-one-or-more pattern. It changes no author signature, production card, target, or replacement rule. Existing `Blocks(This)` in `WhenEvent` and `WhenEventModes` now observes only final legal declared blocks. Creatures put onto the battlefield blocking remain outside that pattern.
