@@ -223,6 +223,9 @@ type creatureDiesPattern struct {
 	permanentType     CardType
 	filterType        bool
 	duplicateType     bool
+	subtype           string
+	filterSubtype     bool
+	duplicateSubtype  bool
 	controllerOnly    bool
 	duplicateControl  bool
 	opponentOnly      bool
@@ -273,6 +276,16 @@ func (p creatureDiesPattern) OfType(cardType CardType) creatureDiesPattern {
 	}
 	p.permanentType = cardType
 	p.filterType = true
+	return p
+}
+
+// OfSubtype matches the creature subtype before the creature dies.
+func (p creatureDiesPattern) OfSubtype(subtype string) creatureDiesPattern {
+	if p.filterSubtype {
+		p.duplicateSubtype = true
+	}
+	p.subtype = subtype
+	p.filterSubtype = true
 	return p
 }
 
@@ -393,6 +406,9 @@ func (p creatureDiesPattern) makeTrigger(effect ResolvingEffect) *GenericTrigger
 	if p.filterType {
 		t.AndConditionData(EventSourceWasOfType{Type: p.permanentType})
 	}
+	if p.filterSubtype {
+		t.AndConditionData(EventSourceHasSubType{SubType: p.subtype})
+	}
 	if p.controllerOnly {
 		t.AndConditionData(EventPlayerIsController{})
 	}
@@ -493,6 +509,9 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	if p.nontokenOnly {
 		text = strings.Replace(text, subject, "nontoken "+subject, 1)
 	}
+	if p.filterSubtype {
+		text = strings.Replace(text, subject, p.subtype+" "+subject, 1)
+	}
 	if p.filterColor {
 		text = strings.Replace(text, subject, "non"+strings.ToLower(p.excludedColor.String())+" "+subject, 1)
 	}
@@ -508,6 +527,17 @@ func (p creatureDiesPattern) inspectDefinition() definitionNode {
 	}
 	if p.duplicateType || (p.filterType && !permanentCardType(p.permanentType)) {
 		n.problem = "death event: supply one permanent card type"
+	}
+	if p.filterSubtype {
+		if p.duplicateSubtype {
+			n.problem = "death event: supply one subtype filter"
+		} else if p.subtype == "" {
+			n.problem = "death event: supply a creature subtype"
+		} else if !p.creatureOnly && (!p.filterType || p.permanentType != TypeCreature) {
+			n.problem = "death event: subtype filter requires a creature pattern"
+		} else if family, known := knownSubtypeFamily(p.subtype); known && family != SubtypeCreature {
+			n.problem = "death event: subtype is not a creature subtype"
+		}
 	}
 	if p.duplicateOutcome {
 		n.problem = "death event: supply one sacrifice outcome filter"

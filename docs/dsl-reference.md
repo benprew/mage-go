@@ -1430,6 +1430,13 @@ Triggers on rules events dispatched by the engine:
     )
     ```
   * Creature-death patterns support `.Nontoken()`: Match only a creature that was not a token before it died. For example, `dsl.WhenEvent(dsl.AnotherCreatureDies().Nontoken(), dsl.GainLife(dsl.You, dsl.Fixed(1)))` is valid on a battlefield permanent. This does not choose or target the dying creature.
+  * `CreatureDies().OfSubtype(string)` and the other creature-death patterns match a creature with the named creature subtype immediately before death. The filter works in battlefield `WhenEvent` and `WhenEventModes` declarations and composes with controller, source-exclusion, and nontoken filters. Registration rejects an empty, noncreature, or repeated subtype filter. It does not target the dying creature.
+    ```go
+    dsl.WhenEvent(
+        dsl.AnotherCreatureDies().OfSubtype("Goblin"),
+        dsl.GainLife(dsl.You, dsl.Fixed(1)),
+    )
+    ```
   * Creature-death patterns support `.WithoutColor(core.Color)`: Match a creature that did not have the specified color immediately before it died. Supply one of the five Magic colors. This filter can combine with `.Nontoken()` and the existing event bindings. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent.
     ```go
     dsl.WhenEvent(
