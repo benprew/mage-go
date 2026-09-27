@@ -30,6 +30,7 @@ var (
 	SourceCounters                = mage.SourceCounters
 	AddManaAmount                 = mage.AddManaAmount
 	AddManaToPlayer               = mage.AddManaToPlayer
+	AddManaOfProducedTypeToPlayer = mage.AddManaOfProducedTypeToPlayer
 	AddManaOfAnyOneColor          = mage.AddManaOfAnyOneColor
 	SnapshotNumber                = mage.SnapshotNumber
 	CaptureNumberBeforePayment    = mage.CaptureNumberBeforePayment
@@ -468,10 +469,12 @@ var (
 )
 
 type PlayerBinding = mage.PlayerBinding
+type ManaTypesBinding = mage.ManaTypesBinding
 
 var (
 	SnapshotPlayer     = mage.SnapshotPlayer
 	BindPlayer         = mage.BindPlayer
+	BindManaTypes      = mage.BindManaTypes
 	FromPlayer         = mage.FromPlayer
 	ChooseRandomPlayer = mage.ChooseRandomPlayer
 )

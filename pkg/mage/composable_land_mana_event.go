@@ -12,12 +12,15 @@ type landTappedForManaPattern struct {
 	player          *PlayerBinding
 	amount          *NumberBinding
 	land            *PermanentBinding
+	types           *ManaTypesBinding
 	capturePlayer   bool
 	captureAmount   bool
 	captureLand     bool
+	captureTypes    bool
 	duplicatePlayer bool
 	duplicateAmount bool
 	duplicateLand   bool
+	duplicateTypes  bool
 	manaType        Color
 	filterManaType  bool
 	duplicateType   bool
@@ -70,6 +73,15 @@ func (p landTappedForManaPattern) WithLand(binding *PermanentBinding) landTapped
 		p.duplicateLand = true
 	}
 	p.land, p.captureLand = binding, true
+	return p
+}
+
+// WithManaTypes saves the types produced by the triggering land ability.
+func (p landTappedForManaPattern) WithManaTypes(binding *ManaTypesBinding) landTappedForManaPattern {
+	if p.captureTypes {
+		p.duplicateTypes = true
+	}
+	p.types, p.captureTypes = binding, true
 	return p
 }
 
@@ -143,6 +155,14 @@ func (p landTappedForManaPattern) inspectDefinition() definitionNode {
 			n.children = append(n.children, definitionEdge{"land", &eventPermanentCapture{binding: p.land}})
 		}
 	}
+	if p.captureTypes {
+		if p.types == nil || p.duplicateTypes {
+			n.problem = "land tapped for mana: supply one mana types binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.types)
+			n.children = append(n.children, definitionEdge{"mana types", &eventManaTypesCapture{binding: p.types}})
+		}
+	}
 	return n
 }
 
@@ -154,7 +174,7 @@ func (p landTappedForManaPattern) captureDetectedEvent(event *GameEvent, _ GameR
 }
 
 func (p landTappedForManaPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
-	if !p.capturePlayer && !p.captureAmount {
+	if !p.capturePlayer && !p.captureAmount && !p.captureTypes {
 		return effects
 	}
 	var captures []ResolvingEffect
@@ -163,6 +183,9 @@ func (p landTappedForManaPattern) captureEventEffects(event *GameEvent, effects 
 	}
 	if p.captureAmount {
 		captures = append(captures, &eventAmountCapture{binding: p.amount, amount: event.Amount})
+	}
+	if p.captureTypes {
+		captures = append(captures, &eventManaTypesCapture{binding: p.types, types: slices.Clone(event.ManaTypes)})
 	}
 	captures = append(captures, Sequence(effects...))
 	return []Effect{Sequence(captures...)}

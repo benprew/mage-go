@@ -1227,7 +1227,17 @@ Use distinct constructors for distinct trigger lifecycles:
 Triggers on rules events dispatched by the engine:
 * `WhenEvent(EventPattern, ResolvingEffect, ...TriggerOption)`
 * Event patterns:
-  * `LandTappedForMana().WithPlayer(*PlayerBinding).WithAmount(*NumberBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. Both captures are optional and independent. `WithPlayer` saves the activating player; `WithAmount` saves the total mana produced by that ability as recorded in the event. Read them with `FromPlayer` and `FromNumber` in the trigger body. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. Each binding belongs to one trigger instance and is not a target. Zero production has no matching event. This captures a number, not the types of mana produced. For example:
+  * `LandTappedForMana().WithPlayer(*PlayerBinding).WithAmount(*NumberBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. Both captures are optional and independent. `WithPlayer` saves the activating player; `WithAmount` saves the total mana produced by that ability as recorded in the event. Read them with `FromPlayer` and `FromNumber` in the trigger body. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. Each binding belongs to one trigger instance and is not a target. Zero production has no matching event. For example:
+  * `BindManaTypes(name) *ManaTypesBinding` declares an instance-local type set. `LandTappedForMana().WithManaTypes(binding)` saves the distinct mana types produced by the triggering land ability. `AddManaOfProducedTypeToPlayer(player PlayerRef, types *ManaTypesBinding, amount ResolutionValue) ResolvingEffect` lets the recipient choose one saved type and adds the full amount through the shared mana action. An absent player, empty type set, or nonpositive amount adds no mana. A choice outside the saved set uses its first type. The action works in a battlefield `WhenEvent` or `WhenEventModes` body and has triggered mana timing when the trigger has no target. Registration rejects nil, unnamed, repeated, and unproduced bindings. This declaration compiles:
+
+    ```go
+    producer := dsl.BindPlayer("producer")
+    types := dsl.BindManaTypes("produced types")
+    ability := dsl.WhenEvent(
+        dsl.LandTappedForMana().WithPlayer(producer).WithManaTypes(types),
+        dsl.AddManaOfProducedTypeToPlayer(dsl.FromPlayer(producer), types, dsl.Fixed(1)))
+    _ = ability
+    ```
   * `LandTappedForMana().WithLand(*PermanentBinding)`: Save the exact land incarnation that produced mana. This optional capture composes with `WithPlayer` and `WithAmount` in `WhenEvent` and `WhenEventModes` on a battlefield permanent. `From(land)` is absent if that land leaves and returns or phases out before resolution. The land is an event participant, not a target. Registration rejects a nil, unnamed, repeated, or unbound land binding. This declaration compiles:
     ```go
     land := dsl.BindPermanent("producing land")

@@ -22,6 +22,7 @@ type ResolutionState struct {
 	spellBindings         map[*SpellBinding]uuid.UUID
 	playerBindings        map[*PlayerBinding]uuid.UUID
 	numberBindings        map[*NumberBinding]int
+	manaTypesBindings     map[*ManaTypesBinding][]Color
 	damageSourceBindings  map[*DamageSourceBinding]DamageSource
 	damageResultsBindings map[*DamageResultsBinding][]damageOutcome
 	damageResultBindings  map[*DamageResultBinding]damageOutcome
@@ -125,6 +126,7 @@ func (s *ResolutionState) Clear() {
 	s.spellBindings = nil
 	s.playerBindings = nil
 	s.numberBindings = nil
+	s.manaTypesBindings = nil
 	s.damageSourceBindings = nil
 	s.damageResultsBindings = nil
 	s.damageResultBindings = nil
@@ -198,6 +200,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		spellBindings:          maps.Clone(s.spellBindings),
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
+		manaTypesBindings:      cloneManaTypesBindings(s.manaTypesBindings),
 		targetSpecs:            append([]Target(nil), s.targetSpecs...),
 		targetIncarnations:     maps.Clone(s.targetIncarnations),
 		sourceIncarnation:      s.sourceIncarnation,

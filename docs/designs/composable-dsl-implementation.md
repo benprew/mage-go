@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Event-Time Produced Mana Type Choice
+
+`BindManaTypes(name)`, `LandTappedForMana().WithManaTypes(binding)`, and `AddManaOfProducedTypeToPlayer(player, binding, amount)` capture the land ability's produced mana types per trigger and add one chosen type to the selected player's pool. The event, trigger frame, and shared mana action supply timing and execution. The typed action is available in targetless battlefield `WhenEvent` and `WhenEventModes` bodies and resolves immediately as a triggered mana ability. Empty type sets and absent players add no mana; a choice outside the produced set uses its first type. No production card or legacy export changed.
+
+Mana Flare's complete text was checked in `data/4ED.json` and its Limited gap record. This slice supplies its event condition, player, type choice, and mana action, but the production definition still uses `NewManaFlareAbility`; its gap remains blocked pending card migration and full card review. Wild Growth also remains on its legacy helper. The focused contract first failed because the binding and action were absent. Tests cover a single type, multiple types, another recipient, an invalid choice, immediate timing, phasing, clone isolation, and registration rejection. Existing mana event capture and activated mana tests remain. The next dependency-ready work is another bounded P payment result or T division declaration after a fresh requirement audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh caller search found the two legacy helpers in `cards/limited/enchantments.go` and no production use of the new action. The post-lint diff was reviewed.
+
 ## Current Slice: Tapped-for-Mana Triggered Mana Timing
 
 Targetless `WhenEvent(LandTappedForMana(), body)` triggers with a direct or sequenced mana action now resolve immediately after the producing tap-cost mana ability, using the existing captured event frame and mana action. Ordinary triggers from before or during that resolution stay pending. Targeted and non-mana triggers keep ordinary timing. No public constructor, production card, or legacy export changed. The supported public declaration is `WhenEvent(LandTappedForMana().WithPlayer(player), AddManaToPlayer(FromPlayer(player), core.Green, Fixed(1)))` on a battlefield permanent. This slice does not cover conditional mana bodies, mana-added or activated-mana event triggers, event-time mana-type choice, or card wiring.

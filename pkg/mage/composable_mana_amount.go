@@ -124,6 +124,8 @@ func canProduceMana(effects []Effect, targets []Target) bool {
 			return true
 		case *manaToPlayerEffect:
 			return true
+		case *manaFromProducedTypesEffect:
+			return true
 		case *manaAnyOneColorEffect:
 			return true
 		case *addManaEffect:
