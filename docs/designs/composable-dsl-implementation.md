@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Damage Event Permanent Recipient Capture
+
+`DealsDamage(This, amount).WithPermanent(binding)` saves the final permanent recipient's battlefield incarnation when positive damage occurs. `From(binding)` is absent if that permanent leaves and returns before the pending trigger resolves. The damage service sets `EvtDamageDealt.TargetIncarnation` after replacements and prevention; the adapter reuses the event and trigger capture frame. It supports battlefield `WhenEvent` and `WhenEventModes`, including `AttachedPermanent` as the source. Player damage leaves the permanent binding absent. No damage executor, production card, or legacy export changed.
+
+Contract tests first failed because the method was absent. Focused tests cover recipient return, prevention, redirection, source and recipient phasing, simultaneous damage, stack copy, clone isolation, inspection, and registration rejection. A public DSL declaration compiles. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. A fresh search found two production `DealsDamage` callers in Arabian Nights and Jumpstart; both remain unchanged for separate audit and wiring. No gap record closes from this event participant alone. The next dependency-ready work is another E event participant or a remaining P payment result, after a fresh caller audit.
+
 ## Current Slice: Controller Damage Event Source Capture
 
 `ControllerIsDealtDamage(amount).WithSource(source)` binds the final positive damage event's source to a pending battlefield trigger. `FromDamageSource(source)` uses its captured incarnation, controller, and characteristics after departure or return. The adapter uses the shared damage snapshot and event capture frame; it adds no damage executor. The return type is now the concrete sealed pattern so authors can select `WithSource`; existing declarations remain valid. No production card or legacy export changed.

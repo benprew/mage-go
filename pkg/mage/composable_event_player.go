@@ -23,12 +23,24 @@ type damageEventPattern struct {
 	captureAmount             bool
 	anyRecipient              bool
 	combatOnly                bool
+	permanent                 *PermanentBinding
+	capturePermanent          bool
+	duplicatePermanent        bool
 }
 
 // DealsDamage matches damage from the source to any recipient.
 // It saves the actual damage amount without declaring a target.
-func DealsDamage(source PermanentRef, amount *NumberBinding) EventPattern {
+func DealsDamage(source PermanentRef, amount *NumberBinding) damageEventPattern {
 	return damageEventPattern{source: source, amount: amount, captureAmount: true, anyRecipient: true}
+}
+
+// WithPermanent saves the permanent that receives damage.
+func (p damageEventPattern) WithPermanent(binding *PermanentBinding) damageEventPattern {
+	if p.capturePermanent {
+		p.duplicatePermanent = true
+	}
+	p.permanent, p.capturePermanent = binding, true
+	return p
 }
 
 // DealsDamageToPlayer matches damage from the source to either player.
@@ -162,17 +174,28 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 	if p.captureAmount {
 		n.children = append(n.children, definitionEdge{"amount", &eventAmountCapture{binding: p.amount}})
 	}
+	if p.capturePermanent {
+		if !p.anyRecipient || p.permanent == nil || p.duplicatePermanent {
+			n.problem = "damage event requires one permanent binding on DealsDamage"
+		} else {
+			n.children = append(n.children, definitionEdge{"permanent", &eventPermanentCapture{binding: p.permanent}})
+		}
+	}
 	return n
 }
-func (p damageEventPattern) captureDetectedEvent(_ *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.captureDamageSource || p.damageSource == nil {
-		return nil
-	}
+func (p damageEventPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
 	game, ok := observer.(*Game)
 	if !ok {
 		return nil
 	}
-	return []Effect{&eventDamageSourceCapture{binding: p.damageSource, source: cloneDamageSource(game.damageEventSource)}}
+	var captures []Effect
+	if p.captureDamageSource && p.damageSource != nil {
+		captures = append(captures, &eventDamageSourceCapture{binding: p.damageSource, source: cloneDamageSource(game.damageEventSource)})
+	}
+	if p.capturePermanent && p.permanent != nil && event.TargetIncarnation != uuid.Nil {
+		captures = append(captures, &eventPermanentCapture{binding: p.permanent, value: capturedPermanent{event.TargetID, event.TargetIncarnation}})
+	}
+	return captures
 }
 func (p damageEventPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
 	var captures []ResolvingEffect

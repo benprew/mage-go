@@ -695,6 +695,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 		SourceIncarnation:  a.DamageSource().Incarnation(),
 		SourceControllerID: a.DamageSource().Controller(),
 		TargetID:           perm.ID(),
+		TargetIncarnation:  perm.incarnationID,
 		Amount:             amount,
 	}, a.DamageSource())
 	if ds.onDamageDealt != nil {

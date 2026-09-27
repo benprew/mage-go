@@ -1898,7 +1898,14 @@ Triggers on rules events dispatched by the engine:
         dsl.GainLife(dsl.You, dsl.FromNumber(power)),
     )
     ```
-  * `DealsDamage(source PermanentRef, amountBinding *NumberBinding) EventPattern`: `This` or `AttachedPermanent` deals positive damage to any player or permanent. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding saves the final amount after prevention and replacement in that trigger's frame. `AttachedPermanent` checks the attachment when damage occurs; a later attachment or controller change does not change a queued trigger. Registration rejects other permanent references, nil or unnamed amount bindings, and use outside a battlefield trigger.
+  * `DealsDamage(source PermanentRef, amountBinding *NumberBinding) damageEventPattern`: `This` or `AttachedPermanent` deals positive damage to any player or permanent. The concrete pattern implements the sealed `EventPattern` role and offers `WithPermanent`. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding saves the final amount after prevention and replacement in that trigger's frame. `AttachedPermanent` checks the attachment when damage occurs; a later attachment or controller change does not change a queued trigger. Registration rejects other permanent references, nil or unnamed amount bindings, and use outside a battlefield trigger.
+  * `DealsDamage(source, amountBinding).WithPermanent(recipientBinding *PermanentBinding)`: Save the permanent that receives positive damage after prevention and redirection. The binding is absent for damage to a player. `From(recipientBinding)` requires the same battlefield incarnation when the trigger resolves. Use this in a battlefield `WhenEvent` or `WhenEventModes` declaration. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
+    ```go
+    recipient := dsl.BindPermanent("recipient")
+    card := dsl.NewCreature("Damage watcher", "", 1, 1, dsl.WithAbility(
+        dsl.WhenEvent(dsl.DealsDamage(dsl.This, dsl.BindNumber("dealt")).WithPermanent(recipient),
+            dsl.AddCounters(dsl.From(recipient), dsl.P1P1, dsl.Fixed(1)))))
+    ```
     ```go
     func linkedAura() dsl.Card {
         dealt := dsl.BindNumber("damage dealt")
