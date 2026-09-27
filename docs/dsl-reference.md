@@ -1952,7 +1952,18 @@ Triggers on rules events dispatched by the engine:
             dsl.LoseLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))))
     }
     ```
-  * `OpponentLosesLife(playerBinding)`: Opponent loses life (can chain `.WithAmount(binding)`).
+  * `PlayerLosesLife(*PlayerBinding) lifeLossEventPattern`, `OpponentLosesLife(*PlayerBinding) lifeLossEventPattern`, and `.WithAmount(*NumberBinding) lifeLossEventPattern`: The first pattern matches either player's positive life loss; the second matches an opponent of the source controller when the loss occurs. Both save the losing player without declaring a target. `WithAmount` also saves the completed event amount. Use either pattern in a battlefield `WhenEvent` or `WhenEventModes` body. Direct life loss and damage that causes life loss match; zero loss and fully prevented damage do not. Each simultaneous player loss has its own pending trigger and binding frame. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
+
+    ```go
+    func lifeLossWatcher() dsl.Card {
+        player := dsl.BindPlayer("loser")
+        amount := dsl.BindNumber("lost")
+        return dsl.NewEnchantment("Life Loss Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+            dsl.PlayerLosesLife(player).WithAmount(amount),
+            dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))))
+    }
+    ```
+
   * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
   * `AttachedBecomesTapped(hostBinding)`: Captures the attached permanent when it becomes tapped. Read with `From(hostBinding)`; it is not a target. Attachment moves and source departure do not change the captured incarnation.
 

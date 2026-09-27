@@ -244,6 +244,7 @@ var (
 	DealsCombatDamageToPlayer = mage.DealsCombatDamageToPlayer
 	DealsDamageToOpponent     = mage.DealsDamageToOpponent
 	OpponentLosesLife         = mage.OpponentLosesLife
+	PlayerLosesLife           = mage.PlayerLosesLife
 	ControllerDrawsCard       = mage.ControllerDrawsCard
 	OpponentDrawsCard         = mage.OpponentDrawsCard
 	PlayerDrawsCard           = mage.PlayerDrawsCard

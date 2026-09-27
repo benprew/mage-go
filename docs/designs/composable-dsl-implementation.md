@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Any-Player Life-Loss Event
+
+`PlayerLosesLife(*PlayerBinding).WithAmount(*NumberBinding)` matches each positive completed life-loss event for either player. The amount option is optional. It saves the player and event amount in each pending trigger's instance-local frame and works in battlefield `WhenEvent` and `WhenEventModes` bodies. The existing `OpponentLosesLife` keeps its event-time opponent filter and now shares the same pattern implementation. The adapter reuses `EvtLifeLost` and the existing trigger lifecycle. It adds no life-loss executor, payment rule, replacement, or target. No production card or legacy export changed.
+
+The E plan calls for general life-event participants. Synthetic tests first failed because `PlayerLosesLife` was undefined. Focused tests cover both players, direct loss and damage, zero and fully prevented damage, simultaneous loss, source phasing and departure, stack copies, game clones, inspection, registration, and a public DSL declaration. Existing opponent-loss tests cover event-time controller changes and delayed and modal bodies. A fresh production search found three `OpponentLosesLife` callers and no `PlayerLosesLife` caller; their card wiring remains open. No JSON gap record is closed by this adapter. The next dependency-ready work is a separate E participant or P payment output after a fresh audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Player Life-Gain Event
 
 `PlayerGainsLife(*PlayerBinding).WithAmount(*NumberBinding)` matches each positive completed life gain by either player and saves the player and post-replacement amount in its pending trigger. It works in battlefield `WhenEvent` and `WhenEventModes` bodies. The amount option is optional. It reuses `EvtLifeGained`, the existing replacement path, and instance-local event captures. The existing `ControllerGainsLife` shares that implementation and keeps its controller filter. No new life executor, payment timing, target, or replacement rule is added. No production card or legacy export changed.
