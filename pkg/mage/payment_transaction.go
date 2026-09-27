@@ -225,6 +225,10 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	for _, cost := range tx.costs {
 		var paidPower, paidToughness, paidManaValue int
 		var paidCardID uuid.UUID
+		var discardedCardID uuid.UUID
+		if discard, ok := cost.(*discardCost); ok && discard.captureCard && len(discard.selected) == 1 {
+			discardedCardID = discard.selected[0]
+		}
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureCard) {
 			if !sacrifice.CanPay(tx.sourceID, tx.controller, tx.game) || len(sacrifice.selected) != 1 {
 				return fmt.Errorf("cannot pay chosen sacrifice")
@@ -243,6 +247,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		if discard, ok := cost.(*discardCost); ok && discard.captureCard {
+			if tx.paidCards == nil {
+				tx.paidCards = make(map[*CardBinding]capturedCard)
+			}
+			tx.paidCards[discard.paidCard] = capturedCard{id: discardedCardID, visit: tx.game.graveyardVisit(discardedCardID), zone: ZoneGraveyard}
 		}
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && sacrifice.captureCard {
 			if tx.paidCards == nil {

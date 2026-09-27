@@ -720,6 +720,7 @@ var (
 	SacrificeNMatchingCost                        = mage.SacrificeNMatchingCost
 	LifePayCost                                   = mage.LifePayCost
 	DiscardCost                                   = mage.DiscardCost
+	DiscardCardCostInto                           = mage.DiscardCardCostInto
 	EitherCost                                    = mage.EitherCost
 	ExileMatchingCardFromGraveyardCost            = mage.ExileMatchingCardFromGraveyardCost
 	DiscardCardsWithDifferentNamesCost            = mage.DiscardCardsWithDifferentNamesCost

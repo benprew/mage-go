@@ -404,14 +404,39 @@ func (c *tapMatchingCost) Text() string { return c.text }
 
 // discardCost requires discarding cards from hand.
 type discardCost struct {
-	amount   int
-	selected []uuid.UUID
-	locked   bool
+	amount      int
+	selected    []uuid.UUID
+	locked      bool
+	paidCard    *CardBinding
+	captureCard bool
 }
 
 // DiscardCost creates a cost that requires the controller to discard n cards.
 func DiscardCost(n int) Cost {
 	return &discardCost{amount: n}
+}
+
+// DiscardCardCostInto saves one discarded card during its graveyard visit.
+func DiscardCardCostInto(card *CardBinding) Cost {
+	return &discardCost{amount: 1, paidCard: card, captureCard: true}
+}
+
+func (c *discardCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "discard-cost", Text: c.Text()}
+	if c.amount < 0 {
+		n.problem = "supply a nonnegative discard count"
+	}
+	if c.captureCard {
+		if c.paidCard == nil {
+			n.problem = "supply a non-nil paid card binding"
+		}
+		if c.amount != 1 {
+			n.problem = "paid card requires one discard"
+		}
+		n.bindingWrites = []savedBinding{c.paidCard}
+		n.children = []definitionEdge{{"card", c.paidCard}}
+	}
+	return n
 }
 
 func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {

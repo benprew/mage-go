@@ -1,5 +1,35 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Paid Discard Card
+
+`DiscardCardCostInto(*CardBinding)` saves the one chosen discarded card in its
+new graveyard visit during committed total-cost payment. `FromCard` and
+`IfCardHasType` can read it in the resolving spell or activation. A replacement
+to the library gives an absent card reference, as does a later zone move.
+The existing locked choice, shared discard replacement action, and
+instance-local stack capture remain in use. Registration checks nil and
+duplicate bindings and a dominating payment producer. `DiscardCost(n)` and
+unmigrated production callers remain compatible.
+
+Land's Edge's complete text was checked in `data/LEG.json`. Its land-type
+branch can use this adapter for an ordinary graveyard discard, but its
+player-or-planeswalker target, any-player activation, and card wiring remain
+separate. The Legends gap record remains open. Random and name-constrained
+discard costs and paid-card snapshots across other destination zones are
+outside this singular capture. The next dependency-ready work is a typed
+player-or-planeswalker damage target or another P payment output after a fresh
+caller and rules audit.
+
+The focused contract test first failed because the constructor was absent.
+It covers activation, spell additional cost, stack copy and clone isolation,
+graveyard-visit expiry, hidden-zone replacement, prevented payment rollback,
+and declaration validation. A public DSL declaration compiles and validates.
+A fresh search found nine production `DiscardCost` call sites and no
+`DiscardCardCostInto` production caller. Focused tests, `go test
+./pkg/mage/... -short -count=1`, the DSL registration and closed-role tests,
+`go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and
+`git diff --check` pass. No production card or JSON gap record changed.
+
 ## Current Slice: Chosen Cost-Discard Replacement
 
 `DiscardCost(n)` now submits each chosen card as a cost-origin `DiscardAction`

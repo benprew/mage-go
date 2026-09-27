@@ -316,8 +316,11 @@ card IDs on its isolated game, and commit uses the same IDs without asking
 again. A choice that is absent from the hand at validation or commit fails
 payment; commit checks it before mana or life payment. The reusable cost
 declaration does not retain a transaction's choices. Direct legacy `Pay`
-calls still choose at the time of payment. This contract does not yet produce
-a typed result for the discarded card or snapshot its characteristics.
+calls still choose at the time of payment. `DiscardCardCostInto(binding)`
+saves the one chosen card only in its new graveyard visit. `FromCard(binding)`
+becomes absent after another zone move or when a replacement sends the card
+to a different zone. The committed capture is local to the spell or activation
+frame and follows stack copies and game clones.
 `DiscardCost` uses `PlayerDiscardByCost` and the shared `DiscardAction`
 replacement pipeline. The action records that the discard pays a cost. A
 replacement that watches all discards can change its destination, and the
@@ -326,7 +329,7 @@ cost discards. Total-cost validation runs these replacements on an isolated
 game; a replacement that prevents the discard makes validation fail without
 changing the live game. The locked card choice is reused at commit. This
 contract covers chosen `DiscardCost`, not random or name-constrained discard
-costs, and does not expose paid-card characteristics. If a replacement sends a
+costs. If a replacement sends a
 discarded card to a hidden zone without revealing it, its characteristics are
 undefined for the related payment (CR 701.9c).
 
