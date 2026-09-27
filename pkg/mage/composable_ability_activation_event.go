@@ -13,10 +13,32 @@ type abilityActivatedPattern struct {
 	source             *DamageSourceBinding
 	captureSource      bool
 	duplicateSource    bool
+	artifactOnly       bool
+	opponentOnly       bool
+	duplicateArtifact  bool
+	duplicateOpponent  bool
 }
 
 // ActivatedAbilityEvent matches a completed activated ability announcement.
 func ActivatedAbilityEvent() abilityActivatedPattern { return abilityActivatedPattern{} }
+
+// FromArtifact limits the event to an ability of an artifact at activation.
+func (p abilityActivatedPattern) FromArtifact() abilityActivatedPattern {
+	if p.artifactOnly {
+		p.duplicateArtifact = true
+	}
+	p.artifactOnly = true
+	return p
+}
+
+// ByOpponent limits the event to an ability activated by an opponent.
+func (p abilityActivatedPattern) ByOpponent() abilityActivatedPattern {
+	if p.opponentOnly {
+		p.duplicateOpponent = true
+	}
+	p.opponentOnly = true
+	return p
+}
 
 // WithActivator saves the player who activated the ability.
 func (p abilityActivatedPattern) WithActivator(binding *PlayerBinding) abilityActivatedPattern {
@@ -38,12 +60,36 @@ func (p abilityActivatedPattern) WithSource(binding *DamageSourceBinding) abilit
 
 func (abilityActivatedPattern) eventPattern() {}
 
-func (abilityActivatedPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
-	return NewTriggered(EvtAbilityActivated, false, effect)
+func (p abilityActivatedPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	t := NewTriggered(EvtAbilityActivated, false, effect)
+	if p.artifactOnly {
+		t.AndConditionData(activatedSourceIsArtifact{})
+	}
+	if p.opponentOnly {
+		t.AndConditionData(EventPlayerIsOpponent{})
+	}
+	return t
+}
+
+type activatedSourceIsArtifact struct{}
+
+func (activatedSourceIsArtifact) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.SourceIncarnation == uuid.Nil {
+		return false
+	}
+	if permanent := game.FindPermanentIncludingPhased(event.SourceID); permanent != nil && permanent.incarnationID == event.SourceIncarnation {
+		return permanent.HasType(TypeArtifact)
+	}
+	lki := game.zones.LKIByIncarnation(event.SourceIncarnation)
+	return lki != nil && lki.ID == event.SourceID && lki.HasType(TypeArtifact)
 }
 
 func (p abilityActivatedPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "an ability is activated", battlefieldSource: true}
+	if p.duplicateArtifact || p.duplicateOpponent {
+		n.problem = "ability activation event: supply each filter once"
+	}
 	if p.captureActivator {
 		if p.activator == nil || p.duplicateActivator {
 			n.problem = "ability activation event: supply one activator binding"

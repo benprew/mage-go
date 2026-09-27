@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Opponent Artifact Activation Filter
+
+`ActivatedAbilityEvent().FromArtifact().ByOpponent()` adds two independent filters to the completed activated-ability event pattern. `FromArtifact` checks the event's source incarnation against the live permanent or its departure LKI. `ByOpponent` compares the recorded activator with the watcher controller at detection. Both filters compose with `WithActivator` and `WithSource` in battlefield `WhenEvent` declarations. They include activations with a tap cost. The reusable boundary is the existing activation event, trigger conditions, and pending-trigger binding frame; no payment executor or legacy export changed.
+
+Powerleech's complete text in `data/ATQ.json` requires both an opponent artifact tap event and an opponent artifact activation without `{T}` in the cost. The existing `ArtifactAbilityActivatedWithoutTapCost` pattern provides the tap-cost exclusion; this new general filter does not. Artifact Possession and Haunting Wind have separate attached-artifact and damage requirements. All three production cards remain unchanged, and their JSON gap records remain open. A fresh caller search found one production `OpponentActivatedArtifactNoTapCost` use and no production `ActivatedAbilityEvent` use. Next dependency-ready work is a separate P payment output or E event filter after a fresh requirements audit.
+
+The focused test first failed because the filter methods were absent. Synthetic tests cover opponent and artifact selection, a tap-cost activation, activation-cost sacrifice and return under another controller, source lifelink, trigger copying, clone isolation, registration rejection of repeated filters, and a public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass. The post-lint diff was reviewed, and `git diff --check` passes.
+
 ## Current Slice: Activated Ability Event Source Capture
 
 `ActivatedAbilityEvent().WithSource(*DamageSourceBinding)` saves the activated permanent's event-time incarnation and characteristics in each pending trigger. `FromDamageSource` can use it for later damage even when activation sacrificed the permanent and the card returned under a different controller. The capture reuses `EvtAbilityActivated`, incarnation-indexed LKI, the shared damage-source snapshot, and the resolution frame. It composes with `WithActivator` in battlefield `WhenEvent` and `WhenEventModes` declarations. No artifact, attached-source, tap-cost, or opponent filter was added. No production card or legacy export changed.
