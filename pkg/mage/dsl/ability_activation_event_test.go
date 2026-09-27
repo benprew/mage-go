@@ -15,3 +15,14 @@ func TestAbilityActivatedPublicDeclaration(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAbilityActivatedSourcePublicDeclaration(t *testing.T) {
+	actor := dsl.BindPlayer("actor")
+	source := dsl.BindDamageSource("source")
+	card := dsl.NewEnchantment("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+		dsl.ActivatedAbilityEvent().WithActivator(actor).WithSource(source),
+		dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.FromPlayer(actor), dsl.Fixed(1)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}

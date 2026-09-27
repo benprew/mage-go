@@ -1403,17 +1403,19 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
-  * `ActivatedAbilityEvent().WithActivator(*PlayerBinding) EventPattern`: Match each completed activated ability announcement, including planned mana abilities. `WithActivator` is optional and saves the activating player at event time for `FromPlayer`. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The engine event keeps the source incarnation through a sacrifice cost, but this pattern does not yet expose a source binding. The constructor uses `ActivatedAbilityEvent` because `AbilityActivated` is already a core ability-type constant. For example:
+  * `ActivatedAbilityEvent().WithActivator(*PlayerBinding).WithSource(*DamageSourceBinding) EventPattern`: Match each completed activated ability announcement, including planned mana abilities. Both captures are optional. `WithActivator` saves the activating player for `FromPlayer`. `WithSource` saves the activated permanent's event-time incarnation and characteristics for `FromDamageSource`, including when a cost sacrifices it. The saved source can deal damage after it leaves or returns. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The constructor uses `ActivatedAbilityEvent` because `AbilityActivated` is already a core ability-type constant. For example:
+
     ```go
     package main
 
     import "github.com/benprew/mage-go/pkg/mage/dsl"
 
     var actor = dsl.BindPlayer("activator")
+    var source = dsl.BindDamageSource("activated source")
     var _ = dsl.NewEnchantment("Activation watcher", "",
         dsl.WithAbility(dsl.WhenEvent(
-            dsl.ActivatedAbilityEvent().WithActivator(actor),
-            dsl.GainLife(dsl.FromPlayer(actor), dsl.Fixed(1)))))
+            dsl.ActivatedAbilityEvent().WithActivator(actor).WithSource(source),
+            dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.FromPlayer(actor), dsl.Fixed(1)))))
 
     func main() {}
     ```
