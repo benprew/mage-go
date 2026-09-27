@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Turn Damage Recipient Set
+
+`PermanentsDealtDamageByThisTurn(DamageSourceRef, PermanentSet) PermanentSet` selects current, unphased permanent candidates dealt positive damage by one permanent source incarnation this turn. It uses the existing source-and-recipient incarnation record from the shared damage pipeline. Prevention and redirection determine the final record; final cleanup clears it. The selector works in resolving spell, activation, and trigger bodies with permanent-set consumers. Nil arguments and out-of-scope source bindings fail registration; the sealed source and set roles reject category errors at compile time. No production card or legacy export changed.
+
+The D/S inventory includes damage-history collections. The full Brine Hag requirement in `doc/designs/composable-dsl-migration-legends-gaps.json` needs the reverse collection of creatures that damaged the source, so this selector does not complete it. Giant Shark also needs combat opponent capture and an Island-dependent restriction. Their gap records remain open. Synthetic tests cover prevention, source and recipient return, phasing, final cleanup, game clone isolation, inspection, registration, and a public DSL declaration. The focused test first failed because the selector was absent. The next dependency-ready work is a separate reverse source-history collection or a P payment output after a fresh audit. Production card wiring remains open.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production caller of this selector. The post-lint diff was reviewed.
+
 ## Current Slice: Controller Drawn-Card Event Capture
 
 `ControllerDrawsCardInto(*PlayerBinding, *CardBinding) EventPattern` saves the source controller and the exact card from each completed draw. `EvtCardDrawn` now carries that card's ID and current hand-visit ID. `FromCard` is absent after the card leaves and returns. The pattern uses `WhenEvent` or `WhenEventModes` on a battlefield source. It has no target and gives no drawn-card binding for opponent or any-player patterns, which preserves hidden-hand access. The existing draw replacement, event, pending-trigger, resolution-frame, and clone services remain responsible for execution. No production card or legacy export changed.

@@ -406,6 +406,7 @@ var (
 	DamageRecipients                 = mage.DamageRecipients
 	PlayersDealtDamageBy             = mage.PlayersDealtDamageBy
 	PermanentsDealtDamageBy          = mage.PermanentsDealtDamageBy
+	PermanentsDealtDamageByThisTurn  = mage.PermanentsDealtDamageByThisTurn
 	DealDamageEach                   = mage.DealDamageEach
 	DamageTotalInto                  = mage.DamageTotalInto
 	SacrificeAmountInto              = mage.SacrificeAmountInto

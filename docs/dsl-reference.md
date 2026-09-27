@@ -828,7 +828,17 @@ card := dsl.NewCreature("History source", "", 2, 3, dsl.WithAbility(dsl.At(dsl.Y
 _ = card
 ```
 
-The damage system also keeps an internal, turn-scoped source-and-recipient incarnation record for damage to permanents. It records only positive damage after prevention and replacement and clears at final cleanup. No DSL query or death-event filter exposes this new record yet. The existing `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption)` signature feeds it in spell, activation, and trigger resolution. This synthetic spell declaration compiles:
+The damage system also keeps a turn-scoped source-and-recipient incarnation record for damage to permanents. It records only positive damage after prevention and replacement and clears at final cleanup. `PermanentsDealtDamageByThisTurn(DamageSourceRef, PermanentSet) PermanentSet` selects current, unphased candidates damaged by that source incarnation this turn. It works in resolving spell, activation, and trigger bodies with permanent-set consumers such as `TapEach`, `CountPermanents`, and `ForEach`. An absent or spell source selects nothing. A returned permanent has a new identity. `CreatureDies().DamagedByThisTurn()` separately checks the dying creature's former incarnation. This synthetic declaration compiles:
+
+```go
+card := dsl.NewCreature("Turn history", "", 1, 5,
+    dsl.WithAbility(dsl.At(dsl.YourUpkeep,
+        dsl.TapEach(dsl.PermanentsDealtDamageByThisTurn(dsl.This,
+            dsl.MatchingPermanents(dsl.IsCreature))))))
+_ = card
+```
+
+The existing `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption)` signature feeds this record in spell, activation, and trigger resolution. This synthetic spell declaration compiles:
 
 ```go
 victim := dsl.DeclarePermanentTarget("victim", dsl.IsCreature)

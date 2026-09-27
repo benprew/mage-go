@@ -79,3 +79,42 @@ func (s damageHistoryPermanents) inspectDefinition() definitionNode {
 	n.children = []definitionEdge{{"source", damageSourceDefinition{s.source}}, {"candidates", s.candidates}}
 	return n
 }
+
+type turnDamageHistoryPermanents struct {
+	source     DamageSourceRef
+	candidates PermanentSet
+}
+
+// PermanentsDealtDamageByThisTurn selects current recipients of this source's turn damage.
+func PermanentsDealtDamageByThisTurn(source DamageSourceRef, candidates PermanentSet) PermanentSet {
+	return turnDamageHistoryPermanents{source: source, candidates: candidates}
+}
+
+func (turnDamageHistoryPermanents) permanentSet() {}
+
+func (s turnDamageHistoryPermanents) resolvePermanents(ctx *EffectContext) []*Permanent {
+	if nilDefinition(s.source) || nilDefinition(s.candidates) {
+		return nil
+	}
+	source := s.source.resolveDamageSource(ctx)
+	if source.Incarnation() == uuid.Nil {
+		return nil
+	}
+	var selected []*Permanent
+	for _, permanent := range s.candidates.resolvePermanents(ctx) {
+		if permanent != nil && !permanent.PhasedOut && ctx.Game.damage.dealtDamageToPermanentThisTurn(source, capturedPermanent{permanent.ID(), permanent.incarnationID}) {
+			selected = append(selected, permanent)
+		}
+	}
+	return selected
+}
+
+func (s turnDamageHistoryPermanents) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "permanent-set", Text: "permanents dealt damage by source this turn"}
+	if nilDefinition(s.source) || nilDefinition(s.candidates) {
+		n.problem = "supply a damage source and permanent set"
+		return n
+	}
+	n.children = []definitionEdge{{"source", damageSourceDefinition{s.source}}, {"candidates", s.candidates}}
+	return n
+}
