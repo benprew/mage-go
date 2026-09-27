@@ -29,6 +29,7 @@ var (
 	FlipCoin             = mage.FlipCoin
 	DefineToken          = mage.DefineToken
 	CreateTokenCopies    = mage.CreateTokenCopies
+	CreateOneToken       = mage.CreateOneToken
 	TokenTypes           = mage.TokenTypes
 	TokenSubtypes        = mage.TokenSubtypes
 	TokenColors          = mage.TokenColors

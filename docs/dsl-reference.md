@@ -6,6 +6,17 @@ Cards import `pkg/mage/dsl` (and `pkg/mage/core` for enums/types). All card defi
 
 Typed token creation uses `DefineToken(name, options...)` with `TokenTypes`, `TokenSubtypes`, `TokenColors`, `TokenPT`, `TokenKeywords`, and `TokenAbilities`. Creature tokens require `TokenPT`; other tokens omit it. Omit `TokenColors` for a colorless token. `CreateTokenCopies(player, count, definition)` evaluates the player and count at resolution and enters all copies as one group. A nonpositive count creates no tokens. Each token ability has its own binding scope and cannot read a binding from the creating ability.
 
+`CreateOneToken(player PlayerRef, definition TokenDefinition, result *PermanentBinding) ResolvingEffect` creates one token and saves its battlefield incarnation in the resolving spell, activation, or trigger frame. Use `From(result)` in later instructions. If no token enters, the binding is absent. It is not a target and does not follow a token that leaves the battlefield. Multi-token results need a separate collection binding.
+
+```go
+created := BindPermanent("created Cat")
+cat := DefineToken("Cat", TokenTypes(TypeCreature), TokenSubtypes("Cat"), TokenColors(White), TokenPT(2, 2))
+ability := Spell(Sequence(
+    CreateOneToken(You, cat, created),
+    AddCounters(From(created), P1P1, Fixed(1)),
+))
+```
+
 ---
 
 ## Table of Contents

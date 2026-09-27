@@ -151,6 +151,42 @@ type createTokenCopiesEffect struct {
 	token  TokenDefinition
 }
 
+type createOneTokenEffect struct {
+	player PlayerRef
+	token  TokenDefinition
+	result *PermanentBinding
+}
+
+// CreateOneToken saves the created token's battlefield incarnation.
+func CreateOneToken(player PlayerRef, token TokenDefinition, result *PermanentBinding) ResolvingEffect {
+	return &createOneTokenEffect{player: player, token: token, result: result}
+}
+
+func (*createOneTokenEffect) Text() string { return "create one token" }
+func (e *createOneTokenEffect) Properties() EffectProperties {
+	return (&createTokenCopiesEffect{token: e.token}).Properties()
+}
+func (e *createOneTokenEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), bindingWrite: e.result, children: []definitionEdge{{"player", e.player}, {"token", e.token}, {"result", e.result}}}
+}
+func (e *createOneTokenEffect) Apply(ctx *EffectContext) error {
+	delete(ctx.Game.resolution.permanentBindings, e.result)
+	player, ok := e.player.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	d := e.token.(*tokenDefinition)
+	created := createTokenBatchWithResult(ctx.Game, player, 1, d.name, d.power, d.toughness, d.types, d.subtypes, d.colors, d.keywords, d.abilities)
+	if len(created) == 0 {
+		return nil
+	}
+	if ctx.Game.resolution.permanentBindings == nil {
+		ctx.Game.resolution.permanentBindings = make(map[*PermanentBinding]capturedPermanent)
+	}
+	ctx.Game.resolution.permanentBindings[e.result] = capturedPermanent{created[0].ID(), created[0].incarnationID}
+	return nil
+}
+
 // CreateTokenCopies creates the evaluated number of tokens for one player.
 func CreateTokenCopies(player PlayerRef, count ResolutionValue, token TokenDefinition) ResolvingEffect {
 	return &createTokenCopiesEffect{player, count, token}

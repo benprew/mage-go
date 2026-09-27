@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Created-Token Result
+
+`CreateOneToken(PlayerRef, TokenDefinition, *PermanentBinding)` creates one token through the shared token entry batch and saves the accepted battlefield incarnation in the resolving frame. `From(binding)` can feed later singular instructions. The result is absent if no token enters, if it phases out, or if it leaves; a same-card return cannot satisfy the old incarnation. Registration checks the player, token definition, named binding, and producer dominance. The typed result is available in spells, activations, and triggers. No production card or legacy export changed.
+
+Ajani's Chosen's complete text was checked in `data/JMP.json` and its Jumpstart gap record. This slice supplies the created-token identity needed for its optional attachment clause, but the attachment choice and production wiring remain open. The Secrets of Strixhaven Fractal cards require a multi-token result set, which this singular binding does not supply. Both gap records remain open. The first focused test failed because the constructor was absent. Synthetic and public DSL tests cover the created incarnation, controller, clone isolation, absence, phasing, subsequent action, inspection, and registration. The next dependency-ready slice is an attachment action or a multi-token result collection after a fresh audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role check, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `CreateOneToken` caller; existing `CreateTokenCopies` and legacy token constructors remain for unmigrated cards.
+
 ## Current Slice: Resolution-Time Enchantment Subtype Branch
 
 `IfPermanentHasEnchantmentSubtype(PermanentRef, string, ResolvingEffect)` checks a current or saved battlefield incarnation when a spell, activation, or trigger body resolves. For a saved permanent that departed, it reads the `ZoneSystem` LKI snapshot keyed by incarnation; a returned card does not replace that object. A phased-out object has no current subject. The branch uses the existing subtype and resolution services. It adds no token-result or attachment action. Registration checks the sealed permanent role, a known enchantment subtype, body presence, and binding dominance. No production card or legacy export changed.

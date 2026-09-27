@@ -368,7 +368,7 @@ func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *
 	return perm
 }
 
-func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID) {
+func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID) []*Permanent {
 	permanents := make([]*Permanent, 0, len(cards))
 	for _, card := range cards {
 		if perm := g.prepareBattlefieldEntry(card, controller, nil); perm != nil {
@@ -381,6 +381,7 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 	for _, perm := range permanents {
 		g.completeBattlefieldEntry(perm, controller, controller)
 	}
+	return permanents
 }
 
 func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color) *Permanent {

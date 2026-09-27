@@ -497,6 +497,11 @@ func (e *createTokenEffect) Apply(ctx *EffectContext) error {
 }
 
 func createTokenBatch(g *Game, player uuid.UUID, count int, name string, power, toughness int, types []CardType, subtypes []string, colors []Color, keywords []Keyword, abilities []Ability) error {
+	createTokenBatchWithResult(g, player, count, name, power, toughness, types, subtypes, colors, keywords, abilities)
+	return nil
+}
+
+func createTokenBatchWithResult(g *Game, player uuid.UUID, count int, name string, power, toughness int, types []CardType, subtypes []string, colors []Color, keywords []Keyword, abilities []Ability) []*Permanent {
 	tokens := make([]Card, 0, count)
 	for range count {
 		token := NewToken(name, power, toughness, types, subtypes, keywords...)
@@ -509,8 +514,7 @@ func createTokenBatch(g *Game, player uuid.UUID, count int, name string, power, 
 		}
 		tokens = append(tokens, token)
 	}
-	g.putTokensOnBattlefieldTogether(tokens, player)
-	return nil
+	return g.putTokensOnBattlefieldTogether(tokens, player)
 }
 
 func (e *cloneTargetEffect) Apply(ctx *EffectContext) error {
