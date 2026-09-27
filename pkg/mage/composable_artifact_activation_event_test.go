@@ -56,7 +56,7 @@ func TestArtifactAbilityWithoutTapCostFiltersAndLKI(t *testing.T) {
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	controller := BindPlayer("controller")
-	watcher := NewAura("Watcher", "", WithAbility(WhenEvent(
+	watcher := NewAura("Watcher", "", WithCastTarget(TargetArtifact()), WithAbility(WhenEvent(
 		ArtifactAbilityActivatedWithoutTapCost().AttachedToSource().WithController(controller),
 		GainLifeFor(FromPlayer(controller), Fixed(1)))))
 	watcher.SetOwner(a.PlayerID())

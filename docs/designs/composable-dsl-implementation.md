@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attachment Move Legality
+
+`Game.Attach(sourceID, targetID)` now checks attachment source kind, Aura enchant restrictions, protection, and attachment prohibitions before a move. It rejects phased-out or absent participants and same-host moves without changing attachment state. Successful moves record the host incarnation and continue through the shared effect and event paths. This is an engine prerequisite; it adds no typed author action or production card wiring. Synthetic tests first failed on wrong-type Aura hosts, protection, and ordinary creature attachment. They cover failed-move state, same-host behavior, phasing, departure and return, and clone isolation.
+
+Ajani's Chosen's full Oracle text was checked in `data/JMP.json`. Its optional Aura-to-created-token clause still needs attachment timestamps, a typed optional attachment action, and a separate card migration. The Jumpstart inventory and gap record remain open. The next dependency-ready slice is attachment timestamp ordering under CR 701.3c and 613.7e. Existing `Game.Attach` callers remain available during migration.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. Three synthetic tests previously attached default creature Auras to artifacts; their declarations now specify enchant artifact. No card definition or gap record changed.
+
 ## Current Slice: Created-Token Result Set
 
 `BindCreatedTokens`, `CreateTokenCopiesInto`, and `FromCreatedTokens` provide a typed collection of the accepted battlefield incarnations from one token-entry batch. The action is available in spell, activation, and trigger bodies, and the saved set can be read by later resolving and delayed-step instructions. It reuses `createTokenBatchWithResult` and the existing permanent-set consumers. The result excludes rejected entries, departed or returned tokens, and phased-out tokens. A nonpositive count clears the binding. Declaration inspection and dominance checks reject invalid or unproduced bindings. The frame, loops, delayed steps, and game clones copy result slices independently. No production card or legacy export changed.

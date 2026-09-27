@@ -45,6 +45,8 @@ Read-only queries are organized into focused domain interfaces: `PlayerReader`, 
 
 ## 2. Object Identity, Incarnations, and Phasing (CR 400.7)
 
+`Game.Attach(sourceID, targetID)` checks both battlefield objects before it changes an attachment. An Aura must satisfy its enchant restriction, protection, and enchantment prohibitions. An Equipment must attach to a creature; a Fortification must attach to a land. An ordinary permanent cannot attach. A failed move leaves the old host and both attachment lists unchanged. Attaching to the same host has no effect (CR 303.4j, 701.3a–b). Phased-out and departed objects are absent for this action. The operation records the new host incarnation when it succeeds. The separate attachment timestamp rule (CR 701.3c, 613.7e) remains open.
+
 * **Physical Card vs. Rules Object**: `Permanent.ID()` returns the physical card UUID, but `Permanent.incarnationID` tracks the unique existence of that permanent on the battlefield.
 * **Battlefield References**: Resolving effects (such as `Sacrifice(This)` or `Untap(This)`) resolve and verify the specific captured battlefield incarnation.
 * **Sacrifice Action Result**: A typed `Sacrifice` instruction writes 1 only when its controller sacrifices the referenced, present, unphased permanent. It writes 0 for an absent, returned, phased-out, or differently controlled permanent. The `NumberBinding` belongs to the resolving stack frame and is copied with that frame. This result does not describe a sacrifice paid as a cost (CR 701.21a, 118.10).

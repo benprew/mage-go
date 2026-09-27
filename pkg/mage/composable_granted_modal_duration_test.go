@@ -12,7 +12,7 @@ func TestGrantedModalModificationLifetimeAndCopies(t *testing.T) {
 	for _, duration := range []Duration{Indefinite, EndOfTurn, EndOfCombat} {
 		t.Run(duration.String(), func(t *testing.T) {
 			g, a, b := newModalGame()
-			donor, recipient := NewAura("Donor", ""), NewArtifact("Recipient", "")
+			donor, recipient := NewAura("Donor", "", WithCastTarget(TargetArtifact())), NewArtifact("Recipient", "")
 			g.PutOnBattlefield(donor, a.PlayerID())
 			g.PutOnBattlefield(recipient, b.PlayerID())
 			g.Attach(donor.ID(), recipient.ID())
@@ -82,9 +82,9 @@ func TestGrantedModalModificationSourceDurationAndWhile(t *testing.T) {
 		modification := ActivatedModesModification(AttachedPermanent, Costs(),
 			ModeOf("counter", AddCountersTo(This, Charge, Fixed(1))),
 			ModeOf("gain", GainLifeFor(You, Fixed(2))), ActivationLimit(1))
-		donor, recipient := NewAura("Donor", ""), NewArtifact("Recipient", "")
+		donor, recipient := NewAura("Donor", "", WithCastTarget(TargetArtifact())), NewArtifact("Recipient", "")
 		if dynamic {
-			donor = NewAura("Donor", "", WithAbility(Static(While(Controls(IsArtifact), modification))))
+			donor = NewAura("Donor", "", WithCastTarget(TargetArtifact()), WithAbility(Static(While(Controls(IsArtifact), modification))))
 		}
 		g.PutOnBattlefield(donor, a.PlayerID())
 		g.PutOnBattlefield(recipient, a.PlayerID())

@@ -1593,9 +1593,20 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	if src == nil || target == nil {
 		return
 	}
-
-	// "Can't be enchanted" — prevent enchantment attachment entirely.
-	if src.HasType(TypeEnchantment) && target.HasAttr(AttrCantBeEnchanted) {
+	if src.AttachedTo == targetID && src.attachedIncarnation == target.incarnationID {
+		return
+	}
+	if src.HasSubType("Aura") {
+		if src.HasType(TypeCreature) || src.ID() == target.ID() ||
+			target.HasAttr(AttrCantBeEnchanted) || target.HasProtectionFromInGame(src.Card, g) ||
+			!auraHostIsLegal(src.Card, target, g) {
+			return
+		}
+	} else if src.HasSubType("Equipment") {
+		if src.HasType(TypeCreature) || !target.HasType(TypeCreature) || src.ID() == target.ID() {
+			return
+		}
+	} else if !src.HasSubType("Fortification") || !target.HasType(TypeLand) || src.ID() == target.ID() {
 		return
 	}
 

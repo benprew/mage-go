@@ -4,6 +4,14 @@ This document is the authoritative, comprehensive reference for the composable c
 
 Cards import `pkg/mage/dsl` (and `pkg/mage/core` for enums/types). All card definitions, abilities, costs, targets, and effects are built using the typed combinators exported by `dsl`.
 
+The shared engine operation `(*mage.Game).Attach(sourceID, targetID uuid.UUID)` moves an Aura, Equipment, or Fortification between battlefield permanents. It checks the Aura's enchant restriction, protection, and attachment prohibitions before changing either host. An invalid move, including a move to a phased-out host, does nothing. A move to the current host also does nothing. This operation is for engine integrations and existing callers; there is no typed `dsl.Attach` action yet. For example, a synthetic engine test can call:
+
+```go
+host := game.PutOnBattlefield(mage.NewCreature("Host", "", 2, 2), playerID)
+aura := game.PutOnBattlefield(mage.NewAura("Aura", ""), playerID)
+game.Attach(aura.ID(), host.ID())
+```
+
 Typed token creation uses `DefineToken(name, options...)` with `TokenTypes`, `TokenSubtypes`, `TokenColors`, `TokenPT`, `TokenKeywords`, and `TokenAbilities`. Creature tokens require `TokenPT`; other tokens omit it. Omit `TokenColors` for a colorless token. `CreateTokenCopies(player, count, definition)` evaluates the player and count at resolution and enters all copies as one group. A nonpositive count creates no tokens. Each token ability has its own binding scope and cannot read a binding from the creating ability.
 
 `CreateOneToken(player PlayerRef, definition TokenDefinition, result *PermanentBinding) ResolvingEffect` creates one token and saves its battlefield incarnation in the resolving spell, activation, or trigger frame. Use `From(result)` in later instructions. If no token enters, the binding is absent. It is not a target and does not follow a token that leaves the battlefield.
