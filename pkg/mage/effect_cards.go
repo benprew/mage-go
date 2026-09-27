@@ -532,13 +532,7 @@ func (e *millTargetPlayerEffect) Apply(ctx *EffectContext) error {
 			continue
 		}
 		amount := ctx.Game.ApplyMillModifiers(p.PlayerID(), baseAmount)
-		lib := p.Library()
-		for i := 0; i < amount && len(lib) > 0; i++ {
-			card := lib[0]
-			lib = lib[1:]
-			p.AddToGraveyard(card)
-		}
-		p.SetLibrary(lib)
+		ctx.Game.millCards(p.PlayerID(), amount)
 	}
 	return nil
 }

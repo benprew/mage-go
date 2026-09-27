@@ -302,6 +302,8 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
 
 ## 9. Total-Cost Payment Transactions (CR 601.2, 602.2)
 
+`MillCost(count)` is a cost, including in a resolution-time optional payment. It uses the shared mill amount modifiers and card movement path. Preparation locks the modified amount and verifies that the payer has enough library cards to mill that full amount (CR 701.17b). Commit rechecks the amount and library before it changes mana or life. If a modifier changes or the library becomes too small, payment fails without changing those resources. A modifier that changes the amount to zero permits payment. The cost does not save milled-card results.
+
 `TapAttachedPermanentCost` locks the ability source incarnation, attached permanent incarnation, and attachment during payment preparation. Commit rechecks them before mana, life, or other costs change live state. It uses the shared tap transition and event path. A phased-out, absent, returned, detached, or already tapped host cannot pay. Phasing back in preserves its incarnation. This is a normal tap action cost, so the `{T}` symbol's summoning-sickness restriction does not apply.
 
 Grouped activated abilities announce and validate one target list per declared

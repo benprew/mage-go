@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Mill Payment
+
+`MillCost(count int) Cost` is a reusable payment component for activated abilities, spell additional costs, and resolution-time `IfPaid`/`UnlessPaid`. It reuses the total-cost transaction, mill modifiers, and shared library-to-graveyard movement. Preparation locks the replacement-adjusted amount; commit rechecks that amount and the available library before mana or life changes. A payment fails when the library cannot supply the full modified amount. A replacement that reduces the amount to zero permits payment. Registration rejects nonpositive counts. No production card or legacy export changed.
+
+Deep Spawn's complete text was checked in `data/FEM.json`, its Fallen Empires inventory and gap record, and CR 118.3 and 701.17b. The synthetic upkeep declaration uses `UnlessPaid(You, Costs(MillCost(2)), Sacrifice(This))`. Its other ability and production wiring remain separate, so the JSON gap stays open. Focused tests first failed because `MillCost` was absent. Engine and public DSL tests cover zero through three library cards, optional payment, replacement increase and reduction, changed replacement, preparation and commit rollback, clone isolation, and registration. The next dependency-ready work is another isolated P payment/result or a T target extension after a fresh requirements audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A first lint run found three style issues in the new helper; they were corrected before the passing run.
+
 ## Current Slice: Source-Inclusive Sacrifice Mana Value
 
 `SacrificeMatchingIncludingSourceCostWithManaValue(filter, text, binding) Cost` lets an activated ability or spell additional cost sacrifice a matching permanent, including its source, and save that permanent's mana value in an instance-local number binding. It reuses the locked sacrifice choice and payment transaction already used by `SacrificeMatchingCostWithManaValue`; no new payment executor is added. The source is a candidate only when it satisfies the filter. An absent, phased-out, returned, or otherwise ineligible choice fails payment without a result. Registration rejects missing text or binding, empty binding names, and out-of-scope reads. No production card or legacy export changed.

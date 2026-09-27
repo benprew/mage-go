@@ -876,6 +876,13 @@ func turnCheck() *dsl.BaseCard {
   For "destroy this creature unless you pay {1}", use
   `UnlessPaid(You, Costs(Mana("{1}")), Destroy(This))`. A granted trigger
   keeps its triggering controller and source incarnation through resolution.
+* `MillCost(count int) Cost`: Pay by milling `count` cards from the payer's library. Use it in `Costs` for spell or activation payment, or in a resolution-time `IfPaid` or `UnlessPaid` branch. Registration requires a positive count. Payment uses the current mill amount after replacement; if the library has fewer cards than that amount, the payment fails without milling cards or paying another component. A replacement that reduces the mill amount to zero permits payment. A player can decline an optional payment before preparation.
+
+```go
+var _ = NewCreature("Upkeep", "", 1, 1,
+    WithAbility(At(YourUpkeep,
+        UnlessPaid(You, Costs(MillCost(2)), Sacrifice(This)))))
+```
 * `ChoosePermanent(playerRef, set, binding)`: Player chooses a permanent at resolution, storing it in `binding`.
 * `ChooseRandomPermanent(set, binding)`: Selects a random permanent from the set at resolution.
 * `ChooseRandomPlayer(playerSet, binding)`: Selects a random player from the set at resolution.

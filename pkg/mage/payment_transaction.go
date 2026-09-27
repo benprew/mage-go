@@ -173,6 +173,13 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			validationCost = &locked
 			tx.costs[i] = &locked
 		}
+		if mill, ok := cost.(*millCost); ok {
+			locked := *mill
+			locked.lockedAmount = max(0, validation.ApplyMillModifiers(tx.controller, mill.amount))
+			locked.locked = true
+			validationCost = &locked
+			tx.costs[i] = &locked
+		}
 		if counter, ok := cost.(*removeAnyCountersCost); ok {
 			cntCopy := *counter
 			source := tx.game.FindPermanent(tx.sourceID)
@@ -255,6 +262,7 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	if player == nil {
 		return ErrPlayerNotFound
 	}
+	millTotal := 0
 	for _, cost := range tx.costs {
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture && !exile.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen graveyard exile")
@@ -271,6 +279,15 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		if discard, ok := cost.(*discardCost); ok && !discard.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen discard")
 		}
+		if mill, ok := cost.(*millCost); ok && !mill.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay mill cost")
+		}
+		if mill, ok := cost.(*millCost); ok {
+			millTotal += mill.lockedAmount
+		}
+	}
+	if millTotal > len(player.Library()) {
+		return fmt.Errorf("cannot pay mill cost")
 	}
 	if err := tx.game.mana.ApplyManaSolution(tx.game, tx.controller, tx.manaSolution); err != nil {
 		return err
