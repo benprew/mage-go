@@ -4293,10 +4293,11 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 			}
 		}
 		g.FireEvent(GameEvent{
-			Type:     EvtAbilityActivated,
-			SourceID: perm.ID(),
-			PlayerID: playerID,
-			Flag:     true,
+			Type:              EvtAbilityActivated,
+			SourceID:          perm.ID(),
+			SourceIncarnation: perm.incarnationID,
+			PlayerID:          playerID,
+			Flag:              true,
 		})
 		g.mana.FireTappedForMana(g, perm.ID(), playerID, produced)
 		return nil
@@ -4468,10 +4469,11 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	if canProduceMana(actionEffects, actionTargets) {
 		g.FireEvent(GameEvent{
-			Type:     EvtAbilityActivated,
-			SourceID: perm.ID(),
-			PlayerID: playerID,
-			Flag:     hasTapCost,
+			Type:              EvtAbilityActivated,
+			SourceID:          perm.ID(),
+			SourceIncarnation: perm.incarnationID,
+			PlayerID:          playerID,
+			Flag:              hasTapCost,
 		})
 		produced, colors := g.resolveStackObject(obj)
 		if hasTapCost && produced > 0 {
@@ -4503,10 +4505,11 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	g.pushStack(obj)
 
 	g.FireEvent(GameEvent{
-		Type:     EvtAbilityActivated,
-		SourceID: perm.ID(),
-		PlayerID: playerID,
-		Flag:     hasTapCost,
+		Type:              EvtAbilityActivated,
+		SourceID:          perm.ID(),
+		SourceIncarnation: perm.incarnationID,
+		PlayerID:          playerID,
+		Flag:              hasTapCost,
 	})
 
 	g.fireBecomesTargetEvents(obj, true)

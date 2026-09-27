@@ -1403,7 +1403,7 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
-  * `ActivatedAbilityEvent().WithActivator(*PlayerBinding) EventPattern`: Match each completed activated ability announcement, including mana abilities. `WithActivator` is optional and saves the activating player at event time for `FromPlayer`. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. It does not filter or save the ability's source. The constructor uses `ActivatedAbilityEvent` because `AbilityActivated` is already a core ability-type constant. For example:
+  * `ActivatedAbilityEvent().WithActivator(*PlayerBinding) EventPattern`: Match each completed activated ability announcement, including planned mana abilities. `WithActivator` is optional and saves the activating player at event time for `FromPlayer`. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The engine event keeps the source incarnation through a sacrifice cost, but this pattern does not yet expose a source binding. The constructor uses `ActivatedAbilityEvent` because `AbilityActivated` is already a core ability-type constant. For example:
     ```go
     package main
 
