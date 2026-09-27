@@ -13,6 +13,40 @@ type manaAmountEffect struct {
 
 type manaAnyOneColorEffect struct{ amount ResolutionValue }
 
+type manaToPlayerEffect struct {
+	player PlayerRef
+	color  core.Color
+	amount ResolutionValue
+}
+
+// AddManaToPlayer puts mana into the selected player's pool.
+func AddManaToPlayer(player PlayerRef, color core.Color, amount ResolutionValue) ResolvingEffect {
+	return &manaToPlayerEffect{player: player, color: color, amount: amount}
+}
+
+func (e *manaToPlayerEffect) Text() string                 { return "add mana to player" }
+func (e *manaToPlayerEffect) Properties() EffectProperties { return EffectProperties{} }
+func (e *manaToPlayerEffect) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"player", e.player}, {"amount", e.amount}}}
+	if e.color < core.Colorless || e.color >= core.AnyColor {
+		n.problem = "supply a concrete mana color"
+	}
+	return n
+}
+func (e *manaToPlayerEffect) Apply(ctx *EffectContext) error {
+	player, ok := e.player.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	amount := e.amount.resolveValue(ctx)
+	if amount <= 0 {
+		return nil
+	}
+	child := *ctx
+	child.Controller = player
+	return AddMana(e.color, amount).Apply(&child)
+}
+
 // AddManaOfAnyOneColor adds the full amount in one color chosen at resolution.
 func AddManaOfAnyOneColor(amount ResolutionValue) ResolvingEffect {
 	return &manaAnyOneColorEffect{amount: amount}
@@ -87,6 +121,8 @@ func canProduceMana(effects []Effect, targets []Target) bool {
 	for _, effect := range effects {
 		switch e := effect.(type) {
 		case *manaAmountEffect:
+			return true
+		case *manaToPlayerEffect:
 			return true
 		case *manaAnyOneColorEffect:
 			return true

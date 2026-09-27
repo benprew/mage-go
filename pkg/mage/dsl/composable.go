@@ -29,6 +29,7 @@ var (
 	CountersOn                    = mage.CountersOn
 	SourceCounters                = mage.SourceCounters
 	AddManaAmount                 = mage.AddManaAmount
+	AddManaToPlayer               = mage.AddManaToPlayer
 	AddManaOfAnyOneColor          = mage.AddManaOfAnyOneColor
 	SnapshotNumber                = mage.SnapshotNumber
 	CaptureNumberBeforePayment    = mage.CaptureNumberBeforePayment

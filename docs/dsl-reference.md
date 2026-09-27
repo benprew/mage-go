@@ -1070,6 +1070,15 @@ This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. A player
 * `ScryAtResolution(ResolutionValue)`: Scries cards equal to the amount.
 * `SurveilAtResolution(ResolutionValue)`: Surveils cards equal to the amount.
 * `AddManaAmount(Color, ResolutionValue)`: Adds mana of the specified color to the pool.
+* `AddManaToPlayer(PlayerRef, core.Color, ResolutionValue) ResolvingEffect`: Add a fixed mana type to the selected player's pool. The player and amount are read at resolution; an absent player or nonpositive amount adds nothing. Use it in a spell, activated ability, or trigger body. A targetless activated ability that can add mana this way resolves as a mana ability. A tapped-for-mana trigger that uses this action still needs the triggered-mana timing contract. This declaration compiles:
+
+  ```go
+  producer := dsl.BindPlayer("producer")
+  card := dsl.NewEnchantment("Mana watcher", "", dsl.WithAbility(dsl.WhenEvent(
+      dsl.LandTappedForMana().WithPlayer(producer),
+      dsl.AddManaToPlayer(dsl.FromPlayer(producer), core.Green, dsl.Fixed(1)))))
+  _ = card
+  ```
 * `AddManaOfAnyOneColor(ResolutionValue)`: The resolving controller chooses one color and adds the full amount in that color. It works in resolving spell, activation, and trigger bodies. A targetless activation that can produce mana resolves as a mana ability. A fixed positive amount in a tap-only mana activation is available to automatic payment planning; a dynamic amount is not.
 
 ```go
