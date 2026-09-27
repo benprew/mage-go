@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Cast-Color Entry Counter Replacement
+
+`ColorsSpentToCastEnteringPermanent() EntryCounterValue` and `EntersWithCounters(core.CounterType, EntryCounterValue) Ability` supply a sealed, inspectable self-entry counter replacement. The entry path passes the entering permanent spell's own distinct colored mana count to preparation; direct entry passes zero. The adapter uses the existing counter replacement service before the entry event. It keeps `EntersWithComputedCounters` and other production callers unchanged. Registration rejects a nil amount and invalid counter types.
+
+Rancorous Archaic's complete text in `data/SOS.json` requires one +1/+1 counter per color spent to cast it. Synthetic tests cover failed payment, paid two-color entry, direct return, clone isolation, counter doubling, zero-base additional counters, inspection, registration, and the public DSL export. The initial focused test failed because both constructors were absent. Production Rancorous Archaic still uses its legacy callback, and Wildgrowth Archaic has additional trigger and hybrid-mana requirements. Their gap records remain blocked. Next dependency-ready work is a separate entry replacement participant or a P/T extension after a fresh audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. No production card or JSON gap record changed.
+
 ## Current Slice: Self-Entry Former Cast Colors Capture
 
 `Enters(This).WithColorsSpent(*NumberBinding)` saves the distinct colored mana colors paid to cast that permanent as a spell. The resolving permanent-spell path puts the count from its own cast context on the entry event; direct entry carries zero, even if another spell causes it. The existing event-capture frame saves the number for a battlefield `WhenEvent` or `WhenEventModes` body. Registration rejects nil, unnamed, repeated, non-entry, and out-of-scope bindings. No production card or legacy export changed.

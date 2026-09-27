@@ -359,7 +359,7 @@ func (g *Game) PutOnBattlefieldBy(card Card, controller, actor uuid.UUID) *Perma
 }
 
 func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, castColorsSpent int) *Permanent {
-	perm := g.prepareBattlefieldEntry(card, controller, colors)
+	perm := g.prepareBattlefieldEntry(card, controller, colors, castColorsSpent)
 	if perm == nil {
 		return nil
 	}
@@ -371,7 +371,7 @@ func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *
 func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID) []*Permanent {
 	permanents := make([]*Permanent, 0, len(cards))
 	for _, card := range cards {
-		if perm := g.prepareBattlefieldEntry(card, controller, nil); perm != nil {
+		if perm := g.prepareBattlefieldEntry(card, controller, nil, 0); perm != nil {
 			permanents = append(permanents, perm)
 		}
 	}
@@ -384,7 +384,7 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 	return permanents
 }
 
-func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color) *Permanent {
+func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int) *Permanent {
 	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
 		return nil
 	}
@@ -445,6 +445,15 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 				g.AddCountersWithReplacement(perm, cc.CounterType, n, perm.ID(), true)
 			}
 			baseCtrTypes[cc.CounterType] = true
+		}
+	}
+	for _, ability := range perm.RuntimeAbilities {
+		if counters, ok := ability.(*entryCountersAbility); ok && !nilDefinition(counters.amount) {
+			n := counters.amount.entryCounterAmount(castColorsSpent)
+			if n > 0 {
+				g.AddCountersWithReplacement(perm, counters.counter, n, perm.ID(), true)
+				baseCtrTypes[counters.counter] = true
+			}
 		}
 	}
 

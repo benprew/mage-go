@@ -2,6 +2,13 @@ package dsl
 
 import "github.com/benprew/mage-go/pkg/mage"
 
+type EntryCounterValue = mage.EntryCounterValue
+
+var (
+	ColorsSpentToCastEnteringPermanent = mage.ColorsSpentToCastEnteringPermanent
+	EntersWithCounters                 = mage.EntersWithCounters
+)
+
 type NumberBinding = mage.NumberBinding
 type CastCondition = mage.CastCondition
 

@@ -2235,6 +2235,16 @@ not prevent the creation of regeneration shields.
 
 ## 12. Replacements and Prevention
 
+Entry counter replacements use `EntersWithCounters(counter core.CounterType, amount EntryCounterValue) Ability` with `ColorsSpentToCastEnteringPermanent() EntryCounterValue`. Add the ability to a permanent card with `WithAbility`. The amount is the number of distinct colored mana colors paid to cast that exact permanent spell. An entry without casting supplies zero. This value is valid only for the entry replacement; it is not a resolving `ResolutionValue`.
+
+```go
+dsl.NewCreature("Converge Example", "{3}", 2, 2,
+    dsl.WithAbility(dsl.EntersWithCounters(core.P1P1,
+        dsl.ColorsSpentToCastEnteringPermanent())))
+```
+
+The counter placement uses the shared replacement service before the permanent enters. A counter doubler can change the final count. Registration rejects a missing amount or invalid counter type.
+
 * `PreventNextDamage(recipient, amount)`: Installs a prevention shield on permanent or player.
 * `SkipNextUntap(PermanentRef)`: Prevents untap during the controller's next untap step.
 * `SkipNextUntapOf(PermanentRef, PlayerRef)`: Prevents untap during the specified player's next untap step.

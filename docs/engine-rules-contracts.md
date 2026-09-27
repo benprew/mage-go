@@ -228,6 +228,8 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ## 6. Replacement and Prevention Pipeline (CR 614–616)
 
+* **Cast-payment entry counters**: The battlefield entry path passes the entering permanent spell's own distinct colored mana count to self-entry counter abilities. A direct entry passes zero, including when another spell causes it. `EntersWithCounters` places its counters before the entry event through `AddCountersWithReplacement`, so applicable counter replacements see the proposed placement. Failed spell payment cannot start this entry action.
+
 * **Replacement Applicability**:
   * A replacement effect watches a proposed game action (not an event that already occurred) and transforms it into an altered action or prevention.
   * When multiple replacements apply to the same action, the affected player (or controller of the affected permanent) chooses which replacement applies (CR 616.1).
