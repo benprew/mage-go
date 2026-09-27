@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Turn-Scoped Damage Incarnation History
+
+The damage system now records positive damage to a permanent this turn by both the captured source incarnation and recipient battlefield incarnation. It writes after replacement and prevention in the shared damage action, so prevented damage, absent recipients, and phased-out recipients add no record. Source departure and return, recipient departure and return, LKI cleanup, and phasing preserve the correct identities. Game clones copy the record independently. Final cleanup clears it after all cleanup priority rounds. The existing card-ID turn query and all production callers remain unchanged.
+
+Sengir Vampire's complete Oracle text was checked in `data/LEA.json`, and Axelrod Gunnarson's in `data/LEG.json`, against their inventories and CR 400.7, 603.6c, and 603.10a. The card-ID turn query cannot distinguish a returned source or victim, so this engine prerequisite comes before a typed “creature dealt damage by this source this turn dies” event filter. This slice does not expose that filter or migrate either card. The internal `DamageSystem.dealtDamageToPermanentThisTurn` query takes a captured source and recipient incarnation. Focused tests initially failed because it was absent, then covered both incarnations, departure LKI cleanup, prevention, phasing, cloning, and final cleanup. The next dependency-ready slice is the typed death-event filter using this record and event-time recipient identity; it needs an event-time identity audit before implementation.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The first engine run found one excess clone allocation; conditional allocation of the new history map corrected it.
+
 ## Current Slice: Simultaneous Destruction Graveyard Result
 
 `DestroyEach(PermanentSet, ...DestroyEachResultOption)` and `DestroyEachWithoutRegeneration` now accept `PermanentsPutIntoGraveyardThisWayInto(*NumberBinding)`. The option saves the number of selected battlefield incarnations that the shared destruction batch moves to a graveyard. It uses the batch's existing `destroyed` result and the current resolution frame; no separate executor or global history slot was added. It writes zero for an empty set. Regenerated, indestructible, phased-out, absent, returned, and replacement-exiled objects do not count. Tokens that enter a graveyard count. Existing calls and all legacy exports remain valid; inspection and registration reject nil, unnamed, duplicate, and undominated bindings.

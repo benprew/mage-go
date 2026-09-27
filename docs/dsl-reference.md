@@ -704,6 +704,14 @@ card := dsl.NewCreature("History source", "", 2, 3, dsl.WithAbility(dsl.At(dsl.Y
 _ = card
 ```
 
+The damage system also keeps an internal, turn-scoped source-and-recipient incarnation record for damage to permanents. It records only positive damage after prevention and replacement and clears at final cleanup. No DSL query or death-event filter exposes this new record yet. The existing `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption)` signature feeds it in spell, activation, and trigger resolution. This synthetic spell declaration compiles:
+
+```go
+victim := dsl.DeclarePermanentTarget("victim", dsl.IsCreature)
+spell := dsl.Spell(dsl.DealDamageFrom(dsl.This, victim, dsl.Fixed(1)), dsl.WithTargets(victim))
+_ = spell
+```
+
 The set filters inspect the source and candidate declarations. Registration rejects missing inputs and undeclared target or binding references. They retain candidate order. They do not expose turn-scoped history or damage from a spell source. For example, this resolving spell declaration uses the damage pipeline, but its spell source does not enter permanent-incarnation history:
 
 ```go

@@ -17,6 +17,7 @@ type DamageSystem struct {
 	damageDealtToPermanentsByPermanent map[uuid.UUID]map[uuid.UUID]bool
 	damageToPlayersByIncarnation       map[capturedPermanent]map[uuid.UUID]bool
 	damageToPermanentsByIncarnation    map[capturedPermanent]map[capturedPermanent]bool
+	turnDamageToPermanents             map[capturedPermanent]map[capturedPermanent]bool
 	combatDamageThisStep               map[uuid.UUID]map[uuid.UUID]int
 	combatDamageSourcesThisStep        map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
 	resolvingCombatDamage              bool
@@ -100,6 +101,7 @@ func NewDamageSystem() DamageSystem {
 		damageDealtToPermanentsByPermanent: make(map[uuid.UUID]map[uuid.UUID]bool),
 		damageToPlayersByIncarnation:       make(map[capturedPermanent]map[uuid.UUID]bool),
 		damageToPermanentsByIncarnation:    make(map[capturedPermanent]map[capturedPermanent]bool),
+		turnDamageToPermanents:             make(map[capturedPermanent]map[capturedPermanent]bool),
 		combatDamageThisStep:               make(map[uuid.UUID]map[uuid.UUID]int),
 		combatDamageSourcesThisStep:        make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int),
 	}
@@ -143,6 +145,12 @@ func (ds *DamageSystem) Clone() DamageSystem {
 			clone.damageToPermanentsByIncarnation[source] = maps.Clone(permanents)
 		}
 	}
+	if len(ds.turnDamageToPermanents) > 0 {
+		clone.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool, len(ds.turnDamageToPermanents))
+		for source, permanents := range ds.turnDamageToPermanents {
+			clone.turnDamageToPermanents[source] = maps.Clone(permanents)
+		}
+	}
 	if len(ds.combatDamageThisStep) > 0 {
 		clone.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int, len(ds.combatDamageThisStep))
 		for k, inner := range ds.combatDamageThisStep {
@@ -174,6 +182,7 @@ func (ds *DamageSystem) ResetPerCycle() {
 func (ds *DamageSystem) ClearEndOfTurn() {
 	ds.expireEndOfTurnEffects()
 	ds.damageDealtBy = make(map[uuid.UUID]map[uuid.UUID]bool)
+	ds.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool)
 }
 
 func (ds *DamageSystem) expireEndOfTurnEffects() {
@@ -258,6 +267,14 @@ func (ds *DamageSystem) HasDealtDamageToPermanentFromSource(source DamageSource,
 		return false
 	}
 	return ds.damageToPermanentsByIncarnation[capturedPermanent{source.ID(), source.Incarnation()}][capturedPermanent{recipient.ID(), recipient.incarnationID}]
+}
+
+// dealtDamageToPermanentThisTurn checks the two battlefield incarnations.
+func (ds *DamageSystem) dealtDamageToPermanentThisTurn(source DamageSource, recipient capturedPermanent) bool {
+	if source.Incarnation() == uuid.Nil || recipient.id == uuid.Nil || recipient.incarnation == uuid.Nil {
+		return false
+	}
+	return ds.turnDamageToPermanents[capturedPermanent{source.ID(), source.Incarnation()}][recipient]
 }
 
 // DamageDealtBy returns the set of sources that dealt damage to permID this turn.
@@ -618,6 +635,13 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	}
 	if source := a.DamageSource(); source.Incarnation() != uuid.Nil {
 		key := capturedPermanent{source.ID(), source.Incarnation()}
+		if ds.turnDamageToPermanents == nil {
+			ds.turnDamageToPermanents = make(map[capturedPermanent]map[capturedPermanent]bool)
+		}
+		if ds.turnDamageToPermanents[key] == nil {
+			ds.turnDamageToPermanents[key] = make(map[capturedPermanent]bool)
+		}
+		ds.turnDamageToPermanents[key][capturedPermanent{perm.ID(), perm.incarnationID}] = true
 		if ds.damageToPermanentsByIncarnation == nil {
 			ds.damageToPermanentsByIncarnation = make(map[capturedPermanent]map[capturedPermanent]bool)
 		}
