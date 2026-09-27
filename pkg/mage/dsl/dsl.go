@@ -735,6 +735,7 @@ var (
 	RemoveXCountersFromSourceCost                     = mage.RemoveXCountersFromSourceCost
 	RevealFromHandCost                                = mage.RevealFromHandCost
 	RevealFromHandCostWithCard                        = mage.RevealFromHandCostWithCard
+	OptionalCostInto                                  = mage.OptionalCostInto
 )
 
 // =============================================================================

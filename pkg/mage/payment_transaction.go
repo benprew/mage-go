@@ -336,6 +336,17 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		tx.game.PlayerLoseLife(player, tx.lifeLoss)
 	}
 	for _, cost := range tx.costs {
+		if outcome, ok := cost.(*optionalOutcomeCost); ok {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			if outcome.paid {
+				tx.paidNumbers[outcome.result] = 1
+			} else {
+				tx.paidNumbers[outcome.result] = 0
+			}
+			continue
+		}
 		var paidPower, paidToughness, paidManaValue int
 		var paidCardID uuid.UUID
 		var discardedCardID uuid.UUID

@@ -115,6 +115,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		n.problem = "supply an explicit Costs group"
 	}
 	for i, cost := range c.costs {
+		if optional, ok := cost.(*optionalCost); ok && optional.capture {
+			n.problem = "optional payment result requires an activated ability cost or spell additional cost"
+		}
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
 			n.problem = "paid graveyard exile value requires an activated ability cost or spell additional cost"
 		}

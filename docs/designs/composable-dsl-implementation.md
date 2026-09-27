@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Payment Outcome Binding
+
+`OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` saves 1 when the payer accepts and pays a direct optional cost and 0 when the payer declines or cannot pay. The existing cost-choice lock and total-cost transaction supply the timing; the new outcome marker writes into the spell or activation payment frame, so pending instances, stack copies, and game clones keep separate values. It does not use the legacy source-wide optional-cost tracker. Registration rejects nil or unnamed bindings, empty prompts, nested choices, other captured costs, duplicate producers, and resolution-time payment use. No production card or legacy export changed.
+
+This prerequisite supports a future optional reveal-card branch, but it does not yet bind the revealed card, a chosen alternative cost, or cast-time controlled-creature state. Draconic Roar's complete text was checked in `data/JMP.json`; its production wiring and Jumpstart inventory stay open. Synthetic engine and public DSL tests cover acceptance, decline, inability to pay, clone and stack-copy isolation, and declaration validation. The next dependency-ready slice is optional or alternative payment of a chosen hand card with branch-local capture, or an independent E event participant.
+
+Validation: focused tests first failed because the constructor was absent. The focused tests, `go test ./pkg/mage/... -short -count=1`, `go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Revealed Hand-Card Payment Binding
 
 `RevealFromHandCostWithCard(CardFilter, string, *CardBinding) Cost` saves one card chosen to pay a direct reveal-from-hand cost. The payer chooses once during total-cost preparation; isolated validation and live commit check the same card and hand visit. A successful payment stores the visit in the spell or activation frame and adds one public reveal snapshot; failed validation adds none. `FromCard` is absent after the card leaves and returns to hand. Stack copies and game clones keep their own frames. Registration rejects nil or unnamed bindings, empty cost text, duplicate producers, and reads without a producer. The first focused test failed because the constructor did not exist. Synthetic engine and public DSL tests cover pending activations, stack copies, clones, stale visits, failed total payment, public reveal records, and declaration validation. No production card was changed.

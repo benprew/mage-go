@@ -1852,6 +1852,15 @@ func watchDeparture() dsl.Card {
 
 ## 10. Spells, Activations, and Costs
 
+`OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` offers one direct optional cost during spell additional-cost or activated-ability payment. `FromNumber(paid)` is 1 when the payer accepted and paid the cost, and 0 when the payer declined or could not pay it. The choice and result belong to that spell or activation instance; stack copies and game clones retain their own values. Registration rejects a nil or unnamed binding, empty prompt, nested choice, another captured cost, and resolution-time payment use. This result records payment acceptance; it does not save a card chosen to pay the inner cost.
+
+```go
+paid := dsl.BindNumber("paid")
+card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.OptionalCostInto(dsl.LifePayCost(2), "Pay two life?", paid)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
+```
+
 `RevealFromHandCostWithCard(filter CardFilter, text string, card *CardBinding) Cost` pays a direct spell additional cost or activated ability cost by revealing one matching card from the payer's hand. `FromCard(card)` reads that same card in the resolving body while its hand visit remains current. The payer chooses once during payment preparation. A card that leaves and returns to hand is absent from the binding. Registration requires a named binding and nonempty cost text. This result is local to each spell or ability instance and follows stack copies and game clones. The existing `RevealFromHandCost` remains available for callers that do not need a card binding. This constructor does not declare an optional cost or a choice between costs.
 
 ```go

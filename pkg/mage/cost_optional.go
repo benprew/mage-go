@@ -14,8 +14,10 @@ import (
 // reveal a Dragon card from your hand") and similar may-pay additional
 // costs whose payment unlocks a stronger resolution branch.
 type optionalCost struct {
-	inner  Cost
-	prompt string
+	inner   Cost
+	prompt  string
+	result  *NumberBinding
+	capture bool
 }
 
 // OptionalCost creates a "may-pay" wrapper over an inner cost. The prompt
@@ -23,6 +25,40 @@ type optionalCost struct {
 // the outcome at resolution via Game.LastCostOptionalPaid(sourceID).
 func OptionalCost(inner Cost, prompt string) Cost {
 	return &optionalCost{inner: inner, prompt: prompt}
+}
+
+// OptionalCostInto saves 1 if the player pays the cost and 0 otherwise.
+func OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost {
+	return &optionalCost{inner: inner, prompt: prompt, result: result, capture: true}
+}
+
+func (c *optionalCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "optional-cost", Text: c.Text(), children: []definitionEdge{{"cost", c.inner}}}
+	if c.inner == nil {
+		n.problem = "supply a non-nil optional cost"
+	}
+	if c.capture && c.result == nil {
+		n.problem = "supply a non-nil optional payment binding"
+	}
+	if c.capture && c.prompt == "" {
+		n.problem = "supply optional payment prompt text"
+	}
+	if c.capture && c.inner != nil {
+		if _, nested := c.inner.(*optionalCost); nested {
+			n.problem = "optional payment result requires a direct cost"
+		}
+		if _, alternate := c.inner.(*eitherCost); alternate {
+			n.problem = "optional payment result requires a direct cost"
+		}
+		if inspector, ok := c.inner.(definitionInspector); ok && len(inspector.inspectDefinition().bindingWrites) != 0 {
+			n.problem = "optional payment result cannot wrap another captured cost"
+		}
+	}
+	if c.result != nil {
+		n.bindingWrites = []savedBinding{c.result}
+		n.children = append(n.children, definitionEdge{"result", c.result})
+	}
+	return n
 }
 
 func (c *optionalCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
@@ -49,8 +85,20 @@ func (c *optionalCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 }
 
 func (c *optionalCost) Text() string {
+	if c.inner == nil {
+		return "optional cost"
+	}
 	return "you may " + c.inner.Text()
 }
+
+type optionalOutcomeCost struct {
+	result *NumberBinding
+	paid   bool
+}
+
+func (*optionalOutcomeCost) CanPay(uuid.UUID, uuid.UUID, *Game) bool { return true }
+func (*optionalOutcomeCost) Pay(uuid.UUID, uuid.UUID, *Game) error   { return nil }
+func (*optionalOutcomeCost) Text() string                            { return "optional payment result" }
 
 func (g *Game) setOptionalCostPaid(sourceID uuid.UUID, paid bool) {
 	g.trackers.Turn.SetOptionalCostPaid(sourceID, paid)

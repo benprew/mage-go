@@ -174,9 +174,13 @@ func lockPaymentCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uu
 			}
 			return lock(payable[selected])
 		case *optionalCost:
-			outcomes[sourceID] = false
-			if choice.inner.CanPay(sourceID, controller, validation) && chooser.ChooseMayAbility(choice.prompt) {
-				outcomes[sourceID] = true
+			paid := choice.inner != nil && choice.inner.CanPay(sourceID, controller, validation) && chooser.ChooseMayAbility(choice.prompt)
+			if choice.result == nil {
+				outcomes[sourceID] = paid
+			} else {
+				locked = append(locked, &optionalOutcomeCost{result: choice.result, paid: paid})
+			}
+			if paid {
 				return lock(choice.inner)
 			}
 			return nil

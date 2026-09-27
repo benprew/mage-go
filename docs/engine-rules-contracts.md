@@ -392,6 +392,13 @@ frames. A successful reveal payment adds one public snapshot to
 `Game.PublicReveals()`; failed validation adds none. This capture applies to a direct cost component. It does not make a
 resolution-time payment or an `EitherCost` branch produce a card binding
 (CR 400.7, 601.2h, 701.20b).
+
+`OptionalCostInto` locks the payer's choice during total-cost preparation and
+saves a 1 or 0 outcome in the spell or activation payment frame. The live
+commit does not ask again. A failed total payment publishes no result. This
+instance-local outcome does not use the source-wide legacy optional-cost
+tracker. The inner cost must be direct and must not produce another binding
+(CR 118.8b, 601.2b, 601.2h).
 `DiscardCost` uses `PlayerDiscardByCost` and the shared `DiscardAction`
 replacement pipeline. The action records that the discard pays a cost. A
 replacement that watches all discards can change its destination, and the
