@@ -1646,6 +1646,11 @@ func (g *Game) HasDealtDamageToPlayerFromSource(source DamageSource, playerID uu
 	return g.damage.HasDealtDamageToPlayerFromSource(source, playerID)
 }
 
+// HasDealtDamageToPlayerThisTurn checks one source incarnation and player.
+func (g *Game) HasDealtDamageToPlayerThisTurn(sourceID, incarnation, playerID uuid.UUID) bool {
+	return g.damage.dealtDamageToPlayerThisTurn(sourceID, incarnation, playerID)
+}
+
 // HasDealtDamageToPermanentFromSource checks source and recipient incarnations.
 func (g *Game) HasDealtDamageToPermanentFromSource(source DamageSource, recipient *Permanent) bool {
 	return g.damage.HasDealtDamageToPermanentFromSource(source, recipient)

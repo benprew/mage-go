@@ -61,6 +61,7 @@ type CombatReader interface {
 // TrackerReader provides read-only queries for turn-scoped and duel-scoped observations.
 type TrackerReader interface {
 	DamageTakenByPlayer(uuid.UUID) int
+	HasDealtDamageToPlayerThisTurn(sourceID, incarnation, playerID uuid.UUID) bool
 	PlayerLifeGainedThisTurn(uuid.UUID) int
 	HasAttackedThisTurn(uuid.UUID) bool
 	HasAttackedThisTurnIncarnation(uuid.UUID, uuid.UUID) bool

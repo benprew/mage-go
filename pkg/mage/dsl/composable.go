@@ -352,6 +352,7 @@ var (
 	SourceAttackedOrBlockedThisCombatCondition = mage.SourceAttackedOrBlockedThisCombatCondition
 	ControllerHandSizeIs                       = mage.ControllerHandSizeIs
 	ControllerGainedLifeThisTurn               = mage.ControllerGainedLifeThisTurn
+	SourceDamagedOpponentThisTurnCondition     = mage.SourceDamagedOpponentThisTurnCondition
 	IsYourTurn                                 = mage.IsYourTurn
 	HasUniqueHighestLife                       = mage.HasUniqueHighestLife
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.

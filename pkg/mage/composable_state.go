@@ -28,6 +28,26 @@ type yourTurnCondition struct{}
 
 type controllerGainedLifeThisTurnCondition struct{}
 
+type sourceDamagedOpponentThisTurnCondition struct{}
+
+// SourceDamagedOpponentThisTurnCondition checks this source's turn damage to an opponent.
+func SourceDamagedOpponentThisTurnCondition() StateCondition {
+	return sourceDamagedOpponentThisTurnCondition{}
+}
+
+func (sourceDamagedOpponentThisTurnCondition) stateCondition() {}
+func (sourceDamagedOpponentThisTurnCondition) checkState(g GameReader, ctx StateContext) bool {
+	p := g.FindPermanent(ctx.SourceID)
+	if p == nil || p.PhasedOut || (ctx.SourceIncarnation != uuid.Nil && p.incarnationID != ctx.SourceIncarnation) {
+		return false
+	}
+	opponent := g.GetOpponent(ctx.ControllerID)
+	return opponent != nil && g.HasDealtDamageToPlayerThisTurn(p.ID(), p.incarnationID, opponent.PlayerID())
+}
+func (sourceDamagedOpponentThisTurnCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "source dealt damage to an opponent this turn", battlefieldSource: true}
+}
+
 // ControllerGainedLifeThisTurn checks actual life gained in the current turn.
 func ControllerGainedLifeThisTurn() StateCondition { return controllerGainedLifeThisTurnCondition{} }
 

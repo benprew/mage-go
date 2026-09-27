@@ -348,10 +348,19 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
 * `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
 * `ControllerGainedLifeThisTurn() StateCondition`: Check whether the ability controller gained a positive amount of life this turn, after life-gain replacement. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the turn tracker, so source departure does not erase the result. A missing controller does not match. The history clears at final cleanup. Use `LifeGainedThisTurn(You)` for a number in a resolving effect.
-
 ```go
 card := dsl.NewInstant("Life history example", "", dsl.WithAbility(dsl.Spell(
     dsl.IfState(dsl.ControllerGainedLifeThisTurn(), dsl.Draw(dsl.You, dsl.Fixed(1))))))
+_ = card
+```
+
+* `SourceDamagedOpponentThisTurnCondition() StateCondition`: Check whether the current battlefield source incarnation dealt positive damage to the ability controller's opponent this turn. The damage record uses the final player recipient after replacement and prevention. The condition returns false for an absent, phased-out, or returned source, and turn cleanup clears the record. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While` on permanent abilities. The opponent relationship is checked when the condition is evaluated.
+
+```go
+card := dsl.NewCreature("History watcher", "", 1, 1,
+    dsl.WithAbility(dsl.At(dsl.EachEndStep,
+        dsl.GainLife(dsl.You, dsl.Fixed(1)),
+        dsl.WithInterveningIf(dsl.SourceDamagedOpponentThisTurnCondition()))))
 _ = card
 ```
 
