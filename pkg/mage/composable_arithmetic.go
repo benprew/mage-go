@@ -7,6 +7,8 @@ const (
 	valueMin
 	valueMax
 	valueMultiply
+	valueDivideDown
+	valueDivideUp
 )
 
 type arithmeticValue struct {
@@ -34,6 +36,16 @@ func MaxValue(left, right ResolutionValue) ResolutionValue {
 	return arithmeticValue{left, right, valueMax}
 }
 
+// DivideRoundDown divides two values and rounds the result down.
+func DivideRoundDown(numerator, denominator ResolutionValue) ResolutionValue {
+	return arithmeticValue{numerator, denominator, valueDivideDown}
+}
+
+// DivideRoundUp divides two values and rounds the result up.
+func DivideRoundUp(numerator, denominator ResolutionValue) ResolutionValue {
+	return arithmeticValue{numerator, denominator, valueDivideUp}
+}
+
 func (v arithmeticValue) operationName() string {
 	switch v.operation {
 	case valueMultiply:
@@ -42,13 +54,26 @@ func (v arithmeticValue) operationName() string {
 		return "subtract"
 	case valueMin:
 		return "minimum"
-	default:
+	case valueMax:
 		return "maximum"
+	case valueDivideDown:
+		return "divide rounded down"
+	case valueDivideUp:
+		return "divide rounded up"
+	default:
+		return "invalid arithmetic"
 	}
 }
 
 func (v arithmeticValue) Text() string {
-	return v.operationName() + "(" + v.left.Text() + ", " + v.right.Text() + ")"
+	left, right := "?", "?"
+	if !nilDefinition(v.left) {
+		left = v.left.Text()
+	}
+	if !nilDefinition(v.right) {
+		right = v.right.Text()
+	}
+	return v.operationName() + "(" + left + ", " + right + ")"
 }
 
 func (v arithmeticValue) resolveValue(ctx *EffectContext) int {
@@ -60,14 +85,37 @@ func (v arithmeticValue) resolveValue(ctx *EffectContext) int {
 		return left - right
 	case valueMin:
 		return min(left, right)
-	default:
+	case valueMax:
 		return max(left, right)
+	case valueDivideDown, valueDivideUp:
+		if right == 0 {
+			return 0
+		}
+		quotient, remainder := left/right, left%right
+		if remainder == 0 {
+			return quotient
+		}
+		if v.operation == valueDivideDown && (left < 0) != (right < 0) {
+			return quotient - 1
+		}
+		if v.operation == valueDivideUp && (left < 0) == (right < 0) {
+			return quotient + 1
+		}
+		return quotient
+	default:
+		return 0
 	}
 }
 
 func (v arithmeticValue) inspectDefinition() definitionNode {
-	return definitionNode{
+	n := definitionNode{
 		Role: "arithmetic-value", Text: v.operationName(),
 		children: []definitionEdge{{"left", v.left}, {"right", v.right}},
 	}
+	if (v.operation == valueDivideDown || v.operation == valueDivideUp) && !nilDefinition(v.right) {
+		if fixed, ok := v.right.(fixedValue); ok && fixed.n == 0 {
+			n.problem = "fixed divisor must not be zero"
+		}
+	}
+	return n
 }

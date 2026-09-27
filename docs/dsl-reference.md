@@ -2679,6 +2679,18 @@ Operations taking amounts accept `ResolutionValue`:
   * `SubtractValues(a, b)`: $a - b$.
   * `MinValue(a, b)`: $\min(a, b)$.
   * `MaxValue(a, b)`: $\max(a, b)$.
+  * `DivideRoundDown(numerator, denominator)` and `DivideRoundUp(numerator, denominator)`: Divide two `ResolutionValue` operands and round the quotient down or up. A dynamic zero divisor supplies zero; registration rejects a fixed zero divisor. Both operands read the current resolution frame. These values work in spell, activation, and triggered resolving bodies, and in existing continuous modifications that accept a `ResolutionValue`.
+
+  ```go
+  x := dsl.BindNumber("x")
+  card := dsl.NewCreature("Half X", "", 1, 1, dsl.WithAbility(dsl.Activate(
+      dsl.Costs(), dsl.Sequence(
+          dsl.SnapshotNumber(dsl.Fixed(5), x),
+          dsl.DealDamageFrom(dsl.This, dsl.You,
+              dsl.DivideRoundUp(dsl.FromNumber(x), dsl.Fixed(2))),
+      ))))
+  _ = card
+  ```
 * Adapters:
   * `ValueAtResolution(legacyValueSource)`: Adapts legacy value sources.
 

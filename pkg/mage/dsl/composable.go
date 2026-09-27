@@ -466,6 +466,8 @@ var (
 	SubtractValues    = mage.SubtractValues
 	MinValue          = mage.MinValue
 	MaxValue          = mage.MaxValue
+	DivideRoundDown   = mage.DivideRoundDown
+	DivideRoundUp     = mage.DivideRoundUp
 )
 
 type PlayerBinding = mage.PlayerBinding

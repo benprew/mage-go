@@ -1,5 +1,15 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Rounded Resolution Division
+
+`DivideRoundDown(ResolutionValue, ResolutionValue)` and `DivideRoundUp(ResolutionValue, ResolutionValue)` supply explicit rounding for typed resolution arithmetic. They reuse the existing arithmetic value, resolution frame, definition inspector, and action consumers; no combat, damage, or payment service changed. A dynamic zero divisor yields zero under CR 107.2, and registration rejects a fixed zero divisor. Signed intermediate values use mathematical floor or ceiling before the consuming action applies its own result rules. Both constructors work in spell, activation, trigger, and supported continuous-modification value contexts. No production card or legacy export changed.
+
+Banshee and Eternal Flame were checked against their complete text in `data/DRK.json`. The half-X amount can now be declared, but Banshee still needs its activation cost, target, and two damage instructions wired; Eternal Flame still needs its Mountain count, target, and card wiring. Fireball requires a separate target-count payment and equal damage allocation audit. Their inventory and gap statuses remain open. A fresh search found no production caller of the new constructors. The next dependency-ready work is a bounded target-count/payment or event-participant slice after a fresh API audit.
+
+The focused contract first failed at compilation because the constructors were absent. Tests cover odd, even, zero, and signed values; fixed and dynamic zero divisors; saved binding use; clone isolation; and registration rejection of nil, unbound, and fixed-zero operands. The public DSL example is compiled and validated in a synthetic test.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed. Untracked inventories and unrelated workspace files remain untouched.
+
 ## Current Slice: Event-Time Produced Mana Type Choice
 
 `BindManaTypes(name)`, `LandTappedForMana().WithManaTypes(binding)`, and `AddManaOfProducedTypeToPlayer(player, binding, amount)` capture the land ability's produced mana types per trigger and add one chosen type to the selected player's pool. The event, trigger frame, and shared mana action supply timing and execution. The typed action is available in targetless battlefield `WhenEvent` and `WhenEventModes` bodies and resolves immediately as a triggered mana ability. Empty type sets and absent players add no mana; a choice outside the produced set uses its first type. No production card or legacy export changed.
