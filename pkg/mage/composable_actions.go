@@ -554,6 +554,38 @@ func (e *returnEachToHandEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "return-each-to-hand", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
 }
 
+type tapEachEffect struct{ subjects PermanentSet }
+
+// TapEach taps the selected permanents together.
+func TapEach(subjects PermanentSet) ResolvingEffect {
+	return &tapEachEffect{subjects: subjects}
+}
+func (*tapEachEffect) Text() string { return "tap each permanent" }
+func (*tapEachEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Taps: true, Mass: true}
+}
+func (e *tapEachEffect) Apply(ctx *EffectContext) error {
+	selected := e.subjects.resolvePermanents(ctx)
+	untapped := make([]*Permanent, 0, len(selected))
+	seen := make(map[uuid.UUID]bool, len(selected))
+	for _, p := range selected {
+		if p == nil || seen[p.ID()] {
+			continue
+		}
+		live := ctx.Game.FindPermanent(p.ID())
+		if live == nil || live.incarnationID != p.incarnationID || live.Tapped {
+			continue
+		}
+		seen[p.ID()] = true
+		untapped = append(untapped, live)
+	}
+	ctx.Game.tapPermanentsTogether(untapped)
+	return nil
+}
+func (e *tapEachEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "tap-each", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
+}
+
 // GainLifeFor gains life for the selected player through the existing life action.
 func GainLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount, gain: true}

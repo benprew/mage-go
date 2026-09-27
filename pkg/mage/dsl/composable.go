@@ -194,6 +194,7 @@ var (
 	// ReturnToHand bounces the referenced permanent to its owner's hand.
 	ReturnToHand     = mage.ReturnToHand
 	ReturnEachToHand = mage.ReturnEachToHand
+	TapEach          = mage.TapEach
 	// Untap untaps the referenced permanent incarnation.
 	Untap = mage.UntapPermanent
 	// SkipNextUntap prevents the permanent from untapping during its controller's next untap step.

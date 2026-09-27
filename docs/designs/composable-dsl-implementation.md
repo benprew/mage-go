@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Permanent-Set Tap
+
+`TapEach(PermanentSet) ResolvingEffect` is a typed collection tap for spell, activation, and trigger resolution. It reads one permanent set at resolution, keeps only current untapped battlefield incarnations, and uses `Game.tapPermanentsTogether` so all members become tapped before any tap event fires. Each actual transition emits one tap event. Registration inspects the set and rejects nil or undeclared references; a singular `PermanentRef` cannot be passed to the collection constructor. The effect reports mass tap metadata. It does not supply untapping, target announcement, or a tap-count result.
+
+Riptide's complete text was checked in `data/DRK.json`: "Tap all blue creatures." A synthetic declaration uses `TapEach(MatchingPermanents(HasColorFilter(Blue)))`. Focused tests first failed because the constructor was missing, then covered simultaneous event observation, already tapped and phased-out members, stale and duplicate incarnations, clone isolation, public DSL registration, inspection, and a compile-time singular/set role error. Production Riptide remains a stub, and no production card uses `TapEach`; the untracked Dark inventory still needs a card-wiring update in the separate migration. No legacy export was removed. The next dependency-ready B slice is `UntapEach` or `AddCountersEach`, after checking the corresponding shared batch contract and card requirements.
+
+Validation: focused `TestTapEach` and closed-role tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Cast-Color Entry Counter Replacement
 
 `ColorsSpentToCastEnteringPermanent() EntryCounterValue` and `EntersWithCounters(core.CounterType, EntryCounterValue) Ability` supply a sealed, inspectable self-entry counter replacement. The entry path passes the entering permanent spell's own distinct colored mana count to preparation; direct entry passes zero. The adapter uses the existing counter replacement service before the entry event. It keeps `EntersWithComputedCounters` and other production callers unchanged. Registration rejects a nil amount and invalid counter types.
