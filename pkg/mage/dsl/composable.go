@@ -157,6 +157,7 @@ var (
 	OpponentsOf                      = mage.OpponentsOf
 	GrantLandPlays                   = mage.GrantLandPlays
 	LoseLifeEach                     = mage.LoseLifeEach
+	LoseLifeForWithResult            = mage.LoseLifeForWithResult
 	LifeLostInto                     = mage.LifeLostInto
 	LifeGainedInto                   = mage.LifeGainedInto
 	MatchingPermanents               = mage.MatchingPermanents

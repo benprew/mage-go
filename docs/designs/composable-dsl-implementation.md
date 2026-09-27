@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Life-Loss Result
+
+`LoseLifeForWithResult(PlayerRef, ResolutionValue, ...LifeLossResultOption)` accepts `LifeLostInto(*NumberBinding)` and saves one selected player's actual life loss in the current resolution frame. It reuses `playersLoseLife`, including event dispatch after the life change. Missing or illegal recipients and nonpositive amounts save zero. Inspection and registration check binding presence, names, duplicates, and dominance. The separate `LoseLifeFor` and `dsl.LoseLife` two-argument signatures remain compatible with production callers and first-class function uses. No production card or legacy export changed.
+
+This is a P action-result adapter. Bubbling Cauldron's complete text in `doc/designs/composable-dsl-migration-jumpstart-gap.json` calls for the total across each opponent; existing `LoseLifeEach(..., LifeLostInto(...))` supplies that set result, so this singular adapter does not close its card gap or change its production wiring. The focused contract test first failed at compilation because the singular constructor did not accept a result. Synthetic tests cover positive, zero, and negative amounts, absent recipient, clone isolation, scope and duplicate validation, and public spell, activation, and trigger declarations. Target illegality and event ordering use the existing player-reference and life service contracts. The next dependency-ready work is another P paid-object output or E event participant after a fresh audit.
+
 ## Current Slice: Unqualified Attack-Group Event
 
 `OneOrMoreCreaturesAttack().WithCount(*NumberBinding)` matches one completed positive attacker declaration by either player. `WithCount` is optional and saves the declared count in the pending trigger. It uses the existing `EvtAttackersDeclared` event and trigger capture path; no combat engine contract changed. The sealed pattern works in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects invalid count bindings and non-battlefield sources. The existing controller-filtered pattern and legacy callers remain unchanged. No production card changed.

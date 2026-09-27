@@ -771,7 +771,6 @@ _ = card
 ```
 * `LoseLife(PlayerRef, ResolutionValue)`: Causes player to lose life.
 * `LoseLifeEach(PlayerSet, ResolutionValue, ...LifeLossResultOption) ResolvingEffect`: Causes each player in the set to lose life. `LifeLostInto(*NumberBinding) LifeLossResultOption` saves the total life lost by this instruction; the life service measures the loss before it dispatches life-loss events. It writes zero for an empty set or a nonpositive amount. Read the result later in the same spell, activation, or trigger body with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated result binding. This is a life-loss result; it does not include damage dealt by another instruction.
-
 ```go
 lost := dsl.BindNumber("life lost")
 body := dsl.Sequence(
@@ -780,6 +779,18 @@ body := dsl.Sequence(
 )
 card := dsl.NewArtifact("Life result example", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body)))
 _ = card
+```
+
+* `LoseLifeForWithResult(PlayerRef, ResolutionValue, ...LifeLossResultOption) ResolvingEffect`: Causes one selected player to lose life and saves the actual loss with `LifeLostInto`. It works in spell, activation, and triggered resolving bodies. An absent or illegal target, or a nonpositive amount, writes zero. The result is instance-local and excludes life payment and damage. `LoseLifeFor` and the public `LoseLife` alias keep their two-argument signatures. This synthetic spell declaration compiles:
+
+```go
+lost := dsl.BindNumber("life lost")
+opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
+spell := dsl.Spell(dsl.Sequence(
+    dsl.LoseLifeForWithResult(opponent, dsl.Fixed(4), dsl.LifeLostInto(lost)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(lost)),
+), dsl.WithTargets(opponent))
+_ = spell
 ```
 
 ### Destruction Actions

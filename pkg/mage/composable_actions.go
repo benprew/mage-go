@@ -628,6 +628,22 @@ func LoseLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount}
 }
 
+// LoseLifeForWithResult saves the life lost by one player in this instruction.
+func LoseLifeForWithResult(subject PlayerRef, amount ResolutionValue, options ...LifeLossResultOption) ResolvingEffect {
+	e := &lifeAction{subject: subject, amount: amount}
+	if len(options) == 0 {
+		e.invalid = true
+	}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalid = true
+			continue
+		}
+		option.applyLifeLossResult(&e.lifeLossResultState)
+	}
+	return e
+}
+
 // AddCountersTo adds counters through the existing replacement action.
 func AddCountersTo(subject PermanentRef, counter core.CounterType, amount ResolutionValue) ResolvingEffect {
 	return &counterSubjectEffect{subject, counter, amount}
@@ -712,6 +728,7 @@ type lifeAction struct {
 	subject PlayerRef
 	amount  ResolutionValue
 	gain    bool
+	lifeLossResultState
 }
 
 func (e *lifeAction) Text() string {
@@ -738,6 +755,12 @@ func (e *lifeAction) Properties() EffectProperties {
 }
 
 func (e *lifeAction) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
 	id, ok := e.subject.resolvePlayer(ctx)
 	if !ok {
 		return nil
@@ -752,11 +775,28 @@ func (e *lifeAction) Apply(ctx *EffectContext) error {
 	if e.gain {
 		return GainLifeTarget(Fixed(amount)).Apply(&child)
 	}
-	return TargetPlayerLoseLife(Fixed(amount)).Apply(&child)
+	if e.result == nil {
+		return TargetPlayerLoseLife(Fixed(amount)).Apply(&child)
+	}
+	player := ctx.Game.GetPlayer(id)
+	if player != nil {
+		ctx.Game.resolution.numberBindings[e.result] = ctx.Game.playersLoseLife([]Player{player}, amount)
+	}
+	return nil
 }
 
 func (e *lifeAction) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	if e.invalid {
+		n.problem = "supply a non-nil life loss result binding"
+	} else if e.count > 1 {
+		n.problem = "supply the life loss result binding only once"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }
 
 type untapPermanentEffect struct{ subject PermanentRef }

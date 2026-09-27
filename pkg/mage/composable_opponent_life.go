@@ -29,15 +29,19 @@ func (s *opponentsRef) inspectDefinition() definitionNode {
 type loseLifeEachEffect struct {
 	subjects PlayerSet
 	amount   ResolutionValue
-	result   *NumberBinding
-	count    int
-	invalid  bool
+	lifeLossResultState
+}
+
+type lifeLossResultState struct {
+	result  *NumberBinding
+	count   int
+	invalid bool
 }
 
 // LifeLossResultOption selects the total life lost from one set instruction.
 type LifeLossResultOption interface {
 	lifeLossResultOption()
-	applyLifeLossResult(*loseLifeEachEffect)
+	applyLifeLossResult(*lifeLossResultState)
 }
 
 type lifeLostOption struct{ binding *NumberBinding }
@@ -45,7 +49,7 @@ type lifeLostOption struct{ binding *NumberBinding }
 // LifeLostInto saves the total life lost by the selected players.
 func LifeLostInto(binding *NumberBinding) LifeLossResultOption { return lifeLostOption{binding} }
 func (lifeLostOption) lifeLossResultOption()                   {}
-func (o lifeLostOption) applyLifeLossResult(e *loseLifeEachEffect) {
+func (o lifeLostOption) applyLifeLossResult(e *lifeLossResultState) {
 	e.result = o.binding
 	e.count++
 	if o.binding == nil {
@@ -63,7 +67,7 @@ func LoseLifeEach(subjects PlayerSet, amount ResolutionValue, options ...LifeLos
 			e.invalid = true
 			continue
 		}
-		option.applyLifeLossResult(e)
+		option.applyLifeLossResult(&e.lifeLossResultState)
 	}
 	return e
 }
