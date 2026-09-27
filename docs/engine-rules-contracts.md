@@ -216,6 +216,8 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
 * **Controller Damage Trigger (CR 120.4, 603.2g, 603.3a)**:
   * `ControllerIsDealtDamage(amount)` matches each final positive damage event whose recipient is the battlefield source's controller when damage occurs. Redirection to a permanent, full prevention, zero damage, life loss without damage, and a phased-out source produce no match. Each event in a simultaneous damage batch can create a separate trigger.
   * The trigger saves the final damage amount in its resolution frame. A later source control change or departure does not change the trigger controller or saved amount. Stack copies and game clones keep separate frames.
+* **Attached Damage Trigger (CR 120.8, 603.2g, 603.3a)**:
+  * `DealsDamage(AttachedPermanent, amount)` checks the current attachment when a positive damage event occurs. It accepts damage to a player or permanent. Prevention and replacement determine the final event amount before capture. A phased-out Aura cannot trigger. The queued trigger keeps its amount and controller if the Aura moves, returns, or changes attachment before resolution.
 * **Lifelink Outcome Routing**:
   * Damage from a permanent with lifelink causes its controller to gain that much life simultaneously with damage execution.
   * Life gained from lifelink routes through the event-aware life gain executor, emitting an `EvtLifeGained` with the actual positive amount after life-gain replacements.

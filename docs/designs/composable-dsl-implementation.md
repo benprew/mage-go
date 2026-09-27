@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attached Permanent Damage Event
+
+`DealsDamage(source PermanentRef, amount *NumberBinding) EventPattern` now accepts `AttachedPermanent` as well as its existing `This` source. On a battlefield Aura or Equipment, it matches final positive damage from the currently attached permanent to any recipient and saves the actual event amount in the trigger frame. It reuses the shared damage event, attachment condition, trigger, and binding services. Registration rejects other source references and invalid bindings. No production card or legacy export changed. Spirit Link's complete text was checked in `data/LEG.json`; its production declaration and the Legends gap record remain open for card migration. The next E work is an attached-permanent damage-to-player participant or another filtered event after a fresh audit.
+
+Synthetic contract tests first failed at compilation because `DealsDamage` accepted only `This`. They cover player and permanent recipients, full prevention, unrelated sources, phasing, changed attachments, source departure and return, event-time controller and amount, stack-copy and game-clone isolation, and registration validation. A public DSL declaration test compiles the reference form. A fresh search found two production `DealsDamage(This, ...)` calls and no production `DealsDamage(AttachedPermanent, ...)` call; both existing callers remain compatible.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff contains only this adapter, synthetic and public tests, and supporting documentation. No gap record changed because Spirit Link remains unwired.
+
 ## Current Slice: Announced X Permanent Target Sets
 
 `TargetPermanentsExactlyX(name, filter, options...)` and `TargetPermanentsUpToX(name, filter, options...)` declare typed permanent sets whose target count follows announced X. The underlying `targetDeclaration` now forwards `BoundsForX` to the existing target-count service. Spell and activation announcements check counts and distinct legal targets before costs, and stack-aligned target specifications retain group identity for copying and resolution. `ForEach` can consume the legal set. The typed names avoid the legacy `TargetXPermanents` export collision; that export and all production callers remain. The adapter uses the current target and payment paths and adds no new selection or action executor. A failing activation test also found that `ManaCost.IsZero` dropped a pure `{X}` cost before payment; the shared cost check now retains it.

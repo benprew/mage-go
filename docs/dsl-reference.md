@@ -1182,7 +1182,15 @@ Triggers on rules events dispatched by the engine:
     )
     ```
   * Each creature-death pattern supports `.WithToughness(*NumberBinding)`: Save the dying creature's toughness at event detection, including continuous effects. Read the number with `FromNumber` in the trigger body. The value remains fixed after the creature leaves or returns. This is an event value, not a target. It can combine with `.WithController`.
-  * `DealsDamage(source, amountBinding)`: Source deals damage to anything; captures amount.
+  * `DealsDamage(source PermanentRef, amountBinding *NumberBinding) EventPattern`: `This` or `AttachedPermanent` deals positive damage to any player or permanent. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding saves the final amount after prevention and replacement in that trigger's frame. `AttachedPermanent` checks the attachment when damage occurs; a later attachment or controller change does not change a queued trigger. Registration rejects other permanent references, nil or unnamed amount bindings, and use outside a battlefield trigger.
+    ```go
+    func linkedAura() dsl.Card {
+        dealt := dsl.BindNumber("damage dealt")
+        return dsl.NewAura("Linked Aura", "{W}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.DealsDamage(dsl.AttachedPermanent, dealt),
+                dsl.GainLife(dsl.You, dsl.FromNumber(dealt))),
+        ))
+    }
   * `DealsDamageToPlayer(source, playerBinding)`: Source deals damage to player; captures player.
   * `DealsCombatDamageToPlayer(This, playerBinding).WithAmount(amountBinding)`: A battlefield source deals combat damage to a player. Use it in `WhenEvent` or `WhenEventModes`. It saves the damaged player and, when requested, the final positive amount after prevention. The player is an event participant, not a target. Registration rejects nil, unnamed, or out-of-scope bindings. The amount capture is optional.
     ```go

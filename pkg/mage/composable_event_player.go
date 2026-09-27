@@ -9,6 +9,7 @@ import (
 )
 
 type damageEventPattern struct {
+	source        PermanentRef
 	player        *PlayerBinding
 	opponentOnly  bool
 	amount        *NumberBinding
@@ -19,8 +20,8 @@ type damageEventPattern struct {
 
 // DealsDamage matches damage from the source to any recipient.
 // It saves the actual damage amount without declaring a target.
-func DealsDamage(_ sourceRef, amount *NumberBinding) EventPattern {
-	return damageEventPattern{amount: amount, captureAmount: true, anyRecipient: true}
+func DealsDamage(source PermanentRef, amount *NumberBinding) EventPattern {
+	return damageEventPattern{source: source, amount: amount, captureAmount: true, anyRecipient: true}
 }
 
 // DealsDamageToPlayer matches damage from the source to either player.
@@ -55,6 +56,9 @@ func (p damageEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggere
 		}})
 	}
 	if p.anyRecipient {
+		if _, ok := p.source.(attachedPermanentRef); ok {
+			return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(EventSourceIsAttachedTo{})
+		}
 		return NewTriggered(EvtDamageDealt, false, effect).SetConditionData(EventSourceIsSelf{})
 	}
 	if p.opponentOnly {
@@ -76,6 +80,13 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 		bindingWrite: p.player, children: []definitionEdge{{"player", p.player}}}
 	if p.anyRecipient {
 		n.Text, n.bindingWrite, n.children = "source deals damage", nil, nil
+		switch p.source.(type) {
+		case sourceRef:
+		case attachedPermanentRef:
+			n.Text = "attached permanent deals damage"
+		default:
+			n.problem = "damage event source requires This or AttachedPermanent"
+		}
 	}
 	if p.captureAmount {
 		n.children = append(n.children, definitionEdge{"amount", &eventAmountCapture{binding: p.amount}})
