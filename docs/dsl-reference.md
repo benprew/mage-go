@@ -1418,7 +1418,7 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
-  * `ActivatedAbilityEvent().FromArtifact().ByOpponent()`: Both filters are optional and can be used independently. `FromArtifact` checks the activated source's battlefield incarnation or departure LKI at the event. `ByOpponent` checks the activating player against the watcher controller at detection. The filters include abilities with `{T}` in the cost and compose with both captures. Registration rejects a repeated filter. This declaration compiles:
+  * `ActivatedAbilityEvent().FromArtifact().ByOpponent().WithoutTapCost()`: All three filters are optional and can be used independently. `FromArtifact` checks the activated source's battlefield incarnation or departure LKI at the event. `ByOpponent` checks the activating player against the watcher controller at detection. `WithoutTapCost` checks that the activation cost has no `{T}` symbol; it does not exclude other ways to tap a permanent. The filters compose with both captures in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects a repeated filter. This declaration compiles:
 
     ```go
     package main
@@ -1427,7 +1427,7 @@ Triggers on rules events dispatched by the engine:
 
     var actor = dsl.BindPlayer("activator")
     var _ = dsl.NewEnchantment("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.ActivatedAbilityEvent().FromArtifact().ByOpponent().WithActivator(actor),
+        dsl.ActivatedAbilityEvent().FromArtifact().ByOpponent().WithoutTapCost().WithActivator(actor),
         dsl.GainLife(dsl.FromPlayer(actor), dsl.Fixed(1)))))
 
     func main() {}

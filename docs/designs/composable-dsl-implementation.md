@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Activated Ability Without Tap Cost Filter
+
+`ActivatedAbilityEvent().WithoutTapCost()` filters completed activations by the existing activation-cost flag. It composes with `FromArtifact`, `ByOpponent`, `WithActivator`, and `WithSource` in battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses the event and pending-trigger services, and leaves the separate `ArtifactAbilityActivatedWithoutTapCost` pattern and legacy callers intact. No production card changed.
+
+Powerleech's complete text in `data/ATQ.json` requires an opponent artifact activation without `{T}` and an opponent artifact tap event. The new filter supplies the first pattern, but card wiring remains open. Artifact Possession and Haunting Wind still need their separate attachment, tapped-artifact, controller, and damage requirements. Their JSON gap records remain open. A fresh caller search found one production `OpponentActivatedArtifactNoTapCost` use and no production `ActivatedAbilityEvent` use. The next dependency-ready work is a P payment output or another E event filter after a fresh audit.
+
+Focused tests first failed because `WithoutTapCost` was absent. Synthetic tests cover artifact and opponent selection, `{T}` exclusion, ordinary and mana activations, failed payment, source sacrifice and return, saved lifelink, phasing, trigger copy, clone isolation, registration rejection of repeated filters, and a public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass. The post-lint diff and `git diff --check` pass.
+
 ## Current Slice: Opponent Artifact Activation Filter
 
 `ActivatedAbilityEvent().FromArtifact().ByOpponent()` adds two independent filters to the completed activated-ability event pattern. `FromArtifact` checks the event's source incarnation against the live permanent or its departure LKI. `ByOpponent` compares the recorded activator with the watcher controller at detection. Both filters compose with `WithActivator` and `WithSource` in battlefield `WhenEvent` declarations. They include activations with a tap cost. The reusable boundary is the existing activation event, trigger conditions, and pending-trigger binding frame; no payment executor or legacy export changed.

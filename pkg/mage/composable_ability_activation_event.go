@@ -17,6 +17,8 @@ type abilityActivatedPattern struct {
 	opponentOnly       bool
 	duplicateArtifact  bool
 	duplicateOpponent  bool
+	withoutTapCost     bool
+	duplicateTapFilter bool
 }
 
 // ActivatedAbilityEvent matches a completed activated ability announcement.
@@ -37,6 +39,15 @@ func (p abilityActivatedPattern) ByOpponent() abilityActivatedPattern {
 		p.duplicateOpponent = true
 	}
 	p.opponentOnly = true
+	return p
+}
+
+// WithoutTapCost limits the event to an activation with no tap symbol in its cost.
+func (p abilityActivatedPattern) WithoutTapCost() abilityActivatedPattern {
+	if p.withoutTapCost {
+		p.duplicateTapFilter = true
+	}
+	p.withoutTapCost = true
 	return p
 }
 
@@ -68,6 +79,9 @@ func (p abilityActivatedPattern) makeTrigger(effect ResolvingEffect) *GenericTri
 	if p.opponentOnly {
 		t.AndConditionData(EventPlayerIsOpponent{})
 	}
+	if p.withoutTapCost {
+		t.AndConditionData(activationWithoutTapCost{})
+	}
 	return t
 }
 
@@ -87,7 +101,7 @@ func (activatedSourceIsArtifact) CheckTriggerCond(event *GameEvent, reader GameR
 
 func (p abilityActivatedPattern) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "event-pattern", Text: "an ability is activated", battlefieldSource: true}
-	if p.duplicateArtifact || p.duplicateOpponent {
+	if p.duplicateArtifact || p.duplicateOpponent || p.duplicateTapFilter {
 		n.problem = "ability activation event: supply each filter once"
 	}
 	if p.captureActivator {
