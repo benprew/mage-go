@@ -133,6 +133,9 @@ func describeDefinition(v any) definitionNode {
 		}
 		n.children = append(n.children, declaredTargetNodes(e.targets, e.groupedTargets)...)
 		for i, cost := range e.costs {
+			if _, ok := cost.(*tapNOtherMatchingCost); ok {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && exile.capture {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}

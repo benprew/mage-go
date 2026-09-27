@@ -374,6 +374,15 @@ costs. If a replacement sends a
 discarded card to a hidden zone without revealing it, its characteristics are
 undefined for the related payment (CR 701.9c).
 
+`TapNOtherMatchingCost` locks exactly the chosen battlefield incarnations during
+payment validation. It excludes the ability source, checks current control,
+untapped status, phasing, and the matching filter again before live payment,
+and taps the chosen group before it sends their tap events. The group can
+include creatures with summoning sickness because it is a tap cost for another
+object, not those creatures' own `{T}` abilities. An invalid choice or failed
+payment leaves live mana, life, and tap state unchanged. The declaration does
+not keep selected objects between transactions.
+
 `Tap(subject, TapAmountInto(binding))` records an action result in the current
 resolution frame. It writes 1 only when the referenced battlefield incarnation
 changes from untapped to tapped; the normal tap action emits its event once.

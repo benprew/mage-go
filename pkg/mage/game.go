@@ -911,6 +911,20 @@ func (g *Game) TapPermanent(perm *Permanent) {
 	})
 }
 
+// tapPermanentsTogether makes each tap visible before it sends tap events.
+func (g *Game) tapPermanentsTogether(permanents []*Permanent) {
+	for _, permanent := range permanents {
+		g.MutablePermanent(permanent.ID()).Tapped = true
+	}
+	for _, permanent := range permanents {
+		g.FireEvent(GameEvent{
+			Type:     EvtTapped,
+			SourceID: permanent.ID(),
+			PlayerID: permanent.ControllerID(),
+		})
+	}
+}
+
 // checkAbilitiesForEvent checks a set of abilities (from a removed permanent) for triggers.
 func (g *Game) checkAbilitiesForEvent(abilities []Ability, evt *GameEvent, sourceID, controller uuid.UUID) {
 	if g.triggers.zoneBatch != nil && isBattlefieldLeaveEvent(evt) {

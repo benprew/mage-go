@@ -159,6 +159,12 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			sacCopy.chooser = tx.game.GetPlayer(tx.controller)
 			validationCost = &sacCopy
 		}
+		if taps, ok := cost.(*tapNOtherMatchingCost); ok {
+			locked := *taps
+			locked.selected = make([]capturedPermanent, 0, locked.count)
+			locked.chooser = tx.game.GetPlayer(tx.controller)
+			validationCost = &locked
+		}
 		if counter, ok := cost.(*removeAnyCountersCost); ok {
 			cntCopy := *counter
 			source := tx.game.FindPermanent(tx.sourceID)
@@ -216,6 +222,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			sacrifice.chooser = nil
 			tx.costs[i] = sacrifice
 		}
+		if taps, ok := validationCost.(*tapNOtherMatchingCost); ok {
+			taps.locked = true
+			taps.chooser = nil
+			tx.costs[i] = taps
+		}
 		if _, ok := cost.(*discardCost); ok {
 			tx.costs[i] = validationCost
 		}
@@ -242,6 +253,9 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if counter, ok := cost.(*removeCountersCost); ok && counter.capture && !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay locked counter cost")
+		}
+		if taps, ok := cost.(*tapNOtherMatchingCost); ok && !taps.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay chosen tap cost")
 		}
 		if discard, ok := cost.(*discardCost); ok && !discard.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen discard")
