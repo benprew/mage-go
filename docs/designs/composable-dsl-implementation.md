@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Exact Multi-Sacrifice Total Power
+
+`SacrificeNMatchingCostWithTotalPower(count, filter, text, total)` records the sum of current power for the exact, locked set of other permanents sacrificed as a direct spell additional cost or activated ability cost. It reuses the prepared-payment transaction, incarnation checks, sacrifice service, and instance-local number frame. The power snapshot is taken before any chosen permanent is sacrificed. A phased or returned choice fails without a result. Inspection and registration reject missing, unnamed, duplicate, or out-of-scope results and invalid count or text. The public DSL keeps `SacrificeNMatchingCost` and all production callers unchanged.
+
+The full Sword of the Ages text in `data/LEG.json` requires an any-number choice, source sacrifice, linked exile, and damage; this exact-count output does not complete that card or its gap record. Fixed-count sacrifice callers in Fourth Edition and Fallen Empires still use the legacy constructor and need individual audits before migration. No production card or JSON gap record changed. The next dependency-ready slice is an any-number payment collection contract or T recorded target groups after a fresh requirements audit.
+
+Focused contract tests first failed because the constructor was absent. They now cover derived power, locked choices, phasing and changed incarnation, failed-payment result absence, independent pending activations, stack copying, game cloning, registration, and a public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Paid Graveyard Exile Card
 
 `ExileMatchingCardFromGraveyardCostWithCard(CardFilter, string, *CardBinding) Cost` saves the card exiled from the payer's graveyard by a direct spell additional cost or activated ability cost. The prepared-payment transaction locks its graveyard visit; the committed payment captures its new exile visit in the spell or ability frame. `FromCard` is absent after that card leaves exile, even if it returns. Exile now records a visit ID for face-up and face-down entries, and game cloning retains it. This reuses the existing cost choice, exile move, and frame services; it adds no new executor, replacement, or card policy. The legacy cost and its one production caller, Necropolis, remain unchanged. No production card or JSON gap record changed.

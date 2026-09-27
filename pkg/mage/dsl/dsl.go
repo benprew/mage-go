@@ -723,6 +723,7 @@ var (
 	SacrificeMatchingCost                             = mage.SacrificeMatchingCost
 	SacrificeMatchingIncludingSourceCost              = mage.SacrificeMatchingIncludingSourceCost
 	SacrificeNMatchingCost                            = mage.SacrificeNMatchingCost
+	SacrificeNMatchingCostWithTotalPower              = mage.SacrificeNMatchingCostWithTotalPower
 	TapNOtherMatchingCost                             = mage.TapNOtherMatchingCost
 	LifePayCost                                       = mage.LifePayCost
 	DiscardCost                                       = mage.DiscardCost

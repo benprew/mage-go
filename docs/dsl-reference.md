@@ -2854,3 +2854,17 @@ The sacrifice cost requires another creature. The ability has no targets or
 tap cost. At resolution, add the counter to the original source incarnation,
 then gain life for the stored controller. An absent source does not prevent
 life gain, and a returned Blood Host does not receive the old ability's counter.
+
+# Exact multi-sacrifice power payment
+
+`SacrificeNMatchingCostWithTotalPower(count int, filter PermanentFilter, text string, total *NumberBinding) Cost` chooses exactly `count` other matching permanents controlled by the payer. It reads their current power immediately before payment and saves the sum in the spell or activated ability instance. The choices are locked during payment preparation. A changed incarnation or phased-out choice fails payment without producing a result. Use this cost directly in `Costs` or as a spell additional cost; it cannot produce a binding in a resolution-time payment branch. Registration requires a positive count, nonempty text, and a named number binding. This constructor does not choose any number of permanents or include the source.
+
+```go
+total := dsl.BindNumber("paid power")
+offering := dsl.NewArtifact("Offering", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.SacrificeNMatchingCostWithTotalPower(
+        2, dsl.IsCreature, "Sacrifice two creatures", total)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(total)),
+)))
+_ = offering
+```

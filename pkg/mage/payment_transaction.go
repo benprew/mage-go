@@ -362,9 +362,15 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 			discardedCardID = discard.selected[0]
 		}
 		paidSubtype := 0
-		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.captureCard) {
-			if !sacrifice.CanPay(tx.sourceID, tx.controller, tx.game) || len(sacrifice.selected) != 1 {
+		paidTotalPower := 0
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.captureCard || sacrifice.captureTotalPower) {
+			if !sacrifice.CanPay(tx.sourceID, tx.controller, tx.game) || len(sacrifice.selected) != sacrifice.count {
 				return fmt.Errorf("cannot pay chosen sacrifice")
+			}
+			for _, choice := range sacrifice.selected {
+				if sacrifice.captureTotalPower {
+					paidTotalPower += tx.game.FindPermanent(choice.id).CurrentPower(tx.game)
+				}
 			}
 			chosen := tx.game.FindPermanent(sacrifice.selected[0].id)
 			if sacrifice.captureCard && !chosen.IsToken {
@@ -434,7 +440,7 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 			}
 			tx.paidNumbers[counter.paid] = counter.amount
 		}
-		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype) {
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.captureTotalPower) {
 			if tx.paidNumbers == nil {
 				tx.paidNumbers = make(map[*NumberBinding]int)
 			}
@@ -447,6 +453,9 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 			}
 			if sacrifice.captureSubtype {
 				tx.paidNumbers[sacrifice.paidSubtype] = paidSubtype
+			}
+			if sacrifice.captureTotalPower {
+				tx.paidNumbers[sacrifice.paidTotalPower] = paidTotalPower
 			}
 		}
 	}

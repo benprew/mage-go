@@ -123,23 +123,25 @@ func (*sacrificeSourceCost) Pay(sourceID, _ uuid.UUID, g *Game) error {
 func (*sacrificeSourceCost) Text() string { return "Sacrifice ~" }
 
 type sacrificeMatchingCost struct {
-	filter           PermanentFilter
-	text             string
-	count            int
-	includeSource    bool
-	locked           bool
-	selected         []capturedPermanent
-	chooser          Player
-	paidPower        *NumberBinding
-	paidToughness    *NumberBinding
-	paidManaValue    *NumberBinding
-	paidSubtype      *NumberBinding
-	subtype          string
-	paidCard         *CardBinding
-	captureStats     bool
-	captureManaValue bool
-	captureSubtype   bool
-	captureCard      bool
+	filter            PermanentFilter
+	text              string
+	count             int
+	includeSource     bool
+	locked            bool
+	selected          []capturedPermanent
+	chooser           Player
+	paidPower         *NumberBinding
+	paidToughness     *NumberBinding
+	paidManaValue     *NumberBinding
+	paidSubtype       *NumberBinding
+	subtype           string
+	paidCard          *CardBinding
+	paidTotalPower    *NumberBinding
+	captureStats      bool
+	captureManaValue  bool
+	captureSubtype    bool
+	captureCard       bool
+	captureTotalPower bool
 }
 
 // SacrificeMatchingCost creates a cost that sacrifices another permanent the
@@ -159,6 +161,11 @@ func SacrificeMatchingIncludingSourceCost(filter PermanentFilter, text string) C
 // permanents the controller controls.
 func SacrificeNMatchingCost(n int, filter PermanentFilter, text string) Cost {
 	return &sacrificeMatchingCost{filter: filter, text: text, count: n}
+}
+
+// SacrificeNMatchingCostWithTotalPower saves the chosen permanents' power at payment.
+func SacrificeNMatchingCostWithTotalPower(n int, filter PermanentFilter, text string, total *NumberBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: n, paidTotalPower: total, captureTotalPower: true}
 }
 
 // SacrificeArtifactCost creates a cost that sacrifices another artifact.
@@ -215,7 +222,19 @@ func SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *Ca
 
 func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
-	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard {
+	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard && !c.captureTotalPower {
+		return n
+	}
+	if c.captureTotalPower {
+		if c.count <= 0 {
+			n.problem = "supply a positive sacrifice count"
+		} else if c.text == "" {
+			n.problem = "supply sacrifice text"
+		} else if c.paidTotalPower == nil {
+			n.problem = "supply a non-nil paid total power binding"
+		}
+		n.bindingWrites = []savedBinding{c.paidTotalPower}
+		n.children = []definitionEdge{{"total power", c.paidTotalPower}}
 		return n
 	}
 	if c.captureSubtype {
