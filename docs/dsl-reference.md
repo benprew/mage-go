@@ -1403,6 +1403,20 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `ActivatedAbilityEvent().WithActivator(*PlayerBinding) EventPattern`: Match each completed activated ability announcement, including mana abilities. `WithActivator` is optional and saves the activating player at event time for `FromPlayer`. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. It does not filter or save the ability's source. The constructor uses `ActivatedAbilityEvent` because `AbilityActivated` is already a core ability-type constant. For example:
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var actor = dsl.BindPlayer("activator")
+    var _ = dsl.NewEnchantment("Activation watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.ActivatedAbilityEvent().WithActivator(actor),
+            dsl.GainLife(dsl.FromPlayer(actor), dsl.Fixed(1)))))
+
+    func main() {}
+    ```
   * `ArtifactAbilityActivatedWithoutTapCost().AttachedToSource().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match an activated ability of a battlefield artifact when its activation cost has no `{T}`. `AttachedToSource` optionally requires the artifact to be attached to the trigger source. Either binding is optional. `WithArtifact` saves the battlefield incarnation for `From`; `WithController` saves its controller at activation for `FromPlayer`. A sacrificed artifact has no live permanent reference at resolution, but its saved controller remains available. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
     ```go
     package main

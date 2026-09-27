@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Activated Ability Event Player Capture
+
+`ActivatedAbilityEvent().WithActivator(*PlayerBinding)` is a battlefield `WhenEvent` and `WhenEventModes` pattern. The binding is optional. It matches the existing completed `EvtAbilityActivated` event for normal and mana abilities and saves `GameEvent.PlayerID` in the pending trigger's instance-local frame. A failed activation produces no trigger. This slice adds no ability-source binding, artifact filter, mana-production detail, or payment rule. The proposed `AbilityActivated` constructor name would collide with the existing core ability-type constant, so the implemented name is `ActivatedAbilityEvent`. No production card or legacy export changed.
+
+The E-family inventory requests an activated-ability event. Complete Antiquities text in `data/ATQ.json` shows that Artifact Possession, Haunting Wind, and Powerleech also need source, artifact, tap-cost, and controller conditions; the existing narrower `ArtifactAbilityActivatedWithoutTapCost` pattern supplies some of these. This generic player capture alone does not complete those cards or close their gap records. A fresh production search found three direct `EvtAbilityActivated` declarations in `cards/antiquities/enchantments.go`; no production caller uses the new pattern. The next dependency-ready work is a separate E ability-source event binding or a P payment output after a fresh requirements audit.
+
+The focused contract first failed because the constructor was absent. Synthetic tests cover two activators, ordinary and mana abilities, failed payment, source departure and return, phasing, stack copy, game clone, inspection, registration, modal use, and the public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Source Becomes Targeted by Spell or Ability
 
 `BecomesTargeted(This).ByOpponent().WithController(*PlayerBinding)` is a battlefield `WhenEvent` and `WhenEventModes` pattern. Both options are optional. It matches target announcement for a spell or activated ability, compares the event player with the source controller at detection, and saves that player in the pending trigger's instance-local frame. It reuses `EvtBecomesTarget` and the existing trigger capture service. The older spell-only `BecomesTargetOfSpell` remains. A fresh search found no production caller of either typed pattern; five production `EvtBecomesTarget` declarations remain in Jumpstart and Secrets of Strixhaven, including Tenured Concocter. No production card changed.

@@ -338,6 +338,8 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
 
 ## 9. Total-Cost Payment Transactions (CR 601.2, 602.2)
 
+`ActivatedAbilityEvent().WithActivator(actor)` watches the existing completed `EvtAbilityActivated` event (CR 602.2, 605.3). The event is published after a normal activation pays its costs or a mana ability activates. A failed activation publishes no event. The pending trigger saves `GameEvent.PlayerID` in its own resolution frame, so source departure, control changes, stack copies, and game clones cannot change the activating player. A phased-out battlefield watcher does not detect the event. This pattern does not capture the activated ability's source or grant it stack behavior when the activation is a mana ability.
+
 An activated cost that removes the announced X counters fixes X during cost
 preparation. The captured form uses the existing locked counter-cost payment:
 commit rechecks the source incarnation, phasing, and counter count before it

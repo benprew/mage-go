@@ -258,6 +258,7 @@ var (
 	Dies                               = mage.Dies
 	LeavesBattlefield                  = mage.LeavesBattlefield
 	SpellCast                          = mage.SpellCast
+	ActivatedAbilityEvent              = mage.ActivatedAbilityEvent
 	Attacks                            = mage.Attacks
 	OneOrMoreCreaturesYouControlAttack = mage.OneOrMoreCreaturesYouControlAttack
 	OneOrMoreCreaturesAttack           = mage.OneOrMoreCreaturesAttack
