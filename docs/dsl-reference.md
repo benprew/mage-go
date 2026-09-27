@@ -465,6 +465,21 @@ func sacrificeAbility() {
 * `DestroyEachWithoutRegeneration(PermanentSet)`: Simultaneously destroys the set without regeneration. Indestructible still applies; the instruction does not change permanent keywords.
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
 * `Tap(PermanentRef, ...TapResultOption) ResolvingEffect`: Taps the referenced battlefield incarnation. `TapAmountInto(*NumberBinding) TapResultOption` saves 1 when it changes from untapped to tapped, or 0 when it is already tapped, absent, phased out, or a returned incarnation. The option may occur once. The result is local to the resolving spell or ability. Existing `Tap(subject)` calls remain valid.
+* `TapAttachedPermanentCost() Cost`: Pays by tapping the untapped permanent attached to the battlefield ability source. Use it in `Costs` for an activated ability. Payment preparation locks both battlefield incarnations and their attachment; commit fails if either object leaves, phases out, changes attachment, or the host becomes tapped. The cost does not require control of the host and does not apply the creature summoning-sickness rule for the `{T}` symbol. A spell additional cost cannot use this battlefield-source operation. `PermanentIsUntapped(AttachedPermanent)` supplies a separate activation condition when the text requires one.
+
+This synthetic Aura declaration compiles:
+
+```go
+package example
+
+import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+var gate = dsl.NewAura("Synthetic gate", "{1}{B}{B}",
+    dsl.WithCastTarget(dsl.TargetLand()),
+    dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.TapAttachedPermanentCost()),
+        dsl.GainLife(dsl.You, dsl.Fixed(1)),
+        dsl.ActivationIf(dsl.PermanentIsUntapped(dsl.AttachedPermanent)))))
+```
 * `IfPositive(ResolutionValue, ResolvingEffect) ResolvingEffect`: Runs the body only when the value is greater than zero. Use it after an action result in `Sequence`; a binding written only inside its body cannot be read after the branch.
 * `IfCardHasType(CardRef, core.CardType, ResolvingEffect) ResolvingEffect` and `IfCardLacksType(CardRef, core.CardType, ResolvingEffect) ResolvingEffect`: Check a saved hand or graveyard card, or a legal graveyard card target, at resolution. Both skip the body when the reference is absent. The body may read a binding written before the branch; a binding written in the body cannot be read after it. These branches work in resolving spell, activation, and trigger bodies, not in pure state or static conditions.
 

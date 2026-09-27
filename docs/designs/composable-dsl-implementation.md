@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Attached-Permanent Tap Payment
+
+`TapAttachedPermanentCost() Cost` pays an activated ability cost by tapping the permanent attached to its battlefield source. The payment transaction locks the source and host incarnations and their attachment during preparation, then checks them before commit. It reuses the shared tap event and total-cost transaction. An absent, phased-out, detached, returned, or already tapped host cannot pay. Phasing in preserves a valid host. This cost does not impose the `{T}` symbol's summoning-sickness restriction or a host-controller restriction. The separate `PermanentIsUntapped(AttachedPermanent)` state condition expresses an explicit activation condition. The API is valid in `Costs` for an activated ability; registration rejects it as a spell additional cost. No production card or legacy export changed.
+
+Tourach's Gate's complete text was checked in `data/FEM.json` and its Fallen Empires inventory and gap record. Its production wiring remains open, including its attacking-creature effect and other abilities; the gap record stays blocked. Focused tests first failed because the constructor was absent. Engine and public DSL tests cover payment, already tapped and unattached hosts, attachment changes, phasing, source and host leave-and-return, life-cost rollback, clone isolation, and registration. A fresh production caller search found no use of the new cost. The next dependency-ready work is another isolated P payment or action result after a requirements audit; T divided-value announcement also remains open.
+
+Validation: focused engine and DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Exact Matching-Permanent Tap Payment
 
 `TapNOtherMatchingCost(count, filter, text)` pays by tapping exactly that many distinct untapped matching permanents controlled by the payer, excluding the ability source. It is a `Cost` for `Costs`, spell additional costs, and `IfPaid`/`UnlessPaid`. It uses the existing isolated payment transaction and tap events. Preparation makes each choice once and records battlefield incarnations; commit rechecks control, eligibility, phasing, and identity before changing live state. All selected permanents become tapped before their tap events are sent. Other creatures can pay despite summoning sickness; the source's own `{T}` still uses `TapCost(This)`. Registration rejects nonpositive counts and empty text. The cost has no output binding and does not change legacy `TapMatchingCost` callers.

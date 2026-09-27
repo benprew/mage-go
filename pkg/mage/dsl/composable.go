@@ -337,6 +337,7 @@ var (
 	Tap                              = mage.TapSubject
 	Fight                            = mage.Fight
 	TapCost                          = mage.TapCost
+	TapAttachedPermanentCost         = mage.TapAttachedPermanentCost
 	TargetDamageRecipient            = mage.DeclareDamageTarget
 	TargetPlayerOrPlaneswalkerDamage = mage.DeclarePlayerOrPlaneswalkerTarget
 	TargetDamageRecipients           = mage.DeclareDamageTargets
