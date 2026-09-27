@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Player Damage Event Source Capture
+
+`DealsDamageToPlayer(This, player).WithSource(*DamageSourceBinding)` saves the final positive damage event's source in a pending battlefield trigger. `AttachedPermanent` is also accepted by the existing player-damage pattern. `FromDamageSource` uses the captured incarnation, controller, and characteristics after departure or return. The adapter reuses the damage service snapshot and event capture frame. It adds no damage executor or card policy. No production card, legacy author export, or gap record changed. Existing card wiring remains separate.
+
+Contract tests first failed because `WithSource` was absent. They cover prevention, source departure and return, phasing, source lifelink, stack copying, game cloning, inspection, registration rejection, and a public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass. A fresh production search found no `DealsDamageToPlayer` callers; the one `WheneverEnchantedPermanentDealsDamageToPlayerTrigger` caller and one `DealsDamageToOpponentTrigger` caller remain on their legacy exports. This slice does not add a controller-damage event source capture, a generic `DealsDamage` source capture, batch damage, or permanent recipient identity. The next dependency-ready work is controller-damage source capture after a fresh caller audit.
+
 ## Current Slice: Received Damage Source Capture
 
 `ReceivesDamage(This, amount).WithSource(*DamageSourceBinding)` saves the final damage action's source when a battlefield source receives positive damage. `FromDamageSource` can use its captured incarnation, controller, and characteristics in that pending trigger, including after a permanent leaves and returns, phases out, or a spell leaves the stack. The shared damage dispatcher carries a source snapshot with each damage event, including events held during simultaneous damage. This reuses the existing damage pipeline, pending-trigger capture, resolution frame, and source cloning. It adds no damage executor, recipient binding, or card-specific rule. `WithSourceController` and all legacy author exports remain available.

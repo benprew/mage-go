@@ -16,6 +16,9 @@ type damageEventPattern struct {
 	sourceController          *PlayerBinding
 	captureSourceController   bool
 	duplicateSourceController bool
+	damageSource              *DamageSourceBinding
+	captureDamageSource       bool
+	duplicateDamageSource     bool
 	amount                    *NumberBinding
 	captureAmount             bool
 	anyRecipient              bool
@@ -46,6 +49,15 @@ func (p damageEventPattern) WithSourceController(binding *PlayerBinding) damageE
 		p.duplicateSourceController = true
 	}
 	p.sourceController, p.captureSourceController = binding, true
+	return p
+}
+
+// WithSource saves the damage source when damage occurs.
+func (p damageEventPattern) WithSource(binding *DamageSourceBinding) damageEventPattern {
+	if p.captureDamageSource {
+		p.duplicateDamageSource = true
+	}
+	p.damageSource, p.captureDamageSource = binding, true
 	return p
 }
 
@@ -139,10 +151,28 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 			n.children = append(n.children, definitionEdge{"source controller", &eventPlayerCapture{binding: p.sourceController}})
 		}
 	}
+	if p.captureDamageSource {
+		if p.anyRecipient || p.combatOnly || p.opponentOnly || p.damageSource == nil || p.duplicateDamageSource {
+			n.problem = "damage event requires one source binding on DealsDamageToPlayer"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.damageSource)
+			n.children = append(n.children, definitionEdge{"source", &eventDamageSourceCapture{binding: p.damageSource}})
+		}
+	}
 	if p.captureAmount {
 		n.children = append(n.children, definitionEdge{"amount", &eventAmountCapture{binding: p.amount}})
 	}
 	return n
+}
+func (p damageEventPattern) captureDetectedEvent(_ *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
+	if !p.captureDamageSource || p.damageSource == nil {
+		return nil
+	}
+	game, ok := observer.(*Game)
+	if !ok {
+		return nil
+	}
+	return []Effect{&eventDamageSourceCapture{binding: p.damageSource, source: cloneDamageSource(game.damageEventSource)}}
 }
 func (p damageEventPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
 	var captures []ResolvingEffect

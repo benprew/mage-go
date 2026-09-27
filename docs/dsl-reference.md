@@ -1908,6 +1908,16 @@ Triggers on rules events dispatched by the engine:
         ))
     }
   * `DealsDamageToPlayer(source PermanentRef, playerBinding *PlayerBinding).WithAmount(amountBinding)`: `This` or `AttachedPermanent` deals positive damage to a player. The player binding saves the damaged player, not a target. `WithAmount` optionally saves the final damage amount. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. An attached source is checked when damage occurs; queued bindings stay fixed if the attachment or its controller later changes. Registration rejects other source references and invalid bindings.
+  * `DealsDamageToPlayer(source, playerBinding).WithSource(sourceBinding *DamageSourceBinding)`: Save the final damage action's source at event detection. `FromDamageSource(sourceBinding)` keeps the source incarnation, controller, and characteristics for the pending trigger after departure or return. Use with `This` or `AttachedPermanent` in battlefield `WhenEvent` or `WhenEventModes`; the saved source is an event participant, not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. Example:
+
+    ```go
+    damaged := dsl.BindPlayer("damaged")
+    source := dsl.BindDamageSource("source")
+    card := dsl.NewCreature("Damage Watcher", "", 1, 3, dsl.WithAbility(dsl.WhenEvent(
+        dsl.DealsDamageToPlayer(dsl.This, damaged).WithSource(source),
+        dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.FromPlayer(damaged), dsl.Fixed(1)))))
+    _ = card
+    ```
   * `DealsDamageToPlayer(source, playerBinding).ToController().WithAmount(amountBinding)`: Filter the player recipient to the trigger controller when damage occurs. `ToController` must follow `DealsDamageToPlayer`; registration rejects it on opponent or combat damage patterns. The damaged player and final amount remain event bindings. Use `This` or `AttachedPermanent` as the source in a battlefield `WhenEvent` or `WhenEventModes` ability.
     ```go
     func attachedDamageWatcher() dsl.Card {
