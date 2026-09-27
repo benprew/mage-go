@@ -1,6 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Combat Opponent Set
+## Current Slice: Permanent Owner Reference
+
+`OwnerOf(PermanentRef) PlayerRef` is a typed resolving-time owner reference for one battlefield incarnation. It works in spell, activation, and trigger bodies through existing player-consuming instructions, including `SnapshotPlayer`. It reads the card owner from the resolved permanent and remains distinct from `ControllerOf`; absence, phasing, and a returned incarnation yield no player. The existing permanent resolver, player frame, inspection graph, and target scope validation supply the behavior. There is no new engine ownership contract or production card change.
+
+Focused contract tests first failed because `OwnerOf` was undefined. They now cover differing owner and controller, phasing, leave and return, snapshot and game-clone isolation, target legality after phasing or return, registration rejection for nil and undeclared references, and a public DSL declaration. The complete Personal Incarnation text and its owner distinction were checked against `data/LEA.json` before selecting this acceptance case. Its death-trigger wiring, owner-only activation, damage redirection, and production migration remain open, so no gap record is closed. Existing `ControllerOf` and legacy ownership callers remain. The next dependency-ready work is a separate S owner-filtered permanent set or P payment output after a fresh audit.
+
+`go test ./pkg/mage -run '^TestOwnerOf' -count=1`, the public DSL focused test, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. No production card or gap record changed.
+
+## Previous Slice: Combat Opponent Set
 
 `BlockingOrBlockedBy(PermanentRef) PermanentSet` selects the creatures currently blocking or blocked by one battlefield incarnation. It reads combat groups at the consuming instruction, excludes phased-out or returned objects, and returns each member once. The set can feed `CountPermanents`, `ForEach`, or a collection modification such as `Until(EndOfTurn, GrantEachKeyword(...))`. Registration rejects an absent declaration; the role excludes player and card references at compile time. It reuses the combat group and permanent-set services. No production card changed.
 

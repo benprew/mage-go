@@ -44,6 +44,7 @@ var (
 	ActivationIf         = mage.ActivationIf
 	AnyPlayerMayActivate = mage.AnyPlayerMayActivate
 	ControllerOf         = mage.ControllerOf
+	OwnerOf              = mage.OwnerOf
 	ControllerOfSpell    = mage.ControllerOfSpell
 	UnlessPaid           = mage.UnlessPaid
 	IfPaid               = mage.IfPaid

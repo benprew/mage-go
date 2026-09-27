@@ -97,6 +97,18 @@ Operations accept explicit subjects rather than baking the subject into the verb
 * `ActivePlayer`: The player whose turn it currently is.
 * `FromPlayer(binding)`: The player captured in a `PlayerBinding` (from target, snapshot, or event pattern).
 * `ControllerOf(permanentRef)`: The player who controls the referenced permanent at resolution time.
+* `OwnerOf(permanentRef) PlayerRef`: The player who owns the referenced battlefield permanent at resolution time. It accepts one `PermanentRef`, including `This` or a declared permanent target, in a resolving spell, activation, or trigger body. An absent, phased-out, or returned incarnation supplies no player. Use `SnapshotPlayer` when a later instruction must keep the owner after the permanent leaves.
+
+```go
+target := dsl.TargetPermanent("permanent", dsl.AnyPermanent)
+owner := dsl.BindPlayer("owner")
+spell := dsl.Spell(dsl.Sequence(
+    dsl.SnapshotPlayer(dsl.OwnerOf(target), owner),
+    dsl.GainLife(dsl.FromPlayer(owner), dsl.Fixed(1)),
+), dsl.WithTargets(target))
+_ = spell
+```
+
 * `EachPlayer`: Collection of all players in active-player-first order.
 * `OpponentsOf(playerRef)`: All opponents of the specified player (for 2-player, the single opponent).
 

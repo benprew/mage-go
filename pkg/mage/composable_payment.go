@@ -8,6 +8,7 @@ import (
 )
 
 type permanentControllerRef struct{ subject PermanentRef }
+type permanentOwnerRef struct{ subject PermanentRef }
 
 // ControllerOf reads the current controller of the selected battlefield incarnation.
 func ControllerOf(subject PermanentRef) PlayerRef { return permanentControllerRef{subject} }
@@ -25,6 +26,28 @@ func (r permanentControllerRef) resolveRecipient(ctx *EffectContext) (uuid.UUID,
 }
 func (r permanentControllerRef) inspectDefinition() definitionNode {
 	return definitionNode{Role: "player-ref", Text: "controller", children: []definitionEdge{{"subject", r.subject}}}
+}
+
+// OwnerOf reads the owner of the selected battlefield incarnation.
+func OwnerOf(subject PermanentRef) PlayerRef { return permanentOwnerRef{subject} }
+func (permanentOwnerRef) playerRef()         {}
+func (permanentOwnerRef) damageRecipient()   {}
+func (r permanentOwnerRef) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
+	if nilDefinition(r.subject) {
+		return uuid.Nil, false
+	}
+	p, ok := r.subject.resolvePermanent(ctx)
+	if !ok {
+		return uuid.Nil, false
+	}
+	owner := p.Card.Owner()
+	return owner, ctx.Game.GetPlayer(owner) != nil
+}
+func (r permanentOwnerRef) resolveRecipient(ctx *EffectContext) (uuid.UUID, bool) {
+	return r.resolvePlayer(ctx)
+}
+func (r permanentOwnerRef) inspectDefinition() definitionNode {
+	return definitionNode{Role: "player-ref", Text: "owner", children: []definitionEdge{{"subject", r.subject}}}
 }
 
 type unlessPaidEffect struct {
