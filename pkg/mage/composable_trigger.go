@@ -54,6 +54,9 @@ type creatureEntersPattern struct {
 	nontokenOnly     bool
 	subtype          string
 	filterSubtype    bool
+	keyword          Keyword
+	filterKeyword    bool
+	duplicateKeyword bool
 	permanent        *PermanentBinding
 	capturePermanent bool
 	power            *NumberBinding
@@ -76,6 +79,15 @@ func (p creatureEntersPattern) Nontoken() creatureEntersPattern {
 func (p creatureEntersPattern) OfSubtype(subtype string) creatureEntersPattern {
 	p.subtype = subtype
 	p.filterSubtype = true
+	return p
+}
+
+// HasKeyword checks the creature's effective keyword when it enters.
+func (p creatureEntersPattern) HasKeyword(keyword Keyword) creatureEntersPattern {
+	if p.filterKeyword {
+		p.duplicateKeyword = true
+	}
+	p.keyword, p.filterKeyword = keyword, true
 	return p
 }
 
@@ -115,6 +127,9 @@ func (p creatureEntersPattern) makeTrigger(effect ResolvingEffect) *GenericTrigg
 	if p.filterSubtype {
 		t.AndConditionData(eventSourceHasEntrySubtype{subtype: p.subtype})
 	}
+	if p.filterKeyword {
+		t.AndConditionData(eventSourceHasEntryKeyword{keyword: p.keyword})
+	}
 	return t
 }
 
@@ -132,7 +147,13 @@ func (p creatureEntersPattern) inspectDefinition() definitionNode {
 	if p.filterSubtype {
 		text = strings.Replace(text, "creature", p.subtype+" creature", 1)
 	}
+	if p.filterKeyword {
+		text += " with " + p.keyword.String()
+	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true}
+	if p.filterKeyword && (p.duplicateKeyword || p.keyword < Flying || p.keyword > AttrPrepared) {
+		n.problem = "entry event: supply one valid keyword"
+	}
 	if p.filterSubtype {
 		if p.subtype == "" {
 			n.problem = "entry event: supply a creature subtype"
@@ -159,6 +180,13 @@ func (p creatureEntersPattern) inspectDefinition() definitionNode {
 }
 
 type eventSourceHasEntrySubtype struct{ subtype string }
+
+type eventSourceHasEntryKeyword struct{ keyword Keyword }
+
+func (c eventSourceHasEntryKeyword) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	permanent := reader.FindPermanent(event.SourceID)
+	return permanent != nil && permanent.HasKeyword(c.keyword)
+}
 
 func (c eventSourceHasEntrySubtype) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
 	permanent := reader.FindPermanent(event.SourceID)

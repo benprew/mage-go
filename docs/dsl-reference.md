@@ -1246,6 +1246,13 @@ Triggers on rules events dispatched by the engine:
     ```
   * `AnotherCreatureYouControlDies()`: A different creature controlled by the ability controller dies. The controller and creature type are checked before departure; the dying creature is not a target.
   * `AnotherCreatureYouControlEnters()`: A different creature enters under the ability controller's control. Add `.Nontoken()` to exclude tokens. The check uses the entering permanent after entry effects and continuous effects apply. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield permanent. The entering creature is not a target.
+    Add `.HasKeyword(core.Keyword)` to require an effective keyword when the creature enters. It can combine with `.Nontoken()`, `.OfSubtype(string)`, `.WithPermanent`, and `.WithPower`. Registration rejects a nonkeyword attribute or a repeated keyword filter. The filter is checked at entry; later keyword changes do not undo the trigger.
+    ```go
+    dsl.WhenEvent(
+        dsl.AnotherCreatureYouControlEnters().HasKeyword(core.Flying),
+        dsl.GainLife(dsl.You, dsl.Fixed(1)),
+    )
+    ```
     ```go
     dsl.WhenEvent(
         dsl.AnotherCreatureYouControlEnters().Nontoken(),

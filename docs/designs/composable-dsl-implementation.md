@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Creature-Entry Keyword Filter
+
+`AnotherCreatureYouControlEnters().HasKeyword(core.Keyword)` matches another creature entering under the trigger controller's control when it has the keyword after entry effects and continuous effects apply. It uses the existing battlefield entry event, effective permanent attributes, and pending-trigger path. The method is valid in battlefield `WhenEvent` and `WhenEventModes` declarations and composes with the pattern's nontoken, subtype, and capture options. Registration rejects a nonkeyword attribute and a repeated keyword filter. No production card or legacy export changed.
+
+Archon of Redemption's complete Oracle text was checked against `data/JMP.json`. This filter and the existing entry power capture cover its other-creature-with-flying event requirement. Its self-entry branch, optional life gain, full declaration audit, and production wiring remain open; the Jumpstart inventory and gap record stay open. The next dependency-ready work is a separate E event participant or P payment output after a fresh audit.
+
+Focused tests first failed because `HasKeyword` was absent. Synthetic tests cover opposing control, missing and static granted or removed keywords, source phasing, source and entering-creature departure and return, game clone isolation, inspection, and registration rejection. A public DSL test compiles the reference declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production caller of `AnotherCreatureYouControlEnters`; Archon of Redemption still uses its legacy declaration, so legacy exports remain.
+
 ## Current Slice: Creature-Entry Power Capture
 
 `AnotherCreatureYouControlEnters().WithPower(*NumberBinding)` saves the entering creature's effective power when the entry event is detected. `FromNumber` reads the instance-local value in the trigger body, even after the creature changes, leaves, or returns. It uses the existing event detector, continuous-power query, and trigger frame. The pattern is valid in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects nil, unnamed, duplicate, and unproduced bindings. No production card or legacy export changed.
