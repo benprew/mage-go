@@ -1,5 +1,30 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Unique Highest Life State Condition
+
+`HasUniqueHighestLife() StateCondition` checks the current life totals of all
+players and is true only for one strict leader. It uses the existing pure state
+condition path in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and
+`While`. It has no player-result binding and changes no production card. Tests
+first failed because the constructor was absent. Focused tests cover a tie,
+either controller, state changes, game-clone isolation, inspection, and
+registration in an intervening-if trigger. Ghazbán Ogre's complete text was
+checked against `data/ARN.json`; its winning-player binding, indefinite control
+effect, and production wiring remain separate, so its gap record stays open.
+No production caller uses the new condition. The existing control and discard
+exports remain. Focused `TestUniqueHighestLife` tests, `go test ./pkg/mage/...`
+with `-short -count=1`, the DSL registration and closed-role tests, `go build
+./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff
+--check` pass. The next dependency-ready slice is the cost-discard replacement
+prerequisite or another independently scoped S condition after a fresh audit.
+
+The next paid-discard slice has a verified prerequisite: `DiscardCost` uses
+`PlayerDiscard`, which bypasses the replacement path used by effect discards.
+CR 701.9c also makes discarded-card characteristics undefined when a
+replacement moves the card to a hidden zone without revealing it. A paid-card
+type adapter must wait for an exact transactional cost-discard replacement
+contract. Existing discard costs and callers remain unchanged.
+
 ## Current Slice: Locked Discard Payment Choice
 
 `DiscardCost(n)` now retains the payer's chosen hand-card IDs in the total-cost

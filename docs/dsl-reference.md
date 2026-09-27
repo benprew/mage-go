@@ -242,6 +242,16 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
 * `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
 * `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
+* `HasUniqueHighestLife() StateCondition`: True when one player has more life than every other player. Ties return false. The condition reads all players at each check and does not depend on the ability controller or source. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`.
+
+  ```go
+  ability := dsl.Activate(
+      dsl.Costs(),
+      dsl.Draw(dsl.You, dsl.Fixed(1)),
+      dsl.ActivationIf(dsl.HasUniqueHighestLife()),
+  )
+  _ = ability
+  ```
 * `SourceHasCounters(counter, min)`: The source permanent has at least `min` counters of the specified type.
 * `SourceTappedCondition()` and `SourceUntappedCondition()`: The current battlefield source is tapped or untapped, respectively. Both return false when the source is absent or phased out. They work in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState` on permanent abilities.
 * `PermanentIsTapped(subject PermanentRef)` and `PermanentIsUntapped(subject PermanentRef)`: Check `This` or `AttachedPermanent` at state evaluation. Both return false if the source or selected permanent is absent or phased out. A returned source or attachment is a new object. Use these conditions in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects target and saved bindings in this state context.

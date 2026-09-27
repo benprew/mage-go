@@ -318,6 +318,11 @@ payment; commit checks it before mana or life payment. The reusable cost
 declaration does not retain a transaction's choices. Direct legacy `Pay`
 calls still choose at the time of payment. This contract does not yet produce
 a typed result for the discarded card or snapshot its characteristics.
+Cost discards currently call `PlayerDiscard`, while effect discards use
+`PlayerDiscardByEffect` and its replacement pipeline. A paid-discard
+characteristic binding needs a shared cost-discard replacement contract first.
+If a replacement sends a discarded card to a hidden zone without revealing it,
+its characteristics are undefined for the related payment (CR 701.9c).
 
 `Tap(subject, TapAmountInto(binding))` records an action result in the current
 resolution frame. It writes 1 only when the referenced battlefield incarnation

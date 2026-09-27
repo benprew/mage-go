@@ -26,6 +26,32 @@ type StateContext struct {
 
 type yourTurnCondition struct{}
 
+type uniqueHighestLifeCondition struct{}
+
+// HasUniqueHighestLife checks whether one player alone has the most life.
+func HasUniqueHighestLife() StateCondition { return uniqueHighestLifeCondition{} }
+
+func (uniqueHighestLifeCondition) stateCondition() {}
+func (uniqueHighestLifeCondition) checkState(g GameReader, _ StateContext) bool {
+	players := g.AllPlayers()
+	if len(players) < 2 {
+		return false
+	}
+	best, ties := players[0].Life(), 1
+	for _, player := range players[1:] {
+		switch {
+		case player.Life() > best:
+			best, ties = player.Life(), 1
+		case player.Life() == best:
+			ties++
+		}
+	}
+	return ties == 1
+}
+func (uniqueHighestLifeCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "one player has the highest life total"}
+}
+
 type controllerHandSizeCondition struct{ size int }
 
 // ControllerHandSizeIs checks the ability controller's hand when evaluated.
