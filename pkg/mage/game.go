@@ -1199,8 +1199,44 @@ func (g *Game) gainLifeWithEvent(p Player, amount int) {
 	}
 }
 
+// playersGainLife applies each gain before observers read life totals.
+func (g *Game) playersGainLife(players []Player, amount int) {
+	if amount <= 0 {
+		return
+	}
+	type gain struct {
+		player Player
+		amount int
+	}
+	var gains []gain
+	seen := make(map[uuid.UUID]bool, len(players))
+	for _, player := range players {
+		if player == nil || seen[player.PlayerID()] {
+			continue
+		}
+		seen[player.PlayerID()] = true
+		if actual := g.prepareLifeGain(player, amount); actual > 0 {
+			gains = append(gains, gain{player, actual})
+		}
+	}
+	for _, result := range gains {
+		result.player.GainLife(result.amount)
+	}
+	for _, result := range gains {
+		g.FireEvent(GameEvent{Type: EvtLifeGained, PlayerID: result.player.PlayerID(), Amount: result.amount})
+	}
+}
+
 // applyLifeGain returns the amount gained after replacement processing.
 func (g *Game) applyLifeGain(p Player, amount int) int {
+	gained := g.prepareLifeGain(p, amount)
+	if gained > 0 {
+		p.GainLife(gained)
+	}
+	return gained
+}
+
+func (g *Game) prepareLifeGain(p Player, amount int) int {
 	if amount <= 0 {
 		return 0
 	}
@@ -1211,7 +1247,6 @@ func (g *Game) applyLifeGain(p Player, amount int) int {
 	action := NewLifeGainAction(uuid.Nil, p.PlayerID(), amount)
 	result := g.effects.ApplyReplacements(action, g)
 	if gain, ok := result.(*LifeGainAction); ok && gain.Amount() > 0 {
-		p.GainLife(gain.Amount())
 		return gain.Amount()
 	}
 	return 0

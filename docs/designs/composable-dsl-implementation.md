@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Simultaneous Player-Set Life Gain
+
+`GainLifeEach(PlayerSet, ResolutionValue) ResolvingEffect` uses the existing life modifier and replacement path for each selected player. It captures the set and amount once, prepares all gain outcomes before changing any life total, and sends positive gain events after all life totals change. The sealed player-set role excludes singular player references at compile time. Registration checks the set, amount, and binding scope. Synthetic tests cover final-total event observation, actual replacement outcomes, zero and absent selections, clone isolation, declaration errors, and the public DSL export. The focused test first failed because the constructor was absent. No production card or legacy export changed.
+
+The plan's collection life-gain operation is available in spell, activation, and trigger bodies. Card wiring remains open; the next dependency-ready B slice is player-set discard after its choice and batch contract audit. This slice does not add a life-gain result binding or change singular `GainLife` callers.
+
+Validation: focused engine and DSL tests, `go test ./pkg/mage/... -short -count=1`, registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass.
+
 ## Current Slice: Simultaneous Permanent-Set Counter Placement
 
 `AddCountersEach(PermanentSet, core.CounterType, ResolutionValue) ResolvingEffect` reads one set and amount at resolution. `Game.AddCountersTogether` prepares each live, distinct permanent's counter action through the existing replacement pipeline before placing any counters. It uses game-local mutable permanents for clone isolation. Registration inspects the set and amount and rejects missing inputs, undeclared target groups, and invalid counter types. The sealed set role rejects a singular permanent at compile time. It works in spell, activation, and trigger bodies. It does not provide entry counters, a placement result, or card-specific restrictions.

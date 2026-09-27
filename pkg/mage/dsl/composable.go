@@ -352,8 +352,9 @@ var (
 	IsYourTurn                                 = mage.IsYourTurn
 	HasUniqueHighestLife                       = mage.HasUniqueHighestLife
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
-	GainLife = mage.GainLifeFor
-	LoseLife = mage.LoseLifeFor
+	GainLife     = mage.GainLifeFor
+	GainLifeEach = mage.GainLifeEach
+	LoseLife     = mage.LoseLifeFor
 )
 
 type (

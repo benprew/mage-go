@@ -706,6 +706,7 @@ _ = spell
 ```
 * `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
 * `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.
+* `GainLifeEach(PlayerSet, ResolutionValue) ResolvingEffect`: Gains life for each selected player in one spell, activation, or trigger instruction. It reads the set and amount once. Each gain uses the shared modifier and replacement path. Positive `EvtLifeGained` events are sent after all life totals change. A zero, negative, or fully replaced gain sends no gain event. `EachPlayer` and `OpponentsOf(You)` are supported player sets. For example, `dsl.NewSorcery("Shared gain", "", dsl.WithAbility(dsl.Spell(dsl.GainLifeEach(dsl.EachPlayer, dsl.Fixed(3)))))` compiles.
 * `LoseLife(PlayerRef, ResolutionValue)`: Causes player to lose life.
 * `LoseLifeEach(PlayerSet, ResolutionValue, ...LifeLossResultOption) ResolvingEffect`: Causes each player in the set to lose life. `LifeLostInto(*NumberBinding) LifeLossResultOption` saves the total life lost by this instruction; the life service measures the loss before it dispatches life-loss events. It writes zero for an empty set or a nonpositive amount. Read the result later in the same spell, activation, or trigger body with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated result binding. This is a life-loss result; it does not include damage dealt by another instruction.
 
