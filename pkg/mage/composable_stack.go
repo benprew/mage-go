@@ -12,6 +12,35 @@ type StackObjectRef interface {
 	resolveStackObject(*EffectContext) (*StackObject, bool)
 }
 
+// SpellBinding declares a spell seen by an event.
+type SpellBinding struct{ name string }
+
+// BindSpell declares a spell binding for a cast event.
+func BindSpell(name string) *SpellBinding { return &SpellBinding{name: name} }
+
+type savedSpellRef struct{ binding *SpellBinding }
+
+// FromSpell reads the same stack object seen by the cast event.
+func FromSpell(binding *SpellBinding) StackObjectRef { return savedSpellRef{binding: binding} }
+
+func (savedSpellRef) stackObjectRef() {}
+func (r savedSpellRef) resolveStackObject(ctx *EffectContext) (*StackObject, bool) {
+	id := ctx.Game.resolution.spellBindings[r.binding]
+	obj := ctx.Game.stack.FindByID(id)
+	return obj, obj != nil && !obj.IsAbility && obj.Card != nil
+}
+func (b *SpellBinding) bindingName() string { return b.name }
+func (b *SpellBinding) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "spell-binding", Text: b.name, bindingDeclaration: b}
+	if b.name == "" {
+		n.problem = "supply a binding name"
+	}
+	return n
+}
+func (r savedSpellRef) inspectDefinition() definitionNode {
+	return definitionNode{Role: "stack-object-ref", Text: "cast spell", bindingRead: r.binding, children: []definitionEdge{{"binding", r.binding}}}
+}
+
 // SpellTargetBinding declares one spell target on the stack.
 type SpellTargetBinding struct{ *targetDeclaration }
 

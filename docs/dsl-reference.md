@@ -1386,6 +1386,21 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `BindSpell(name string) *SpellBinding`, `SpellCast().WithSpell(*SpellBinding)`, and `FromSpell(*SpellBinding) StackObjectRef`: Save the cast spell's stack identity in a battlefield `WhenEvent` or `WhenEventModes` trigger. `FromSpell` can be used with `Counter`, `ManaValueOfSpell`, and `ControllerOfSpell` while that exact spell remains on the stack. The reference is not a target. If the spell leaves the stack, it is absent even if the same card is cast again. Trigger copies keep the captured identity. Registration rejects missing, unnamed, repeated, and out-of-scope bindings. For example:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var spell = dsl.BindSpell("cast spell")
+    var _ = dsl.NewArtifact("Cast Watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.SpellCast().WithSpell(spell),
+            dsl.Counter(dsl.FromSpell(spell)))))
+
+    func main() {}
+    ```
   * `ArtifactBecomesTapped().ByOpponent().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match an artifact when it changes from untapped to tapped. `ByOpponent` is optional and limits the event to an artifact controlled by an opponent of the watcher controller at that time. Both captures are optional. `WithArtifact` saves the tapped artifact's battlefield incarnation for `From`; `WithController` saves its controller at the event for `FromPlayer`. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The artifact is not a target. A saved artifact that leaves and returns, or phases out, is absent at resolution. Entering tapped and tapping an already tapped artifact do not match. Registration rejects a repeated `ByOpponent` filter. For example:
     ```go
     package main

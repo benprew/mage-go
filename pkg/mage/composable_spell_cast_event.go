@@ -34,10 +34,22 @@ type spellCastPattern struct {
 	duplicateAnnouncedX         bool
 	filterXInManaCost           bool
 	duplicateXInManaCost        bool
+	spell                       *SpellBinding
+	captureSpell                bool
+	duplicateSpell              bool
 }
 
 // SpellCast matches a spell cast by any player while this source is on the battlefield.
 func SpellCast() spellCastPattern { return spellCastPattern{} }
+
+// WithSpell saves the cast spell's stack identity for this trigger.
+func (p spellCastPattern) WithSpell(binding *SpellBinding) spellCastPattern {
+	if p.captureSpell {
+		p.duplicateSpell = true
+	}
+	p.spell, p.captureSpell = binding, true
+	return p
+}
 
 // ByOpponent checks the caster against the source controller when the spell is cast.
 func (p spellCastPattern) ByOpponent() spellCastPattern {
@@ -219,6 +231,14 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 	if p.duplicateAnnouncedX {
 		n.problem = "spell cast event: supply one announced-X binding"
 	}
+	if p.captureSpell {
+		if p.spell == nil || p.duplicateSpell {
+			n.problem = "spell cast event: supply one spell binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.spell)
+			n.children = append(n.children, definitionEdge{"spell", &eventSpellCapture{binding: p.spell}})
+		}
+	}
 	return n
 }
 
@@ -272,7 +292,7 @@ func (c spellCastHasType) CheckTriggerCond(event *GameEvent, reader GameReader, 
 }
 
 func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
-	if !p.captureCaster && !p.captureManaSpent && !p.captureColorsSpent && !p.captureAnnouncedX {
+	if !p.captureCaster && !p.captureManaSpent && !p.captureColorsSpent && !p.captureAnnouncedX && !p.captureSpell {
 		return effects
 	}
 	captures := make([]ResolvingEffect, 0, 4)
@@ -288,8 +308,29 @@ func (p spellCastPattern) captureEventEffects(event *GameEvent, effects []Effect
 	if p.captureAnnouncedX {
 		captures = append(captures, &eventAmountCapture{binding: p.announcedX, amount: event.CastAnnouncedX})
 	}
+	if p.captureSpell {
+		captures = append(captures, &eventSpellCapture{binding: p.spell, id: event.TargetID})
+	}
 	captures = append(captures, Sequence(effects...))
 	return []Effect{Sequence(captures...)}
+}
+
+type eventSpellCapture struct {
+	binding *SpellBinding
+	id      uuid.UUID
+}
+
+func (*eventSpellCapture) Text() string                 { return "remember cast spell" }
+func (*eventSpellCapture) Properties() EffectProperties { return EffectProperties{} }
+func (e *eventSpellCapture) Apply(ctx *EffectContext) error {
+	if ctx.Game.resolution.spellBindings == nil {
+		ctx.Game.resolution.spellBindings = make(map[*SpellBinding]uuid.UUID)
+	}
+	ctx.Game.resolution.spellBindings[e.binding] = e.id
+	return nil
+}
+func (e *eventSpellCapture) inspectDefinition() definitionNode {
+	return definitionNode{Role: "event-spell-capture", bindingWrite: e.binding, children: []definitionEdge{{"spell", e.binding}}}
 }
 
 type spellCastHasEffectiveColor struct{ color Color }

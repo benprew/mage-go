@@ -19,6 +19,7 @@ type ResolutionState struct {
 	permanentBindings     map[*PermanentBinding]capturedPermanent
 	createdTokenBindings  map[*CreatedTokensBinding][]capturedPermanent
 	cardBindings          map[*CardBinding]capturedCard
+	spellBindings         map[*SpellBinding]uuid.UUID
 	playerBindings        map[*PlayerBinding]uuid.UUID
 	numberBindings        map[*NumberBinding]int
 	damageSourceBindings  map[*DamageSourceBinding]DamageSource
@@ -121,6 +122,7 @@ func (s *ResolutionState) Clear() {
 	s.permanentBindings = nil
 	s.createdTokenBindings = nil
 	s.cardBindings = nil
+	s.spellBindings = nil
 	s.playerBindings = nil
 	s.numberBindings = nil
 	s.damageSourceBindings = nil
@@ -193,6 +195,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		permanentBindings:      maps.Clone(s.permanentBindings),
 		createdTokenBindings:   cloneCreatedTokenBindings(s.createdTokenBindings),
 		cardBindings:           maps.Clone(s.cardBindings),
+		spellBindings:          maps.Clone(s.spellBindings),
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
 		targetSpecs:            append([]Target(nil), s.targetSpecs...),

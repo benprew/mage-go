@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Cast-Event Spell Binding
+
+`BindSpell(name)`, `SpellCast().WithSpell(binding)`, and `FromSpell(binding)` save the cast spell's stack object ID for a battlefield `WhenEvent` or `WhenEventModes` body. The sealed `StackObjectRef` works with existing `Counter`, `ManaValueOfSpell`, and `ControllerOfSpell`. It uses the cast event's stack ID and the instance-local resolution frame. An absent spell is not found by card ID after another cast. Trigger copies keep the binding; game clones copy its frame. This event participant is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. No production card or legacy export changed.
+
+In the Eye of Chaos, Invoke Prejudice, Nether Void, and Presence of the Master need this stack participant according to their complete text in `doc/designs/composable-dsl-migration-legends-gaps.json`; their payment, filtering, and production wiring still need individual audits. Their gap records remain open. A fresh search found no production `WithSpell` calls. The next dependency-ready work is a P payment output or another E event participant after a fresh requirements audit.
+
+Focused tests first failed because the binding API was absent. Synthetic tests cover exact stack identity, same-card recast, absence, trigger copying, source phasing, game clone isolation, inspection, scope validation, and a public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` pass with zero failures. The post-lint diff and `git diff --check` pass.
+
 ## Current Slice: Opponent Artifact Tap Filter
 
 `ArtifactBecomesTapped().ByOpponent()` matches a tap transition only when an opponent controls the artifact at the event. It composes with `WithArtifact` and `WithController` in battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses `EvtTapped`, the event source controller condition, and the pending-trigger capture frame. A repeated filter fails registration. No production card or legacy export changed.

@@ -79,6 +79,7 @@ var (
 type (
 	PlayerRef                 = mage.PlayerRef
 	StackObjectRef            = mage.StackObjectRef
+	SpellBinding              = mage.SpellBinding
 	PlayerSet                 = mage.PlayerSet
 	PermanentSet              = mage.PermanentSet
 	TargetBinding             = mage.TargetBinding
@@ -136,6 +137,8 @@ var (
 	FromCard                         = mage.FromCard
 	ReturnCardToBattlefield          = mage.ReturnCardToBattlefield
 	Counter                          = mage.Counter
+	BindSpell                        = mage.BindSpell
+	FromSpell                        = mage.FromSpell
 	TargetOpponentOnly               = mage.TargetOpponentOnly
 	// WithTargets binds declared target bindings to a spell, activation, or trigger.
 	WithTargets = mage.WithTargets
