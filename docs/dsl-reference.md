@@ -651,6 +651,17 @@ _ = card
 ```
 
 ### Destruction Actions
+`DestroyWithResult(PermanentRef, DestroyResultOption)` and `DestroyWithoutRegenerationWithResult(PermanentRef, DestroyResultOption)` save one when that instruction actually destroys its subject and zero otherwise. `DestroyedThisWayInto(*NumberBinding) DestroyResultOption` supplies the output binding. Use it in a spell, activation, or trigger resolving body. The result is zero for an absent, phased-out, indestructible, or regenerated subject, including a target that became illegal before resolution. The output is instance-local. Registration rejects nil, unnamed, or undominated bindings. The original `Destroy(PermanentRef)` and `DestroyWithoutRegeneration(PermanentRef)` signatures remain available, including as function values. This example compiles:
+
+```go
+destroyed := dsl.BindNumber("destroyed")
+dsl.Sequence(
+    dsl.DestroyWithResult(dsl.This, dsl.DestroyedThisWayInto(destroyed)),
+    dsl.IfPositive(dsl.FromNumber(destroyed),
+        dsl.DealDamageFrom(dsl.This, dsl.You, dsl.Fixed(7))),
+)
+```
+
 `DestroyEach(PermanentSet, ...DestroyEachResultOption)` and `DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption)` can save a result from one simultaneous destruction group. `CreaturesDiedThisWayInto(*NumberBinding) DestroyEachResultOption` saves the number of selected creatures that this instruction moved from the battlefield to a graveyard. Indestructible, regenerated, absent, phased-out, and noncreature objects do not add to the count. The result is zero for an empty group. Use `FromNumber` later in the same spell, activation, or trigger resolution. Registration rejects a nil, unnamed, repeated, or undominated binding. The existing one-argument calls remain valid. This example compiles:
 
 ```go

@@ -41,11 +41,16 @@ func (g *Game) DestroyPermanents(permanents []*Permanent) {
 	g.destroyPermanents(permanents, false)
 }
 
-func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool) int {
+type destructionResult struct {
+	creatureDeaths int
+	destroyed      int
+}
+
+func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool) destructionResult {
 	if len(permanents) == 0 {
-		return 0
+		return destructionResult{}
 	}
-	creatureDeaths := 0
+	var result destructionResult
 	g.withZoneChangeBatch(func() {
 		type candidate struct {
 			permanent *Permanent
@@ -79,13 +84,14 @@ func (g *Game) destroyPermanents(permanents []*Permanent, cannotRegenerate bool)
 		for _, item := range destroy {
 			if current := g.FindPermanent(item.permanent.ID()); current != nil && current.incarnationID == item.permanent.incarnationID {
 				if item.creature {
-					creatureDeaths++
+					result.creatureDeaths++
 				}
 				g.PutPermanentIntoGraveyard(current)
+				result.destroyed++
 			}
 		}
 	})
-	return creatureDeaths
+	return result
 }
 
 // BouncePermanentsToHand returns one group of battlefield objects to their owners' hands.

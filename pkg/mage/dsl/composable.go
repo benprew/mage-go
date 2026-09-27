@@ -82,6 +82,7 @@ type (
 	LifeLossResultOption      = mage.LifeLossResultOption
 	DiscardResultOption       = mage.DiscardResultOption
 	DestroyEachResultOption   = mage.DestroyEachResultOption
+	DestroyResultOption       = mage.DestroyResultOption
 )
 
 var (
@@ -156,8 +157,11 @@ var (
 	// Destroy destroys the targeted or referenced permanent (permits regeneration).
 	Destroy = mage.Destroy
 	// DestroyEach destroys all permanents in a PermanentSet simultaneously.
-	DestroyEach              = mage.DestroyEach
-	CreaturesDiedThisWayInto = mage.CreaturesDiedThisWayInto
+	DestroyEach                          = mage.DestroyEach
+	CreaturesDiedThisWayInto             = mage.CreaturesDiedThisWayInto
+	DestroyedThisWayInto                 = mage.DestroyedThisWayInto
+	DestroyWithResult                    = mage.DestroyWithResult
+	DestroyWithoutRegenerationWithResult = mage.DestroyWithoutRegenerationWithResult
 	// DestroyEachWithoutRegeneration destroys the set without regeneration.
 	DestroyEachWithoutRegeneration = mage.DestroyEachWithoutRegeneration
 	// DestroyWithoutRegeneration destroys the permanent and forbids regeneration.

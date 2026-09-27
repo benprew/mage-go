@@ -97,6 +97,88 @@ func DestroyWithoutRegeneration(subject PermanentRef) ResolvingEffect {
 	return &subjectAction{permanent: subject, effect: DestroyTargetNoRegen(), verb: "destroy without regeneration"}
 }
 
+// DestroyWithResult destroys one permanent and saves its action result.
+func DestroyWithResult(subject PermanentRef, option DestroyResultOption) ResolvingEffect {
+	return newDestroySubjectEffect(subject, false, []DestroyResultOption{option})
+}
+
+// DestroyWithoutRegenerationWithResult destroys one permanent without regeneration and saves its result.
+func DestroyWithoutRegenerationWithResult(subject PermanentRef, option DestroyResultOption) ResolvingEffect {
+	return newDestroySubjectEffect(subject, true, []DestroyResultOption{option})
+}
+
+type destroySubjectEffect struct {
+	subject          PermanentRef
+	cannotRegenerate bool
+	result           *NumberBinding
+	optionCount      int
+	invalidOption    bool
+}
+
+// DestroyResultOption selects a result of one destruction instruction.
+type DestroyResultOption interface {
+	destroyResultOption()
+	applyDestroyResult(*destroySubjectEffect)
+}
+
+type destroyedThisWayOption struct{ binding *NumberBinding }
+
+// DestroyedThisWayInto saves one when the instruction destroys its subject.
+func DestroyedThisWayInto(binding *NumberBinding) DestroyResultOption {
+	return destroyedThisWayOption{binding}
+}
+func (destroyedThisWayOption) destroyResultOption() {}
+func (o destroyedThisWayOption) applyDestroyResult(e *destroySubjectEffect) {
+	e.result = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
+func newDestroySubjectEffect(subject PermanentRef, cannotRegenerate bool, options []DestroyResultOption) ResolvingEffect {
+	e := &destroySubjectEffect{subject: subject, cannotRegenerate: cannotRegenerate}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyDestroyResult(e)
+	}
+	return e
+}
+func (e *destroySubjectEffect) Text() string { return "destroy permanent" }
+func (*destroySubjectEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
+}
+func (e *destroySubjectEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
+	if p, ok := e.subject.resolvePermanent(ctx); ok {
+		result := ctx.Game.destroyPermanents([]*Permanent{p}, e.cannotRegenerate)
+		if e.result != nil {
+			ctx.Game.resolution.numberBindings[e.result] = result.destroyed
+		}
+	}
+	return nil
+}
+func (e *destroySubjectEffect) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	if e.invalidOption {
+		n.problem = "supply a non-nil destruction result binding"
+	} else if e.optionCount > 1 {
+		n.problem = "supply the destruction result binding only once"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
+}
+
 // Exile exiles the selected battlefield incarnation.
 func Exile(subject PermanentRef) ResolvingEffect {
 	return &subjectAction{permanent: subject, effect: &exileTargetEffect{}, verb: "exile"}
@@ -404,7 +486,7 @@ func (e *destroyEachEffect) Apply(ctx *EffectContext) error {
 	}
 	deaths := ctx.Game.destroyPermanents(e.subjects.resolvePermanents(ctx), e.cannotRegenerate)
 	if e.creatureDeaths != nil {
-		ctx.Game.resolution.numberBindings[e.creatureDeaths] = deaths
+		ctx.Game.resolution.numberBindings[e.creatureDeaths] = deaths.creatureDeaths
 	}
 	return nil
 }
