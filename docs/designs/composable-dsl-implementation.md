@@ -1,6 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Rounded Resolution Division
+## Current Slice: Attached Aura Collection
+
+`AttachedAuras(PermanentRef) PermanentSet` selects live, unphased Auras attached to one current battlefield incarnation. `CountPermanents` can read the set in a resolving action or a dynamic static Layer 7c value. It uses the existing attachment links and permanent-reference contract. Registration rejects a missing or undeclared host binding. It adds no attachment action, production card, or legacy export.
+
+Rabid Wombat's complete text was checked against `data/LEG.json` and the Legends inventory and gap record. The selector supplies its dynamic Aura count, including Auras controlled by another player; its production declaration remains unchanged and the gap record remains open for card wiring and full validation. A fresh search found no production `AttachedAuras` caller. The next dependency-ready work is a bounded P payment output or T target-announcement slice after a fresh API and caller audit.
+
+The focused contract first failed because the selector was absent. Synthetic tests cover a static bonus, reattachment, Equipment exclusion, separate Aura control, phasing, host return, clone isolation, registration, and the public DSL declaration. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
+## Previous Slice: Rounded Resolution Division
 
 `DivideRoundDown(ResolutionValue, ResolutionValue)` and `DivideRoundUp(ResolutionValue, ResolutionValue)` supply explicit rounding for typed resolution arithmetic. They reuse the existing arithmetic value, resolution frame, definition inspector, and action consumers; no combat, damage, or payment service changed. A dynamic zero divisor yields zero under CR 107.2, and registration rejects a fixed zero divisor. Signed intermediate values use mathematical floor or ceiling before the consuming action applies its own result rules. Both constructors work in spell, activation, trigger, and supported continuous-modification value contexts. No production card or legacy export changed.
 

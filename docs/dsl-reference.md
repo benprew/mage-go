@@ -124,6 +124,17 @@ Operations accept explicit subjects rather than baking the subject into the verb
 ### Permanent Sets (`PermanentSet`)
 * `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
 * `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
+* `AttachedAuras(host PermanentRef) PermanentSet`: Auras attached to the current battlefield incarnation of `host`. The set changes with attachments, zone changes, and phasing. It excludes Equipment and other non-Aura attachments. Use `CountPermanents` to read its current size in a resolving or static value.
+
+    ```go
+    func syntheticWombat() dsl.Card {
+        bonus := dsl.MultiplyValues(dsl.Fixed(2),
+            dsl.CountPermanents(dsl.AttachedAuras(dsl.This)))
+        return dsl.NewCreature("Synthetic wombat", "", 0, 1,
+            dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.IsCreature),
+                dsl.ModifyPT(dsl.This, bonus, bonus)))))
+    }
+    ```
 * `PermanentsOwnedBy(player PlayerRef, filter PermanentFilter) PermanentSet`: Battlefield permanents owned by the resolved player, regardless of their controllers. Use it in a resolving spell, activation, or trigger body. A zero-value filter selects all permanent types. The set excludes phased-out permanents and reads current battlefield membership when consumed. The player can be `You`, `OwnerOf(...)`, or a declared player target. A missing player yields an empty set.
 
     ```go

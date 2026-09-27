@@ -167,6 +167,7 @@ var (
 	LifeGainedInto                   = mage.LifeGainedInto
 	MatchingPermanents               = mage.MatchingPermanents
 	PermanentsOwnedBy                = mage.PermanentsOwnedBy
+	AttachedAuras                    = mage.AttachedAuras
 	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy
 	ManaValueAtMost                  = mage.ManaValueAtMost
 	WithoutPermanent                 = mage.WithoutPermanent

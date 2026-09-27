@@ -187,6 +187,7 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 `MakeUnblockableUntilEndOfTurn` executor uses the same captured restriction.
 
 ### Dynamic vs. Frozen Membership
+* `AttachedAuras(host)` reads the live attachments of the host's battlefield incarnation. It includes an attachment only when that object is an unphased Aura and its attachment still names that incarnation. It does not test the Aura's controller. A returned host cannot inherit an earlier attachment (CR 303.4b, 303.4e, 400.7). `CountPermanents` reads this set again during each static layer evaluation, so an Aura attachment or departure changes the Layer 7c bonus without a new trigger (CR 611.3a, 613.1g).
 * **Temporary Effects (`Until`)**: Effects modifying characteristics or control capture affected objects **at resolution time** (CR 611.2c). Permanents entering the battlefield later are not included.
 * **Typed Control Change**: `ChangeController(PermanentRef, PlayerRef)` installs only through `Until(EndOfTurn, ...)`. It captures the target incarnation and player at resolution, then applies in Layer 2 timestamp order. Source departure does not end it; a returned target is a new object. The control prohibition and expiry reconciliation use the shared layer service.
 * **Static Effects (`While`, `Static`)**: Static continuous effects continuously recalculate their matching set (CR 611.3a). Permanents entering later receive the boost or ability dynamically.
