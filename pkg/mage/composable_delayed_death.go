@@ -6,35 +6,46 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-type delayedDeathEffect struct {
+type delayedDepartureEffect struct {
 	subject PermanentRef
 	body    ResolvingEffect
+	leaves  bool
 }
 
 // WhenDiesThisTurn watches one battlefield object until this turn ends.
 func WhenDiesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
-	return &delayedDeathEffect{subject: subject, body: body}
+	return &delayedDepartureEffect{subject: subject, body: body}
 }
 
-func (e *delayedDeathEffect) Text() string { return "when that permanent dies this turn" }
+// WhenLeavesThisTurn watches one battlefield object until this turn ends.
+func WhenLeavesThisTurn(subject PermanentRef, body ResolvingEffect) ResolvingEffect {
+	return &delayedDepartureEffect{subject: subject, body: body, leaves: true}
+}
 
-func (e *delayedDeathEffect) Properties() EffectProperties {
+func (e *delayedDepartureEffect) Text() string {
+	if e.leaves {
+		return "when that permanent leaves the battlefield this turn"
+	}
+	return "when that permanent dies this turn"
+}
+
+func (e *delayedDepartureEffect) Properties() EffectProperties {
 	if nilDefinition(e.body) {
 		return EffectProperties{}
 	}
 	return e.body.Properties()
 }
 
-func (e *delayedDeathEffect) inspectDefinition() definitionNode {
+func (e *delayedDepartureEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "delayed-event", Text: e.Text(), isolatedBindings: true,
 		children: []definitionEdge{{"subject", e.subject}, {"body", e.body}}}
 	if nilDefinition(e.subject) || nilDefinition(e.body) {
-		n.problem = "delayed death: supply a subject and body"
+		n.problem = "delayed departure: supply a subject and body"
 	}
 	return n
 }
 
-func (e *delayedDeathEffect) Apply(ctx *EffectContext) error {
+func (e *delayedDepartureEffect) Apply(ctx *EffectContext) error {
 	permanent, ok := e.subject.resolvePermanent(ctx)
 	if !ok || permanent.PhasedOut {
 		return nil
@@ -54,11 +65,10 @@ func (e *delayedDeathEffect) Apply(ctx *EffectContext) error {
 			body.sourceIncarnation = source.incarnationID
 		}
 	}
-	ctx.Game.RegisterDelayedTrigger(&DelayedTrigger{
+	dt := &DelayedTrigger{
 		EventType:         EvtZoneChange,
 		MatchEventID:      permanent.ID(),
 		MatchFromZone:     ZoneBattlefield,
-		MatchToZone:       ZoneGraveyard,
 		SourceID:          ctx.SourceID,
 		Controller:        ctx.Controller,
 		Effects:           []Effect{body},
@@ -66,6 +76,10 @@ func (e *delayedDeathEffect) Apply(ctx *EffectContext) error {
 		sourceIncarnation: body.sourceIncarnation,
 		matchIncarnation:  permanent.incarnationID,
 		Persistent:        true,
-	})
+	}
+	if !e.leaves {
+		dt.MatchToZone = ZoneGraveyard
+	}
+	ctx.Game.RegisterDelayedTrigger(dt)
 	return nil
 }

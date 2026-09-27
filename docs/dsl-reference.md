@@ -1675,6 +1675,22 @@ func watchDeath() dsl.Card {
 }
 ```
 
+`WhenLeavesThisTurn(PermanentRef, ResolvingEffect) ResolvingEffect` watches one current battlefield incarnation in a spell, activation, or trigger body. It fires for that object's battlefield departure to any zone before cleanup. Phasing does not match. The creating source can leave before the watched object. The body keeps the resolving controller and earlier bindings; it does not follow a watched card that leaves and returns. A permanent set or player reference is not a valid subject.
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func watchDeparture() dsl.Card {
+    watched := dsl.TargetPermanent("watched artifact", dsl.IsArtifact)
+    return dsl.NewSorcery("Watch Departure", "{1}{U}",
+        dsl.Spell(dsl.WhenLeavesThisTurn(watched,
+            dsl.GainLife(dsl.You, dsl.Fixed(2))),
+            dsl.WithTargets(watched)))
+}
+```
+
 ### Modal Triggers
 * `WhenEventModes(pattern, modes...)`: Choose a mode when the trigger is placed on stack.
 * `AtModes(stepPattern, modes...)`: Modal turn-step trigger.
