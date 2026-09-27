@@ -611,7 +611,17 @@ effect. Multi-card draw-result consumers remain open.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
-* `DiscardEntireHand(PlayerRef)`: Discards all cards in the player's hand.
+* `DiscardEntireHand(PlayerRef, ...DiscardResultOption) ResolvingEffect`: Discards the player's hand at resolution. `DiscardAmountInto(*NumberBinding) DiscardResultOption` saves the number of cards actually discarded by this instruction. A prevented discard does not count; a discard redirected to another zone does count. An absent player or empty hand saves zero. Read the result later in the same spell, activation, or trigger with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated binding.
+
+```go
+discarded := dsl.BindNumber("discarded")
+body := dsl.Sequence(
+    dsl.DiscardEntireHand(dsl.You, dsl.DiscardAmountInto(discarded)),
+    dsl.Draw(dsl.You, dsl.FromNumber(discarded)),
+)
+spell := dsl.NewSorcery("Test Discard", "", dsl.WithAbility(dsl.Spell(body)))
+_ = spell
+```
 * `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
 * `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.
 * `LoseLife(PlayerRef, ResolutionValue)`: Causes player to lose life.

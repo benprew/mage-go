@@ -1,5 +1,7 @@
 package mage
 
+import "github.com/google/uuid"
+
 // DiscardHandEffect discards the complete hand of selected players.
 type DiscardHandEffect struct {
 	selector PlayerSelector
@@ -31,9 +33,17 @@ func (e *DiscardHandEffect) Apply(ctx *EffectContext) error {
 		if player == nil {
 			continue
 		}
-		for _, card := range append([]Card(nil), player.Hand()...) {
-			ctx.Game.PlayerDiscardByEffect(player, card.ID(), ctx.SourceID)
-		}
+		discardPlayerHand(ctx.Game, player, ctx.SourceID)
 	}
 	return nil
+}
+
+func discardPlayerHand(game *Game, player Player, sourceID uuid.UUID) int {
+	count := 0
+	for _, card := range append([]Card(nil), player.Hand()...) {
+		if _, discarded := game.PlayerDiscardByEffect(player, card.ID(), sourceID); discarded {
+			count++
+		}
+	}
+	return count
 }

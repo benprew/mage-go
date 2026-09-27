@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Entire-Hand Discard Result
+
+`DiscardEntireHand(PlayerRef, ...DiscardResultOption)` now accepts `DiscardAmountInto(*NumberBinding)`. It saves the number of completed discards from one hand-discard instruction in the current resolution frame. The shared hand-discard executor takes the player's hand snapshot and calls the existing effect-discard action for each card. Prevention or an impossible discard does not count; a replacement that sends the card to the library still counts. An absent player or empty hand writes zero. The existing one-argument signature and legacy `DiscardHand` callers remain valid. Registration rejects nil, unnamed, repeated, and undominated result bindings. The sealed option is not a resolving effect.
+
+Borrowed Knowledge's complete text was checked in `data/SOS.json`, the Secrets of Strixhaven inventory and JSON gap record, and CR 609.3 and 701.9. The synthetic second mode discards the controller's hand, then draws the number of cards actually discarded. Its other mode needs a target opponent's hand-size value, and production card wiring remains open; the JSON gap stays blocked. Focused tests first failed because the result option was absent. They now cover completed, replaced, prevented, empty, and absent discards, clone frame isolation, stack copies with different hand counts, declaration validation, and a public DSL declaration. A fresh search found no production `DiscardAmountInto` caller; `DiscardEntireHand` has one production caller and legacy `DiscardHand` has two. The next dependency-ready work is a separate P action result or T target extension after a fresh audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The first lint run found one test variable name issue; it was corrected before the passing run.
+
 ## Current Slice: Simultaneous Life-Loss Result
 
 `LoseLifeEach(PlayerSet, ResolutionValue, ...LifeLossResultOption)` now accepts `LifeLostInto(*NumberBinding)`. The option saves the total life lost by the selected players from that one instruction in its resolution frame. The shared life service measures each total change before it dispatches `EvtLifeLost`; all selected life totals still change before those events. An empty set or nonpositive amount writes zero. Registration rejects nil, unnamed, repeated, and undominated bindings; the sealed option cannot be used as an effect. The existing two-argument call and production callers remain valid.

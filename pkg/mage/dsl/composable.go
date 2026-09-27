@@ -79,6 +79,7 @@ type (
 	GrantedActivationOption   = mage.GrantedActivationOption
 	CostGroup                 = mage.CostGroup
 	LifeLossResultOption      = mage.LifeLossResultOption
+	DiscardResultOption       = mage.DiscardResultOption
 )
 
 var (
@@ -178,6 +179,7 @@ var (
 	// DiscardAtRandom uses a typed player and amount. Ring of Renewal uses You and Fixed(1).
 	DiscardAtRandom   = mage.DiscardAtRandom
 	DiscardEntireHand = mage.DiscardEntireHand
+	DiscardAmountInto = mage.DiscardAmountInto
 	// Mill moves cards from the top of the library to the graveyard.
 	Mill = mage.Mill
 )
