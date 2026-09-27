@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Source-Inclusive Sacrifice Mana Value
+
+`SacrificeMatchingIncludingSourceCostWithManaValue(filter, text, binding) Cost` lets an activated ability or spell additional cost sacrifice a matching permanent, including its source, and save that permanent's mana value in an instance-local number binding. It reuses the locked sacrifice choice and payment transaction already used by `SacrificeMatchingCostWithManaValue`; no new payment executor is added. The source is a candidate only when it satisfies the filter. An absent, phased-out, returned, or otherwise ineligible choice fails payment without a result. Registration rejects missing text or binding, empty binding names, and out-of-scope reads. No production card or legacy export changed.
+
+Homarid Spawning Bed's complete text was checked in `data/FEM.json` and its Fallen Empires inventory and JSON gap record. Its token action already has a typed path, but full card migration remains separate; the gap record stays open. Focused tests first failed because the constructor was absent. Synthetic engine and public DSL tests cover source payment, a nonmatching other creature, mana value after source departure, clone isolation, stale-incarnation rollback, registration, and compile-time binding type rejection. Existing payment tests cover independent pending activations and spell additional costs for the shared result path. The next dependency-ready work is another P payment/action result or a T target extension after a fresh requirements audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Attached-Permanent Tap Payment
 
 `TapAttachedPermanentCost() Cost` pays an activated ability cost by tapping the permanent attached to its battlefield source. The payment transaction locks the source and host incarnations and their attachment during preparation, then checks them before commit. It reuses the shared tap event and total-cost transaction. An absent, phased-out, detached, returned, or already tapped host cannot pay. Phasing in preserves a valid host. This cost does not impose the `{T}` symbol's summoning-sickness restriction or a host-controller restriction. The separate `PermanentIsUntapped(AttachedPermanent)` state condition expresses an explicit activation condition. The API is valid in `Costs` for an activated ability; registration rejects it as a spell additional cost. No production card or legacy export changed.

@@ -1893,6 +1893,18 @@ a power increase after resolution does not end the blocking restriction.
 
 `SacrificeMatchingCostWithManaValue(filter, text, binding) Cost` chooses one matching permanent that the payer controls, except the source, and sacrifices it as an activation cost or spell additional cost. It saves that permanent's mana value at payment time in the `NumberBinding`. Use `FromNumber` in the resolving body. The binding belongs to that spell or ability instance, including copies. It is not available in `IfPaid` or `UnlessPaid` resolution-time costs. The text and binding must be present at registration. A zero-value filter matches all permanents.
 
+`SacrificeMatchingIncludingSourceCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost` has the same payment and result contract but also permits the ability source when it matches the filter. Use it in `Costs` for an activation or as a spell additional cost. The payment transaction locks the chosen battlefield incarnation and reads its mana value immediately before sacrifice. The result is available only after successful payment and remains in that spell or ability instance when the source is gone. For example, this synthetic declaration compiles:
+
+```go
+paid := dsl.BindNumber("paid mana value")
+card := dsl.NewCreature("Synthetic", "{2}{U}", 1, 1,
+    dsl.WithAbility(dsl.Activate(
+        dsl.Costs(dsl.SacrificeMatchingIncludingSourceCostWithManaValue(
+            dsl.And(dsl.IsCreature, dsl.HasColorFilter(dsl.Blue)),
+            "Sacrifice a blue creature", paid)),
+        dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
+```
+
 ```go
 func manaValueOffering() dsl.Card {
     paid := dsl.BindNumber("paid mana value")

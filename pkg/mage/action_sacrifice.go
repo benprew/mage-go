@@ -202,6 +202,12 @@ func SacrificeMatchingCostWithManaValue(filter PermanentFilter, text string, val
 	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidManaValue: value, captureManaValue: true}
 }
 
+// SacrificeMatchingIncludingSourceCostWithManaValue lets the source pay when it matches.
+// The chosen permanent's mana value belongs to this payment instance.
+func SacrificeMatchingIncludingSourceCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, includeSource: true, paidManaValue: value, captureManaValue: true}
+}
+
 // SacrificeMatchingCostWithCard saves the sacrificed card in its new graveyard visit.
 func SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *CardBinding) Cost {
 	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidCard: card, captureCard: true}

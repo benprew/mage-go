@@ -340,6 +340,9 @@ frame. Commit reads the chosen permanent's mana value before sacrifice, then
 writes it to that spell or activation's number binding only after the cost
 succeeds. A returned or phased-out choice does not produce a value. The
 resolution-time `IfPaid` and `UnlessPaid` paths do not carry this output.
+`SacrificeMatchingIncludingSourceCostWithManaValue` uses that same contract
+and admits the ability source only when it matches the filter. Its captured
+value remains available after the source is sacrificed.
 
 `SacrificeCreatureCostWithSubtype` uses the same locked choice and frame. It
 can select the source creature. Commit reads the chosen creature's current
