@@ -164,8 +164,8 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 		}
 	}
 	if p.captureDamageSource {
-		if p.anyRecipient || p.combatOnly || p.opponentOnly || p.damageSource == nil || p.duplicateDamageSource {
-			n.problem = "damage event requires one source binding on DealsDamageToPlayer"
+		if p.combatOnly || p.opponentOnly || p.damageSource == nil || p.duplicateDamageSource {
+			n.problem = "damage event requires one source binding on DealsDamage or DealsDamageToPlayer"
 		} else {
 			n.bindingWrites = append(n.bindingWrites, p.damageSource)
 			n.children = append(n.children, definitionEdge{"source", &eventDamageSourceCapture{binding: p.damageSource}})

@@ -1914,6 +1914,16 @@ Triggers on rules events dispatched by the engine:
                 dsl.GainLife(dsl.You, dsl.FromNumber(dealt))),
         ))
     }
+    ```
+  * `DealsDamage(source, amountBinding).WithSource(sourceBinding *DamageSourceBinding)`: Save the final damage action's source for a pending battlefield `WhenEvent` or `WhenEventModes` trigger. `source` is `This` or `AttachedPermanent`. The capture works for player and permanent recipients after replacement and prevention. `FromDamageSource(sourceBinding)` keeps the source incarnation and last-known characteristics after departure or return. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
+
+    ```go
+    dealt := dsl.BindNumber("dealt")
+    source := dsl.BindDamageSource("source")
+    ability := dsl.WhenEvent(dsl.DealsDamage(dsl.This, dealt).WithSource(source),
+        dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.FromNumber(dealt)))
+    _ = ability
+    ```
   * `DealsDamageToPlayer(source PermanentRef, playerBinding *PlayerBinding).WithAmount(amountBinding)`: `This` or `AttachedPermanent` deals positive damage to a player. The player binding saves the damaged player, not a target. `WithAmount` optionally saves the final damage amount. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. An attached source is checked when damage occurs; queued bindings stay fixed if the attachment or its controller later changes. Registration rejects other source references and invalid bindings.
   * `DealsDamageToPlayer(source, playerBinding).WithSource(sourceBinding *DamageSourceBinding)`: Save the final damage action's source at event detection. `FromDamageSource(sourceBinding)` keeps the source incarnation, controller, and characteristics for the pending trigger after departure or return. Use with `This` or `AttachedPermanent` in battlefield `WhenEvent` or `WhenEventModes`; the saved source is an event participant, not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. Example:
 
