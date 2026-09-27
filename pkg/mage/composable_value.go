@@ -66,6 +66,25 @@ type permanentManaValue struct{ subject PermanentRef }
 
 type playerHandSizeValue struct{ subject PlayerRef }
 
+type playerLifeGainedThisTurnValue struct{ subject PlayerRef }
+
+// LifeGainedThisTurn reads the selected player's actual life gain this turn.
+func LifeGainedThisTurn(subject PlayerRef) ResolutionValue {
+	return playerLifeGainedThisTurnValue{subject: subject}
+}
+
+func (v playerLifeGainedThisTurnValue) Text() string { return "life gained by player this turn" }
+func (v playerLifeGainedThisTurnValue) resolveValue(ctx *EffectContext) int {
+	id, ok := v.subject.resolvePlayer(ctx)
+	if !ok || ctx.Game.GetPlayer(id) == nil {
+		return 0
+	}
+	return ctx.Game.PlayerLifeGainedThisTurn(id)
+}
+func (v playerLifeGainedThisTurnValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
+}
+
 // HandSizeOf reads the selected player's current hand size at resolution.
 func HandSizeOf(subject PlayerRef) ResolutionValue { return playerHandSizeValue{subject} }
 

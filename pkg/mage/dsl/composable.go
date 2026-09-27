@@ -7,6 +7,7 @@ type NumberBinding = mage.NumberBinding
 var (
 	CountPermanents               = mage.CountPermanents
 	HandSizeOf                    = mage.HandSizeOf
+	LifeGainedThisTurn            = mage.LifeGainedThisTurn
 	CreaturesDiedThisTurn         = mage.CreaturesDiedThisTurn
 	CountersOn                    = mage.CountersOn
 	SourceCounters                = mage.SourceCounters

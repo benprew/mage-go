@@ -331,7 +331,7 @@ State conditions must be **pure functions** of game state (no random choices, mu
 * `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
 * `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
 * `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
-* `ControllerGainedLifeThisTurn() StateCondition`: Check whether the ability controller gained a positive amount of life this turn, after life-gain replacement. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the turn tracker, so source departure does not erase the result. A missing controller does not match. The history clears at final cleanup. It does not supply the numeric amount.
+* `ControllerGainedLifeThisTurn() StateCondition`: Check whether the ability controller gained a positive amount of life this turn, after life-gain replacement. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the turn tracker, so source departure does not erase the result. A missing controller does not match. The history clears at final cleanup. Use `LifeGainedThisTurn(You)` for a number in a resolving effect.
 
 ```go
 card := dsl.NewInstant("Life history example", "", dsl.WithAbility(dsl.Spell(
@@ -640,6 +640,14 @@ effect. Multi-card draw-result consumers remain open.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
 * `DiscardEntireHand(PlayerRef, ...DiscardResultOption) ResolvingEffect`: Discards the player's hand at resolution. `DiscardAmountInto(*NumberBinding) DiscardResultOption` saves the number of cards actually discarded by this instruction. A prevented discard does not count; a discard redirected to another zone does count. An absent player or empty hand saves zero. Read the result later in the same spell, activation, or trigger with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated binding.
 * `HandSizeOf(PlayerRef) ResolutionValue`: Reads the selected player's current number of cards in hand when the value is used. It works in resolving spell, activation, and trigger bodies, including after a preceding discard or draw. An absent player supplies zero. A declared player target is rechecked through its target reference; registration rejects a nil, undeclared, or undominated player reference. This value reveals no cards.
+* `LifeGainedThisTurn(PlayerRef) ResolutionValue`: Reads the selected player's total actual positive life gain in the current turn. It works in resolving spell, activation, and trigger bodies and reads the turn tracker when used. Life-gain replacement affects the total; life loss does not subtract from it. A missing player supplies zero. Registration rejects a nil, undeclared, or undominated player reference. The value cannot set target eligibility when targets are announced or serve as a pure static condition.
+
+```go
+card := dsl.NewCreature("Life history example", "", 1, 1,
+    dsl.WithAbility(dsl.At(dsl.YourEndStep,
+        dsl.GainLife(dsl.You, dsl.LifeGainedThisTurn(dsl.You)))))
+_ = card
+```
 
 ```go
 opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())

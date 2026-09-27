@@ -260,6 +260,7 @@ The `RemoveAnyCountersCost` activation cost chooses a count during payment prepa
 * **Lifelink Outcome Routing**:
   * Damage from a permanent with lifelink causes its controller to gain that much life simultaneously with damage execution.
   * Life gained from lifelink routes through the event-aware life gain executor, emitting an `EvtLifeGained` with the actual positive amount after life-gain replacements.
+  * The turn tracker totals positive `EvtLifeGained` amounts per player. `LifeGainedThisTurn(PlayerRef)` reads that total at effect resolution, including gain after replacement. Zero, consumed gain, and life loss do not add to it. Final cleanup clears the total after priority ends.
 * **Damage Source Identity**:
   * A damage instruction captures source characteristics and controller before replacement and prevention. If a permanent leaves and the same card returns, its new incarnation does not change the old instruction's protection, lifelink, or deathtouch result.
   * A resolving ability reads its captured source incarnation from durable departure LKI. A resolving spell uses the stack object's controller. An unrelated source ID does not inherit the resolving source's LKI. Phased-out permanents do not supply a new source capture.
