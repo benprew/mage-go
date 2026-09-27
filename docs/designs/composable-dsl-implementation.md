@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Damage Event Source Incarnation
+
+The shared damage service now records the captured `DamageSource.Incarnation()` in `EvtDamageDealt.SourceIncarnation` for positive damage to a player or permanent. This is the source incarnation after the existing replacement and prevention pipeline, and the event keeps it if the physical card leaves and returns. A spell source has no battlefield incarnation. Full prevention and zero damage emit no damage event. This prerequisite changes no public DSL signature, card, or legacy author export. The existing `ReceivesDamage(This, amount).WithSourceController(controller)` signature and its supported battlefield trigger contexts remain as documented in `docs/dsl-reference.md`.
+
+Belltower Sphinx's complete text in `data/JMP.json` requires the amount and damage source controller; the typed event adapter already supplies those values, but production card wiring remains open. The incarnation field supports future source bindings that need exact source identity. No gap record is closed by this prerequisite. The next dependency-ready work is a typed damage event source binding that captures the source at detection, including its spell and departed-permanent cases.
+
+Contract tests first failed because both damage event paths emitted a nil source incarnation. The tests cover departure and return, player and permanent recipients, full prevention, simultaneous assignments, and a spell source. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff was reviewed and `git diff --check` passes.
+
 ## Current Slice: Exact Multi-Sacrifice Total Power
 
 `SacrificeNMatchingCostWithTotalPower(count, filter, text, total)` records the sum of current power for the exact, locked set of other permanents sacrificed as a direct spell additional cost or activated ability cost. It reuses the prepared-payment transaction, incarnation checks, sacrifice service, and instance-local number frame. The power snapshot is taken before any chosen permanent is sacrificed. A phased or returned choice fails without a result. Inspection and registration reject missing, unnamed, duplicate, or out-of-scope results and invalid count or text. The public DSL keeps `SacrificeNMatchingCost` and all production callers unchanged.

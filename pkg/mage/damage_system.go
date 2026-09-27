@@ -493,6 +493,7 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 	g.FireEvent(GameEvent{
 		Type:               EvtDamageDealt,
 		SourceID:           sourceID,
+		SourceIncarnation:  source.Incarnation(),
 		SourceControllerID: source.Controller(),
 		TargetID:           p.PlayerID(),
 		Amount:             amount,
@@ -683,6 +684,7 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	g.FireEvent(GameEvent{
 		Type:               EvtDamageDealt,
 		SourceID:           sourceID,
+		SourceIncarnation:  a.DamageSource().Incarnation(),
 		SourceControllerID: a.DamageSource().Controller(),
 		TargetID:           perm.ID(),
 		Amount:             amount,

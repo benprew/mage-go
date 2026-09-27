@@ -1958,7 +1958,7 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
-  * `ReceivesDamage(This, amountBinding).WithSourceController(controllerBinding)`: A battlefield source permanent receives positive damage. The pattern saves the final amount and, when requested, the damage source's controller at event time. Use it in `WhenEvent` or `WhenEventModes`. The controller is an event participant, not a target. The amount binding is required; the controller capture is optional. Registration rejects nil, unnamed, and out-of-scope bindings.
+  * `ReceivesDamage(This, amountBinding).WithSourceController(controllerBinding)`: A battlefield source permanent receives positive damage. The pattern saves the final amount and, when requested, the damage source's controller at event time. Use it in `WhenEvent` or `WhenEventModes`. The controller is an event participant, not a target. The amount binding is required; the controller capture is optional. Registration rejects nil, unnamed, and out-of-scope bindings. The shared event also records the damage source's battlefield incarnation. This existing signature does not expose that source as a DSL binding yet.
     ```go
     func damageRecipient() dsl.Card {
         amount := dsl.BindNumber("damage")
