@@ -64,6 +64,27 @@ func ManaValueOf(subject PermanentRef) ResolutionValue { return permanentManaVal
 
 type permanentManaValue struct{ subject PermanentRef }
 
+type playerHandSizeValue struct{ subject PlayerRef }
+
+// HandSizeOf reads the selected player's current hand size at resolution.
+func HandSizeOf(subject PlayerRef) ResolutionValue { return playerHandSizeValue{subject} }
+
+func (v playerHandSizeValue) Text() string { return "hand size of player" }
+func (v playerHandSizeValue) resolveValue(ctx *EffectContext) int {
+	id, ok := v.subject.resolvePlayer(ctx)
+	if !ok {
+		return 0
+	}
+	player := ctx.Game.GetPlayer(id)
+	if player == nil {
+		return 0
+	}
+	return len(player.Hand())
+}
+func (v playerHandSizeValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
+}
+
 func (v permanentManaValue) Text() string { return "mana value of subject" }
 func (v permanentManaValue) resolveValue(ctx *EffectContext) int {
 	p, ok := v.subject.resolvePermanent(ctx)

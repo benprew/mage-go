@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Resolution-Time Player Hand Size
+
+`HandSizeOf(PlayerRef) ResolutionValue` reads the selected player's current number of cards in hand in a spell, activation, or trigger resolving body. It uses the existing sealed player reference, target frame, and player hand service. An absent player supplies zero. The declaration is inspectable; registration rejects nil, undeclared, and undominated references. The value makes no card choice and reveals no hidden information. No production card or legacy export changed.
+
+Borrowed Knowledge's complete text in `data/SOS.json`, its Secrets of Strixhaven inventory and gap record, and CR 400.1, 400.2, and 609.3 supply the acceptance case. A synthetic first mode discards the controller's hand, then draws based on the target opponent's hand at resolution. The second mode can use the existing `DiscardAmountInto` result. Production wiring remains open, so the JSON gap stays blocked. Tests first failed because `HandSizeOf` was undefined. Focused tests cover controller and active-player identity, target selection, changes before evaluation, absent references, clone isolation, inspection, registration, and the public DSL declaration. The next dependency-ready work is a separate P action result or T target extension after a fresh requirements audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `HandSizeOf` caller and two production `DiscardHand` callers; the legacy export remains.
+
 ## Current Slice: Entire-Hand Discard Result
 
 `DiscardEntireHand(PlayerRef, ...DiscardResultOption)` now accepts `DiscardAmountInto(*NumberBinding)`. It saves the number of completed discards from one hand-discard instruction in the current resolution frame. The shared hand-discard executor takes the player's hand snapshot and calls the existing effect-discard action for each card. Prevention or an impossible discard does not count; a replacement that sends the card to the library still counts. An absent player or empty hand writes zero. The existing one-argument signature and legacy `DiscardHand` callers remain valid. Registration rejects nil, unnamed, repeated, and undominated result bindings. The sealed option is not a resolving effect.

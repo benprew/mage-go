@@ -612,6 +612,19 @@ effect. Multi-card draw-result consumers remain open.
 * `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
 * `DiscardEntireHand(PlayerRef, ...DiscardResultOption) ResolvingEffect`: Discards the player's hand at resolution. `DiscardAmountInto(*NumberBinding) DiscardResultOption` saves the number of cards actually discarded by this instruction. A prevented discard does not count; a discard redirected to another zone does count. An absent player or empty hand saves zero. Read the result later in the same spell, activation, or trigger with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated binding.
+* `HandSizeOf(PlayerRef) ResolutionValue`: Reads the selected player's current number of cards in hand when the value is used. It works in resolving spell, activation, and trigger bodies, including after a preceding discard or draw. An absent player supplies zero. A declared player target is rechecked through its target reference; registration rejects a nil, undeclared, or undominated player reference. This value reveals no cards.
+
+```go
+opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
+spell := dsl.NewSorcery("Test Hand Size", "", dsl.WithAbility(dsl.Spell(
+    dsl.Sequence(
+        dsl.DiscardEntireHand(dsl.You),
+        dsl.Draw(dsl.You, dsl.HandSizeOf(opponent)),
+    ),
+    dsl.WithTargets(opponent),
+)))
+_ = spell
+```
 
 ```go
 discarded := dsl.BindNumber("discarded")
