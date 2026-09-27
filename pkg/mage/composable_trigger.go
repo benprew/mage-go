@@ -56,6 +56,9 @@ type creatureEntersPattern struct {
 	filterSubtype    bool
 	permanent        *PermanentBinding
 	capturePermanent bool
+	power            *NumberBinding
+	capturePower     bool
+	duplicatePower   bool
 }
 
 // AnotherCreatureYouControlEnters matches a different creature that enters under your control.
@@ -80,6 +83,16 @@ func (p creatureEntersPattern) OfSubtype(subtype string) creatureEntersPattern {
 func (p creatureEntersPattern) WithPermanent(permanent *PermanentBinding) creatureEntersPattern {
 	p.permanent = permanent
 	p.capturePermanent = true
+	return p
+}
+
+// WithPower saves the creature's power when it enters.
+func (p creatureEntersPattern) WithPower(power *NumberBinding) creatureEntersPattern {
+	if p.capturePower {
+		p.duplicatePower = true
+	}
+	p.power = power
+	p.capturePower = true
 	return p
 }
 
@@ -133,6 +146,15 @@ func (p creatureEntersPattern) inspectDefinition() definitionNode {
 	} else if p.capturePermanent {
 		n.problem = "entry event: supply a permanent binding"
 	}
+	if p.power != nil {
+		n.bindingWrites = append(n.bindingWrites, p.power)
+		n.children = append(n.children, definitionEdge{"power", &eventAmountCapture{binding: p.power}})
+	} else if p.capturePower {
+		n.problem = "entry event: supply a power binding"
+	}
+	if p.duplicatePower {
+		n.problem = "entry event: supply one power binding"
+	}
 	return n
 }
 
@@ -144,14 +166,23 @@ func (c eventSourceHasEntrySubtype) CheckTriggerCond(event *GameEvent, reader Ga
 }
 
 func (p creatureEntersPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.capturePermanent || p.permanent == nil {
+	if !p.capturePermanent && !p.capturePower {
 		return nil
 	}
 	permanent := observer.FindPermanent(event.SourceID)
 	if permanent == nil {
 		return nil
 	}
-	return []Effect{&eventPermanentCapture{binding: p.permanent, value: capturedPermanent{permanent.ID(), permanent.incarnationID}}}
+	var captures []Effect
+	if p.capturePermanent && p.permanent != nil {
+		captures = append(captures, &eventPermanentCapture{binding: p.permanent, value: capturedPermanent{permanent.ID(), permanent.incarnationID}})
+	}
+	if p.capturePower && p.power != nil {
+		if game, ok := observer.(*Game); ok {
+			captures = append(captures, &eventAmountCapture{binding: p.power, amount: permanent.CurrentPower(game)})
+		}
+	}
+	return captures
 }
 
 type creatureDiesPattern struct {

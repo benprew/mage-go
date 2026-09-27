@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Creature-Entry Power Capture
+
+`AnotherCreatureYouControlEnters().WithPower(*NumberBinding)` saves the entering creature's effective power when the entry event is detected. `FromNumber` reads the instance-local value in the trigger body, even after the creature changes, leaves, or returns. It uses the existing event detector, continuous-power query, and trigger frame. The pattern is valid in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects nil, unnamed, duplicate, and unproduced bindings. No production card or legacy export changed.
+
+Archon of Redemption's complete Oracle text was checked in `data/JMP.json`. This slice supplies its event-time power value for another controlled creature, but the card also needs a self-entry branch, flying filter, optional life gain, and production wiring. The Jumpstart inventory and gap record stay open. Focused tests first failed because `WithPower` was absent. Synthetic and public DSL tests cover control filtering, phasing, changed power, departure and return, stack copying, clone isolation, inspection, and declaration validation. Focused tests, the short engine and repository suites, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. A fresh search found no production `WithPower` caller on the entry pattern; existing event and legacy exports remain for unmigrated cards. The next dependency-ready slice is another E event-participant or P payment output after a fresh audit.
+
 ## Current Slice: Creature-Death Power Capture
 
 `CreatureDies().WithPower(*NumberBinding)` and the other creature-death patterns save the dying creature's pre-departure power in each pending trigger. The adapter reuses the existing departure view, event detection, and instance-local number binding. It is valid in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects a nil or unnamed binding, a repeated power capture, a general `PermanentDies()` pattern, and reads without a producer. No engine event storage, production card, or legacy export changed.

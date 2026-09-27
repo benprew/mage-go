@@ -1267,6 +1267,14 @@ Triggers on rules events dispatched by the engine:
         dsl.AddCounters(dsl.From(entered), core.P1P1, dsl.Fixed(1)),
     )
     ```
+    Add `.WithPower(*NumberBinding)` to save the creature's effective power when it enters. Read it with `FromNumber` in the trigger body. The value stays fixed if the creature changes power, leaves, or returns. This binding is local to each trigger and is not a target. It works with `WhenEvent` and `WhenEventModes` on a battlefield permanent and can combine with `.WithPermanent` using separate bindings.
+    ```go
+    power := dsl.BindNumber("entering creature power")
+    dsl.WhenEvent(
+        dsl.AnotherCreatureYouControlEnters().WithPower(power),
+        dsl.GainLife(dsl.You, dsl.FromNumber(power)),
+    )
+    ```
   * Creature-death patterns support `.Nontoken()`: Match only a creature that was not a token before it died. For example, `dsl.WhenEvent(dsl.AnotherCreatureDies().Nontoken(), dsl.GainLife(dsl.You, dsl.Fixed(1)))` is valid on a battlefield permanent. This does not choose or target the dying creature.
   * Creature-death patterns support `.WithoutColor(core.Color)`: Match a creature that did not have the specified color immediately before it died. Supply one of the five Magic colors. This filter can combine with `.Nontoken()` and the existing event bindings. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent.
     ```go
