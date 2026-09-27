@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Player Life-Total Resolution Value
+
+`LifeTotalOf(PlayerRef) ResolutionValue` reads the referenced player's current life total when a resolving instruction uses it. It works in spell, activation, and trigger bodies through the existing player reference and value inspection contracts. An absent reference supplies zero; a declared player target uses the existing resolution-time legality check. Registration rejects nil, undeclared, and undominated references. The typed value does not supply a pure state comparison, life-total exchange, or target-announcement restriction. No production card or legacy author export changed.
+
+The family S inventory names life-total values and comparisons. Ghazbán Ogre's complete text in `data/ARN.json` confirms that it still needs a pure comparison and indefinite control change; this resolution value does not close that gap. Synthetic tests initially failed because the constructor was absent, then covered instruction order, player selection, absence, target declaration and scope, game-clone isolation, inspection, and public DSL authoring. The existing life modifier and target services supply the behavior; no new life or replacement engine contract was needed. No gap record is closed. Next dependency-ready work is a separate S state comparison or P payment output, after its requirement audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Source Damage to Opponent This Turn
 
 `SourceDamagedOpponentThisTurnCondition() StateCondition` uses a new turn-scoped player-damage record in the shared damage executor. Each positive final player-damage action records its source battlefield incarnation and actual player recipient. The condition checks the current permanent incarnation and the ability controller's opponent when evaluated. It works in permanent `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While` contexts. An absent, phased-out, or returned source does not match. Final cleanup clears the record, and game clones own independent copies. Existing game-long and legacy card-ID queries remain available; no production card or legacy export changed.

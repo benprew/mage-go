@@ -22,6 +22,7 @@ var (
 var (
 	CountPermanents               = mage.CountPermanents
 	HandSizeOf                    = mage.HandSizeOf
+	LifeTotalOf                   = mage.LifeTotalOf
 	LifeGainedThisTurn            = mage.LifeGainedThisTurn
 	ColorsSpentToCastThisSpell    = mage.ColorsSpentToCastThisSpell
 	CreaturesDiedThisTurn         = mage.CreaturesDiedThisTurn

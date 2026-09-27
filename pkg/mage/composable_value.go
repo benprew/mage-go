@@ -79,7 +79,28 @@ type permanentManaValue struct{ subject PermanentRef }
 
 type playerHandSizeValue struct{ subject PlayerRef }
 
+type playerLifeTotalValue struct{ subject PlayerRef }
+
 type playerLifeGainedThisTurnValue struct{ subject PlayerRef }
+
+// LifeTotalOf reads the selected player's current life total at resolution.
+func LifeTotalOf(subject PlayerRef) ResolutionValue { return playerLifeTotalValue{subject} }
+
+func (v playerLifeTotalValue) Text() string { return "life total of player" }
+func (v playerLifeTotalValue) resolveValue(ctx *EffectContext) int {
+	id, ok := v.subject.resolvePlayer(ctx)
+	if !ok {
+		return 0
+	}
+	player := ctx.Game.GetPlayer(id)
+	if player == nil {
+		return 0
+	}
+	return player.Life()
+}
+func (v playerLifeTotalValue) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolution-value", Text: v.Text(), children: []definitionEdge{{"subject", v.subject}}}
+}
 
 // LifeGainedThisTurn reads the selected player's actual life gain this turn.
 func LifeGainedThisTurn(subject PlayerRef) ResolutionValue {

@@ -696,6 +696,17 @@ _ = card
 ```
 
 * `HandSizeOf(PlayerRef) ResolutionValue`: Reads the selected player's current number of cards in hand when the value is used. It works in resolving spell, activation, and trigger bodies, including after a preceding discard or draw. An absent player supplies zero. A declared player target is rechecked through its target reference; registration rejects a nil, undeclared, or undominated player reference. This value reveals no cards.
+* `LifeTotalOf(PlayerRef) ResolutionValue`: Reads the selected player's current life total when the value is used in a resolving spell, activation, or trigger body. It reads the value after preceding instructions, including life gain, life loss, and damage. An absent player supplies zero. Target and saved-player references use their existing legality and scope rules. This is a resolution value; it does not define a static life-total comparison or an announcement-time target restriction. This synthetic declaration compiles:
+
+```go
+opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
+card := dsl.NewSorcery("Life total example", "", dsl.WithAbility(dsl.Spell(
+    dsl.Sequence(dsl.LoseLife(opponent, dsl.Fixed(3)),
+        dsl.GainLife(dsl.You, dsl.LifeTotalOf(opponent))),
+    dsl.WithTargets(opponent),
+)))
+_ = card
+```
 * `LifeGainedThisTurn(PlayerRef) ResolutionValue`: Reads the selected player's total actual positive life gain in the current turn. It works in resolving spell, activation, and trigger bodies and reads the turn tracker when used. Life-gain replacement affects the total; life loss does not subtract from it. A missing player supplies zero. Registration rejects a nil, undeclared, or undominated player reference. This resolution value cannot set target eligibility when targets are announced or serve as a pure static condition; use `ControllerLifeGainedThisTurn()` as a `TargetNumber` for the supported target restriction.
 
 ```go
