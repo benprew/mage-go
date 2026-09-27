@@ -4,7 +4,13 @@ import "github.com/benprew/mage-go/pkg/mage/core"
 
 type playerDrawEventPattern struct {
 	player       *PlayerBinding
+	anyPlayer    bool
 	opponentOnly bool
+}
+
+// PlayerDrawsCard saves the player who completes a card draw.
+func PlayerDrawsCard(player *PlayerBinding) EventPattern {
+	return playerDrawEventPattern{player: player, anyPlayer: true}
 }
 
 // ControllerDrawsCard matches a card drawn by the source controller.
@@ -20,6 +26,9 @@ func OpponentDrawsCard(player *PlayerBinding) EventPattern {
 
 func (playerDrawEventPattern) eventPattern() {}
 func (p playerDrawEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
+	if p.anyPlayer {
+		return NewTriggered(core.EvtCardDrawn, false, effect)
+	}
 	condition := TriggerConditionData(EventPlayerIsController{})
 	if p.opponentOnly {
 		condition = EventPlayerIsOpponent{}
@@ -28,7 +37,9 @@ func (p playerDrawEventPattern) makeTrigger(effect ResolvingEffect) *GenericTrig
 }
 func (p playerDrawEventPattern) inspectDefinition() definitionNode {
 	text := "you draw a card"
-	if p.opponentOnly {
+	if p.anyPlayer {
+		text = "a player draws a card"
+	} else if p.opponentOnly {
 		text = "an opponent draws a card"
 	}
 	return definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true,

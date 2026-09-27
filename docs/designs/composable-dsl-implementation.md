@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Any-Player Draw Event
+
+`PlayerDrawsCard(*PlayerBinding) EventPattern` matches each completed card draw by either player and saves the drawer in that trigger's instance-local frame. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. It reuses `EvtCardDrawn`, the existing draw replacement path, and pending-trigger capture. A replaced draw or an empty-library attempt creates no matching event. Registration rejects nil, unnamed, unbound, and out-of-scope bindings. No payment, draw-result binding, or target declaration is added.
+
+The E inventory requests a generalized player-draw pattern. The complete Phyrexian Tyranny text in `data/PLS.json` confirms the any-player event requirement, but its optional mana payment and production wiring remain separate. Synthetic tests first failed because the constructor was absent. They now cover both drawers, repeated and failed draws, replacement, phasing, event-time control, source leave and return, stack copying, game cloning, inspection, registration, and a public DSL declaration. A fresh production search found no `PlayerDrawsCard` caller; existing controller/opponent patterns and direct draw-event callers remain. No JSON card gap record closes from adapter availability alone. The next dependency-ready slice is another E event participant or P payment output after a fresh audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Player Discard Event
 
 `PlayerDiscardsCard(*PlayerBinding) EventPattern` matches each completed card discard by either player and saves the discarding player in the pending trigger. It works in battlefield `WhenEvent` and `WhenEventModes` declarations. The existing `OpponentDiscardsCard` keeps its event-time controller filter. Both use the shared `EvtDiscard` dispatch and instance-local event-player capture; no new discard or replacement service was needed. Registration rejects nil, unnamed, unbound, and out-of-scope bindings. There is no target declaration, cost capture, or discard-result output in this slice.

@@ -1894,6 +1894,16 @@ Triggers on rules events dispatched by the engine:
     }
     ```
   * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
+  * `PlayerDrawsCard(playerBinding) EventPattern`: Either player completes one card draw. The pattern saves that player when the draw occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source, and read the player with `FromPlayer`. Each completed card draw matches once. A replaced draw or an empty-library attempt does not match. The player binding is not a target.
+    ```go
+    func anyDrawWatcher() dsl.Card {
+        drawer := dsl.BindPlayer("drawer")
+        return dsl.NewEnchantment("Any Draw Watcher", "{1}{B}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.PlayerDrawsCard(drawer),
+                dsl.LoseLife(dsl.FromPlayer(drawer), dsl.Fixed(2))),
+        ))
+    }
+    ```
   * `SpellCast().WithXInManaCost()`: Match a cast spell whose mana cost contains an `{X}` symbol. The announced value can be zero. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield source. The check reads the spell that caused the cast event, before that spell leaves the stack. Copies placed on the stack without being cast do not cause a cast event. Registration rejects a second use of the filter.
 
     ```go
