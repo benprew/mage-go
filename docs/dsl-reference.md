@@ -564,6 +564,20 @@ func eruption() dsl.Card {
 }
 ```
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
+* `ExileEach(PermanentSet) ResolvingEffect`: Exiles the selected battlefield incarnations in one instruction. Use it in `Spell`, `Activate`, or a triggered resolving body. The set is read once at resolution. Absent, phased-out, duplicate, and returned incarnations do not move. Tokens leave but do not remain in exile. Leave events are checked after all selected objects leave.
+
+```go
+package example
+
+import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func exileTwoArtifacts() dsl.Card {
+    artifacts := dsl.TargetPermanents("artifacts", 2, 2, dsl.IsArtifact)
+    return dsl.NewSorcery("Synthetic exile", "{1}{W}{W}", dsl.WithAbility(dsl.Spell(
+        dsl.ExileEach(artifacts), dsl.WithTargets(artifacts),
+    )))
+}
+```
 * `Tap(PermanentRef, ...TapResultOption) ResolvingEffect`: Taps the referenced battlefield incarnation. `TapAmountInto(*NumberBinding) TapResultOption` saves 1 when it changes from untapped to tapped, or 0 when it is already tapped, absent, phased out, or a returned incarnation. The option may occur once. The result is local to the resolving spell or ability. Existing `Tap(subject)` calls remain valid.
 * `TapAttachedPermanentCost() Cost`: Pays by tapping the untapped permanent attached to the battlefield ability source. Use it in `Costs` for an activated ability. Payment preparation locks both battlefield incarnations and their attachment; commit fails if either object leaves, phases out, changes attachment, or the host becomes tapped. The cost does not require control of the host and does not apply the creature summoning-sickness rule for the `{T}` symbol. A spell additional cost cannot use this battlefield-source operation. `PermanentIsUntapped(AttachedPermanent)` supplies a separate activation condition when the text requires one.
 

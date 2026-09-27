@@ -1309,9 +1309,12 @@ func (g *Game) ExilePermanent(perm *Permanent) {
 	controller := perm.ControllerID()
 	permID := perm.ID()
 	card := perm.Card
+	isToken := perm.IsToken
 	g.RemoveFromBattlefield(perm)
 	selfAbilities := g.LKIAbilities(permID)
-	g.zones.ExileCard(card, uuid.Nil)
+	if !isToken {
+		g.zones.ExileCard(card, uuid.Nil)
+	}
 	zoneEvt := GameEvent{
 		Type:     EvtZoneChange,
 		SourceID: permID,

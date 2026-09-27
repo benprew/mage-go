@@ -1885,6 +1885,16 @@ Focused damage tests and `go test ./pkg/mage -short -count=1` pass. The required
 
 The architectural specification is in [composable-dsl-design.md](composable-dsl-design.md), and authoring reference is in [dsl-reference.md](../dsl-reference.md).
 
+## Current Run: Simultaneous Permanent Exile
+
+`ExileEach(PermanentSet) ResolvingEffect` is available in spell, activation, and triggered resolving bodies. It selects the set once and uses `Game.ExilePermanents`, which shares the zone-change batch with set return and destruction. Each present, unphased battlefield incarnation moves at most once. Leave and state-trigger checks see the completed group. The shared `ExilePermanent` path now lets tokens leave without retaining them in exile. No production card or legacy author export changed.
+
+Dust to Dust's complete Oracle text in `data/DRK.json` is "Exile two target artifacts." The typed declaration can use one exact-two artifact target group and `ExileEach`; its production card remains unchanged. The Dark inventory still requires card wiring. The test-only contract first failed because `ExileEach` was absent; a second test first failed because tokens stayed in exile. Tests cover a state trigger that must not observe an intermediate battlefield, duplicate and stale objects, phasing, target leave and return, clone isolation, source leave triggers, token removal, and registration rejection. The public example is in `docs/dsl-reference.md`.
+
+This slice uses the existing exile operation and zone-change batch. General zone-change replacement ordering is still an engine gap; this adapter does not claim that contract or linked exile/return. Other B and Z work and all production card migrations remain open. A fresh search found no production `ExileEach` caller, six card files with `Exile`, and the one `ExileTargetStep` caller. Those exports remain. The next dependency-ready work is a separate zone-change replacement prerequisite or a P payment output after a fresh audit. The historical recipient-history blocker below is stale: incarnation-keyed recipient and source histories and their clone, phasing, and cleanup tests now exist. No JSON gap record was closed by this engine slice.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The standalone reference example builds. The post-lint diff was reviewed.
+
 ## Outstanding Card Migrations
 
 - [ ] **Icatian Moneychanger**: Audit entry damage source identity. (Sacrifice activation with credit counter capture is complete).
@@ -1910,7 +1920,7 @@ The architectural specification is in [composable-dsl-design.md](composable-dsl-
 - [ ] Audit explicit unblocking and historical sole-blocker tracking for False Orders and Ydwen Efreet before retiring their legacy removal helpers.
 
 ### Zone LKI Retention
-- [ ] Audit damage recipient incarnation and damage-condition histories before claiming exact damage-condition adapters. The legacy card-ID cache still resets on final cleanup and can be replaced by a later departure of the same card. Damage source instructions now retain incarnation LKI separately; typed counter and attachment histories have their own durable records.
+- [x] Audit damage recipient incarnation and damage-condition histories. Incarnation-keyed game and turn histories retain old visits across leave and return, phasing, and cloning. Legacy card-ID queries remain for compatibility and reset at final cleanup. Damage source instructions retain incarnation LKI separately; typed counter and attachment histories have their own durable records.
 
 ### Mana-Cost Representation
 - [ ] Support monocolored hybrid symbols in the shared parser and payment path. `ParseManaCost("{2/W}").CMC()` currently returns 0 instead of 2. The typed mana-value adapter reuses this service; it does not add symbol support.

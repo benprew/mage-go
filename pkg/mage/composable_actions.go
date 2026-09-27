@@ -184,6 +184,24 @@ func Exile(subject PermanentRef) ResolvingEffect {
 	return &subjectAction{permanent: subject, effect: &exileTargetEffect{}, verb: "exile"}
 }
 
+type exileEachEffect struct{ subjects PermanentSet }
+
+// ExileEach moves the selected permanents to exile in one instruction.
+func ExileEach(subjects PermanentSet) ResolvingEffect {
+	return &exileEachEffect{subjects: subjects}
+}
+func (*exileEachEffect) Text() string { return "exile each permanent" }
+func (*exileEachEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
+}
+func (e *exileEachEffect) Apply(ctx *EffectContext) error {
+	ctx.Game.ExilePermanents(e.subjects.resolvePermanents(ctx))
+	return nil
+}
+func (e *exileEachEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "exile-each", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
+}
+
 // ReturnToHand returns the selected permanent to its owner's hand.
 func ReturnToHand(subject PermanentRef) ResolvingEffect {
 	return &subjectAction{permanent: subject, effect: ReturnToHandTarget(), verb: "return to owner's hand"}

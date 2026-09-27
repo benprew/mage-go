@@ -201,7 +201,8 @@ var (
 	// DestroyWithoutRegeneration destroys the permanent and forbids regeneration.
 	DestroyWithoutRegeneration = mage.DestroyWithoutRegeneration
 	// Exile moves the referenced permanent to exile.
-	Exile = mage.Exile
+	Exile     = mage.Exile
+	ExileEach = mage.ExileEach
 	// ReturnToHand bounces the referenced permanent to its owner's hand.
 	ReturnToHand     = mage.ReturnToHand
 	ReturnEachToHand = mage.ReturnEachToHand
