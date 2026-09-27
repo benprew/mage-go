@@ -6,17 +6,22 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// DiscardAction represents a card being discarded because of an effect.
+// DiscardAction represents a proposed discard.
 type DiscardAction struct {
 	source      uuid.UUID
 	playerID    uuid.UUID
 	cardID      uuid.UUID
 	destination Zone
+	effectCause bool
 }
 
 // NewDiscardAction creates an effect-caused discard whose normal destination
 // is its owner's graveyard.
 func NewDiscardAction(source, playerID, cardID uuid.UUID) *DiscardAction {
+	return &DiscardAction{source: source, playerID: playerID, cardID: cardID, destination: ZoneGraveyard, effectCause: true}
+}
+
+func newCostDiscardAction(source, playerID, cardID uuid.UUID) *DiscardAction {
 	return &DiscardAction{source: source, playerID: playerID, cardID: cardID, destination: ZoneGraveyard}
 }
 
@@ -24,6 +29,7 @@ func (a *DiscardAction) ActionSource() uuid.UUID { return a.source }
 func (a *DiscardAction) PlayerID() uuid.UUID     { return a.playerID }
 func (a *DiscardAction) CardID() uuid.UUID       { return a.cardID }
 func (a *DiscardAction) Destination() Zone       { return a.destination }
+func (a *DiscardAction) CausedByEffect() bool    { return a.effectCause }
 
 func (a *DiscardAction) withDestination(destination Zone) *DiscardAction {
 	cp := *a
@@ -38,7 +44,7 @@ type discardToLibraryReplacement struct {
 
 func (r *discardToLibraryReplacement) Matches(action Action, _ GameReader) bool {
 	discard, ok := action.(*DiscardAction)
-	return ok && discard.PlayerID() == r.playerID && discard.Destination() == ZoneGraveyard
+	return ok && discard.CausedByEffect() && discard.PlayerID() == r.playerID && discard.Destination() == ZoneGraveyard
 }
 
 func (r *discardToLibraryReplacement) Replace(action Action, g *Game) Action {

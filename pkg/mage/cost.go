@@ -448,15 +448,23 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	}
 	if c.locked {
 		for _, id := range c.selected {
-			if _, ok := g.PlayerDiscard(p, id); !ok {
+			if _, ok := g.PlayerDiscardByCost(p, id, sourceID); !ok {
 				return fmt.Errorf("cannot pay chosen discard")
 			}
 		}
 		return nil
 	}
 	chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
+	if len(chosen) != c.amount {
+		return fmt.Errorf("cannot pay chosen discard")
+	}
 	for _, card := range chosen {
-		g.PlayerDiscard(p, card.ID())
+		if card == nil {
+			return fmt.Errorf("cannot pay chosen discard")
+		}
+		if _, ok := g.PlayerDiscardByCost(p, card.ID(), sourceID); !ok {
+			return fmt.Errorf("cannot pay chosen discard")
+		}
 	}
 	return nil
 }

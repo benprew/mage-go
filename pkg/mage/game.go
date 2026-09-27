@@ -1087,12 +1087,22 @@ func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
 }
 
 // PlayerDiscardByEffect discards a card through the replacement pipeline.
-// Costs and turn-based discards must continue to use PlayerDiscard.
+// Use PlayerDiscardByCost for cost discards.
 func (g *Game) PlayerDiscardByEffect(p Player, cardID, sourceID uuid.UUID) (Card, bool) {
 	if p == nil {
 		return nil, false
 	}
-	action := NewDiscardAction(sourceID, p.PlayerID(), cardID)
+	return g.playerDiscardAction(NewDiscardAction(sourceID, p.PlayerID(), cardID))
+}
+
+func (g *Game) PlayerDiscardByCost(p Player, cardID, sourceID uuid.UUID) (Card, bool) {
+	if p == nil {
+		return nil, false
+	}
+	return g.playerDiscardAction(newCostDiscardAction(sourceID, p.PlayerID(), cardID))
+}
+
+func (g *Game) playerDiscardAction(action *DiscardAction) (Card, bool) {
 	result := g.effects.ApplyReplacements(action, g)
 	if result == nil {
 		return nil, false

@@ -1368,7 +1368,7 @@ Triggers at step transitions:
     ```
   * `RemoveCountersCost(counter, count)`: Remove counters from source.
   * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
-  * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice is locked during total-cost validation and reused at commit. It does not expose the discarded cards to the resolving body.
+  * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice is locked during total-cost validation and reused at commit. Each chosen discard uses the shared replacement action and emits a discard event only when a card is discarded. A replacement that applies only when an effect causes a discard does not apply to this cost. The cost does not expose the discarded cards to the resolving body. General paid-card characteristic bindings remain unavailable.
   * `DiscardRandomCost(count)`: Discard cards at random.
 
 ```go

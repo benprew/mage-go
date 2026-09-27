@@ -1,5 +1,32 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Chosen Cost-Discard Replacement
+
+`DiscardCost(n)` now submits each chosen card as a cost-origin `DiscardAction`
+through the shared replacement pipeline during isolated payment validation and
+live commit. A general discard replacement can change the destination; the
+completed discard emits one event. The effect-only library replacement retains
+its effect-only condition. The locked choice, source ID, and existing
+transaction path remain in use. `PlayerDiscardByCost(Player, cardID, sourceID)`
+is the engine entry point; the author signature stays `DiscardCost(n int)` in
+activation costs and spell additional costs. No production card changed.
+
+The contract tests first failed because cost discard bypassed the replacement
+action. Focused tests cover replacement destination, replacement recheck and
+prevention during isolated validation, other-cost rollback at validation,
+effect-only exclusion, discard event count, and clone isolation. Land's Edge's
+complete text was checked in `data/LEG.json`; paid-card type capture and its
+player-or-planeswalker target still need separate slices. The Legends gap
+record and all production wiring remain open. Existing legacy exports remain.
+Nine production `DiscardCost` call sites remain. Random and name-constrained
+discard costs still use their existing paths. The
+next dependency-ready slice is a paid-discard characteristic binding, with
+CR 701.9c hidden-zone behavior and instance-local payment capture.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration
+and closed-role tests, `go build ./...`, `go vet ./...`, `make test`, `make lint`
+(zero issues), and `git diff --check` pass.
+
 ## Current Slice: Unique Highest Life State Condition
 
 `HasUniqueHighestLife() StateCondition` checks the current life totals of all
