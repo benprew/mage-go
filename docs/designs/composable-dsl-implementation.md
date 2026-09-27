@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Typed Attachment Move
+
+`MayAttach(PermanentRef, PermanentRef)` is a resolving action for spells, activations, and triggers. It resolves two current battlefield incarnations, offers the resolving controller a choice only for a legal move, and sends an accepted move through `Game.Attach`. The shared legality check, timestamp order, continuous effects, and attach event remain in one engine path. An absent, phased-out, returned, illegal, or same-host pair causes no choice or move. Registration checks both sealed permanent references and binding dominance. No production card or legacy export changed.
+
+Ajani's Chosen's complete text was checked in `data/JMP.json`. A synthetic enchantment-entry trigger combines the existing event capture, token result, resolution-time Aura branch, and this action. Its production declaration and full card audit remain for a separate migration. The Jumpstart inventory and JSON gap record stay open. A fresh caller search finds 35 direct `Game.Attach` uses in production cards and no production `AttachToTarget` call; existing exports remain. The focused tests first failed because `MayAttach` did not exist. They now cover accept and decline, controller choice, legality, incarnation and phasing, inspection, registration, and clone isolation. The next dependency-ready work is a separate P result or B simultaneous collection action after a fresh inventory audit.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass.
+
 ## Current Slice: Attachment Move Timestamp
 
 `Game.Attach(sourceID, targetID)` now moves an attachment's printed static effects to the current end of timestamp order after a successful move. It keeps their relative order. This uses the existing effect manager and attachment legality checks; the public engine signature does not change. Failed and same-host attempts leave the order unchanged. Game clones have independent effect order. The focused synthetic test first failed because a reattached Aura still applied before an earlier Aura. It covers opposing ability grants and removals, same-host and illegal moves, phasing, and clone isolation. No typed author action or production card changed.

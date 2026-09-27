@@ -2,6 +2,8 @@
 
 This document specifies the internal architecture, subsystem invariants, and Magic: The Gathering Comprehensive Rules (CR) execution contracts for `mage-go`.
 
+`MayAttach` resolves both permanent references before it offers a choice. It offers no choice for an absent, phased-out, same-host, or illegal pair. If the controller accepts, `Game.Attach` checks legality again and performs the move. The shared move path updates the attachment timestamp, continuous effects, and attach event (CR 303.4j, 701.3, 613.7e). The action does not follow a permanent that leaves and returns.
+
 ---
 
 ## Table of Contents

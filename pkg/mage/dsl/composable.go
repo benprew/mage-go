@@ -89,6 +89,7 @@ var (
 	TargetOpponentControls           = mage.TargetOpponentControls
 	TargetChosenByOpponent           = mage.TargetChosenByOpponent
 	MayTapOrUntap                    = mage.MayTapOrUntap
+	MayAttach                        = mage.MayAttach
 	PreventCombatDamageToAndBy       = mage.PreventCombatDamageToAndBy
 	TargetPlayer                     = mage.DeclarePlayerTarget
 	TargetSpell                      = mage.DeclareSpellTarget

@@ -1590,23 +1590,7 @@ func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
 func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	src := g.MutablePermanent(sourceID)
 	target := g.MutablePermanent(targetID)
-	if src == nil || target == nil {
-		return
-	}
-	if src.AttachedTo == targetID && src.attachedIncarnation == target.incarnationID {
-		return
-	}
-	if src.HasSubType("Aura") {
-		if src.HasType(TypeCreature) || src.ID() == target.ID() ||
-			target.HasAttr(AttrCantBeEnchanted) || target.HasProtectionFromInGame(src.Card, g) ||
-			!auraHostIsLegal(src.Card, target, g) {
-			return
-		}
-	} else if src.HasSubType("Equipment") {
-		if src.HasType(TypeCreature) || !target.HasType(TypeCreature) || src.ID() == target.ID() {
-			return
-		}
-	} else if !src.HasSubType("Fortification") || !target.HasType(TypeLand) || src.ID() == target.ID() {
+	if !g.canAttach(src, target) {
 		return
 	}
 
@@ -1636,6 +1620,26 @@ func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 		SourceID: sourceID,
 		TargetID: targetID,
 	})
+}
+
+func (g *Game) canAttach(src, target *Permanent) bool {
+	if src == nil || target == nil || src.AttachedTo == target.ID() && src.attachedIncarnation == target.incarnationID {
+		return false
+	}
+	if src.HasSubType("Aura") {
+		if src.HasType(TypeCreature) || src.ID() == target.ID() ||
+			target.HasAttr(AttrCantBeEnchanted) || target.HasProtectionFromInGame(src.Card, g) ||
+			!auraHostIsLegal(src.Card, target, g) {
+			return false
+		}
+	} else if src.HasSubType("Equipment") {
+		if src.HasType(TypeCreature) || !target.HasType(TypeCreature) || src.ID() == target.ID() {
+			return false
+		}
+	} else if !src.HasSubType("Fortification") || !target.HasType(TypeLand) || src.ID() == target.ID() {
+		return false
+	}
+	return true
 }
 
 // fireBecomesTargetEvents sends an EvtBecomesTarget event for each declared target.
