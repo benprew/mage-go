@@ -1958,13 +1958,14 @@ Triggers on rules events dispatched by the engine:
     }
     ```
   * `DealsDamageToOpponent(source, playerBinding)`: Source deals damage to opponent.
-  * `ControllerIsDealtDamage(amountBinding) EventPattern`: A battlefield source's controller is dealt positive damage by any source. The pattern saves the actual amount after damage replacement and prevention. Use `FromNumber(amountBinding)` in a `WhenEvent` or `WhenEventModes` body. The damaged player is not a target. Registration rejects a nil or unnamed binding and a read outside the trigger.
+  * `ControllerIsDealtDamage(amountBinding).WithSource(sourceBinding *DamageSourceBinding)`: A battlefield source's controller is dealt positive damage by any source. The pattern saves the actual amount after damage replacement and prevention. `WithSource` also saves that damage event's source incarnation and characteristics. Use `FromNumber(amountBinding)` and `FromDamageSource(sourceBinding)` in a `WhenEvent` or `WhenEventModes` body. The damaged player is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. A source-only capture does not change target legality.
     ```go
     func damageWatcher() dsl.Card {
         amount := dsl.BindNumber("damage dealt")
+        source := dsl.BindDamageSource("damage source")
         return dsl.NewEnchantment("Damage Watcher", "{G}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.ControllerIsDealtDamage(amount),
-                dsl.GainLife(dsl.You, dsl.FromNumber(amount))),
+            dsl.WhenEvent(dsl.ControllerIsDealtDamage(amount).WithSource(source),
+                dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.FromNumber(amount))),
         ))
     }
     ```
