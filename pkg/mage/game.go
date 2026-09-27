@@ -350,21 +350,21 @@ func (g *Game) TryPayMana(playerID uuid.UUID, manaCostStr string) bool {
 
 // PutOnBattlefield puts a card onto the battlefield under the given controller.
 func (g *Game) PutOnBattlefield(card Card, controller uuid.UUID) *Permanent {
-	return g.putOnBattlefield(card, controller, uuid.Nil, nil, uuid.Nil)
+	return g.putOnBattlefield(card, controller, uuid.Nil, nil, uuid.Nil, 0)
 }
 
 // PutOnBattlefieldBy records the player who puts the card onto the battlefield.
 func (g *Game) PutOnBattlefieldBy(card Card, controller, actor uuid.UUID) *Permanent {
-	return g.putOnBattlefield(card, controller, actor, nil, uuid.Nil)
+	return g.putOnBattlefield(card, controller, actor, nil, uuid.Nil, 0)
 }
 
-func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID) *Permanent {
+func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, castColorsSpent int) *Permanent {
 	perm := g.prepareBattlefieldEntry(card, controller, colors)
 	if perm == nil {
 		return nil
 	}
 	g.registerBattlefieldEntry(perm, colors, colorSourceID)
-	g.completeBattlefieldEntry(perm, controller, actor)
+	g.completeBattlefieldEntry(perm, controller, actor, castColorsSpent)
 	return perm
 }
 
@@ -379,7 +379,7 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 		g.registerBattlefieldEntry(perm, nil, uuid.Nil)
 	}
 	for _, perm := range permanents {
-		g.completeBattlefieldEntry(perm, controller, controller)
+		g.completeBattlefieldEntry(perm, controller, controller, 0)
 	}
 	return permanents
 }
@@ -513,7 +513,7 @@ func (g *Game) registerBattlefieldEntry(perm *Permanent, colors *[]Color, colorS
 	}
 }
 
-func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.UUID) {
+func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.UUID, castColorsSpent int) {
 	// Run unconditional ETB effects (e.g. Primal Clay mode choice)
 	for _, a := range perm.RuntimeAbilities {
 		if etb, ok := a.(*ETBEffectAbility); ok {
@@ -532,13 +532,14 @@ func (g *Game) completeBattlefieldEntry(perm *Permanent, controller, actor uuid.
 	g.effects.Apply(g)
 
 	g.FireEvent(GameEvent{
-		Type:     EvtZoneChange,
-		SourceID: perm.ID(),
-		PlayerID: controller,
-		ActorID:  actor,
-		Amount:   g.resolution.X(), // preserve X from resolving spell for ETB triggers
-		FromZone: ZoneAny,          // engine doesn't model the precise origin of an ETB
-		ToZone:   ZoneBattlefield,
+		Type:            EvtZoneChange,
+		SourceID:        perm.ID(),
+		PlayerID:        controller,
+		ActorID:         actor,
+		Amount:          g.resolution.X(), // preserve X from resolving spell for ETB triggers
+		CastColorsSpent: castColorsSpent,
+		FromZone:        ZoneAny, // engine doesn't model the precise origin of an ETB
+		ToZone:          ZoneBattlefield,
 	})
 }
 
@@ -2546,7 +2547,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 	if obj.Card != nil && !obj.IsAbility {
 		// Permanents go to the battlefield instead
 		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
-			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID)
+			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID, obj.CastContext.DistinctColorsSpent())
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {

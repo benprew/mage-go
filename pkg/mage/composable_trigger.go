@@ -15,20 +15,33 @@ type EventPattern interface {
 	makeTrigger(ResolvingEffect) *GenericTriggered
 }
 type sourceEventPattern struct {
-	dies   bool
-	leaves bool
+	dies                 bool
+	leaves               bool
+	colorsSpent          *NumberBinding
+	captureColorsSpent   bool
+	duplicateColorsSpent bool
 }
 
 func (sourceEventPattern) eventPattern() {}
 
 // Enters matches the source entering the battlefield.
-func Enters(sourceRef) EventPattern { return sourceEventPattern{} }
+func Enters(sourceRef) sourceEventPattern { return sourceEventPattern{} }
 
 // Dies matches the source leaving the battlefield for the graveyard.
-func Dies(sourceRef) EventPattern { return sourceEventPattern{dies: true} }
+func Dies(sourceRef) sourceEventPattern { return sourceEventPattern{dies: true} }
 
 // LeavesBattlefield matches the source moving from the battlefield to another zone.
-func LeavesBattlefield(sourceRef) EventPattern { return sourceEventPattern{leaves: true} }
+func LeavesBattlefield(sourceRef) sourceEventPattern { return sourceEventPattern{leaves: true} }
+
+// WithColorsSpent saves the former spell payment when this permanent enters.
+func (p sourceEventPattern) WithColorsSpent(binding *NumberBinding) sourceEventPattern {
+	if p.captureColorsSpent {
+		p.duplicateColorsSpent = true
+	}
+	p.colorsSpent = binding
+	p.captureColorsSpent = true
+	return p
+}
 func (p sourceEventPattern) makeTrigger(e ResolvingEffect) *GenericTriggered {
 	if p.dies {
 		return DiesTrigger(e, false)
@@ -45,7 +58,26 @@ func (p sourceEventPattern) inspectDefinition() definitionNode {
 	} else if p.leaves {
 		label = "source leaves battlefield"
 	}
-	return definitionNode{Role: "event-pattern", Text: label, battlefieldSource: true}
+	n := definitionNode{Role: "event-pattern", Text: label, battlefieldSource: true}
+	if p.captureColorsSpent {
+		n.bindingWrites = append(n.bindingWrites, p.colorsSpent)
+		n.children = append(n.children, definitionEdge{"colors spent", &eventAmountCapture{binding: p.colorsSpent}})
+		if p.dies || p.leaves {
+			n.problem = "colors spent capture requires an entry event"
+		} else if p.colorsSpent == nil {
+			n.problem = "entry event: supply a colors-spent binding"
+		} else if p.duplicateColorsSpent {
+			n.problem = "entry event: supply one colors-spent binding"
+		}
+	}
+	return n
+}
+
+func (p sourceEventPattern) captureDetectedEvent(event *GameEvent, _ GameReader, _ uuid.UUID) []Effect {
+	if !p.captureColorsSpent || p.colorsSpent == nil {
+		return nil
+	}
+	return []Effect{&eventAmountCapture{binding: p.colorsSpent, amount: event.CastColorsSpent}}
 }
 
 type creatureEntersPattern struct {

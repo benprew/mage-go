@@ -1239,6 +1239,21 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+
+  * `Enters(This).WithColorsSpent(*NumberBinding) EventPattern`: Save the number of distinct colored mana colors paid to cast this permanent as a spell. Read the saved number with `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. Entry without casting saves zero. The value belongs to the entry event, so later zone changes do not alter a pending trigger. This is an entry-trigger capture, not an "enters with" replacement. Registration rejects missing, unnamed, repeated, or out-of-scope bindings and use on `Dies(This)` or `LeavesBattlefield(This)`. This synthetic declaration compiles:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var colors = dsl.BindNumber("entry colors")
+    var _ = dsl.NewCreature("Entry Colors", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(
+        dsl.Enters(dsl.This).WithColorsSpent(colors),
+        dsl.GainLife(dsl.You, dsl.FromNumber(colors)))))
+
+    func main() {}
+    ```
   * `SpellCast().OfEnchantmentSubtype(string) EventPattern`: Match an enchantment spell with the named enchantment subtype when it is cast. The filter reads the cast stack object, not another copy of the same card. It composes with `OfType(core.TypeEnchantment)`, `OfColor`, `ByOpponent`, and `WithCaster` in battlefield `WhenEvent` and `WhenEventModes` abilities. Registration rejects an unknown or nonenchantment subtype, a repeated subtype filter, or an incompatible `OfType`. It does not target or save the spell.
 
     ```go

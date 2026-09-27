@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Self-Entry Former Cast Colors Capture
+
+`Enters(This).WithColorsSpent(*NumberBinding)` saves the distinct colored mana colors paid to cast that permanent as a spell. The resolving permanent-spell path puts the count from its own cast context on the entry event; direct entry carries zero, even if another spell causes it. The existing event-capture frame saves the number for a battlefield `WhenEvent` or `WhenEventModes` body. Registration rejects nil, unnamed, repeated, non-entry, and out-of-scope bindings. No production card or legacy export changed.
+
+Sundering Archaic and Transcendent Archaic need this former-cast value for their entry triggers according to their complete text in `data/SOS.json`. A fresh search found both still using `ResolvingCastContext` callbacks in `cards/secretsofstrixhaven/creatures.go`; neither was migrated, and their other clauses remain open. Their gap records stay blocked. Rancorous, Magmablood, and Wildgrowth Archaic instead need entry replacement work for their "enters with" clauses. Synthetic tests cover real paid mana, failed payment rollback, uncast entry, departure and return, phasing, trigger copies, game clones, inspection, and public DSL registration. The first focused test failed because the capture method was absent. The next dependency-ready slice is a typed former-cast colors value for an entry replacement, after a separate replacement contract audit.
+
+Validation: focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The diff was reviewed after lint.
+
 ## Current Slice: Resolving Spell Distinct-Colors Value
 
 `ColorsSpentToCastThisSpell() ResolutionValue` reads the number of distinct colored mana colors paid to cast the current spell. It is valid in a typed `Spell` body, including a copied spell. It uses the existing cast payment record, `CastContext.DistinctColorsSpent`, resolution state, and stack copy/clone services. Registration rejects activation and trigger use. An absent cast context returns zero in an internal read; a failed payment does not put the spell on the stack. No production card or legacy export changed.
