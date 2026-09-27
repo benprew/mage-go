@@ -286,6 +286,13 @@ func (ds *DamageSystem) dealtDamageToPermanentThisTurn(source DamageSource, reci
 	return ds.turnDamageToPermanents[capturedPermanent{source.ID(), source.Incarnation()}][recipient]
 }
 
+func (ds *DamageSystem) permanentDealtDamageToThisTurn(source, recipient capturedPermanent) bool {
+	if source.id == uuid.Nil || source.incarnation == uuid.Nil || recipient.id == uuid.Nil || recipient.incarnation == uuid.Nil {
+		return false
+	}
+	return ds.turnDamageToPermanents[source][recipient]
+}
+
 func (ds *DamageSystem) dealtDamageToPlayerThisTurn(sourceID, incarnation, playerID uuid.UUID) bool {
 	if sourceID == uuid.Nil || incarnation == uuid.Nil || playerID == uuid.Nil {
 		return false

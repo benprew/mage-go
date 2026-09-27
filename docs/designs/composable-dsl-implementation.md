@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Reverse Turn Damage Source Set
+
+`PermanentsThatDealtDamageToThisTurn(PermanentRef, PermanentSet) PermanentSet` selects current, unphased permanents that dealt positive damage to one recipient incarnation this turn. `This` uses the resolving trigger's captured source incarnation, including after death and return. Other recipient references must resolve to a battlefield permanent. The adapter reads the existing source-and-recipient turn record after the shared damage pipeline; it adds no damage executor or historical card-ID lookup. It works in resolving spell, activation, and trigger bodies and exposes a sealed `PermanentSet` with inspection and registration checks. No production card or legacy export changed.
+
+The complete Brine Hag text in `data/LEG.json` needs creatures that damaged it this turn, including its death-trigger recipient identity. This selector supplies that collection. A set form of indefinite base-power-and-toughness setting is still absent from the typed continuous API, so the card and its Legends gap record remain open. Focused tests first failed because the selector was missing. They now cover prevention, source and recipient return, phasing, recipient LKI cleanup, final cleanup, game clone isolation, death-trigger resolution after return, inspection, registration, and a public DSL declaration. The next dependency-ready slice is a set base-power-and-toughness modification or a P payment output after a fresh contract audit.
+
+Validation: focused engine and public DSL tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff was reviewed and `git diff --check` passes.
+
 ## Current Slice: Turn Damage Recipient Set
 
 `PermanentsDealtDamageByThisTurn(DamageSourceRef, PermanentSet) PermanentSet` selects current, unphased permanent candidates dealt positive damage by one permanent source incarnation this turn. It uses the existing source-and-recipient incarnation record from the shared damage pipeline. Prevention and redirection determine the final record; final cleanup clears it. The selector works in resolving spell, activation, and trigger bodies with permanent-set consumers. Nil arguments and out-of-scope source bindings fail registration; the sealed source and set roles reject category errors at compile time. No production card or legacy export changed.

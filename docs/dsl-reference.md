@@ -838,6 +838,16 @@ card := dsl.NewCreature("Turn history", "", 1, 5,
 _ = card
 ```
 
+`PermanentsThatDealtDamageToThisTurn(PermanentRef, PermanentSet) PermanentSet` selects current, unphased candidate permanents that dealt positive damage to the recipient this turn. It works in resolving spell, activation, and trigger bodies. When the recipient is `This`, a death trigger uses the original source incarnation even after the card leaves or returns. Other recipient references must still resolve to a battlefield permanent. The candidate set controls current characteristics, such as whether a source is now a creature. This synthetic declaration compiles:
+
+```go
+card := dsl.NewCreature("Watcher", "", 1, 4,
+    dsl.WithAbility(dsl.WhenEvent(dsl.Dies(dsl.This),
+        dsl.TapEach(dsl.PermanentsThatDealtDamageToThisTurn(dsl.This,
+            dsl.MatchingPermanents(dsl.IsCreature))))))
+_ = card
+```
+
 The existing `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption)` signature feeds this record in spell, activation, and trigger resolution. This synthetic spell declaration compiles:
 
 ```go
