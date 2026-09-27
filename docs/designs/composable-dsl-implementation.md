@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Land Tapped for Mana Amount Capture
+
+`LandTappedForMana().WithAmount(*NumberBinding)` saves the positive `EvtTappedForMana.Amount` in each pending battlefield trigger. It composes with the existing `WithPlayer` capture in `WhenEvent` and `WhenEventModes`. The adapter reuses the mana event, number binding frame, inspection, and stack/game copy paths. Zero production sends no event. This slice does not capture mana types or add a triggered mana-production action; Gauntlet of Might, Mana Flare, and Wild Growth still need those contracts and card wiring. No production card, legacy export, or gap record changed.
+
+The contract test first failed because `WithAmount` was absent. Focused tests cover the event value, stack copy, clone isolation, source departure, invalid or undominated bindings, and a public DSL declaration composed with `WithPlayer`. Existing tapped-for-mana tests cover nonland and zero production, source phasing, and source return. Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff and `git diff --check` pass. The next dependency-ready work is mana-type event capture with triggered mana timing, or a separate E event participant after a fresh audit.
+
 ## Current Slice: Spell-Cast Ownership Filter
 
 `SpellCast().NotOwnedByCaster()` matches a completed cast when the exact cast stack object's card owner differs from the event caster. It composes with existing cast filters in battlefield `WhenEvent` and `WhenEventModes`. The existing cast event, stack identity, trigger lifecycle, and registration inspection supply the behavior; no new engine contract, production card, or legacy export changed. The complete Nita, Forum Conciliator text in `data/SOS.json` needs this filter for its first ability, but graveyard exile, cast permission, replacement exile, and card wiring remain open. No gap record closes. The next dependency-ready work is a separate P payment/result or E event-participant slice after a fresh requirements audit.

@@ -1218,13 +1218,14 @@ Use distinct constructors for distinct trigger lifecycles:
 Triggers on rules events dispatched by the engine:
 * `WhenEvent(EventPattern, ResolvingEffect, ...TriggerOption)`
 * Event patterns:
-  * `LandTappedForMana().WithPlayer(*PlayerBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. `WithPlayer` is optional and saves the activating player when the event occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding is local to each trigger and is not a target. For example:
+  * `LandTappedForMana().WithPlayer(*PlayerBinding).WithAmount(*NumberBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. Both captures are optional and independent. `WithPlayer` saves the activating player; `WithAmount` saves the total mana produced by that ability as recorded in the event. Read them with `FromPlayer` and `FromNumber` in the trigger body. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. Each binding belongs to one trigger instance and is not a target. Zero production has no matching event. This captures a number, not the types of mana produced. For example:
 
     ```go
     player := dsl.BindPlayer("mana player")
+    amount := dsl.BindNumber("mana amount")
     ability := dsl.WhenEvent(
-        dsl.LandTappedForMana().WithPlayer(player),
-        dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(player), dsl.Fixed(1)))
+        dsl.LandTappedForMana().WithPlayer(player).WithAmount(amount),
+        dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))
     ```
 
   * `Enters(This)`: Source enters the battlefield.

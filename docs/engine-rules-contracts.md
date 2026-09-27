@@ -514,7 +514,7 @@ costs use the payment transaction.
   * `AttachedBecomesTapped` captures the event permanent at detection through the existing trigger capture path. Pending triggers, copies, and delayed effects keep that incarnation independently of later attachment changes.
 * **Tapped-for-Mana Events**:
   * `EvtTappedForMana` fires only when a mana ability having a {T} cost produces mana (CR 106.12a). Normal tap actions without mana produce only `EvtTapped`.
-  * `LandTappedForMana().WithPlayer(binding)` matches this event when its source is a land and saves the activating player before trigger placement. A nonland source or zero production does not match. The saved player stays fixed if the land leaves and returns or the trigger is copied. This trigger boundary is separate from the mana-production replacement boundary in CR 106.12b.
+  * `LandTappedForMana().WithPlayer(player).WithAmount(amount)` matches this event when its source is a land. Either capture is optional. It saves the activating player and the event's produced-mana total before trigger placement. A nonland source or zero production does not match. The saved values stay fixed if the land leaves and returns or the trigger is copied. This trigger boundary is separate from the mana-production replacement boundary in CR 106.12b.
 * **Typed Mana Bonuses**:
   * Explicit typed mana activations retain the actual produced colors through resolution and use the shared mana-bonus service once after a tap-cost ability produces a positive amount. Zero production and abilities without a tap cost receive no tap bonus.
   * Production totals exclude bonus mana. Nested resolutions restore their parent's tracking state, and clones copy the color list. Planned activation keeps its existing bonus path.
