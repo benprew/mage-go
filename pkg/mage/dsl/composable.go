@@ -297,6 +297,7 @@ var (
 	AnotherCreatureYouControlDies      = mage.AnotherCreatureYouControlDies
 	CreatureYouControlEnters           = mage.CreatureYouControlEnters
 	AnotherCreatureYouControlEnters    = mage.AnotherCreatureYouControlEnters
+	AnotherCreatureEnters              = mage.AnotherCreatureEnters
 	EnchantmentYouControlEnters        = mage.EnchantmentYouControlEnters
 	LandEnters                         = mage.LandEnters
 	LandTappedForMana                  = mage.LandTappedForMana

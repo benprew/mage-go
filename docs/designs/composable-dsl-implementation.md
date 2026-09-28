@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Any-Controller Other-Creature Entry
+
+`AnotherCreatureEnters()` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches a different creature entering under either controller and reuses the shared entry event, source exclusion, trigger frame, and existing entry filters and captures. `.WithPower` saves effective power at entry. The pattern does not implement Hamletback Goliath's optional effect or change any production card. Its full text was checked in `data/JMP.json`; the Jumpstart inventory and gap record remain open. A fresh caller search found Hamletback Goliath still using its legacy entry trigger. Existing legacy exports remain.
+
+The focused contract first failed because the constructor was absent. Synthetic tests cover both controllers, owner versus controller, source phasing, self and noncreature exclusion, event-time power, clone isolation, invalid capture registration, and public DSL compilation. The next dependency-ready work is a separate P payment output or E event participant after a fresh contract audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Combat-Damage Group Source Subtype Filter
 
 `OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype(string)` is a sealed battlefield `WhenEvent` or `WhenEventModes` filter. It matches once per controller, recipient player, and combat damage step when at least one contributing creature lacks the named subtype and deals positive damage. The damage service now saves each contributing source's incarnation and characteristics when damage is dealt. Detection uses those snapshots, not a later battlefield lookup. The existing per-source amount map and unfiltered event remain available to legacy callers. The filter rejects an empty, noncreature, or repeated subtype at registration. It adds no damage executor, target, or card-specific policy.

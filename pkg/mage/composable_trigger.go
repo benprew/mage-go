@@ -106,6 +106,11 @@ func AnotherCreatureYouControlEnters() creatureEntersPattern {
 	return creatureEntersPattern{controllerOnly: true, otherOnly: true}
 }
 
+// AnotherCreatureEnters matches a creature other than the source under any controller.
+func AnotherCreatureEnters() creatureEntersPattern {
+	return creatureEntersPattern{otherOnly: true}
+}
+
 // Nontoken limits the pattern to creatures that enter as nontoken permanents.
 func (p creatureEntersPattern) Nontoken() creatureEntersPattern {
 	p.nontokenOnly = true

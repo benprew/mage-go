@@ -202,6 +202,8 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ## 5. State-Triggered Abilities and Simultaneous Deaths (CR 603.8, 603.6c)
 
+`AnotherCreatureEnters()` uses the battlefield entry event for a creature under any controller. It excludes the watcher itself by source card ID. The event check uses the entering permanent's effective type after entry; `.WithPower` saves its power in the pending trigger before a later change can affect that value. A phased-out watcher does not detect the event. The pattern uses the existing entry trigger path and does not create an entry replacement (CR 603.6a–b).
+
 * **Opponent Land Tap Event (CR 603.2e)**:
   * `OpponentLandBecomesTapped().WithLand(binding)` captures the tapped land's battlefield incarnation when its tap transition occurs. The pending trigger keeps that reference through source departure, controller change, stack copying, and game cloning. `From(binding)` is absent if the land leaves and returns or phases out before resolution. The event has no target or payment step.
 * **State Triggers (`WhenState`)**:
