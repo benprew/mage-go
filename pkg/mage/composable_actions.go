@@ -209,7 +209,7 @@ func ReturnToHand(subject PermanentRef) ResolvingEffect {
 
 // UntapPermanent untaps the selected battlefield incarnation.
 func UntapPermanent(subject PermanentRef) ResolvingEffect {
-	return &untapPermanentEffect{subject}
+	return &untapPermanentEffect{subject: subject}
 }
 
 // DrawFor draws individual cards for the selected player. An absent player has no effect.
@@ -894,20 +894,78 @@ func (e *lifeAction) inspectDefinition() definitionNode {
 	return n
 }
 
-type untapPermanentEffect struct{ subject PermanentRef }
+type untapPermanentEffect struct {
+	subject        PermanentRef
+	result         *NumberBinding
+	optionCount    int
+	invalidOption  bool
+	requiresResult bool
+}
+
+// UntapResultOption selects an output for one untap instruction.
+type UntapResultOption interface {
+	untapResultOption()
+	applyUntapResult(*untapPermanentEffect)
+}
+
+type untappedThisWayOption struct{ binding *NumberBinding }
+
+// UntappedThisWayInto saves 1 only when the permanent becomes untapped.
+func UntappedThisWayInto(binding *NumberBinding) UntapResultOption {
+	return untappedThisWayOption{binding}
+}
+func (untappedThisWayOption) untapResultOption() {}
+func (o untappedThisWayOption) applyUntapResult(e *untapPermanentEffect) {
+	e.result = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
+
+// UntapPermanentWithResult untaps one permanent and saves the outcome.
+func UntapPermanentWithResult(subject PermanentRef, options ...UntapResultOption) ResolvingEffect {
+	e := &untapPermanentEffect{subject: subject, requiresResult: true}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyUntapResult(e)
+	}
+	return e
+}
 
 func (e *untapPermanentEffect) Text() string { return "untap " + InspectDefinition(e.subject).Text }
 func (*untapPermanentEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *untapPermanentEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
 	if p, ok := e.subject.resolvePermanent(ctx); ok {
-		ctx.Game.UntapPermanent(p)
+		if ctx.Game.UntapPermanent(p) && e.result != nil {
+			ctx.Game.resolution.numberBindings[e.result] = 1
+		}
 	}
 	return nil
 }
 func (e *untapPermanentEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	if e.invalidOption || (e.requiresResult && e.result == nil) {
+		n.problem = "supply a non-nil untap result binding"
+	} else if e.optionCount > 1 {
+		n.problem = "supply the untap result binding only once"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }
 
 // RemovePermanentFromCombat removes the selected incarnation from combat.

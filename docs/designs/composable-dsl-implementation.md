@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Untap Action Result
+
+`UntapPermanentWithResult(PermanentRef, UntappedThisWayInto(*NumberBinding))` saves 1 only when the referenced battlefield incarnation becomes untapped. It reuses `Game.UntapPermanent`, including the stun-counter replacement and untap event. A redundant, absent, phased-out, returned, or stun-replaced attempt saves 0. The named result lives in the resolving spell, activation, or trigger frame. Registration rejects missing, nil, unnamed, repeated, or undominated bindings; Go rejects a player or set subject. `UntapPermanent` and all production callers remain unchanged. This is a P action-result output, not an untap-cost result or a collection result.
+
+Focused contracts first failed because the typed constructor was absent. Synthetic tests cover transitions, stun replacement, target legality after departure and return, phasing, stack-copy and game-clone isolation, declaration validation, and a public DSL example. The checked inventories do not identify a card whose remaining requirements are completed by this result alone. No JSON gap record or production card was changed. A fresh search found no production `UntapPermanentWithResult` caller. The next dependency-ready work is another P output or a T announcement contract after a fresh audit. The graveyard-return result is deferred because the existing move path lacks the general CR 400.6 zone-change replacement contract.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Singular Battlefield Exile Result
 
 `ExileWithResult(PermanentRef, ExiledThisWayInto(*NumberBinding))` records 1 when one current battlefield incarnation moves through the existing `Game.ExilePermanent` operation and 0 when the reference is absent, phased out, or stale after leave and return. The sealed result option and named number binding work in resolving spell, activation, and trigger bodies. Registration rejects a missing, nil, duplicate, or undominated result. The result lives in the resolution frame; `Exile(PermanentRef)` and all legacy author exports remain unchanged. This is a P action output. It does not link an exiled card, offer a payment, or add a batch result.

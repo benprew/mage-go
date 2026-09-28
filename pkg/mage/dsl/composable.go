@@ -43,6 +43,7 @@ type CoinBranch = mage.CoinBranch
 type PermanentTargetOption = mage.PermanentTargetOption
 type PlayerTargetOption = mage.PlayerTargetOption
 type GraveyardTargetOption = mage.GraveyardTargetOption
+type UntapResultOption = mage.UntapResultOption
 type TokenDefinition = mage.TokenDefinition
 type TokenOption = mage.TokenOption
 type CreatedTokensBinding = mage.CreatedTokensBinding
@@ -135,6 +136,8 @@ var (
 	InAnyGraveyard                   = mage.InAnyGraveyard
 	GraveyardCardFilter              = mage.GraveyardCardFilter
 	ReturnCardToHand                 = mage.ReturnCardToHand
+	UntapPermanentWithResult         = mage.UntapPermanentWithResult
+	UntappedThisWayInto              = mage.UntappedThisWayInto
 	DiscardCard                      = mage.DiscardCard
 	RevealCard                       = mage.RevealCard
 	IfCardHasType                    = mage.IfCardHasType
