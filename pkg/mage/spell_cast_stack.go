@@ -10,21 +10,22 @@ import (
 )
 
 type castStackObjectOptions struct {
-	CapturedNumbers   map[*NumberBinding]int
-	CapturedCards     map[*CardBinding]capturedCard
-	Card              Card
-	Controller        uuid.UUID
-	Targets           []uuid.UUID
-	TargetSpecs       []Target
-	XValue            int
-	CastZone          Zone
-	SourceID          uuid.UUID
-	IsCopy            bool
-	ExileOnLeaveStack bool
-	SnapshotCast      bool
-	PromptTargets     bool
-	ModePrompt        string
-	ModalSelection    *modalSpellSelection
+	CapturedNumbers    map[*NumberBinding]int
+	CapturedCards      map[*CardBinding]capturedCard
+	CapturedPermanents map[*PermanentBinding]capturedPermanent
+	Card               Card
+	Controller         uuid.UUID
+	Targets            []uuid.UUID
+	TargetSpecs        []Target
+	XValue             int
+	CastZone           Zone
+	SourceID           uuid.UUID
+	IsCopy             bool
+	ExileOnLeaveStack  bool
+	SnapshotCast       bool
+	PromptTargets      bool
+	ModePrompt         string
+	ModalSelection     *modalSpellSelection
 }
 
 func (g *Game) prepareSpellTargetGroups(controller uuid.UUID, card Card, groups [][]uuid.UUID, x int) ([]uuid.UUID, []Target, error) {
@@ -91,22 +92,23 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	}
 
 	obj := &StackObject{
-		capturedNumbers:   maps.Clone(opts.CapturedNumbers),
-		capturedCards:     maps.Clone(opts.CapturedCards),
-		ID:                uuid.New(),
-		Card:              card,
-		Controller:        opts.Controller,
-		SourceID:          sourceID,
-		Effects:           effects,
-		Targets:           targets,
-		TargetSpecs:       expandTargetSpecs(card.CastTargets(), targets, opts.XValue),
-		TargetSource:      card,
-		XValue:            opts.XValue,
-		ModeChoice:        modeChoice,
-		ModalTargets:      modalTargets,
-		IsCopy:            opts.IsCopy,
-		CastZone:          opts.CastZone,
-		ExileOnLeaveStack: opts.ExileOnLeaveStack,
+		capturedNumbers:    maps.Clone(opts.CapturedNumbers),
+		capturedCards:      maps.Clone(opts.CapturedCards),
+		capturedPermanents: maps.Clone(opts.CapturedPermanents),
+		ID:                 uuid.New(),
+		Card:               card,
+		Controller:         opts.Controller,
+		SourceID:           sourceID,
+		Effects:            effects,
+		Targets:            targets,
+		TargetSpecs:        expandTargetSpecs(card.CastTargets(), targets, opts.XValue),
+		TargetSource:       card,
+		XValue:             opts.XValue,
+		ModeChoice:         modeChoice,
+		ModalTargets:       modalTargets,
+		IsCopy:             opts.IsCopy,
+		CastZone:           opts.CastZone,
+		ExileOnLeaveStack:  opts.ExileOnLeaveStack,
 	}
 	if modal, ok := getModalSpellAbility(card); ok {
 		obj.TargetSpecs = expandTargetSpecs(modal.Modes()[modeChoice].Targets, targets, opts.XValue)

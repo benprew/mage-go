@@ -136,11 +136,13 @@ type sacrificeMatchingCost struct {
 	paidSubtype       *NumberBinding
 	subtype           string
 	paidCard          *CardBinding
+	paidPermanent     *PermanentBinding
 	paidTotalPower    *NumberBinding
 	captureStats      bool
 	captureManaValue  bool
 	captureSubtype    bool
 	captureCard       bool
+	capturePermanent  bool
 	captureTotalPower bool
 }
 
@@ -220,9 +222,24 @@ func SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *Ca
 	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidCard: card, captureCard: true}
 }
 
+// SacrificeMatchingCostWithPermanent saves the chosen battlefield incarnation.
+func SacrificeMatchingCostWithPermanent(filter PermanentFilter, text string, permanent *PermanentBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidPermanent: permanent, capturePermanent: true}
+}
+
 func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
-	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard && !c.captureTotalPower {
+	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard && !c.capturePermanent && !c.captureTotalPower {
+		return n
+	}
+	if c.capturePermanent {
+		if c.text == "" {
+			n.problem = "supply sacrifice text"
+		} else if c.paidPermanent == nil {
+			n.problem = "supply a non-nil paid permanent binding"
+		}
+		n.bindingWrites = []savedBinding{c.paidPermanent}
+		n.children = []definitionEdge{{"permanent", c.paidPermanent}}
 		return n
 	}
 	if c.captureTotalPower {

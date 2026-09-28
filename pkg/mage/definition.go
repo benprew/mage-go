@@ -158,7 +158,7 @@ func describeDefinition(v any) definitionNode {
 			if life, ok := cost.(*lifePayCost); ok && life.capture {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.captureTotalPower) {
+			if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.capturePermanent || sacrifice.captureTotalPower) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if _, ok := cost.(*removeAnyCountersCost); ok {
@@ -338,6 +338,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.captureCard && !nilDefinition(sacrifice.paidCard) && assigned[sacrifice.paidCard] {
 			fail("duplicate paid card binding")
+		}
+		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.capturePermanent && !nilDefinition(sacrifice.paidPermanent) && assigned[sacrifice.paidPermanent] {
+			fail("duplicate paid permanent binding")
 		}
 		if sacrifice, ok := value.(*sacrificeMatchingCost); ok && sacrifice.captureTotalPower && !nilDefinition(sacrifice.paidTotalPower) && assigned[sacrifice.paidTotalPower] {
 			fail("duplicate paid total power binding")

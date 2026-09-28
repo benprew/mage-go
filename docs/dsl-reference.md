@@ -2586,6 +2586,17 @@ a power increase after resolution does not end the blocking restriction.
   * `CaptureNumberBeforePayment(value, binding)`: Saves amount before mana production & cost payment.
   * `CapturePermanentBeforePayment(subject, binding)`: Saves permanent (e.g. attachment) before sacrifice cost.
 
+`SacrificeMatchingCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost` chooses one other matching permanent controlled by the payer and saves its battlefield incarnation when the cost is paid. Use it in `Costs` for an activation or as a spell additional cost. `From(paid)` is absent after sacrifice, but `DamageSourceOf(From(paid))` reads the former incarnation's damage-source LKI. The binding belongs to the spell or ability instance, including stack copies and game clones. A returned card does not replace it. Registration requires nonempty text and a named binding and rejects duplicate or undominated reads. It cannot produce a binding in a resolution-time `IfPaid` or `UnlessPaid` cost. This synthetic declaration compiles:
+
+```go
+paid := dsl.BindPermanent("paid creature")
+card := dsl.NewInstant("Offering", "",
+    dsl.WithAbility(dsl.Spell(
+        dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(paid)), dsl.You, dsl.Fixed(1)))),
+    dsl.WithAdditionalCost(dsl.SacrificeMatchingCostWithPermanent(
+        dsl.IsCreature, "Sacrifice a creature", paid)))
+```
+
 `SacrificeMatchingCostWithManaValue(filter, text, binding) Cost` chooses one matching permanent that the payer controls, except the source, and sacrifices it as an activation cost or spell additional cost. It saves that permanent's mana value at payment time in the `NumberBinding`. Use `FromNumber` in the resolving body. The binding belongs to that spell or ability instance, including copies. It is not available in `IfPaid` or `UnlessPaid` resolution-time costs. The text and binding must be present at registration. A zero-value filter matches all permanents.
 
 `SacrificeMatchingIncludingSourceCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost` has the same payment and result contract but also permits the ability source when it matches the filter. Use it in `Costs` for an activation or as a spell additional cost. The payment transaction locks the chosen battlefield incarnation and reads its mana value immediately before sacrifice. The result is available only after successful payment and remains in that spell or ability instance when the source is gone. For example, this synthetic declaration compiles:

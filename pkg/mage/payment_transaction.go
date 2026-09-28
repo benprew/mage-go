@@ -25,6 +25,7 @@ type costPaymentTransaction struct {
 	resetDrainedBeforeMana bool
 	paidNumbers            map[*NumberBinding]int
 	paidCards              map[*CardBinding]capturedCard
+	paidPermanents         map[*PermanentBinding]capturedPermanent
 }
 
 type costPaymentSpec struct {
@@ -281,10 +282,12 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	tx.paidNumbers = nil
 	tx.paidCards = nil
+	tx.paidPermanents = nil
 	defer func() {
 		if commitErr != nil {
 			tx.paidNumbers = nil
 			tx.paidCards = nil
+			tx.paidPermanents = nil
 		}
 	}()
 	player := tx.game.GetPlayer(tx.controller)
@@ -349,6 +352,7 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		var paidPower, paidToughness, paidManaValue int
 		var paidCardID uuid.UUID
+		var paidPermanent capturedPermanent
 		var discardedCardID uuid.UUID
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) {
 			for _, card := range tx.game.GetPlayer(tx.controller).Graveyard() {
@@ -363,7 +367,7 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		paidSubtype := 0
 		paidTotalPower := 0
-		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.captureCard || sacrifice.captureTotalPower) {
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && (sacrifice.captureStats || sacrifice.captureManaValue || sacrifice.captureSubtype || sacrifice.captureCard || sacrifice.capturePermanent || sacrifice.captureTotalPower) {
 			if !sacrifice.CanPay(tx.sourceID, tx.controller, tx.game) || len(sacrifice.selected) != sacrifice.count {
 				return fmt.Errorf("cannot pay chosen sacrifice")
 			}
@@ -373,6 +377,9 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 				}
 			}
 			chosen := tx.game.FindPermanent(sacrifice.selected[0].id)
+			if sacrifice.capturePermanent {
+				paidPermanent = capturedPermanent{id: chosen.ID(), incarnation: chosen.incarnationID}
+			}
 			if sacrifice.captureCard && !chosen.IsToken {
 				paidCardID = chosen.ID()
 			}
@@ -421,6 +428,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 				tx.paidCards = make(map[*CardBinding]capturedCard)
 			}
 			tx.paidCards[sacrifice.paidCard] = capturedCard{id: paidCardID, visit: tx.game.graveyardVisit(paidCardID), zone: ZoneGraveyard}
+		}
+		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok && sacrifice.capturePermanent {
+			if tx.paidPermanents == nil {
+				tx.paidPermanents = make(map[*PermanentBinding]capturedPermanent)
+			}
+			tx.paidPermanents[sacrifice.paidPermanent] = paidPermanent
 		}
 		if life, ok := cost.(*lifePayCost); ok && life.capture && life.paid != nil {
 			if tx.paidNumbers == nil {

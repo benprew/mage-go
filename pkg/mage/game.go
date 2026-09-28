@@ -3054,16 +3054,17 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		ModalSelection:  selection,
-		Card:            card,
-		Controller:      playerID,
-		Targets:         targets,
-		TargetSpecs:     aligned,
-		XValue:          xValue,
-		CastZone:        ZoneHand,
-		SnapshotCast:    true,
-		CapturedNumbers: payment.payment.paidNumbers,
-		CapturedCards:   payment.payment.paidCards,
+		ModalSelection:     selection,
+		Card:               card,
+		Controller:         playerID,
+		Targets:            targets,
+		TargetSpecs:        aligned,
+		XValue:             xValue,
+		CastZone:           ZoneHand,
+		SnapshotCast:       true,
+		CapturedNumbers:    payment.payment.paidNumbers,
+		CapturedCards:      payment.payment.paidCards,
+		CapturedPermanents: payment.payment.paidPermanents,
 	})
 	return err
 }
@@ -4510,6 +4511,12 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)
+	if len(payment.paidPermanents) > 0 {
+		if capturedPermanents == nil {
+			capturedPermanents = make(map[*PermanentBinding]capturedPermanent)
+		}
+		maps.Copy(capturedPermanents, payment.paidPermanents)
+	}
 	obj.capturedPermanents = capturedPermanents
 	obj.TargetSpecs = expandTargetSpecs(actionTargets, targets, g.resolution.X())
 	if grouped {

@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Paid Sacrifice Permanent Identity
+
+`SacrificeMatchingCostWithPermanent(PermanentFilter, string, *PermanentBinding) Cost` saves the exact battlefield incarnation chosen for one sacrifice cost. It reuses locked sacrifice choice, payment validation, stack frames, and durable departure LKI. `From(binding)` is absent after payment; `DamageSourceOf(From(binding))` can use the old incarnation as a damage source. Spell and activation bodies can read the binding, including stack copies and game clones. The constructor excludes the ability source, like `SacrificeMatchingCost`; source-inclusive and multiple-permanent payment references remain separate work. It does not change production cards or legacy exports.
+
+Momentous Fall's full text in `data/JMP.json` calls for payment-time characteristics of its sacrificed creature. The existing `SacrificeCreatureCostWithStats` already covers its power and toughness; this slice adds identity for abilities that need a former payment object. No card gap record closes from this adapter alone. A fresh search found no production caller of the new constructor; legacy sacrifice callers remain. The next dependency-ready work is a separate P payment output or T target-announcement slice after a fresh requirement audit.
+
+Focused synthetic tests first failed because the constructor and transaction capture were absent. They cover normal and alternative-cost spell casting, activation payment, departure LKI, return as a new incarnation, phasing, stale-choice rollback, stack copies, game clone isolation, registration validation, and the public DSL declaration. The focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Singular Sacrifice Subtype Result
 
 `SacrificeSubtypeInto(string, *NumberBinding) SacrificeResultOption` adds an

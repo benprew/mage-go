@@ -227,16 +227,17 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		ModalSelection:    selection,
-		Card:              card,
-		Controller:        playerID,
-		Targets:           targets,
-		XValue:            xValue,
-		CastZone:          zone,
-		ExileOnLeaveStack: exileOnLeaveStack,
-		SnapshotCast:      true,
-		CapturedNumbers:   payment.payment.paidNumbers,
-		CapturedCards:     payment.payment.paidCards,
+		ModalSelection:     selection,
+		Card:               card,
+		Controller:         playerID,
+		Targets:            targets,
+		XValue:             xValue,
+		CastZone:           zone,
+		ExileOnLeaveStack:  exileOnLeaveStack,
+		SnapshotCast:       true,
+		CapturedNumbers:    payment.payment.paidNumbers,
+		CapturedCards:      payment.payment.paidCards,
+		CapturedPermanents: payment.payment.paidPermanents,
 	})
 	return err
 }
