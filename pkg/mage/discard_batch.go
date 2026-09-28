@@ -33,7 +33,7 @@ func (g *Game) discardHandsTogether(ids []uuid.UUID, sourceID uuid.UUID) int {
 	var events []core.GameEvent
 	for _, action := range prepared {
 		if card, ok := g.moveDiscardedCard(action); ok {
-			events = append(events, core.GameEvent{Type: core.EvtDiscard, SourceID: card.ID(), PlayerID: action.PlayerID()})
+			events = append(events, core.GameEvent{Type: core.EvtDiscard, SourceID: card.ID(), PlayerID: action.PlayerID(), DiscardedCardVisit: g.graveyardVisit(card.ID())})
 		}
 	}
 	for _, event := range events {

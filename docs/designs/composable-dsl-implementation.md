@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Discard Event Card Capture
+
+`PlayerDiscardsCard(player).WithCard(card)` and `OpponentDiscardsCard(player).WithCard(card)` save the exact graveyard visit of each completed discarded card. The sealed event pattern is valid in battlefield `WhenEvent` and `WhenEventModes` declarations. The discard event now carries that visit after direct, effect, cost, and batch discards. It reuses `CardBinding`, the pending-trigger frame, and the shared discard service. A discard redirected to a library still triggers but supplies an absent `FromCard`; a later zone visit does not revive the binding. Existing calls without `.WithCard` and all legacy exports remain available. No production card changed.
+
+The first contract test failed at compilation because `.WithCard` did not exist. Synthetic tests cover each player pattern, distinct batch events, replacement to a library, departure and return, phasing, stack copying, game cloning, public DSL compilation, inspection, and registration rejection. The complete Psychic Purge and Fell Specter text was checked in `data/LEG.json` and the Jumpstart inventory. Fell Specter's opponent-discard pattern already existed. Psychic Purge also needs a discard-cause player and an ability active from the discarded card's zone; this card capture alone does not complete it. Their production wiring and gap records remain open. A fresh caller search found no production `.WithCard` discard pattern use. The next dependency-ready work is another bounded E participant or a P payment output; T target-announcement work still depends on the shared `{2/W}` mana-cost contract.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Recipient Damage Event Player Capture
 
 `DealsDamage(This, amount).WithRecipientPlayer(player)` and the `AttachedPermanent` form save the final player recipient of a positive damage event. `FromPlayer` is absent when damage lands on a permanent. The adapter uses the shared damage event and pending trigger frame; it adds no damage executor or legacy export. The method works in battlefield `WhenEvent` and `WhenEventModes` declarations. It preserves source identity, event timing, and the existing `DealsDamageToPlayer` pattern for callers that require only player events.

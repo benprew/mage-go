@@ -1113,9 +1113,10 @@ func (g *Game) PlayerDiscard(p Player, cardID uuid.UUID) (Card, bool) {
 		return nil, false
 	}
 	g.FireEvent(GameEvent{
-		Type:     EvtDiscard,
-		SourceID: cardID,
-		PlayerID: p.PlayerID(),
+		Type:               EvtDiscard,
+		SourceID:           cardID,
+		PlayerID:           p.PlayerID(),
+		DiscardedCardVisit: g.graveyardVisit(cardID),
 	})
 	return c, true
 }
@@ -1153,7 +1154,7 @@ func (g *Game) executeDiscard(action *DiscardAction) (Card, bool) {
 	if !ok {
 		return nil, false
 	}
-	g.FireEvent(GameEvent{Type: EvtDiscard, SourceID: c.ID(), PlayerID: action.PlayerID()})
+	g.FireEvent(GameEvent{Type: EvtDiscard, SourceID: c.ID(), PlayerID: action.PlayerID(), DiscardedCardVisit: g.graveyardVisit(c.ID())})
 	return c, true
 }
 

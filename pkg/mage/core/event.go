@@ -72,6 +72,7 @@ type GameEvent struct {
 	RelatedIDs         []uuid.UUID
 	DrawnCardID        uuid.UUID
 	DrawnCardVisit     uuid.UUID
+	DiscardedCardVisit uuid.UUID
 	PlayerID           uuid.UUID
 	Amount             int
 	Flag               bool // context-dependent

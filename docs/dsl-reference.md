@@ -2233,7 +2233,7 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
-  * `PlayerDiscardsCard(*PlayerBinding) EventPattern`: Either player discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time. A failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes` on a battlefield source. The saved player is not a target.
+  * `PlayerDiscardsCard(*PlayerBinding) playerDiscardEventPattern`: Either player discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time. A failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes` on a battlefield source. The saved player is not a target.
     ```go
     func anyDiscardWatcher() dsl.Card {
         discarder := dsl.BindPlayer("discarder")
@@ -2242,7 +2242,7 @@ Triggers on rules events dispatched by the engine:
                 dsl.GainLife(dsl.FromPlayer(discarder), dsl.Fixed(1)))))
     }
     ```
-  * `OpponentDiscardsCard(*PlayerBinding) EventPattern`: An opponent of the battlefield source controller discards one card. It retains the same capture and lifecycle contract as `PlayerDiscardsCard` but filters the event-time player against the source controller.
+  * `OpponentDiscardsCard(*PlayerBinding) playerDiscardEventPattern`: An opponent of the battlefield source controller discards one card. It retains the same capture and lifecycle contract as `PlayerDiscardsCard` but filters the event-time player against the source controller.
     ```go
     func discardWatcher() dsl.Card {
         discarder := dsl.BindPlayer("discarder")
@@ -2250,6 +2250,24 @@ Triggers on rules events dispatched by the engine:
             dsl.WhenEvent(dsl.OpponentDiscardsCard(discarder),
                 dsl.LoseLife(dsl.FromPlayer(discarder), dsl.Fixed(2))),
         ))
+    }
+    ```
+  * `.WithCard(*CardBinding) playerDiscardEventPattern`: Either discard pattern can save the discarded card's exact graveyard visit. `FromCard` reads that card only while it remains in that visit. A discard replaced into a library still causes the discard trigger, but the card binding is absent. The binding is also absent after the card leaves and returns. It is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope card bindings. This works in battlefield `WhenEvent` and `WhenEventModes` bodies:
+    ```go
+    package example
+
+    import (
+        "github.com/benprew/mage-go/pkg/mage/core"
+        "github.com/benprew/mage-go/pkg/mage/dsl"
+    )
+
+    func landDiscardWatcher() dsl.Card {
+        discarder := dsl.BindPlayer("discarder")
+        discarded := dsl.BindCard("discarded")
+        return dsl.NewEnchantment("Land Discard Watcher", "", dsl.WithAbility(dsl.WhenEvent(
+            dsl.OpponentDiscardsCard(discarder).WithCard(discarded),
+            dsl.IfCardHasType(dsl.FromCard(discarded), core.TypeLand,
+                dsl.LoseLife(dsl.FromPlayer(discarder), dsl.Fixed(2))))))
     }
     ```
   * `ControllerGainsLife(*PlayerBinding) lifeGainEventPattern`, `PlayerGainsLife(*PlayerBinding) lifeGainEventPattern`, and `.WithAmount(*NumberBinding) lifeGainEventPattern`: The first pattern matches the source controller's positive life gain; the second matches either player's positive life gain. `WithAmount` is optional. The returned sealed pattern is accepted as an `EventPattern`. It saves the player and the actual amount after replacement in this trigger's frame. Read them with `FromPlayer` and `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The bindings are not targets. A replaced gain triggers only if life is actually gained. Copies keep the saved values while `You` uses the copy's controller. Registration rejects nil, unnamed, repeated, and out-of-scope amount bindings. This declaration compiles:
