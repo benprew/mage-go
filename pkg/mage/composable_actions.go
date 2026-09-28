@@ -230,8 +230,10 @@ type drawSubjectEffect struct {
 	amount        ResolutionValue
 	result        *NumberBinding
 	cardResult    *CardBinding
+	cardsResult   *CardsBinding
 	optionCount   int
 	cardCount     int
+	setCount      int
 	invalidOption bool
 }
 
@@ -244,6 +246,18 @@ type DrawResultOption interface {
 type drawAmountOption struct{ binding *NumberBinding }
 
 type drawCardOption struct{ binding *CardBinding }
+type drawCardsOption struct{ binding *CardsBinding }
+
+// DrawCardsInto saves the cards from one completed draw instruction.
+func DrawCardsInto(binding *CardsBinding) DrawResultOption { return drawCardsOption{binding} }
+func (drawCardsOption) drawResultOption()                  {}
+func (o drawCardsOption) applyDrawResult(e *drawSubjectEffect) {
+	e.cardsResult = o.binding
+	e.setCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
 
 // DrawCardInto saves the card from a single completed draw.
 func DrawCardInto(binding *CardBinding) DrawResultOption { return drawCardOption{binding} }
@@ -273,9 +287,9 @@ func (e *drawSubjectEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
 	if e.invalidOption {
 		n.problem = "supply a non-nil draw result binding"
-	} else if e.optionCount > 1 || e.cardCount > 1 {
+	} else if e.optionCount > 1 || e.cardCount > 1 || e.setCount > 1 {
 		n.problem = "supply the draw result binding only once"
-	} else if e.result != nil && e.cardResult != nil {
+	} else if (e.result != nil && (e.cardResult != nil || e.cardsResult != nil)) || (e.cardResult != nil && e.cardsResult != nil) {
 		n.problem = "supply one kind of draw result binding"
 	} else if e.cardResult != nil {
 		if fixed, ok := e.amount.(fixedValue); !ok || fixed.n != 1 {
@@ -290,9 +304,19 @@ func (e *drawSubjectEffect) inspectDefinition() definitionNode {
 		n.bindingWrite = e.cardResult
 		n.children = append(n.children, definitionEdge{"card result", e.cardResult})
 	}
+	if e.cardsResult != nil {
+		n.bindingWrite = e.cardsResult
+		n.children = append(n.children, definitionEdge{"cards result", e.cardsResult})
+	}
 	return n
 }
 func (e *drawSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.cardsResult != nil {
+		if ctx.Game.resolution.cardsBindings == nil {
+			ctx.Game.resolution.cardsBindings = make(map[*CardsBinding][]capturedCard)
+		}
+		delete(ctx.Game.resolution.cardsBindings, e.cardsResult)
+	}
 	if e.cardResult != nil {
 		if ctx.Game.resolution.cardBindings == nil {
 			ctx.Game.resolution.cardBindings = make(map[*CardBinding]capturedCard)
@@ -322,6 +346,11 @@ func (e *drawSubjectEffect) Apply(ctx *EffectContext) error {
 			if e.cardResult != nil {
 				if visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
 					ctx.Game.resolution.cardBindings[e.cardResult] = capturedCard{id: card.ID(), visit: visitor.handVisit(card.ID()), zone: core.ZoneHand}
+				}
+			}
+			if e.cardsResult != nil {
+				if visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
+					ctx.Game.resolution.cardsBindings[e.cardsResult] = append(ctx.Game.resolution.cardsBindings[e.cardsResult], capturedCard{id: card.ID(), visit: visitor.handVisit(card.ID()), zone: core.ZoneHand})
 				}
 			}
 		}

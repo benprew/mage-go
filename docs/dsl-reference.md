@@ -763,13 +763,23 @@ permanent. If the Aura has left, its last attachment is used. A returned Aura
 or host is a new incarnation and does not redirect the old reference.
 
 ### Player Actions
-* `Draw(PlayerRef, ResolutionValue, ...DrawResultOption) ResolvingEffect`: Instructs one player to draw cards in a spell, activation, or trigger body. `DrawAmountInto(*NumberBinding) DrawResultOption` saves the number of cards actually drawn by this instruction. It writes zero for an absent player, an empty library, or a fully replaced draw. Read it later in the same `Sequence` with `FromNumber`. `DrawCardInto(*CardBinding) DrawResultOption` saves the card from one completed draw. It requires `Fixed(1)` and cannot be combined with `DrawAmountInto`. `FromCard` refers to that card only during its original hand visit. `DrawEach` does not accept these options.
+* `Draw(PlayerRef, ResolutionValue, ...DrawResultOption) ResolvingEffect`: Instructs one player to draw cards in a spell, activation, or trigger body. `DrawAmountInto(*NumberBinding) DrawResultOption` saves the number of cards actually drawn by this instruction. It writes zero for an absent player, an empty library, or a fully replaced draw. Read it later in the same `Sequence` with `FromNumber`. `DrawCardInto(*CardBinding) DrawResultOption` saves the card from one completed draw. It requires `Fixed(1)`. `DrawCardsInto(*CardsBinding) DrawResultOption` saves all cards actually drawn by the instruction. `FromCards` retains each card only during its captured hand visit. Supply one result option per instruction. `DrawEach` does not accept these options.
 
 ```go
 drawn := dsl.BindNumber("drawn")
 ability := dsl.Spell(dsl.Sequence(
     dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawAmountInto(drawn)),
     dsl.GainLife(dsl.You, dsl.FromNumber(drawn)),
+))
+_ = ability
+```
+For a multi-card result in a spell, activation, or trigger body:
+
+```go
+drawnCards := dsl.BindCards("drawn cards")
+ability := dsl.Spell(dsl.Sequence(
+    dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawCardsInto(drawnCards)),
+    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(drawnCards))),
 ))
 _ = ability
 ```

@@ -1,6 +1,10 @@
 package mage
 
-import "github.com/benprew/mage-go/pkg/mage/core"
+import (
+	"github.com/google/uuid"
+
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 // CardsBinding names a collection saved by one payment or instruction.
 type CardsBinding struct{ name string }
@@ -22,6 +26,21 @@ func (savedCardsSet) cardSet()                {}
 func (s savedCardsSet) resolveCards(ctx *EffectContext) []Card {
 	var cards []Card
 	for _, captured := range ctx.Game.resolution.cardsBindings[s.binding] {
+		if captured.zone == core.ZoneHand {
+			for _, player := range ctx.Game.players {
+				visitor, ok := player.(interface{ handVisit(uuid.UUID) uuid.UUID })
+				if !ok || visitor.handVisit(captured.id) != captured.visit {
+					continue
+				}
+				for _, card := range player.Hand() {
+					if card.ID() == captured.id {
+						cards = append(cards, card)
+						break
+					}
+				}
+			}
+			continue
+		}
 		if captured.zone == core.ZoneExile {
 			if exiled := ctx.Game.FindExiledCard(captured.id); exiled != nil && exiled.Visit == captured.visit && exiled.VisibleTo(ctx.Controller) {
 				cards = append(cards, exiled.Card)

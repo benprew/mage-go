@@ -226,6 +226,7 @@ var (
 	DrawEach                        = mage.DrawEach
 	DrawAmountInto                  = mage.DrawAmountInto
 	DrawCardInto                    = mage.DrawCardInto
+	DrawCardsInto                   = mage.DrawCardsInto
 	Discard                         = mage.Discard
 	DiscardCardInto                 = mage.DiscardCardInto
 	DiscardCardsInto                = mage.DiscardCardsInto
