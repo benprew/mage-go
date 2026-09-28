@@ -326,6 +326,7 @@ var (
 	AttachedBecomesTapped                  = mage.AttachedBecomesTapped
 	OpponentLandBecomesTapped              = mage.OpponentLandBecomesTapped
 	ArtifactBecomesTapped                  = mage.ArtifactBecomesTapped
+	PermanentBecomesTapped                 = mage.PermanentBecomesTapped
 	ArtifactAbilityActivatedWithoutTapCost = mage.ArtifactAbilityActivatedWithoutTapCost
 	BecomesTapped                          = mage.BecomesTapped
 	TurnStepBegins                         = mage.TurnStepBegins

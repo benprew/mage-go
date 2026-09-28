@@ -715,6 +715,16 @@ var _ = dsl.NewInstant("Synthetic untap", "", dsl.Spell(dsl.Sequence(
     dsl.IfPositive(dsl.FromNumber(untapped), dsl.GainLife(dsl.You, dsl.Fixed(1))),
 ), dsl.WithTargets(creature)))
 ```
+* `PermanentBecomesTapped()`: An `EventPattern` for a permanent changing from untapped to tapped. Use it in a battlefield `WhenEvent` or `WhenEventModes` ability. `.OfType(CardType)` accepts a permanent card type; `.ByOpponent()` compares the tapped permanent's controller with the trigger source's controller when the event occurs. `.WithPermanent(*PermanentBinding)` saves the tapped battlefield incarnation, and `.WithController(*PlayerBinding)` saves its event-time controller. Each filter and capture can occur once. The saved permanent is absent after it leaves and returns or while it is phased out. Entering tapped and tapping an already tapped permanent do not match. For example:
+
+```go
+object := dsl.BindPermanent("tapped permanent")
+controller := dsl.BindPlayer("tap controller")
+card := dsl.NewEnchantment("Observer", "", dsl.WithAbility(dsl.WhenEvent(
+    dsl.PermanentBecomesTapped().OfType(dsl.TypeArtifact).ByOpponent().WithPermanent(object).WithController(controller),
+    dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1)))))
+```
+
 * `RemoveFromCombat(PermanentRef)`: Removes the captured permanent from combat. Removing a blocker does not make its attacker unblocked. An absent or different incarnation is unaffected.
 * `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
 * `ReturnEachToHand(PermanentSet) ResolvingEffect`: Returns the selected battlefield incarnations to their owners' hands in one simultaneous instruction. Use it in a spell, activation, or trigger body. It excludes phased-out objects and tokens do not remain in hand. The set is read once at resolution; later returned incarnations are not part of that instruction.
