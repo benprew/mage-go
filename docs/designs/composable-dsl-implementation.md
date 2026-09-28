@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Battlefield Exile Result
+
+`ExileWithResult(PermanentRef, ExiledThisWayInto(*NumberBinding))` records 1 when one current battlefield incarnation moves through the existing `Game.ExilePermanent` operation and 0 when the reference is absent, phased out, or stale after leave and return. The sealed result option and named number binding work in resolving spell, activation, and trigger bodies. Registration rejects a missing, nil, duplicate, or undominated result. The result lives in the resolution frame; `Exile(PermanentRef)` and all legacy author exports remain unchanged. This is a P action output. It does not link an exiled card, offer a payment, or add a batch result.
+
+The focused contract first failed because the typed constructors were absent. Synthetic tests cover completion, absent and phased objects, returned incarnation, target legality, stack-copy and clone isolation, declaration rejection, and a public DSL declaration. Tawnos's Coffin's complete Oracle text was checked in `data/ATQ.json`. Its inventory still requires linked cards, counter and Aura snapshots, and return timing; this output alone does not complete it. Its production wiring and gap record remain open. A fresh caller search found no production `ExileWithResult` caller; existing `Exile` and legacy exile callers remain. The next dependency-ready work is a separate P payment or action output, or the T divided-target announcement contract after an audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Paid Mill Count
 
 `MillCostInto(int, *NumberBinding) Cost` saves the modifier-adjusted count of cards milled to pay one direct activated cost or spell additional cost. It reuses `MillCost` preparation and the locked total-cost transaction. The count enters the paid spell or activation frame only after commit, so stack copies and game clones retain independent values. Zero is a valid adjusted count. Registration rejects nil or unnamed bindings, duplicate producers, undominated reads, `EitherCost`, and resolution-time payment capture. `MillCost` and all production callers remain unchanged.

@@ -622,6 +622,17 @@ func eruption() dsl.Card {
 }
 ```
 * `Exile(PermanentRef)`: Moves the permanent to the exile zone.
+* `ExileWithResult(PermanentRef, ExiledThisWayInto(*NumberBinding)) ResolvingEffect`: Moves one current battlefield incarnation through the shared exile operation and saves 1 when it moves or 0 when the subject is absent, phased out, or has left and returned. The result belongs to the resolving spell, activation, or trigger. Registration requires one named result binding and a dominating producer. This reports the move, including a token leaving the battlefield; it does not save an exiled card or link later returns.
+
+```go
+exiled := dsl.BindNumber("exiled")
+target := dsl.TargetPermanent("creature", dsl.IsCreature)
+ability := dsl.Spell(dsl.Sequence(
+    dsl.ExileWithResult(target, dsl.ExiledThisWayInto(exiled)),
+    dsl.IfPositive(dsl.FromNumber(exiled), dsl.GainLife(dsl.You, dsl.Fixed(1))),
+), dsl.WithTargets(target))
+_ = ability
+```
 * `ExileEach(PermanentSet) ResolvingEffect`: Exiles the selected battlefield incarnations in one instruction. Use it in `Spell`, `Activate`, or a triggered resolving body. The set is read once at resolution. Absent, phased-out, duplicate, and returned incarnations do not move. Tokens leave but do not remain in exile. Leave events are checked after all selected objects leave.
 
 ```go

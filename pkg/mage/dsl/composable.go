@@ -111,6 +111,7 @@ type (
 	DiscardEachResultOption   = mage.DiscardEachResultOption
 	DestroyEachResultOption   = mage.DestroyEachResultOption
 	DestroyResultOption       = mage.DestroyResultOption
+	ExileResultOption         = mage.ExileResultOption
 )
 
 var (
@@ -202,6 +203,8 @@ var (
 	PermanentsPutIntoGraveyardThisWayInto = mage.PermanentsPutIntoGraveyardThisWayInto
 	DestroyedThisWayInto                  = mage.DestroyedThisWayInto
 	DestroyWithResult                     = mage.DestroyWithResult
+	ExiledThisWayInto                     = mage.ExiledThisWayInto
+	ExileWithResult                       = mage.ExileWithResult
 	DestroyWithoutRegenerationWithResult  = mage.DestroyWithoutRegenerationWithResult
 	// DestroyEachWithoutRegeneration destroys the set without regeneration.
 	DestroyEachWithoutRegeneration = mage.DestroyEachWithoutRegeneration

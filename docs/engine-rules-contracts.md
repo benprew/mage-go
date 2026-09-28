@@ -2,6 +2,8 @@
 
 This document specifies the internal architecture, subsystem invariants, and Magic: The Gathering Comprehensive Rules (CR) execution contracts for `mage-go`.
 
+`ExileWithResult` uses the same singular battlefield exile operation as `Exile`. It saves a numeric result in the current resolution frame only after a current, unphased battlefield incarnation moves. An absent subject or a card that left and returned saves zero. The result records a completed move, including a token leaving the battlefield; it does not identify a card in exile. This keeps action results separate from linked exile records (CR 400.7, 406.2, 701.13).
+
 `MayAttach` resolves both permanent references before it offers a choice. It offers no choice for an absent, phased-out, same-host, or illegal pair. If the controller accepts, `Game.Attach` checks legality again and performs the move. The shared move path updates the attachment timestamp, continuous effects, and attach event (CR 303.4j, 701.3, 613.7e). The action does not follow a permanent that leaves and returns.
 
 ---
