@@ -1274,9 +1274,25 @@ func turnCheck() *dsl.BaseCard {
 ```
 * `IfPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body only if paid.
 * `UnlessPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body if declined/unpaid.
+  The payment choice is offered only when each cost component is currently payable. A later failed transaction also runs the unpaid body. Use it inside `ForEachSavedCard` for a separate choice per saved card.
   For "destroy this creature unless you pay {1}", use
   `UnlessPaid(You, Costs(Mana("{1}")), Destroy(This))`. A granted trigger
   keeps its triggering controller and source incarnation through resolution.
+
+```go
+func perDrawnCardChoice() dsl.Card {
+    drawn, member := dsl.BindCards("drawn"), dsl.BindCard("member")
+    return dsl.NewInstant("Synthetic draw", "{X}{U}", dsl.Spell(dsl.Sequence(
+        dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawCardsInto(drawn)),
+        dsl.ForEachSavedCard(drawn, member, dsl.UnlessPaid(dsl.You,
+            dsl.Costs(dsl.SacrificeMatchingIncludingSourceCost(dsl.AnyPermanent, "Sacrifice a permanent")),
+            dsl.Discard(dsl.You, dsl.Fixed(1)))),
+    )))
+}
+```
+
+The example uses a fixed draw count for a standalone declaration. A card with X in its text needs the announced-X value. The choice is a resolving spell, activation, or trigger body; it is not an additional cost.
+
 * `MillCost(count int) Cost`: Pay by milling `count` cards from the payer's library. Use it in `Costs` for spell or activation payment, or in a resolution-time `IfPaid` or `UnlessPaid` branch. Registration requires a positive count. Payment uses the current mill amount after replacement; if the library has fewer cards than that amount, the payment fails without milling cards or paying another component. A replacement that reduces the mill amount to zero permits payment. A player can decline an optional payment before preparation.
 
 ```go

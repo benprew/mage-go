@@ -1,5 +1,15 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Resolution-Time Optional Payment Availability
+
+`IfPaid` and `UnlessPaid` now check that each cost component can be paid before asking the player whether to pay. A player with no controlled permanent cannot choose the sacrifice branch. The accepted branch still uses the existing locked total-cost transaction. In a `ForEachSavedCard` body, each iteration checks the resulting game state anew, so sacrificing the only permanent on the first iteration makes the second iteration discard. The public signatures and sealed roles are unchanged. This is a payment-choice engine contract, not a new author adapter; no production card or legacy export changed.
+
+Read the Runes has the complete text "Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent" in `data/JMP.json`. Its per-card choice can be composed from `DrawCardsInto`, `ForEachSavedCard`, `UnlessPaid`, `SacrificeMatchingIncludingSourceCost(AnyPermanent, ...)`, and `Discard`. The synthetic example uses a fixed draw count; production wiring still needs its announced X and a full card review. Its Jumpstart inventory and JSON gap record remain open. A fresh caller search found the production Read the Runes definition in `cards/jumpstart/spells.go`; no production card was modified. The next dependency-ready work is a separate P result output or T divided-target announcement prerequisite after a fresh audit.
+
+The focused contract first failed because an impossible sacrifice was offered. Tests cover no legal permanent, a permanent controlled by the opponent, a phased-out permanent, successful payment followed by an impossible second payment, declining each offer, zero drawn cards, and registration in spell, activation, and trigger contexts. A public DSL declaration compiles. The existing payment transaction tests cover cost atomicity; this slice changes the availability gate only.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Blocked Source Defending-Player Capture
 
 `BecomesBlocked(This).WithDefendingPlayer(*PlayerBinding)` saves the defending player at the first blocked-state transition. The shared `EvtCreatureBecomesBlocked` now carries that player in `TargetID`; when the defender is a permanent, the event records its controller at that time. The pending trigger owns the player binding, so source departure, return, stack copying, and game cloning do not change it. The pattern is valid in battlefield `WhenEvent` and `WhenEventModes`; it does not bind a blocker or introduce a target. Registration rejects nil, unnamed, duplicate, and undominated bindings. The change reuses combat groups, the existing event dispatcher, and event-player capture. No production card or legacy export changed.

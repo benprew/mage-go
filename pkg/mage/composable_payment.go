@@ -89,7 +89,14 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 		texts[i] = cost.Text()
 	}
 	paid := false
-	if ctx.Game.GetPlayer(id).ChooseMayAbility("pay " + strings.Join(texts, ", ")) {
+	available := true
+	for _, cost := range e.costs.costs {
+		if !cost.CanPay(ctx.SourceID, id, ctx.Game) {
+			available = false
+			break
+		}
+	}
+	if available && ctx.Game.GetPlayer(id).ChooseMayAbility("pay "+strings.Join(texts, ", ")) {
 		tx, err := ctx.Game.prepareActionPaymentTransaction(actionPaymentSpec{
 			SourceID: ctx.SourceID, Controller: id, Costs: e.costs.costs,
 			Targets: ctx.Targets, XValue: ctx.Game.XValue(),
