@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Any-Player Draw Event Card Capture
+
+`PlayerDrawsCard(player).WithCard(card)` and `OpponentDrawsCard(player).WithCard(card)` save a completed draw's card and exact hand visit in a pending battlefield trigger. `FromCard` is absent after that visit ends, including when the same card returns to hand. The patterns reuse the existing draw event, hand-visit service, card binding, and trigger frame. A prevented or failed draw emits no draw event. The constructor return types are concrete sealed patterns so the method is available; existing `EventPattern` callers remain valid. The methods work in battlefield `WhenEvent` and `WhenEventModes` bodies. Production cards and legacy exports remain unchanged.
+
+The contract first failed at compilation because `.WithCard` was unavailable on the returned interface. Synthetic engine and public DSL tests cover both player patterns, separate draw events, failed and replaced draws, source phasing and departure, card leave and return, stack copying, game cloning, inspection, and registration rejection. `ControllerDrawsCardInto` remains a compatible earlier form. No gap record closes: the Legends Sylvan Library requirement also needs draw-step extra draws, a turn-local card collection, and per-card choices; Underworld Dreams already had its player-only draw condition and typed damage. The complete texts were checked in `data/LEG.json`. A fresh search found no production `PlayerDrawsCard` or `OpponentDrawsCard` caller; other draw helpers remain in production. The next dependency-ready work is another bounded E event participant or a P payment output after a fresh caller audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Discard Event Card Capture
 
 `PlayerDiscardsCard(player).WithCard(card)` and `OpponentDiscardsCard(player).WithCard(card)` save the exact graveyard visit of each completed discarded card. The sealed event pattern is valid in battlefield `WhenEvent` and `WhenEventModes` declarations. The discard event now carries that visit after direct, effect, cost, and batch discards. It reuses `CardBinding`, the pending-trigger frame, and the shared discard service. A discard redirected to a library still triggers but supplies an absent `FromCard`; a later zone visit does not revive the binding. Existing calls without `.WithCard` and all legacy exports remain available. No production card changed.

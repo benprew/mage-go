@@ -2223,7 +2223,7 @@ Triggers on rules events dispatched by the engine:
         dsl.Until(dsl.EndOfTurn, dsl.CantBeBlocked(dsl.This)),
     )))
     ```
-  * `OpponentDrawsCard(playerBinding) EventPattern`: An opponent of the source controller draws one card. The pattern saves the drawer in a `PlayerBinding` when the draw occurs. Read it with `FromPlayer` in a `WhenEvent` or `WhenEventModes` body. A draw that is replaced or fails on an empty library does not match. The saved player is not a target.
+  * `OpponentDrawsCard(playerBinding) playerDrawEventPattern`: An opponent of the source controller draws one card. The pattern saves the drawer in a `PlayerBinding` when the draw occurs. Read it with `FromPlayer` in a `WhenEvent` or `WhenEventModes` body. A draw that is replaced or fails on an empty library does not match. The saved player is not a target.
     ```go
     func drawWatcher() dsl.Card {
         drawer := dsl.BindPlayer("drawer")
@@ -2231,6 +2231,17 @@ Triggers on rules events dispatched by the engine:
             dsl.WhenEvent(dsl.OpponentDrawsCard(drawer),
                 dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(drawer), dsl.Fixed(1))),
         ))
+    }
+    ```
+  * `PlayerDrawsCard(*PlayerBinding) playerDrawEventPattern`: Either player completes one draw. `.WithCard(*CardBinding)` on this or `OpponentDrawsCard` saves that card's current hand visit. `FromCard` is absent if the card leaves and returns before the trigger resolves. Each draw gets a separate binding, including draws from one multi-card instruction. The saved card is not a target. Use these patterns in battlefield `WhenEvent` or `WhenEventModes` bodies. Registration rejects nil, unnamed, repeated, and out-of-scope card bindings. For example:
+    ```go
+    func landDrawWatcher() dsl.Card {
+        drawer := dsl.BindPlayer("drawer")
+        drawn := dsl.BindCard("drawn")
+        return dsl.NewEnchantment("Land Draw Watcher", "{1}{G}", dsl.WithAbility(
+            dsl.WhenEvent(dsl.PlayerDrawsCard(drawer).WithCard(drawn),
+                dsl.IfCardHasType(dsl.FromCard(drawn), core.TypeLand,
+                    dsl.GainLife(dsl.FromPlayer(drawer), dsl.Fixed(1))))))
     }
     ```
   * `PlayerDiscardsCard(*PlayerBinding) playerDiscardEventPattern`: Either player discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time. A failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes` on a battlefield source. The saved player is not a target.

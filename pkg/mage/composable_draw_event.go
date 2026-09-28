@@ -6,12 +6,13 @@ type playerDrawEventPattern struct {
 	player       *PlayerBinding
 	card         *CardBinding
 	cardCapture  bool
+	cardCaptures int
 	anyPlayer    bool
 	opponentOnly bool
 }
 
 // PlayerDrawsCard saves the player who completes a card draw.
-func PlayerDrawsCard(player *PlayerBinding) EventPattern {
+func PlayerDrawsCard(player *PlayerBinding) playerDrawEventPattern {
 	return playerDrawEventPattern{player: player, anyPlayer: true}
 }
 
@@ -27,8 +28,16 @@ func ControllerDrawsCardInto(player *PlayerBinding, card *CardBinding) EventPatt
 }
 
 // OpponentDrawsCard saves the opponent who drew a card when the draw occurs.
-func OpponentDrawsCard(player *PlayerBinding) EventPattern {
+func OpponentDrawsCard(player *PlayerBinding) playerDrawEventPattern {
 	return playerDrawEventPattern{player: player, opponentOnly: true}
+}
+
+// WithCard saves the drawn card for its current hand visit.
+func (p playerDrawEventPattern) WithCard(card *CardBinding) playerDrawEventPattern {
+	p.card = card
+	p.cardCapture = true
+	p.cardCaptures++
+	return p
 }
 
 func (playerDrawEventPattern) eventPattern() {}
@@ -51,7 +60,9 @@ func (p playerDrawEventPattern) inspectDefinition() definitionNode {
 	}
 	n := definitionNode{Role: "event-pattern", Text: text, battlefieldSource: true,
 		bindingWrite: p.player, children: []definitionEdge{{"player", p.player}}}
-	if p.card != nil {
+	if p.cardCaptures > 1 {
+		n.problem = "save the drawn card only once"
+	} else if p.card != nil {
 		n.bindingWrites = []savedBinding{p.card}
 		n.children = append(n.children, definitionEdge{"card", p.card})
 	} else if p.cardCapture {
