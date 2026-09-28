@@ -9,7 +9,11 @@ type sourceCombatEventPattern struct {
 	captureDefender   bool
 	duplicateDefender bool
 }
-type sourceBecomesBlockedPattern struct{}
+type sourceBecomesBlockedPattern struct {
+	defender          *PlayerBinding
+	captureDefender   bool
+	duplicateDefender bool
+}
 
 // Attacks matches the source when it is declared as an attacker.
 func Attacks(sourceRef) sourceCombatEventPattern { return sourceCombatEventPattern{} }
@@ -33,7 +37,17 @@ func (p sourceCombatEventPattern) WithDefendingPlayer(binding *PlayerBinding) so
 func Blocks(sourceRef) EventPattern { return sourceCombatEventPattern{blocking: true} }
 
 // BecomesBlocked matches the source's first transition to blocked in combat.
-func BecomesBlocked(sourceRef) EventPattern { return sourceBecomesBlockedPattern{} }
+func BecomesBlocked(sourceRef) sourceBecomesBlockedPattern { return sourceBecomesBlockedPattern{} }
+
+// WithDefendingPlayer saves the defending player when the source becomes blocked.
+func (p sourceBecomesBlockedPattern) WithDefendingPlayer(binding *PlayerBinding) sourceBecomesBlockedPattern {
+	if p.captureDefender {
+		p.duplicateDefender = true
+	}
+	p.defender = binding
+	p.captureDefender = true
+	return p
+}
 
 func (sourceCombatEventPattern) eventPattern()    {}
 func (sourceBecomesBlockedPattern) eventPattern() {}
@@ -42,8 +56,24 @@ func (sourceBecomesBlockedPattern) makeTrigger(effect ResolvingEffect) *GenericT
 	return NewTriggered(EvtCreatureBecomesBlocked, false, effect).SetConditionData(EventSourceIsSelf{})
 }
 
-func (sourceBecomesBlockedPattern) inspectDefinition() definitionNode {
-	return definitionNode{Role: "event-pattern", Text: "source becomes blocked", battlefieldSource: true}
+func (p sourceBecomesBlockedPattern) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "event-pattern", Text: "source becomes blocked", battlefieldSource: true}
+	if p.captureDefender {
+		if p.defender == nil || p.duplicateDefender {
+			n.problem = "blocked event: supply one defending player binding"
+		} else {
+			n.bindingWrite = p.defender
+			n.children = append(n.children, definitionEdge{"defender", &eventPlayerCapture{binding: p.defender}})
+		}
+	}
+	return n
+}
+
+func (p sourceBecomesBlockedPattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
+	if !p.captureDefender {
+		return effects
+	}
+	return []Effect{Sequence(&eventPlayerCapture{binding: p.defender, player: event.TargetID}, Sequence(effects...))}
 }
 
 func (p sourceCombatEventPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {

@@ -1788,7 +1788,15 @@ Triggers on rules events dispatched by the engine:
         dsl.WithAbility(dsl.WhenEvent(dsl.Blocks(dsl.This),
             dsl.GainLife(dsl.You, dsl.Fixed(1)))))
     ```
-  * `BecomesBlocked(This)`: Source first becomes blocked in combat. It matches once even when multiple creatures block it, and also matches when a creature enters blocking an unblocked source. It is available in `WhenEvent` and `WhenEventModes` on a battlefield source. It does not bind or target a blocker.
+  * `BecomesBlocked(This).WithDefendingPlayer(*PlayerBinding)`: Source first becomes blocked in combat. It matches once even when multiple creatures block it, and also matches when a creature enters blocking an unblocked source. The optional binding saves the defending player when the event occurs. Use `FromPlayer` in the `WhenEvent` or `WhenEventModes` body on a battlefield source. The pattern does not bind or target a blocker. Registration rejects a nil, unnamed, repeated, or out-of-scope player binding. This declaration compiles:
+
+    ```go
+    defender := dsl.BindPlayer("defending player")
+    ability := dsl.WhenEvent(
+        dsl.BecomesBlocked(dsl.This).WithDefendingPlayer(defender),
+        dsl.Discard(dsl.FromPlayer(defender), dsl.Fixed(1)))
+    _ = ability
+    ```
   * `BecomesTargetOfSpell(This) EventPattern`: Match the battlefield source when a spell targets it. An activated ability targeting the source does not match. Use it in `WhenEvent` or `WhenEventModes`; the pattern has no target or stack-object binding. For example:
 
     ```go

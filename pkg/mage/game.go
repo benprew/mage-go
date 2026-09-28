@@ -743,7 +743,18 @@ func (g *Game) fireDeclaredBlockerPairs(before map[combatBlockPair]bool) {
 func (g *Game) fireCreatureBecomesBlocked(attackerID uuid.UUID) {
 	attacker := g.FindPermanent(attackerID)
 	if attacker != nil {
-		g.FireEvent(GameEvent{Type: EvtCreatureBecomesBlocked, SourceID: attackerID, PlayerID: attacker.ControllerID()})
+		defender := uuid.Nil
+		for _, group := range g.combat.Groups {
+			if group.AttackerID != attackerID {
+				continue
+			}
+			defender = group.DefenderID
+			if permanent := g.FindPermanent(defender); permanent != nil {
+				defender = permanent.ControllerID()
+			}
+			break
+		}
+		g.FireEvent(GameEvent{Type: EvtCreatureBecomesBlocked, SourceID: attackerID, PlayerID: attacker.ControllerID(), TargetID: defender})
 	}
 }
 

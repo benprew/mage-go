@@ -18,7 +18,7 @@ func TestSourceCombatEvents(t *testing.T) {
 	}{
 		{"attacks", EvtDeclaredAttacker, false, func(ref sourceRef) EventPattern { return Attacks(ref) }},
 		{"blocks", EvtDeclaredBlocker, true, Blocks},
-		{"becomes blocked", EvtCreatureBecomesBlocked, false, BecomesBlocked},
+		{"becomes blocked", EvtCreatureBecomesBlocked, false, func(ref sourceRef) EventPattern { return BecomesBlocked(ref) }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a, b := NewBasePlayer("A"), NewBasePlayer("B")
