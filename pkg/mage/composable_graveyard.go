@@ -216,13 +216,39 @@ func (e *returnCardToHandEffect) Apply(ctx *EffectContext) error {
 }
 
 type returnCardToBattlefieldEffect struct {
-	card       CardRef
-	controller PlayerRef
+	card         CardRef
+	controller   PlayerRef
+	entryTapped  bool
+	entryOptions int
+}
+
+// BattlefieldEntryOption changes how a card enters from a graveyard.
+type BattlefieldEntryOption interface {
+	battlefieldEntryOption()
+	applyBattlefieldEntry(*returnCardToBattlefieldEffect)
+}
+
+type enterTappedOption struct{}
+
+// EnterTapped makes the card enter tapped.
+func EnterTapped() BattlefieldEntryOption         { return enterTappedOption{} }
+func (enterTappedOption) battlefieldEntryOption() {}
+func (enterTappedOption) applyBattlefieldEntry(effect *returnCardToBattlefieldEffect) {
+	effect.entryTapped = true
+	effect.entryOptions++
 }
 
 // ReturnCardToBattlefield puts the referenced graveyard card onto the battlefield.
-func ReturnCardToBattlefield(card CardRef, controller PlayerRef) ResolvingEffect {
-	return &returnCardToBattlefieldEffect{card: card, controller: controller}
+func ReturnCardToBattlefield(card CardRef, controller PlayerRef, options ...BattlefieldEntryOption) ResolvingEffect {
+	effect := &returnCardToBattlefieldEffect{card: card, controller: controller}
+	for _, option := range options {
+		if option == nil {
+			effect.entryOptions++
+			continue
+		}
+		option.applyBattlefieldEntry(effect)
+	}
+	return effect
 }
 func (*returnCardToBattlefieldEffect) Text() string {
 	return "return card from graveyard to the battlefield"
@@ -231,7 +257,13 @@ func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
 	return (&returnFromAnyGraveyardEffect{}).Properties()
 }
 func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}
+	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}
+	if e.entryOptions > 1 {
+		node.problem = "supply one entry option"
+	} else if e.entryOptions == 1 && !e.entryTapped {
+		node.problem = "supply a non-nil entry option"
+	}
+	return node
 }
 func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	card, ok := e.card.resolveCard(ctx)
@@ -242,6 +274,6 @@ func (e *returnCardToBattlefieldEffect) Apply(ctx *EffectContext) error {
 	if !ok {
 		return nil
 	}
-	returnGraveyardCardToBattlefield(ctx.Game, card.ID(), controller)
+	returnGraveyardCardToBattlefieldWithEntry(ctx.Game, card.ID(), controller, e.entryTapped)
 	return nil
 }

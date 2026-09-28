@@ -89,6 +89,7 @@ Read-only queries are organized into focused domain interfaces: `PlayerReader`, 
   `CreateOneToken` uses that entry path and saves the accepted token's battlefield incarnation after entry. A later `From` read is absent if the token left or phased out. An entry that creates no permanent clears an earlier value of the same binding.
   `CreateTokenCopiesInto` uses the same batch and saves all accepted incarnations in an instance-local set. Later reads omit a token that left, returned, or phased out. A zero count or rejected batch clears the set. Game clones and delayed effects copy the saved identities. Iteration takes a member snapshot; it does not make the body actions simultaneous.
 * **Graveyard Return to Battlefield**: A typed return checks the graveyard visit before moving the card. The shared graveyard movement service records its departure, and normal battlefield entry creates a new permanent incarnation under the explicitly selected controller. The card keeps its owner and uses normal entry abilities and triggers.
+  `ReturnCardToBattlefield(card, controller, EnterTapped())` sets tapped status during shared entry preparation, before entry triggers are detected. An entry trigger observes the tapped permanent. Entering tapped does not create a tap-transition event. The instruction does not change the card's printed abilities or later returns. A stale or absent graveyard reference causes no entry (CR 400.7, 603.2e, 614.1d).
 
 ---
 

@@ -361,7 +361,11 @@ func (g *Game) PutOnBattlefieldBy(card Card, controller, actor uuid.UUID) *Perma
 }
 
 func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, castColorsSpent int) *Permanent {
-	perm := g.prepareBattlefieldEntry(card, controller, colors, castColorsSpent)
+	return g.putOnBattlefieldWithEntry(card, controller, actor, colors, colorSourceID, castColorsSpent, false)
+}
+
+func (g *Game) putOnBattlefieldWithEntry(card Card, controller, actor uuid.UUID, colors *[]Color, colorSourceID uuid.UUID, castColorsSpent int, tapped bool) *Permanent {
+	perm := g.prepareBattlefieldEntry(card, controller, colors, castColorsSpent, tapped)
 	if perm == nil {
 		return nil
 	}
@@ -373,7 +377,7 @@ func (g *Game) putOnBattlefield(card Card, controller, actor uuid.UUID, colors *
 func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID) []*Permanent {
 	permanents := make([]*Permanent, 0, len(cards))
 	for _, card := range cards {
-		if perm := g.prepareBattlefieldEntry(card, controller, nil, 0); perm != nil {
+		if perm := g.prepareBattlefieldEntry(card, controller, nil, 0, false); perm != nil {
 			permanents = append(permanents, perm)
 		}
 	}
@@ -386,7 +390,7 @@ func (g *Game) putTokensOnBattlefieldTogether(cards []Card, controller uuid.UUID
 	return permanents
 }
 
-func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int) *Permanent {
+func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *[]Color, castColorsSpent int, tapped bool) *Permanent {
 	if card.HasType(TypeLand) && g.effects.Rules.LandsCantEnter() {
 		return nil
 	}
@@ -400,8 +404,8 @@ func (g *Game) prepareBattlefieldEntry(card Card, controller uuid.UUID, colors *
 
 	g.syncAbilityContext(perm)
 
-	// EntersTapped keyword check — consumed on entry, attr cleared immediately after.
-	if perm.HasKeyword(EntersTapped) || g.effects.Rules.ShouldEnterTapped(perm) {
+	// Set tapped status before entry effects and triggers inspect this permanent.
+	if tapped || perm.HasKeyword(EntersTapped) || g.effects.Rules.ShouldEnterTapped(perm) {
 		perm.Tapped = true
 		perm.RevokeBaseAttr(EntersTapped)
 	}

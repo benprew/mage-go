@@ -345,7 +345,18 @@ func lifeGainTarget() dsl.Card {
 
 The example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It can choose no target and still resolve the trigger. A chosen target must remain legal at resolution.
 * `ReturnCardToHand(card)`: Moves the bound graveyard card to its owner's hand. A card that leaves and returns to the graveyard is a new object, so the old binding cannot move it.
-* `ReturnCardToBattlefield(card, controller)`: Moves the bound graveyard card onto the battlefield under the selected player's control. The card keeps its owner. A stale graveyard binding does nothing.
+* `ReturnCardToBattlefield(card CardRef, controller PlayerRef, options ...BattlefieldEntryOption) ResolvingEffect`: Moves the bound graveyard card onto the battlefield under the selected player's control. The card keeps its owner. A stale graveyard binding does nothing. Use `EnterTapped()` when the instruction says that the card enters tapped. The option applies during battlefield entry, before entry triggers are detected. It works in spell, activation, and trigger resolving bodies. Registration rejects nil or repeated entry options. Existing two-argument calls remain valid.
+
+```go
+discarded := dsl.BindCards("discarded")
+picked := dsl.BindCard("picked")
+player := dsl.TargetPlayer("player")
+var _ = dsl.NewInstant("Synthetic return", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
+    dsl.Discard(player, dsl.Fixed(2), dsl.DiscardCardsInto(discarded)),
+    dsl.ChooseUpToOneCard(dsl.You, dsl.FromCards(discarded), dsl.IsLandCard, picked),
+    dsl.ReturnCardToBattlefield(dsl.FromCard(picked), dsl.You, dsl.EnterTapped()),
+), dsl.WithTargets(player))))
+```
 
 ---
 

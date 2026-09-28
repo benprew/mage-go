@@ -141,6 +141,7 @@ var (
 	BindCard                         = mage.BindCard
 	FromCard                         = mage.FromCard
 	ReturnCardToBattlefield          = mage.ReturnCardToBattlefield
+	EnterTapped                      = mage.EnterTapped
 	Counter                          = mage.Counter
 	BindSpell                        = mage.BindSpell
 	FromSpell                        = mage.FromSpell

@@ -486,6 +486,10 @@ func (*returnFromAnyGraveyardEffect) Apply(ctx *EffectContext) error {
 }
 
 func returnGraveyardCardToBattlefield(g *Game, cardID, controller uuid.UUID) {
+	returnGraveyardCardToBattlefieldWithEntry(g, cardID, controller, false)
+}
+
+func returnGraveyardCardToBattlefieldWithEntry(g *Game, cardID, controller uuid.UUID, tapped bool) {
 	for _, player := range g.players {
 		for _, card := range player.Graveyard() {
 			if card.ID() == cardID && !graveyardCardCanEnter(g, card) {
@@ -497,7 +501,7 @@ func returnGraveyardCardToBattlefield(g *Game, cardID, controller uuid.UUID) {
 	if !ok {
 		return
 	}
-	g.PutOnBattlefieldBy(card, controller, controller)
+	g.putOnBattlefieldWithEntry(card, controller, controller, nil, uuid.Nil, 0, tapped)
 }
 
 func graveyardCardCanEnter(g *Game, card Card) bool {
