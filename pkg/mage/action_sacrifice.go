@@ -227,6 +227,11 @@ func SacrificeMatchingCostWithPermanent(filter PermanentFilter, text string, per
 	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, paidPermanent: permanent, capturePermanent: true}
 }
 
+// SacrificeMatchingIncludingSourceCostWithPermanent saves the paid incarnation.
+func SacrificeMatchingIncludingSourceCostWithPermanent(filter PermanentFilter, text string, permanent *PermanentBinding) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: 1, includeSource: true, paidPermanent: permanent, capturePermanent: true}
+}
+
 func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
 	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard && !c.capturePermanent && !c.captureTotalPower {

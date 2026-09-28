@@ -2597,6 +2597,16 @@ card := dsl.NewInstant("Offering", "",
         dsl.IsCreature, "Sacrifice a creature", paid)))
 ```
 
+`SacrificeMatchingIncludingSourceCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost` has the same capture and validation contract, but the payer can choose the ability source if it matches. It works in an activated ability's `Costs` and in a spell's additional costs. Payment locks the chosen battlefield incarnation. The saved identity can supply damage-source LKI after the source is sacrificed; a phased-out source cannot pay. This synthetic activation compiles:
+
+```go
+paid := dsl.BindPermanent("paid source")
+card := dsl.NewCreature("Offering", "", 2, 2, dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.SacrificeMatchingIncludingSourceCostWithPermanent(
+        dsl.IsCreature, "Sacrifice a creature", paid)),
+    dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(paid)), dsl.You, dsl.Fixed(1)))))
+```
+
 `SacrificeMatchingCostWithManaValue(filter, text, binding) Cost` chooses one matching permanent that the payer controls, except the source, and sacrifices it as an activation cost or spell additional cost. It saves that permanent's mana value at payment time in the `NumberBinding`. Use `FromNumber` in the resolving body. The binding belongs to that spell or ability instance, including copies. It is not available in `IfPaid` or `UnlessPaid` resolution-time costs. The text and binding must be present at registration. A zero-value filter matches all permanents.
 
 `SacrificeMatchingIncludingSourceCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost` has the same payment and result contract but also permits the ability source when it matches the filter. Use it in `Costs` for an activation or as a spell additional cost. The payment transaction locks the chosen battlefield incarnation and reads its mana value immediately before sacrifice. The result is available only after successful payment and remains in that spell or ability instance when the source is gone. For example, this synthetic declaration compiles:
