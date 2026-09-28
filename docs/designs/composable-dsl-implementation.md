@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Continuous-Control State Condition
+
+`ControlledSinceTurnStart(PermanentRef) StateCondition` accepts `This` or `AttachedPermanent` in battlefield activation, resolving, and static conditions. It checks that the ability controller currently controls the selected permanent and that the engine's existing control-gain turn predates the current turn. It rejects absent, phased-out, returned, and stale source incarnations. Registration rejects nil and unsupported references. The existing control service and legacy `WithControlledSinceTurnStart` author export remain unchanged. No production card changed.
+
+Rocket Launcher's complete text was checked in `data/ATQ.json` and the Antiquities gap record. Its production ability still uses the legacy activation option; damage and delayed destruction wiring remain separate card work. The contract test first failed because the typed constructor was absent. Synthetic tests cover turn boundary, control change, source return, phasing, clone isolation, failed activation rollback, registration, inspection, and a public DSL declaration. The Antiquities gap record stays blocked because the card is unmigrated. A fresh caller search found one production `WithControlledSinceTurnStart` caller and no production typed caller. The next dependency-ready work is a separate S history condition or P payment output after a fresh requirements audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Player-Controlled Permanent Set
 
 `PermanentsControlledBy(PlayerRef, PermanentFilter) PermanentSet` selects current, unphased battlefield permanents under the resolved player's effective control. It works in resolving spell, activation, and trigger bodies through existing permanent-set consumers. It uses the shared battlefield filter and typed player reference. Registration rejects a nil or undeclared player. It does not add a static condition, mutate control, or change production cards or legacy exports.

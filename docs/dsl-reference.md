@@ -158,6 +158,13 @@ Operations accept explicit subjects rather than baking the subject into the verb
                 dsl.WithTargets(player))))
     }
     ```
+* `ControlledSinceTurnStart(subject PermanentRef) StateCondition`: Checks whether the current ability controller has controlled `This` or `AttachedPermanent` continuously since their most recent turn began. Use it with `ActivationIf`, `IfState`, or `While` on a battlefield source. A new, absent, phased-out, returned, or newly controlled permanent fails. Registration rejects other permanent references. This synthetic declaration compiles:
+
+    ```go
+    card := dsl.NewArtifact("Gate", "", dsl.WithAbility(dsl.Activate(
+        dsl.Costs(), dsl.GainLife(dsl.You, dsl.Fixed(1)),
+        dsl.ActivationIf(dsl.ControlledSinceTurnStart(dsl.This)))))
+    ```
 * `BlockingOrBlockedBy(permanentRef) PermanentSet`: Creatures currently blocking or blocked by the referenced permanent. The set uses current combat links and battlefield incarnations when an action reads it. A phased-out, returned, or absent creature is excluded. Use it in a resolving body; `GrantEachKeyword` captures its members when `Until` resolves.
 
     ```go

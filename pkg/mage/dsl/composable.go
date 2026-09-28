@@ -377,6 +377,7 @@ var (
 	PermanentIsTapped                          = mage.PermanentIsTapped
 	PermanentIsAttacking                       = mage.PermanentIsAttacking
 	PermanentIsBlocking                        = mage.PermanentIsBlocking
+	ControlledSinceTurnStart                   = mage.ControlledSinceTurnStart
 	PermanentIsUntapped                        = mage.PermanentIsUntapped
 	SourceUntappedCondition                    = mage.SourceUntappedCondition
 	SourceBlockingCondition                    = mage.SourceBlockingCondition
