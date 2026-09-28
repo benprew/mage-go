@@ -1400,6 +1400,21 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
+  * `OneOrMoreCardsLeaveYourGraveyard().WithCount(*NumberBinding)`: Match once for each event group in which one or more cards leave the source controller's graveyard. `WithCount` is optional and saves the number of cards in that group. Separate moves cause separate triggers. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding belongs to that trigger instance. Registration rejects nil, unnamed, repeated, or out-of-scope count bindings. This declaration compiles:
+
+    ```go
+    package main
+
+    import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+    var count = dsl.BindNumber("cards that left")
+    var _ = dsl.NewEnchantment("Graveyard watcher", "",
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.OneOrMoreCardsLeaveYourGraveyard().WithCount(count),
+            dsl.GainLife(dsl.You, dsl.FromNumber(count)))))
+
+    func main() {}
+    ```
   * `EachCreatureYouControlAttacks().WithAttacker(*PermanentBinding).WithDefendingPlayer(*PlayerBinding)`: Match once per creature you control that is declared as an attacker. Either capture is optional. `From` reads the attacking battlefield incarnation; `FromPlayer` reads the defending player. Both values belong to that trigger instance. A creature put onto the battlefield attacking does not match. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The combat service currently records player defenders only.
 
     ```go

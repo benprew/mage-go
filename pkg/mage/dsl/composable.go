@@ -252,24 +252,25 @@ type (
 )
 
 var (
-	WhenEventModes            = mage.WhenEventModes
-	AtModes                   = mage.AtModes
-	DealsDamage               = mage.DealsDamage
-	ControllerIsDealtDamage   = mage.ControllerIsDealtDamage
-	ReceivesDamage            = mage.ReceivesDamage
-	DealsDamageToPlayer       = mage.DealsDamageToPlayer
-	DealsCombatDamageToPlayer = mage.DealsCombatDamageToPlayer
-	DealsDamageToOpponent     = mage.DealsDamageToOpponent
-	OpponentLosesLife         = mage.OpponentLosesLife
-	PlayerLosesLife           = mage.PlayerLosesLife
-	ControllerDrawsCard       = mage.ControllerDrawsCard
-	ControllerDrawsCardInto   = mage.ControllerDrawsCardInto
-	OpponentDrawsCard         = mage.OpponentDrawsCard
-	PlayerDrawsCard           = mage.PlayerDrawsCard
-	OpponentDiscardsCard      = mage.OpponentDiscardsCard
-	PlayerDiscardsCard        = mage.PlayerDiscardsCard
-	ControllerGainsLife       = mage.ControllerGainsLife
-	PlayerGainsLife           = mage.PlayerGainsLife
+	WhenEventModes                   = mage.WhenEventModes
+	AtModes                          = mage.AtModes
+	DealsDamage                      = mage.DealsDamage
+	ControllerIsDealtDamage          = mage.ControllerIsDealtDamage
+	ReceivesDamage                   = mage.ReceivesDamage
+	DealsDamageToPlayer              = mage.DealsDamageToPlayer
+	DealsCombatDamageToPlayer        = mage.DealsCombatDamageToPlayer
+	DealsDamageToOpponent            = mage.DealsDamageToOpponent
+	OpponentLosesLife                = mage.OpponentLosesLife
+	PlayerLosesLife                  = mage.PlayerLosesLife
+	ControllerDrawsCard              = mage.ControllerDrawsCard
+	ControllerDrawsCardInto          = mage.ControllerDrawsCardInto
+	OpponentDrawsCard                = mage.OpponentDrawsCard
+	PlayerDrawsCard                  = mage.PlayerDrawsCard
+	OneOrMoreCardsLeaveYourGraveyard = mage.OneOrMoreCardsLeaveYourGraveyard
+	OpponentDiscardsCard             = mage.OpponentDiscardsCard
+	PlayerDiscardsCard               = mage.PlayerDiscardsCard
+	ControllerGainsLife              = mage.ControllerGainsLife
+	PlayerGainsLife                  = mage.PlayerGainsLife
 	// WhenEvent constructs an event-triggered ability that responds to game events.
 	WhenEvent                          = mage.WhenEvent
 	Enters                             = mage.Enters

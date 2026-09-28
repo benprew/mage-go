@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Graveyard Leave Batch Event
+
+`OneOrMoreCardsLeaveYourGraveyard().WithCount(*NumberBinding)` is a sealed battlefield event pattern for `WhenEvent` and `WhenEventModes`. The optional count is the positive `EvtCardsLeftGraveyard` amount for one event group. The pattern compares the event's graveyard player with the source controller at detection, then saves the count in that pending trigger's frame. It reuses the existing graveyard movement and trigger services. It adds no new movement executor, target, or legacy export. Production cards remain unchanged.
+
+The contract test first failed because the constructor was absent. Synthetic engine and public DSL tests cover a two-card batch, missing cards, separate single-card moves, another player's graveyard, source phasing, departure and return under another controller, stack copying, game cloning, inspection, and registration rejection of nil, unnamed, repeated, undominated, or wrong-zone declarations. The complete Garrison Excavator and Spirit Mascot text was checked in `data/SOS.json`. Their production declarations and the broad Secrets of Strixhaven inventory and gap record remain open. Six production callers still use `WheneverOneOrMoreCardsLeaveYourGraveyardTrigger`, so that export remains. The next dependency-ready work is a separate E combat-damage batch pattern or P payment output after a fresh requirements audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Player Draw Event Card Capture
 
 `PlayerDrawsCard(player).WithCard(card)` and `OpponentDrawsCard(player).WithCard(card)` save a completed draw's card and exact hand visit in a pending battlefield trigger. `FromCard` is absent after that visit ends, including when the same card returns to hand. The patterns reuse the existing draw event, hand-visit service, card binding, and trigger frame. A prevented or failed draw emits no draw event. The constructor return types are concrete sealed patterns so the method is available; existing `EventPattern` callers remain valid. The methods work in battlefield `WhenEvent` and `WhenEventModes` bodies. Production cards and legacy exports remain unchanged.
