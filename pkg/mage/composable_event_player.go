@@ -26,6 +26,9 @@ type damageEventPattern struct {
 	permanent                 *PermanentBinding
 	capturePermanent          bool
 	duplicatePermanent        bool
+	recipientPlayer           *PlayerBinding
+	captureRecipientPlayer    bool
+	duplicateRecipientPlayer  bool
 }
 
 // DealsDamage matches damage from the source to any recipient.
@@ -40,6 +43,15 @@ func (p damageEventPattern) WithPermanent(binding *PermanentBinding) damageEvent
 		p.duplicatePermanent = true
 	}
 	p.permanent, p.capturePermanent = binding, true
+	return p
+}
+
+// WithRecipientPlayer saves the player damaged by an any-recipient event.
+func (p damageEventPattern) WithRecipientPlayer(binding *PlayerBinding) damageEventPattern {
+	if p.captureRecipientPlayer {
+		p.duplicateRecipientPlayer = true
+	}
+	p.recipientPlayer, p.captureRecipientPlayer = binding, true
 	return p
 }
 
@@ -181,6 +193,13 @@ func (p damageEventPattern) inspectDefinition() definitionNode {
 			n.children = append(n.children, definitionEdge{"permanent", &eventPermanentCapture{binding: p.permanent}})
 		}
 	}
+	if p.captureRecipientPlayer {
+		if !p.anyRecipient || p.recipientPlayer == nil || p.duplicateRecipientPlayer {
+			n.problem = "damage event requires one player recipient binding on DealsDamage"
+		} else {
+			n.children = append(n.children, definitionEdge{"player recipient", &eventPlayerCapture{binding: p.recipientPlayer}})
+		}
+	}
 	return n
 }
 func (p damageEventPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
@@ -207,6 +226,13 @@ func (p damageEventPattern) captureEventEffects(event *GameEvent, effects []Effe
 	}
 	if p.captureSourceController {
 		captures = append(captures, &eventPlayerCapture{binding: p.sourceController, player: event.SourceControllerID})
+	}
+	if p.captureRecipientPlayer {
+		player := uuid.Nil
+		if event.TargetIncarnation == uuid.Nil {
+			player = event.TargetID
+		}
+		captures = append(captures, &eventPlayerCapture{binding: p.recipientPlayer, player: player})
 	}
 	captures = append(captures, Sequence(effects...))
 	return []Effect{Sequence(captures...)}

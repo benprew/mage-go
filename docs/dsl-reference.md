@@ -2080,6 +2080,16 @@ Triggers on rules events dispatched by the engine:
         ))
     }
     ```
+  * `DealsDamage(source, amountBinding).WithRecipientPlayer(recipientBinding *PlayerBinding)`: Save the player who receives positive damage after prevention and redirection. For a permanent recipient, `FromPlayer` is absent. The player identity stays fixed in the queued trigger even if the source leaves or its controller changes. Use this in a battlefield `WhenEvent` or `WhenEventModes` declaration. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
+
+    ```go
+    recipient := dsl.BindPlayer("recipient")
+    ability := dsl.WhenEvent(
+        dsl.DealsDamage(dsl.This, dsl.BindNumber("dealt")).WithRecipientPlayer(recipient),
+        dsl.GainLife(dsl.FromPlayer(recipient), dsl.Fixed(1)),
+    )
+    _ = ability
+    ```
   * `DealsDamage(source, amountBinding).WithSource(sourceBinding *DamageSourceBinding)`: Save the final damage action's source for a pending battlefield `WhenEvent` or `WhenEventModes` trigger. `source` is `This` or `AttachedPermanent`. The capture works for player and permanent recipients after replacement and prevention. `FromDamageSource(sourceBinding)` keeps the source incarnation and last-known characteristics after departure or return. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
 
     ```go

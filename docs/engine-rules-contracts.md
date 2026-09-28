@@ -274,6 +274,8 @@ Positive damage events keep the final damage action's source snapshot through ev
 
 Positive damage to a permanent records `EvtDamageDealt.TargetIncarnation` after replacement and prevention. `DealsDamage(This, amount).WithPermanent(recipient)` saves that identity in the pending trigger. If the permanent leaves and returns before resolution, `From(recipient)` is absent. Damage to a player and fully prevented damage do not produce a permanent recipient binding (CR 400.7, 120.4b, 603.2g).
 
+`DealsDamage(This, amount).WithRecipientPlayer(recipient)` saves the final player recipient in the pending trigger. A final permanent recipient saves no player, including when a player damage action is redirected to a permanent. Full prevention creates no event or pending trigger. The player ID belongs to each event's frame and survives trigger copies and game cloning (CR 120.4b, 120.8, 603.2g).
+
 `DealsDamage(This, amount).WithSource(source)` and its `AttachedPermanent` form save the final damage source snapshot for either a player or permanent recipient. The pending trigger uses the captured incarnation and characteristics after departure or return. Full prevention and zero damage do not produce a trigger. Each simultaneous damage event keeps its own capture (CR 120.4b, 120.8, 603.2g).
 
 `DealsDamageToPlayer(This, player).WithSource(source)` uses the same snapshot at detection. It saves the source in the pending trigger's frame after final positive damage to a player. Prevention and recipient redirection to a permanent produce no match. A returned source is a new incarnation; the saved source keeps the old controller and characteristics for subsequent damage. Stack copies and game clones retain independent frames.
