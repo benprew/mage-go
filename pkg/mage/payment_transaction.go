@@ -397,6 +397,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
 		}
+		if taps, ok := cost.(*tapNOtherMatchingCost); ok && taps.capture {
+			if tx.paidPermanents == nil {
+				tx.paidPermanents = make(map[*PermanentBinding]capturedPermanent)
+			}
+			tx.paidPermanents[taps.paid] = taps.selected[0]
+		}
 		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
 			if tx.paidCards == nil {
 				tx.paidCards = make(map[*CardBinding]capturedCard)

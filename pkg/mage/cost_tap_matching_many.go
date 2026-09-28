@@ -13,11 +13,18 @@ type tapNOtherMatchingCost struct {
 	locked   bool
 	selected []capturedPermanent
 	chooser  Player
+	paid     *PermanentBinding
+	capture  bool
 }
 
 // TapNOtherMatchingCost taps exactly count other untapped matching permanents.
 func TapNOtherMatchingCost(count int, filter PermanentFilter, text string) Cost {
 	return &tapNOtherMatchingCost{count: count, filter: filter, text: text}
+}
+
+// TapNOtherMatchingCostWithPermanent saves the permanent that pays a single tap cost.
+func TapNOtherMatchingCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost {
+	return &tapNOtherMatchingCost{count: 1, filter: filter, text: text, paid: paid, capture: true}
 }
 
 func (c *tapNOtherMatchingCost) Text() string { return c.text }
@@ -28,6 +35,12 @@ func (c *tapNOtherMatchingCost) inspectDefinition() definitionNode {
 		n.problem = "tap count must be positive"
 	} else if c.text == "" {
 		n.problem = "supply tap cost text"
+	} else if c.capture && c.paid == nil {
+		n.problem = "supply a non-nil paid permanent binding"
+	}
+	if c.capture {
+		n.bindingWrites = []savedBinding{c.paid}
+		n.children = []definitionEdge{{"permanent", c.paid}}
 	}
 	return n
 }

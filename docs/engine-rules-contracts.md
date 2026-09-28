@@ -394,6 +394,8 @@ callers.
 
 `TapAttachedPermanentCost` locks the ability source incarnation, attached permanent incarnation, and attachment during payment preparation. Commit rechecks them before mana, life, or other costs change live state. It uses the shared tap transition and event path. A phased-out, absent, returned, detached, or already tapped host cannot pay. Phasing back in preserves its incarnation. This is a normal tap action cost, so the `{T}` symbol's summoning-sickness restriction does not apply.
 
+`TapNOtherMatchingCostWithPermanent` uses the existing one-permanent matching tap payment. Preparation locks the chosen battlefield incarnation; commit rechecks its controller, filter, tapped state, phasing, and incarnation before payment. Only a successful commit publishes that incarnation to the spell or activation frame. A failed commit leaves the binding absent and does not spend later life costs. The tap uses the shared event path. Stack copies and game clones keep independent binding frames. A returned card cannot stand in for the paid permanent (CR 118.3, 118.10, 400.7).
+
 Grouped activated abilities announce and validate one target list per declared
 group before payment. The ability stack object stores the chosen target's
 declaration beside each target, so an empty optional group does not take a
