@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Defending-Player Control Attack Restriction
+
+`CanAttackOnlyIfDefendingPlayerControls(PermanentFilter) StaticRule` installs the existing battlefield attack restriction through the sealed static-rule role. It checks the nonactive defending player's current matching permanents at continuous-effect evaluation in this two-player engine. Current control qualifies independently of ownership; phasing and departure remove a match. It affects attacker declaration and does not remove an existing attacker. `Static` accepts the rule; resolving effects do not. No new combat state or production card changed. The legacy `PreventFromAttackingIfDefendingPlayerControls` author export remains for eight production calls.
+
+The contract first failed because the typed constructor was absent. Synthetic tests cover controller and owner separation, phasing, departure and return, clone isolation, inspection, registration, and a compiling public DSL declaration. Dandân's complete text in `data/ARN.json` and Pirate Ship and Sea Serpent in `data/4ED.json` require this restriction, but their production definitions and inventory rows remain open for card wiring and full card validation. No JSON gap record closes from this adapter alone. The next dependency-ready work is a separate P payment output after a fresh contract audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Pure Player-Control State Condition
 
 `PlayerControls(PlayerRef, PermanentFilter) StateCondition` checks current effective control of matching battlefield permanents. The pure state role supports `You` and `ActivePlayer` in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. Registration rejects nil, targeted, and saved player references because this state context has no resolution frame. It reuses the battlefield filter and control services; no new control state or card-specific attack rule was added. A zero-value filter matches all permanents. Production cards and legacy exports remain unchanged.

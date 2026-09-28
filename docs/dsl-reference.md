@@ -391,6 +391,15 @@ var _ = dsl.NewInstant("Synthetic return", "", dsl.WithAbility(dsl.Spell(dsl.Seq
 
 ## 5. Pure State Conditions & Filters
 
+`CanAttackOnlyIfDefendingPlayerControls(filter PermanentFilter) StaticRule` restricts the permanent with the ability at attacker declaration. The filter checks current permanents controlled by the defending player, including permanents owned by the attacker controller and controlled by the defender. Phased-out permanents do not match. Install it with `Static`; it cannot be used as a resolving effect. A zero-value filter matches any permanent. This declaration compiles:
+
+```go
+card := dsl.NewCreature("Island-bound attacker", "", 2, 2,
+    dsl.WithAbility(dsl.Static(dsl.CanAttackOnlyIfDefendingPlayerControls(
+        dsl.And(dsl.IsLand, dsl.HasSubType("Island"))))))
+_ = card
+```
+
 State conditions must be **pure functions** of game state (no random choices, mutations, or player prompts):
 
 ### State Conditions (`StateCondition`)

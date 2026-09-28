@@ -390,6 +390,7 @@ var (
 	SourceDamagedOpponentThisTurnCondition     = mage.SourceDamagedOpponentThisTurnCondition
 	IsYourTurn                                 = mage.IsYourTurn
 	PlayerControls                             = mage.PlayerControls
+	CanAttackOnlyIfDefendingPlayerControls     = mage.CanAttackOnlyIfDefendingPlayerControls
 	HasUniqueHighestLife                       = mage.HasUniqueHighestLife
 	PlayerWithUniqueHighestLife                = mage.PlayerWithUniqueHighestLife
 	ControllerLifeAtLeastStartingLife          = mage.ControllerLifeAtLeastStartingLife
