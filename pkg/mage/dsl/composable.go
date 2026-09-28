@@ -174,6 +174,7 @@ var (
 	PermanentsOwnedBy                = mage.PermanentsOwnedBy
 	AttachedAuras                    = mage.AttachedAuras
 	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy
+	BlockersOf                       = mage.BlockersOf
 	ManaValueAtMost                  = mage.ManaValueAtMost
 	WithoutPermanent                 = mage.WithoutPermanent
 	ActivatedAbilityModification     = mage.ActivatedAbilityModification

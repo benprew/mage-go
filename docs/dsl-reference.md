@@ -122,6 +122,17 @@ Operations accept explicit subjects rather than baking the subject into the verb
 * `LowestPower(PermanentSet)`: Selects the permanent with the lowest power among a set.
 
 ### Permanent Sets (`PermanentSet`)
+* `BlockersOf(attacker PermanentRef) PermanentSet`: Creatures currently blocking the referenced attacking creature. It reads combat links when a resolving spell, activation, or trigger consumes the set. It excludes phased-out, removed, departed, or returned combat objects. The referenced attacker must still be attacking. This set has no implicit target; declare a target separately if the spell targets the attacker.
+
+    ```go
+    func blockerCount() dsl.Card {
+        attacker := dsl.TargetPermanent("attacker", dsl.IsCreature)
+        return dsl.NewInstant("Blocker count", "",
+            dsl.WithAbility(dsl.Spell(
+                dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.BlockersOf(attacker))),
+                dsl.WithTargets(attacker))))
+    }
+
 * `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
 * `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
 * `PermanentsControlledBy(player PlayerRef, filter PermanentFilter) PermanentSet`: Current battlefield permanents controlled by the resolved player and matching the filter. Use it in a resolving spell, activation, or trigger body. It excludes phased-out permanents. Control changes and zone changes affect the set when it is read; ownership does not. A missing player yields an empty set. The player can be `You` or a declared player target.
