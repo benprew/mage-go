@@ -124,6 +124,17 @@ Operations accept explicit subjects rather than baking the subject into the verb
 ### Permanent Sets (`PermanentSet`)
 * `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
 * `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
+* `PermanentsControlledBy(player PlayerRef, filter PermanentFilter) PermanentSet`: Current battlefield permanents controlled by the resolved player and matching the filter. Use it in a resolving spell, activation, or trigger body. It excludes phased-out permanents. Control changes and zone changes affect the set when it is read; ownership does not. A missing player yields an empty set. The player can be `You` or a declared player target.
+
+    ```go
+    func controlledArtifactCount() dsl.Card {
+        player := dsl.TargetPlayer("player")
+        return dsl.NewInstant("Controlled artifact count", "{1}{U}",
+            dsl.WithAbility(dsl.Spell(
+                dsl.GainLife(dsl.You,
+                    dsl.CountPermanents(dsl.PermanentsControlledBy(player, dsl.IsArtifact))),
+                dsl.WithTargets(player))))
+    }
 * `AttachedAuras(host PermanentRef) PermanentSet`: Auras attached to the current battlefield incarnation of `host`. The set changes with attachments, zone changes, and phasing. It excludes Equipment and other non-Aura attachments. Use `CountPermanents` to read its current size in a resolving or static value.
 
     ```go

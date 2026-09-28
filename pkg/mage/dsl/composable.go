@@ -170,6 +170,7 @@ var (
 	LifeLostInto                     = mage.LifeLostInto
 	LifeGainedInto                   = mage.LifeGainedInto
 	MatchingPermanents               = mage.MatchingPermanents
+	PermanentsControlledBy           = mage.PermanentsControlledBy
 	PermanentsOwnedBy                = mage.PermanentsOwnedBy
 	AttachedAuras                    = mage.AttachedAuras
 	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy

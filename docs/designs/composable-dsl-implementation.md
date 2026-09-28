@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Player-Controlled Permanent Set
+
+`PermanentsControlledBy(PlayerRef, PermanentFilter) PermanentSet` selects current, unphased battlefield permanents under the resolved player's effective control. It works in resolving spell, activation, and trigger bodies through existing permanent-set consumers. It uses the shared battlefield filter and typed player reference. Registration rejects a nil or undeclared player. It does not add a static condition, mutate control, or change production cards or legacy exports.
+
+The contract first failed because the constructor was absent. Synthetic engine and public DSL tests cover owner/controller separation, a continuous control change, phasing, departure and return, a declared player target, copied stack frames, clone isolation, and registration errors. The S-family inventory proposes this selector, but no JSON gap record is closed by its availability alone. All card wiring remains. A fresh caller search found no production `PermanentsControlledBy` caller; the older `ControlledPermanents` callers remain. The next dependency-ready work is a separate S selector or P payment output after a fresh audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Any-Controller Other-Creature Entry
 
 `AnotherCreatureEnters()` is a sealed battlefield `EventPattern` for `WhenEvent` and `WhenEventModes`. It matches a different creature entering under either controller and reuses the shared entry event, source exclusion, trigger frame, and existing entry filters and captures. `.WithPower` saves effective power at entry. The pattern does not implement Hamletback Goliath's optional effect or change any production card. Its full text was checked in `data/JMP.json`; the Jumpstart inventory and gap record remain open. A fresh caller search found Hamletback Goliath still using its legacy entry trigger. Existing legacy exports remain.
