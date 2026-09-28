@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Pure Player-Control State Condition
+
+`PlayerControls(PlayerRef, PermanentFilter) StateCondition` checks current effective control of matching battlefield permanents. The pure state role supports `You` and `ActivePlayer` in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. Registration rejects nil, targeted, and saved player references because this state context has no resolution frame. It reuses the battlefield filter and control services; no new control state or card-specific attack rule was added. A zero-value filter matches all permanents. Production cards and legacy exports remain unchanged.
+
+The contract tests first failed because `PlayerControls` was absent. Focused tests cover owner versus controller, phasing, leave and return, clone isolation, resolution-time active player, static declaration, invalid references, and a compiling public DSL declaration. Relevant rules are CR 403.3–4, 604.1, and 611.3a. Dandân's complete Oracle text in `data/ARN.json` also requires a defending-player attack restriction; this pure condition does not add that restriction, so its production card and Arabian inventory remain open. A fresh caller search found no production `PlayerControls` caller and eight production `PreventFromAttackingIfDefendingPlayerControls` callers. The next dependency-ready slice is the typed defending-player attack restriction after an engine contract audit, or a separate P payment output.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed. No JSON gap record closes from this adapter alone.
+
 ## Current Slice: Directional Blocker Set
 
 `BlockersOf(PermanentRef) PermanentSet` selects the current creature incarnations blocking a specific attacker. It works in resolving spell, activation, and trigger bodies through existing permanent-set consumers. It reads the combat service when consumed, requires the referenced incarnation to be attacking, and excludes removed, phased-out, departed, and returned blockers. A blocked attacker with no remaining blockers produces an empty set. The selector is directional; the existing `BlockingOrBlockedBy` remains for either combat role. Registration rejects nil and undeclared references, and the sealed role rejects a player in place of a permanent. No production card or legacy export changed.

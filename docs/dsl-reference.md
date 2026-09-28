@@ -396,6 +396,15 @@ State conditions must be **pure functions** of game state (no random choices, mu
 ### State Conditions (`StateCondition`)
 * `Controls(filter)`: Ability controller controls at least one permanent matching filter (includes source).
 * `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
+* `PlayerControls(player PlayerRef, filter PermanentFilter) StateCondition`: Check current control of a matching, unphased battlefield permanent. The state role accepts `You` or `ActivePlayer`; registration rejects target and saved player references because they have no pure state frame. A zero-value filter matches any permanent. Use the condition in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, or `While`. It checks again at each evaluation. This declaration compiles:
+
+```go
+card := dsl.NewInstant("Watch the active player", "", dsl.WithAbility(dsl.Spell(
+    dsl.IfState(dsl.PlayerControls(dsl.ActivePlayer, dsl.IsLand),
+        dsl.GainLife(dsl.You, dsl.Fixed(1))))))
+_ = card
+```
+
 * `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
 * `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
 * `ControllerGainedLifeThisTurn() StateCondition`: Check whether the ability controller gained a positive amount of life this turn, after life-gain replacement. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the turn tracker, so source departure does not erase the result. A missing controller does not match. The history clears at final cleanup. Use `LifeGainedThisTurn(You)` for a number in a resolving effect.
