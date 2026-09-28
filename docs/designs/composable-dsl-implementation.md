@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Saved-Card Result Iteration
+
+`ForEachSavedCard(*CardsBinding, *CardBinding, ResolvingEffect) ResolvingEffect` runs a sequential body once per card captured by one result, in saved order. The member retains its original zone visit. The loop copies binding maps per iteration and restores the outer frame even when the body returns an error. Registration checks producer dominance, a named member, and loop-local scope. It works in spell, activation, and trigger bodies. The first contract test failed because the constructor was absent; focused engine and public DSL tests now cover draw order, card departure and return, clone and stack-copy isolation, scope, and frame restoration. No production card or legacy export changed.
+
+Read the Runes in `data/JMP.json` says, "Draw X cards. For each card drawn this way, discard a card unless you sacrifice a permanent." The loop supplies only the per-card iteration. Its per-iteration optional sacrifice choice and conditional discard still need a separate contract, and its production card and Jumpstart gap record remain blocked. A fresh production search found no `ForEachSavedCard` caller. The next dependency-ready P slice is the per-card sacrifice-or-discard choice after an exact payment and action-outcome audit. Focused tests, the short engine and repository suites, DSL registration and closed-role checks, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Multi-Card Draw Hand-Visit Result
 
 `DrawCardsInto(*CardsBinding) DrawResultOption` saves the cards actually drawn by one typed `Draw` instruction. `FromCards` reads only their captured hand visits; a card that leaves and returns is absent. The declaration works in spell, activation, and triggered resolving bodies and shares the existing individual draw and replacement path. Registration rejects nil, unnamed, duplicate, mixed-kind, and undominated bindings. The set belongs to the current resolution frame and copies with that frame. No production card or legacy export changed.

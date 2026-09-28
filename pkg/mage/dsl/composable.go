@@ -75,6 +75,7 @@ var (
 	UnlessPaid            = mage.UnlessPaid
 	IfPaid                = mage.IfPaid
 	ForEach               = mage.ForEach
+	ForEachSavedCard      = mage.ForEachSavedCard
 )
 
 // Typed subjects and declarations keep choices in the resolving instance.

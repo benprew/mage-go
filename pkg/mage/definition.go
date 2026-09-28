@@ -465,7 +465,7 @@ func (r *Registry) ValidateDefinitions() error {
 
 func definitionSequential(value any) bool {
 	switch value.(type) {
-	case *nextStepEffect, *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot, *permanentLoop, *damageResultLoop, damageEventPattern, controllerDamageEventPattern, lifeLossEventPattern, attachedControllerUpkeepPattern, attachedBecomesTappedPattern:
+	case *nextStepEffect, *sequenceEffect, *compositeEffect, *PipelineData, *permanentSnapshot, *permanentLoop, *savedCardLoop, *damageResultLoop, damageEventPattern, controllerDamageEventPattern, lifeLossEventPattern, attachedControllerUpkeepPattern, attachedBecomesTappedPattern:
 		return true
 	default:
 		return false

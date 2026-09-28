@@ -783,6 +783,17 @@ ability := dsl.Spell(dsl.Sequence(
 ))
 _ = ability
 ```
+`ForEachSavedCard(cards *CardsBinding, member *CardBinding, body ResolvingEffect) ResolvingEffect` runs a resolving body once per card saved by one instruction, in saved order. The member keeps the original zone visit. `FromCard(member)` is absent if that card has left and returned. Each iteration has its own bindings; the member and values produced inside the body cannot be read after the loop. The loop is sequential and does not make its body a simultaneous action. This declaration compiles:
+
+```go
+drawnCards := dsl.BindCards("drawn cards")
+card := dsl.BindCard("drawn card")
+ability := dsl.Spell(dsl.Sequence(
+    dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawCardsInto(drawnCards)),
+    dsl.ForEachSavedCard(drawnCards, card, dsl.RevealCard(dsl.FromCard(card))),
+))
+_ = ability
+```
 For a single-card result in a spell, activation, or trigger body:
 
 ```go
