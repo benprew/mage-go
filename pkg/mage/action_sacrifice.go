@@ -44,6 +44,7 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 	isCreature := perm.HasType(TypeCreature)
 	isToken := perm.IsToken
 	permID := perm.ID()
+	incarnation := perm.incarnationID
 	card := perm.Card
 
 	g.RemoveFromBattlefield(perm)
@@ -73,12 +74,13 @@ func (g *Game) DoSacrifice(perm *Permanent) {
 	g.checkAbilitiesForEvent(selfTriggers, &zoneEvt, permID, controller)
 
 	sacEvt := GameEvent{
-		Type:     EvtSacrifice,
-		SourceID: permID,
-		PlayerID: controller,
-		Flag:     isCreature, // Flag=true means the sacrificed permanent was a creature
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneGraveyard,
+		Type:              EvtSacrifice,
+		SourceID:          permID,
+		SourceIncarnation: incarnation,
+		PlayerID:          controller,
+		Flag:              isCreature, // Flag=true means the sacrificed permanent was a creature
+		FromZone:          ZoneBattlefield,
+		ToZone:            ZoneGraveyard,
 	}
 	g.FireEvent(sacEvt)
 	g.checkAbilitiesForEvent(selfTriggers, &sacEvt, permID, controller)

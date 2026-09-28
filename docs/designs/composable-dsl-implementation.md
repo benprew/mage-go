@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Sacrifice Event Permanent Capture
+
+`CreatureYouSacrifice().WithPermanent(*PermanentBinding)` saves the exact creature incarnation from a completed sacrifice event in each pending battlefield `WhenEvent` or `WhenEventModes` trigger. `From(binding)` is absent after departure; `DamageSourceOf(From(binding))` can use departure LKI after the card returns. The event carries its predeparture incarnation, and the pattern reuses the existing sacrifice event, trigger frame, and permanent capture effect. Registration rejects nil, unnamed, repeated, and undominated captures. Existing `CreatureYouSacrifice()` declarations remain valid. No production card or legacy export changed.
+
+The contract tests first failed because `WithPermanent` was absent. Synthetic tests cover source phasing and self-sacrifice, old incarnation after return, trigger copying, clone isolation, and registration. A public DSL declaration compiles. Kels, Fight Fixer's complete text in `data/JMP.json` requires the sacrifice event, already available before this slice; its card wiring and hybrid payment audit remain open. No JSON gap record closes. A fresh caller search found no production `CreatureYouSacrifice` use; legacy sacrifice-trigger callers remain. The next dependency-ready work is another E event participant or P payment output after a fresh requirements audit.
+
+Validation: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
 ## Current Slice: Graveyard Leave Batch Event
 
 `OneOrMoreCardsLeaveYourGraveyard().WithCount(*NumberBinding)` is a sealed battlefield event pattern for `WhenEvent` and `WhenEventModes`. The optional count is the positive `EvtCardsLeftGraveyard` amount for one event group. The pattern compares the event's graveyard player with the source controller at detection, then saves the count in that pending trigger's frame. It reuses the existing graveyard movement and trigger services. It adds no new movement executor, target, or legacy export. Production cards remain unchanged.

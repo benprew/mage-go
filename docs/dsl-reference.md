@@ -1432,13 +1432,16 @@ Triggers on rules events dispatched by the engine:
 
     func main() {}
     ```
-  * `CreatureYouSacrifice() EventPattern`: Match each creature sacrificed by the source controller, including the source and tokens. It uses the completed sacrifice event and the creature type at sacrifice time. The pattern has no target or sacrificed-object binding. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
+  * `CreatureYouSacrifice() creatureYouSacrificePattern`: Match each creature sacrificed by the source controller, including the source and tokens. It uses the completed sacrifice event and the creature type at sacrifice time. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. `WithPermanent(*PermanentBinding)` saves the departing battlefield incarnation in that trigger. `From(binding)` is absent after sacrifice; `DamageSourceOf(From(binding))` can use its departure LKI even if the card returns. Registration rejects nil, unnamed, repeated, and undominated bindings. For example:
 
     ```go
-    mage.NewCreature("Sacrifice Watcher", "", 1, 1,
-        mage.WithAbility(mage.WhenEvent(
-            mage.CreatureYouSacrifice(),
-            mage.GainLifeFor(mage.You, mage.Fixed(1)))))
+    paid := dsl.BindPermanent("sacrificed creature")
+    card := dsl.NewCreature("Sacrifice Watcher", "", 1, 1,
+        dsl.WithAbility(dsl.WhenEvent(
+            dsl.CreatureYouSacrifice().WithPermanent(paid),
+            dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(paid)),
+                dsl.You, dsl.Fixed(1)))))
+    _ = card
     ```
   * `SpellCast().OfColor(core.Color) EventPattern`: Match a spell cast by any player while the source is on the battlefield. `OfColor` is optional and accepts one of the five Magic colors. It checks the spell's effective color on the stack when the cast event occurs, including color changes. The pattern does not target or bind the spell. Use it in `WhenEvent` or `WhenEventModes`.
   * `SpellCast().FromZone(core.Zone) EventPattern`: Match a spell cast from the given card zone. The filter reads the exact cast stack object's `CastZone` when the cast event occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. It composes with cast filters and captures such as `ByOpponent` and `WithCaster`. Registration rejects a repeated filter, `ZoneStack`, `ZoneAny`, or an invalid zone. A copied spell does not create a cast event. This synthetic declaration compiles:

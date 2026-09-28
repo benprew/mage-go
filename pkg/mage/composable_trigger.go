@@ -714,10 +714,20 @@ func (p creatureDiesPattern) captureEventEffects(event *GameEvent, effects []Eff
 	return []Effect{Sequence(&eventPlayerCapture{binding: p.controller, player: event.PlayerID}, Sequence(effects...))}
 }
 
-type creatureYouSacrificePattern struct{}
+type creatureYouSacrificePattern struct {
+	permanent *PermanentBinding
+	captures  int
+}
 
 // CreatureYouSacrifice matches a creature sacrificed by the source controller.
-func CreatureYouSacrifice() EventPattern { return creatureYouSacrificePattern{} }
+func CreatureYouSacrifice() creatureYouSacrificePattern { return creatureYouSacrificePattern{} }
+
+// WithPermanent saves the sacrificed battlefield incarnation for this trigger.
+func (p creatureYouSacrificePattern) WithPermanent(binding *PermanentBinding) creatureYouSacrificePattern {
+	p.permanent = binding
+	p.captures++
+	return p
+}
 
 func (creatureYouSacrificePattern) eventPattern() {}
 
@@ -728,8 +738,24 @@ func (creatureYouSacrificePattern) makeTrigger(effect ResolvingEffect) *GenericT
 	}})
 }
 
-func (creatureYouSacrificePattern) inspectDefinition() definitionNode {
-	return definitionNode{Role: "event-pattern", Text: "you sacrifice a creature", battlefieldSource: true}
+func (p creatureYouSacrificePattern) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "event-pattern", Text: "you sacrifice a creature", battlefieldSource: true}
+	if p.captures > 1 {
+		n.problem = "save the sacrificed permanent only once"
+	} else if p.captures == 1 && p.permanent == nil {
+		n.problem = "supply a non-nil sacrificed permanent binding"
+	} else if p.permanent != nil {
+		n.bindingWrite = p.permanent
+		n.children = []definitionEdge{{"permanent", &eventPermanentCapture{binding: p.permanent}}}
+	}
+	return n
+}
+
+func (p creatureYouSacrificePattern) captureEventEffects(event *GameEvent, effects []Effect) []Effect {
+	if p.permanent == nil {
+		return effects
+	}
+	return []Effect{Sequence(&eventPermanentCapture{binding: p.permanent, value: capturedPermanent{event.SourceID, event.SourceIncarnation}}, Sequence(effects...))}
 }
 
 // TurnStepPattern describes a turn-step boundary.
