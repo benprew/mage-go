@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Creature-Entry Controller Capture
+
+`AnotherCreatureEnters().WithController(*PlayerBinding)` and the existing controlled-creature entry patterns now save the entering creature's event-time controller in the pending trigger frame. The optional method is available in battlefield `WhenEvent` and `WhenEventModes` declarations. It uses the shared zone-change event, entry characteristic check, and player-binding service. The saved player survives a later control change, departure and return, source departure, stack copying, and game cloning. Source phasing prevents detection. Registration rejects missing, unnamed, repeated, or undominated bindings. No production card or legacy export changed.
+
+The focused contract first failed because `WithController` was absent. Synthetic tests cover a different owner and controller, source departure, entrant return, phasing, stack copying, cloning, and invalid declarations. The public DSL declaration compiles and validates. The complete Lathliss, Dragon Queen text in `data/JMP.json` and the Jumpstart inventory were checked: her existing subtype, nontoken, and controller filter requirements are separate from this capture, and production wiring remains open. No JSON gap record closes. A fresh card search found no production `.WithController` creature-entry pattern caller. The next dependency-ready work is the T recorded target-group boundary after a fresh audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: General Permanent Tap Event
 
 `PermanentBecomesTapped().OfType(type).ByOpponent().WithPermanent(binding).WithController(binding)` is a typed E-family pattern for battlefield `WhenEvent` and `WhenEventModes` declarations. Its filters and captures are optional and immutable. It reuses the completed `EvtTapped` transition, event-time type and controller checks, and the pending-trigger frame. A batch creates one trigger per matching tap after every member has tapped. A saved permanent keeps its battlefield incarnation and becomes absent after departure and return or during phasing. The saved controller survives later changes, source departure, stack copying, and game cloning. Registration rejects invalid or repeated filters and missing, repeated, unnamed, or undominated captures. The public DSL export is `PermanentBecomesTapped`; `BecomesTapped(This)`, `ArtifactBecomesTapped`, and `OpponentLandBecomesTapped` remain available.

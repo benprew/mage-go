@@ -81,19 +81,22 @@ func (p sourceEventPattern) captureDetectedEvent(event *GameEvent, _ GameReader,
 }
 
 type creatureEntersPattern struct {
-	controllerOnly   bool
-	otherOnly        bool
-	nontokenOnly     bool
-	subtype          string
-	filterSubtype    bool
-	keyword          Keyword
-	filterKeyword    bool
-	duplicateKeyword bool
-	permanent        *PermanentBinding
-	capturePermanent bool
-	power            *NumberBinding
-	capturePower     bool
-	duplicatePower   bool
+	controllerOnly      bool
+	otherOnly           bool
+	nontokenOnly        bool
+	subtype             string
+	filterSubtype       bool
+	keyword             Keyword
+	filterKeyword       bool
+	duplicateKeyword    bool
+	permanent           *PermanentBinding
+	capturePermanent    bool
+	controller          *PlayerBinding
+	captureController   bool
+	duplicateController bool
+	power               *NumberBinding
+	capturePower        bool
+	duplicatePower      bool
 }
 
 // CreatureYouControlEnters matches a creature that enters under your control.
@@ -137,6 +140,15 @@ func (p creatureEntersPattern) HasKeyword(keyword Keyword) creatureEntersPattern
 func (p creatureEntersPattern) WithPermanent(permanent *PermanentBinding) creatureEntersPattern {
 	p.permanent = permanent
 	p.capturePermanent = true
+	return p
+}
+
+// WithController saves the entering creature's controller at entry.
+func (p creatureEntersPattern) WithController(controller *PlayerBinding) creatureEntersPattern {
+	if p.captureController {
+		p.duplicateController = true
+	}
+	p.controller, p.captureController = controller, true
 	return p
 }
 
@@ -209,6 +221,14 @@ func (p creatureEntersPattern) inspectDefinition() definitionNode {
 	} else if p.capturePermanent {
 		n.problem = "entry event: supply a permanent binding"
 	}
+	if p.captureController {
+		if p.controller == nil || p.duplicateController {
+			n.problem = "entry event: supply one controller binding"
+		} else {
+			n.bindingWrites = append(n.bindingWrites, p.controller)
+			n.children = append(n.children, definitionEdge{"controller", &eventPlayerCapture{binding: p.controller}})
+		}
+	}
 	if p.power != nil {
 		n.bindingWrites = append(n.bindingWrites, p.power)
 		n.children = append(n.children, definitionEdge{"power", &eventAmountCapture{binding: p.power}})
@@ -236,7 +256,7 @@ func (c eventSourceHasEntrySubtype) CheckTriggerCond(event *GameEvent, reader Ga
 }
 
 func (p creatureEntersPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
-	if !p.capturePermanent && !p.capturePower {
+	if !p.capturePermanent && !p.capturePower && !p.captureController {
 		return nil
 	}
 	permanent := observer.FindPermanent(event.SourceID)
@@ -246,6 +266,9 @@ func (p creatureEntersPattern) captureDetectedEvent(event *GameEvent, observer G
 	var captures []Effect
 	if p.capturePermanent && p.permanent != nil {
 		captures = append(captures, &eventPermanentCapture{binding: p.permanent, value: capturedPermanent{permanent.ID(), permanent.incarnationID}})
+	}
+	if p.captureController && p.controller != nil {
+		captures = append(captures, &eventPlayerCapture{binding: p.controller, player: permanent.ControllerID()})
 	}
 	if p.capturePower && p.power != nil {
 		if game, ok := observer.(*Game); ok {

@@ -2177,7 +2177,7 @@ Triggers on rules events dispatched by the engine:
         dsl.GainLife(dsl.You, dsl.FromNumber(power)),
     )
     ```
-  * `AnotherCreatureEnters()`: A different creature enters under any player's control. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent. It supports the same entry filters and `.WithPermanent(*PermanentBinding)` and `.WithPower(*NumberBinding)` captures as `AnotherCreatureYouControlEnters()`. The power is saved when the creature enters, so later power changes do not change the trigger value. The entering creature is not a target.
+  * `AnotherCreatureEnters()`: A different creature enters under any player's control. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent. It supports the same entry filters and `.WithPermanent(*PermanentBinding)`, `.WithPower(*NumberBinding)`, and `.WithController(*PlayerBinding)` captures as `AnotherCreatureYouControlEnters()`. The power and controller are saved when the creature enters, so later changes do not change the trigger values. The entering creature is not a target. `CreatureYouControlEnters()` also supports `.WithController`. Registration rejects missing, unnamed, repeated, or undominated controller bindings.
     ```go
     power := dsl.BindNumber("entry power")
     ability := dsl.WhenEvent(
@@ -2185,6 +2185,14 @@ Triggers on rules events dispatched by the engine:
         dsl.AddCounters(dsl.This, core.P1P1, dsl.FromNumber(power)),
     )
     _ = dsl.NewCreature("Watcher", "", 6, 6, dsl.WithAbility(ability))
+    ```
+    ```go
+    controller := dsl.BindPlayer("entrant controller")
+    watcher := dsl.NewCreature("Watcher", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(
+        dsl.AnotherCreatureEnters().WithController(controller),
+        dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1)),
+    )))
+    _ = watcher
     ```
   * Creature-death patterns support `.Nontoken()`: Match only a creature that was not a token before it died. For example, `dsl.WhenEvent(dsl.AnotherCreatureDies().Nontoken(), dsl.GainLife(dsl.You, dsl.Fixed(1)))` is valid on a battlefield permanent. This does not choose or target the dying creature.
   * `CreatureDies().OfSubtype(string)` and the other creature-death patterns match a creature with the named creature subtype immediately before death. The filter works in battlefield `WhenEvent` and `WhenEventModes` declarations and composes with controller, source-exclusion, and nontoken filters. Registration rejects an empty, noncreature, or repeated subtype filter. It does not target the dying creature.
