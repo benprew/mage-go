@@ -16,10 +16,15 @@ type spellCastPattern struct {
 	cardType                    CardType
 	filterType                  bool
 	duplicateType               bool
+	instantOrSorcery            bool
+	targetsCreature             bool
+	duplicateTargetsCreature    bool
 	enchantmentSubtype          string
 	filterEnchantmentSubtype    bool
 	duplicateEnchantmentSubtype bool
 	opponentOnly                bool
+	controllerOnly              bool
+	duplicateCasterFilter       bool
 	caster                      *PlayerBinding
 	captureCaster               bool
 	duplicateCaster             bool
@@ -76,7 +81,19 @@ func (p spellCastPattern) WithSpell(binding *SpellBinding) spellCastPattern {
 
 // ByOpponent checks the caster against the source controller when the spell is cast.
 func (p spellCastPattern) ByOpponent() spellCastPattern {
+	if p.opponentOnly || p.controllerOnly {
+		p.duplicateCasterFilter = true
+	}
 	p.opponentOnly = true
+	return p
+}
+
+// ByController matches a spell cast by the trigger source's controller.
+func (p spellCastPattern) ByController() spellCastPattern {
+	if p.opponentOnly || p.controllerOnly {
+		p.duplicateCasterFilter = true
+	}
+	p.controllerOnly = true
 	return p
 }
 
@@ -141,11 +158,29 @@ func (p spellCastPattern) OfColor(color Color) spellCastPattern {
 
 // OfType checks the spell's type when it is cast.
 func (p spellCastPattern) OfType(cardType CardType) spellCastPattern {
-	if p.filterType {
+	if p.filterType || p.instantOrSorcery {
 		p.duplicateType = true
 	}
 	p.cardType = cardType
 	p.filterType = true
+	return p
+}
+
+// OfInstantOrSorcery matches a spell with either spell type.
+func (p spellCastPattern) OfInstantOrSorcery() spellCastPattern {
+	if p.filterType || p.instantOrSorcery {
+		p.duplicateType = true
+	}
+	p.instantOrSorcery = true
+	return p
+}
+
+// TargetsCreature checks the current creature status of a chosen spell target.
+func (p spellCastPattern) TargetsCreature() spellCastPattern {
+	if p.targetsCreature {
+		p.duplicateTargetsCreature = true
+	}
+	p.targetsCreature = true
 	return p
 }
 
@@ -166,11 +201,20 @@ func (p spellCastPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered 
 	if p.opponentOnly {
 		t.SetConditionData(EventPlayerIsNotController{})
 	}
+	if p.controllerOnly {
+		t.SetConditionData(EventPlayerIsController{})
+	}
 	if p.filterColor {
 		t.AndConditionData(spellCastHasEffectiveColor{color: p.color})
 	}
 	if p.filterType {
 		t.AndConditionData(spellCastHasType{cardType: p.cardType})
+	}
+	if p.instantOrSorcery {
+		t.AndConditionData(spellCastIsInstantOrSorcery{})
+	}
+	if p.targetsCreature {
+		t.AndConditionData(spellCastTargetsCreature{})
 	}
 	if p.filterEnchantmentSubtype {
 		t.AndConditionData(spellCastHasEnchantmentSubtype{subtype: p.enchantmentSubtype})
@@ -202,10 +246,28 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 			n.Text = "an opponent casts a spell"
 		}
 	}
+	if p.controllerOnly {
+		n.Text = "this source's controller casts a spell"
+	}
+	if p.duplicateCasterFilter {
+		n.problem = "spell cast event: supply one caster filter"
+	}
 	if p.filterType {
 		n.Text += " with type " + strings.ToLower(p.cardType.String())
 		if p.duplicateType || p.cardType < TypeCreature || p.cardType > TypePlaneswalker || p.cardType == TypeLand {
 			n.problem = "spell cast event: supply one valid spell type"
+		}
+	}
+	if p.instantOrSorcery {
+		n.Text += " with instant or sorcery type"
+		if p.duplicateType {
+			n.problem = "spell cast event: supply one spell type filter"
+		}
+	}
+	if p.targetsCreature {
+		n.Text += " that targets a creature"
+		if p.duplicateTargetsCreature {
+			n.problem = "spell cast event: supply the creature-target filter once"
 		}
 	}
 	if p.filterEnchantmentSubtype {
@@ -284,6 +346,40 @@ func (p spellCastPattern) inspectDefinition() definitionNode {
 }
 
 type spellCastHasType struct{ cardType CardType }
+
+type spellCastIsInstantOrSorcery struct{}
+type spellCastTargetsCreature struct{}
+
+func (spellCastIsInstantOrSorcery) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.TargetID == uuid.Nil {
+		return false
+	}
+	object := game.stack.FindByID(event.TargetID)
+	return object != nil && !object.IsAbility && object.Card != nil && object.SourceID == event.SourceID &&
+		(object.Card.HasType(TypeInstant) || object.Card.HasType(TypeSorcery))
+}
+
+func (spellCastTargetsCreature) CheckTriggerCond(event *GameEvent, reader GameReader, _, _ uuid.UUID) bool {
+	game, ok := reader.(*Game)
+	if !ok || event.TargetID == uuid.Nil {
+		return false
+	}
+	object := game.stack.FindByID(event.TargetID)
+	if object == nil || object.IsAbility || object.Card == nil || object.SourceID != event.SourceID {
+		return false
+	}
+	for _, id := range object.Targets {
+		if object.TargetZones[id] != ZoneBattlefield {
+			continue
+		}
+		permanent := game.FindPermanent(id)
+		if permanent != nil && !permanent.PhasedOut && permanent.incarnationID == object.targetIncarnations[id] && permanent.HasType(TypeCreature) {
+			return true
+		}
+	}
+	return false
+}
 
 type spellCastFromZone struct{ zone Zone }
 

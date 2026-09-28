@@ -1444,6 +1444,7 @@ Triggers on rules events dispatched by the engine:
     ```
 
   * `SpellCast().OfType(core.CardType) EventPattern`: Match a cast spell of one nonland card type. The filter reads the spell on the stack at cast time, including more than one type. A repeated filter or a land type fails registration. It composes with `OfColor`, `ByOpponent`, and `WithCaster` in `WhenEvent` and `WhenEventModes` on a battlefield source. For example:
+
     ```go
     watcher := dsl.NewCreature("Watcher", "{2}{U}", 1, 2,
         dsl.WithAbility(dsl.WhenEvent(
@@ -1452,6 +1453,13 @@ Triggers on rules events dispatched by the engine:
         )),
     )
     _ = watcher
+    ```
+  * `SpellCast().ByController().OfInstantOrSorcery().TargetsCreature() EventPattern`: Match a spell cast by the source controller when that instant or sorcery has at least one chosen target that is currently a creature on the battlefield. The creature check uses the target's captured battlefield incarnation and does not use last-known information after it leaves. The pattern works in battlefield `WhenEvent` and `WhenEventModes`. Each filter can be used separately. Registration rejects repeated caster, type, or creature-target filters and conflicting caster filters. This declaration compiles:
+
+    ```go
+    dsl.NewArtifact("Repartee source", "", dsl.WithAbility(dsl.WhenEvent(
+        dsl.SpellCast().ByController().OfInstantOrSorcery().TargetsCreature(),
+        dsl.Draw(dsl.You, dsl.Fixed(1)))))
     ```
   * `SpellCast().ByOpponent().WithCaster(*PlayerBinding) EventPattern`: `ByOpponent` matches a caster who is an opponent of the source controller when the spell is cast. `WithCaster` is optional and saves that event player for this trigger instance. Read it with `FromPlayer` in the trigger body. The two filters compose with `OfColor`. A missing or repeated caster binding is rejected at registration. This does not bind or target the spell.
     ```go
