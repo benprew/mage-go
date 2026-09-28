@@ -578,6 +578,7 @@ var (
 	IsPlaneswalker           = mage.IsPlaneswalker
 	IsCreature               = mage.IsCreature
 	IsCreatureCard           = mage.IsCreatureCard
+	IsLandCard               = mage.IsLandCard
 	IsEnchantmentCard        = mage.IsEnchantmentCard
 	IsArtifact               = mage.IsArtifact
 	IsEnchantment            = mage.IsEnchantment

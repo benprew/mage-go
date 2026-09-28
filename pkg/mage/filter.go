@@ -103,6 +103,11 @@ var IsCreatureCard = NewCardFilter("creature card", func(c Card) bool {
 	return slices.Contains(c.Types(), TypeCreature)
 })
 
+// IsLandCard matches land cards in any zone.
+var IsLandCard = NewCardFilter("land card", func(c Card) bool {
+	return slices.Contains(c.Types(), TypeLand)
+})
+
 // ControlledBy returns a filter matching permanents controlled by the given player.
 func ControlledBy(playerID uuid.UUID) PermanentFilter {
 	return NewPermanentFilter("you control", func(p *Permanent, _ *Game) bool {

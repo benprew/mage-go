@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Choice from a Captured Graveyard Set
+
+`ChooseUpToOneCard(PlayerRef, CardSet, CardFilter, *CardBinding)` lets the named player choose zero or one current card from the filtered members of a saved graveyard result. `IsLandCard` supplies the land-card filter. The choice uses the existing optional and graveyard choice services and saves a zone-visit `CardRef` in the current resolution frame. Empty, declined, absent, invalid, or departed choices leave the binding absent. It works in spell, activation, and trigger resolving bodies; it is not a target. Declaration inspection checks nil roles, the set producer, binding scope, and binding name. Production cards and legacy exports remain unchanged.
+
+The complete Mind Roots text in `data/SOS.json` was checked: the player discards two cards, then the controller may put up to one land discarded this way onto the battlefield tapped under their control. Synthetic tests first failed because the constructor and land-card filter were absent. They now cover filtering to the captured set, an opponent-owned card, declining, invalid selection, departure and return, game clone isolation, stack copy resolution, inspection, and registration. The public DSL declaration compiles. Mind Roots still needs tapped entry and separate production wiring; its Secrets of Strixhaven inventory and gap record remain open. A fresh search found no production `ChooseUpToOneCard` caller. The next dependency-ready slice is a tapped-entry option for `ReturnCardToBattlefield` or another bounded Z choice after an audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Multi-Card Discard Graveyard Result
 
 `BindCards`, `DiscardCardsInto`, `FromCards`, and `CountCards` save and read all current graveyard visits produced by one typed `Discard` instruction. The affected player makes the existing hand choice. Each selected card passes through the shared effect-discard replacement action. The result excludes prevented and redirected discards, loses a member after that card changes zones, and is local to the resolving instance. `CardSet` is a sealed set role; it cannot stand in for one `CardRef`. The option works in spell, activation, and trigger bodies. The two-argument `Discard` and single-card option remain compatible; no production card or legacy export changed.
