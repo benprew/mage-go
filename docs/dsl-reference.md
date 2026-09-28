@@ -2167,6 +2167,16 @@ Triggers on rules events dispatched by the engine:
             )))
     }
     ```
+  * `OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(playerBinding)`: A battlefield `WhenEvent` or `WhenEventModes` pattern that matches once for each player dealt positive combat damage by one or more creatures controlled by the source controller in one combat damage step. `WithPlayer` is optional; it saves the damaged player in the pending trigger and does not target that player. Registration rejects a nil, unnamed, repeated, or undominated binding. This pattern does not filter the damaging creatures by characteristics or operate from the graveyard.
+    ```go
+    func combatBatchWatcher() dsl.Card {
+        player := dsl.BindPlayer("damaged player")
+        return dsl.NewEnchantment("Combat Batch Watcher", "{G}",
+            dsl.WithAbility(dsl.WhenEvent(
+                dsl.OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(player),
+                dsl.GainLife(dsl.FromPlayer(player), dsl.Fixed(1)),
+            )))
+    }
   * `DealsDamageToOpponent(source, playerBinding)`: Source deals damage to opponent.
   * `ControllerIsDealtDamage(amountBinding).WithSource(sourceBinding *DamageSourceBinding)`: A battlefield source's controller is dealt positive damage by any source. The pattern saves the actual amount after damage replacement and prevention. `WithSource` also saves that damage event's source incarnation and characteristics. Use `FromNumber(amountBinding)` and `FromDamageSource(sourceBinding)` in a `WhenEvent` or `WhenEventModes` body. The damaged player is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. A source-only capture does not change target legality.
     ```go

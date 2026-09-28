@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Battlefield Combat-Damage Batch Event
+
+`OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(*PlayerBinding)` is a sealed battlefield `WhenEvent` or `WhenEventModes` pattern. It observes the shared post-damage `EvtCombatDamageDealt` group once per damaging controller, recipient player, and combat damage step. Its optional player binding captures the recipient in the pending trigger frame. The adapter does not add a damage executor, read a later source controller, or change legacy callers. It cannot be used by a graveyard-active ability and does not filter the damaging creatures by subtype.
+
+The contract first failed because the constructor was absent. Synthetic tests cover a real two-creature combat step, partial and full prevention, opposing controllers, source phasing and departure/return, stack copying, clone isolation, registration errors, and the public DSL declaration. Killian's Confidence in `data/SOS.json` requires this event but also a graveyard-active source, hybrid payment, and source-card return; Keeper of Fables in `data/JMP.json` also needs a non-Human source filter. Neither card is wired, so their inventory and JSON gap records remain open. A fresh search found two production callers of `WheneverOneOrMoreCreaturesYouControlDealCombatDamageToPlayerTrigger`, in Secrets of Strixhaven and Jumpstart; that export remains. No production caller uses the typed pattern. The next dependency-ready slice is the event-time source-characteristic filter for this batch, subject to an LKI audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The earlier missing-`cards/custom` and C-metadata failures do not recur in this workspace. The post-lint diff was reviewed.
+
 ## Current Slice: Sacrifice Event Permanent Capture
 
 `CreatureYouSacrifice().WithPermanent(*PermanentBinding)` saves the exact creature incarnation from a completed sacrifice event in each pending battlefield `WhenEvent` or `WhenEventModes` trigger. `From(binding)` is absent after departure; `DamageSourceOf(From(binding))` can use departure LKI after the card returns. The event carries its predeparture incarnation, and the pattern reuses the existing sacrifice event, trigger frame, and permanent capture effect. Registration rejects nil, unnamed, repeated, and undominated captures. Existing `CreatureYouSacrifice()` declarations remain valid. No production card or legacy export changed.
