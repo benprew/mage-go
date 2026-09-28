@@ -717,6 +717,7 @@ var (
 	SacrificeMatchingCostWithManaValue                = mage.SacrificeMatchingCostWithManaValue
 	SacrificeMatchingIncludingSourceCostWithManaValue = mage.SacrificeMatchingIncludingSourceCostWithManaValue
 	MillCost                                          = mage.MillCost
+	MillCostInto                                      = mage.MillCostInto
 	SacrificeMatchingCostWithCard                     = mage.SacrificeMatchingCostWithCard
 	SacrificeMatchingCostWithPermanent                = mage.SacrificeMatchingCostWithPermanent
 	SacrificeMatchingIncludingSourceCostWithPermanent = mage.SacrificeMatchingIncludingSourceCostWithPermanent

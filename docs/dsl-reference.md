@@ -1310,6 +1310,17 @@ var _ = NewCreature("Upkeep", "", 1, 1,
     WithAbility(At(YourUpkeep,
         UnlessPaid(You, Costs(MillCost(2)), Sacrifice(This)))))
 ```
+
+* `MillCostInto(count int, paid *NumberBinding) Cost`: Use a direct activated cost or spell additional cost to save the final count milled during payment. The count includes mill amount modifiers and can be zero. `FromNumber(paid)` reads it in that spell or ability's resolving body. Registration rejects a nil or unnamed binding, duplicate producers, undominated reads, and use in `EitherCost` or a resolution-time payment. This binding records a count, not the identities of milled cards.
+
+```go
+paid := dsl.BindNumber("milled")
+card := dsl.NewArtifact("Mill source", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.MillCostInto(2, paid)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+)))
+_ = card
+```
 * `ChoosePermanent(playerRef, set, binding)`: Player chooses a permanent at resolution, storing it in `binding`.
 * `ChooseRandomPermanent(set, binding)`: Selects a random permanent from the set at resolution.
 * `ChooseRandomPlayer(playerSet, binding)`: Selects a random player from the set at resolution.

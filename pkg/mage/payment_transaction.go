@@ -449,6 +449,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
 		}
+		if mill, ok := cost.(*millCost); ok && mill.capture {
+			if tx.paidNumbers == nil {
+				tx.paidNumbers = make(map[*NumberBinding]int)
+			}
+			tx.paidNumbers[mill.paid] = mill.lockedAmount
+		}
 		exile, _ := cost.(*exileFromGraveyardCost)
 		if exile != nil && exile.paid != nil {
 			if tx.paidCardSets == nil {

@@ -122,6 +122,9 @@ func (c CostGroup) inspectDefinition() definitionNode {
 		n.problem = "supply an explicit Costs group"
 	}
 	for i, cost := range c.costs {
+		if mill, ok := cost.(*millCost); ok && mill.capture {
+			n.problem = "paid mill count requires an activated ability cost or spell additional cost"
+		}
 		if optional, ok := cost.(*optionalCost); ok && optional.capture {
 			n.problem = "optional payment result requires an activated ability cost or spell additional cost"
 		}

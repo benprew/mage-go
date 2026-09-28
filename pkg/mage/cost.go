@@ -807,6 +807,9 @@ func (c *eitherCost) inspectDefinition() definitionNode {
 		n.problem = "supply at least one cost option"
 	}
 	for i, option := range c.options {
+		if mill, ok := option.(*millCost); ok && mill.capture {
+			n.problem = "paid mill count requires a direct cost"
+		}
 		if exile, ok := option.(*exileFromGraveyardCost); ok && exile.paidRequired {
 			n.problem = "paid graveyard exile cards require a direct cost"
 		}

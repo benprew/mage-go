@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Paid Mill Count
+
+`MillCostInto(int, *NumberBinding) Cost` saves the modifier-adjusted count of cards milled to pay one direct activated cost or spell additional cost. It reuses `MillCost` preparation and the locked total-cost transaction. The count enters the paid spell or activation frame only after commit, so stack copies and game clones retain independent values. Zero is a valid adjusted count. Registration rejects nil or unnamed bindings, duplicate producers, undominated reads, `EitherCost`, and resolution-time payment capture. `MillCost` and all production callers remain unchanged.
+
+The contract test first failed because the constructor was absent, then because declaration validation did not propagate the paid binding. Synthetic tests cover modified and zero counts, two pending activations, spell copying, game cloning, payment rollback, and invalid declarations. A public DSL declaration compiles. This is a P payment-count output. It does not capture milled card identities or repair the general mill zone-change and replacement path. Deep Spawn's complete text in `data/FEM.json` requires an optional mill-two payment, already available through `MillCost`; its production card and Fallen Empires gap record remain open. A fresh caller search found no production `MillCostInto` caller. The next dependency-ready work is another P output or the separate T divided-target announcement contract after a fresh audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role run, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Singular Life-Gain Result
 
 `GainLifeForWithResult(PlayerRef, ResolutionValue, ...LifeGainResultOption)` accepts `LifeGainedInto(*NumberBinding)` and saves one player's actual gain after life-gain modifiers and replacement. It uses the existing gain and event service. An absent recipient, nonpositive amount, or fully prevented gain saves zero. The binding belongs to the current resolving spell, activation, or trigger frame; clones retain separate values. Registration requires one named result option and a dominating producer. `GainLifeFor`, `dsl.GainLife`, and production callers remain unchanged. This is a P action-result adapter; it does not capture life paid as a cost or implement another life-gain replacement contract.

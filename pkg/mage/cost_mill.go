@@ -10,10 +10,17 @@ type millCost struct {
 	amount       int
 	lockedAmount int
 	locked       bool
+	paid         *NumberBinding
+	capture      bool
 }
 
 // MillCost pays by milling the specified number of cards.
 func MillCost(amount int) Cost { return &millCost{amount: amount} }
+
+// MillCostInto saves the adjusted count only after payment commits.
+func MillCostInto(amount int, paid *NumberBinding) Cost {
+	return &millCost{amount: amount, paid: paid, capture: true}
+}
 
 func (c *millCost) Text() string { return fmt.Sprintf("Mill %d cards", c.amount) }
 
@@ -21,6 +28,14 @@ func (c *millCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "cost", Text: c.Text()}
 	if c.amount <= 0 {
 		n.problem = "mill cost requires a positive count"
+	}
+	if c.capture {
+		if c.paid == nil {
+			n.problem = "paid mill count binding must be non-nil"
+		} else {
+			n.bindingWrite = c.paid
+			n.children = append(n.children, definitionEdge{"paid count", c.paid})
+		}
 	}
 	return n
 }
