@@ -134,6 +134,39 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 	}
 	for i, cost := range tx.costs {
 		validationCost := cost
+		if either, ok := cost.(*eitherCost); ok {
+			locked := *either
+			locked.options = append([]Cost(nil), either.options...)
+			var payable []int
+			var labels []string
+			for index, option := range locked.options {
+				if option.CanPay(tx.sourceID, tx.controller, validation) {
+					payable = append(payable, index)
+					labels = append(labels, option.Text())
+				}
+			}
+			if len(payable) == 0 {
+				return fmt.Errorf("no payable cost option")
+			}
+			choice := 0
+			if len(payable) > 1 {
+				choice = tx.game.GetPlayer(tx.controller).ChooseMode(labels, either.Text())
+				if choice < 0 || choice >= len(payable) {
+					return fmt.Errorf("invalid cost option")
+				}
+			}
+			locked.selected = payable[choice]
+			locked.locked = true
+			if exile, ok := locked.options[locked.selected].(*exileFromGraveyardCost); ok {
+				chosen := *exile
+				if err := chosen.choose(tx.controller, tx.game); err != nil {
+					return err
+				}
+				locked.options[locked.selected] = &chosen
+			}
+			validationCost = &locked
+			tx.costs[i] = &locked
+		}
 		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
 			payer := tx.game.GetPlayer(tx.controller)
 			if payer == nil {
@@ -207,6 +240,14 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			locked := *mill
 			locked.lockedAmount = max(0, validation.ApplyMillModifiers(tx.controller, mill.amount))
 			locked.locked = true
+			validationCost = &locked
+			tx.costs[i] = &locked
+		}
+		if exile, ok := cost.(*exileFromGraveyardCost); ok {
+			locked := *exile
+			if err := locked.choose(tx.controller, tx.game); err != nil {
+				return err
+			}
 			validationCost = &locked
 			tx.costs[i] = &locked
 		}
@@ -301,6 +342,14 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) && !exile.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen graveyard exile")
+		}
+		if exile, ok := cost.(*exileFromGraveyardCost); ok && !exile.CanPay(tx.sourceID, tx.controller, tx.game) {
+			return fmt.Errorf("cannot pay chosen graveyard exile")
+		}
+		if either, ok := cost.(*eitherCost); ok && either.locked {
+			if _, exile := either.options[either.selected].(*exileFromGraveyardCost); exile && !either.CanPay(tx.sourceID, tx.controller, tx.game) {
+				return fmt.Errorf("cannot pay chosen graveyard exile")
+			}
 		}
 		if counter, ok := cost.(*removeCountersCost); ok && counter.capture && !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay locked counter cost")

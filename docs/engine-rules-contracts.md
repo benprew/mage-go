@@ -375,6 +375,8 @@ An exiled card has a new visit identity each time it enters exile. `ExileMatchin
 
 ## 9. Total-Cost Payment Transactions (CR 601.2, 602.2)
 
+`ExileFromGraveyardCost` locks the payer's distinct card choices and their graveyard visits during total-cost preparation. The isolated validation game pays those exact choices. Before live mana, life, or other cost payment, commit checks that every selected visit is still present. A card that leaves and returns is a new object and cannot satisfy the old choice. `EitherCost` locks its selected branch with the card choices, so the live commit does not ask again. The existing graveyard movement service moves the chosen group and emits its graveyard-leave batch event. This cost does not publish a paid-card binding (CR 118.3, 400.7, 601.2h, 701.13a).
+
 The typed single-card discard result uses `PlayerDiscardByEffect` after the affected player chooses the card. It saves the resulting graveyard visit only when the completed discard puts the card there. Replacement to the library still completes the discard but produces no graveyard `CardRef`. The saved visit is instance-local; a later zone move makes it absent, and a game clone keeps its own result.
 
 The typed multi-card discard result uses the same affected-player choice and effect-discard replacement action for each chosen card. `DiscardCardsInto` saves only completed moves to graveyards. `FromCards` retains each new graveyard visit, and `CountCards` counts only visits still present when read. A prevented discard, a redirected destination, or a later move contributes no current card. The result is local to one resolution frame, and game clones copy its member list independently (CR 400.7j, 609.3, 701.9).

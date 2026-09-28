@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Locked Graveyard Exile Cost Choice
+
+`ExileFromGraveyardCost(int) Cost` now lets the payer select distinct cards during payment preparation and locks each graveyard visit. The existing transaction validates those choices on its isolated game and rechecks them before live payment. A returned card, an invalid choice, or insufficient cards fails without exiling cards or paying later life costs. An `EitherCost` branch is selected once and retains its chosen exile cards. The cost is usable in activated `Costs` groups and spell additional costs; it does not yet produce a typed paid-card set or resolve general zone-change replacement ordering. No production card or legacy export changed.
+
+Grim Lavamancer's complete cost and Soaring Stoneglider's alternative additional cost were checked in `data/JMP.json` and `data/SOS.json`. Synthetic tests first failed because the cost did not ask for card choices, accepted a returned visit, and accepted an invalid choice. They now cover distinct selection, batch movement, stale visit rejection, rollback, clone isolation, the `EitherCost` branch, and registration rejection of a negative count. Production callers remain in `cards/jumpstart/creatures.go` and `cards/secretsofstrixhaven/creatures.go`; typed card wiring and full card audits are separate. No JSON gap record closes. The next dependency-ready P work is a paid-card set binding for multi-card graveyard exile, after checking its consumer requirements, or the T divided-target contract.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The standalone reference example compiles. The post-lint diff was reviewed.
+
 ## Current Slice: Paid Matching-Tap Permanent
 
 `TapNOtherMatchingCostWithPermanent(PermanentFilter, string, *PermanentBinding) Cost` chooses and taps one other untapped matching permanent controlled by the payer. It uses the existing locked matching-tap payment transaction and publishes the selected battlefield incarnation only after commit. `From(paid)` works while that incarnation remains present; `DamageSourceOf(From(paid))` can use its departure LKI. It is valid in an activated `Costs` group or as a spell additional cost. Registration rejects nil, unnamed, duplicate, undominated, and resolution-time payment bindings. `TapNOtherMatchingCost` and all production callers remain unchanged.

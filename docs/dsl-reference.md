@@ -2530,6 +2530,16 @@ func watchDeparture() dsl.Card {
 
 ## 10. Spells, Activations, and Costs
 
+`ExileFromGraveyardCost(n int) Cost` makes the payer choose `n` distinct cards from their graveyard. It works in an activated `Costs` group, a spell additional cost, and the graveyard branch of `EitherCost`. The choice is locked during payment preparation. Commit rechecks each card's graveyard visit before paying resources; a card that leaves and returns cannot pay in place of the chosen object. An invalid or stale choice exiles none of the chosen cards. Zero is allowed, and registration rejects a negative count. This cost does not create a typed card binding.
+
+```go
+ability := dsl.Activate(
+    dsl.Costs(dsl.Mana("{R}"), dsl.ExileFromGraveyardCost(2)),
+    dsl.DealDamageFrom(dsl.This, dsl.You, dsl.Fixed(2)))
+card := dsl.NewArtifact("Synthetic graveyard payment", "", dsl.WithAbility(ability))
+_ = card
+```
+
 `OptionalRevealFromHandCost(filter CardFilter, text, prompt string, paid *NumberBinding, card *CardBinding) Cost` offers one matching hand card as an optional spell additional cost or activated ability cost. The player chooses whether to pay during announcement. If paid, `FromNumber(paid)` is 1 and `FromCard(card)` refers to the chosen hand visit. If declined or no matching card exists, the number is 0 and the card reference is absent. The selected card is revealed on payment. A card that leaves and returns to hand is absent from the saved binding. The payment choice, card, and result belong to each spell or ability instance. Registration requires named bindings, cost text, and prompt text; it rejects duplicate producers and resolution-time costs.
 
 ```go

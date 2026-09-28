@@ -784,7 +784,9 @@ func (c *revealFromHandCost) Text() string {
 // several alternatives at pay time. Used for "as an additional cost,
 // discard a card or pay {N}" and similar OR-style additional costs.
 type eitherCost struct {
-	options []Cost
+	options  []Cost
+	locked   bool
+	selected int
 }
 
 // EitherCost creates a branching cost that lets the controller pick which
@@ -799,7 +801,21 @@ func EitherCost(options ...Cost) Cost {
 	return &eitherCost{options: options}
 }
 
+func (c *eitherCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "alternative-cost", Text: c.Text()}
+	if len(c.options) == 0 {
+		n.problem = "supply at least one cost option"
+	}
+	for i, option := range c.options {
+		n.children = append(n.children, definitionEdge{fmt.Sprintf("options[%d]", i), option})
+	}
+	return n
+}
+
 func (c *eitherCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.locked {
+		return c.selected >= 0 && c.selected < len(c.options) && c.options[c.selected].CanPay(sourceID, controller, g)
+	}
 	for _, opt := range c.options {
 		if opt.CanPay(sourceID, controller, g) {
 			return true
@@ -809,6 +825,12 @@ func (c *eitherCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 }
 
 func (c *eitherCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	if c.locked {
+		if !c.CanPay(sourceID, controller, g) {
+			return fmt.Errorf("chosen cost is no longer payable")
+		}
+		return c.options[c.selected].Pay(sourceID, controller, g)
+	}
 	var payable []int
 	var labels []string
 	for i, opt := range c.options {
@@ -847,7 +869,9 @@ func (c *eitherCost) Text() string {
 
 // exileFromGraveyardCost requires exiling cards from your graveyard.
 type exileFromGraveyardCost struct {
-	amount int
+	amount   int
+	locked   bool
+	selected []capturedCard
 }
 
 // ExileFromGraveyardCost creates a cost that requires the controller to exile n cards from their graveyard.
@@ -855,21 +879,69 @@ func ExileFromGraveyardCost(n int) Cost {
 	return &exileFromGraveyardCost{amount: n}
 }
 
+func (c *exileFromGraveyardCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "graveyard-exile-cost", Text: c.Text()}
+	if c.amount < 0 {
+		n.problem = "graveyard exile cost count cannot be negative"
+	}
+	return n
+}
+
+func (c *exileFromGraveyardCost) choose(controller uuid.UUID, g *Game) error {
+	p := g.GetPlayer(controller)
+	if p == nil || c.amount < 0 || len(p.Graveyard()) < c.amount {
+		return fmt.Errorf("cannot pay graveyard exile cost")
+	}
+	c.selected = make([]capturedCard, 0, c.amount)
+	candidates := append([]Card(nil), p.Graveyard()...)
+	for range c.amount {
+		chosen := p.ChooseCardFromGraveyard(candidates, c.Text(), g)
+		index := slices.IndexFunc(candidates, func(card Card) bool {
+			return chosen != nil && card.ID() == chosen.ID()
+		})
+		if index < 0 {
+			return fmt.Errorf("invalid graveyard exile cost choice")
+		}
+		c.selected = append(c.selected, capturedCard{id: chosen.ID(), visit: g.graveyardVisit(chosen.ID()), zone: ZoneGraveyard})
+		candidates = slices.Delete(candidates, index, index+1)
+	}
+	c.locked = true
+	return nil
+}
+
 func (c *exileFromGraveyardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
-	return p != nil && len(p.Graveyard()) >= c.amount
+	if p == nil || c.amount < 0 || len(p.Graveyard()) < c.amount {
+		return false
+	}
+	if !c.locked {
+		return true
+	}
+	if len(c.selected) != c.amount {
+		return false
+	}
+	for _, selected := range c.selected {
+		if selected.visit == uuid.Nil || g.graveyardVisit(selected.id) != selected.visit || !slices.ContainsFunc(p.Graveyard(), func(card Card) bool { return card.ID() == selected.id }) {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *exileFromGraveyardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return ErrPlayerNotFound
+	if !c.locked {
+		chosen := *c
+		if err := chosen.choose(controller, g); err != nil {
+			return err
+		}
+		return chosen.Pay(sourceID, controller, g)
 	}
-	gy := p.Graveyard()
-	n := min(c.amount, len(gy))
-	ids := make([]uuid.UUID, 0, n)
-	for i := range n {
-		ids = append(ids, gy[i].ID())
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay chosen graveyard exile cost")
+	}
+	ids := make([]uuid.UUID, 0, c.amount)
+	for _, selected := range c.selected {
+		ids = append(ids, selected.id)
 	}
 	removed := g.MoveCardsFromGraveyard(controller, ids, ZoneExile)
 	for _, card := range removed {
