@@ -337,8 +337,16 @@ func drawAmountProperties(amount ResolutionValue) EffectProperties {
 }
 
 // Discard lets the selected player discard through the existing choice and replacement paths.
-func Discard(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
-	return &discardSubjectEffect{subject, amount}
+func Discard(subject PlayerRef, amount ResolutionValue, options ...DiscardCardResultOption) ResolvingEffect {
+	e := &discardSubjectEffect{subject: subject, amount: amount}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyDiscardCardResult(e)
+	}
+	return e
 }
 
 // PlayerSet selects a collection of players when an operation starts.

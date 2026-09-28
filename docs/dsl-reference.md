@@ -741,7 +741,19 @@ all players and leaves it in its zone. The engine stores a public snapshot in
 not an ongoing effect that keeps a card revealed. An absent reference has no
 effect. Multi-card draw-result consumers remain open.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
-* `Discard(PlayerRef, ResolutionValue)`: Player chooses and discards cards from hand.
+* `Discard(PlayerRef, ResolutionValue, ...DiscardCardResultOption) ResolvingEffect`: The selected player chooses and discards cards from hand in a spell, activation, or trigger body. `DiscardCardInto(*CardBinding) DiscardCardResultOption` saves the card from one completed discard into a graveyard. The amount must be `Fixed(1)`. `FromCard` reads that graveyard visit until the card leaves. An absent player, empty hand, prevented discard, or discard replaced with a move to another zone clears the binding. Registration rejects a nil, unnamed, duplicate, or undominated binding. Multi-card results need a separate collection contract.
+
+This synthetic declaration compiles:
+
+```go
+discarded := dsl.BindCard("discarded")
+player := dsl.TargetPlayer("player")
+card := dsl.NewInstant("Return discarded card", "", dsl.WithAbility(dsl.Spell(
+    dsl.Sequence(
+        dsl.Discard(player, dsl.Fixed(1), dsl.DiscardCardInto(discarded)),
+        dsl.ReturnCardToHand(dsl.FromCard(discarded))),
+    dsl.WithTargets(player))))
+```
 * `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
 * `DiscardEntireHand(PlayerRef, ...DiscardResultOption) ResolvingEffect`: Discards the player's hand at resolution. `DiscardAmountInto(*NumberBinding) DiscardResultOption` saves the number of cards actually discarded by this instruction. A prevented discard does not count; a discard redirected to another zone does count. An absent player or empty hand saves zero. Read the result later in the same spell, activation, or trigger with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated binding.
 * `DiscardEach(PlayerSet, ...DiscardEachResultOption) ResolvingEffect`: Makes each selected player discard their hand in one instruction. It snapshots the selected hands, prepares discard replacements, moves the cards, then sends discard events after all moves. `DiscardTotalInto(*NumberBinding) DiscardEachResultOption` saves the number of completed discards across the batch, including cards redirected to another zone. An empty or absent set, empty hands, and prevented discards save zero. It works in spell, activation, and trigger bodies. A singular `PlayerRef` is not a `PlayerSet`. For example, `dsl.NewSorcery("Shared discard", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(dsl.DiscardEach(dsl.EachPlayer), dsl.DrawEach(dsl.EachPlayer, dsl.Fixed(7))))))` compiles.

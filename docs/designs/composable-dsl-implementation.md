@@ -1,5 +1,11 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Discarded Card Result
+
+`Discard(PlayerRef, Fixed(1), DiscardCardInto(*CardBinding))` saves the exact card from one completed discard into a graveyard. It uses the affected player's existing choice and the shared effect-discard replacement service. `FromCard` checks the saved graveyard visit, so departure and return make it absent. Spell, activation, and trigger bodies can use the binding. The existing two-argument `Discard` call and all legacy exports remain available. No production card changed.
+
+The focused contract first failed at compilation because the option was absent. Synthetic engine and public DSL tests cover identity, absent players, empty hands, replacement to the library, departure and return, registration validation, stack copying, and game clone isolation. Mind Roots's full text in `data/SOS.json` needs a result set for two discarded cards, a choice of up to one land from that set, and tapped entry under the spell controller. This singular result does not meet its gap record, so its production wiring and status remain open. A fresh search found no production caller of `DiscardCardInto`; legacy discard callers remain. Focused tests, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` (zero issues), and `git diff --check` pass. The post-lint diff was reviewed. The next dependency-ready P/Z slice is a multi-card discard result set with zone-visit identity and a bounded choice from that set.
+
 ## Current Slice: Paid Source Sacrifice Permanent Identity
 
 `SacrificeMatchingIncludingSourceCostWithPermanent(PermanentFilter, string, *PermanentBinding) Cost` saves the exact chosen battlefield incarnation during a one-permanent sacrifice payment, including the ability source when it matches. It reuses the existing locked payment transaction, incarnation checks, departure LKI, and instance-local permanent binding. It works in activated costs and spell additional costs. `From(binding)` is absent after sacrifice; `DamageSourceOf(From(binding))` can use the old incarnation. The source-exclusive constructor and all legacy exports remain. No production card changed.
