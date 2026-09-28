@@ -89,6 +89,8 @@ type (
 	PlayerTargetBinding       = mage.PlayerTargetBinding
 	CardRef                   = mage.CardRef
 	CardBinding               = mage.CardBinding
+	CardSet                   = mage.CardSet
+	CardsBinding              = mage.CardsBinding
 	CardTargetBinding         = mage.CardTargetBinding
 	TargetNumber              = mage.TargetNumber
 	SpellOption               = mage.SpellOption
@@ -217,12 +219,16 @@ var (
 	// SkipNextUntapOf prevents untapping during the specified player's next untap step.
 	SkipNextUntapOf = mage.SkipNextUntapOf
 	// Draw draws cards for the specified player.
-	Draw            = mage.DrawFor
-	DrawEach        = mage.DrawEach
-	DrawAmountInto  = mage.DrawAmountInto
-	DrawCardInto    = mage.DrawCardInto
-	Discard         = mage.Discard
-	DiscardCardInto = mage.DiscardCardInto
+	Draw             = mage.DrawFor
+	DrawEach         = mage.DrawEach
+	DrawAmountInto   = mage.DrawAmountInto
+	DrawCardInto     = mage.DrawCardInto
+	Discard          = mage.Discard
+	DiscardCardInto  = mage.DiscardCardInto
+	DiscardCardsInto = mage.DiscardCardsInto
+	BindCards        = mage.BindCards
+	FromCards        = mage.FromCards
+	CountCards       = mage.CountCards
 	// DiscardAtRandom uses a typed player and amount. Ring of Renewal uses You and Fixed(1).
 	DiscardAtRandom   = mage.DiscardAtRandom
 	DiscardEntireHand = mage.DiscardEntireHand

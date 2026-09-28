@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Multi-Card Discard Graveyard Result
+
+`BindCards`, `DiscardCardsInto`, `FromCards`, and `CountCards` save and read all current graveyard visits produced by one typed `Discard` instruction. The affected player makes the existing hand choice. Each selected card passes through the shared effect-discard replacement action. The result excludes prevented and redirected discards, loses a member after that card changes zones, and is local to the resolving instance. `CardSet` is a sealed set role; it cannot stand in for one `CardRef`. The option works in spell, activation, and trigger bodies. The two-argument `Discard` and single-card option remain compatible; no production card or legacy export changed.
+
+The contract first failed at compilation because these constructors and roles were absent. Focused synthetic tests cover a short hand, empty result, target absence, replacement to library, full prevention, departure and return, stack copying, clone isolation, inspection through registration, and invalid, repeated, or undominated bindings. A public DSL declaration compiles and validates. The complete Mind Roots text in `data/SOS.json` requires two discards followed by a choice of up to one land from exactly those cards and tapped entry under the spell controller. This slice provides the result set only; bounded choice, tapped entry, and production wiring in `cards/secretsofstrixhaven/spells.go` remain. Its inventory and gap record stay open. A fresh search found no production `DiscardCardsInto` caller; two legacy `DiscardCards` author calls remain in Jumpstart and Fallen Empires, plus direct discard callbacks such as Mind Roots. The next dependency-ready slice is a bounded, non-targeted choice from a captured `CardSet`, with zone-visit and chooser rules.
+
+Focused tests, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, and `make lint` (zero issues) pass. The post-lint diff and `git diff --check` were reviewed.
+
 ## Current Slice: Singular Discarded Card Result
 
 `Discard(PlayerRef, Fixed(1), DiscardCardInto(*CardBinding))` saves the exact card from one completed discard into a graveyard. It uses the affected player's existing choice and the shared effect-discard replacement service. `FromCard` checks the saved graveyard visit, so departure and return make it absent. Spell, activation, and trigger bodies can use the binding. The existing two-argument `Discard` call and all legacy exports remain available. No production card changed.

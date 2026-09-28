@@ -19,6 +19,7 @@ type ResolutionState struct {
 	permanentBindings     map[*PermanentBinding]capturedPermanent
 	createdTokenBindings  map[*CreatedTokensBinding][]capturedPermanent
 	cardBindings          map[*CardBinding]capturedCard
+	cardsBindings         map[*CardsBinding][]capturedCard
 	spellBindings         map[*SpellBinding]uuid.UUID
 	playerBindings        map[*PlayerBinding]uuid.UUID
 	numberBindings        map[*NumberBinding]int
@@ -123,6 +124,7 @@ func (s *ResolutionState) Clear() {
 	s.permanentBindings = nil
 	s.createdTokenBindings = nil
 	s.cardBindings = nil
+	s.cardsBindings = nil
 	s.spellBindings = nil
 	s.playerBindings = nil
 	s.numberBindings = nil
@@ -197,6 +199,7 @@ func (s *ResolutionState) Clone() ResolutionState {
 		permanentBindings:      maps.Clone(s.permanentBindings),
 		createdTokenBindings:   cloneCreatedTokenBindings(s.createdTokenBindings),
 		cardBindings:           maps.Clone(s.cardBindings),
+		cardsBindings:          cloneCardsBindings(s.cardsBindings),
 		spellBindings:          maps.Clone(s.spellBindings),
 		playerBindings:         maps.Clone(s.playerBindings),
 		numberBindings:         maps.Clone(s.numberBindings),
@@ -252,4 +255,15 @@ func (s *ResolutionState) Clone() ResolutionState {
 		maps.Copy(c.resolvingCounterDistribution, s.resolvingCounterDistribution)
 	}
 	return c
+}
+
+func cloneCardsBindings(bindings map[*CardsBinding][]capturedCard) map[*CardsBinding][]capturedCard {
+	if bindings == nil {
+		return nil
+	}
+	clone := make(map[*CardsBinding][]capturedCard, len(bindings))
+	for binding, cards := range bindings {
+		clone[binding] = append([]capturedCard(nil), cards...)
+	}
+	return clone
 }

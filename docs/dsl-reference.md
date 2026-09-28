@@ -741,7 +741,17 @@ all players and leaves it in its zone. The engine stores a public snapshot in
 not an ongoing effect that keeps a card revealed. An absent reference has no
 effect. Multi-card draw-result consumers remain open.
 * `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
-* `Discard(PlayerRef, ResolutionValue, ...DiscardCardResultOption) ResolvingEffect`: The selected player chooses and discards cards from hand in a spell, activation, or trigger body. `DiscardCardInto(*CardBinding) DiscardCardResultOption` saves the card from one completed discard into a graveyard. The amount must be `Fixed(1)`. `FromCard` reads that graveyard visit until the card leaves. An absent player, empty hand, prevented discard, or discard replaced with a move to another zone clears the binding. Registration rejects a nil, unnamed, duplicate, or undominated binding. Multi-card results need a separate collection contract.
+* `Discard(PlayerRef, ResolutionValue, ...DiscardCardResultOption) ResolvingEffect`: The selected player chooses and discards cards from hand in a spell, activation, or trigger body. `DiscardCardInto(*CardBinding) DiscardCardResultOption` saves the card from one completed discard into a graveyard. The amount must be `Fixed(1)`. `FromCard` reads that graveyard visit until the card leaves. An absent player, empty hand, prevented discard, or discard replaced with a move to another zone clears the binding. Registration rejects a nil, unnamed, duplicate, or undominated binding.
+* `BindCards(string) *CardsBinding`, `DiscardCardsInto(*CardsBinding) DiscardCardResultOption`, `FromCards(*CardsBinding) CardSet`, and `CountCards(CardSet) ResolutionValue`: Save all cards that one `Discard` instruction puts into graveyards, then count the cards still in those exact graveyard visits. These declarations work in spell, activation, and trigger resolving bodies. Prevention, another destination, an absent player, and an empty hand produce an empty set. Registration rejects nil, unnamed, repeated, or undominated set bindings. `CardSet` is a sealed collection and cannot be used as a singular `CardRef`. A bounded choice from this set is separate work. This synthetic declaration compiles:
+
+```go
+discarded := dsl.BindCards("discarded")
+player := dsl.TargetPlayer("player")
+card := dsl.NewInstant("Count discarded", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
+    dsl.Discard(player, dsl.Fixed(2), dsl.DiscardCardsInto(discarded)),
+    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(discarded))),
+), dsl.WithTargets(player))))
+```
 
 This synthetic declaration compiles:
 

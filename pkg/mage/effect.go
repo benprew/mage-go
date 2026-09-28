@@ -153,6 +153,9 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 	savedCards := g.resolution.cardBindings
 	g.resolution.cardBindings = maps.Clone(cards)
 	defer func() { g.resolution.cardBindings = savedCards }()
+	savedCardSets := g.resolution.cardsBindings
+	g.resolution.cardsBindings = nil
+	defer func() { g.resolution.cardsBindings = savedCardSets }()
 	savedSpells := g.resolution.spellBindings
 	g.resolution.spellBindings = nil
 	defer func() { g.resolution.spellBindings = savedSpells }()
