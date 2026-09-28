@@ -1,5 +1,14 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Paid Graveyard Exile Card Set
+
+`ExileFromGraveyardCostWithCards(int, *CardsBinding) Cost` saves the exact cards that a direct multi-card graveyard exile payment moved into exile. `FromCards` reads only their captured exile visits; a card that leaves and returns is absent. The binding is published only after payment commits and is stored in each spell or ability stack frame, including copies and game clones. The constructor works in activated `Costs` and spell additional costs. Registration rejects nil, unnamed, duplicate, and undominated bindings, negative counts, resolution-time payment, and the captured form inside `EitherCost`. The original cost remains available, including inside `EitherCost`. No production card or legacy export changed.
+
+This slice reuses the locked graveyard choice, payment transaction, group movement, exile visit, and card-set services. Its contract test first failed because the constructor and card-set stack capture were absent. Synthetic engine tests cover activation and spell payment, selected-card identity, stack copying, clone isolation, leave and return, stale-choice rollback before life payment, and registration errors. A public DSL declaration compiles. Grim Lavamancer's complete text was checked in `data/JMP.json`; its activation needs two-card exile and typed damage, but its production wiring remains legacy. Soaring Stoneglider's complete text was checked in `data/SOS.json`; its alternative additional cost already uses the uncaptured constructor. Neither card or gap record is complete from this adapter. A fresh caller search found no production `ExileFromGraveyardCostWithCards` caller and three production `ExileFromGraveyardCost` calls. The next dependency-ready slice is a separate P paid-object/result output or the T divided-target announcement contract after a fresh requirements audit.
+
+Focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed.
+
+
 ## Current Slice: Locked Graveyard Exile Cost Choice
 
 `ExileFromGraveyardCost(int) Cost` now lets the payer select distinct cards during payment preparation and locks each graveyard visit. The existing transaction validates those choices on its isolated game and rechecks them before live payment. A returned card, an invalid choice, or insufficient cards fails without exiling cards or paying later life costs. An `EitherCost` branch is selected once and retains its chosen exile cards. The cost is usable in activated `Costs` groups and spell additional costs; it does not yet produce a typed paid-card set or resolve general zone-change replacement ordering. No production card or legacy export changed.

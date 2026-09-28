@@ -12,6 +12,7 @@ import (
 type castStackObjectOptions struct {
 	CapturedNumbers    map[*NumberBinding]int
 	CapturedCards      map[*CardBinding]capturedCard
+	CapturedCardSets   map[*CardsBinding][]capturedCard
 	CapturedPermanents map[*PermanentBinding]capturedPermanent
 	Card               Card
 	Controller         uuid.UUID
@@ -94,6 +95,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 	obj := &StackObject{
 		capturedNumbers:    maps.Clone(opts.CapturedNumbers),
 		capturedCards:      maps.Clone(opts.CapturedCards),
+		capturedCardSets:   cloneCardsBindings(opts.CapturedCardSets),
 		capturedPermanents: maps.Clone(opts.CapturedPermanents),
 		ID:                 uuid.New(),
 		Card:               card,

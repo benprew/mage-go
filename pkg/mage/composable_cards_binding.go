@@ -1,6 +1,8 @@
 package mage
 
-// CardsBinding names a collection saved by one resolving instruction.
+import "github.com/benprew/mage-go/pkg/mage/core"
+
+// CardsBinding names a collection saved by one payment or instruction.
 type CardsBinding struct{ name string }
 
 // BindCards declares a card collection binding.
@@ -20,6 +22,15 @@ func (savedCardsSet) cardSet()                {}
 func (s savedCardsSet) resolveCards(ctx *EffectContext) []Card {
 	var cards []Card
 	for _, captured := range ctx.Game.resolution.cardsBindings[s.binding] {
+		if captured.zone == core.ZoneExile {
+			if exiled := ctx.Game.FindExiledCard(captured.id); exiled != nil && exiled.Visit == captured.visit && exiled.VisibleTo(ctx.Controller) {
+				cards = append(cards, exiled.Card)
+			}
+			continue
+		}
+		if captured.zone != core.ZoneGraveyard {
+			continue
+		}
 		if ctx.Game.graveyardVisit(captured.id) != captured.visit {
 			continue
 		}

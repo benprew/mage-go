@@ -237,6 +237,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		SnapshotCast:       true,
 		CapturedNumbers:    payment.payment.paidNumbers,
 		CapturedCards:      payment.payment.paidCards,
+		CapturedCardSets:   payment.payment.paidCardSets,
 		CapturedPermanents: payment.payment.paidPermanents,
 	})
 	return err

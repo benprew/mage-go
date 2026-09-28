@@ -25,6 +25,7 @@ type costPaymentTransaction struct {
 	resetDrainedBeforeMana bool
 	paidNumbers            map[*NumberBinding]int
 	paidCards              map[*CardBinding]capturedCard
+	paidCardSets           map[*CardsBinding][]capturedCard
 	paidPermanents         map[*PermanentBinding]capturedPermanent
 }
 
@@ -323,11 +324,13 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 func (tx *costPaymentTransaction) Commit() (commitErr error) {
 	tx.paidNumbers = nil
 	tx.paidCards = nil
+	tx.paidCardSets = nil
 	tx.paidPermanents = nil
 	defer func() {
 		if commitErr != nil {
 			tx.paidNumbers = nil
 			tx.paidCards = nil
+			tx.paidCardSets = nil
 			tx.paidPermanents = nil
 		}
 	}()
@@ -445,6 +448,17 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		}
 		if err := cost.Pay(tx.sourceID, tx.controller, tx.game); err != nil {
 			return err
+		}
+		exile, _ := cost.(*exileFromGraveyardCost)
+		if exile != nil && exile.paid != nil {
+			if tx.paidCardSets == nil {
+				tx.paidCardSets = make(map[*CardsBinding][]capturedCard)
+			}
+			for _, selected := range exile.selected {
+				if exiled := tx.game.FindExiledCard(selected.id); exiled != nil {
+					tx.paidCardSets[exile.paid] = append(tx.paidCardSets[exile.paid], capturedCard{id: selected.id, visit: exiled.Visit, zone: ZoneExile})
+				}
+			}
 		}
 		if taps, ok := cost.(*tapNOtherMatchingCost); ok && taps.capture {
 			if tx.paidPermanents == nil {

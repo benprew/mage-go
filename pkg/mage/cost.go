@@ -807,6 +807,9 @@ func (c *eitherCost) inspectDefinition() definitionNode {
 		n.problem = "supply at least one cost option"
 	}
 	for i, option := range c.options {
+		if exile, ok := option.(*exileFromGraveyardCost); ok && exile.paidRequired {
+			n.problem = "paid graveyard exile cards require a direct cost"
+		}
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("options[%d]", i), option})
 	}
 	return n
@@ -869,9 +872,11 @@ func (c *eitherCost) Text() string {
 
 // exileFromGraveyardCost requires exiling cards from your graveyard.
 type exileFromGraveyardCost struct {
-	amount   int
-	locked   bool
-	selected []capturedCard
+	amount       int
+	locked       bool
+	selected     []capturedCard
+	paid         *CardsBinding
+	paidRequired bool
 }
 
 // ExileFromGraveyardCost creates a cost that requires the controller to exile n cards from their graveyard.
@@ -879,10 +884,21 @@ func ExileFromGraveyardCost(n int) Cost {
 	return &exileFromGraveyardCost{amount: n}
 }
 
+// ExileFromGraveyardCostWithCards saves cards moved to exile by this payment.
+func ExileFromGraveyardCostWithCards(n int, paid *CardsBinding) Cost {
+	return &exileFromGraveyardCost{amount: n, paid: paid, paidRequired: true}
+}
+
 func (c *exileFromGraveyardCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "graveyard-exile-cost", Text: c.Text()}
 	if c.amount < 0 {
 		n.problem = "graveyard exile cost count cannot be negative"
+	}
+	if c.paid != nil {
+		n.bindingWrite = c.paid
+		n.children = []definitionEdge{{"paid cards", c.paid}}
+	} else if c.paidRequired {
+		n.problem = "paid cards binding must be non-nil"
 	}
 	return n
 }

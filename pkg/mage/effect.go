@@ -144,6 +144,10 @@ func ApplyEffect(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uu
 }
 
 func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID, numbers map[*NumberBinding]int, permanents map[*PermanentBinding]capturedPermanent, cards map[*CardBinding]capturedCard) error {
+	return applyEffectWithCardSetCaptures(g, e, sourceID, controller, targets, numbers, permanents, cards, nil)
+}
+
+func applyEffectWithCardSetCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, targets []uuid.UUID, numbers map[*NumberBinding]int, permanents map[*PermanentBinding]capturedPermanent, cards map[*CardBinding]capturedCard, cardSets map[*CardsBinding][]capturedCard) error {
 	if e == nil {
 		return nil
 	}
@@ -154,7 +158,7 @@ func applyEffectWithCaptures(g *Game, e Effect, sourceID, controller uuid.UUID, 
 	g.resolution.cardBindings = maps.Clone(cards)
 	defer func() { g.resolution.cardBindings = savedCards }()
 	savedCardSets := g.resolution.cardsBindings
-	g.resolution.cardsBindings = nil
+	g.resolution.cardsBindings = cloneCardsBindings(cardSets)
 	defer func() { g.resolution.cardsBindings = savedCardSets }()
 	savedSpells := g.resolution.spellBindings
 	g.resolution.spellBindings = nil

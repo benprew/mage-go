@@ -2530,7 +2530,17 @@ func watchDeparture() dsl.Card {
 
 ## 10. Spells, Activations, and Costs
 
-`ExileFromGraveyardCost(n int) Cost` makes the payer choose `n` distinct cards from their graveyard. It works in an activated `Costs` group, a spell additional cost, and the graveyard branch of `EitherCost`. The choice is locked during payment preparation. Commit rechecks each card's graveyard visit before paying resources; a card that leaves and returns cannot pay in place of the chosen object. An invalid or stale choice exiles none of the chosen cards. Zero is allowed, and registration rejects a negative count. This cost does not create a typed card binding.
+`ExileFromGraveyardCost(n int) Cost` makes the payer choose `n` distinct cards from their graveyard. It works in an activated `Costs` group, a spell additional cost, and the graveyard branch of `EitherCost`. The choice is locked during payment preparation. Commit rechecks each card's graveyard visit before paying resources; a card that leaves and returns cannot pay in place of the chosen object. An invalid or stale choice exiles none of the chosen cards. Zero is allowed, and registration rejects a negative count. This form does not create a typed card binding.
+
+`ExileFromGraveyardCostWithCards(n int, paid *CardsBinding) Cost` saves the chosen cards in their new exile visits after payment commits. Use it as a direct activated `Costs` component or spell additional cost. `FromCards(paid)` is a `CardSet`; `CountCards(FromCards(paid))` counts only cards still in those exile visits. A card that leaves and returns to exile is absent. The binding belongs to the paid spell or ability, including stack copies and game clones. Registration rejects a nil or unnamed binding, duplicate producers, undominated reads, a negative count, and use inside `EitherCost` or a resolution-time payment. The existing `ExileFromGraveyardCost` remains available for alternative costs.
+
+```go
+paid := dsl.BindCards("exiled cards")
+card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.ExileFromGraveyardCostWithCards(2, paid)),
+    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(paid))),
+)))
+```
 
 ```go
 ability := dsl.Activate(

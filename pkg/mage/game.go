@@ -2648,7 +2648,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 
 	defer g.resolution.Begin(obj)()
 	for _, eff := range obj.Effects {
-		_ = applyEffectWithCaptures(g, eff, obj.SourceID, obj.Controller, resolvedTargets, obj.capturedNumbers, obj.capturedPermanents, obj.capturedCards)
+		_ = applyEffectWithCardSetCaptures(g, eff, obj.SourceID, obj.Controller, resolvedTargets, obj.capturedNumbers, obj.capturedPermanents, obj.capturedCards, obj.capturedCardSets)
 	}
 	g.resolution.ClearDistributions()
 
@@ -3069,6 +3069,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		SnapshotCast:       true,
 		CapturedNumbers:    payment.payment.paidNumbers,
 		CapturedCards:      payment.payment.paidCards,
+		CapturedCardSets:   payment.payment.paidCardSets,
 		CapturedPermanents: payment.payment.paidPermanents,
 	})
 	return err
@@ -4516,6 +4517,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)
+	obj.capturedCardSets = cloneCardsBindings(payment.paidCardSets)
 	if len(payment.paidPermanents) > 0 {
 		if capturedPermanents == nil {
 			capturedPermanents = make(map[*PermanentBinding]capturedPermanent)
