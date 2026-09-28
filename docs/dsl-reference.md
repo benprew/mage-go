@@ -2167,13 +2167,13 @@ Triggers on rules events dispatched by the engine:
             )))
     }
     ```
-  * `OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(playerBinding)`: A battlefield `WhenEvent` or `WhenEventModes` pattern that matches once for each player dealt positive combat damage by one or more creatures controlled by the source controller in one combat damage step. `WithPlayer` is optional; it saves the damaged player in the pending trigger and does not target that player. Registration rejects a nil, unnamed, repeated, or undominated binding. This pattern does not filter the damaging creatures by characteristics or operate from the graveyard.
+  * `OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype(subtype string).WithPlayer(playerBinding)`: A battlefield `WhenEvent` or `WhenEventModes` pattern that matches once for each player dealt positive combat damage by one or more creatures controlled by the source controller in one combat damage step. `WithoutSubtype` is optional and requires at least one damaging creature without that subtype; it reads each source's characteristics when damage is dealt. `WithPlayer` is optional; it saves the damaged player in the pending trigger and does not target that player. Registration rejects an empty, noncreature, or repeated subtype filter and a nil, unnamed, repeated, or undominated player binding. The pattern does not operate from the graveyard.
     ```go
     func combatBatchWatcher() dsl.Card {
         player := dsl.BindPlayer("damaged player")
         return dsl.NewEnchantment("Combat Batch Watcher", "{G}",
             dsl.WithAbility(dsl.WhenEvent(
-                dsl.OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(player),
+                dsl.OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Human").WithPlayer(player),
                 dsl.GainLife(dsl.FromPlayer(player), dsl.Fixed(1)),
             )))
     }

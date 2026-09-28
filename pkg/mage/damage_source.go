@@ -36,6 +36,7 @@ func (s DamageSource) Name() string              { return s.name }
 func (s DamageSource) HasKeyword(k Keyword) bool { return s.keywords[k] }
 func (s DamageSource) HasColor(c Color) bool     { return slices.Contains(s.colors, c) }
 func (s DamageSource) HasType(t CardType) bool   { return s.card != nil && s.card.HasType(t) }
+func (s DamageSource) HasSubType(st string) bool { return s.card != nil && s.card.HasSubType(st) }
 
 func damageSourceFromPermanent(p *Permanent) DamageSource {
 	s := DamageSource{id: p.ID(), incarnation: p.incarnationID, controller: p.ControllerID(), owner: p.Card.Owner(), name: p.Name(), card: damageSourceCardFromPermanent(p), colors: slices.Clone(p.Colors()), keywords: make(map[Keyword]bool)}

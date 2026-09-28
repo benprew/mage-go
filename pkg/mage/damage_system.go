@@ -21,6 +21,7 @@ type DamageSystem struct {
 	turnDamageToPlayers                map[capturedPermanent]map[uuid.UUID]bool
 	combatDamageThisStep               map[uuid.UUID]map[uuid.UUID]int
 	combatDamageSourcesThisStep        map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int
+	combatDamageSourceStatesThisStep   map[uuid.UUID]map[uuid.UUID][]DamageSource
 	resolvingCombatDamage              bool
 	onDamageDealt                      func(source, target string, amount int, isCombat bool)
 }
@@ -187,6 +188,17 @@ func (ds *DamageSystem) Clone() DamageSystem {
 	} else {
 		clone.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int)
 	}
+	if len(ds.combatDamageSourceStatesThisStep) > 0 {
+		clone.combatDamageSourceStatesThisStep = make(map[uuid.UUID]map[uuid.UUID][]DamageSource, len(ds.combatDamageSourceStatesThisStep))
+		for controller, recipients := range ds.combatDamageSourceStatesThisStep {
+			clone.combatDamageSourceStatesThisStep[controller] = make(map[uuid.UUID][]DamageSource, len(recipients))
+			for recipient, sources := range recipients {
+				for _, source := range sources {
+					clone.combatDamageSourceStatesThisStep[controller][recipient] = append(clone.combatDamageSourceStatesThisStep[controller][recipient], cloneDamageSource(source))
+				}
+			}
+		}
+	}
 	return clone
 }
 
@@ -346,6 +358,7 @@ func (ds *DamageSystem) FlushCombatDamageAggregator(g *Game) {
 	}
 	ds.combatDamageThisStep = make(map[uuid.UUID]map[uuid.UUID]int)
 	ds.combatDamageSourcesThisStep = make(map[uuid.UUID]map[uuid.UUID]map[uuid.UUID]int)
+	ds.combatDamageSourceStatesThisStep = nil
 }
 
 // DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
@@ -496,6 +509,14 @@ func (ds *DamageSystem) ExecuteDamageToPlayer(g *Game, a *DamageToPlayerAction) 
 				byCtrlSrcs[p.PlayerID()] = bySrc
 			}
 			bySrc[sourceID] += amount
+			if ds.combatDamageSourceStatesThisStep == nil {
+				ds.combatDamageSourceStatesThisStep = make(map[uuid.UUID]map[uuid.UUID][]DamageSource)
+			}
+			if ds.combatDamageSourceStatesThisStep[srcPerm.ControllerID()] == nil {
+				ds.combatDamageSourceStatesThisStep[srcPerm.ControllerID()] = make(map[uuid.UUID][]DamageSource)
+			}
+			ds.combatDamageSourceStatesThisStep[srcPerm.ControllerID()][p.PlayerID()] = append(
+				ds.combatDamageSourceStatesThisStep[srcPerm.ControllerID()][p.PlayerID()], cloneDamageSource(source))
 		}
 	}
 	g.fireDamageEvent(GameEvent{

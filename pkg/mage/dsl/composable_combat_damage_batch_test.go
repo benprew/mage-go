@@ -18,3 +18,14 @@ func TestCombatDamageBatchAuthorSurface(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCombatDamageBatchSubtypeAuthorSurface(t *testing.T) {
+	var card dsl.Card = dsl.NewEnchantment("Non-Human Watcher", "{G}",
+		dsl.WithAbility(dsl.WhenEvent(
+			dsl.OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Human"),
+			dsl.Draw(dsl.You, dsl.Fixed(1)),
+		)))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}
