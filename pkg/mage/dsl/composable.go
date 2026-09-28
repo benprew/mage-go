@@ -398,9 +398,10 @@ var (
 	PlayerWithUniqueHighestLife                = mage.PlayerWithUniqueHighestLife
 	ControllerLifeAtLeastStartingLife          = mage.ControllerLifeAtLeastStartingLife
 	// Life amounts use ResolutionValue. Adapt legacy values with ValueAtResolution.
-	GainLife     = mage.GainLifeFor
-	GainLifeEach = mage.GainLifeEach
-	LoseLife     = mage.LoseLifeFor
+	GainLife              = mage.GainLifeFor
+	GainLifeForWithResult = mage.GainLifeForWithResult
+	GainLifeEach          = mage.GainLifeEach
+	LoseLife              = mage.LoseLifeFor
 )
 
 type (

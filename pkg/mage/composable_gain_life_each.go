@@ -3,23 +3,27 @@ package mage
 type gainLifeEachEffect struct {
 	subjects PlayerSet
 	amount   ResolutionValue
-	result   *NumberBinding
-	count    int
-	invalid  bool
+	lifeGainResultState
 }
 
-// LifeGainResultOption selects the total life gained by one set instruction.
+type lifeGainResultState struct {
+	result  *NumberBinding
+	count   int
+	invalid bool
+}
+
+// LifeGainResultOption selects the life gained by one instruction.
 type LifeGainResultOption interface {
 	lifeGainResultOption()
-	applyLifeGainResult(*gainLifeEachEffect)
+	applyLifeGainResult(*lifeGainResultState)
 }
 
 type lifeGainedOption struct{ binding *NumberBinding }
 
-// LifeGainedInto saves the total life gained by the selected players.
+// LifeGainedInto saves the life gained by the selected players.
 func LifeGainedInto(binding *NumberBinding) LifeGainResultOption { return lifeGainedOption{binding} }
 func (lifeGainedOption) lifeGainResultOption()                   {}
-func (o lifeGainedOption) applyLifeGainResult(e *gainLifeEachEffect) {
+func (o lifeGainedOption) applyLifeGainResult(e *lifeGainResultState) {
 	e.result = o.binding
 	e.count++
 	if o.binding == nil {
@@ -35,7 +39,7 @@ func GainLifeEach(subjects PlayerSet, amount ResolutionValue, options ...LifeGai
 			e.invalid = true
 			continue
 		}
-		option.applyLifeGainResult(e)
+		option.applyLifeGainResult(&e.lifeGainResultState)
 	}
 	return e
 }

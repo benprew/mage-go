@@ -915,6 +915,16 @@ _ = spell
 ```
 * `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
 * `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.
+* `GainLifeForWithResult(PlayerRef, ResolutionValue, ...LifeGainResultOption) ResolvingEffect`: Gains life for one selected player in a spell, activation, or trigger body. `LifeGainedInto(*NumberBinding)` saves the amount actually gained after replacement. An absent player or nonpositive gain saves zero. The result belongs to this resolution instance. Registration requires exactly one named result option and rejects an undominated read. Existing `GainLifeFor` and `dsl.GainLife` calls keep their two-argument form. This declaration compiles:
+
+  ```go
+  gained := dsl.BindNumber("gained")
+  dsl.NewSorcery("Life result", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
+      dsl.GainLifeForWithResult(dsl.You, dsl.Fixed(2), dsl.LifeGainedInto(gained)),
+      dsl.LoseLife(dsl.You, dsl.FromNumber(gained)),
+  ))))
+  ```
+
 * `GainLifeEach(PlayerSet, ResolutionValue, ...LifeGainResultOption) ResolvingEffect`: Gains life for each selected player in one spell, activation, or trigger instruction. It reads the set and amount once. Each gain uses the shared modifier and replacement path. Positive `EvtLifeGained` events are sent after all life totals change. A zero, negative, or fully replaced gain sends no gain event. `LifeGainedInto(*NumberBinding) LifeGainResultOption` saves the total life actually gained by this instruction after replacement. An empty set or nonpositive amount saves zero. Read the result later in the same body with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated result binding.
 
 ```go

@@ -678,6 +678,22 @@ func GainLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount, gain: true}
 }
 
+// GainLifeForWithResult saves the life gained by one player after replacement.
+func GainLifeForWithResult(subject PlayerRef, amount ResolutionValue, options ...LifeGainResultOption) ResolvingEffect {
+	e := &lifeAction{subject: subject, amount: amount, gain: true, gainResult: true}
+	if len(options) == 0 {
+		e.lifeGainResultState.invalid = true
+	}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.lifeGainResultState.invalid = true
+			continue
+		}
+		option.applyLifeGainResult(&e.lifeGainResultState)
+	}
+	return e
+}
+
 // LoseLifeFor loses life for the selected player through the existing life action.
 func LoseLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &lifeAction{subject: subject, amount: amount}
@@ -687,11 +703,11 @@ func LoseLifeFor(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 func LoseLifeForWithResult(subject PlayerRef, amount ResolutionValue, options ...LifeLossResultOption) ResolvingEffect {
 	e := &lifeAction{subject: subject, amount: amount}
 	if len(options) == 0 {
-		e.invalid = true
+		e.lifeLossResultState.invalid = true
 	}
 	for _, option := range options {
 		if nilDefinition(option) {
-			e.invalid = true
+			e.lifeLossResultState.invalid = true
 			continue
 		}
 		option.applyLifeLossResult(&e.lifeLossResultState)
@@ -780,9 +796,11 @@ func (e *tapSubjectEffect) inspectDefinition() definitionNode {
 func TapCost(sourceRef) Cost { return Tap() }
 
 type lifeAction struct {
-	subject PlayerRef
-	amount  ResolutionValue
-	gain    bool
+	subject    PlayerRef
+	amount     ResolutionValue
+	gain       bool
+	gainResult bool
+	lifeGainResultState
 	lifeLossResultState
 }
 
@@ -810,11 +828,15 @@ func (e *lifeAction) Properties() EffectProperties {
 }
 
 func (e *lifeAction) Apply(ctx *EffectContext) error {
-	if e.result != nil {
+	result := e.lifeLossResultState.result
+	if e.gain {
+		result = e.lifeGainResultState.result
+	}
+	if result != nil {
 		if ctx.Game.resolution.numberBindings == nil {
 			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
 		}
-		ctx.Game.resolution.numberBindings[e.result] = 0
+		ctx.Game.resolution.numberBindings[result] = 0
 	}
 	id, ok := e.subject.resolvePlayer(ctx)
 	if !ok {
@@ -828,28 +850,46 @@ func (e *lifeAction) Apply(ctx *EffectContext) error {
 	child := *ctx
 	child.Targets = []uuid.UUID{id}
 	if e.gain {
+		if e.gainResult {
+			if player := ctx.Game.GetPlayer(id); player != nil {
+				ctx.Game.resolution.numberBindings[result] = ctx.Game.playersGainLife([]Player{player}, amount)
+			}
+			return nil
+		}
 		return GainLifeTarget(Fixed(amount)).Apply(&child)
 	}
-	if e.result == nil {
+	if e.lifeLossResultState.result == nil {
 		return TargetPlayerLoseLife(Fixed(amount)).Apply(&child)
 	}
 	player := ctx.Game.GetPlayer(id)
 	if player != nil {
-		ctx.Game.resolution.numberBindings[e.result] = ctx.Game.playersLoseLife([]Player{player}, amount)
+		ctx.Game.resolution.numberBindings[e.lifeLossResultState.result] = ctx.Game.playersLoseLife([]Player{player}, amount)
 	}
 	return nil
 }
 
 func (e *lifeAction) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
-	if e.invalid {
+	if e.gainResult {
+		if e.lifeGainResultState.invalid {
+			n.problem = "supply a non-nil life gain result binding option"
+		} else if e.lifeGainResultState.count > 1 {
+			n.problem = "supply the life gain result binding only once"
+		}
+		if e.lifeGainResultState.result != nil {
+			n.bindingWrite = e.lifeGainResultState.result
+			n.children = append(n.children, definitionEdge{"result", e.lifeGainResultState.result})
+		}
+		return n
+	}
+	if e.lifeLossResultState.invalid {
 		n.problem = "supply a non-nil life loss result binding"
-	} else if e.count > 1 {
+	} else if e.lifeLossResultState.count > 1 {
 		n.problem = "supply the life loss result binding only once"
 	}
-	if e.result != nil {
-		n.bindingWrite = e.result
-		n.children = append(n.children, definitionEdge{"result", e.result})
+	if e.lifeLossResultState.result != nil {
+		n.bindingWrite = e.lifeLossResultState.result
+		n.children = append(n.children, definitionEdge{"result", e.lifeLossResultState.result})
 	}
 	return n
 }

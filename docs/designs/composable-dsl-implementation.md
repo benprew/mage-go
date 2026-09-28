@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Life-Gain Result
+
+`GainLifeForWithResult(PlayerRef, ResolutionValue, ...LifeGainResultOption)` accepts `LifeGainedInto(*NumberBinding)` and saves one player's actual gain after life-gain modifiers and replacement. It uses the existing gain and event service. An absent recipient, nonpositive amount, or fully prevented gain saves zero. The binding belongs to the current resolving spell, activation, or trigger frame; clones retain separate values. Registration requires one named result option and a dominating producer. `GainLifeFor`, `dsl.GainLife`, and production callers remain unchanged. This is a P action-result adapter; it does not capture life paid as a cost or implement another life-gain replacement contract.
+
+The contract first failed to compile because the constructor was absent. Focused tests cover the final replacement amount, zero and negative amounts, absent recipients, clone isolation, and registration errors. A public DSL declaration compiles. Existing `GainLifeEach` tests cover the shared batch service; this slice reuses that service for one recipient. A fresh caller search found no production `GainLifeForWithResult` caller and one `GainLifeFor` call in a production card test. No inventory or JSON gap record claims that this result alone completes a blocked card, so none was closed. Production card wiring remains separate. The next dependency-ready work is another P payment or action output, or a T announcement contract after a fresh audit.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Resolution-Time Optional Payment Availability
 
 `IfPaid` and `UnlessPaid` now check that each cost component can be paid before asking the player whether to pay. A player with no controlled permanent cannot choose the sacrifice branch. The accepted branch still uses the existing locked total-cost transaction. In a `ForEachSavedCard` body, each iteration checks the resulting game state anew, so sacrificing the only permanent on the first iteration makes the second iteration discard. The public signatures and sealed roles are unchanged. This is a payment-choice engine contract, not a new author adapter; no production card or legacy export changed.
