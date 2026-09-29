@@ -180,6 +180,7 @@ var (
 	AttachedAuras                    = mage.AttachedAuras
 	BlockingOrBlockedBy              = mage.BlockingOrBlockedBy
 	BlockersOf                       = mage.BlockersOf
+	BlockedAttackersOf               = mage.BlockedAttackersOf
 	ManaValueAtMost                  = mage.ManaValueAtMost
 	WithoutPermanent                 = mage.WithoutPermanent
 	ActivatedAbilityModification     = mage.ActivatedAbilityModification

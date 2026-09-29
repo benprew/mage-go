@@ -132,6 +132,19 @@ Operations accept explicit subjects rather than baking the subject into the verb
                 dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.BlockersOf(attacker))),
                 dsl.WithTargets(attacker))))
     }
+    ```
+
+* `BlockedAttackersOf(blocker PermanentRef) PermanentSet`: Attacking creatures that the referenced blocking creature is currently blocking. It reads combat links when a resolving spell, activation, or trigger consumes the set. It excludes phased-out, removed, departed, or returned combat objects. The referenced creature must still be blocking. The set does not declare a target.
+
+    ```go
+    func blockedAttackerCount() dsl.Card {
+        blocker := dsl.TargetPermanent("blocker", dsl.IsCreature)
+        return dsl.NewInstant("Blocked attacker count", "",
+            dsl.WithAbility(dsl.Spell(
+                dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.BlockedAttackersOf(blocker))),
+                dsl.WithTargets(blocker))))
+    }
+    ```
 
 * `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
 * `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.

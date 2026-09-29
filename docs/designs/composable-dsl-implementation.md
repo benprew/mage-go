@@ -1,5 +1,13 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Directional Blocked-Attacker Set
+
+`BlockedAttackersOf(PermanentRef) PermanentSet` selects the attacking creatures that one referenced creature is currently blocking. It is available in resolving spell, activation, and trigger bodies. It reads the combat service's current incarnation links when consumed, so absent, phased, removed, or returned objects do not contribute. Multiple attackers blocked by one creature appear once each. The existing `BlockersOf` and `BlockingOrBlockedBy` sets remain distinct; no production card or legacy export changed.
+
+The test-only contract first failed because the constructor was absent. Synthetic tests cover multiple and unrelated combat links, removal, phasing, leave and return, clone isolation, inspection, registration scope, and a public compiling declaration. The complete Sewers of Estark text in `data/PHPR.json` and the Promo gap record were checked. Its combat-state branches and blocked-attacker set are now available, but source-only combat prevention for this combat and production wiring remain open. The `promo-combat-prevention` gap therefore stays open. A fresh caller search found no production `BlockedAttackersOf` caller; Sewers still uses `FuncEffect`. The next dependency-ready work is source-only combat prevention with an exact combat duration.
+
+Validation passes: focused tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, DSL registration and closed-role checks, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. The post-lint diff was reviewed.
+
 ## Current Slice: Resolution-Time Combat Membership Branches
 
 `IfPermanentAttacking(PermanentRef, ResolvingEffect)` and `IfPermanentBlocking(PermanentRef, ResolvingEffect)` check current, incarnation-keyed combat membership when a resolving spell, activation, or trigger reaches the branch. They accept a declared permanent target or a dominating saved permanent reference, as well as `This` and `AttachedPermanent`. The body runs only for a present, unphased permanent still in the relevant combat role. The branches reuse the combat service and existing subject resolution, inspection, and registration scope checks. Static `PermanentIsAttacking` and `PermanentIsBlocking` retain their narrower state-condition contract. No production card or legacy export changed.

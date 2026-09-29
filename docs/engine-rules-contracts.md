@@ -623,6 +623,8 @@ Evidence: `TestSpellStepRestriction` (every step, both players, four cast paths)
 
 ## Combat Removal (CR 506.4, 509.1h)
 
+`BlockedAttackersOf` reads current combat links by battlefield incarnation. It returns attackers still blocked by the referenced creature, including multiple attackers blocked by one creature. The set is empty when the blocker is absent, phased out, or no longer blocking. An attacker removed from combat, phased out, or returned as a new object is excluded. It does not use historical blocked status: an attacker can remain blocked after its last blocker leaves (CR 509.1h).
+
 An `EvtDeclaredAttacker` records its defending player in `TargetID` when the attack is declared. Both the turn path and simulated declaration path supply this value. A typed attack trigger captures it before the stack entry is made, so later combat changes do not change the saved player.
 
 `EvtCreatureBlockedBy` occurs once for each new attacker and blocker pair after legal blocker declarations settle. `BecomesBlockedBy(This)` uses this event and checks the blocker subtype when the event occurs. `WithBlocker` saves that blocker's battlefield incarnation in the pending trigger. A copied trigger and a cloned game keep independent captures. The binding does not follow a blocker that leaves and returns, and a phased-out blocker is absent until it phases in.
