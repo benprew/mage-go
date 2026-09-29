@@ -2722,6 +2722,8 @@ card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
 
 A direct uncaptured `RemoveXCountersFromSourceCost(counter CounterType) Cost` inside `OptionalCostInto` fixes announced X before the affordability check for spell additional costs and activated `Costs`. Accepted positive removal uses the existing source-incarnation lock and combined-total preflight. Zero can be accepted without removing counters. The result records acceptance, not the number removed. This contract does not extend nested choices or resolution-time optional payment.
 
+Direct engine total-payment preparation also fixes current X for this direct inner cost in `OptionalCost(inner Cost, prompt string) Cost` and `OptionalCostInto`. It locks acceptance once, then uses the same counter preflight. Commit cannot repeat the choice or substitute a returned source. This internal transaction contract does not add a public resolution-payment capture context; registration still rejects `OptionalCostInto` in resolution-time payments. The example below remains an announcement-time declaration.
+
 ```go
 paid := dsl.BindNumber("paid")
 card := dsl.NewArtifact("Synthetic optional X", "", dsl.WithAbility(dsl.Activate(
@@ -2814,7 +2816,7 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     )
     _ = ability
     ```
-  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. A direct `EitherCost(options ...Cost) Cost` option also fixes announced X before affordability checks and uses the same incarnation lock and combined-total preflight. Optional and nested alternative wrappers remain separate contracts. This declaration compiles:
+  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. A direct `EitherCost(options ...Cost) Cost` option also fixes announced X before affordability checks and uses the same incarnation lock and combined-total preflight. Direct optional X wrappers are specified above; nested alternative wrappers remain separate work. This declaration compiles:
 
     ```go
     card := dsl.NewArtifact("Synthetic X counter payment", "", dsl.WithAbility(dsl.Activate(

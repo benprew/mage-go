@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/google/uuid"
 
@@ -133,7 +134,28 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		}
 		validation.PlayerLoseLife(player, tx.lifeLoss)
 	}
-	for i, cost := range tx.costs {
+	for i := 0; i < len(tx.costs); i++ {
+		cost := tx.costs[i]
+		if optional, ok := cost.(*optionalCost); ok {
+			if _, directX := optional.inner.(*removeXCountersCost); directX {
+				// Fix the choice and X before the shared counter payment locks the source.
+				locked, outcomes, err := lockPaymentCosts([]Cost{optional}, tx.sourceID, tx.controller, nil, tx.game.resolution.X(), validation, tx.game.GetPlayer(tx.controller))
+				if err != nil {
+					return err
+				}
+				costs := append([]Cost(nil), tx.costs[:i]...)
+				costs = append(costs, locked...)
+				tx.costs = append(costs, tx.costs[i+1:]...)
+				if len(outcomes) != 0 {
+					copied := make(map[uuid.UUID]bool, len(tx.optionalOutcomes)+len(outcomes))
+					maps.Copy(copied, tx.optionalOutcomes)
+					maps.Copy(copied, outcomes)
+					tx.optionalOutcomes = copied
+				}
+				i--
+				continue
+			}
+		}
 		if counter, ok := cost.(*removeXCountersCost); ok {
 			cost = counter.resolveActionCost(actionCostContext{XValue: tx.game.resolution.X()})
 			tx.costs[i] = cost
