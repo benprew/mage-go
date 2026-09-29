@@ -874,6 +874,17 @@ func EitherCost(options ...Cost) Cost {
 	return &eitherCost{options: options}
 }
 
+func (c *eitherCost) resolveActionCost(ctx actionCostContext) Cost {
+	resolved := *c
+	resolved.options = append([]Cost(nil), c.options...)
+	for i, option := range resolved.options {
+		if counter, ok := option.(*removeXCountersCost); ok {
+			resolved.options[i] = counter.resolveActionCost(ctx)
+		}
+	}
+	return &resolved
+}
+
 func (c *eitherCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "alternative-cost", Text: c.Text()}
 	if len(c.options) == 0 {

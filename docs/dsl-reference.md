@@ -2804,11 +2804,19 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     )
     _ = ability
     ```
-  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. Optional/alternative wrappers remain a separate locking contract. This declaration compiles:
+  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. A direct `EitherCost(options ...Cost) Cost` option also fixes announced X before affordability checks and uses the same incarnation lock and combined-total preflight. Optional and nested alternative wrappers remain separate contracts. This declaration compiles:
 
     ```go
     card := dsl.NewArtifact("Synthetic X counter payment", "", dsl.WithAbility(dsl.Activate(
         dsl.Costs(dsl.Mana("{X}"), dsl.RemoveXCountersFromSourceCost(core.Charge)),
+        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+    ```
+
+    A synthetic alternative declaration uses the same public constructors:
+
+    ```go
+    card := dsl.NewArtifact("Synthetic alternative X payment", "", dsl.WithAbility(dsl.Activate(
+        dsl.Costs(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge))),
         dsl.GainLife(dsl.You, dsl.Fixed(1)))))
     ```
 

@@ -7,7 +7,7 @@ import (
 )
 
 func TestCounterPaymentCommitPreflight(t *testing.T) {
-	for _, kind := range []string{"fixed", "captured", "chosen", "combined", "X", "X-combined", "either-fixed", "either-combined"} {
+	for _, kind := range []string{"fixed", "captured", "chosen", "combined", "X", "X-combined", "either-fixed", "either-combined", "either-X", "either-X-combined"} {
 		for _, change := range []string{"return", "absent", "phase", "short"} {
 			t.Run(kind+"/"+change, func(t *testing.T) {
 				a := &counterChoicePlayer{BasePlayer: NewBasePlayer("A"), choice: 2}
@@ -23,6 +23,10 @@ func TestCounterPaymentCommitPreflight(t *testing.T) {
 					costs = append(costs, RemoveXCountersFromSourceCost(Charge))
 				case "X-combined":
 					costs = append(costs, RemoveXCountersFromSourceCost(Charge), RemoveCountersCost(Charge, 2))
+				case "either-X":
+					costs = append(costs, EitherCost(RemoveXCountersFromSourceCost(Charge), LifePayCost(1)))
+				case "either-X-combined":
+					costs = append(costs, EitherCost(RemoveXCountersFromSourceCost(Charge)), RemoveCountersCost(Charge, 2))
 				case "either-fixed":
 					costs = append(costs, EitherCost(RemoveCountersCost(Charge, 2), LifePayCost(1)))
 				case "either-combined":
@@ -53,7 +57,7 @@ func TestCounterPaymentCommitPreflight(t *testing.T) {
 					g.PhaseOut(source.ID())
 				case "short":
 					count := 1
-					if kind == "combined" || kind == "X-combined" || kind == "either-combined" {
+					if kind == "combined" || kind == "X-combined" || kind == "either-combined" || kind == "either-X-combined" {
 						count = 3
 					}
 					g.MutablePermanent(source.ID()).RemoveCounter(Charge, 4-count)
@@ -68,7 +72,7 @@ func TestCounterPaymentCommitPreflight(t *testing.T) {
 					expected := 4
 					if change == "short" {
 						expected = 1
-						if kind == "combined" || kind == "X-combined" || kind == "either-combined" {
+						if kind == "combined" || kind == "X-combined" || kind == "either-combined" || kind == "either-X-combined" {
 							expected = 3
 						}
 					}
@@ -311,5 +315,107 @@ func TestEitherCounterPaymentCombinedCommit(t *testing.T) {
 	}
 	if g.FindPermanent(source.ID()).Counters[Charge] != 0 || g.FindPermanent(source.ID()).Counters[Carrion] != 0 || tx.paidNumbers[paid] != 2 || a.calls != 1 {
 		t.Fatal("combined payment changed locked count")
+	}
+}
+
+func TestEitherXCounterPaymentAmount(t *testing.T) {
+	for _, action := range []bool{false, true} {
+		a := NewBasePlayer("A")
+		g := NewGame(a, NewBasePlayer("B"))
+		source := NewArtifact("Source", "")
+		g.PutOnBattlefield(source, a.PlayerID())
+		g.MutablePermanent(source.ID()).AddCounter(Charge, 5)
+		declaration := EitherCost(RemoveXCountersFromSourceCost(Charge))
+		g.resolution.SetX(4)
+		var tx *costPaymentTransaction
+		var err error
+		if action {
+			tx, err = g.prepareActionPaymentTransaction(actionPaymentSpec{SourceID: source.ID(), Controller: a.PlayerID(), XValue: 2, Costs: []Cost{declaration}})
+		} else {
+			g.resolution.SetX(2)
+			tx, err = g.prepareCostPaymentTransaction(costPaymentSpec{SourceID: source.ID(), Controller: a.PlayerID(), Costs: []Cost{declaration}}, nil)
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		g.resolution.SetX(5)
+		if err := tx.Commit(); err != nil {
+			t.Fatal(err)
+		}
+		if g.FindPermanent(source.ID()).Counters[Charge] != 3 {
+			t.Fatalf("action=%v: prepared X changed", action)
+		}
+		if _, ok := declaration.(*eitherCost).options[0].(*removeXCountersCost); !ok {
+			t.Fatal("declaration changed")
+		}
+	}
+}
+func TestEitherXCounterPaymentLockIsolationAndZero(t *testing.T) {
+	for _, count := range []int{0, 2} {
+		t.Run(string(rune('0'+count)), func(t *testing.T) {
+			a := NewBasePlayer("A")
+			g := NewGame(a, NewBasePlayer("B"))
+			first, second := NewArtifact("First", ""), NewArtifact("Second", "")
+			g.resolution.SetX(count)
+			inner := RemoveXCountersFromSourceCost(Charge)
+			declaration := EitherCost(inner)
+			prepare := func(game *Game, source Card) *costPaymentTransaction {
+				tx, err := game.prepareCostPaymentTransaction(costPaymentSpec{SourceID: source.ID(), Controller: a.PlayerID(), Costs: []Cost{declaration}}, nil)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return tx
+			}
+			for _, source := range []Card{first, second} {
+				g.PutOnBattlefield(source, a.PlayerID())
+				g.MutablePermanent(source.ID()).AddCounter(Charge, 2)
+			}
+			firstTx, secondTx := prepare(g, first), prepare(g, second)
+			clone := g.Clone()
+			cloneTx := prepare(clone, first)
+			g.RemoveFromBattlefield(g.FindPermanent(first.ID()))
+			g.PutOnBattlefield(first, a.PlayerID())
+			g.MutablePermanent(first.ID()).AddCounter(Charge, 2)
+			if err := firstTx.Commit(); (count > 0 && err == nil) || (count == 0 && err != nil) {
+				t.Fatalf("returned source payment: count=%d err=%v", count, err)
+			}
+			if err := secondTx.Commit(); err != nil {
+				t.Fatal(err)
+			}
+			if err := cloneTx.Commit(); err != nil {
+				t.Fatal(err)
+			}
+			if int(g.FindPermanent(first.ID()).Counters[Charge]) != 2 || int(g.FindPermanent(second.ID()).Counters[Charge]) != 2-count || int(clone.FindPermanent(first.ID()).Counters[Charge]) != 2-count {
+				t.Fatal("payment crossed source or clone boundary")
+			}
+			if declaration.(*eitherCost).locked {
+				t.Fatal("preparation changed declaration")
+			}
+		})
+	}
+}
+func TestEitherXCounterPaymentSelection(t *testing.T) {
+	a := &counterAlternativePlayer{BasePlayer: NewBasePlayer("A")}
+	g := NewGame(a, NewBasePlayer("B"))
+	source := NewArtifact("Source", "")
+	g.PutOnBattlefield(source, a.PlayerID())
+	g.MutablePermanent(source.ID()).AddCounter(Charge, 2)
+	g.resolution.SetX(2)
+	declaration := EitherCost(RemoveXCountersFromSourceCost(Charge), LifePayCost(1))
+	tx, err := g.prepareCostPaymentTransaction(costPaymentSpec{SourceID: source.ID(), Controller: a.PlayerID(), Costs: []Cost{declaration}}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a.calls != 1 {
+		t.Fatal("preparation did not choose once")
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	if a.calls != 1 || a.Life() != 20 || g.FindPermanent(source.ID()).Counters[Charge] != 0 {
+		t.Fatal("commit changed branch or repeated selection")
+	}
+	if declaration.(*eitherCost).locked {
+		t.Fatal("preparation changed declaration")
 	}
 }

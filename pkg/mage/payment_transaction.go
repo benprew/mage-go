@@ -140,8 +140,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		}
 		validationCost := cost
 		if either, ok := cost.(*eitherCost); ok {
-			locked := *either
-			locked.options = append([]Cost(nil), either.options...)
+			locked := *either.resolveActionCost(actionCostContext{XValue: tx.game.resolution.X()}).(*eitherCost)
 			var payable []int
 			var labels []string
 			for index, option := range locked.options {
