@@ -2778,7 +2778,7 @@ spell := dsl.NewInstant("Synthetic reveal", "",
         dsl.WithAdditionalCost(dsl.LifePayXCostInto(paid)))
     _ = spell
     ```
-  * `RemoveCountersCost(counter CounterType, count int) Cost`: Remove a fixed nonnegative number of source counters. Direct prepared payments lock the source battlefield incarnation. Commit rejects an absent, returned, phased-out, or counter-short source before spending mana or life. This retains activated, spell additional, and resolution-payment contexts; those contexts still require a present source to pay. Direct fixed and chosen-count removals of the same counter type are checked as a total. Optional/alternative wrapper locking and uncaptured X costs are separate contracts. This synthetic activated declaration compiles:
+  * `RemoveCountersCost(counter CounterType, count int) Cost`: Remove a fixed nonnegative number of source counters. Direct prepared payments lock the source battlefield incarnation. Commit rejects an absent, returned, phased-out, or counter-short source before spending mana or life. This retains activated, spell additional, and resolution-payment contexts; those contexts still require a present source to pay. Direct fixed and chosen-count removals of the same counter type are checked as a total. Optional/alternative wrapper locking is a separate contract. This synthetic activated declaration compiles:
 
     ```go
     card := dsl.NewArtifact("Synthetic counter payment", "", dsl.WithAbility(dsl.Activate(
@@ -2795,6 +2795,14 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     )
     _ = ability
     ```
+  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. Optional/alternative wrappers remain a separate locking contract. This declaration compiles:
+
+    ```go
+    card := dsl.NewArtifact("Synthetic X counter payment", "", dsl.WithAbility(dsl.Activate(
+        dsl.Costs(dsl.Mana("{X}"), dsl.RemoveXCountersFromSourceCost(core.Charge)),
+        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+    ```
+
   * `RemoveXCountersFromSourceCostInto(counter core.CounterType, paid *NumberBinding) Cost`: Remove the announced X counters from the source as an activated ability cost. The cost fixes X before payment and locks the source battlefield incarnation. `FromNumber(paid)` reads the committed count in that activation's resolving body. Zero is valid while the source is present. A failed payment saves no value. Registration rejects a nil or unnamed binding, duplicate producers, and spell or resolution-time payment use. The existing `RemoveXCountersFromSourceCost` remains available.
 
     ```go

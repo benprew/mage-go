@@ -171,12 +171,13 @@ func (c *tap) Properties() EffectProperties {
 
 // removeCountersCost requires removing counters from the source.
 type removeCountersCost struct {
-	ct          CounterType
-	amount      int
-	paid        *NumberBinding
-	capture     bool
-	incarnation uuid.UUID
-	locked      bool
+	zeroWithoutSource bool
+	ct                CounterType
+	amount            int
+	paid              *NumberBinding
+	capture           bool
+	incarnation       uuid.UUID
+	locked            bool
 }
 
 // RemoveCountersCost creates a cost that requires removing n counters of the given type from the source.
@@ -214,6 +215,9 @@ func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) boo
 	if c.ct < 0 || c.ct >= NumCounters {
 		return false
 	}
+	if c.zeroWithoutSource && c.amount == 0 {
+		return true
+	}
 	p := g.FindPermanent(sourceID)
 	return p != nil && (!c.locked || p.incarnationID == c.incarnation) && c.amount >= 0 && int(p.Counters[c.ct]) >= c.amount
 }
@@ -221,6 +225,9 @@ func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) boo
 func (c *removeCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if !c.CanPay(sourceID, controller, g) {
 		return fmt.Errorf("cannot pay counter cost")
+	}
+	if c.zeroWithoutSource && c.amount == 0 {
+		return nil
 	}
 	p := g.MutablePermanent(sourceID)
 	if p == nil {
@@ -288,6 +295,10 @@ func (c *capturedXCountersCost) resolveActionCost(ctx actionCostContext) Cost {
 // removed and the cost is trivially payable.
 func RemoveXCountersFromSourceCost(ct CounterType) Cost {
 	return &removeXCountersCost{ct: ct}
+}
+
+func (c *removeXCountersCost) resolveActionCost(ctx actionCostContext) Cost {
+	return &removeCountersCost{ct: c.ct, amount: ctx.XValue, zeroWithoutSource: true}
 }
 
 func (c *removeXCountersCost) inspectDefinition() definitionNode {

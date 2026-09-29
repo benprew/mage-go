@@ -134,6 +134,10 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		validation.PlayerLoseLife(player, tx.lifeLoss)
 	}
 	for i, cost := range tx.costs {
+		if counter, ok := cost.(*removeXCountersCost); ok {
+			cost = counter.resolveActionCost(actionCostContext{XValue: tx.game.resolution.X()})
+			tx.costs[i] = cost
+		}
 		validationCost := cost
 		if either, ok := cost.(*eitherCost); ok {
 			locked := *either
@@ -273,7 +277,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			validationCost = &cntCopy
 			tx.costs[i] = &cntCopy
 		}
-		if counter, ok := cost.(*removeCountersCost); ok {
+		if counter, ok := cost.(*removeCountersCost); ok && (!counter.zeroWithoutSource || counter.amount != 0) {
 			locked := *counter
 			source := tx.game.FindPermanent(tx.sourceID)
 			if source == nil {

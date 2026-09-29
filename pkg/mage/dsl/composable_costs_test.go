@@ -739,3 +739,37 @@ func TestPaidFilteredDiscardPublicDeclaration(t *testing.T) {
 		t.Fatalf("descriptor = %+v", got)
 	}
 }
+
+func TestUncapturedXCounterPublicDeclaration(t *testing.T) {
+	card := dsl.NewArtifact("Synthetic X counter payment", "", dsl.WithAbility(dsl.Activate(
+		dsl.Costs(dsl.Mana("{X}"), dsl.RemoveXCountersFromSourceCost(core.Charge)),
+		dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	a := mage.NewBasePlayer("A")
+	g := mage.NewGame(a, mage.NewBasePlayer("B"))
+	g.PutOnBattlefield(card, a.PlayerID())
+	g.MutablePermanent(card.ID()).AddCounter(core.Charge, 2)
+	a.ManaPool().Add(core.Red, 2)
+	g.SetXValue(2)
+	if err := g.ActivateAbilityByIndex(a.PlayerID(), card.ID(), 0, nil); err != nil {
+		t.Fatal(err)
+	}
+	if g.FindPermanent(card.ID()).Counters[core.Charge] != 0 {
+		t.Fatal("activation did not pay announced X")
+	}
+	g.CopyStackObjectDirect(g.StackObjects()[0], a.PlayerID(), false)
+	clone := g.Clone()
+	clone.ResolveStack()
+	if clone.GetPlayer(a.PlayerID()).Life() != 22 || a.Life() != 20 {
+		t.Fatal("copied resolution crossed clone boundary")
+	}
+	g.ResolveStack()
+	if a.Life() != 22 {
+		t.Fatal("copied ability did not resolve")
+	}
+	if got := dsl.InspectDefinition(dsl.RemoveXCountersFromSourceCost(core.Charge)); got.Role != "cost" {
+		t.Fatalf("descriptor = %+v", got)
+	}
+}
