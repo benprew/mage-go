@@ -273,7 +273,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			validationCost = &cntCopy
 			tx.costs[i] = &cntCopy
 		}
-		if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
+		if counter, ok := cost.(*removeCountersCost); ok {
 			locked := *counter
 			source := tx.game.FindPermanent(tx.sourceID)
 			if source == nil {
@@ -347,6 +347,7 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 		return ErrPlayerNotFound
 	}
 	millTotal := 0
+	counterTotals := make(map[CounterType]int)
 	for _, cost := range tx.costs {
 		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture && !reveal.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen reveal")
@@ -362,8 +363,28 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 				return fmt.Errorf("cannot pay chosen graveyard exile")
 			}
 		}
-		if counter, ok := cost.(*removeCountersCost); ok && counter.capture && !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
-			return fmt.Errorf("cannot pay locked counter cost")
+		var counterType CounterType
+		var counterAmount int
+		switch counter := cost.(type) {
+		case *removeCountersCost:
+			if !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
+				return fmt.Errorf("cannot pay locked counter cost")
+			}
+			counterType, counterAmount = counter.ct, counter.amount
+		case *removeAnyCountersCost:
+			if !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
+				return fmt.Errorf("cannot pay chosen counter cost")
+			}
+			counterType, counterAmount = counter.ct, counter.count
+		default:
+			counterAmount = 0
+		}
+		if counterAmount > 0 {
+			available := int(tx.game.FindPermanent(tx.sourceID).Counters[counterType])
+			if counterAmount > available-counterTotals[counterType] {
+				return fmt.Errorf("cannot pay total counter cost")
+			}
+			counterTotals[counterType] += counterAmount
 		}
 		if taps, ok := cost.(*tapNOtherMatchingCost); ok && !taps.CanPay(tx.sourceID, tx.controller, tx.game) {
 			return fmt.Errorf("cannot pay chosen tap cost")
