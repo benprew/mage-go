@@ -594,6 +594,7 @@ type Permanent struct {
 	Tapped              bool
 	PhasedOut           bool // true when phased out (treated as though it doesn't exist)
 	Damage              int
+	DeathtouchDamage    bool // true if dealt damage by a source with deathtouch or basilisk touch since last cleanup
 	// Counters is a fixed-size array indexed by CounterType, so cloning a
 	// Permanent is a memcpy instead of a map allocation. Absent counters are
 	// zero. To iterate, loop over [0, NumCounters) and skip zeros.
@@ -625,8 +626,11 @@ type Permanent struct {
 	grantedAttrs        [NumAttrs]int8
 
 	// P/T bonuses from continuous effects (LayerPT). Reset and recomputed each Apply() cycle.
-	powerBonus int
-	toughBonus int
+	cdaPower     *int
+	cdaToughness *int
+	powerBonus   int
+	toughBonus   int
+	ptSwitched   bool
 
 	// ETB choices (e.g. Jihad: choose a color and an opponent;
 	// Herald's Horn: choose a creature type). Set by "as ~ enters" replacement
@@ -876,8 +880,11 @@ func (p *Permanent) CanBeTargetedBy(source Card, sourceController uuid.UUID, g *
 }
 
 // CurrentPower returns power including counters and continuous effects.
-func (p *Permanent) CurrentPower(g GameReader) int {
+func (p *Permanent) unswitchedPower(g GameReader) int {
 	pw := p.Card.Power()
+	if p.cdaPower != nil {
+		pw = *p.cdaPower
+	}
 	if p.BasePTOverride != nil {
 		pw = p.BasePTOverride[0]
 	}
@@ -886,16 +893,17 @@ func (p *Permanent) CurrentPower(g GameReader) int {
 			pw += ct.PowerBoost() * int(n)
 		}
 	}
-	// Continuous effects are applied by the EffectManager
 	if g != nil {
 		pw += p.powerBonus
 	}
 	return pw
 }
 
-// CurrentToughness returns toughness including counters and continuous effects.
-func (p *Permanent) CurrentToughness(g GameReader) int {
+func (p *Permanent) unswitchedToughness(g GameReader) int {
 	tg := p.Card.Toughness()
+	if p.cdaToughness != nil {
+		tg = *p.cdaToughness
+	}
 	if p.BasePTOverride != nil {
 		tg = p.BasePTOverride[1]
 	}
@@ -908,6 +916,43 @@ func (p *Permanent) CurrentToughness(g GameReader) int {
 		tg += p.toughBonus
 	}
 	return tg
+}
+
+// CurrentPower returns power including CDAs, base overrides, counters, continuous effects, and switching.
+func (p *Permanent) CurrentPower(g GameReader) int {
+	if p.ptSwitched {
+		return p.unswitchedToughness(g)
+	}
+	return p.unswitchedPower(g)
+}
+
+// CurrentToughness returns toughness including CDAs, base overrides, counters, continuous effects, and switching.
+func (p *Permanent) CurrentToughness(g GameReader) int {
+	if p.ptSwitched {
+		return p.unswitchedPower(g)
+	}
+	return p.unswitchedToughness(g)
+}
+
+// SetCDAPowerToughness sets characteristic-defining power and toughness in Layer 7a (CR 613.4a).
+func (p *Permanent) SetCDAPowerToughness(power, toughness int) {
+	p.cdaPower = &power
+	p.cdaToughness = &toughness
+}
+
+// SetCDAPower sets characteristic-defining power in Layer 7a (CR 613.4a).
+func (p *Permanent) SetCDAPower(power int) {
+	p.cdaPower = &power
+}
+
+// SetCDAToughness sets characteristic-defining toughness in Layer 7a (CR 613.4a).
+func (p *Permanent) SetCDAToughness(toughness int) {
+	p.cdaToughness = &toughness
+}
+
+// SwitchPowerToughness switches power and toughness in Layer 7d (CR 613.4d).
+func (p *Permanent) SwitchPowerToughness() {
+	p.ptSwitched = !p.ptSwitched
 }
 
 // BoostPT adds power and toughness bonuses during continuous effect application.

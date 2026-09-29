@@ -168,3 +168,44 @@ func TestCR506_4_RemoveFromCombatOnControlChange(t *testing.T) {
 		t.Fatal("creature whose control changed should be removed from combat (CR 506.4)")
 	}
 }
+
+// CR 120.3 & CR 704.5h: Deathtouch damage marks actual damage, not inflated toughness.
+// A creature receiving deathtouch damage has that damage marked and is destroyed by SBA,
+// even if toughness is boosted before SBAs check.
+func TestCR704_5h_DeathtouchDamageIntegrity(t *testing.T) {
+	a, b := NewBasePlayer("A"), NewBasePlayer("B")
+	g := NewGame(a, b)
+
+	snake := NewCreature("Snake", "{G}", 1, 1, WithKeyword(Deathtouch))
+	g.PutOnBattlefield(snake, a.PlayerID())
+
+	giant := NewCreature("Colossus", "{8}", 10, 10)
+	giantPerm := g.PutOnBattlefield(giant, b.PlayerID())
+
+	// Deal 1 deathtouch damage to 10/10.
+	g.DealDamageToPermanent(giantPerm, 1, snake.ID())
+
+	// Marked damage must be exactly 1 per CR 120.3, NOT 10.
+	giantPerm = g.FindPermanent(giant.ID())
+	if giantPerm.Damage != 1 {
+		t.Fatalf("expected marked damage to be 1 per CR 120.3, got %d", giantPerm.Damage)
+	}
+	if !giantPerm.DeathtouchDamage {
+		t.Fatal("expected DeathtouchDamage flag to be true")
+	}
+
+	// Instant-speed toughness boost before SBAs: 10/10 becomes 10/13.
+	giantPerm.BoostPT(0, 3)
+	if giantPerm.CurrentToughness(g) != 13 {
+		t.Fatalf("toughness = %d, want 13", giantPerm.CurrentToughness(g))
+	}
+	if giantPerm.Damage != 1 {
+		t.Fatalf("damage changed to %d, want 1", giantPerm.Damage)
+	}
+
+	// SBA check destroys the creature via CR 704.5h despite having 1 damage on a 13-toughness creature.
+	g.CheckStateBasedActions()
+	if g.FindPermanent(giant.ID()) != nil {
+		t.Fatal("creature dealt deathtouch damage should be destroyed by SBA 704.5h")
+	}
+}

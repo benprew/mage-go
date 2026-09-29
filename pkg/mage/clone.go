@@ -174,6 +174,8 @@ func clonePermanentInto(dst, src *Permanent) {
 		printedAbilitiesSuppressed: src.printedAbilitiesSuppressed,
 		powerBonus:                 src.powerBonus,
 		toughBonus:                 src.toughBonus,
+		ptSwitched:                 src.ptSwitched,
+		DeathtouchDamage:           src.DeathtouchDamage,
 		Counters:                   src.Counters, // fixed-size array: value copy
 		baseAttrs:                  src.baseAttrs,
 		printedAbilityAttrs:        src.printedAbilityAttrs,
@@ -205,6 +207,15 @@ func clonePermanentInto(dst, src *Permanent) {
 	if len(src.SubTypeAdditions) > 0 {
 		dst.SubTypeAdditions = make([]string, len(src.SubTypeAdditions))
 		copy(dst.SubTypeAdditions, src.SubTypeAdditions)
+	}
+	// Deep copy cdaPower and cdaToughness if non-nil.
+	if src.cdaPower != nil {
+		v := *src.cdaPower
+		dst.cdaPower = &v
+	}
+	if src.cdaToughness != nil {
+		v := *src.cdaToughness
+		dst.cdaToughness = &v
 	}
 	// Deep copy BasePTOverride if non-nil (it's a *[2]int).
 	if src.BasePTOverride != nil {

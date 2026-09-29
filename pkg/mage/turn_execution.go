@@ -544,7 +544,7 @@ func (g *Game) doCleanupActions() bool {
 	}
 	// CR 514.2 includes phased-out permanents in damage removal.
 	for _, p := range g.zones.battlefield {
-		if p.Damage == 0 {
+		if p.Damage == 0 && !p.DeathtouchDamage {
 			continue
 		}
 		p = g.MutablePermanentIncludingPhased(p.ID())
@@ -552,6 +552,7 @@ func (g *Game) doCleanupActions() bool {
 			continue
 		}
 		p.Damage = 0
+		p.DeathtouchDamage = false
 	}
 	// Clear mana pools
 	for _, p := range g.players {

@@ -503,47 +503,47 @@ func BoostAllCreaturesIncludingSelf(power, toughness int, filter PermanentFilter
 	})
 }
 
-// PTEqualsCount creates a continuous effect where the source creature gets
-// +N/+N where N is the count of permanents matching countFilter (on whole battlefield).
-// Used for Plague Rats, etc.
+// PTEqualsCount creates a continuous effect where the source creature's power and toughness
+// are each equal to the count of permanents matching countFilter (on whole battlefield).
+// This is a characteristic-defining ability applied in Layer 7a (CR 613.4a).
 func PTEqualsCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+	return FuncContinuousEffectWithSublayer(LayerPT, SublayerPT_CDA, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		src := g.MutablePermanent(sourceID)
 		if src == nil {
 			return nil
 		}
 		count := g.CountBattlefield(countFilter)
-		src.powerBonus += count
-		src.toughBonus += count
+		src.SetCDAPowerToughness(count, count)
 		return nil
 	})
 }
 
-// PTEqualsControlledCount creates a continuous effect where the source creature gets
-// +N/+N where N is the count of permanents matching countFilter that you control.
+// PTEqualsControlledCount creates a continuous effect where the source creature's power and toughness
+// are each equal to the count of permanents matching countFilter that you control.
+// This is a characteristic-defining ability applied in Layer 7a (CR 613.4a).
 func PTEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+	return FuncContinuousEffectWithSublayer(LayerPT, SublayerPT_CDA, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		src := g.MutablePermanent(sourceID)
 		if src == nil {
 			return nil
 		}
 		count := g.CountBattlefield(And(ControlledBy(src.ControllerID()), countFilter))
-		src.powerBonus += count
-		src.toughBonus += count
+		src.SetCDAPowerToughness(count, count)
 		return nil
 	})
 }
 
-// ToughnessEqualsControlledCount creates a continuous effect where the source creature gets
-// +0/+N where N is the count of permanents matching countFilter that you control.
+// ToughnessEqualsControlledCount creates a continuous effect where the source creature's toughness
+// is equal to the count of permanents matching countFilter that you control.
+// This is a characteristic-defining ability applied in Layer 7a (CR 613.4a).
 func ToughnessEqualsControlledCount(countFilter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerPT, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
+	return FuncContinuousEffectWithSublayer(LayerPT, SublayerPT_CDA, WhileOnBattlefield, func(g *Game, sourceID uuid.UUID) error {
 		src := g.MutablePermanent(sourceID)
 		if src == nil {
 			return nil
 		}
 		count := g.CountBattlefield(And(ControlledBy(src.ControllerID()), countFilter))
-		src.toughBonus += count
+		src.SetCDAToughness(count)
 		return nil
 	})
 }

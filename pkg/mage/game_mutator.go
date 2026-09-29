@@ -228,9 +228,12 @@ func (g *Game) CombatGroupFor(attackerID uuid.UUID) *CombatGroup {
 	return g.combat.GroupFor(attackerID)
 }
 
-// IsAttackingInCombat reports whether the permanent is a declared attacker.
+// IsAttackingInCombat reports whether the permanent is currently an attacking creature in combat.
 func (g *Game) IsAttackingInCombat(permID uuid.UUID) bool {
 	if g.combat == nil {
+		return false
+	}
+	if p := g.FindPermanent(permID); p == nil || p.PhasedOut {
 		return false
 	}
 	return g.combat.IsAttacking(permID)
@@ -241,9 +244,12 @@ func (g *Game) IsAttackingIncarnation(permID, incarnation uuid.UUID) bool {
 	return g.combat != nil && g.combat.IsAttackingIncarnation(permID, incarnation)
 }
 
-// IsBlockingInCombat reports whether the permanent is a declared blocker.
+// IsBlockingInCombat reports whether the permanent is currently a blocking creature in combat.
 func (g *Game) IsBlockingInCombat(permID uuid.UUID) bool {
 	if g.combat == nil {
+		return false
+	}
+	if p := g.FindPermanent(permID); p == nil || p.PhasedOut {
 		return false
 	}
 	return g.combat.IsBlocking(permID)

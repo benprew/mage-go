@@ -110,8 +110,15 @@ func TestDamageSourceIdentityProtectionAndDeathtouchAfterReturn(t *testing.T) {
 	}
 	victim := g.PutOnBattlefield(NewCreature("Victim", "", 2, 4), b.PlayerID())
 	g.DealDamageToPermanentFromSource(victim, 1, source)
-	if victim.Damage != 4 {
-		t.Fatalf("deathtouch marked damage = %d, want lethal", victim.Damage)
+	if victim.Damage != 1 {
+		t.Fatalf("deathtouch marked damage = %d, want 1", victim.Damage)
+	}
+	if !victim.DeathtouchDamage {
+		t.Fatal("expected deathtouch damage flag to be set")
+	}
+	g.CheckStateBasedActions()
+	if g.FindPermanent(victim.ID()) != nil {
+		t.Fatal("expected victim to be destroyed by state-based actions")
 	}
 }
 

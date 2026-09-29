@@ -26,6 +26,7 @@ type layerModification struct {
 	cantBeBlocked    bool
 	setBasePT        bool
 	setPowerOnly     bool
+	isSwitch         bool
 	layer            Layer
 	colors           []Color
 	family           SubtypeFamily
@@ -55,6 +56,11 @@ func SetBasePowerToughness(subject PermanentRef, power, toughness ResolutionValu
 // SetBasePower sets base power and preserves base toughness.
 func SetBasePower(subject PermanentRef, power ResolutionValue) ContinuousModification {
 	return &layerModification{subject: subject, power: power, toughness: Fixed(0), layer: LayerPT, setBasePT: true, setPowerOnly: true}
+}
+
+// SwitchPowerToughness switches power and toughness in Layer 7d (CR 613.4d).
+func SwitchPowerToughness(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, layer: LayerPT, isSwitch: true}
 }
 
 // ModifyEachPT applies a power and toughness modification to a permanent set.
@@ -234,6 +240,7 @@ type capturedModification struct {
 	cantBeBlocked    bool
 	setBasePT        bool
 	setPowerOnly     bool
+	isSwitch         bool
 	colors           []Color
 	family           SubtypeFamily
 	subtypes         []string
@@ -246,7 +253,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -258,8 +265,10 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 			v.ability, v.grantID = m.ability, uuid.New()
 		}
 		if m.layer == LayerPT {
-			v.power = m.power.resolveValue(ctx)
-			v.toughness = m.toughness.resolveValue(ctx)
+			if !m.isSwitch {
+				v.power = m.power.resolveValue(ctx)
+				v.toughness = m.toughness.resolveValue(ctx)
+			}
 		}
 		result = append(result, v)
 	}
@@ -279,11 +288,16 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			toughness := v.toughness
 			if v.setPowerOnly {
 				toughness = p.Card.Toughness()
+				if p.cdaToughness != nil {
+					toughness = *p.cdaToughness
+				}
 				if p.BasePTOverride != nil {
 					toughness = p.BasePTOverride[1]
 				}
 			}
 			p.BasePTOverride = &[2]int{v.power, toughness}
+		} else if v.isSwitch {
+			p.SwitchPowerToughness()
 		} else {
 			p.powerBonus += v.power
 			p.toughBonus += v.toughness
@@ -364,7 +378,23 @@ func (r *continuousRule) staticEffects() []ContinuousEffect {
 				mods = append(mods, m)
 			}
 		}
-		if len(mods) > 0 {
+		if layer == LayerPT {
+			sublayerMods := make(map[SublayerPT][]*layerModification)
+			for _, m := range mods {
+				sub := SublayerPT_Modify
+				if m.setBasePT {
+					sub = SublayerPT_Set
+				} else if m.isSwitch {
+					sub = SublayerPT_Switch
+				}
+				sublayerMods[sub] = append(sublayerMods[sub], m)
+			}
+			for _, sub := range []SublayerPT{SublayerPT_CDA, SublayerPT_Set, SublayerPT_Modify, SublayerPT_Switch} {
+				if sm := sublayerMods[sub]; len(sm) > 0 {
+					effects = append(effects, &composedLayerEffect{layer: LayerPT, sublayer: sub, duration: WhileOnBattlefield, rule: r, modifications: sm, grantID: uuid.New()})
+				}
+			}
+		} else if len(mods) > 0 {
 			effects = append(effects, &composedLayerEffect{layer: layer, duration: WhileOnBattlefield, rule: r, modifications: mods, grantID: uuid.New()})
 		}
 	}
@@ -389,6 +419,7 @@ func Static(rules ...StaticRule) *StaticAbilityHolder {
 type composedLayerEffect struct {
 	effectSource
 	layer             Layer
+	sublayer          SublayerPT
 	duration          Duration
 	rule              *continuousRule
 	modifications     []*layerModification
@@ -402,7 +433,13 @@ func (e *composedLayerEffect) Text() string { return "continuous modification" }
 func (e *composedLayerEffect) Properties() EffectProperties {
 	return propertiesFromModifications(e.modifications)
 }
-func (e *composedLayerEffect) GetLayer() Layer       { return e.layer }
+func (e *composedLayerEffect) GetLayer() Layer { return e.layer }
+func (e *composedLayerEffect) GetSublayer() SublayerPT {
+	if e.sublayer == 0 {
+		return SublayerPT_Modify
+	}
+	return e.sublayer
+}
 func (e *composedLayerEffect) GetDuration() Duration { return e.duration }
 func (e *composedLayerEffect) survivesSourceExit() bool {
 	return e.rule == nil && !e.sourceBound
@@ -594,6 +631,29 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 	}
 	var effects []*composedLayerEffect
 	for _, layer := range []Layer{LayerControl, LayerText, LayerType, LayerColor, LayerAbility, LayerPT} {
+		if layer == LayerPT {
+			sublayerCaps := make(map[SublayerPT][]capturedModification)
+			for _, value := range e.modifications {
+				m := value.modification()
+				if m.layer == LayerPT {
+					sub := SublayerPT_Modify
+					if m.setBasePT {
+						sub = SublayerPT_Set
+					} else if m.isSwitch {
+						sub = SublayerPT_Switch
+					}
+					sublayerCaps[sub] = append(sublayerCaps[sub], m.capture(ctx)...)
+				}
+			}
+			for _, sub := range []SublayerPT{SublayerPT_CDA, SublayerPT_Set, SublayerPT_Modify, SublayerPT_Switch} {
+				if caps := sublayerCaps[sub]; len(caps) > 0 {
+					entry := &composedLayerEffect{layer: LayerPT, sublayer: sub, duration: e.duration, sourceBound: e.sourceBound, sourceIncarnation: sourceIncarnation, captured: caps}
+					entry.SetSourceID(ctx.SourceID)
+					effects = append(effects, entry)
+				}
+			}
+			continue
+		}
 		entry := &composedLayerEffect{layer: layer, duration: e.duration, sourceBound: e.sourceBound, sourceIncarnation: sourceIncarnation}
 		entry.SetSourceID(ctx.SourceID)
 		for _, value := range e.modifications {

@@ -15,6 +15,16 @@ const (
 	LayerPT      Layer = 7
 )
 
+// SublayerPT represents the sublayers within Layer 7 (CR 613.4).
+type SublayerPT int
+
+const (
+	SublayerPT_CDA    SublayerPT = 1 // 7a: Characteristic-defining abilities (CR 613.4a)
+	SublayerPT_Set    SublayerPT = 2 // 7b: Setting base P/T (CR 613.4b)
+	SublayerPT_Modify SublayerPT = 3 // 7c: Modify P/T without setting (CR 613.4c)
+	SublayerPT_Switch SublayerPT = 4 // 7d: Switch P/T (CR 613.4d)
+)
+
 // Duration represents how long an effect lasts.
 type Duration int
 

@@ -732,9 +732,9 @@ func (ds *DamageSystem) ExecuteDamageToCreature(g *Game, a *DamageToCreatureActi
 	}
 	source := a.DamageSource()
 	if source.HasKeyword(Deathtouch) && amount > 0 && perm.HasType(TypeCreature) {
-		perm.Damage = perm.CurrentToughness(g)
+		perm.DeathtouchDamage = true
 	} else if source.HasKeyword(BasiliskTouch) && amount > 0 && perm.HasType(TypeCreature) && !perm.HasSubType("Wall") {
-		perm.Damage = perm.CurrentToughness(g)
+		perm.DeathtouchDamage = true
 	}
 	if source.HasKeyword(Lifelink) {
 		controller := source.Controller()

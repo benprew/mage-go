@@ -41,6 +41,7 @@ func (r *regenerationReplacement) Replace(a Action, g *Game) Action {
 	if perm != nil {
 		g.TapPermanent(perm)
 		perm.Damage = 0
+		perm.DeathtouchDamage = false
 		g.RemoveFromCombat(perm.ID())
 	}
 	return nil // destruction is fully replaced

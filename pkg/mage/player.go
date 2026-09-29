@@ -41,6 +41,22 @@ type BlockAssignment struct {
 	AttackerID uuid.UUID
 }
 
+// TriggerOrderInfo describes a pending trigger for player ordering choices under CR 603.3b.
+type TriggerOrderInfo struct {
+	SourceID    uuid.UUID
+	SourceName  string
+	AbilityText string
+}
+
+// TriggerOrderChooser is an optional interface for players to choose the order
+// their simultaneous triggers are placed on the stack (CR 603.3b).
+// The returned slice contains indices into triggers, indicating the order to put triggers on the stack
+// (the first trigger put on the stack is placed first and resolves last).
+// If nil or invalid, the engine falls back to the deterministic default order.
+type TriggerOrderChooser interface {
+	ChooseTriggerOrder(triggers []TriggerOrderInfo) []int
+}
+
 // Player interface for game players.
 type Player interface {
 	PlayerID() uuid.UUID

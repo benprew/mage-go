@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -98,6 +99,7 @@ type ContinuousApplyFunc func(g *Game, sourceID uuid.UUID) error
 // funcContinuousEffect implements ContinuousEffect using a function and metadata.
 type funcContinuousEffect struct {
 	layer    Layer
+	sublayer SublayerPT
 	duration Duration
 	apply    ContinuousApplyFunc
 	active   ActiveCondition // nil means SourceOnBattlefield
@@ -108,12 +110,18 @@ type funcContinuousEffect struct {
 // By default, it's active while the source permanent is on the battlefield.
 // Pass an optional ActiveCondition to customize when it's active.
 func FuncContinuousEffect(layer Layer, duration Duration, apply ContinuousApplyFunc, condition ...ActiveCondition) ContinuousEffect {
+	return FuncContinuousEffectWithSublayer(layer, SublayerPT_Modify, duration, apply, condition...)
+}
+
+// FuncContinuousEffectWithSublayer creates a ContinuousEffect with an explicit Layer 7 sublayer.
+func FuncContinuousEffectWithSublayer(layer Layer, sublayer SublayerPT, duration Duration, apply ContinuousApplyFunc, condition ...ActiveCondition) ContinuousEffect {
 	var cond ActiveCondition
 	if len(condition) > 0 {
 		cond = condition[0]
 	}
 	return &funcContinuousEffect{
 		layer:    layer,
+		sublayer: sublayer,
 		duration: duration,
 		apply:    apply,
 		active:   cond,
@@ -123,7 +131,13 @@ func FuncContinuousEffect(layer Layer, duration Duration, apply ContinuousApplyF
 func (e *funcContinuousEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *funcContinuousEffect) Text() string                 { return "" }
 func (e *funcContinuousEffect) GetLayer() Layer              { return e.layer }
-func (e *funcContinuousEffect) GetDuration() Duration        { return e.duration }
+func (e *funcContinuousEffect) GetSublayer() SublayerPT {
+	if e.sublayer == 0 {
+		return SublayerPT_Modify
+	}
+	return e.sublayer
+}
+func (e *funcContinuousEffect) GetDuration() Duration { return e.duration }
 
 func (e *funcContinuousEffect) IsActive(g *Game) bool {
 	if e.active != nil {
@@ -146,8 +160,9 @@ type AttachedApplyFunc func(g *Game, source, target *Permanent) error
 
 // attachedEffect implements ContinuousEffect for aura/equipment patterns.
 type attachedEffect struct {
-	layer Layer
-	apply AttachedApplyFunc
+	layer    Layer
+	sublayer SublayerPT
+	apply    AttachedApplyFunc
 	effectSource
 }
 
@@ -155,15 +170,22 @@ type attachedEffect struct {
 // attached to another permanent. The apply function receives both source and target.
 func AttachedEffect(layer Layer, apply AttachedApplyFunc) ContinuousEffect {
 	return &attachedEffect{
-		layer: layer,
-		apply: apply,
+		layer:    layer,
+		sublayer: SublayerPT_Modify,
+		apply:    apply,
 	}
 }
 
 func (e *attachedEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *attachedEffect) Text() string                 { return "" }
 func (e *attachedEffect) GetLayer() Layer              { return e.layer }
-func (e *attachedEffect) GetDuration() Duration        { return WhileOnBattlefield }
+func (e *attachedEffect) GetSublayer() SublayerPT {
+	if e.sublayer == 0 {
+		return SublayerPT_Modify
+	}
+	return e.sublayer
+}
+func (e *attachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *attachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
@@ -189,6 +211,7 @@ type TargetApplyFunc func(g *Game, target *Permanent) error
 // targetEffect implements ContinuousEffect for effects targeting a specific permanent.
 type targetEffect struct {
 	layer         Layer
+	sublayer      SublayerPT
 	duration      Duration
 	targetID      uuid.UUID
 	apply         TargetApplyFunc
@@ -204,11 +227,23 @@ func TargetEffect(layer Layer, duration Duration, targetID uuid.UUID, apply Targ
 	return TargetEffectWhen(layer, duration, targetID, apply, nil)
 }
 
+// TargetEffectWithSublayer creates a target effect with an explicit Layer 7 sublayer.
+func TargetEffectWithSublayer(layer Layer, sublayer SublayerPT, duration Duration, targetID uuid.UUID, apply TargetApplyFunc) ContinuousEffect {
+	return &targetEffect{
+		layer:    layer,
+		sublayer: sublayer,
+		duration: duration,
+		targetID: targetID,
+		apply:    apply,
+	}
+}
+
 // TargetEffectWhen creates a target effect with an additional source-based
 // active condition, such as SourceTapped.
 func TargetEffectWhen(layer Layer, duration Duration, targetID uuid.UUID, apply TargetApplyFunc, condition ActiveCondition) ContinuousEffect {
 	return &targetEffect{
 		layer:    layer,
+		sublayer: SublayerPT_Modify,
 		duration: duration,
 		targetID: targetID,
 		apply:    apply,
@@ -225,6 +260,7 @@ func TargetEffectWhen(layer Layer, duration Duration, targetID uuid.UUID, apply 
 func TapMaintainedTargetEffect(layer Layer, duration Duration, targetID uuid.UUID, apply TargetApplyFunc, condition ActiveCondition) ContinuousEffect {
 	return &targetEffect{
 		layer:         layer,
+		sublayer:      SublayerPT_Modify,
 		duration:      duration,
 		targetID:      targetID,
 		apply:         apply,
@@ -236,7 +272,13 @@ func TapMaintainedTargetEffect(layer Layer, duration Duration, targetID uuid.UUI
 func (e *targetEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *targetEffect) Text() string                 { return "" }
 func (e *targetEffect) GetLayer() Layer              { return e.layer }
-func (e *targetEffect) GetDuration() Duration        { return e.duration }
+func (e *targetEffect) GetSublayer() SublayerPT {
+	if e.sublayer == 0 {
+		return SublayerPT_Modify
+	}
+	return e.sublayer
+}
+func (e *targetEffect) GetDuration() Duration { return e.duration }
 
 // cloneEffect deep-copies the effect so its mutable expired latch is isolated
 // from the original when the game is cloned for AI search.
@@ -542,6 +584,8 @@ func (em *EffectManager) Apply(g *Game) {
 		p.SubTypeOverride = nil
 		p.SubTypeAdditions = nil
 		p.resetSubtypeFamilyEffects()
+		p.cdaPower = nil
+		p.cdaToughness = nil
 		p.BasePTOverride = nil
 		p.ColorOverride = nil
 		// Reset grantedAttrs and P/T bonuses so each Apply() cycle starts fresh.
@@ -549,6 +593,7 @@ func (em *EffectManager) Apply(g *Game) {
 		p.grantedAttrs = [NumAttrs]int8{}
 		p.powerBonus = 0
 		p.toughBonus = 0
+		p.ptSwitched = false
 	}
 
 	// Remove effects whose source is no longer on the battlefield
@@ -576,11 +621,37 @@ func (em *EffectManager) Apply(g *Game) {
 		if layer == LayerCopy || layer == LayerControl {
 			continue
 		}
+		if layer == LayerPT {
+			// CR 613.4: Apply Layer 7 sublayers in order:
+			// 7a: CDAs (CR 613.4a)
+			// 7b: Setting base P/T (CR 613.4b)
+			// 7c: Modifications without setting (CR 613.4c)
+			// 7d: Switching P/T (CR 613.4d)
+			for _, sub := range []SublayerPT{SublayerPT_CDA, SublayerPT_Set, SublayerPT_Modify, SublayerPT_Switch} {
+				var subEffects []ContinuousEffect
+				for _, e := range em.effects {
+					if e.GetLayer() == LayerPT && getEffectSublayer(e) == sub && e.IsActive(g) {
+						subEffects = append(subEffects, e)
+					}
+				}
+				subEffects = orderEffectsByDependency(subEffects, g)
+				for _, e := range subEffects {
+					_ = e.ApplyContinuous(&EffectContext{Game: g})
+					em.syncAttrDeltas(g)
+				}
+			}
+			continue
+		}
+		var layerEffects []ContinuousEffect
 		for _, e := range em.effects {
 			if e.GetLayer() == layer && e.IsActive(g) {
-				_ = e.ApplyContinuous(&EffectContext{Game: g})
-				em.syncAttrDeltas(g)
+				layerEffects = append(layerEffects, e)
 			}
+		}
+		layerEffects = orderEffectsByDependency(layerEffects, g)
+		for _, e := range layerEffects {
+			_ = e.ApplyContinuous(&EffectContext{Game: g})
+			em.syncAttrDeltas(g)
 		}
 	}
 
@@ -824,6 +895,21 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 		if len(candidates) == 0 {
 			break
 		}
+		bestPriority := ReplacementPriorityDefault
+		for _, r := range candidates {
+			p := getReplacementPriority(r)
+			if p < bestPriority {
+				bestPriority = p
+			}
+		}
+		var tierCandidates []ReplacementEffect
+		for _, r := range candidates {
+			if getReplacementPriority(r) == bestPriority {
+				tierCandidates = append(tierCandidates, r)
+			}
+		}
+		candidates = tierCandidates
+
 		index := 0
 		if len(candidates) > 1 {
 			if player := replacementAffectedPlayer(action, g); player != nil {
@@ -892,4 +978,133 @@ func replacementAffectedPlayer(action Action, g *Game) Player {
 		}
 	}
 	return nil
+}
+
+func getReplacementPriority(r ReplacementEffect) ReplacementPriority {
+	if p, ok := r.(ReplacementPriorityProvider); ok {
+		prio := p.ReplacementPriority()
+		if prio > 0 {
+			return prio
+		}
+	}
+	return ReplacementPriorityDefault
+}
+
+// DependencyDetector is an optional interface for continuous effects to declare dependencies under CR 613.8.
+type DependencyDetector interface {
+	DependsOn(other ContinuousEffect, g *Game) bool
+}
+
+func getEffectSublayer(e ContinuousEffect) SublayerPT {
+	if sp, ok := e.(interface{ GetSublayer() SublayerPT }); ok {
+		sub := sp.GetSublayer()
+		if sub > 0 {
+			return sub
+		}
+	}
+	return SublayerPT_Modify
+}
+
+func orderEffectsByDependency(effects []ContinuousEffect, g *Game) []ContinuousEffect {
+	n := len(effects)
+	if n <= 1 {
+		return effects
+	}
+
+	dependsOn := make([][]bool, n)
+	for i := range dependsOn {
+		dependsOn[i] = make([]bool, n)
+	}
+
+	hasAnyDep := false
+	for i, effI := range effects {
+		if detector, ok := effI.(DependencyDetector); ok {
+			for j, effJ := range effects {
+				if i != j && detector.DependsOn(effJ, g) {
+					dependsOn[i][j] = true
+					hasAnyDep = true
+				}
+			}
+		}
+	}
+
+	if !hasAnyDep {
+		return effects
+	}
+
+	inCycle := make(map[int]bool)
+	visited := make([]int, n)
+	var checkCycle func(u int, path []int)
+	checkCycle = func(u int, path []int) {
+		visited[u] = 1
+		path = append(path, u)
+		for v := range n {
+			if dependsOn[u][v] {
+				if visited[v] == 1 {
+					for _, p := range slices.Backward(path) {
+						inCycle[p] = true
+						if p == v {
+							break
+						}
+					}
+				} else if visited[v] == 0 {
+					checkCycle(v, path)
+				}
+			}
+		}
+		visited[u] = 2
+	}
+	for i := range n {
+		if visited[i] == 0 {
+			checkCycle(i, nil)
+		}
+	}
+
+	for u := range n {
+		for v := range n {
+			if inCycle[u] || inCycle[v] {
+				dependsOn[u][v] = false
+			}
+		}
+	}
+
+	inDegree := make([]int, n)
+	for i := range n {
+		for j := range n {
+			if dependsOn[i][j] {
+				inDegree[i]++
+			}
+		}
+	}
+
+	result := make([]ContinuousEffect, 0, n)
+	applied := make([]bool, n)
+
+	for len(result) < n {
+		next := -1
+		for i := range n {
+			if !applied[i] && inDegree[i] == 0 {
+				next = i
+				break
+			}
+		}
+		if next == -1 {
+			for i := range n {
+				if !applied[i] {
+					next = i
+					break
+				}
+			}
+		}
+		applied[next] = true
+		result = append(result, effects[next])
+		for i := range n {
+			if dependsOn[i][next] {
+				dependsOn[i][next] = false
+				inDegree[i]--
+			}
+		}
+	}
+
+	return result
 }

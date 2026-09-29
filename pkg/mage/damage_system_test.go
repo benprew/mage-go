@@ -71,8 +71,15 @@ func TestDamageSystem_CreatureDamageAndKeywords(t *testing.T) {
 
 	g.DealDamageToPermanent(targetPerm, 1, sourcePerm.ID())
 
-	if targetPerm.Damage != 2 {
-		t.Fatalf("expected deathtouch to mark lethal damage (2), got %d", targetPerm.Damage)
+	if targetPerm.Damage != 1 {
+		t.Fatalf("expected deathtouch to mark 1 damage, got %d", targetPerm.Damage)
+	}
+	if !targetPerm.DeathtouchDamage {
+		t.Fatalf("expected deathtouch damage flag to be set")
+	}
+	g.CheckStateBasedActions()
+	if g.FindPermanent(targetPerm.ID()) != nil {
+		t.Fatalf("expected creature dealt deathtouch damage to be destroyed by SBA")
 	}
 	if !g.HasDealtDamageToPermanent(sourcePerm.ID(), targetPerm.ID()) {
 		t.Fatalf("expected duel damage to be tracked for permanent")
@@ -257,8 +264,15 @@ func TestDamageSystem_BasiliskTouch(t *testing.T) {
 
 	g.DealDamageToPermanent(targetPerm, 1, basiliskPerm.ID())
 
-	if targetPerm.Damage != 6 {
-		t.Fatalf("expected BasiliskTouch to mark lethal damage (6), got %d", targetPerm.Damage)
+	if targetPerm.Damage != 1 {
+		t.Fatalf("expected BasiliskTouch to mark 1 damage, got %d", targetPerm.Damage)
+	}
+	if !targetPerm.DeathtouchDamage {
+		t.Fatalf("expected BasiliskTouch damage flag to be set on non-wall")
+	}
+	g.CheckStateBasedActions()
+	if g.FindPermanent(targetPerm.ID()) != nil {
+		t.Fatalf("expected creature dealt BasiliskTouch damage to be destroyed by SBA")
 	}
 
 	// BasiliskTouch does not destroy walls lethal damage style
@@ -268,6 +282,9 @@ func TestDamageSystem_BasiliskTouch(t *testing.T) {
 	g.DealDamageToPermanent(wallPerm, 1, basiliskPerm.ID())
 	if wallPerm.Damage != 1 {
 		t.Fatalf("expected Wall of Wood to only take 1 damage from BasiliskTouch, got %d", wallPerm.Damage)
+	}
+	if wallPerm.DeathtouchDamage {
+		t.Fatalf("expected Wall of Wood to not have DeathtouchDamage flag")
 	}
 }
 
