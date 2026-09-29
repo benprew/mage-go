@@ -1,5 +1,17 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Announced X Counter Payment
+
+Delivery step 3's P wrapper-payment prerequisite now resolves a direct uncaptured X counter cost inside an announcement-time optional wrapper before affordability. Fresh API, tracker, and tests confirmed that damage identity, singular damage, attack/block, and filtered death already exist. `OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` and `RemoveXCountersFromSourceCost(CounterType) Cost` retain their signatures. The wrapper copy delegates X conversion to the existing contextual counter adapter; accepted costs reuse fixed-counter locks and total preflight. No new executor, role, binding format, AI metadata, or card policy is added.
+
+`TestOptionalXCounterPaymentAnnouncement` first failed for accepted zero with different ambient X. Preflight regressions first failed for returned, absent, phased, short, and combined-short sources. Acceptance covers decline, affordability before offering, announced versus ambient X, immutable declarations, no repeated choice, resource/output rollback, interleaved payments, clone isolation, and copied synthetic activation results. The public reference example compiles and validates in `TestOptionalXCounterPublicDeclaration`. These payments are nontargeted and require current source identity for positive removal, not LKI. Replacement ordering and simultaneous actions are unchanged.
+
+Chamber Sentry's complete `data/JMP.json` text was checked against the Jumpstart inventory and gap record. Its X counter cost supplies the amount requirement; it does not require an optional cost. The optional integration is synthetic. One production uncaptured-X caller remains in `cards/jumpstart/creatures.go`; no production `OptionalCostInto` caller was found. All callers and exports remain. No production card or gap record changed or closed. Card wiring and the card's other abilities remain separate work.
+
+Excluded: direct total-payment optional wrappers, nested choices, captured counter costs, resolution-time optional payments, and mutations during commit. Next dependency-ready work is a separate T divided-announcement prerequisite or P wrapper audit. No second slice was started.
+
+Validation: focused contracts with `-count=1`, engine short tests, registration/closed-role checks, repository short tests, build, vet, full `make test`, `make lint` with zero issues, and `git diff --check` pass. The post-lint diff was reviewed; lint only grouped imports in the new test file. Historical package and C-metadata blockers did not recur. Unrelated untracked work is preserved.
+
 ## Current Slice: Selected Uncaptured X Counter Alternative Payment
 
 Delivery step 3's P wrapper-payment prerequisite extends the existing selected fixed-counter contract to direct uncaptured X options. Fresh API and caller searches confirmed that damage identity, singular damage, attack/block events, filtered death, and direct fixed/X payments already exist. `EitherCost(options ...Cost) Cost` and `RemoveXCountersFromSourceCost(CounterType) Cost` retain their public signatures. Before branch affordability checks, action preparation converts direct uncaptured X options using announced X; total-cost preparation uses current X. The selected option then reuses fixed-counter incarnation locking, isolated validation, and combined-total commit preflight. Option slices and fixed costs are copied, so declarations stay immutable.

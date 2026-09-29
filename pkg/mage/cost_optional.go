@@ -33,6 +33,14 @@ func OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost {
 	return &optionalCost{inner: inner, prompt: prompt, result: result, capture: true}
 }
 
+func (c *optionalCost) resolveActionCost(ctx actionCostContext) Cost {
+	resolved := *c
+	if counter, ok := c.inner.(*removeXCountersCost); ok {
+		resolved.inner = counter.resolveActionCost(ctx)
+	}
+	return &resolved
+}
+
 // OptionalRevealFromHandCost saves the payment choice and the revealed card.
 func OptionalRevealFromHandCost(filter CardFilter, label, prompt string, paid *NumberBinding, card *CardBinding) Cost {
 	return &optionalCost{

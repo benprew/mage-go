@@ -2720,6 +2720,16 @@ card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
     dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
 ```
 
+A direct uncaptured `RemoveXCountersFromSourceCost(counter CounterType) Cost` inside `OptionalCostInto` fixes announced X before the affordability check for spell additional costs and activated `Costs`. Accepted positive removal uses the existing source-incarnation lock and combined-total preflight. Zero can be accepted without removing counters. The result records acceptance, not the number removed. This contract does not extend nested choices or resolution-time optional payment.
+
+```go
+paid := dsl.BindNumber("paid")
+card := dsl.NewArtifact("Synthetic optional X", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.Mana("{X}"), dsl.OptionalCostInto(
+        dsl.RemoveXCountersFromSourceCost(core.Charge), "Pay counters?", paid)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
+```
+
 `RevealFromHandCostWithCard(filter CardFilter, text string, card *CardBinding) Cost` pays a direct spell additional cost or activated ability cost by revealing one matching card from the payer's hand. `FromCard(card)` reads that same card in the resolving body while its hand visit remains current. The payer chooses once during payment preparation. A card that leaves and returns to hand is absent from the binding. Registration requires a named binding and nonempty cost text. This result is local to each spell or ability instance and follows stack copies and game clones. The existing `RevealFromHandCost` remains available for callers that do not need a card binding. This constructor does not declare an optional cost or a choice between costs.
 
 ```go
