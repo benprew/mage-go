@@ -258,6 +258,9 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			tx.costs[i] = &locked
 		}
 		if counter, ok := cost.(*removeAnyCountersCost); ok {
+			if !counter.CanPay(tx.sourceID, tx.controller, tx.game) {
+				return fmt.Errorf("cannot pay chosen counter cost")
+			}
 			cntCopy := *counter
 			source := tx.game.FindPermanent(tx.sourceID)
 			if source == nil {

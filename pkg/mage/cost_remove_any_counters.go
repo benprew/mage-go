@@ -26,6 +26,9 @@ func (c *removeAnyCountersCost) inspectDefinition() definitionNode {
 	if c.paid == nil {
 		n.problem = "supply a non-nil paid counter binding"
 	}
+	if c.ct < 0 || c.ct >= core.NumCounters {
+		n.problem = "invalid counter type"
+	}
 	return n
 }
 
@@ -34,6 +37,9 @@ func (c *removeAnyCountersCost) Text() string {
 }
 
 func (c *removeAnyCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.ct < 0 || c.ct >= core.NumCounters {
+		return false
+	}
 	p := g.FindPermanent(sourceID)
 	return p != nil && (!c.locked || p.incarnationID == c.incarnation) && c.count >= 0 && int(p.Counters[c.ct]) >= c.count
 }

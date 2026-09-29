@@ -134,6 +134,24 @@ func TestFixedCounterPaymentPublicDeclaration(t *testing.T) {
 	}
 }
 
+func TestCounterPaymentBoundsPublicDeclaration(t *testing.T) {
+	paid := dsl.BindNumber("paid charge counters")
+	card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
+		dsl.Costs(dsl.RemoveAnyCountersCost(core.Charge, paid)),
+		dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+	)))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	invalid := dsl.NewArtifact("Invalid", "", dsl.WithAbility(dsl.Activate(
+		dsl.Costs(dsl.RemoveCountersCost(core.NumCounters, 1)),
+		dsl.GainLife(dsl.You, dsl.Fixed(1)),
+	)))
+	if err := mage.ValidateCardDefinition(invalid.Name(), invalid); err == nil {
+		t.Fatal("public declaration accepted an invalid counter type")
+	}
+}
+
 // --- from composable_paid_x_counters_test.go ---
 func TestPaidXCountersPublicDeclaration(t *testing.T) {
 	paid := dsl.BindNumber("removed")

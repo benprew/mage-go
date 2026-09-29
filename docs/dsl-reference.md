@@ -2800,6 +2800,17 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     _ = ability
     ```
   * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
+
+    All five counter-removal cost constructors (`RemoveCountersCost`, `RemoveCountersCostInto`, `RemoveXCountersFromSourceCost`, `RemoveXCountersFromSourceCostInto`, and `RemoveAnyCountersCost`) require `0 <= counter < core.NumCounters`. Registration rejects other values, including in nested payment declarations. Fixed counts must be nonnegative. The uncaptured fixed and X constructors retain their existing payment contexts; captured forms remain activated costs. These checks do not change the signatures or valid payment behavior.
+
+    ```go
+    paid := dsl.BindNumber("paid charge counters")
+    ability := dsl.Activate(
+        dsl.Costs(dsl.RemoveAnyCountersCost(core.Charge, paid)),
+        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+    )
+    _ = ability
+    ```
   * `TapNOtherMatchingCost(count int, filter PermanentFilter, text string) Cost`: Choose and tap exactly `count` distinct untapped matching permanents you control, excluding the ability source. Use it in `Costs(...)`, spell additional costs, or resolution-time payment groups. The choices are made once during payment preparation and kept by battlefield incarnation through commit. The other creatures can have summoning sickness; `{T}` on the ability source still uses `TapCost(This)`. Registration requires a positive count and nonempty text. It returns no payment binding.
   * `TapNOtherMatchingCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost`: Choose and tap one other untapped matching permanent controlled by the payer. The committed spell or activation saves its battlefield incarnation in `paid`. Use `From(paid)` while that incarnation remains on the battlefield, or `DamageSourceOf(From(paid))` when its damage-source LKI is needed after departure. The binding stays with stack copies and game clones. A returned card does not become the paid permanent. Use this form in `Costs(...)` or as a spell additional cost; registration rejects it in a resolution-time payment group. Registration also requires nonempty text and a named, unique, dominating binding.
 

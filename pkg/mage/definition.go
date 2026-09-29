@@ -176,7 +176,10 @@ func describeDefinition(v any) definitionNode {
 			if _, ok := cost.(*capturedXCountersCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if counter, ok := cost.(*removeCountersCost); ok && counter.capture {
+			if _, ok := cost.(*removeCountersCost); ok {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
+			if _, ok := cost.(*removeXCountersCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 		}

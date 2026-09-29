@@ -191,6 +191,12 @@ func RemoveCountersCostInto(ct CounterType, n int, paid *NumberBinding) Cost {
 
 func (c *removeCountersCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "cost", battlefieldSource: c.capture}
+	if c.ct < 0 || c.ct >= NumCounters {
+		n.problem = "invalid counter type"
+	}
+	if c.amount < 0 {
+		n.problem = "counter count cannot be negative"
+	}
 	if c.capture {
 		n.bindingWrite = c.paid
 		n.children = []definitionEdge{{"paid", c.paid}}
@@ -205,6 +211,9 @@ func (c *removeCountersCost) inspectDefinition() definitionNode {
 }
 
 func (c *removeCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.ct < 0 || c.ct >= NumCounters {
+		return false
+	}
 	p := g.FindPermanent(sourceID)
 	return p != nil && (!c.locked || p.incarnationID == c.incarnation) && c.amount >= 0 && int(p.Counters[c.ct]) >= c.amount
 }
@@ -251,6 +260,9 @@ func (c *capturedXCountersCost) inspectDefinition() definitionNode {
 	if c.paid == nil {
 		n.problem = "supply a non-nil paid counter binding"
 	}
+	if c.ct < 0 || c.ct >= NumCounters {
+		n.problem = "invalid counter type"
+	}
 	return n
 }
 
@@ -278,7 +290,18 @@ func RemoveXCountersFromSourceCost(ct CounterType) Cost {
 	return &removeXCountersCost{ct: ct}
 }
 
+func (c *removeXCountersCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "cost", Text: c.Text()}
+	if c.ct < 0 || c.ct >= NumCounters {
+		n.problem = "invalid counter type"
+	}
+	return n
+}
+
 func (c *removeXCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.ct < 0 || c.ct >= NumCounters {
+		return false
+	}
 	x := g.resolution.X()
 	if x <= 0 {
 		return true
@@ -288,6 +311,9 @@ func (c *removeXCountersCost) CanPay(sourceID, controller uuid.UUID, g *Game) bo
 }
 
 func (c *removeXCountersCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay X counter cost")
+	}
 	x := g.resolution.X()
 	if x <= 0 {
 		return nil
