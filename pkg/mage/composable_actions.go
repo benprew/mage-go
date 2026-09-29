@@ -1145,23 +1145,46 @@ func (e *counterSubjectEffect) Apply(ctx *EffectContext) error {
 
 // --- from composable_counter_removal.go ---
 type removeCountersSubjectEffect struct {
-	subject PermanentRef
-	counter CounterType
-	amount  ResolutionValue
+	subject        PermanentRef
+	counter        CounterType
+	amount         ResolutionValue
+	result         *NumberBinding
+	requiresResult bool
 }
 
 // RemoveCountersFrom removes up to the specified number of counters from a subject.
 func RemoveCountersFrom(subject PermanentRef, counter CounterType, amount ResolutionValue) ResolvingEffect {
-	return &removeCountersSubjectEffect{subject, counter, amount}
+	return &removeCountersSubjectEffect{subject: subject, counter: counter, amount: amount}
+}
+
+// RemoveCountersFromWithResult saves only counters removed by this instruction.
+func RemoveCountersFromWithResult(subject PermanentRef, counter CounterType, amount ResolutionValue, result *NumberBinding) ResolvingEffect {
+	return &removeCountersSubjectEffect{subject: subject, counter: counter, amount: amount, result: result, requiresResult: true}
 }
 func (e *removeCountersSubjectEffect) Text() string {
 	return "remove " + e.counter.String() + " counters from " + InspectDefinition(e.subject).Text
 }
 func (*removeCountersSubjectEffect) Properties() EffectProperties { return EffectProperties{} }
 func (e *removeCountersSubjectEffect) inspectDefinition() definitionNode {
-	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+	if e.counter < 0 || e.counter >= NumCounters {
+		n.problem = "supply a valid counter type"
+	} else if e.requiresResult && e.result == nil {
+		n.problem = "supply a non-nil counter removal result binding"
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
 }
 func (e *removeCountersSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
 	p, ok := e.subject.resolvePermanent(ctx)
 	if !ok {
 		return nil
@@ -1170,9 +1193,19 @@ func (e *removeCountersSubjectEffect) Apply(ctx *EffectContext) error {
 	if amount <= 0 {
 		return nil
 	}
+	before := int(p.Counters[e.counter])
 	child := *ctx
 	child.Targets = []uuid.UUID{p.ID()}
-	return RemoveCounters(e.counter, amount).Targeting(ToTarget()).Apply(&child)
+	if err := RemoveCounters(e.counter, amount).Targeting(ToTarget()).Apply(&child); err != nil {
+		return err
+	}
+	if e.result != nil {
+		current := ctx.Game.FindPermanent(p.ID())
+		if current != nil && current.incarnationID == p.incarnationID {
+			ctx.Game.resolution.numberBindings[e.result] = before - int(current.Counters[e.counter])
+		}
+	}
+	return nil
 }
 
 // --- from composable_counter_reset.go ---

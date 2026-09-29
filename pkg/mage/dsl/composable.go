@@ -387,6 +387,7 @@ var (
 	AddCounters                                = mage.AddCountersTo
 	RemoveAllCounters                          = mage.RemoveAllCounters
 	RemoveCountersFrom                         = mage.RemoveCountersFrom
+	RemoveCountersFromWithResult               = mage.RemoveCountersFromWithResult
 	SourceHasCounters                          = mage.SourceHasCounters
 	SourceTappedCondition                      = mage.SourceTappedCondition
 	PermanentIsTapped                          = mage.PermanentIsTapped

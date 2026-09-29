@@ -3406,3 +3406,21 @@ offering := dsl.NewArtifact("Offering", "", dsl.WithAbility(dsl.Activate(
 )))
 _ = offering
 ```
+
+## Singular Counter-Removal Result
+
+`RemoveCountersFromWithResult(subject PermanentRef, counter CounterType, amount ResolutionValue, result *NumberBinding) ResolvingEffect` removes up to the requested number of counters and saves the number actually removed. It is supported in spell, activated ability, and triggered resolving bodies. Nonpositive amounts and absent, phased-out, illegal, or returned subjects save zero. Zone departure does not count as counter removal. The result belongs to the resolving instance and follows stack copies and game clones. Registration rejects invalid counter types, nil subjects or amounts, and nil, unnamed, or undominated result bindings. The existing `RemoveCountersFrom` signature remains available.
+
+This compiling synthetic declaration uses qualified `dsl` names:
+
+```go
+removed := dsl.BindNumber("removed counters")
+target := dsl.TargetPermanent("permanent", dsl.AnyPermanent)
+card := dsl.NewInstant("Synthetic removal", "", dsl.Spell(dsl.Sequence(
+    dsl.RemoveCountersFromWithResult(target, dsl.Charge, dsl.Fixed(3), removed),
+    dsl.GainLife(dsl.You, dsl.FromNumber(removed)),
+), dsl.WithTargets(target)))
+_ = card
+```
+
+This action does not choose a removal quantity, pay a cost, move counters, or remove counters from a set. Those operations have separate contracts.

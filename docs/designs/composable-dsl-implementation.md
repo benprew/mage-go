@@ -1,5 +1,15 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Singular Counter-Removal Result
+
+`RemoveCountersFromWithResult(PermanentRef, CounterType, ResolutionValue, *NumberBinding) ResolvingEffect` saves the actual number removed by a singular resolving instruction. It reuses the existing typed subject resolution, shared counter-removal executor, inspection graph, definite-assignment validator, and per-instance number frame. The required result parameter avoids an unnecessary option family for one output. Spell, activation, and triggered bodies are supported; costs, quantity choices, simultaneous collections, counter movement, and production wiring are excluded. `RemoveCountersFrom` and all legacy exports remain compatible.
+
+The focused contract first failed because the constructor was absent. Tests cover partial and nonpositive amounts, counter-kind isolation, stale result clearing, source absence and return, phasing and phase return, target legality with another legal target, stack copies, game clones, activated and triggered resolution, invalid counter types, nil declarations, unnamed bindings, producer dominance, and a compiling public declaration. Compile-failure fixtures reject player and set subjects. No transaction or replacement service changed; this resolving action cannot publish a payment capture.
+
+The Antiquities inventory and complete Tetravus text in `data/ATQ.json` were checked. Actual counter-removal quantity is one requirement for its first upkeep body, but optional quantity selection, linked tokens, and all production wiring remain open. The available adapter does not complete Tetravus or close its gap. No inventory or JSON record changed. A fresh caller search found no production `RemoveCountersFromWithResult` caller. Existing production counter helpers remain. The next dependency-ready work in delivery step 3 is a separate P payment output or T per-target payment/divided-announcement prerequisite after a fresh audit.
+
+Validation passes: focused engine and public DSL tests with `-count=1`, `go test ./pkg/mage/... -short -count=1`, `go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`, `go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, `make test`, `make lint` with zero issues, and `git diff --check`. Lint only formatted the new tests. The post-lint diff was reviewed; production cards and unrelated untracked work are unchanged.
+
 ## Current Slice: Announced Permanent Target Count
 
 `AnnouncedTargetCount(*PermanentTargetsBinding) ResolutionValue` reads one group's chosen target count from the resolving stack object's recorded target choices. It works in spell, activation, and targeted trigger bodies. The count includes targets that later become illegal, phase out, or leave and return. Stack copies keep the announced count when retargeted. The value reuses the existing grouped target frame and registration scope validator; no new target or payment service is needed. Go requires a permanent target group, and registration rejects a nil or undeclared group. An object with all targets illegal still fails to resolve under CR 608.2b.
