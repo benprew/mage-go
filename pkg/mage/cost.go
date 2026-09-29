@@ -537,25 +537,40 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	if !c.CanPay(sourceID, controller, g) {
 		return fmt.Errorf("cannot pay chosen discard")
 	}
+	var selected []uuid.UUID
 	if c.locked {
 		for _, card := range c.selected {
-			if _, ok := g.PlayerDiscardByCost(p, card.id, sourceID); !ok {
+			selected = append(selected, card.id)
+		}
+	} else {
+		chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
+		if len(chosen) != c.amount {
+			return fmt.Errorf("cannot pay chosen discard")
+		}
+		locked := *c
+		locked.locked = true
+		locked.selected = nil
+		visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID })
+		if len(chosen) > 0 && !ok {
+			return fmt.Errorf("cannot pay chosen discard")
+		}
+		for _, card := range chosen {
+			if card == nil {
 				return fmt.Errorf("cannot pay chosen discard")
 			}
+			locked.selected = append(locked.selected, capturedCard{id: card.ID(), visit: visitor.handVisit(card.ID()), zone: ZoneHand})
+			selected = append(selected, card.ID())
 		}
-		return nil
+		if !locked.CanPay(sourceID, controller, g) {
+			return fmt.Errorf("cannot pay chosen discard")
+		}
 	}
-	chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
-	if len(chosen) != c.amount {
+	var actions []*DiscardAction
+	for _, id := range selected {
+		actions = append(actions, newCostDiscardAction(sourceID, controller, id))
+	}
+	if g.discardActionsTogether(actions, true) != c.amount {
 		return fmt.Errorf("cannot pay chosen discard")
-	}
-	for _, card := range chosen {
-		if card == nil {
-			return fmt.Errorf("cannot pay chosen discard")
-		}
-		if _, ok := g.PlayerDiscardByCost(p, card.ID(), sourceID); !ok {
-			return fmt.Errorf("cannot pay chosen discard")
-		}
 	}
 	return nil
 }

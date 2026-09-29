@@ -2826,7 +2826,7 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     )
     _ = ability
     ```
-  * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice and each chosen hand visit are locked during total-cost validation and reused at commit. Before mana, life, or other costs are paid, commit rejects a missing chosen card or a card that left the hand and returned. Zero cards is a legal payment. Reordering the hand does not change a visit. Each chosen discard uses the shared replacement action and emits a discard event only when a card is discarded. A replacement that applies only when an effect causes a discard does not apply to this cost.
+  * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice and each chosen hand visit are locked during total-cost validation and reused at commit. Before mana, life, or other costs are paid, commit rejects a missing chosen card or a card that left the hand and returned. Zero cards is a legal payment. Reordering the hand does not change a visit. All discard replacements are prepared before any chosen card moves. The accepted cards move together, then each completed discard emits its event. Event observers see the complete discard payment. If a replacement prevents a chosen discard, the whole discard cost fails before any chosen card moves. A replacement that applies only when an effect causes a discard does not apply to this cost.
   * `DiscardCardCostInto(card *CardBinding) Cost`: Discard one chosen card and save its new graveyard visit in the spell or activation frame. Use `FromCard(card)` in the resolving body. The reference is absent if a replacement sends the card to a different zone or it leaves the graveyard before resolution. Registration requires a named binding and a dominating payment producer. This cost uses the same locked choice and replacement path as `DiscardCost(1)`.
   * `ExileMatchingCardFromGraveyardCostInto(filter CardFilter, text string, paid *NumberBinding) Cost`: Choose one matching card from the payer's graveyard during payment preparation, exile that same graveyard visit, and save its mana value when payment commits. Use `FromNumber(paid)` in a spell additional cost or an activated ability body. The saved number belongs to that stack instance and its copies. Registration requires a named binding and nonempty cost text. A resolution-time `IfPaid` or `UnlessPaid` cost cannot produce this binding.
   * `ExileMatchingCardFromGraveyardCostWithCard(filter CardFilter, text string, paid *CardBinding) Cost`: Choose and exile one matching card from the payer's graveyard as a direct activated ability cost or spell additional cost. `FromCard(paid)` refers to the new exile visit in that stack instance. The reference is absent after the card leaves exile, even if it returns. Registration requires a named binding and nonempty cost text. A resolution-time payment branch cannot produce this binding. This constructor saves the card; use `ExileMatchingCardFromGraveyardCostInto` when the body needs only its mana value.
@@ -2855,7 +2855,7 @@ _ = ability
 
 ```go
 ability := dsl.Activate(
-    dsl.Costs(dsl.DiscardCost(1)),
+    dsl.Costs(dsl.DiscardCost(2)),
     dsl.Draw(dsl.You, dsl.Fixed(1)),
 )
 _ = ability

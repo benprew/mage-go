@@ -23,12 +23,20 @@ func (g *Game) discardHandsTogether(ids []uuid.UUID, sourceID uuid.UUID) int {
 			actions = append(actions, NewDiscardAction(sourceID, id, card.ID()))
 		}
 	}
+	return g.discardActionsTogether(actions, false)
+}
+
+// discardActionsTogether keeps each event after all card moves.
+func (g *Game) discardActionsTogether(actions []*DiscardAction, requireAll bool) int {
 	var prepared []*DiscardAction
 	for _, action := range actions {
 		result := g.effects.ApplyReplacements(action, g)
 		if discard, ok := result.(*DiscardAction); ok {
 			prepared = append(prepared, discard)
 		}
+	}
+	if requireAll && len(prepared) != len(actions) {
+		return 0
 	}
 	var events []core.GameEvent
 	for _, action := range prepared {
