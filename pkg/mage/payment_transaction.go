@@ -171,6 +171,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			}
 			validationCost = &locked
 			tx.costs[i] = &locked
+			if counter, ok := locked.options[locked.selected].(*removeCountersCost); ok {
+				cost = counter
+				validationCost = counter
+				tx.costs[i] = counter
+			}
 		}
 		if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
 			payer := tx.game.GetPlayer(tx.controller)

@@ -703,3 +703,7 @@ When a permanent spell resolves to the battlefield, its entry event carries the 
 ## Filtered discard payment capture
 
 `DiscardMatchingCardCostInto` composes the locked singular filtered discard payment with the existing paid-card frame. A successful direct activated cost or spell additional cost saves the movement-time graveyard visit, not the physical card across later visits (CR 400.7). Preparation offers matching candidates once; commit rechecks the locked hand visit and filter before spending resources. Prevention or an unrevealed hidden destination rejects characteristic-constrained payment (CR 701.9c). Failed payment publishes no capture. Stack copies retain the capture and cloned games isolate its resolution. Singular and set discard captures both reject optional, alternative, and resolution-time payment contexts at registration.
+
+### Selected fixed-counter alternative payment
+
+A direct `EitherCost` fixed-counter branch uses the same prepared source-incarnation lock and combined counter-total preflight as a direct fixed cost (CR 118.3, 400.7). Commit rejects absence, return, phasing, and shortage before mana or life payment. Preparation copies the branch; it does not change the declaration. The chosen branch is not selected again. This contract does not extend optional, nested alternative, X, or chosen-count wrappers, or handle mutations during commit.
