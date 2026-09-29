@@ -268,6 +268,8 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ## 6. Replacement and Prevention Pipeline (CR 614–616)
 
+`PreventCombatDamageBy` and `PreventCombatDamageByEach` capture each selected battlefield incarnation when the instruction resolves. The replacement checks the captured source identity on combat damage to any player or permanent. It does not depend on the source's later controller or current battlefield presence. A card that leaves and returns has a new incarnation, while phasing preserves one. The replacement expires after the end-of-combat step, before a later combat; it does not prevent noncombat damage or damage to the selected source from another source (CR 400.7, 615.1–615.3).
+
 * **Cast-payment entry counters**: The battlefield entry path passes the entering permanent spell's own distinct colored mana count to self-entry counter abilities. A direct entry passes zero, including when another spell causes it. `EntersWithCounters` places its counters before the entry event through `AddCountersWithReplacement`, so applicable counter replacements see the proposed placement. Failed spell payment cannot start this entry action.
 * **Permanent-set counter placement**: `AddCountersTogether` prepares a separate counter action for each distinct, live battlefield incarnation. The replacement pipeline transforms each action before any counter count changes. The service then places all final counters through game-local mutable permanents. A stale, phased-out, or duplicate selection does not add counters, and game clones do not share the resulting counter state (CR 400.7, 122.2, 614.1c).
 

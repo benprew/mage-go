@@ -1,6 +1,10 @@
 package mage
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+
+	. "github.com/benprew/mage-go/pkg/mage/core"
+)
 
 // DamageRecipientRef identifies a player or permanent that can receive damage.
 type DamageRecipientRef interface {
@@ -120,4 +124,63 @@ func (e *combatPreventionInstallation) Apply(ctx *EffectContext) error {
 }
 func (e *combatPreventionInstallation) inspectDefinition() definitionNode {
 	return definitionNode{Role: "install-combat-prevention", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}
+
+type combatSourcePreventionInstallation struct {
+	subject  PermanentRef
+	subjects PermanentSet
+}
+
+// PreventCombatDamageBy prevents combat damage from one permanent this combat.
+func PreventCombatDamageBy(subject PermanentRef) ResolvingEffect {
+	return &combatSourcePreventionInstallation{subject: subject}
+}
+
+// PreventCombatDamageByEach prevents combat damage from a selected set this combat.
+func PreventCombatDamageByEach(subjects PermanentSet) ResolvingEffect {
+	return &combatSourcePreventionInstallation{subjects: subjects}
+}
+
+func (*combatSourcePreventionInstallation) Text() string {
+	return "prevent combat damage by selected sources this combat"
+}
+func (*combatSourcePreventionInstallation) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+func (e *combatSourcePreventionInstallation) Apply(ctx *EffectContext) error {
+	var selected []*Permanent
+	if e.subject != nil {
+		if p, ok := e.subject.resolvePermanent(ctx); ok {
+			selected = []*Permanent{p}
+		}
+	} else if e.subjects != nil {
+		selected = e.subjects.resolvePermanents(ctx)
+	}
+	seen := make(map[uuid.UUID]bool)
+	for _, p := range selected {
+		if p == nil || p.PhasedOut || seen[p.incarnationID] {
+			continue
+		}
+		current := ctx.Game.FindPermanent(p.ID())
+		if current == nil || current.incarnationID != p.incarnationID {
+			continue
+		}
+		seen[p.incarnationID] = true
+		ctx.Game.effects.AddReplacement(&combatSourcePreventionReplacement{
+			replacementBase: replacementBase{duration: EndOfCombat},
+			preventedID:     p.ID(), incarnation: p.incarnationID,
+		})
+	}
+	return nil
+}
+func (e *combatSourcePreventionInstallation) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "install-combat-source-prevention", Text: e.Text()}
+	if e.subject != nil && e.subjects == nil {
+		n.children = []definitionEdge{{"subject", e.subject}}
+	} else if e.subjects != nil && e.subject == nil {
+		n.children = []definitionEdge{{"subjects", e.subjects}}
+	} else {
+		n.problem = "combat source prevention requires one subject or set"
+	}
+	return n
 }

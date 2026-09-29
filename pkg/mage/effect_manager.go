@@ -469,6 +469,13 @@ func (em *EffectManager) RemoveEndOfCombat() {
 		}
 	}
 	em.effects = filtered
+	replacements := em.replacements[:0]
+	for _, r := range em.replacements {
+		if r.GetDuration() != EndOfCombat {
+			replacements = append(replacements, r)
+		}
+	}
+	em.replacements = replacements
 }
 
 // RemoveUntilYourNextTurn removes all effects with UntilYourNextTurn duration

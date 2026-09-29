@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "gap_id": "promo-combat-prevention",
+  "status": "open",
+  "capability": "Typed combat-state branches, blocked-attacker collection, and source-only combat prevention",
+  "affected_cards": [
+    "Sewers of Estark"
+  ],
+  "oracle_requirements": [
+    {
+      "card": "Sewers of Estark",
+      "text": "Choose target creature. If it's attacking, it can't be blocked this turn. If it's blocking, prevent all combat damage that would be dealt this combat by it and each creature it's blocking."
+    }
+  ],
+  "rules_references": [
+    "CR 509.1",
+    "CR 615.1",
+    "CR 615.3"
+  ],
+  "required_scenarios": [
+    "Allow any creature target; a creature outside combat receives neither effect.",
+    "Check attacking and blocking independently at resolution.",
+    "Prevent combat damage by the blocker and every attacker it blocks, including damage to other recipients.",
+    "Do not prevent noncombat damage, damage from unrelated sources, or damage in a later combat."
+  ],
+  "integration_points": [
+    "pkg/mage/composable_state.go",
+    "pkg/mage/composable_subject.go",
+    "pkg/mage/composable_prevention.go"
+  ],
+  "evidence": [
+    "IfPermanentAttacking and IfPermanentBlocking now read a target binding at resolution.",
+    "BlockedAttackersOf exposes the current attackers blocked by a referenced creature.",
+    "PreventCombatDamageBy and PreventCombatDamageByEach now capture source incarnations and expire after this combat.",
+    "cards/promo/spells.go retains its existing FuncEffect and requires production card migration and full card validation."
+  ]
+}

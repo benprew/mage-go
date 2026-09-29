@@ -1142,6 +1142,20 @@ _ = ability
 * `PreventNextDamage(DamageRecipientRef, ResolutionValue)`: Installs a prevention shield on creature or player.
 * `PreventAllCombatDamage()`: Prevents all combat damage for the turn (Fog).
 * `PreventCombatDamageToAndBy(PermanentRef)`: Prevents combat damage to and by a specific permanent.
+* `PreventCombatDamageBy(PermanentRef) ResolvingEffect`: Prevents combat damage from one present permanent incarnation for the current combat. It does not prevent damage to that permanent or noncombat damage. Use it in a resolving spell, activation, or trigger.
+* `PreventCombatDamageByEach(PermanentSet) ResolvingEffect`: Selects the set once and prevents combat damage from each present incarnation for the current combat. A permanent that leaves and returns has a new incarnation; phasing does not change the captured incarnation. Use it in a resolving spell, activation, or trigger. Neither constructor accepts a player as a source.
+
+This test-only declaration compiles and validates:
+
+```go
+blocker := dsl.TargetPermanent("creature", dsl.IsCreature)
+card := dsl.NewInstant("Combat prevention", "", dsl.WithAbility(dsl.Spell(
+    dsl.IfPermanentBlocking(blocker, dsl.Sequence(
+        dsl.PreventCombatDamageBy(blocker),
+        dsl.PreventCombatDamageByEach(dsl.BlockedAttackersOf(blocker)))),
+    dsl.WithTargets(blocker))))
+_ = card
+```
 
 The engine APIs `(*Game).CaptureDamageSource(uuid.UUID) DamageSource`, `(*Game).DealDamageToPermanentFromSource(*Permanent, int, DamageSource)`, and `(*Game).DealDamageToPlayerFromSource(Player, int, DamageSource)` serve engine and integration code. Capture freezes a permanent's incarnation, controller, colors, types, and keywords. The damage methods keep that source through replacement and prevention. The existing UUID-based damage methods remain available and capture the source when called. A planeswalker loses loyalty counters after unprevented damage; a planeswalker creature also has damage marked.
 

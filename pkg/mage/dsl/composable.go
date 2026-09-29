@@ -126,6 +126,8 @@ var (
 	MayTapOrUntap                    = mage.MayTapOrUntap
 	MayAttach                        = mage.MayAttach
 	PreventCombatDamageToAndBy       = mage.PreventCombatDamageToAndBy
+	PreventCombatDamageBy            = mage.PreventCombatDamageBy
+	PreventCombatDamageByEach        = mage.PreventCombatDamageByEach
 	TargetPlayer                     = mage.DeclarePlayerTarget
 	TargetSpell                      = mage.DeclareSpellTarget
 	TargetGraveyardCard              = mage.DeclareGraveyardCardTarget
