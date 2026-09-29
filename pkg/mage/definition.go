@@ -158,7 +158,7 @@ func describeDefinition(v any) definitionNode {
 			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if discard, ok := cost.(*discardCost); ok && (discard.captureCard || discard.captureCards) {
+			if discard, ok := cost.(*discardCost); ok && (discard.captureCard || discard.captureCards || discard.differentNames) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if _, ok := cost.(*xLifePayCost); ok {

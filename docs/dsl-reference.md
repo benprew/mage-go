@@ -2827,6 +2827,7 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     _ = ability
     ```
   * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice and each chosen hand visit are locked during total-cost validation and reused at commit. Before mana, life, or other costs are paid, commit rejects a missing chosen card or a card that left the hand and returned. Zero cards is a legal payment. Reordering the hand does not change a visit. All discard replacements are prepared before any chosen card moves. The accepted cards move together, then each completed discard emits its event. Event observers see the complete discard payment. If a replacement prevents a chosen discard, the whole discard cost fails before any chosen card moves. A replacement that applies only when an effect causes a discard does not apply to this cost.
+  * `DiscardCardsWithDifferentNamesCost(n int) Cost`: Discard exactly `n` chosen cards whose names are distinct. Use it in activated `Costs`, a spell additional cost, or a resolution-time payment group. Announcement-time optional and alternative cost wrappers use the same locked payment. Preparation saves each chosen hand visit; commit checks the visits and names before spending other resources. Invalid, duplicate, missing, or same-name choices fail payment; the engine does not substitute a different selection. Zero is valid, and negative counts fail registration. The shared discard batch prepares replacements before movement and sends events after every chosen card moves. Prevention rejects the whole group. A replacement to the library without revelation makes this characteristic-constrained payment illegal (CR 701.9c). The current discard action has no revealed-library destination. Random discard and paid characteristic/card outputs are separate capabilities.
   * `DiscardCostWithCards(n int, paid *CardsBinding) Cost`: Discard exactly `n` chosen cards and save their resulting graveyard visits in the paid spell or activation frame. Zero cards is valid. Use a direct activated `Costs` component or spell additional cost. `FromCards(paid)` excludes redirected cards and cards that leave their captured graveyard visits. Copies and game clones keep independent frames. Registration rejects nil or unnamed bindings, negative counts, duplicate producers, reads without a dominating producer, alternative or optional wrappers, and resolution-time payment captures. `DiscardCost` and `DiscardCardCostInto` remain available.
   * `DiscardCardCostInto(card *CardBinding) Cost`: Discard one chosen card and save its new graveyard visit in the spell or activation frame. Use `FromCard(card)` in the resolving body. The reference is absent if a replacement sends the card to a different zone or it leaves the graveyard before resolution. Registration requires a named binding and a dominating payment producer. This cost uses the same locked choice and replacement path as `DiscardCost(1)`.
   * `ExileMatchingCardFromGraveyardCostInto(filter CardFilter, text string, paid *NumberBinding) Cost`: Choose one matching card from the payer's graveyard during payment preparation, exile that same graveyard visit, and save its mana value when payment commits. Use `FromNumber(paid)` in a spell additional cost or an activated ability body. The saved number belongs to that stack instance and its copies. Registration requires a named binding and nonempty cost text. A resolution-time `IfPaid` or `UnlessPaid` cost cannot produce this binding.
@@ -3437,3 +3438,16 @@ card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
 ```
 
 This example gains life for cards still in the saved graveyard visits at resolution. It does not count redirected discards or cards that left and returned. The payment uses the shared locked hand choices, simultaneous movement, and replacement service. This constructor does not add filtered choices, random discards, different-name costs, or a discarded-card characteristic snapshot.
+
+### Distinct-name discard payment example
+
+This declaration uses the existing public cost export and validates at registration:
+
+```go
+card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.DiscardCardsWithDifferentNamesCost(3)),
+    dsl.Draw(dsl.You, dsl.Fixed(5)),
+)))
+```
+
+The payer chooses the cards during payment preparation. Copying the paid activation does not pay the cost again.

@@ -8,11 +8,12 @@ import (
 
 // DiscardAction represents a proposed discard.
 type DiscardAction struct {
-	source      uuid.UUID
-	playerID    uuid.UUID
-	cardID      uuid.UUID
-	destination Zone
-	effectCause bool
+	source                  uuid.UUID
+	playerID                uuid.UUID
+	cardID                  uuid.UUID
+	destination             Zone
+	effectCause             bool
+	requiresCharacteristics bool
 }
 
 // NewDiscardAction creates an effect-caused discard whose normal destination

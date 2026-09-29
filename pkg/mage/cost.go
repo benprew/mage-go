@@ -466,14 +466,15 @@ func (c *tapMatchingCost) Text() string { return c.text }
 
 // discardCost requires discarding cards from hand.
 type discardCost struct {
-	amount       int
-	selected     []capturedCard
-	locked       bool
-	paidCard     *CardBinding
-	captureCard  bool
-	paidCards    *CardsBinding
-	captureCards bool
-	results      []capturedCard
+	amount         int
+	differentNames bool
+	selected       []capturedCard
+	locked         bool
+	paidCard       *CardBinding
+	captureCard    bool
+	paidCards      *CardsBinding
+	captureCards   bool
+	results        []capturedCard
 }
 
 // DiscardCost creates a cost that requires the controller to discard n cards.
@@ -522,23 +523,36 @@ func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 		return false
 	}
 	if !c.locked {
+		if c.differentNames {
+			names := make(map[string]bool)
+			for _, card := range p.Hand() {
+				names[card.Name()] = true
+			}
+			return len(names) >= c.amount
+		}
 		return true
 	}
 	if len(c.selected) != c.amount {
 		return false
 	}
-	available := make(map[uuid.UUID]bool, len(p.Hand()))
+	available := make(map[uuid.UUID]Card, len(p.Hand()))
 	for _, card := range p.Hand() {
-		available[card.ID()] = true
+		available[card.ID()] = card
 	}
 	visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID })
 	if len(c.selected) > 0 && !ok {
 		return false
 	}
+	names := make(map[string]bool, len(c.selected))
 	for _, card := range c.selected {
-		if !available[card.id] || card.visit == uuid.Nil || visitor.handVisit(card.id) != card.visit {
+		current := available[card.id]
+		if current == nil || card.visit == uuid.Nil || visitor.handVisit(card.id) != card.visit {
 			return false
 		}
+		if c.differentNames && names[current.Name()] {
+			return false
+		}
+		names[current.Name()] = true
 		delete(available, card.id)
 	}
 	return true
@@ -559,7 +573,10 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 			selected = append(selected, card.id)
 		}
 	} else {
-		chosen := p.ChooseCardsFromHand(c.amount, "discard cost", g)
+		var chosen []Card
+		if c.amount > 0 {
+			chosen = p.ChooseCardsFromHand(c.amount, c.Text(), g)
+		}
 		if len(chosen) != c.amount {
 			return fmt.Errorf("cannot pay chosen discard")
 		}
@@ -583,7 +600,9 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	}
 	var actions []*DiscardAction
 	for _, id := range selected {
-		actions = append(actions, newCostDiscardAction(sourceID, controller, id))
+		action := newCostDiscardAction(sourceID, controller, id)
+		action.requiresCharacteristics = c.differentNames
+		actions = append(actions, action)
 	}
 	events := g.discardActionsTogetherWithEvents(actions, true)
 	if len(events) != c.amount {
@@ -603,89 +622,15 @@ func (c *discardCost) Text() string {
 	if c.amount == 1 {
 		return "Discard a card"
 	}
+	if c.differentNames {
+		return fmt.Sprintf("Discard %d cards with different names", c.amount)
+	}
 	return fmt.Sprintf("Discard %d cards", c.amount)
 }
 
-// discardCardsWithDifferentNamesCost is a Cost that requires the
-// controller to discard `amount` cards from their hand whose names are
-// all distinct (CR 117 cost-payment validity is checked by CanPay).
-// Used by Ormos, Archive Keeper — "Discard three cards with different
-// names". The chosen set is solicited via Player.ChooseCardsFromHand;
-// if the player's selection isn't a valid distinct-name set the cost
-// falls back to a deterministic distinct-name selection from hand.
-type discardCardsWithDifferentNamesCost struct {
-	amount int
-}
-
-// DiscardCardsWithDifferentNamesCost creates a cost that requires the
-// controller to discard n cards with mutually distinct names. The cost
-// is unpayable unless the controller has at least n distinctly-named
-// cards in hand.
+// DiscardCardsWithDifferentNamesCost requires distinct names for the payment.
 func DiscardCardsWithDifferentNamesCost(n int) Cost {
-	return &discardCardsWithDifferentNamesCost{amount: n}
-}
-
-// distinctNameCards returns up to amount cards from hand with mutually
-// distinct names, in hand order. Used by both CanPay (length check) and
-// Pay (deterministic fallback).
-func (c *discardCardsWithDifferentNamesCost) distinctNameCards(hand []Card) []Card {
-	seen := make(map[string]bool, c.amount)
-	out := make([]Card, 0, c.amount)
-	for _, card := range hand {
-		if seen[card.Name()] {
-			continue
-		}
-		seen[card.Name()] = true
-		out = append(out, card)
-		if len(out) == c.amount {
-			break
-		}
-	}
-	return out
-}
-
-func (c *discardCardsWithDifferentNamesCost) CanPay(_, controller uuid.UUID, g *Game) bool {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return false
-	}
-	return len(c.distinctNameCards(p.Hand())) >= c.amount
-}
-
-func (c *discardCardsWithDifferentNamesCost) Pay(_, controller uuid.UUID, g *Game) error {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	chosen := p.ChooseCardsFromHand(c.amount, c.Text(), g)
-	valid := len(chosen) == c.amount
-	if valid {
-		seen := make(map[string]bool, c.amount)
-		for _, card := range chosen {
-			if card == nil || seen[card.Name()] {
-				valid = false
-				break
-			}
-			seen[card.Name()] = true
-		}
-	}
-	if !valid {
-		chosen = c.distinctNameCards(p.Hand())
-		if len(chosen) < c.amount {
-			return fmt.Errorf("not enough distinctly-named cards to discard")
-		}
-	}
-	for _, card := range chosen {
-		g.PlayerDiscard(p, card.ID())
-	}
-	return nil
-}
-
-func (c *discardCardsWithDifferentNamesCost) Text() string {
-	if c.amount == 1 {
-		return "Discard a card"
-	}
-	return fmt.Sprintf("Discard %d cards with different names", c.amount)
+	return &discardCost{amount: n, differentNames: true}
 }
 
 // revealFromHandCost is an additional cost that requires the controller

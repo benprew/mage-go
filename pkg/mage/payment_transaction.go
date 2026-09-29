@@ -207,7 +207,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 				if payer == nil {
 					return ErrPlayerNotFound
 				}
-				for _, card := range payer.ChooseCardsFromHand(discard.amount, "discard cost", tx.game) {
+				for _, card := range payer.ChooseCardsFromHand(discard.amount, discard.Text(), tx.game) {
 					if card != nil {
 						selected := capturedCard{id: card.ID(), zone: ZoneHand}
 						if visitor, ok := payer.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {

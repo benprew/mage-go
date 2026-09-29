@@ -36,6 +36,10 @@ func (g *Game) discardActionsTogetherWithEvents(actions []*DiscardAction, requir
 	for _, action := range actions {
 		result := g.effects.ApplyReplacements(action, g)
 		if discard, ok := result.(*DiscardAction); ok {
+			// A hidden destination removes the names required by this cost.
+			if action.requiresCharacteristics && discard.Destination() == core.ZoneLibrary {
+				return nil
+			}
 			prepared = append(prepared, discard)
 		}
 	}
