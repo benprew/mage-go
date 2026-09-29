@@ -498,6 +498,11 @@ func DiscardMatchingCardCost(filter CardFilter) Cost {
 	return &discardCost{amount: 1, filter: filter}
 }
 
+// DiscardMatchingCardCostInto must not follow the card through later zone changes.
+func DiscardMatchingCardCostInto(filter CardFilter, paid *CardBinding) Cost {
+	return &discardCost{amount: 1, filter: filter, paidCard: paid, captureCard: true}
+}
+
 func (c *discardCost) choose(p Player, g *Game) []Card {
 	if c.amount == 0 {
 		return nil
@@ -841,7 +846,7 @@ func (c *eitherCost) inspectDefinition() definitionNode {
 		if mill, ok := option.(*millCost); ok && mill.capture {
 			n.problem = "paid mill count requires a direct cost"
 		}
-		if discard, ok := option.(*discardCost); ok && discard.captureCards {
+		if discard, ok := option.(*discardCost); ok && (discard.captureCards || discard.captureCard) {
 			n.problem = "paid discard cards require a direct cost"
 		}
 		if exile, ok := option.(*exileFromGraveyardCost); ok && exile.paidRequired {

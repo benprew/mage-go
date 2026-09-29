@@ -709,3 +709,15 @@ func TestFilteredDiscardPublicDeclaration(t *testing.T) {
 		t.Fatalf("descriptor = %+v", descriptor)
 	}
 }
+
+func TestPaidFilteredDiscardPublicDeclaration(t *testing.T) {
+	paid := dsl.BindCard("paid")
+	cost := dsl.DiscardMatchingCardCostInto(dsl.IsArtifactCard, paid)
+	card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(dsl.Costs(cost), dsl.ReturnCardToHand(dsl.FromCard(paid)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	if got := dsl.InspectDefinition(cost); got.Role != "discard-cost" || got.Text != "Discard one artifact card" {
+		t.Fatalf("descriptor = %+v", got)
+	}
+}
