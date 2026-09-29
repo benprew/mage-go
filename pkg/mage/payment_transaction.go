@@ -200,6 +200,7 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 		if discard, ok := cost.(*discardCost); ok {
 			locked := *discard
 			locked.selected = nil
+			locked.results = nil
 			locked.locked = true
 			if discard.amount > 0 {
 				payer := tx.game.GetPlayer(tx.controller)
@@ -495,6 +496,12 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 				}
 				tx.paidCards[exile.paidCard] = capturedCard{id: exile.selected, visit: exiled.Visit, zone: ZoneExile}
 			}
+		}
+		if discard, ok := cost.(*discardCost); ok && discard.captureCards {
+			if tx.paidCardSets == nil {
+				tx.paidCardSets = make(map[*CardsBinding][]capturedCard)
+			}
+			tx.paidCardSets[discard.paidCards] = append([]capturedCard(nil), discard.results...)
 		}
 		if discard, ok := cost.(*discardCost); ok && discard.captureCard {
 			if tx.paidCards == nil {

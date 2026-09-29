@@ -391,7 +391,7 @@ An exiled card has a new visit identity each time it enters exile. `ExileMatchin
 
 `ExileFromGraveyardCost` locks the payer's distinct card choices and their graveyard visits during total-cost preparation. The isolated validation game pays those exact choices. Before live mana, life, or other cost payment, commit checks that every selected visit is still present. A card that leaves and returns is a new object and cannot satisfy the old choice. `EitherCost` locks its selected branch with the card choices, so the live commit does not ask again. The existing graveyard movement service moves the chosen group and emits its graveyard-leave batch event. The direct-cost `ExileFromGraveyardCostWithCards` form publishes the resulting exile visits in the paid stack instance after commit; it publishes nothing on failed payment. The original constructor does not publish a binding (CR 118.3, 400.7, 400.7j, 601.2h, 701.13a).
 
-`DiscardCost` and `DiscardCardCostInto` lock each chosen card's hand visit during total-cost preparation. The isolated validation game retains those visits. Commit rejects a missing or returned visit before mana, life, or other costs change live state; no paid binding or discard event is published on that failure. All chosen visits must be present for a multi-card cost. Zero cards is valid, and hand reordering preserves visits. Choices belong to the prepared transaction, so a reused cost declaration or a game clone does not change another transaction's choices. The shared discard action still applies replacement ordering and cost-versus-effect restrictions (CR 118.3, 400.7, 601.2h, 602.2b, 701.9). This contract does not add filtered discard choices or simultaneous discard movement.
+`DiscardCost` and `DiscardCardCostInto` lock each chosen card's hand visit during total-cost preparation. The isolated validation game retains those visits. Commit rejects a missing or returned visit before mana, life, or other costs change live state; no paid binding or discard event is published on that failure. All chosen visits must be present for a multi-card cost. Zero cards is valid, and hand reordering preserves visits. Choices belong to the prepared transaction, so a reused cost declaration or a game clone does not change another transaction's choices. The shared discard action still applies replacement ordering and cost-versus-effect restrictions (CR 118.3, 400.7, 601.2h, 602.2b, 701.9). This contract does not add filtered discard choices. Simultaneous discard movement uses the multi-card payment contract above.
 
 The typed single-card discard result uses `PlayerDiscardByEffect` after the affected player chooses the card. It saves the resulting graveyard visit only when the completed discard puts the card there. Replacement to the library still completes the discard but produces no graveyard `CardRef`. The saved visit is instance-local; a later zone move makes it absent, and a game clone keeps its own result.
 
@@ -479,6 +479,18 @@ saves the one chosen card only in its new graveyard visit. `FromCard(binding)`
 becomes absent after another zone move or when a replacement sends the card
 to a different zone. The committed capture is local to the spell or activation
 frame and follows stack copies and game clones.
+
+`DiscardCostWithCards(n, binding)` saves each resulting graveyard visit recorded
+by the shared discard batch. The batch records visits before it dispatches
+events, so later zone moves cannot replace the saved identity. Redirected
+discards can pay the unfiltered cost but supply no graveyard reference. Zero
+cards supplies an empty set. Commit publishes the set only after successful
+payment; a failed transaction clears all outputs. Locked cost copies retain
+their own choices and results. The stack frame owns a separate result slice
+and follows stack copies and game clones. A saved reference is absent after
+its graveyard visit ends (CR 400.7j, 601.2h, 701.9). This output supports direct
+activation costs and spell additional costs. Alternative costs, optional
+wrappers, and resolution-time payment captures are rejected at registration.
 
 `RevealFromHandCostWithCard` locks one matching hand card and its hand visit
 during payment preparation. The same choice is checked during isolated

@@ -466,11 +466,14 @@ func (c *tapMatchingCost) Text() string { return c.text }
 
 // discardCost requires discarding cards from hand.
 type discardCost struct {
-	amount      int
-	selected    []capturedCard
-	locked      bool
-	paidCard    *CardBinding
-	captureCard bool
+	amount       int
+	selected     []capturedCard
+	locked       bool
+	paidCard     *CardBinding
+	captureCard  bool
+	paidCards    *CardsBinding
+	captureCards bool
+	results      []capturedCard
 }
 
 // DiscardCost creates a cost that requires the controller to discard n cards.
@@ -481,6 +484,11 @@ func DiscardCost(n int) Cost {
 // DiscardCardCostInto saves one discarded card during its graveyard visit.
 func DiscardCardCostInto(card *CardBinding) Cost {
 	return &discardCost{amount: 1, paidCard: card, captureCard: true}
+}
+
+// DiscardCostWithCards saves the new graveyard visits for this payment.
+func DiscardCostWithCards(n int, paid *CardsBinding) Cost {
+	return &discardCost{amount: n, paidCards: paid, captureCards: true}
 }
 
 func (c *discardCost) inspectDefinition() definitionNode {
@@ -497,6 +505,13 @@ func (c *discardCost) inspectDefinition() definitionNode {
 		}
 		n.bindingWrites = []savedBinding{c.paidCard}
 		n.children = []definitionEdge{{"card", c.paidCard}}
+	}
+	if c.captureCards {
+		if c.paidCards == nil {
+			n.problem = "supply a non-nil paid cards binding"
+		}
+		n.bindingWrites = append(n.bindingWrites, c.paidCards)
+		n.children = append(n.children, definitionEdge{"paid cards", c.paidCards})
 	}
 	return n
 }
@@ -530,6 +545,7 @@ func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 }
 
 func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
+	c.results = nil
 	p := g.GetPlayer(controller)
 	if p == nil {
 		return ErrPlayerNotFound
@@ -569,8 +585,16 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	for _, id := range selected {
 		actions = append(actions, newCostDiscardAction(sourceID, controller, id))
 	}
-	if g.discardActionsTogether(actions, true) != c.amount {
+	events := g.discardActionsTogetherWithEvents(actions, true)
+	if len(events) != c.amount {
 		return fmt.Errorf("cannot pay chosen discard")
+	}
+	if c.captureCards {
+		for _, event := range events {
+			if event.DiscardedCardVisit != uuid.Nil {
+				c.results = append(c.results, capturedCard{id: event.SourceID, visit: event.DiscardedCardVisit, zone: ZoneGraveyard})
+			}
+		}
 	}
 	return nil
 }
@@ -828,6 +852,9 @@ func (c *eitherCost) inspectDefinition() definitionNode {
 	for i, option := range c.options {
 		if mill, ok := option.(*millCost); ok && mill.capture {
 			n.problem = "paid mill count requires a direct cost"
+		}
+		if discard, ok := option.(*discardCost); ok && discard.captureCards {
+			n.problem = "paid discard cards require a direct cost"
 		}
 		if exile, ok := option.(*exileFromGraveyardCost); ok && exile.paidRequired {
 			n.problem = "paid graveyard exile cards require a direct cost"

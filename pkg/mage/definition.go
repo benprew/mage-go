@@ -146,7 +146,7 @@ func describeDefinition(v any) definitionNode {
 			if _, ok := cost.(*exileFromGraveyardCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if optional, ok := cost.(*optionalCost); ok && optional.capture {
+			if _, ok := cost.(*optionalCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if reveal, ok := cost.(*revealFromHandCost); ok && reveal.capture {
@@ -158,7 +158,7 @@ func describeDefinition(v any) definitionNode {
 			if exile, ok := cost.(*exileMatchingCardFromGraveyardCost); ok && (exile.capture || exile.captureCard) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
-			if discard, ok := cost.(*discardCost); ok && discard.captureCard {
+			if discard, ok := cost.(*discardCost); ok && (discard.captureCard || discard.captureCards) {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
 			if _, ok := cost.(*xLifePayCost); ok {
@@ -365,6 +365,9 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		if discard, ok := value.(*discardCost); ok && discard.captureCard && !nilDefinition(discard.paidCard) && assigned[discard.paidCard] {
 			fail("duplicate paid card binding")
+		}
+		if discard, ok := value.(*discardCost); ok && discard.captureCards && !nilDefinition(discard.paidCards) && assigned[discard.paidCards] {
+			fail("duplicate paid cards binding")
 		}
 		if reveal, ok := value.(*revealFromHandCost); ok && reveal.capture && !nilDefinition(reveal.paidCard) && assigned[reveal.paidCard] {
 			fail("duplicate paid card binding")
