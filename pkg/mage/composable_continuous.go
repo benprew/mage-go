@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
-
 	. "github.com/benprew/mage-go/pkg/mage/core"
+
+	"github.com/google/uuid"
 )
 
+// --- from composable_continuous.go ---
 // ContinuousModification describes a layer operation before installation.
 type ContinuousModification interface {
 	continuousModification()
@@ -671,4 +672,92 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 	}
 	ctx.Game.ApplyContinuousEffects()
 	return nil
+}
+
+// --- from composable_land_plays.go ---
+type grantLandPlaysEffect struct {
+	subject PlayerRef
+	amount  ResolutionValue
+}
+
+// GrantLandPlays adds to the selected player's land allowance for this turn.
+// It does not play a land or change when the player can play lands.
+// An absent player or a nonpositive amount has no effect.
+func GrantLandPlays(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
+	return &grantLandPlaysEffect{subject, amount}
+}
+
+func (e *grantLandPlaysEffect) Text() string {
+	return "grant additional land plays this turn to " + InspectDefinition(e.subject).Text
+}
+func (*grantLandPlaysEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit}
+}
+func (e *grantLandPlaysEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"amount", e.amount}}}
+}
+func (e *grantLandPlaysEffect) Apply(ctx *EffectContext) error {
+	id, ok := e.subject.resolvePlayer(ctx)
+	if !ok {
+		return nil
+	}
+	ctx.Game.GrantExtraLandPlay(id, e.amount.resolveValue(ctx))
+	return nil
+}
+
+// --- from composable_skip_untap.go ---
+// SkipNextUntap prevents untapping during the next untap step of the subject's
+// current controller. It does not tap the subject or prevent other untap effects.
+func SkipNextUntap(subject PermanentRef) ResolvingEffect {
+	return &skipNextUntapEffect{subject}
+}
+
+type skipNextUntapEffect struct{ subject PermanentRef }
+
+func (e *skipNextUntapEffect) Text() string {
+	return InspectDefinition(e.subject).Text + " doesn't untap during its controller's next untap step"
+}
+func (*skipNextUntapEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+func (e *skipNextUntapEffect) Apply(ctx *EffectContext) error {
+	if p, ok := e.subject.resolvePermanent(ctx); ok {
+		ctx.Game.SkipNextUntap(p.ID())
+	}
+	return nil
+}
+func (e *skipNextUntapEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}
+
+// SkipNextUntapOf prevents untapping during the selected player's next untap
+// step. It captures the player at resolution, even if control changes later.
+func SkipNextUntapOf(subject PermanentRef, player PlayerRef) ResolvingEffect {
+	return &capturedUntapEffect{subject: subject, player: player}
+}
+
+type capturedUntapEffect struct {
+	subject PermanentRef
+	player  PlayerRef
+}
+
+func (e *capturedUntapEffect) Text() string {
+	return InspectDefinition(e.subject).Text + " doesn't untap during the next untap step of " + InspectDefinition(e.player).Text
+}
+func (*capturedUntapEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment}
+}
+func (e *capturedUntapEffect) Apply(ctx *EffectContext) error {
+	p, ok := e.subject.resolvePermanent(ctx)
+	if !ok {
+		return nil
+	}
+	player, ok := e.player.resolvePlayer(ctx)
+	if ok {
+		ctx.Game.turns.skipNextUntapOf(p.ID(), player)
+	}
+	return nil
+}
+func (e *capturedUntapEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}, {"player", e.player}}}
 }
