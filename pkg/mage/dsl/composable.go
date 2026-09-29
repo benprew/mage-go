@@ -21,6 +21,7 @@ var (
 
 var (
 	CountPermanents               = mage.CountPermanents
+	AnnouncedTargetCount          = mage.AnnouncedTargetCount
 	HandSizeOf                    = mage.HandSizeOf
 	LifeTotalOf                   = mage.LifeTotalOf
 	LifeGainedThisTurn            = mage.LifeGainedThisTurn

@@ -240,6 +240,7 @@ Spell(
 * `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
 * `TargetPermanentsExactlyX(label, filter, options...)`: Declares exactly the announced X as a permanent target set. `TargetPermanentsUpToX(label, filter, options...)` declares zero through X targets. Both return a `PermanentSet` and a target declaration. They work in spells and activations through `WithTargets`; use `WithTargetGroups` or `WithActivationTargetGroups` when another variable group is present. Choose X before targets. The target count stays fixed on a copy, and an illegal target is absent at resolution. The legacy `TargetXPermanents` has a different return type and remains available to unmigrated cards.
+* `AnnouncedTargetCount(*PermanentTargetsBinding) ResolutionValue`: Reads the number chosen for one permanent target group when the spell or ability was put on the stack. Use it in a `Spell`, `Activate`, or targeted trigger body. The count includes a target that later becomes illegal. It stays with a copied or retargeted stack object. Registration rejects a nil or undeclared group. If every target of the stack object becomes illegal, it does not resolve under CR 608.2b.
 
 ```go
 lands := dsl.TargetPermanentsExactlyX("lands", dsl.IsLand)
@@ -248,6 +249,11 @@ ability := dsl.Activate(dsl.Costs(dsl.Mana("{X}"), dsl.TapCost(dsl.This)),
     dsl.ForEach(lands, member, dsl.Untap(dsl.From(member))),
     dsl.WithTargets(lands))
 _ = dsl.NewArtifact("Example", "", dsl.WithAbility(ability))
+
+creatures := dsl.TargetPermanentsUpToX("creatures", dsl.IsCreature)
+_ = dsl.NewInstant("Count example", "{X}", dsl.WithAbility(dsl.Spell(
+    dsl.GainLife(dsl.You, dsl.AnnouncedTargetCount(creatures)),
+    dsl.WithTargets(creatures))))
 ```
 
   For “up to two target creatures,” use `TargetPermanents("creatures", 0, 2, IsCreature)`
