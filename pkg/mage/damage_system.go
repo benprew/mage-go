@@ -811,3 +811,72 @@ func WithPlayerOnly() damagePreventionRuleOption {
 		dpr.playerOnly = true
 	}
 }
+
+// DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
+func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
+	g.damage.DealDamageToPlayer(g, p, amount, sourceID)
+}
+
+// DealDamageToPlayerFromSource keeps the damage source identity after it leaves.
+func (g *Game) DealDamageToPlayerFromSource(p Player, amount int, source DamageSource) {
+	g.damage.DealDamageToPlayerFromSource(g, p, amount, source)
+}
+
+func (g *Game) executeDamageAction(action Action) int {
+	switch a := action.(type) {
+	case *DamageToPlayerAction:
+		return g.damage.ExecuteDamageToPlayer(g, a)
+	case *DamageToCreatureAction:
+		return g.damage.ExecuteDamageToCreature(g, a)
+	}
+	return 0
+}
+
+// DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
+func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID) {
+	g.damage.DealDamageToPermanent(g, perm, amount, sourceID)
+}
+
+// DealDamageToPermanentFromSource keeps the damage source identity after it leaves.
+func (g *Game) DealDamageToPermanentFromSource(perm *Permanent, amount int, source DamageSource) {
+	g.damage.DealDamageToPermanentFromSource(g, perm, amount, source)
+}
+
+// HasDealtDamageToPlayer reports whether the given source permanent has dealt damage to playerID this game.
+func (g *Game) HasDealtDamageToPlayer(sourceID, playerID uuid.UUID) bool {
+	return g.damage.HasDealtDamageToPlayer(sourceID, playerID)
+}
+
+// HasDealtDamageToPermanent reports whether the given source permanent has dealt damage to permID this game.
+func (g *Game) HasDealtDamageToPermanent(sourceID, permID uuid.UUID) bool {
+	return g.damage.HasDealtDamageToPermanent(sourceID, permID)
+}
+
+// HasDealtDamageToPlayerFromSource checks one permanent source incarnation.
+func (g *Game) HasDealtDamageToPlayerFromSource(source DamageSource, playerID uuid.UUID) bool {
+	return g.damage.HasDealtDamageToPlayerFromSource(source, playerID)
+}
+
+// HasDealtDamageToPlayerThisTurn checks one source incarnation and player.
+func (g *Game) HasDealtDamageToPlayerThisTurn(sourceID, incarnation, playerID uuid.UUID) bool {
+	return g.damage.dealtDamageToPlayerThisTurn(sourceID, incarnation, playerID)
+}
+
+// HasDealtDamageToPermanentFromSource checks source and recipient incarnations.
+func (g *Game) HasDealtDamageToPermanentFromSource(source DamageSource, recipient *Permanent) bool {
+	return g.damage.HasDealtDamageToPermanentFromSource(source, recipient)
+}
+
+func (g *Game) flushCombatDamageAggregator() {
+	g.damage.FlushCombatDamageAggregator(g)
+}
+
+// CombatDamageSourcesThisStep returns the per-source combat damage breakdown
+// for the given (controllerID, recipientPlayerID) pair during the current
+// EvtCombatDamageDealt fire. Returns nil if no combat damage was dealt for
+// this pair this step. The map is sourcePermanentID -> amount. Trigger
+// condition closures listening to EvtCombatDamageDealt may use this to
+// filter on source attributes (e.g., "non-Human creatures you control").
+func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int {
+	return g.damage.CombatDamageSourcesThisStep(controllerID, recipientID)
+}

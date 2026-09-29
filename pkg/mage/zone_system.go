@@ -336,12 +336,18 @@ func (zs *ZoneSystem) PhaseOut(id uuid.UUID) []uuid.UUID {
 }
 
 // PhaseIn phases the given permanents back onto the battlefield. IDs that are
-// not currently phased out are skipped.
+// not currently phased out are skipped. If an unphasing permanent has attached
+// permanents that phased out indirectly with it (CR 702.26g), they phase in too.
 func (zs *ZoneSystem) PhaseIn(ids []uuid.UUID) {
 	for _, id := range ids {
 		perm := zs.MutablePermanentIncludingPhased(id)
 		if perm != nil && perm.PhasedOut {
 			perm.PhasedOut = false
+			for _, p := range zs.battlefield {
+				if p.PhasedOut && p.AttachedTo == id {
+					p.PhasedOut = false
+				}
+			}
 		}
 	}
 }

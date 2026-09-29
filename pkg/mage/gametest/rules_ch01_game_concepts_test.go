@@ -79,6 +79,17 @@ func TestCR104_3b_LoseAtNegativeLife(t *testing.T) {
 	tg.AssertWinner(PlayerA)
 }
 
+// CR 104.4a: If all remaining players lose simultaneously, the game is a draw.
+func TestCR104_4a_SimultaneousLossDraw(t *testing.T) {
+	tg := NewTestGame(t)
+	tg.SetLife(PlayerA, 0)
+	tg.SetLife(PlayerB, 0)
+	tg.StopAt(1, core.PrecombatMain)
+	tg.Execute()
+	tg.AssertGameOver(true)
+	tg.AssertDraw()
+}
+
 // ── Rule 104.3d ──────────────────────────────────────────────────────────────
 
 // CR 104.3d: A player with 10 or more poison counters loses.

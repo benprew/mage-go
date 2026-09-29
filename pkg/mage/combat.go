@@ -321,7 +321,7 @@ func CanBlock(blocker, attacker *Permanent, g *Game) bool {
 	// Fear: can only be blocked by artifact creatures or black creatures
 	if attacker.HasKeyword(Fear) {
 		isArtifact := blocker.HasType(TypeArtifact)
-		isBlack := slices.Contains(blocker.Card.ManaCost().Colors(), Black)
+		isBlack := slices.Contains(blocker.Colors(), Black)
 		if !isArtifact && !isBlack {
 			return false
 		}

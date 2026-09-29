@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"math/rand"
 	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -1318,85 +1317,6 @@ func (g *Game) BouncePermanentToHand(perm *Permanent) {
 	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
 }
 
-// ExilePermanent removes a permanent from the battlefield to exile and fires
-// an EvtZoneChange{From: Battlefield, To: Exile}. Self-referencing leave
-// triggers fire via the LKI snapshot's captured abilities per CR 603.6c.
-func (g *Game) ExilePermanent(perm *Permanent) {
-	controller := perm.ControllerID()
-	permID := perm.ID()
-	card := perm.Card
-	isToken := perm.IsToken
-	g.RemoveFromBattlefield(perm)
-	selfAbilities := g.LKIAbilities(permID)
-	if !isToken {
-		g.zones.ExileCard(card, uuid.Nil)
-	}
-	zoneEvt := GameEvent{
-		Type:     EvtZoneChange,
-		SourceID: permID,
-		PlayerID: controller,
-		FromZone: ZoneBattlefield,
-		ToZone:   ZoneExile,
-	}
-	g.FireEvent(zoneEvt)
-	g.checkAbilitiesForEvent(selfAbilities, &zoneEvt, permID, controller)
-	g.consumePendingExileZoneChange(permID)
-}
-
-// ExileCard moves a card (from any zone) to the exile zone.
-func (g *Game) ExileCard(card Card, exiledBy uuid.UUID) {
-	g.zones.ExileCard(card, exiledBy)
-	g.recordCardPutIntoExile(card)
-}
-
-// ExileCardFaceDown moves a card to the exile zone face down. Only players in
-// revealedTo may inspect the card's identity (via FindExiledCard / GetExile +
-// ExiledCard.VisibleTo). For Gonti-style "exile face down" effects, only the
-// exiling player (not the card's owner) sees the identity — pass that player's
-// ID in revealedTo. Owners of face-down exiled cards do not automatically see
-// the identity, matching Gonti's printed ruling.
-func (g *Game) ExileCardFaceDown(card Card, exiledBy uuid.UUID, revealedTo ...uuid.UUID) {
-	g.zones.ExileCardFaceDown(card, exiledBy, revealedTo...)
-	g.recordCardPutIntoExile(card)
-}
-
-// RevealExiledCardTo grants the given player permission to see the identity of
-// the face-down exiled card with the given ID. No-op if the card is face up
-// (already public) or not in exile.
-func (g *Game) RevealExiledCardTo(cardID, playerID uuid.UUID) {
-	g.zones.RevealExiledCardTo(cardID, playerID)
-}
-
-// FindExiledCard finds an exiled card by its ID.
-func (g *Game) FindExiledCard(cardID uuid.UUID) *ExiledCard {
-	return g.zones.FindExiledCard(cardID)
-}
-
-// RemoveFromExile removes a card from exile by ID and returns it.
-func (g *Game) RemoveFromExile(cardID uuid.UUID) (Card, bool) {
-	return g.zones.RemoveFromExile(cardID)
-}
-
-// RemoveExiledCardBySource removes all exiled cards with the given ExiledBy ID
-// and returns them. Used by Tawnos's Coffin and similar cards.
-func (g *Game) RemoveExiledCardBySource(exiledBy uuid.UUID) []ExiledCard {
-	return g.zones.RemoveExiledCardBySource(exiledBy)
-}
-
-func (g *Game) flushCombatDamageAggregator() {
-	g.damage.FlushCombatDamageAggregator(g)
-}
-
-// CombatDamageSourcesThisStep returns the per-source combat damage breakdown
-// for the given (controllerID, recipientPlayerID) pair during the current
-// EvtCombatDamageDealt fire. Returns nil if no combat damage was dealt for
-// this pair this step. The map is sourcePermanentID -> amount. Trigger
-// condition closures listening to EvtCombatDamageDealt may use this to
-// filter on source attributes (e.g., "non-Human creatures you control").
-func (g *Game) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int {
-	return g.damage.CombatDamageSourcesThisStep(controllerID, recipientID)
-}
-
 // CounterSpellOnStack removes a spell from the stack by its source ID.
 // The countered spell's card goes to its owner's graveyard.
 //
@@ -1408,10 +1328,10 @@ func (g *Game) CounterSpellOnStack(spellID uuid.UUID) {
 	g.counterStackObject(g.stack.FindBySourceID(spellID))
 }
 
-// CounterStackObject counters a spell by its stack object ID.
+// CounterStackObject counters a spell or ability by its stack object ID (CR 701.5a).
 func (g *Game) CounterStackObject(id uuid.UUID) {
 	obj := g.stack.FindByID(id)
-	if obj == nil || obj.IsAbility || obj.Card == nil {
+	if obj == nil {
 		return
 	}
 	g.counterStackObject(obj)
@@ -1602,99 +1522,6 @@ func defaultScryTopOrder(top []Card) []uuid.UUID {
 	return out
 }
 
-// DealDamageToPlayer deals damage to a player, running it through the replacement pipeline.
-func (g *Game) DealDamageToPlayer(p Player, amount int, sourceID uuid.UUID) {
-	g.damage.DealDamageToPlayer(g, p, amount, sourceID)
-}
-
-// DealDamageToPlayerFromSource keeps the damage source identity after it leaves.
-func (g *Game) DealDamageToPlayerFromSource(p Player, amount int, source DamageSource) {
-	g.damage.DealDamageToPlayerFromSource(g, p, amount, source)
-}
-
-func (g *Game) executeDamageAction(action Action) int {
-	switch a := action.(type) {
-	case *DamageToPlayerAction:
-		return g.damage.ExecuteDamageToPlayer(g, a)
-	case *DamageToCreatureAction:
-		return g.damage.ExecuteDamageToCreature(g, a)
-	}
-	return 0
-}
-
-// DealDamageToPermanent deals damage to a permanent, running it through the replacement pipeline.
-func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID) {
-	g.damage.DealDamageToPermanent(g, perm, amount, sourceID)
-}
-
-// DealDamageToPermanentFromSource keeps the damage source identity after it leaves.
-func (g *Game) DealDamageToPermanentFromSource(perm *Permanent, amount int, source DamageSource) {
-	g.damage.DealDamageToPermanentFromSource(g, perm, amount, source)
-}
-
-// auraHostIsLegal reports whether host satisfies the aura's enchant ability
-// (CR 303.4c). It checks the aura's cast-target filter against the host,
-// ignoring targeting restrictions (shroud/hexproof don't make an already-attached
-// aura fall off — see CR 702.11b).
-func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
-	targets := auraCard.CastTargets()
-	if len(targets) == 0 {
-		return true
-	}
-	for _, t := range targets {
-		switch tt := t.(type) {
-		case *CreatureTarget:
-			if !host.HasType(TypeCreature) {
-				continue
-			}
-			if filtersMatch(tt.Filters, host, g) {
-				return true
-			}
-		case *PermanentTarget:
-			if filtersMatch(tt.Filters, host, g) {
-				return true
-			}
-		default:
-			return true
-		}
-	}
-	return false
-}
-
-// HasDealtDamageToPlayer reports whether the given source permanent has dealt damage to playerID this game.
-func (g *Game) HasDealtDamageToPlayer(sourceID, playerID uuid.UUID) bool {
-	return g.damage.HasDealtDamageToPlayer(sourceID, playerID)
-}
-
-// HasDealtDamageToPermanent reports whether the given source permanent has dealt damage to permID this game.
-func (g *Game) HasDealtDamageToPermanent(sourceID, permID uuid.UUID) bool {
-	return g.damage.HasDealtDamageToPermanent(sourceID, permID)
-}
-
-// HasDealtDamageToPlayerFromSource checks one permanent source incarnation.
-func (g *Game) HasDealtDamageToPlayerFromSource(source DamageSource, playerID uuid.UUID) bool {
-	return g.damage.HasDealtDamageToPlayerFromSource(source, playerID)
-}
-
-// HasDealtDamageToPlayerThisTurn checks one source incarnation and player.
-func (g *Game) HasDealtDamageToPlayerThisTurn(sourceID, incarnation, playerID uuid.UUID) bool {
-	return g.damage.dealtDamageToPlayerThisTurn(sourceID, incarnation, playerID)
-}
-
-// HasDealtDamageToPermanentFromSource checks source and recipient incarnations.
-func (g *Game) HasDealtDamageToPermanentFromSource(source DamageSource, recipient *Permanent) bool {
-	return g.damage.HasDealtDamageToPermanentFromSource(source, recipient)
-}
-
-func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
-	for _, f := range filters {
-		if !f.Match(p, g) {
-			return false
-		}
-	}
-	return true
-}
-
 // Attach attaches source to target (for auras and equipment).
 func (g *Game) Attach(sourceID, targetID uuid.UUID) {
 	src := g.MutablePermanent(sourceID)
@@ -1747,6 +1574,44 @@ func (g *Game) canAttach(src, target *Permanent) bool {
 		}
 	} else if !src.HasSubType("Fortification") || !target.HasType(TypeLand) || src.ID() == target.ID() {
 		return false
+	}
+	return true
+}
+
+// auraHostIsLegal reports whether host satisfies the aura's enchant ability
+// (CR 303.4c). It checks the aura's cast-target filter against the host,
+// ignoring targeting restrictions (shroud/hexproof don't make an already-attached
+// aura fall off — see CR 702.11b).
+func auraHostIsLegal(auraCard Card, host *Permanent, g *Game) bool {
+	targets := auraCard.CastTargets()
+	if len(targets) == 0 {
+		return true
+	}
+	for _, t := range targets {
+		switch tt := t.(type) {
+		case *CreatureTarget:
+			if !host.HasType(TypeCreature) {
+				continue
+			}
+			if filtersMatch(tt.Filters, host, g) {
+				return true
+			}
+		case *PermanentTarget:
+			if filtersMatch(tt.Filters, host, g) {
+				return true
+			}
+		default:
+			return true
+		}
+	}
+	return false
+}
+
+func filtersMatch(filters []PermanentFilter, p *Permanent, g *Game) bool {
+	for _, f := range filters {
+		if !f.Match(p, g) {
+			return false
+		}
 	}
 	return true
 }
@@ -2676,9 +2541,9 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID, obj.CastContext.DistinctColorsSpent())
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
-			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(obj.Targets) > 0 {
+			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(resolvedTargets) > 0 && resolvedTargets[0] != uuid.Nil {
 				if slices.Contains(obj.Card.SubTypes(), "Aura") {
-					g.Attach(perm.ID(), obj.Targets[0])
+					g.Attach(perm.ID(), resolvedTargets[0])
 				}
 			}
 			return
@@ -3084,924 +2949,6 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		CapturedPermanents: payment.payment.paidPermanents,
 	})
 	return err
-}
-
-// CheckStateBasedActions checks and processes state-based actions.
-func (g *Game) CheckStateBasedActions() {
-	g.checkStateBasedActions()
-}
-
-func (g *Game) checkStateBasedActions() bool {
-	performed := false
-	for {
-		actions := false
-
-		var toDestroy, toGraveyard []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.HasType(TypeCreature) && p.CurrentToughness(g) <= 0 || p.HasType(TypePlaneswalker) && int(p.Counters[Loyalty]) <= 0 {
-				toGraveyard = append(toGraveyard, p)
-			} else if p.HasType(TypeCreature) && p.LethalDamage(g) && !p.HasKeyword(Indestructible) {
-				toDestroy = append(toDestroy, p)
-			}
-		}
-		if len(toDestroy)+len(toGraveyard) > 0 {
-			actions = true
-			g.withZoneChangeBatch(func() {
-				g.DestroyPermanents(toDestroy)
-				for _, p := range toGraveyard {
-					if current := g.FindPermanent(p.ID()); current != nil && current.incarnationID == p.incarnationID {
-						g.PutPermanentIntoGraveyard(current)
-					}
-				}
-			})
-		}
-
-		// MTG rule 704.5q: +1/+1 and -1/-1 counter annihilation
-		for _, p := range g.zones.battlefield {
-			plus := p.Counters[P1P1]
-			minus := p.Counters[M1M1]
-			if plus > 0 && minus > 0 {
-				remove := min(minus, plus)
-				p = g.MutablePermanent(p.ID())
-				if p == nil {
-					continue
-				}
-				p.Counters[P1P1] -= remove
-				p.Counters[M1M1] -= remove
-				actions = true
-			}
-		}
-
-		// Check for auras attached to nothing or illegal targets (CR 704.5m / 303.4c).
-		var aurasToDrop []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.PhasedOut {
-				continue
-			}
-			if p.HasSubType("Aura") && p.IsAttached() {
-				host := g.FindPermanent(p.AttachedTo)
-				if host == nil {
-					aurasToDrop = append(aurasToDrop, p)
-					actions = true
-				} else if host.HasProtectionFromInGame(p.Card, g) {
-					aurasToDrop = append(aurasToDrop, p)
-					actions = true
-				} else if !auraHostIsLegal(p.Card, host, g) {
-					aurasToDrop = append(aurasToDrop, p)
-					actions = true
-				}
-			}
-		}
-		for _, a := range aurasToDrop {
-			g.DestroyPermanent(a)
-		}
-
-		// Equipment attached to a non-creature or missing host becomes unattached
-		for _, p := range g.zones.battlefield {
-			if p.PhasedOut {
-				continue
-			}
-			if p.HasSubType("Equipment") && p.IsAttached() {
-				host := g.FindPermanent(p.AttachedTo)
-				if host == nil || !host.HasType(TypeCreature) {
-					p = g.MutablePermanent(p.ID())
-					if p == nil {
-						continue
-					}
-					p.AttachedTo = uuid.Nil
-					p.attachedIncarnation = uuid.Nil
-					actions = true
-				}
-			}
-		}
-
-		// MTG rule 704.5j: Legend rule — if a player controls two or more legendary
-		// permanents with the same name, they choose one and sacrifice the rest.
-		var legendCounts map[uuid.UUID]map[string][]*Permanent // controller -> name -> perms
-		for _, p := range g.zones.battlefield {
-			if p.Card.HasSuperType(SuperLegendary) {
-				if legendCounts == nil {
-					legendCounts = make(map[uuid.UUID]map[string][]*Permanent)
-				}
-				if legendCounts[p.ControllerID()] == nil {
-					legendCounts[p.ControllerID()] = make(map[string][]*Permanent)
-				}
-				legendCounts[p.ControllerID()][p.Name()] = append(legendCounts[p.ControllerID()][p.Name()], p)
-			}
-		}
-		for ctrlID, byName := range legendCounts {
-			for _, perms := range byName {
-				if len(perms) > 1 {
-					player := g.GetPlayer(ctrlID)
-					keep := player.ChoosePermanent(perms, "legend rule: keep one", g)
-					for _, p := range perms {
-						if p != keep {
-							g.PutPermanentIntoGraveyard(p)
-						}
-					}
-					actions = true
-				}
-			}
-		}
-
-		// MTG rule 704.5k: World rule — if two or more permanents have the World
-		// supertype, all except the most recent one are put into their owners' graveyards.
-		var worldPerms []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.Card.HasSuperType(SuperWorld) {
-				worldPerms = append(worldPerms, p)
-			}
-		}
-		if len(worldPerms) > 1 {
-			// Keep the most recently entered one (last in Battlefield slice)
-			keep := worldPerms[len(worldPerms)-1]
-			for _, p := range worldPerms {
-				if p != keep {
-					g.PutPermanentIntoGraveyard(p)
-				}
-			}
-			actions = true
-		}
-
-		// MTG rule 704.5c: player with 10 or more poison counters loses
-		for _, p := range g.players {
-			if p.PoisonCounters() >= 10 {
-				p.SetLost()
-			}
-		}
-
-		// MTG rule 704.5b: player who attempted to draw from empty library loses
-		for _, p := range g.players {
-			if p.DrewFromEmpty() {
-				p.ClearDrewFromEmpty()
-				p.SetLost()
-			}
-		}
-
-		// MTG rule 704.5d / CR 111.7: a token in any zone other than the battlefield
-		// ceases to exist. Token status lives on Permanent, so when a token permanent
-		// leaves the battlefield its underlying Card is just a regular card — it is
-		// skipped by DestroyPermanent/bounce rather than cleaned up here.
-
-		if !actions {
-			break
-		}
-		performed = true
-	}
-
-	// Put any pending triggers on the stack
-	if g.triggers.immediateManaDepth == 0 {
-		g.PutTriggersOnStack()
-	}
-	return performed
-}
-
-// UntapPermanent untaps the given permanent unless it has a stun counter
-// (CR 122.1g — "If a permanent with a stun counter would become untapped,
-// remove a stun counter from it instead. It doesn't untap.") If the
-// permanent has at least one stun counter, exactly one is removed and the
-// permanent stays tapped; no EvtBecameUntapped fires. Otherwise, if the
-// permanent is currently tapped it untaps and EvtBecameUntapped fires.
-// Returns true if the permanent actually untapped.
-func (g *Game) UntapPermanent(p *Permanent) bool {
-	if p == nil {
-		return false
-	}
-	p = g.MutablePermanent(p.ID())
-	if p == nil {
-		return false
-	}
-	if !g.untapWithoutEvent(p) {
-		return false
-	}
-	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
-	return true
-}
-
-func (g *Game) untapWithoutEvent(p *Permanent) bool {
-	if p.Counters[Stun] > 0 {
-		p.RemoveCounter(Stun, 1)
-		return false
-	}
-	if !p.Tapped {
-		return false
-	}
-	p.Tapped = false
-	return true
-}
-
-// untapPermanentsTogether completes each untap before it sends untap events.
-func (g *Game) untapPermanentsTogether(permanents []*Permanent) {
-	untapped := make([]*Permanent, 0, len(permanents))
-	for _, permanent := range permanents {
-		live := g.MutablePermanent(permanent.ID())
-		if live != nil && g.untapWithoutEvent(live) {
-			untapped = append(untapped, live)
-		}
-	}
-	for _, permanent := range untapped {
-		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: permanent.ID()})
-	}
-}
-
-// SkipNextUntap prevents untapping during the next untap step of the current
-// controller. Repeated applications expire during that same step.
-func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
-	if g.FindPermanent(permanentID) == nil {
-		return
-	}
-	g.turns.SkipNextUntap(permanentID)
-}
-
-func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
-	if p == nil || !p.Tapped {
-		return false
-	}
-	return g.UntapPermanent(p)
-}
-
-func (g *Game) doUntap() {
-	active := g.ActivePlayerObj()
-	capturedUntap := g.turns.consumeCapturedUntap(active.PlayerID())
-	// Island Sanctuary: clear protection at the start of the player's turn
-	g.effects.Rules.ClearSanctuary(active.PlayerID())
-
-	// Snapshot the active player's untapped land count before the untap loop
-	// runs (CR 502.1 happens at the very start of the turn). Power Surge and
-	// similar effects read this at upkeep.
-	count := 0
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() && p.HasType(TypeLand) && !p.Tapped {
-			count++
-		}
-	}
-	g.trackers.Turn.SetUntappedLandsAtTurnStart(active.PlayerID(), count)
-
-	landUntapLimit := g.effects.Rules.LandUntapMax
-	landsUntapped := 0
-	artifactUntapLimit := g.effects.Rules.ArtifactUntapMax
-	artifactsUntapped := 0
-	creatureUntapLimit := g.effects.Rules.CreatureUntapMax
-	creaturesUntapped := 0
-
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() {
-			if g.turns.ConsumeSkipNextUntap(p.ID()) || capturedUntap[p.ID()] || p.HasAttr(AttrDoesNotUntap) {
-				// The restriction expires even when no untap is possible.
-			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
-				// Player may choose not to untap, but only when staying tapped
-				// still maintains a continuous effect on a target that remains
-				// on the battlefield. Once that target is gone (e.g. Tawnos's
-				// Weaponry's boosted creature or Phyrexian Gremlins' tapped
-				// artifact left play), there is nothing left to maintain, so
-				// untap automatically instead of asking.
-				hasTapEffect, targetLives := g.effects.SourceTapMaintainedStatus(g, p.ID())
-				autoUntap := hasTapEffect && !targetLives
-				if !autoUntap && !active.ChooseMayAbility("untap "+p.Name()) {
-					continue
-				}
-				g.untapPermanentDuringUntapStep(p)
-			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
-				// Land with untap limit in effect
-				if p.Tapped && landsUntapped < landUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						landsUntapped++
-					}
-				}
-			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
-				// Artifact (non-land) with untap limit in effect (Damping Field)
-				if p.Tapped && artifactsUntapped < artifactUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						artifactsUntapped++
-					}
-				}
-			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
-				// Creature with untap limit in effect (Smoke)
-				if p.Tapped && creaturesUntapped < creatureUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						creaturesUntapped++
-					}
-				}
-			} else if p.Tapped {
-				g.untapPermanentDuringUntapStep(p)
-			}
-			if mp := g.MutablePermanent(p.ID()); mp != nil {
-				mp.RevokeBaseAttr(AttrSummonSick)
-			}
-		}
-	}
-	g.trackers.Turn.ResetLandsPlayed()
-}
-
-// TODO this should "tell" turn to do upkeep actions and give turn a list of actions to do
-// this should iterate over permanents & cards in the game and ask if they have upkeep actions to do
-// What the fuck is this method doing here? Why isn't it part of Turn or similar?
-func (g *Game) doUpkeepActions() {
-	active := g.ActivePlayerObj()
-
-	// Expire "until your next upkeep" effects for the active player.
-	g.effects.RemoveUntilYourNextTurn(g, active.PlayerID())
-
-	g.FireEvent(GameEvent{
-		Type:     EvtUpkeep,
-		PlayerID: active.PlayerID(),
-	})
-	g.PutTriggersOnStack()
-}
-
-func (g *Game) doDrawActions() {
-	active := g.ActivePlayerObj()
-
-	// Fire draw step event after the normal draw so triggers can queue
-	g.FireEvent(GameEvent{
-		Type:     EvtDrawStep,
-		PlayerID: active.PlayerID(),
-	})
-	g.PutTriggersOnStack()
-}
-
-func (g *Game) doDrawNormalDraw() {
-	active := g.ActivePlayerObj()
-
-	// Run through replacement pipeline (skip draw, Aladdin's Lamp, etc.)
-	action := NewDrawCardAction(uuid.Nil, active.PlayerID(), true)
-	result := g.effects.ApplyReplacements(action, g)
-	if result == nil {
-		return // draw was replaced (skip draw, Aladdin's Lamp, etc.)
-	}
-
-	g.drawCardRaw(active)
-}
-
-// applyDrawReplacement handles Aladdin's Lamp draw replacement.
-// Look at top X cards, choose one, put rest on bottom randomly, draw the chosen card.
-func (g *Game) applyDrawReplacement(p Player, count int) {
-	lib := p.Library()
-	if count > len(lib) {
-		count = len(lib)
-	}
-	if count == 0 {
-		return
-	}
-	candidates := make([]Card, count)
-	copy(candidates, lib[:count])
-	chosen := p.ChooseCardFromLibrary(candidates, "choose card from Aladdin's Lamp", g)
-	if chosen == nil {
-		chosen = candidates[0]
-	}
-	var rest []Card
-	for _, c := range candidates {
-		if c.ID() != chosen.ID() {
-			rest = append(rest, c)
-		}
-	}
-	rand.Shuffle(len(rest), func(i, j int) { rest[i], rest[j] = rest[j], rest[i] })
-	newLib := make([]Card, 1, 1+len(lib)-count+len(rest))
-	newLib[0] = chosen
-	newLib = append(newLib, lib[count:]...)
-	newLib = append(newLib, rest...)
-	p.SetLibrary(newLib)
-	g.drawCardRaw(p)
-}
-
-// 1. Rule 508.1: First, the active player declares attackers.
-// 2. Rule 508.2: Second, the active player gets priority.
-func (g *Game) doDeclareAttackers() {
-	active := g.ActivePlayerObj()
-	attackerIDs := active.DeclareAttackers(g)
-	defender := g.NonActivePlayerObj()
-
-	// Auto-add creatures with MustAttack keyword (from Nettling Imp, etc.)
-	declared := make(map[uuid.UUID]bool)
-	declaredCount := 0
-	for _, id := range attackerIDs {
-		declared[id] = true
-	}
-	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() && p.HasAttr(AttrMustAttack) && !declared[p.ID()] {
-			if p.CanDeclareAsAttacker(g) {
-				attackerIDs = append(attackerIDs, p.ID())
-			}
-		}
-	}
-
-	for _, id := range attackerIDs {
-		if g.combat.IsAttacking(id) {
-			continue
-		}
-		atk := g.FindPermanent(id)
-		if atk == nil {
-			continue
-		}
-		if !atk.CanDeclareAsAttacker(g) {
-			continue
-		}
-		// Island Sanctuary: only flying or islandwalk creatures can attack
-		if g.effects.Rules.IsSanctuaryActive(defender.PlayerID()) {
-			if !atk.HasKeyword(Flying) && !atk.HasKeyword(Islandwalk) {
-				continue
-			}
-		}
-
-		// Attack costs (CR 508.1e): declined or unpayable means not declared.
-		if !g.PayAttackCosts(atk, active.PlayerID(), true) {
-			continue
-		}
-
-		// Tap attacker (unless vigilance)
-		if !atk.HasKeyword(Vigilance) {
-			g.TapPermanent(atk)
-		}
-
-		g.combat.AddAttackerIncarnation(id, atk.incarnationID, defender.PlayerID())
-		declaredCount++
-		g.trackers.Turn.RecordAttacked(id)
-		g.trackers.Turn.RecordAttackedIncarnation(id, atk.incarnationID)
-		g.FireEvent(GameEvent{
-			Type:     EvtDeclaredAttacker,
-			SourceID: id,
-			PlayerID: active.PlayerID(),
-			TargetID: defender.PlayerID(),
-		})
-	}
-
-	// Form attacking bands if the player has scripted them.
-	if bf, ok := active.(BandFormer); ok {
-		for _, band := range bf.GetBandFormations(g.turns.Turn(), g) {
-			if g.isValidBand(band) {
-				g.combat.AddBand(band)
-			}
-		}
-	}
-
-	// CR 506.5 — snapshot "attacks alone" once all attackers have been
-	// declared this step.
-	g.combat.SnapshotAttackedAlone()
-
-	// CR 506.4 / 603.6e: once-per-combat "whenever one or more creatures
-	// attack" trigger. Fired only if at least one creature was declared as
-	// an attacker. evt.Amount carries the attacker count.
-	if declaredCount > 0 {
-		g.FireEvent(GameEvent{
-			Type:     EvtAttackersDeclared,
-			PlayerID: active.PlayerID(),
-			Amount:   declaredCount,
-		})
-	}
-
-	g.ResolveStack()
-}
-
-// AttackedDuringLastTurn reports whether the given creature attacked during playerID's most recent turn.
-func (g *Game) AttackedDuringLastTurn(playerID, permID uuid.UUID) bool {
-	if m := g.trackers.Turn.AttackedLastTurn(playerID); m != nil {
-		return m[permID]
-	}
-	return false
-}
-
-// isValidBand checks that a slice of attacker IDs meets banding requirements:
-// all must be currently attacking, at least one must have banding, and at most
-// one may lack banding.
-func (g *Game) isValidBand(memberIDs []uuid.UUID) bool {
-	if len(memberIDs) < 2 {
-		return false
-	}
-	bandingCount := 0
-	nonBandingCount := 0
-	for _, id := range memberIDs {
-		perm := g.FindPermanent(id)
-		if perm == nil || !g.combat.IsAttacking(id) {
-			return false
-		}
-		if perm.HasKeyword(Banding) {
-			bandingCount++
-		} else {
-			nonBandingCount++
-		}
-	}
-	return bandingCount >= 1 && nonBandingCount <= 1
-}
-
-func (g *Game) doDeclareBlockers() {
-	nonActive := g.NonActivePlayerObj()
-	blockedBefore := g.blockedAttackersBeforeDeclaration()
-	pairsBefore := g.blockerPairsBeforeDeclaration()
-	assignments := nonActive.DeclareBlockers(g)
-	if assignments == nil {
-		// Even with no scripted blockers, we may need to enforce
-		// CR 509.1c "must be blocked if able" before firing the event.
-		g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
-		g.combat.SnapshotBlockedAlone()
-		g.fireDeclaredBlockerPairs(pairsBefore)
-		g.fireNewBlockerPairs(pairsBefore)
-		g.fireNewBlockerGroups(pairsBefore)
-		g.fireNewlyBlockedAttackers(blockedBefore)
-		g.fireUnblockedAttackers()
-		g.FireEvent(GameEvent{
-			Type:     EvtBlockersDecl,
-			PlayerID: nonActive.PlayerID(),
-		})
-		return
-	}
-
-	// Check for Lure: if any attacker has MustBeBlocked, redirect all blocks to it
-	var luredAttackerID uuid.UUID
-	for _, group := range g.combat.Groups {
-		atk := g.FindPermanent(group.AttackerID)
-		if atk != nil && atk.HasKeyword(MustBeBlocked) {
-			luredAttackerID = group.AttackerID
-			break
-		}
-	}
-
-	blockerCount := make(map[uuid.UUID]int) // how many attackers each blocker is assigned to
-	for _, ba := range assignments {
-		blocker := g.FindPermanent(ba.BlockerID)
-		attackerID := ba.AttackerID
-		// If there's a Lure creature, redirect all blocks to it
-		if luredAttackerID != uuid.Nil {
-			attackerID = luredAttackerID
-		}
-		attacker := g.FindPermanent(attackerID)
-		if blocker == nil || attacker == nil {
-			continue
-		}
-		if !blocker.CanDeclareAsBlocker(g) {
-			continue
-		}
-		if !CanBlock(blocker, attacker, g) {
-			continue
-		}
-		// Landwalk: if attacker has landwalk and defender controls matching land, can't be blocked
-		if HasLandwalkEvasion(attacker, nonActive.PlayerID(), g) {
-			continue
-		}
-		// Check multi-block limit: normally a creature can only block one attacker
-		maxBlocks := 1
-		if blocker.HasKeyword(CanBlockAny) {
-			maxBlocks = 999
-		} else if blocker.HasKeyword(CanBlockAdditional) {
-			maxBlocks = 2
-		}
-		if blockerCount[ba.BlockerID] >= maxBlocks {
-			continue
-		}
-		blockerCount[ba.BlockerID]++
-		g.combat.AddBlockerIncarnation(ba.BlockerID, blocker.incarnationID, attackerID)
-		g.trackers.Turn.RecordBlocked(ba.BlockerID, attackerID)
-	}
-
-	// Enforce minimum-blocker restrictions (CR 509.1b — Goblin Goon style):
-	// if an attacker requires N+ blockers and fewer than N are declared,
-	// none of them are legal blockers. Remove them all.
-	g.enforceMinimumBlockers()
-
-	// Enforce CR 509.1c "must be blocked if able": for every attacker with
-	// AttrMustBeBlockedIfAble, if no blocker has been declared and at least
-	// one creature controlled by the defender could legally block it, force
-	// one such creature into the block.
-	g.enforceMustBeBlockedIfAble(nonActive.PlayerID())
-
-	// CR 506.5 — snapshot "blocks alone" once all blockers have been
-	// declared this step.
-	g.combat.SnapshotBlockedAlone()
-	g.fireDeclaredBlockerPairs(pairsBefore)
-	g.fireNewBlockerPairs(pairsBefore)
-	g.fireNewBlockerGroups(pairsBefore)
-	g.fireNewlyBlockedAttackers(blockedBefore)
-	g.fireUnblockedAttackers()
-
-	// Fire EvtBlockersDecl once after all blockers are assigned
-	g.FireEvent(GameEvent{
-		Type:     EvtBlockersDecl,
-		PlayerID: nonActive.PlayerID(),
-	})
-}
-
-// enforceMinimumBlockers removes blockers from groups whose attacker has a
-// minimum-blocker requirement (e.g. Goblin Goon "can't be blocked except by
-// three or more creatures") that isn't met.
-func (g *Game) enforceMinimumBlockers() {
-	for _, group := range g.combat.Groups {
-		minN := g.effects.MinBlockers(group.AttackerID)
-		if minN <= 0 {
-			continue
-		}
-		if len(group.BlockerIDs) >= minN {
-			continue
-		}
-		// Insufficient blockers — none of them are legal. Drop them all,
-		// and reset the Blocked flag so the attacker is treated as unblocked
-		// for damage assignment (CR 509.1b — those creatures aren't legal
-		// blockers, so the attacker was never legally blocked).
-		dropped := group.BlockerIDs
-		group.BlockerIDs = nil
-		group.BlockerIncarnations = nil
-		group.Blocked = false
-		for _, bid := range dropped {
-			// Also clean up the per-turn blocked tracking for this attacker.
-			g.trackers.Turn.RemoveBlockedAttacker(bid, group.AttackerID)
-		}
-	}
-}
-
-// enforceMustBeBlockedIfAble implements CR 509.1c: for each attacker with
-// AttrMustBeBlockedIfAble, if no blocker is currently declared, force one
-// legal blocker controlled by defenderID into the block. Picks the first
-// untapped creature that passes CanBlock; ignores creatures already maxed-out
-// on blocks.
-func (g *Game) enforceMustBeBlockedIfAble(defenderID uuid.UUID) {
-	for _, group := range g.combat.Groups {
-		atk := g.FindPermanent(group.AttackerID)
-		if atk == nil || !atk.HasAttr(AttrMustBeBlockedIfAble) {
-			continue
-		}
-		if len(group.BlockerIDs) > 0 {
-			continue
-		}
-		minN := max(g.effects.MinBlockers(group.AttackerID), 1)
-		// Find legal blockers controlled by the defender.
-		var candidates []*Permanent
-		for _, p := range g.zones.battlefield {
-			if p.ControllerID() != defenderID {
-				continue
-			}
-			if !p.CanDeclareAsBlocker(g) {
-				continue
-			}
-			if !CanBlock(p, atk, g) {
-				continue
-			}
-			if HasLandwalkEvasion(atk, defenderID, g) {
-				continue
-			}
-			candidates = append(candidates, p)
-		}
-		if len(candidates) < minN {
-			continue
-		}
-		for i := 0; i < minN && i < len(candidates); i++ {
-			b := candidates[i]
-			g.combat.AddBlockerIncarnation(b.ID(), b.incarnationID, atk.ID())
-			g.trackers.Turn.RecordBlocked(b.ID(), atk.ID())
-			g.FireEvent(GameEvent{
-				Type:     EvtDeclaredBlocker,
-				SourceID: b.ID(),
-				TargetID: atk.ID(),
-				PlayerID: defenderID,
-				Flag:     true,
-			})
-		}
-	}
-}
-
-// doCleanupActions performs cleanup housekeeping and places any triggers on the stack.
-// It returns true if state-based actions or triggers require another cleanup step.
-func (g *Game) doCleanupActions() bool {
-	active := g.ActivePlayerObj()
-	g.FireEvent(GameEvent{
-		Type:     EvtCleanup,
-		PlayerID: active.PlayerID(),
-	})
-	// Hand size discard: active player discards down to max hand size (CR 514.1)
-	p := active
-	maxHS := g.effects.Rules.MaxHandSize(p.PlayerID())
-	for maxHS >= 0 && len(p.Hand()) > maxHS {
-		chosen := p.ChooseCardsFromHand(1, "discard to hand size", g)
-		if len(chosen) == 0 {
-			break
-		}
-		g.PlayerDiscard(p, chosen[0].ID())
-	}
-	// CR 514.2 includes phased-out permanents in damage removal.
-	for _, p := range g.zones.battlefield {
-		if p.Damage == 0 {
-			continue
-		}
-		p = g.MutablePermanentIncludingPhased(p.ID())
-		if p == nil {
-			continue
-		}
-		p.Damage = 0
-	}
-	// Clear mana pools
-	for _, p := range g.players {
-		p.ManaPool().Clear()
-	}
-	// Remove end-of-turn effects and clear turn-scoped state
-	g.effects.RemoveEndOfTurn()
-	g.effects.Apply(g)
-	g.effects.ClearReplacementsEndOfTurn()
-	g.zones.ClearExileInstead()
-	g.damage.expireEndOfTurnEffects()
-	g.effects.Rules.ClearEndOfTurn()
-	// Clear non-persistent delayed triggers (they only last "this turn")
-	g.triggers.ClearEndOfTurn()
-	// CR 514.3a keeps turn history available during cleanup priority.
-	performed := g.checkStateBasedActions()
-	if performed || !g.stack.IsEmpty() {
-		return true
-	}
-	// Pending cleanup abilities can still need departure information.
-	g.zones.ClearLKI()
-	g.trackers.Turn.ResetForNewTurn(active.PlayerID())
-	g.damage.ClearEndOfTurn()
-	// Clear last-drawn-card tracking for all players
-	for _, p := range g.players {
-		p.ClearLastDrawnCard()
-	}
-	for _, p := range g.zones.battlefield {
-		p = g.MutablePermanentIncludingPhased(p.ID())
-		// Clear activation tracking (Charge counters used for per-turn counts)
-		p.Counters[Charge] = 0
-		// Cloned games can share abilities before this reset.
-		p.RuntimeAbilities = clonePaymentAbilities(p.RuntimeAbilities)
-		for _, a := range p.RuntimeAbilities {
-			if aa, ok := UnwrapAbility(a).(*SimpleActivatedAbility); ok {
-				aa.ResetActivation()
-			}
-		}
-	}
-	return false
-}
-
-// Run executes the game until the stop condition.
-func (g *Game) Run(stopTurn int, stopStep PhaseStep, maxTurns int) {
-	for g.turns.Turn() <= maxTurns {
-		// Turn-skip (CR 500.11): if the active player's next turn is
-		// marked as skipped, consume the skip and advance past this turn
-		// without running any steps.
-		activeID := g.ActivePlayerObj().PlayerID()
-		if g.turns.ConsumeTurnSkip(activeID) {
-			// Fall through to the extra-turn / next-player logic below.
-		} else if g.RunTurn(stopTurn, stopStep) {
-			return
-		}
-		// Check for extra turns
-		if extraPlayerID, ok := g.turns.PopExtraTurn(); ok {
-			// Find the player index
-			for i, p := range g.players {
-				if p.PlayerID() == extraPlayerID {
-					g.turns.SetActivePlayerIndex(i)
-					break
-				}
-			}
-		} else {
-			// Next turn: swap active player
-			g.turns.SetActivePlayerIndex((g.turns.ActivePlayerIndex() + 1) % len(g.players))
-		}
-		g.turns.IncrementTurn()
-	}
-}
-
-// MaxLandPlays returns the maximum number of lands that can be played this turn.
-func (g *Game) MaxLandPlays() int {
-	limit := 1
-	if g.effects.Rules.UnlimitedLandPlays {
-		limit = 999
-	}
-	activeID := g.ActivePlayerObj().PlayerID()
-	limit += g.trackers.Turn.ExtraLandPlays(activeID)
-	limit += g.effects.Rules.AdditionalLandPlays(activeID)
-	return limit
-}
-
-// GrantExtraLandPlay increases the active player's land-play allowance by n
-// for the current turn. Cumulative across multiple grants. Reset alongside
-// landsPlayedThisTurn during the cleanup step. Implements the rules-modifier
-// half of Explore / Walking Atlas / Azusa-style effects.
-func (g *Game) GrantExtraLandPlay(playerID uuid.UUID, n int) {
-	if n <= 0 {
-		return
-	}
-	g.trackers.Turn.AddExtraLandPlays(playerID, n)
-}
-
-// ExtraLandPlaysGrantedThisTurn returns the cumulative additional land-play
-// allowance granted to the player this turn (not including the base 1).
-func (g *Game) ExtraLandPlaysGrantedThisTurn(playerID uuid.UUID) int {
-	return g.trackers.Turn.ExtraLandPlays(playerID)
-}
-
-// AddRevealedTopCardEffect marks playerID as playing with the top card of
-// their library revealed for this Apply() cycle (Future Sight, Oracle of
-// Mul Daya, Magus of the Future). Card implementations should normally
-// register the RevealTopCardOfLibrary continuous effect via
-// WithStaticAbility; this method is the direct entry point for callers
-// (UI, AI) and tests that need to set the flag explicitly.
-func (g *Game) AddRevealedTopCardEffect(playerID uuid.UUID) {
-	g.effects.Rules.AddRevealedTopCard(playerID)
-}
-
-// IsTopCardRevealed reports whether the given player is currently playing
-// with the top card of their library revealed.
-func (g *Game) IsTopCardRevealed(playerID uuid.UUID) bool {
-	return g.effects.Rules.IsTopCardRevealed(playerID)
-}
-
-// AddPlayLandsFromZone permits playerID to play lands from the given zone
-// (in addition to their hand) for this Apply() cycle. Used by Oracle of
-// Mul Daya and similar cards via PlayLandsFromTopOfLibrary.
-func (g *Game) AddPlayLandsFromZone(playerID uuid.UUID, zone Zone) {
-	g.effects.Rules.AddPlayLandsFromZone(playerID, zone)
-}
-
-// CanPlayLandsFromZone reports whether playerID may currently play lands
-// from the given zone.
-func (g *Game) CanPlayLandsFromZone(playerID uuid.UUID, zone Zone) bool {
-	return g.effects.Rules.CanPlayLandsFromZone(playerID, zone)
-}
-
-// AddAdditionalLandPlay registers a static-ability per-cycle additional
-// land-play allowance for the player. Re-registered each Apply() cycle by
-// the source's continuous effect, so it auto-clears when the source
-// leaves the battlefield (Azusa, Oracle of Mul Daya, Exploration).
-func (g *Game) AddAdditionalLandPlay(playerID uuid.UUID, n int) {
-	g.effects.Rules.AddAdditionalLandPlay(playerID, n)
-}
-
-// playLandCore moves a land from a player's hand (or, with an active
-// AddPlayLandsFromZone(ZoneLibrary) grant, from the top of their library)
-// to the battlefield and fires landfall triggers, but does NOT resolve the
-// stack. Callers are responsible for draining the stack (via ResolveStack
-// or RunPriorityRound).
-func (g *Game) playLandCore(playerID, cardID uuid.UUID) error {
-	if g.effects.Rules.CantPlayLands() {
-		return fmt.Errorf("players can't play lands")
-	}
-	if !g.turns.Step().IsMainPhase() {
-		return fmt.Errorf("can only play lands during a main phase")
-	}
-	if g.ActivePlayerObj().PlayerID() != playerID {
-		return fmt.Errorf("only the active player can play a land")
-	}
-	if g.trackers.Turn.LandsPlayed() >= g.MaxLandPlays() {
-		return fmt.Errorf("already played a land this turn")
-	}
-
-	p := g.GetPlayer(playerID)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-
-	card, ok := p.RemoveFromHand(cardID)
-	fromZone := ZoneHand
-	if !ok {
-		// Try the top of library if the player has a grant for that zone.
-		if g.effects.Rules.CanPlayLandsFromZone(playerID, ZoneLibrary) {
-			lib := p.Library()
-			if len(lib) > 0 && lib[0].ID() == cardID {
-				card = lib[0]
-				p.SetLibrary(lib[1:])
-				ok = true
-				fromZone = ZoneLibrary
-			}
-		}
-	}
-	if !ok {
-		return ErrCardNotInHand
-	}
-	if !card.HasType(TypeLand) {
-		if fromZone == ZoneLibrary {
-			// Restore to top of library.
-			p.SetLibrary(append([]Card{card}, p.Library()...))
-		} else {
-			p.AddToHand(card)
-		}
-		return fmt.Errorf("card is not a land")
-	}
-	// Check expansion block (City in a Bottle)
-	if g.effects.Rules.IsCardExpansionBlocked(card.Name()) {
-		if fromZone == ZoneLibrary {
-			p.SetLibrary(append([]Card{card}, p.Library()...))
-		} else {
-			p.AddToHand(card)
-		}
-		return fmt.Errorf("can't play %s: card is from a blocked expansion", card.Name())
-	}
-
-	g.PutOnBattlefieldBy(card, playerID, playerID)
-	g.trackers.Turn.RecordLandPlayed()
-
-	g.FireEvent(GameEvent{
-		Type:     EvtLandPlayed,
-		SourceID: card.ID(),
-		PlayerID: playerID,
-		Amount:   g.trackers.Turn.LandsPlayed(), // which land number this was
-	})
-	g.PutTriggersOnStack()
-
-	return nil
-}
-
-// PlayLand moves a land from a player's hand to the battlefield.
-func (g *Game) PlayLand(playerID, cardID uuid.UUID) error {
-	if err := g.playLandCore(playerID, cardID); err != nil {
-		return err
-	}
-	g.ResolveStack()
-	return nil
 }
 
 // TapForMana taps a permanent for mana using its first mana ability.
@@ -4615,14 +3562,31 @@ func (g *Game) IsGameOver() bool {
 	return false
 }
 
-// Winner returns the name of the winning player, or "" if no winner yet.
+// Winner returns the name of the winning player, or "" if no winner yet or if the game ended in a draw (CR 104.4a).
 func (g *Game) Winner() string {
+	var alive []Player
 	for _, p := range g.players {
-		if !p.IsAlive() {
-			return g.GetOpponent(p.PlayerID()).Name()
+		if p.IsAlive() {
+			alive = append(alive, p)
 		}
 	}
+	if len(alive) == 1 {
+		return alive[0].Name()
+	}
 	return ""
+}
+
+// IsDraw reports whether the game has ended in a draw (CR 104.4a).
+func (g *Game) IsDraw() bool {
+	if !g.IsGameOver() {
+		return false
+	}
+	for _, p := range g.players {
+		if p.IsAlive() {
+			return false
+		}
+	}
+	return true
 }
 
 func (g *Game) Stack() *Stack {

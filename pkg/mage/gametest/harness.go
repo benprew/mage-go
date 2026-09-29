@@ -1328,6 +1328,17 @@ func (tg *TestGame) AssertWinner(p PlayerRef) {
 	}
 }
 
+// AssertDraw checks that the game ended in a draw (CR 104.4a).
+func (tg *TestGame) AssertDraw() {
+	tg.t.Helper()
+	if !tg.IsGameOver() {
+		tg.t.Errorf("AssertDraw: game is not over")
+	}
+	if got := tg.Winner(); got != "" {
+		tg.t.Errorf("AssertDraw: expected no winner (draw), got %q", got)
+	}
+}
+
 // AssertGameOver checks whether the game has ended.
 func (tg *TestGame) AssertGameOver(want bool) {
 	tg.t.Helper()

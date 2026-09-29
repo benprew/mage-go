@@ -353,7 +353,7 @@ func (r *continuousRule) staticEffects() []ContinuousEffect {
 		panic("static: supply at least one modification")
 	}
 	var effects []ContinuousEffect
-	for _, layer := range []Layer{LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerControl, LayerText, LayerType, LayerColor, LayerAbility, LayerPT} {
 		var mods []*layerModification
 		for _, value := range r.modifications {
 			if nilDefinition(value) {
@@ -593,7 +593,7 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 		sourceIncarnation = source.incarnationID
 	}
 	var effects []*composedLayerEffect
-	for _, layer := range []Layer{LayerControl, LayerType, LayerColor, LayerAbility, LayerPT} {
+	for _, layer := range []Layer{LayerControl, LayerText, LayerType, LayerColor, LayerAbility, LayerPT} {
 		entry := &composedLayerEffect{layer: layer, duration: e.duration, sourceBound: e.sourceBound, sourceIncarnation: sourceIncarnation}
 		entry.SetSourceID(ctx.SourceID)
 		for _, value := range e.modifications {
