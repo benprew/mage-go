@@ -482,6 +482,19 @@ becomes absent after another zone move or when a replacement sends the card
 to a different zone. The committed capture is local to the spell or activation
 frame and follows stack copies and game clones.
 
+`DiscardMatchingCardCost(filter)` reuses the same locked hand-visit payment
+and discard replacement service for one matching card. The live payer chooses
+from matching hand cards once. Invalid choices fail without substitution.
+Validation and commit recheck both the hand visit and the filter; commit
+rejects a stale choice before spending mana or life. The declaration retains
+no chosen card. Prevention rejects payment, and an unrevealed library
+replacement cannot pay a characteristic-constrained discard (CR 701.9c).
+The zero filter matches all cards. Direct activation and spell costs,
+announcement optional/alternative wrappers, and resolution-time payment
+groups are supported. This constructor produces no binding or characteristic
+capture. Stack copies do not repay the cost; game clones pay only on their
+own state. Phasing and battlefield LKI do not apply to hand-card choices.
+
 `DiscardCostWithCards(n, binding)` saves each resulting graveyard visit recorded
 by the shared discard batch. The batch records visits before it dispatches
 events, so later zone moves cannot replace the saved identity. Redirected

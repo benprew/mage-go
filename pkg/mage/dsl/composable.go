@@ -525,3 +525,5 @@ var (
 var SkipDrawStepForLife = mage.SkipDrawStepForLife
 
 var DiscardCardsWithDifferentNamesCostWithCards = mage.DiscardCardsWithDifferentNamesCostWithCards
+
+var DiscardMatchingCardCost = mage.DiscardMatchingCardCost

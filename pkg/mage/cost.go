@@ -468,6 +468,7 @@ func (c *tapMatchingCost) Text() string { return c.text }
 type discardCost struct {
 	amount         int
 	differentNames bool
+	filter         CardFilter
 	selected       []capturedCard
 	locked         bool
 	paidCard       *CardBinding
@@ -490,6 +491,34 @@ func DiscardCardCostInto(card *CardBinding) Cost {
 // DiscardCostWithCards saves the new graveyard visits for this payment.
 func DiscardCostWithCards(n int, paid *CardsBinding) Cost {
 	return &discardCost{amount: n, paidCards: paid, captureCards: true}
+}
+
+// DiscardMatchingCardCost requires one hand card that matches the filter.
+func DiscardMatchingCardCost(filter CardFilter) Cost {
+	return &discardCost{amount: 1, filter: filter}
+}
+
+func (c *discardCost) choose(p Player, g *Game) []Card {
+	if c.amount == 0 {
+		return nil
+	}
+	if c.filter.IsZero() {
+		return p.ChooseCardsFromHand(c.amount, c.Text(), g)
+	}
+	var candidates []Card
+	for _, card := range p.Hand() {
+		if c.filter.Match(card) {
+			candidates = append(candidates, card)
+		}
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+	chosen := p.ChooseCardFromHand(candidates, c.Text(), g)
+	if chosen == nil {
+		return nil
+	}
+	return []Card{chosen}
 }
 
 func (c *discardCost) inspectDefinition() definitionNode {
@@ -523,6 +552,9 @@ func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 		return false
 	}
 	if !c.locked {
+		if !c.filter.IsZero() {
+			return slices.ContainsFunc(p.Hand(), c.filter.Match)
+		}
 		if c.differentNames {
 			names := make(map[string]bool)
 			for _, card := range p.Hand() {
@@ -547,6 +579,9 @@ func (c *discardCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	for _, card := range c.selected {
 		current := available[card.id]
 		if current == nil || card.visit == uuid.Nil || visitor.handVisit(card.id) != card.visit {
+			return false
+		}
+		if !c.filter.Match(current) {
 			return false
 		}
 		if c.differentNames && names[current.Name()] {
@@ -575,7 +610,7 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	} else {
 		var chosen []Card
 		if c.amount > 0 {
-			chosen = p.ChooseCardsFromHand(c.amount, c.Text(), g)
+			chosen = c.choose(p, g)
 		}
 		if len(chosen) != c.amount {
 			return fmt.Errorf("cannot pay chosen discard")
@@ -601,7 +636,7 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 	var actions []*DiscardAction
 	for _, id := range selected {
 		action := newCostDiscardAction(sourceID, controller, id)
-		action.requiresCharacteristics = c.differentNames
+		action.requiresCharacteristics = c.differentNames || !c.filter.IsZero()
 		actions = append(actions, action)
 	}
 	events := g.discardActionsTogetherWithEvents(actions, true)
@@ -619,6 +654,9 @@ func (c *discardCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 }
 
 func (c *discardCost) Text() string {
+	if !c.filter.IsZero() {
+		return "Discard one " + c.filter.Text()
+	}
 	if c.amount == 1 {
 		return "Discard a card"
 	}

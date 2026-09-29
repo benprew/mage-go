@@ -694,3 +694,18 @@ func TestTapNOtherMatchingCostDeclaration(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestFilteredDiscardPublicDeclaration(t *testing.T) {
+	cost := dsl.DiscardMatchingCardCost(dsl.IsArtifactCard)
+	card := dsl.NewInstant("Synthetic filtered discard", "{2}{U}", dsl.WithAbility(dsl.Spell(dsl.Sequence(
+		dsl.Draw(dsl.You, dsl.Fixed(3)),
+		dsl.UnlessPaid(dsl.You, dsl.Costs(cost), dsl.Discard(dsl.You, dsl.Fixed(2))),
+	))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	descriptor := dsl.InspectDefinition(cost)
+	if descriptor.Role != "discard-cost" || descriptor.Text != "Discard one artifact card" {
+		t.Fatalf("descriptor = %+v", descriptor)
+	}
+}

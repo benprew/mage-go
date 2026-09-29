@@ -2827,6 +2827,7 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     _ = ability
     ```
   * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice and each chosen hand visit are locked during total-cost validation and reused at commit. Before mana, life, or other costs are paid, commit rejects a missing chosen card or a card that left the hand and returned. Zero cards is a legal payment. Reordering the hand does not change a visit. All discard replacements are prepared before any chosen card moves. The accepted cards move together, then each completed discard emits its event. Event observers see the complete discard payment. If a replacement prevents a chosen discard, the whole discard cost fails before any chosen card moves. A replacement that applies only when an effect causes a discard does not apply to this cost.
+  * `DiscardMatchingCardCost(filter CardFilter) Cost`: Discard one chosen hand card that matches `filter`. Use in activated `Costs`, spell additional costs, announcement-time optional/alternative costs, or resolution-time `IfPaid`/`UnlessPaid`. The zero filter matches all cards. Preparation offers only matching candidates and locks the chosen hand visit. Invalid choices fail without substitution; commit rechecks the visit and filter before spending resources. Prevention and unrevealed library replacement reject payment through the shared discard service (CR 701.9c). No paid-card or characteristic output is produced.
   * `DiscardCardsWithDifferentNamesCost(n int) Cost`: Discard exactly `n` chosen cards whose names are distinct. Use it in activated `Costs`, a spell additional cost, or a resolution-time payment group. Announcement-time optional and alternative cost wrappers use the same locked payment. Preparation saves each chosen hand visit; commit checks the visits and names before spending other resources. Invalid, duplicate, missing, or same-name choices fail payment; the engine does not substitute a different selection. Zero is valid, and negative counts fail registration. The shared discard batch prepares replacements before movement and sends events after every chosen card moves. Prevention rejects the whole group. A replacement to the library without revelation makes this characteristic-constrained payment illegal (CR 701.9c). The current discard action has no revealed-library destination. Random discard and paid characteristic/card outputs are separate capabilities.
   * `DiscardCostWithCards(n int, paid *CardsBinding) Cost`: Discard exactly `n` chosen cards and save their resulting graveyard visits in the paid spell or activation frame. Zero cards is valid. Use a direct activated `Costs` component or spell additional cost. `FromCards(paid)` excludes redirected cards and cards that leave their captured graveyard visits. Copies and game clones keep independent frames. Registration rejects nil or unnamed bindings, negative counts, duplicate producers, reads without a dominating producer, alternative or optional wrappers, and resolution-time payment captures. `DiscardCost` and `DiscardCardCostInto` remain available.
   * `DiscardCardsWithDifferentNamesCostWithCards(n int, paid *CardsBinding) Cost`: Discard exactly `n` chosen cards with different names and save the resulting graveyard visits. The supported contexts, binding validation, visit identity, and copy/clone behavior are the same as `DiscardCostWithCards`. An unrevealed hidden-zone replacement cannot pay this characteristic-constrained cost (CR 701.9c). Optional/alternative wrappers and resolution-time captures are rejected. The existing distinct-name cost export remains available.
@@ -3464,3 +3465,17 @@ card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
 ```
 
 The payer chooses distinct names once during payment preparation. The paid frame saves the batch's resulting graveyard visits. This example counts visits still present at resolution; it does not save discarded characteristics. Zero cards supplies an empty set. Failed payment supplies no output.
+
+### Filtered resolution-time discard payment
+
+```go
+card := dsl.NewInstant("Synthetic filtered discard", "{2}{U}",
+    dsl.WithAbility(dsl.Spell(dsl.Sequence(
+        dsl.Draw(dsl.You, dsl.Fixed(3)),
+        dsl.UnlessPaid(dsl.You,
+            dsl.Costs(dsl.DiscardMatchingCardCost(dsl.IsArtifactCard)),
+            dsl.Discard(dsl.You, dsl.Fixed(2))),
+    ))))
+```
+
+The payment choice occurs after drawing. The fallback occurs if the payer declines or cannot pay. This example compiles and validates in `TestFilteredDiscardPublicDeclaration`; production card wiring remains separate.
