@@ -2,7 +2,6 @@ package mage
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -56,20 +55,23 @@ func TestActivatedAbilityArtifactOpponentFilter(t *testing.T) {
 }
 
 func TestActivatedAbilityArtifactOpponentFilterDefinition(t *testing.T) {
-	good := NewEnchantment("Good", "", WithAbility(WhenEvent(
-		ActivatedAbilityEvent().FromArtifact().ByOpponent(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
-	for _, pattern := range []EventPattern{
-		ActivatedAbilityEvent().FromArtifact().FromArtifact(),
-		ActivatedAbilityEvent().ByOpponent().ByOpponent(),
-	} {
-		bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("duplicate filter passed registration")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewEnchantment("Good", "", WithAbility(WhenEvent(
+				ActivatedAbilityEvent().FromArtifact().ByOpponent(), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:    "duplicate from artifact filter",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent().FromArtifact().FromArtifact(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate by opponent filter",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent().ByOpponent().ByOpponent(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestActivatedAbilityArtifactOpponentSourceLKI(t *testing.T) {
@@ -218,17 +220,22 @@ func TestActivatedAbilityWithoutTapCostManaAbilities(t *testing.T) {
 
 func TestActivatedAbilityWithoutTapCostDefinition(t *testing.T) {
 	pattern := ActivatedAbilityEvent().FromArtifact().ByOpponent().WithoutTapCost()
-	if got := InspectDefinition(pattern); got.Role != "event-pattern" {
-		t.Fatalf("role = %q", got.Role)
-	}
-	good := NewEnchantment("Good", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
-	bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern.WithoutTapCost(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-		t.Fatal("repeated filter passed registration")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewEnchantment("Good", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1))))),
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(pattern); got.Role != "event-pattern" {
+					t.Fatalf("role = %q", got.Role)
+				}
+			},
+		},
+		{
+			Name:    "repeated filter",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern.WithoutTapCost(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_activation_capture_test.go ---
@@ -293,33 +300,46 @@ func TestActivationNumberCaptureRepeatedAndFailedPayment(t *testing.T) {
 
 func TestActivationNumberCaptureValidation(t *testing.T) {
 	n := BindNumber("number")
-	for _, tc := range []struct {
-		name     string
-		captures []ActivationOption
-		body     ResolvingEffect
-		want     string
-	}{
-		{"valid", []ActivationOption{CaptureNumberBeforePayment(Fixed(2), n)}, GainLifeFor(You, FromNumber(n)), ""},
-		{"empty name", []ActivationOption{CaptureNumberBeforePayment(Fixed(2), BindNumber(""))}, GainLifeFor(You, Fixed(1)), "name"},
-		{"duplicate name", []ActivationOption{CaptureNumberBeforePayment(Fixed(2), n), CaptureNumberBeforePayment(Fixed(3), BindNumber("number"))}, GainLifeFor(You, Fixed(1)), "duplicate"},
-		{"overwrite", []ActivationOption{CaptureNumberBeforePayment(Fixed(2), n), CaptureNumberBeforePayment(SubtractValues(FromNumber(n), Fixed(1)), n)}, GainLifeFor(You, FromNumber(n)), ""},
-		{"self read", []ActivationOption{CaptureNumberBeforePayment(FromNumber(n), n)}, GainLifeFor(You, Fixed(1)), "producer"},
-		{"nil value", []ActivationOption{CaptureNumberBeforePayment(nil, n)}, GainLifeFor(You, Fixed(1)), "non-nil"},
-		{"nil binding", []ActivationOption{CaptureNumberBeforePayment(Fixed(1), nil)}, GainLifeFor(You, Fixed(1)), "non-nil"},
-		{"body too late", []ActivationOption{CaptureNumberBeforePayment(FromNumber(n), BindNumber("other"))}, SnapshotNumber(Fixed(2), n), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			c := NewArtifact("Capture", "", WithAbility(Activate(Costs(), tc.body, tc.captures...)))
-			err := ValidateCardDefinition(c.Name(), c)
-			if tc.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("error = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid capture",
+			Card: NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(n)), CaptureNumberBeforePayment(Fixed(2), n)))),
+		},
+		{
+			Name:          "empty name",
+			Card:          NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CaptureNumberBeforePayment(Fixed(2), BindNumber(""))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate name",
+			Card:          NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CaptureNumberBeforePayment(Fixed(2), n), CaptureNumberBeforePayment(Fixed(3), BindNumber("number"))))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name: "overwrite",
+			Card: NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(n)), CaptureNumberBeforePayment(Fixed(2), n), CaptureNumberBeforePayment(SubtractValues(FromNumber(n), Fixed(1)), n)))),
+		},
+		{
+			Name:          "self read",
+			Card:          NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CaptureNumberBeforePayment(FromNumber(n), n)))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "nil value",
+			Card:          NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CaptureNumberBeforePayment(nil, n)))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Capture", "", WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CaptureNumberBeforePayment(Fixed(1), nil)))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "body too late",
+			Card:          NewArtifact("Capture", "", WithAbility(Activate(Costs(), SnapshotNumber(Fixed(2), n), CaptureNumberBeforePayment(FromNumber(n), BindNumber("other"))))),
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestActivationNumberCaptureTargetsAndOrder(t *testing.T) {
@@ -532,29 +552,93 @@ func TestComposableActivationRestrictions(t *testing.T) {
 }
 
 func TestComposableActivationOptionValidation(t *testing.T) {
-	for _, options := range [][]ActivationOption{
-		{AnyPlayerMayActivate(), AnyPlayerMayActivate()},
-		{OnlyAsSorcery(), OnlyDuring(Upkeep)},
-		{OnlyDuring(Upkeep), OnlyDuring(Upkeep)},
-		{OnlyOnYourTurn(), OnlyOnYourTurn()},
-		{OnlyDuring(Upkeep), OnlyOnYourTurn(), OnlyDuring(EndStep)},
-		{OnlyOnYourTurn(), OnlyDuring(Upkeep), OnlyOnYourTurn()},
-		{OnlyOnYourTurn(), OnlyAsSorcery()},
-		{ActivationLimit(1), ActivationLimit(2)},
-		{ActivationLimit(0)},
-		{OnlyDuring(PhaseStep(-1))},
-		{ActivationIf(nil)},
-	} {
-		if err := validateFactory("Invalid activation", func() Card {
-			return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), options...)))
-		}); err == nil {
-			t.Fatal("invalid options accepted")
-		}
-	}
-	ability := Activate(Costs(), GainLifeFor(You, Fixed(1)), ActivationIf(AllConditions()))
-	if err := ValidateCardDefinition("Invalid condition", NewCreature("Invalid condition", "", 1, 1, WithAbility(ability))); err == nil {
-		t.Fatal("activation condition was not inspected")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "duplicate any player",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), AnyPlayerMayActivate(), AnyPlayerMayActivate())))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "sorcery with upkeep",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyAsSorcery(), OnlyDuring(Upkeep))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "duplicate upkeep",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyDuring(Upkeep), OnlyDuring(Upkeep))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "duplicate on your turn",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyOnYourTurn(), OnlyOnYourTurn())))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "multiple steps",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyDuring(Upkeep), OnlyOnYourTurn(), OnlyDuring(EndStep))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "upkeep with duplicate on your turn",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyOnYourTurn(), OnlyDuring(Upkeep), OnlyOnYourTurn())))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "on your turn with sorcery",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyOnYourTurn(), OnlyAsSorcery())))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "duplicate limits",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), ActivationLimit(1), ActivationLimit(2))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "zero limit",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), ActivationLimit(0))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "invalid step",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), OnlyDuring(PhaseStep(-1)))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "nil condition",
+			Factory: func() Card {
+				return NewCreature("Invalid activation", "", 1, 1, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), ActivationIf(nil))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "activation condition inspected",
+			Factory: func() Card {
+				ability := Activate(Costs(), GainLifeFor(You, Fixed(1)), ActivationIf(AllConditions()))
+				return NewCreature("Invalid condition", "", 1, 1, WithAbility(ability))
+			},
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_attached_tap_cost_test.go ---
@@ -624,14 +708,17 @@ func TestTapAttachedPermanentCostStaleAttachmentAndRollback(t *testing.T) {
 }
 
 func TestTapAttachedPermanentCostDeclaration(t *testing.T) {
-	valid := NewAura("Valid", "", WithAbility(Activate(Costs(TapAttachedPermanentCost()), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	invalid := NewInstant("Invalid", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(TapAttachedPermanentCost()))
-	if err := ValidateCardDefinition(invalid.Name(), invalid); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("invalid cost validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid aura",
+			Card: NewAura("Valid", "", WithAbility(Activate(Costs(TapAttachedPermanentCost()), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "invalid instant additional cost",
+			Card:          NewInstant("Invalid", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(TapAttachedPermanentCost())),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestTapAttachedPermanentCostAbsentAndClone(t *testing.T) {
@@ -771,16 +858,28 @@ func TestCapturedUntapAbsentAndValidation(t *testing.T) {
 		t.Fatal("absent reference installed restriction")
 	}
 	player := BindPlayer("player")
-	for _, body := range []ResolvingEffect{
-		SkipNextUntapOf(nil, You), SkipNextUntapOf(This, nil),
-		SkipNextUntapOf(This, FromPlayer(player)),
-		SkipNextUntapOf(DeclarePermanentTarget("target", IsCreature), You),
-	} {
-		card := NewInstant("Invalid", "", WithAbility(Spell(body)))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid definition")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil subject",
+			Card:    NewInstant("Invalid", "", WithAbility(Spell(SkipNextUntapOf(nil, You)))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil player",
+			Card:    NewInstant("Invalid", "", WithAbility(Spell(SkipNextUntapOf(This, nil)))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound player",
+			Card:    NewInstant("Invalid", "", WithAbility(Spell(SkipNextUntapOf(This, FromPlayer(player))))),
+			WantErr: true,
+		},
+		{
+			Name:    "undeclared target",
+			Card:    NewInstant("Invalid", "", WithAbility(Spell(SkipNextUntapOf(DeclarePermanentTarget("target", IsCreature), You)))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestCapturedUntapTargetSourceExitAndExistingRestriction(t *testing.T) {
@@ -879,16 +978,27 @@ func TestStaticGrantedActivation(t *testing.T) {
 
 func TestStaticGrantedActivationValidation(t *testing.T) {
 	saved := BindPermanent("outside")
-	for _, body := range []ResolvingEffect{Regenerate(From(saved)), Regenerate(DeclarePermanentTarget("undeclared", IsCreature)), nil} {
-		card := NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsCreature), Costs(), body))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "abilities[0]") {
-			t.Fatalf("missing grant diagnostic: %v", err)
-		}
-	}
-	card := NewEnchantment("Valid grant", "", WithAbility(Static(GrantEachActivatedAbility(WithoutPermanent(MatchingPermanents(IsCreature), This), Costs(), Regenerate(This)))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "unbound permanent",
+			Card:          NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsCreature), Costs(), Regenerate(From(saved)))))),
+			WantErrSubstr: "abilities[0]",
+		},
+		{
+			Name:          "undeclared target",
+			Card:          NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsCreature), Costs(), Regenerate(DeclarePermanentTarget("undeclared", IsCreature)))))),
+			WantErrSubstr: "abilities[0]",
+		},
+		{
+			Name:          "nil effect",
+			Card:          NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsCreature), Costs(), nil)))),
+			WantErrSubstr: "abilities[0]",
+		},
+		{
+			Name: "valid grant",
+			Card: NewEnchantment("Valid grant", "", WithAbility(Static(GrantEachActivatedAbility(WithoutPermanent(MatchingPermanents(IsCreature), This), Costs(), Regenerate(This))))),
+		},
+	})
 }
 
 func TestStaticGrantedManaActivation(t *testing.T) {
@@ -974,32 +1084,58 @@ func TestLegacyPaymentDefinitionValidation(t *testing.T) {
 	payment := func(paid, unpaid Effect) Effect {
 		return IfPlayerPays(SelectController(), ManaCostOf("{1}"), "Pay?", paid, unpaid)
 	}
-	tests := []struct {
-		name    string
-		effect  Effect
-		path    string
-		message string
-	}{
-		{"paid target", payment(Destroy(target), nil), ".paid.subject", "target binding requires"},
-		{"unpaid target", UnlessTargetPays(SelectController(), ManaCostOf("{1}"), "Pay?", Destroy(target)), ".unpaid.subject", "target binding requires"},
-		{"paid saved read", payment(Destroy(From(saved)), nil), ".paid.subject", "producer before this read"},
-		{"unpaid saved read", payment(nil, Destroy(From(saved))), ".unpaid.subject", "producer before this read"},
-		{"sibling assignment", payment(Snapshot(This, saved), Destroy(From(saved))), ".unpaid.subject", "producer before this read"},
-		{"escaped assignment", CompositeEffects("sequence", payment(Snapshot(This, saved), nil), Destroy(From(saved))), ".effects[1].subject", "producer before this read"},
-		{"nil payer", IfPlayerPays(nil, ManaCostOf("{1}"), "Pay?", nil, nil), ".payer", "non-nil expression"},
-		{"nil cost", IfPlayerPays(SelectController(), nil, "Pay?", nil, nil), ".cost", "non-nil expression"},
-		{"typed nil paid", payment(missing, nil), ".paid", "non-nil expression"},
-		{"typed nil unpaid", payment(nil, missing), ".unpaid", "non-nil expression"},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			card := NewArtifact("Payment", "", WithAbility(NewActivatedAbility(test.effect, ManaCostOf("{0}"))))
-			err := ValidateCardDefinition("Payment", card)
-			if err == nil || !strings.Contains(err.Error(), "Payment: abilities[0].") || !strings.Contains(err.Error(), test.path) || !strings.Contains(err.Error(), test.message) {
-				t.Fatalf("diagnostic = %v, want path %s and %s", err, test.path, test.message)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "paid target",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(Destroy(target), nil), ManaCostOf("{0}")))),
+			WantErrSubstr: "target binding requires",
+		},
+		{
+			Name:          "unpaid target",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(UnlessTargetPays(SelectController(), ManaCostOf("{1}"), "Pay?", Destroy(target)), ManaCostOf("{0}")))),
+			WantErrSubstr: "target binding requires",
+		},
+		{
+			Name:          "paid saved read",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(Destroy(From(saved)), nil), ManaCostOf("{0}")))),
+			WantErrSubstr: "producer before this read",
+		},
+		{
+			Name:          "unpaid saved read",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(nil, Destroy(From(saved))), ManaCostOf("{0}")))),
+			WantErrSubstr: "producer before this read",
+		},
+		{
+			Name:          "sibling assignment",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(Snapshot(This, saved), Destroy(From(saved))), ManaCostOf("{0}")))),
+			WantErrSubstr: "producer before this read",
+		},
+		{
+			Name:          "escaped assignment",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(CompositeEffects("sequence", payment(Snapshot(This, saved), nil), Destroy(From(saved))), ManaCostOf("{0}")))),
+			WantErrSubstr: "producer before this read",
+		},
+		{
+			Name:          "nil payer",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(IfPlayerPays(nil, ManaCostOf("{1}"), "Pay?", nil, nil), ManaCostOf("{0}")))),
+			WantErrSubstr: "non-nil expression",
+		},
+		{
+			Name:          "nil cost",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(IfPlayerPays(SelectController(), nil, "Pay?", nil, nil), ManaCostOf("{0}")))),
+			WantErrSubstr: "non-nil expression",
+		},
+		{
+			Name:          "typed nil paid",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(missing, nil), ManaCostOf("{0}")))),
+			WantErrSubstr: "non-nil expression",
+		},
+		{
+			Name:          "typed nil unpaid",
+			Card:          NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(nil, missing), ManaCostOf("{0}")))),
+			WantErrSubstr: "non-nil expression",
+		},
+	})
 }
 
 func TestLegacyPaymentDefinitionValidScopes(t *testing.T) {
@@ -1007,26 +1143,34 @@ func TestLegacyPaymentDefinitionValidScopes(t *testing.T) {
 	payment := func(paid, unpaid Effect) Effect {
 		return IfPlayerPays(SelectController(), ManaCostOf("{1}"), "Pay?", paid, unpaid)
 	}
-	for _, effect := range []Effect{
-		payment(nil, nil),
-		payment(Sequence(Snapshot(This, saved), Destroy(From(saved))), nil),
-		payment(nil, Sequence(Snapshot(This, saved), Destroy(From(saved)))),
-		CompositeEffects("outer snapshot", Snapshot(This, saved), payment(Destroy(From(saved)), Destroy(From(saved)))),
-	} {
-		card := NewArtifact("Payment", "", WithAbility(NewActivatedAbility(effect, ManaCostOf("{0}"))))
-		if err := ValidateCardDefinition("Payment", card); err != nil {
-			t.Fatal(err)
-		}
-	}
 	target := DeclarePermanentTarget("creature", IsCreature)
-	card := NewInstant("Payment", "", WithAbility(Spell(payment(Destroy(target), nil), WithTargets(target))))
-	if err := ValidateCardDefinition("Payment", card); err != nil {
-		t.Fatal(err)
-	}
-	bad := NewInstant("Payment", "", WithAbility(Spell(payment(Sacrifice(This), nil))))
-	if err := ValidateCardDefinition("Payment", bad); err == nil || !strings.Contains(err.Error(), ".paid.subject: battlefield source") {
-		t.Fatalf("spell source diagnostic = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "nil branches",
+			Card: NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(nil, nil), ManaCostOf("{0}")))),
+		},
+		{
+			Name: "paid sequence snapshot",
+			Card: NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(Sequence(Snapshot(This, saved), Destroy(From(saved))), nil), ManaCostOf("{0}")))),
+		},
+		{
+			Name: "unpaid sequence snapshot",
+			Card: NewArtifact("Payment", "", WithAbility(NewActivatedAbility(payment(nil, Sequence(Snapshot(This, saved), Destroy(From(saved)))), ManaCostOf("{0}")))),
+		},
+		{
+			Name: "outer snapshot",
+			Card: NewArtifact("Payment", "", WithAbility(NewActivatedAbility(CompositeEffects("outer snapshot", Snapshot(This, saved), payment(Destroy(From(saved)), Destroy(From(saved)))), ManaCostOf("{0}")))),
+		},
+		{
+			Name: "declared target",
+			Card: NewInstant("Payment", "", WithAbility(Spell(payment(Destroy(target), nil), WithTargets(target)))),
+		},
+		{
+			Name:          "spell source invalid",
+			Card:          NewInstant("Payment", "", WithAbility(Spell(payment(Sacrifice(This), nil)))),
+			WantErrSubstr: ".paid.subject: battlefield source",
+		},
+	})
 }
 
 // --- from composable_mana_choice_test.go ---
@@ -1082,12 +1226,18 @@ func TestAddManaOfAnyOneColorPlanningAndRollback(t *testing.T) {
 }
 
 func TestAddManaOfAnyOneColorValidation(t *testing.T) {
-	for _, amount := range []ResolutionValue{nil, FromNumber(BindNumber("missing"))} {
-		card := NewSorcery("Invalid", "", Spell(AddManaOfAnyOneColor(amount)))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid amount accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil amount",
+			Card:    NewSorcery("Invalid", "", Spell(AddManaOfAnyOneColor(nil))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound number",
+			Card:    NewSorcery("Invalid", "", Spell(AddManaOfAnyOneColor(FromNumber(BindNumber("missing"))))),
+			WantErr: true,
+		},
+	})
 	ability := Activate(Costs(TapCost(This)), AddManaOfAnyOneColor(PowerOf(This)))
 	if !IsActivatedManaAbility(ability) || ManaProductionsForAbility(ability) != nil {
 		t.Fatal("dynamic amount was misclassified or advertised to planner")
@@ -1165,20 +1315,28 @@ func TestAddManaToPlayerAbsenceAndValidation(t *testing.T) {
 	if got := a.ManaPool().Count(Green); got != 0 {
 		t.Fatalf("absent recipient added %d mana", got)
 	}
-	for _, effect := range []ResolvingEffect{
-		AddManaToPlayer(nil, Green, Fixed(1)),
-		AddManaToPlayer(You, AnyColor, Fixed(1)),
-		AddManaToPlayer(You, Green, nil),
-	} {
-		card := NewSorcery("Bad", "", Spell(effect))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid mana recipient action")
-		}
-	}
-	card := NewSorcery("Unbound", "", Spell(AddManaToPlayer(FromPlayer(BindPlayer("missing")), Green, Fixed(1))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("accepted unbound player")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil player",
+			Card:    NewSorcery("Bad", "", Spell(AddManaToPlayer(nil, Green, Fixed(1)))),
+			WantErr: true,
+		},
+		{
+			Name:    "any color not allowed",
+			Card:    NewSorcery("Bad", "", Spell(AddManaToPlayer(You, AnyColor, Fixed(1)))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil amount",
+			Card:    NewSorcery("Bad", "", Spell(AddManaToPlayer(You, Green, nil))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound player",
+			Card:    NewSorcery("Unbound", "", Spell(AddManaToPlayer(FromPlayer(BindPlayer("missing")), Green, Fixed(1)))),
+			WantErr: true,
+		},
+	})
 	if got := b.ManaPool().Count(Green); got != 0 {
 		t.Fatalf("other player received %d mana", got)
 	}
@@ -1237,33 +1395,43 @@ func TestLandManaTypesCapturedForTriggeredMana(t *testing.T) {
 
 func TestLandManaTypesDeclaration(t *testing.T) {
 	types := BindManaTypes("types")
-	for _, pattern := range []landTappedForManaPattern{
-		LandTappedForMana().WithManaTypes(nil),
-		LandTappedForMana().WithManaTypes(BindManaTypes("")),
-		LandTappedForMana().WithManaTypes(types).WithManaTypes(types),
-	} {
-		card := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern,
-			AddManaOfProducedTypeToPlayer(You, types, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid type binding")
-		}
-	}
-	card := NewEnchantment("Unbound", "", WithAbility(WhenEvent(LandTappedForMana(),
-		AddManaOfProducedTypeToPlayer(You, types, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("accepted unbound type set")
-	}
-	for _, effect := range []ResolvingEffect{
-		AddManaOfProducedTypeToPlayer(nil, types, Fixed(1)),
-		AddManaOfProducedTypeToPlayer(You, nil, Fixed(1)),
-		AddManaOfProducedTypeToPlayer(You, types, nil),
-	} {
-		card := NewEnchantment("Bad action", "", WithAbility(WhenEvent(
-			LandTappedForMana().WithManaTypes(types), effect)))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid mana action")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil mana types",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(LandTappedForMana().WithManaTypes(nil), AddManaOfProducedTypeToPlayer(You, types, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "empty mana types name",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(LandTappedForMana().WithManaTypes(BindManaTypes("")), AddManaOfProducedTypeToPlayer(You, types, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate mana types",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(LandTappedForMana().WithManaTypes(types).WithManaTypes(types), AddManaOfProducedTypeToPlayer(You, types, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound type set",
+			Card:    NewEnchantment("Unbound", "", WithAbility(WhenEvent(LandTappedForMana(), AddManaOfProducedTypeToPlayer(You, types, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil player in effect",
+			Card:    NewEnchantment("Bad action", "", WithAbility(WhenEvent(LandTappedForMana().WithManaTypes(types), AddManaOfProducedTypeToPlayer(nil, types, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil types in effect",
+			Card:    NewEnchantment("Bad action", "", WithAbility(WhenEvent(LandTappedForMana().WithManaTypes(types), AddManaOfProducedTypeToPlayer(You, nil, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil amount in effect",
+			Card:    NewEnchantment("Bad action", "", WithAbility(WhenEvent(LandTappedForMana().WithManaTypes(types), AddManaOfProducedTypeToPlayer(You, types, nil)))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestLandManaTypesMultiTypeChoiceAndClone(t *testing.T) {
@@ -1471,16 +1639,22 @@ func TestMillCostMultipleComponentsRecheck(t *testing.T) {
 }
 
 func TestMillCostDeclaration(t *testing.T) {
-	valid := NewCreature("Valid", "", 1, 1, WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(MillCost(2)), Sacrifice(This)))))
-	if err := ValidateCardDefinition("Valid", valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, n := range []int{-1, 0} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(MillCost(n)), Sacrifice(This)))))
-		if err := ValidateCardDefinition("Invalid", card); err == nil || !strings.Contains(err.Error(), "positive") {
-			t.Fatalf("count %d: validation = %v", n, err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid mill cost",
+			Card: NewCreature("Valid", "", 1, 1, WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(MillCost(2)), Sacrifice(This))))),
+		},
+		{
+			Name:          "negative mill count",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(MillCost(-1)), Sacrifice(This))))),
+			WantErrSubstr: "positive",
+		},
+		{
+			Name:          "zero mill count",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(At(YourUpkeep, UnlessPaid(You, Costs(MillCost(0)), Sacrifice(This))))),
+			WantErrSubstr: "positive",
+		},
+	})
 }
 
 // --- from composable_optional_payment_availability_test.go ---
@@ -1553,15 +1727,20 @@ func TestUnlessPaidPerDrawnCardDeclaration(t *testing.T) {
 		ForEachSavedCard(cards, member, UnlessPaid(You,
 			Costs(SacrificeMatchingIncludingSourceCost(AnyPermanent, "Sacrifice a permanent")),
 			Discard(You, Fixed(1)))))
-	for _, card := range []*BaseCard{
-		NewInstant("Draw spell", "", Spell(body)),
-		NewArtifact("Draw artifact", "", WithAbility(Activate(Costs(), body))),
-		NewArtifact("Draw trigger", "", WithAbility(WhenEvent(Enters(This), body))),
-	} {
-		if err := ValidateCardDefinition(card.Name(), card); err != nil {
-			t.Fatal(err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "draw spell",
+			Card: NewInstant("Draw spell", "", Spell(body)),
+		},
+		{
+			Name: "draw artifact",
+			Card: NewArtifact("Draw artifact", "", WithAbility(Activate(Costs(), body))),
+		},
+		{
+			Name: "draw trigger",
+			Card: NewArtifact("Draw trigger", "", WithAbility(WhenEvent(Enters(This), body))),
+		},
+	})
 }
 
 // --- from composable_optional_payment_result_test.go ---
@@ -1616,34 +1795,45 @@ func TestOptionalPaymentResultDeclinedAndFailure(t *testing.T) {
 	if a.Life() != 20 {
 		t.Fatalf("declined or impossible payment changed life: %d", a.Life())
 	}
-	if err := ValidateCardDefinition("Nil", NewArtifact("Nil", "", WithAbility(Activate(Costs(
-		OptionalCostInto(LifePayCost(1), "Pay?", nil)), GainLifeFor(You, Fixed(1)))))); err == nil || !strings.Contains(err.Error(), "non-nil") {
-		t.Fatalf("nil binding validation = %v", err)
-	}
-	if err := ValidateCardDefinition("Wrong", NewArtifact("Wrong", "", WithAbility(Activate(Costs(
-		OptionalCostInto(LifePayCost(1), "Pay?", paid)), IfCardHasType(FromCard(BindCard("card")), TypeCreature, GainLifeFor(You, Fixed(1))))))); err == nil {
-		t.Fatal("unbound card was accepted")
-	}
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{OptionalCostInto(LifePayCost(1), "", paid), "prompt"},
-		{OptionalCostInto(LifePayCost(1), "Pay?", BindNumber("")), "name"},
-		{OptionalCostInto(RevealFromHandCostWithCard(IsCreatureCard, "Reveal", BindCard("card")), "Reveal?", paid), "captured"},
-		{OptionalCostInto(EitherCost(LifePayCost(1), LifePayCost(2)), "Pay?", paid), "direct"},
-	} {
-		card := NewArtifact("Invalid", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("validation = %v; want %s", err, tc.want)
-		}
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		OptionalCostInto(LifePayCost(1), "First?", paid),
-		OptionalCostInto(LifePayCost(1), "Second?", paid)), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate binding = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Nil", "", WithAbility(Activate(Costs(OptionalCostInto(LifePayCost(1), "Pay?", nil)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:    "unbound card",
+			Card:    NewArtifact("Wrong", "", WithAbility(Activate(Costs(OptionalCostInto(LifePayCost(1), "Pay?", paid)), IfCardHasType(FromCard(BindCard("card")), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+			WantErr: true,
+		},
+		{
+			Name:          "missing prompt",
+			Card:          NewArtifact("Invalid", "", WithAbility(Activate(Costs(OptionalCostInto(LifePayCost(1), "", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "prompt",
+		},
+		{
+			Name:          "empty binding name",
+			Card:          NewArtifact("Invalid", "", WithAbility(Activate(Costs(OptionalCostInto(LifePayCost(1), "Pay?", BindNumber(""))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "nested captured cost",
+			Card:          NewArtifact("Invalid", "", WithAbility(Activate(Costs(OptionalCostInto(RevealFromHandCostWithCard(IsCreatureCard, "Reveal", BindCard("card")), "Reveal?", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "captured",
+		},
+		{
+			Name:          "nested direct choice cost",
+			Card:          NewArtifact("Invalid", "", WithAbility(Activate(Costs(OptionalCostInto(EitherCost(LifePayCost(1), LifePayCost(2)), "Pay?", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "direct",
+		},
+		{
+			Name: "duplicate binding",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				OptionalCostInto(LifePayCost(1), "First?", paid),
+				OptionalCostInto(LifePayCost(1), "Second?", paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "duplicate",
+		},
+	})
 }
 
 func TestOptionalPaymentResultPendingAndRollback(t *testing.T) {
@@ -1747,30 +1937,34 @@ func TestPaidSacrificeCardVisitAndValidation(t *testing.T) {
 		t.Fatal("saved card followed a later zone visit")
 	}
 
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", paid), ""},
-		{SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", nil), "non-nil"},
-		{SacrificeMatchingCostWithCard(IsCreature, "", paid), "text"},
-	} {
-		card := NewInstant("Offering", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))), WithAdditionalCost(tc.cost))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	missing := NewInstant("Missing", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing payment producer: %v", err)
-	}
-	duplicate := NewInstant("Duplicate", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))),
-		WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", paid)),
-		WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", paid)))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate payment producer: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid sacrifice matching cost with card",
+			Card: NewInstant("Offering", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))), WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", paid))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewInstant("Offering", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))), WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", nil))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty prompt text",
+			Card:          NewInstant("Offering", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))), WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "", paid))),
+			WantErrSubstr: "text",
+		},
+		{
+			Name:          "missing payment producer",
+			Card:          NewInstant("Missing", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate payment producer",
+			Card: NewInstant("Duplicate", "", WithAbility(Spell(ReturnCardToHand(FromCard(paid)))),
+				WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", paid)),
+				WithAdditionalCost(SacrificeMatchingCostWithCard(IsCreature, "Sacrifice a creature", paid))),
+			WantErrSubstr: "duplicate",
+		},
+	})
 }
 
 func TestPaidSacrificeCardFailedPayment(t *testing.T) {
@@ -1923,23 +2117,22 @@ func TestPaidCounterChoiceRollbackAndValidation(t *testing.T) {
 		t.Fatal("phased-out source paid cost")
 	}
 
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"nil", RemoveAnyCountersCost(Charge, nil), "non-nil"},
-		{"unnamed", RemoveAnyCountersCost(Charge, BindNumber("")), "name"},
-		{"valid", RemoveAnyCountersCost(Charge, paid), ""},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Test", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, FromNumber(paid)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveAnyCountersCost(Charge, nil)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveAnyCountersCost(Charge, BindNumber(""))), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name: "valid",
+			Card: NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveAnyCountersCost(Charge, paid)), GainLifeFor(You, FromNumber(paid))))),
+		},
+	})
 }
 
 func TestPaidCounterChoiceZeroAndInvalid(t *testing.T) {
@@ -2012,27 +2205,27 @@ func TestPaidDiscardCardActivationAndClone(t *testing.T) {
 
 func TestPaidDiscardCardDefinition(t *testing.T) {
 	paid := BindCard("discarded")
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{DiscardCardCostInto(paid), ""},
-		{DiscardCardCostInto(nil), "non-nil"},
-	} {
-		card := NewArtifact("Edge", "", WithAbility(Activate(Costs(tc.cost), IfCardHasType(FromCard(paid), TypeLand, GainLifeFor(You, Fixed(2))))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	missing := NewArtifact("Missing", "", WithAbility(Activate(Costs(), IfCardHasType(FromCard(paid), TypeLand, GainLifeFor(You, Fixed(2))))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing producer: %v", err)
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(DiscardCardCostInto(paid), DiscardCardCostInto(paid)), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate producer: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid discard cost",
+			Card: NewArtifact("Edge", "", WithAbility(Activate(Costs(DiscardCardCostInto(paid)), IfCardHasType(FromCard(paid), TypeLand, GainLifeFor(You, Fixed(2)))))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Edge", "", WithAbility(Activate(Costs(DiscardCardCostInto(nil)), IfCardHasType(FromCard(paid), TypeLand, GainLifeFor(You, Fixed(2)))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "missing producer",
+			Card:          NewArtifact("Missing", "", WithAbility(Activate(Costs(), IfCardHasType(FromCard(paid), TypeLand, GainLifeFor(You, Fixed(2)))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "duplicate producer",
+			Card:          NewArtifact("Duplicate", "", WithAbility(Activate(Costs(DiscardCardCostInto(paid), DiscardCardCostInto(paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "duplicate",
+		},
+	})
 }
 
 func TestPaidDiscardCardReplacementAndRollback(t *testing.T) {
@@ -2209,28 +2402,35 @@ func TestPaidExileCardVisitAndRollback(t *testing.T) {
 
 func TestPaidExileCardDeclaration(t *testing.T) {
 	paid := BindCard("paid")
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Exile", paid), ""},
-		{ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Exile", nil), "non-nil"},
-		{ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Exile", BindCard("")), "name"},
-		{ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "", paid), "text"},
-	} {
-		card := NewArtifact("Synthetic", "", WithAbility(Activate(Costs(tc.cost), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1))))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "One", paid),
-		ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Two", paid)),
-		IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate binding: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Exile", paid)), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Exile", nil)), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed binding",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Exile", BindCard(""))), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "empty text",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "", paid)), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+			WantErrSubstr: "text",
+		},
+		{
+			Name: "duplicate",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "One", paid),
+				ExileMatchingCardFromGraveyardCostWithCard(IsCreatureCard, "Two", paid)),
+				IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+			WantErrSubstr: "duplicate",
+		},
+	})
 }
 
 // --- from composable_paid_exile_cards_test.go ---
@@ -2282,34 +2482,44 @@ func TestPaidGraveyardExileCardsActivationAndVisits(t *testing.T) {
 
 func TestPaidGraveyardExileCardsDeclaration(t *testing.T) {
 	paid := BindCards("paid")
-	valid := NewArtifact("Valid", "", WithAbility(Activate(Costs(ExileFromGraveyardCostWithCards(2, paid)), GainLifeFor(You, CountCards(FromCards(paid))))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{ExileFromGraveyardCostWithCards(1, nil), "non-nil"},
-		{ExileFromGraveyardCostWithCards(1, BindCards("")), "name"},
-		{ExileFromGraveyardCostWithCards(-1, paid), "negative"},
-		{EitherCost(ExileFromGraveyardCostWithCards(1, paid), LifePayCost(1)), "direct cost"},
-	} {
-		card := NewArtifact("Bad", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		ExileFromGraveyardCostWithCards(0, paid), ExileFromGraveyardCostWithCards(0, paid)),
-		GainLifeFor(You, CountCards(FromCards(paid))))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate validation = %v", err)
-	}
-	unbound := NewInstant("Unbound", "", Spell(GainLifeFor(You, CountCards(FromCards(paid)))))
-	if err := ValidateCardDefinition(unbound.Name(), unbound); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("unbound validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid exile cards",
+			Card: NewArtifact("Valid", "", WithAbility(Activate(Costs(ExileFromGraveyardCostWithCards(2, paid)), GainLifeFor(You, CountCards(FromCards(paid)))))),
+		},
+		{
+			Name:          "nil cards binding",
+			Card:          NewArtifact("Bad", "", WithAbility(Activate(Costs(ExileFromGraveyardCostWithCards(1, nil)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty name cards binding",
+			Card:          NewArtifact("Bad", "", WithAbility(Activate(Costs(ExileFromGraveyardCostWithCards(1, BindCards(""))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "negative count",
+			Card:          NewArtifact("Bad", "", WithAbility(Activate(Costs(ExileFromGraveyardCostWithCards(-1, paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "negative",
+		},
+		{
+			Name:          "either cost wrapping",
+			Card:          NewArtifact("Bad", "", WithAbility(Activate(Costs(EitherCost(ExileFromGraveyardCostWithCards(1, paid), LifePayCost(1))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "direct cost",
+		},
+		{
+			Name: "duplicate binding",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				ExileFromGraveyardCostWithCards(0, paid), ExileFromGraveyardCostWithCards(0, paid)),
+				GainLifeFor(You, CountCards(FromCards(paid)))))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "unbound cards",
+			Card:          NewInstant("Unbound", "", Spell(GainLifeFor(You, CountCards(FromCards(paid))))),
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestPaidGraveyardExileCardsSpellCopyAndRollback(t *testing.T) {
@@ -2398,39 +2608,45 @@ func TestExiledGraveyardCostManaValueActivation(t *testing.T) {
 
 func TestExiledGraveyardCostManaValueDeclaration(t *testing.T) {
 	paid := BindNumber("paid")
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile a creature card", paid), ""},
-		{"nil", ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile a creature card", nil), "non-nil"},
-		{"unnamed", ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile a creature card", BindNumber("")), "name"},
-		{"text", ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "", paid), "text"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Synthetic", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, FromNumber(paid)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile one", paid),
-		ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile two", paid)), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate validation = %v", err)
-	}
-	missing := NewArtifact("Missing", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing producer validation = %v", err)
-	}
-	branch := NewArtifact("Branch", "", WithAbility(Activate(Costs(), IfPaid(You,
-		Costs(ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile", paid)), GainLifeFor(You, FromNumber(paid))))))
-	if err := ValidateCardDefinition(branch.Name(), branch); err == nil || !strings.Contains(err.Error(), "activated ability") {
-		t.Fatalf("branch validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile a creature card", paid)), GainLifeFor(You, FromNumber(paid))))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile a creature card", nil)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed binding",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile a creature card", BindNumber(""))), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "empty text",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "", paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "text",
+		},
+		{
+			Name: "duplicate binding",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile one", paid),
+				ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile two", paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "missing producer",
+			Card:          NewArtifact("Missing", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "resolution cost requires activated ability",
+			Card: NewArtifact("Branch", "", WithAbility(Activate(Costs(), IfPaid(You,
+				Costs(ExileMatchingCardFromGraveyardCostInto(IsCreatureCard, "Exile", paid)), GainLifeFor(You, FromNumber(paid)))))),
+			WantErrSubstr: "activated ability",
+		},
+	})
 }
 
 func TestExiledGraveyardCostManaValueStaleChoiceAndFailedPayment(t *testing.T) {
@@ -2531,37 +2747,43 @@ func TestFixedCounterPaymentRejectsChangedSource(t *testing.T) {
 }
 
 func TestFixedCounterPaymentDeclaration(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", RemoveCountersCostInto(Charge, 1, BindNumber("paid")), ""},
-		{"nil", RemoveCountersCostInto(Charge, 1, nil), "non-nil"},
-		{"negative", RemoveCountersCostInto(Charge, -1, BindNumber("paid")), "negative"},
-		{"unnamed", RemoveCountersCostInto(Charge, 1, BindNumber("")), "name"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Test", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
 	paid := BindNumber("paid")
-	card := NewArtifact("Invalid", "", WithAbility(Activate(Costs(RemoveCountersCostInto(Charge, 1, paid), RemoveCountersCostInto(Charge, 1, paid)), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("duplicate producer accepted")
-	}
-	missing := NewArtifact("Missing", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil {
-		t.Fatal("unproduced binding accepted")
-	}
-	spell := NewInstant("Spell", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(RemoveCountersCostInto(Charge, 1, paid)))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil {
-		t.Fatal("battlefield counter payment accepted for a spell")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveCountersCostInto(Charge, 1, paid)), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveCountersCostInto(Charge, 1, nil)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "negative count",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveCountersCostInto(Charge, -1, paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "negative",
+		},
+		{
+			Name:          "unnamed binding",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveCountersCostInto(Charge, 1, BindNumber(""))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate producer",
+			Card:          NewArtifact("Invalid", "", WithAbility(Activate(Costs(RemoveCountersCostInto(Charge, 1, paid), RemoveCountersCostInto(Charge, 1, paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "missing producer",
+			Card:          NewArtifact("Missing", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "spell battlefield counter payment",
+			Card:          NewInstant("Spell", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(RemoveCountersCostInto(Charge, 1, paid))),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestFixedCounterPaymentZeroAndInterleavedActivations(t *testing.T) {
@@ -2643,25 +2865,28 @@ func TestPaidLifeAmountBoundaryAndFailure(t *testing.T) {
 }
 
 func TestPaidLifeAmountDefinition(t *testing.T) {
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{LifePayCostInto(2, BindNumber("paid")), ""},
-		{LifePayCostInto(2, nil), "non-nil"},
-		{LifePayCostInto(-1, BindNumber("paid")), "negative"},
-		{LifePayCostInto(2, BindNumber("")), "name"},
-	} {
-		paid := BindNumber("paid")
-		if c, ok := tc.cost.(*lifePayCost); ok && c.paid != nil {
-			paid = c.paid
-		}
-		card := NewArtifact("Source", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, FromNumber(paid)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
+	paid := BindNumber("paid")
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Source", "", WithAbility(Activate(Costs(LifePayCostInto(2, paid)), GainLifeFor(You, FromNumber(paid))))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Source", "", WithAbility(Activate(Costs(LifePayCostInto(2, nil)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "negative amount",
+			Card:          NewArtifact("Source", "", WithAbility(Activate(Costs(LifePayCostInto(-1, paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "negative",
+		},
+		{
+			Name:          "empty binding name",
+			Card:          NewArtifact("Source", "", WithAbility(Activate(Costs(LifePayCostInto(2, BindNumber(""))), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "name",
+		},
+	})
 }
 
 func TestPaidLifeAmountPendingActivationsAndSpell(t *testing.T) {
@@ -2699,20 +2924,23 @@ func TestPaidLifeAmountPendingActivationsAndSpell(t *testing.T) {
 
 func TestPaidLifeAmountInvalidDeclarations(t *testing.T) {
 	b := BindNumber("paid")
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"duplicate", NewArtifact("Duplicate", "", WithAbility(Activate(Costs(LifePayCostInto(1, b), LifePayCostInto(1, b)), GainLifeFor(You, FromNumber(b))))), "duplicate"},
-		{"branch", NewArtifact("Branch", "", WithAbility(Activate(Costs(), IfPaid(You, Costs(LifePayCostInto(1, b)), GainLifeFor(You, FromNumber(b)))))), "requires an activated ability"},
-		{"unbound", NewArtifact("Unbound", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(b))))), "producer"},
-	} {
-		err := ValidateCardDefinition(tc.card.Name(), tc.card)
-		if err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("%s: validation = %v", tc.name, err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "duplicate",
+			Card:          NewArtifact("Duplicate", "", WithAbility(Activate(Costs(LifePayCostInto(1, b), LifePayCostInto(1, b)), GainLifeFor(You, FromNumber(b))))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "branch",
+			Card:          NewArtifact("Branch", "", WithAbility(Activate(Costs(), IfPaid(You, Costs(LifePayCostInto(1, b)), GainLifeFor(You, FromNumber(b)))))),
+			WantErrSubstr: "requires an activated ability",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewArtifact("Unbound", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(b))))),
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestPaidLifeAmountTotalCostFailure(t *testing.T) {
@@ -2767,24 +2995,27 @@ func TestPaidSacrificeManaValuePendingActivations(t *testing.T) {
 
 func TestPaidSacrificeManaValueValidationAndRollback(t *testing.T) {
 	paid := BindNumber("paid")
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", SacrificeMatchingCostWithManaValue(IsArtifact, "Sacrifice an artifact", paid), ""},
-		{"nil", SacrificeMatchingCostWithManaValue(IsArtifact, "Sacrifice an artifact", nil), "non-nil"},
-		{"empty", SacrificeMatchingCostWithManaValue(IsArtifact, "Sacrifice an artifact", BindNumber("")), "name"},
-		{"no text", SacrificeMatchingCostWithManaValue(IsArtifact, "", paid), "text"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Synthetic", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, FromNumber(paid)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeMatchingCostWithManaValue(IsArtifact, "Sacrifice an artifact", paid)), GainLifeFor(You, FromNumber(paid))))),
+		},
+		{
+			Name:          "nil",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeMatchingCostWithManaValue(IsArtifact, "Sacrifice an artifact", nil)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeMatchingCostWithManaValue(IsArtifact, "Sacrifice an artifact", BindNumber(""))), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "no text",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeMatchingCostWithManaValue(IsArtifact, "", paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "text",
+		},
+	})
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	artifact := NewArtifact("Payment", "{3}")
@@ -2874,30 +3105,42 @@ func TestPaidMillCountUsesCommittedAmountAndFrames(t *testing.T) {
 
 func TestPaidMillCountRollbackAndDeclaration(t *testing.T) {
 	paid := BindNumber("milled")
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{MillCostInto(2, paid), ""},
-		{MillCostInto(0, paid), "positive"},
-		{MillCostInto(2, nil), "non-nil"},
-		{MillCostInto(2, BindNumber("")), "name"},
-		{EitherCost(MillCostInto(2, paid), LifePayCost(1)), "direct cost"},
-	} {
-		card := NewArtifact("Test", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(MillCostInto(1, paid), MillCostInto(1, paid)), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil {
-		t.Fatal("duplicate producer accepted")
-	}
-	optional := NewArtifact("Optional", "", WithAbility(Activate(Costs(), IfPaid(You, Costs(MillCostInto(1, paid)), GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(optional.Name(), optional); err == nil {
-		t.Fatal("resolution-time capture accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Test", "", WithAbility(Activate(Costs(MillCostInto(2, paid)), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "zero count",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(MillCostInto(0, paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "positive",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(MillCostInto(2, nil)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed binding",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(MillCostInto(2, BindNumber(""))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "either cost wrapping",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(EitherCost(MillCostInto(2, paid), LifePayCost(1))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "direct cost",
+		},
+		{
+			Name:          "duplicate producer",
+			Card:          NewArtifact("Duplicate", "", WithAbility(Activate(Costs(MillCostInto(1, paid), MillCostInto(1, paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:    "resolution time capture",
+			Card:    NewArtifact("Optional", "", WithAbility(Activate(Costs(), IfPaid(You, Costs(MillCostInto(1, paid)), GainLifeFor(You, Fixed(1)))))),
+			WantErr: true,
+		},
+	})
 	a := NewBasePlayer("A")
 	g := NewGame(a, NewBasePlayer("B"))
 	for range 2 {
@@ -3001,36 +3244,41 @@ func TestPaidPermanentFailedCommitAndDefinition(t *testing.T) {
 			g.RemoveFromBattlefield(p)
 		}
 	}
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid), ""},
-		{SacrificeMatchingCostWithPermanent(IsCreature, "", paid), "text"},
-		{SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", nil), "non-nil"},
-	} {
-		card := NewInstant("Test", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))), WithAdditionalCost(tc.cost))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	missing := NewInstant("Missing", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing binding validation = %v", err)
-	}
-	duplicate := NewInstant("Duplicate", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))),
-		WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid)),
-		WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid)))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate binding validation = %v", err)
-	}
-	resolutionCost := NewArtifact("Invalid", "", WithAbility(Activate(Costs(),
-		IfPaid(You, Costs(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid)),
-			GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(resolutionCost.Name(), resolutionCost); err == nil || !strings.Contains(err.Error(), "activated ability cost") {
-		t.Fatalf("resolution payment validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid sacrifice matching cost with permanent",
+			Card: NewInstant("Test", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))), WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid))),
+		},
+		{
+			Name:          "empty prompt text",
+			Card:          NewInstant("Test", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))), WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "", paid))),
+			WantErrSubstr: "text",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewInstant("Test", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))), WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", nil))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "missing binding",
+			Card:          NewInstant("Missing", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate binding",
+			Card: NewInstant("Duplicate", "", WithAbility(Spell(DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))),
+				WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid)),
+				WithAdditionalCost(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid))),
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name: "resolution cost requires activated ability cost",
+			Card: NewArtifact("Invalid", "", WithAbility(Activate(Costs(),
+				IfPaid(You, Costs(SacrificeMatchingCostWithPermanent(IsCreature, "Sacrifice a creature", paid)),
+					GainLifeFor(You, Fixed(1)))))),
+			WantErrSubstr: "activated ability cost",
+		},
+	})
 }
 
 func TestPaidPermanentActivationRetainsFormerIncarnation(t *testing.T) {
@@ -3113,21 +3361,39 @@ func TestPaidRevealCardKeepsOneHandVisitPerActivation(t *testing.T) {
 
 func TestPaidRevealCardRegistrationAndRollback(t *testing.T) {
 	paid := BindCard("revealed")
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{RevealFromHandCostWithCard(IsCreatureCard, "Reveal a creature", paid), ""},
-		{RevealFromHandCostWithCard(IsCreatureCard, "Reveal a creature", nil), "non-nil"},
-		{RevealFromHandCostWithCard(IsCreatureCard, "Reveal a creature", BindCard("")), "name"},
-		{RevealFromHandCostWithCard(IsCreatureCard, "", paid), "text"},
-	} {
-		card := NewArtifact("Watcher", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Watcher", "", WithAbility(Activate(Costs(RevealFromHandCostWithCard(IsCreatureCard, "Reveal a creature", paid)), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Watcher", "", WithAbility(Activate(Costs(RevealFromHandCostWithCard(IsCreatureCard, "Reveal a creature", nil)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty name binding",
+			Card:          NewArtifact("Watcher", "", WithAbility(Activate(Costs(RevealFromHandCostWithCard(IsCreatureCard, "Reveal a creature", BindCard(""))), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "empty text",
+			Card:          NewArtifact("Watcher", "", WithAbility(Activate(Costs(RevealFromHandCostWithCard(IsCreatureCard, "", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "text",
+		},
+		{
+			Name:          "missing binding",
+			Card:          NewArtifact("Missing", "", WithAbility(Activate(Costs(), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1)))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate binding",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				RevealFromHandCostWithCard(IsCreatureCard, "Reveal one", paid),
+				RevealFromHandCostWithCard(IsCreatureCard, "Reveal two", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "duplicate",
+		},
+	})
 	a := NewBasePlayer("A")
 	g := NewGame(a, NewBasePlayer("B"))
 	land := NewCreature("Creature", "", 1, 1)
@@ -3137,16 +3403,6 @@ func TestPaidRevealCardRegistrationAndRollback(t *testing.T) {
 	}})
 	if err == nil || tx != nil || a.Life() != 20 || len(a.Hand()) != 1 || len(g.PublicReveals()) != 0 {
 		t.Fatalf("failed total payment changed game: %v", err)
-	}
-	missing := NewArtifact("Missing", "", WithAbility(Activate(Costs(), IfCardHasType(FromCard(paid), TypeCreature, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing binding: %v", err)
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		RevealFromHandCostWithCard(IsCreatureCard, "Reveal one", paid),
-		RevealFromHandCostWithCard(IsCreatureCard, "Reveal two", paid)), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate binding: %v", err)
 	}
 }
 
@@ -3219,19 +3475,30 @@ func TestPaidSacrificeSubtypeRollbackAndDeclaration(t *testing.T) {
 	if err := tx.Commit(); err == nil || len(tx.paidNumbers) != 0 {
 		t.Fatal("returned creature produced a payment value")
 	}
-	for _, tc := range []struct {
-		subtype string
-		binding *NumberBinding
-		want    string
-	}{
-		{"Thrull", paid, ""}, {"", paid, "subtype"}, {"Island", paid, "creature subtype"}, {"Thrull", nil, "non-nil"},
-	} {
-		card := NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithSubtype(tc.subtype, tc.binding)), GainLifeFor(You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("subtype %q: validation = %v", tc.subtype, err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithSubtype("Thrull", paid)), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "empty subtype",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithSubtype("", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "subtype",
+		},
+		{
+			Name:          "invalid creature subtype",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithSubtype("Island", paid)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "creature subtype",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithSubtype("Thrull", nil)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+	})
 }
 
 func TestPaidSacrificeSubtypeSourceAndStackCopy(t *testing.T) {
@@ -3258,17 +3525,21 @@ func TestPaidSacrificeSubtypeSourceAndStackCopy(t *testing.T) {
 
 func TestPaidSacrificeSubtypeSpellAndResolutionCost(t *testing.T) {
 	paid := BindNumber("paid subtype")
-	spell := NewInstant("Offering", "", WithAbility(Spell(
-		IfPositive(FromNumber(paid), GainLifeFor(You, Fixed(1))))),
-		WithAdditionalCost(SacrificeCreatureCostWithSubtype("Thrull", paid)))
-	if err := ValidateCardDefinition(spell.Name(), spell); err != nil {
-		t.Fatalf("spell additional cost: %v", err)
-	}
-	invalid := NewInstant("Invalid", "", WithAbility(Spell(
-		IfPaid(You, Costs(SacrificeCreatureCostWithSubtype("Thrull", paid)), GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(invalid.Name(), invalid); err == nil || !strings.Contains(err.Error(), "activated ability cost or spell additional cost") {
-		t.Fatalf("resolution payment validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "spell additional cost",
+			Card: NewInstant("Offering", "", WithAbility(Spell(
+				IfPositive(FromNumber(paid), GainLifeFor(You, Fixed(1))))),
+				WithAdditionalCost(SacrificeCreatureCostWithSubtype("Thrull", paid))),
+		},
+		{
+			Name: "resolution payment validation",
+			Card: NewInstant("Invalid", "", WithAbility(Spell(
+				IfPaid(You, Costs(SacrificeCreatureCostWithSubtype("Thrull", paid)), GainLifeFor(You, Fixed(1)))))),
+			WantErr:       true,
+			WantErrSubstr: "activated ability cost or spell additional cost",
+		},
+	})
 }
 
 // --- from composable_paid_sacrifice_test.go ---
@@ -3397,43 +3668,57 @@ func TestPaidSacrificeStatsFailedCommit(t *testing.T) {
 }
 
 func TestPaidSacrificeStatsDefinition(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		body ResolvingEffect
-		want string
-	}{
-		{"valid", SacrificeCreatureCostWithStats(BindNumber("power"), BindNumber("toughness")), GainLifeFor(You, Fixed(1)), ""},
-		{"nil power", SacrificeCreatureCostWithStats(nil, BindNumber("toughness")), GainLifeFor(You, Fixed(1)), "non-nil"},
-		{"nil both", SacrificeCreatureCostWithStats(nil, nil), GainLifeFor(You, Fixed(1)), "non-nil"},
-		{"duplicate", SacrificeCreatureCostWithStats(BindNumber("same"), BindNumber("same")), GainLifeFor(You, Fixed(1)), "duplicate"},
-		{"read before payment", SacrificeCreatureCost(), GainLifeFor(You, FromNumber(BindNumber("missing"))), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Synthetic", "", WithAbility(Activate(Costs(tc.cost), tc.body)))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithStats(BindNumber("power"), BindNumber("toughness"))), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil power",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithStats(nil, BindNumber("toughness"))), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil both",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithStats(nil, nil)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCostWithStats(BindNumber("same"), BindNumber("same"))), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "read before payment",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeCreatureCost()), GainLifeFor(You, FromNumber(BindNumber("missing")))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestPaidSacrificeStatsSpellAndResolutionCost(t *testing.T) {
 	power, toughness := BindNumber("power"), BindNumber("toughness")
 	cost := SacrificeCreatureCostWithStats(power, toughness)
-	card := NewInstant("Invalid", "", WithAbility(Spell(GainLifeFor(You, FromNumber(toughness)))), WithAdditionalCost(cost))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatalf("additional cost validation = %v", err)
-	}
-	card = NewInstant("Invalid", "", WithAbility(NewAction(ActionSpell, WithCost(cost), WithEffect(GainLifeFor(You, FromNumber(toughness))))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatalf("spell action cost validation = %v", err)
-	}
-	card = NewArtifact("Invalid", "", WithAbility(Activate(Costs(), IfPaid(You, Costs(cost), GainLifeFor(You, FromNumber(toughness))))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "activated ability cost") {
-		t.Fatalf("resolution payment validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "additional cost",
+			Card: NewInstant("Invalid", "", WithAbility(Spell(GainLifeFor(You, FromNumber(toughness)))), WithAdditionalCost(cost)),
+		},
+		{
+			Name: "spell action cost",
+			Card: NewInstant("Invalid", "", WithAbility(NewAction(ActionSpell, WithCost(cost), WithEffect(GainLifeFor(You, FromNumber(toughness)))))),
+		},
+		{
+			Name:          "resolution payment",
+			Card:          NewArtifact("Invalid", "", WithAbility(Activate(Costs(), IfPaid(You, Costs(cost), GainLifeFor(You, FromNumber(toughness)))))),
+			WantErr:       true,
+			WantErrSubstr: "activated ability cost",
+		},
+	})
 }
 
 // --- from composable_paid_sacrifice_total_power_test.go ---
@@ -3498,25 +3783,36 @@ func TestPaidSacrificeTotalPowerRollback(t *testing.T) {
 }
 
 func TestPaidSacrificeTotalPowerDefinition(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", BindNumber("total")), ""},
-		{"nil", SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", nil), "non-nil"},
-		{"unnamed", SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", BindNumber("")), "name"},
-		{"count", SacrificeNMatchingCostWithTotalPower(0, IsCreature, "Sacrifice", BindNumber("total")), "positive"},
-		{"text", SacrificeNMatchingCostWithTotalPower(2, IsCreature, "", BindNumber("total")), "text"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Synthetic", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", BindNumber("total"))), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", nil)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", BindNumber(""))), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "count",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeNMatchingCostWithTotalPower(0, IsCreature, "Sacrifice", BindNumber("total"))), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "positive",
+		},
+		{
+			Name:          "text",
+			Card:          NewArtifact("Synthetic", "", WithAbility(Activate(Costs(SacrificeNMatchingCostWithTotalPower(2, IsCreature, "", BindNumber("total"))), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "text",
+		},
+	})
 }
 
 func TestPaidSacrificeTotalPowerPendingActivations(t *testing.T) {
@@ -3544,23 +3840,29 @@ func TestPaidSacrificeTotalPowerPendingActivations(t *testing.T) {
 
 func TestPaidSacrificeTotalPowerSpellAndScope(t *testing.T) {
 	total := BindNumber("total")
-	spell := NewInstant("Offering", "", WithAbility(Spell(GainLifeFor(You, FromNumber(total)))), WithAdditionalCost(SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", total)))
-	if err := ValidateCardDefinition(spell.Name(), spell); err != nil {
-		t.Fatal(err)
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		SacrificeNMatchingCostWithTotalPower(1, IsCreature, "Sacrifice one", total),
-		SacrificeNMatchingCostWithTotalPower(1, IsCreature, "Sacrifice another", total),
-	), GainLifeFor(You, FromNumber(total)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate validation = %v", err)
-	}
-	branch := NewArtifact("Branch", "", WithAbility(Activate(Costs(), IfPaid(You,
-		Costs(SacrificeNMatchingCostWithTotalPower(1, IsCreature, "Sacrifice one", total)),
-		GainLifeFor(You, FromNumber(total))))))
-	if err := ValidateCardDefinition(branch.Name(), branch); err == nil || !strings.Contains(err.Error(), "activated ability cost") {
-		t.Fatalf("branch validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "additional cost",
+			Card: NewInstant("Offering", "", WithAbility(Spell(GainLifeFor(You, FromNumber(total)))), WithAdditionalCost(SacrificeNMatchingCostWithTotalPower(2, IsCreature, "Sacrifice two", total))),
+		},
+		{
+			Name: "duplicate",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				SacrificeNMatchingCostWithTotalPower(1, IsCreature, "Sacrifice one", total),
+				SacrificeNMatchingCostWithTotalPower(1, IsCreature, "Sacrifice another", total),
+			), GainLifeFor(You, FromNumber(total))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name: "resolution payment",
+			Card: NewArtifact("Branch", "", WithAbility(Activate(Costs(), IfPaid(You,
+				Costs(SacrificeNMatchingCostWithTotalPower(1, IsCreature, "Sacrifice one", total)),
+				GainLifeFor(You, FromNumber(total)))))),
+			WantErr:       true,
+			WantErrSubstr: "activated ability cost",
+		},
+	})
 }
 
 // --- from composable_paid_source_mana_value_test.go ---
@@ -3596,24 +3898,30 @@ func TestPaidSourceSacrificeManaValue(t *testing.T) {
 
 func TestPaidSourceSacrificeManaValueValidationAndRollback(t *testing.T) {
 	paid := BindNumber("paid")
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "Sacrifice a creature", paid), ""},
-		{"nil", SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "Sacrifice a creature", nil), "non-nil"},
-		{"empty", SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "Sacrifice a creature", BindNumber("")), "name"},
-		{"no text", SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "", paid), "text"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewCreature("Synthetic", "{2}", 1, 1, WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, FromNumber(paid)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Synthetic", "{2}", 1, 1, WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "Sacrifice a creature", paid)), GainLifeFor(You, FromNumber(paid))))),
+		},
+		{
+			Name:          "nil",
+			Card:          NewCreature("Synthetic", "{2}", 1, 1, WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "Sacrifice a creature", nil)), GainLifeFor(You, FromNumber(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewCreature("Synthetic", "{2}", 1, 1, WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "Sacrifice a creature", BindNumber(""))), GainLifeFor(You, FromNumber(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "no text",
+			Card:          NewCreature("Synthetic", "{2}", 1, 1, WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCostWithManaValue(IsCreature, "", paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "text",
+		},
+	})
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	source := NewCreature("Source", "{2}", 1, 1)
@@ -3690,30 +3998,38 @@ func TestPaidSourcePermanentRollbackAndDeclaration(t *testing.T) {
 	if err := second.Commit(); err == nil || len(second.paidPermanents) != 0 {
 		t.Fatal("returned source paid a stale cost")
 	}
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{cost, ""},
-		{SacrificeMatchingIncludingSourceCostWithPermanent(IsCreature, "", paid), "text"},
-		{SacrificeMatchingIncludingSourceCostWithPermanent(IsCreature, "Sacrifice a creature", nil), "non-nil"},
-	} {
-		card := NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(tc.cost), DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	missing := NewCreature("Missing", "", 1, 1, WithAbility(Activate(Costs(), DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing producer validation = %v", err)
-	}
-	resolutionCost := NewCreature("Resolution", "", 1, 1, WithAbility(Activate(Costs(),
-		IfPaid(You, Costs(SacrificeMatchingIncludingSourceCostWithPermanent(IsCreature, "Sacrifice a creature", paid)),
-			DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1))))))
-	if err := ValidateCardDefinition(resolutionCost.Name(), resolutionCost); err == nil || !strings.Contains(err.Error(), "activated ability cost") {
-		t.Fatalf("resolution cost validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(cost), DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1))))),
+		},
+		{
+			Name:          "no text",
+			Card:          NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCostWithPermanent(IsCreature, "", paid)), DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "text",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(SacrificeMatchingIncludingSourceCostWithPermanent(IsCreature, "Sacrifice a creature", nil)), DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "missing producer",
+			Card:          NewCreature("Missing", "", 1, 1, WithAbility(Activate(Costs(), DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "resolution cost",
+			Card: NewCreature("Resolution", "", 1, 1, WithAbility(Activate(Costs(),
+				IfPaid(You, Costs(SacrificeMatchingIncludingSourceCostWithPermanent(IsCreature, "Sacrifice a creature", paid)),
+					DealDamageFrom(DamageSourceOf(From(paid)), You, Fixed(1)))))),
+			WantErr:       true,
+			WantErrSubstr: "activated ability cost",
+		},
+	})
 }
 
 // --- from composable_paid_source_sacrifice_test.go ---
@@ -3760,33 +4076,38 @@ func TestPaidSourceSacrificeStatsRollbackAndDefinition(t *testing.T) {
 	if err := tx.Commit(); err == nil || len(tx.paidNumbers) != 0 || g.FindPermanent(source.ID()) == nil {
 		t.Fatal("returned source paid a stale cost")
 	}
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{SacrificeCreatureIncludingSourceCostWithStats(power, toughness), ""},
-		{SacrificeCreatureIncludingSourceCostWithStats(nil, toughness), "non-nil"},
-		{SacrificeCreatureIncludingSourceCostWithStats(power, power), "duplicate"},
-	} {
-		card := NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("validation = %v, want %q", err, tc.want)
-		}
-	}
-	missing := BindNumber("missing")
-	invalid := NewCreature("Missing", "", 1, 1, WithAbility(Activate(
-		Costs(SacrificeCreatureIncludingSourceCostWithStats(power, toughness)),
-		GainLifeFor(You, FromNumber(missing)),
-	)))
-	if err := ValidateCardDefinition(invalid.Name(), invalid); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("unbound paid value validation = %v", err)
-	}
-	spell := NewInstant("Additional", "", WithAbility(Spell(GainLifeFor(You, FromNumber(power)))),
-		WithAdditionalCost(SacrificeCreatureIncludingSourceCostWithStats(power, toughness)))
-	if err := ValidateCardDefinition(spell.Name(), spell); err != nil {
-		t.Fatalf("spell additional cost validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(SacrificeCreatureIncludingSourceCostWithStats(power, toughness)), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil stats",
+			Card:          NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(SacrificeCreatureIncludingSourceCostWithStats(nil, toughness)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "duplicate binding",
+			Card:          NewCreature("Definition", "", 1, 1, WithAbility(Activate(Costs(SacrificeCreatureIncludingSourceCostWithStats(power, power)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name: "missing producer",
+			Card: NewCreature("Missing", "", 1, 1, WithAbility(Activate(
+				Costs(SacrificeCreatureIncludingSourceCostWithStats(power, toughness)),
+				GainLifeFor(You, FromNumber(BindNumber("missing"))),
+			))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "spell additional cost",
+			Card: NewInstant("Additional", "", WithAbility(Spell(GainLifeFor(You, FromNumber(power)))),
+				WithAdditionalCost(SacrificeCreatureIncludingSourceCostWithStats(power, toughness))),
+		},
+	})
 }
 
 func TestPaidSourceSacrificeStatsCopyAndClone(t *testing.T) {
@@ -3904,38 +4225,53 @@ func TestPaidTapPermanentSpellAdditionalCost(t *testing.T) {
 
 func TestPaidTapPermanentDeclaration(t *testing.T) {
 	paid := BindPermanent("paid")
-	for _, tc := range []struct {
-		cost Cost
-		want string
-	}{
-		{TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid), ""},
-		{TapNOtherMatchingCostWithPermanent(IsCreature, "", paid), "text"},
-		{TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", nil), "non-nil"},
-		{TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", BindPermanent("")), "name"},
-	} {
-		card := NewArtifact("Source", "", WithAbility(Activate(Costs(tc.cost), TapSubject(From(paid)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("definition = %v, want %q", err, tc.want)
-		}
-	}
-	missing := NewArtifact("Missing", "", WithAbility(Activate(Costs(), TapSubject(From(paid)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing producer = %v", err)
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
-		TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid),
-		TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid),
-	), TapSubject(From(paid)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("duplicate producer = %v", err)
-	}
-	resolutionCost := NewArtifact("Resolution", "", WithAbility(Activate(Costs(),
-		IfPaid(You, Costs(TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid)),
-			TapSubject(From(paid))))))
-	if err := ValidateCardDefinition(resolutionCost.Name(), resolutionCost); err == nil || !strings.Contains(err.Error(), "activated ability cost") {
-		t.Fatalf("resolution payment binding = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Source", "", WithAbility(Activate(Costs(TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid)), TapSubject(From(paid))))),
+		},
+		{
+			Name:          "no text",
+			Card:          NewArtifact("Source", "", WithAbility(Activate(Costs(TapNOtherMatchingCostWithPermanent(IsCreature, "", paid)), TapSubject(From(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "text",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Source", "", WithAbility(Activate(Costs(TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", nil)), TapSubject(From(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty name",
+			Card:          NewArtifact("Source", "", WithAbility(Activate(Costs(TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", BindPermanent(""))), TapSubject(From(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "missing producer",
+			Card:          NewArtifact("Missing", "", WithAbility(Activate(Costs(), TapSubject(From(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate producer",
+			Card: NewArtifact("Duplicate", "", WithAbility(Activate(Costs(
+				TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid),
+				TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid),
+			), TapSubject(From(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name: "resolution cost",
+			Card: NewArtifact("Resolution", "", WithAbility(Activate(Costs(),
+				IfPaid(You, Costs(TapNOtherMatchingCostWithPermanent(IsCreature, "Tap another creature", paid)),
+					TapSubject(From(paid)))))),
+			WantErr:       true,
+			WantErrSubstr: "activated ability cost",
+		},
+	})
 }
 
 // --- from composable_paid_x_counters_test.go ---
@@ -3978,35 +4314,39 @@ func TestPaidXCountersActivationFrames(t *testing.T) {
 
 func TestPaidXCountersRollbackAndDeclaration(t *testing.T) {
 	paid := BindNumber("removed")
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", RemoveXCountersFromSourceCostInto(Charge, paid), ""},
-		{"nil", RemoveXCountersFromSourceCostInto(Charge, nil), "non-nil"},
-		{"unnamed", RemoveXCountersFromSourceCostInto(Charge, BindNumber("")), "name"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewArtifact("Test", "", WithAbility(Activate(Costs(tc.cost), GainLifeFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	duplicate := NewArtifact("Duplicate", "", WithAbility(Activate(Costs(RemoveXCountersFromSourceCostInto(Charge, paid), RemoveXCountersFromSourceCostInto(Charge, paid)), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil {
-		t.Fatal("duplicate binding accepted")
-	}
-	spell := NewInstant("Spell", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(RemoveXCountersFromSourceCostInto(Charge, paid)))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil {
-		t.Fatal("battlefield cost accepted on spell")
-	}
-	missing := NewArtifact("Missing", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(paid)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil {
-		t.Fatal("unproduced binding accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveXCountersFromSourceCostInto(Charge, paid)), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveXCountersFromSourceCostInto(Charge, nil)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewArtifact("Test", "", WithAbility(Activate(Costs(RemoveXCountersFromSourceCostInto(Charge, BindNumber(""))), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:    "duplicate",
+			Card:    NewArtifact("Duplicate", "", WithAbility(Activate(Costs(RemoveXCountersFromSourceCostInto(Charge, paid), RemoveXCountersFromSourceCostInto(Charge, paid)), GainLifeFor(You, FromNumber(paid))))),
+			WantErr: true,
+		},
+		{
+			Name:    "battlefield cost on spell",
+			Card:    NewInstant("Spell", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(RemoveXCountersFromSourceCostInto(Charge, paid))),
+			WantErr: true,
+		},
+		{
+			Name:    "missing producer",
+			Card:    NewArtifact("Missing", "", WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(paid))))),
+			WantErr: true,
+		},
+	})
 	a := NewBasePlayer("A")
 	g := NewGame(a, NewBasePlayer("B"))
 	source := NewArtifact("Source", "")
@@ -4141,20 +4481,32 @@ func TestPaidXLifeSeparateInstances(t *testing.T) {
 
 func TestPaidXLifeRegistration(t *testing.T) {
 	paid := BindNumber("paid")
-	for _, tc := range []struct {
-		card Card
-		want string
-	}{
-		{NewInstant("Nil", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(LifePayXCostInto(nil))), "non-nil"},
-		{NewInstant("Unnamed", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(LifePayXCostInto(BindNumber("")))), "name"},
-		{NewInstant("Duplicate", "", WithAbility(Spell(GainLifeFor(You, FromNumber(paid)))), WithAdditionalCost(LifePayXCostInto(paid)), WithAdditionalCost(LifePayXCostInto(paid))), "duplicate"},
-		{NewInstant("Unbound", "", WithAbility(Spell(GainLifeFor(You, FromNumber(paid))))), "producer"},
-	} {
-		err := ValidateCardDefinition(tc.card.Name(), tc.card)
-		if err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("%s: %v", tc.card.Name(), err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil binding",
+			Card:          NewInstant("Nil", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(LifePayXCostInto(nil))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewInstant("Unnamed", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(LifePayXCostInto(BindNumber("")))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewInstant("Duplicate", "", WithAbility(Spell(GainLifeFor(You, FromNumber(paid)))), WithAdditionalCost(LifePayXCostInto(paid)), WithAdditionalCost(LifePayXCostInto(paid))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewInstant("Unbound", "", WithAbility(Spell(GainLifeFor(You, FromNumber(paid))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_payment_test.go ---
@@ -4300,31 +4652,48 @@ func TestActivationPermanentCaptureOrderAndValidation(t *testing.T) {
 	host := BindPermanent("host")
 	n := BindNumber("power")
 	valid := []ActivationOption{CapturePermanentBeforePayment(This, host), CaptureNumberBeforePayment(PowerOf(From(host)), n)}
-	for _, tc := range []struct {
-		name    string
-		options []ActivationOption
-		want    string
-	}{
-		{"valid", valid, ""},
-		{"read before write", []ActivationOption{valid[1], valid[0]}, "producer"},
-		{"self read", []ActivationOption{CapturePermanentBeforePayment(From(host), host)}, "producer"},
-		{"nil subject", []ActivationOption{CapturePermanentBeforePayment(nil, host)}, "non-nil"},
-		{"nil binding", []ActivationOption{CapturePermanentBeforePayment(This, nil)}, "non-nil"},
-		{"empty name", []ActivationOption{CapturePermanentBeforePayment(This, BindPermanent(""))}, "name"},
-		{"duplicate", []ActivationOption{valid[0], CapturePermanentBeforePayment(This, BindPermanent("host"))}, "duplicate"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			c := NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), tc.options...)))
-			err := ValidateCardDefinition(c.Name(), c)
-			if tc.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("error = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), valid...))),
+		},
+		{
+			Name:          "read before write",
+			Card:          NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), valid[1], valid[0]))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "self read",
+			Card:          NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CapturePermanentBeforePayment(From(host), host)))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "nil subject",
+			Card:          NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CapturePermanentBeforePayment(nil, host)))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CapturePermanentBeforePayment(This, nil)))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty name",
+			Card:          NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CapturePermanentBeforePayment(This, BindPermanent(""))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), valid[0], CapturePermanentBeforePayment(This, BindPermanent("host"))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+	})
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
 	c := NewCreature("Source", "", 3, 3, WithAbility(Activate(Costs(SacrificeSourceCost()), GainLifeFor(You, FromNumber(n)), valid...)))
@@ -4414,19 +4783,23 @@ func TestActivationPermanentCaptureGrantedModalDelayed(t *testing.T) {
 func TestActivationPermanentCaptureScope(t *testing.T) {
 	host := BindPermanent("host")
 	target := DeclarePermanentTarget("creature", IsCreature)
-	for _, c := range []Card{
-		NewArtifact("Other ability", "",
-			WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CapturePermanentBeforePayment(This, host))),
-			WithAbility(Activate(Costs(), Regenerate(From(host))))),
-		NewArtifact("Mode target", "", WithAbility(ActivateModes(Costs(),
-			CapturePermanentBeforePayment(target, host),
-			ModeOf("one", Regenerate(From(host)), WithTargets(target)),
-			ModeOf("two", Regenerate(From(host)))))),
-	} {
-		if err := ValidateCardDefinition(c.Name(), c); err == nil {
-			t.Fatal("invalid capture scope accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "other ability",
+			Card: NewArtifact("Other ability", "",
+				WithAbility(Activate(Costs(), GainLifeFor(You, Fixed(1)), CapturePermanentBeforePayment(This, host))),
+				WithAbility(Activate(Costs(), Regenerate(From(host))))),
+			WantErr: true,
+		},
+		{
+			Name: "mode target",
+			Card: NewArtifact("Mode target", "", WithAbility(ActivateModes(Costs(),
+				CapturePermanentBeforePayment(target, host),
+				ModeOf("one", Regenerate(From(host)), WithTargets(target)),
+				ModeOf("two", Regenerate(From(host)))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestActivationPermanentCaptureAbsentOverwrite(t *testing.T) {
@@ -4516,32 +4889,38 @@ func TestCreatureYouSacrificePermanentCaptureSelfAndPhasing(t *testing.T) {
 }
 
 func TestCreatureYouSacrificePermanentCaptureValidation(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		make func() EventPattern
-		want string
-	}{
-		{"valid", func() EventPattern { return CreatureYouSacrifice().WithPermanent(BindPermanent("paid")) }, ""},
-		{"nil", func() EventPattern { return CreatureYouSacrifice().WithPermanent(nil) }, "non-nil"},
-		{"unnamed", func() EventPattern { return CreatureYouSacrifice().WithPermanent(BindPermanent("")) }, "name"},
-		{"duplicate", func() EventPattern {
-			return CreatureYouSacrifice().WithPermanent(BindPermanent("one")).WithPermanent(BindPermanent("two"))
-		}, "once"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewCreature("Synthetic", "", 1, 1, WithAbility(WhenEvent(tc.make(), GainLifeFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	missing := BindPermanent("missing")
-	card := NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(CreatureYouSacrifice(),
-		DealDamageFrom(DamageSourceOf(From(missing)), You, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("unbound event participant passed registration")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Synthetic", "", 1, 1, WithAbility(WhenEvent(CreatureYouSacrifice().WithPermanent(BindPermanent("paid")), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:          "nil",
+			Card:          NewCreature("Synthetic", "", 1, 1, WithAbility(WhenEvent(CreatureYouSacrifice().WithPermanent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewCreature("Synthetic", "", 1, 1, WithAbility(WhenEvent(CreatureYouSacrifice().WithPermanent(BindPermanent("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name: "duplicate",
+			Card: NewCreature("Synthetic", "", 1, 1, WithAbility(WhenEvent(
+				CreatureYouSacrifice().WithPermanent(BindPermanent("one")).WithPermanent(BindPermanent("two")),
+				GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "once",
+		},
+		{
+			Name: "unbound",
+			Card: NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(CreatureYouSacrifice(),
+				DealDamageFrom(DamageSourceOf(From(BindPermanent("missing"))), You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_spell_cast_x_capture_test.go ---
@@ -4579,25 +4958,42 @@ func TestSpellCastAnnouncedXDeclaration(t *testing.T) {
 	if got := InspectDefinition(pattern); got.Role != "event-pattern" || len(got.Children) != 1 {
 		t.Fatalf("inspection = %#v", got)
 	}
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"valid", NewArtifact("Valid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, FromNumber(x))))), ""},
-		{"nil", NewArtifact("Nil", "", WithAbility(WhenEvent(SpellCast().WithAnnouncedX(nil), GainLifeFor(You, Fixed(1))))), "binding"},
-		{"unnamed", NewArtifact("Unnamed", "", WithAbility(WhenEvent(SpellCast().WithAnnouncedX(BindNumber("")), GainLifeFor(You, Fixed(1))))), "name"},
-		{"duplicate", NewArtifact("Duplicate", "", WithAbility(WhenEvent(pattern.WithAnnouncedX(BindNumber("other")), GainLifeFor(You, Fixed(1))))), "one"},
-		{"unbound", NewArtifact("Unbound", "", WithAbility(WhenEvent(SpellCast(), GainLifeFor(You, FromNumber(x))))), "producer"},
-		{"wrong zone", NewInstant("Wrong", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, FromNumber(x))))), "battlefield"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Valid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, FromNumber(x))))),
+		},
+		{
+			Name:          "nil",
+			Card:          NewArtifact("Nil", "", WithAbility(WhenEvent(SpellCast().WithAnnouncedX(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewArtifact("Unnamed", "", WithAbility(WhenEvent(SpellCast().WithAnnouncedX(BindNumber("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewArtifact("Duplicate", "", WithAbility(WhenEvent(pattern.WithAnnouncedX(BindNumber("other")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "one",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewArtifact("Unbound", "", WithAbility(WhenEvent(SpellCast(), GainLifeFor(You, FromNumber(x))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "wrong zone",
+			Card:          NewInstant("Wrong", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, FromNumber(x))))),
+			WantErr:       true,
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestSpellCastAnnouncedXSourceLifecycleAndCopy(t *testing.T) {
@@ -4677,23 +5073,24 @@ func TestSpellPaidSacrificeStats(t *testing.T) {
 }
 
 func TestSpellPaidSacrificeDefinition(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		cost Cost
-		want string
-	}{
-		{"valid", SacrificeCreatureCostWithStats(BindNumber("power"), BindNumber("toughness")), ""},
-		{"nil binding", SacrificeCreatureCostWithStats(nil, BindNumber("toughness")), "non-nil"},
-		{"duplicate binding", SacrificeCreatureCostWithStats(BindNumber("same"), BindNumber("same")), "duplicate"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewInstant("Offering", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(tc.cost))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewInstant("Offering", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(SacrificeCreatureCostWithStats(BindNumber("power"), BindNumber("toughness")))),
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewInstant("Offering", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(SacrificeCreatureCostWithStats(nil, BindNumber("toughness")))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "duplicate binding",
+			Card:          NewInstant("Offering", "", WithAbility(Spell(GainLifeFor(You, Fixed(1)))), WithAdditionalCost(SacrificeCreatureCostWithStats(BindNumber("same"), BindNumber("same")))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+	})
 }
 
 func TestSpellPaidSacrificeFailureKeepsResources(t *testing.T) {
@@ -4852,23 +5249,38 @@ func TestTapNOtherMatchingCostRejectsChangedChoiceWithoutPartialPayment(t *testi
 }
 
 func TestTapNOtherMatchingCostRegistration(t *testing.T) {
-	for _, tc := range []struct {
-		count      int
-		text, want string
-	}{
-		{3, "Tap three white creatures", ""},
-		{0, "Tap", "positive"},
-		{-1, "Tap", "positive"},
-		{3, "", "text"},
-	} {
-		card := NewArtifact("Synthetic", "", WithAbility(Activate(
-			Costs(TapNOtherMatchingCost(tc.count, IsCreature, tc.text)),
-			GainLifeFor(You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("count %d, text %q: validation = %v, want %q", tc.count, tc.text, err, tc.want)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(
+				Costs(TapNOtherMatchingCost(3, IsCreature, "Tap three white creatures")),
+				GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name: "count zero",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(
+				Costs(TapNOtherMatchingCost(0, IsCreature, "Tap")),
+				GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "positive",
+		},
+		{
+			Name: "count negative",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(
+				Costs(TapNOtherMatchingCost(-1, IsCreature, "Tap")),
+				GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "positive",
+		},
+		{
+			Name: "empty text",
+			Card: NewArtifact("Synthetic", "", WithAbility(Activate(
+				Costs(TapNOtherMatchingCost(3, IsCreature, "")),
+				GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "text",
+		},
+	})
 }
 
 func TestTapNOtherMatchingCostEventsSeeCompleteTap(t *testing.T) {

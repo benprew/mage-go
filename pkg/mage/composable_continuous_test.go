@@ -82,19 +82,28 @@ func TestRemoveAbilitiesStaticSetUpdates(t *testing.T) {
 func TestRemoveAbilitiesValidationAndMetadata(t *testing.T) {
 	target := DeclarePermanentTarget("creature", IsCreature)
 	body := Until(EndOfTurn, RemoveAbilities(target))
-	info := InspectDefinition(body)
-	if info.Properties.Outcome != OutcomeDetriment || info.Properties.GrantedKeyword != 0 || !strings.Contains(info.Text, "remove all abilities") {
-		t.Fatalf("removal metadata = %+v", info)
-	}
-	if err := ValidateCardDefinition("Unbound", NewInstant("Unbound", "", WithAbility(Spell(body)))); err == nil || !strings.Contains(err.Error(), "target binding requires a declaration") {
-		t.Fatalf("undeclared target error = %v", err)
-	}
-	if err := ValidateCardDefinition("Nil", NewInstant("Nil", "", WithAbility(Spell(Until(EndOfTurn, RemoveAbilities(nil)))))); err == nil || !strings.Contains(err.Error(), "supply a non-nil expression") {
-		t.Fatalf("nil target error = %v", err)
-	}
-	if err := ValidateCardDefinition("Valid", NewInstant("Valid", "", WithAbility(Spell(body, WithTargets(target))))); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewInstant("Valid", "", WithAbility(Spell(body, WithTargets(target)))),
+			Inspect: func(t *testing.T) {
+				info := InspectDefinition(body)
+				if info.Properties.Outcome != OutcomeDetriment || info.Properties.GrantedKeyword != 0 || !strings.Contains(info.Text, "remove all abilities") {
+					t.Fatalf("removal metadata = %+v", info)
+				}
+			},
+		},
+		{
+			Name:          "undeclared target",
+			Card:          NewInstant("Unbound", "", WithAbility(Spell(body))),
+			WantErrSubstr: "target binding requires a declaration",
+		},
+		{
+			Name:          "nil target expression",
+			Card:          NewInstant("Nil", "", WithAbility(Spell(Until(EndOfTurn, RemoveAbilities(nil))))),
+			WantErrSubstr: "supply a non-nil expression",
+		},
+	})
 }
 
 // --- from composable_base_pt_test.go ---
@@ -388,21 +397,24 @@ func TestCreatureEntryKeywordFilter(t *testing.T) {
 }
 
 func TestCreatureEntryKeywordDeclaration(t *testing.T) {
-	valid := NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(
-		AnotherCreatureYouControlEnters().HasKeyword(Flying).Nontoken(),
-		GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, pattern := range []creatureEntersPattern{
-		AnotherCreatureYouControlEnters().HasKeyword(Attr(0)),
-		AnotherCreatureYouControlEnters().HasKeyword(Flying).HasKeyword(Vigilance),
-	} {
-		invalid := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(invalid.Name(), invalid); err == nil {
-			t.Fatal("accepted invalid entry keyword filter")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid flying nontoken entry",
+			Card: NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(
+				AnotherCreatureYouControlEnters().HasKeyword(Flying).Nontoken(),
+				GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name:    "zero keyword attribute",
+			Card:    NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(AnotherCreatureYouControlEnters().HasKeyword(Attr(0)), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "repeated keyword filter",
+			Card:    NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(AnotherCreatureYouControlEnters().HasKeyword(Flying).HasKeyword(Vigilance), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestCreatureEntryKeywordUsesEffectiveEntryState(t *testing.T) {
@@ -487,24 +499,27 @@ func TestEntryCastColorsCounters(t *testing.T) {
 func TestEntryCastColorsDeclaration(t *testing.T) {
 	valid := NewCreature("Valid", "", 1, 1, WithAbility(
 		EntersWithCounters(P1P1, ColorsSpentToCastEnteringPermanent())))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	if got := InspectDefinition(valid.Abilities()[0]).Children; len(got) == 0 {
-		t.Fatal("entry replacement missing from inspection")
-	}
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"nil", NewCreature("Nil", "", 1, 1, WithAbility(EntersWithCounters(P1P1, nil))), "entry amount"},
-		{"counter", NewCreature("Counter", "", 1, 1, WithAbility(EntersWithCounters(CounterType(999), ColorsSpentToCastEnteringPermanent()))), "counter type"},
-	} {
-		if err := ValidateCardDefinition(tc.name, tc.card); err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("%s: %v", tc.name, err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: valid,
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(valid.Abilities()[0]).Children; len(got) == 0 {
+					t.Fatal("entry replacement missing from inspection")
+				}
+			},
+		},
+		{
+			Name:          "nil entry amount",
+			Card:          NewCreature("Nil", "", 1, 1, WithAbility(EntersWithCounters(P1P1, nil))),
+			WantErrSubstr: "entry amount",
+		},
+		{
+			Name:          "invalid counter type",
+			Card:          NewCreature("Counter", "", 1, 1, WithAbility(EntersWithCounters(CounterType(999), ColorsSpentToCastEnteringPermanent()))),
+			WantErrSubstr: "counter type",
+		},
+	})
 }
 
 func TestEntryCastColorsCounterReplacement(t *testing.T) {
@@ -1001,14 +1016,29 @@ func TestStaticGrantedManaLimit(t *testing.T) {
 }
 
 func TestStaticGrantedLimitValidation(t *testing.T) {
-	for _, options := range [][]GrantedActivationOption{{ActivationLimit(0)}, {ActivationLimit(-1)}, {ActivationLimit(1), ActivationLimit(2)}} {
-		err := validateFactory("Invalid limit", func() Card {
-			return NewEnchantment("Invalid limit", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), options...))))
-		})
-		if err == nil {
-			t.Fatal("invalid limit accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "zero limit",
+			Factory: func() Card {
+				return NewEnchantment("Invalid limit", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), ActivationLimit(0)))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "negative limit",
+			Factory: func() Card {
+				return NewEnchantment("Invalid limit", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), ActivationLimit(-1)))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "duplicate limit",
+			Factory: func() Card {
+				return NewEnchantment("Invalid limit", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), ActivationLimit(1), ActivationLimit(2)))))
+			},
+			WantErr: true,
+		},
+	})
 }
 
 func TestStaticGrantedLimitCopiesAndDistinctGrants(t *testing.T) {
@@ -1288,30 +1318,27 @@ func TestStaticGrantedModesPaymentAndLegality(t *testing.T) {
 func TestStaticGrantedModesValidation(t *testing.T) {
 	target := DeclarePermanentTarget("creature", IsCreature)
 	valid := ModeOf("return", ReturnToHand(target), WithTargets(target))
-	for _, tc := range []struct {
-		name       string
-		mode       ModeDefinition
-		diagnostic string
-	}{
-		{"valid", ModeOf("gain", GainLifeFor(You, Fixed(1))), ""},
-		{"scope", ModeOf("undeclared", ReturnToHand(target)), "target binding requires a declaration"},
-		{"nil", ModeOf("missing", nil), "nil"},
-		{"label", ModeOf("", Regenerate(This)), "supply a mode label"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewEnchantment(tc.name, "", WithAbility(Static(GrantEachActivatedModes(MatchingPermanents(IsArtifact), Costs(), valid, tc.mode))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.diagnostic == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-				return
-			}
-			if err == nil || !strings.Contains(err.Error(), tc.diagnostic) || !strings.Contains(err.Error(), "modes[1]") {
-				t.Fatalf("missing mode diagnostic: %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid second mode",
+			Card: NewEnchantment("valid", "", WithAbility(Static(GrantEachActivatedModes(MatchingPermanents(IsArtifact), Costs(), valid, ModeOf("gain", GainLifeFor(You, Fixed(1))))))),
+		},
+		{
+			Name:          "undeclared target in mode",
+			Card:          NewEnchantment("scope", "", WithAbility(Static(GrantEachActivatedModes(MatchingPermanents(IsArtifact), Costs(), valid, ModeOf("undeclared", ReturnToHand(target)))))),
+			WantErrSubstr: "target binding requires a declaration",
+		},
+		{
+			Name:          "nil effect in mode",
+			Card:          NewEnchantment("nil", "", WithAbility(Static(GrantEachActivatedModes(MatchingPermanents(IsArtifact), Costs(), valid, ModeOf("missing", nil))))),
+			WantErrSubstr: "nil",
+		},
+		{
+			Name:          "empty mode label",
+			Card:          NewEnchantment("label", "", WithAbility(Static(GrantEachActivatedModes(MatchingPermanents(IsArtifact), Costs(), valid, ModeOf("", Regenerate(This)))))),
+			WantErrSubstr: "supply a mode label",
+		},
+	})
 	for _, modes := range [][]ModalActivationOption{nil, {valid}} {
 		func() {
 			defer func() {
@@ -1499,18 +1526,26 @@ func TestStaticGrantedSubjectModes(t *testing.T) {
 }
 
 func TestStaticGrantedSubjectValidation(t *testing.T) {
-	for _, subject := range []PermanentRef{DeclarePermanentTarget("outer", IsCreature), From(BindPermanent("outer"))} {
-		card := NewEnchantment("Invalid subject", "", WithAbility(Static(GrantActivatedAbility(subject, Costs(), Regenerate(This)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "subjects") {
-			t.Fatalf("missing subject diagnostic: %v", err)
-		}
-	}
-	for _, subject := range []PermanentRef{This, AttachedPermanent} {
-		card := NewEnchantment("Valid subject", "", WithAbility(Static(GrantActivatedAbility(subject, Costs(), Regenerate(This)))))
-		if err := ValidateCardDefinition(card.Name(), card); err != nil {
-			t.Fatal(err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid This subject",
+			Card: NewEnchantment("Valid subject", "", WithAbility(Static(GrantActivatedAbility(This, Costs(), Regenerate(This))))),
+		},
+		{
+			Name: "valid AttachedPermanent subject",
+			Card: NewEnchantment("Valid subject", "", WithAbility(Static(GrantActivatedAbility(AttachedPermanent, Costs(), Regenerate(This))))),
+		},
+		{
+			Name:          "invalid declared target subject",
+			Card:          NewEnchantment("Invalid subject", "", WithAbility(Static(GrantActivatedAbility(DeclarePermanentTarget("outer", IsCreature), Costs(), Regenerate(This))))),
+			WantErrSubstr: "subjects",
+		},
+		{
+			Name:          "invalid bound permanent subject",
+			Card:          NewEnchantment("Invalid subject", "", WithAbility(Static(GrantActivatedAbility(From(BindPermanent("outer")), Costs(), Regenerate(This))))),
+			WantErrSubstr: "subjects",
+		},
+	})
 }
 
 func TestStaticGrantedSubjectReturnedRecipient(t *testing.T) {
@@ -1660,15 +1695,18 @@ func TestStaticGrantedTargetCopies(t *testing.T) {
 func TestStaticGrantedTargetValidation(t *testing.T) {
 	target := DeclarePermanentTarget("creature", IsCreature)
 	valid := GrantEachActivatedAbility(MatchingPermanents(IsCreature), Costs(), Regenerate(target), WithTargets(target))
-	card := NewEnchantment("Valid", "", WithAbility(Static(valid)))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
 	undeclared := GrantEachActivatedAbility(MatchingPermanents(IsCreature), Costs(), Regenerate(target))
-	card = NewEnchantment("Separate scopes", "", WithAbility(Static(valid, undeclared)))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "target binding requires a declaration") {
-		t.Fatalf("sibling grant target escaped its scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewEnchantment("Valid", "", WithAbility(Static(valid))),
+		},
+		{
+			Name:          "sibling grant target escaped scope",
+			Card:          NewEnchantment("Separate scopes", "", WithAbility(Static(valid, undeclared))),
+			WantErrSubstr: "target binding requires a declaration",
+		},
+	})
 }
 
 func TestStaticGrantedTargetPartialLegality(t *testing.T) {
@@ -1788,13 +1826,29 @@ func TestStaticGrantedTiming(t *testing.T) {
 }
 
 func TestStaticGrantedTimingValidation(t *testing.T) {
-	for _, options := range [][]GrantedActivationOption{{OnlyAsSorcery(), OnlyDuring(Upkeep)}, {OnlyOnYourTurn(), OnlyAsSorcery()}, {OnlyDuring(PhaseStep(-1))}} {
-		if err := validateFactory("Invalid grant", func() Card {
-			return NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), options...))))
-		}); err == nil {
-			t.Fatal("invalid timing accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "sorcery and upkeep timing",
+			Factory: func() Card {
+				return NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), OnlyAsSorcery(), OnlyDuring(Upkeep)))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "on your turn and sorcery timing",
+			Factory: func() Card {
+				return NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), OnlyOnYourTurn(), OnlyAsSorcery()))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "negative phase step",
+			Factory: func() Card {
+				return NewEnchantment("Invalid grant", "", WithAbility(Static(GrantEachActivatedAbility(MatchingPermanents(IsArtifact), Costs(), Regenerate(This), OnlyDuring(PhaseStep(-1))))))
+			},
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_keyword_removal_test.go ---
@@ -2065,21 +2119,38 @@ func TestGrantLandPlaysAmountAndAbsence(t *testing.T) {
 }
 
 func TestGrantLandPlaysValidation(t *testing.T) {
-	for _, body := range []ResolvingEffect{
-		GrantLandPlays(nil, Fixed(1)),
-		GrantLandPlays(You, nil),
-		GrantLandPlays(You, FromNumber(BindNumber("missing"))),
-		GrantLandPlays(DeclarePlayerTarget("undeclared"), Fixed(1)),
-	} {
-		card := NewSorcery("Invalid allowance", "", WithAbility(Spell(body)))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid allowance accepted")
-		}
-	}
-	info := InspectDefinition(GrantLandPlays(You, Fixed(1)))
-	if info.Properties.Outcome != OutcomeBenefit || info.Role != "resolving-effect" {
-		t.Fatalf("incorrect metadata: %+v", info)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewSorcery("Valid allowance", "", WithAbility(Spell(GrantLandPlays(You, Fixed(1))))),
+			Inspect: func(t *testing.T) {
+				info := InspectDefinition(GrantLandPlays(You, Fixed(1)))
+				if info.Properties.Outcome != OutcomeBenefit || info.Role != "resolving-effect" {
+					t.Fatalf("incorrect metadata: %+v", info)
+				}
+			},
+		},
+		{
+			Name:    "nil player",
+			Card:    NewSorcery("Invalid allowance", "", WithAbility(Spell(GrantLandPlays(nil, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil amount",
+			Card:    NewSorcery("Invalid allowance", "", WithAbility(Spell(GrantLandPlays(You, nil)))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound number",
+			Card:    NewSorcery("Invalid allowance", "", WithAbility(Spell(GrantLandPlays(You, FromNumber(BindNumber("missing")))))),
+			WantErr: true,
+		},
+		{
+			Name:    "undeclared target",
+			Card:    NewSorcery("Invalid allowance", "", WithAbility(Spell(GrantLandPlays(DeclarePlayerTarget("undeclared"), Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_pt_metadata_test.go ---
@@ -2138,25 +2209,27 @@ func TestColorsSpentToCastThisSpellAbsentAndDeclaration(t *testing.T) {
 	if got := value.resolveValue(&EffectContext{Game: NewGame(NewBasePlayer("A"), NewBasePlayer("B"))}); got != 0 {
 		t.Fatalf("absent cast context = %d", got)
 	}
-	if got := InspectDefinition(value); got.Role != "resolution-value" || !strings.Contains(got.Text, "colors") {
-		t.Fatalf("inspection = %#v", got)
-	}
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"spell", NewInstant("Spell", "", Spell(GainLifeFor(You, value))), ""},
-		{"activation", NewArtifact("Activation", "", WithAbility(Activate(Costs(), GainLifeFor(You, value)))), "spell ability"},
-		{"trigger", NewArtifact("Trigger", "", WithAbility(WhenEvent(Enters(This), GainLifeFor(You, value)))), "spell ability"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "spell",
+			Card: NewInstant("Spell", "", Spell(GainLifeFor(You, value))),
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(value); got.Role != "resolution-value" || !strings.Contains(got.Text, "colors") {
+					t.Fatalf("inspection = %#v", got)
+				}
+			},
+		},
+		{
+			Name:          "activation error",
+			Card:          NewArtifact("Activation", "", WithAbility(Activate(Costs(), GainLifeFor(You, value)))),
+			WantErrSubstr: "spell ability",
+		},
+		{
+			Name:          "trigger error",
+			Card:          NewArtifact("Trigger", "", WithAbility(WhenEvent(Enters(This), GainLifeFor(You, value)))),
+			WantErrSubstr: "spell ability",
+		},
+	})
 }
 
 func TestColorsSpentToCastThisSpellPaidCastAndFailedPayment(t *testing.T) {
@@ -2238,25 +2311,33 @@ func TestSelfEntryColorsSpentWithoutCastAndDeclaration(t *testing.T) {
 	if a.Life() != 20 {
 		t.Fatalf("uncast entry gained %d life", a.Life()-20)
 	}
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		want    string
-	}{
-		{"nil", Enters(This).WithColorsSpent(nil), "binding"},
-		{"unnamed", Enters(This).WithColorsSpent(BindNumber("")), "name"},
-		{"repeated", Enters(This).WithColorsSpent(colors).WithColorsSpent(colors), "one"},
-		{"wrong event", Dies(This).WithColorsSpent(colors), "entry"},
-	} {
-		card := NewCreature(tc.name, "", 1, 1, WithAbility(WhenEvent(tc.pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("%s validation = %v", tc.name, err)
-		}
-	}
-	unbound := NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(Enters(This), GainLifeFor(You, FromNumber(colors)))))
-	if err := ValidateCardDefinition(unbound.Name(), unbound); err == nil {
-		t.Fatal("accepted unbound capture")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil binding",
+			Card:          NewCreature("nil", "", 1, 1, WithAbility(WhenEvent(Enters(This).WithColorsSpent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+		{
+			Name:          "unnamed binding",
+			Card:          NewCreature("unnamed", "", 1, 1, WithAbility(WhenEvent(Enters(This).WithColorsSpent(BindNumber("")), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "repeated binding",
+			Card:          NewCreature("repeated", "", 1, 1, WithAbility(WhenEvent(Enters(This).WithColorsSpent(colors).WithColorsSpent(colors), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "one",
+		},
+		{
+			Name:          "wrong event",
+			Card:          NewCreature("wrong event", "", 1, 1, WithAbility(WhenEvent(Dies(This).WithColorsSpent(colors), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "entry",
+		},
+		{
+			Name:    "unbound capture",
+			Card:    NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(Enters(This), GainLifeFor(You, FromNumber(colors))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestSelfEntryColorsSpentPaidCastAndRollback(t *testing.T) {
@@ -2355,17 +2436,28 @@ func TestComposableSkipNextUntapTargetAndSourceExit(t *testing.T) {
 
 func TestComposableSkipNextUntapValidation(t *testing.T) {
 	saved := BindPermanent("saved")
-	for _, body := range []ResolvingEffect{
-		SkipNextUntap(nil),
-		SkipNextUntap(From(saved)),
-		SkipNextUntap(DeclarePermanentTarget("undeclared", IsCreature)),
-		Sequence(SkipNextUntap(From(saved)), Snapshot(This, saved)),
-	} {
-		card := NewCreature("Invalid skip", "", 1, 1, WithAbility(Activate(Costs(), body)))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid subject")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil subject",
+			Card:    NewCreature("Invalid skip", "", 1, 1, WithAbility(Activate(Costs(), SkipNextUntap(nil)))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound saved permanent",
+			Card:    NewCreature("Invalid skip", "", 1, 1, WithAbility(Activate(Costs(), SkipNextUntap(From(saved))))),
+			WantErr: true,
+		},
+		{
+			Name:    "undeclared target",
+			Card:    NewCreature("Invalid skip", "", 1, 1, WithAbility(Activate(Costs(), SkipNextUntap(DeclarePermanentTarget("undeclared", IsCreature))))),
+			WantErr: true,
+		},
+		{
+			Name:    "reversed sequence snapshot",
+			Card:    NewCreature("Invalid skip", "", 1, 1, WithAbility(Activate(Costs(), Sequence(SkipNextUntap(From(saved)), Snapshot(This, saved))))),
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_spell_cast_colors_test.go ---
@@ -2430,28 +2522,42 @@ func TestSpellCastDistinctColorsZeroAndSourcePhasing(t *testing.T) {
 
 func TestSpellCastDistinctColorsDeclaration(t *testing.T) {
 	colors := BindNumber("colors")
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"valid", NewArtifact("Valid", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(colors), GainLifeFor(You, FromNumber(colors))))), ""},
-		{"nil", NewArtifact("Nil", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(nil), GainLifeFor(You, Fixed(1))))), "binding"},
-		{"unnamed", NewArtifact("Unnamed", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(BindNumber("")), GainLifeFor(You, Fixed(1))))), "name"},
-		{"duplicate", NewArtifact("Duplicate", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(colors).WithColorsSpent(BindNumber("other")), GainLifeFor(You, Fixed(1))))), "one"},
-		{"unbound", NewArtifact("Unbound", "", WithAbility(WhenEvent(SpellCast(), GainLifeFor(You, FromNumber(colors))))), "producer"},
-		{"wrong zone", NewInstant("Wrong", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(colors), GainLifeFor(You, FromNumber(colors))))), "battlefield"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	if got := InspectDefinition(SpellCast().WithColorsSpent(colors)); got.Role != "event-pattern" || len(got.Children) != 1 {
-		t.Fatalf("inspection = %#v", got)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid artifact",
+			Card: NewArtifact("Valid", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(colors), GainLifeFor(You, FromNumber(colors))))),
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(SpellCast().WithColorsSpent(colors)); got.Role != "event-pattern" || len(got.Children) != 1 {
+					t.Fatalf("inspection = %#v", got)
+				}
+			},
+		},
+		{
+			Name:          "nil binding",
+			Card:          NewArtifact("Nil", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+		{
+			Name:          "unnamed binding",
+			Card:          NewArtifact("Unnamed", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(BindNumber("")), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate binding",
+			Card:          NewArtifact("Duplicate", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(colors).WithColorsSpent(BindNumber("other")), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "one",
+		},
+		{
+			Name:          "unbound number",
+			Card:          NewArtifact("Unbound", "", WithAbility(WhenEvent(SpellCast(), GainLifeFor(You, FromNumber(colors))))),
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "wrong zone (instant)",
+			Card:          NewInstant("Wrong", "", WithAbility(WhenEvent(SpellCast().WithColorsSpent(colors), GainLifeFor(You, FromNumber(colors))))),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestDistinctColorsSpentExcludesColorless(t *testing.T) {

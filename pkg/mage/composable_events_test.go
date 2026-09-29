@@ -95,31 +95,39 @@ func TestAbilityActivatedDeclaration(t *testing.T) {
 	if got := InspectDefinition(ActivatedAbilityEvent().WithActivator(actor)); got.Role != "event-pattern" || len(got.Children) != 1 {
 		t.Fatal("activation pattern inspection lost its binding")
 	}
-	good := NewEnchantment("Good", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithActivator(actor), GainLifeFor(FromPlayer(actor), Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
-	for _, pattern := range []EventPattern{ActivatedAbilityEvent().WithActivator(nil), ActivatedAbilityEvent().WithActivator(actor).WithActivator(actor)} {
-		bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid activation pattern passed registration")
-		}
-	}
-	bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent(), GainLifeFor(FromPlayer(actor), Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-		t.Fatal("unbound activator passed registration")
-	}
-	spell := NewInstant("Bad spell", "", WithAbility(WhenEvent(ActivatedAbilityEvent(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil {
-		t.Fatal("non-battlefield source passed registration")
-	}
-	modal := NewEnchantment("Modal", "", WithAbility(WhenEventModes(
-		ActivatedAbilityEvent().WithActivator(actor),
-		ModeOf("Gain", GainLifeFor(FromPlayer(actor), Fixed(1))),
-		ModeOf("Draw", DrawFor(FromPlayer(actor), Fixed(1))))))
-	if err := ValidateCardDefinition(modal.Name(), modal); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Good", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithActivator(actor), GainLifeFor(FromPlayer(actor), Fixed(1))))),
+		},
+		{
+			Name:    "nil activator",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithActivator(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate activator",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithActivator(actor).WithActivator(actor), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound activator",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent(), GainLifeFor(FromPlayer(actor), Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "non-battlefield source",
+			Card:    NewInstant("Bad spell", "", WithAbility(WhenEvent(ActivatedAbilityEvent(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "valid modal",
+			Card: NewEnchantment("Modal", "", WithAbility(WhenEventModes(
+				ActivatedAbilityEvent().WithActivator(actor),
+				ModeOf("Gain", GainLifeFor(FromPlayer(actor), Fixed(1))),
+				ModeOf("Draw", DrawFor(FromPlayer(actor), Fixed(1)))))),
+		},
+	})
 }
 
 // --- from composable_ability_source_event_test.go ---
@@ -165,23 +173,30 @@ func TestAbilityActivatedSourceCaptureAfterSacrificeAndReturn(t *testing.T) {
 
 func TestAbilityActivatedSourceDeclaration(t *testing.T) {
 	source := BindDamageSource("source")
-	good := NewEnchantment("Good", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithSource(source), DealDamageFrom(FromDamageSource(source), You, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
 	if got := InspectDefinition(ActivatedAbilityEvent().WithSource(source)); got.Role != "event-pattern" || len(got.Children) != 1 {
 		t.Fatal("source capture missing from inspection")
 	}
-	for _, pattern := range []EventPattern{ActivatedAbilityEvent().WithSource(nil), ActivatedAbilityEvent().WithSource(source).WithSource(source)} {
-		bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid source capture passed registration")
-		}
-	}
-	bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent(), DealDamageFrom(FromDamageSource(source), You, Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-		t.Fatal("unbound source passed registration")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Good", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithSource(source), DealDamageFrom(FromDamageSource(source), You, Fixed(1))))),
+		},
+		{
+			Name:    "nil source capture",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithSource(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate source capture",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent().WithSource(source).WithSource(source), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound source",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(ActivatedAbilityEvent(), DealDamageFrom(FromDamageSource(source), You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestAbilityActivatedSourceSurvivesPhasing(t *testing.T) {
@@ -283,31 +298,43 @@ func TestAnyDrawEventCardDeclaration(t *testing.T) {
 		t.Fatalf("inspection = %+v", info)
 	}
 	body := IfCardHasType(FromCard(drawn), TypeLand, GainLifeFor(You, Fixed(1)))
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		body    ResolvingEffect
-		want    string
-	}{
-		{"valid", PlayerDrawsCard(drawer).WithCard(drawn), body, ""},
-		{"nil", PlayerDrawsCard(drawer).WithCard(nil), GainLifeFor(You, Fixed(1)), "non-nil"},
-		{"unnamed", OpponentDrawsCard(drawer).WithCard(BindCard("")), GainLifeFor(You, Fixed(1)), "name"},
-		{"repeated", PlayerDrawsCard(drawer).WithCard(drawn).WithCard(drawn), body, "once"},
-		{"missing", PlayerDrawsCard(drawer), body, "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			definition := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, tc.body)))
-			err := ValidateCardDefinition(definition.Name(), definition)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	other := NewEnchantment("Scope", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer).WithCard(drawn), body)),
-		WithAbility(Activate(Costs(), body)))
-	if err := ValidateCardDefinition(other.Name(), other); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer).WithCard(drawn), body))),
+		},
+		{
+			Name:          "nil card",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer).WithCard(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed card",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDrawsCard(drawer).WithCard(BindCard("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "repeated card",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer).WithCard(drawn).WithCard(drawn), body))),
+			WantErr:       true,
+			WantErrSubstr: "once",
+		},
+		{
+			Name:          "missing card producer",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer), body))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "scope escape",
+			Card: NewEnchantment("Scope", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer).WithCard(drawn), body)),
+				WithAbility(Activate(Costs(), body))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_any_draw_event_test.go ---
@@ -394,25 +421,36 @@ func TestPlayerDrawsCardDeclaration(t *testing.T) {
 	if info := InspectDefinition(PlayerDrawsCard(drawer)); info.Role != "event-pattern" || info.Text != "a player draws a card" || len(info.Children) != 1 {
 		t.Fatalf("inspection = %+v", info)
 	}
-	for _, tc := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{PlayerDrawsCard(drawer), ""},
-		{PlayerDrawsCard(nil), "non-nil"},
-		{PlayerDrawsCard(BindPlayer("")), "name"},
-		{PlayerDrawsCard(BindPlayer("other")), "producer"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, GainLifeFor(FromPlayer(drawer), Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("want %q: %v", tc.want, err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer), GainLifeFor(FromPlayer(drawer), Fixed(1)))), WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(drawer), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+		},
+		{
+			Name:          "nil player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(nil), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty player name",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(BindPlayer("")), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDrawsCard(BindPlayer("other")), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "scope escape",
+			Card:          NewEnchantment("Scope", "", WithAbility(WhenEvent(PlayerDrawsCard(drawer), GainLifeFor(FromPlayer(drawer), Fixed(1)))), WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_any_life_gain_event_test.go ---
@@ -474,28 +512,48 @@ func TestPlayerGainsLifeSourceAndFrameLifecycle(t *testing.T) {
 
 func TestPlayerGainsLifeDeclaration(t *testing.T) {
 	player, amount := BindPlayer("gainer"), BindNumber("amount")
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		want    string
-	}{
-		{"valid", PlayerGainsLife(player).WithAmount(amount), ""},
-		{"nil player", PlayerGainsLife(nil), "non-nil"},
-		{"nil amount", PlayerGainsLife(player).WithAmount(nil), "non-nil"},
-		{"empty", PlayerGainsLife(BindPlayer("")), "name"},
-		{"duplicate", PlayerGainsLife(player).WithAmount(BindNumber("gainer")), "duplicate"},
-		{"repeated", PlayerGainsLife(player).WithAmount(amount).WithAmount(amount), "one amount"},
-		{"missing", PlayerGainsLife(player), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern,
-				LoseLifeFor(FromPlayer(player), FromNumber(amount)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(player).WithAmount(amount), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+		},
+		{
+			Name:          "nil player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(nil), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil amount",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(player).WithAmount(nil), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(BindPlayer("")), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(player).WithAmount(BindNumber("gainer")), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "repeated",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(player).WithAmount(amount).WithAmount(amount), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "one amount",
+		},
+		{
+			Name:          "missing",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerGainsLife(player), LoseLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 	if got := InspectDefinition(PlayerGainsLife(player).WithAmount(amount)); got.Role != "event-pattern" || len(got.Children) != 2 {
 		t.Fatalf("inspection = %#v", got)
 	}
@@ -565,28 +623,48 @@ func TestPlayerLosesLifeSimultaneousAndSourceLifetime(t *testing.T) {
 
 func TestPlayerLosesLifeDeclaration(t *testing.T) {
 	player, amount := BindPlayer("loser"), BindNumber("lost")
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		want    string
-	}{
-		{"valid", PlayerLosesLife(player).WithAmount(amount), ""},
-		{"nil player", PlayerLosesLife(nil), "non-nil"},
-		{"nil amount", PlayerLosesLife(player).WithAmount(nil), "non-nil"},
-		{"empty player", PlayerLosesLife(BindPlayer("")), "name"},
-		{"duplicate name", PlayerLosesLife(player).WithAmount(BindNumber("loser")), "duplicate"},
-		{"repeated", PlayerLosesLife(player).WithAmount(amount).WithAmount(amount), "one amount"},
-		{"missing", PlayerLosesLife(player), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern,
-				GainLifeFor(FromPlayer(player), FromNumber(amount)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(player).WithAmount(amount), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+		},
+		{
+			Name:          "nil player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(nil), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil amount",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(player).WithAmount(nil), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(BindPlayer("")), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate name",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(player).WithAmount(BindNumber("loser")), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "repeated",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(player).WithAmount(amount).WithAmount(amount), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "one amount",
+		},
+		{
+			Name:          "missing",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerLosesLife(player), GainLifeFor(FromPlayer(player), FromNumber(amount))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 	if got := InspectDefinition(PlayerLosesLife(player).WithAmount(amount)); got.Role != "event-pattern" || len(got.Children) != 2 {
 		t.Fatalf("inspection = %#v", got)
 	}
@@ -676,28 +754,40 @@ func TestArtifactAbilityWithoutTapCostFiltersAndLKI(t *testing.T) {
 func TestArtifactAbilityWithoutTapCostDeclaration(t *testing.T) {
 	artifact := BindPermanent("artifact")
 	controller := BindPlayer("controller")
-	valid := NewEnchantment("Valid", "", WithAbility(WhenEvent(
-		ArtifactAbilityActivatedWithoutTapCost().WithArtifact(artifact).WithController(controller),
-		GainLifeFor(FromPlayer(controller), Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, pattern := range []EventPattern{
-		ArtifactAbilityActivatedWithoutTapCost().WithArtifact(nil),
-		ArtifactAbilityActivatedWithoutTapCost().WithController(nil),
-		ArtifactAbilityActivatedWithoutTapCost().WithArtifact(artifact).WithArtifact(artifact),
-		ArtifactAbilityActivatedWithoutTapCost().WithController(controller).WithController(controller),
-	} {
-		card := NewEnchantment("Invalid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid pattern passed registration")
-		}
-	}
-	missing := NewEnchantment("Missing", "", WithAbility(WhenEvent(
-		ArtifactAbilityActivatedWithoutTapCost(), GainLifeFor(FromPlayer(controller), Fixed(1)))))
-	if err := ValidateCardDefinition(missing.Name(), missing); err == nil {
-		t.Fatal("unbound controller passed registration")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Valid", "", WithAbility(WhenEvent(
+				ArtifactAbilityActivatedWithoutTapCost().WithArtifact(artifact).WithController(controller),
+				GainLifeFor(FromPlayer(controller), Fixed(1))))),
+		},
+		{
+			Name:    "nil artifact",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(ArtifactAbilityActivatedWithoutTapCost().WithArtifact(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil controller",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(ArtifactAbilityActivatedWithoutTapCost().WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate artifact",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(ArtifactAbilityActivatedWithoutTapCost().WithArtifact(artifact).WithArtifact(artifact), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate controller",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(ArtifactAbilityActivatedWithoutTapCost().WithController(controller).WithController(controller), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "missing controller binding",
+			Card: NewEnchantment("Missing", "", WithAbility(WhenEvent(
+				ArtifactAbilityActivatedWithoutTapCost(), GainLifeFor(FromPlayer(controller), Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestArtifactAbilityWithoutTapCostExcludesManaTap(t *testing.T) {
@@ -848,42 +938,70 @@ func TestArtifactBecomesTappedPendingCopy(t *testing.T) {
 func TestArtifactBecomesTappedDeclaration(t *testing.T) {
 	artifact := BindPermanent("artifact")
 	controller := BindPlayer("controller")
-	valid := NewArtifact("Valid", "", WithAbility(WhenEvent(
-		ArtifactBecomesTapped().WithArtifact(artifact).WithController(controller),
-		GainLifeFor(FromPlayer(controller), Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
 	if got := InspectDefinition(ArtifactBecomesTapped()); got.Role != "event-pattern" || got.Text != "artifact becomes tapped" {
 		t.Fatalf("inspection=%+v", got)
 	}
-	for _, pattern := range []EventPattern{
-		ArtifactBecomesTapped().WithArtifact(nil),
-		ArtifactBecomesTapped().WithArtifact(BindPermanent("")),
-		ArtifactBecomesTapped().WithArtifact(artifact).WithArtifact(artifact),
-		ArtifactBecomesTapped().WithController(nil),
-		ArtifactBecomesTapped().WithController(BindPlayer("")),
-		ArtifactBecomesTapped().WithController(controller).WithController(controller),
-		ArtifactBecomesTapped().WithArtifact(artifact).WithController(BindPlayer("artifact")),
-	} {
-		bad := NewArtifact("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid artifact tap pattern")
-		}
-	}
-	for _, body := range []ResolvingEffect{
-		AddCountersTo(From(artifact), Charge, Fixed(1)),
-		GainLifeFor(FromPlayer(controller), Fixed(1)),
-	} {
-		bad := NewArtifact("Unbound", "", WithAbility(WhenEvent(ArtifactBecomesTapped(), body)))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "producer") {
-			t.Fatalf("unbound validation=%v", err)
-		}
-	}
-	badSource := NewInstant("Bad source", "", WithAbility(WhenEvent(ArtifactBecomesTapped(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(badSource.Name(), badSource); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("source validation=%v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Valid", "", WithAbility(WhenEvent(
+				ArtifactBecomesTapped().WithArtifact(artifact).WithController(controller),
+				GainLifeFor(FromPlayer(controller), Fixed(1))))),
+		},
+		{
+			Name:    "nil artifact",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithArtifact(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "empty artifact name",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithArtifact(BindPermanent("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate artifact",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithArtifact(artifact).WithArtifact(artifact), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil controller",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "empty controller name",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithController(BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate controller",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithController(controller).WithController(controller), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "conflicting names",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(ArtifactBecomesTapped().WithArtifact(artifact).WithController(BindPlayer("artifact")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:          "unbound artifact producer",
+			Card:          NewArtifact("Unbound", "", WithAbility(WhenEvent(ArtifactBecomesTapped(), AddCountersTo(From(artifact), Charge, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "unbound controller producer",
+			Card:          NewArtifact("Unbound", "", WithAbility(WhenEvent(ArtifactBecomesTapped(), GainLifeFor(FromPlayer(controller), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "bad source",
+			Card:          NewInstant("Bad source", "", WithAbility(WhenEvent(ArtifactBecomesTapped(), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 // --- from composable_attached_creature_death_test.go ---
@@ -983,14 +1101,18 @@ func TestAttachedCreatureDiesRejectsOtherEvents(t *testing.T) {
 
 func TestAttachedCreatureDiesValidation(t *testing.T) {
 	b := BindNumber("toughness")
-	good := NewAura("Good", "", WithAbility(WhenEvent(AttachedCreatureDies().WithToughness(b), GainLifeFor(You, FromNumber(b)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
-	bad := NewAura("Bad", "", WithAbility(WhenEvent(AttachedCreatureDies().WithController(nil), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "binding") {
-		t.Fatalf("validation=%v, want binding error", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewAura("Good", "", WithAbility(WhenEvent(AttachedCreatureDies().WithToughness(b), GainLifeFor(You, FromNumber(b))))),
+		},
+		{
+			Name:          "nil controller binding",
+			Card:          NewAura("Bad", "", WithAbility(WhenEvent(AttachedCreatureDies().WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 // --- from composable_controlled_death_test.go ---
@@ -1159,25 +1281,14 @@ func TestControllerIsDealtDamageReplacementAbsenceAndPhasing(t *testing.T) {
 
 func TestControllerIsDealtDamageRegistration(t *testing.T) {
 	amount := BindNumber("amount")
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"valid", NewEnchantment("Valid", "", WithAbility(WhenEvent(ControllerIsDealtDamage(amount), GainLifeFor(You, FromNumber(amount))))), ""},
-		{"nil", NewEnchantment("Nil", "", WithAbility(WhenEvent(ControllerIsDealtDamage(nil), GainLifeFor(You, Fixed(1))))), "non-nil"},
-		{"empty", NewEnchantment("Empty", "", WithAbility(WhenEvent(ControllerIsDealtDamage(BindNumber("")), GainLifeFor(You, Fixed(1))))), "name"},
-		{"unbound", NewEnchantment("Unbound", "", WithAbility(WhenEvent(Enters(This), GainLifeFor(You, FromNumber(amount))))), "producer"},
-		{"other ability", NewEnchantment("Other", "", WithAbility(WhenEvent(ControllerIsDealtDamage(amount), GainLifeFor(You, Fixed(1)))), WithAbility(WhenEvent(Enters(This), GainLifeFor(You, FromNumber(amount))))), "producer"},
-		{"bad zone", NewInstant("Instant", "", WithAbility(WhenEvent(ControllerIsDealtDamage(amount), GainLifeFor(You, FromNumber(amount))))), "battlefield"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid", Card: NewEnchantment("Valid", "", WithAbility(WhenEvent(ControllerIsDealtDamage(amount), GainLifeFor(You, FromNumber(amount))))), WantErr: false},
+		{Name: "nil", Card: NewEnchantment("Nil", "", WithAbility(WhenEvent(ControllerIsDealtDamage(nil), GainLifeFor(You, Fixed(1))))), WantErr: true, WantErrSubstr: "non-nil"},
+		{Name: "empty", Card: NewEnchantment("Empty", "", WithAbility(WhenEvent(ControllerIsDealtDamage(BindNumber("")), GainLifeFor(You, Fixed(1))))), WantErr: true, WantErrSubstr: "name"},
+		{Name: "unbound", Card: NewEnchantment("Unbound", "", WithAbility(WhenEvent(Enters(This), GainLifeFor(You, FromNumber(amount))))), WantErr: true, WantErrSubstr: "producer"},
+		{Name: "other ability", Card: NewEnchantment("Other", "", WithAbility(WhenEvent(ControllerIsDealtDamage(amount), GainLifeFor(You, Fixed(1)))), WithAbility(WhenEvent(Enters(This), GainLifeFor(You, FromNumber(amount))))), WantErr: true, WantErrSubstr: "producer"},
+		{Name: "bad zone", Card: NewInstant("Instant", "", WithAbility(WhenEvent(ControllerIsDealtDamage(amount), GainLifeFor(You, FromNumber(amount))))), WantErr: true, WantErrSubstr: "battlefield"},
+	})
 	if got := InspectDefinition(ControllerIsDealtDamage(amount)); got.Role != "event-pattern" || len(got.Children) != 1 {
 		t.Fatalf("inspection = %#v", got)
 	}
@@ -1304,18 +1415,36 @@ func TestCreatureDiesWithoutColorSimultaneousAndSourceState(t *testing.T) {
 }
 
 func TestCreatureDiesWithoutColorRejectsInvalidColor(t *testing.T) {
-	for _, color := range []Color{Colorless, AnyColor, Color(99)} {
-		card := NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
-			CreatureDies().WithoutColor(color), GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "color") {
-			t.Fatalf("color=%v validation=%v", color, err)
-		}
-	}
-	duplicate := NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(
-		CreatureDies().WithoutColor(Black).WithoutColor(Red), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "color") {
-		t.Fatalf("duplicate filter validation=%v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "Colorless",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithoutColor(Colorless), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "color",
+		},
+		{
+			Name: "AnyColor",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithoutColor(AnyColor), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "color",
+		},
+		{
+			Name: "Color(99)",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithoutColor(Color(99)), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "color",
+		},
+		{
+			Name: "duplicate filter",
+			Card: NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithoutColor(Black).WithoutColor(Red), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "color",
+		},
+	})
 }
 
 func TestCreatureDiesWithoutColorIgnoresNonDeathsAndReturnedSource(t *testing.T) {
@@ -1481,42 +1610,43 @@ func TestCreatureDiesControllerPhasedSource(t *testing.T) {
 }
 
 func TestCreatureDiesControllerValidation(t *testing.T) {
-	for _, tc := range []struct {
-		name  string
-		build func() Card
-		want  string
-	}{
-		{"valid", func() Card {
-			b := BindPlayer("controller")
-			return NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithController(b), GainLifeFor(FromPlayer(b), Fixed(1)))))
-		}, ""},
-		{"nil", func() Card {
-			return NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithController(nil), GainLifeFor(You, Fixed(1)))))
-		}, "binding"},
-		{"undeclared read", func() Card {
-			b := BindPlayer("controller")
-			return NewCreature("Read", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(FromPlayer(b), Fixed(1)))))
-		}, "producer"},
-		{"duplicate name", func() Card {
-			a := BindPlayer("same")
-			b := BindPlayer("same")
-			return NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithController(a), Sequence(SnapshotPlayer(You, b), GainLifeFor(FromPlayer(a), Fixed(1))))))
-		}, "duplicate binding name"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := tc.build()
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-				return
-			}
-			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("validation=%v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Factory: func() Card {
+				b := BindPlayer("controller")
+				return NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithController(b), GainLifeFor(FromPlayer(b), Fixed(1)))))
+			},
+			WantErr: false,
+		},
+		{
+			Name: "nil",
+			Factory: func() Card {
+				return NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithController(nil), GainLifeFor(You, Fixed(1)))))
+			},
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+		{
+			Name: "undeclared read",
+			Factory: func() Card {
+				b := BindPlayer("controller")
+				return NewCreature("Read", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(FromPlayer(b), Fixed(1)))))
+			},
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate name",
+			Factory: func() Card {
+				a := BindPlayer("same")
+				b := BindPlayer("same")
+				return NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithController(a), Sequence(SnapshotPlayer(You, b), GainLifeFor(FromPlayer(a), Fixed(1))))))
+			},
+			WantErr:       true,
+			WantErrSubstr: "duplicate binding name",
+		},
+	})
 }
 
 // --- from composable_creature_death_owner_test.go ---
@@ -1594,29 +1724,38 @@ func TestCreatureDiesOwnerCaptureSourceAndPhasing(t *testing.T) {
 
 func TestCreatureDiesOwnerCaptureValidation(t *testing.T) {
 	owner := BindPlayer("owner")
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		body    ResolvingEffect
-		want    string
-	}{
-		{"nil", CreatureDies().WithOwner(nil), GainLifeFor(You, Fixed(1)), "binding"},
-		{"empty", CreatureDies().WithOwner(BindPlayer("")), GainLifeFor(You, Fixed(1)), "binding name"},
-		{"unbound", CreatureDies(), GainLifeFor(FromPlayer(owner), Fixed(1)), "producer"},
-		{"duplicate", CreatureDies().WithOwner(owner).WithController(owner), GainLifeFor(You, Fixed(1)), "different bindings"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(tc.pattern, tc.body)))
-			if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("validation=%v, want %q", err, tc.want)
-			}
-		})
-	}
-	valid := NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(
-		AnotherCreatureDies().Nontoken().WithOwner(owner), GainLifeFor(FromPlayer(owner), Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithOwner(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+		{
+			Name:          "empty",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithOwner(BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding name",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(FromPlayer(owner), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithOwner(owner).WithController(owner), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "different bindings",
+		},
+		{
+			Name: "valid",
+			Card: NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(
+				AnotherCreatureDies().Nontoken().WithOwner(owner), GainLifeFor(FromPlayer(owner), Fixed(1))))),
+			WantErr: false,
+		},
+	})
 }
 
 // --- from composable_creature_death_power_test.go ---
@@ -1698,28 +1837,14 @@ func TestCreatureDeathPowerSimultaneousAndAbsentSource(t *testing.T) {
 
 func TestCreatureDeathPowerDeclaration(t *testing.T) {
 	power := BindNumber("power")
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"valid", NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(power), GainLifeFor(You, FromNumber(power))))), ""},
-		{"nil", NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(nil), GainLifeFor(You, Fixed(1))))), "power binding"},
-		{"empty", NewCreature("Empty", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(BindNumber("")), GainLifeFor(You, Fixed(1))))), "binding name"},
-		{"wrong event", NewCreature("Wrong", "", 1, 1, WithAbility(WhenEvent(PermanentDies().WithPower(BindNumber("power")), GainLifeFor(You, Fixed(1))))), "creature"},
-		{"unbound", NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(You, FromNumber(BindNumber("power")))))), "producer"},
-		{"duplicate", NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(BindNumber("a")).WithPower(BindNumber("b")), GainLifeFor(You, Fixed(1))))), "one power"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err == nil {
-				return
-			}
-			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("validation=%v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid", Card: NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(power), GainLifeFor(You, FromNumber(power))))), WantErr: false},
+		{Name: "nil", Card: NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(nil), GainLifeFor(You, Fixed(1))))), WantErr: true, WantErrSubstr: "power binding"},
+		{Name: "empty", Card: NewCreature("Empty", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(BindNumber("")), GainLifeFor(You, Fixed(1))))), WantErr: true, WantErrSubstr: "binding name"},
+		{Name: "wrong event", Card: NewCreature("Wrong", "", 1, 1, WithAbility(WhenEvent(PermanentDies().WithPower(BindNumber("power")), GainLifeFor(You, Fixed(1))))), WantErr: true, WantErrSubstr: "creature"},
+		{Name: "unbound", Card: NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(You, FromNumber(BindNumber("power")))))), WantErr: true, WantErrSubstr: "producer"},
+		{Name: "duplicate", Card: NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithPower(BindNumber("a")).WithPower(BindNumber("b")), GainLifeFor(You, Fixed(1))))), WantErr: true, WantErrSubstr: "one power"},
+	})
 }
 
 // --- from composable_creature_death_toughness_test.go ---
@@ -1750,39 +1875,49 @@ func TestCreatureDiesCapturesToughnessAtDetection(t *testing.T) {
 }
 
 func TestCreatureDiesToughnessValidation(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"nil", NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(nil), GainLifeFor(You, Fixed(1))))), "binding"},
-		{"missing producer", func() Card {
-			b := BindNumber("toughness")
-			return NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(You, FromNumber(b)))))
-		}(), "producer"},
-		{"duplicate name", func() Card {
-			a, b := BindNumber("same"), BindNumber("same")
-			return NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(a), Sequence(SnapshotNumber(Fixed(1), b), GainLifeFor(You, FromNumber(a))))))
-		}(), "duplicate binding name"},
-		{"non dominating", func() Card {
-			b := BindNumber("toughness")
-			return NewCreature("Non Dominating", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(b), GainLifeFor(You, FromNumber(b)))), WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(b)))))
-		}(), "producer"},
-		{"valid", func() Card {
-			b := BindNumber("toughness")
-			return NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(b), GainLifeFor(You, FromNumber(b)))))
-		}(), ""},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err == nil {
-				return
-			}
-			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("validation=%v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil",
+			Card:          NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+		{
+			Name: "missing producer",
+			Factory: func() Card {
+				b := BindNumber("toughness")
+				return NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), GainLifeFor(You, FromNumber(b)))))
+			},
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate name",
+			Factory: func() Card {
+				a, b := BindNumber("same"), BindNumber("same")
+				return NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(a), Sequence(SnapshotNumber(Fixed(1), b), GainLifeFor(You, FromNumber(a))))))
+			},
+			WantErr:       true,
+			WantErrSubstr: "duplicate binding name",
+		},
+		{
+			Name: "non dominating",
+			Factory: func() Card {
+				b := BindNumber("toughness")
+				return NewCreature("Non Dominating", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(b), GainLifeFor(You, FromNumber(b)))), WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(b)))))
+			},
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "valid",
+			Factory: func() Card {
+				b := BindNumber("toughness")
+				return NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithToughness(b), GainLifeFor(You, FromNumber(b)))))
+			},
+			WantErr: false,
+		},
+	})
 }
 
 func TestCreatureDiesCapturesOwnToughness(t *testing.T) {
@@ -2040,28 +2175,42 @@ func TestReceivesDamageSourceCaptureAfterRedirect(t *testing.T) {
 func TestReceivesDamageSourceDeclaration(t *testing.T) {
 	source := BindDamageSource("source")
 	amount := BindNumber("amount")
-	good := NewCreature("Good", "", 1, 3, WithAbility(WhenEvent(
-		ReceivesDamage(This, amount).WithSource(source),
-		DealDamageFrom(FromDamageSource(source), You, FromNumber(amount)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Good", "", 1, 3, WithAbility(WhenEvent(
+				ReceivesDamage(This, amount).WithSource(source),
+				DealDamageFrom(FromDamageSource(source), You, FromNumber(amount))))),
+			WantErr: false,
+		},
+		{
+			Name: "nil source",
+			Card: NewCreature("Bad", "", 1, 3, WithAbility(WhenEvent(
+				ReceivesDamage(This, amount).WithSource(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "empty source",
+			Card: NewCreature("Bad", "", 1, 3, WithAbility(WhenEvent(
+				ReceivesDamage(This, amount).WithSource(BindDamageSource("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "duplicate source",
+			Card: NewCreature("Bad", "", 1, 3, WithAbility(WhenEvent(
+				ReceivesDamage(This, amount).WithSource(source).WithSource(source), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "unbound source",
+			Card: NewCreature("Bad", "", 1, 3, WithAbility(WhenEvent(
+				ReceivesDamage(This, amount), DealDamageFrom(FromDamageSource(source), You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 	if got := InspectDefinition(ReceivesDamage(This, amount).WithSource(source)); got.Role != "event-pattern" || len(got.Children) != 2 {
 		t.Fatalf("inspection = %#v", got)
-	}
-	for _, pattern := range []EventPattern{
-		ReceivesDamage(This, amount).WithSource(nil),
-		ReceivesDamage(This, amount).WithSource(BindDamageSource("")),
-		ReceivesDamage(This, amount).WithSource(source).WithSource(source),
-	} {
-		bad := NewCreature("Bad", "", 1, 3, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid capture passed registration")
-		}
-	}
-	bad := NewCreature("Bad", "", 1, 3, WithAbility(WhenEvent(ReceivesDamage(This, amount), DealDamageFrom(FromDamageSource(source), You, Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("unbound source: %v", err)
 	}
 }
 
@@ -2133,30 +2282,50 @@ func TestDealsDamagePermanentRecipientPresentAndAbsent(t *testing.T) {
 
 func TestDealsDamagePermanentRecipientDeclaration(t *testing.T) {
 	bound := BindPermanent("recipient")
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Good", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamage(This, BindNumber("amount")).WithPermanent(bound),
+				AddCountersTo(From(bound), P1P1, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name: "nil recipient",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamage(This, BindNumber("amount")).WithPermanent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "empty recipient",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamage(This, BindNumber("amount")).WithPermanent(BindPermanent("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "duplicate recipient",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamage(This, BindNumber("amount")).WithPermanent(bound).WithPermanent(bound), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "player damage with recipient",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamageToPlayer(This, BindPlayer("player")).WithPermanent(bound), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "unbound recipient",
+			Card: NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamage(This, BindNumber("amount")), AddCountersTo(From(bound), P1P1, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 	good := NewCreature("Good", "", 1, 1, WithAbility(WhenEvent(
 		DealsDamage(This, BindNumber("amount")).WithPermanent(bound),
 		AddCountersTo(From(bound), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
 	if meta := InspectDefinition(good.Abilities()[0]); !strings.Contains(fmt.Sprintf("%+v", meta), "event-permanent-capture") {
 		t.Fatalf("missing capture: %+v", meta)
-	}
-	for _, pattern := range []EventPattern{
-		DealsDamage(This, BindNumber("amount")).WithPermanent(nil),
-		DealsDamage(This, BindNumber("amount")).WithPermanent(BindPermanent("")),
-		DealsDamage(This, BindNumber("amount")).WithPermanent(bound).WithPermanent(bound),
-		DealsDamageToPlayer(This, BindPlayer("player")).WithPermanent(bound),
-	} {
-		bad := NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid capture")
-		}
-	}
-	unbound := NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(
-		DealsDamage(This, BindNumber("amount")), AddCountersTo(From(bound), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(unbound.Name(), unbound); err == nil {
-		t.Fatal("accepted unbound recipient")
 	}
 }
 
@@ -2312,15 +2481,18 @@ func TestCreatureDiesDamagedByThisTurnSimultaneous(t *testing.T) {
 }
 
 func TestCreatureDiesDamagedByThisTurnRejectsInvalidPattern(t *testing.T) {
-	for _, pattern := range []creatureDiesPattern{
-		PermanentDies().DamagedByThisTurn(),
-		CreatureDies().DamagedByThisTurn().DamagedByThisTurn(),
-	} {
-		card := NewArtifact("Invalid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid damage-history pattern was accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "PermanentDies",
+			Card:    NewArtifact("Invalid", "", WithAbility(WhenEvent(PermanentDies().DamagedByThisTurn(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "DamagedByThisTurn duplicate",
+			Card:    NewArtifact("Invalid", "", WithAbility(WhenEvent(CreatureDies().DamagedByThisTurn().DamagedByThisTurn(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestCreatureDiesDamagedByThisTurnRequiresEventIncarnation(t *testing.T) {
@@ -2376,35 +2548,41 @@ func TestDeathEventCardVisit(t *testing.T) {
 
 func TestDeathEventCardDeclaration(t *testing.T) {
 	b := BindCard("dead")
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		body    ResolvingEffect
-		want    string
-	}{
-		{"nil", CreatureDies().WithCard(nil), GainLifeFor(You, Fixed(1)), "binding"},
-		{"empty", CreatureDies().WithCard(BindCard("")), GainLifeFor(You, Fixed(1)), "binding name"},
-		{"missing", CreatureDies(), ReturnCardToHand(FromCard(b)), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(tc.pattern, tc.body)))
-			if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("validation=%v, want %q", err, tc.want)
-			}
-		})
-	}
-	wrongScope := NewCreature("Wrong scope", "", 1, 1,
-		WithAbility(WhenEvent(CreatureDies().WithCard(b), GainLifeFor(You, Fixed(1)))),
-		WithAbility(Activate(Costs(), ReturnCardToHand(FromCard(b)))))
-	if err := ValidateCardDefinition(wrongScope.Name(), wrongScope); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope validation=%v", err)
-	}
-	duplicate := NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(
-		CreatureDies().WithCard(BindCard("same")),
-		Sequence(ReturnCardToHand(FromCard(BindCard("same"))), GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil {
-		t.Fatal("separate declarations with the same label were accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithCard(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+		{
+			Name:          "empty",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies().WithCard(BindCard("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding name",
+		},
+		{
+			Name:          "missing",
+			Card:          NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(CreatureDies(), ReturnCardToHand(FromCard(b))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "wrong scope",
+			Card: NewCreature("Wrong scope", "", 1, 1,
+				WithAbility(WhenEvent(CreatureDies().WithCard(b), GainLifeFor(You, Fixed(1)))),
+				WithAbility(Activate(Costs(), ReturnCardToHand(FromCard(b))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "duplicate",
+			Card: NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithCard(BindCard("same")),
+				Sequence(ReturnCardToHand(FromCard(BindCard("same"))), GainLifeFor(You, Fixed(1)))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestDeathEventCardSimultaneousAndCopy(t *testing.T) {
@@ -2706,21 +2884,26 @@ func TestPermanentDiesNotSacrificedSimultaneousSourceDeath(t *testing.T) {
 }
 
 func TestPermanentDiesNotSacrificedDeclaration(t *testing.T) {
-	good := NewArtifact("Good", "", WithAbility(WhenEvent(
-		PermanentDies().NotSacrificed(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
-	bad := NewArtifact("Bad", "", WithAbility(WhenEvent(
-		PermanentDies().NotSacrificed().NotSacrificed(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-		t.Fatal("duplicate filter accepted")
-	}
-	bad = NewArtifact("Bad", "", WithAbility(WhenEvent(
-		PermanentDies().YouControlled().YouControlled(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-		t.Fatal("duplicate controller filter accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Good", "", WithAbility(WhenEvent(
+				PermanentDies().NotSacrificed(), GainLifeFor(You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name: "duplicate NotSacrificed",
+			Card: NewArtifact("Bad", "", WithAbility(WhenEvent(
+				PermanentDies().NotSacrificed().NotSacrificed(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "duplicate YouControlled",
+			Card: NewArtifact("Bad", "", WithAbility(WhenEvent(
+				PermanentDies().YouControlled().YouControlled(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_death_observation_test.go ---
@@ -2873,28 +3056,42 @@ func TestDeathPermanentBindingKeepsDepartedDamageSource(t *testing.T) {
 
 func TestDeathPermanentBindingDeclaration(t *testing.T) {
 	dead := BindPermanent("dead")
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Good", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithPermanent(dead), DealDamageFrom(DamageSourceOf(From(dead)), You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name: "nil permanent",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithPermanent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "empty permanent",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithPermanent(BindPermanent("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "duplicate permanent",
+			Card: NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().WithPermanent(dead).WithPermanent(dead), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "unbound",
+			Card: NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies(), DealDamageFrom(DamageSourceOf(From(dead)), You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 	good := NewCreature("Good", "", 1, 1, WithAbility(WhenEvent(
 		CreatureDies().WithPermanent(dead), DealDamageFrom(DamageSourceOf(From(dead)), You, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
 	if meta := InspectDefinition(good.Abilities()[0]); meta.Role != "event-trigger" || len(meta.Children[0].Children) == 0 {
 		t.Fatalf("missing capture inspection: %+v", meta)
-	}
-	for _, pattern := range []creatureDiesPattern{
-		CreatureDies().WithPermanent(nil),
-		CreatureDies().WithPermanent(BindPermanent("")),
-		CreatureDies().WithPermanent(dead).WithPermanent(dead),
-	} {
-		bad := NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid death capture")
-		}
-	}
-	unbound := NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(
-		CreatureDies(), DealDamageFrom(DamageSourceOf(From(dead)), You, Fixed(1)))))
-	if err := ValidateCardDefinition(unbound.Name(), unbound); err == nil {
-		t.Fatal("accepted unbound death reference")
 	}
 }
 
@@ -3023,22 +3220,30 @@ func TestDeathPowerOrToughnessFilterBatchAndReplacement(t *testing.T) {
 }
 
 func TestDeathPowerOrToughnessFilterDeclaration(t *testing.T) {
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Good", "", 2, 2, WithAbility(WhenEvent(
+				CreatureYouControlDies().PowerOrToughnessAtMost(1), GainLifeFor(You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name: "duplicate PowerOrToughnessAtMost",
+			Card: NewCreature("Bad", "", 2, 2, WithAbility(WhenEvent(
+				CreatureDies().PowerOrToughnessAtMost(1).PowerOrToughnessAtMost(2), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "PermanentDies PowerOrToughnessAtMost",
+			Card: NewCreature("Bad", "", 2, 2, WithAbility(WhenEvent(
+				PermanentDies().PowerOrToughnessAtMost(1), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 	good := NewCreature("Good", "", 2, 2, WithAbility(WhenEvent(
 		CreatureYouControlDies().PowerOrToughnessAtMost(1), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
 	if text := InspectDefinition(good.Abilities()[0]).Children[0].Text; !strings.Contains(text, "power or toughness 1 or less") {
 		t.Fatalf("inspection = %q", text)
-	}
-	for _, pattern := range []EventPattern{
-		CreatureDies().PowerOrToughnessAtMost(1).PowerOrToughnessAtMost(2),
-		PermanentDies().PowerOrToughnessAtMost(1),
-	} {
-		bad := NewCreature("Bad", "", 2, 2, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid characteristic filter accepted")
-		}
 	}
 }
 
@@ -3114,31 +3319,37 @@ func TestCreatureDeathSubtypeUsesEffectiveType(t *testing.T) {
 }
 
 func TestCreatureDeathSubtypeDeclaration(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		pattern creatureDiesPattern
-		want    string
-	}{
-		{"valid", CreatureDies().OfSubtype("Goblin"), ""},
-		{"empty", CreatureDies().OfSubtype(""), "subtype"},
-		{"wrong family", CreatureDies().OfSubtype("Island"), "creature subtype"},
-		{"duplicate", CreatureDies().OfSubtype("Goblin").OfSubtype("Elf"), "one subtype"},
-		{"permanent", PermanentDies().OfType(TypeLand).OfSubtype("Goblin"), "creature"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(tc.pattern, GainLifeFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-				return
-			}
-			if err == nil || !strings.Contains(err.Error(), tc.want) {
-				t.Fatalf("validation = %v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(CreatureDies().OfSubtype("Goblin"), GainLifeFor(You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "empty",
+			Card:          NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(CreatureDies().OfSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "subtype",
+		},
+		{
+			Name:          "wrong family",
+			Card:          NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(CreatureDies().OfSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "creature subtype",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(CreatureDies().OfSubtype("Goblin").OfSubtype("Elf"), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "one subtype",
+		},
+		{
+			Name:          "permanent",
+			Card:          NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(PermanentDies().OfType(TypeLand).OfSubtype("Goblin"), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "creature",
+		},
+	})
 }
 
 // --- from composable_delayed_death_test.go ---
@@ -3175,16 +3386,31 @@ func TestWhenDiesThisTurnIncarnationAndClone(t *testing.T) {
 
 func TestWhenDiesThisTurnValidation(t *testing.T) {
 	saved := BindPermanent("saved")
-	valid := NewCreature("Valid", "", 1, 1, WithAbility(Activate(Costs(), Sequence(Snapshot(This, saved), WhenDiesThisTurn(From(saved), GainLifeFor(You, Fixed(1)))))))
-	if err := ValidateCardDefinition("Valid", valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, effect := range []ResolvingEffect{WhenDiesThisTurn(From(saved), GainLifeFor(You, Fixed(1))), WhenDiesThisTurn(nil, GainLifeFor(You, Fixed(1))), WhenDiesThisTurn(This, nil)} {
-		card := NewInstant("Invalid", "", Spell(effect))
-		if err := ValidateCardDefinition("Invalid", card); err == nil || !strings.Contains(err.Error(), "delayed") && !strings.Contains(err.Error(), "producer") {
-			t.Fatalf("unexpected validation: %v", err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewCreature("Valid", "", 1, 1, WithAbility(Activate(Costs(), Sequence(Snapshot(This, saved), WhenDiesThisTurn(From(saved), GainLifeFor(You, Fixed(1))))))),
+			WantErr: false,
+		},
+		{
+			Name:          "unbound",
+			Card:          NewInstant("Invalid", "", Spell(WhenDiesThisTurn(From(saved), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "nil target",
+			Card:          NewInstant("Invalid", "", Spell(WhenDiesThisTurn(nil, GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "delayed",
+		},
+		{
+			Name:          "nil effect",
+			Card:          NewInstant("Invalid", "", Spell(WhenDiesThisTurn(This, nil))),
+			WantErr:       true,
+			WantErrSubstr: "delayed",
+		},
+	})
 }
 
 func TestWhenDiesThisTurnTargetSourceAndExpiry(t *testing.T) {
@@ -3358,32 +3584,45 @@ func TestDiscardEventCardDeclaration(t *testing.T) {
 	if info := InspectDefinition(OpponentDiscardsCard(BindPlayer("player")).WithCard(card)); info.Role != "event-pattern" || len(info.Children) != 2 {
 		t.Fatalf("inspection = %+v", info)
 	}
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		body    ResolvingEffect
-		want    string
-	}{
-		{"valid", PlayerDiscardsCard(BindPlayer("player")).WithCard(card), IfCardHasType(FromCard(card), TypeLand, GainLifeFor(You, Fixed(1))), ""},
-		{"nil", PlayerDiscardsCard(BindPlayer("player")).WithCard(nil), GainLifeFor(You, Fixed(1)), "non-nil"},
-		{"unnamed", PlayerDiscardsCard(BindPlayer("player")).WithCard(BindCard("")), GainLifeFor(You, Fixed(1)), "name"},
-		{"duplicate", PlayerDiscardsCard(BindPlayer("player")).WithCard(card).WithCard(card), GainLifeFor(You, Fixed(1)), "once"},
-		{"missing", PlayerDiscardsCard(BindPlayer("player")), IfCardHasType(FromCard(card), TypeLand, GainLifeFor(You, Fixed(1))), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			definition := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, tc.body)))
-			err := ValidateCardDefinition(definition.Name(), definition)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	outOfScope := NewEnchantment("Scope", "",
-		WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")).WithCard(card), GainLifeFor(You, Fixed(1)))),
-		WithAbility(Activate(Costs(), IfCardHasType(FromCard(card), TypeLand, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(outOfScope.Name(), outOfScope); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("out-of-scope validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")).WithCard(card), IfCardHasType(FromCard(card), TypeLand, GainLifeFor(You, Fixed(1)))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")).WithCard(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")).WithCard(BindCard("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")).WithCard(card).WithCard(card), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "once",
+		},
+		{
+			Name:          "missing",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")), IfCardHasType(FromCard(card), TypeLand, GainLifeFor(You, Fixed(1)))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "out of scope",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("player")).WithCard(card), GainLifeFor(You, Fixed(1)))),
+				WithAbility(Activate(Costs(), IfCardHasType(FromCard(card), TypeLand, GainLifeFor(You, Fixed(1)))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_discard_event_test.go ---
@@ -3476,25 +3715,39 @@ func TestOpponentDiscardsCardDeclaration(t *testing.T) {
 	if info := InspectDefinition(OpponentDiscardsCard(discarder)); info.Role != "event-pattern" || info.Text != "an opponent discards a card" {
 		t.Fatalf("inspection = %+v", info)
 	}
-	for _, tc := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{OpponentDiscardsCard(discarder), ""},
-		{OpponentDiscardsCard(nil), "non-nil"},
-		{OpponentDiscardsCard(BindPlayer("")), "name"},
-		{OpponentDiscardsCard(BindPlayer("other")), "producer"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, GainLifeFor(FromPlayer(discarder), Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("want %q: %v", tc.want, err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(OpponentDiscardsCard(discarder), GainLifeFor(FromPlayer(discarder), Fixed(1)))), WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(discarder), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDiscardsCard(discarder), GainLifeFor(FromPlayer(discarder), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDiscardsCard(nil), GainLifeFor(FromPlayer(discarder), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDiscardsCard(BindPlayer("")), GainLifeFor(FromPlayer(discarder), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound other",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDiscardsCard(BindPlayer("other")), GainLifeFor(FromPlayer(discarder), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "out of scope",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(OpponentDiscardsCard(discarder), GainLifeFor(FromPlayer(discarder), Fixed(1)))),
+				WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(discarder), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestOpponentDiscardsCardEventTimeControl(t *testing.T) {
@@ -3556,22 +3809,25 @@ func TestControllerDrawsCardIntoExactHandVisit(t *testing.T) {
 
 func TestControllerDrawsCardIntoDeclaration(t *testing.T) {
 	drawer, drawn := BindPlayer("drawer"), BindCard("drawn")
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"valid", NewEnchantment("Valid", "", WithAbility(WhenEvent(ControllerDrawsCardInto(drawer, drawn), IfCardHasType(FromCard(drawn), TypeLand, GainLifeFor(You, Fixed(1)))))), ""},
-		{"nil", NewEnchantment("Nil", "", WithAbility(WhenEvent(ControllerDrawsCardInto(drawer, nil), GainLifeFor(You, Fixed(1))))), "non-nil"},
-		{"missing", NewEnchantment("Missing", "", WithAbility(WhenEvent(ControllerDrawsCard(drawer), IfCardHasType(FromCard(drawn), TypeLand, GainLifeFor(You, Fixed(1)))))), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Valid", "", WithAbility(WhenEvent(ControllerDrawsCardInto(drawer, drawn), IfCardHasType(FromCard(drawn), TypeLand, GainLifeFor(You, Fixed(1)))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Nil", "", WithAbility(WhenEvent(ControllerDrawsCardInto(drawer, nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "missing",
+			Card:          NewEnchantment("Missing", "", WithAbility(WhenEvent(ControllerDrawsCard(drawer), IfCardHasType(FromCard(drawn), TypeLand, GainLifeFor(You, Fixed(1)))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestControllerDrawsCardIntoCopyAndAbsence(t *testing.T) {
@@ -3743,27 +3999,39 @@ func TestControllerDrawEventSourceIdentity(t *testing.T) {
 
 func TestControllerDrawEventValidation(t *testing.T) {
 	p := BindPlayer("drawer")
-	for _, tt := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{ControllerDrawsCard(p), ""}, {ControllerDrawsCard(nil), "non-nil"},
-		{ControllerDrawsCard(BindPlayer("")), "name"}, {ControllerDrawsCard(BindPlayer("other")), "producer"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tt.pattern, GainLifeFor(FromPlayer(p), Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tt.want == "" {
-			if err != nil {
-				t.Fatal(err)
-			}
-		} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-			t.Fatalf("want %q: %v", tt.want, err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(ControllerDrawsCard(p), GainLifeFor(FromPlayer(p), Fixed(1)))), WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(p), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerDrawsCard(p), GainLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerDrawsCard(nil), GainLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerDrawsCard(BindPlayer("")), GainLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound other",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerDrawsCard(BindPlayer("other")), GainLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "out of scope",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(ControllerDrawsCard(p), GainLifeFor(FromPlayer(p), Fixed(1)))),
+				WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_event_amount_test.go ---
@@ -3831,35 +4099,50 @@ func TestDamageEventAmountLifecycle(t *testing.T) {
 func TestDamageEventAmountValidation(t *testing.T) {
 	p, n := BindPlayer("player"), BindNumber("amount")
 	read := GainLifeFor(You, FromNumber(n))
-	for _, tt := range []struct {
-		name    string
-		trigger TriggeredAbility
-		want    string
-	}{
-		{"valid", WhenEvent(DealsDamageToOpponent(This, p).WithAmount(n), read), ""},
-		{"unbound", WhenEvent(DealsDamageToPlayer(This, p), read), "producer"},
-		{"unrelated", WhenEvent(Enters(This), read), "producer"},
-		{"nil", WhenEvent(DealsDamageToPlayer(This, p).WithAmount(nil), read), "non-nil"},
-		{"empty", WhenEvent(DealsDamageToPlayer(This, p).WithAmount(BindNumber("")), read), "name"},
-		{"duplicate", WhenEvent(DealsDamageToPlayer(This, p).WithAmount(BindNumber("player")), read), "duplicate"},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			card := NewCreature("Source", "", 1, 1, WithAbility(tt.trigger))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tt.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("error = %v", err)
-			}
-		})
-	}
-	card := NewCreature("Cross ability", "", 1, 1,
-		WithAbility(WhenEvent(DealsDamageToPlayer(This, p).WithAmount(n), read)), WithAbility(At(YourUpkeep, read)))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope error = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(DealsDamageToOpponent(This, p).WithAmount(n), read))),
+			WantErr: false,
+		},
+		{
+			Name:          "unbound",
+			Card:          NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p), read))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "unrelated",
+			Card:          NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(Enters(This), read))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "nil",
+			Card:          NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p).WithAmount(nil), read))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p).WithAmount(BindNumber("")), read))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p).WithAmount(BindNumber("player")), read))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name: "cross ability",
+			Card: NewCreature("Cross ability", "", 1, 1,
+				WithAbility(WhenEvent(DealsDamageToPlayer(This, p).WithAmount(n), read)), WithAbility(At(YourUpkeep, read))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestDamageEventAmountFrameIsolation(t *testing.T) {
@@ -3959,35 +4242,37 @@ func TestDamageEventAmountCopyRetarget(t *testing.T) {
 
 // --- from composable_event_opponent_test.go ---
 func TestDamageOpponentBindingValidation(t *testing.T) {
-	for _, tt := range []struct {
-		name   string
-		player *PlayerBinding
-		want   string
-	}{
-		{"valid", BindPlayer("opponent"), ""},
-		{"nil", nil, "non-nil"},
-		{"empty", BindPlayer(""), "name"},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			card := NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(
-				DealsDamageToOpponent(This, tt.player), DrawFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tt.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("error = %v", err)
-			}
-		})
-	}
 	p := BindPlayer("opponent")
-	card := NewCreature("Scope", "", 1, 1,
-		WithAbility(WhenEvent(DealsDamageToOpponent(This, p), DrawFor(FromPlayer(p), Fixed(1)))),
-		WithAbility(WhenEvent(Enters(This), DrawFor(FromPlayer(p), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope error = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamageToOpponent(This, p), DrawFor(You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name: "nil",
+			Card: NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamageToOpponent(This, nil), DrawFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name: "empty",
+			Card: NewCreature("Source", "", 1, 1, WithAbility(WhenEvent(
+				DealsDamageToOpponent(This, BindPlayer("")), DrawFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name: "scope error",
+			Card: NewCreature("Scope", "", 1, 1,
+				WithAbility(WhenEvent(DealsDamageToOpponent(This, p), DrawFor(FromPlayer(p), Fixed(1)))),
+				WithAbility(WhenEvent(Enters(This), DrawFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestDamageOpponentBindingFiltering(t *testing.T) {
@@ -4102,28 +4387,31 @@ func TestDamagePlayerBinding(t *testing.T) {
 
 func TestDamagePlayerBindingValidation(t *testing.T) {
 	p := BindPlayer("player")
-	for _, tt := range []struct {
-		name    string
-		trigger TriggeredAbility
-		want    string
-	}{
-		{"valid", WhenEvent(DealsDamageToPlayer(This, p), DrawFor(FromPlayer(p), Fixed(1))), ""},
-		{"missing", WhenEvent(Enters(This), DrawFor(FromPlayer(p), Fixed(1))), "producer"},
-		{"nil", WhenEvent(DealsDamageToPlayer(This, nil), DrawFor(You, Fixed(1))), "non-nil"},
-		{"empty", WhenEvent(DealsDamageToPlayer(This, BindPlayer("")), DrawFor(You, Fixed(1))), "name"},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			c := NewCreature("Test", "", 1, 1, WithAbility(tt.trigger))
-			err := ValidateCardDefinition(c.Name(), c)
-			if tt.want == "" {
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-				t.Fatalf("error = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p), DrawFor(FromPlayer(p), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "missing",
+			Card:          NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(Enters(This), DrawFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "nil",
+			Card:          NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, nil), DrawFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, BindPlayer("")), DrawFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+	})
 }
 
 func TestDamagePlayerBindingCopyAndTargets(t *testing.T) {
@@ -4208,13 +4496,14 @@ func TestDamagePlayerBindingEventFiltering(t *testing.T) {
 func TestDamagePlayerBindingScope(t *testing.T) {
 	p := BindPlayer("damaged")
 	read := GainLifeFor(FromPlayer(p), Fixed(1))
-	for _, card := range []Card{
-		NewCreature("Cross ability", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p), read)), WithAbility(At(YourUpkeep, read))),
-	} {
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-			t.Fatalf("scope error = %v", err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "cross ability",
+			Card:          NewCreature("Cross ability", "", 1, 1, WithAbility(WhenEvent(DealsDamageToPlayer(This, p), read)), WithAbility(At(YourUpkeep, read))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestDamagePlayerBindingDelayedCapture(t *testing.T) {
@@ -4361,26 +4650,49 @@ func TestGraveyardLeaveEventDeclaration(t *testing.T) {
 	if info := InspectDefinition(pattern); info.Role != "event-pattern" || len(info.Children) != 1 {
 		t.Fatalf("inspection = %+v", info)
 	}
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"valid", NewEnchantment("Valid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, FromNumber(count))))), ""},
-		{"nil", NewEnchantment("Nil", "", WithAbility(WhenEvent(OneOrMoreCardsLeaveYourGraveyard().WithCount(nil), GainLifeFor(You, Fixed(1))))), "count binding"},
-		{"duplicate", NewEnchantment("Duplicate", "", WithAbility(WhenEvent(pattern.WithCount(count), GainLifeFor(You, Fixed(1))))), "count binding"},
-		{"unnamed", NewEnchantment("Unnamed", "", WithAbility(WhenEvent(OneOrMoreCardsLeaveYourGraveyard().WithCount(BindNumber("")), GainLifeFor(You, Fixed(1))))), "name"},
-		{"missing", NewEnchantment("Missing", "", WithAbility(WhenEvent(OneOrMoreCardsLeaveYourGraveyard(), GainLifeFor(You, FromNumber(count))))), "producer"},
-		{"wrong scope", NewEnchantment("Scope", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))), WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(count))))), "producer"},
-		{"wrong zone", NewInstant("Instant", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1))))), "battlefield"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			err := ValidateCardDefinition(tc.card.Name(), tc.card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Valid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, FromNumber(count))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Nil", "", WithAbility(WhenEvent(OneOrMoreCardsLeaveYourGraveyard().WithCount(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "count binding",
+		},
+		{
+			Name:          "duplicate",
+			Card:          NewEnchantment("Duplicate", "", WithAbility(WhenEvent(pattern.WithCount(count), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "count binding",
+		},
+		{
+			Name:          "unnamed",
+			Card:          NewEnchantment("Unnamed", "", WithAbility(WhenEvent(OneOrMoreCardsLeaveYourGraveyard().WithCount(BindNumber("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "missing",
+			Card:          NewEnchantment("Missing", "", WithAbility(WhenEvent(OneOrMoreCardsLeaveYourGraveyard(), GainLifeFor(You, FromNumber(count))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "wrong scope",
+			Card:          NewEnchantment("Scope", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))), WithAbility(Activate(Costs(), GainLifeFor(You, FromNumber(count))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "wrong zone",
+			Card:          NewInstant("Instant", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 // --- from composable_land_entry_event_test.go ---
@@ -4446,23 +4758,38 @@ func TestLandEntryControllerEvent(t *testing.T) {
 
 func TestLandEntryControllerDeclaration(t *testing.T) {
 	binding := BindPlayer("controller")
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewArtifact("Good", "", WithAbility(WhenEvent(LandEnters().WithController(binding),
+				GainLifeFor(FromPlayer(binding), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:    "nil binding",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(LandEnters().WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "empty binding",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(LandEnters().WithController(BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate binding",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(LandEnters().WithController(binding).WithController(binding), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound",
+			Card:    NewArtifact("Unbound", "", WithAbility(WhenEvent(LandEnters(), GainLifeFor(FromPlayer(binding), Fixed(1))))),
+			WantErr: true,
+		},
+	})
 	good := NewArtifact("Good", "", WithAbility(WhenEvent(LandEnters().WithController(binding),
 		GainLifeFor(FromPlayer(binding), Fixed(1)))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
 	if got := InspectDefinition(good.Abilities()[0]); got.Role != "event-trigger" || len(got.Children) == 0 {
 		t.Fatalf("inspection: %+v", got)
-	}
-	for _, pattern := range []landEntersPattern{LandEnters().WithController(nil), LandEnters().WithController(BindPlayer("")), LandEnters().WithController(binding).WithController(binding)} {
-		bad := NewArtifact("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid binding")
-		}
-	}
-	unbound := NewArtifact("Unbound", "", WithAbility(WhenEvent(LandEnters(), GainLifeFor(FromPlayer(binding), Fixed(1)))))
-	if err := ValidateCardDefinition(unbound.Name(), unbound); err == nil {
-		t.Fatal("accepted unbound read")
 	}
 }
 
@@ -4533,21 +4860,29 @@ func TestLandTappedForManaPlayerCapture(t *testing.T) {
 
 func TestLandTappedForManaDeclaration(t *testing.T) {
 	player := BindPlayer("mana player")
-	for _, pattern := range []landTappedForManaPattern{
-		LandTappedForMana().WithPlayer(nil),
-		LandTappedForMana().WithPlayer(BindPlayer("")),
-		LandTappedForMana().WithPlayer(player).WithPlayer(player),
-	} {
-		card := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid event binding")
-		}
-	}
-	card := NewEnchantment("Unbound", "", WithAbility(WhenEvent(LandTappedForMana(),
-		GainLifeFor(FromPlayer(player), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("accepted read without event binding")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil player",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(LandTappedForMana().WithPlayer(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "empty player",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(LandTappedForMana().WithPlayer(BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate player",
+			Card:    NewEnchantment("Bad", "", WithAbility(WhenEvent(LandTappedForMana().WithPlayer(player).WithPlayer(player), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "unbound",
+			Card: NewEnchantment("Unbound", "", WithAbility(WhenEvent(LandTappedForMana(),
+				GainLifeFor(FromPlayer(player), Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestLandTappedForManaFilteringAndSourceLifecycle(t *testing.T) {
@@ -4686,30 +5021,44 @@ func TestOpponentLandBecomesTappedPendingIdentity(t *testing.T) {
 }
 
 func TestOpponentLandBecomesTappedDeclaration(t *testing.T) {
-	valid := NewEnchantment("Valid", "", WithAbility(WhenEvent(
-		OpponentLandBecomesTapped(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewEnchantment("Valid", "", WithAbility(WhenEvent(
+				OpponentLandBecomesTapped(), GainLifeFor(You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name: "empty subtype",
+			Card: NewEnchantment("Invalid", "", WithAbility(WhenEvent(
+				OpponentLandBecomesTapped().OfSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "subtype",
+		},
+		{
+			Name: "Goblin subtype",
+			Card: NewEnchantment("Invalid", "", WithAbility(WhenEvent(
+				OpponentLandBecomesTapped().OfSubtype("Goblin"), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "subtype",
+		},
+		{
+			Name: "duplicate subtype",
+			Card: NewEnchantment("Duplicate", "", WithAbility(WhenEvent(
+				OpponentLandBecomesTapped().OfSubtype("Forest").OfSubtype("Mountain"), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "subtype",
+		},
+		{
+			Name: "spell source",
+			Card: NewInstant("Invalid source", "", WithAbility(WhenEvent(
+				OpponentLandBecomesTapped(), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "battlefield",
+		},
+	})
 	if got := InspectDefinition(OpponentLandBecomesTapped().OfSubtype("Forest")); got.Role != "event-pattern" || got.Text != "opponent Forest becomes tapped" {
 		t.Fatalf("inspection = %+v", got)
-	}
-	for _, subtype := range []string{"", "Goblin"} {
-		card := NewEnchantment("Invalid", "", WithAbility(WhenEvent(
-			OpponentLandBecomesTapped().OfSubtype(subtype), GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "subtype") {
-			t.Fatalf("subtype %q: validation=%v", subtype, err)
-		}
-	}
-	duplicate := NewEnchantment("Duplicate", "", WithAbility(WhenEvent(
-		OpponentLandBecomesTapped().OfSubtype("Forest").OfSubtype("Mountain"), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(duplicate.Name(), duplicate); err == nil || !strings.Contains(err.Error(), "subtype") {
-		t.Fatalf("duplicate subtype validation=%v", err)
-	}
-	spell := NewInstant("Invalid source", "", WithAbility(WhenEvent(
-		OpponentLandBecomesTapped(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell validation=%v", err)
 	}
 }
 
@@ -4805,31 +5154,51 @@ func TestOpponentLifeEventLifecycle(t *testing.T) {
 func TestOpponentLifeEventValidation(t *testing.T) {
 	p, n := BindPlayer("player"), BindNumber("amount")
 	read := GainLifeFor(FromPlayer(p), FromNumber(n))
-	for _, tt := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{OpponentLosesLife(p).WithAmount(n), ""},
-		{OpponentLosesLife(nil).WithAmount(n), "non-nil"},
-		{OpponentLosesLife(p).WithAmount(nil), "non-nil"},
-		{OpponentLosesLife(p), "producer"},
-		{OpponentLosesLife(p).WithAmount(BindNumber("player")), "duplicate"},
-		{OpponentLosesLife(BindPlayer("")).WithAmount(n), "name"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tt.pattern, read)))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tt.want == "" {
-			if err != nil {
-				t.Fatal(err)
-			}
-		} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-			t.Fatalf("want %q: %v", tt.want, err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(OpponentLosesLife(p).WithAmount(n), read)), WithAbility(At(YourUpkeep, read)))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentLosesLife(p).WithAmount(n), read))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentLosesLife(nil).WithAmount(n), read))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil amount",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentLosesLife(p).WithAmount(nil), read))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentLosesLife(p), read))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "duplicate binding",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentLosesLife(p).WithAmount(BindNumber("player")), read))),
+			WantErr:       true,
+			WantErrSubstr: "duplicate",
+		},
+		{
+			Name:          "empty player name",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentLosesLife(BindPlayer("")).WithAmount(n), read))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name: "scope error",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(OpponentLosesLife(p).WithAmount(n), read)),
+				WithAbility(At(YourUpkeep, read))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestOpponentLifeEventPaymentAndPhasing(t *testing.T) {
@@ -5009,27 +5378,39 @@ func TestControllerLifeGainEventSourceIdentity(t *testing.T) {
 
 func TestControllerLifeGainEventValidation(t *testing.T) {
 	p := BindPlayer("gainer")
-	for _, tt := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{ControllerGainsLife(p), ""}, {ControllerGainsLife(nil), "non-nil"},
-		{ControllerGainsLife(BindPlayer("")), "name"}, {ControllerGainsLife(BindPlayer("other")), "producer"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tt.pattern, LoseLifeFor(FromPlayer(p), Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tt.want == "" {
-			if err != nil {
-				t.Fatal(err)
-			}
-		} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-			t.Fatalf("want %q: %v", tt.want, err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(ControllerGainsLife(p), LoseLifeFor(FromPlayer(p), Fixed(1)))), WithAbility(At(YourUpkeep, LoseLifeFor(FromPlayer(p), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerGainsLife(p), LoseLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerGainsLife(nil), LoseLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerGainsLife(BindPlayer("")), LoseLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound other",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(ControllerGainsLife(BindPlayer("other")), LoseLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "scope error",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(ControllerGainsLife(p), LoseLifeFor(FromPlayer(p), Fixed(1)))),
+				WithAbility(At(YourUpkeep, LoseLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_modal_trigger_test.go ---
@@ -5116,40 +5497,54 @@ func TestTypedModalStepTrigger(t *testing.T) {
 func TestTypedModalTriggerValidation(t *testing.T) {
 	first := DeclarePlayerTarget("first")
 	second := DeclarePlayerTarget("second")
-	for _, step := range []bool{false, true} {
-		modes := []ModeDefinition{ModeOf("First", GainLifeFor(first, Fixed(1)), WithTargets(first)), ModeOf("Second", GainLifeFor(first, Fixed(1)), WithTargets(second))}
-		trigger := WhenEventModes(Enters(This), modes...)
-		if step {
-			trigger = AtModes(YourUpkeep, modes...)
-		}
-		err := ValidateCardDefinition("Scope", NewEnchantment("Scope", "", WithAbility(trigger)))
-		if err == nil || !strings.Contains(err.Error(), "modes[1]") {
-			t.Fatalf("scope diagnostic = %v", err)
-		}
-	}
-	for _, build := range []func(){
-		func() {
-			WhenEventModes(nil, ModeOf("One", GainLifeFor(You, Fixed(1))), ModeOf("Two", GainLifeFor(You, Fixed(2))))
+	modes := []ModeDefinition{ModeOf("First", GainLifeFor(first, Fixed(1)), WithTargets(first)), ModeOf("Second", GainLifeFor(first, Fixed(1)), WithTargets(second))}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "WhenEventModes scope",
+			Card:          NewEnchantment("Scope", "", WithAbility(WhenEventModes(Enters(This), modes...))),
+			WantErr:       true,
+			WantErrSubstr: "modes[1]",
 		},
-		func() {
-			AtModes(nil, ModeOf("One", GainLifeFor(You, Fixed(1))), ModeOf("Two", GainLifeFor(You, Fixed(2))))
+		{
+			Name:          "AtModes scope",
+			Card:          NewEnchantment("Scope", "", WithAbility(AtModes(YourUpkeep, modes...))),
+			WantErr:       true,
+			WantErrSubstr: "modes[1]",
 		},
-		func() { WhenEventModes(Enters(This)) },
-		func() { AtModes(YourUpkeep, ModeOf("One", GainLifeFor(You, Fixed(1)))) },
-	} {
-		func() {
-			defer func() {
-				if recover() == nil {
-					t.Error("invalid modal trigger did not panic")
-				}
-			}()
-			build()
-		}()
-	}
-	trigger := WhenEventModes(Enters(This), ModeOf("Missing", nil), ModeOf("Life", GainLifeFor(You, Fixed(1))))
-	if err := ValidateCardDefinition("Nil", NewEnchantment("Nil", "", WithAbility(trigger))); err == nil {
-		t.Fatal("nil mode body passed validation")
-	}
+		{
+			Name: "WhenEventModes nil event",
+			Factory: func() Card {
+				return NewEnchantment("Panic", "", WithAbility(WhenEventModes(nil, ModeOf("One", GainLifeFor(You, Fixed(1))), ModeOf("Two", GainLifeFor(You, Fixed(2))))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "AtModes nil step",
+			Factory: func() Card {
+				return NewEnchantment("Panic", "", WithAbility(AtModes(nil, ModeOf("One", GainLifeFor(You, Fixed(1))), ModeOf("Two", GainLifeFor(You, Fixed(2))))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "WhenEventModes no modes",
+			Factory: func() Card {
+				return NewEnchantment("Panic", "", WithAbility(WhenEventModes(Enters(This))))
+			},
+			WantErr: true,
+		},
+		{
+			Name: "AtModes one mode",
+			Factory: func() Card {
+				return NewEnchantment("Panic", "", WithAbility(AtModes(YourUpkeep, ModeOf("One", GainLifeFor(You, Fixed(1))))))
+			},
+			WantErr: true,
+		},
+		{
+			Name:    "nil mode body",
+			Card:    NewEnchantment("Nil", "", WithAbility(WhenEventModes(Enters(This), ModeOf("Missing", nil), ModeOf("Life", GainLifeFor(You, Fixed(1)))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestTypedModalTriggerClone(t *testing.T) {
@@ -5371,25 +5766,31 @@ func TestOpponentCreatureDiesDeclaration(t *testing.T) {
 	if info := InspectDefinition(pattern); info.Role != "event-pattern" || info.Text != "a creature an opponent controls dies" {
 		t.Fatalf("inspection = %+v", info)
 	}
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		body    ResolvingEffect
-		want    string
-	}{
-		{"valid", pattern, GainLifeFor(FromPlayer(former), Fixed(1)), ""},
-		{"nil", OpponentCreatureDies().WithController(nil), GainLifeFor(You, Fixed(1)), "binding"},
-		{"empty", OpponentCreatureDies().WithController(BindPlayer("")), GainLifeFor(You, Fixed(1)), "name"},
-		{"unbound", OpponentCreatureDies(), GainLifeFor(FromPlayer(former), Fixed(1)), "producer"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, tc.body)))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v, want %q", err, tc.want)
-			}
-		})
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(pattern, GainLifeFor(FromPlayer(former), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentCreatureDies().WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "binding",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentCreatureDies().WithController(BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentCreatureDies(), GainLifeFor(FromPlayer(former), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestOpponentCreatureDiesSimultaneousAndToken(t *testing.T) {
@@ -5543,25 +5944,39 @@ func TestOpponentDrawEventControlAndIdentity(t *testing.T) {
 
 func TestOpponentDrawEventValidation(t *testing.T) {
 	drawer := BindPlayer("drawer")
-	for _, tc := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{OpponentDrawsCard(drawer), ""},
-		{OpponentDrawsCard(nil), "non-nil"},
-		{OpponentDrawsCard(BindPlayer("")), "name"},
-		{OpponentDrawsCard(BindPlayer("different")), "producer"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, GainLifeFor(FromPlayer(drawer), Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("want %q: %v", tc.want, err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(OpponentDrawsCard(drawer), GainLifeFor(FromPlayer(drawer), Fixed(1)))), WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(drawer), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDrawsCard(drawer), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDrawsCard(nil), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDrawsCard(BindPlayer("")), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound different",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(OpponentDrawsCard(BindPlayer("different")), GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "scope error",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(OpponentDrawsCard(drawer), GainLifeFor(FromPlayer(drawer), Fixed(1)))),
+				WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(drawer), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_other_creature_death_test.go ---
@@ -5844,22 +6259,38 @@ func TestPermanentDiesAllTypesAndInspection(t *testing.T) {
 }
 
 func TestPermanentDiesTypeRegistration(t *testing.T) {
-	for _, typ := range []CardType{TypeInstant, TypeSorcery, CardType(-1)} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
-			PermanentDies().OfType(typ), GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatalf("type %v accepted", typ)
-		}
-	}
-	for _, pattern := range []EventPattern{
-		PermanentDies().OfType(TypeLand).OfType(TypeArtifact),
-		CreatureDies().OfType(TypeLand),
-	} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("repeated or creature-only type filter accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "TypeInstant",
+			Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
+				PermanentDies().OfType(TypeInstant), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "TypeSorcery",
+			Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
+				PermanentDies().OfType(TypeSorcery), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "CardType(-1)",
+			Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
+				PermanentDies().OfType(CardType(-1)), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "repeated OfType",
+			Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
+				PermanentDies().OfType(TypeLand).OfType(TypeArtifact), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name: "CreatureDies OfType Land",
+			Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
+				CreatureDies().OfType(TypeLand), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 // --- from composable_permanent_tap_event_test.go ---
@@ -5942,29 +6373,58 @@ func TestPermanentBecomesTappedIdentityAndSourceLifecycle(t *testing.T) {
 func TestPermanentBecomesTappedDeclaration(t *testing.T) {
 	object := BindPermanent("object")
 	controller := BindPlayer("controller")
-	valid := NewArtifact("Valid", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithPermanent(object).WithController(controller), GainLifeFor(FromPlayer(controller), Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, pattern := range []EventPattern{
-		PermanentBecomesTapped().WithPermanent(nil),
-		PermanentBecomesTapped().WithPermanent(BindPermanent("")),
-		PermanentBecomesTapped().WithPermanent(object).WithPermanent(object),
-		PermanentBecomesTapped().WithController(nil),
-		PermanentBecomesTapped().WithController(controller).WithController(controller),
-		PermanentBecomesTapped().ByOpponent().ByOpponent(),
-		PermanentBecomesTapped().OfType(TypeCreature).OfType(TypeArtifact),
-		PermanentBecomesTapped().OfType(TypeInstant),
-	} {
-		bad := NewArtifact("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid tap pattern")
-		}
-	}
-	unbound := NewArtifact("Unbound", "", WithAbility(WhenEvent(PermanentBecomesTapped(), AddCountersTo(From(object), Charge, Fixed(1)))))
-	if err := ValidateCardDefinition(unbound.Name(), unbound); err == nil {
-		t.Fatal("accepted unbound event participant")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewArtifact("Valid", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithPermanent(object).WithController(controller), GainLifeFor(FromPlayer(controller), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:    "nil permanent",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithPermanent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "empty permanent",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithPermanent(BindPermanent("")), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate permanent",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithPermanent(object).WithPermanent(object), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil controller",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate controller",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().WithController(controller).WithController(controller), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate ByOpponent",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().ByOpponent().ByOpponent(), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate OfType",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().OfType(TypeCreature).OfType(TypeArtifact), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "instant OfType",
+			Card:    NewArtifact("Bad", "", WithAbility(WhenEvent(PermanentBecomesTapped().OfType(TypeInstant), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound",
+			Card:    NewArtifact("Unbound", "", WithAbility(WhenEvent(PermanentBecomesTapped(), AddCountersTo(From(object), Charge, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestPermanentBecomesTappedFilterAndBatch(t *testing.T) {
@@ -6031,27 +6491,39 @@ func TestPlayerDiscardsCardDeclaration(t *testing.T) {
 	if info := InspectDefinition(PlayerDiscardsCard(player)); info.Role != "event-pattern" || info.Text != "a player discards a card" {
 		t.Fatalf("inspection = %+v", info)
 	}
-	for _, tc := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{PlayerDiscardsCard(player), ""},
-		{PlayerDiscardsCard(nil), "non-nil"},
-		{PlayerDiscardsCard(BindPlayer("")), "name"},
-		{PlayerDiscardsCard(BindPlayer("other")), "producer"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tc.pattern, GainLifeFor(FromPlayer(player), Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-			t.Fatalf("want %q: %v", tc.want, err)
-		}
-	}
-	scope := NewEnchantment("Scope", "",
-		WithAbility(WhenEvent(PlayerDiscardsCard(player), GainLifeFor(FromPlayer(player), Fixed(1)))),
-		WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(player), Fixed(1)))))
-	if err := ValidateCardDefinition(scope.Name(), scope); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(player), GainLifeFor(FromPlayer(player), Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(nil), GainLifeFor(FromPlayer(player), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("")), GainLifeFor(FromPlayer(player), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name:          "unbound other",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(PlayerDiscardsCard(BindPlayer("other")), GainLifeFor(FromPlayer(player), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "scope error",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(PlayerDiscardsCard(player), GainLifeFor(FromPlayer(player), Fixed(1)))),
+				WithAbility(At(YourUpkeep, GainLifeFor(FromPlayer(player), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestPlayerDiscardsCardReplacementPhasingAndDeparture(t *testing.T) {
@@ -6160,12 +6632,33 @@ func TestTypedPreventionTargetAmount(t *testing.T) {
 func TestTypedPreventionAmountValidation(t *testing.T) {
 	saved := BindPermanent("missing")
 	target := DeclarePermanentTarget("undeclared", IsCreature)
-	for _, amount := range []ResolutionValue{nil, PowerOf(nil), PowerOf(From(saved)), PowerOf(target), ValueAtResolution(nil)} {
-		card := NewInstant("Invalid shield", "", WithAbility(Spell(PreventNextDamage(You, amount))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatalf("accepted %T", amount)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil amount",
+			Card:    NewInstant("Invalid shield", "", WithAbility(Spell(PreventNextDamage(You, nil)))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil PowerOf",
+			Card:    NewInstant("Invalid shield", "", WithAbility(Spell(PreventNextDamage(You, PowerOf(nil))))),
+			WantErr: true,
+		},
+		{
+			Name:    "PowerOf unbound",
+			Card:    NewInstant("Invalid shield", "", WithAbility(Spell(PreventNextDamage(You, PowerOf(From(saved)))))),
+			WantErr: true,
+		},
+		{
+			Name:    "PowerOf undeclared target",
+			Card:    NewInstant("Invalid shield", "", WithAbility(Spell(PreventNextDamage(You, PowerOf(target))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil ValueAtResolution",
+			Card:    NewInstant("Invalid shield", "", WithAbility(Spell(PreventNextDamage(You, ValueAtResolution(nil))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestTypedPreventionUnusedCapacityExpires(t *testing.T) {
@@ -6468,16 +6961,21 @@ func TestSourceLeavesBattlefieldSimultaneousAndCopy(t *testing.T) {
 
 func TestSourceLeavesBattlefieldInspection(t *testing.T) {
 	source := NewCreature("Watcher", "", 1, 1, WithAbility(WhenEvent(LeavesBattlefield(This), DrawFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(source.Name(), source); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    source,
+			WantErr: false,
+		},
+		{
+			Name:    "spell source",
+			Card:    NewSorcery("Invalid leave watcher", "", WithAbility(WhenEvent(LeavesBattlefield(This), DrawFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 	meta := InspectDefinition(source.Abilities()[0])
 	if meta.Role != "event-trigger" || len(meta.Children) == 0 || meta.Children[0].Text != "source leaves battlefield" {
 		t.Fatal("leave pattern missing from inspection")
-	}
-	spell := NewSorcery("Invalid leave watcher", "", WithAbility(WhenEvent(LeavesBattlefield(This), DrawFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil {
-		t.Fatal("spell accepted a battlefield source pattern")
 	}
 }
 
@@ -6555,16 +7053,22 @@ func TestSourceBecomesTappedAbsentPhasedAndCopy(t *testing.T) {
 
 func TestSourceBecomesTappedDeclaration(t *testing.T) {
 	card := NewLand("Valid", WithAbility(WhenEvent(BecomesTapped(This), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    card,
+			WantErr: false,
+		},
+		{
+			Name:          "spell source",
+			Card:          NewInstant("Invalid", "", WithAbility(WhenEvent(BecomesTapped(This), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "battlefield",
+		},
+	})
 	meta := InspectDefinition(card.Abilities()[0])
 	if meta.Role != "event-trigger" || len(meta.Children) == 0 || meta.Children[0].Role != "event-pattern" {
 		t.Fatal("source tap pattern missing from inspection")
-	}
-	spell := NewInstant("Invalid", "", WithAbility(WhenEvent(BecomesTapped(This), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell source tap validation = %v", err)
 	}
 }
 
@@ -6725,34 +7229,41 @@ func TestTurnStepPlayerDelayedCapture(t *testing.T) {
 
 func TestTurnStepPlayerValidation(t *testing.T) {
 	p := BindPlayer("player")
-	for _, tt := range []struct {
-		pattern EventPattern
-		want    string
-	}{
-		{TurnStepBegins(EachUpkeep, p), ""},
-		{TurnStepBegins(EachUpkeep, nil), "non-nil"},
-		{TurnStepBegins(EachUpkeep, BindPlayer("")), "name"},
-	} {
-		card := NewEnchantment("Watcher", "", WithAbility(WhenEvent(tt.pattern, GainLifeFor(You, Fixed(1)))))
-		err := ValidateCardDefinition(card.Name(), card)
-		if tt.want == "" {
-			if err != nil {
-				t.Fatal(err)
-			}
-		} else if err == nil || !strings.Contains(err.Error(), tt.want) {
-			t.Fatalf("validation = %v", err)
-		}
-	}
-	card := NewEnchantment("Scope", "", WithAbility(WhenEvent(TurnStepBegins(EachUpkeep, p), GainLifeFor(FromPlayer(p), Fixed(1)))), WithAbility(At(EachEndStep, GainLifeFor(FromPlayer(p), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("scope = %v", err)
-	}
-	defer func() {
-		if recover() == nil {
-			t.Fatal("nil pattern accepted")
-		}
-	}()
-	TurnStepBegins(nil, p)
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    NewEnchantment("Watcher", "", WithAbility(WhenEvent(TurnStepBegins(EachUpkeep, p), GainLifeFor(You, Fixed(1))))),
+			WantErr: false,
+		},
+		{
+			Name:          "nil player",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(TurnStepBegins(EachUpkeep, nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "empty player name",
+			Card:          NewEnchantment("Watcher", "", WithAbility(WhenEvent(TurnStepBegins(EachUpkeep, BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "name",
+		},
+		{
+			Name: "scope error",
+			Card: NewEnchantment("Scope", "",
+				WithAbility(WhenEvent(TurnStepBegins(EachUpkeep, p), GainLifeFor(FromPlayer(p), Fixed(1)))),
+				WithAbility(At(EachEndStep, GainLifeFor(FromPlayer(p), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name: "nil pattern panic",
+			Factory: func() Card {
+				TurnStepBegins(nil, p)
+				return nil
+			},
+			WantErr: true,
+		},
+	})
 }
 
 func TestTurnStepPlayerUpkeepAndPhasing(t *testing.T) {
@@ -6868,26 +7379,39 @@ func TestBecomesTargetedDeclaration(t *testing.T) {
 	actor := BindPlayer("actor")
 	valid := NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(
 		BecomesTargeted(This).ByOpponent().WithController(actor), GainLifeFor(FromPlayer(actor), Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "valid",
+			Card:    valid,
+			WantErr: false,
+		},
+		{
+			Name:          "nil controller",
+			Card:          NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(BecomesTargeted(This).WithController(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "controller binding",
+		},
+		{
+			Name:          "duplicate controller",
+			Card:          NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(BecomesTargeted(This).WithController(actor).WithController(actor), GainLifeFor(FromPlayer(actor), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "one controller",
+		},
+		{
+			Name:          "unbound",
+			Card:          NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(BecomesTargeted(This), GainLifeFor(FromPlayer(actor), Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "producer",
+		},
+		{
+			Name:          "spell source",
+			Card:          NewInstant("Spell", "", WithAbility(WhenEvent(BecomesTargeted(This), GainLifeFor(You, Fixed(1))))),
+			WantErr:       true,
+			WantErrSubstr: "battlefield",
+		},
+	})
 	if info := InspectDefinition(BecomesTargeted(This)); info.Role != "event-pattern" {
 		t.Fatalf("inspection role = %q", info.Role)
-	}
-	for _, tc := range []struct {
-		name string
-		card Card
-		want string
-	}{
-		{"nil", NewCreature("Nil", "", 1, 1, WithAbility(WhenEvent(BecomesTargeted(This).WithController(nil), GainLifeFor(You, Fixed(1))))), "controller binding"},
-		{"duplicate", NewCreature("Duplicate", "", 1, 1, WithAbility(WhenEvent(BecomesTargeted(This).WithController(actor).WithController(actor), GainLifeFor(FromPlayer(actor), Fixed(1))))), "one controller"},
-		{"unbound", NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(BecomesTargeted(This), GainLifeFor(FromPlayer(actor), Fixed(1))))), "producer"},
-		{"spell", NewInstant("Spell", "", WithAbility(WhenEvent(BecomesTargeted(This), GainLifeFor(You, Fixed(1))))), "battlefield"},
-	} {
-		err := ValidateCardDefinition(tc.card.Name(), tc.card)
-		if err == nil || !strings.Contains(err.Error(), tc.want) {
-			t.Fatalf("%s: validation = %v, want %q", tc.name, err, tc.want)
-		}
 	}
 }
 

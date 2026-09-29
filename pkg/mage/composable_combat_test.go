@@ -1,7 +1,6 @@
 package mage
 
 import (
-	"strings"
 	"testing"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -11,267 +10,267 @@ import (
 
 // --- from composable_any_attack_batch_test.go ---
 func TestAnyAttackBatchPatternBothPlayersAndCount(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	count := BindNumber("declared")
 	watcher := NewEnchantment("Watcher", "", WithAbility(WhenEvent(
 		OneOrMoreCreaturesAttack().WithCount(count), GainLifeFor(You, FromNumber(count)))))
-	if err := ValidateCardDefinition(watcher.Name(), watcher); err != nil {
-		t.Fatal(err)
-	}
-	g.PutOnBattlefield(watcher, a.PlayerID())
 	first := NewCreature("First", "", 1, 1)
 	second := NewCreature("Second", "", 1, 1)
-	g.PutOnBattlefield(first, b.PlayerID())
-	g.PutOnBattlefield(second, b.PlayerID())
-	g.FindPermanent(first.ID()).RevokeBaseAttr(AttrSummonSick)
-	g.FindPermanent(second.ID()).RevokeBaseAttr(AttrSummonSick)
-	g.ExecuteAttackers(b.PlayerID(), []uuid.UUID{first.ID(), second.ID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 1 {
-		t.Fatalf("stack size = %d, want 1", g.StackSize())
-	}
-	clone := g.Clone()
-	clone.ResolveStack()
-	if a.Life() != 20 || clone.GetPlayer(a.PlayerID()).Life() != 22 {
-		t.Fatal("clone changed original or lost attack count")
-	}
-	g.ResolveStack()
-	if a.Life() != 22 || b.Life() != 20 {
-		t.Fatalf("life totals = %d, %d", a.Life(), b.Life())
-	}
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 1})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 1 {
-		t.Fatalf("own attack stack size = %d, want 1", g.StackSize())
-	}
-	g.ResolveStack()
-	if a.Life() != 23 {
-		t.Fatalf("life after own attack = %d, want 23", a.Life())
-	}
-	g.FireEvent(GameEvent{Type: EvtEntersAttacking, SourceID: first.ID(), PlayerID: b.PlayerID()})
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 0})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("an empty declaration or entering attacking triggered")
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid watcher", Card: watcher},
+	})
+
+	RunTriggerScenarios(t, []TriggerScenarioCase{
+		{
+			Name: "two attackers declared by opponent",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+				g.PutOnBattlefield(first, b.PlayerID())
+				g.PutOnBattlefield(second, b.PlayerID())
+				g.FindPermanent(first.ID()).RevokeBaseAttr(AttrSummonSick)
+				g.FindPermanent(second.ID()).RevokeBaseAttr(AttrSummonSick)
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.ExecuteAttackers(b.PlayerID(), []uuid.UUID{first.ID(), second.ID()})
+			},
+			WantTriggers: 1,
+			CheckClone:   true,
+			WantLifeA:    new(22),
+			WantLifeB:    new(20),
+		},
+		{
+			Name: "one attacker declared by controller",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 1})
+			},
+			WantTriggers: 1,
+			WantLifeA:    new(21),
+		},
+		{
+			Name: "empty declaration or entering attacking does not trigger",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtEntersAttacking, SourceID: first.ID(), PlayerID: b.PlayerID()})
+				g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 0})
+			},
+			WantTriggers: 0,
+		},
+	})
 }
 
 func TestAnyAttackBatchPatternLifetimeAndDeclaration(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	watcher := NewEnchantment("Watcher", "", WithAbility(WhenEvent(
 		OneOrMoreCreaturesAttack(), GainLifeFor(You, Fixed(1)))))
-	g.PutOnBattlefield(watcher, a.PlayerID())
-	phased := g.PhaseOut(watcher.ID())
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 1})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("phased source triggered")
-	}
-	g.PhaseIn(phased)
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 1})
-	g.PutTriggersOnStack()
-	g.RemoveFromBattlefield(g.FindPermanent(watcher.ID()))
-	g.PutOnBattlefield(watcher, b.PlayerID())
-	g.ResolveStack()
-	if a.Life() != 21 || b.Life() != 20 {
-		t.Fatal("pending trigger followed returned source")
-	}
-	for _, pattern := range []EventPattern{
-		OneOrMoreCreaturesAttack().WithCount(nil),
-		OneOrMoreCreaturesAttack().WithCount(BindNumber("count")).WithCount(BindNumber("again")),
-	} {
-		bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid count declaration")
-		}
-	}
+
+	RunPhasingWatcherLifecycle(t, watcher, nil, func(g *Game, a, b *BasePlayer) {
+		g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 1})
+	}, 21, 20)
+
 	spell := NewInstant("Invalid", "", Spell(GainLifeFor(You, Fixed(1))))
 	spell.AddAbility(WhenEvent(OneOrMoreCreaturesAttack(), GainLifeFor(You, Fixed(1))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell registration = %v", err)
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "nil count", Card: NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesAttack().WithCount(nil), GainLifeFor(You, Fixed(1))))), WantErrSubstr: "count"},
+		{Name: "duplicate count", Card: NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesAttack().WithCount(BindNumber("count")).WithCount(BindNumber("again")), GainLifeFor(You, Fixed(1))))), WantErrSubstr: "count"},
+		{Name: "spell registration", Card: spell, WantErrSubstr: "battlefield"},
+	})
 }
 
 // --- from composable_attack_batch_test.go ---
 func TestAttackBatchPatternOnceAndController(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	watcher := NewEnchantment("Watcher", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlAttack(), GainLifeFor(You, Fixed(2)))))
-	g.PutOnBattlefield(watcher, a.PlayerID())
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 2})
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 2})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 1 {
-		t.Fatalf("stack size = %d, want 1", g.StackSize())
-	}
-	clone := g.Clone()
-	clone.ResolveStack()
-	if a.Life() != 20 || clone.GetPlayer(a.PlayerID()).Life() != 22 {
-		t.Fatal("clone changed original life or lost trigger")
-	}
-	g.ResolveStack()
-	if a.Life() != 22 {
-		t.Fatalf("life = %d, want 22", a.Life())
-	}
+
+	RunTriggerScenarios(t, []TriggerScenarioCase{
+		{
+			Name: "triggers only for controller attacks",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: b.PlayerID(), Amount: 2})
+				g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 2})
+			},
+			WantTriggers: 1,
+			CheckClone:   true,
+			WantLifeA:    new(22),
+		},
+	})
 }
 
 func TestAttackBatchPatternPhasingAndRegistration(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	watcher := NewEnchantment("Watcher", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlAttack(), GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(watcher.Name(), watcher); err != nil {
-		t.Fatal(err)
-	}
-	g.PutOnBattlefield(watcher, a.PlayerID())
-	phased := g.PhaseOut(watcher.ID())
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 1})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("phased source triggered")
-	}
-	g.PhaseIn(phased)
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 1})
-	g.PutTriggersOnStack()
-	g.RemoveFromBattlefield(g.FindPermanent(watcher.ID()))
-	g.PutOnBattlefield(watcher, b.PlayerID())
-	g.ResolveStack()
-	if a.Life() != 21 || b.Life() != 20 {
-		t.Fatal("pending trigger lost event controller")
-	}
+
+	RunPhasingWatcherLifecycle(t, watcher, nil, func(g *Game, a, b *BasePlayer) {
+		g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 1})
+	}, 21, 20)
+
 	spell := NewInstant("Invalid", "", Spell(GainLifeFor(You, Fixed(1))))
 	spell.AddAbility(WhenEvent(OneOrMoreCreaturesYouControlAttack(), GainLifeFor(You, Fixed(1))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell registration = %v", err)
-	}
-	for _, pattern := range []EventPattern{
-		OneOrMoreCreaturesYouControlAttack().WithCount(nil),
-		OneOrMoreCreaturesYouControlAttack().WithCount(BindNumber("count")).WithCount(BindNumber("again")),
-	} {
-		bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("accepted invalid count declaration")
-		}
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid watcher", Card: watcher},
+		{Name: "spell registration", Card: spell, WantErrSubstr: "battlefield"},
+		{Name: "nil count", Card: NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlAttack().WithCount(nil), GainLifeFor(You, Fixed(1))))), WantErrSubstr: "count"},
+		{Name: "duplicate count", Card: NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlAttack().WithCount(BindNumber("count")).WithCount(BindNumber("again")), GainLifeFor(You, Fixed(1))))), WantErrSubstr: "count"},
+	})
 }
 
 func TestAttackBatchPatternSimulatedDeclarationCount(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	count := BindNumber("attackers")
 	watcher := NewEnchantment("Watcher", "", WithAbility(WhenEvent(
 		OneOrMoreCreaturesYouControlAttack().WithCount(count), GainLifeFor(You, FromNumber(count)))))
-	if err := ValidateCardDefinition(watcher.Name(), watcher); err != nil {
-		t.Fatal(err)
-	}
-	g.PutOnBattlefield(watcher, a.PlayerID())
 	first := NewCreature("First", "", 1, 1)
 	second := NewCreature("Second", "", 1, 1)
-	g.PutOnBattlefield(first, a.PlayerID())
-	g.PutOnBattlefield(second, a.PlayerID())
-	g.FindPermanent(first.ID()).RevokeBaseAttr(AttrSummonSick)
-	g.FindPermanent(second.ID()).RevokeBaseAttr(AttrSummonSick)
-	g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{first.ID(), second.ID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 1 {
-		t.Fatalf("stack size = %d, want 1", g.StackSize())
-	}
-	g.ResolveStack()
-	if a.Life() != 22 {
-		t.Fatalf("life = %d, want 22", a.Life())
-	}
-	g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{first.ID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("an existing attacker made a new group")
-	}
-	g.FireEvent(GameEvent{Type: EvtEntersAttacking, SourceID: first.ID(), PlayerID: a.PlayerID()})
-	g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 0})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("nondeclaration made an attack-group trigger")
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid count watcher", Card: watcher},
+	})
+
+	RunTriggerScenarios(t, []TriggerScenarioCase{
+		{
+			Name: "two attackers declared",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+				g.PutOnBattlefield(first, a.PlayerID())
+				g.PutOnBattlefield(second, a.PlayerID())
+				g.FindPermanent(first.ID()).RevokeBaseAttr(AttrSummonSick)
+				g.FindPermanent(second.ID()).RevokeBaseAttr(AttrSummonSick)
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{first.ID(), second.ID()})
+			},
+			WantTriggers: 1,
+			WantLifeA:    new(22),
+		},
+		{
+			Name: "re-declaring existing attacker does not create new group",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+				g.PutOnBattlefield(first, a.PlayerID())
+				g.FindPermanent(first.ID()).RevokeBaseAttr(AttrSummonSick)
+				g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{first.ID()})
+				g.ResolveStack()
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{first.ID()})
+			},
+			WantTriggers: 0,
+		},
+		{
+			Name: "entering attacking and zero amount do not trigger",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				g.PutOnBattlefield(watcher, a.PlayerID())
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtEntersAttacking, SourceID: first.ID(), PlayerID: a.PlayerID()})
+				g.FireEvent(GameEvent{Type: EvtAttackersDeclared, PlayerID: a.PlayerID(), Amount: 0})
+			},
+			WantTriggers: 0,
+		},
+	})
 }
 
 // --- from composable_attack_defender_test.go ---
 func TestAttackDefendingPlayerCapture(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	defender := BindPlayer("defender")
 	card := NewCreature("Watcher", "", 2, 2, WithAbility(WhenEvent(
 		Attacks(This).WithDefendingPlayer(defender), GainLifeFor(FromPlayer(defender), Fixed(2)))))
-	card.SetOwner(a.PlayerID())
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
-	g.PutOnBattlefield(card, a.PlayerID())
-	g.FireEvent(GameEvent{Type: EvtDeclaredAttacker, SourceID: card.ID(), PlayerID: a.PlayerID(), TargetID: b.PlayerID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 1 {
-		t.Fatalf("attack trigger count = %d", g.StackSize())
-	}
-	clone := g.Clone()
-	g.RemoveFromBattlefield(g.FindPermanent(card.ID()))
-	g.PutOnBattlefield(card, b.PlayerID())
-	g.ResolveStack()
-	if g.GetPlayer(b.PlayerID()).Life() != 22 || g.GetPlayer(a.PlayerID()).Life() != 20 {
-		t.Fatal("defending player changed after attack")
-	}
-	if clone.GetPlayer(b.PlayerID()).Life() != 20 {
-		t.Fatal("clone shared trigger state")
-	}
-	clone.ResolveStack()
-	if clone.GetPlayer(b.PlayerID()).Life() != 22 {
-		t.Fatal("clone lost event capture")
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid defending player watcher", Card: card},
+	})
+
+	RunTriggerScenarios(t, []TriggerScenarioCase{
+		{
+			Name: "captures defender and survives source movement",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				card.SetOwner(a.PlayerID())
+				g.PutOnBattlefield(card, a.PlayerID())
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtDeclaredAttacker, SourceID: card.ID(), PlayerID: a.PlayerID(), TargetID: b.PlayerID()})
+			},
+			WantTriggers: 1,
+			CheckClone:   true,
+			AssertState: func(t *testing.T, g *Game, a, b *BasePlayer) {
+				if b.Life() != 22 || a.Life() != 20 {
+					t.Fatalf("life totals = A:%d B:%d, want A:20 B:22", a.Life(), b.Life())
+				}
+			},
+		},
+	})
 }
 
 func TestAttackDefendingPlayerDeclaration(t *testing.T) {
 	defender := BindPlayer("defender")
-	for _, pattern := range []EventPattern{Attacks(This).WithDefendingPlayer(nil), Attacks(This).WithDefendingPlayer(defender).WithDefendingPlayer(defender)} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid defender binding")
-		}
-	}
-	card := NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(Attacks(This), GainLifeFor(FromPlayer(defender), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "binding") {
-		t.Fatalf("missing binding validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil defender binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(Attacks(This).WithDefendingPlayer(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one defending player binding",
+		},
+		{
+			Name:          "duplicate defender binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(Attacks(This).WithDefendingPlayer(defender).WithDefendingPlayer(defender), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one defending player binding",
+		},
+		{
+			Name:          "unbound defender reference",
+			Card:          NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(Attacks(This), GainLifeFor(FromPlayer(defender), Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 func TestAttackDefendingPlayerRealDeclarationAndAbsence(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	defender := BindPlayer("defender")
 	card := NewCreature("Watcher", "", 2, 2, WithAbility(WhenEvent(
 		Attacks(This).WithDefendingPlayer(defender), GainLifeFor(FromPlayer(defender), Fixed(1)))))
-	card.SetOwner(a.PlayerID())
-	g.PutOnBattlefield(card, a.PlayerID())
-	g.FindPermanent(card.ID()).RevokeBaseAttr(AttrSummonSick)
-	g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{card.ID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 1 {
-		t.Fatalf("actual attack trigger count = %d", g.StackSize())
-	}
-	g.ResolveStack()
-	if g.GetPlayer(b.PlayerID()).Life() != 21 {
-		t.Fatal("actual attack did not capture defender")
-	}
-	phase := g.PhaseOut(card.ID())
-	g.FireEvent(GameEvent{Type: EvtDeclaredAttacker, SourceID: card.ID(), PlayerID: a.PlayerID(), TargetID: b.PlayerID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("phased source triggered")
-	}
-	g.PhaseIn(phase)
-	g.RemoveFromBattlefield(g.FindPermanent(card.ID()))
-	g.FireEvent(GameEvent{Type: EvtDeclaredAttacker, SourceID: card.ID(), PlayerID: a.PlayerID(), TargetID: b.PlayerID()})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("absent source triggered")
-	}
+
+	RunTriggerScenarios(t, []TriggerScenarioCase{
+		{
+			Name: "real attack execution triggers and gains life for defender",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				card.SetOwner(a.PlayerID())
+				g.PutOnBattlefield(card, a.PlayerID())
+				g.FindPermanent(card.ID()).RevokeBaseAttr(AttrSummonSick)
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.ExecuteAttackers(a.PlayerID(), []uuid.UUID{card.ID()})
+			},
+			WantTriggers: 1,
+			WantLifeB:    new(21),
+		},
+		{
+			Name: "phased out source does not trigger",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				card.SetOwner(a.PlayerID())
+				g.PutOnBattlefield(card, a.PlayerID())
+				g.PhaseOut(card.ID())
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtDeclaredAttacker, SourceID: card.ID(), PlayerID: a.PlayerID(), TargetID: b.PlayerID()})
+			},
+			WantTriggers: 0,
+		},
+		{
+			Name: "absent source does not trigger",
+			Setup: func(g *Game, a, b *BasePlayer) {
+				card.SetOwner(a.PlayerID())
+				g.PutOnBattlefield(card, a.PlayerID())
+				g.RemoveFromBattlefield(g.FindPermanent(card.ID()))
+			},
+			Action: func(g *Game, a, b *BasePlayer) {
+				g.FireEvent(GameEvent{Type: EvtDeclaredAttacker, SourceID: card.ID(), PlayerID: a.PlayerID(), TargetID: b.PlayerID()})
+			},
+			WantTriggers: 0,
+		},
+	})
 }
 
 // --- from composable_blocked_attackers_set_test.go ---
@@ -328,18 +327,33 @@ func TestBlockedAttackersOfCurrentCombatIncarnations(t *testing.T) {
 func TestBlockedAttackersOfDeclaration(t *testing.T) {
 	target := DeclarePermanentTarget("blocker", IsCreature)
 	valid := NewInstant("Valid", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockedAttackersOf(target))), WithTargets(target))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	if info := InspectDefinition(BlockedAttackersOf(target)); info.Role != "permanent-set" || len(info.Children) != 1 {
-		t.Fatalf("inspection = %+v", info)
-	}
-	for _, subject := range []PermanentRef{nil, target, From(BindPermanent("missing"))} {
-		bad := NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockedAttackersOf(subject))))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid blocked-attacker set accepted")
-		}
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: valid,
+			Inspect: func(t *testing.T) {
+				if info := InspectDefinition(BlockedAttackersOf(target)); info.Role != "permanent-set" || len(info.Children) != 1 {
+					t.Fatalf("inspection = %+v", info)
+				}
+			},
+		},
+		{
+			Name:          "nil subject",
+			Card:          NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockedAttackersOf(nil)))))),
+			WantErrSubstr: "blocked attackers require a blocker",
+		},
+		{
+			Name:          "untargeted subject",
+			Card:          NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockedAttackersOf(target)))))),
+			WantErrSubstr: "target",
+		},
+		{
+			Name:          "missing binding",
+			Card:          NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockedAttackersOf(From(BindPermanent("missing")))))))),
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 func TestBlockedAttackersOfTargetResolution(t *testing.T) {
@@ -483,17 +497,34 @@ func TestBlockedByPatternStackCopy(t *testing.T) {
 }
 
 func TestBlockedByPatternValidation(t *testing.T) {
-	for _, pattern := range []EventPattern{BecomesBlockedBy(This).OfSubtype(""), BecomesBlockedBy(This).OfSubtype("Island"), BecomesBlockedBy(This).WithBlocker(nil), BecomesBlockedBy(This).WithBlocker(BindPermanent(""))} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid blocked-by pattern accepted")
-		}
-	}
 	blocker := BindPermanent("unbound")
-	card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This), AddCountersTo(From(blocker), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "binding") {
-		t.Fatalf("unbound blocker accepted: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "empty subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).OfSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a creature subtype",
+		},
+		{
+			Name:          "non-creature subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).OfSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "not a creature subtype",
+		},
+		{
+			Name:          "nil blocker binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).WithBlocker(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a blocker binding",
+		},
+		{
+			Name:          "empty blocker binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).WithBlocker(BindPermanent("")), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a binding name",
+		},
+		{
+			Name:          "unbound blocker reference",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This), AddCountersTo(From(blocker), P1P1, Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 func TestBlockedByPatternWithoutSubtype(t *testing.T) {
@@ -522,18 +553,28 @@ func TestBlockedByPatternWithoutSubtype(t *testing.T) {
 }
 
 func TestBlockedByPatternWithoutSubtypeValidation(t *testing.T) {
-	patterns := []EventPattern{
-		BecomesBlockedBy(This).WithoutSubtype(""),
-		BecomesBlockedBy(This).WithoutSubtype("Island"),
-		BecomesBlockedBy(This).WithoutSubtype("Wall").WithoutSubtype("Orc"),
-		BecomesBlockedBy(This).OfSubtype("Orc").WithoutSubtype("Wall"),
-	}
-	for _, pattern := range patterns {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid blocked-by exclusion accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "empty without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).WithoutSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a creature subtype",
+		},
+		{
+			Name:          "non-creature without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).WithoutSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "not a creature subtype",
+		},
+		{
+			Name:          "duplicate without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).WithoutSubtype("Wall").WithoutSubtype("Orc"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+		{
+			Name:          "mixed of and without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlockedBy(This).OfSubtype("Orc").WithoutSubtype("Wall"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+	})
 }
 
 func TestBlockedByPatternWithoutSubtypeEventCapture(t *testing.T) {
@@ -614,19 +655,23 @@ func TestBecomesBlockedCapturesDefendingPlayer(t *testing.T) {
 
 func TestBecomesBlockedDefenderDeclaration(t *testing.T) {
 	defender := BindPlayer("defender")
-	for _, pattern := range []EventPattern{
-		BecomesBlocked(This).WithDefendingPlayer(nil),
-		BecomesBlocked(This).WithDefendingPlayer(defender).WithDefendingPlayer(defender),
-	} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid defender capture")
-		}
-	}
-	card := NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(BecomesBlocked(This), GainLifeFor(FromPlayer(defender), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "binding") {
-		t.Fatalf("validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil defending player",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlocked(This).WithDefendingPlayer(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one defending player binding",
+		},
+		{
+			Name:          "duplicate defending player",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BecomesBlocked(This).WithDefendingPlayer(defender).WithDefendingPlayer(defender), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one defending player binding",
+		},
+		{
+			Name:          "unbound defender reference",
+			Card:          NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(BecomesBlocked(This), GainLifeFor(FromPlayer(defender), Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 func TestBecomesBlockedDefenderRealCombatEvent(t *testing.T) {
@@ -716,13 +761,18 @@ func TestBlocksOrBecomesBlockedByGroup(t *testing.T) {
 }
 
 func TestBlocksOrBecomesBlockedByGroupValidation(t *testing.T) {
-	for _, subtype := range []string{"", "Island"} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(
-			BlocksOrBecomesBlockedBy(This).OfSubtype(subtype), GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "subtype") {
-			t.Fatalf("subtype %q accepted: %v", subtype, err)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "empty subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).OfSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "subtype",
+		},
+		{
+			Name:          "non-creature subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).OfSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "subtype",
+		},
+	})
 }
 
 func TestBlocksOrBecomesBlockedByGroupBlockingAndTiming(t *testing.T) {
@@ -850,19 +900,33 @@ func TestBlocksOrBecomesBlockedByWithoutSubtypeBlockingAndEventTime(t *testing.T
 }
 
 func TestBlocksOrBecomesBlockedByWithoutSubtypeValidation(t *testing.T) {
-	patterns := []blockerGroupPattern{
-		BlocksOrBecomesBlockedBy(This).WithoutSubtype(""),
-		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Island"),
-		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall").WithoutSubtype("Orc"),
-		BlocksOrBecomesBlockedBy(This).OfSubtype("Orc").WithoutSubtype("Wall"),
-		BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall").OfSubtype("Orc"),
-	}
-	for _, pattern := range patterns {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatalf("invalid pattern accepted: %+v", pattern)
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "empty without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).WithoutSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a creature subtype",
+		},
+		{
+			Name:          "non-creature without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).WithoutSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "not a creature subtype",
+		},
+		{
+			Name:          "duplicate without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall").WithoutSubtype("Orc"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+		{
+			Name:          "of and without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).OfSubtype("Orc").WithoutSubtype("Wall"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+		{
+			Name:          "without and of subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedBy(This).WithoutSubtype("Wall").OfSubtype("Orc"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+	})
 }
 
 // --- from composable_blockers_set_test.go ---
@@ -920,18 +984,33 @@ func TestBlockersOfCurrentCombatIncarnations(t *testing.T) {
 func TestBlockersOfDeclaration(t *testing.T) {
 	target := DeclarePermanentTarget("attacker", IsCreature)
 	good := NewInstant("Good", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockersOf(target))), WithTargets(target))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
-	if info := InspectDefinition(BlockersOf(target)); info.Role != "permanent-set" || len(info.Children) != 1 {
-		t.Fatalf("inspection = %+v", info)
-	}
-	for _, subject := range []PermanentRef{nil, target, From(BindPermanent("missing"))} {
-		bad := NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockersOf(subject))))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatalf("invalid blocker set accepted: %+v", InspectDefinition(BlockersOf(subject)))
-		}
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: good,
+			Inspect: func(t *testing.T) {
+				if info := InspectDefinition(BlockersOf(target)); info.Role != "permanent-set" || len(info.Children) != 1 {
+					t.Fatalf("inspection = %+v", info)
+				}
+			},
+		},
+		{
+			Name:          "nil subject",
+			Card:          NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockersOf(nil)))))),
+			WantErrSubstr: "blockers require an attacker",
+		},
+		{
+			Name:          "untargeted subject",
+			Card:          NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockersOf(target)))))),
+			WantErrSubstr: "target",
+		},
+		{
+			Name:          "unbound reference",
+			Card:          NewInstant("Bad", "", WithAbility(Spell(GainLifeFor(You, CountPermanents(BlockersOf(From(BindPermanent("missing")))))))),
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_blocking_test.go ---
@@ -1071,22 +1150,38 @@ func TestBlocksCreaturePerPairAndCapture(t *testing.T) {
 
 func TestBlocksCreatureDeclarationValidation(t *testing.T) {
 	opponent := BindPermanent("opponent")
-	for _, pattern := range []EventPattern{
-		BlocksCreature(This).WithoutSubtype(""),
-		BlocksCreature(This).WithoutSubtype("Island"),
-		BlocksCreature(This).OfSubtype("Wall").WithoutSubtype("Orc"),
-		BlocksCreature(This).WithOpponent(nil),
-		BlocksCreature(This).WithOpponent(opponent).WithOpponent(opponent),
-	} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid event pattern accepted")
-		}
-	}
-	card := NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This), AddCountersTo(From(opponent), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("unbound opponent accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "empty without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This).WithoutSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a creature subtype",
+		},
+		{
+			Name:          "non-creature without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This).WithoutSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "not a creature subtype",
+		},
+		{
+			Name:          "mixed of and without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This).OfSubtype("Wall").WithoutSubtype("Orc"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+		{
+			Name:          "nil opponent binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This).WithOpponent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply an opponent binding",
+		},
+		{
+			Name:          "duplicate opponent binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This).WithOpponent(opponent).WithOpponent(opponent), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "save one opponent",
+		},
+		{
+			Name:          "unbound opponent reference",
+			Card:          NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(BlocksCreature(This), AddCountersTo(From(opponent), P1P1, Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 func TestBlocksCreatureOpponentIncarnationAndClone(t *testing.T) {
@@ -1199,42 +1294,36 @@ func TestCombatDamageBatchRealStepAndPrevention(t *testing.T) {
 }
 
 func TestCombatDamageBatchSourceLifetimeAndValidation(t *testing.T) {
-	a, b := NewBasePlayer("A"), NewBasePlayer("B")
-	g := NewGame(a, b)
 	watcher := NewEnchantment("Watcher", "", WithAbility(WhenEvent(
 		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer(), GainLifeFor(You, Fixed(1)))))
-	g.PutOnBattlefield(watcher, a.PlayerID())
-	phase := g.PhaseOut(watcher.ID())
-	g.FireEvent(GameEvent{Type: EvtCombatDamageDealt, PlayerID: a.PlayerID(), TargetID: b.PlayerID(), Amount: 2})
-	g.PutTriggersOnStack()
-	if g.StackSize() != 0 {
-		t.Fatal("phased source triggered")
-	}
-	g.PhaseIn(phase)
-	g.FireEvent(GameEvent{Type: EvtCombatDamageDealt, PlayerID: a.PlayerID(), TargetID: b.PlayerID(), Amount: 2})
-	g.PutTriggersOnStack()
-	g.RemoveFromBattlefield(g.FindPermanent(watcher.ID()))
-	g.PutOnBattlefield(watcher, b.PlayerID())
-	g.ResolveStack()
-	if a.Life() != 21 || b.Life() != 20 {
-		t.Fatal("pending trigger changed controller")
-	}
-	for _, pattern := range []EventPattern{
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(nil),
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(BindPlayer("")),
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(BindPlayer("first")).WithPlayer(BindPlayer("second")),
-	} {
-		bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid event declaration accepted")
-		}
-	}
+
+	RunPhasingWatcherLifecycle(t, watcher, nil, func(g *Game, a, b *BasePlayer) {
+		g.FireEvent(GameEvent{Type: EvtCombatDamageDealt, PlayerID: a.PlayerID(), TargetID: b.PlayerID(), Amount: 2})
+	}, 21, 20)
+
 	missing := BindPlayer("missing")
-	bad := NewEnchantment("Bad", "", WithAbility(WhenEvent(
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer(), GainLifeFor(FromPlayer(missing), Fixed(1)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "producer") {
-		t.Fatalf("missing producer: %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "nil player binding",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one player binding",
+		},
+		{
+			Name:          "empty player binding",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(BindPlayer("")), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a binding name",
+		},
+		{
+			Name:          "duplicate player binding",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithPlayer(BindPlayer("first")).WithPlayer(BindPlayer("second")), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one player binding",
+		},
+		{
+			Name:          "missing producer",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer(), GainLifeFor(FromPlayer(missing), Fixed(1))))),
+			WantErrSubstr: "producer",
+		},
+	})
 }
 
 // --- from composable_combat_damage_event_test.go ---
@@ -1300,26 +1389,27 @@ func TestSourceCombatDamageToPlayerRealCombatAndPrevention(t *testing.T) {
 
 func TestSourceCombatDamageToPlayerDeclaration(t *testing.T) {
 	p, n := BindPlayer("player"), BindNumber("amount")
-	for _, tc := range []struct {
-		name    string
-		pattern EventPattern
-		want    string
-	}{
-		{"valid", DealsCombatDamageToPlayer(This, p).WithAmount(n), ""},
-		{"nil player", DealsCombatDamageToPlayer(This, nil), "non-nil"},
-		{"nil amount", DealsCombatDamageToPlayer(This, p).WithAmount(nil), "non-nil"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			card := NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(tc.pattern, GainLifeFor(You, Fixed(1)))))
-			err := ValidateCardDefinition(card.Name(), card)
-			if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
-				t.Fatalf("validation = %v", err)
-			}
-		})
-	}
-	if got := InspectDefinition(DealsCombatDamageToPlayer(This, p)); got.Role != "event-pattern" {
-		t.Fatalf("inspection = %#v", got)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid",
+			Card: NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(DealsCombatDamageToPlayer(This, p).WithAmount(n), GainLifeFor(You, Fixed(1))))),
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(DealsCombatDamageToPlayer(This, p)); got.Role != "event-pattern" {
+					t.Fatalf("inspection = %#v", got)
+				}
+			},
+		},
+		{
+			Name:          "nil player",
+			Card:          NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(DealsCombatDamageToPlayer(This, nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+		{
+			Name:          "nil amount",
+			Card:          NewCreature("Test", "", 1, 1, WithAbility(WhenEvent(DealsCombatDamageToPlayer(This, p).WithAmount(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "non-nil",
+		},
+	})
 }
 
 // --- from composable_combat_damage_filter_test.go ---
@@ -1389,16 +1479,23 @@ func TestCombatDamageBatchWithoutSubtypeRequiresPositiveQualifyingDamage(t *test
 }
 
 func TestCombatDamageBatchWithoutSubtypeRegistration(t *testing.T) {
-	for _, pattern := range []EventPattern{
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype(""),
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Island"),
-		OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Human").WithoutSubtype("Elf"),
-	} {
-		card := NewEnchantment("Bad", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid subtype filter accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:          "empty without subtype",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one creature subtype",
+		},
+		{
+			Name:          "non-creature without subtype",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "not a creature subtype",
+		},
+		{
+			Name:          "duplicate without subtype",
+			Card:          NewEnchantment("Bad", "", WithAbility(WhenEvent(OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Human").WithoutSubtype("Elf"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one creature subtype",
+		},
+	})
 }
 
 func TestCombatDamageBatchSourceSnapshotsCloneIndependently(t *testing.T) {
@@ -1489,14 +1586,13 @@ func TestCombatOpponentsBlockingAndTriggerResolution(t *testing.T) {
 func TestCombatOpponentsDeclaration(t *testing.T) {
 	good := NewCreature("Good", "", 1, 1, WithAbility(WhenEvent(
 		BlocksOrBecomesBlockedBy(This), GainLifeFor(You, CountPermanents(BlockingOrBlockedBy(This))))))
-	if err := ValidateCardDefinition(good.Name(), good); err != nil {
-		t.Fatal(err)
-	}
 	bad := NewCreature("Bad", "", 1, 1, WithAbility(WhenEvent(
 		BlocksOrBecomesBlockedBy(This), GainLifeFor(You, CountPermanents(BlockingOrBlockedBy(nil))))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "source") {
-		t.Fatalf("bad declaration: %v", err)
-	}
+
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{Name: "valid card", Card: good},
+		{Name: "nil source", Card: bad, WantErrSubstr: "source"},
+	})
 }
 
 // --- from composable_combat_pair_test.go ---
@@ -1554,26 +1650,42 @@ func TestCombatPairPatternBothDirectionsPerOpponent(t *testing.T) {
 
 func TestCombatPairPatternDeclarationValidation(t *testing.T) {
 	opponent := BindPermanent("opponent")
-	for _, pattern := range []EventPattern{
-		BlocksOrBecomesBlockedByCreature(This).OfSubtype(""),
-		BlocksOrBecomesBlockedByCreature(This).WithoutSubtype("Island"),
-		BlocksOrBecomesBlockedByCreature(This).OfSubtype("Wall").WithoutSubtype("Orc"),
-		BlocksOrBecomesBlockedByCreature(This).WithOpponent(nil),
-		BlocksOrBecomesBlockedByCreature(This).WithOpponent(opponent).WithOpponent(opponent),
-	} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("invalid combat-pair pattern accepted")
-		}
-	}
-	card := NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This), AddCountersTo(From(opponent), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil {
-		t.Fatal("unbound opponent accepted")
-	}
-	valid := NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).WithOpponent(opponent), AddCountersTo(From(opponent), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).WithOpponent(opponent), AddCountersTo(From(opponent), P1P1, Fixed(1))))),
+		},
+		{
+			Name:          "empty subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).OfSubtype(""), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply a creature subtype",
+		},
+		{
+			Name:          "non-creature subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).WithoutSubtype("Island"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "not a creature subtype",
+		},
+		{
+			Name:          "mixed of and without subtype",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).OfSubtype("Wall").WithoutSubtype("Orc"), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply one subtype filter",
+		},
+		{
+			Name:          "nil opponent binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).WithOpponent(nil), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "supply an opponent binding",
+		},
+		{
+			Name:          "duplicate opponent binding",
+			Card:          NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This).WithOpponent(opponent).WithOpponent(opponent), GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "save one opponent",
+		},
+		{
+			Name:          "unbound opponent reference",
+			Card:          NewCreature("Unbound", "", 1, 1, WithAbility(WhenEvent(BlocksOrBecomesBlockedByCreature(This), AddCountersTo(From(opponent), P1P1, Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 func TestCombatPairPatternCaptureIdentityAndClone(t *testing.T) {
@@ -1817,19 +1929,37 @@ func TestCombatSourcePreventionIncarnation(t *testing.T) {
 
 func TestCombatSourcePreventionDeclaration(t *testing.T) {
 	target := DeclarePermanentTarget("creature", IsCreature)
-	valid := NewInstant("Valid", "", Spell(Sequence(PreventCombatDamageBy(target), PreventCombatDamageByEach(BlockedAttackersOf(target))), WithTargets(target)))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, effect := range []ResolvingEffect{PreventCombatDamageBy(nil), PreventCombatDamageByEach(nil), PreventCombatDamageBy(target), PreventCombatDamageByEach(BlockedAttackersOf(target))} {
-		bad := NewInstant("Bad", "", Spell(effect))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid prevention accepted")
-		}
-	}
-	if info := InspectDefinition(PreventCombatDamageBy(target)); info.Role != "install-combat-source-prevention" {
-		t.Fatalf("inspection = %+v", info)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid prevention sequence",
+			Card: NewInstant("Valid", "", Spell(Sequence(PreventCombatDamageBy(target), PreventCombatDamageByEach(BlockedAttackersOf(target))), WithTargets(target))),
+			Inspect: func(t *testing.T) {
+				if info := InspectDefinition(PreventCombatDamageBy(target)); info.Role != "install-combat-source-prevention" {
+					t.Fatalf("inspection = %+v", info)
+				}
+			},
+		},
+		{
+			Name:    "nil source",
+			Card:    NewInstant("Bad", "", Spell(PreventCombatDamageBy(nil))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil each source",
+			Card:    NewInstant("Bad", "", Spell(PreventCombatDamageByEach(nil))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound target",
+			Card:    NewInstant("Bad", "", Spell(PreventCombatDamageBy(target))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound each target",
+			Card:    NewInstant("Bad", "", Spell(PreventCombatDamageByEach(BlockedAttackersOf(target)))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestCombatSourcePreventionCapturedDeparture(t *testing.T) {
@@ -1920,19 +2050,27 @@ func TestCombatStateBranchTargetScope(t *testing.T) {
 		IfPermanentAttacking(target, GainLifeFor(You, Fixed(1))),
 		IfPermanentBlocking(target, GainLifeFor(You, Fixed(1))),
 	), WithTargets(target)))
-	if err := ValidateCardDefinition(valid.Name(), valid); err != nil {
-		t.Fatal(err)
-	}
-	for _, effect := range []ResolvingEffect{
-		IfPermanentAttacking(nil, GainLifeFor(You, Fixed(1))),
-		IfPermanentBlocking(target, GainLifeFor(You, Fixed(1))),
-		IfPermanentAttacking(target, nil),
-	} {
-		bad := NewInstant("Invalid", "", Spell(effect))
-		if err := ValidateCardDefinition(bad.Name(), bad); err == nil {
-			t.Fatal("invalid combat branch accepted")
-		}
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid combat branch",
+			Card: valid,
+		},
+		{
+			Name:    "nil target attacking",
+			Card:    NewInstant("Invalid", "", Spell(IfPermanentAttacking(nil, GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "unbound target blocking",
+			Card:    NewInstant("Invalid", "", Spell(IfPermanentBlocking(target, GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil effect attacking",
+			Card:    NewInstant("Invalid", "", Spell(IfPermanentAttacking(target, nil))),
+			WantErr: true,
+		},
+	})
 
 	a, b := NewBasePlayer("A"), NewBasePlayer("B")
 	g := NewGame(a, b)
@@ -2001,13 +2139,17 @@ func TestDefendingPlayerControlAttackRestriction(t *testing.T) {
 
 func TestDefendingPlayerControlAttackRestrictionDeclaration(t *testing.T) {
 	rule := CanAttackOnlyIfDefendingPlayerControls(HasSubType("Island"))
-	card := NewCreature("Attacker", "", 2, 2, WithAbility(Static(rule)))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
-	if meta := InspectDefinition(rule); meta.Role == "" || meta.Text == "" {
-		t.Fatalf("inspection = %+v", meta)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewCreature("Attacker", "", 2, 2, WithAbility(Static(rule))),
+			Inspect: func(t *testing.T) {
+				if meta := InspectDefinition(rule); meta.Role == "" || meta.Text == "" {
+					t.Fatalf("inspection = %+v", meta)
+				}
+			},
+		},
+	})
 }
 
 // --- from composable_each_attacker_test.go ---
@@ -2088,21 +2230,33 @@ func TestEachControlledAttackerIdentityAndAbsence(t *testing.T) {
 func TestEachControlledAttackerDeclaration(t *testing.T) {
 	attacker := BindPermanent("attacker")
 	defender := BindPlayer("defender")
-	for _, pattern := range []EventPattern{
-		EachCreatureYouControlAttacks().WithAttacker(nil),
-		EachCreatureYouControlAttacks().WithDefendingPlayer(nil),
-		EachCreatureYouControlAttacks().WithAttacker(attacker).WithAttacker(attacker),
-		EachCreatureYouControlAttacks().WithDefendingPlayer(defender).WithDefendingPlayer(defender),
-	} {
-		card := NewEnchantment("Invalid", "", WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid event capture")
-		}
-	}
-	card := NewEnchantment("Missing", "", WithAbility(WhenEvent(EachCreatureYouControlAttacks(), AddCountersTo(From(attacker), P1P1, Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "binding") {
-		t.Fatalf("scope check = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil attacker binding",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(EachCreatureYouControlAttacks().WithAttacker(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "nil defender binding",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(EachCreatureYouControlAttacks().WithDefendingPlayer(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate attacker binding",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(EachCreatureYouControlAttacks().WithAttacker(attacker).WithAttacker(attacker), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate defender binding",
+			Card:    NewEnchantment("Invalid", "", WithAbility(WhenEvent(EachCreatureYouControlAttacks().WithDefendingPlayer(defender).WithDefendingPlayer(defender), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:          "unbound attacker reference",
+			Card:          NewEnchantment("Missing", "", WithAbility(WhenEvent(EachCreatureYouControlAttacks(), AddCountersTo(From(attacker), P1P1, Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
 
 func TestEachControlledAttackerSourceLifecycleAndCopy(t *testing.T) {
@@ -2222,21 +2376,28 @@ func TestPermanentAttackingAttachedAndValidation(t *testing.T) {
 	if condition.checkState(g, ctx) {
 		t.Fatal("returned host inherited attack or attachment identity")
 	}
-	if err := ValidateCardDefinition(aura.Name(), aura); err != nil {
-		t.Fatal(err)
-	}
-	if got := InspectDefinition(condition); got.Role != "state-condition" || got.Text != "attached permanent is attacking" {
-		t.Fatalf("inspection = %+v", got)
-	}
 	target := DeclarePermanentTarget("target", IsCreature)
-	bad := NewAura("Bad", "", WithAbility(Static(While(PermanentIsAttacking(target), GrantKeywordModification(AttachedPermanent, Shroud)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "state") {
-		t.Fatalf("invalid state reference accepted: %v", err)
-	}
-	spell := NewInstant("Bad spell", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil {
-		t.Fatal("nonbattlefield source accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid aura",
+			Card: aura,
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(condition); got.Role != "state-condition" || got.Text != "attached permanent is attacking" {
+					t.Fatalf("inspection = %+v", got)
+				}
+			},
+		},
+		{
+			Name:          "invalid target state reference",
+			Card:          NewAura("Bad", "", WithAbility(Static(While(PermanentIsAttacking(target), GrantKeywordModification(AttachedPermanent, Shroud))))),
+			WantErrSubstr: "state",
+		},
+		{
+			Name:    "nonbattlefield source",
+			Card:    NewInstant("Bad spell", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestPermanentAttackingEntryAndNormalDeclaration(t *testing.T) {
@@ -2348,21 +2509,28 @@ func TestPermanentBlockingAttachedAndValidation(t *testing.T) {
 	if condition.checkState(g, ctx) {
 		t.Fatal("returned host inherited attachment or block")
 	}
-	if err := ValidateCardDefinition(aura.Name(), aura); err != nil {
-		t.Fatal(err)
-	}
-	if got := InspectDefinition(condition); got.Role != "state-condition" || got.Text != "attached permanent is blocking" {
-		t.Fatalf("inspection = %+v", got)
-	}
 	target := DeclarePermanentTarget("target", IsCreature)
-	bad := NewAura("Bad", "", WithAbility(Static(While(PermanentIsBlocking(target), GrantKeywordModification(AttachedPermanent, Shroud)))))
-	if err := ValidateCardDefinition(bad.Name(), bad); err == nil || !strings.Contains(err.Error(), "state") {
-		t.Fatalf("invalid state reference accepted: %v", err)
-	}
-	spell := NewInstant("Bad spell", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil {
-		t.Fatal("nonbattlefield source accepted")
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid aura",
+			Card: aura,
+			Inspect: func(t *testing.T) {
+				if got := InspectDefinition(condition); got.Role != "state-condition" || got.Text != "attached permanent is blocking" {
+					t.Fatalf("inspection = %+v", got)
+				}
+			},
+		},
+		{
+			Name:          "invalid target state reference",
+			Card:          NewAura("Bad", "", WithAbility(Static(While(PermanentIsBlocking(target), GrantKeywordModification(AttachedPermanent, Shroud))))),
+			WantErrSubstr: "state",
+		},
+		{
+			Name:    "nonbattlefield source",
+			Card:    NewInstant("Bad spell", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+	})
 }
 
 func TestPermanentBlockingNormalDeclaration(t *testing.T) {
@@ -2432,18 +2600,23 @@ func TestSourceAttackedOrBlockedThisTurnIdentity(t *testing.T) {
 
 func TestSourceAttackedOrBlockedThisTurnDeclaration(t *testing.T) {
 	condition := SourceAttackedOrBlockedThisTurnCondition()
-	card := NewCreature("Watcher", "", 2, 2, WithAbility(At(EachEndStep, IfState(condition, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
-	meta := InspectDefinition(condition)
-	if meta.Role != "state-condition" || meta.Text != "source attacked or blocked this turn" {
-		t.Fatalf("metadata = %+v", meta)
-	}
-	spell := NewInstant("Invalid", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewCreature("Watcher", "", 2, 2, WithAbility(At(EachEndStep, IfState(condition, GainLifeFor(You, Fixed(1)))))),
+			Inspect: func(t *testing.T) {
+				meta := InspectDefinition(condition)
+				if meta.Role != "state-condition" || meta.Text != "source attacked or blocked this turn" {
+					t.Fatalf("metadata = %+v", meta)
+				}
+			},
+		},
+		{
+			Name:          "invalid non-battlefield source",
+			Card:          NewInstant("Invalid", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestSourceAttackedOrBlockedThisTurnTrigger(t *testing.T) {
@@ -2507,18 +2680,23 @@ func TestSourceAttackedThisTurnState(t *testing.T) {
 
 func TestSourceAttackedThisTurnDeclaration(t *testing.T) {
 	condition := SourceAttackedThisTurnCondition()
-	card := NewCreature("Watcher", "", 2, 2, WithAbility(WhenEvent(Attacks(This), IfState(condition, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
-	meta := InspectDefinition(condition)
-	if meta.Role != "state-condition" || meta.Text != "source attacked this turn" {
-		t.Fatalf("condition metadata = %+v", meta)
-	}
-	spell := NewInstant("Invalid", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewCreature("Watcher", "", 2, 2, WithAbility(WhenEvent(Attacks(This), IfState(condition, GainLifeFor(You, Fixed(1)))))),
+			Inspect: func(t *testing.T) {
+				meta := InspectDefinition(condition)
+				if meta.Role != "state-condition" || meta.Text != "source attacked this turn" {
+					t.Fatalf("condition metadata = %+v", meta)
+				}
+			},
+		},
+		{
+			Name:          "invalid non-battlefield source",
+			Card:          NewInstant("Invalid", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestSourceAttackedThisTurnTriggerRecheck(t *testing.T) {
@@ -2596,19 +2774,24 @@ func TestSourceBlockingConditionState(t *testing.T) {
 
 func TestSourceBlockingConditionDeclaration(t *testing.T) {
 	condition := SourceBlockingCondition()
-	card := NewCreature("Watcher", "", 2, 2, WithAbility(WhenEvent(Blocks(This),
-		IfState(condition, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
-	meta := InspectDefinition(condition)
-	if meta.Role != "state-condition" || meta.Text != "source is blocking" {
-		t.Fatalf("condition metadata = %+v", meta)
-	}
-	spell := NewInstant("Invalid", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid creature",
+			Card: NewCreature("Watcher", "", 2, 2, WithAbility(WhenEvent(Blocks(This),
+				IfState(condition, GainLifeFor(You, Fixed(1)))))),
+			Inspect: func(t *testing.T) {
+				meta := InspectDefinition(condition)
+				if meta.Role != "state-condition" || meta.Text != "source is blocking" {
+					t.Fatalf("condition metadata = %+v", meta)
+				}
+			},
+		},
+		{
+			Name:          "invalid non-battlefield source",
+			Card:          NewInstant("Invalid", "", WithEffect(IfState(condition, GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestSourceBlockingConditionResolution(t *testing.T) {
@@ -2794,21 +2977,36 @@ func TestSourceCombatEventIncarnationAndPhasing(t *testing.T) {
 }
 
 func TestSourceCombatEventValidation(t *testing.T) {
-	for _, pattern := range []EventPattern{Attacks(This), Blocks(This), BecomesBlocked(This)} {
-		card := NewCreature("Valid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err != nil {
-			t.Fatal(err)
-		}
-		meta := InspectDefinition(card.Abilities()[0])
-		if meta.Role != "event-trigger" || len(meta.Children) == 0 || meta.Children[0].Role != "event-pattern" {
-			t.Fatal("combat event missing from inspection")
-		}
+	cases := []DefinitionValidationCase{
+		{
+			Name: "attacks",
+			Card: NewCreature("ValidAttacks", "", 1, 1, WithAbility(WhenEvent(Attacks(This), GainLifeFor(You, Fixed(1))))),
+			Inspect: func(t *testing.T) {
+				meta := InspectDefinition(WhenEvent(Attacks(This), GainLifeFor(You, Fixed(1))))
+				if meta.Role != "event-trigger" || len(meta.Children) == 0 || meta.Children[0].Role != "event-pattern" {
+					t.Fatal("combat event missing from inspection")
+				}
+			},
+		},
+		{
+			Name: "blocks",
+			Card: NewCreature("ValidBlocks", "", 1, 1, WithAbility(WhenEvent(Blocks(This), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name: "becomes blocked",
+			Card: NewCreature("ValidBecomesBlocked", "", 1, 1, WithAbility(WhenEvent(BecomesBlocked(This), GainLifeFor(You, Fixed(1))))),
+		},
+		{
+			Name: "invalid non-battlefield source",
+			Card: func() Card {
+				spell := NewInstant("Invalid", "", WithEffect(GainLifeFor(You, Fixed(1))))
+				spell.AddAbility(WhenEvent(BecomesBlocked(This), GainLifeFor(You, Fixed(1))))
+				return spell
+			}(),
+			WantErrSubstr: "battlefield",
+		},
 	}
-	spell := NewInstant("Invalid", "", WithEffect(GainLifeFor(You, Fixed(1))))
-	spell.AddAbility(WhenEvent(BecomesBlocked(This), GainLifeFor(You, Fixed(1))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell event validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, cases)
 }
 
 func TestSourceBecomesBlockedAbsentOrPhasedBeforeEvent(t *testing.T) {
@@ -2915,17 +3113,22 @@ func TestSourceAttackedOrBlockedThisCombatHistory(t *testing.T) {
 
 func TestSourceAttackedOrBlockedThisCombatDeclaration(t *testing.T) {
 	condition := SourceAttackedOrBlockedThisCombatCondition()
-	card := NewCreature("Watcher", "", 2, 2, WithAbility(At(EachEndOfCombat, IfState(condition, GainLifeFor(You, Fixed(1))))))
-	if err := ValidateCardDefinition(card.Name(), card); err != nil {
-		t.Fatal(err)
-	}
-	if meta := InspectDefinition(condition); meta.Role != "state-condition" || meta.Text != "source attacked or blocked this combat" {
-		t.Fatalf("metadata = %+v", meta)
-	}
-	spell := NewInstant("Invalid", "", Spell(IfState(condition, GainLifeFor(You, Fixed(1)))))
-	if err := ValidateCardDefinition(spell.Name(), spell); err == nil || !strings.Contains(err.Error(), "battlefield") {
-		t.Fatalf("spell validation = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name: "valid card",
+			Card: NewCreature("Watcher", "", 2, 2, WithAbility(At(EachEndOfCombat, IfState(condition, GainLifeFor(You, Fixed(1)))))),
+			Inspect: func(t *testing.T) {
+				if meta := InspectDefinition(condition); meta.Role != "state-condition" || meta.Text != "source attacked or blocked this combat" {
+					t.Fatalf("metadata = %+v", meta)
+				}
+			},
+		},
+		{
+			Name:          "invalid non-battlefield source",
+			Card:          NewInstant("Invalid", "", Spell(IfState(condition, GainLifeFor(You, Fixed(1))))),
+			WantErrSubstr: "battlefield",
+		},
+	})
 }
 
 func TestSourceAttackedOrBlockedThisCombatEndTrigger(t *testing.T) {
@@ -3029,14 +3232,21 @@ func TestUnblockedAttackRejectsEarlierBlockAndAbsentSource(t *testing.T) {
 
 func TestUnblockedAttackDeclarationValidation(t *testing.T) {
 	defender := BindPlayer("defender")
-	for _, pattern := range []EventPattern{AttacksUnblocked(This).WithDefendingPlayer(nil), AttacksUnblocked(This).WithDefendingPlayer(defender).WithDefendingPlayer(defender)} {
-		card := NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(pattern, GainLifeFor(You, Fixed(1)))))
-		if err := ValidateCardDefinition(card.Name(), card); err == nil {
-			t.Fatal("accepted invalid binding")
-		}
-	}
-	card := NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(AttacksUnblocked(This), GainLifeFor(FromPlayer(defender), Fixed(1)))))
-	if err := ValidateCardDefinition(card.Name(), card); err == nil || !strings.Contains(err.Error(), "binding") {
-		t.Fatalf("missing binding error = %v", err)
-	}
+	RunDefinitionValidationTable(t, []DefinitionValidationCase{
+		{
+			Name:    "nil defending player",
+			Card:    NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(AttacksUnblocked(This).WithDefendingPlayer(nil), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:    "duplicate defending player",
+			Card:    NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(AttacksUnblocked(This).WithDefendingPlayer(defender).WithDefendingPlayer(defender), GainLifeFor(You, Fixed(1))))),
+			WantErr: true,
+		},
+		{
+			Name:          "missing binding",
+			Card:          NewCreature("Missing", "", 1, 1, WithAbility(WhenEvent(AttacksUnblocked(This), GainLifeFor(FromPlayer(defender), Fixed(1))))),
+			WantErrSubstr: "binding",
+		},
+	})
 }
