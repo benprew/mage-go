@@ -633,6 +633,11 @@ func DiscardCardsWithDifferentNamesCost(n int) Cost {
 	return &discardCost{amount: n, differentNames: true}
 }
 
+// DiscardCardsWithDifferentNamesCostWithCards saves the new graveyard visits.
+func DiscardCardsWithDifferentNamesCostWithCards(n int, paid *CardsBinding) Cost {
+	return &discardCost{amount: n, differentNames: true, paidCards: paid, captureCards: true}
+}
+
 // revealFromHandCost is an additional cost that requires the controller
 // to reveal a card from their hand matching the given filter. The card
 // stays in hand after being revealed (CR 701.16) — no zone change.

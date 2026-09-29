@@ -494,6 +494,14 @@ its graveyard visit ends (CR 400.7j, 601.2h, 701.9). This output supports direct
 activation costs and spell additional costs. Alternative costs, optional
 wrappers, and resolution-time payment captures are rejected at registration.
 
+`DiscardCardsWithDifferentNamesCostWithCards(n, binding)` combines the same
+paid-set output with the existing distinct-name constraint. Preparation and
+commit use the locked hand visits and the shared simultaneous discard batch.
+The cost rejects undefined characteristics from an unrevealed hidden-zone
+replacement (CR 701.9c). It has the same direct-cost scope, registration checks,
+and instance-local capture lifetime as `DiscardCostWithCards`. It does not
+capture names or other discarded characteristics for later evaluation.
+
 `RevealFromHandCostWithCard` locks one matching hand card and its hand visit
 during payment preparation. The same choice is checked during isolated
 validation and live commit, before mana or life is paid. A card that leaves
