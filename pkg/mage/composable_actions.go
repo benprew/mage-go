@@ -45,61 +45,14 @@ func (activePlayerRef) inspectDefinition() definitionNode {
 	return definitionNode{Role: "player-ref", Text: "active player"}
 }
 
-type subjectAction struct {
-	permanent PermanentRef
-	player    PlayerRef
-	effect    Effect
-	verb      string
-	amount    ValueSource
-}
-
-func (e *subjectAction) Text() string {
-	s := any(e.permanent)
-	if e.player != nil {
-		s = e.player
-	}
-	return e.verb + " " + InspectDefinition(s).Text
-}
-func (e *subjectAction) Properties() EffectProperties { return e.effect.Properties() }
-func (e *subjectAction) Apply(ctx *EffectContext) error {
-	var id uuid.UUID
-	if e.permanent != nil {
-		p, ok := e.permanent.resolvePermanent(ctx)
-		if !ok {
-			return nil
-		}
-		id = p.ID()
-	} else {
-		p, ok := e.player.resolvePlayer(ctx)
-		if !ok {
-			return nil
-		}
-		id = p
-	}
-	child := *ctx
-	child.Targets = []uuid.UUID{id}
-	return e.effect.Apply(&child)
-}
-func (e *subjectAction) inspectDefinition() definitionNode {
-	s := any(e.permanent)
-	if e.player != nil {
-		s = e.player
-	}
-	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", s}}}
-	if e.player != nil || e.verb == "add counters to" {
-		n.children = append(n.children, definitionEdge{"amount", e.amount})
-	}
-	return n
-}
-
 // Destroy destroys the selected battlefield incarnation through the normal action.
 func Destroy(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: DestroyTarget(), verb: "destroy"}
+	return newDestroySubjectEffect(subject, false, nil)
 }
 
 // DestroyWithoutRegeneration destroys the subject and prevents regeneration.
 func DestroyWithoutRegeneration(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: DestroyTargetNoRegen(), verb: "destroy without regeneration"}
+	return newDestroySubjectEffect(subject, true, nil)
 }
 
 // DestroyWithResult destroys one permanent and saves its action result.
@@ -151,7 +104,16 @@ func newDestroySubjectEffect(subject PermanentRef, cannotRegenerate bool, option
 	}
 	return e
 }
-func (e *destroySubjectEffect) Text() string { return "destroy permanent" }
+func (e *destroySubjectEffect) Text() string {
+	verb := "destroy"
+	if e.cannotRegenerate {
+		verb = "destroy without regeneration"
+	}
+	if e.subject != nil {
+		return verb + " " + InspectDefinition(e.subject).Text
+	}
+	return verb + " permanent"
+}
 func (*destroySubjectEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Destroys: true}
 }
@@ -184,9 +146,99 @@ func (e *destroySubjectEffect) inspectDefinition() definitionNode {
 	return n
 }
 
+// ExileResultOption saves the outcome of one battlefield exile instruction.
+type ExileResultOption interface {
+	exileResultOption()
+	applyExileResult(*exileSubjectEffect)
+}
+
+type exiledThisWayOption struct{ binding *NumberBinding }
+
+// ExiledThisWayInto saves 1 when the subject moves from the battlefield.
+func ExiledThisWayInto(binding *NumberBinding) ExileResultOption {
+	return exiledThisWayOption{binding: binding}
+}
+func (exiledThisWayOption) exileResultOption() {}
+func (o exiledThisWayOption) applyExileResult(e *exileSubjectEffect) {
+	e.result = o.binding
+	e.optionCount++
+	if o.binding == nil {
+		e.invalidOption = true
+	}
+}
+
+type exileSubjectEffect struct {
+	subject       PermanentRef
+	result        *NumberBinding
+	optionCount   int
+	invalidOption bool
+	withResult    bool
+}
+
 // Exile exiles the selected battlefield incarnation.
 func Exile(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: &exileTargetEffect{}, verb: "exile"}
+	return &exileSubjectEffect{subject: subject}
+}
+
+// ExileWithResult exiles one permanent and saves the completed move.
+func ExileWithResult(subject PermanentRef, options ...ExileResultOption) ResolvingEffect {
+	e := &exileSubjectEffect{subject: subject, withResult: true}
+	for _, option := range options {
+		if nilDefinition(option) {
+			e.invalidOption = true
+			continue
+		}
+		option.applyExileResult(e)
+	}
+	return e
+}
+
+func (e *exileSubjectEffect) Text() string {
+	if e.withResult {
+		return "exile permanent with result"
+	}
+	if e.subject != nil {
+		return "exile " + InspectDefinition(e.subject).Text
+	}
+	return "exile permanent"
+}
+
+func (*exileSubjectEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, TargetPurposeOverride: AITargetExile}
+}
+
+func (e *exileSubjectEffect) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+	if e.withResult {
+		if e.invalidOption || e.result == nil {
+			n.problem = "supply a non-nil exile result binding"
+		} else if e.optionCount != 1 {
+			n.problem = "supply the exile result binding only once"
+		}
+	}
+	if e.result != nil {
+		n.bindingWrite = e.result
+		n.children = append(n.children, definitionEdge{"result", e.result})
+	}
+	return n
+}
+
+func (e *exileSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.result != nil {
+		if ctx.Game.resolution.numberBindings == nil {
+			ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
+		}
+		ctx.Game.resolution.numberBindings[e.result] = 0
+	}
+	if e.subject != nil {
+		if p, ok := e.subject.resolvePermanent(ctx); ok {
+			ctx.Game.ExilePermanent(p)
+			if e.result != nil {
+				ctx.Game.resolution.numberBindings[e.result] = 1
+			}
+		}
+	}
+	return nil
 }
 
 type exileEachEffect struct{ subjects PermanentSet }
@@ -207,9 +259,37 @@ func (e *exileEachEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "exile-each", Text: e.Text(), children: []definitionEdge{{"subjects", e.subjects}}}
 }
 
+type returnToHandSubjectEffect struct {
+	subject PermanentRef
+}
+
 // ReturnToHand returns the selected permanent to its owner's hand.
 func ReturnToHand(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: ReturnToHandTarget(), verb: "return to owner's hand"}
+	return &returnToHandSubjectEffect{subject: subject}
+}
+
+func (e *returnToHandSubjectEffect) Text() string {
+	if e.subject != nil {
+		return "return to owner's hand " + InspectDefinition(e.subject).Text
+	}
+	return "return to owner's hand permanent"
+}
+
+func (*returnToHandSubjectEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeDetriment, IsBounce: true}
+}
+
+func (e *returnToHandSubjectEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}
+
+func (e *returnToHandSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.subject != nil {
+		if p, ok := e.subject.resolvePermanent(ctx); ok {
+			ctx.Game.BouncePermanentToHand(p)
+		}
+	}
+	return nil
 }
 
 // UntapPermanent untaps the selected battlefield incarnation.
@@ -2215,77 +2295,6 @@ func (a *entryCountersAbility) inspectDefinition() definitionNode {
 	return n
 }
 
-// --- from composable_exile_result.go ---
-// ExileResultOption saves the outcome of one battlefield exile instruction.
-type ExileResultOption interface {
-	exileResultOption()
-	applyExileResult(*exileResultEffect)
-}
-
-type exiledThisWayOption struct{ binding *NumberBinding }
-
-// ExiledThisWayInto saves 1 when the subject moves from the battlefield.
-func ExiledThisWayInto(binding *NumberBinding) ExileResultOption {
-	return exiledThisWayOption{binding: binding}
-}
-func (exiledThisWayOption) exileResultOption() {}
-func (o exiledThisWayOption) applyExileResult(e *exileResultEffect) {
-	e.result = o.binding
-	e.optionCount++
-	if o.binding == nil {
-		e.invalidOption = true
-	}
-}
-
-type exileResultEffect struct {
-	subject       PermanentRef
-	result        *NumberBinding
-	optionCount   int
-	invalidOption bool
-}
-
-// ExileWithResult exiles one permanent and saves the completed move.
-func ExileWithResult(subject PermanentRef, options ...ExileResultOption) ResolvingEffect {
-	e := &exileResultEffect{subject: subject}
-	for _, option := range options {
-		if nilDefinition(option) {
-			e.invalidOption = true
-			continue
-		}
-		option.applyExileResult(e)
-	}
-	return e
-}
-
-func (*exileResultEffect) Text() string { return "exile permanent with result" }
-func (*exileResultEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment}
-}
-func (e *exileResultEffect) inspectDefinition() definitionNode {
-	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
-	if e.invalidOption || e.result == nil {
-		n.problem = "supply a non-nil exile result binding"
-	} else if e.optionCount != 1 {
-		n.problem = "supply the exile result binding only once"
-	}
-	if e.result != nil {
-		n.bindingWrite = e.result
-		n.children = append(n.children, definitionEdge{"result", e.result})
-	}
-	return n
-}
-func (e *exileResultEffect) Apply(ctx *EffectContext) error {
-	if ctx.Game.resolution.numberBindings == nil {
-		ctx.Game.resolution.numberBindings = make(map[*NumberBinding]int)
-	}
-	ctx.Game.resolution.numberBindings[e.result] = 0
-	if p, ok := e.subject.resolvePermanent(ctx); ok {
-		ctx.Game.ExilePermanent(p)
-		ctx.Game.resolution.numberBindings[e.result] = 1
-	}
-	return nil
-}
-
 // --- from composable_fight.go ---
 // Fight makes two referenced creatures deal damage equal to their power to each other.
 func Fight(first, second PermanentRef) ResolvingEffect {
@@ -2585,7 +2594,7 @@ type returnCardToHandEffect struct{ card CardRef }
 func ReturnCardToHand(card CardRef) ResolvingEffect { return &returnCardToHandEffect{card} }
 func (*returnCardToHandEffect) Text() string        { return "return card to its owner's hand" }
 func (*returnCardToHandEffect) Properties() EffectProperties {
-	return (&returnFromGraveyardToHandTargetEffect{}).Properties()
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *returnCardToHandEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}}}
@@ -2645,7 +2654,7 @@ func (*returnCardToBattlefieldEffect) Text() string {
 	return "return card from graveyard to the battlefield"
 }
 func (*returnCardToBattlefieldEffect) Properties() EffectProperties {
-	return (&returnFromAnyGraveyardEffect{}).Properties()
+	return EffectProperties{Outcome: OutcomeBenefit}
 }
 func (e *returnCardToBattlefieldEffect) inspectDefinition() definitionNode {
 	node := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"card", e.card}, {"controller", e.controller}}}
@@ -3297,9 +3306,37 @@ func (p receivesDamagePattern) captureEventEffects(event *GameEvent, effects []E
 }
 
 // --- from composable_regeneration.go ---
+type regenerateSubjectEffect struct {
+	subject PermanentRef
+}
+
 // Regenerate protects the subject from its next destruction this turn.
 func Regenerate(subject PermanentRef) ResolvingEffect {
-	return &subjectAction{permanent: subject, effect: &regenerateTargetEffect{}, verb: "regenerate"}
+	return &regenerateSubjectEffect{subject: subject}
+}
+
+func (e *regenerateSubjectEffect) Text() string {
+	if e.subject != nil {
+		return "regenerate " + InspectDefinition(e.subject).Text
+	}
+	return "regenerate permanent"
+}
+
+func (*regenerateSubjectEffect) Properties() EffectProperties {
+	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
+}
+
+func (e *regenerateSubjectEffect) inspectDefinition() definitionNode {
+	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"subject", e.subject}}}
+}
+
+func (e *regenerateSubjectEffect) Apply(ctx *EffectContext) error {
+	if e.subject != nil {
+		if p, ok := e.subject.resolvePermanent(ctx); ok {
+			ctx.Game.AddRegenerationShield(p.ID())
+		}
+	}
+	return nil
 }
 
 // --- from composable_regeneration_ai.go ---
@@ -3329,9 +3366,8 @@ func RegeneratesAttachment(ability ActivatedAbility) bool {
 	var inspect func(Effect) (found, supported bool)
 	inspect = func(effect Effect) (bool, bool) {
 		switch effect := effect.(type) {
-		case *subjectAction:
-			_, regenerates := effect.effect.(*regenerateTargetEffect)
-			return regenerates && isAttached(effect.permanent), regenerates
+		case *regenerateSubjectEffect:
+			return isAttached(effect.subject), true
 		case *permanentSnapshot:
 			attached[effect.binding] = isAttached(effect.subject)
 			return false, true
@@ -3963,7 +3999,7 @@ type counterReferencedEffect struct{ spell StackObjectRef }
 func Counter(spell StackObjectRef) ResolvingEffect { return &counterReferencedEffect{spell: spell} }
 func (*counterReferencedEffect) Text() string      { return "counter target spell" }
 func (*counterReferencedEffect) Properties() EffectProperties {
-	return (&counterSpellEffect{}).Properties()
+	return EffectProperties{Outcome: OutcomeDetriment}
 }
 func (e *counterReferencedEffect) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"spell", e.spell}}}

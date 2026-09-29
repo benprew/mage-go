@@ -93,14 +93,6 @@ func (e *replaceKeywordEffect) Text() string {
 }
 func (e *replaceKeywordEffect) Properties() EffectProperties { return EffectProperties{} }
 
-// regenerateTargetEffect sets a regeneration shield on the target.
-type regenerateTargetEffect struct{}
-
-func (e *regenerateTargetEffect) Text() string { return "Regenerate target creature" }
-func (e *regenerateTargetEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeBenefit, Regenerates: true}
-}
-
 // markDestroyAtEOTAfterNActivationsEffect tracks pump activations using Charge
 // counters. When the count reaches the threshold, sets DestroyAtEndOfTurn.
 type markDestroyAtEOTAfterNActivationsEffect struct {
@@ -244,18 +236,6 @@ func (e *replaceKeywordEffect) Apply(ctx *EffectContext) error {
 	eff.SetSourceID(ctx.SourceID)
 	ctx.Game.AddContinuousEffect(eff)
 	ctx.Game.ApplyContinuousEffects()
-	return nil
-}
-
-func (*regenerateTargetEffect) Apply(ctx *EffectContext) error {
-	if len(ctx.Targets) == 0 {
-		return nil
-	}
-	perm := ctx.Game.FindPermanent(ctx.Targets[0])
-	if perm == nil {
-		return nil
-	}
-	ctx.Game.AddRegenerationShield(perm.ID())
 	return nil
 }
 
