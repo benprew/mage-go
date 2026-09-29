@@ -208,7 +208,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 				}
 				for _, card := range payer.ChooseCardsFromHand(discard.amount, "discard cost", tx.game) {
 					if card != nil {
-						locked.selected = append(locked.selected, card.ID())
+						selected := capturedCard{id: card.ID(), zone: ZoneHand}
+						if visitor, ok := payer.(interface{ handVisit(uuid.UUID) uuid.UUID }); ok {
+							selected.visit = visitor.handVisit(card.ID())
+						}
+						locked.selected = append(locked.selected, selected)
 					}
 				}
 			}
@@ -415,7 +419,7 @@ func (tx *costPaymentTransaction) Commit() (commitErr error) {
 			}
 		}
 		if discard, ok := cost.(*discardCost); ok && discard.captureCard && len(discard.selected) == 1 {
-			discardedCardID = discard.selected[0]
+			discardedCardID = discard.selected[0].id
 		}
 		paidSubtype := 0
 		paidTotalPower := 0
