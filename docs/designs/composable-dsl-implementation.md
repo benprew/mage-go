@@ -1,6 +1,64 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Equal Rounded-Down Damage Division
+## Current Slice: Spell Cost Modifiers on the Combined Mana Total
+
+Delivery step 3 T/P's additional-per-target audit found an engine prerequisite.
+Ordinary casting reduced the printed cost before combining added mana and
+before resolving X; alternate-zone casts omitted those modifiers. The draft
+beyond-first adapter was removed. This run completes only the shared total-cost
+calculation prerequisite. Existing damage identity, explicit damage, attack/block,
+filtered death, target groups, allocation, and equal division remain intact.
+
+No public API was added or retired. `prepareSpellPaymentTransaction` now applies
+existing color increases and color/type/conditional reductions to the combined
+mana total in both its direct-mana and mixed-cost paths. Announced X is resolved
+before reductions, but its stack value and mana value remain unchanged. Card
+colors supply color eligibility even for a differently colored alternative cost.
+The existing payment service locks the result before planning and commit.
+Ordinary casting's existing Channel generic-life substitution follows the final
+total calculation. There is no new role, binding, executor, replacement service,
+AI metadata, or card-specific policy.
+
+`TestSpellTotalModifiersAdditionalAndX` first failed in all eight ordinary and
+alternate-zone cases: added, action, per-target, and X mana could not be reduced.
+Acceptance now covers these paths; increase-before-reduction ordering; color,
+type, self and target-conditional reductions; fixed X and clone isolation;
+a reducer sacrificed during payment; successful combined payment and insufficient
+mana/life rollback with no live events; and Channel's final generic total.
+The synthetic gametest uses the public reference declaration and checks equal
+damage and normal spell cleanup. Legacy per-target, casting, and autotap
+regressions pass with `-count=1`.
+
+Complete Fireball text in `data/4ED.json` was checked against the Limited
+inventory and its JSON gap requirement. Fireball needs additional {1} for each
+target beyond the first, then X damage divided evenly, rounded down, among any
+number of targets. The existing `ManaCostPerTarget(string)` charges every target
+and is preserved. The beyond-first declaration remains next dependency-ready
+work after this prerequisite; no production card was changed and no inventory
+or gap record was closed. A fresh production search finds one remaining
+`ManaCostPerTarget` construction, Goblin Polka Band in
+`cards/astral/creatures.go`; its activation and all legacy exports remain.
+Mana Matrix's complete text in `data/LEG.json` requires a {2} reduction for
+instant and enchantment spells; its inventory still lists the separate typed
+static-rule adapter gap. All remaining card wiring is separate.
+
+Excluded: new cost adapters, activation changes, optional/alternative branch
+eligibility, prepared/Paradigm card-copy payment, general Channel declaration,
+and production migration. No second slice was implemented. Unrelated untracked
+workspace work is preserved.
+
+Validation passes: focused `TestSpellTotalModifiers*`, shared casting,
+legacy per-target payment, autotap contracts, and synthetic integration with
+`-count=1`; `go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test`; `make lint` with zero issues;
+and `git diff --check`. Lint's first run reported two local naming warnings;
+both were corrected, the required tests/build/vet/full suite were repeated,
+and lint passed. The post-lint diff was reviewed. No unrelated tracked file
+changed, no production card changed, and no validation blocker remains.
+
+## Completed Slice: Equal Rounded-Down Damage Division
 
 Delivery step 3 T adds the missing resolution-time equal-division adapter after
 the source-color prerequisites. A fresh API audit found source/recipient LKI,

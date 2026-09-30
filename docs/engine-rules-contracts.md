@@ -886,3 +886,24 @@ This extension adds no counter executor, target, LKI, replacement ordering, or
 simultaneous action contract. Captured leaves, mixed families, nested optional
 gates, general payment-order choice, and mutations during commit remain outside
 this contract.
+
+### Spell cost modifiers on the combined mana total (CR 601.2f–h)
+
+The shared spell-payment service first resolves announced X and combines the
+printed or alternative mana cost with locked additional and action mana costs.
+It then applies existing color-based increases, color/type reductions, and
+conditional reductions exactly once. Reductions can reach generic mana from
+additional costs and X; generic mana cannot fall below zero. Color checks use
+the card's color, including when an alternative mana cost has different colors.
+The original X and mana value do not change. This applies to both direct-mana
+and mixed mana/nonmana transaction paths, ordinary casts, and the shared
+alternate-zone cast service.
+
+The resulting total is fixed before mana planning and payment. A reducer lost
+through a sacrifice cost cannot change the total. Ordinary casting's existing
+Channel generic-life substitution follows this calculation and uses the final
+generic total. Unpayable combined life and mana costs fail isolated payment
+validation without publishing events or spending live resources. Stack copies
+and clones do not calculate or pay costs again. Activation cost reduction,
+optional/alternative branch eligibility, prepared/Paradigm card-copy payment,
+and the general Channel mana-ability declaration are separate contracts.

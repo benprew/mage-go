@@ -21,15 +21,16 @@ type spellPaymentTransaction struct {
 }
 
 type spellPaymentSpec struct {
-	Card       Card
-	Controller uuid.UUID
-	Zone       Zone
-	Mana       ManaCost
-	LifeLoss   int
-	Costs      []Cost
-	Targets    []uuid.UUID
-	XValue     int
-	AnyColor   bool
+	Card           Card
+	Controller     uuid.UUID
+	Zone           Zone
+	Mana           ManaCost
+	LifeLoss       int
+	Costs          []Cost
+	Targets        []uuid.UUID
+	XValue         int
+	AnyColor       bool
+	ChannelGeneric bool
 }
 
 func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaymentTransaction, error) {
@@ -43,15 +44,13 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 	if extraMana, direct := directSpellManaCosts(spec.Costs, spec.XValue); direct {
 		totalMana := resolvedSpellManaCost(spec.Mana, spec.XValue)
 		addActionManaCost(&totalMana, extraMana)
-		if spec.AnyColor {
-			totalMana = flattenManaCost(totalMana)
-		}
+		totalMana, lifeLoss := g.modifySpellTotalCost(spec, totalMana)
 		spellCtx := SpellContextForCard(spec.Card)
 		payment, err := g.prepareCostPaymentTransaction(costPaymentSpec{
 			Controller:             spec.Controller,
 			SourceID:               spec.Card.ID(),
 			Mana:                   totalMana,
-			LifeLoss:               spec.LifeLoss,
+			LifeLoss:               lifeLoss,
 			Hint:                   AutoTapHint{CastingCard: spec.Card.ID()},
 			SpellContext:           spellCtx,
 			ResetDrainedBeforeMana: true,
@@ -90,16 +89,14 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 			nonMana = append(nonMana, cost)
 		}
 	}
-	if spec.AnyColor {
-		totalMana = flattenManaCost(totalMana)
-	}
+	totalMana, lifeLoss := g.modifySpellTotalCost(spec, totalMana)
 
 	spellCtx := SpellContextForCard(spec.Card)
 	payment, err := g.prepareCostPaymentTransaction(costPaymentSpec{
 		Controller:             spec.Controller,
 		SourceID:               spec.Card.ID(),
 		Mana:                   totalMana,
-		LifeLoss:               spec.LifeLoss,
+		LifeLoss:               lifeLoss,
 		Costs:                  nonMana,
 		OptionalOutcomes:       outcomes,
 		Hint:                   AutoTapHint{CastingCard: spec.Card.ID()},
@@ -117,6 +114,37 @@ func (g *Game) prepareSpellPaymentTransaction(spec spellPaymentSpec) (*spellPaym
 		zone:       spec.Zone,
 		payment:    payment,
 	}, nil
+}
+
+// Cost changes use the complete mana total so reductions can cover added mana.
+func (g *Game) modifySpellTotalCost(spec spellPaymentSpec, total ManaCost) (modified ManaCost, lifeLoss int) {
+	for _, color := range cardColors(spec.Card) {
+		if increase := g.effects.Rules.SpellCostIncrease(color); increase > 0 {
+			total.Generic += increase
+			break
+		}
+	}
+	for _, color := range cardColors(spec.Card) {
+		if reduction := g.effects.Rules.SpellCostReduction(color); reduction > 0 {
+			total.Generic = max(0, total.Generic-reduction)
+			break
+		}
+	}
+	for _, cardType := range spec.Card.Types() {
+		if reduction := g.effects.Rules.SpellTypeCostReduction(cardType); reduction > 0 {
+			total.Generic = max(0, total.Generic-reduction)
+		}
+	}
+	total.Generic -= computeConditionalCostReduction(g, spec.Controller, spec.Card, total.Generic, spec.Targets)
+	lifeLoss = spec.LifeLoss
+	if spec.ChannelGeneric {
+		lifeLoss += total.Generic
+		total.Generic = 0
+	}
+	if spec.AnyColor {
+		total = flattenManaCost(total)
+	}
+	return total, lifeLoss
 }
 
 func directSpellManaCosts(costs []Cost, xValue int) (ManaCost, bool) {

@@ -2636,59 +2636,6 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 	mc := card.ManaCost()
 
-	// Apply spell cost increases (e.g. Gloom)
-	for _, col := range mc.Colors() {
-		increase := g.effects.Rules.SpellCostIncrease(col)
-		if increase > 0 {
-			mc.Generic += increase
-			break // only apply once per spell
-		}
-	}
-
-	// Apply spell cost reductions (by color)
-	for _, col := range mc.Colors() {
-		reduction := g.effects.Rules.SpellCostReduction(col)
-		if reduction > 0 {
-			mc.Generic -= reduction
-			if mc.Generic < 0 {
-				mc.Generic = 0
-			}
-			break // only apply once per spell
-		}
-	}
-
-	// Apply spell cost reductions (by type, e.g. Mana Matrix, Planar Gate)
-	for _, ct := range card.Types() {
-		reduction := g.effects.Rules.SpellTypeCostReduction(ct)
-		if reduction > 0 {
-			mc.Generic -= reduction
-			if mc.Generic < 0 {
-				mc.Generic = 0
-			}
-		}
-	}
-
-	// Conditional cost reductions (CR 601.2f). Reduce generic only; never
-	// below zero. Covers static-source reducers (Warden of Evos Isle,
-	// Dragonlord's Servant, Herald's Horn) and intrinsic self-reducers
-	// (Bone Picker, Cryptic Serpent, Ghalta).
-	if r := computeConditionalCostReduction(g, playerID, card, mc.Generic, targets); r > 0 {
-		mc.Generic -= r
-	}
-
-	payMC := mc
-	lifeLoss := 0
-	// Channel: pay life for the printed generic/X portion instead of mana.
-	if g.effects.Rules.IsChannelActive(playerID) && (mc.Generic > 0 || (mc.HasX && xValue > 0)) {
-		payMC.Generic = 0
-		payMC.HasX = false
-		payMC.XCount = 0
-		lifeLoss = mc.Generic
-		if mc.HasX {
-			lifeLoss += xValue * mc.XCount
-		}
-	}
-
 	var totalCosts []Cost
 	if bc, ok := card.(*BaseCard); ok {
 		totalCosts = append(totalCosts, bc.AdditionalCosts()...)
@@ -2704,14 +2651,14 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	totalCosts = append(totalCosts, actionCosts...)
 
 	payment, err := g.prepareSpellPaymentTransaction(spellPaymentSpec{
-		Card:       card,
-		Controller: playerID,
-		Zone:       ZoneHand,
-		Mana:       payMC,
-		LifeLoss:   lifeLoss,
-		Costs:      totalCosts,
-		Targets:    targets,
-		XValue:     xValue,
+		Card:           card,
+		Controller:     playerID,
+		Zone:           ZoneHand,
+		Mana:           mc,
+		ChannelGeneric: g.effects.Rules.IsChannelActive(playerID),
+		Costs:          totalCosts,
+		Targets:        targets,
+		XValue:         xValue,
 	})
 	if err != nil {
 		return fmt.Errorf("cannot pay total cost for %s: %w", name, err)

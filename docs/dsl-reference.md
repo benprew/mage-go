@@ -4045,3 +4045,32 @@ Registration rejects empty trees, invalid counter types, captured leaves,
 mixed fixed/X or other cost families, nested optional gates, nil or unnamed
 results, and empty prompts. Resolution-time capture and reads not dominated by
 this producer remain invalid. The legacy exports and production callers remain.
+
+### Total mana cost changes during casting
+
+The existing `ManaCostPerTarget(string) Cost`, `GenericCost(int) Cost`,
+`ManaPayment(string) Cost`, and printed X costs join one mana total before
+spell cost increases and reductions apply. Ordinary hand casting and the
+shared alternate-zone casting path use this contract. Increases apply first;
+color, type, and conditional reductions can reduce added generic mana and
+announced X, with a minimum generic cost of zero. They do not change announced
+X or the spell's mana value. The total is locked before mana planning and
+payment, so sacrificing a reducer as a cost does not recalculate it.
+
+This synthetic declaration compiles and uses existing public functions:
+
+```go
+recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
+card := dsl.NewInstant("Synthetic Reduced X", "{X}{R}",
+    dsl.Spell(dsl.DealDamageEvenly(dsl.This, recipients,
+        dsl.ValueAtResolution(dsl.XValue())), dsl.WithTargets(recipients)),
+    dsl.WithAdditionalCost(dsl.ManaCostPerTarget("{1}")),
+    dsl.WithSelfCostReduction(dsl.FixedAmount(2), nil))
+_ = card
+```
+
+For two targets and X=4, the total is {4}{R}: {4}{R} plus {2}, minus {2}.
+This example charges for every target. The separate declaration for a cost
+per target beyond the first remains proposed work. Branch selection inside
+optional/alternative costs, prepared/Paradigm card-copy payment, and new
+cost-reduction declarations are outside this slice.
