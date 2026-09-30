@@ -1044,6 +1044,33 @@ _ = spell
 ```
 
 ### Damage Actions
+
+The engine compatibility constructor
+`mage.DealDividedDamage(total mage.ValueSource) mage.Effect` remains unchanged;
+it is not a typed `dsl` divided-damage export. Its spell and activation paths
+normalize chosen allocations so each target receives at least one damage
+(CR 601.2d). Valid shares are preserved. For malformed responses with a
+representable target list, the fallback gives one to each target and the
+remainder to the first announced target. The default player makes this same
+choice. Copies and game clones retain independent allocation maps, and an
+illegal target's share is not redistributed at resolution. This synthetic
+engine declaration compiles and is exercised by `TestDamageDivisionSpellActivationCopyClone`:
+
+```go
+spell := mage.NewInstant("Division spell", "",
+    mage.NewMultiTargetSpell(
+        []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
+        mage.DealDividedDamage(mage.Fixed(4))))
+```
+
+The internal signature is
+`sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int) map[uuid.UUID]int`.
+It returns nil for an empty target list, duplicate or nil target IDs, or a
+total smaller than the target count. Callers must not treat nil as proof of a
+legal announcement. Typed divided-target declarations, prepayment choice
+locking and rejection, and simultaneous divided damage are still unimplemented.
+Fireball's equal division at resolution requires a separate contract.
+
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:
 
 ```go

@@ -2377,51 +2377,38 @@ func reverseTriggers(s []*pendingTrigger) {
 	}
 }
 
-// sanitizeDamageDistribution validates a player-chosen damage division for a
-// divided-damage spell or ability (CR 601.2d). The returned map is restricted
-// to keys present in `targets`, has only non-negative values, and sums to
-// exactly `total`. If the player's input is malformed (sum mismatch, unknown
-// target, negative entry, missing assignment when total > 0) we fall back to
-// "all damage to the first target," which is always a legal distribution
-// because total damage must be assigned across the chosen targets.
+// Each chosen target must receive damage under CR 601.2d.
+// An impossible target list has no valid fallback.
 func sanitizeDamageDistribution(in map[uuid.UUID]int, targets []uuid.UUID, total int) map[uuid.UUID]int {
-	if total <= 0 || len(targets) == 0 {
+	if len(targets) == 0 || total < len(targets) {
 		return nil
 	}
-	allowed := make(map[uuid.UUID]struct{}, len(targets))
-	for _, t := range targets {
-		if t == uuid.Nil {
-			continue
+	allowed := make(map[uuid.UUID]bool, len(targets))
+	for _, id := range targets {
+		if id == uuid.Nil || allowed[id] {
+			return nil
 		}
-		allowed[t] = struct{}{}
+		allowed[id] = true
 	}
-	out := make(map[uuid.UUID]int, len(in))
-	sum := 0
-	valid := true
-	for k, v := range in {
-		if _, ok := allowed[k]; !ok {
+	out := make(map[uuid.UUID]int, len(targets))
+	remaining := total
+	valid := len(in) == len(targets)
+	for id, amount := range in {
+		if !allowed[id] || amount < 1 || amount > remaining {
 			valid = false
 			break
 		}
-		if v < 0 {
-			valid = false
-			break
-		}
-		if v > 0 {
-			out[k] = v
-			sum += v
-		}
+		out[id] = amount
+		remaining -= amount
 	}
-	if !valid || sum != total || len(out) == 0 {
-		out = map[uuid.UUID]int{}
-		for _, t := range targets {
-			if t != uuid.Nil {
-				out[t] = total
-				return out
-			}
-		}
-		return nil
+	if valid && remaining == 0 {
+		return out
 	}
+	out = make(map[uuid.UUID]int, len(targets))
+	for _, id := range targets {
+		out[id] = 1
+	}
+	out[targets[0]] += total - len(targets)
 	return out
 }
 

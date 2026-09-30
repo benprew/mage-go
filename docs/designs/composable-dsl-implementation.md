@@ -1,6 +1,60 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Typed Acceptance for X-Counter Alternative Trees
+## Current Slice: Positive Chosen-Damage Allocation Normalization
+
+Delivery step 3 T completes one shared prerequisite for divided-target
+announcement. Fresh API, test, caller, and tracker searches confirmed that the
+preferred source/recipient identity, explicit singular damage, source attack and
+block events, and filtered other-creature death slices already exist. The typed
+divided-damage adapter is absent. The legacy shared normalizer accepted missing
+or zero shares, used an illegal all-to-first fallback, and could accept an
+overflowed sum. No adapter was exposed over that incomplete contract.
+
+`sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int)
+map[uuid.UUID]int` now preserves a valid allocation in a new map, requires every
+chosen target to receive at least one, and checks the total by subtraction.
+Malformed responses receive one per target plus the remainder on the first
+announced target. Duplicate or nil target IDs, an empty list, or a total smaller
+than the target count have no representable allocation and return nil.
+`BasePlayer.ChooseDamageDistribution` uses the same normalization boundary.
+All public signatures remain unchanged. This does not certify an impossible
+announcement as legal; admission and prepayment choice locking remain open.
+
+`TestDamageDivision*` first failed for missing/zero shares, malformed fallback,
+integer overflow, and spell/activation allocations. Acceptance covers valid
+shares, nil responses, missing/unknown targets, negative/zero/excess/short shares,
+maximum integer totals, invalid target shapes, exhaustive one-to-three-target
+allocations, unchanged input maps, default choices, synthetic spells and
+activations, phasing, loss of illegal target shares, and independent stack-copy
+and game-clone allocations. Normalization reads IDs and amounts only; it neither
+resolves objects nor changes payment, LKI, replacements, events, or damage
+execution. No sealed role, declaration state, scope rule, or AI metadata was
+added. Existing registration and role checks remain required.
+
+Complete Flames of the Firebrand and Pyrotechnics texts in `data/JMP.json` and
+`data/4ED.json` were checked against the inventories and gap requirements.
+Both require positive chosen allocations. Fireball's complete text in
+`data/4ED.json` requires a different equal-division contract. Fresh production
+searches found two `DealDividedDamage` constructions, in Jumpstart and Legends;
+both remain unchanged. No production card or gap record is completed. The
+reference includes the exact compiling synthetic engine declaration from the
+integration test; no typed divided-damage author export is claimed.
+
+Excluded: typed divided target groups and amounts, prepayment announcement
+choices, transactional rejection of impossible target/total shapes, alternate
+casting admission, simultaneous legacy divided damage, and card migration.
+Next dependency-ready work is the T prepayment division choice and admission
+contract, before a typed divided-damage adapter. No second slice was started.
+Unrelated tracked and untracked work is preserved.
+
+Validation passes: focused contracts with `-count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run with `-count=1`, `go test ./... -short -count=1`, `go build ./...`,
+`go vet ./...`, full `make test`, `make lint` with zero issues, and `git diff --check`.
+The post-lint diff was reviewed. Lint made no additional source changes, and
+no validation blocker remains.
+
+## Completed Slice: Typed Acceptance for X-Counter Alternative Trees
 
 Delivery step 3 P extends the existing
 `OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` to

@@ -293,6 +293,25 @@ does not erase this rule, and the rule applies to later blockers (CR 509.1b,
 
 ## 7. Damage Execution and Nonpositive Outcomes (CR 120, 120.8)
 
+`sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int) map[uuid.UUID]int`
+is the shared engine boundary for legacy chosen damage allocations. For a
+nonempty list of distinct, non-nil target IDs and a total at least as large as
+the target count, it returns exactly those IDs, each with a positive share, and
+an exact total (CR 601.2d). It preserves a valid response in an independent map.
+For a malformed response, it assigns one to each target and the remainder to
+the first target in announcement order. It subtracts shares from the remaining
+total to avoid integer overflow. An empty or unrepresentable target/total shape
+returns nil; that result does not certify a legal announcement. The default
+`BasePlayer.ChooseDamageDistribution` uses the same boundary.
+
+Spell and activation paths store the normalized map in `StackObject`.
+Existing stack copying and game cloning keep independent maps. If a target
+becomes illegal, its share is lost instead of reassigned (CR 608.2b, 707.10).
+This normalization contract does not establish prepayment choice timing,
+transactional rejection of impossible divisions, typed group allocations, or
+simultaneous execution of legacy divided damage. Those remain prerequisites
+for a complete typed divided-damage adapter.
+
 Positive damage events keep the final damage action's source snapshot through event dispatch, including a simultaneous damage batch. `ReceivesDamage(This, amount).WithSource(source)` captures that snapshot when the trigger is detected. The pending trigger can use its source after a permanent leaves and returns or a spell leaves the stack. The snapshot includes the source controller and characteristics used by later damage; it does not find a new object with the same card ID. Prevention and zero damage send no damage event (CR 400.7, 603.2g, 608.2h).
 
 Positive damage to a permanent records `EvtDamageDealt.TargetIncarnation` after replacement and prevention. `DealsDamage(This, amount).WithPermanent(recipient)` saves that identity in the pending trigger. If the permanent leaves and returns before resolution, `From(recipient)` is absent. Damage to a player and fully prevented damage do not produce a permanent recipient binding (CR 400.7, 120.4b, 603.2g).
