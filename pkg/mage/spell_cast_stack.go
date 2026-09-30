@@ -106,7 +106,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 				return nil, err
 			}
 		}
-		division, err := g.prepareDamageDivision(opts.Controller, card, effects, targets)
+		division, err := g.prepareDamageDivision(opts.Controller, card, effects, targets, opts.XValue)
 		if err != nil {
 			return nil, err
 		}

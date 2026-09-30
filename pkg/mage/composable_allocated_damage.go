@@ -8,23 +8,46 @@ func DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBindin
 	return &allocatedDamageEffect{source: source, recipients: recipients, total: total}
 }
 
+// DealAllocatedDamageX fixes shares from announced X before payment.
+// It does not read X again when the instruction resolves.
+func DealAllocatedDamageX(source DamageSourceRef, recipients *DamageTargetsBinding) ResolvingEffect {
+	return &allocatedDamageEffect{source: source, recipients: recipients, announcedX: true}
+}
+
 type allocatedDamageEffect struct {
 	source     DamageSourceRef
 	recipients *DamageTargetsBinding
 	total      int
+	announcedX bool
 }
 
 func (*allocatedDamageEffect) Text() string { return "deal damage divided as you choose" }
 func (e *allocatedDamageEffect) Properties() EffectProperties {
-	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: Fixed(e.total), Mass: true}
+	return EffectProperties{Outcome: OutcomeDetriment, DamageValue: e.allocationValue(), Mass: true}
 }
+func (e *allocatedDamageEffect) allocationValue() ValueSource {
+	if e.announcedX {
+		return XValue()
+	}
+	return Fixed(e.total)
+}
+
+type announcedAllocationX struct{}
+
+func (announcedAllocationX) inspectDefinition() definitionNode {
+	return definitionNode{Role: "announcement-value", Text: "announced X"}
+}
+
 func (e *allocatedDamageEffect) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "resolving-effect", Text: e.Text(), children: []definitionEdge{{"source", damageSourceDefinition{e.source}}, {"recipients", e.recipients}, {"total", Fixed(e.total)}}}
-	if e.total <= 0 {
+	if e.announcedX {
+		n.children[2].value = announcedAllocationX{}
+	}
+	if !e.announcedX && e.total <= 0 {
 		n.problem = "supply a positive fixed allocation total"
 	} else if e.recipients == nil || e.recipients.targetDeclaration == nil {
 		n.problem = "supply a damage target declaration"
-	} else if e.recipients.Min() > e.total {
+	} else if !e.announcedX && e.recipients.Min() > e.total {
 		n.problem = "allocation total must supply at least one damage per required target"
 	}
 	return n
@@ -98,4 +121,13 @@ func allocatedBodyEdge(effects []Effect, targets []Target, child any) bool {
 	}
 	allocation := singleAllocatedDamage(effects[0])
 	return allocation != nil && allocation.recipients != nil && child == effects[0] && targets[0] == allocation.recipients.targetDeclaration
+}
+
+func hasAnnouncedXAllocation(effects []Effect) bool {
+	for _, effect := range effects {
+		if allocation := singleAllocatedDamage(effect); allocation != nil && allocation.announcedX {
+			return true
+		}
+	}
+	return false
 }

@@ -149,10 +149,10 @@ func DividedDamageTotal(e Effect) ValueSource {
 	case *dealDividedDamageEffect:
 		return d.total
 	case *allocatedDamageEffect:
-		return Fixed(d.total)
+		return d.allocationValue()
 	case *sequenceEffect:
 		if allocation := singleAllocatedDamage(d); allocation != nil {
-			return Fixed(allocation.total)
+			return allocation.allocationValue()
 		}
 	}
 	return nil

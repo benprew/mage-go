@@ -1,6 +1,63 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: X-Bounded Mixed Damage Recipients
+## Current Slice: Announced-X Chosen Damage Allocation
+
+Delivery step 3 T adds `DealAllocatedDamageX(source DamageSourceRef,
+recipients *DamageTargetsBinding) ResolvingEffect`. Fresh API, caller, test, and
+tracker checks confirmed that the preferred foundation slices, fixed allocation,
+and X-bounded mixed recipients already exist. No production card changed.
+
+The narrow X constructor preserves `DealAllocatedDamage(..., total int)` and
+rejects resolution expressions by construction. General announcement-value
+expressions remain proposed APIs. Inspection identifies the total as an
+`announcement-value`; existing damage metadata reports X. No public mutable
+value reader, new executor, frame storage, or AI policy was added. The shared
+announcement service receives recorded X explicitly for hand, alternate-zone,
+and card-copy admission; activation supplies its announced X. The resolving
+adapter reads saved shares and uses the existing simultaneous damage pipeline.
+Registration keeps one allocation, one declared group, source roles, target
+scope, and supported spell/activation/sequence/selected-mode restrictions.
+
+`TestAllocatedDamageX*` first failed because the constructor was absent. Tests
+then exposed the hand/alternate post-payment fallback replacing announced zero
+with ambient X. That fallback now excludes this declaration; legacy callers
+retain it. Acceptance covers zero and positive empty groups, negative X,
+impossible positive shares, target validation, failed payment without mana,
+life, or tap spending, changed ambient X, interleaved frames, mode selection,
+source sacrifice and return LKI, protection, prevention, absent source,
+recipient return/phasing, lost shares, replacement preparation before batch
+execution, complete callback visibility, copies, retargeting, and clones.
+Public declaration/inspection and compile-failure tests cover source/set roles;
+a synthetic gametest spell checks chosen shares, state-based death, and the
+following effect. No production card is used for the new integration case.
+
+Complete Fireball and Pyrotechnics text in `data/4ED.json`, Rolling Thunder in
+`data/TMP.json`, and the Limited/Legends inventories and gap records were checked.
+Chosen X division, fixed division, and Fireball's equal division are distinct.
+Rolling Thunder still needs production wiring. The X-bounded declaration is
+sufficient for its chosen division because each target needs at least one share
+(CR 601.2d). Fireball still needs equal rounded-down division, unrestricted
+counts, and additional per-target payment. The two production
+`DealDividedDamage` constructions remain in `cards/jumpstart/spells.go` and
+`cards/legends/spells.go`; no production caller uses `DealAllocatedDamageX`.
+All legacy exports remain. No gap record or inventory is closed by this slice.
+
+Excluded: general announcement expressions, unrestricted target counts,
+Fireball's division/payment, trigger-specific X capture, multiple allocations,
+prepared mana payment, and all production card wiring. Next dependency-ready
+work is an unrestricted mixed-recipient count declaration after a fresh audit,
+with positive-share admission limiting chosen division. No second slice started.
+
+Validation passes: focused allocation, division, X-target, public declaration,
+compile-failure, and synthetic integration tests with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+The reference example is covered by the public DSL test. The post-lint diff was
+reviewed. No validation blocker remains. Unrelated untracked work is preserved.
+
+## Completed Slice: X-Bounded Mixed Damage Recipients
 
 Delivery step 3 T completes the mixed-recipient count prerequisite named by the
 preceding slice. Fresh API, caller, test, and tracker checks confirmed that damage

@@ -240,7 +240,7 @@ Spell(
 * `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
 * `TargetPermanentsExactlyX(label, filter, options...)`: Declares exactly the announced X as a permanent target set. `TargetPermanentsUpToX(label, filter, options...)` declares zero through X targets. Both return a `PermanentSet` and a target declaration. They work in spells and activations through `WithTargets`; use `WithTargetGroups` or `WithActivationTargetGroups` when another variable group is present. Choose X before targets. The target count stays fixed on a copy, and an illegal target is absent at resolution. The legacy `TargetXPermanents` has a different return type and remains available to unmigrated cards.
-* `TargetDamageRecipientsExactlyX(name string) *DamageTargetsBinding` and `TargetDamageRecipientsUpToX(name string) *DamageTargetsBinding`: Declare exactly X or zero through X player, creature, or planeswalker targets for a spell or activation. X is announced before targets and payment. X=0 allows an empty group, which still resolves. Use `WithTargets` for one group, or the recorded `WithTargetGroups` / `WithActivationTargetGroups` path for independent groups. Copies retain the chosen count and X; new targets must occupy the same group positions. At resolution, an illegal, phased-out, or returned permanent is absent; remaining legal targets still receive damage. These declarations specify recipient counts, not damage amounts or division. `DealDamageEach` uses one simultaneous batch. Dynamic chosen-allocation totals still require a separate adapter. This synthetic declaration compiles:
+* `TargetDamageRecipientsExactlyX(name string) *DamageTargetsBinding` and `TargetDamageRecipientsUpToX(name string) *DamageTargetsBinding`: Declare exactly X or zero through X player, creature, or planeswalker targets for a spell or activation. X is announced before targets and payment. X=0 allows an empty group, which still resolves. Use `WithTargets` for one group, or the recorded `WithTargetGroups` / `WithActivationTargetGroups` path for independent groups. Copies retain the chosen count and X; new targets must occupy the same group positions. At resolution, an illegal, phased-out, or returned permanent is absent; remaining legal targets still receive damage. These declarations specify recipient counts, not damage amounts or division. `DealDamageEach` uses one simultaneous batch. Use `DealAllocatedDamageX` for chosen division of announced X; general announcement expressions remain separate work. This synthetic declaration compiles:
 
 ```go
 recipients := dsl.TargetDamageRecipientsUpToX("recipients")
@@ -1105,14 +1105,43 @@ Damage and life-gain observers see the complete batch. A source that left can
 supply departure LKI; an absent source without that information does nothing.
 An optional group with no chosen targets needs no allocation prompt.
 
-The integer total makes the announcement timing explicit. Dynamic totals need a
-separate announcement-value contract; `ResolutionValue` would read at the wrong
-lifecycle. Instructions in a `Sequence` resolve in order; each allocated damage
-instruction remains one simultaneous batch. Multiple allocations within one
-body or mode, branches, loops, multiple selected modes, triggered allocations,
-result bindings, and Fireball's equal division at
-resolution remain separate work. The legacy `DealDividedDamage(ValueSource)`
-signature and its callers remain available.
+`DealAllocatedDamageX(source DamageSourceRef, recipients *DamageTargetsBinding) ResolvingEffect`
+uses the nonnegative X announced for the spell or activation as the allocation
+total. The controller chooses positive shares before payment. The announcement
+service receives X explicitly; it does not read ambient X for this declaration.
+The shares and X belong to the stack instance. A later payment, another pending
+activation, or changed ambient X cannot change the shares. An announced zero
+stays zero and permits only an empty group. An empty optional group needs no
+allocation prompt, including when X is positive. A nonempty group with more
+targets than X fails before the prompt or payment.
+
+This declaration compiles:
+
+```go
+recipients := dsl.TargetDamageRecipientsUpToX("recipients")
+card := dsl.NewSorcery("Allocated X", "{X}{R}",
+    dsl.Spell(dsl.Sequence(
+        dsl.DealAllocatedDamageX(dsl.This, recipients),
+        dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
+```
+
+Use this constructor in the same spell, activation, nested `Sequence`, and
+single selected mode contexts as fixed allocation. It accepts a damage target
+binding, rather than an arbitrary recipient set. Its inspection total has the
+`announcement-value` role; damage metadata reports X. It shares the fixed
+adapter's registration, incarnation/LKI, target legality, replacement, batch,
+copy, and retargeting contracts. Supplied alternate-cost casts and the shared
+card-copy admission path use their recorded X. This does not correct prepared
+spell mana payment or choose X for a casting permission.
+
+The integer total and the separate X constructor keep announcement timing
+explicit. General announcement expressions remain proposed work;
+`ResolutionValue` would read at the wrong lifecycle. Instructions in a
+`Sequence` resolve in order; each allocated damage instruction remains one
+simultaneous batch. Multiple allocations within one body or mode, branches,
+loops, multiple selected modes, triggered allocations, result bindings, and
+Fireball's equal division at resolution remain separate work. The legacy
+`DealDividedDamage(ValueSource)` signature and its callers remain available.
 
 
 The engine compatibility constructor

@@ -7,15 +7,23 @@ import (
 )
 
 func (g *Game) prepareActivationDamageDivision(controller uuid.UUID, card Card, effects []Effect, targets []uuid.UUID) (map[uuid.UUID]int, error) {
-	return g.prepareDamageDivision(controller, card, effects, targets)
+	return g.prepareDamageDivision(controller, card, effects, targets, g.resolution.X())
 }
 
-func (g *Game) prepareDamageDivision(controller uuid.UUID, card Card, effects []Effect, targets []uuid.UUID) (map[uuid.UUID]int, error) {
+func (g *Game) prepareDamageDivision(controller uuid.UUID, card Card, effects []Effect, targets []uuid.UUID, announcedX int) (map[uuid.UUID]int, error) {
 	for _, effect := range effects {
 		if !IsDividedDamageEffect(effect) {
 			continue
 		}
-		total := max(0, DividedDamageTotal(effect).Resolve(g, card.ID(), controller, targets))
+		var total int
+		if allocation := singleAllocatedDamage(effect); allocation != nil && allocation.announcedX {
+			if announcedX < 0 {
+				return nil, fmt.Errorf("allocation X cannot be negative")
+			}
+			total = announcedX
+		} else {
+			total = max(0, DividedDamageTotal(effect).Resolve(g, card.ID(), controller, targets))
+		}
 		if len(targets) == 0 {
 			return nil, nil
 		}

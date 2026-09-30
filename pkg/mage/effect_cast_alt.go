@@ -201,7 +201,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	if selection != nil {
 		effects = selection.effects
 	}
-	division, err := g.prepareDamageDivision(playerID, card, effects, targets)
+	division, err := g.prepareDamageDivision(playerID, card, effects, targets, xValue)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return err
 	}
 
-	if g.resolution.X() != 0 && xValue == 0 {
+	if g.resolution.X() != 0 && xValue == 0 && !hasAnnouncedXAllocation(effects) {
 		xValue = g.resolution.X()
 		g.resolution.SetX(0)
 	}

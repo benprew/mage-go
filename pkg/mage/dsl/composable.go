@@ -451,6 +451,7 @@ var (
 	PermanentsDealtDamageByThisTurn     = mage.PermanentsDealtDamageByThisTurn
 	PermanentsThatDealtDamageToThisTurn = mage.PermanentsThatDealtDamageToThisTurn
 	DealAllocatedDamage                 = mage.DealAllocatedDamage
+	DealAllocatedDamageX                = mage.DealAllocatedDamageX
 	DealDamageEach                      = mage.DealDamageEach
 	DamageTotalInto                     = mage.DamageTotalInto
 	SacrificeAmountInto                 = mage.SacrificeAmountInto

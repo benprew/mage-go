@@ -2629,7 +2629,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	if selection != nil {
 		effects = selection.effects
 	}
-	division, err := g.prepareDamageDivision(playerID, card, effects, targets)
+	division, err := g.prepareDamageDivision(playerID, card, effects, targets, xValue)
 	if err != nil {
 		return err
 	}
@@ -2721,7 +2721,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	// If an additional cost set g.resolution.X (e.g. sacrifice-capture-CMC), use it
-	if g.resolution.X() != 0 && xValue == 0 {
+	if g.resolution.X() != 0 && xValue == 0 && !hasAnnouncedXAllocation(effects) {
 		xValue = g.resolution.X()
 		g.resolution.SetX(0)
 	}
