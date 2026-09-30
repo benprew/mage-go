@@ -137,8 +137,10 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 	for i := 0; i < len(tx.costs); i++ {
 		cost := tx.costs[i]
 		if optional, ok := cost.(*optionalCost); ok {
-			if _, directX := optional.inner.(*removeXCountersCost); directX {
-				// Fix the choice and X before the shared counter payment locks the source.
+			_, directX := optional.inner.(*removeXCountersCost)
+			fixed, directFixed := optional.inner.(*removeCountersCost)
+			if directX || (directFixed && !fixed.capture) {
+				// Lock acceptance before the shared counter payment checks the source.
 				locked, outcomes, err := lockPaymentCosts([]Cost{optional}, tx.sourceID, tx.controller, nil, tx.game.resolution.X(), validation, tx.game.GetPlayer(tx.controller))
 				if err != nil {
 					return err

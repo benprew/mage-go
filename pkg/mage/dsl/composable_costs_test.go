@@ -801,6 +801,33 @@ func TestOptionalXCounterPublicDeclaration(t *testing.T) {
 	}
 }
 
+func TestOptionalFixedCounterPublicDeclaration(t *testing.T) {
+	paid := dsl.BindNumber("paid")
+	card := dsl.NewArtifact("Synthetic optional fixed", "", dsl.WithAbility(dsl.Activate(
+		dsl.Costs(dsl.OptionalCostInto(dsl.RemoveCountersCost(core.Charge, 0), "Pay counters?", paid)),
+		dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+	a := &optionalXAcceptPlayer{mage.NewBasePlayer("A")}
+	g := mage.NewGame(a, mage.NewBasePlayer("B"))
+	g.PutOnBattlefield(card, a.PlayerID())
+	g.SetXValue(0)
+	if err := g.ActivateAbilityByIndex(a.PlayerID(), card.ID(), 0, nil); err != nil {
+		t.Fatal(err)
+	}
+	g.CopyStackObjectDirect(g.StackObjects()[0], a.PlayerID(), false)
+	clone := g.Clone()
+	clone.ResolveStack()
+	if clone.GetPlayer(a.PlayerID()).Life() != 22 || a.Life() != 20 {
+		t.Fatal("optional output crossed clone boundary")
+	}
+	g.ResolveStack()
+	if a.Life() != 22 {
+		t.Fatal("copied optional output was lost")
+	}
+}
+
 type optionalXAcceptPlayer struct{ *mage.BasePlayer }
 
 func (*optionalXAcceptPlayer) ChooseMayAbility(string) bool { return true }
