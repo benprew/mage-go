@@ -2274,7 +2274,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 			}
 			continue
 		}
-		if random, ok := t.(*randomTarget); ok {
+		if random, ok := randomTargetSpec(t); ok {
 			chosen := g.chooseRandomTargets(pt.controller, sourceCard, random, 0)
 			if len(chosen) < t.Min() {
 				return nil, nil, false

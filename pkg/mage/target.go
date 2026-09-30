@@ -128,8 +128,13 @@ func (t *randomTarget) BoundsForX(x int) (minimum, maximum int) {
 	return TargetBounds(t.inner, x)
 }
 
+func randomTargetSpec(t Target) (*randomTarget, bool) {
+	random, ok := UnwrapTarget(t).(*randomTarget)
+	return random, ok
+}
+
 func isRandomTarget(t Target) bool {
-	_, ok := t.(*randomTarget)
+	_, ok := randomTargetSpec(t)
 	return ok
 }
 
@@ -186,7 +191,7 @@ func (g *Game) acquireRandomTargets(controller uuid.UUID, sourceCard Card, specs
 	offset := 0
 	hasOrdinary := false
 	for i, spec := range specs {
-		if random, ok := spec.(*randomTarget); ok {
+		if random, ok := randomTargetSpec(spec); ok {
 			out = append(out, g.chooseRandomTargets(controller, sourceCard, random, x)...)
 			continue
 		}

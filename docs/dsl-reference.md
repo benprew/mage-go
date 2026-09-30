@@ -251,6 +251,13 @@ than the declaration's `Chosen()` method. Explicit legacy `Choose` and `Reset`
 methods retain their signatures. Typed random target bindings and grouped random
 announcement are still separate work.
 
+The engine also detects these random specifications inside its internal
+`targetDeclaration` wrapper in spell, activation, trigger, and target-prompt
+paths. Stack specifications retain the wrapper so typed effects can read the
+sampled target from their instance frame. This is an engine prerequisite; no
+public typed random constructor is available yet. The signatures above and the
+compiling legacy example below remain unchanged.
+
 This synthetic legacy declaration compiles with `dsl` imported. It is also the
 public integration test's source definition:
 

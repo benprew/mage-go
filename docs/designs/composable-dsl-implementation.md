@@ -1,5 +1,53 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Wrapped Random Target Detection Prerequisite
+
+Delivery step 3 T remains the earliest dependency-ready work after the completed
+D identity/damage and source attack/block/filtered-death slices. Before a typed
+random adapter can be complete, all flat announcement paths must detect its
+internal target declaration wrapper. New tests reproduced missing activation
+and spell targets and nonrandom trigger/prompt selection.
+
+The internal `randomTargetSpec(Target) (*randomTarget, bool)` lookup now supplies
+wrapper-aware detection to announcement, trigger selection, and target prompts.
+The existing sampler, legal candidate service, total-payment transaction, stack
+incarnation capture, and copy/clone services supply the remaining behavior.
+Original wrapped specifications remain on the stack for typed binding capture.
+No public API, role, frame, inspection node, validation constraint, or AI policy
+was added. Legacy `TargetRandom(inner Target) Target` and
+`TargetRandomCount(inner Target) Target` and all production callers remain.
+
+Acceptance tests cover four entry paths, independent pending instances, typed
+resolution-frame reads, fixed/chosen/random/X counts, zero and impossible counts,
+ordinary-target alignment, distinct sampling, phasing, protection, exact random
+consumption, failed mana/tap/life payment, cloned games, copies without
+reselection, and target departure/return. No new LKI, replacement, simultaneous
+action, or payment contract is introduced.
+
+Complete Goblin Polka Band and Orcish Catapult requirements were checked in
+`data/PAST.json` against the Astral inventory and JSON gap record. Fresh searches
+find one production `TargetRandom` caller and one `TargetRandomCount` caller,
+both in `cards/astral/`. Goblin Polka Band still needs the public typed target
+adapter and Goblin tap-result wiring; Orcish Catapult still needs the typed
+random-count adapter and random counter distribution. No production card or
+untracked inventory/gap record changed, and no whole-card requirement is closed.
+
+Next dependency-ready slice: the public typed random permanent target adapter,
+with registration/role checks, after a fresh API audit. Grouped random targets,
+tap-result composition, counter distribution, and card migration remain
+separate work. This run implements only the shared detection prerequisite.
+
+Validation passes: focused `TestWrappedRandomTarget`, `TestRandomTarget`,
+`TestTargetRandom`, and `TestManaCostPerTarget` contracts with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles|TestRandomTargetPublicInstanceIsolation' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test` with zero failures;
+`make lint` with zero issues; and `git diff --check`.
+Post-lint review found no changes outside the slice and no automatic code fixes.
+Historical missing-package and C-metadata blockers did not recur. No validation
+blocker remains. No second slice was started.
+
 ## Current Slice: Random Target Declaration Isolation Prerequisite
 
 Delivery step 3 T's next random-target audit found a shared engine prerequisite.

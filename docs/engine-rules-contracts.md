@@ -976,3 +976,24 @@ and leave-and-return incarnation rules.
 synthetic integration is `TestRandomTargetPublicInstanceIsolation`.
 This prerequisite adds no typed random adapter, target frame, result binding,
 replacement service, or simultaneous action.
+
+### Wrapped random target detection prerequisite
+
+`randomTargetSpec(Target) (*randomTarget, bool)` is an internal lookup used by
+flat spell and activation announcement, trigger target selection, and target
+prompts. It unwraps `targetDeclaration` for random detection while stack
+construction retains the original declaration for binding capture and target
+legality. Raw legacy targets retain their behavior. The lookup does not sample,
+store choices, or alter the declaration.
+
+`TestWrappedRandomTargetDeclarationIsolation` covers all four entry paths and
+independent pending instances. `TestWrappedRandomTargetCountAndOrdinaryTargets`
+covers fixed, controller-chosen, random, and X bounds, zero and impossible counts,
+ordinary-target alignment, distinct selection, phasing, protection, and exact
+random consumption. `TestWrappedRandomTargetFailedPaymentKeepsDeclaration`
+checks that sampling precedes failed payment without spending mana, life, or tap
+resources. `TestWrappedRandomTargetCloneCopyAndIncarnation` checks separate
+clone streams, copies without reselection, and returned-target illegality.
+`TestWrappedRandomTargetTypedResolution` uses a test-only typed binding to check
+that the resolving tap action reads the sampled target. Public typed random
+declarations, grouped random announcement, and card wiring remain open.
