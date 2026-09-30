@@ -1,6 +1,55 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Optional X-Counter Alternative Tree
+## Current Slice: Typed Acceptance for Fixed-Counter Alternative Trees
+
+Delivery step 3 P extends `OptionalCostInto(inner Cost, prompt string,
+result *NumberBinding) Cost` to an `EitherCost(options ...Cost) Cost` tree whose
+leaves are uncaptured `RemoveCountersCost(counter CounterType, count int) Cost`
+costs. Fresh code, caller, test, and tracker checks confirmed that damage
+identity, explicit `DealDamageFrom`, source attack/block events, filtered death,
+and the legacy optional alternative prerequisite already exist. No public
+signature, sealed role, counter executor, target, AI metadata, or declaration
+state was added. The extension reuses the existing inspection graph, choice
+locking, source-incarnation lock, combined-total preflight, and instance frames.
+
+`TestOptionalCounterAlternativeResult*` first failed for registration rejection,
+missing acceptance outputs, commit-time choices, stale source acceptance, and
+branch selection. A later regression failed for a selected enclosing alternative
+that bypassed wrapper locking; that branch now uses the same path. Acceptance
+covers nested selection, fixed zero, decline and unaffordability, source
+departure/return, absence, phasing and phase-in, combined
+shortage before resource spending or payment events, immutable declarations,
+interleaved payments, stack copies, and independent game clones. Synthetic DSL
+cards test accepted and unaffordable activations together, spell additional costs
+with an absent source, and registration scope/dominance. Invalid declarations
+retain rejection for empty trees, invalid counter types, negative counts,
+captured/X/mixed leaves, nil results, empty prompts, and resolution-time capture.
+These payments are nontargeted and require current identity, not LKI. Replacement
+ordering and simultaneous actions are unchanged.
+
+Osai Vultures' full text in `data/LEG.json` was checked against the Legends
+inventory and gap record. It supplies the fixed-counter cost requirement; the
+optional alternative wrapper is synthetic. Fresh production searches found four
+`EitherCost` constructions, one legacy `OptionalCost`, and no `OptionalCostInto`.
+All remain unchanged. No card or gap record is completed: card upkeep and
+remaining wiring need separate migration and audits. No inventory or JSON record
+changed. Unrelated untracked work is preserved. Previously noted Cauldron of
+Essence and Saproling-sacrifice tracker corrections are already present.
+
+Excluded: captured/X/mixed leaves, nested optional gates, general payment-order
+choice, mutations during commit, and production wiring. Next dependency-ready
+work is typed acceptance around uncaptured X-counter alternatives or T divided
+target announcement. No second slice was started.
+
+Validation passes: focused contracts with `-count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run with `-count=1`, `go test ./... -short -count=1`, `go build ./...`,
+`go vet ./...`, full `make test`, `make lint` with zero issues, and
+`git diff --check`. The post-lint diff was reviewed. Lint only adjusted import
+spacing in the new engine test; no semantic changes or validation blockers
+remain. Historical workspace failures did not recur.
+
+## Completed Slice: Optional X-Counter Alternative Tree
 
 Delivery step 3 P now locks the legacy engine `OptionalCost(inner Cost, prompt
 string) Cost` around an `EitherCost(options ...Cost) Cost` tree of uncaptured

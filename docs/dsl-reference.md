@@ -3638,9 +3638,9 @@ zero requires the original present source. Phasing back in preserves identity;
 departure and return do not. Reused declarations and game clones keep separate locks.
 
 `OptionalCost` is an engine compatibility API, not a `dsl` export. No new author
-export is added by this prerequisite. `OptionalCostInto` still rejects an
-alternative inner cost at registration. Captured leaves, X leaves, mixed leaf
-families, general payment-order selection, and mutations during commit remain
+export is added by this prerequisite. `OptionalCostInto` now supports uncaptured
+fixed-counter alternative trees; see the typed acceptance section below. Captured
+leaves, X leaves, mixed leaf families, general payment-order selection, and mutations during commit remain
 outside this contract. This synthetic engine/DSL integration example compiles
 and validates in `TestOptionalEitherFixedCounterEngineDeclaration`:
 
@@ -3674,7 +3674,7 @@ separate values. Costs are nontargeted and need current identity, not LKI.
 
 `OptionalCost` remains an engine compatibility API, not a `dsl` export. Its
 legacy flag is preserved; this adds no typed acceptance result or author export.
-`OptionalCostInto` still rejects an alternative inner cost at registration.
+`OptionalCostInto` still rejects X-counter alternative trees at registration.
 Captured leaves, mixed leaf families, nested optional gates, payment-order
 selection, and mutations during commit remain separate contracts. This example
 compiles and validates in `TestOptionalEitherXCounterEngineDeclaration`:
@@ -3685,3 +3685,37 @@ card := dsl.NewArtifact("Synthetic optional X alternative", "", dsl.WithAbility(
         dsl.RemoveXCountersFromSourceCost(core.Charge))), "Pay counters?")),
     dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 ```
+
+### Typed acceptance for fixed-counter alternatives
+
+`OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` accepts an
+`EitherCost(options ...Cost) Cost` tree with uncaptured
+`RemoveCountersCost(counter core.CounterType, count int) Cost` leaves. This is
+supported in activated costs, spell additional costs, and direct engine payment
+preparation. It saves 1 for accepted payment and 0 for decline or unaffordability.
+The result records acceptance, not the number of counters removed.
+
+```go
+paid := dsl.BindNumber("paid")
+card := dsl.NewArtifact("Synthetic optional counter result", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.OptionalCostInto(dsl.EitherCost(dsl.EitherCost(
+        dsl.RemoveCountersCost(core.Charge, 2))), "Pay counters?", paid)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+)))
+_ = card
+```
+
+Preparation offers only affordable branches, fixes acceptance before selecting a
+branch, and makes each choice once. A selected enclosing alternative branch uses
+the same preparation path. Commit checks the saved source incarnation
+and combined counter total before spending resources. Fixed zero still requires
+a present, unphased source. Phase-out followed by phase-in preserves identity;
+departure and return do not. Failed preflight publishes no result or payment
+event. Pending instances, copied stack objects, and game clones keep separate
+results. The typed result does not write the legacy optional-payment flag.
+
+Registration rejects empty trees, invalid counter types or negative counts,
+captured or X-counter leaves, mixed cost families, nil or unnamed results, and
+empty prompts. Resolution-time result capture remains invalid. An enclosing
+alternative branch cannot make this result dominate a read outside that branch.
+The legacy `OptionalCost` signature and existing callers remain available.

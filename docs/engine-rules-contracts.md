@@ -775,8 +775,26 @@ or caller outcome maps. Interleaved transactions and game clones own separate
 locks (CR 118.3, 400.7, 601.2h, 602.2b).
 
 This extends the earlier optional-around-alternative exclusion only for legacy
-uncaptured fixed-counter trees. It adds no typed result producer. Registration
-continues to reject `OptionalCostInto` around an alternative, invalid counter
-types, negative counts, and empty alternatives. Captured or X leaves, mixed cost
-families, general payment-order choice, and mutations during commit remain open.
+uncaptured fixed-counter trees. Typed acceptance is now supported for these trees
+as described below. Registration continues to reject invalid counter types,
+negative counts, and empty alternatives. Captured or X leaves, mixed cost families, general payment-order choice, and mutations during commit remain open.
 The existing announcement paths and shared counter-removal executor are reused.
+
+### Typed optional acceptance around fixed-counter alternatives
+
+`OptionalCostInto` around an uncaptured fixed-counter `EitherCost` tree reuses
+`lockPaymentCosts` in announcement and direct total-payment preparation. The
+wrapper writes an instance-local 1 for accepted payment or 0 for decline or
+unaffordability. It does not write `LastCostOptionalPaid`. Branches and acceptance
+are fixed before commit, including inside a selected enclosing alternative; the
+selected leaf uses the existing source-incarnation lock and combined-total
+preflight. Fixed zero requires that same present,
+unphased source. No mana, life, counters, payment events, or result bindings are
+published when preflight fails (CR 400.7, 601.2h, 602.2b, 702.26b–d).
+
+The existing frame propagation preserves the result across stack copies and game
+clones. A result below another alternative does not dominate consumers outside
+that branch. Registration admits only uncaptured fixed-counter leaves for this
+wrapper extension; captured leaves, X leaves, mixed families, and resolution-time
+optional result capture remain invalid. This contract does not change payment
+order, counter execution, replacement ordering, or simultaneous actions.

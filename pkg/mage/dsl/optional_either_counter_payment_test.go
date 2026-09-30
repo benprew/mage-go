@@ -45,7 +45,7 @@ func TestOptionalEitherFixedCounterDeclarationValidation(t *testing.T) {
 		mage.OptionalCost(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, -1)), "Pay?"),
 		mage.OptionalCost(dsl.EitherCost(dsl.EitherCost(dsl.RemoveCountersCost(core.NumCounters, 1))), "Pay?"),
 		mage.OptionalCost(dsl.EitherCost(), "Pay?"),
-		dsl.OptionalCostInto(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 1)), "Pay?", dsl.BindNumber("paid")),
+		dsl.OptionalCostInto(dsl.EitherCost(dsl.RemoveCountersCostInto(core.Charge, 1, dsl.BindNumber("inner"))), "Pay?", dsl.BindNumber("paid")),
 	} {
 		card := dsl.NewArtifact("Invalid optional alternative", "", dsl.WithAbility(dsl.Activate(dsl.Costs(cost), dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 		if err := mage.ValidateCardDefinition(card.Name(), card); err == nil {
