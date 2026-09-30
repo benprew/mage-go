@@ -35,8 +35,11 @@ func OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost {
 
 func (c *optionalCost) resolveActionCost(ctx actionCostContext) Cost {
 	resolved := *c
-	if counter, ok := c.inner.(*removeXCountersCost); ok {
-		resolved.inner = counter.resolveActionCost(ctx)
+	switch inner := c.inner.(type) {
+	case *removeXCountersCost:
+		resolved.inner = inner.resolveActionCost(ctx)
+	case *eitherCost:
+		resolved.inner = inner.resolveActionCost(ctx)
 	}
 	return &resolved
 }
@@ -51,6 +54,25 @@ func uncapturedFixedCounterAlternatives(cost Cost) bool {
 		}
 		for _, option := range c.options {
 			if !uncapturedFixedCounterAlternatives(option) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func uncapturedXCounterAlternatives(cost Cost) bool {
+	switch c := cost.(type) {
+	case *removeXCountersCost:
+		return true
+	case *eitherCost:
+		if len(c.options) == 0 {
+			return false
+		}
+		for _, option := range c.options {
+			if !uncapturedXCounterAlternatives(option) {
 				return false
 			}
 		}

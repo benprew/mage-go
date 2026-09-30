@@ -3653,3 +3653,35 @@ card := dsl.NewArtifact("Synthetic optional alternative", "", dsl.WithAbility(ds
 
 The engine wrapper preserves its legacy optional flag. It does not supply a
 new typed acceptance binding or permit source-wide flags as typed result reads.
+
+### Optional payment of X-counter alternatives (engine prerequisite)
+
+The legacy engine `mage.OptionalCost(inner mage.Cost, prompt string) mage.Cost`
+can wrap an `EitherCost(options ...Cost) Cost` tree with uncaptured
+`RemoveXCountersFromSourceCost(counter core.CounterType) Cost` leaves. Activated
+costs and spell additional costs fix announced X before optional affordability.
+Direct engine total-payment preparation fixes current X. Acceptance and each
+selected branch are locked once; commit does not ask again or read a later X.
+Only payable branches are offered, and a sole payable branch is selected without
+a choice. Decline or unaffordability selects no branch and removes no counters.
+
+Accepted positive X uses the shared source-incarnation lock and combined
+counter-total preflight before live mana, life, or counters change. An absent,
+returned, phased-out, or counter-short source cannot pay. Phasing out and back
+in preserves identity. Accepted zero requires no source or counter action.
+Declarations, caller outcome maps, pending payments, and game clones retain
+separate values. Costs are nontargeted and need current identity, not LKI.
+
+`OptionalCost` remains an engine compatibility API, not a `dsl` export. Its
+legacy flag is preserved; this adds no typed acceptance result or author export.
+`OptionalCostInto` still rejects an alternative inner cost at registration.
+Captured leaves, mixed leaf families, nested optional gates, payment-order
+selection, and mutations during commit remain separate contracts. This example
+compiles and validates in `TestOptionalEitherXCounterEngineDeclaration`:
+
+```go
+card := dsl.NewArtifact("Synthetic optional X alternative", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.Mana("{X}"), mage.OptionalCost(dsl.EitherCost(dsl.EitherCost(
+        dsl.RemoveXCountersFromSourceCost(core.Charge))), "Pay counters?")),
+    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+```

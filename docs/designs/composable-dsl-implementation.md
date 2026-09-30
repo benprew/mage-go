@@ -1,9 +1,64 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Optional Fixed-Counter Alternative Tree
+## Current Slice: Optional X-Counter Alternative Tree
 
-Delivery step 3 P has a remaining wrapper-payment prerequisite: direct engine
-total-payment preparation did not lock a legacy `OptionalCost` around an
+Delivery step 3 P now locks the legacy engine `OptionalCost(inner Cost, prompt
+string) Cost` around an `EitherCost(options ...Cost) Cost` tree of uncaptured
+`RemoveXCountersFromSourceCost(counter CounterType) Cost` leaves. Fresh API,
+caller, test, and tracker checks confirmed that damage identity, singular typed
+damage, source attack/block events, filtered death, and fixed-counter optional
+alternatives already exist. This completes a wrapper-payment prerequisite,
+without adding a public signature, role, executor, target, result binding,
+replacement service, or AI metadata. All production callers remain unchanged.
+
+`optionalCost.resolveActionCost` now resolves an alternative tree before
+optional affordability. Direct total-payment validation then reuses
+`lockPaymentCosts`, isolated validation, source-incarnation locks, and combined
+counter preflight. Announced X is used for activation and spell announcement;
+direct engine preparation uses current X. Choices and X remain fixed at commit.
+
+`TestOptionalEitherXCounterPayment*` first failed for lost acceptance, ambient X,
+stale source acceptance, partial combined removal, and clone interference.
+Acceptance covers decline, unaffordability, sole payable branch selection,
+two nested branch choices without repetition, zero, absence, source departure
+and return, phasing and phasing back in, combined shortage without resource
+spending or published events/outputs, unchanged declarations and caller maps,
+interleaved transactions, announced versus ambient X, and independent clones.
+`TestOptionalEitherXCounterEngineDeclaration` validates the reference example,
+pays at activation, copies without repaying, and resolves independently in a
+clone. Registration still rejects invalid counter types, empty alternatives,
+and `OptionalCostInto` around alternatives. These payments are nontargeted and
+need current source identity, not LKI. Replacement ordering and simultaneous
+actions are unchanged.
+
+Chamber Sentry's complete text in `data/JMP.json` was checked against the
+Jumpstart inventory and gap record. It supplies the announced X-counter
+requirement; optional alternative wrappers are synthetic. Fresh searches found
+four production `EitherCost` constructions, one legacy `OptionalCost`
+construction, one `RemoveXCountersFromSourceCost` construction, and no
+`OptionalCostInto` construction. No production caller uses this wrapper shape.
+No card, inventory, or JSON record changed or closed. Entry, damage, and
+graveyard card wiring require separate migration and audits. Unrelated
+untracked work is preserved.
+
+Excluded: captured leaves, mixed leaf families, nested optional gates, typed
+acceptance around alternatives, general payment-order choice, mutations during
+commit, and production card wiring. Next dependency-ready work is a separate P
+captured-wrapper audit or T divided-target announcement prerequisite. No second
+slice was started.
+
+Validation passes: focused contracts with `-count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run with `-count=1`, `go test ./... -short -count=1`, `go build ./...`,
+`go vet ./...`, full `make test`, `make lint` with zero issues, and
+`git diff --check`. The post-lint diff was reviewed. Lint only added import
+spacing in the new test file; no semantic source changes or validation blockers
+remain. Historical workspace failures did not recur.
+
+## Completed Slice: Optional Fixed-Counter Alternative Tree
+
+Delivery step 3 P completed a wrapper-payment prerequisite: direct engine
+total-payment preparation now locks a legacy `OptionalCost` around an
 `EitherCost` tree of uncaptured fixed-counter leaves. Preferred damage identity,
 explicit singular damage, attack/block, and filtered death functions already
 exist. This slice reuses `lockPaymentCosts`, isolated validation, fixed-counter

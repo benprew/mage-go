@@ -140,8 +140,8 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			_, directX := optional.inner.(*removeXCountersCost)
 			fixed, directFixed := optional.inner.(*removeCountersCost)
 			_, alternative := optional.inner.(*eitherCost)
-			fixedAlternatives := !optional.capture && alternative && uncapturedFixedCounterAlternatives(optional.inner)
-			if directX || (directFixed && !fixed.capture) || fixedAlternatives {
+			counterAlternatives := !optional.capture && alternative && (uncapturedFixedCounterAlternatives(optional.inner) || uncapturedXCounterAlternatives(optional.inner))
+			if directX || (directFixed && !fixed.capture) || counterAlternatives {
 				// Lock acceptance before the shared counter payment checks the source.
 				locked, outcomes, err := lockPaymentCosts([]Cost{optional}, tx.sourceID, tx.controller, nil, tx.game.resolution.X(), validation, tx.game.GetPlayer(tx.controller))
 				if err != nil {
