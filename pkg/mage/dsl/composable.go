@@ -454,6 +454,7 @@ var (
 	DealAllocatedDamage                 = mage.DealAllocatedDamage
 	DealAllocatedDamageX                = mage.DealAllocatedDamageX
 	DealDamageEach                      = mage.DealDamageEach
+	DealDamageEvenly                    = mage.DealDamageEvenly
 	DamageTotalInto                     = mage.DamageTotalInto
 	SacrificeAmountInto                 = mage.SacrificeAmountInto
 	SacrificeSubtypeInto                = mage.SacrificeSubtypeInto

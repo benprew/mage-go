@@ -1353,6 +1353,7 @@ type damageEachEffect struct {
 	source        DamageSourceRef
 	recipients    DamageRecipientSet
 	amount        ResolutionValue
+	evenDivision  bool
 	total         *NumberBinding
 	results       *DamageResultsBinding
 	optionCount   int
@@ -1384,6 +1385,18 @@ func (o damageTotalOption) applyDamageEachResult(e *damageEachEffect) {
 
 // DealDamageEach deals one amount from one source to each selected recipient.
 func DealDamageEach(source DamageSourceRef, recipients DamageRecipientSet, amount ResolutionValue, options ...DamageEachResultOption) ResolvingEffect {
+	return newDamageEachEffect(source, recipients, amount, options)
+}
+
+// DealDamageEvenly divides the total at resolution, not at announcement.
+// Only surviving recipients in this target group receive a share.
+func DealDamageEvenly(source DamageSourceRef, recipients *DamageTargetsBinding, total ResolutionValue, options ...DamageEachResultOption) ResolvingEffect {
+	e := newDamageEachEffect(source, recipients, total, options)
+	e.evenDivision = true
+	return e
+}
+
+func newDamageEachEffect(source DamageSourceRef, recipients DamageRecipientSet, amount ResolutionValue, options []DamageEachResultOption) *damageEachEffect {
 	e := &damageEachEffect{source: source, recipients: recipients, amount: amount}
 	for _, option := range options {
 		if option == nil {
@@ -1395,7 +1408,12 @@ func DealDamageEach(source DamageSourceRef, recipients DamageRecipientSet, amoun
 	return e
 }
 
-func (*damageEachEffect) Text() string { return "deal damage to each recipient" }
+func (e *damageEachEffect) Text() string {
+	if e.evenDivision {
+		return "deal damage divided evenly, rounded down"
+	}
+	return "deal damage to each recipient"
+}
 func (*damageEachEffect) Properties() EffectProperties {
 	return EffectProperties{Outcome: OutcomeDetriment, Mass: true}
 }
@@ -1440,6 +1458,18 @@ func (e *damageEachEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	assignments := e.recipients.resolveDamageRecipients(ctx, amount, source)
+	if e.evenDivision {
+		if len(assignments) == 0 {
+			return nil
+		}
+		share := amount / len(assignments)
+		if share == 0 {
+			return nil
+		}
+		for i := range assignments {
+			assignments[i].request.amount = share
+		}
+	}
 	outcomes := ctx.Game.dealSimultaneousDamageOutcomes(assignments...)
 	total := 0
 	for _, outcome := range outcomes {

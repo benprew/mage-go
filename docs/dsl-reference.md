@@ -1400,6 +1400,18 @@ _ = card
 * `TargetDamageRecipients(name string, minimum, maximum int) *DamageTargetsBinding`: Declares one bounded target group of players, creatures, and planeswalkers. It is both a `TargetBinding` and a `DamageRecipientSet`. Declare it with `WithTargets`, `WithTargetGroups`, or `WithActivationTargetGroups` as appropriate. Registration rejects invalid bounds. The target announcement rejects duplicate or illegal choices before payment. At resolution, an illegal, phased-out, or returned permanent is absent from the batch; each remaining recipient is dealt damage simultaneously. This collection cannot be used as the singular recipient of `DealDamageFrom`.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
 
+* `DealDamageEvenly(DamageSourceRef, *DamageTargetsBinding, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Reads the total once at resolution and divides it by the number of surviving recipients in that declared target group, rounded down. It submits all shares as one simultaneous damage instruction. Use it in spells, activations, triggered resolving bodies, and selected modes. Recorded target groups divide independently. A legal recipient with prevention still counts in the denominator; an illegal, absent, phased-out, or returned target does not. Empty groups, nonpositive totals, and zero shares cause no damage. All-illegal announced targets stop the entire resolving body through the shared target resolver. `DamageTotalInto` and `DamageResultsInto` record actual post-replacement outcomes and clear earlier results for empty actions. Copies retain their own targets and divide again at resolution. This function does not ask for an allocation before payment or supply additional per-target costs.
+
+```go
+recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
+card := dsl.NewSorcery("Synthetic Equal Division", "{X}{R}",
+    dsl.Spell(dsl.DealDamageEvenly(dsl.This, recipients,
+        dsl.ValueAtResolution(dsl.XValue())), dsl.WithTargets(recipients)))
+_ = card
+```
+
+This synthetic declaration supplies division and the ordinary mana cost. Fireball also requires its additional cost for each target beyond the first; card wiring remains separate.
+
 ```go
 targets := dsl.TargetPermanents("creatures", 1, 2, dsl.IsCreature)
 ability := dsl.Spell(

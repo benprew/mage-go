@@ -1,6 +1,72 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Spell Source Colors in Target Legality
+## Current Slice: Equal Rounded-Down Damage Division
+
+Delivery step 3 T adds the missing resolution-time equal-division adapter after
+the source-color prerequisites. A fresh API audit found source/recipient LKI,
+singular and simultaneous damage, source attack/block, filtered other-creature
+death, target groups, and chosen allocation already implemented. These functions
+were preserved. No production card or legacy export changed.
+
+Implemented API: `DealDamageEvenly(DamageSourceRef, *DamageTargetsBinding,
+ResolutionValue, ...DamageEachResultOption) ResolvingEffect`. The source and
+total are read once. The surviving recipients of that recorded target group
+divide the positive total evenly, rounded down. Empty groups and zero shares
+submit no actions. Legal targets with prevention still count; illegal targets,
+phasing, departure, and leave-and-return exclude recipients. All-illegal target
+suppression remains owned by the shared stack resolver. Copies divide again
+using their own targets and current legality.
+
+The adapter shares `damageEachEffect`'s immutable declaration, inspection,
+registration and scope validation, detrimental/mass AI metadata, result frame,
+and simultaneous damage executor. `DamageTotalInto` and `DamageResultsInto`
+retain their actual-outcome and clearing contracts. There is no new replacement
+pipeline, transaction, global result slot, or mutable per-instance declaration.
+The public API takes a mixed target binding rather than a general recipient set
+to make the division domain explicit. It does not reuse `DealAllocatedDamage`:
+chosen allocation is fixed at announcement, while equal division occurs during
+resolution.
+
+The initial `TestEvenDamage*` contract run failed because `DealDamageEvenly` was
+absent. Acceptance covers rounding across players, creatures, and planeswalkers;
+more recipients than the total; zero and negative totals; empty and all-illegal
+groups; source departure/return LKI, lifelink and deathtouch; recipient departure,
+return, phasing and protection; prevention and redirected actual results;
+replacement preparation before execution and complete-batch observers; one-time
+total reads; independent groups; copy retargeting and clone isolation; clearing
+results on absent/phased sources and empty/prevented actions; unpaid and invalid
+announcement rollback; and registration validation. Public tests compile the
+reference declaration and check inspection metadata. Compile-failure fixtures
+reject player sources, general recipient sets, and static installation. A
+synthetic gametest checks announced X, protection-based redistribution, and
+normal spell cleanup. Shared damage and target-legality regressions also pass.
+
+The complete Fireball text in `data/4ED.json` was checked against the Limited
+inventory and JSON requirement. The division rule was verified against
+[Wizards' Iconic Masters release notes](https://magic.wizards.com/en/news/feature/iconic-masters-release-notes-2017-09-11).
+The adapter supplies equal division only. Fireball still needs its additional
+cost for every target beyond the first and separate production wiring. No JSON
+record was changed or closed. A fresh production search finds legacy
+`DealDividedDamage` in `cards/jumpstart/spells.go` and `cards/legends/spells.go`;
+both callers and their exports remain. There are no production
+`DealDamageEvenly` callers.
+
+Excluded: per-target cost calculation, chosen allocation extensions, general
+replacement changes, and all production card migration. Next dependency-ready
+work is a narrow T/P additional-per-target-cost audit across announcement and
+payment paths. No second slice was started.
+
+Validation passes: focused `TestEvenDamage*`, shared damage and target-legality
+contracts with `-count=1`; `go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test`; `make lint` with zero issues;
+and `git diff --check`. The reference example compiles in the public declaration
+test. The post-lint diff was reviewed; lint did not change tracked source files
+beyond this slice. No validation blocker remains. Unrelated untracked work is
+preserved.
+
+## Completed Slice: Spell Source Colors in Target Legality
 
 Delivery step 3 T's equal-division acceptance test exposed another shared
 prerequisite: a normal stack pop made a printed red spell absent from the color
