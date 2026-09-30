@@ -947,3 +947,32 @@ and invalid declarations, option-list isolation, additive options, two pending
 casts, copied modes, target departure/return/phasing, and clone isolation.
 The public DSL synthetic integration checks payment, damage, and spell cleanup.
 No new damage executor or replacement-order contract is introduced.
+
+### Random target announcement isolation (CR 115.1, 115.3, 601.2c, 602.2b)
+
+The shared `chooseRandomTargets` sampler reads legal candidates and count bounds
+without calling `Reset` or `Choose` on its reusable target declaration. Returned
+identities belong to one announcement; normal stack construction captures their
+incarnations and stores the aligned target specifications. A second announcement,
+a failed payment, or sampling in a cloned game cannot publish new choices into
+the declaration. The sampler does not clear a pre-existing explicit legacy
+choice either. Other legacy target operations can still call `Reset` and
+`Choose`; this contract does not make every legacy target implementation
+immutable.
+
+Fixed counts and controller-chosen variable counts sample distinct identities
+uniformly without replacement. Random-count declarations sample a legal count
+first, then the identities. Empty legal pools with a zero minimum, zero chosen
+counts, and insufficient required candidates consume no identity randomness.
+Phasing and protection use the existing target legality service. Copies without
+new targets preserve identities and consume no randomness. Game clones keep
+separate random streams and stack targets. Resolution retains ordinary fizzle
+and leave-and-return incarnation rules.
+
+`TestRandomTargetDeclarationIsolation`, `TestRandomTargetFailedPaymentKeepsDeclaration`,
+`TestRandomTargetCloneCopyAndIncarnation`,
+`TestRandomTargetEmptyAndPhasedCandidatesKeepDeclaration`, and
+`TestRandomTargetSamplingKeepsDeclaration` prove this contract. The public
+synthetic integration is `TestRandomTargetPublicInstanceIsolation`.
+This prerequisite adds no typed random adapter, target frame, result binding,
+replacement service, or simultaneous action.

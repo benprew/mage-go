@@ -236,7 +236,33 @@ Spell(
 )
 ```
 
+### Legacy Random Target Announcement
+
+The legacy announcement adapters `TargetRandom(inner Target) Target` and
+`TargetRandomCount(inner Target) Target` remain available for unmigrated callers.
+They work in legacy spell, activation, and trigger target declarations.
+`TargetRandom` samples distinct legal identities without replacement; the
+controller chooses the count within variable bounds. `TargetRandomCount` also
+samples the count uniformly within the legal bounds. These are announcement
+operations, before payment or trigger stack placement, rather than resolution
+choices. The shared sampler returns choices to the announcement and does not
+store them in the reusable declaration. Read an instance's stack targets rather
+than the declaration's `Chosen()` method. Explicit legacy `Choose` and `Reset`
+methods retain their signatures. Typed random target bindings and grouped random
+announcement are still separate work.
+
+This synthetic legacy declaration compiles with `dsl` imported. It is also the
+public integration test's source definition:
+
+```go
+targets := dsl.TargetRandom(dsl.TargetCreature())
+source := dsl.NewArtifact("Synthetic random source", "", dsl.WithActivatedAbility(
+    dsl.GainLife(dsl.You, dsl.Fixed(1)), dsl.GenericCost(0), dsl.WithTarget(targets)))
+_ = source
+```
+
 ### Permanent Targets
+
 * `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
 * `TargetPermanentsExactlyX(label, filter, options...)`: Declares exactly the announced X as a permanent target set. `TargetPermanentsUpToX(label, filter, options...)` declares zero through X targets. Both return a `PermanentSet` and a target declaration. They work in spells and activations through `WithTargets`; use `WithTargetGroups` or `WithActivationTargetGroups` when another variable group is present. Choose X before targets. The target count stays fixed on a copy, and an illegal target is absent at resolution. The legacy `TargetXPermanents` has a different return type and remains available to unmigrated cards.

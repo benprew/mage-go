@@ -146,11 +146,11 @@ func uniqueTargetCandidates(ids []uuid.UUID) []uuid.UUID {
 	return unique
 }
 
+// Choices belong to the announcement, because declarations can be shared by games.
 func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target *randomTarget, x int) []uuid.UUID {
 	if target == nil {
 		return nil
 	}
-	target.Reset()
 	candidates := uniqueTargetCandidates(target.Possible(controller, sourceCard, g))
 	minimum, maximum := TargetBounds(target, x)
 	maximum = min(maximum, len(candidates))
@@ -172,7 +172,6 @@ func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target
 		chosen = append(chosen, candidates[idx])
 		candidates = append(candidates[:idx], candidates[idx+1:]...)
 	}
-	_ = target.Choose(controller, sourceCard, g, chosen)
 	return chosen
 }
 

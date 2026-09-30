@@ -1,5 +1,61 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Random Target Declaration Isolation Prerequisite
+
+Delivery step 3 T's next random-target audit found a shared engine prerequisite.
+The existing `chooseRandomTargets` sampler called `Reset` and `Choose` on a
+reusable declaration. Failing contract tests reproduced published choices in
+activation, spell, trigger, and prompt paths, failed payment, and cloned games.
+The sampler now returns announcement-local choices without these declaration
+writes. The existing random source, legal-candidate service, payment transaction,
+stack capture, and copy/clone services supply the remaining behavior.
+
+No public function was added. `TargetRandom(inner Target) Target` and
+`TargetRandomCount(inner Target) Target`, including their DSL exports, retain
+signatures. Explicit legacy `Choose` and `Reset` remain available; the sampler
+also preserves a pre-existing explicit choice. No new sealed role, inspection
+node, binding, scope rule, frame, AI policy, or registration constraint is
+needed for this internal prerequisite. Typed random declarations and grouped
+random announcement remain open; the existing raw `Target` exports are not a
+completed typed adapter.
+
+Acceptance covers independent pending announcements through four entry paths,
+fixed/controller-chosen/random counts, zero and impossible counts, distinct
+sampling, exact scripted random consumption, phased/protected candidates,
+failed combined mana/tap/life payment, clone stream and resolution isolation,
+copying without reselection, and target death/return incarnation legality.
+`TestRandomTargetPublicInstanceIsolation` uses gametest players and the compiling
+reference declaration. Existing `TestTargetRandom*`, `TestRandomTarget*`, and
+`TestManaCostPerTarget*` tests verify the reused execution and payment contracts.
+
+Goblin Polka Band's full printed requirement in `data/PAST.json` matches the
+Astral inventory and JSON record: random creature targets, {R} per target,
+and next-untap restrictions only for Goblins actually tapped. Its typed colored
+per-target cost already exists; typed random declaration and tap-result wiring
+remain required. Fresh production searches find one `TargetRandom` caller
+(Goblin Polka Band) and one `TargetRandomCount` caller (Orcish Catapult), both
+in `cards/astral/`. No production caller reads `Chosen` or `IsChosen`.
+All production cards and legacy exports remain unchanged. No untracked
+inventory or JSON gap record was changed or closed.
+
+Next dependency-ready slice: typed announcement-time random permanent target
+bindings, after auditing wrapped declaration detection and all supported
+announcement paths. Grouped random targeting, random counter distribution,
+tap-result bindings, and production migration remain separate work.
+
+Validation passes: focused random-target and per-target-payment contracts with
+`-count=1`; public synthetic integration with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test` with zero failures;
+`make lint` with zero issues; and `git diff --check`.
+Lint first rejected a test variable named `copy`; it was renamed to `copied`,
+and lint plus the full uncached suite passed again. Post-lint review found only
+import formatting in this slice's new engine test. Historical missing-package
+and C-metadata blockers did not recur. No validation blocker remains.
+No second slice was started.
+
 ## Current Slice: Selected-Mode Spell Target Surcharge
 
 Delivery step 3 T/P extends the existing beyond-first target surcharge to
