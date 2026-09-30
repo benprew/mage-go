@@ -1,6 +1,70 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Simultaneous Legacy Divided Damage
+## Current Slice: Typed Fixed-Total Chosen Damage
+
+Delivery step 3 T adds the first complete typed chosen-damage adapter after the
+recorded announcement and simultaneous execution prerequisites. Fresh API,
+caller, test, and tracker searches confirmed the preferred damage and event
+slices and all recorded cast/activation routes already exist. No production
+card changed.
+
+Implemented API:
+`DealAllocatedDamage(DamageSourceRef, *DamageTargetsBinding, int) ResolvingEffect`,
+also exported by `dsl`. The positive integer total preserves announcement timing
+without treating a resolution value as an announcement value. The declaration
+is the direct body of a nonmodal spell or activation with one mixed damage-target
+group. The shared division detector supplies its fixed total to existing
+announcement and payment services. The adapter resolves the source once, reads
+only legal declared recipient incarnations and their stored shares, and submits
+one batch to `Game.DealSimultaneousDamage`. It does not add a damage executor,
+mutable allocation declaration, payment transaction, or global result slot.
+Inspection exposes source, recipients, total, and damage AI metadata. Existing
+scope validation and a direct-body admission check reject invalid declarations
+at registration. Unsupported contexts are rejected instead of silently skipping
+announcement. Sealed source and recipient roles remain intact.
+
+`TestAllocatedDamageAnnouncementAndBatch` first failed because the API was absent.
+`TestAllocatedDamageDeclarations/impossible_minimum` then failed because a required
+minimum larger than the total was accepted. A zero-value recipient declaration
+then exposed two registration panics, including the shared target-group bounds
+inspection. Nil declaration guards now reject it without a panic. These
+regressions pass. Acceptance covers spell and activation announcement before payment, impossible selected counts,
+illegal/duplicate/absent/phased targets, failed payment rollback, optional empty
+groups, departed and returned source LKI, source controller identity, lifelink,
+deathtouch, lost illegal shares, protection, finite prevention, redirection and
+replacement preparation before execution, complete-batch event/callback
+observations, absent source, response/copy/clone map isolation, retargeted copies,
+and ordinary/alternate/prepared/Paradigm cast routes. Compile-failure fixtures
+reject player sources, arbitrary recipient sets, and resolution-value totals.
+A public DSL declaration checks inspection and registration; a synthetic
+`gametest` card proves chosen shares and state-based death. No production card is
+used as an implementation fixture. The reference example compiles in the DSL
+test.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) text was rechecked against the inventories and JSON records.
+Flames of the Firebrand and Pyrotechnics can use this fixed-total declaration;
+their two production `DealDividedDamage` constructions in Jumpstart and Legends
+remain unchanged and need card wiring. Fireball's dynamic equal division and
+per-target payment are separate work. No author export was removed and no gap
+record was closed: an adapter does not complete an unmigrated card. Unrelated
+tracked and untracked files are preserved.
+
+Excluded: dynamic announcement values, nested/modal/triggered allocations,
+multiple allocation instructions or recipient groups, allocation result
+bindings, Fireball's equal division, prepared mana-payment fixes, and production
+card migration. Next dependency-ready work is the allocation ownership and
+announcement contract for nested or modal bodies, before extending this adapter.
+No second slice started.
+
+Validation passes: focused contracts and synthetic integration with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`; DSL registration and closed-role checks
+with `-count=1`; `go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+Historical missing-package and C-metadata failures did not recur. No validation
+blocker remains. The post-lint diff was reviewed.
+
+## Completed Slice: Simultaneous Legacy Divided Damage
 
 Delivery step 3 T completes the execution prerequisite for chosen damage.
 Fresh API, caller, tracker, and test searches confirmed that damage identity,

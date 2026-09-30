@@ -326,7 +326,7 @@ func (c targetGroupContract) inspectDefinition() definitionNode {
 		if _, ok := t.(*targetDeclaration); ok {
 			typed = true
 		}
-		if t != nil && t.Min() != t.Max() {
+		if !nilDefinition(t) && t.Min() != t.Max() {
 			variable++
 		}
 	}

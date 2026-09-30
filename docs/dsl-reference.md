@@ -1045,6 +1045,41 @@ _ = spell
 
 ### Damage Actions
 
+`DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect`
+exposes chosen damage allocation for a positive fixed total. Use it as the direct
+body of a nonmodal `Spell` or `Activate`, with that declaration as the only target
+group. It accepts `WithTargets`, or a single group declared with `WithTargetGroups`
+or `WithActivationTargetGroups`. Registration rejects nested bodies, triggers,
+modes, extra groups, absent declarations, nonpositive totals, and a required
+minimum larger than the total. Go rejects player sources, arbitrary recipient
+sets, and resolution values in place of the integer total.
+
+```go
+recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
+card := dsl.NewSorcery("Allocated damage", "{2}{R}",
+    dsl.Spell(dsl.DealAllocatedDamage(dsl.This, recipients, 3),
+        dsl.WithTargets(recipients)))
+```
+
+The controller chooses shares before payment. Each announced target receives at
+least one damage. The existing announcement service validates targets and
+normalizes the player's response; the stack owns the allocation map. Copies and
+game clones keep separate maps. Retargeting a stack copy preserves each share.
+At resolution, illegal targets lose their shares without redistribution. The
+adapter reads only the declared group's legal incarnations and deals the shares
+in one batch through the shared source, replacement, and prevention services.
+Damage and life-gain observers see the complete batch. A source that left can
+supply departure LKI; an absent source without that information does nothing.
+An optional group with no chosen targets needs no allocation prompt.
+
+The integer total makes the announcement timing explicit. Dynamic totals need a
+separate announcement-value contract; `ResolutionValue` would read at the wrong
+lifecycle. Multiple allocations, nested or modal allocation declarations,
+triggered allocations, result bindings, and Fireball's equal division at
+resolution remain separate work. The legacy `DealDividedDamage(ValueSource)`
+signature and its callers remain available.
+
+
 The engine compatibility constructor
 `mage.DealDividedDamage(total mage.ValueSource) mage.Effect` remains unchanged;
 it is not a typed `dsl` divided-damage export. Its spell and activation paths

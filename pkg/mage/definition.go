@@ -272,8 +272,8 @@ func ValidateCardDefinition(name string, card Card) error {
 	var names map[string]any
 	var targets map[*targetDeclaration]bool
 	var castBody bool
-	var visit func(any, string, bool, map[any]bool)
-	visit = func(value any, path string, spell bool, active map[any]bool) {
+	var visit func(any, string, bool, map[any]bool, bool)
+	visit = func(value any, path string, spell bool, active map[any]bool, allocationAllowed bool) {
 		previousCastBody := castBody
 		if action, ok := value.(*ActionDefinition); ok {
 			castBody = action.kind == ActionSpell
@@ -293,6 +293,9 @@ func ValidateCardDefinition(name string, card Card) error {
 			defer delete(active, value)
 		}
 		n := describeDefinition(value)
+		if _, allocated := value.(*allocatedDamageEffect); allocated && !allocationAllowed {
+			fail("allocated damage requires a direct nonmodal spell or activation body with one target group")
+		}
 		if n.isolatedBindings {
 			outer, outerTargets := assigned, targets
 			assigned = maps.Clone(assigned)
@@ -398,7 +401,13 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		for _, edge := range n.children {
 			before := maps.Clone(assigned)
-			visit(edge.value, path+"."+edge.name, spell, active)
+			allowAllocation := false
+			if action, ok := value.(*ActionDefinition); ok && (action.kind == ActionSpell || action.kind == ActionActivated) && len(action.modes) == 0 && len(action.effects) == 1 && len(action.targets) == 1 {
+				if allocation, ok := edge.value.(*allocatedDamageEffect); ok && allocation.recipients != nil {
+					allowAllocation = action.effects[0] == allocation && action.targets[0] == allocation.recipients.targetDeclaration
+				}
+			}
+			visit(edge.value, path+"."+edge.name, spell, active, allowAllocation)
 			_, eventTrigger := value.(*GenericTriggered)
 			_, capture := edge.value.(activationCapture)
 			_, paidCost := edge.value.(*sacrificeMatchingCost)
@@ -435,11 +444,11 @@ func ValidateCardDefinition(name string, card Card) error {
 		if spell {
 			if base, ok := card.(*BaseCard); ok {
 				for j, cost := range base.AdditionalCosts() {
-					visit(cost, fmt.Sprintf("additional-costs[%d]", j), true, make(map[any]bool))
+					visit(cost, fmt.Sprintf("additional-costs[%d]", j), true, make(map[any]bool), false)
 				}
 			}
 		}
-		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool))
+		visit(a, fmt.Sprintf("abilities[%d]", i), spell, make(map[any]bool), false)
 	}
 	return errors.Join(problems...)
 }

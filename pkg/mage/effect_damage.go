@@ -133,15 +133,21 @@ func (e *dealDividedDamageEffect) Properties() EffectProperties {
 // IsDividedDamageEffect returns true if e is a divided-damage effect (used by
 // the spell-cast flow to prompt the controller for a distribution).
 func IsDividedDamageEffect(e Effect) bool {
-	_, isDiv := e.(*dealDividedDamageEffect)
-	return isDiv
+	switch e.(type) {
+	case *dealDividedDamageEffect, *allocatedDamageEffect:
+		return true
+	}
+	return false
 }
 
 // DividedDamageTotal returns the ValueSource carrying the total damage of a
 // divided-damage effect, or nil if e is not one.
 func DividedDamageTotal(e Effect) ValueSource {
-	if d, isDiv := e.(*dealDividedDamageEffect); isDiv {
+	switch d := e.(type) {
+	case *dealDividedDamageEffect:
 		return d.total
+	case *allocatedDamageEffect:
+		return Fixed(d.total)
 	}
 	return nil
 }
