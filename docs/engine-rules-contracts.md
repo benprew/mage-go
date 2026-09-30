@@ -748,3 +748,23 @@ templates, outcome maps, pending transactions, and game clones remain separate.
 This extends the optional-X exclusion in the earlier alternative-branch contract;
 captured inner costs, optional-around-alternative wrappers, general payment-order
 selection, and mutations during commit remain separate work.
+
+### Optional fixed-counter alternative tree
+
+A legacy `OptionalCost` around an `EitherCost` tree of uncaptured fixed counter
+costs enters the shared choice-locking path in direct total-payment preparation.
+Acceptance occurs before branch selection, and each choice occurs once. Only
+affordable branches are offered. Decline or no affordable branch leaves no
+counter instruction. An accepted leaf enters the existing direct fixed-counter
+incarnation lock and combined-total commit preflight. Fixed zero requires the
+original present incarnation. Failed preflight spends no mana, life, or counters
+and publishes no new optional outcome. Preparation does not mutate declarations
+or caller outcome maps. Interleaved transactions and game clones own separate
+locks (CR 118.3, 400.7, 601.2h, 602.2b).
+
+This extends the earlier optional-around-alternative exclusion only for legacy
+uncaptured fixed-counter trees. It adds no typed result producer. Registration
+continues to reject `OptionalCostInto` around an alternative, invalid counter
+types, negative counts, and empty alternatives. Captured or X leaves, mixed cost
+families, general payment-order choice, and mutations during commit remain open.
+The existing announcement paths and shared counter-removal executor are reused.

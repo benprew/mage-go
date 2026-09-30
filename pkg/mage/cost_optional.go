@@ -41,6 +41,25 @@ func (c *optionalCost) resolveActionCost(ctx actionCostContext) Cost {
 	return &resolved
 }
 
+func uncapturedFixedCounterAlternatives(cost Cost) bool {
+	switch c := cost.(type) {
+	case *removeCountersCost:
+		return !c.capture
+	case *eitherCost:
+		if len(c.options) == 0 {
+			return false
+		}
+		for _, option := range c.options {
+			if !uncapturedFixedCounterAlternatives(option) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
 // OptionalRevealFromHandCost saves the payment choice and the revealed card.
 func OptionalRevealFromHandCost(filter CardFilter, label, prompt string, paid *NumberBinding, card *CardBinding) Cost {
 	return &optionalCost{

@@ -3623,3 +3623,33 @@ card := dsl.NewArtifact("Synthetic alternative optional X", "", dsl.WithAbility(
         dsl.RemoveXCountersFromSourceCost(core.Charge), "Pay counters?", dsl.BindNumber("paid")))),
     dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 ```
+
+### Optional payment of fixed-counter alternatives (engine prerequisite)
+
+The legacy engine `mage.OptionalCost(inner mage.Cost, prompt string) mage.Cost`
+can wrap an `EitherCost(options ...Cost) Cost` tree whose leaves are uncaptured
+`RemoveCountersCost(counter core.CounterType, count int) Cost` costs.
+Activated costs and spell additional costs retain announcement locking. Direct
+engine total-payment preparation now also locks optional acceptance and each
+selected branch once. The selected fixed leaf uses the existing source-incarnation
+lock and combined counter preflight before live mana, life, or counters change.
+Decline and unaffordability select no branch and remove no counters. Accepted
+zero requires the original present source. Phasing back in preserves identity;
+departure and return do not. Reused declarations and game clones keep separate locks.
+
+`OptionalCost` is an engine compatibility API, not a `dsl` export. No new author
+export is added by this prerequisite. `OptionalCostInto` still rejects an
+alternative inner cost at registration. Captured leaves, X leaves, mixed leaf
+families, general payment-order selection, and mutations during commit remain
+outside this contract. This synthetic engine/DSL integration example compiles
+and validates in `TestOptionalEitherFixedCounterEngineDeclaration`:
+
+```go
+card := dsl.NewArtifact("Synthetic optional alternative", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(mage.OptionalCost(dsl.EitherCost(dsl.EitherCost(
+        dsl.RemoveCountersCost(core.Charge, 2))), "Pay counters?")),
+    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+```
+
+The engine wrapper preserves its legacy optional flag. It does not supply a
+new typed acceptance binding or permit source-wide flags as typed result reads.

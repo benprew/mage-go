@@ -1,5 +1,52 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional Fixed-Counter Alternative Tree
+
+Delivery step 3 P has a remaining wrapper-payment prerequisite: direct engine
+total-payment preparation did not lock a legacy `OptionalCost` around an
+`EitherCost` tree of uncaptured fixed-counter leaves. Preferred damage identity,
+explicit singular damage, attack/block, and filtered death functions already
+exist. This slice reuses `lockPaymentCosts`, isolated validation, fixed-counter
+incarnation locks, and combined-total preflight. Acceptance and selected branches
+occur once. No new role, executor, public signature, result binding, target,
+replacement service, or AI metadata is added. `OptionalCost` remains an engine
+compatibility API; it is not exported by `dsl`. Production callers are preserved.
+
+`TestOptionalEitherFixedCounterPayment*` first failed for repeated optional
+choices, returned/absent/phased/short source acceptance, and partial removal on
+combined shortage. Acceptance covers decline, affordability, automatic selection
+of a sole payable branch, two nested branch choices without repetition, fixed
+zero, phase-out/in, source identity, unchanged templates and caller maps,
+interleaved payments, clone isolation, and failure without resource spending or
+published outputs. `TestOptionalEitherFixedCounterEngineDeclaration` validates
+the compiling reference example, pays on activation, copies the stack object
+without repaying, and resolves in independent games. Declaration tests retain
+rejection for negative counts, invalid counter types, empty alternatives, and
+`OptionalCostInto` around alternatives. These costs are nontargeted and need
+current source identity, not LKI. Replacement and simultaneous-action behavior
+is unchanged.
+
+Osai Vultures' complete text in `data/LEG.json` matches the Legends inventory
+and gap record: its activated cost removes two carrion counters and its effect
+grants +1/+1 until end of turn. This supplies the fixed-payment requirement;
+optional alternatives are synthetic. Card upkeep and remaining wiring require
+separate audits. Fresh searches found 18 production `RemoveCountersCost`
+constructions, four `EitherCost` constructions, one legacy `OptionalCost`
+construction, and no `OptionalCostInto` construction. No card, inventory, or
+JSON record changed or closed. Unrelated untracked work is preserved.
+
+Excluded: captured/X/mixed leaves, typed acceptance capture around alternatives,
+general payment-order choice, mutations during commit, and card wiring. Next
+dependency-ready work is a separate P captured-wrapper audit or T divided-target
+announcement prerequisite. No second slice was started.
+
+Validation passes: focused tests with `-count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run with `-count=1`, `go test ./... -short -count=1`, `go build ./...`,
+`go vet ./...`, full `make test`, `make lint` with zero issues, and
+`git diff --check`. The post-lint diff was reviewed; no automatic source
+changes or validation blockers remain. Historical workspace failures did not recur.
+
 ## Current Slice: Optional X-Counter Branch in an Alternative Payment
 
 Delivery step 3 P now recursively resolves optional uncaptured X-counter leaves
