@@ -1,6 +1,62 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Alternate-Zone Division Before Payment
+## Current Slice: Card-Copy Division Admission
+
+Delivery step 3 T completes the remaining card-copy announcement prerequisite
+for chosen damage. Fresh API, tracker, caller, and test searches confirmed the
+preferred damage identity, singular damage, source attack/block, filtered death,
+normalization, activation, hand, and alternate-zone slices already exist.
+Prepared and Paradigm copies still accepted illegal targets and impossible
+positive-share divisions. This slice fixes that shared admission contract;
+it does not add a typed adapter or change production cards.
+
+`CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory func() Card) error`
+and `CastParadigmCopyFromExile(playerID uuid.UUID, name string) (*StackObject, error)`
+retain their signatures. The unprepared-allocation branch of shared stack
+construction validates nonmodal targets and uses `prepareDamageDivision` before
+publishing a cast. Existing modal selection validates its own targets. Nonmodal
+copy target prompts use stored X. The stack clones the allocation map. Ordinary
+and alternate casts keep their existing prepayment prepared-allocation path.
+No public role, binding, inspection rule, declaration state, replacement service,
+executor, or AI metadata is added. The unused private post-admission chooser was
+removed; all production author exports remain.
+
+`TestCopyCastDamageDivisionAdmission` first failed for all eight invalid shapes
+on both routes: negative/zero/insufficient totals, absent/phased/duplicate/wrong
+category targets, and a missing required target. Acceptance also covers empty
+optional target lists, selected and inactive modes, prepared X target bounds,
+retained prepared state and exile originals, zero failure event traces, allocation
+before publication, response/copy/clone map isolation, and announced shares at
+resolution. Existing division tests cover normalization, overflow, resolution
+legality, and lost shares. LKI, prevention, and replacement remain in the shared
+damage service. This change adds no new damage execution or simultaneous-action
+contract.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) texts were checked against the relevant inventories and gap
+records. Fireball requires equal division at resolution, a separate contract.
+Two production `DealDividedDamage` constructions remain in Jumpstart and Legends.
+Prepared factory and direct copy-cast callers remain in Secrets of Strixhaven;
+Paradigm keeps its existing engine call path. All are unchanged. Typed divided
+allocation declarations and card wiring remain open; no JSON record changed or
+card was certified complete. Unrelated untracked work is preserved.
+
+Excluded: prepared mana payment, casting-permission audits, typed grouped
+allocations, multiple division instructions, simultaneous legacy divided damage,
+Fireball's rule, and production migration. Next dependency-ready work is the
+simultaneous legacy divided-damage execution prerequisite after a fresh audit,
+before exposing a complete typed adapter. No second slice was started.
+
+Validation passes: focused `TestCopyCastDamageDivision*` and the existing
+activation/hand/alternate/normalization division and prepared/Paradigm tests
+with `-count=1`; `go test ./pkg/mage/... -short -count=1`; DSL registration and
+closed-role checks with `-count=1`; `go test ./... -short -count=1`;
+`go build ./...`; `go vet ./...`; full `make test`; `make lint` with zero issues;
+and `git diff --check`. The standalone reference example builds. Lint made no
+additional changes, and the post-lint diff was reviewed. Historical missing-package
+and C-metadata failures did not recur. No validation blocker remains.
+
+## Completed Slice: Alternate-Zone Division Before Payment
 
 Delivery step 3 T completes the shared cast-from-zone chosen-damage announcement
 prerequisite. Fresh API, caller, test, and tracker searches confirmed that the

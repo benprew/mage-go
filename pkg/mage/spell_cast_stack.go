@@ -88,7 +88,29 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		modalTargets = selection.modalTargets
 		modeChoice = selection.mode
 	} else {
-		effects, targets = g.prepareSpellStackPayload(controller, card, opts.Targets, opts.PromptTargets)
+		effects, targets = g.prepareSpellStackPayload(controller, card, opts.Targets, false)
+		if opts.PromptTargets {
+			targets = append(targets, g.promptTargetsForListWithX(opts.Controller, card, card.CastTargets(), opts.XValue)...)
+		}
+	}
+	if !opts.DamageDivisionPrepared {
+		if selection == nil {
+			specs := card.CastTargets()
+			if opts.TargetSpecs != nil {
+				specs = opts.TargetSpecs
+			}
+			if len(specs) == 0 && len(targets) != 0 {
+				return nil, fmt.Errorf("too many targets for spell")
+			}
+			if err := g.validateActionTargets(opts.Controller, card, specs, targets, opts.XValue, "spell"); err != nil {
+				return nil, err
+			}
+		}
+		division, err := g.prepareDamageDivision(opts.Controller, card, effects, targets)
+		if err != nil {
+			return nil, err
+		}
+		opts.DamageDistribution = division
 	}
 	sourceID := opts.SourceID
 	if sourceID == uuid.Nil {
@@ -129,11 +151,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		obj.ModeChoice = controller.ChooseMode(modes, card.Name())
 	}
 
-	if opts.DamageDivisionPrepared {
-		obj.DamageDistribution = maps.Clone(opts.DamageDistribution)
-	} else {
-		g.chooseDividedDamageForSpell(obj, card, controller)
-	}
+	obj.DamageDistribution = maps.Clone(opts.DamageDistribution)
 	g.pushStack(obj)
 	g.recordSpellCast(card, opts.Controller)
 	g.FireEvent(GameEvent{
@@ -208,23 +226,6 @@ func (g *Game) prepareSpellStackPayload(caster Player, card Card, targets []uuid
 		}
 	}
 	return effects, targets
-}
-
-func (g *Game) chooseDividedDamageForSpell(obj *StackObject, card Card, controller Player) {
-	if obj == nil || card == nil || controller == nil {
-		return
-	}
-	for _, eff := range obj.Effects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(g, obj.SourceID, obj.Controller, obj.Targets)
-		if total > 0 && len(obj.Targets) > 0 {
-			dist := controller.ChooseDamageDistribution(obj.Targets, total, card.Name(), g)
-			obj.DamageDistribution = sanitizeDamageDistribution(dist, obj.Targets, total)
-		}
-		break
-	}
 }
 
 func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {

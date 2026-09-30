@@ -1127,10 +1127,38 @@ _ = err
 ```
 
 These helpers use the granting effect's casting permission and timing context.
-This slice adds no typed divided-damage export. Prepared/Paradigm copy casting,
+This slice adds no typed divided-damage export. Prepared spell payment,
 typed divided-target declarations, independent grouped allocations, and
 simultaneous divided damage remain open. Fireball's equal division at resolution
 requires a separate contract.
+
+Prepared and Paradigm card-copy casts also validate their selected targets and
+positive-share division before publishing the spell. A failed announcement sends
+no cast or target event, leaves the prepared source prepared, and keeps the
+Paradigm original in exile. Nonmodal prepared target prompts use the stored X.
+Only the selected mode supplies an allocation. The stack stores an independent
+copy of the normalized map; later spell copies and game clones do the same.
+This admission contract does not correct the separate prepared mana-payment gap.
+These public engine signatures remain unchanged:
+
+```go
+func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory func() Card) error
+func (g *Game) CastParadigmCopyFromExile(playerID uuid.UUID, name string) (*StackObject, error)
+```
+
+The engine-level example below compiles. `TestCopyCastDamageDivision*` uses
+synthetic cards to exercise both routes, including failed announcements.
+
+```go
+func castSyntheticPreparedDivision(game *mage.Game, caster, source uuid.UUID) error {
+    return game.CastPreparedSpellCopy(caster, source, func() mage.Card {
+        return mage.NewInstant("Prepared division", "",
+            mage.NewMultiTargetSpell(
+                []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
+                mage.DealDividedDamage(mage.Fixed(3))))
+    })
+}
+```
 
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:
 
