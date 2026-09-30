@@ -441,6 +441,8 @@ var (
 	TargetDamageRecipient               = mage.DeclareDamageTarget
 	TargetPlayerOrPlaneswalkerDamage    = mage.DeclarePlayerOrPlaneswalkerTarget
 	TargetDamageRecipients              = mage.DeclareDamageTargets
+	TargetDamageRecipientsExactlyX      = mage.DeclareXDamageTargets
+	TargetDamageRecipientsUpToX         = mage.DeclareUpToXDamageTargets
 	DealDamageFrom                      = mage.DealDamageFrom
 	DamageSourceOf                      = mage.DamageSourceOf
 	DamageRecipients                    = mage.DamageRecipients

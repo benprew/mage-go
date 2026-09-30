@@ -1,6 +1,63 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Fixed-Total Chosen Damage in One Selected Mode
+## Current Slice: X-Bounded Mixed Damage Recipients
+
+Delivery step 3 T completes the mixed-recipient count prerequisite named by the
+preceding slice. Fresh API, caller, test, and tracker checks confirmed that damage
+identity, singular damage, attack/block events, filtered death, and fixed-total
+modal allocation already exist. No production card or legacy export changed.
+
+Implemented public signatures:
+
+- `TargetDamageRecipientsExactlyX(name string) *DamageTargetsBinding`
+- `TargetDamageRecipientsUpToX(name string) *DamageTargetsBinding`
+
+The engine constructors are `DeclareXDamageTargets` and
+`DeclareUpToXDamageTargets`. Both reuse `countBoundTarget`, `DamageAnyTarget`, the
+existing target declaration, announcement validators, and target-aligned stack
+frames. There is no new executor, payment path, frame storage, or AI policy.
+`DealDamageEach` keeps its existing inspection and damage metadata and uses the
+shared simultaneous damage/replacement service. Exactly X and zero through X
+counts are checked before payment; X=0 permits no targets. Counts and X remain
+with copies, while permanent references retain their captured incarnations.
+Registration and sealed roles retain scope and singular/set checks.
+
+`TestTypedXDamageTargets*` first failed because both constructors were absent.
+Focused contracts now cover invalid counts, duplicates, illegal categories,
+missing identities, zero/empty groups, failed spell and activation payment,
+player/creature/planeswalker batches, prevention, callback visibility,
+departed/returned source LKI and lifelink, returned/phased recipients, changed
+ambient X, copy/clone isolation, retargeting, protection, all-illegal resolution,
+recorded empty group boundaries for spells and activations, and registration scope.
+Public DSL and compile-failure tests verify the reference example and reject a
+set used as a singular recipient. A synthetic gametest spell proves mixed damage,
+state-based creature death, and the following life gain.
+
+Complete repository text for Fireball and Pyrotechnics (`data/4ED.json`) and
+Rolling Thunder (`data/TMP.json`) confirms that recipient counts, chosen damage
+division, and equal division are distinct requirements. These declarations are a
+prerequisite, not a complete implementation of those cards. Fireball still needs
+unbounded target counts, additional per-target payment, and equal rounded-down
+division. The two production `DealDividedDamage` constructions remain in
+`cards/jumpstart/spells.go` and `cards/legends/spells.go`; no production caller uses
+the new constructors. No inventory or gap record is closed or changed.
+
+Excluded: dynamic allocation totals, unrestricted announcement expressions,
+Fireball division/payment, card migration, and trigger-specific X capture.
+Next dependency-ready work is the announcement-time chosen-X allocation total
+contract, using these mixed bounds where appropriate. A resolution value must
+not substitute for a value fixed before payment. No second slice started.
+
+Validation passes: focused damage/target/allocation contracts and synthetic
+integration with `-count=1`; `go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+Historical missing-package and C-metadata failures did not recur. The post-lint
+diff was reviewed. No validation blocker remains. Unrelated untracked files are
+preserved.
+
+## Completed Slice: Fixed-Total Chosen Damage in One Selected Mode
 
 Delivery step 3 T extends allocation admission to one selected mode in
 `SpellModes` and `ActivateModes`. Fresh searches confirmed the preferred damage

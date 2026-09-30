@@ -240,6 +240,16 @@ Spell(
 * `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
 * `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
 * `TargetPermanentsExactlyX(label, filter, options...)`: Declares exactly the announced X as a permanent target set. `TargetPermanentsUpToX(label, filter, options...)` declares zero through X targets. Both return a `PermanentSet` and a target declaration. They work in spells and activations through `WithTargets`; use `WithTargetGroups` or `WithActivationTargetGroups` when another variable group is present. Choose X before targets. The target count stays fixed on a copy, and an illegal target is absent at resolution. The legacy `TargetXPermanents` has a different return type and remains available to unmigrated cards.
+* `TargetDamageRecipientsExactlyX(name string) *DamageTargetsBinding` and `TargetDamageRecipientsUpToX(name string) *DamageTargetsBinding`: Declare exactly X or zero through X player, creature, or planeswalker targets for a spell or activation. X is announced before targets and payment. X=0 allows an empty group, which still resolves. Use `WithTargets` for one group, or the recorded `WithTargetGroups` / `WithActivationTargetGroups` path for independent groups. Copies retain the chosen count and X; new targets must occupy the same group positions. At resolution, an illegal, phased-out, or returned permanent is absent; remaining legal targets still receive damage. These declarations specify recipient counts, not damage amounts or division. `DealDamageEach` uses one simultaneous batch. Dynamic chosen-allocation totals still require a separate adapter. This synthetic declaration compiles:
+
+```go
+recipients := dsl.TargetDamageRecipientsUpToX("recipients")
+card := dsl.NewInstant("X recipients", "{X}{R}", dsl.Spell(
+    dsl.DealDamageEach(dsl.This, recipients, dsl.Fixed(2)),
+    dsl.WithTargets(recipients)))
+_ = card
+```
+
 * `AnnouncedTargetCount(*PermanentTargetsBinding) ResolutionValue`: Reads the number chosen for one permanent target group when the spell or ability was put on the stack. Use it in a `Spell`, `Activate`, or targeted trigger body. The count includes a target that later becomes illegal. It stays with a copied or retargeted stack object. Registration rejects a nil or undeclared group. If every target of the stack object becomes illegal, it does not resolve under CR 608.2b.
 
 ```go

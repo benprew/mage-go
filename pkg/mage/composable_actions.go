@@ -1273,6 +1273,19 @@ func DeclareDamageTargets(name string, minimum, maximum int) *DamageTargetsBindi
 	return &DamageTargetsBinding{&targetDeclaration{name: name, spec: spec}}
 }
 
+func DeclareXDamageTargets(name string) *DamageTargetsBinding {
+	return declareXBoundDamageTargets(name, false)
+}
+
+func DeclareUpToXDamageTargets(name string) *DamageTargetsBinding {
+	return declareXBoundDamageTargets(name, true)
+}
+
+func declareXBoundDamageTargets(name string, upTo bool) *DamageTargetsBinding {
+	spec := &countBoundTarget{inner: &DamageAnyTarget{BaseTarget: BaseTarget{min: 1, max: 1}}, usesX: !upTo, upToX: upTo}
+	return &DamageTargetsBinding{&targetDeclaration{name: name, spec: spec}}
+}
+
 func (*DamageTargetsBinding) damageRecipientSet() {}
 func (b *DamageTargetsBinding) inspectDefinition() definitionNode {
 	return targetReadNode(b.targetDeclaration, "damage-recipient-set")
