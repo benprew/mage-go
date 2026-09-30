@@ -2625,6 +2625,15 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		}
 	}
 
+	effects, _ := g.prepareSpellStackPayload(p, card, targets, false)
+	if selection != nil {
+		effects = selection.effects
+	}
+	division, err := g.prepareDamageDivision(playerID, card, effects, targets)
+	if err != nil {
+		return err
+	}
+
 	mc := card.ManaCost()
 
 	// Apply spell cost increases (e.g. Gloom)
@@ -2718,18 +2727,20 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		ModalSelection:     selection,
-		Card:               card,
-		Controller:         playerID,
-		Targets:            targets,
-		TargetSpecs:        aligned,
-		XValue:             xValue,
-		CastZone:           ZoneHand,
-		SnapshotCast:       true,
-		CapturedNumbers:    payment.payment.paidNumbers,
-		CapturedCards:      payment.payment.paidCards,
-		CapturedCardSets:   payment.payment.paidCardSets,
-		CapturedPermanents: payment.payment.paidPermanents,
+		DamageDivisionPrepared: true,
+		DamageDistribution:     division,
+		ModalSelection:         selection,
+		Card:                   card,
+		Controller:             playerID,
+		Targets:                targets,
+		TargetSpecs:            aligned,
+		XValue:                 xValue,
+		CastZone:               ZoneHand,
+		SnapshotCast:           true,
+		CapturedNumbers:        payment.payment.paidNumbers,
+		CapturedCards:          payment.payment.paidCards,
+		CapturedCardSets:       payment.payment.paidCardSets,
+		CapturedPermanents:     payment.payment.paidPermanents,
 	})
 	return err
 }

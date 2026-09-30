@@ -7,6 +7,10 @@ import (
 )
 
 func (g *Game) prepareActivationDamageDivision(controller uuid.UUID, card Card, effects []Effect, targets []uuid.UUID) (map[uuid.UUID]int, error) {
+	return g.prepareDamageDivision(controller, card, effects, targets)
+}
+
+func (g *Game) prepareDamageDivision(controller uuid.UUID, card Card, effects []Effect, targets []uuid.UUID) (map[uuid.UUID]int, error) {
 	for _, effect := range effects {
 		if !IsDividedDamageEffect(effect) {
 			continue
@@ -17,7 +21,7 @@ func (g *Game) prepareActivationDamageDivision(controller uuid.UUID, card Card, 
 		}
 		// Each target needs a positive share before the player can pay costs.
 		if sanitizeDamageDistribution(nil, targets, total) == nil {
-			return nil, fmt.Errorf("cannot divide %d damage among %d ability targets", total, len(targets))
+			return nil, fmt.Errorf("cannot divide %d damage among %d targets", total, len(targets))
 		}
 		player := g.GetPlayer(controller)
 		if player == nil {

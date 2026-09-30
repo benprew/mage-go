@@ -1067,12 +1067,12 @@ The internal signature is
 `sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int) map[uuid.UUID]int`.
 It returns nil for an empty target list, duplicate or nil target IDs, or a
 total smaller than the target count. Callers must not treat nil as proof of a
-legal announcement. Activations now validate and lock their division before
-cost preparation and payment. The selected mode supplies the effects and targets.
+legal announcement. Activations and ordinary hand casts now validate and lock
+their division before cost preparation and payment. The selected mode supplies the effects and targets.
 An impossible nonempty division fails before the player chooses shares, pays
-costs, or publishes payment/activation events. Each target needs at least one
-point; a negative calculated total is treated as zero (CR 107.1b). When the
-target declaration permits zero targets, the activation can choose none and
+costs, or publishes payment, activation, or cast events. Each target needs at
+least one point; a negative calculated total is treated as zero (CR 107.1b). When the
+target declaration permits zero targets, the spell or ability can choose none and
 has no allocation prompt (CR 107.1c). Payment does not recalculate the shares,
 even if it changes the total's inputs or sacrifices the source. A failed payment
 creates no stack allocation. This synthetic activation declaration compiles and
@@ -1088,8 +1088,16 @@ _ = source
 
 `Game.ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int,
 targets []uuid.UUID) error` retains its signature. This is a shared engine
-prerequisite, with no new typed DSL export or role. Spell prepayment division,
-typed divided-target declarations, and simultaneous divided damage remain open.
+prerequisite, with no new typed DSL export or role.
+`Game.CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID,
+xValues ...int) error` and `Game.CastSpellByID(playerID, cardID uuid.UUID,
+targets []uuid.UUID, xValue int) error` now use this prepayment contract for
+ordinary casts from hand, including selected modal spells. The spell example
+above is also exercised by `TestSpellDamageDivision*`. Allocation occurs before
+mana abilities used for payment. Failed payment preserves the hand, life, mana,
+and stack. A prepared empty allocation does not prompt again after payment.
+Alternate-zone casting, prepared/Paradigm copy casting, typed divided-target
+declarations, and simultaneous divided damage remain open.
 Fireball's equal division at resolution requires a separate contract.
 
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:

@@ -10,23 +10,26 @@ import (
 )
 
 type castStackObjectOptions struct {
-	CapturedNumbers    map[*NumberBinding]int
-	CapturedCards      map[*CardBinding]capturedCard
-	CapturedCardSets   map[*CardsBinding][]capturedCard
-	CapturedPermanents map[*PermanentBinding]capturedPermanent
-	Card               Card
-	Controller         uuid.UUID
-	Targets            []uuid.UUID
-	TargetSpecs        []Target
-	XValue             int
-	CastZone           Zone
-	SourceID           uuid.UUID
-	IsCopy             bool
-	ExileOnLeaveStack  bool
-	SnapshotCast       bool
-	PromptTargets      bool
-	ModePrompt         string
-	ModalSelection     *modalSpellSelection
+	// An empty prepared division must not cause a second choice after payment.
+	DamageDivisionPrepared bool
+	DamageDistribution     map[uuid.UUID]int
+	CapturedNumbers        map[*NumberBinding]int
+	CapturedCards          map[*CardBinding]capturedCard
+	CapturedCardSets       map[*CardsBinding][]capturedCard
+	CapturedPermanents     map[*PermanentBinding]capturedPermanent
+	Card                   Card
+	Controller             uuid.UUID
+	Targets                []uuid.UUID
+	TargetSpecs            []Target
+	XValue                 int
+	CastZone               Zone
+	SourceID               uuid.UUID
+	IsCopy                 bool
+	ExileOnLeaveStack      bool
+	SnapshotCast           bool
+	PromptTargets          bool
+	ModePrompt             string
+	ModalSelection         *modalSpellSelection
 }
 
 func (g *Game) prepareSpellTargetGroups(controller uuid.UUID, card Card, groups [][]uuid.UUID, x int) ([]uuid.UUID, []Target, error) {
@@ -126,7 +129,11 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		obj.ModeChoice = controller.ChooseMode(modes, card.Name())
 	}
 
-	g.chooseDividedDamageForSpell(obj, card, controller)
+	if opts.DamageDivisionPrepared {
+		obj.DamageDistribution = maps.Clone(opts.DamageDistribution)
+	} else {
+		g.chooseDividedDamageForSpell(obj, card, controller)
+	}
 	g.pushStack(obj)
 	g.recordSpellCast(card, opts.Controller)
 	g.FireEvent(GameEvent{

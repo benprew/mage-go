@@ -1,6 +1,66 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Activation Division Before Payment
+## Current Slice: Ordinary Hand-Cast Division Before Payment
+
+Delivery step 3 T completes the ordinary hand-casting portion of the next
+chosen-damage announcement prerequisite. Fresh API, caller, tracker, and test
+searches confirmed that damage identity, singular damage, source attack/block,
+filtered death, positive normalization, and activation division already exist.
+The ordinary spell path still chose allocations after payment and admitted
+impossible divisions. This is an engine contract correction, not a new adapter.
+
+`Game.CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID,
+xValues ...int) error`, `Game.CastSpellByID(playerID, cardID uuid.UUID,
+targets []uuid.UUID, xValue int) error`, and the ordinary grouped hand-cast
+entry retain their signatures. Shared internal `prepareDamageDivision` reuses
+the existing amount reader, normalizer, and player choice service. It runs after
+target validation and selected-mode acquisition, before cost calculation,
+mana abilities, or payment. A prepared flag distinguishes an empty allocation
+from an unprepared allocation. The stack service copies the saved map after
+successful payment without another prompt or amount evaluation. Existing
+activation behavior and all legacy exports remain compatible. No new role,
+declaration state, scope rule, executor, result binding, or AI metadata is added.
+
+`TestSpellDamageDivision*` first failed for post-payment life-based totals,
+impossible divisions spending costs and sending cast events, failed payment
+skipping announcement, and modal payment timing. Acceptance covers positive,
+zero, and negative totals; optional empty target lists; life and mana payment;
+automatic mana abilities; combined unaffordable costs; selected versus inactive
+mode effects; absent, phased, duplicate, and wrong-category targets; and response,
+copy, and clone map isolation. Resolution preserves the announced total when
+payment changes its inputs. Existing `TestDamageDivision*` covers normalization,
+overflow, illegal target shares, phasing at resolution, and copy/clone isolation.
+The slice changes announcement only; LKI, replacement ordering, simultaneous
+execution, and damage events remain in their existing services.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) texts were checked. The Jumpstart inventory and gap record
+require chosen allocations at announcement. Fireball instead needs equal
+division at resolution. Synthetic spells supply all new integration cases.
+Fresh searches found two production `DealDividedDamage` constructions, in
+Jumpstart and Legends, both unchanged. No card or gap record is completed;
+typed divided targets and production wiring remain. No JSON record changed,
+so no schema validation is required. Unrelated untracked work is preserved.
+
+Excluded: alternate-zone casting, prepared/Paradigm copy casting, typed
+allocation declarations, multiple independent division instructions,
+simultaneous legacy divided damage, Fireball's equal-division rule, and card
+migration. Next dependency-ready work is alternate-zone division admission
+and prepayment choice before exposing a typed divided-damage adapter.
+No second slice was started.
+
+Validation passes: focused `TestSpellDamageDivision*`,
+`TestActivationDamageDivision*`, and `TestDamageDivision*` with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`; the DSL registration/closed-role
+checks with `-count=1`; `go test ./... -short -count=1`; `go build ./...`;
+`go vet ./...`; full `make test`; `make lint` with zero issues; and
+`git diff --check`. Lint first reported a test variable that shadowed `copy`;
+it was renamed and focused tests and lint passed again. The post-lint diff
+was reviewed. Lint only adjusted the new test's import spacing.
+Historical missing-package and C-metadata failures did not recur.
+No validation blocker remains.
+
+## Completed Slice: Activation Division Before Payment
 
 Delivery step 3 T completes the activation announcement prerequisite for
 legacy chosen damage. Fresh API, caller, test, and tracker searches confirmed

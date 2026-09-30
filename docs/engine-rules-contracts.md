@@ -320,9 +320,19 @@ change to the amount's inputs during payment cannot change the shares.
 Failed payment leaves no stack object or allocation. Copying and cloning use
 the existing independent-map contract.
 
-This extends activation timing and admission only. Spell prepayment choices,
-typed group allocations, and simultaneous execution of legacy divided damage
-remain prerequisites for a complete typed divided-damage adapter.
+Ordinary hand casts now use the same allocation service after target validation
+and modal selection, before cost calculation, mana abilities, and payment
+(CR 601.2d–h). The saved allocation is copied into the stack object only after
+payment succeeds. An empty prepared allocation is distinct from an allocation
+that has not been prepared; it does not cause a post-payment choice. Impossible
+divisions leave the hand, mana, life, stack, and event trace unchanged. Failed
+payment also leaves no stack allocation. `CastSpellByName`, `CastSpellByID`,
+and the ordinary grouped-target entry path use this contract.
+
+Alternate-zone and prepared/Paradigm copy casts retain their existing allocation
+path. Their admission and prepayment choices, typed group allocations, and
+simultaneous execution of legacy divided damage remain prerequisites for a
+complete typed divided-damage adapter.
 
 Positive damage events keep the final damage action's source snapshot through event dispatch, including a simultaneous damage batch. `ReceivesDamage(This, amount).WithSource(source)` captures that snapshot when the trigger is detected. The pending trigger can use its source after a permanent leaves and returns or a spell leaves the stack. The snapshot includes the source controller and characteristics used by later damage; it does not find a new object with the same card ID. Prevention and zero damage send no damage event (CR 400.7, 603.2g, 608.2h).
 
