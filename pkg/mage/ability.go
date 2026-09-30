@@ -148,7 +148,13 @@ func (pa *ProtectionAbility) BlocksInGame(card Card, g *Game) bool {
 	if len(pa.FromColors) == 0 || g == nil {
 		return pa.Blocks(card)
 	}
-	for _, sourceColor := range g.EffectiveColors(card.ID()) {
+	var colors []Color
+	if source, ok := card.(targetSourceLKI); ok {
+		colors = source.colors
+	} else {
+		colors = g.EffectiveColors(card.ID())
+	}
+	for _, sourceColor := range colors {
 		if slices.Contains(pa.FromColors, sourceColor) {
 			return true
 		}

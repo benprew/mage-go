@@ -1,6 +1,66 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Unrestricted Mixed Damage Recipients
+## Current Slice: Ability Source LKI in Target Legality
+
+Delivery step 3 T's next equal-division audit exposed a shared prerequisite:
+resolution and copied-ability target choices could use a returned source's
+colors instead of the departed source incarnation. The meaningful regression
+first failed with `returned=true`: damage was prevented, but the later life-gain
+instruction still ran because the target was incorrectly considered legal.
+A second regression first failed for a phased source with a changed color.
+This run completes that prerequisite only. No equal-division adapter was added.
+
+The private `resolutionTargetSource` view uses the captured source incarnation
+and the existing durable incarnation LKI store. Color protection reads its saved
+colors; type protection reads its saved card characteristics. A returned card
+cannot supply the view for an earlier visit. A phased source retains its own
+characteristics and identity. Resolution and copied-ability retargeting share
+the view. There is no new executor, storage map, binding, role, AI policy, or
+public export. Existing `DealDamageFrom`, `DealDamageEach`, target, activation,
+and legacy signatures remain unchanged. Registration and sealed-role checks
+continue through their existing services.
+
+`TestTargetLegality*` covers source departure and return, color changes before
+departure, live source colors, ordinary cleanup, color and artifact protection,
+all-illegal body suppression, independent mixed recipients, phasing, copied
+abilities, illegal new target rejection, clone isolation, absent and unrelated
+sources, and spell-source compatibility. A public DSL test compiles the reference
+example; a synthetic gametest integration verifies that an illegal recipient
+stops both damage and the following life gain. Existing damage and ability-copy
+regressions cover the reused damage, replacement, target-incarnation, and frame
+services. The change adds no payment or batch mutation; transaction rollback and
+replacement ordering remain owned by the existing services.
+
+Complete Fireball text in `data/4ED.json` was checked against the Limited
+inventory and JSON requirement. Its division uses only legal targets at
+resolution, as confirmed by the Wizards Iconic Masters release notes:
+https://magic.wizards.com/en/news/feature/iconic-masters-release-notes-2017-09-11.
+The previously suggested announcement-count denominator must not be used for
+that division. Equal rounded-down division remains a proposed adapter; per-target
+payment is a separate prerequisite. Prodigal Sorcerer and Orcish Mechanics text
+in `data/4ED.json` and `data/ATQ.json` was also checked for source-versus-ability
+damage requirements. No production card or gap record is changed or closed.
+A fresh search still finds the two `DealDividedDamage` callers in
+`cards/jumpstart/spells.go` and `cards/legends/spells.go`; legacy exports remain.
+All production wiring and full card audits remain separate work.
+
+Excluded: equal division, per-target payment, new damage outputs, general trigger
+announcement changes, and production card migration. Next dependency-ready work
+is the equal rounded-down division adapter over the legal mixed-recipient group.
+No second slice was started.
+
+Validation passes: focused regressions, existing damage and ability-copy
+contracts, the public reference declaration, and synthetic gametest integration
+with `-count=1`; `go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+Lint changed import order and removed redundant embedded-field selectors in the
+new integration test. The final diff was reviewed, and checks were rerun after
+those fixes. Historical absent-package and C-metadata failures did not recur.
+No validation blocker remains; unrelated untracked work is preserved.
+
+## Completed Slice: Unrestricted Mixed Damage Recipients
 
 Delivery step 3 T adds `TargetDamageRecipientsAnyNumber(name string)
 *DamageTargetsBinding`, exported from `DeclareAnyNumberDamageTargets`.

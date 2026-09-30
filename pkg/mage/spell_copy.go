@@ -111,7 +111,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 	if mayChooseNewTargets {
 		if cp.IsAbility {
 			declarations := slices.Compact(slices.Clone(cp.TargetSpecs))
-			cp.Targets = g.retargetCopyGroups(cp, cp.TargetSource, declarations)
+			cp.Targets = g.retargetCopyGroups(cp, g.resolutionTargetSource(cp), declarations)
 		} else if copiedCard != nil {
 			g.repromptTargetsForCopy(cp, copiedCard)
 		}

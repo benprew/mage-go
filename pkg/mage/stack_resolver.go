@@ -179,6 +179,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 	// in place (illegal ones nulled) so effects that read targets by index
 	// (e.g. Hungry Flames) stay aligned.
 	resolvedTargets := make([]uuid.UUID, len(obj.Targets))
+	sourceCard := g.resolutionTargetSource(obj)
 	hasRealTarget := false
 	anyLegal := false
 	for i, t := range obj.Targets {
@@ -187,10 +188,6 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 			var spec Target
 			if i < len(obj.TargetSpecs) {
 				spec = obj.TargetSpecs[i]
-			}
-			sourceCard := obj.Card
-			if obj.TargetSource != nil {
-				sourceCard = obj.TargetSource
 			}
 			incarnationLegal := true
 			if incarnation, ok := obj.targetIncarnations[t]; ok {

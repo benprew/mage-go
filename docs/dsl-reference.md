@@ -1330,6 +1330,18 @@ func sourceWasControlledBy(evt *core.GameEvent, player uuid.UUID) bool {
 This example uses `core` from `github.com/benprew/mage-go/pkg/mage/core` and `uuid` from `github.com/google/uuid`.
 
 * `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption) ResolvingEffect`: Deals one damage action from `This` to a player or battlefield permanent. Use it in `Spell`, `Activate`, or a triggered resolving body. The source keeps its resolving incarnation and last known characteristics after departure. A missing source or recipient has no effect. The current `DealDamage(ValueSource)` remains for unmigrated positional callers.
+
+Target legality also uses a departed ability source's incarnation LKI for protection. A returned source cannot replace the departed source's colors or types. Copied abilities use the same view when choosing new targets. If every announced target is illegal, the body does not resolve, including later life gain. The existing signatures remain unchanged; this compiling declaration uses the corrected shared contract:
+
+```go
+recipient := dsl.TargetDamageRecipient("recipient")
+card := dsl.NewCreature("Synthetic Departed Source", "{G}", 2, 2,
+    dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.SacrificeSourceCost()),
+        dsl.Sequence(dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2)),
+            dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipient))))
+_ = card
+```
+
 * `DamageSourceOf(PermanentRef) DamageSourceRef`: Uses a typed permanent reference as the source of `DealDamageFrom` or `DealDamageEach`. A declared target or `From` snapshot keeps its captured battlefield incarnation; if that permanent has left, the damage instruction uses its departure characteristics and controller. A phased-out or missing permanent without departure information cannot supply damage. The argument must be a `PermanentRef`; player and stack-object references are rejected by Go. This source can be used in a spell, activation, or trigger body.
 
 ```go
