@@ -883,6 +883,8 @@ func (c *eitherCost) resolveActionCost(ctx actionCostContext) Cost {
 			resolved.options[i] = nested.resolveActionCost(ctx)
 		case *eitherCost:
 			resolved.options[i] = nested.resolveActionCost(ctx)
+		case *optionalCost:
+			resolved.options[i] = nested.resolveActionCost(ctx)
 		}
 	}
 	return &resolved

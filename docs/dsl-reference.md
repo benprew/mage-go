@@ -3594,3 +3594,32 @@ card := dsl.NewArtifact("Synthetic alternative optional fixed", "", dsl.WithAbil
 ```
 
 This extends the earlier nested-optional exclusion only for a selected alternative branch with a direct uncaptured fixed-counter inner cost. X costs, captured inner costs, optional-around-alternative declarations, general payment-order selection, and mutations during commit remain separate contracts. No public signature changed.
+
+### Optional X-counter branches in alternative payments
+
+`EitherCost(options ...Cost) Cost` supports a selected branch containing
+`OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` with
+an uncaptured `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`
+inner cost. Nested `EitherCost` ancestors use the same contract. Activated
+`Costs` and spell additional costs fix announced X before optional affordability;
+direct engine total-payment preparation fixes current X. Acceptance and branch
+selection occur once. Accepted positive removal uses the existing source-incarnation
+lock and combined counter-total preflight before mana, life, or counters change.
+Accepted zero requires no source or counter action. Decline and unaffordability
+remove no counters. Departure and return invalidate positive payment; phasing
+back in preserves the source identity.
+
+The legacy engine `OptionalCost(inner Cost, prompt string) Cost` keeps its
+signature and uses the same path. Declaration templates, caller outcome maps,
+pending payments, and cloned games remain isolated. This does not add captured
+inner costs, optional-around-alternative wrappers, or a public resolution-time
+capture context. An optional result inside an alternative branch does not dominate
+a read outside that branch; registration rejects that read. This synthetic example
+compiles and validates without reading the branch-local result:
+
+```go
+card := dsl.NewArtifact("Synthetic alternative optional X", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.Mana("{X}"), dsl.EitherCost(dsl.OptionalCostInto(
+        dsl.RemoveXCountersFromSourceCost(core.Charge), "Pay counters?", dsl.BindNumber("paid")))),
+    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+```

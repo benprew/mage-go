@@ -1,5 +1,53 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Optional X-Counter Branch in an Alternative Payment
+
+Delivery step 3 P now recursively resolves optional uncaptured X-counter leaves
+inside `EitherCost(options ...Cost) Cost` before affordability. Fresh API, tests,
+caller, and tracker checks confirmed that damage identity, explicit singular
+damage, source attack/block, filtered death, and optional fixed alternatives
+already exist. The change reuses `optionalCost.resolveActionCost`, announcement
+locking, fixed-counter source-incarnation locks, combined-total preflight, and
+instance-local outcome frames. No public signature, sealed role, executor,
+target, replacement service, or AI metadata was added. All production callers
+remain unchanged.
+
+`TestEitherOptionalXCounterPayment*` first failed for repeated choices, stale
+source acceptance, partial combined removal, lost outcomes, and ambient X in
+place of announced X. Acceptance covers zero and positive X, decline,
+unaffordability, announced versus ambient X, source departure/return, absence,
+phasing, phase-out/in, combined shortage without resource spending or published
+outputs, two nested branch choices without repetition, unchanged templates and
+caller maps, interleaved transactions, and independent game clones.
+`TestEitherOptionalXCounterPublicDeclaration` compiles and validates the reference
+example, pays at activation, copies the stack object, and resolves independently
+in a clone. `TestEitherOptionalXCounterResultDoesNotDominate` retains registration
+rejection for a result read outside the alternative branch. These costs are
+nontargeted and require current identity for positive removal, not LKI.
+Replacement ordering and simultaneous actions are unchanged.
+
+Chamber Sentry's complete text in `data/JMP.json` was checked against the Jumpstart
+inventory and gap record. It requires announced X source-counter payment;
+optional alternative wrappers are synthetic. Its entry, damage, and graveyard
+wiring still require separate audits and migration. Fresh production searches
+found four `EitherCost` constructions, one `RemoveXCountersFromSourceCost`
+construction, one legacy `OptionalCost` construction, and no `OptionalCostInto`
+construction. No production card, inventory, or JSON gap record changed or closed.
+Unrelated untracked work is preserved.
+
+Excluded: captured inner costs, optional-around-alternative wrappers, public
+result reads outside an alternative branch, general payment-order selection,
+mutations during commit, and production wiring. Next dependency-ready work is a
+separate T divided-announcement prerequisite or P captured-wrapper audit.
+No second slice was started.
+
+Validation passes: focused contracts with `-count=1`, engine short tests with
+`-count=1`, DSL registration and closed-role checks with `-count=1`, repository
+short tests with `-count=1`, `go build ./...`, `go vet ./...`, full `make test`,
+`make lint` with zero issues, and `git diff --check`. The post-lint diff was
+reviewed; no automatic code changes or validation blockers remain. Historical
+workspace failures did not recur.
+
 ## Current Slice: Optional Fixed-Counter Branch in an Alternative Payment
 
 Delivery step 3 P now routes a selected `EitherCost(options ...Cost) Cost` branch containing an optional direct uncaptured `RemoveCountersCost(CounterType, int) Cost` through existing optional preparation, source-incarnation locking, and combined-total preflight. Nested alternative ancestors use the same path. `OptionalCost` and `OptionalCostInto` keep their signatures. This is an engine contract correction; announcement already flattens these choices. No public API, role, executor, declaration state, target, replacement service, or AI metadata was added. Fresh code and tracker checks confirmed that the preferred damage identity, explicit singular damage, source attack/block, filtered death, and nested fixed/X alternative slices already exist.

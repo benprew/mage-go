@@ -731,3 +731,20 @@ A selected nested `EitherCost` branch enters the same preparation path as a dire
 ### Nested uncaptured X-counter alternative payment
 
 Recursive `EitherCost` preparation copies each option slice and fixes uncaptured X leaves before affordability (CR 601.2b, 602.2b). Action preparation uses announced X; direct total-payment preparation uses current X. Selected leaves reuse the fixed-counter incarnation lock and combined-total preflight. Commit does not repeat branch selection or read ambient X. Positive removal rejects absent, returned, phased, and short sources before resource payment. Zero preserves the uncaptured X no-action contract. Declaration templates, pending transactions, and cloned games remain isolated. This supersedes only the nested-X exclusion above; nested optional, captured, general payment-order, and mutations-during-commit contracts remain separate work.
+
+### Optional X-counter alternative branches
+
+Recursive `EitherCost` preparation copies optional declarations and fixes an
+uncaptured `RemoveXCountersFromSourceCost` inner cost before optional affordability
+(CR 107.3a, 601.2b, 602.2b). Announcement uses announced X; direct total-payment
+preparation uses current X. A selected optional branch then uses the existing
+fixed-counter preparation path: acceptance is saved once, positive removal locks
+the source incarnation, and combined counter totals are checked before live
+resource payment. Stale identity, absence, phasing, or shortage fails without
+spending mana, life, or counters or publishing captured outcomes (CR 118.3,
+400.7, 601.2h, 702.26). Zero retains the uncaptured X no-action contract and
+requires no source. Phase-out followed by phase-in retains identity. Declaration
+templates, outcome maps, pending transactions, and game clones remain separate.
+This extends the optional-X exclusion in the earlier alternative-branch contract;
+captured inner costs, optional-around-alternative wrappers, general payment-order
+selection, and mutations during commit remain separate work.
