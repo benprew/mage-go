@@ -1,6 +1,69 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Colored Mana for Each Activation Target
+## Current Slice: Selected-Mode Spell Target Surcharge
+
+Delivery step 3 T/P extends the existing beyond-first target surcharge to
+single-choice modal spells. A fresh API, caller, and tracker audit confirms
+D identity and damage, source attack/block, filtered death, target groups,
+division, and single-body target costs already exist. No functions were recreated
+and no production card was changed.
+
+Implemented APIs: `SpellModesWithOptions([]ModalSpellOption,
+...ModeDefinition) *ModalSpellAbility` and the sealed `ModalSpellOption` role.
+`AdditionalManaPerTargetBeyondFirst(int)` now returns `TargetSurchargeOption`,
+which embeds both `SpellOption` and `ModalSpellOption`. Existing callers and
+assignments to `SpellOption` remain compatible. This avoids a duplicate modal
+surcharge constructor. `SpellModes` retains its signature. Nil modal options
+and nonpositive amounts fail registration; category errors fail compilation.
+
+The constructor copies its option list. Hand and alternate-zone casting collect
+the embedded modal spell action's costs and use the existing contextual-cost
+and spell-payment services. Only selected-mode targets count. Costs join printed
+or alternative mana and X before increases and reductions, then lock before
+payment. Copies pay nothing; later target loss does not refund payment. No new
+frame, binding, damage executor, replacement service, or AI policy is needed.
+Excluded: mode-specific costs, multiple/repeated chosen modes, modal activation
+costs, selected-mode target groups, and all production card migration.
+
+The initial `TestModalTargetSurcharge*` run failed because the typed modal option
+and constructor were absent. Acceptance covers both selected modes, zero through
+three targets, X, alternate-zone casting, combined cost modifiers, unpaid
+mana/life, illegal/phased/duplicate targets, rollback with no live events, invalid
+and nil options, inspection, additive options, immutable option-list capture,
+two pending casts sharing a declaration, copied modes, target departure/return
+and phasing, and clone isolation. Compile-failure fixtures reject activation
+and resolving options. The synthetic gametest compiles the reference example
+and checks payment, damage, and spell cleanup. Existing surcharge, selected-mode
+allocation, and equal-damage tests check reused contracts.
+
+Fireball's complete `data/4ED.json` text still matches the Limited inventory and
+JSON requirement. Its surcharge and equal division are available, but its
+single-body production declaration remains unmigrated. This modal extension
+closes no additional whole-card requirement. A fresh caller search finds no
+production `AdditionalManaPerTargetBeyondFirst` or `SpellModesWithOptions`
+callers, and one legacy `ManaCostPerTarget` caller in `cards/astral/creatures.go`.
+That Goblin Polka Band caller and all legacy exports remain. No untracked
+inventory or gap record was changed.
+
+Next dependency-ready work is a narrow audit of announcement-time random target
+declarations for Goblin Polka Band; resolution-time random choices cannot supply
+that contract. Modal activation costs and mode-specific spell costs remain
+separate slices. No second slice is started.
+
+Validation passes: focused `TestModalTargetSurcharge*`, `TestTargetSurcharge*`,
+`TestAllocatedDamageSelectedMode`, and `TestEvenDamage*` with `-count=1`;
+public synthetic integration with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test` with zero failures;
+`make lint` with zero issues; and `git diff --check`. The standalone reference
+example builds. Post-lint review confirms automatic edits only formatted imports
+in this slice's new test files. Historical missing-package and C-metadata failures
+did not recur. No validation blocker remains. No production card changed;
+unrelated tracked and untracked work is preserved.
+
+## Completed Slice: Colored Mana for Each Activation Target
 
 Delivery step 3 T/P adds `ActivationManaPerTarget(color core.Color, amount int)
 ActivationOption`. A fresh audit confirms the damage identity prerequisites,
@@ -49,9 +112,10 @@ part of the older Astral inventory is stale. This slice does not wire those
 available functions into the card. No inventory or JSON gap is closed or
 modified. All legacy exports remain available.
 
-Next dependency-ready work is a narrow audit of modal spell per-target costs
-and their selected-mode count contract. Random target declarations and dependent
-tap-result card wiring remain separate work. No second slice is started.
+The next dependency-ready work identified here, modal spell per-target costs
+and their selected-mode count contract, is implemented in the slice above.
+Random target declarations and dependent tap-result card wiring remain separate
+work. This earlier activation slice did not start a second slice.
 
 Validation passes: focused `TestActivationTargetMana*`, legacy
 `TestManaCostPerTarget*`, and `TestActivationTargetGroups*`, including synthetic

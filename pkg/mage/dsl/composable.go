@@ -489,6 +489,8 @@ type (
 	PermanentTargetsBinding = mage.PermanentTargetsBinding
 	ModeDefinition          = mage.ModeDefinition
 	ModeOption              = mage.ModeOption
+	ModalSpellOption        = mage.ModalSpellOption
+	TargetSurchargeOption   = mage.TargetSurchargeOption
 )
 
 var (
@@ -497,6 +499,7 @@ var (
 	TargetPermanentsUpToX    = mage.DeclareUpToXPermanentTargets
 	ModeOf                   = mage.ModeOf
 	SpellModes               = mage.SpellModes
+	SpellModesWithOptions    = mage.SpellModesWithOptions
 	ActivateModes            = mage.ActivateModes
 )
 

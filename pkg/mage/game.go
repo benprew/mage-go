@@ -2643,8 +2643,13 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 
 	var actionCosts []Cost
 	for _, a := range card.Abilities() {
-		if sa, ok := a.(*SpellAbility); ok && sa.Kind() == ActionSpell {
-			actionCosts = append(actionCosts, sa.Costs()...)
+		switch spell := a.(type) {
+		case *SpellAbility:
+			if spell.Kind() == ActionSpell {
+				actionCosts = append(actionCosts, spell.Costs()...)
+			}
+		case *ModalSpellAbility:
+			actionCosts = append(actionCosts, spell.Costs()...)
 		}
 	}
 	actionCosts = g.prepareActionCosts(actionCosts, targets, xValue)

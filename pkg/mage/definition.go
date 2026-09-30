@@ -123,6 +123,9 @@ func describeDefinition(v any) definitionNode {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("rules[%d]", i), effect})
 		}
 	case *ModalSpellAbility:
+		for i, option := range e.dslOptions {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("options[%d]", i), option})
+		}
 		n.children = append(n.children, modeEdges(e.modes)...)
 	case *ActionDefinition:
 		if e.groupedTargets && len(e.targets) == 0 {

@@ -47,7 +47,8 @@ type EffectModeChooser interface {
 // and resolves only that mode's effects.
 type ModalSpellAbility struct {
 	SpellAbility
-	modes []Mode
+	modes      []Mode
+	dslOptions []ModalSpellOption
 }
 
 // Modes returns the configured modes.

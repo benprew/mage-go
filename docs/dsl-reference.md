@@ -4077,7 +4077,7 @@ payment, and new cost-reduction declarations remain separate work.
 
 ### Additional mana for targets beyond the first
 
-`AdditionalManaPerTargetBeyondFirst(amount int) SpellOption` adds generic mana
+`AdditionalManaPerTargetBeyondFirst(amount int) TargetSurchargeOption` adds generic mana
 for each announced target occurrence after the first. The amount must be
 positive; registration rejects zero and negative amounts. Use it in `Spell`,
 including spells with `WithTargetGroups`. It counts all groups together, including
@@ -4091,7 +4091,8 @@ the paid cost. Spell copies pay no additional cost. Declaration values are
 immutable and contain no target choices or payment results.
 
 This spell-only option cannot be used in `Costs`, `Activate`, a resolving body,
-or `SpellModes`. Activation and modal adapters remain separate work. The legacy
+or the mode list passed to `SpellModes`. Use `SpellModesWithOptions` below for
+a modal spell. Activation adapters remain separate work. The legacy
 `ManaCostPerTarget(string) Cost` still charges for every announced target and
 remains available for existing callers.
 
@@ -4162,3 +4163,47 @@ func Card() dsl.Card {
 This supplies Goblin Polka Band's per-target colored payment requirement.
 Its random target announcement and dependent tap/untap behavior still need
 separate typed wiring; the example chooses targets normally.
+
+### Modal spell target surcharge
+
+`SpellModesWithOptions(options []ModalSpellOption, modes ...ModeDefinition)
+*ModalSpellAbility` declares a spell that chooses exactly one mode, with
+spell-wide announcement options. Existing `SpellModes` callers remain valid.
+`AdditionalManaPerTargetBeyondFirst(amount int) TargetSurchargeOption` implements
+both sealed `SpellOption` and `ModalSpellOption`; existing `Spell` calls and
+assignments to `SpellOption` remain valid. This slice supplies only that modal
+option. Resolving effects and activation options cannot occupy its option list.
+Registration rejects nil options and nonpositive surcharge amounts.
+
+The surcharge counts only the selected mode's announced targets. A targetless
+mode adds no mana, and inactive modes add no targets or costs. Multiple options
+add their costs. Hand casting and the shared alternate-zone cast path combine
+these costs with printed or alternative mana and X before cost increases and
+reductions. The total locks before payment. Failed casting publishes no payment
+or targeting events and spends no resources. Target departure, return, or phasing
+after casting does not refund mana. Copies retain the mode and targets and pay
+nothing. Options contain no instance state; the constructor copies the option
+list. Existing damage, replacement, target, copy, and AI services remain in use.
+
+This complete synthetic declaration compiles:
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func Card() dsl.Card {
+    recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
+    return dsl.NewInstant("Synthetic Modal Surcharge", "{X}{R}",
+        dsl.WithAbility(dsl.SpellModesWithOptions(
+            []dsl.ModalSpellOption{dsl.AdditionalManaPerTargetBeyondFirst(1)},
+            dsl.ModeOf("Damage", dsl.DealDamageEvenly(dsl.This, recipients,
+                dsl.ValueAtResolution(dsl.XValue())), dsl.WithTargets(recipients)),
+            dsl.ModeOf("Life", dsl.GainLife(dsl.You, dsl.Fixed(3))))))
+}
+```
+
+For the damage mode with two targets and X=4, pay {5}{R}. For the life mode
+with X=0, pay {R}. Production cards remain unmigrated. Mode-specific costs,
+multiple or repeated selected modes, modal activation costs, and grouped targets
+within a selected spell mode remain separate work.

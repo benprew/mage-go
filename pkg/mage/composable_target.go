@@ -1910,6 +1910,24 @@ func modeValues(modes []ModeDefinition) []Mode {
 // SpellModes creates a spell that chooses one mode through the existing casting path.
 func SpellModes(modes ...ModeDefinition) *ModalSpellAbility { return NewModalSpell(modeValues(modes)) }
 
+// ModalSpellOption keeps announcement rules outside mode resolution bodies.
+type ModalSpellOption interface {
+	modalSpellOption()
+	applyModalSpell(*ModalSpellAbility)
+}
+
+// SpellModesWithOptions keeps spell costs separate from the selected mode.
+func SpellModesWithOptions(options []ModalSpellOption, modes ...ModeDefinition) *ModalSpellAbility {
+	m := SpellModes(modes...)
+	m.dslOptions = append([]ModalSpellOption(nil), options...)
+	for _, option := range m.dslOptions {
+		if !nilDefinition(option) {
+			option.applyModalSpell(m)
+		}
+	}
+	return m
+}
+
 // ModalActivationOption is a mode or a restriction for a modal activation.
 type ModalActivationOption interface {
 	modalActivationOption()

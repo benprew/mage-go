@@ -216,7 +216,12 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	}
 	var actionCosts []Cost
 	for _, ability := range card.Abilities() {
-		if spell, ok := ability.(*SpellAbility); ok && spell.Kind() == ActionSpell {
+		switch spell := ability.(type) {
+		case *SpellAbility:
+			if spell.Kind() == ActionSpell {
+				actionCosts = append(actionCosts, spell.Costs()...)
+			}
+		case *ModalSpellAbility:
 			actionCosts = append(actionCosts, spell.Costs()...)
 		}
 	}

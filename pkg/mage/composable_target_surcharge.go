@@ -8,14 +8,24 @@ import (
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
 
+// TargetSurchargeOption permits the same cost rule in both spell constructors.
+type TargetSurchargeOption interface {
+	SpellOption
+	ModalSpellOption
+}
+
 type targetSurcharge struct{ amount int }
 
 // AdditionalManaPerTargetBeyondFirst uses the announced target count because
 // target legality can change after the total cost is locked.
-func AdditionalManaPerTargetBeyondFirst(amount int) SpellOption {
+func AdditionalManaPerTargetBeyondFirst(amount int) TargetSurchargeOption {
 	return targetSurcharge{amount: amount}
 }
 
+func (targetSurcharge) modalSpellOption() {}
+func (o targetSurcharge) applyModalSpell(m *ModalSpellAbility) {
+	o.applySpell(&m.SpellAbility)
+}
 func (targetSurcharge) spellOption()                              {}
 func (o targetSurcharge) applySpell(a *ActionDefinition)          { a.costs = append(a.costs, o) }
 func (o targetSurcharge) CanPay(uuid.UUID, uuid.UUID, *Game) bool { return true }

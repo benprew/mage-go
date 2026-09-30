@@ -927,3 +927,23 @@ reused declarations, pending instances, copies, clones, departure, return, phasi
 and registration. The synthetic gametest uses the public DSL declaration and
 checks damage, payment, and spell cleanup. No damage or replacement executor was
 added or changed.
+
+### Selected-mode target surcharge (CR 601.2b–h, 700.2c, 700.2g)
+
+`SpellModesWithOptions` reuses the selected-mode announcement service before
+cost calculation. Only that mode's targets enter the contextual surcharge.
+Both ordinary and alternate-zone spell casting collect costs from the embedded
+spell action of `ModalSpellAbility`. The shared spell transaction then locks
+and pays the combined total. Inactive modes and a targetless selected mode add
+no surcharge. The declaration contains no per-cast state; copying its option
+list prevents changes to the input slice from changing inspection or payment.
+Copies keep their selected mode without payment, and later target loss does
+not recalculate the cost.
+
+`TestModalTargetSurcharge*` covers targetless and targeted modes, zero through
+three recipients, X, alternate-zone casting, combined cost modifiers, unpaid
+mana/life, illegal/phased/duplicate targets, rollback without live events, nil
+and invalid declarations, option-list isolation, additive options, two pending
+casts, copied modes, target departure/return/phasing, and clone isolation.
+The public DSL synthetic integration checks payment, damage, and spell cleanup.
+No new damage executor or replacement-order contract is introduced.
