@@ -1,6 +1,66 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Ability Source LKI in Target Legality
+## Current Slice: Spell Source Colors in Target Legality
+
+Delivery step 3 T's equal-division acceptance test exposed another shared
+prerequisite: a normal stack pop made a printed red spell absent from the color
+lookup during target legality. Protection prevented damage, but the incorrectly
+legal target allowed the following life gain. `TestTargetLegalityPoppedSpellColors`
+first failed for red protection, printed colors, and a singular target, with
+life 21 instead of 20. The equal-division draft was removed; this run completes
+only the spell-source prerequisite. No production card changed.
+
+`resolutionTargetSource` now provides a private spell color view from the card
+and its stack color override. Explicit colorless overrides remain colorless.
+The same view is passed to new spell-copy retargeting before stack placement;
+`TestTargetLegalityNewSpellCopyColors` first failed because a copy accepted a
+new target with protection from its printed red color. Copies use their own
+copiable characteristics, without the original's ordinary color changes.
+Existing ability incarnation/LKI behavior, public signatures, sealed roles,
+registration, inspection, scopes, result frames, damage AI metadata, and legacy
+callers remain on their existing services. No new adapter, executor, mutable
+binding, payment path, or export was added.
+
+Acceptance covers printed red and changed blue spells, explicit colorless
+spells, normal stack and top-of-stack resolution, all-illegal body suppression,
+independent mixed recipients, clone isolation, copied spell and mode retargeting,
+illegal-new-target rejection, copiable colors, immutable color views, and
+absent/unrelated source guards. Existing target-source tests cover departed,
+returned, and phased ability sources. The public declaration test compiles the
+reference example. A synthetic gametest integration checks body suppression and
+normal graveyard cleanup. Replacement ordering, simultaneous damage, payment
+rollback, and scope validation continue through unchanged shared services;
+this slice makes no payment, replacement, or batch mutation.
+
+Complete Fireball and Pyrotechnics text in `data/4ED.json`, Prodigal Sorcerer in
+that data, and Orcish Mechanics in `data/ATQ.json` were checked against the
+Limited and Antiquities inventories and gap records. Fireball division must use
+legal targets at resolution, per CR 608.2b and the Wizards Iconic Masters release notes:
+https://magic.wizards.com/en/news/feature/iconic-masters-release-notes-2017-09-11.
+Equal division and additional per-target payment remain separate requirements.
+No card or JSON gap record is completed by this prerequisite. A fresh caller
+search still finds `DealDividedDamage` in `cards/jumpstart/spells.go` and
+`cards/legends/spells.go`; all legacy exports remain. Remaining production card
+wiring and full Oracle audits require separate migrations.
+
+Excluded: equal division, per-target payment, damage result extensions, general
+trigger announcement, and production card migration. Next dependency-ready work
+is the equal rounded-down division adapter over legal mixed recipients, after a
+fresh contract audit. No second slice was implemented.
+
+Validation passes: focused target-legality, shared damage, public declaration,
+and synthetic integration tests with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+Lint adjusted import formatting in the new tests. The post-lint diff was
+reviewed; focused shared damage, target-legality, registration/closed-role,
+public declaration, and synthetic integration checks passed again with
+`-count=1`. Historical absent-package and C-metadata failures did not recur.
+No validation blocker remains. Unrelated untracked work is preserved.
+
+## Completed Slice: Ability Source LKI in Target Legality
 
 Delivery step 3 T's next equal-division audit exposed a shared prerequisite:
 resolution and copied-ability target choices could use a returned source's

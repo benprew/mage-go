@@ -1055,6 +1055,36 @@ _ = spell
 
 ### Damage Actions
 
+Spell target legality uses the resolving spell's printed colors or its current
+stack color override, including an explicit colorless override. This source
+view remains available after the spell is popped from the stack. Color
+protection can make a target illegal before any resolving instruction runs:
+if all targets are illegal, the entire body is skipped; mixed declarations
+retain their independent legal recipients. New spell copies check their own
+copiable colors before they enter the stack when choosing new targets. Ordinary
+color changes on the original spell are not copied (CR 608.2b, 702.16b, 707.2,
+707.10c).
+
+No constructor changes are required. The existing signatures are
+`TargetDamageRecipient(name string) *DamageTargetBinding` and
+`DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue,
+...DamageResultOption) ResolvingEffect`. Target-source checks also apply to
+other targeted spell instructions and spell modes, through the shared target
+service. The permanent-ability incarnation/LKI contract remains in effect.
+This synthetic declaration compiles and is covered by a gametest integration:
+
+```go
+recipient := dsl.TargetDamageRecipient("recipient")
+card := dsl.NewInstant("Synthetic Spell Source", "{R}",
+    dsl.Spell(dsl.Sequence(
+        dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2)),
+        dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipient)))
+```
+
+If the recipient gains protection from red before resolution, neither damage
+nor life gain occurs. Equal rounded-down division and per-target casting costs
+remain proposed work; this contract does not implement either adapter.
+
 `DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect`
 exposes chosen damage allocation for a positive fixed total. Use it as the direct
 body of `Spell` or `Activate`, or inside nested `Sequence` bodies. It also

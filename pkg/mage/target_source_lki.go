@@ -17,6 +17,14 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 	if obj.TargetSource != nil {
 		card = obj.TargetSource
 	}
+	// A resolving spell or new copy can be absent from the stack lookup.
+	if !obj.IsAbility && obj.Card != nil && card != nil && card.ID() == obj.SourceID {
+		colors := cardColors(card)
+		if obj.ColorOverride != nil {
+			colors = append([]core.Color(nil), (*obj.ColorOverride)...)
+		}
+		return targetSourceLKI{Card: card, colors: colors}
+	}
 	if card == nil || card.ID() != obj.SourceID || obj.sourceIncarnation == uuid.Nil {
 		return card
 	}

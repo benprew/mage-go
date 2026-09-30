@@ -131,7 +131,7 @@ func TestTargetLegalitySourceLKIUnrelatedAndAbsent(t *testing.T) {
 		t.Fatal("absent source was created")
 	}
 	spell := NewInstant("Spell", "{G}")
-	if g.resolutionTargetSource(&StackObject{SourceID: spell.ID(), Card: spell}) != spell {
+	if g.resolutionTargetSource(&StackObject{SourceID: spell.ID(), Card: spell}).ID() != spell.ID() {
 		t.Fatal("spell source changed")
 	}
 	source := g.PutOnBattlefield(card, a.PlayerID())

@@ -113,7 +113,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 			declarations := slices.Compact(slices.Clone(cp.TargetSpecs))
 			cp.Targets = g.retargetCopyGroups(cp, g.resolutionTargetSource(cp), declarations)
 		} else if copiedCard != nil {
-			g.repromptTargetsForCopy(cp, copiedCard)
+			g.repromptTargetsForCopy(cp, g.resolutionTargetSource(cp))
 		}
 		if cp.targetIncarnations == nil {
 			cp.targetIncarnations = make(map[uuid.UUID]uuid.UUID)
