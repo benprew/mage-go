@@ -725,3 +725,7 @@ This extends the optional announced-X contract above to direct total-payment pre
 ### Nested fixed-counter alternative payment
 
 A selected nested `EitherCost` branch enters the same preparation path as a direct branch. Its uncaptured fixed-counter leaf locks the source incarnation and joins combined counter preflight before live mana or life payment (CR 118.3, 400.7, 601.2h). Selection and leaf locks belong to the transaction; declaration options are unchanged. Phase-out followed by phase-in retains identity. Absence, return, phasing at commit, and individual or combined shortage fail without spending resources. This extends only the fixed-counter alternative contract; nested optional, captured, X, and general payment-order contracts remain separate work.
+
+### Nested uncaptured X-counter alternative payment
+
+Recursive `EitherCost` preparation copies each option slice and fixes uncaptured X leaves before affordability (CR 601.2b, 602.2b). Action preparation uses announced X; direct total-payment preparation uses current X. Selected leaves reuse the fixed-counter incarnation lock and combined-total preflight. Commit does not repeat branch selection or read ambient X. Positive removal rejects absent, returned, phased, and short sources before resource payment. Zero preserves the uncaptured X no-action contract. Declaration templates, pending transactions, and cloned games remain isolated. This supersedes only the nested-X exclusion above; nested optional, captured, general payment-order, and mutations-during-commit contracts remain separate work.

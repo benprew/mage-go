@@ -1,5 +1,17 @@
 # Composable DSL Outstanding Implementation Work
 
+## Current Slice: Nested Uncaptured X-Counter Alternative Payment
+
+Delivery step 3 P now recursively fixes uncaptured `RemoveXCountersFromSourceCost(CounterType) Cost` leaves inside nested `EitherCost(options ...Cost) Cost` declarations before branch affordability. Fresh API, caller, and tracker checks confirmed the preferred damage identity, singular damage, attack/block, filtered death, and nested fixed-counter prerequisites already exist. No new public API, role, frame, executor, target, replacement service, or AI metadata is introduced. Selected leaves reuse existing source-incarnation locks and combined-total preflight; all production callers remain unchanged.
+
+`TestNestedEitherXCounterPaymentAnnouncement` first failed because an announced zero was rejected with ambient X=5. Acceptance tests cover announced versus ambient X, insufficient affordability, zero, positive removal, departure/return/phasing, phase-out/in, combined shortage without mana/life/counter spending or outputs, two branch choices without repetition, shared immutable declarations, interleaved transactions, and independent cloned games. `TestNestedEitherXCounterPaymentPublicDeclaration` compiles and validates the reference example and copies the paid activation and resolves both instances independently in a clone. Existing registration, scope, dominance, and sealed-role checks remain applicable. These nontargeted costs require current identity for positive removal, not LKI; replacement and simultaneous-action contracts are unchanged.
+
+Chamber Sentry's complete Oracle text in `data/JMP.json` was checked against the Jumpstart inventory and gap record. Its announced X payment supplies the amount requirement; nested alternatives are synthetic. Four production `EitherCost` calls and one `RemoveXCountersFromSourceCost` call remain, with no nested X alternative. No production card or gap record is completed. Card entry, damage, and graveyard wiring still require separate audits and migration. No inventory or JSON record changed. Unrelated untracked work is preserved.
+
+Excluded: nested optional wrappers, captured leaves, general payment-order selection, mutations during commit, and production wiring. Next dependency-ready work is a separate T divided-announcement prerequisite or P nested optional-wrapper audit. No second slice was started.
+
+Validation passes: focused contracts with `-count=1`, engine short tests with `-count=1`, DSL registration and closed-role checks with `-count=1`, repository short tests with `-count=1`, build, vet, full `make test`, `make lint` with zero issues, and `git diff --check`. Required checks passed again after adding stack-copy integration. The post-lint diff was reviewed; no automatic changes or validation blockers remain.
+
 ## Current Slice: Nested Fixed-Counter Alternative Payment
 
 Fresh API, tests, and tracker checks confirmed the preferred damage identity, singular damage, attack/block, and filtered death slices already exist. Delivery step 3 P has a remaining nested-wrapper prerequisite. Selected nested `EitherCost(options ...Cost) Cost` branches now enter the existing leaf preparation path. Uncaptured `RemoveCountersCost(CounterType, int) Cost` leaves use source-incarnation locking and combined-total commit preflight. No new public API, role, binding, executor, target, replacement, or AI metadata is introduced. Production cards and all legacy callers remain unchanged.

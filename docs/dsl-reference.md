@@ -2825,7 +2825,7 @@ spell := dsl.NewInstant("Synthetic reveal", "",
     )
     _ = ability
     ```
-  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. A direct `EitherCost(options ...Cost) Cost` option also fixes announced X before affordability checks and uses the same incarnation lock and combined-total preflight. Direct optional X wrappers are specified above; nested alternative wrappers remain separate work. This declaration compiles:
+  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. A direct `EitherCost(options ...Cost) Cost` option also fixes announced X before affordability checks and uses the same incarnation lock and combined-total preflight. Direct optional X wrappers are specified above; nested alternatives are specified below. This declaration compiles:
 
     ```go
     card := dsl.NewArtifact("Synthetic X counter payment", "", dsl.WithAbility(dsl.Activate(
@@ -3563,3 +3563,16 @@ card := dsl.NewArtifact("Synthetic nested counter payment", "", dsl.WithAbility(
     dsl.Costs(dsl.EitherCost(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 2)))),
     dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 ```
+
+### Nested uncaptured X-counter alternatives
+
+`EitherCost(options ...Cost) Cost` supports nested alternatives with uncaptured `RemoveXCountersFromSourceCost(counter CounterType) Cost` leaves in activated costs and spell additional costs. Recursive preparation fixes announced X before branch affordability checks. Direct engine total-payment preparation fixes current X. Selection occurs once; commit uses the existing source-incarnation lock and combined counter preflight. Positive removal requires the original present, unphased source. Zero requires no counter action, including after source departure. Captured leaves and nested optional wrappers remain separate contracts.
+
+```go
+card := dsl.NewArtifact("Synthetic nested X counter payment", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.EitherCost(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge)))),
+    dsl.GainLife(dsl.You, dsl.Fixed(1)),
+)))
+```
+
+This extends the earlier nested fixed-counter section's X exclusion. Existing signatures and production callers remain available.

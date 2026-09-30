@@ -878,8 +878,11 @@ func (c *eitherCost) resolveActionCost(ctx actionCostContext) Cost {
 	resolved := *c
 	resolved.options = append([]Cost(nil), c.options...)
 	for i, option := range resolved.options {
-		if counter, ok := option.(*removeXCountersCost); ok {
-			resolved.options[i] = counter.resolveActionCost(ctx)
+		switch nested := option.(type) {
+		case *removeXCountersCost:
+			resolved.options[i] = nested.resolveActionCost(ctx)
+		case *eitherCost:
+			resolved.options[i] = nested.resolveActionCost(ctx)
 		}
 	}
 	return &resolved
