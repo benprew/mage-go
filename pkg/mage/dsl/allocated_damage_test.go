@@ -30,3 +30,16 @@ func TestAllocatedDamageSequencePublicDeclaration(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAllocatedDamageModePublicDeclaration(t *testing.T) {
+	recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
+	card := dsl.NewSorcery("Modal allocated damage", "{2}{R}",
+		dsl.WithAbility(dsl.SpellModes(
+			dsl.ModeOf("Damage", dsl.Sequence(
+				dsl.DealAllocatedDamage(dsl.This, recipients, 3),
+				dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)),
+			dsl.ModeOf("Life", dsl.GainLife(dsl.You, dsl.Fixed(3))))))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}

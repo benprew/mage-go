@@ -3,7 +3,7 @@ package mage
 import "reflect"
 
 // DealAllocatedDamage requires shares to be chosen before payment.
-// Use one target group in a nonmodal spell or activation.
+// Each spell, activation, or selected mode needs its own target group.
 func DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect {
 	return &allocatedDamageEffect{source: source, recipients: recipients, total: total}
 }
@@ -90,4 +90,12 @@ func singleAllocatedDamage(effect Effect) *allocatedDamageEffect {
 		return nil
 	}
 	return allocation
+}
+
+func allocatedBodyEdge(effects []Effect, targets []Target, child any) bool {
+	if len(effects) != 1 || len(targets) != 1 {
+		return false
+	}
+	allocation := singleAllocatedDamage(effects[0])
+	return allocation != nil && allocation.recipients != nil && child == effects[0] && targets[0] == allocation.recipients.targetDeclaration
 }

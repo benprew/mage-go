@@ -1047,11 +1047,15 @@ _ = spell
 
 `DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect`
 exposes chosen damage allocation for a positive fixed total. Use it as the direct
-body of a nonmodal `Spell` or `Activate`, or inside nested `Sequence` bodies,
-with exactly one allocation instruction and that declaration as the only target
-group. It accepts `WithTargets`, or a single group declared with `WithTargetGroups`
+body of `Spell` or `Activate`, or inside nested `Sequence` bodies. It also
+supports a single selected mode of `SpellModes` or `ActivateModes`. Each body or
+mode must have exactly one allocation instruction and that declaration as its
+only target group. Different modes may declare different allocations and totals;
+only the chosen mode announces shares and resolves. Use `WithTargets` within a
+mode. Nonmodal bodies also accept a single group declared with `WithTargetGroups`
 or `WithActivationTargetGroups`. Registration rejects branches, loops, triggers,
-modes, multiple allocation instructions (including a legacy division sibling),
+multiple allocation instructions within one body or mode (including a legacy
+division sibling),
 extra groups, absent declarations, nonpositive totals, and a required minimum
 larger than the total. Go rejects player sources, arbitrary recipient sets, and resolution values in place of the integer total.
 
@@ -1062,6 +1066,23 @@ card := dsl.NewSorcery("Allocated damage", "{2}{R}",
         dsl.DealAllocatedDamage(dsl.This, recipients, 3),
         dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
 ```
+
+The same declaration works within one selected mode:
+
+```go
+recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
+card := dsl.NewSorcery("Modal allocated damage", "{2}{R}",
+    dsl.WithAbility(dsl.SpellModes(
+        dsl.ModeOf("Damage", dsl.Sequence(
+            dsl.DealAllocatedDamage(dsl.This, recipients, 3),
+            dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)),
+        dsl.ModeOf("Life", dsl.GainLife(dsl.You, dsl.Fixed(3))))))
+```
+
+For an activation, put these `ModeOf` declarations in
+`ActivateModes(Costs(...), ...)`. Target bindings belong to their declaring mode.
+An inactive allocation mode has no target or division requirements. Copies keep
+the chosen mode and shares; retargeting does not select a new mode (CR 700.2).
 
 The controller chooses shares before payment. Each announced target receives at
 least one damage. The existing announcement service validates targets and
@@ -1077,8 +1098,9 @@ An optional group with no chosen targets needs no allocation prompt.
 The integer total makes the announcement timing explicit. Dynamic totals need a
 separate announcement-value contract; `ResolutionValue` would read at the wrong
 lifecycle. Instructions in a `Sequence` resolve in order; each allocated damage
-instruction remains one simultaneous batch. Multiple allocations, branches, loops,
-modal or triggered allocations, result bindings, and Fireball's equal division at
+instruction remains one simultaneous batch. Multiple allocations within one
+body or mode, branches, loops, multiple selected modes, triggered allocations,
+result bindings, and Fireball's equal division at
 resolution remain separate work. The legacy `DealDividedDamage(ValueSource)`
 signature and its callers remain available.
 

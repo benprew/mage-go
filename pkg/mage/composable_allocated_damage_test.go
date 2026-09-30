@@ -94,7 +94,7 @@ func TestAllocatedDamageDeclarations(t *testing.T) {
 		{Name: "branch", Card: NewInstant("Invalid", "", Spell(IfState(Controls(IsCreature), valid), WithTargets(recipients))), WantErr: true},
 		{Name: "nested extra group", Card: NewInstant("Invalid", "", Spell(Sequence(valid), WithTargets(recipients, extra))), WantErr: true},
 		{Name: "trigger", Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(Enters(This), valid, WithTargets(recipients)))), WantErr: true},
-		{Name: "modal", Card: NewInstant("Invalid", "", WithAbility(SpellModes(ModeOf("Allocate", valid, WithTargets(recipients)), ModeOf("Gain", GainLifeFor(You, Fixed(1)))))), WantErr: true},
+		{Name: "modal", Card: NewInstant("Invalid", "", WithAbility(SpellModes(ModeOf("Allocate", valid, WithTargets(recipients)), ModeOf("Gain", GainLifeFor(You, Fixed(1))))))},
 		{Name: "impossible minimum", Card: NewInstant("Invalid", "", Spell(DealAllocatedDamage(This, four, 3), WithTargets(four))), WantErr: true},
 		{Name: "zero", Card: NewInstant("Invalid", "", Spell(DealAllocatedDamage(This, recipients, 0), WithTargets(recipients))), WantErr: true},
 		{Name: "negative", Card: NewInstant("Invalid", "", Spell(DealAllocatedDamage(This, recipients, -1), WithTargets(recipients))), WantErr: true},

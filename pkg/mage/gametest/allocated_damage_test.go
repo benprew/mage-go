@@ -34,3 +34,31 @@ func TestAllocatedDamageIntegration(t *testing.T) {
 	tg.AssertGraveyardCount(PlayerA, spell, 1)
 	tg.AssertLife(PlayerA, 21)
 }
+
+func TestAllocatedDamageModeIntegration(t *testing.T) {
+	const spell = "Synthetic Modal Allocated Damage"
+	const first = "Synthetic Modal Allocation Recipient One"
+	const second = "Synthetic Modal Allocation Recipient Two"
+	if !mage.CardRegistered(spell) {
+		dsl.Register(spell, func() dsl.Card {
+			recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
+			return dsl.NewSorcery(spell, "", dsl.WithAbility(dsl.SpellModes(dsl.ModeOf("Damage", dsl.Sequence(dsl.DealAllocatedDamage(dsl.This, recipients, 3), dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)), dsl.ModeOf("Life", dsl.GainLife(dsl.You, dsl.Fixed(3))))))
+		})
+		dsl.Register(first, func() dsl.Card { return dsl.NewCreature(first, "", 2, 2) })
+		dsl.Register(second, func() dsl.Card { return dsl.NewCreature(second, "", 2, 2) })
+	}
+	tg := NewTestGame(t)
+	tg.AddCard(core.ZoneBattlefield, PlayerB, first)
+	tg.AddCard(core.ZoneBattlefield, PlayerB, second)
+	tg.AddCard(core.ZoneHand, PlayerA, spell)
+	tg.ChooseMode(PlayerA, 0)
+	tg.ChooseDamageDistribution(PlayerA, map[string]int{first: 1, second: 2})
+	tg.CastSpell(1, core.PrecombatMain, PlayerA, spell, first, second)
+	tg.StopAt(1, core.EndCombat)
+	tg.Execute()
+	tg.AssertPermanentCount(PlayerB, first, 1)
+	tg.AssertPermanentCount(PlayerB, second, 0)
+	tg.AssertGraveyardCount(PlayerB, second, 1)
+	tg.AssertGraveyardCount(PlayerA, spell, 1)
+	tg.AssertLife(PlayerA, 21)
+}

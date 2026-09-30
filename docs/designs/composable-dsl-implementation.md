@@ -1,6 +1,67 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Sequenced Fixed-Total Chosen Damage
+## Current Slice: Fixed-Total Chosen Damage in One Selected Mode
+
+Delivery step 3 T extends allocation admission to one selected mode in
+`SpellModes` and `ActivateModes`. Fresh searches confirmed the preferred damage
+identity, singular damage, source attack/block, and filtered death slices already
+exist. The preceding sequence slice identified selected-mode admission as next.
+No production card changed and no legacy author export was removed.
+
+The signature remains
+`DealAllocatedDamage(DamageSourceRef, *DamageTargetsBinding, int) ResolvingEffect`.
+Each mode may contain one allocation, directly or through nested `Sequence`
+bodies, and its sole target group must be that allocation's declaration. Different
+modes can use different bindings and totals. Registration admits the body through
+its spell or activation owner and preserves mode-local scope and dominance
+validation. Triggered modes, branches, extra groups, duplicate allocation
+instructions, missing declarations, invalid totals, and impossible minima remain
+rejected. Existing inspection and sealed-role compile-failure checks apply.
+
+The existing selected-mode announcement path already supplies exact target and
+effect lists before payment. No engine prerequisite, new frame, allocation map,
+transaction, or damage executor was needed. Inactive modes do not request shares.
+The stack and copies retain the chosen mode, target incarnations, and allocation.
+Resolution uses the existing simultaneous damage/replacement pipeline and source
+LKI. A mode's sequence retains instruction order.
+
+`TestAllocatedDamageSelectedMode` first failed at registration because allocations
+in modes were rejected. It now covers both spells and activations, two distinct
+allocation modes, an inactive damage mode, prepayment announcement, response-map
+isolation, copy/clone isolation, simultaneous callbacks, and sequence timing.
+Additional focused contracts cover optional empty groups, departure/return source
+LKI with lifelink/deathtouch, absent/returned/phased/protected/prevented recipients,
+replacement preparation, redirection, finite prevention, invalid-target and
+failed-payment rollback, retargeted copies, and alternate/prepared/Paradigm cast
+routes. Declaration tests reject invalid modal contexts and cross-mode reads.
+The public DSL test compiles the reference example; a synthetic gametest spell
+proves selected-mode damage, state-based death, and the following life gain.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) text matches the relevant inventory requirements: chosen fixed
+totals and Fireball's separate equal division are distinct contracts. The two
+production `DealDividedDamage` constructions in Jumpstart and Legends remain
+unchanged and need typed wiring. No JSON record changed or closed. Available
+syntax does not complete an unmigrated card. Verified existing Cauldron of Essence
+reanimation and Elvish Farmer/Thallid Devourer Saproling activations remain intact.
+Unrelated untracked work is preserved.
+
+Excluded: multiple selected modes, multiple allocation instructions within a
+mode, dynamic announcement totals, triggered/branched/looped allocations, result
+bindings, Fireball's equal division and per-target payment, and card migration.
+Next dependency-ready work is a separately audited announcement-value contract
+for X-dependent damage totals and mixed recipient bounds. Typed permanent-only
+X target groups already exist; they do not supply that mixed damage contract.
+No second slice started.
+
+Validation passes: focused allocation/division contracts and synthetic integration
+with `-count=1`; `go test ./pkg/mage/... -short -count=1`; DSL registration and
+closed-role checks with `-count=1`; `go test ./... -short -count=1`;
+`go build ./...`; `go vet ./...`; full `make test`; `make lint` with zero issues;
+and `git diff --check`. Historical missing-package and C-metadata failures did
+not recur. No validation blocker remains. The post-lint diff was reviewed.
+
+## Completed Slice: Sequenced Fixed-Total Chosen Damage
 
 Delivery step 3 T extends the existing allocation adapter through nonmodal
 `Sequence` bodies. Fresh API, caller, test, and tracker searches confirmed that

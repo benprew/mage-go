@@ -294,7 +294,7 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		n := describeDefinition(value)
 		if _, allocated := value.(*allocatedDamageEffect); allocated && !allocationAllowed {
-			fail("allocated damage requires one instruction in a nonmodal spell or activation sequence with one target group")
+			fail("allocated damage requires one instruction in a spell or activation body with one target group")
 		}
 		if n.isolatedBindings {
 			outer, outerTargets := assigned, targets
@@ -403,10 +403,19 @@ func ValidateCardDefinition(name string, card Card) error {
 			before := maps.Clone(assigned)
 			_, sequence := value.(*sequenceEffect)
 			allowAllocation := allocationAllowed && sequence
-			if action, ok := value.(*ActionDefinition); ok && (action.kind == ActionSpell || action.kind == ActionActivated) && len(action.modes) == 0 && len(action.effects) == 1 && len(action.targets) == 1 {
-				if allocation := singleAllocatedDamage(action.effects[0]); allocation != nil && allocation.recipients != nil {
-					allowAllocation = edge.value == action.effects[0] && action.targets[0] == allocation.recipients.targetDeclaration
+			switch parent := value.(type) {
+			case *ActionDefinition:
+				if parent.kind == ActionSpell || parent.kind == ActionActivated {
+					if len(parent.modes) == 0 {
+						allowAllocation = allocatedBodyEdge(parent.effects, parent.targets, edge.value)
+					} else if len(parent.targets) == 0 {
+						_, allowAllocation = edge.value.(ModeDefinition)
+					}
 				}
+			case *ModalSpellAbility:
+				_, allowAllocation = edge.value.(ModeDefinition)
+			case ModeDefinition:
+				allowAllocation = allocationAllowed && allocatedBodyEdge(parent.mode.Effects, parent.mode.Targets, edge.value)
 			}
 			visit(edge.value, path+"."+edge.name, spell, active, allowAllocation)
 			_, eventTrigger := value.(*GenericTriggered)
