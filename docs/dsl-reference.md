@@ -4114,3 +4114,51 @@ func Card() dsl.Card {
 
 This supplies Fireball's target surcharge and equal-division requirements.
 Production card wiring remains separate.
+
+### Colored mana for each activation target
+
+`ActivationManaPerTarget(color core.Color, amount int) ActivationOption` adds
+`amount` mana of the selected color for each announced target occurrence.
+Use it in a single-body `Activate`, with `WithTargets` or
+`WithActivationTargetGroups`. Registration requires a positive amount and one
+of `White`, `Blue`, `Black`, `Red`, or `Green`. `Colorless` and `AnyColor` are
+invalid. Generic, hybrid, variable, and modal per-target costs are outside this
+adapter's supported contexts.
+
+Zero targets add no mana. A repeated object chosen in separate target groups
+counts once per occurrence. Multiple options add their separate costs. The
+existing contextual-cost service fixes the count before the combined mana
+payment and nonmana costs. Colored mana is not reduced by generic activation
+cost reductions. Failed payment or invalid target announcement spends no live
+resources and emits no live payment or activation events. Later target loss
+does not refund mana, and ability copies pay no costs. Declarations contain no
+mutable target choices or payment results; copies and game clones use their own
+existing target frames.
+
+The option cannot be used in `Costs`, `Spell`, `ActivateModes`, granted
+activations, or a resolving body. The legacy `ManaCostPerTarget` export remains
+available for unmigrated callers.
+
+This complete synthetic declaration compiles:
+
+```go
+package example
+
+import (
+    "github.com/benprew/mage-go/pkg/mage/core"
+    "github.com/benprew/mage-go/pkg/mage/dsl"
+)
+
+func Card() dsl.Card {
+    targets := dsl.TargetPermanents("creatures", 0, 3, dsl.IsCreature)
+    return dsl.NewArtifact("Synthetic Target Payment", "",
+        dsl.WithAbility(dsl.Activate(
+            dsl.Costs(dsl.Mana("{2}"), dsl.TapCost(dsl.This)),
+            dsl.TapEach(targets),
+            dsl.WithTargets(targets), dsl.ActivationManaPerTarget(core.Red, 1))))
+}
+```
+
+This supplies Goblin Polka Band's per-target colored payment requirement.
+Its random target announcement and dependent tap/untap behavior still need
+separate typed wiring; the example chooses targets normally.

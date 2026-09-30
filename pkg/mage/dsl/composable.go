@@ -163,6 +163,7 @@ var (
 	// Spell constructs the resolving ability of an instant or sorcery card.
 	Spell                              = mage.Spell
 	AdditionalManaPerTargetBeyondFirst = mage.AdditionalManaPerTargetBeyondFirst
+	ActivationManaPerTarget            = mage.ActivationManaPerTarget
 	// Activate constructs an activated ability from costs, an effect body, and optional restrictions.
 	Activate = mage.Activate
 	// Costs groups cost components (mana, tap, sacrifice, life, counters) for an activation.

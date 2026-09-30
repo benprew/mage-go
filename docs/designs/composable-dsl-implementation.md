@@ -1,6 +1,70 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Additional Mana for Targets Beyond the First
+## Current Slice: Colored Mana for Each Activation Target
+
+Delivery step 3 T/P adds `ActivationManaPerTarget(color core.Color, amount int)
+ActivationOption`. A fresh audit confirms the damage identity prerequisites,
+singular and simultaneous damage, source attack/block, filtered death, target
+groups, division, and beyond-first spell surcharge already exist. The previous
+slice identified this narrow activation adapter as the next dependency-ready
+work. No production card is changed.
+
+The immutable option installs an internal contextual cost in `ActionDefinition`.
+It uses `multiplyManaCost` and the existing target announcement, action payment,
+autotap, and cost transaction services. Each announced target occurrence adds
+the fixed colored amount, including the same object chosen in separate groups.
+Zero targets add no mana. Generic reductions do not reduce colored payments.
+Later target loss does not refund payment, and copies pay nothing. No new frame,
+binding role, damage executor, replacement service, or AI policy is introduced.
+
+Registration inspection rejects nonpositive amounts and colors other than
+white, blue, black, red, or green. The sealed return role restricts use to a
+single-body activation. Compile-failure fixtures reject spell, cost-group,
+resolving-body, and modal activation use. Generic, hybrid, variable, modal,
+granted, and spell per-target options remain excluded. The fixed color/amount
+signature deliberately avoids the legacy string parser and its broader cost
+grammar; this is a narrower implemented API than the plan's general proposal.
+
+`TestActivationTargetMana*` first failed because the constructor was absent.
+Acceptance covers all five colors, zero through three mixed targets, repeated
+objects across independent groups, combined mana/tap/life payment, autotap,
+generic reduction without colored reduction, wrong-color and insufficient
+payment, illegal/absent/phased/duplicate targets, unpaid life, and rollback
+without live events. Two pending activations reuse one immutable option without
+sharing target counts. Copy/clone tests cover source departure LKI, target
+departure/return and phasing, unchanged payment, and original-game isolation.
+The synthetic gametest compiles the public reference declaration and checks
+target effects and combined payment. Existing legacy per-target and activation
+group tests cover the reused services. Replacement ordering and simultaneous
+action execution are unchanged; this option performs no resolving action.
+
+Goblin Polka Band's complete text in `data/PAST.json` matches the Astral inventory
+and JSON requirement: pay {R} per random target, then restrict next untap only
+for Goblins actually tapped. A fresh production caller search finds one legacy
+`ManaCostPerTarget` construction in `cards/astral/creatures.go` and no production
+caller of the new option. That card remains unmigrated, with random announcement
+and successful-tap dependent wiring still open. Existing `TapAmountInto` and
+`IfPositive` already supply singular tap outcomes and result branching; that
+part of the older Astral inventory is stale. This slice does not wire those
+available functions into the card. No inventory or JSON gap is closed or
+modified. All legacy exports remain available.
+
+Next dependency-ready work is a narrow audit of modal spell per-target costs
+and their selected-mode count contract. Random target declarations and dependent
+tap-result card wiring remain separate work. No second slice is started.
+
+Validation passes: focused `TestActivationTargetMana*`, legacy
+`TestManaCostPerTarget*`, and `TestActivationTargetGroups*`, including synthetic
+integration, with `-count=1`; `go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test`; `make lint` with zero issues;
+and `git diff --check`. The standalone reference example builds. The post-lint
+diff was reviewed; automatic changes only formatted imports in this slice's
+new Go files. No validation blocker remains, no production card changed, and
+unrelated tracked and untracked work is preserved.
+
+## Completed Slice: Additional Mana for Targets Beyond the First
 
 Delivery step 3 T/P adds `AdditionalManaPerTargetBeyondFirst(amount int)
 SpellOption` after the combined-total cost prerequisite. A fresh audit found
@@ -46,11 +110,13 @@ search finds no production use of the new option and one legacy
 `ManaCostPerTarget` construction, Goblin Polka Band in
 `cards/astral/creatures.go`. That activation and all legacy exports remain.
 
-The next dependency-ready T/P work is a typed per-target activation mana option
-for Goblin Polka Band, after its colored-cost and action-payment contracts are
-audited. Its random target selection and successful tap results remain separate
-requirements. Modal spell costs need their own option and selected-mode contract
-audit. No second slice was begun.
+The next dependency-ready T/P work was a typed per-target activation mana option
+for Goblin Polka Band, after its colored-cost and action-payment contracts were
+audited. That narrow adapter is implemented in the slice above. Its random target
+selection and successful-tap dependent card wiring remain separate requirements;
+the existing `TapAmountInto` and `IfPositive` adapters are available. Modal spell
+costs need their own option and selected-mode contract audit. No second slice
+was begun.
 
 Validation passes: focused `TestTargetSurcharge*`, `TestSpellTotalModifiers*`,
 and `TestEvenDamage*` plus synthetic integration with `-count=1`;
