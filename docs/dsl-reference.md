@@ -1096,9 +1096,41 @@ ordinary casts from hand, including selected modal spells. The spell example
 above is also exercised by `TestSpellDamageDivision*`. Allocation occurs before
 mana abilities used for payment. Failed payment preserves the hand, life, mana,
 and stack. A prepared empty allocation does not prompt again after payment.
-Alternate-zone casting, prepared/Paradigm copy casting, typed divided-target
-declarations, and simultaneous divided damage remain open.
-Fireball's equal division at resolution requires a separate contract.
+The shared cast-from-zone path also validates targets and locks chosen damage
+before total-cost preparation, mana abilities, or payment. This includes free
+casts, supplied alternate mana costs, registered alternate costs, flashback,
+and exile permissions, with the caster as controller even for a foreign-owned
+exiled card. Failed admission or payment preserves the source zone and exile
+permission. The existing public signatures remain:
+
+```go
+func (g *Game) CastCardFromZoneWithoutPaying(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int) error
+func (g *Game) CastCardFromExileWithoutPaying(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error
+func (g *Game) CastCardFromZoneWithAlternateCost(playerID, cardID uuid.UUID, zone Zone, alternate ManaCost, targets []uuid.UUID, xValue int) error
+func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int, targets []uuid.UUID, xValue int) error
+func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error
+```
+
+This synthetic engine example compiles and its path is covered by
+`TestAlternateDamageDivisionBeforePayment`:
+
+```go
+spell := mage.NewInstant("Alternate division", "{R}",
+    mage.NewMultiTargetSpell(
+        []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
+        mage.DealDividedDamage(mage.Fixed(3))))
+spell.SetOwner(caster.PlayerID())
+caster.AddToGraveyard(spell)
+err := game.CastCardFromZoneWithAlternateCost(caster.PlayerID(), spell.ID(),
+    core.ZoneGraveyard, core.ParseManaCost("{R}"), []uuid.UUID{opponent.PlayerID()}, 0)
+_ = err
+```
+
+These helpers use the granting effect's casting permission and timing context.
+This slice adds no typed divided-damage export. Prepared/Paradigm copy casting,
+typed divided-target declarations, independent grouped allocations, and
+simultaneous divided damage remain open. Fireball's equal division at resolution
+requires a separate contract.
 
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:
 

@@ -329,10 +329,22 @@ divisions leave the hand, mana, life, stack, and event trace unchanged. Failed
 payment also leaves no stack allocation. `CastSpellByName`, `CastSpellByID`,
 and the ordinary grouped-target entry path use this contract.
 
-Alternate-zone and prepared/Paradigm copy casts retain their existing allocation
-path. Their admission and prepayment choices, typed group allocations, and
-simultaneous execution of legacy divided damage remain prerequisites for a
-complete typed divided-damage adapter.
+The shared cast-from-zone path uses the same target validation and prepayment
+allocation boundary. Free casts, supplied and registered alternate costs,
+flashback, and exile permissions all prepare the selected effects' allocation
+before cost preparation, mana abilities, or payment. The card remains in its
+source zone during allocation. Caster and owner remain distinct for foreign-owned
+exiled cards. Impossible divisions and illegal targets publish no payment or
+cast events; failed payment stores no stack allocation. Failed casts retain
+exile permissions. Successful payment copies the saved map without a second
+choice, including for a prepared empty allocation. Flashback retains its
+exile-on-leaving-stack rule. These contracts are covered by
+`TestAlternateDamageDivision*`.
+
+Prepared/Paradigm copy casts retain their existing allocation path. Their
+admission and prepayment choices, typed group allocations, and simultaneous
+execution of legacy divided damage remain prerequisites for a complete typed
+divided-damage adapter.
 
 Positive damage events keep the final damage action's source snapshot through event dispatch, including a simultaneous damage batch. `ReceivesDamage(This, amount).WithSource(source)` captures that snapshot when the trigger is detected. The pending trigger can use its source after a permanent leaves and returns or a spell leaves the stack. The snapshot includes the source controller and characteristics used by later damage; it does not find a new object with the same card ID. Prevention and zero damage send no damage event (CR 400.7, 603.2g, 608.2h).
 

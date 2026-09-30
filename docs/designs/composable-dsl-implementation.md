@@ -1,6 +1,68 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Ordinary Hand-Cast Division Before Payment
+## Current Slice: Alternate-Zone Division Before Payment
+
+Delivery step 3 T completes the shared cast-from-zone chosen-damage announcement
+prerequisite. Fresh API, caller, test, and tracker searches confirmed that the
+preferred damage identity, singular damage, attack/block, filtered death,
+normalization, activation announcement, and ordinary hand-cast slices exist.
+The shared alternate casting path still allocated after payment and omitted
+nonmodal target validation. This slice corrects that engine contract; it does
+not expose an incomplete typed adapter.
+
+`CastCardFromZoneWithoutPaying`, `CastCardFromExileWithoutPaying`,
+`CastCardFromZoneWithAlternateCost`, `CastCardWithAlternateCost`, and
+`CastExiledCardWithPermission` retain their signatures. Their common internal
+path uses existing random/opponent target acquisition, action target validation,
+modal selection, `prepareDamageDivision`, spell payment transactions, and
+prepared stack allocation storage. It validates and locks the selected effects'
+division before cost preparation, mana abilities, or payment. The allocation
+stays local until successful payment and is copied into the stack object.
+No role, declaration state, binding, inspection rule, executor, replacement
+service, or AI metadata is added. All production cards and exports are retained.
+
+`TestAlternateDamageDivision*` first failed because life/mana payment and zone
+removal preceded the allocation prompt, impossible divisions and illegal targets
+were admitted, failed payment skipped announcement, and modal division occurred
+after payment. Acceptance covers hand, graveyard, library, and exile; free,
+supplied, registered, flashback, and exile-permission routes; foreign ownership;
+life and automatic mana payment; positive/zero/negative totals; optional empty
+target lists; absent/phased/duplicate/wrong-category targets; combined
+unaffordable costs; selected versus inactive mode effects; response-map,
+copy, and clone isolation; resolution of the announced amount; retained exile
+permissions on failure; and flashback resolution destination. Existing division
+contracts cover normalization, overflow, resolution target legality, and lost
+shares. Damage LKI, replacement ordering, and execution remain in their existing
+services. The reference contains signatures and a compiling synthetic example.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) texts were checked against the inventories and Jumpstart gap
+record. Chosen division differs from Fireball's equal division at resolution.
+Two production `DealDividedDamage` constructions remain in Jumpstart and Legends,
+unchanged. No gap record or card is completed; typed divided-target declarations
+and card wiring remain. No JSON record changed. Unrelated untracked files are
+preserved.
+
+Excluded: prepared/Paradigm copy casting, typed allocations, independent grouped
+allocations, multiple division instructions, simultaneous legacy divided damage,
+Fireball's equal-division rule, general casting-permission audits, and production
+migration. Next dependency-ready work is the prepared/Paradigm division
+announcement prerequisite after a fresh audit, before exposing a typed adapter.
+No second slice was started.
+
+Validation passes: focused `TestAlternateDamageDivision*`,
+`TestSpellDamageDivision*`, `TestActivationDamageDivision*`, and
+`TestDamageDivision*` with `-count=1`; `go test ./pkg/mage/... -short -count=1`;
+DSL registration/closed-role checks with `-count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+The standalone reference example builds. Its first build found a wrong package
+qualifier for `ParseManaCost`; the reference now uses `core.ParseManaCost`.
+Lint adjusted only the new test's import spacing; focused tests passed again.
+The post-lint diff was reviewed. Historical missing-package and C-metadata
+failures did not recur. No validation blocker remains.
+
+## Completed Slice: Ordinary Hand-Cast Division Before Payment
 
 Delivery step 3 T completes the ordinary hand-casting portion of the next
 chosen-damage announcement prerequisite. Fresh API, caller, tracker, and test

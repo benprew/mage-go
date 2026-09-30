@@ -186,6 +186,24 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	}
 	if selection != nil {
 		targets = selection.targets
+	} else {
+		targets = g.acquireRandomTargets(playerID, card, card.CastTargets(), targets, xValue)
+		targets = g.acquireOpponentChosenTargets(playerID, card, card.CastTargets(), targets)
+		if err := g.validateActionTargets(playerID, card, card.CastTargets(), targets, xValue, "spell"); err != nil {
+			return err
+		}
+		if err := g.validateVariableSpellTargets(playerID, card, targets, xValue); err != nil {
+			return err
+		}
+	}
+
+	effects, _ := g.prepareSpellStackPayload(g.GetPlayer(playerID), card, targets, false)
+	if selection != nil {
+		effects = selection.effects
+	}
+	division, err := g.prepareDamageDivision(playerID, card, effects, targets)
+	if err != nil {
+		return err
 	}
 
 	var mana ManaCost
@@ -227,18 +245,20 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 	}
 
 	_, err = g.pushCastSpellObject(castStackObjectOptions{
-		ModalSelection:     selection,
-		Card:               card,
-		Controller:         playerID,
-		Targets:            targets,
-		XValue:             xValue,
-		CastZone:           zone,
-		ExileOnLeaveStack:  exileOnLeaveStack,
-		SnapshotCast:       true,
-		CapturedNumbers:    payment.payment.paidNumbers,
-		CapturedCards:      payment.payment.paidCards,
-		CapturedCardSets:   payment.payment.paidCardSets,
-		CapturedPermanents: payment.payment.paidPermanents,
+		DamageDivisionPrepared: true,
+		DamageDistribution:     division,
+		ModalSelection:         selection,
+		Card:                   card,
+		Controller:             playerID,
+		Targets:                targets,
+		XValue:                 xValue,
+		CastZone:               zone,
+		ExileOnLeaveStack:      exileOnLeaveStack,
+		SnapshotCast:           true,
+		CapturedNumbers:        payment.payment.paidNumbers,
+		CapturedCards:          payment.payment.paidCards,
+		CapturedCardSets:       payment.payment.paidCardSets,
+		CapturedPermanents:     payment.payment.paidPermanents,
 	})
 	return err
 }
