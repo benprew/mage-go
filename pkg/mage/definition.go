@@ -294,7 +294,7 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		n := describeDefinition(value)
 		if _, allocated := value.(*allocatedDamageEffect); allocated && !allocationAllowed {
-			fail("allocated damage requires a direct nonmodal spell or activation body with one target group")
+			fail("allocated damage requires one instruction in a nonmodal spell or activation sequence with one target group")
 		}
 		if n.isolatedBindings {
 			outer, outerTargets := assigned, targets
@@ -401,10 +401,11 @@ func ValidateCardDefinition(name string, card Card) error {
 		}
 		for _, edge := range n.children {
 			before := maps.Clone(assigned)
-			allowAllocation := false
+			_, sequence := value.(*sequenceEffect)
+			allowAllocation := allocationAllowed && sequence
 			if action, ok := value.(*ActionDefinition); ok && (action.kind == ActionSpell || action.kind == ActionActivated) && len(action.modes) == 0 && len(action.effects) == 1 && len(action.targets) == 1 {
-				if allocation, ok := edge.value.(*allocatedDamageEffect); ok && allocation.recipients != nil {
-					allowAllocation = action.effects[0] == allocation && action.targets[0] == allocation.recipients.targetDeclaration
+				if allocation := singleAllocatedDamage(action.effects[0]); allocation != nil && allocation.recipients != nil {
+					allowAllocation = edge.value == action.effects[0] && action.targets[0] == allocation.recipients.targetDeclaration
 				}
 			}
 			visit(edge.value, path+"."+edge.name, spell, active, allowAllocation)

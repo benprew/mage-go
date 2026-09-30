@@ -1047,18 +1047,20 @@ _ = spell
 
 `DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect`
 exposes chosen damage allocation for a positive fixed total. Use it as the direct
-body of a nonmodal `Spell` or `Activate`, with that declaration as the only target
+body of a nonmodal `Spell` or `Activate`, or inside nested `Sequence` bodies,
+with exactly one allocation instruction and that declaration as the only target
 group. It accepts `WithTargets`, or a single group declared with `WithTargetGroups`
-or `WithActivationTargetGroups`. Registration rejects nested bodies, triggers,
-modes, extra groups, absent declarations, nonpositive totals, and a required
-minimum larger than the total. Go rejects player sources, arbitrary recipient
-sets, and resolution values in place of the integer total.
+or `WithActivationTargetGroups`. Registration rejects branches, loops, triggers,
+modes, multiple allocation instructions (including a legacy division sibling),
+extra groups, absent declarations, nonpositive totals, and a required minimum
+larger than the total. Go rejects player sources, arbitrary recipient sets, and resolution values in place of the integer total.
 
 ```go
 recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
 card := dsl.NewSorcery("Allocated damage", "{2}{R}",
-    dsl.Spell(dsl.DealAllocatedDamage(dsl.This, recipients, 3),
-        dsl.WithTargets(recipients)))
+    dsl.Spell(dsl.Sequence(
+        dsl.DealAllocatedDamage(dsl.This, recipients, 3),
+        dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
 ```
 
 The controller chooses shares before payment. Each announced target receives at
@@ -1074,8 +1076,9 @@ An optional group with no chosen targets needs no allocation prompt.
 
 The integer total makes the announcement timing explicit. Dynamic totals need a
 separate announcement-value contract; `ResolutionValue` would read at the wrong
-lifecycle. Multiple allocations, nested or modal allocation declarations,
-triggered allocations, result bindings, and Fireball's equal division at
+lifecycle. Instructions in a `Sequence` resolve in order; each allocated damage
+instruction remains one simultaneous batch. Multiple allocations, branches, loops,
+modal or triggered allocations, result bindings, and Fireball's equal division at
 resolution remain separate work. The legacy `DealDividedDamage(ValueSource)`
 signature and its callers remain available.
 

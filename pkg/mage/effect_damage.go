@@ -136,6 +136,8 @@ func IsDividedDamageEffect(e Effect) bool {
 	switch e.(type) {
 	case *dealDividedDamageEffect, *allocatedDamageEffect:
 		return true
+	case *sequenceEffect:
+		return singleAllocatedDamage(e) != nil
 	}
 	return false
 }
@@ -148,6 +150,10 @@ func DividedDamageTotal(e Effect) ValueSource {
 		return d.total
 	case *allocatedDamageEffect:
 		return Fixed(d.total)
+	case *sequenceEffect:
+		if allocation := singleAllocatedDamage(d); allocation != nil {
+			return Fixed(allocation.total)
+		}
 	}
 	return nil
 }

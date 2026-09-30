@@ -19,3 +19,14 @@ func TestAllocatedDamagePublicDeclaration(t *testing.T) {
 		t.Fatal("inspection omitted damage declaration or AI metadata")
 	}
 }
+
+func TestAllocatedDamageSequencePublicDeclaration(t *testing.T) {
+	recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
+	card := dsl.NewSorcery("Allocated sequence", "{2}{R}",
+		dsl.Spell(dsl.Sequence(
+			dsl.DealAllocatedDamage(dsl.This, recipients, 3),
+			dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
+	if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
+		t.Fatal(err)
+	}
+}

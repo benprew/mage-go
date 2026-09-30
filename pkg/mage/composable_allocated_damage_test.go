@@ -10,60 +10,67 @@ import (
 )
 
 func TestAllocatedDamageAnnouncementAndBatch(t *testing.T) {
-	for _, activation := range []bool{false, true} {
-		t.Run(map[bool]string{false: "spell", true: "activation"}[activation], func(t *testing.T) {
-			g, a, b := newActivationDivisionGame()
-			recipients := DeclareDamageTargets("recipients", 1, 3)
-			effect := DealAllocatedDamage(This, recipients, 3)
-			victim := g.PutOnBattlefield(NewCreature("Recipient", "", 2, 9), b.PlayerID())
-			response := map[uuid.UUID]int{victim.ID(): 2, b.PlayerID(): 1}
-			a.ManaPool().Add(Red, 1)
-			a.choose = func(ids []uuid.UUID, total int, _ *Game) map[uuid.UUID]int {
-				if total != 3 || len(ids) != 2 || a.ManaPool().Count(Red) != 1 || g.StackSize() != 0 {
-					t.Error("allocation occurred after payment or publication")
-				}
-				return response
-			}
-			if activation {
-				source := g.PutOnBattlefield(NewArtifact("Source", "", WithAbility(Activate(Costs(ManaCostOf("{R}")), effect, WithTargets(recipients)))), a.PlayerID())
-				if err := ValidateCardDefinition(source.Card.Name(), source.Card); err != nil {
-					t.Fatal(err)
-				}
-				if err := g.ActivateAbilityByIndex(a.PlayerID(), source.ID(), 0, []uuid.UUID{victim.ID(), b.PlayerID()}); err != nil {
-					t.Fatal(err)
-				}
-			} else {
-				spell := NewInstant("Allocated", "{R}", Spell(effect, WithTargets(recipients)))
-				spell.SetOwner(a.PlayerID())
-				a.AddToHand(spell)
-				if err := ValidateCardDefinition(spell.Name(), spell); err != nil {
-					t.Fatal(err)
-				}
-				if err := g.CastSpellByName(a.PlayerID(), spell.Name(), []uuid.UUID{victim.ID(), b.PlayerID()}); err != nil {
-					t.Fatal(err)
-				}
-			}
-			obj := g.StackPeek()
-			if a.divisions != 1 || !maps.Equal(obj.DamageDistribution, response) || a.ManaPool().Count(Red) != 0 {
-				t.Fatal("allocation was not locked")
-			}
-			response[b.PlayerID()] = 99
-			clone := g.Clone()
-			copyObj := clone.CopyStackObjectDirect(clone.StackPeek(), a.PlayerID(), false)
-			copyObj.DamageDistribution[b.PlayerID()] = 2
-			if obj.DamageDistribution[b.PlayerID()] != 1 || clone.StackObjects()[0].DamageDistribution[b.PlayerID()] != 1 {
-				t.Fatal("allocation maps share state")
-			}
-			callbacks := 0
-			g.damage.SetOnDamageDealt(func(string, string, int, bool) {
-				callbacks++
-				if g.FindPermanent(victim.ID()).Damage != 2 || b.Life() != 19 {
-					t.Errorf("observer saw damage=%d life=%d dist=%v", g.FindPermanent(victim.ID()).Damage, b.Life(), obj.DamageDistribution)
-				}
-			})
-			g.ResolveStack()
-			if callbacks != 2 || b.Life() != 19 || g.FindPermanent(victim.ID()).Damage != 2 {
-				t.Fatal("allocated shares were not dealt")
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) {
+			for _, activation := range []bool{false, true} {
+				t.Run(map[bool]string{false: "spell", true: "activation"}[activation], func(t *testing.T) {
+					g, a, b := newActivationDivisionGame()
+					recipients := DeclareDamageTargets("recipients", 1, 3)
+					effect := DealAllocatedDamage(This, recipients, 3)
+					if nested {
+						effect = Sequence(GainLifeFor(You, Fixed(1)), Sequence(effect), GainLifeFor(You, Fixed(2)))
+					}
+					victim := g.PutOnBattlefield(NewCreature("Recipient", "", 2, 9), b.PlayerID())
+					response := map[uuid.UUID]int{victim.ID(): 2, b.PlayerID(): 1}
+					a.ManaPool().Add(Red, 1)
+					a.choose = func(ids []uuid.UUID, total int, _ *Game) map[uuid.UUID]int {
+						if total != 3 || len(ids) != 2 || a.ManaPool().Count(Red) != 1 || g.StackSize() != 0 {
+							t.Error("allocation occurred after payment or publication")
+						}
+						return response
+					}
+					if activation {
+						source := g.PutOnBattlefield(NewArtifact("Source", "", WithAbility(Activate(Costs(ManaCostOf("{R}")), effect, WithTargets(recipients)))), a.PlayerID())
+						if err := ValidateCardDefinition(source.Card.Name(), source.Card); err != nil {
+							t.Fatal(err)
+						}
+						if err := g.ActivateAbilityByIndex(a.PlayerID(), source.ID(), 0, []uuid.UUID{victim.ID(), b.PlayerID()}); err != nil {
+							t.Fatal(err)
+						}
+					} else {
+						spell := NewInstant("Allocated", "{R}", Spell(effect, WithTargets(recipients)))
+						spell.SetOwner(a.PlayerID())
+						a.AddToHand(spell)
+						if err := ValidateCardDefinition(spell.Name(), spell); err != nil {
+							t.Fatal(err)
+						}
+						if err := g.CastSpellByName(a.PlayerID(), spell.Name(), []uuid.UUID{victim.ID(), b.PlayerID()}); err != nil {
+							t.Fatal(err)
+						}
+					}
+					obj := g.StackPeek()
+					if a.divisions != 1 || !maps.Equal(obj.DamageDistribution, response) || a.ManaPool().Count(Red) != 0 {
+						t.Fatal("allocation was not locked")
+					}
+					response[b.PlayerID()] = 99
+					clone := g.Clone()
+					copyObj := clone.CopyStackObjectDirect(clone.StackPeek(), a.PlayerID(), false)
+					copyObj.DamageDistribution[b.PlayerID()] = 2
+					if obj.DamageDistribution[b.PlayerID()] != 1 || clone.StackObjects()[0].DamageDistribution[b.PlayerID()] != 1 {
+						t.Fatal("allocation maps share state")
+					}
+					callbacks := 0
+					g.damage.SetOnDamageDealt(func(string, string, int, bool) {
+						callbacks++
+						if g.FindPermanent(victim.ID()).Damage != 2 || b.Life() != 19 || (nested && a.Life() != 21) {
+							t.Errorf("observer saw damage=%d life=%d dist=%v", g.FindPermanent(victim.ID()).Damage, b.Life(), obj.DamageDistribution)
+						}
+					})
+					g.ResolveStack()
+					if callbacks != 2 || b.Life() != 19 || g.FindPermanent(victim.ID()).Damage != 2 || (nested && a.Life() != 23) {
+						t.Fatal("allocated shares were not dealt")
+					}
+				})
 			}
 		})
 	}
@@ -79,7 +86,13 @@ func TestAllocatedDamageDeclarations(t *testing.T) {
 		{Name: "direct spell", Card: NewInstant("Valid", "", Spell(valid, WithTargets(recipients)))},
 		{Name: "missing declaration", Card: NewInstant("Invalid", "", Spell(valid)), WantErr: true},
 		{Name: "extra group", Card: NewInstant("Invalid", "", Spell(valid, WithTargets(recipients, extra))), WantErr: true},
-		{Name: "nested", Card: NewInstant("Invalid", "", Spell(Sequence(valid, GainLifeFor(You, Fixed(1))), WithTargets(recipients))), WantErr: true},
+		{Name: "sequence", Card: NewInstant("Invalid", "", Spell(Sequence(valid, GainLifeFor(You, Fixed(1))), WithTargets(recipients)))},
+		{Name: "multiple allocations", Card: NewInstant("Invalid", "", Spell(Sequence(valid, valid), WithTargets(recipients))), WantErr: true},
+		{Name: "mixed legacy division", Card: NewInstant("Invalid", "", Spell(Sequence(valid, DealDividedDamage(Fixed(3))), WithTargets(recipients))), WantErr: true},
+		{Name: "conditional legacy division", Card: NewInstant("Invalid", "", Spell(Sequence(valid, IfState(Controls(IsCreature), DealDividedDamage(Fixed(3)))), WithTargets(recipients))), WantErr: true},
+		{Name: "nested branch", Card: NewInstant("Invalid", "", Spell(Sequence(IfState(Controls(IsCreature), valid)), WithTargets(recipients))), WantErr: true},
+		{Name: "branch", Card: NewInstant("Invalid", "", Spell(IfState(Controls(IsCreature), valid), WithTargets(recipients))), WantErr: true},
+		{Name: "nested extra group", Card: NewInstant("Invalid", "", Spell(Sequence(valid), WithTargets(recipients, extra))), WantErr: true},
 		{Name: "trigger", Card: NewCreature("Invalid", "", 1, 1, WithAbility(WhenEvent(Enters(This), valid, WithTargets(recipients)))), WantErr: true},
 		{Name: "modal", Card: NewInstant("Invalid", "", WithAbility(SpellModes(ModeOf("Allocate", valid, WithTargets(recipients)), ModeOf("Gain", GainLifeFor(You, Fixed(1)))))), WantErr: true},
 		{Name: "impossible minimum", Card: NewInstant("Invalid", "", Spell(DealAllocatedDamage(This, four, 3), WithTargets(four))), WantErr: true},
@@ -92,9 +105,15 @@ func TestAllocatedDamageDeclarations(t *testing.T) {
 }
 
 func TestAllocatedDamageSourceLKIAndIsolation(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamageSourceLKIAndIsolation(t, nested) })
+	}
+}
+
+func testAllocatedDamageSourceLKIAndIsolation(t *testing.T, nested bool) {
 	g, a, b := newActivationDivisionGame()
 	recipients := DeclareDamageTargets("recipients", 1, 2)
-	card := NewCreature("Source", "", 2, 2, WithKeyword(Lifelink), WithKeyword(Deathtouch), WithAbility(Activate(Costs(SacrificeSourceCost()), DealAllocatedDamage(This, recipients, 4), WithTargets(recipients))))
+	card := NewCreature("Source", "", 2, 2, WithKeyword(Lifelink), WithKeyword(Deathtouch), WithAbility(Activate(Costs(SacrificeSourceCost()), allocatedDamageTestBody(nested, This, recipients, 4), WithTargets(recipients))))
 	source := g.PutOnBattlefield(card, a.PlayerID())
 	victim := g.PutOnBattlefield(NewCreature("Recipient", "", 2, 9), b.PlayerID())
 	a.choose = func([]uuid.UUID, int, *Game) map[uuid.UUID]int {
@@ -140,13 +159,19 @@ func TestAllocatedDamageSourceLKIAndIsolation(t *testing.T) {
 }
 
 func TestAllocatedDamageIllegalShares(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamageIllegalShares(t, nested) })
+	}
+}
+
+func testAllocatedDamageIllegalShares(t *testing.T, nested bool) {
 	for _, state := range []string{"absent", "returned", "phased", "protected", "prevented"} {
 		t.Run(state, func(t *testing.T) {
 			g, a, b := newActivationDivisionGame()
 			card := NewCreature("Recipient", "", 2, 9)
 			victim := g.PutOnBattlefield(card, b.PlayerID())
 			recipients := DeclareDamageTargets("recipients", 1, 2)
-			spell := NewInstant("Division spell", "{R}", Spell(DealAllocatedDamage(This, recipients, 4), WithTargets(recipients)))
+			spell := NewInstant("Division spell", "{R}", Spell(allocatedDamageTestBody(nested, This, recipients, 4), WithTargets(recipients)))
 			spell.SetOwner(a.PlayerID())
 			a.AddToHand(spell)
 			a.ManaPool().Add(Red, 1)
@@ -178,6 +203,12 @@ func TestAllocatedDamageIllegalShares(t *testing.T) {
 }
 
 func TestAllocatedDamagePaymentAndTargetRollback(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamagePaymentAndTargetRollback(t, nested) })
+	}
+}
+
+func testAllocatedDamagePaymentAndTargetRollback(t *testing.T, nested bool) {
 	for _, state := range []string{"insufficient shares", "failed payment", "absent", "phased", "duplicate", "wrong type"} {
 		t.Run(state, func(t *testing.T) {
 			g, a, b := newActivationDivisionGame()
@@ -186,7 +217,7 @@ func TestAllocatedDamagePaymentAndTargetRollback(t *testing.T) {
 			if state == "insufficient shares" {
 				total = 1
 			}
-			spell := NewInstant("Allocated", "{R}", Spell(DealAllocatedDamage(This, recipients, total), WithTargets(recipients)))
+			spell := NewInstant("Allocated", "{R}", Spell(allocatedDamageTestBody(nested, This, recipients, total), WithTargets(recipients)))
 			if state == "failed payment" {
 				WithAdditionalCost(LifePayCost(11))(spell)
 				WithAdditionalCost(LifePayCost(11))(spell)
@@ -224,9 +255,15 @@ func TestAllocatedDamagePaymentAndTargetRollback(t *testing.T) {
 }
 
 func TestAllocatedDamageEmptyAndAbsentSource(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamageEmptyAndAbsentSource(t, nested) })
+	}
+}
+
+func testAllocatedDamageEmptyAndAbsentSource(t *testing.T, nested bool) {
 	g, a, b := newActivationDivisionGame()
 	recipients := DeclareDamageTargets("recipients", 0, 3)
-	spell := NewInstant("Allocated", "", Spell(DealAllocatedDamage(This, recipients, 3), WithTargets(recipients)))
+	spell := NewInstant("Allocated", "", Spell(allocatedDamageTestBody(nested, This, recipients, 3), WithTargets(recipients)))
 	spell.SetOwner(a.PlayerID())
 	a.AddToHand(spell)
 	if err := g.CastSpellByName(a.PlayerID(), spell.Name(), nil); err != nil {
@@ -236,7 +273,7 @@ func TestAllocatedDamageEmptyAndAbsentSource(t *testing.T) {
 		t.Fatal("empty allocation prompted")
 	}
 	g.ResolveStack()
-	effect := DealAllocatedDamage(This, recipients, 3)
+	effect := allocatedDamageTestBody(nested, This, recipients, 3)
 	ctx := &EffectContext{Game: g, SourceID: uuid.New(), Controller: a.PlayerID(), DamageDistribution: map[uuid.UUID]int{b.PlayerID(): 3}, targetBindings: map[*targetDeclaration][]capturedPermanent{recipients.targetDeclaration: {{id: b.PlayerID()}}}}
 	if err := effect.Apply(ctx); err != nil {
 		t.Fatal(err)
@@ -247,9 +284,15 @@ func TestAllocatedDamageEmptyAndAbsentSource(t *testing.T) {
 }
 
 func TestAllocatedDamageReplacementBatch(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamageReplacementBatch(t, nested) })
+	}
+}
+
+func testAllocatedDamageReplacementBatch(t *testing.T, nested bool) {
 	g, a, b := newActivationDivisionGame()
 	recipients := DeclareDamageTargets("recipients", 1, 2)
-	spell := NewInstant("Allocated", "", Spell(DealAllocatedDamage(This, recipients, 4), WithTargets(recipients)))
+	spell := NewInstant("Allocated", "", Spell(allocatedDamageTestBody(nested, This, recipients, 4), WithTargets(recipients)))
 	spell.SetOwner(a.PlayerID())
 	a.AddToHand(spell)
 	victim := g.PutOnBattlefield(NewCreature("Recipient", "", 2, 9), b.PlayerID())
@@ -282,9 +325,15 @@ func TestAllocatedDamageReplacementBatch(t *testing.T) {
 }
 
 func TestAllocatedDamageCopyRetarget(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamageCopyRetarget(t, nested) })
+	}
+}
+
+func testAllocatedDamageCopyRetarget(t *testing.T, nested bool) {
 	g, a, b := newActivationDivisionGame()
 	recipients := DeclareDamageTargets("recipients", 1, 2)
-	spell := NewInstant("Allocated", "", Spell(DealAllocatedDamage(This, recipients, 4), WithTargets(recipients)))
+	spell := NewInstant("Allocated", "", Spell(allocatedDamageTestBody(nested, This, recipients, 4), WithTargets(recipients)))
 	spell.SetOwner(a.PlayerID())
 	a.AddToHand(spell)
 	first := g.PutOnBattlefield(NewCreature("First", "", 2, 9), b.PlayerID())
@@ -308,11 +357,17 @@ func TestAllocatedDamageCopyRetarget(t *testing.T) {
 }
 
 func TestAllocatedDamageAdditionalCastRoutes(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(map[bool]string{false: "direct", true: "sequence"}[nested], func(t *testing.T) { testAllocatedDamageAdditionalCastRoutes(t, nested) })
+	}
+}
+
+func testAllocatedDamageAdditionalCastRoutes(t *testing.T, nested bool) {
 	for _, route := range []string{"alternate", "prepared", "paradigm"} {
 		t.Run(route, func(t *testing.T) {
 			g, a, b := newActivationDivisionGame()
 			recipients := DeclareDamageTargets("recipients", 1, 2)
-			spell := NewInstant("Allocated route", "", Spell(DealAllocatedDamage(This, recipients, 3), WithTargets(recipients)))
+			spell := NewInstant("Allocated route", "", Spell(allocatedDamageTestBody(nested, This, recipients, 3), WithTargets(recipients)))
 			spell.SetOwner(a.PlayerID())
 			a.choose = func(ids []uuid.UUID, total int, _ *Game) map[uuid.UUID]int {
 				if total != 3 || len(ids) != 2 || g.StackSize() != 0 {
@@ -341,4 +396,12 @@ func TestAllocatedDamageAdditionalCastRoutes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func allocatedDamageTestBody(nested bool, source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect {
+	effect := DealAllocatedDamage(source, recipients, total)
+	if nested {
+		return Sequence(Sequence(effect))
+	}
+	return effect
 }

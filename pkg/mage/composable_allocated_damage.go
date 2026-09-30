@@ -1,7 +1,9 @@
 package mage
 
+import "reflect"
+
 // DealAllocatedDamage requires shares to be chosen before payment.
-// Use one target group as the direct body of a spell or activation.
+// Use one target group in a nonmodal spell or activation.
 func DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect {
 	return &allocatedDamageEffect{source: source, recipients: recipients, total: total}
 }
@@ -43,4 +45,49 @@ func (e *allocatedDamageEffect) Apply(ctx *EffectContext) error {
 	}
 	ctx.Game.DealSimultaneousDamage(assignments...)
 	return nil
+}
+
+// One stack allocation must not serve two damage instructions.
+func singleAllocatedDamage(effect Effect) *allocatedDamageEffect {
+	var allocation *allocatedDamageEffect
+	count := 0
+	active := make(map[Effect]bool)
+	var visit func(Effect, bool)
+	visit = func(effect Effect, allowed bool) {
+		if nilDefinition(effect) {
+			return
+		}
+		if reflect.ValueOf(effect).Comparable() {
+			if active[effect] {
+				count++
+				return
+			}
+			active[effect] = true
+			defer delete(active, effect)
+		}
+		switch e := effect.(type) {
+		case *allocatedDamageEffect:
+			if allowed {
+				allocation = e
+			}
+			count++
+		case *dealDividedDamageEffect:
+			count++
+		case *sequenceEffect:
+			for _, child := range e.effects {
+				visit(child, allowed)
+			}
+		default:
+			for _, edge := range describeDefinition(effect).children {
+				if child, ok := edge.value.(Effect); ok {
+					visit(child, false)
+				}
+			}
+		}
+	}
+	visit(effect, true)
+	if count != 1 {
+		return nil
+	}
+	return allocation
 }

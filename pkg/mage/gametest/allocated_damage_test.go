@@ -15,7 +15,7 @@ func TestAllocatedDamageIntegration(t *testing.T) {
 	if !mage.CardRegistered(spell) {
 		dsl.Register(spell, func() dsl.Card {
 			recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
-			return dsl.NewSorcery(spell, "", dsl.Spell(dsl.DealAllocatedDamage(dsl.This, recipients, 3), dsl.WithTargets(recipients)))
+			return dsl.NewSorcery(spell, "", dsl.Spell(dsl.Sequence(dsl.DealAllocatedDamage(dsl.This, recipients, 3), dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
 		})
 		dsl.Register(first, func() dsl.Card { return dsl.NewCreature(first, "", 2, 2) })
 		dsl.Register(second, func() dsl.Card { return dsl.NewCreature(second, "", 2, 2) })
@@ -32,4 +32,5 @@ func TestAllocatedDamageIntegration(t *testing.T) {
 	tg.AssertPermanentCount(PlayerB, second, 0)
 	tg.AssertGraveyardCount(PlayerB, second, 1)
 	tg.AssertGraveyardCount(PlayerA, spell, 1)
+	tg.AssertLife(PlayerA, 21)
 }

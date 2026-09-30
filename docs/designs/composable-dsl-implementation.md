@@ -1,6 +1,64 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Typed Fixed-Total Chosen Damage
+## Current Slice: Sequenced Fixed-Total Chosen Damage
+
+Delivery step 3 T extends the existing allocation adapter through nonmodal
+`Sequence` bodies. Fresh API, caller, test, and tracker searches confirmed that
+source/recipient identity, singular damage, source attack/block, filtered death,
+and direct fixed-total allocations already exist. No production card changed.
+
+The public signature remains
+`DealAllocatedDamage(DamageSourceRef, *DamageTargetsBinding, int) ResolvingEffect`,
+exported by `dsl`. Exactly one allocation instruction may occur through nested
+`Sequence` bodies of a nonmodal spell or activation with its sole target group.
+The shared declaration traversal finds that instruction for both registration
+admission and the existing prepayment announcement service. It counts inspected
+division instructions in other composition bodies to reject shared-map reuse,
+including a conditional legacy divided-damage sibling. It admits the typed
+instruction only through `Sequence`. Existing inspection, scope/dominance,
+immutable declarations, sealed roles, instance bindings, AI metadata, copying,
+and damage execution remain in use. No allocation storage, payment transaction,
+or damage executor was added. Sequence instructions resolve in order; the
+allocated damage instruction still executes as one simultaneous batch.
+
+`TestAllocatedDamageAnnouncementAndBatch/sequence` and the sequence registration
+case first failed because nested allocations were rejected. A conditional legacy
+division test then failed because registration accepted two instructions sharing
+one allocation. Both regressions now pass. Direct and sequenced acceptance tests
+cover spell/activation announcement before payment, preceding and following
+instruction timing, complete-batch callbacks, source departure/return LKI,
+controller identity, lifelink/deathtouch, absent/returned/phased/protected/prevented
+targets, lost shares, failed payment and invalid-target rollback, optional empty
+groups, absent sources, replacement preparation/redirection/finite prevention,
+response/copy/clone isolation, retargeted copies, and alternate/prepared/Paradigm
+cast routes. Registration rejects multiple instructions, extra groups, branches,
+triggers, modes, invalid totals, and absent declarations. Existing compile-failure
+fixtures retain source/recipient/total category checks. A public DSL test compiles
+the reference example. A synthetic gametest card proves damage, state-based death,
+and the following life gain.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) text was rechecked against the inventories and JSON records.
+The two production `DealDividedDamage` constructions in Jumpstart and Legends
+remain unchanged and need typed card wiring. No author export was removed. No gap
+record was closed: available syntax does not complete an unmigrated card.
+Unrelated untracked work is preserved.
+
+Excluded: modal, branched, looped, or triggered allocations, multiple allocation
+instructions/groups, dynamic announcement totals, result bindings, Fireball's
+equal division/per-target payment, prepared payment fixes, and card migration.
+Next dependency-ready work is allocation ownership/admission in one selected
+announcement mode, after auditing selected-mode target frames and copying.
+No second slice started.
+
+Validation passes: focused allocation/division contracts and synthetic integration
+with `-count=1`; `go test ./pkg/mage/... -short -count=1`; DSL registration and
+closed-role checks with `-count=1`; `go test ./... -short -count=1`;
+`go build ./...`; `go vet ./...`; full `make test`; `make lint` with zero issues;
+and `git diff --check`. Historical missing-package and C-metadata failures did
+not recur. No validation blocker remains. The post-lint diff was reviewed.
+
+## Completed Slice: Typed Fixed-Total Chosen Damage
 
 Delivery step 3 T adds the first complete typed chosen-damage adapter after the
 recorded announcement and simultaneous execution prerequisites. Fresh API,
