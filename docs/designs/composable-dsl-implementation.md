@@ -1,6 +1,65 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Positive Chosen-Damage Allocation Normalization
+## Current Slice: Activation Division Before Payment
+
+Delivery step 3 T completes the activation announcement prerequisite for
+legacy chosen damage. Fresh API, caller, test, and tracker searches confirmed
+that source/recipient identity, singular damage, source attack/block events,
+filtered death, and positive allocation normalization already exist. The next
+missing contract was the post-payment activation allocation prompt.
+
+`Game.ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int,
+targets []uuid.UUID) error` keeps its signature. Internal
+`prepareActivationDamageDivision` uses the selected effects, existing total
+reader, normalizer, and player choice service after target validation and before
+cost preparation. Impossible nonempty divisions fail before choices, payment,
+or events. Negative calculated totals become zero. A declaration that permits
+zero targets can choose none without an allocation prompt (CR 107.1b–c).
+Payment cannot change the saved total or prompt again. The map belongs to the
+stack instance and uses existing copy/clone isolation. Failed payment publishes
+no stack allocation. No public adapter, role, executor, declaration state,
+scope rule, or AI metadata was added.
+
+`TestActivationDamageDivision*` first failed for post-payment life-based totals,
+source sacrifice before choice, impossible divisions spending costs and sending
+events, payment failure skipping announcement, and modal payment timing.
+Acceptance covers mana/life/tap payment, source sacrifice, dynamic totals,
+positive/zero/negative totals with no targets, insufficient shares, illegal,
+absent, phased, and duplicate targets, combined unaffordable costs, selected
+versus inactive modes, response-map isolation, stack copies, and game clones.
+Existing `TestDamageDivision*` also passes and covers normalization, overflow,
+phasing at resolution, and losing illegal target shares. This slice changes
+announcement only; LKI, damage replacement ordering, and damage execution use
+the existing services.
+
+Complete Flames of the Firebrand, Pyrotechnics, and Fireball texts were checked
+in `data/JMP.json` and `data/4ED.json`. The Jumpstart inventory and gap record
+require chosen announcement allocations for Flames of the Firebrand. The plan
+names Pyrotechnics and Fireball as contrasting chosen/equal division cases;
+the Fourth Edition inventory and gap record do not list them separately.
+Their spell requirements remain open: this slice uses synthetic activations.
+Fresh production searches found two `DealDividedDamage` constructions, in
+Jumpstart and Legends, both unchanged. No production card, inventory, or JSON
+gap record is completed. All legacy exports remain. The reference includes a
+compiling synthetic activation example from the contract tests.
+
+Excluded: spell casting and alternate casting admission, typed divided-target
+amounts, multiple independent division instructions, simultaneous legacy
+divided damage, Fireball's equal-division rule, and production wiring.
+Next dependency-ready work is spell prepayment division choice and admission,
+before a typed divided-damage adapter. No second slice was started. Unrelated
+tracked and untracked files remain unchanged.
+
+Validation passes: focused `TestActivationDamageDivision*` and
+`TestDamageDivision*` with `-count=1`, `go test ./pkg/mage/... -short -count=1`,
+the DSL registration/closed-role run with `-count=1`,
+`go test ./... -short -count=1`, `go build ./...`, `go vet ./...`, full
+`make test`, `make lint` with zero issues, and `git diff --check`.
+The post-lint diff was reviewed; lint adjusted test import spacing only.
+Historical missing-package and C-metadata failures did not recur.
+No validation blocker remains.
+
+## Completed Slice: Positive Chosen-Damage Allocation Normalization
 
 Delivery step 3 T completes one shared prerequisite for divided-target
 announcement. Fresh API, test, caller, and tracker searches confirmed that the

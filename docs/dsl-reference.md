@@ -1067,8 +1067,29 @@ The internal signature is
 `sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int) map[uuid.UUID]int`.
 It returns nil for an empty target list, duplicate or nil target IDs, or a
 total smaller than the target count. Callers must not treat nil as proof of a
-legal announcement. Typed divided-target declarations, prepayment choice
-locking and rejection, and simultaneous divided damage are still unimplemented.
+legal announcement. Activations now validate and lock their division before
+cost preparation and payment. The selected mode supplies the effects and targets.
+An impossible nonempty division fails before the player chooses shares, pays
+costs, or publishes payment/activation events. Each target needs at least one
+point; a negative calculated total is treated as zero (CR 107.1b). When the
+target declaration permits zero targets, the activation can choose none and
+has no allocation prompt (CR 107.1c). Payment does not recalculate the shares,
+even if it changes the total's inputs or sacrifices the source. A failed payment
+creates no stack allocation. This synthetic activation declaration compiles and
+is exercised by the activation division contracts:
+
+```go
+source := mage.NewArtifact("Division source", "",
+    mage.WithActivatedAbility(mage.DealDividedDamage(mage.Fixed(3)),
+        mage.SacrificeSourceCost(),
+        mage.WithTarget(mage.TargetUpToNCreaturesOrPlayers(1))))
+_ = source
+```
+
+`Game.ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int,
+targets []uuid.UUID) error` retains its signature. This is a shared engine
+prerequisite, with no new typed DSL export or role. Spell prepayment division,
+typed divided-target declarations, and simultaneous divided damage remain open.
 Fireball's equal division at resolution requires a separate contract.
 
 The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:

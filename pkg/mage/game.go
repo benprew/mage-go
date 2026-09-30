@@ -3208,6 +3208,11 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 		}
 	}
 
+	damageDistribution, err := g.prepareActivationDamageDivision(playerID, perm.Card, actionEffects, targets)
+	if err != nil {
+		return err
+	}
+
 	// Lock and validate the total activation cost before changing live state.
 	// If the ability includes {T}, reserve its source from mana planning.
 	hasTapCost := false
@@ -3256,6 +3261,7 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 	}
 
 	obj := newStackObject(playerID, perm.ID(), nil, actionEffects, targets, g.resolution.X(), true)
+	obj.DamageDistribution = damageDistribution
 	obj.capturedNumbers = capturedNumbers
 	obj.capturedCards = maps.Clone(payment.paidCards)
 	obj.capturedCardSets = cloneCardsBindings(payment.paidCardSets)
@@ -3293,21 +3299,6 @@ func (g *Game) activateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIn
 
 	if modeChoice < 0 {
 		chooseModeForStackObject(obj, perm.Card.Modes(), g.GetPlayer(playerID), perm.Card.Name())
-	}
-
-	for _, eff := range actionEffects {
-		if !IsDividedDamageEffect(eff) {
-			continue
-		}
-		total := DividedDamageTotal(eff).Resolve(g, perm.ID(), playerID, targets)
-		if total > 0 && len(targets) > 0 {
-			pl := g.GetPlayer(playerID)
-			if pl != nil {
-				dist := pl.ChooseDamageDistribution(targets, total, perm.Card.Name(), g)
-				obj.DamageDistribution = sanitizeDamageDistribution(dist, targets, total)
-			}
-		}
-		break
 	}
 
 	g.pushStack(obj)

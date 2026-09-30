@@ -307,10 +307,22 @@ returns nil; that result does not certify a legal announcement. The default
 Spell and activation paths store the normalized map in `StackObject`.
 Existing stack copying and game cloning keep independent maps. If a target
 becomes illegal, its share is lost instead of reassigned (CR 608.2b, 707.10).
-This normalization contract does not establish prepayment choice timing,
-transactional rejection of impossible divisions, typed group allocations, or
-simultaneous execution of legacy divided damage. Those remain prerequisites
-for a complete typed divided-damage adapter.
+Activation announcement now evaluates and locks the selected mode's legacy
+chosen-damage division after target validation and before cost preparation
+(CR 601.2d, 602.2b). Each nonempty chosen target list must admit a positive
+share for every target. Impossible shapes fail before the allocation prompt,
+cost payment, or payment/activation events. Negative calculated totals become
+zero (CR 107.1b). A target declaration that permits zero targets can choose
+none, even with a positive total, without prompting for an allocation
+(CR 107.1c). The normalized map stays local until total payment succeeds;
+payment does not evaluate the total or prompt again. Source sacrifice or a
+change to the amount's inputs during payment cannot change the shares.
+Failed payment leaves no stack object or allocation. Copying and cloning use
+the existing independent-map contract.
+
+This extends activation timing and admission only. Spell prepayment choices,
+typed group allocations, and simultaneous execution of legacy divided damage
+remain prerequisites for a complete typed divided-damage adapter.
 
 Positive damage events keep the final damage action's source snapshot through event dispatch, including a simultaneous damage batch. `ReceivesDamage(This, amount).WithSource(source)` captures that snapshot when the trigger is detected. The pending trigger can use its source after a permanent leaves and returns or a spell leaves the stack. The snapshot includes the source controller and characteristics used by later damage; it does not find a new object with the same card ID. Prevention and zero damage send no damage event (CR 400.7, 603.2g, 608.2h).
 
