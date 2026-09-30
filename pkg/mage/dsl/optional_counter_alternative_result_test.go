@@ -47,7 +47,7 @@ func TestOptionalCounterAlternativeResultValidation(t *testing.T) {
 		wrap(dsl.EitherCost()),
 		wrap(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, -1))),
 		wrap(dsl.EitherCost(dsl.RemoveCountersCost(core.NumCounters, 1))),
-		wrap(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge))),
+		wrap(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge), dsl.RemoveCountersCost(core.Charge, 1))),
 		wrap(dsl.EitherCost(dsl.RemoveCountersCostInto(core.Charge, 1, dsl.BindNumber("inner")))),
 		wrap(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 1), dsl.LifePayCost(1))),
 		dsl.OptionalCostInto(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 1)), "Pay?", nil),

@@ -108,8 +108,8 @@ func (c *optionalCost) inspectDefinition() definitionNode {
 		if _, nested := c.inner.(*optionalCost); nested {
 			n.problem = "optional payment result requires a direct cost"
 		}
-		if _, alternate := c.inner.(*eitherCost); alternate && !uncapturedFixedCounterAlternatives(c.inner) {
-			n.problem = "optional payment result requires a direct cost or uncaptured fixed-counter alternatives"
+		if _, alternate := c.inner.(*eitherCost); alternate && !uncapturedFixedCounterAlternatives(c.inner) && !uncapturedXCounterAlternatives(c.inner) {
+			n.problem = "optional payment result requires a direct cost or uncaptured fixed- or X-counter alternatives"
 		}
 		if inspector, ok := c.inner.(definitionInspector); ok && len(inspector.inspectDefinition().bindingWrites) != 0 && !c.captureCard {
 			n.problem = "optional payment result cannot wrap another captured cost"

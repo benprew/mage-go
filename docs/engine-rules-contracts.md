@@ -552,7 +552,8 @@ resolution-time payment or an `EitherCost` branch produce a card binding
 saves a 1 or 0 outcome in the spell or activation payment frame. The live
 commit does not ask again. A failed total payment publishes no result. This
 instance-local outcome does not use the source-wide legacy optional-cost
-tracker. The inner cost must be direct and must not produce another binding
+tracker. The inner cost must be direct or a supported uncaptured counter
+alternative tree, and must not produce another binding
 (CR 118.8b, 601.2b, 601.2h).
 
 `OptionalRevealFromHandCost` combines that locked optional outcome with the
@@ -794,7 +795,27 @@ published when preflight fails (CR 400.7, 601.2h, 602.2b, 702.26b–d).
 
 The existing frame propagation preserves the result across stack copies and game
 clones. A result below another alternative does not dominate consumers outside
-that branch. Registration admits only uncaptured fixed-counter leaves for this
-wrapper extension; captured leaves, X leaves, mixed families, and resolution-time
-optional result capture remain invalid. This contract does not change payment
-order, counter execution, replacement ordering, or simultaneous actions.
+that branch. Registration admits uncaptured fixed-counter leaves for this
+wrapper extension and homogeneous X-counter trees as specified below. Captured
+leaves, mixed families, and resolution-time optional result capture remain invalid.
+This contract does not change payment order, counter execution, replacement
+ordering, or simultaneous actions.
+
+### Typed optional X-counter alternative acceptance
+
+`OptionalCostInto` around an uncaptured X-counter `EitherCost` tree uses the
+same preparation as the legacy optional tree. Action preparation fixes announced
+X; direct total-payment preparation fixes current X. Acceptance and each branch
+choice occur once. Accepted positive X reuses the source-incarnation lock and
+combined counter-total preflight; zero has no counter action and needs no source.
+A selected enclosing alternative uses the same path, but cannot make its result
+dominate a read outside the branch. Commit publishes 1 or 0 only in its payment
+frame after total payment succeeds, without writing the legacy source-wide flag.
+Failed preflight spends no resources and publishes no payment events. Declaration
+templates, pending instances, stack copies, and game clones retain separate state
+(CR 118.3, 118.5, 400.7, 601.2b, 601.2h, 602.2b, 702.26b-d).
+
+This extension adds no counter executor, target, LKI, replacement ordering, or
+simultaneous action contract. Captured leaves, mixed families, nested optional
+gates, general payment-order choice, and mutations during commit remain outside
+this contract.

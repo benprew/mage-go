@@ -1,6 +1,52 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Typed Acceptance for Fixed-Counter Alternative Trees
+## Current Slice: Typed Acceptance for X-Counter Alternative Trees
+
+Delivery step 3 P extends the existing
+`OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` to
+`EitherCost(options ...Cost) Cost` trees with uncaptured
+`RemoveXCountersFromSourceCost(counter CounterType) Cost` leaves. Fresh API,
+caller, tracker, and test searches confirmed that the preferred damage identity,
+singular damage, source attack/block, filtered death, legacy optional X tree,
+and typed fixed-counter tree slices already exist. No function was recreated.
+The extension reuses inspection, X conversion, choice locking, source-incarnation
+checks, combined counter preflight, and instance-local payment frames.
+
+The new `TestOptionalXCounterAlternativeResult*` contracts first failed for
+registration rejection, missing acceptance outputs, commit-time choice, stale
+source acceptance, and nested branch selection. Acceptance covers announced
+versus ambient X, zero, decline, unaffordability, nested and sole payable branch
+selection, source departure/return, initial absence, phasing and phase-in,
+combined shortages before mana/life/counter spending or events, immutable
+declarations, interleaved transactions, independent game clones, and stack copies.
+Synthetic public DSL declarations cover activations, spell additional costs,
+registration rejection, scope, and dominance. Existing role compile checks apply;
+no new role or AI metadata is introduced. Payments are nontargeted and need
+current identity for positive removal, not LKI. Replacement ordering and
+simultaneous actions are unchanged.
+
+Chamber Sentry's complete text in `data/JMP.json` was checked against the
+Jumpstart inventory and gap record. It supplies the announced X-counter cost
+requirement; the optional alternative wrapper is synthetic. No card is completed
+by this adapter. Its entry, damage, graveyard ability, and all wiring still need
+separate migration and audits. Fresh production searches found four `EitherCost`
+constructions, one legacy `OptionalCost`, and no `OptionalCostInto`. All remain
+unchanged. No inventory or JSON record changed; unrelated untracked work remains.
+
+Excluded: captured leaves, mixed fixed/X or other families, nested optional gates,
+general payment-order choice, mutations during commit, and production wiring.
+Next dependency-ready work is T divided-target announcement after a fresh audit.
+No second slice was started.
+
+Validation passes: focused contracts with `-count=1`,
+`go test ./pkg/mage/... -short -count=1`, the DSL registration and closed-role
+run with `-count=1`, `go test ./... -short -count=1`, `go build ./...`,
+`go vet ./...`, full `make test`, `make lint` with zero issues, and
+`git diff --check`. The public reference declaration compiles and validates in
+the synthetic activation test. The post-lint diff was reviewed; lint adjusted
+import spacing only. Historical workspace blockers did not recur.
+
+## Completed Slice: Typed Acceptance for Fixed-Counter Alternative Trees
 
 Delivery step 3 P extends `OptionalCostInto(inner Cost, prompt string,
 result *NumberBinding) Cost` to an `EitherCost(options ...Cost) Cost` tree whose

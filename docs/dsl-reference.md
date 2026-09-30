@@ -3674,7 +3674,7 @@ separate values. Costs are nontargeted and need current identity, not LKI.
 
 `OptionalCost` remains an engine compatibility API, not a `dsl` export. Its
 legacy flag is preserved; this adds no typed acceptance result or author export.
-`OptionalCostInto` still rejects X-counter alternative trees at registration.
+`OptionalCostInto` supports X-counter alternative trees as described below.
 Captured leaves, mixed leaf families, nested optional gates, payment-order
 selection, and mutations during commit remain separate contracts. This example
 compiles and validates in `TestOptionalEitherXCounterEngineDeclaration`:
@@ -3715,7 +3715,40 @@ event. Pending instances, copied stack objects, and game clones keep separate
 results. The typed result does not write the legacy optional-payment flag.
 
 Registration rejects empty trees, invalid counter types or negative counts,
-captured or X-counter leaves, mixed cost families, nil or unnamed results, and
+captured leaves, mixed fixed/X or other cost families, nil or unnamed results, and
 empty prompts. Resolution-time result capture remains invalid. An enclosing
 alternative branch cannot make this result dominate a read outside that branch.
 The legacy `OptionalCost` signature and existing callers remain available.
+
+### Typed acceptance for X-counter alternative trees
+
+`OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` also
+accepts an `EitherCost(options ...Cost) Cost` tree whose leaves are uncaptured
+`RemoveXCountersFromSourceCost(counter core.CounterType) Cost` costs. Supported
+contexts are activated costs, spell additional costs, and direct engine total
+payment preparation. `FromNumber(result)` reads 1 for accepted payment or 0 for
+decline or unaffordability; this is acceptance, not the removed counter count.
+
+```go
+paid := dsl.BindNumber("paid")
+card := dsl.NewArtifact("Synthetic optional X counter result", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.Mana("{X}"), dsl.OptionalCostInto(dsl.EitherCost(dsl.EitherCost(
+        dsl.RemoveXCountersFromSourceCost(core.Charge))), "Pay counters?", paid)),
+    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
+)))
+_ = card
+```
+
+Preparation fixes announced X before affordability, acceptance, and branch
+selection. Direct engine preparation fixes current X. Commit repeats neither
+choice and uses the existing source-incarnation lock and combined counter
+preflight. Positive X requires the original present, unphased source. Zero
+requires no counter action and can record acceptance without a source. Failure
+publishes no result or payment event and spends no resources at preflight.
+Stack copies and game clones retain independent payment frames; the typed result
+does not write the legacy optional-payment flag.
+
+Registration rejects empty trees, invalid counter types, captured leaves,
+mixed fixed/X or other cost families, nested optional gates, nil or unnamed
+results, and empty prompts. Resolution-time capture and reads not dominated by
+this producer remain invalid. The legacy exports and production callers remain.

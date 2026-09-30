@@ -92,7 +92,7 @@ func TestOptionalEitherXCounterDeclarationValidation(t *testing.T) {
 	for _, cost := range []dsl.Cost{
 		mage.OptionalCost(dsl.EitherCost(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.NumCounters))), "Pay?"),
 		mage.OptionalCost(dsl.EitherCost(), "Pay?"),
-		dsl.OptionalCostInto(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge)), "Pay?", dsl.BindNumber("paid")),
+		dsl.OptionalCostInto(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge), dsl.RemoveCountersCost(core.Charge, 1)), "Pay?", dsl.BindNumber("paid")),
 	} {
 		card := dsl.NewArtifact("Invalid optional X alternative", "", dsl.WithAbility(dsl.Activate(dsl.Costs(cost), dsl.GainLife(dsl.You, dsl.Fixed(1)))))
 		if err := mage.ValidateCardDefinition(card.Name(), card); err == nil {
