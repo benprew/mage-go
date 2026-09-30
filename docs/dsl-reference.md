@@ -3553,3 +3553,13 @@ card := dsl.NewInstant("Synthetic filtered discard", "{2}{U}",
 ```
 
 The payment choice occurs after drawing. The fallback occurs if the payer declines or cannot pay. This example compiles and validates in `TestFilteredDiscardPublicDeclaration`; production card wiring remains separate.
+
+### Nested fixed-counter alternatives
+
+`EitherCost(options ...Cost) Cost` can contain nested `EitherCost` declarations with uncaptured `RemoveCountersCost(counter CounterType, count int) Cost` leaves. In activated costs, spell additional costs, and direct engine total-payment preparation, selected fixed leaves use the existing source-incarnation lock and combined counter preflight. Each branch is selected during preparation; commit does not repeat that selection. A returned, absent, phased, or counter-short source fails before mana or life payment. Fixed zero still requires the original present source. This contract does not cover nested optional wrappers, captured leaves, or nested X.
+
+```go
+card := dsl.NewArtifact("Synthetic nested counter payment", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.EitherCost(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 2)))),
+    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
+```

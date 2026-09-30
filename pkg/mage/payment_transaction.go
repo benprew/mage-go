@@ -185,6 +185,11 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			}
 			locked.selected = payable[choice]
 			locked.locked = true
+			if nested, ok := locked.options[locked.selected].(*eitherCost); ok {
+				tx.costs[i] = nested
+				i--
+				continue
+			}
 			if exile, ok := locked.options[locked.selected].(*exileFromGraveyardCost); ok {
 				chosen := *exile
 				if err := chosen.choose(tx.controller, tx.game); err != nil {
