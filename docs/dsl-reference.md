@@ -1345,6 +1345,16 @@ ability := dsl.Activate(
 _ = ability
 ```
 * `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. Triggered abilities, spells, and activations can use multiple variable-size groups through their respective group announcement paths. An illegal target is absent from the batch.
+* `TargetDamageRecipientsAnyNumber(name string) *DamageTargetsBinding`: Declares zero or more distinct players, creatures, or planeswalkers, independent of X. Use it in spells, activations, selected modes, or targeted triggers with the existing target announcement options. Multiple variable groups require the recorded group path. Empty groups resolve without a damage action. If all announced targets are illegal, the object does not resolve. This is a set, so it cannot be the singular recipient of `DealDamageFrom`. `DealAllocatedDamage` and `DealAllocatedDamageX` retain their narrower spell/activation contexts and require a positive share for each chosen target before payment. The declaration does not supply equal division or per-target costs.
+
+```go
+recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
+card := dsl.NewSorcery("Any number damage", "{X}{R}",
+    dsl.Spell(dsl.DealAllocatedDamageX(dsl.This, recipients),
+        dsl.WithTargets(recipients)))
+_ = card
+```
+
 * `TargetDamageRecipients(name string, minimum, maximum int) *DamageTargetsBinding`: Declares one bounded target group of players, creatures, and planeswalkers. It is both a `TargetBinding` and a `DamageRecipientSet`. Declare it with `WithTargets`, `WithTargetGroups`, or `WithActivationTargetGroups` as appropriate. Registration rejects invalid bounds. The target announcement rejects duplicate or illegal choices before payment. At resolution, an illegal, phased-out, or returned permanent is absent from the batch; each remaining recipient is dealt damage simultaneously. This collection cannot be used as the singular recipient of `DealDamageFrom`.
 * `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
 

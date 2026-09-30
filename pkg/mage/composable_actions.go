@@ -3,6 +3,7 @@ package mage
 import (
 	"fmt"
 	"maps"
+	"math"
 	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
@@ -1271,6 +1272,11 @@ type DamageTargetsBinding struct{ *targetDeclaration }
 func DeclareDamageTargets(name string, minimum, maximum int) *DamageTargetsBinding {
 	spec := &DamageAnyTarget{BaseTarget: BaseTarget{min: minimum, max: maximum}}
 	return &DamageTargetsBinding{&targetDeclaration{name: name, spec: spec}}
+}
+
+// The slice length is the only upper bound for an unrestricted target group.
+func DeclareAnyNumberDamageTargets(name string) *DamageTargetsBinding {
+	return DeclareDamageTargets(name, 0, math.MaxInt)
 }
 
 func DeclareXDamageTargets(name string) *DamageTargetsBinding {

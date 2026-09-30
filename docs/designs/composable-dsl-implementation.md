@@ -1,6 +1,67 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Announced-X Chosen Damage Allocation
+## Current Slice: Unrestricted Mixed Damage Recipients
+
+Delivery step 3 T adds `TargetDamageRecipientsAnyNumber(name string)
+*DamageTargetsBinding`, exported from `DeclareAnyNumberDamageTargets`.
+Fresh API, caller, test, and tracker searches confirmed that source/recipient
+identity, singular damage, attack/block events, filtered death, recorded target
+groups, and fixed/announced-X chosen allocation already exist. The preceding
+slice named unrestricted mixed counts as its next dependency-ready work.
+
+The declaration selects zero or more distinct players, creatures, or
+planeswalkers, independent of X. It reuses `DeclareDamageTargets`, `DamageAnyTarget`,
+and the existing target/frame, validation, payment, damage, replacement, and
+copy services. Its internal maximum is `math.MaxInt`, the largest representable
+slice length; it has no arbitrary game count cap. No mutable declaration,
+new executor, binding role, or AI policy is added. Existing damage inspection
+and AI metadata remain intact. Spells, activations, selected modes, and targeted
+triggers use their existing announcement paths. Multiple variable groups require
+recorded group boundaries. Chosen allocation keeps its existing narrower
+spell/activation contexts and positive-share admission rules.
+
+`TestAnyNumberDamageTargets*` first failed because the constructor was absent.
+Focused contracts cover 103 mixed recipients at X=0 for spells and activations,
+illegal categories, duplicate/absent identities, unpaid announcements without
+tap or mana spending, complete callback visibility, empty groups, empty recorded
+group boundaries, source sacrifice/return LKI and lifelink, prevention,
+recipient departure/return and phasing, copy/clone isolation, retargeting,
+protection, all-illegal resolution, scope, and registration rejection.
+The existing `TestDealDamageEach*`, `TestAllocatedDamage*`, and
+`TestTypedXDamageTargets*` regressions cover the reused source-absence,
+replacement, allocation, and group services. A public DSL test compiles the
+reference example and checks existing damage metadata. A compile-failure test
+rejects the new set as a singular recipient. A synthetic gametest spell checks
+chosen shares, state-based creature death, and the following instruction.
+Chosen allocation rejects more targets than positive shares before a choice
+prompt or payment; empty allocation groups need no prompt.
+
+Complete Fireball and Pyrotechnics text in `data/4ED.json` and Rolling Thunder
+text in `data/TMP.json` were checked against the Limited/Legends inventories and
+JSON requirements. Unrestricted counts, chosen division, equal rounded-down
+division, and additional per-target payment are distinct contracts. Fireball
+still needs equal division and per-target payment adapters; all three cards
+still need separate production wiring and full audits. Fresh searches found no
+production caller of the new API and the same two `DealDividedDamage` calls in
+`cards/jumpstart/spells.go` and `cards/legends/spells.go`. No legacy export,
+production card, inventory, or JSON gap record changed or closed. All unrelated
+tracked and untracked work is preserved.
+
+Excluded: equal division, per-target payment, general announcement expressions,
+multiple allocations, prepared casting payment, and production migration.
+Next dependency-ready work is a narrow T audit of equal rounded-down damage
+division and its announcement-count contract, with per-target payment kept as a
+separate prerequisite. No second slice was started.
+
+Validation passes: focused contracts, public declaration, compile-failure, and
+synthetic integration with `-count=1`; `go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+Lint's test-slice preallocation issue was corrected and required checks were
+rerun. The post-lint diff was reviewed. No validation blocker remains.
+
+## Completed Slice: Announced-X Chosen Damage Allocation
 
 Delivery step 3 T adds `DealAllocatedDamageX(source DamageSourceRef,
 recipients *DamageTargetsBinding) ResolvingEffect`. Fresh API, caller, test, and
