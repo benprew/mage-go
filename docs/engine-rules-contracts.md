@@ -907,3 +907,23 @@ validation without publishing events or spending live resources. Stack copies
 and clones do not calculate or pay costs again. Activation cost reduction,
 optional/alternative branch eligibility, prepared/Paradigm card-copy payment,
 and the general Channel mana-ability declaration are separate contracts.
+
+### Announced target surcharge (CR 601.2c, 601.2f)
+
+`AdditionalManaPerTargetBeyondFirst(amount int)` is a spell-only declaration.
+Its internal contextual cost adds `amount * max(0, len(announcedTargets)-1)`
+generic mana through `lockPaymentCosts`. Target occurrences in separate groups
+count separately, even when they name the same object. The existing total-cost
+transaction applies increases and reductions to the combined mana total, proves
+payment on a clone, and commits only after successful validation. Sacrificing a
+reducer during payment cannot change the locked total. Failed payment or invalid
+target announcement publishes no live payment or targeting events and changes
+no resources. Copies and later target legality checks do not pay or refund the
+surcharge. The declaration stores no per-cast state.
+
+The `TestTargetSurcharge*` contracts cover zero through three targets, independent
+groups, X, alternate-zone casting, cost modifiers, a sacrificed reducer, rollback,
+reused declarations, pending instances, copies, clones, departure, return, phasing,
+and registration. The synthetic gametest uses the public DSL declaration and
+checks damage, payment, and spell cleanup. No damage or replacement executor was
+added or changed.

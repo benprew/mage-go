@@ -1410,7 +1410,7 @@ card := dsl.NewSorcery("Synthetic Equal Division", "{X}{R}",
 _ = card
 ```
 
-This synthetic declaration supplies division and the ordinary mana cost. Fireball also requires its additional cost for each target beyond the first; card wiring remains separate.
+This synthetic declaration supplies division and the ordinary mana cost. Add `AdditionalManaPerTargetBeyondFirst(1)` inside `Spell` for Fireball's target surcharge; production card wiring remains separate.
 
 ```go
 targets := dsl.TargetPermanents("creatures", 1, 2, dsl.IsCreature)
@@ -4070,7 +4070,47 @@ _ = card
 ```
 
 For two targets and X=4, the total is {4}{R}: {4}{R} plus {2}, minus {2}.
-This example charges for every target. The separate declaration for a cost
-per target beyond the first remains proposed work. Branch selection inside
-optional/alternative costs, prepared/Paradigm card-copy payment, and new
-cost-reduction declarations are outside this slice.
+This example charges for every target. Use the spell-only
+`AdditionalManaPerTargetBeyondFirst` option below to exclude the first target.
+Branch selection inside optional/alternative costs, prepared/Paradigm card-copy
+payment, and new cost-reduction declarations remain separate work.
+
+### Additional mana for targets beyond the first
+
+`AdditionalManaPerTargetBeyondFirst(amount int) SpellOption` adds generic mana
+for each announced target occurrence after the first. The amount must be
+positive; registration rejects zero and negative amounts. Use it in `Spell`,
+including spells with `WithTargetGroups`. It counts all groups together, including
+one object chosen once in each of two independent groups. Zero or one announced
+target adds no mana. Multiple options add their separate costs.
+
+The existing spell payment transaction combines this cost with printed or
+alternative mana and announced X before increases and reductions. Payment locks
+the count at announcement. Later target loss, phasing, or illegality cannot change
+the paid cost. Spell copies pay no additional cost. Declaration values are
+immutable and contain no target choices or payment results.
+
+This spell-only option cannot be used in `Costs`, `Activate`, a resolving body,
+or `SpellModes`. Activation and modal adapters remain separate work. The legacy
+`ManaCostPerTarget(string) Cost` still charges for every announced target and
+remains available for existing callers.
+
+This complete synthetic declaration compiles:
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func Card() dsl.Card {
+    recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
+    return dsl.NewSorcery("Synthetic Target Surcharge", "{X}{R}",
+        dsl.Spell(dsl.DealDamageEvenly(dsl.This, recipients,
+            dsl.ValueAtResolution(dsl.XValue())),
+            dsl.WithTargets(recipients),
+            dsl.AdditionalManaPerTargetBeyondFirst(1)))
+}
+```
+
+This supplies Fireball's target surcharge and equal-division requirements.
+Production card wiring remains separate.

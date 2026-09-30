@@ -1,6 +1,70 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Spell Cost Modifiers on the Combined Mana Total
+## Current Slice: Additional Mana for Targets Beyond the First
+
+Delivery step 3 T/P adds `AdditionalManaPerTargetBeyondFirst(amount int)
+SpellOption` after the combined-total cost prerequisite. A fresh audit found
+source/recipient damage identity, singular and simultaneous damage, source
+attack/block events, filtered other-creature death, target groups, allocation,
+and equal division already implemented. No existing function was recreated.
+
+The immutable spell option installs an internal contextual cost in the existing
+`ActionDefinition`. It adds `amount * max(0, announced target count - 1)` generic
+mana across all declared groups. The same object selected in separate groups
+counts once per occurrence. Zero or one target adds nothing. Printed or
+alternative mana, announced X, and added mana join the shared total before cost
+increases and reductions. The total locks before mana production and payment;
+sacrificing a reducer cannot change it. Copies pay nothing and later target
+loss does not refund costs. The option contains no choices, frame, or results.
+
+The public API returns the sealed `SpellOption`, rather than a general `Cost`,
+to restrict this announcement-only capability to spells. Registration rejects
+nonpositive amounts through the inspection graph. Compile-failure fixtures
+reject activation, resolving-body, and `Costs` use. No new binding, target role,
+AI metadata, damage executor, replacement service, or payment transaction was
+needed. Existing payment and target-frame services supply the behavior.
+Excluded: activation and modal spell options, colored or variable surcharges,
+group-specific costs, and production cards. Multiple declarations add their
+separate costs; no mutable declaration state is shared.
+
+`TestTargetSurcharge*` first failed because the constructor was absent.
+Acceptance covers zero through three mixed recipients, independent groups with
+a repeated object, X, hand and alternate-zone casting, increase-before-reduction
+ordering, a reducer sacrificed during payment, successful mixed mana/life
+payment, unpaid and invalid target rollback with no live events, reused options
+with two pending casts, copies, clone isolation, departure/return, phasing, and
+registration/inspection. Shared total-cost and equal-damage regressions pass.
+The synthetic gametest uses the public example, checks the paid surcharge,
+equal damage, and normal spell cleanup; the standalone reference example builds.
+
+Complete Fireball text in `data/4ED.json` was checked against the Limited
+inventory and JSON requirement. Its variable targets, equal division, typed
+damage, and beyond-first surcharge are available for the single-body spell.
+Fireball's production declaration is still unmigrated; its inventory and JSON
+gap remain open. No untracked input record was edited or closed. A fresh caller
+search finds no production use of the new option and one legacy
+`ManaCostPerTarget` construction, Goblin Polka Band in
+`cards/astral/creatures.go`. That activation and all legacy exports remain.
+
+The next dependency-ready T/P work is a typed per-target activation mana option
+for Goblin Polka Band, after its colored-cost and action-payment contracts are
+audited. Its random target selection and successful tap results remain separate
+requirements. Modal spell costs need their own option and selected-mode contract
+audit. No second slice was begun.
+
+Validation passes: focused `TestTargetSurcharge*`, `TestSpellTotalModifiers*`,
+and `TestEvenDamage*` plus synthetic integration with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`;
+`go test ./pkg/mage/dsl -run 'TestRegisteredDefinitions|TestClosedExpressionRoles' -count=1`;
+`go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full uncached `GOFLAGS=-count=1 make test`; `make lint` with zero issues;
+and `git diff --check`. The standalone reference example builds. The post-lint
+diff was reviewed; formatting changes stay within this slice. Historical
+missing-package and C-metadata blockers did not recur. No validation blocker
+remains. Unrelated untracked workspace files are preserved. No production card
+changed.
+
+## Completed Slice: Spell Cost Modifiers on the Combined Mana Total
 
 Delivery step 3 T/P's additional-per-target audit found an engine prerequisite.
 Ordinary casting reduced the printed cost before combining added mana and
@@ -33,9 +97,10 @@ Complete Fireball text in `data/4ED.json` was checked against the Limited
 inventory and its JSON gap requirement. Fireball needs additional {1} for each
 target beyond the first, then X damage divided evenly, rounded down, among any
 number of targets. The existing `ManaCostPerTarget(string)` charges every target
-and is preserved. The beyond-first declaration remains next dependency-ready
-work after this prerequisite; no production card was changed and no inventory
-or gap record was closed. A fresh production search finds one remaining
+and is preserved. The beyond-first declaration was the next dependency-ready
+work after this prerequisite and is now implemented in the slice above; no
+production card was changed and no inventory or gap record was closed. A fresh
+production search finds one remaining
 `ManaCostPerTarget` construction, Goblin Polka Band in
 `cards/astral/creatures.go`; its activation and all legacy exports remain.
 Mana Matrix's complete text in `data/LEG.json` requires a {2} reduction for

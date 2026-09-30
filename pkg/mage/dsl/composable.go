@@ -161,7 +161,8 @@ var (
 	// WithActivationTargetGroups declares independent activation target groups.
 	WithActivationTargetGroups = mage.WithActivationTargetGroups
 	// Spell constructs the resolving ability of an instant or sorcery card.
-	Spell = mage.Spell
+	Spell                              = mage.Spell
+	AdditionalManaPerTargetBeyondFirst = mage.AdditionalManaPerTargetBeyondFirst
 	// Activate constructs an activated ability from costs, an effect body, and optional restrictions.
 	Activate = mage.Activate
 	// Costs groups cost components (mana, tap, sacrifice, life, counters) for an activation.
