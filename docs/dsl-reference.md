@@ -3576,3 +3576,21 @@ card := dsl.NewArtifact("Synthetic nested X counter payment", "", dsl.WithAbilit
 ```
 
 This extends the earlier nested fixed-counter section's X exclusion. Existing signatures and production callers remain available.
+
+### Alternative Branch with an Optional Fixed-Counter Payment
+
+`EitherCost(options ...Cost) Cost` can select a branch containing `OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` with a direct uncaptured `RemoveCountersCost(counter core.CounterType, count int) Cost` inner cost. Activated costs and spell additional costs retain announcement-time locking. Direct engine total-payment preparation now also locks that branch's optional acceptance once and sends accepted fixed removal through the shared source-incarnation lock and combined-total preflight. Nested `EitherCost` ancestors use the same path. The engine's legacy `OptionalCost(inner Cost, prompt string) Cost` also retains this behavior and its signature.
+
+Decline or an unaffordable inner cost performs no counter removal. Accepted fixed zero requires the original present source. A returned, absent, phased-out, or counter-short source fails commit before mana or life payment. Phase-out followed by phase-in preserves identity. The declaration remains immutable; pending payments and game clones own separate locks and outputs.
+
+An optional result inside an alternative branch does not dominate a read outside that branch, even for a one-option alternative. Registration rejects that read. This example intentionally leaves the result unread and is compiled and executed by `TestEitherOptionalFixedCounterPublicDeclaration`:
+
+```go
+card := dsl.NewArtifact("Synthetic alternative optional fixed", "", dsl.WithAbility(dsl.Activate(
+    dsl.Costs(dsl.EitherCost(dsl.OptionalCostInto(
+        dsl.RemoveCountersCost(core.Charge, 2), "Pay counters?", dsl.BindNumber("paid")))),
+    dsl.GainLife(dsl.You, dsl.Fixed(1)),
+)))
+```
+
+This extends the earlier nested-optional exclusion only for a selected alternative branch with a direct uncaptured fixed-counter inner cost. X costs, captured inner costs, optional-around-alternative declarations, general payment-order selection, and mutations during commit remain separate contracts. No public signature changed.

@@ -190,6 +190,13 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 				i--
 				continue
 			}
+			if optional, ok := locked.options[locked.selected].(*optionalCost); ok {
+				if fixed, ok := optional.inner.(*removeCountersCost); ok && !fixed.capture {
+					tx.costs[i] = optional
+					i--
+					continue
+				}
+			}
 			if exile, ok := locked.options[locked.selected].(*exileFromGraveyardCost); ok {
 				chosen := *exile
 				if err := chosen.choose(tx.controller, tx.game); err != nil {
