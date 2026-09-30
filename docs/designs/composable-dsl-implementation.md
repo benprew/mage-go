@@ -1,6 +1,63 @@
 # Composable DSL Outstanding Implementation Work
 
-## Current Slice: Card-Copy Division Admission
+## Current Slice: Simultaneous Legacy Divided Damage
+
+Delivery step 3 T completes the execution prerequisite for chosen damage.
+Fresh API, caller, tracker, and test searches confirmed that damage identity,
+singular damage, source attack/block, filtered death, division normalization,
+and all recorded announcement routes already exist. The legacy executor still
+applied each share sequentially. This slice fixes that shared contract before a
+typed allocation adapter is exposed. No production card changed.
+
+`mage.DealDividedDamage(total mage.ValueSource) mage.Effect` retains its signature
+and metadata. Its executor captures the resolving damage source once, builds
+player/permanent assignments from the surviving positive announced shares, and
+uses `Game.DealSimultaneousDamage`. Replacement and prevention prepare all shares
+before execution. Damage and life-gain events and damage callbacks see the
+complete batch. The existing stack resolver handles target legality and
+incarnation checks; illegal shares are lost, not redistributed. Departure LKI
+supplies source characteristics and controller. The legacy unknown-source ID
+fallback remains. This slice adds no role, binding, declaration state,
+inspection node, registration rule, payment transaction, or damage service.
+
+`TestDividedDamageBatchObservers` first failed for both synthetic spell and
+activation resolution because event observers and callbacks saw partial damage.
+`TestDividedDamageBatchPreparesBeforeExecution` first failed because later
+replacement processing saw an executed share. These regressions now pass.
+Acceptance also covers redirection followed by prevention, finite shields,
+sacrificed/returned source LKI, lifelink and deathtouch, damage-event source
+identity, copy/clone isolation, absent/returned/phased/protected/prevented
+recipients, empty and nonpositive shares, and legacy unknown-source IDs.
+Existing normalization and all announcement-route tests cover payment rollback,
+map isolation, modal selection, and division admission. The synthetic gametest
+`TestDividedDamage` passes. The reference example builds independently.
+
+Complete Flames of the Firebrand (`data/JMP.json`), Pyrotechnics, and Fireball
+(`data/4ED.json`) text was checked against the inventories and gap records.
+Fireball's equal division at resolution is a separate rule. A fresh caller
+search finds two production `DealDividedDamage` constructions:
+`cards/jumpstart/spells.go` (Flames of the Firebrand) and
+`cards/legends/spells.go` (Pyrotechnics). Both remain unchanged and still need
+typed allocation/card wiring. No export was removed. No inventory or JSON gap
+record is closed: an engine execution fix does not complete an unmigrated card.
+Unrelated tracked and untracked work is preserved.
+
+Excluded: typed allocations, independent groups, multiple division instructions,
+Fireball's rule, general replacement-pipeline extensions, prepared mana payment,
+and production migration. Next dependency-ready work is a typed chosen-damage
+allocation for one recorded damage-recipient target group, after a fresh audit
+of its announcement, inspection, and copying contracts. No second slice started.
+
+Validation passes: focused `TestDividedDamageBatch*`, normalization, activation,
+hand, alternate-zone, copy-cast, mixed-batch, and source-identity contracts with
+`-count=1`; synthetic gametest `TestDividedDamage` with `-count=1`;
+`go test ./pkg/mage/... -short -count=1`; DSL registration and closed-role checks
+with `-count=1`; `go test ./... -short -count=1`; `go build ./...`; `go vet ./...`;
+full `make test`; `make lint` with zero issues; and `git diff --check`.
+Historical missing-package and C-metadata failures did not recur. No validation
+blocker remains. The diff was reviewed after lint.
+
+## Completed Slice: Card-Copy Division Admission
 
 Delivery step 3 T completes the remaining card-copy announcement prerequisite
 for chosen damage. Fresh API, tracker, caller, and test searches confirmed the

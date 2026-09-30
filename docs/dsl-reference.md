@@ -1061,7 +1061,21 @@ spell := mage.NewInstant("Division spell", "",
     mage.NewMultiTargetSpell(
         []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
         mage.DealDividedDamage(mage.Fixed(4))))
+_ = spell
 ```
+
+At resolution, `DealDividedDamage` captures the source once and submits all
+remaining positive shares to `Game.DealSimultaneousDamage`. Replacement and
+prevention prepare every assignment before damage is applied. Damage and
+lifelink events and damage callbacks observe the complete batch. The shared
+stack resolver excludes illegal targets, including departed, returned, phased,
+and protected permanents; their shares are lost. The batch keeps the source's
+resolving incarnation and departure LKI for protection, lifelink, and deathtouch.
+This execution contract supports resolving spells and activated abilities,
+including their copies. It preserves legacy unknown-source ID behavior and
+the existing AI damage metadata. `TestDividedDamageBatch*` covers the adapter
+and synthetic spell/activation integration. No typed divided-target or allocation
+declaration is introduced.
 
 The internal signature is
 `sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int) map[uuid.UUID]int`.
@@ -1128,8 +1142,8 @@ _ = err
 
 These helpers use the granting effect's casting permission and timing context.
 This slice adds no typed divided-damage export. Prepared spell payment,
-typed divided-target declarations, independent grouped allocations, and
-simultaneous divided damage remain open. Fireball's equal division at resolution
+typed divided-target declarations and independent grouped allocations
+remain open. Fireball's equal division at resolution
 requires a separate contract.
 
 Prepared and Paradigm card-copy casts also validate their selected targets and

@@ -413,13 +413,7 @@ func (e *dealDamageEffect) Apply(ctx *EffectContext) error {
 	return nil
 }
 
-// execDealDividedDamage reads the per-target damage distribution chosen at
-// cast/activation time (stored on the StackObject and forwarded into ctx via
-// resolvingDamageDistribution) and applies it. CR 601.2d/609.3.5: a divided-
-// damage spell's distribution is chosen on announcement and is frozen; if a
-// target later becomes illegal, only that target's share is wasted — the
-// remaining targets still take their shares. We honor that by skipping
-// ctx.Targets entries that no longer point at a valid creature/player.
+// Illegal targets keep no share. The remaining shares form one damage instruction.
 func (*dealDividedDamageEffect) Apply(ctx *EffectContext) error {
 	dist := ctx.DamageDistribution
 	if dist == nil {
@@ -428,32 +422,23 @@ func (*dealDividedDamageEffect) Apply(ctx *EffectContext) error {
 	if len(dist) == 0 {
 		return nil
 	}
-	for _, tid := range ctx.Targets {
-		amt, ok := dist[tid]
-		if !ok || amt <= 0 {
-			continue
-		}
-		applied := false
-		for _, pl := range ctx.Game.AllPlayers() {
-			if pl.PlayerID() == tid {
-				ctx.Game.DealDamageToPlayer(pl, amt, ctx.SourceID)
-				applied = true
-				break
-			}
-		}
-		if applied {
-			continue
-		}
-		perm := ctx.Game.FindPermanent(tid)
-		if perm == nil {
-			continue
-		}
-		sourceCard := ctx.Game.FindCardAnywhere(ctx.SourceID)
-		if sourceCard != nil && perm.HasProtectionFromInGame(sourceCard, ctx.Game) {
-			continue
-		}
-		ctx.Game.DealDamageToPermanent(perm, amt, ctx.SourceID)
+	source := ctx.Game.CaptureDamageSource(ctx.SourceID)
+	if !source.Valid() {
+		source.id = ctx.SourceID
 	}
+	assignments := make([]DamageAssignment, 0, len(ctx.Targets))
+	for _, targetID := range ctx.Targets {
+		amount := dist[targetID]
+		if amount <= 0 {
+			continue
+		}
+		if player := ctx.Game.GetPlayer(targetID); player != nil {
+			assignments = append(assignments, PlayerDamageAssignment(player, amount, source))
+		} else if permanent := ctx.Game.FindPermanent(targetID); permanent != nil {
+			assignments = append(assignments, PermanentDamageAssignment(permanent, amount, source))
+		}
+	}
+	ctx.Game.DealSimultaneousDamage(assignments...)
 	return nil
 }
 
