@@ -206,6 +206,44 @@ func (p *HumanPlayer) ChooseMode(modes []string, reason string) int {
 	return resp.SelectedIndex
 }
 
+func (p *HumanPlayer) ChooseTargets(possible []uuid.UUID, minimum, maximum int, g *mage.Game) []uuid.UUID {
+	options := make([]ChoiceOption, 0, len(possible))
+	for _, id := range possible {
+		label := id.String()
+		if player := g.GetPlayer(id); player != nil {
+			label = player.Name()
+		} else if permanent := g.FindPermanent(id); permanent != nil {
+			label = permanent.Name()
+		}
+		options = append(options, ChoiceOption{ID: id, Label: label})
+	}
+	var selected []uuid.UUID
+	for len(selected) < maximum && len(options) > 0 {
+		if len(selected) >= minimum && !p.ChooseMayAbility("Choose another target?") {
+			break
+		}
+		response := p.requestChoice(ChoiceRequest{
+			Type: ChoicePermanent, Reason: "Choose a target", Amount: 1, Options: options,
+		})
+		if len(response.SelectedIDs) != 1 {
+			return selected
+		}
+		found := false
+		for i, option := range options {
+			if option.ID == response.SelectedIDs[0] {
+				selected = append(selected, option.ID)
+				options = append(options[:i:i], options[i+1:]...)
+				found = true
+				break
+			}
+		}
+		if !found {
+			return selected
+		}
+	}
+	return selected
+}
+
 func (p *HumanPlayer) ChoosePermanent(candidates []*mage.Permanent, reason string, g mage.GameReader) *mage.Permanent {
 	if len(candidates) == 0 {
 		return nil
