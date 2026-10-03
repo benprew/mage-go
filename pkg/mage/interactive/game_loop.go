@@ -67,7 +67,7 @@ func RunGameLoopContext(ctx context.Context, g *mage.Game, humanIdx int, aiActio
 	getHumanAction := func(mainPhase bool) (PriorityAction, bool) {
 		playerID := g.PlayerAt(humanIdx).PlayerID()
 		options := GetAvailableActions(g, playerID)
-		if shouldAutoPassPriority(options) {
+		if hp.autoPassPriority(g, humanIdx, options) {
 			lastUndo.valid = false
 			return PriorityAction{Type: ActionPass}, send(PromptNone, nil)
 		}
