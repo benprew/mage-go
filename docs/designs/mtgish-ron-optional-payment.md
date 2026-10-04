@@ -30,7 +30,7 @@ ability. Relevant rules: CR 113.7a and 608.2b–d, 608.2g.
 Declarations reject missing/nonadjacent continuations, tuple `CostWasPaid()`,
 standalone or reused payment conditions, empty unpaid bodies, unbound/wrong-role
 player or spell references, variable mana costs, alternative costs and nonmana
-costs. `MayCost`, `PayManaX`, paid branches, loop payment bindings, event payer
+costs. `PayManaX`, paid branches, loop payment bindings, event payer
 references and general conditionals remain unsupported.
 
 Inventory assigns the player and cost roles to `PlayerMayCost`, condition and
@@ -49,3 +49,7 @@ These reporting roles do not imply execution support for rejected ancestors.
 Local Oracle records in `data/LEG.json` and `data/FEM.json` agree with the
 complete selected RON records. No RON data or engine implementation changes
 are required. The production registry remains unchanged.
+
+`MayCost(PayMana(...))` with an adjacent unpaid continuation is now supported.
+See [controller upkeep payments](mtgish-ron-upkeep-payment.md) for its exact
+shapes and gameplay evidence.

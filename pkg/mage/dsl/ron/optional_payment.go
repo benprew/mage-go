@@ -6,7 +6,7 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
-		if part.Name == "PlayerMayCost" {
+		if part.Name == "PlayerMayCost" || part.Name == "MayCost" {
 			if i+1 == len(parts) {
 				return nil, problem(part, "payment requires an adjacent unpaid continuation")
 			}
@@ -28,14 +28,24 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 }
 
 func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactory, error) {
-	if err := arity(payment, 2); err != nil {
-		return nil, err
+	var player playerReferencePlan
+	var cost Node
+	if payment.Name == "MayCost" {
+		if err := arity(payment, 1); err != nil {
+			return nil, err
+		}
+		cost = payment.Args[0]
+	} else {
+		if err := arity(payment, 2); err != nil {
+			return nil, err
+		}
+		var err error
+		player, err = compilePlayerRef(payment.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		cost = payment.Args[1]
 	}
-	player, err := compilePlayerRef(payment.Args[0], ctx)
-	if err != nil {
-		return nil, err
-	}
-	cost := payment.Args[1]
 	if cost.Name != "PayMana" {
 		return nil, unsupported(cost, "optional payment cost")
 	}

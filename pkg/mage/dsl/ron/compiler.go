@@ -748,6 +748,21 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		if n.Name == "PermanentDealsDamage" && n.Args[2].Name == "Player" {
+			if err := arity(n.Args[2], 1); err != nil {
+				return nil, err
+			}
+			if n.Args[2].Args[0].Kind != Symbol || n.Args[2].Args[0].Name != "You" {
+				return nil, unsupported(n.Args[2].Args[0], "damage player reference")
+			}
+			player, err := compilePlayerRef(n.Args[2].Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.DealDamageFrom(mage.This, player.build(bindings), mage.ValueAtResolution(amount))
+			})
+		}
 		if err := requireRef(n.Args[2], ctx.target, ctx); err != nil {
 			return nil, err
 		}

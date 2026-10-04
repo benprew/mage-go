@@ -1348,3 +1348,124 @@ related cards after a complete-record audit; characteristic readers/branches
 for Blood Lust and the downstream cards above. Reassess estimates before
 starting a new slice. Complete loading/gameplay, embedded startup, native/WASM
 smoke tests, Go-card/generator deletion and unused-DSL cleanup remain open.
+
+## Run 2026-10-04: P4-IMPLICIT-FIXED-MANA
+
+Status: complete one fixed controller upkeep payment slice, with the
+P5-CONTROLLER-DAMAGE adapter prerequisite. No second slice was started.
+Initial user edits to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from this commit. No unrelated untracked files existed.
+
+The [upkeep payment report](mtgish-ron-upkeep-payment.md) records the three
+candidate comparison, distinct names, complete-record audit, estimates,
+dependencies, exact contexts, reusable engine contracts, source evidence and
+card-to-test mappings. Fixed payments offered six estimated complete-card
+unlocks at lower effort than temporary animation (three with several missing
+contracts) or characteristic branches (one plus three blocked downstream cards).
+The payment pair and the Force of Nature damage-recipient prerequisite were
+selected and their contract and acceptance cases stated before edits.
+
+Exact supported additions:
+
+- `MayCost(PayMana(list))/1` adjacent to `Unless(CostWasPaid, list)/2` in
+  action sequences, including supported trigger, activation and spell contexts.
+  Fixed mana only; the unpaid body must be nonempty. Nested pairs have local
+  outcomes. The payer is the stored resolving controller, independently of
+  player action selectors. Existing `PlayerMayCost/2` callers keep working.
+- `PermanentDealsDamage(ThisPermanent, value, Player(You))/3` in a permanent
+  scope, with existing Integer/1 or bound ValueX values. Explicit Player/1 here
+  accepts only the symbol You. Other sources/player forms remain errors.
+- Inventory cost roles under MayCost/1 and player-reference roles under
+  recipient Player/1. Reporting still does not claim signature support.
+
+Engine reuse: `UnlessPaid`, `Costs`, `Sequence`, fresh cost/effect factories,
+`DealDamageFrom`, `This`, `You`, `ValueAtResolution`; shared total-payment
+transactions, mana solver, trigger queue/controller capture, incarnations,
+LKI and damage/prevention/event services. No missing engine contract was found.
+No engine implementation, RON source, runtime wiring, Go definition or DSL export
+was changed. No fallback, card-name branch or global last-action result was
+introduced. The old removal gates are still closed; no unused-caller audit or
+production deletion is claimed.
+
+TDD first failed on missing MayCost and inventory roles after fixture API
+corrections. Later gameplay failures exposed incorrect test expectations for
+sacrifice after control transfer, cloned BasePlayer choices, and trigger indexes
+before activated abilities. Those expectations were corrected using existing
+engine behavior. Clones use their default decline decision and retain separate
+mana/life/stack state. Full RON tests then failed only on two old inventory totals;
+these were updated from fresh measured counts without changing gameplay tests.
+
+Affected unique cards and gameplay mapping (all tests in upkeep_payment_test.go):
+
+| Card or context | Tests |
+| --- | --- |
+| Force of Nature, Phantasmal Forces, Junún Efreet, Sunken City, Palladia-Mors, Vaevictis Asmadi | `TestRONUpkeepPaymentRealCards`: ten scenarios per complete RON record; payment timing, own/opponent upkeep, pay/refuse/inability, colored mana sources and rollback, source departure/return/phasing, control changes and prevention |
+| Sunken City; selected creatures' flying/trample; Vaevictis Asmadi's three pumps | `TestRONUpkeepPaymentOtherRules`: both controllers' blue creatures, boost departure, keywords, all three colored activations |
+| Independent source/controller instances and game clones | `TestRONUpkeepPaymentInstancesAndClones` |
+| Zero costs, fresh factories and nested independent results | `TestRONUpkeepPaymentZeroAndNested` |
+| Juzám Djinn, Serendib Efreet, Elves of Deep Shadow | `TestRONUpkeepDamageAdditionalCards`: upkeep self damage, flying, immediate mana ability with tap cost and self damage |
+| Force of Nature's source LKI/event incarnation and recipient | `TestRONUpkeepDamageLKI`: source departure, return under another controller, phasing and control transfer |
+| Invalid shapes, costs, conditions and bindings | `TestRONUpkeepPaymentInvalid`, `TestRONUpkeepDamageInvalid` |
+| Nested operand roles | `TestRONUpkeepPaymentInventory` |
+
+Compilation increases from **919 to 939 of 2,445 records**; strict rejection
+falls from **1,526 to 1,506 records**. Accepted unique names increase from
+**271 to 280**, leaving **706 rejected unique names**. Actual gain is **20
+records and nine names**: Force of Nature and Phantasmal Forces six reprints
+each, Serendib Efreet two, and the other six names one each. The estimate of
+six names counted the payment users but missed three direct damage-prerequisite
+users. Their full records and gameplay were subsequently included. Compilation
+and gameplay evidence remain separate; inventory engine_validated and
+behavior_verified global totals remain null. The nine names have direct RON
+rules tests; this is not a claim of complete collection behavior.
+
+Before/after diagnostics show zero new rejection and 27 changed remaining
+record diagnostics. Conversion now reaches SetLandType; Demonic Hordes reaches
+opponent sacrifice choices; Arcades Sabboth reaches IsntAttacking; Breeding Pit
+reaches end-step/token rules; Nicol Bolas reaches damage events; the Chants reach
+entry events; Forethought Amulet reaches its replacement. Other changes expose
+unsupported nonmana costs, paid branches and MustCost. All other rejected
+record diagnostics stay the same. The leading first gaps are
+PermanentRuleEffect 110, AsPermanentEnters 90, If 64, ActivatedWithModifiers 61,
+CastEffect 54, ChooseADamageSource 46, WhenAPlayerCastsASpell 43,
+Targeted_Modal 42, HostController 35 and ControlledByAPlayer 29 records.
+These are compiler/context gaps, not environment failures.
+
+Local Oracle data in LEA/ARN/DRK/LEG agrees with all nine unlocked records.
+No source defect was corrected. All 12 RON file hashes match the vocabulary
+snapshot, so its source syntax does not need refresh. Gaea's Liege/Fastbond
+observations remain unresolved. The report lists inspected partially affected
+cards and their other blockers; none is counted as a full unlock.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`, `make build` | PASS |
+| Baseline strict loader and AST inventory | Expected exit 1; 919 compiled, 1,526 rejected |
+| New `go test ./pkg/mage/dsl/ron -run TestRONUpkeepPayment -count=1` | Expected unsupported MayCost and missing-role failures; final PASS |
+| Focused `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final gameplay test change |
+| `make test` | PASS, repeated after final gameplay test change |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; repeated |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; both 939 compiled, 1,506 rejected; no partial registry |
+| Source hashes and rejection comparison | All hashes unchanged; no accepted-record regression |
+
+Automatic lint changes only reordered the new test file's imports. Reviewed
+changes have no semantic effect and neither user file was changed by lint.
+No required check was waived and no environment/pre-existing failure blocks
+this slice. The slice changes compiler.go, optional_payment.go, inventory.go,
+inventory_test.go and the new upkeep_payment_test.go; dsl-reference.md,
+engine-rules-contracts.md, optional-payment report, the new upkeep-payment
+report and this ledger. Only these ten files are staged for one descriptive
+commit. No startup or cutover validation is claimed.
+
+Next ranked candidates: shared spell-cast events plus fixed paid continuations
+for Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere and Urza's
+Chalice (six credible unlocks after exact event/payer audit); temporary animation
+for Mishra's Factory/Jade Statue/Thelonite Druid (three possible unlocks with
+layer/timing/duration/cost dependencies); characteristic filters/branches for
+Blood Lust and downstream Berserk/Kry Shield/Subdue (one immediate unlock).
+Reassess fresh evidence next run. Complete loading/gameplay, embedded runtime,
+native startup, Go-card/generator deletion and unused-DSL cleanup remain open.

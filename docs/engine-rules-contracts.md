@@ -697,3 +697,15 @@ RON tests, mapped in [the slice report](designs/mtgish-ron-static-animation.md).
 Creature entry detection sees the animated power before its trigger is queued.
 The event keeps that value after departure. No new replacement, payment-result,
 APNAP, general LKI reader or simultaneous zone-operation contract is introduced.
+
+## RON controller upkeep payment adapter
+
+RON lowers adjacent fixed `MayCost(PayMana(...))` and
+`Unless(CostWasPaid, [...])` declarations to `UnlessPaid(You, Costs(...), ...)`.
+The stacked trigger keeps its controller as payer. Source control changes do
+not transfer that payment; an unpaid sacrifice still requires that player to
+control the original source incarnation. RON controller damage uses
+`DealDamageFrom(This, You, ValueAtResolution(...))`, preserving source LKI and
+prevention instead of applying life loss. Tests cover departure, return,
+phasing, control changes and damage-event identity. This adds compiler support
+for existing engine contracts. See the [shape and test report](designs/mtgish-ron-upkeep-payment.md).

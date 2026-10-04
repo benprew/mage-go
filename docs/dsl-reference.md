@@ -998,3 +998,11 @@ The engine selects subjects in layer 4 and retains those incarnations for
 layers 5 and 7b within the same application. Later applications use current
 membership. Other static, Aura and temporary type/base/color shapes remain
 separate compiler contexts. See [the contract and tests](designs/mtgish-ron-static-animation.md).
+
+RON action sequences also accept `MayCost(PayMana([...]))` followed by
+`Unless(CostWasPaid, [actions])`. This pair uses the stored resolving controller
+as payer. Costs are fixed mana costs; an empty list still offers a choice.
+`PermanentDealsDamage(ThisPermanent, value, Player(You))` uses that controller
+as the recipient and the engine's damage source, LKI and prevention services.
+Other explicit damage-player references remain unsupported. Shapes, limits and
+tests: [RON upkeep payments](designs/mtgish-ron-upkeep-payment.md).
