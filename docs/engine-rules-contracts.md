@@ -832,3 +832,26 @@ Evidence: `TestRONActivationTimingLegality`, `TestRONActivationTimingScepter`,
 `TestRONActivationTimingManaPlanning`. These reuse the existing transactional
 payment, source/target capture, phasing, copying, clone and cleanup contracts.
 No new engine execution service is introduced.
+
+
+## Activation limit isolation
+
+Intrinsic ActionDefinition limits are state of one ability on one permanent.
+After successful payment, markActivatedInGame obtains the mutable source and
+copies runtime abilities before it records the use. It leaves the card's
+ability declaration and other game clones unchanged. The stack and mana
+activation paths share this service. An action whose source has left needs no
+lasting runtime use count. Granted-ability tracker handling stays unchanged.
+
+Control changes and phasing retain limits (CR 602.5b, 702.26). Returning to the
+battlefield creates an unused object (CR 400.7). Stack copies do not activate
+abilities. Rejected activation does not consume a use (CR 602.2). Final cleanup
+resets runtime counts, including phased sources, with clone isolation.
+
+Evidence: TestActivationLimitIsolation, TestRONActivationLimitRealCards,
+TestRONActivationLimitInstancesCopiesAndClone,
+TestRONActivationLimitConjunctionAndRollback,
+TestRONActivationLimitManaAndInventory and TestRONActivationLimitPhasedReset.
+The RON adapter supports fixed positive maxima and once-only limits with
+supported timing conjunctions. It adds no replacement or simultaneous-operation
+contract.

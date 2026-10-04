@@ -1101,6 +1101,24 @@ On permanent cards, `ActivatedWithModifiers(cost, actions, modifier)` accepts
 use the same builders as `Activated`. The engine checks the current activating
 controller's turn, and the upkeep step where required, before payment. The
 restriction does not repeat when the ability resolves. Every factory creates
-fresh costs, targets, effects and abilities. Other modifiers and combinations
-remain errors. See [the timing slice](designs/mtgish-ron-activation-timing.md)
+fresh costs, targets, effects and abilities. The activation limit forms below
+can be combined with this timing. Other modifier forms remain errors. See [the timing slice](designs/mtgish-ron-activation-timing.md)
 for exact shapes and real-card evidence.
+
+
+## RON activation limits
+
+Permanent `ActivatedWithModifiers` accepts the symbol `ActivateOnlyOnceEachTurn`
+and `ActivateNoMoreThanNumberTimesEachTurn(Integer(n))` for a positive fixed
+integer. A nonempty `And([modifier, ...])` combines supported limits and timing;
+nested conjunctions are allowed. More than one numbered maximum is rejected.
+Dynamic or nonpositive limits remain errors. Costs and actions retain their
+existing context checks.
+
+Limits belong to an ability of one permanent incarnation. Failed activation
+consumes no use; control changes and phase cycles retain uses. Returned cards
+start unused. Copies do not consume uses, cloned games keep separate counts,
+and final cleanup resets phased sources too. The shared engine service copies
+runtime action state before it records a successful activation; card definitions
+remain unchanged. See [activation limits](designs/mtgish-ron-activation-limits.md)
+for exact shapes, dependencies and real RON gameplay evidence.

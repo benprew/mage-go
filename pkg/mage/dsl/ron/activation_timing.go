@@ -18,7 +18,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	var timing []mage.ActionOption
 	if count == 3 {
 		var err error
-		timing, err = compileActivationTiming(n.Args[2])
+		timing, err = compileActivationModifiers(n.Args[2])
 		if err != nil {
 			return nil, err
 		}
@@ -40,6 +40,66 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		options = append(options, timing...)
 		return mage.WithAbility(mage.NewAction(mage.ActionActivated, options...))
 	}, nil
+}
+
+func compileActivationModifiers(n Node) ([]mage.ActionOption, error) {
+	seenMaximum := false
+	return compileActivationModifier(n, &seenMaximum)
+}
+
+func compileActivationModifier(n Node, seenMaximum *bool) ([]mage.ActionOption, error) {
+	switch n.Name {
+	case "And":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		items, err := list(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		if len(items) == 0 {
+			return nil, unsupported(n, "empty activation modifiers")
+		}
+		var options []mage.ActionOption
+		for _, item := range items {
+			next, err := compileActivationModifier(item, seenMaximum)
+			if err != nil {
+				return nil, err
+			}
+			options = append(options, next...)
+		}
+		return options, nil
+	case "ActivateOnlyOnceEachTurn":
+		if _, err := symbol(n); err != nil {
+			return nil, err
+		}
+		return []mage.ActionOption{mage.WithOncePerTurn()}, nil
+	case "ActivateNoMoreThanNumberTimesEachTurn":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		value := n.Args[0]
+		if value.Name != "Integer" {
+			return nil, unsupported(value, "fixed activation limit")
+		}
+		if err := arity(value, 1); err != nil {
+			return nil, err
+		}
+		if value.Args[0].Kind != IntegerNode {
+			return nil, problem(value, "expected integer literal")
+		}
+		count := value.Args[0].Integer
+		if count <= 0 {
+			return nil, unsupported(value, "positive activation limit")
+		}
+		if *seenMaximum {
+			return nil, problem(n, "multiple maximum activation limits are not supported")
+		}
+		*seenMaximum = true
+		return []mage.ActionOption{mage.WithMaxActivationsPerTurn(count)}, nil
+	default:
+		return compileActivationTiming(n)
+	}
 }
 
 func compileActivationTiming(n Node) ([]mage.ActionOption, error) {

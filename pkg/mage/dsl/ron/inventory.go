@@ -248,8 +248,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "activation_modifier":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "activation_modifier"
+		}
+		if n.Name == "ActivateNoMoreThanNumberTimesEachTurn" && len(n.Args) == 1 {
+			return "activation_limit_value"
+		}
 		if n.Name == "ActivateOnlyIf" && len(n.Args) == 1 {
 			return "activation_condition"
+		}
+	case "activation_limit_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
 		}
 	case "activation_condition":
 		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {

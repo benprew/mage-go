@@ -361,7 +361,22 @@ func (a *ActionDefinition) markActivatedInGame(g *Game) {
 		}
 		return
 	}
-	a.MarkActivated()
+	if !a.limits.OncePerTurn && a.limits.MaxActivationsPerTurn <= 0 {
+		return
+	}
+	source := g.MutablePermanentIncludingPhased(a.source)
+	if source == nil {
+		return
+	}
+	// A game clone and the card declaration can share this action.
+	source.RuntimeAbilities = clonePaymentAbilities(source.RuntimeAbilities)
+	for _, ability := range source.RuntimeAbilities {
+		current, ok := UnwrapAbility(ability).(*ActionDefinition)
+		if ok && current.id == a.id {
+			current.MarkActivated()
+			return
+		}
+	}
 }
 
 // MarkActivated sets the once-per-turn flag. Called after the ability is paid for.

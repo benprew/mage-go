@@ -2206,3 +2206,121 @@ payment, Chaos directly and Invoke after cast/filter support. Reassess inventory
 and multi-card priority next run. Complete loading/gameplay, startup/native
 validation, Go-card/generator removal and unused-DSL cleanup remain open.
 No second slice was started.
+
+## Run 2026-10-04: P4-ACTIVATION-LIMITS
+
+Status: completed fixed activation limits, modifier conjunctions and their
+required engine isolation repair. This run stops after this slice. User edits
+to `.gitignore` and `mtgish-ron-execution.md` are preserved and excluded.
+
+The [activation limits report](mtgish-ron-activation-limits.md) records the
+complete candidate comparison, supported signatures/contexts, full-record
+nested audit, reuse boundary, rules evidence and card-to-test mapping.
+Before editing, three candidates were compared:
+
+| Candidate | Distinct names | Estimated complete unlocks | Other blockers | Downstream capability | Effort |
+| --- | --- | ---: | --- | --- | --- |
+| Limits/conjunctions | Fire Drake, Vampire Bats, Dream Coat, Instill Energy, Ebon Praetor, Gaea's Touch, Gate to Phyrexia | 2 | Choices/colors, host attack permission, counters/results, sorcery timing/hand placement, matching sacrifice cost | Independent limited abilities and timing composition for seven names | Small adapter, medium contract tests; engine isolation repair was discovered |
+| Hand-count condition | Library of Alexandria | 1 | None for seven-card equality | Pure player-state conditions | Small adapter, medium tests |
+| Variable optional mana | In the Eye of Chaos, Invoke Prejudice | 1 | Invoke's color-sharing/ExceptFor spell filter | Captured spell mana-value payments for two cast triggers | Medium adapter, substantial payment/choice tests |
+
+Limits won on the largest credible direct multi-card gain. Complete records,
+not first-error frequency, supplied the estimates; identical reprints count
+once. Selection, contract, reuse boundary and acceptance cases were stated
+before editing. No RON source defect or environment failure was found.
+
+Exact support: permanent-source ActivatedWithModifiers/3 with the symbol
+ActivateOnlyOnceEachTurn, or ActivateNoMoreThanNumberTimesEachTurn/1 containing
+Integer/1 of a positive integer literal. Nonempty And/1 lists compose these
+limits and supported You/IsTheirTurn or IsTheirUpkeep timing, including nested
+conjunctions. Multiple numbered maxima remain errors to prevent option overwrite.
+Once-only and one numbered maximum may coexist. Unsupported contexts, malformed
+shapes, unknown modifiers, dynamic/nonpositive maxima and unbound cost/action
+references remain errors. Plans contain immutable options and construct fresh
+costs, actions, targets and abilities per factory. No new result binding exists.
+Inventory assigns activation_modifier, activation_limit_value and integer_literal
+roles without claiming support for unsupported descendants.
+
+The first real gameplay tests failed as intended on missing limit/And adapters.
+After lowering, they exposed clone count sharing and returned-object count
+retention. TestActivationLimitIsolation then failed independently on synthetic
+engine cards, proving runtime action mutation also changed card declarations.
+ActionDefinition.markActivatedInGame now obtains the mutable source, copies
+runtime abilities and records successful payment on the matching action ID.
+Both stack and mana activation use the service. Public APIs, granted-ability
+trackers and current callers remain. Absent sources need no lasting runtime
+count. Unlimited actions avoid the copy. This is a rules prerequisite, not a
+card-name workaround or parallel RON execution service.
+
+Engine reuse: WithOncePerTurn/WithMaxActivationsPerTurn, CanActivate,
+transactional costs, shared mana planning, typed targets, incarnation-bound
+This/Until/ModifyPT, control, phasing, stack copies, clones and final cleanup.
+CR 602.1b/602.2/602.5b/c, 400.7 and 702.26 supply the relevant contracts.
+No replacement-order, simultaneous-operation or LKI query service is introduced.
+Local DRK/LEG Oracle data confirms the once/twice instructions. Source data was
+not changed; all 12 hashes match the vocabulary snapshot, so no refresh is needed.
+Known Gaea's Liege/Fastbond defects remain uncorrected.
+
+| Card/context | Test mapping |
+| --- | --- |
+| Fire Drake, Vampire Bats, all rules | TestRONActivationLimitRealCards: full-record validation, metadata/flying, payment/limits, delayed source bonuses, control/phase/departure/return identity, pending clones, cleanup and opponent-turn reuse |
+| Vampire Bats | TestRONActivationLimitInstancesCopiesAndClone: independent factories/permanents, cloned counts/effects and copy before a further permitted activation |
+| Fire Drake | TestRONActivationLimitPhasedReset: phased rejection, phased cleanup reset and clone isolation |
+| Timing/typed targets/costs | TestRONActivationLimitConjunctionAndRollback: both timing filters, invalid target/turn rejection, mana/tap rollback, untap does not reset limit, timing change before resolution |
+| Mana/inventory | TestRONActivationLimitManaAndInventory: pure repeat queries, immediate mana, solver limit exclusion, clone/reset contracts, nested roles |
+| Nested/combined declarations | TestRONActivationLimitNestedAndContexts: nested timing/limits, combined once-only and numeric maximum, instant/sorcery rejection |
+| Invalid declarations | TestRONActivationLimitInvalid and retained timing tests: arity/kind/value/context/reference/modifier errors, duplicate maxima across nested conjunctions |
+| Reusable engine | TestActivationLimitIsolation: maximum one/two, clone, return, control, phase, immutable declaration and independent resolution |
+
+The unsupported targeted life fixture was corrected to an existing typed tap
+action. Previously invalid once/conjunction declarations now have positive
+behavior tests; remaining rejection expectations were retained. Automatic lint
+changes only reordered imports and were reviewed.
+
+Estimated and actual gain agree: **two unique names, two records**. Strict
+loader **1,003 -> 1,005/2,445 compiled**, **1,442 -> 1,440 rejected**.
+Accepted names **308 -> 310**, rejected names **678 -> 676**. No accepted record
+regressed. Strict/full-inventory diagnostics match exactly. Nodes/signatures
+remain 72,938/8,528; unknown-role occurrences fall 17,943 -> 17,852.
+Global engine_validated/behavior_verified remain null; two additional cards
+have complete-record RON gameplay evidence. Compilation and collection-wide
+behavior coverage remain separate.
+
+Largest remaining first diagnostics: PermanentRuleEffect (110), AsPermanentEnters
+(90), non-spell CastEffect (53), If rule (47), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep reference (35), PutCounters (29).
+Gate to Phyrexia now reaches SacrificeAPermanent; the other dependent names
+remain blocked as recorded in the report. None is counted as fully supported.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; make build | PASS |
+| Baseline strict/full-inventory loader | Expected exit 1: 1,003 compiled, 1,442 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONActivationLimit -count=1 | Expected missing-adapter failures first; final PASS |
+| go test ./pkg/mage -run '^TestActivationLimitIsolation$' -count=1 | Expected engine isolation failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated after lint |
+| make test | PASS, repeated after lint |
+| make build | PASS, repeated after lint |
+| go vet ./... | PASS, repeated after lint |
+| make lint | PASS, zero issues; import formatting reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and -inventory -json | Expected exit 1: 1,005 compiled, 1,440 rejected; identical issues |
+| Accepted-record comparison/source hashes | Zero regressions; all hashes unchanged |
+
+This slice changes activated.go, new activation_limit_isolation_test.go,
+activation_timing.go, new activation_limit_test.go, activation_timing_test.go,
+inventory.go/inventory_test.go, dsl-reference.md, engine-rules-contracts.md,
+new activation limits report and this ledger. Production registry/startup,
+Go-card definitions/generators and DSL exports keep their callers. Removal
+gates remain closed; no unused-DSL deletion or runtime cutover is claimed.
+
+Ranked next candidates to reassess: (1) shared fixed counter actions and their
+cost/result prerequisites, enabling the five Mana Batteries, Dwarven Weaponsmith,
+Ebon Praetor and related entry-counter cards; (2) matching sacrifice activation
+costs, now a direct dependency for Gate to Phyrexia and other multi-card cost
+work; (3) variable optional mana payment (In the Eye of Chaos directly, Invoke
+Prejudice after filters). Library's single-card hand-count condition stays
+behind useful multi-card work. These are suggestions requiring fresh full-record
+unlock estimates next run. Complete RON gameplay/loading, application cutover,
+native startup, Go-card/generator removal and unused-DSL cleanup remain open.

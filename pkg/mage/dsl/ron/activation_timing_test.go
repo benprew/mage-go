@@ -255,7 +255,7 @@ func TestRONActivationTimingInvalid(t *testing.T) {
 		`ActivateOnlyIf(PlayerPassesFilter(SinglePlayer(You), IsTheirTurn))`,
 		`ActivateOnlyIf(PlayerPassesFilter(You, NumCardsInHandIs(EqualTo(Integer(7)))))`,
 		`ActivateOnlyIf(PlayerPassesFilter(You))`, `ActivateOnlyIf(You)`,
-		`ActivateOnlyOnceEachTurn`, `And([])`, `And([ActivateOnlyIf(PlayerPassesFilter(You, IsTheirTurn)), ActivateOnlyOnceEachTurn])`,
+		`And([])`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [ActivatedWithModifiers(PayMana([]), ActionList([GainLife(Integer(1))]), %s)])`, modifier)
 		nodes, err := Parse(strings.NewReader(src), "invalid-timing.ron")
