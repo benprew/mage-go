@@ -354,29 +354,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, err
 		}
 		return func() mage.CardOption { return mage.WithAbility(SpellActions(plan.build())) }, nil
-	case "Activated":
-		if !ctx.permanent {
-			return nil, unsupported(n, "activated rule on a spell")
-		}
-		if err := arity(n, 2); err != nil {
-			return nil, err
-		}
-		costs, hasX, err := compileCosts(n.Args[0])
-		if err != nil {
-			return nil, err
-		}
-		ctx.x = hasX
-		plan, err := compileActions(n.Args[1], ctx)
-		if err != nil {
-			return nil, err
-		}
-		return func() mage.CardOption {
-			values := make([]mage.Cost, len(costs))
-			for i, build := range costs {
-				values[i] = build()
-			}
-			return mage.WithAbility(Activated(values, plan.build()))
-		}, nil
+	case "Activated", "ActivatedWithModifiers":
+		return compileActivatedRule(n, ctx)
 	case "EnchantPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err

@@ -814,3 +814,21 @@ Evidence: `TestRONTemporaryCollectionRealCards`,
 `TestRONTemporaryCollectionHolyLightDeaths`. Bone Flute's transactional payment
 regression is `TestRONTemporaryCollectionBoneFluteRollback`. No new replacement,
 LKI query or simultaneous zone-operation contract is established.
+
+## RON own-turn and upkeep activation timing
+
+RON `ActivatedWithModifiers/3` with
+`ActivateOnlyIf(PlayerPassesFilter(You, IsTheirTurn|IsTheirUpkeep))` lowers to
+existing action timing and condition services. The engine's activation path
+checks the current controller's turn before costs. Upkeep also requires the
+upkeep step. Timing is an activation instruction (CR 602.1b, 602.5), so a
+pending ability resolves after a step or turn change. Normal activation
+permission and tap/summoning-sickness checks still apply (CR 117.1b, 602.5a).
+The mana solver uses the same restrictions and its queries do not pay costs.
+
+Evidence: `TestRONActivationTimingLegality`, `TestRONActivationTimingScepter`,
+`TestRONActivationTimingPriest`, `TestRONActivationTimingInstancesAndCopy`,
+`TestRONActivationTimingRepeatAndInventory` and
+`TestRONActivationTimingManaPlanning`. These reuse the existing transactional
+payment, source/target capture, phasing, copying, clone and cleanup contracts.
+No new engine execution service is introduced.

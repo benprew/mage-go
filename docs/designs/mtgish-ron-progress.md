@@ -2105,3 +2105,104 @@ prerequisite analysis; (3) variable optional mana payment (Chaos directly, Invok
 after filters). Reassess fresh inventory and full records next run. Complete
 loading/gameplay, production startup/native validation, Go-card/generator removal
 and unused-DSL cleanup remain open. This run begins no second slice.
+
+## Run 2026-10-04: P4-ACTIVATION-TIMING
+
+Status: complete own-turn/upkeep activation timing slice. This run stops here.
+Initial user edits to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from the commit. There were no unrelated untracked files.
+
+The [activation timing report](mtgish-ron-activation-timing.md) contains the
+candidate comparison, complete-record and nested audit, exact signatures,
+engine reuse, rules evidence, card-to-test mappings and remaining dependencies.
+Before editing, three candidates were compared: own-turn/upkeep timing (Scepter
+and Priest, two complete unlocks); collection keyword grants (Slug, Skirmishers,
+Flats and Part Water, zero immediate unlocks due to event/loop/filter/target-set
+prerequisites); variable optional mana payment (Chaos directly, one unlock;
+Invoke needs cast/filter support). Timing supplies the largest credible direct
+multi-card gain for the effort. Selection, scope, reuse boundary and acceptance
+cases were stated before editing. Reprints count once.
+
+All distinct complete ActivatedWithModifiers records and nested forms were read.
+Exact supported permanent rule is ActivatedWithModifiers(cost, actions,
+ActivateOnlyIf(PlayerPassesFilter(You, IsTheirTurn|IsTheirUpkeep))). The outer
+arities are 3/1/2; player and filter operands are symbols. Existing supported
+cost/action shapes are reused. compileActivatedRule now builds both this rule
+and bare Activated with fresh costs, actions, targets and abilities per factory.
+compileActivationTiming stores immutable ActionOptions. IsTheirTurn uses
+WithYourTurnOnly; upkeep adds a pure WithActivationCondition step check. You
+is the current activating controller. Both checks run before payment through
+the engine; pending resolution does not repeat them. Other modifiers, limits,
+combinations, players, conditions, spell contexts, malformed shapes, invalid
+costs and unbound references remain declaration errors. Inventory supplies
+operand roles without making support claims.
+
+Engine reuse: NewAction/WithCost, timing/condition gates, transactional
+activation and rollback, typed player/permanent targets, source/target capture,
+incarnations, phasing, copies/retargeting, clones, mana solver, layers, discard
+decisions and cleanup. No engine implementation, public DSL API, replacement
+order, simultaneous operation or LKI query contract is added. Local rules read:
+CR 117.1b/d, 602.1a/b, 602.2a/b, 602.5/5a and continuous-effect duration,
+with existing identity/phasing/capture documentation retained.
+
+Real gameplay and invalid declaration tests were written first. After a
+test-only DrawStep -> Draw API correction, the real records failed on absent
+ActivatedWithModifiers support. Final focused tests pass. A later test-only
+pool getter was corrected to TotalMana. No gameplay expectation was weakened.
+Automatic lint changes were reviewed and only reordered new-file imports.
+
+| Card/context | Evidence |
+| --- | --- |
+| Disrupting Scepter | TestRONActivationTimingLegality; TestRONActivationTimingScepter: complete record/definition validation, current controller versus owner, own-turn combat/draw versus opponent turn, costs/tap/rollback, self/opponent discard decision and timing, source departure/return/control/phasing, pending clones |
+| Svyelunite Priest | TestRONActivationTimingLegality; TestRONActivationTimingPriest; TestRONActivationTimingInstancesAndCopy: complete record/validation, own versus opponent upkeep and wrong step, sickness/controller/payment/tap rejection, self/opponent target, shroud with retained characteristics, source departure/return/control/phasing, target legality/return/phasing/control/noncreature changes, fresh instances, retargeted copy/original, clones and cleanup |
+| Invalid/shared declarations | TestRONActivationTimingInvalid; TestRONActivationTimingRepeatAndInventory: arity/symbol/player/filter/modifier/cost/context/binding rejection, repeat activations without an implicit limit, resolution after timing changes, exact inventory roles |
+| Mana context | TestRONActivationTimingManaPlanning: both timing shapes, pure affordability queries, correct solver restrictions, immediate mana resolution |
+
+Estimate and actual gain agree: **two unique names, seven records** (six Scepter
+reprints; one Priest). Strict loader **996 -> 1,003/2,445 compiled**;
+**1,449 -> 1,442 rejected**. Names **306 -> 308 accepted**, **680 -> 678
+rejected**. No accepted record regressed. Full inventory and strict-loader
+issues match exactly. Nodes/signatures remain 72,938/8,528; unknown-role
+occurrences fall 19,278 -> 17,943 through operand reporting, including unsupported
+modifier contexts. Global engine_validated/behavior_verified remain null.
+Two additional unique names have complete-record gameplay evidence; compilation
+and full collection gameplay remain separate measurements.
+
+Remaining largest first diagnostics: PermanentRuleEffect (110), AsPermanentEnters
+(90), non-spell CastEffect (53), If rule (47), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep reference (35). Unsupported activation
+modifiers now report their specific shape/filter errors. No source-data defect
+was corrected. All 12 asset hashes match the vocabulary snapshot; no RON change
+requires a snapshot refresh. Gaea's Liege/Fastbond concerns remain unresolved.
+No environment or pre-existing failure blocked the slice.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON/CLI tests, engine short tests, make build | PASS |
+| Baseline strict loader and full inventory | Expected exit 1: 996 compiled, 1,449 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONActivationTiming -count=1 | Intended missing-adapter failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS; repeated after lint |
+| go test ./pkg/mage/... -short -count=1 | PASS; repeated after lint |
+| make test | PASS; repeated after lint |
+| make build | PASS; repeated after lint |
+| go vet ./... | PASS; repeated after lint |
+| make lint | PASS, zero issues; import formatting reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and -inventory -json | Expected exit 1: 1,003 compiled, 1,442 rejected; identical issues |
+| Source hash and accepted-record comparisons | All source hashes unchanged; zero accepted regressions |
+
+Only nine slice files are staged for the descriptive commit: compiler.go,
+inventory.go, inventory_test.go, new activation_timing.go and
+activation_timing_test.go; dsl-reference.md, engine-rules-contracts.md,
+new activation timing report and this ledger. Production registry/startup,
+Go definitions/generators and DSL exports retain current callers. Removal gates
+remain closed; no deletion audit or runtime cutover is claimed.
+
+Ranked next candidates: (1) activation limits, Fire Drake/Vampire Bats directly
+and prerequisites for Instill Energy/Ebon Praetor/Gate to Phyrexia;
+(2) general activation hand-count/state conditions, Library directly, other
+conditions needing fresh complete-record comparison; (3) variable optional mana
+payment, Chaos directly and Invoke after cast/filter support. Reassess inventory
+and multi-card priority next run. Complete loading/gameplay, startup/native
+validation, Go-card/generator removal and unused-DSL cleanup remain open.
+No second slice was started.

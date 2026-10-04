@@ -1092,3 +1092,15 @@ membership. Phased objects are excluded. Installed effects keep incarnation
 identity and expire at cleanup. See
 [the collection report](designs/mtgish-ron-temporary-collection.md) for exact
 contexts, full-record audit and gameplay mappings.
+
+## RON activation timing
+
+On permanent cards, `ActivatedWithModifiers(cost, actions, modifier)` accepts
+`ActivateOnlyIf(PlayerPassesFilter(You, IsTheirTurn))` and
+`ActivateOnlyIf(PlayerPassesFilter(You, IsTheirUpkeep))`. Costs and action bodies
+use the same builders as `Activated`. The engine checks the current activating
+controller's turn, and the upkeep step where required, before payment. The
+restriction does not repeat when the ability resolves. Every factory creates
+fresh costs, targets, effects and abilities. Other modifiers and combinations
+remain errors. See [the timing slice](designs/mtgish-ron-activation-timing.md)
+for exact shapes and real-card evidence.

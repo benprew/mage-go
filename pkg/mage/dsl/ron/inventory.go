@@ -222,6 +222,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "actions"
 			}
+		case "ActivatedWithModifiers":
+			if len(n.Args) == 3 {
+				return []string{"cost", "actions", "activation_modifier"}[index]
+			}
 		case "Activated":
 			if len(n.Args) == 2 {
 				return []string{"cost", "actions"}[index]
@@ -242,6 +246,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "activation_modifier":
+		if n.Name == "ActivateOnlyIf" && len(n.Args) == 1 {
+			return "activation_condition"
+		}
+	case "activation_condition":
+		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
+			return []string{"player_reference", "activation_player_filter"}[index]
 		}
 	case "actions":
 		if n.Name == "Targeted" && len(n.Args) == 2 {
