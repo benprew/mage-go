@@ -28,6 +28,7 @@ type scope struct {
 	permanentTarget *permanentTargetPlan
 	spellTarget     *spellTargetPlan
 	castEvent       *castEventPlan
+	stepEvent       *stepEventPlan
 }
 
 type actionPlan struct {
@@ -1029,6 +1030,16 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if ctx.player.step != nil && (n.Name == "GainLife" || n.Name == "LoseLife") {
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			player := ctx.player.build(bindings)
+			if n.Name == "GainLife" {
+				return mage.GainLifeFor(player, amount(bindings))
+			}
+			return mage.LoseLifeFor(player, amount(bindings))
+		}}, nil
+	}
+
 	switch n.Name {
 	case "DrawNumberCards":
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {

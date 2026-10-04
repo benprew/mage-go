@@ -961,3 +961,25 @@ Automatic mana queries exclude these choice costs and never make the choice.
 This establishes compiler support for existing engine contracts, with no engine
 rule change. Evidence: `TestRONCounterPayment*`, mapped in the
 [counter payment report](designs/mtgish-ron-counter-payment.md).
+
+## RON ordinary end-step events
+
+The RON end-step adapter reuses `EachEndStep`, `YourEndStep`, `TurnStepBegins`,
+`WhenEvent`, `BindPlayer` and `FromPlayer`. It establishes no new engine rule.
+At the event boundary, the current source controller determines whether a
+controller-only event matches (CR 603.2b). The pending ability keeps that
+controller through placement and resolution (CR 603.3a). APNAP placement remains
+in the shared trigger service (CR 603.3b). Event player and ability controller
+are separate references, including on copies and in cloned games.
+
+No end-step ability executes on detection. Entry after the boundary does not
+repeat it, and cleanup is a different event (CR 513.2). Phased sources do not
+trigger; a pending ability survives source phasing. Source references retain the
+captured incarnation and cannot follow a returned card (CR 400.7). A pending
+sacrifice cannot sacrifice a source now controlled by another player (CR 701.21a).
+Typed targets are selected at placement and checked again at resolution
+(CR 603.3d, 608.2b).
+
+Evidence: `TestRONEndStep*`, mapped in
+[the slice report](designs/mtgish-ron-end-step.md). Intervening-if, histories,
+delayed triggers and other step player filters remain separate prerequisites.

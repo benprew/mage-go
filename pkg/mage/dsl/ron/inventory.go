@@ -502,7 +502,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			switch n.Name {
 			case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies":
 				return "permanent_filter"
-			case "AtTheBeginningOfAPlayersUpkeep":
+			case "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep":
 				return "player_filter"
 			}
 		}

@@ -1203,3 +1203,23 @@ transaction locks the choice and preserves rollback and source identity.
 Mana production queries do not choose counter payments; choice-cost abilities
 remain outside automatic mana planning. See the
 [counter payment report](designs/mtgish-ron-counter-payment.md) for shapes and tests.
+
+## RON end-step trigger adapter
+
+Permanent-source RON rules accept
+`TriggerA(AtTheBeginningOfAPlayersEndStep(AnyPlayer), actions)` and
+`TriggerA(AtTheBeginningOfAPlayersEndStep(SinglePlayer(You)), actions)`.
+The first form matches either player's end step. The second form uses the
+source's current controller when the event occurs. Both use the engine's step
+patterns and pending-trigger path.
+
+Within these action lists, symbol `Trigger_ThatPlayer` is a typed reference to
+the player whose end step began. It is separate from `You`, which refers to the
+pending ability's controller. It can supply existing player actions, including
+life, draw, discard and optional fixed mana payment. Each factory builds a fresh
+player binding and any declared targets. Targets are chosen at stack placement.
+
+Other end-step player filters, `TriggerI`, and `CreateFutureTrigger` remain
+unsupported. This adapter does not provide history queries or a delayed trigger.
+Evidence: `TestRONEndStep*`, including complete Ball Lightning and Breeding Pit
+RON gameplay; [slice report](designs/mtgish-ron-end-step.md).

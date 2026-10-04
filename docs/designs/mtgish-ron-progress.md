@@ -2974,3 +2974,113 @@ Icatian Store and Sand Silos, whose counter/mana activation is now supported;
 of Yawgmoth, Sacrifice and Metamorphosis. Complete collection gameplay/loading,
 runtime/native startup, Go-card/generator deletion and DSL cleanup remain open.
 No second slice began.
+
+## Run 2026-10-04: P6-END-STEP
+
+Status: completed one ordinary end-step trigger slice. User changes in
+`.gitignore` and `mtgish-ron-execution.md` are preserved and excluded from the
+commit. No unrelated untracked files were present at baseline.
+
+The [end-step report](mtgish-ron-end-step.md) records complete affected names,
+nested/complete-record inspection, candidate comparison, exact interfaces,
+engine reuse, remaining blockers and card-to-test mappings. The selection
+contract and acceptance cases preceded edits. Comparison:
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers / effort |
+| --- | --- | ---: | --- |
+| Ordinary end-step event, selected | Ball Lightning, Breeding Pit, Erg Raiders, Khabál Ghoul, Osai Vultures, Pestilence, Scavenging Ghoul, Season of the Witch, Voodoo Doll, Whirling Dervish | 2 | Other eight need histories/TriggerI/damage/filters; small event adapter and typed-scope effort |
+| Storage-land lifecycle | Bottomless Vault, Dwarven Hold, Hollow Trees, Icatian Store, Sand Silos | 5 with all prerequisites | Entry tapped, optional untap and tapped-source TriggerI; three contexts, moderate to large effort |
+| Saved-sacrifice mana | Priest of Yawgmoth, Sacrifice, Metamorphosis | 1 | Spells need casting-payment bindings; Metamorphosis also Plus/restricted mana; small consumer, broader spell work |
+
+Two complete cards with one small adapter won on credible gain per effort.
+The selected event/player scope is a shared dependency for later end-step
+history and intervening-if adapters. Storage lifecycle enables reusable entry,
+untap permissions and conditions. Paid-value mana enables the two blocked
+spells. Delayed next-end-step was inspected as an extension and deferred.
+No engine prerequisite or environment failure was found.
+
+Exact support: permanent-source TriggerA/2 containing
+AtTheBeginningOfAPlayersEndStep/1 with symbol AnyPlayer or SinglePlayer/1 of
+symbol You, and existing ActionList/1 or single-group Targeted/2 action bodies.
+Symbol Trigger_ThatPlayer is a typed step-player reference in this body; it
+remains separate from You. Existing player consumers include life/draw/discard
+and optional fixed mana payment. Other player filters, TriggerI and future
+triggers remain errors. Cross-rule, incompatible, tuple-shaped and unbound
+reads fail compilation. No spell/cost/static/event-spell scope is invented.
+
+Private signature: compileEndStepTrigger(event, body Node, ctx scope)
+(optionFactory,error). Immutable nonzero-sized stepEventPlan carries scope
+identity. Each factory builds a fresh PlayerBinding in instanceBindings.steps;
+playerReferencePlan.step uses FromPlayer. Existing caller signatures remain.
+Targets and effects are built in that factory. No card-name branch, fallback,
+global last-action slot, game-time declaration panic or partial registry exists.
+
+Engine reuse: EachEndStep, YourEndStep, TurnStepBegins, WhenEvent, BindPlayer,
+FromPlayer, Sequence, pending-trigger/APNAP placement, typed target legality,
+source incarnations, stack copies, clone state, sacrifice, token entry and player
+actions. No engine API or rule changed. Local CR 513.1–2, 603.1–5 and 701.21a
+were read; existing CR 400.7 and 608.2b identity/target contracts apply. No new
+LKI query, replacement ordering or simultaneous-operation contract is claimed.
+API/rules documentation describes only this ordinary-event adapter.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Ball Lightning | TestRONEndStepBallLightning: complete record, definition validation, either boundary, source identity/control/phasing, countered trigger, owner graveyard and clones |
+| Breeding Pit | TestRONEndStepBreedingPit: complete record, definition validation, upkeep pay/decline/short and end-step interaction, current/pending controller, departure/return/phasing/copy and exact Thrull characteristics |
+| Both full cards / normal turn | TestRONEndStepNativeTurnAndCombat: failed cast rollback, real casting/mana, haste attack legality, trample damage, normal step dispatch/resolution, late entry and cleanup distinction |
+| Controller / event instances | TestRONEndStepCurrentController; TestRONEndStepEventBindings: current control, phasing, independent factories/pending events, copied controller, event-player capture and clones |
+| Consumers / targets | TestRONEndStepExplicitPlayerConsumers; TestRONEndStepTargetsAndPhaseMembership: explicit event-player life/draw/discard and target placement/resolution/return/phasing |
+| Invalid scope / inventory | TestRONEndStepInvalidDeclarations; TestRONEndStepInventory; fresh repository inventory fixtures |
+
+TDD: new tests first failed on the expected unsupported trigger and missing
+inventory operand roles. Fixture assumptions were corrected for normal step
+priority resolution, synthetic owner IDs and CR 701.21a's control restriction.
+The explicit opponent event-player test then exposed the missing step-life
+consumer adapter, which now uses the typed step player. No test was weakened.
+Lint made only import-format changes; automatic edits were reviewed. All
+required checks passed on the final code after the last assertions and lint.
+
+Estimated and actual gain agree: **two unique names and two records**.
+Compiled **1,040 -> 1,042/2,445**; rejected **1,405 -> 1,403**.
+Accepted names **338 -> 340**, rejected names **648 -> 646**. Zero accepted-record
+regressions; strict and inspection issue arrays match. AST occurrences/signatures
+remain **72,938/8,528**; unknown-role occurrences **16,599 -> 16,588**.
+Collection-wide engine_validated/behavior_verified remain null. Two complete
+cards gain explicit RON gameplay/definition evidence; collection compilation
+and gameplay completion remain separate. All twelve source hashes match the
+vocabulary snapshot, so no source refresh is needed. No source defect was
+corrected; Gaea's Liege/Fastbond concerns remain open.
+
+Leading diagnostics remain PermanentRuleEffect 110, AsPermanentEnters 90,
+If 65 across contexts, CastEffect 54 across contexts, ChooseADamageSource 46,
+Targeted_Modal 42, HostController 35, ControlledByAPlayer 29, TriggerI 28 and
+TargetGraveyardCard 26. Exact per-card remaining blockers are in the report.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,040 compiled, 1,405 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONEndStep -count=1 | Expected unsupported adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS, repeated after final tests/lint |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated after final tests/lint |
+| make test | PASS, repeated after final tests/lint |
+| make build | PASS on final code |
+| go vet ./... | PASS on final code |
+| make lint | PASS, zero issues; automatic formatting reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; semantic inspection | Expected exit 1: 1,042 compiled, 1,403 rejected; identical diagnostics |
+| Accepted-record / snapshot source-hash audits | PASS: zero regressions, all twelve hashes unchanged |
+
+Slice files: new end_step.go/end_step_test.go and this run's report; compiler.go,
+player_scope.go, triggers.go, inventory.go/inventory_test.go; dsl-reference.md,
+engine-rules-contracts.md and this ledger. Go-card definitions, generators,
+production registry wiring and existing DSL exports retain callers. The removal
+gates remain closed. No DSL function was removed; no deletion audit or runtime
+cutover is claimed.
+
+Ranked next candidates to reassess: (1) storage-land lifecycle prerequisites,
+including comparison of smaller entry-only forms; (2) shared death-history values
+for Khabál Ghoul/Scavenging Ghoul, with TriggerI downstream for Osai Vultures;
+(3) next-end-step delayed capture for Rukh Egg and nested future-trigger users.
+Complete loading/gameplay, runtime/native startup, Go-card/generator deletion
+and DSL cleanup remain open. No second slice began.

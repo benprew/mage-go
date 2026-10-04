@@ -10,6 +10,7 @@ type playerReferencePlan struct {
 	target *playerTargetPlan
 	spell  *spellReferencePlan
 	event  *castEventPlan
+	step   *stepEventPlan
 }
 
 type castEventPlan struct{ spellName, casterName string }
@@ -23,6 +24,7 @@ type instanceBindings struct {
 	counters   map[*counterPaymentPlan]*mage.NumberBinding
 	sacrifices map[*sacrificeValuePlan]sacrificeValueBindings
 	events     map[*castEventPlan]castEventBindings
+	steps      map[*stepEventPlan]*mage.PlayerBinding
 	permanents map[*permanentTargetPlan]*mage.PermanentTargetBinding
 	players    map[*playerTargetPlan]*mage.PlayerTargetBinding
 	spells     map[*spellTargetPlan]*mage.SpellTargetBinding
@@ -39,6 +41,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	if n.Kind == Symbol {
 		switch n.Name {
 		case "Trigger_ThatPlayer":
+			if ctx.stepEvent != nil {
+				return playerReferencePlan{step: ctx.stepEvent}, nil
+			}
 			if ctx.castEvent != nil && n.Name == ctx.castEvent.casterName {
 				return playerReferencePlan{event: ctx.castEvent}, nil
 			}
@@ -58,6 +63,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.step != nil {
+		return mage.FromPlayer(bindings.steps[p.step])
+	}
 	if p.event != nil {
 		return mage.FromPlayer(bindings.events[p.event].caster)
 	}

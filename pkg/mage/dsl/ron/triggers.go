@@ -54,6 +54,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, unsupported(players.Args[0], "upkeep player reference")
 		}
 		buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.BeginningOfUpkeepTrigger(effect, false) }
+	case "AtTheBeginningOfAPlayersEndStep":
+		return compileEndStepTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerCastsASpell":
 		if err := arity(trigger, 2); err != nil {
 			return nil, err
