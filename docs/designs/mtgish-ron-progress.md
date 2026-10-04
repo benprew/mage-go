@@ -652,3 +652,101 @@ fixed mana-payment result scopes. No further slice was started. Complete RON
 loading/gameplay, embedded startup, native/WASM startup evidence, Go-card
 deletion, obsolete Go-set generator retirement and unused-DSL removal gates
 remain unmet. No DSL removal or whole-repository caller audit is claimed.
+
+## Run 2026-10-03: P1-STATIC-CONTROLLER
+
+Status: complete controlled static creature-layer slice. No second slice was
+started. Initial user changes to `.gitignore` and `mtgish-ron-execution.md` are
+preserved and excluded from the commit. No unrelated untracked files existed.
+
+The fresh three-candidate comparison, exact shapes/contexts, dependencies,
+complete affected-name lists, source findings, test mappings and ranked next
+candidates are in [mtgish-ron-static-controller.md](mtgish-ron-static-controller.md).
+Selection: static controller conjunctions affect 15 unique names and unlock five
+for a small adapter. Variable temporary boosts affect six names and unlock two;
+optional fixed counter payments affect four names and unlock two with broader
+payer/decision/result prerequisites. Fresh inspection found Orcish Oriflamme as
+a fifth static unlock beyond the prior ledger's four-card estimate.
+
+Implemented `ControlledByAPlayer(SinglePlayer(You))/1` in creature-restricted
+`EachPermanentLayerEffect/2`, below nonempty nested `And/1`, for existing fixed
+`AdjustPT/2` and basic `AddAbility/1` modifications. RON validates and decomposes
+immutable static filters; each factory builds fresh continuous effects. Engine
+reuse: BoostControlledCreatures, GrantKeywordToControlled, shared filters,
+printed static registration, layer ordering, phasing and clone ownership.
+Other player references, controller predicates below Or and other compiler
+contexts remain rejected. Inventory now assigns player selector/reference roles
+below controller predicates without claiming support.
+
+TDD identified two missing engine contracts after the initial compiler failures.
+Control duration now survives target phasing, while cleanup and unmet conditions
+still expire it. Explicit targeted/global ability-removal services now expose
+removal membership to printed static dependency ordering; application checks
+current activity after ordering. Targeted removal expiry state is deep-cloned.
+These changes are prerequisites for complete source-control and keyword-grant
+lifecycle behavior in the selected shape, not a second capability slice.
+Rules: CR 611.2b/3a/3b, 613.1b/e/f/g, 613.4c, 613.8a/b, 702.26b/d/f.
+API/rules documentation records only those established contracts. No new public
+engine API, cost, LKI value, target binding, replacement or simultaneous zone
+operation was added. Existing regression tests retain those services' evidence.
+
+Five cards gain direct RON gameplay evidence: Castle, Fortified Area, Goblin War
+Drums, Jacques le Vert and Orcish Oriflamme. Tests cover opposing-controller
+exclusion, owner/control distinction, matching source inclusion, source and
+recipient control changes, late entry, tap/untap, combat membership, color,
+phasing, source departure/return, ability removal and clone/factory isolation.
+Llanowar Elves and Wall of Wood supply complete real RON fixtures. Invalid
+selector/scope/Boolean declarations and nested inventory roles are tested.
+New engine regressions independently test control phasing, conditional expiry,
+cleanup, targeted/global and printed/direct removal dependencies, restoration,
+unrelated abilities, returned sources and clone latch isolation. Complete
+card-to-test mapping is in the companion report; no global behavior-verification
+total or full-collection gameplay certification is claimed.
+
+Fresh strict loading: **874/2,445 compiled records**, **1,571 rejected records**,
+**256 compiled unique names**, **730 rejected unique names**. Gain: **15 records,
+five unique cards**, exactly this run's estimate. No accepted record regressed;
+no remaining first diagnostic changed. Strict loading still exits 1 and publishes
+no partial registry. Remaining first gaps include PermanentRuleEffect (110),
+AsPermanentEnters (90), ActivatedWithModifiers (61), CastEffect on spells (53),
+rule If (47), ChooseADamageSource (46), MayCost (43), WhenAPlayerCastsASpell (43),
+Targeted_Modal (42), HostController upkeep references (35), and
+ControlledByAPlayer in other contexts (28).
+
+No source defect was corrected; all 12 source hashes match the vocabulary
+snapshot. No snapshot refresh is needed. Gaea's Liege/Fastbond observations
+remain open. No environment failure or pre-existing check failure blocked this
+run. Initial lint found a deprecated Keyword alias in a new test; it was changed
+to Attr. Automatic formatting only changed new test import order. User-modified
+files and unrelated files were not changed by lint.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline strict loader and AST inventory | Expected exit 1; 859 compiled, 1,586 rejected |
+| Focused new tests with `-count=1` | Expected compiler, declaration, phasing, dependency and inventory failures before their fixes; PASS afterward |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS after new-test alias correction; zero issues |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` | Expected exit 1; 874 compiled, 1,571 rejected |
+| Final `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same counts, nested controller roles |
+| Vocabulary hash comparison | All 12 hashes match |
+
+Files: `layers.go`, `inventory.go`, `inventory_test.go`, new
+`static_controller_test.go` under `pkg/mage/dsl/ron`; `effect_control.go`,
+`effect_manager.go`, `continuous_effects.go`, `controller_operation_test.go` and
+`subtype_ability_effects_test.go` under `pkg/mage`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, the new static-controller report and this ledger.
+All dependencies are tracked. These 13 files form one descriptive slice commit;
+the two initial user changes stay outside it.
+
+Next ranked slice: static Other(ThisPermanent) source exclusion for the three
+Kobold lords, then variable temporary P/T for Howl from Beyond/Great Defender,
+then optional fixed counter payments. Complete RON gameplay/loading, embedded
+startup, native startup evidence, Go-card deletion, obsolete Go-set generator
+retirement and unused-DSL removal gates remain unmet. No deletion or caller audit
+is claimed. This run stops after P1-STATIC-CONTROLLER.

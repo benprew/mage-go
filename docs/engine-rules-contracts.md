@@ -608,3 +608,21 @@ Existing damage-filter tests retain prevention, simultaneous-death, and pending
 ability copy/clone coverage. Target legality, replacement ordering, payment
 transactions, and batch execution are unchanged. Spell sources and other
 intrinsic/game-state filter captures remain separate contracts.
+
+## Control duration during phasing and printed keyword dependencies
+
+A control effect on a phased target suspends application without expiring its
+otherwise valid duration. Phase-in resumes the effect. Turn-limited durations
+can expire during phasing; conditions that require an absent source or target
+fact still end their duration (CR 611.2b, 702.26b/d/f). Clone expiration latches
+are independent. Evidence: `TestControlEffectSurvivesTargetPhasing` and
+`TestConditionalControlStillExpiresDuringPhasing`.
+
+The targeted and global `RemoveAllAbilities` services expose their removal
+membership to printed static effects. In layer 6, a matching removal changes
+the existence of a printed grant, so the grant depends on removal (CR 613.8a/b).
+The shared sorter applies removal first and execution checks current activity.
+This applies to printed or directly installed removal services. Removal expiry
+state is deep-cloned. It does not establish complete dependency detection for
+all layer forms. Evidence: `TestAbilityRemovalOrdersBeforePrintedKeywordGrant`,
+`TestPrintedAbilityRemovalOrdersBeforePrintedGrant`, and the RON Fortified Area/Goblin War Drums source-removal tests.

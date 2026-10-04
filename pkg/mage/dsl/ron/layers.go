@@ -15,8 +15,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	}
 	global := n.Name == "EachPermanentLayerEffect"
 	var filter mage.PermanentFilter
+	var controlled bool
 	if global {
-		filter, err = compileFilter(n.Args[0])
+		filter, controlled, err = compileStaticCreatureFilter(n.Args[0])
 		if err != nil {
 			return nil, err
 		}
@@ -35,7 +36,11 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 				return nil, err
 			}
 			if global {
-				effects = append(effects, func() mage.ContinuousEffect { return mage.BoostAllCreaturesIncludingSelf(power, toughness, filter) })
+				if controlled {
+					effects = append(effects, func() mage.ContinuousEffect { return mage.BoostControlledCreatures(power, toughness, filter) })
+				} else {
+					effects = append(effects, func() mage.ContinuousEffect { return mage.BoostAllCreaturesIncludingSelf(power, toughness, filter) })
+				}
 			} else {
 				effects = append(effects, func() mage.ContinuousEffect { return mage.BoostAttached(power, toughness, core.AttachAura) })
 			}
@@ -50,7 +55,11 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			for _, ability := range abilities {
 				if keyword, ok := keywords[ability.Name]; ok && ability.Kind == Symbol {
 					if global {
-						effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToAllIncludingSource(keyword, filter) })
+						if controlled {
+							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToControlled(keyword, filter) })
+						} else {
+							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToAllIncludingSource(keyword, filter) })
+						}
 					} else {
 						effects = append(effects, func() mage.ContinuousEffect { return mage.GrantAbilityToAttached(keyword, core.AttachAura) })
 					}
@@ -111,4 +120,48 @@ func requiresCreature(n Node) bool {
 		return n.Name == "Or"
 	}
 	return false
+}
+
+func compileStaticCreatureFilter(n Node) (mage.PermanentFilter, bool, error) {
+	if n.Name == "ControlledByAPlayer" {
+		if err := arity(n, 1); err != nil {
+			return mage.PermanentFilter{}, false, err
+		}
+		player := n.Args[0]
+		if player.Name != "SinglePlayer" {
+			return mage.PermanentFilter{}, false, unsupported(player, "static controller selector")
+		}
+		if err := arity(player, 1); err != nil {
+			return mage.PermanentFilter{}, false, err
+		}
+		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
+			return mage.PermanentFilter{}, false, unsupported(player.Args[0], "static controller reference")
+		}
+		return mage.AnyPermanent, true, nil
+	}
+	if n.Name == "And" {
+		if err := arity(n, 1); err != nil {
+			return mage.PermanentFilter{}, false, err
+		}
+		parts, err := list(n.Args[0])
+		if err != nil {
+			return mage.PermanentFilter{}, false, err
+		}
+		if len(parts) == 0 {
+			return mage.PermanentFilter{}, false, problem(n, "empty static conjunction")
+		}
+		filters := make([]mage.PermanentFilter, 0, len(parts))
+		controlled := false
+		for _, part := range parts {
+			filter, usesController, err := compileStaticCreatureFilter(part)
+			if err != nil {
+				return mage.PermanentFilter{}, false, err
+			}
+			filters = append(filters, filter)
+			controlled = controlled || usesController
+		}
+		return mage.And(filters...), controlled, nil
+	}
+	filter, err := compileFilter(n)
+	return filter, false, err
 }

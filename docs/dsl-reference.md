@@ -900,3 +900,15 @@ cross-rule reads fail compilation. Controller, mana-value and target-history
 filters, modes and multiple spell target groups remain unsupported.
 
 Contract and card tests: [RON spell scopes](designs/mtgish-ron-spell-scopes.md).
+
+### RON controlled static creature layers
+
+In `EachPermanentLayerEffect`, use
+`ControlledByAPlayer(SinglePlayer(You))` inside a creature-restricted `And` filter
+for fixed P/T changes or basic keyword grants. Nested nonempty conjunctions are
+supported. The engine reads the source's current controller each time it applies
+the layers. Matching creature sources are included. Current membership changes
+with control, tap status, combat status, color and later entries. Controller
+predicates inside `Or` and other controller reference forms remain rejected.
+This adapter does not add controller support to target or collection filters.
+See [the supported contract and tests](designs/mtgish-ron-static-controller.md).

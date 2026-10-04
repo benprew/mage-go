@@ -41,6 +41,20 @@ func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
 	return e.ContinuousEffect.IsActive(g)
 }
 
+func (e *printedAbilityContinuousEffect) DependsOn(other ContinuousEffect, g *Game) bool {
+	if printed, ok := other.(*printedAbilityContinuousEffect); ok {
+		other = printed.ContinuousEffect
+	}
+	if removal, ok := other.(*abilityRemovalContinuousEffect); ok {
+		source := g.FindPermanent(e.SourceID())
+		return source != nil && removal.matches(source, g)
+	}
+	if detector, ok := e.ContinuousEffect.(DependencyDetector); ok {
+		return detector.DependsOn(other, g)
+	}
+	return false
+}
+
 func (e *printedAbilityContinuousEffect) cloneEffect() ContinuousEffect {
 	inner := e.ContinuousEffect
 	if cloneable, ok := inner.(deepCloneableEffect); ok {
@@ -657,6 +671,9 @@ func (em *EffectManager) Apply(g *Game) {
 		}
 		layerEffects = orderEffectsByDependency(layerEffects, g)
 		for _, e := range layerEffects {
+			if !e.IsActive(g) {
+				continue
+			}
 			_ = e.ApplyContinuous(&EffectContext{Game: g})
 			em.syncAttrDeltas(g)
 		}

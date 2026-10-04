@@ -898,24 +898,51 @@ func removeAllAbilitiesAtCurrentLayer(g *Game, target *Permanent) {
 // RemoveAllAbilities makes the target permanent lose all abilities in layer 6
 // for the requested duration. Later layer-6 effects can grant abilities back.
 func RemoveAllAbilities(targetID uuid.UUID, duration Duration) ContinuousEffect {
-	return TargetEffect(LayerAbility, duration, targetID, func(g *Game, target *Permanent) error {
-		removeAllAbilitiesAtCurrentLayer(g, target)
-		return nil
-	})
+	return &abilityRemovalContinuousEffect{
+		ContinuousEffect: TargetEffect(LayerAbility, duration, targetID, func(g *Game, target *Permanent) error {
+			removeAllAbilitiesAtCurrentLayer(g, target)
+			return nil
+		}),
+		targetID: targetID,
+	}
+}
+
+type abilityRemovalContinuousEffect struct {
+	ContinuousEffect
+	targetID uuid.UUID
+	filter   PermanentFilter
+}
+
+func (e *abilityRemovalContinuousEffect) cloneEffect() ContinuousEffect {
+	clone := *e
+	if inner, ok := e.ContinuousEffect.(deepCloneableEffect); ok {
+		clone.ContinuousEffect = inner.cloneEffect()
+	}
+	return &clone
+}
+
+func (e *abilityRemovalContinuousEffect) matches(p *Permanent, g *Game) bool {
+	if e.targetID != uuid.Nil {
+		return p.ID() == e.targetID
+	}
+	return e.filter.Match(p, g)
 }
 
 // RemoveAllAbilitiesFromAll makes every matching permanent lose all abilities
 // in layer 6 while the source remains on the battlefield.
 func RemoveAllAbilitiesFromAll(filter PermanentFilter) ContinuousEffect {
-	return FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, permanent := range g.FilterBattlefield(filter) {
-			permanent = g.MutablePermanent(permanent.ID())
-			if permanent != nil {
-				removeAllAbilitiesAtCurrentLayer(g, permanent)
+	return &abilityRemovalContinuousEffect{
+		ContinuousEffect: FuncContinuousEffect(LayerAbility, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
+			for _, permanent := range g.FilterBattlefield(filter) {
+				permanent = g.MutablePermanent(permanent.ID())
+				if permanent != nil {
+					removeAllAbilitiesAtCurrentLayer(g, permanent)
+				}
 			}
-		}
-		return nil
-	})
+			return nil
+		}),
+		filter: filter,
+	}
 }
 
 // CyclopeanTombEffect overrides subtypes of all permanents with Mire counters to Swamp.

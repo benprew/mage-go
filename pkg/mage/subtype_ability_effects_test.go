@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -383,5 +384,73 @@ func TestSubtypeFamilyStateClonesWithoutSharingSlices(t *testing.T) {
 	}
 	if permanent.subtypeFamilyAdditions[SubtypeCreature][0] != "Druid" {
 		t.Fatal("clone subtype addition mutation leaked to original")
+	}
+}
+
+func TestAbilityRemovalOrdersBeforePrintedKeywordGrant(t *testing.T) {
+	for _, global := range []bool{false, true} {
+		t.Run(fmt.Sprintf("global=%t", global), func(t *testing.T) {
+			a, b := NewBasePlayer("A"), NewBasePlayer("B")
+			g := NewGame(a, b)
+			recipient := g.PutOnBattlefield(NewCreature("Recipient", "", 1, 1), a.PlayerID())
+			source := g.PutOnBattlefield(NewEnchantment("Grant", "", WithStaticAbility(GrantKeywordToControlled(Flying, AnyPermanent))), a.PlayerID())
+			unrelated := g.PutOnBattlefield(NewCreature("Unrelated", "", 1, 1, WithKeyword(Trample)), b.PlayerID())
+			removalSource := g.PutOnBattlefield(NewEnchantment("Removal", ""), a.PlayerID())
+			effect := RemoveAllAbilities(source.ID(), WhileOnBattlefield)
+			if global {
+				effect = RemoveAllAbilitiesFromAll(Named("Grant"))
+			}
+			effect.SetSourceID(removalSource.ID())
+			g.AddContinuousEffect(effect)
+			if recipient.HasKeyword(Flying) {
+				t.Fatal("printed grant ignored ability-removal dependency")
+			}
+			if !unrelated.HasKeyword(Trample) {
+				t.Fatal("unrelated abilities were removed")
+			}
+			clone := g.Clone()
+			clone.RemoveFromBattlefield(clone.FindPermanent(source.ID()))
+			g.ApplyContinuousEffects()
+			if !g.FindPermanent(source.ID()).printedAbilitiesSuppressed {
+				t.Fatal("clone expired original removal")
+			}
+			g.RemoveFromBattlefield(g.FindPermanent(removalSource.ID()))
+			if !g.FindPermanent(recipient.ID()).HasKeyword(Flying) {
+				t.Fatal("printed grant did not resume")
+			}
+			if clone.FindPermanent(recipient.ID()).HasKeyword(Flying) {
+				t.Fatal("original changed cloned grant state")
+			}
+		})
+	}
+}
+
+func TestPrintedAbilityRemovalOrdersBeforePrintedGrant(t *testing.T) {
+	a := NewBasePlayer("A")
+	g := NewGame(a, NewBasePlayer("B"))
+	source := g.PutOnBattlefield(NewEnchantment("Grant", "", WithStaticAbility(GrantKeywordToControlled(Flying, AnyPermanent))), a.PlayerID())
+	recipient := g.PutOnBattlefield(NewCreature("Recipient", "", 1, 1), a.PlayerID())
+	removal := g.PutOnBattlefield(NewEnchantment("Removal", "", WithStaticAbility(RemoveAllAbilitiesFromAll(Named("Grant")))), a.PlayerID())
+	if recipient.HasKeyword(Flying) {
+		t.Fatal("printed remover did not precede printed grant")
+	}
+	phased := g.PhaseOut(removal.ID())
+	g.ApplyContinuousEffects()
+	if !g.FindPermanent(recipient.ID()).HasKeyword(Flying) {
+		t.Fatal("phased remover suppressed grant")
+	}
+	g.PhaseIn(phased)
+	g.ApplyContinuousEffects()
+	if g.FindPermanent(recipient.ID()).HasKeyword(Flying) {
+		t.Fatal("phased-in remover failed to suppress grant")
+	}
+	g.RemoveFromBattlefield(g.FindPermanent(source.ID()))
+	returned := g.PutOnBattlefield(source.Card, a.PlayerID())
+	if g.FindPermanent(recipient.ID()).HasKeyword(Flying) {
+		t.Fatal("returned grant ignored remover")
+	}
+	g.RemoveFromBattlefield(g.FindPermanent(removal.ID()))
+	if !g.FindPermanent(recipient.ID()).HasKeyword(Flying) || returned == nil {
+		t.Fatal("grant did not resume after remover departure")
 	}
 }

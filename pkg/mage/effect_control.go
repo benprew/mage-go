@@ -87,8 +87,9 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 	if e.expired {
 		return false
 	}
+	// Phasing does not end a duration, but its conditions must still hold.
 	target := g.FindPermanent(e.targetID)
-	if target == nil {
+	if target == nil && g.FindPermanentIncludingPhased(e.targetID) == nil {
 		if latchExpiration {
 			e.expired = true
 		}
@@ -103,7 +104,7 @@ func (e *controlContinuousEffect) isActive(g *Game, latchExpiration bool) bool {
 			return false
 		}
 	}
-	return true
+	return target != nil
 }
 
 type attachedControlEffect struct{ effectSource }

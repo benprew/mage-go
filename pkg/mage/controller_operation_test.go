@@ -1,6 +1,7 @@
 package mage
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -170,5 +171,58 @@ func TestFaceDownControllerResetsAndCloneIsIsolated(t *testing.T) {
 	}
 	if got := perm.ControllerID(); got != b.PlayerID() {
 		t.Fatalf("clone controller mutation leaked: got %s, want %s", got, b.PlayerID())
+	}
+}
+
+func TestControlEffectSurvivesTargetPhasing(t *testing.T) {
+	g, a, b, target := controllerTestGame(t)
+	g.AddControlEffect(ControlEffectSpec{SourceID: b.PlayerID(), TargetID: target.ID(), ControllerID: b.PlayerID(), Duration: Indefinite})
+	phased := g.PhaseOut(target.ID())
+	g.ApplyContinuousEffects()
+	if g.FindPermanent(target.ID()) != nil {
+		t.Fatal("phased target is present")
+	}
+	clone := g.Clone()
+	clone.PhaseIn(phased)
+	clone.ApplyContinuousEffects()
+	if clone.FindPermanent(target.ID()).ControllerID() != b.PlayerID() {
+		t.Fatal("control effect expired during phasing")
+	}
+	if g.FindPermanent(target.ID()) != nil {
+		t.Fatal("clone changed original phasing")
+	}
+	g.PhaseIn(phased)
+	g.ApplyContinuousEffects()
+	if g.FindPermanent(target.ID()).ControllerID() != b.PlayerID() {
+		t.Fatal("control effect did not resume")
+	}
+	g.AddControlEffect(ControlEffectSpec{SourceID: a.PlayerID(), TargetID: target.ID(), ControllerID: a.PlayerID(), Duration: EndOfTurn})
+	phased = g.PhaseOut(target.ID())
+	g.effects.RemoveEndOfTurn()
+	g.ApplyContinuousEffects()
+	g.PhaseIn(phased)
+	g.ApplyContinuousEffects()
+	if g.FindPermanent(target.ID()).ControllerID() != b.PlayerID() {
+		t.Fatal("expired effect survived cleanup while phased")
+	}
+}
+
+func TestConditionalControlStillExpiresDuringPhasing(t *testing.T) {
+	for _, condition := range []ControlConditionData{ControlSourceExists{}, ControlTargetPowerLESource{}} {
+		t.Run(fmt.Sprintf("%T", condition), func(t *testing.T) {
+			g, a, b, target := controllerTestGame(t)
+			source := g.PutOnBattlefield(NewCreature("Source", "", 4, 4), b.PlayerID())
+			g.AddControlEffect(ControlEffectSpec{SourceID: source.ID(), TargetID: target.ID(), ControllerID: b.PlayerID(), Duration: Indefinite, Conditions: []ControlConditionData{condition}})
+			phased := g.PhaseOut(target.ID())
+			g.ApplyContinuousEffects()
+			if _, ok := condition.(ControlSourceExists); ok {
+				g.RemoveFromBattlefield(source)
+			}
+			g.PhaseIn(phased)
+			g.ApplyContinuousEffects()
+			if g.FindPermanent(target.ID()).ControllerID() != a.PlayerID() {
+				t.Fatal("unmet duration condition did not expire")
+			}
+		})
 	}
 }
