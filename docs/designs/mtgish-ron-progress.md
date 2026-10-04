@@ -3192,3 +3192,97 @@ storage lands, now with tapped entry and counter/mana payments supported;
 (3) saved-sacrifice repeated mana, with casting-payment scope downstream.
 Complete collection loading/gameplay, runtime/native startup, Go-card/generator
 deletion and DSL cleanup remain open. No second slice began.
+
+## Run 2026-10-04: P6-DEATH-HISTORY-COUNTERS
+
+Status: completed one dependency-ready compiler slice. User changes in
+`.gitignore` and `mtgish-ron-execution.md` are preserved and excluded from the
+slice commit. Fresh short tests/build passed. Baseline strict and semantic
+loading rejected 1,392 records, with 1,053 compiled. The
+[death-history report](mtgish-ron-death-history.md) records contracts and tests.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers / downstream capability / effort |
+| --- | --- | ---: | --- |
+| Creature death history, selected | Khabál Ghoul; Scavenging Ghoul | 2 | No other blockers. Typed engine history is ready; supports later history conditions. Small adapter, moderate gameplay coverage. |
+| Storage-land lifecycle | Bottomless Vault; Dwarven Hold; Hollow Trees; Icatian Store; Sand Silos | 5 | Optional untap plus tapped-source TriggerI still missing. Entry and counter/mana payments work. Medium implementation, large lifecycle/decision tests. |
+| Saved-sacrifice repeated mana | Priest of Yawgmoth; Sacrifice; Metamorphosis | 1 | Priest needs repeated-mana saved-value consumption; spells need casting-payment bindings, Metamorphosis also Plus/restricted mana. Small activation adapter and moderate rollback/solver tests, larger casting work. |
+
+Complete records and nested forms for all candidate cards, all reprints, and
+Osai Vultures were inspected. Two full unlocks with a single exact adapter won
+on credible benefit for effort. Selection, contract, reuse boundary and
+acceptance cases were stated before edits. No missing engine prerequisite,
+environment failure or source defect was found in this context.
+
+Exact support: `NumCreaturesOrPlaneswalkersThatDiedThisTurn/1` with exactly
+`IsCardtype(Creature)`, used as the amount of
+`PutCounters([NumberCountersOfTypeOnPermanent(amount,counter,subject)])` in
+supported spell, activation and trigger action lists. Private signature:
+`compileCounterAmount(Node, scope) (mage.ResolutionValue, error)`.
+The filter operand receives permanent_filter inventory context; syntax support
+remains unverified. Other types, mixed/controller filters and malformed shapes
+are declaration errors. TriggerI history conditions remain unsupported.
+
+Engine reuse: CreaturesDiedThisTurn, turn tracker, AddCountersTo, typed source/
+target incarnations, static animation LKI, shared destruction batches,
+regeneration, source phasing, pending triggers/copies, game cloning, cleanup
+history reset, native casting and transactional activation costs. Integer/X
+amounts retain ValueAtResolution. The new value has no mutable chosen state
+or result binding; each factory builds separate effects. RON owns syntax and
+shape validation. No engine rule changed, no global last-action slot, fallback,
+card-name branch, declaration panic or partial registry was introduced.
+
+Card-to-test mappings: Khabál Ghoul -> TestRONDeathHistoryCards,
+TestRONDeathHistoryEvents, TestRONDeathHistoryCastingAndInstances;
+Scavenging Ghoul -> TestRONDeathHistoryCards (including activation cost and
+regeneration) and TestRONDeathHistoryCastingAndInstances (all six reprints).
+TestRONDeathHistoryActionContexts covers synthetic spell and activation usage;
+TestRONDeathHistoryInvalid and TestRONDeathHistoryInventory cover invalid
+shapes and syntax roles. The report details timing, source identity, LKI,
+phasing, clones, copies, simultaneous deaths and cost failure coverage.
+
+TDD confirmed the unsupported value/filter-role failures before implementation.
+Fixtures were corrected for explicit owner IDs, activation index 1, and phased
+legality through the batch destruction API. No test was weakened. Lint made
+import formatting changes only; changes were reviewed. Final tests ran after
+all test changes and the final successful lint run.
+
+Estimated and actual unlocks agree: **two unique names, seven records**.
+Compiled **1,053 -> 1,060/2,445**; rejected **1,392 -> 1,385**. Accepted unique
+names **346 -> 348**, rejected names **640 -> 638**. Zero accepted-record
+regressions; strict and semantic issue arrays agree. AST occurrences/signatures
+remain **72,938/8,528**; unknown-role occurrences **16,310 -> 16,303**.
+Collection-wide engine_validated/behavior_verified remain null; two full cards
+have new explicit RON gameplay/definition evidence. No RON source changed;
+all twelve hashes match the vocabulary snapshot. Gaea's Liege/Fastbond source
+concerns remain open. No source correction or vocabulary refresh was needed.
+
+Leading first diagnostics: PermanentRuleEffect 121, If 65, CastEffect 54,
+ChooseADamageSource 46, Targeted_Modal 42, HostController 35,
+ControlledByAPlayer 29, TriggerI 28, TargetGraveyardCard 26.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and semantic loading | Expected exit 1: 1,053 compiled, 1,392 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONDeathHistory -count=1 | Expected unsupported-value/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS on final code after lint |
+| go test ./pkg/mage/... -short -count=1 | PASS on final code after lint |
+| make test | PASS on final code after lint |
+| make build | PASS on final code after lint |
+| go vet ./... | PASS on final code after lint |
+| make lint | PASS, zero issues; automatic formatting reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory | Expected exit 1: 1,060 compiled, 1,385 rejected; identical diagnostics |
+| Accepted-record regression and source-hash audits | PASS: zero regressions, twelve hashes unchanged |
+
+Changed files: counter_placement.go; new death_history_test.go; inventory.go;
+inventory_test.go; dsl-reference.md; engine-rules-contracts.md; this ledger;
+new mtgish-ron-death-history.md. No Go card, generator or existing DSL export
+was removed. Complete-loading/gameplay and runtime cutover gates remain closed;
+no removal caller audit or native startup cutover is claimed.
+
+Ranked next candidates to reassess: (1) storage-land optional untap and
+ tapped-source TriggerI prerequisites; (2) saved-sacrifice repeated mana with
+ downstream casting-payment bindings; (3) death-history intervening-if for
+ Osai Vultures, deferred while useful multi-card work remains unless required
+ as a shared prerequisite. No second slice began.

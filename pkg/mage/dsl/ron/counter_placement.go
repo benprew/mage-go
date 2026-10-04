@@ -18,7 +18,7 @@ func compileCounterPlacement(n Node, ctx scope) (effectFactory, error) {
 	}
 	instruction := parts[0]
 	var counterNode, subjectNode Node
-	var amount mage.ValueSource = mage.Fixed(1)
+	var amount mage.ResolutionValue = mage.Fixed(1)
 	switch instruction.Name {
 	case "ACounterOfTypeOnPermanent":
 		if err := arity(instruction, 2); err != nil {
@@ -29,7 +29,7 @@ func compileCounterPlacement(n Node, ctx scope) (effectFactory, error) {
 		if err := arity(instruction, 3); err != nil {
 			return nil, err
 		}
-		amount, err = compileValue(instruction.Args[0], ctx)
+		amount, err = compileCounterAmount(instruction.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +46,7 @@ func compileCounterPlacement(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.AddCountersTo(subject.build(bindings), counter, mage.ValueAtResolution(amount))
+		return mage.AddCountersTo(subject.build(bindings), counter, amount)
 	}, nil
 }
 
@@ -89,4 +89,28 @@ func compilePermanentCounterType(n Node) (core.CounterType, error) {
 		}
 	}
 	return 0, unsupported(n, "permanent counter type")
+}
+
+func compileCounterAmount(n Node, ctx scope) (mage.ResolutionValue, error) {
+	if n.Name == "NumCreaturesOrPlaneswalkersThatDiedThisTurn" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		filter := n.Args[0]
+		if filter.Name != "IsCardtype" {
+			return nil, unsupported(filter, "creature death history filter")
+		}
+		if err := arity(filter, 1); err != nil {
+			return nil, err
+		}
+		if filter.Args[0].Kind != Symbol || filter.Args[0].Name != "Creature" {
+			return nil, unsupported(filter.Args[0], "creature death history type")
+		}
+		return mage.CreaturesDiedThisTurn(), nil
+	}
+	value, err := compileValue(n, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return mage.ValueAtResolution(value), nil
 }

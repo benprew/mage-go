@@ -1006,3 +1006,22 @@ competing entry replacements remain outside this adapter.
 
 Evidence: `TestRONEntryTapped*`, mapped in
 [the tapped-entry report](designs/mtgish-ron-entry-tapped.md).
+
+## RON creature death history counter amount
+
+RON's exact `NumCreaturesOrPlaneswalkersThatDiedThisTurn(IsCardtype(Creature))`
+counter amount uses the existing `CreaturesDiedThisTurn` resolution value and
+`AddCountersTo`. The value reads the current game's turn tracker at resolution,
+including tokens, both players, earlier deaths and later deaths while the trigger
+is on the stack (CR 700.4, 603.2). Copies and cloned games read their own history.
+Simultaneous destruction uses the shared batch; regeneration does not cause a
+death (CR 701.19a). Cleanup clears turn history while counters persist. The
+subject still uses incarnation identity and excludes phased permanents
+(CR 400.7, 702.26b). No engine execution contract changed.
+
+Evidence: `TestRONDeathHistoryCards`, `TestRONDeathHistoryEvents`, and
+`TestRONDeathHistoryCastingAndInstances`; retained engine evidence includes
+`TestCreatureDeathCountActions`, `TestCreatureDeathCountResolutionCopyAndClone`
+and `TestCreatureDeathCountSnapshot`. Other card types, combined filters,
+intervening-if conditions and event-time history snapshots are not supported
+by this RON slice.

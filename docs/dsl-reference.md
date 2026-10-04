@@ -1239,3 +1239,16 @@ the symbol `EntersTapped`. Empty lists, other subjects, tuple-shaped symbols,
 additional operations, entry choices and entry counters remain unsupported.
 `EntersTapped` is not a general action or a top-level keyword declaration.
 See `TestRONEntryTapped*` and the [slice report](designs/mtgish-ron-entry-tapped.md).
+
+## RON creature death history in counter amounts
+
+`PutCounters([NumberCountersOfTypeOnPermanent(amount, counter, subject)])`
+accepts `NumCreaturesOrPlaneswalkersThatDiedThisTurn(IsCardtype(Creature))`
+as its amount in supported spell, activation and trigger action lists. This
+exact filter lowers to `mage.CreaturesDiedThisTurn()`. The count is read when
+placement resolves. It includes tokens and creatures from either player,
+including deaths before the source entered. It does not count exile, return to
+hand, phasing or prevented destruction. Other history filters remain errors.
+The existing typed subject and counter replacement contracts still apply.
+RON gameplay evidence: `TestRONDeathHistory*` for Khabál Ghoul and all six
+Scavenging Ghoul records. Intervening-if history conditions remain unsupported.

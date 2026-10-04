@@ -466,6 +466,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "value":
+		if n.Name == "NumCreaturesOrPlaneswalkersThatDiedThisTurn" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "ManaValueOfPermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
