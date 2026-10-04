@@ -1469,3 +1469,107 @@ layer/timing/duration/cost dependencies); characteristic filters/branches for
 Blood Lust and downstream Berserk/Kry Shield/Subdue (one immediate unlock).
 Reassess fresh evidence next run. Complete loading/gameplay, embedded runtime,
 native startup, Go-card/generator deletion and unused-DSL cleanup remain open.
+
+## Run 2026-10-04: P5-FIXED-DRAW
+
+Status: complete fixed draw activation slice, including fixed activation life
+payment and the required color-choice mana adapter repair. Stop after this slice.
+The initial user edits to `.gitignore` and `mtgish-ron-execution.md` remain intact
+and are excluded from the commit. No unrelated untracked files were present.
+
+The [fixed draw report](mtgish-ron-fixed-draw.md) records candidate comparison,
+complete-record and nested-form audits, exact signatures/contexts, dependencies,
+engine reuse, affected distinct names, rules evidence and card-to-test mappings.
+Candidates were fixed draws/life costs (five estimated unlocks, small adapters
+and a payment/binding matrix), spell-cast life triggers (seven estimated unlocks,
+more event and paid-continuation work), and entry copying (two initial unlocks,
+large entry/copy/layer scope; Doppelganger remains blocked). Fixed draws offered
+the highest credible gain per effort. Selection and acceptance were stated
+before editing; first-error frequency was not used as an unlock estimate.
+
+Supported additions: symbol `DrawACard` in supported spell/activation/trigger
+action contexts and `PlayerAction(player, DrawACard)` with existing typed player
+references. Lowering uses `DrawFor(player, Fixed(1))`. Activation cost
+`PayLife(Integer(n))` requires a nonnegative fixed integer, including nested
+cost conjunctions, and builds fresh `LifePayCost(n)` objects. Dynamic/optional
+life payments remain rejected. Inventory gives PayLife's operand the value role.
+The existing fixed `AnyManaColor` adapter needed repair to complete Standing
+Stones: it now uses `AddManaOfAnyOneColor` instead of storing AnyColor in the
+pool. The full amount uses one chosen color. Regressions cover all accepted
+users of this shape: Birds of Paradise, Black Lotus, Celestial Prism and
+Implements of Sacrifice, plus the newly accepted Standing Stones.
+
+All reusable rules already exist. Engine payment transactions, target instance
+bindings, resolving controller capture, draw/replacement/empty-library services,
+clone isolation, mana classification/solver and color decisions are reused.
+No engine implementation, RON source, Go card definition, runtime startup or DSL
+export was changed. No new general LKI, simultaneous-operation or replacement
+ordering contract is claimed. The removal gates remain closed; no unused-caller
+or definition-removal audit is claimed for this slice.
+
+Tests first failed with missing DrawACard/PayLife adapters and the life inventory
+role. The Standing Stones test and added accepted-card regressions then failed
+on wildcard production before that adapter repair. Fixture corrections used
+existing APIs, activation index zero, cleared summoning sickness for established
+sources, and IsAlive after state-based actions clear the empty-draw flag.
+No test was weakened to accommodate an implementation gap.
+
+Gameplay tests in `fixed_draw_test.go` map all five new unique cards:
+Jayemdae Tome, Xira Arien, Book of Rass and Greed to
+`TestRONFixedDrawRealActivations`, `TestRONFixedDrawPaymentRollback` and
+`TestRONFixedDrawLifeAndManaSources`; Xira additionally to
+`TestRONFixedDrawXiraInstances`; Greed additionally to
+`TestRONFixedDrawReplacementAndEmptyLibrary`; Standing Stones to
+`TestRONFixedLifeStandingStones`. The report maps the four accepted mana-card
+regressions and synthetic declaration, zero/equal/combined life payment, fresh
+factory, player scope, trigger and spell-copy cases. Tests cover all rules in
+the five unlocked records, but are not a full collection gameplay claim.
+
+Estimated and actual compilation gain agree: **five names, ten records**.
+Strict loader increases from **939 to 949/2,445 accepted records**; rejection
+falls from **1,506 to 1,496**. Unique accepted names increase **280 to 285**;
+**701 unique names remain rejected**. Jayemdae Tome contributes six reprints;
+the other four new names contribute one each. No formerly accepted record
+regresses. Two still-rejected diagnostics advance: Jalum Tome to DiscardACard
+and Sindbad to RevealTheCardDrawnThisWay. All other rejected diagnostics remain
+unchanged. Strict loader and full AST inventory diagnostics are identical.
+Global engine_validated and behavior_verified measurements remain null;
+compilation counts are separate from behavior evidence.
+
+Local Oracle data agrees with all five new records. No source defect was
+corrected and every RON hash matches the vocabulary snapshot, so no syntax
+snapshot refresh is needed. The color-choice problem was a compiler adapter
+defect. Gaea's Liege/Fastbond source concerns remain unresolved outside this
+slice. No environment or pre-existing failure blocks completion.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1`, engine short tests, `make build` | PASS |
+| Baseline strict loader and full inventory | Expected exit 1; 939 accepted, 1,506 rejected |
+| New `go test ./pkg/mage/dsl/ron -run TestRONFixed -count=1` | Expected adapter/role failures; final PASS |
+| Fixed mana prerequisite regressions before repair | Expected failure: AnyColor pool value instead of chosen color |
+| Final focused RON/CLI tests with `-count=1` | PASS; repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | First run rejected new test variable `copy` for builtin shadowing; renamed to `copied`; final PASS, zero issues |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; both 949 accepted and 1,496 rejected; diagnostics identical |
+| Source hashes and before/after rejection comparison | All hashes unchanged; no accepted-record regression |
+
+Automatic lint changes only reordered imports in the new test file. Reviewed
+changes have no semantic effect. Focused tests were repeated after the lint fix;
+no required check was waived. Files in this slice: compiler.go, inventory.go,
+inventory_test.go, new fixed_draw_test.go, dsl-reference.md,
+engine-rules-contracts.md, new mtgish-ron-fixed-draw.md and this ledger. One
+commit will include only these eight files; the two user files remain unstaged.
+
+Next ranked candidates: spell-cast life triggers/fixed paid continuations
+(Crystal Rod, Iron Star, Ivory Cup, Throne of Bone, Wooden Sphere, Urza's Chalice,
+Sol'kanar the Swamp King; seven estimated unlocks); temporary animation
+(Mishra's Factory/Jade Statue/Thelonite Druid, up to three with dependencies);
+shared discard action (Jalum Tome now exposes this blocker, but its multi-card
+value requires a fresh nested and complete-record audit). No next slice was
+started. Complete loading/gameplay, embedded production startup and native
+smoke tests, Go-card/generator deletion and unused-DSL cleanup remain open.

@@ -455,6 +455,22 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "PayLife":
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		amount := n.Args[0]
+		if amount.Name != "Integer" {
+			return nil, false, unsupported(amount, "fixed life cost amount")
+		}
+		if err := arity(amount, 1); err != nil {
+			return nil, false, err
+		}
+		if amount.Args[0].Kind != IntegerNode || amount.Args[0].Integer < 0 {
+			return nil, false, problem(amount, "life cost requires a nonnegative integer")
+		}
+		value := amount.Args[0].Integer
+		return []costFactory{func() mage.Cost { return mage.LifePayCost(value) }}, false, nil
 	case "PayMana":
 		if err := arity(n, 1); err != nil {
 			return nil, false, err
@@ -828,7 +844,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "DrawNumberCards", "GainLife", "LoseLife":
+	case "DrawACard", "DrawNumberCards", "GainLife", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		count := 1
@@ -859,7 +875,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		var effects []effectFactory
 		for _, production := range productions {
 			amount, color := production.Amount*count, production.Color
-			effects = append(effects, func(bindings instanceBindings) mage.Effect { return mage.AddMana(color, amount) })
+			effects = append(effects, func(bindings instanceBindings) mage.Effect {
+				if color == core.AnyColor {
+					return mage.AddManaOfAnyOneColor(mage.Fixed(amount))
+				}
+				return mage.AddMana(color, amount)
+			})
 		}
 		return effects, nil
 	case "CreatePermanentLayerEffectUntil":
@@ -942,6 +963,14 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "DrawACard" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "DrawACard requires a symbol")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.DrawFor(ctx.player.build(bindings), mage.Fixed(1))
+		}}, nil
+	}
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}

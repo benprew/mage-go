@@ -271,6 +271,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PayMana" && len(n.Args) == 1 {
 			return "metadata"
 		}
+		if n.Name == "PayLife" && len(n.Args) == 1 {
+			return "value"
+		}
 	case "action":
 		switch n.Name {
 		case "MayCost":

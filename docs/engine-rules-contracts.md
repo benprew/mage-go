@@ -709,3 +709,18 @@ control the original source incarnation. RON controller damage uses
 prevention instead of applying life loss. Tests cover departure, return,
 phasing, control changes and damage-event identity. This adds compiler support
 for existing engine contracts. See the [shape and test report](designs/mtgish-ron-upkeep-payment.md).
+
+## RON fixed draw and activation life cost adapters
+
+RON symbol `DrawACard` uses `DrawFor(player, Fixed(1))`. Typed player targets
+and the stacked controller remain valid after source departure or control
+change. Draws use the shared replacement and empty-library services (CR 121).
+Fixed nonnegative activation `PayLife(Integer(n))` uses fresh `LifePayCost(n)`
+objects through the existing total-cost transaction. Life is paid at activation;
+damage prevention does not prevent payment. Combined life costs must be
+payable together; failure restores mana-source and tap costs (CR 119.4, 602.2).
+Fixed `AnyManaColor` production uses `AddManaOfAnyOneColor`, which chooses one
+color for the whole amount and retains immediate mana-ability execution.
+This establishes compiler adapters for existing services, with no engine rule
+change. Evidence: all `TestRONFixed*` tests, mapped in
+[the slice report](designs/mtgish-ron-fixed-draw.md).

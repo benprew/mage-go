@@ -1006,3 +1006,13 @@ as payer. Costs are fixed mana costs; an empty list still offers a choice.
 as the recipient and the engine's damage source, LKI and prevention services.
 Other explicit damage-player references remain unsupported. Shapes, limits and
 tests: [RON upkeep payments](designs/mtgish-ron-upkeep-payment.md).
+
+## RON fixed draw and activation life cost
+
+Symbol `DrawACard` draws one card in supported action contexts. In
+`PlayerAction(player, DrawACard)`, the typed player reference selects the player;
+otherwise the resolving controller draws. Activation cost
+`PayLife(Integer(n))` accepts a nonnegative fixed integer and uses the existing
+atomic total-cost payment. Optional and dynamic life costs remain rejected.
+Fixed `AnyManaColor` production asks for one color for the complete amount.
+See [the exact shape and gameplay report](designs/mtgish-ron-fixed-draw.md).
