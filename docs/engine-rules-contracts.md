@@ -736,3 +736,24 @@ Adjacent paid continuations use `IfPaid` and the shared cost transaction;
 refusal or inability gives no paid body. Nested pairs keep separate results.
 This adds compiler support without a new engine contract. Evidence:
 `TestRONSpellCastLife*`, mapped in [the slice report](designs/mtgish-ron-spell-cast-life.md).
+
+## Selected discard without result bindings: simultaneous moves
+
+`Discard(subject PlayerRef, amount ResolutionValue)` without result options
+uses the same executor as legacy `DiscardCards(amount ValueSource)`.
+The executor collects the selected cards, prepares each proposed effect-caused
+`DiscardAction` through the shared replacement pipeline, moves the resulting
+cards, then sends discard events. An event therefore sees all destinations
+from that instruction. A replacement sees the hand before any selected card
+moves. A replacement can prevent one discard without stopping other selected
+cards or later instructions. Replacement rechecks remain in the shared service.
+
+The existing affected-player choice, captured resolving controller, short-hand
+behavior, graveyard visits, tracker events and clone state remain in use.
+Nonpositive amounts do not ask for a choice. These changes do not establish a
+new contract for discard result options, random discard or discard costs.
+Rules: CR 101.3, 608.2c/d/f, 616.1/f and 701.9a/b.
+Evidence: `TestSelectedDiscardBatchEvents`,
+`TestSelectedDiscardBatchReplacementPreparation`, and
+`TestRONFixedDiscardReplacementAndEvents`. Existing typed-discard tests cover
+choice, short hands, absent subjects, amounts, declaration validation and copies.

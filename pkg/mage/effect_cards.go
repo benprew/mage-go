@@ -432,6 +432,9 @@ func (e *drawCardsTargetEffect) Apply(ctx *EffectContext) error {
 
 func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 	amount := e.amount.Resolve(ctx.Game, ctx.SourceID, ctx.Controller, ctx.Targets)
+	if amount <= 0 {
+		return nil
+	}
 
 	var playerIDs []uuid.UUID
 	switch {
@@ -445,6 +448,7 @@ func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 
+	var actions []*DiscardAction
 	for _, pid := range playerIDs {
 		p := ctx.Game.GetPlayer(pid)
 		if p == nil {
@@ -452,9 +456,10 @@ func (e *discardCardsEffect) Apply(ctx *EffectContext) error {
 		}
 		chosen := p.ChooseCardsFromHand(amount, "discard", ctx.Game)
 		for _, card := range chosen {
-			ctx.Game.PlayerDiscardByEffect(p, card.ID(), ctx.SourceID)
+			actions = append(actions, NewDiscardAction(ctx.SourceID, pid, card.ID()))
 		}
 	}
+	ctx.Game.discardActionsTogether(actions, false)
 	return nil
 }
 

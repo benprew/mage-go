@@ -1678,3 +1678,104 @@ changes have no semantic effect. Focused tests and diff checks passed again
 after lint; the final strict loader still rejects the remaining collection.
 Only the slice files are staged for one descriptive commit. No required check
 is waived and no environment failure blocks the commit.
+
+## Run 2026-10-04: P5-FIXED-DISCARD
+
+Status: completed one fixed selected discard slice and its simultaneous-move
+engine prerequisite. Initial user edits to `.gitignore` and the execution design
+remain intact and excluded from this slice. No unrelated untracked files were
+present. This run stops after this slice.
+
+The [fixed discard report](mtgish-ron-fixed-discard.md) records the complete-record
+and nested-form audit, candidate comparison, signatures/contexts, dependencies,
+engine reuse, rules references and card-to-test mapping. Candidates were fixed
+selected discard (two complete unlocks, small adapters plus shared batch repair),
+typed spell-cast references (two immediate unlocks; event spell/player bindings,
+variable payment and additional filters for later cards), and temporary animation
+(up to three, with type/layer/timing/duration/cost prerequisites). Fixed discard
+has the smallest complete boundary for two credible full-card unlocks. Selection,
+reuse boundary and acceptance cases were stated before editing. Reprints count
+once; first-error frequency was not used as an unlock estimate.
+
+Supported forms: symbol `DiscardACard`, `DiscardNumberCards(Integer(n))` with a
+nonnegative integer, and either action inside `PlayerAction(player, action)`.
+Existing spell/activation/trigger/paid-continuation action contexts apply.
+Existing typed player refs and per-instance target bindings supply the recipient;
+bare actions use the captured resolving controller. Dynamic amounts, costs,
+saved results, malformed declarations and undeclared event players remain errors.
+Inventory labels the amount operand as `value` in both action roles.
+
+Lowering uses `mage.Discard(ref, mage.Fixed(n))`. The no-result typed action
+already delegates to legacy DiscardCards. That executor now gathers selected
+cards into `DiscardAction` proposals, then uses `discardActionsTogether` to
+prepare replacements, move the cards and send events after all moves. This
+repairs a CR 608.2f gap without a new RON zone or event system. It also avoids
+choices for nonpositive amounts. No public engine signature changed. Result
+option paths, random discards and discard costs are outside this new engine
+contract. Transactional activation costs, draw services, stack controller capture,
+phasing, clone isolation and replacement rechecks are reused.
+
+Gameplay mapping: Jalum Tome and Bazaar of Baghdad ->
+`TestRONFixedDiscardRealCards` and `TestRONFixedDiscardActivationRollback`.
+These cover their complete records: metadata validation, costs, draw-before-choice,
+newly drawn card identity, short hands, source departure/return/control/phasing
+and cloned resolution. Bazaar additionally maps to
+`TestRONFixedDiscardReplacementAndEvents`. Shared declarations/player targets,
+fresh factories, retargeted spell copies, entry and upkeep map to Contexts;
+zero/empty/continuation to ZeroEmptyAndContinuation; invalid shapes and roles
+to Invalid and Inventory. Engine contracts map to
+`TestSelectedDiscardBatchEvents` and
+`TestSelectedDiscardBatchReplacementPreparation`. The report gives exact names
+and boundaries. No global gameplay completion claim is made.
+
+Tests first failed on missing RON adapters/roles and on engine events observing
+partial hands/destinations. Test fixture core event names were corrected to
+actual APIs. Existing exact inventory expectations were refreshed to measured
+counts, then all tests passed. The first lint run reported unparam on the existing
+private withDestination helper after a new test added another constant argument
+caller. The synthetic replacement now copies its own proposal and sets its test
+destination; no production API or lint rule was changed. Automatic formatting
+only reordered test imports. No assertion was weakened for an implementation gap.
+
+Estimated and actual gain agree: **two unique cards, two records**. Strict loader
+increases **981 to 983/2,445**; rejection falls **1,464 to 1,462**. Accepted names
+increase **292 to 294/986**, leaving **692 rejected names**. No previously accepted
+record regresses. Only Recall's remaining diagnostic changes, to unsupported
+fixed discard amount ValueX; its results/return actions remain blockers.
+Strict loader and full inventory issues match. Global engine_validated and
+behavior_verified measurements remain null. Two newly compiled cards now have
+RON gameplay evidence for all printed rules.
+
+Local Oracle data agrees with both selected records. No source defect was
+corrected; all 12 source hashes still match the vocabulary snapshot, so no syntax
+snapshot refresh is needed. Gaea's Liege/Fastbond observations remain unresolved.
+The adapter and engine gaps were distinct; no environmental blocker occurred.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, engine short tests, `make build` | PASS |
+| Baseline strict loader and inventory | Expected exit 1; 981 accepted, 1,464 rejected |
+| New engine/RON focused tests with `-count=1` | Expected semantic failures before implementation; final PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after refreshing exact inventory counts; repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | First run found old inventory counts; rerun PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | First run found the new test caller's unparam warning; final result recorded below |
+| `git diff --check` | PASS; repeated before commit |
+| Final strict loader and inventory | Expected exit 1; 983 accepted, 1,462 rejected; issues identical |
+| Source hashes and diagnostics comparison | All hashes unchanged; zero accepted regression |
+
+Next ranked candidates: typed spell-cast references (Presence of the Master and
+Nether Void, with In the Eye of Chaos/Invoke Prejudice downstream); temporary
+animation (Mishra's Factory, Jade Statue, Thelonite Druid); shared activation
+modifiers/timing, including Disrupting Scepter. Reassess full records and fresh
+inventory before selecting. No next slice was started. Complete collection
+loading/gameplay, embedded production startup, native smoke tests, Go-card and
+generator deletion, and unused-DSL cleanup remain open. Removal gates remain
+closed; no caller-removal audit is claimed.
+
+Final lint passed with zero issues. Formatting changes were reviewed, and focused
+engine/RON/CLI checks and diff checks passed again. Only the ten slice files are
+included in one descriptive commit; the two initial user files remain unstaged.
+No required check was waived.

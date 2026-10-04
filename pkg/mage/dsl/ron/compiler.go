@@ -844,7 +844,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "DrawACard", "DrawNumberCards", "GainLife", "LoseLife":
+	case "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "GainLife", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		count := 1
@@ -963,6 +963,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "DiscardACard" || n.Name == "DiscardNumberCards" {
+		return compileFixedDiscard(n, ctx)
+	}
 	if n.Name == "DrawACard" {
 		if n.Kind != Symbol {
 			return nil, problem(n, "DrawACard requires a symbol")
@@ -1000,6 +1003,33 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	default:
 		return nil, unsupported(n, "player action")
 	}
+}
+
+func compileFixedDiscard(n Node, ctx scope) ([]effectFactory, error) {
+	amount := 1
+	if n.Name == "DiscardACard" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "DiscardACard requires a symbol")
+		}
+	} else {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		value := n.Args[0]
+		if value.Name != "Integer" {
+			return nil, unsupported(value, "fixed discard amount")
+		}
+		if err := arity(value, 1); err != nil {
+			return nil, err
+		}
+		if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
+			return nil, problem(value, "discard amount must be a nonnegative integer")
+		}
+		amount = value.Args[0].Integer
+	}
+	return []effectFactory{func(bindings instanceBindings) mage.Effect {
+		return mage.Discard(ctx.player.build(bindings), mage.Fixed(amount))
+	}}, nil
 }
 
 func compileMana(n Node) ([]mage.ManaProduction, error) {

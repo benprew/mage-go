@@ -1026,3 +1026,24 @@ followed by `If(CostWasPaid, [actions])` uses `IfPaid`. Each nonempty body has
 its own payment result, including nested pairs. Payment is offered at resolution
 to the stored ability controller or explicit typed payer. X and nonmana
 payments remain separate shapes. See [the contract and tests](designs/mtgish-ron-spell-cast-life.md).
+
+## RON fixed selected discard
+
+In supported spell, activation and trigger action lists, symbol `DiscardACard`
+and `DiscardNumberCards(Integer(n))` use `mage.Discard` with a fixed amount.
+The integer must be nonnegative. Bare actions affect the resolving controller;
+`PlayerAction(player, action)` uses an existing typed player reference, including
+an explicitly declared `Ref_TargetPlayer`. Each factory builds fresh effects
+and target bindings. A target declaration alone does not change the recipient
+of a bare discard action.
+
+The affected player selects cards at resolution, after preceding draws. Short
+hands discard as many cards as possible; zero does not ask for a choice. Selected
+cards move through the shared discard replacement batch before discard events
+are sent. Dynamic amounts, saved discard results, discard costs, and undeclared
+event players remain unsupported RON forms. Evidence:
+`TestRONFixedDiscardRealCards`, `TestRONFixedDiscardContexts`,
+`TestRONFixedDiscardReplacementAndEvents`,
+`TestRONFixedDiscardZeroEmptyAndContinuation`,
+`TestRONFixedDiscardActivationRollback`, `TestRONFixedDiscardInvalid` and
+`TestRONFixedDiscardInventory`.
