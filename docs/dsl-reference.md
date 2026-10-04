@@ -1122,3 +1122,10 @@ and final cleanup resets phased sources too. The shared engine service copies
 runtime action state before it records a successful activation; card definitions
 remain unchanged. See [activation limits](designs/mtgish-ron-activation-limits.md)
 for exact shapes, dependencies and real RON gameplay evidence.
+
+RON activation costs accept `SacrificeAPermanent(filter)` through the existing
+matching-sacrifice transaction. The activating player chooses one matching
+permanent they control, including the source when it matches. Costs are fresh
+per factory; nested filter `And`/`Or` lists must be nonempty. Saved sacrifice
+results, source-relative filters and resolution/optional/casting contexts remain
+unsupported. See [the exact contract and tests](designs/mtgish-ron-sacrifice-costs.md).

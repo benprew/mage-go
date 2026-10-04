@@ -284,6 +284,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "cost":
+		if n.Name == "SacrificeAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "cost"
 		}

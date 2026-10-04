@@ -439,6 +439,17 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "SacrificeAPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		filter, err := compileSacrificeCostFilter(n.Args[0])
+		if err != nil {
+			return nil, false, err
+		}
+		return []costFactory{func() mage.Cost {
+			return mage.SacrificeMatchingIncludingSourceCost(filter, "Sacrifice a matching permanent")
+		}}, false, nil
 	case "PayLife":
 		if err := arity(n, 1); err != nil {
 			return nil, false, err

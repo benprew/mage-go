@@ -855,3 +855,22 @@ TestRONActivationLimitManaAndInventory and TestRONActivationLimitPhasedReset.
 The RON adapter supports fixed positive maxima and once-only limits with
 supported timing conjunctions. It adds no replacement or simultaneous-operation
 contract.
+
+## RON matching sacrifice activation cost adapter
+
+`SacrificeAPermanent(filter)` in activation costs uses
+`SacrificeMatchingIncludingSourceCost` and the shared total-cost transaction.
+The activating controller chooses a matching controlled permanent, including
+the source. Payment locks its incarnation and moves it to its owner's graveyard;
+regeneration does not prevent sacrifice (CR 602.1a, 602.2, 701.21a). Failed
+preparation leaves mana, tap state, permanents and stack unchanged. Costs are
+built separately per factory. Existing ability-source, target and clone services
+preserve pending resolution after payment, source departure and copying.
+
+Evidence: `TestRONSacrificeCostRealCards`, `TestRONSacrificeCostSourceAndTargets`,
+`TestRONSacrificeCostRollbackAndChoice`, `TestRONSacrificeCostInstancesAndCopy`,
+`TestRONSacrificeCostGateTimingAndLimits` and `TestRONSacrificeCostDamageReplacement`.
+`TestRONSacrificeCostManualManaAndQueries` covers immediate explicit mana activation
+and the existing tap-source planner exclusion for sacrifice costs. No new engine
+API, saved paid-result, automatic sacrifice planning, batch sacrifice or
+replacement-order contract is added by this adapter.

@@ -2324,3 +2324,116 @@ Prejudice after filters). Library's single-card hand-count condition stays
 behind useful multi-card work. These are suggestions requiring fresh full-record
 unlock estimates next run. Complete RON gameplay/loading, application cutover,
 native startup, Go-card/generator removal and unused-DSL cleanup remain open.
+
+## Run 2026-10-04: P4-SACRIFICE-MATCHING
+
+Status: completed matching-permanent activation sacrifice costs. This run stops
+here. Initial user edits in `.gitignore` and `mtgish-ron-execution.md` remain
+unchanged and excluded from the commit; no unrelated untracked files were present.
+
+The [sacrifice costs report](mtgish-ron-sacrifice-costs.md) records the complete
+candidate comparison, supported signatures/contexts, nested/full-record audit,
+engine/API/rules reuse and card-to-test mappings. Before editing, three candidates
+were compared: matching activation sacrifices (nine complete unique unlocks);
+fixed counter placement (three estimated direct names, with variable counter
+removal/results still blocking five Mana Batteries); variable optional mana
+payment (In the Eye of Chaos directly; Invoke Prejudice still needs filters).
+Matching costs won on credible direct gain for implementation/test effort.
+Dependent names and exact blockers are listed in the report; first-error counts
+were not used as full-card estimates. Reprints count once.
+
+Exact support: permanent-source Activated/2 and ActivatedWithModifiers/3 costs
+with SacrificeAPermanent/1 containing a supported compileFilter permanent filter.
+Nested filter And/1 and Or/1 require nonempty lists at every level. Existing
+cost conjunctions and supported timing/limit modifiers compose unchanged.
+compileSacrificeCostFilter(Node) (mage.PermanentFilter, error) validates immutable
+filter plans; compileCosts creates a fresh matching sacrifice cost per factory.
+The engine's SacrificeMatchingIncludingSourceCost permits the matching source,
+uses the activating controller's candidates and one locked choice, and moves
+the paid permanent to its owner's graveyard. Source-relative filters, resolving
+sacrifice actions, optional/must payments, additional casting costs and saved
+paid-characteristic results remain declaration errors. Inventory now supplies
+the permanent_filter operand role even beneath unsupported parent contexts.
+No game-time declaration panic, name branch, fallback or parallel cost system
+was added.
+
+Engine reuse: existing total-cost transaction/choice locking, typed references,
+source/target incarnation capture, LKI damage, phasing, copies, clones, timing,
+limits, layers/cleanup, life/draw/regeneration/destruction/damage services and
+explicit immediate mana activation. No reusable engine API or implementation
+changed. The tap-source automatic planner continues to exclude sacrifice costs;
+explicit Altar activation produces two usable colorless mana. Tests document
+pure queries without choosing or paying a sacrifice. Local CR 602.1a/602.2/2b
+and 701.21a establish payment, rollback and owner-graveyard semantics; existing
+400.7/702.26 and source-instance contracts establish identity/phasing behavior.
+No new replacement-order or simultaneous-operation contract is claimed.
+
+| Card/context | Test mapping |
+| --- | --- |
+| Atog, Fallen Angel, Dark Heart of the Wood, Goblin Chirurgeon, Horror of Horrors, Gate to Phyrexia, Orcish Mechanics, Sage of Lat-Nam, Ashnod's Altar; all rules | TestRONSacrificeCostRealCards: complete RON/definition validation, source/candidate controller versus owner, one paid choice, graveyard ownership, regeneration cannot prevent sacrifice, tap cost, payment versus resolution, source departure/return/control/phasing, pending clones, bonus/cleanup, life/draw players, targets, shields/destruction/damage and immediate mana |
+| Fallen Angel, Goblin Chirurgeon | TestRONSacrificeCostSourceAndTargets: source can pay, self-target sacrificed away, returned incarnation, target departure/return/phasing/type legality |
+| Fallen Angel | TestRONSacrificeCostInstancesAndCopy: independent factories, original source capture, ability copy pays no new cost, clone resolution/cleanup isolation |
+| Gate to Phyrexia | TestRONSacrificeCostGateTimingAndLimits: turn/step/target rejections pay nothing, own-upkeep activation and once-per-turn, no timing recheck at resolution |
+| Orcish Mechanics | TestRONSacrificeCostDamageReplacement: departed source LKI and shared prevention pipeline |
+| Ashnod's Altar | TestRONSacrificeCostManualManaAndQueries: explicit immediate mana, planner exclusion/purity, usable production, no reused paid creature and clone isolation |
+| Shared costs/filters/inventory | TestRONSacrificeCostRollbackAndChoice; TestRONSacrificeCostCompositionAndInventory: mana/tap rollback, insufficient/double sacrifices, phased/opposing/wrong-type candidates, invalid choice, locked single choice, nested type/color/subtype filters and operand reporting |
+| Invalid declarations | TestRONSacrificeCostInvalid: kind/arity/reference, nested empty filters, source-relative filter, unsupported action/optional-payment/result contexts |
+
+The first real gameplay tests failed as intended on missing SacrificeAPermanent
+support. Fixture fixes selected ATQ Ornithopter, used phased-inclusive existence
+checks, accounted for source cards bounced to hand, and set owners before
+removal. A new test's automatic-sacrifice-planning assumption was corrected after
+reading the documented tap-source engine/API boundary; the final test proves
+that boundary and explicit usable mana. No rule expectation was bypassed.
+
+Estimated and actual gains agree: **nine unique names, ten records** (two Atog
+reprints). Loader **1,005 -> 1,015/2,445 compiled**, **1,440 -> 1,430 rejected**.
+Accepted unique names **310 -> 319**, rejected **676 -> 667**. Zero previously
+accepted records regressed. Strict/full-inventory issues match exactly.
+Nodes/signatures remain 72,938/8,528; unknown-role occurrences fall
+17,852 -> 17,801. Global engine_validated/behavior_verified remain null.
+Nine additional unique cards have full-record RON gameplay evidence; collection
+compilation and collection-wide behavior coverage remain separate measurements.
+
+Largest remaining first diagnostics: PermanentRuleEffect (110), AsPermanentEnters
+(90), non-spell CastEffect (53), If rule (47), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep reference (35), PutCounters (31).
+PutCounters increased because Dwarven Weaponsmith now reaches its next blocker.
+No source-data defect changed. All 12 source hashes match the vocabulary snapshot;
+no RON edit requires a refresh. Gaea's Liege/Fastbond concerns remain open.
+No environment or pre-existing failure blocked this slice.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1; engine short tests; make build | PASS |
+| Baseline strict and full-inventory loader | Expected exit 1: 1,005 compiled, 1,440 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONSacrificeCost -count=1 | Missing-adapter failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS; final formatting review recorded below |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and -inventory -json | Expected exit 1: 1,015 compiled, 1,430 rejected; identical issues |
+| Accepted-record comparison/source hashes | Zero regressions; all source hashes unchanged |
+
+Slice files: compiler.go, new sacrifice_cost.go and sacrifice_cost_test.go,
+inventory.go/inventory_test.go, dsl-reference.md, engine-rules-contracts.md,
+new sacrifice costs report and this ledger. Production startup, Go-card
+constructors/generators and DSL exports retain their current callers; removal
+gates remain closed. No unused-DSL removal audit or runtime cutover is claimed.
+
+Ranked next candidates requiring fresh comparison: (1) fixed counter placement,
+now also directly benefiting Dwarven Weaponsmith, plus Armor Thrull/Fungal Bloom/
+Citanul Druid and the five Batteries after removal/results; (2) typed sacrifice
+characteristic results for Diamond Valley/Life Chisel, and Priest of Yawgmoth
+after dynamic mana; (3) variable optional mana payment, Chaos directly and Invoke
+after spell filters. Full loading/gameplay, startup/native validation, Go-card
+and generator removal and unused-DSL cleanup remain open. No second slice began.
+
+Final lint review: only new-test import grouping changed; zero lint issues.
+The RON/CLI package tests were repeated after lint and pass. Fresh final strict
+and semantic-inventory loaders retain the recorded counts and identical issues;
+all source hashes were checked against the vocabulary snapshot. Final diff
+whitespace checks pass. All required native Go checks passed before commit.
