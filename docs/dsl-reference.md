@@ -973,6 +973,16 @@ numeric P/T, independent base P/T/color/type changes, granted activated/triggere
 abilities and conditional rules remain separate unsupported shapes.
 See [the exact contract and tests](designs/mtgish-ron-static-permanents.md).
 
+## RON optional fixed mana payments
+
+An adjacent `PlayerMayCost(player, PayMana([...]))` and
+`Unless(CostWasPaid, [actions])` pair builds one `UnlessPaid` effect.
+Each pair keeps its own result, including nested unpaid bodies. Payment uses
+the engine's total-cost transaction during resolution. Spell-controller payer
+references use the current controller of the declared stack target.
+Variable, alternative and nonmana payments remain rejected.
+Contract and tests: [RON optional payments](designs/mtgish-ron-optional-payment.md).
+
 ## RON static animation
 
 `EachPermanentLayerEffect` supports a combined static animation list with exactly

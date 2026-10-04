@@ -534,14 +534,8 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 	if err != nil {
 		return plan, err
 	}
-	for _, part := range parts {
-		effects, err := compileEffect(part, ctx)
-		if err != nil {
-			return plan, err
-		}
-		plan.effects = append(plan.effects, effects...)
-	}
-	return plan, nil
+	plan.effects, err = compileActionSequence(parts, ctx)
+	return plan, err
 }
 
 func compileTarget(n Node) (targetFactory, string, error) {

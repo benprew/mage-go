@@ -1277,3 +1277,74 @@ selection. Defer single-card adapters while useful multi-card work remains.
 Complete RON gameplay/loading, embedded runtime startup, native smoke tests,
 Go-card/generator deletion and unused-DSL cleanup gates remain unmet. No deletion
 or whole-repository caller audit is claimed. This run stops after this slice.
+
+## Run 2026-10-04: P4-OPTIONAL-FIXED-MANA
+
+Status: complete the in-progress optional payment slice. Overall migration
+remains incomplete. Production still uses Go card definitions.
+
+The working tree began with optional-payment compiler/player-scope changes,
+the new adapter and gameplay tests, and user edits to `.gitignore` and the
+execution design. The latter two files are preserved outside this slice commit.
+The existing payment gameplay tests passed. Both failing tests were exact
+inventory counts that still expected the preceding slice's 917 compiled records.
+They now assert the measured 919 compiled and 1,526 rejected records; retained
+registry and gameplay assertions are unchanged.
+
+Exact shapes, boundaries, dependencies, rules and card-to-test mapping:
+[mtgish-ron-optional-payment.md](mtgish-ron-optional-payment.md).
+The compiler lowers each adjacent payment/unpaid pair into one `UnlessPaid`.
+It reuses `ControllerOfSpell`, typed stack targets, fresh instance bindings,
+cost factories, `Sequence`, counter restrictions and action payment transactions.
+No engine service or RON asset changed. Independent/nested payment results
+cannot overwrite one another. General payment-result variables remain deferred.
+
+Candidate comparison, based on complete RON records and fresh diagnostics:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Remaining prerequisites and effort |
+| --- | --- | ---: | --- |
+| Optional fixed counter payments | Force Spike, Vodalian Mage; downstream Power Sink, Thrull Wizard | 2 | Existing engine services; small adapter plus scope/payment tests. Power Sink still needs X payment and player action lists; Thrull Wizard needs alternative costs. |
+| Temporary animation | Mishra's Factory, Jade Statue, Thelonite Druid | Up to 3 with all prerequisites | Temporary type/subtype/base P/T composition, collection animation, timing modifiers, end-of-combat duration and matching sacrifice costs; substantially larger test scope. |
+| Characteristic readers and branches | Blood Lust, Berserk, Kry Shield, Subdue | 1 immediately | Blood Lust needs toughness, subtraction and conditional branches; others retain delayed trigger, casting restriction or prevention blockers. Medium effort. |
+
+The fixed payment pair provides two immediate unlocks with the least new
+machinery and completes the work already in progress. Inspection of nested
+payment forms found other payer, branch, cost and parent-context blockers;
+no additional full-card unlocks are claimed.
+
+TDD for the missing reporting contract confirmed that `PayMana` under
+`PlayerMayCost` lacked its cost role. Inventory now reports payment player/cost,
+continuation condition/action and spell-controller operand roles. The new test
+passes. Signature support stays unverified, and global behavior/engine-validation
+totals remain null.
+
+Strict loader and inventory: **919/2,445 compiled records**, **1,526 rejected**,
+**271 compiled unique names**, **715 rejected unique names**. Actual gain:
+**two records and two unique cards**, matching the estimate: Force Spike and
+Vodalian Mage. A loader run with a `HEAD` compiler overlay reproduced the
+917-record baseline. Record-by-record comparison found no new rejection.
+Three still-rejected names advance to precise later diagnostics: Power Sink
+(`PayManaX`, six records), Thrull Wizard (alternative cost), and Chain Lightning
+(recipient-to-player reference; its paid branch remains another blocker).
+All other rejected diagnostics are unchanged. Strict loading still exits 1
+and publishes no partial registry; this is the expected migration state.
+
+Gameplay tests cover payment/refusal/inability, resolution timing, mana-source
+use, unpaid casting/activation, paid tap costs, source departure/phasing,
+current stack controller, illegal targets, uncounterable spells, recast identity,
+copies, clones, zero costs, colored affordability and nested result independence.
+Local LEG/FEM Oracle data agrees with the selected complete card records.
+No source data correction or runtime cutover is part of this slice.
+
+Validation: focused RON/CLI tests with `-count=1`, `make test`, `make build`,
+`go vet ./...`, `make lint` (zero issues), and `git diff --check` pass.
+The build and lint were repeated with approved cache access after sandbox
+cache-write errors. Lint only reordered test imports and aligned the role map.
+Post-lint focused tests pass. Loader and inventory totals agree.
+
+Next ranked candidates: temporary animation for Mishra's Factory/Jade Statue/
+Thelonite Druid; fixed upkeep payments with `MayCost` for Force of Nature and
+related cards after a complete-record audit; characteristic readers/branches
+for Blood Lust and the downstream cards above. Reassess estimates before
+starting a new slice. Complete loading/gameplay, embedded startup, native/WASM
+smoke tests, Go-card/generator deletion and unused-DSL cleanup remain open.
