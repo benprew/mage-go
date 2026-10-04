@@ -1,10 +1,27 @@
 package mage
 
 import (
+	"fmt"
 	"slices"
 
 	. "github.com/benprew/mage-go/pkg/mage/core"
 )
+
+// ValidateSubtypeFamily prevents invalid subtype declarations before construction.
+func ValidateSubtypeFamily(family SubtypeFamily, subtypes ...string) error {
+	if !family.valid() {
+		return fmt.Errorf("invalid subtype family")
+	}
+	for _, subtype := range subtypes {
+		if subtype == "" {
+			return fmt.Errorf("subtype must not be empty")
+		}
+		if known, ok := knownSubtypeFamily(subtype); ok && known != family {
+			return fmt.Errorf("subtype belongs to a different subtype family: %s", subtype)
+		}
+	}
+	return nil
+}
 
 // SubtypeFamily identifies one of the independent subtype sets defined by CR
 // 205.3. Setting subtypes replaces only subtypes in the selected family.

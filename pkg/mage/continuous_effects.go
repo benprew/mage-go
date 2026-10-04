@@ -1739,16 +1739,8 @@ func applyAddSubtypes(target *Permanent, family SubtypeFamily, subtypes []string
 }
 
 func validateSubtypeChange(name string, family SubtypeFamily, subtypes []string) {
-	if !family.valid() {
-		panic(name + ": invalid subtype family")
-	}
-	for _, subtype := range subtypes {
-		if subtype == "" {
-			panic(name + ": subtype must not be empty")
-		}
-		if knownFamily, ok := knownSubtypeFamily(subtype); ok && knownFamily != family {
-			panic(name + ": subtype belongs to a different subtype family: " + subtype)
-		}
+	if err := ValidateSubtypeFamily(family, subtypes...); err != nil {
+		panic(name + ": " + err.Error())
 	}
 }
 

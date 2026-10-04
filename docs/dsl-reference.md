@@ -1058,3 +1058,20 @@ spell and reads its current controller. The event references do not add targets.
 The compiler rejects these references outside this event and rejects explicit
 event-player life actions. Existing spell filters and payment continuations retain
 their shapes. See [the supported contract and tests](designs/mtgish-ron-spell-cast-references.md).
+
+## RON temporary animation and base values
+
+In the existing end-of-turn `CreatePermanentLayerEffectUntil/3` action, fixed
+`SetPT(PT(integer, integer))` sets base P/T; `AddCardtype` supports Creature,
+Artifact, Land and Enchantment. `AddCreatureType(symbol)` adds a creature subtype;
+`SetCreatureType(symbol)` replaces the creature subtype family. Existing types
+and abilities remain, and all modifications share one engine `Until` installation.
+For becoming a named artifact creature, use replacement as required by CR 205.1b.
+The compiler rejects invalid types/subtype families before building a factory.
+
+Permanent-source `TargetPermanent` filters accept `Other(ThisPermanent)` alone
+or under `And` with existing filters. They use the engine's source-exclusion
+option at announcement and resolution. `Other` in disjunctions or with other
+reference kinds remains unsupported. Exact scope, engine reuse, source corrections
+and gameplay evidence: [temporary animation](designs/mtgish-ron-temporary-animation.md).
+Dynamic base values, collection animation and additional durations remain gaps.

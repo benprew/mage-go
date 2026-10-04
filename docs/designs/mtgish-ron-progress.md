@@ -1892,3 +1892,110 @@ multi-card audit; variable optional mana payment (Chaos directly, Invoke after
 filters). Reassess full records and inventory next run. Complete collection
 loading/gameplay, production startup/native smoke tests, Go-card/generator deletion
 and unused-DSL cleanup remain open. No second slice was started.
+
+## Run 2026-10-04: P7-TEMPORARY-ANIMATION
+
+Status: complete fixed temporary base/type/subtype and source-excluding target
+slice. This run stops here. Initial user edits to `.gitignore` and the execution
+design are preserved and excluded from the commit; there were no unrelated
+untracked files. Removal gates remain closed.
+
+The [temporary animation report](mtgish-ron-temporary-animation.md) records the
+fresh candidate comparison, complete-record/nested inventory audit, exact
+signatures and contexts, engine boundary, rules and card-to-test evidence.
+Candidates: temporary layers (Factory and Queen, two immediate unique unlocks),
+activation modifiers (Scepter directly; Library/Bats with additional independent
+conditions/limits; other audited names have random/results/permission blockers),
+and variable optional payment (Chaos directly; Invoke after filters/caster scope).
+Temporary layers provide the largest credible immediate gain for a coherent
+shared adapter/engine boundary. Selection and acceptance cases were stated before
+editing. Reprints count once; first-error frequency was not an unlock estimate.
+
+Supported signatures in existing end-of-turn CreatePermanentLayerEffectUntil:
+SetPT(PT(integer, integer)), AddCardtype(Creature|Artifact|Land|Enchantment),
+AddCreatureType(symbol), and SetCreatureType(symbol). Existing typed source,
+host and local permanent target references supply subjects; modifications share
+one Until installation. Permanent-source TargetPermanent filters accept
+Other(ThisPermanent), alone or under And, lowered to TargetOtherThanSource.
+Disjunction/other-reference exclusions remain errors. Dynamic ManualPT, next
+upkeep/combat durations, collection animation and activation modifiers remain gaps.
+Spell/activation/trigger/continuation builders reuse the same action path; fresh
+instance target maps retain typed reads and identity.
+
+New reusable engine API: AddCardType(PermanentRef, core.CardType)
+ContinuousModification, using existing attribute-backed types and Until capture.
+Creature addition supplies power/toughness identity. Combined type additions are
+synchronized before subtype checks in the same captured effect. Existing
+SetBasePowerToughness, ModifyPT, AddSubtypeFamily and SetSubtypeFamily supply
+layer operations. ValidateSubtypeFamily(SubtypeFamily, ...string) error exposes
+the existing validation; legacy constructors call it and keep their panic
+contract. RON rejects invalid declarations before factories. No new replacement,
+event batch, APNAP, general LKI or payment-result contract is introduced.
+Transactional costs, target legality, source incarnation, phasing, mana solver,
+stack copy/retarget, clone and cleanup services are reused.
+
+Source defect separated from adapter/engine gaps: CR 205.1b and local
+`data/ATQ.json`/`data/LEA.json` show that Factory/Statue replace earlier creature
+types when becoming named artifact creatures. Their AddCreatureType records
+incorrectly retained prior creature types. A prior-Human Factory regression
+failed after the initial adapter implementation. All six identical uses were
+corrected to explicit SetCreatureType (Factory ATQ; Statue 2ED/CED/CEI/LEA/LEB).
+Addition and replacement retain distinct lowering; no global predicate change or
+card-name branch was added. Statue still rejects its unsupported timing/duration.
+The vocabulary snapshot now has refreshed hashes, renamed syntax and current
+loader diagnostics. Known Gaea's Liege/Fastbond concerns remain unresolved.
+
+Tests first failed on absent AddCardType and unsupported SetPT/Other. Test-only
+controller, mana and sickness API names were corrected before confirming intended
+failures. An old invalid-context test now rejects malformed Other(ThisPermanent())
+and positive gameplay tests establish the new valid form. Inventory count
+expectations were refreshed to measured results. No gameplay assertion was weakened.
+
+| Card/context | Mapping and evidence |
+| --- | --- |
+| Mishra's Factory | TestRONTemporaryAnimationFactory; TestRONTemporaryAnimationFactoryBoostAndRepeat: complete record, mana solver/immediate mana, animation/payment, source return/absence/phasing/control, clone and cleanup, retained ability/summoning sickness, opponent Assembly-Worker boost, invalid target/unpaid rollback, prior creature subtype replacement, reanimation/base-before-bonus |
+| Sorceress Queen | TestRONTemporaryAnimationQueen: complete record, self exclusion/tap rollback, opponent creature, base-before-bonuses/counters, flying retained, absent/noncreature/returned/phased target, source departure/return/control, cloned resolution/cleanup |
+| Synthetic declarations/copies/inventory | TestRONTemporaryAnimationDeclarations; TestRONTemporaryAnimationCopyAndInventory: fresh typed bindings, declaration rejection, distinct retargeted copy/original, new operand roles |
+| Engine fixtures | TestTemporaryCardTypeCapture; TestTemporaryCardTypeKinds; TestTemporaryCardTypeDefinitionValidation: four supported types, combined layer group, retained characteristics, identity/absence/phasing/control, clone expiry, invalid types/undeclared reads |
+
+Estimated and actual gain agree: **two unique names, three records** (Queen has
+two reprints). Strict loader **985 -> 988/2,445 compiled**; rejection
+**1,460 -> 1,457**. Names **296 -> 298 accepted**, **690 -> 688 rejected**.
+No accepted record regression. Halfdane now reports UntilNextUpkeep; ManualPT
+is also unsupported. Fresh full inventory and strict-loader issues match exactly.
+Inventory has 72,938 nodes and 8,528 signatures; unknown-role occurrences decrease
+19,421 -> 19,408 through fixed_pt/card_type/creature_subtype operand reporting.
+Global engine_validated and behavior_verified remain null. Compilation and
+complete collection gameplay coverage remain separate; two additional unique
+cards have gameplay evidence for all printed rules in this slice.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON/CLI tests, engine short tests and make build | PASS |
+| Baseline strict loader/full inventory | Expected exit 1: 985 compiled, 1,460 rejected |
+| New focused engine/RON tests with -count=1 | Intended failures before implementation; final PASS |
+| Prior-Human Factory source-defect regression | Expected failure with additive source; PASS with explicit replacement |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS after refreshing old context/count tests; repeated after lint/source correction |
+| go test ./pkg/mage/... -short -count=1 | PASS; repeated after final source/tests and lint |
+| make test | PASS; repeated after final source/tests and lint |
+| make build | PASS; repeated after final source/tests and lint |
+| go vet ./... | PASS; repeated after final source/tests and lint |
+| go test ./... -short -count=1 | PASS after final code and source correction |
+| make lint | First run found test variable copy shadowing a builtin; corrected; final PASS, zero issues |
+| git diff --check | PASS; repeated before commit |
+| Final strict loader and full inventory | Expected exit 1: 988 compiled, 1,457 rejected; issues identical |
+| Refreshed vocabulary hashes and diagnostics | Match final source and loader; only six source constructor renames |
+
+Automatic lint changes only reordered new test imports and were reviewed.
+No environment or pre-existing failure blocks the commit. Only slice files are
+staged: engine continuous/type/subtype changes and tests; RON adapters/inventory
+and tests; six corrected assets; API/rules docs; refreshed vocabulary; the slice
+report and ledger. Production registry/startup, Go definitions/generators and DSL
+exports retain current callers. No deletion audit or runtime cutover is claimed.
+
+Ranked next candidates: (1) shared activation modifiers with a fresh timing/limit
+multi-card comparison; (2) collection temporary modifications, including Druid
+after sacrifice choice and other mass boost cards; (3) variable optional payment
+(Chaos directly, Invoke after filters). Reassess fresh complete records next run.
+No second slice was started. Complete loading/gameplay, production startup/native
+smoke tests, Go-card/generator deletion and unused-DSL cleanup remain open.

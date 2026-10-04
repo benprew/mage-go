@@ -320,12 +320,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "static_modification", "temporary_modification":
 		switch n.Name {
 		case "SetPT":
-			if role == "static_modification" && len(n.Args) == 1 {
+			if len(n.Args) == 1 {
 				return "fixed_pt"
 			}
 		case "AddCardtype":
-			if role == "static_modification" && len(n.Args) == 1 {
+			if len(n.Args) == 1 {
 				return "card_type"
+			}
+		case "AddCreatureType", "SetCreatureType":
+			if role == "temporary_modification" && len(n.Args) == 1 {
+				return "creature_subtype"
 			}
 		case "SetColor":
 			if role == "static_modification" && len(n.Args) == 1 {

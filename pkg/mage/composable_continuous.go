@@ -33,6 +33,8 @@ type layerModification struct {
 	family           SubtypeFamily
 	subtypes         []string
 	addSubtypes      bool
+	addType          Attr
+	typeAddition     bool
 	ability          *ActionDefinition
 }
 
@@ -164,12 +166,20 @@ func AddSubtypeFamily(subject PermanentRef, family SubtypeFamily, subtypes ...st
 	return &layerModification{subject: subject, family: family, subtypes: append([]string(nil), subtypes...), addSubtypes: true, layer: LayerType}
 }
 
+// AddCardType keeps existing types and abilities during a type addition.
+func AddCardType(subject PermanentRef, kind CardType) ContinuousModification {
+	return &layerModification{subject: subject, addType: CardTypeAttr(kind), typeAddition: true, layer: LayerType}
+}
+
 func (m *layerModification) inspectDefinition() definitionNode {
 	subject := any(m.subject)
 	if m.subjects != nil {
 		subject = m.subjects
 	}
 	n := definitionNode{Role: "continuous-modification", Text: m.description(), children: []definitionEdge{{"subject", subject}}}
+	if m.typeAddition && m.addType == 0 {
+		n.problem = "supply a supported permanent card type"
+	}
 	if m.ability != nil {
 		n.children = append(n.children, definitionEdge{"ability", grantedActivationDefinition{m.ability}})
 	}
@@ -186,6 +196,9 @@ func (m *layerModification) description() string {
 	case LayerControl:
 		return "change controller"
 	case LayerType:
+		if m.addType != 0 {
+			return fmt.Sprintf("add card type %v", m.addType)
+		}
 		if m.addSubtypes {
 			return fmt.Sprintf("add subtypes %v in family %v", m.subtypes, m.family)
 		}
@@ -246,6 +259,7 @@ type capturedModification struct {
 	family           SubtypeFamily
 	subtypes         []string
 	addSubtypes      bool
+	addType          Attr
 	ability          *ActionDefinition
 	grantID          uuid.UUID
 }
@@ -254,7 +268,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -323,7 +337,12 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 		colors := append([]Color(nil), v.colors...)
 		p.ColorOverride = &colors
 	case LayerType:
-		if v.addSubtypes {
+		if v.addType != 0 {
+			g.effects.GrantAttr(p.ID(), v.addType)
+			if v.addType == AttrIsCreature {
+				g.effects.GrantAttr(p.ID(), AttrHasPowerToughness)
+			}
+		} else if v.addSubtypes {
 			applyAddSubtypes(p, v.family, v.subtypes)
 		} else {
 			applySetSubtypes(g, p, v.family, v.subtypes)
@@ -458,8 +477,19 @@ func (e *composedLayerEffect) IsActive(g *Game) bool {
 }
 func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 	if e.rule == nil {
+		if e.layer == LayerType {
+			// Subtype checks need the added card types from the same effect.
+			for _, v := range e.captured {
+				if v.addType != 0 {
+					v.apply(ctx.Game, e.layer)
+				}
+			}
+			ctx.Game.effects.syncAttrDeltas(ctx.Game)
+		}
 		for _, v := range e.captured {
-			v.apply(ctx.Game, e.layer)
+			if e.layer != LayerType || v.addType == 0 {
+				v.apply(ctx.Game, e.layer)
+			}
 		}
 		return nil
 	}

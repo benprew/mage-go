@@ -518,7 +518,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if len(targets) != 1 {
 			return plan, problem(n, "multiple target bindings are not supported")
 		}
-		buildTarget, binding, err := compileTarget(targets[0])
+		buildTarget, binding, err := compileTarget(targets[0], ctx)
 		if err != nil {
 			return plan, err
 		}
@@ -559,7 +559,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 	return plan, err
 }
 
-func compileTarget(n Node) (targetFactory, string, error) {
+func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	if n.Kind == Symbol && n.Name == "AnyTarget" {
 		return mage.TargetDamageAnyTarget, "Ref_AnyTarget", nil
 	}
@@ -568,11 +568,17 @@ func compileTarget(n Node) (targetFactory, string, error) {
 	}
 	switch n.Name {
 	case "TargetPermanent":
-		filter, err := compileFilter(n.Args[0])
+		filter, other, err := compilePermanentTargetFilter(n.Args[0], ctx)
 		if err != nil {
 			return nil, "", err
 		}
-		return func() mage.Target { return mage.DeclarePermanentTarget("Ref_TargetPermanent", filter) }, "Ref_TargetPermanent", nil
+		return func() mage.Target {
+			var options []mage.PermanentTargetOption
+			if other {
+				options = append(options, mage.TargetOtherThanSource())
+			}
+			return mage.DeclarePermanentTarget("Ref_TargetPermanent", filter, options...)
+		}, "Ref_TargetPermanent", nil
 	case "TargetPlayer":
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
 			return nil, "", unsupported(n.Args[0], "player target filter")
@@ -905,6 +911,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		var modifications []func(instanceBindings) mage.ContinuousModification
 		for _, part := range parts {
+			if part.Name == "SetPT" || part.Name == "AddCardtype" || part.Name == "AddCreatureType" || part.Name == "SetCreatureType" {
+				build, err := compileTemporaryType(part, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, build)
+				continue
+			}
 			if part.Name == "AddAbility" {
 				if err := arity(part, 1); err != nil {
 					return nil, err

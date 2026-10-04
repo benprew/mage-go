@@ -37,6 +37,9 @@
 // and spell resolution do not repeat the casting check.
 //
 // Use [SetBasePowerToughness] with [Until] to set captured base values.
+// Combine [AddCardType] and [AddSubtypeFamily] with these base values for
+// temporary animation. The added types permit the subtype checks in one effect.
+// [ValidateSubtypeFamily] permits declaration checks before factory construction.
 // [SetBasePower] changes only base power. Bonuses and counters still apply. [TargetOtherThanSource] excludes the
 // source from a typed permanent target.
 //

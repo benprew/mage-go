@@ -770,3 +770,27 @@ Countering, copied triggers, clones and fixed optional payment use existing
 engine services. Source departure or phasing does not erase a queued capture.
 No engine execution contract changed. Evidence: `TestRONSpellCastReference*`;
 [exact compiler contexts and mappings](designs/mtgish-ron-spell-cast-references.md).
+
+## Temporary typed card-type additions
+
+`AddCardType(PermanentRef, core.CardType) ContinuousModification` adds Creature,
+Artifact, Land or Enchantment in layer 4 through the existing `Until` executor.
+Definition validation rejects other card types. Existing types, colors, subtypes
+and abilities remain; Creature also supplies power/toughness identity. In one
+captured type effect, type additions precede subtype checks. Subjects retain
+captured incarnations; absent/phased subjects are not captured, later phasing
+suspends application, and returned objects do not inherit the effect. Cleanup
+and cloned games use the existing independent effect lifecycle.
+
+Combine `SetBasePowerToughness` (layer 7b), `ModifyPT` (7c) and subtype operations
+in one installation. `AddSubtypeFamily` retains earlier subtypes;
+`SetSubtypeFamily` replaces the selected family. CR 205.1b requires replacement
+for becoming a named creature-type artifact creature. RON's explicit
+`SetCreatureType` correction preserves this distinction for Factory and Statue.
+`ValidateSubtypeFamily(SubtypeFamily, ...string) error` exposes the existing
+constructor validation before factories are built; constructor panic behavior
+is unchanged. No new exhaustive creature-subtype dictionary is claimed.
+
+Evidence: `TestTemporaryCardType*` and `TestRONTemporaryAnimation*`, with exact
+contracts and coverage in [the slice report](designs/mtgish-ron-temporary-animation.md).
+No new event, replacement, payment or general LKI contract is introduced.
