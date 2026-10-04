@@ -25,6 +25,7 @@ type scope struct {
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
 	spellTarget     *spellTargetPlan
+	castEvent       *castEventPlan
 }
 
 type actionPlan struct {
@@ -36,8 +37,12 @@ type actionPlan struct {
 }
 
 func (p actionPlan) build() Actions {
+	return p.buildWithEvents(nil)
+}
+
+func (p actionPlan) buildWithEvents(events map[*castEventPlan]castEventBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
-	bindings := instanceBindings{players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding), spells: make(map[*spellTargetPlan]*mage.SpellTargetBinding)}
+	bindings := instanceBindings{events: events, players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding), spells: make(map[*spellTargetPlan]*mage.SpellTargetBinding)}
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget()
@@ -987,6 +992,9 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return mage.DrawFor(ctx.player.build(bindings), mage.ValueAtResolution(amount))
 		}}, nil
 	case "GainLife":
+		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
+			return nil, unsupported(n, "life action in an event player scope")
+		}
 		if ctx.target == "Ref_TargetPlayer" {
 			return nil, unsupported(n, "life action in a player target scope")
 		}
@@ -994,6 +1002,9 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return mage.GainLifeFor(mage.You, mage.ValueAtResolution(amount))
 		}}, nil
 	case "LoseLife":
+		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
+			return nil, unsupported(n, "life action in an event player scope")
+		}
 		if ctx.target == "Ref_TargetPlayer" {
 			return nil, unsupported(n, "life action in a player target scope")
 		}

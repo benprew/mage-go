@@ -189,7 +189,7 @@ func TestRONSpellCastLifeInvalid(t *testing.T) {
 		`TriggerA(WhenAPlayerCastsASpell(SinglePlayer(You), AnySpell), ActionList([GainLife(Integer(1))]))`,
 		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer, SingleSpell(ThisSpell)), ActionList([GainLife(Integer(1))]))`,
 		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer, AnySpell), ActionList([PlayerAction(Trigger_ThatPlayer, GainLife(Integer(1)))]))`,
-		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer, AnySpell), ActionList([CounterSpell(Trigger_ThatSpell)]))`,
+		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer, AnySpell), ActionList([CounterSpell(Trigger_ThatSpell())]))`,
 		`Activated(PayMana([]), ActionList([If(CostWasPaid, [GainLife(Integer(1))])]))`,
 		`Activated(PayMana([]), ActionList([MayCost(PayMana([])), If(CostWasPaid(), [GainLife(Integer(1))])]))`,
 		`Activated(PayMana([]), ActionList([MayCost(PayMana([])), If(CostWasPaid, [])]))`,

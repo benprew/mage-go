@@ -727,7 +727,7 @@ change. Evidence: all `TestRONFixed*` tests, mapped in
 
 ## RON spell-cast life trigger adapters
 
-RON any-player spell-cast filters use `WheneverSpellCastTrigger`; matching is
+RON any-player spell-cast filters use `SpellCastMatchesCardFilters`; matching is
 checked at cast time. The pending ability keeps its controller (CR 603.3a).
 Optional fixed mana payment is offered during resolution (CR 603.5), even when
 the source departs, returns, changes controller or phases out. A copy placed
@@ -757,3 +757,16 @@ Evidence: `TestSelectedDiscardBatchEvents`,
 `TestSelectedDiscardBatchReplacementPreparation`, and
 `TestRONFixedDiscardReplacementAndEvents`. Existing typed-discard tests cover
 choice, short hands, absent subjects, amounts, declaration validation and copies.
+
+## RON spell-cast event references
+
+`WhenAPlayerCastsASpell(AnyPlayer, filter)` lowers to `SpellCast` with fresh
+spell and caster bindings. The trigger captures the exact stack UUID and caster
+at the event. `Trigger_ThatSpell` does not select a later cast or a copy;
+`Trigger_ThatPlayer` does not change when the spell changes controller.
+`ControllerOfSpell(Trigger_ThatSpell)` reads the current stack controller.
+Event references remain distinct from target declarations (CR 608.2k).
+Countering, copied triggers, clones and fixed optional payment use existing
+engine services. Source departure or phasing does not erase a queued capture.
+No engine execution contract changed. Evidence: `TestRONSpellCastReference*`;
+[exact compiler contexts and mappings](designs/mtgish-ron-spell-cast-references.md).

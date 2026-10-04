@@ -1779,3 +1779,116 @@ Final lint passed with zero issues. Formatting changes were reviewed, and focuse
 engine/RON/CLI checks and diff checks passed again. Only the ten slice files are
 included in one descriptive commit; the two initial user files remain unstaged.
 No required check was waived.
+
+## Run 2026-10-04: P6-SPELL-CAST-REFERENCES
+
+Status: complete typed spell/caster event-reference slice for any-player cast
+triggers. This run stops after this slice. The initial user edits to `.gitignore`
+and `mtgish-ron-execution.md` are preserved and excluded from the commit.
+No unrelated untracked files were present.
+
+The [cast-reference report](mtgish-ron-spell-cast-references.md) records the
+complete-record/nested audit, candidate comparison, exact supported contexts,
+engine reuse, rules evidence and card-to-test mappings. Three candidates were
+compared before editing: cast references (Presence of the Master/Nether Void,
+two complete unlocks); temporary animation (Mishra's Factory directly, Jade
+Statue/Thelonite Druid after timing/cost/duration prerequisites); own-turn
+activation restrictions (Disrupting Scepter directly, five other audited names
+with random/results/limits/permission prerequisites). Cast references provide
+the largest credible immediate multi-card gain for the adapter effort. The report
+lists distinct names, blockers, downstream uses and estimated effort. Selection,
+contract, reuse boundary and acceptance cases were stated before editing.
+Reprints count once. First-error frequency was not used as an unlock estimate.
+
+Supported declaration: `TriggerA(WhenAPlayerCastsASpell(AnyPlayer, filter), actions)`
+with existing AnySpell/IsCardtype/IsColor/nonempty And/Or spell filters and
+ActionList or a supported single-group Targeted declaration. Symbol
+`Trigger_ThatSpell` reads the exact cast stack object for CounterSpell and
+ControllerOfSpell. Symbol `Trigger_ThatPlayer` reads the captured caster for
+existing draw/discard actions and fixed optional PlayerMayCost continuations.
+Malformed, incompatible, out-of-scope and cross-rule reads remain errors.
+Explicit event-player life actions, including those through ControllerOfSpell,
+remain rejected because that old life adapter still uses You. Bare life actions
+remain supported. Variable payments and other event families are separate gaps.
+
+`castEventPlan` is an immutable lexical identity. `actionPlan.buildWithEvents`
+uses a typed event map alongside fresh target maps. Each trigger factory creates
+fresh BindSpell/BindPlayer declarations; spell/player plans read that event
+identity. Target and event groups coexist. Lowering uses WhenEvent/SpellCast,
+WithSpell/WithCaster and the same SpellCastMatchesCardFilters service as the old
+adapter. FromSpell/FromPlayer, pending capture/placement and APNAP, Counter,
+stack copy/clone, transactional optional payment, draw/discard and source lifecycle
+all reuse engine services. No engine service or RON source changed. Relevant
+rules: CR 603.2/603.3/603.5, 608.2c/d/g/k and 701.6a. No new permanent LKI,
+replacement-ordering or simultaneous-operation contract is introduced.
+
+Full records were read for all candidate names and all seven cast-event shapes,
+including nested Mana Vortex under FromStack. Seven already accepted life cards
+retain their gameplay matrix. Presence of the Master and Nether Void each have
+one record and now compile with full-record RON gameplay evidence. Local
+`data/LEG.json` agrees with both. In the Eye of Chaos still needs variable optional
+payment; Invoke Prejudice needs filters/payment; Mana Vortex needs source-zone,
+self-spell, sacrifice and additional event support. Citanul Druid and Verduran
+Enchantress remain blocked by caster scopes and counters/optional drawing.
+No source defect was corrected; all 12 RON hashes match the vocabulary snapshot.
+The Gaea's Liege/Fastbond observations remain unresolved.
+
+New tests first failed on the missing spell/player references after fixing an
+incorrect test helper name. The second independent cast fixture was changed to
+an instant because an artifact cannot be cast while triggers are on the stack.
+The characteristic-change fixture uses the actual CloneFrom API. The old invalid
+symbol CounterSpell case now tests the malformed tuple; positive cases verify
+the newly supported symbol. Exact inventory counts were refreshed. No gameplay
+assertion was weakened to conceal missing support.
+
+| Card/context | Evidence |
+| --- | --- |
+| Presence of the Master, Nether Void | TestRONSpellCastReferenceRealCards: both casters, filters/timing, no event targets, refusal/inability/mana sources, failed casts, exact counter/owner graveyard, absent/uncounterable/copy/recast objects, type/controller changes, departure/return/control/phasing, copied trigger payer and independent clone outcomes |
+| Synthetic factories/events | TestRONSpellCastReferenceIndependentEvents: two instances and two pending events retain separate caster and spell reads |
+| Synthetic event plus target | TestRONSpellCastReferenceDeclarationAndTarget: engine producer validation and distinct target/event spell reads with caster draw |
+| Synthetic controller change | TestRONSpellCastReferenceCasterAndCurrentController: event caster draws; changed current spell controller discards |
+| Invalid scopes | TestRONSpellCastReferenceInvalid: absent/wrong/escaped refs and unsupported event-life contexts |
+| Seven retained cast-life cards | TestRONSpellCastLife* regressions pass after typed event lowering |
+
+Estimated and actual gain agree: **two unique names, two records**. Compiled
+records increase **983 -> 985/2,445**; rejection falls **1,462 -> 1,460**.
+Accepted names increase **294 -> 296/986**, leaving **690 rejected names**.
+No accepted-record regression. Only In the Eye of Chaos's remaining diagnostic
+changes, from an unbound caster to unsupported optional PayManaX. Full inventory
+and strict-loader issues match. Largest remaining first diagnostics are
+PermanentRuleEffect (110), AsPermanentEnters (90), ActivatedWithModifiers (61),
+non-spell CastEffect (53), rule If (47), ChooseADamageSource (46). These counts
+are not semantic unlock estimates. Compilation and gameplay remain separate;
+global engine_validated and behavior_verified measurements remain null.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON/CLI tests, engine short tests, make build | PASS |
+| Baseline strict loader/full inventory | Expected exit 1: 983 accepted, 1,462 rejected |
+| New focused `go test ./pkg/mage/dsl/ron -run TestRONSpellCastReference -count=1` | Expected missing-reference failures first; final PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | First complete run found old inventory counts; final PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final code changes and lint |
+| `make test` | PASS, repeated after final code changes and lint |
+| `make build` | PASS, repeated after lint |
+| `go vet ./...` | PASS, repeated after lint |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS, repeated before commit |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1: 985 accepted, 1,460 rejected; issues identical |
+| Source hashes and diagnostic comparison | All hashes unchanged; zero accepted regressions |
+
+Automatic lint changes only reordered new-test imports and were reviewed.
+No environment or pre-existing validation failure blocks this slice. Only the
+slice's eleven files are committed: compiler.go, player_scope.go, spell_scope.go,
+triggers.go, new spell_cast_reference_test.go, spell_cast_life_test.go,
+inventory_test.go, dsl-reference.md, engine-rules-contracts.md, new cast-reference
+report and this ledger. No engine implementation, runtime registry, Go definition,
+RON asset or DSL export changed. Removal gates are closed; no unused-DSL caller
+audit or startup cutover is claimed.
+
+Next ranked candidates: temporary animation (Factory directly; Queen shares
+set-P/T after its Other target-filter adapter; Statue/Druid after their other
+prerequisites); shared activation modifiers with a fresh once-per-turn/timing
+multi-card audit; variable optional mana payment (Chaos directly, Invoke after
+filters). Reassess full records and inventory next run. Complete collection
+loading/gameplay, production startup/native smoke tests, Go-card/generator deletion
+and unused-DSL cleanup remain open. No second slice was started.

@@ -66,9 +66,20 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		buildTrigger = func(effect mage.Effect) *mage.GenericTriggered {
-			return mage.WheneverSpellCastTrigger(effect, false, filter)
+		ctx.castEvent = &castEventPlan{spellName: "Trigger_ThatSpell", casterName: "Trigger_ThatPlayer"}
+		plan, err := compileActions(n.Args[1], ctx)
+		if err != nil {
+			return nil, err
 		}
+		return func() mage.CardOption {
+			bindings := castEventBindings{spell: mage.BindSpell(ctx.castEvent.spellName), caster: mage.BindPlayer(ctx.castEvent.casterName)}
+			actions := plan.buildWithEvents(map[*castEventPlan]castEventBindings{ctx.castEvent: bindings})
+			pattern := mage.SpellCast().WithSpell(bindings.spell).WithCaster(bindings.caster)
+			trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+			trigger.AndConditionData(mage.SpellCastMatchesCardFilters{Filters: []mage.CardFilter{filter}})
+			actions.effects = nil
+			return mage.WithAbility(TriggerA(trigger, actions))
+		}, nil
 	default:
 		return nil, unsupported(trigger, "trigger")
 	}

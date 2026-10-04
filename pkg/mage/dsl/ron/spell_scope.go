@@ -8,9 +8,15 @@ import (
 
 type spellTargetPlan struct{ name string }
 
-type spellReferencePlan struct{ target *spellTargetPlan }
+type spellReferencePlan struct {
+	target *spellTargetPlan
+	event  *castEventPlan
+}
 
 func compileSpellRef(n Node, ctx scope) (spellReferencePlan, error) {
+	if n.Kind == Symbol && ctx.castEvent != nil && n.Name == ctx.castEvent.spellName {
+		return spellReferencePlan{event: ctx.castEvent}, nil
+	}
 	if n.Kind == Symbol && ctx.spellTarget != nil && n.Name == ctx.spellTarget.name {
 		return spellReferencePlan{target: ctx.spellTarget}, nil
 	}
@@ -18,6 +24,9 @@ func compileSpellRef(n Node, ctx scope) (spellReferencePlan, error) {
 }
 
 func (p spellReferencePlan) build(bindings instanceBindings) mage.StackObjectRef {
+	if p.event != nil {
+		return mage.FromSpell(bindings.events[p.event].spell)
+	}
 	return bindings.spells[p.target]
 }
 

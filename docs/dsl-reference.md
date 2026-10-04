@@ -1047,3 +1047,14 @@ event players remain unsupported RON forms. Evidence:
 `TestRONFixedDiscardZeroEmptyAndContinuation`,
 `TestRONFixedDiscardActivationRollback`, `TestRONFixedDiscardInvalid` and
 `TestRONFixedDiscardInventory`.
+
+## RON spell-cast event references
+
+Inside `TriggerA(WhenAPlayerCastsASpell(AnyPlayer, filter), actions)`, symbol
+`Trigger_ThatSpell` reads the cast spell and symbol `Trigger_ThatPlayer` reads
+its caster. CounterSpell accepts the event spell; supported draws/discards and
+fixed PlayerMayCost accept the event player. ControllerOfSpell accepts the event
+spell and reads its current controller. The event references do not add targets.
+The compiler rejects these references outside this event and rejects explicit
+event-player life actions. Existing spell filters and payment continuations retain
+their shapes. See [the supported contract and tests](designs/mtgish-ron-spell-cast-references.md).
