@@ -894,6 +894,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			})
 		}
 		return effects, nil
+	case "CreateEachPermanentLayerEffectUntil":
+		build, err := compileTemporaryCollection(n)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreatePermanentLayerEffectUntil":
 		if err := arity(n, 3); err != nil {
 			return nil, err

@@ -1075,3 +1075,20 @@ option at announcement and resolution. `Other` in disjunctions or with other
 reference kinds remains unsupported. Exact scope, engine reuse, source corrections
 and gameplay evidence: [temporary animation](designs/mtgish-ron-temporary-animation.md).
 Dynamic base values, collection animation and additional durations remain gaps.
+
+### RON temporary collection P/T
+
+`CreateEachPermanentLayerEffectUntil(filter, [AdjustPT(integer, integer), ...],
+UntilEndOfTurn)` accepts a nonempty modification list in supported resolving
+action contexts. It reuses generic permanent filters and
+`ControlledByAPlayer(SinglePlayer(You))` alone or under conjunction. Controller
+selectors under disjunction, source exclusions, target collections and other
+modifications/durations remain errors. You means the resolving controller.
+
+The compiler reuses the immutable permanent-set filter plan and lowers to
+`Until(EndOfTurn, ModifyEachPT(...))`. Members are captured at resolution;
+later entries are excluded, and later control or combat changes do not change
+membership. Phased objects are excluded. Installed effects keep incarnation
+identity and expire at cleanup. See
+[the collection report](designs/mtgish-ron-temporary-collection.md) for exact
+contexts, full-record audit and gameplay mappings.

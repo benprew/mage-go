@@ -1999,3 +1999,109 @@ after sacrifice choice and other mass boost cards; (3) variable optional payment
 (Chaos directly, Invoke after filters). Reassess fresh complete records next run.
 No second slice was started. Complete loading/gameplay, production startup/native
 smoke tests, Go-card/generator deletion and unused-DSL cleanup remain open.
+
+## Run 2026-10-04: P7-TEMPORARY-COLLECTION
+
+Status: complete fixed temporary collection P/T slice. This run stops here.
+The initial user edits to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from the commit. No unrelated untracked files were present.
+
+The [collection report](mtgish-ron-temporary-collection.md) contains the fresh
+candidate comparison, exact supported signatures/contexts, complete-record and
+nested audit, dependencies, engine reuse, rules evidence and card-to-test mappings.
+Before editing, three candidates were compared: collection P/T (eight complete
+unlocks); own-turn/upkeep activation timing (Scepter/Priest, two complete unlocks,
+with other conditions/limits separate); variable optional mana payment (Chaos,
+one complete unlock, Invoke still needs filters). The collection adapter has the
+largest credible gain per effort. Selection, contract, reuse boundary and
+acceptance cases were stated before editing. Reprints count once.
+
+All nine collection context/shape signatures and the complete records of all
+20 distinct collection names were read. Newly supported names are Army of Allah,
+Piety, Bone Flute, Holy Light, Marsh Gas, Morale, Hell Swarm and Shield Wall.
+Other affected names and their independent blockers appear in the report.
+Subsequent complete timing-record inspection confirms the next candidate's
+entry/counter/result/cost/event dependencies; no second slice was implemented.
+
+Exact shape: CreateEachPermanentLayerEffectUntil(filter, nonempty list of
+AdjustPT(integer_literal, integer_literal), UntilEndOfTurn). Existing spell,
+activation, trigger and supported payment-continuation action builders share it.
+Generic permanent filters and ControlledByAPlayer(SinglePlayer(You)) alone or
+under conjunction reuse compileStaticPermanentFilter's immutable set plan.
+Source exclusion and controller disjunction remain rejected in this context.
+Other collection modifications, target collections, dynamic values, animation
+and durations remain gaps. The compiler stores only filter/integer plans and
+creates fresh modifications/Until per build. No new result/target binding is
+introduced; surrounding bindings retain their existing isolation.
+
+Engine reuse: MatchingPermanents/ControlledPermanents, ModifyEachPT, Fixed,
+Until(EndOfTurn), captured incarnations, layer 7c, resolving controller and source
+capture, source-independent duration, phasing, stack copies, cloned games,
+transactional casting/activation and state-based actions. No engine change,
+replacement ordering, LKI query or simultaneous zone-operation service is added.
+Relevant local rules: CR 611.2a/c and 613.4b/c, with existing identity/phasing
+contracts CR 400.7 and 702.26b/d. API/rules docs describe only this established
+adapter and retained capture behavior.
+
+Real gameplay/invalid tests were written first. After test-only API corrections,
+all eight real records failed on unsupported CreateEachPermanentLayerEffectUntil.
+After lowering, focused tests pass. The optional continuation fixture first
+used BasePlayer, which declines; the existing accepting payment fixture now
+supplies its required decision. No gameplay assertion was weakened. Automatic
+lint changes only reordered imports and were reviewed.
+
+| Card/context | Test and evidence |
+| --- | --- |
+| All eight newly supported names | TestRONTemporaryCollectionRealCards: complete records, engine validation, payment, resolution timing, each filter, before/after-resolution entries, phased exclusion/cycles, controller/combat membership retention, incarnation return, source departure, clones/expiry and graveyard |
+| Army of Allah, Morale | TestRONTemporaryCollectionOpponentCombat: opponent's attacker receives/retains bonus on their turn |
+| Shield Wall | TestRONTemporaryCollectionCopyController: copy's controller, no targets, phased exclusion, original/copy graveyard lifecycle |
+| Bone Flute | TestRONTemporaryCollectionBoneFluteRollback: insufficient mana rollback; successful tap/two-mana cost; tapped source rejection |
+| Holy Light | TestRONTemporaryCollectionHolyLightDeaths: both players' nonwhite creatures die by state-based actions; white creature survives unchanged |
+| Synthetic shared contexts | TestRONTemporaryCollectionSharedContexts: fresh factories, engine validation, activation/entry-trigger/paid continuation, combined adjustments, resolving controller after source control change, inventory roles |
+| Invalid declarations | TestRONTemporaryCollectionInvalid: malformed/empty modifications, wrong value forms, unsupported modification/duration, unbound collection/player, empty filter, disjunction/source exclusion |
+
+Estimated and actual gain agree: **eight unique names, eight records**.
+Strict loader **988 -> 996/2,445 compiled**, **1,457 -> 1,449 rejected**.
+Names **298 -> 306 accepted**, **688 -> 680 rejected**. No accepted-record
+regression. Inventory and strict-loader issues match. Nodes/signatures remain
+72,938/8,528; unknown roles decrease 19,408 -> 19,278. Largest diagnostics:
+PermanentRuleEffect (110), AsPermanentEnters (90), ActivatedWithModifiers (61),
+non-spell CastEffect (53), If rule (47), ChooseADamageSource (46), Targeted_Modal
+(42), HostController upkeep reference (35). First errors are not unlock counts.
+Global engine_validated and behavior_verified remain null. Eight additional
+unique cards have real RON gameplay evidence for all rules in their records;
+compilation and complete collection gameplay remain separate.
+
+No source-data defect was corrected. All 12 asset hashes still match the
+vocabulary snapshot, so no source snapshot refresh is required. Known
+Gaea's Liege/Fastbond concerns remain unresolved. No environment or pre-existing
+failure blocks this slice.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON/CLI tests, engine short tests, make build | PASS |
+| Baseline strict/full-inventory loaders | Expected exit 1: 988 compiled, 1,457 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONTemporaryCollection -count=1 | Intended missing-adapter failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS after count refresh; repeated after lint |
+| go test ./pkg/mage/... -short -count=1 | PASS; repeated after lint |
+| make test | PASS; repeated after lint |
+| make build | PASS; repeated after lint |
+| go vet ./... | PASS; repeated after lint |
+| make lint | PASS, zero issues; reviewed import formatting |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and -inventory -json | Expected exit 1: 996 compiled, 1,449 rejected; issues identical |
+| Source hash and accepted-record comparisons | All hashes unchanged; zero accepted regressions |
+
+Only nine slice files are committed: compiler.go, inventory.go, inventory_test.go,
+new temporary_collection.go and temporary_collection_test.go; dsl-reference.md,
+engine-rules-contracts.md, new collection report and this ledger. Production
+registry, Go definitions/generators and DSL exports retain their callers.
+Removal gates remain closed; no DSL caller deletion audit or runtime cutover is
+claimed.
+
+Ranked next candidates: (1) own-turn/upkeep activation timing, two direct unlocks;
+(2) temporary collection keyword/color changes with fresh target/combat-filter
+prerequisite analysis; (3) variable optional mana payment (Chaos directly, Invoke
+after filters). Reassess fresh inventory and full records next run. Complete
+loading/gameplay, production startup/native validation, Go-card/generator removal
+and unused-DSL cleanup remain open. This run begins no second slice.

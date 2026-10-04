@@ -794,3 +794,23 @@ is unchanged. No new exhaustive creature-subtype dictionary is claimed.
 Evidence: `TestTemporaryCardType*` and `TestRONTemporaryAnimation*`, with exact
 contracts and coverage in [the slice report](designs/mtgish-ron-temporary-animation.md).
 No new event, replacement, payment or general LKI contract is introduced.
+
+## RON temporary collection capture
+
+`Until(EndOfTurn, ModifyEachPT(set, ...))` captures the selected phased-in
+incarnations at resolution (CR 611.2a/c), then installs the adjustments in
+layer 7c (CR 613.4c). `ControlledPermanents` uses the resolving controller.
+A copied spell uses its own controller. Later entries, returned objects and
+objects phased out during capture do not join the set. Later control changes,
+combat removal and phase cycles do not remove captured members. Source departure
+does not end the installed effect. Multiple adjustments install before
+state-based actions use their result. Cleanup and cloned effects retain the
+existing isolation contract. This uses existing engine services.
+
+Evidence: `TestRONTemporaryCollectionRealCards`,
+`TestRONTemporaryCollectionCopyController`,
+`TestRONTemporaryCollectionSharedContexts`,
+`TestRONTemporaryCollectionOpponentCombat`, and
+`TestRONTemporaryCollectionHolyLightDeaths`. Bone Flute's transactional payment
+regression is `TestRONTemporaryCollectionBoneFluteRollback`. No new replacement,
+LKI query or simultaneous zone-operation contract is established.
