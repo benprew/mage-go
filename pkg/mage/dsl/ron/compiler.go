@@ -24,6 +24,7 @@ type scope struct {
 	player          playerReferencePlan
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
+	spellTarget     *spellTargetPlan
 }
 
 type actionPlan struct {
@@ -31,11 +32,12 @@ type actionPlan struct {
 	targets         []targetFactory
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
+	spellTarget     *spellTargetPlan
 }
 
 func (p actionPlan) build() Actions {
 	targets := make([]mage.Target, len(p.targets))
-	bindings := instanceBindings{players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)}
+	bindings := instanceBindings{players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding), spells: make(map[*spellTargetPlan]*mage.SpellTargetBinding)}
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget()
@@ -44,6 +46,9 @@ func (p actionPlan) build() Actions {
 		}
 		if target, ok := targets[i].(*mage.PlayerTargetBinding); ok {
 			bindings.players[p.playerTarget] = target
+		}
+		if target, ok := targets[i].(*mage.SpellTargetBinding); ok {
+			bindings.spells[p.spellTarget] = target
 		}
 		if target, ok := targets[i].(mage.TargetBinding); ok {
 			declared = append(declared, target)
@@ -495,6 +500,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if binding == "Ref_TargetPlayer" {
 			ctx.playerTarget = &playerTargetPlan{name: binding}
 		}
+		if binding == "Ref_TargetSpell" {
+			ctx.spellTarget = &spellTargetPlan{name: binding}
+		}
 		plan, err = compileActions(n.Args[1], ctx)
 		if err != nil {
 			return plan, err
@@ -505,6 +513,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		plan.targets = []targetFactory{buildTarget}
 		plan.playerTarget = ctx.playerTarget
 		plan.permanentTarget = ctx.permanentTarget
+		plan.spellTarget = ctx.spellTarget
 		return plan, nil
 	}
 	if n.Name != "ActionList" {
@@ -547,10 +556,11 @@ func compileTarget(n Node) (targetFactory, string, error) {
 		}
 		return func() mage.Target { return mage.DeclarePlayerTarget("Ref_TargetPlayer") }, "Ref_TargetPlayer", nil
 	case "TargetSpell":
-		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnySpell" {
-			return nil, "", unsupported(n.Args[0], "spell target filter")
+		filter, err := compileSpellFilter(n.Args[0])
+		if err != nil {
+			return nil, "", err
 		}
-		return func() mage.Target { return mage.TargetSpellOnStack() }, "Ref_TargetSpell", nil
+		return func() mage.Target { return mage.DeclareSpellTarget("Ref_TargetSpell", filter) }, "Ref_TargetSpell", nil
 	default:
 		return nil, "", unsupported(n, "target")
 	}
@@ -752,10 +762,11 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ref := n.Args[0]
 		if n.Name == "CounterSpell" {
-			if err := requireRef(ref, "Ref_TargetSpell", ctx); err != nil {
+			subject, err := compileSpellRef(ref, ctx)
+			if err != nil {
 				return nil, err
 			}
-			return one(func(bindings instanceBindings) mage.Effect { return mage.CounterSpell() })
+			return one(func(bindings instanceBindings) mage.Effect { return mage.Counter(subject.build(bindings)) })
 		}
 		subject, err := compilePermanentRef(ref, ctx)
 		if err != nil {

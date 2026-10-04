@@ -13,6 +13,7 @@ type playerReferencePlan struct {
 type instanceBindings struct {
 	permanents map[*permanentTargetPlan]*mage.PermanentTargetBinding
 	players    map[*playerTargetPlan]*mage.PlayerTargetBinding
+	spells     map[*spellTargetPlan]*mage.SpellTargetBinding
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {

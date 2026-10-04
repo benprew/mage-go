@@ -473,3 +473,84 @@ player life actions, saved results, events, and payment bindings remain open.
 Runtime cutover, complete RON gameplay, native/WASM startup, Go-card deletion,
 obsolete generator retirement, and whole-repository DSL removal gates remain
 unmet. No further slice was started in this run.
+
+## Run 2026-10-03: P0-SCOPE-SPELL-FILTERS
+
+Status: complete single-spell-target filter and counter slice. No second slice
+was started. The initial working tree had user changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`; these are preserved and excluded from
+this slice. Prior compiler prerequisites are now tracked, so the previous
+ledger's untracked-dependency commit blocker no longer applies.
+
+The fresh three-candidate comparison, exact signatures/contexts, dependencies,
+engine reuse, complete affected-name lists, card-to-test mapping, source findings
+and ranked next candidates are in
+[mtgish-ron-spell-scopes.md](mtgish-ron-spell-scopes.md).
+
+Selection: single typed spell targets with type/color and Boolean filters unlock
+five unique cards for a small adapter change. Layer reference lowering has zero
+immediate unlocks; explicit-player life actions unlock one card. The selected
+prerequisite also enables later controller/value readers and counter modes.
+
+Implemented `TargetSpell/1` with `AnySpell`, `IsCardtype/1`, `IsColor/1` and
+nonempty recursive `And/1`/`Or/1`, plus declaration-local `CounterSpell/1` in
+spell, activation and supported-trigger action lists. The compiler builds fresh
+`DeclareSpellTarget` bindings and lowers counter reads to `mage.Counter`.
+Engine services handle legality, identity, copies/clones, cost rollback,
+source departure, uncounterability and owner graveyards. No engine rule, asset,
+startup wiring, Go definition, generator or DSL export changed.
+
+TDD: pre-implementation tests failed on the untyped AnySpell declaration and
+unsupported filters in all five selected real cards. Focused tests now pass.
+Additional tests cover invalid declarations, nested Boolean filters, abilities
+excluded from targets, query purity, clone/copy frames, changed-color legality,
+removed/recast spells, departed/phased sources, payment failure and queued entry
+triggers. Full mapping is in the companion document.
+
+Fresh strict loading: **859/2,445 compiled records**, **1,586 rejected records**,
+**251 compiled unique names**, **735 rejected unique names**. Gain equals the
+estimate: **15 records, five unique cards** (Artifact Blast, Deathgrip, Flash
+Counter, Lifeforce, Remove Soul). No accepted record regressed. Counterspell also
+has a typed-read gameplay regression. Six counter cards gain direct
+gameplay tests; four additional real cards serve as spell fixtures. No global
+behavior-verification total or full-collection certification is claimed.
+RON source hashes match the vocabulary snapshot. No source defect was corrected.
+
+Leading remaining first diagnostics: `PermanentRuleEffect` 110 records,
+`AsPermanentEnters` 90, `ActivatedWithModifiers` 61, non-spell `CastEffect` 53,
+rule `If` 47, `ChooseADamageSource` 46, `ControlledByAPlayer` 43, `MayCost` 43,
+and `WhenAPlayerCastsASpell` 43. Seven unique cards advance their first errors
+without acceptance; the companion table lists every changed diagnostic. These
+are missing compiler contexts/adapters, not build failures or proven data defects.
+
+Inventory now reports `CounterSpell/1` operands as spell references and preserves
+spell-filter roles through nested `And`/`Or`. Support remains unverified in the
+inventory; role reporting does not claim gameplay support.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline `go run ./cmd/loadcards -json` | Expected exit 1; 844 compiled, 1,601 rejected |
+| Focused new tests with `-count=1` | Expected failures before implementation; PASS after implementation |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS; final run after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS; repeated after final test changes and lint |
+| `make test` | PASS; final run after lint |
+| `make build` | PASS; final run after lint |
+| `go vet ./...` | PASS; final run after lint |
+| `make lint` | PASS, zero issues; formatter changed new test import order only; final rerun PASS |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 859 compiled, 1,586 rejected; no partial registry |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same compilation counts and nested diagnostics |
+| Vocabulary source hash comparison | All 12 hashes match |
+
+Files: `compiler.go`, `player_scope.go`, `inventory.go`, `inventory_test.go`,
+new `spell_scope.go` and `spell_scope_test.go` under `pkg/mage/dsl/ron`,
+`docs/dsl-reference.md`, new `docs/designs/mtgish-ron-spell-scopes.md`, and this
+ledger. No automatic lint edit changed unrelated files. All prerequisites are
+tracked and required checks pass, so these nine files form one standalone commit.
+The two initial user-modified files remain outside the commit.
+
+Next ranked slice: typed temporary-layer reference lowering; then permanent
+controller filters/references; then optional payment result scopes. No next slice
+was started. Full RON gameplay, runtime loading, Go-card deletion, obsolete
+Go-set generation retirement, and unused-DSL removal gates remain unmet.

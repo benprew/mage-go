@@ -875,3 +875,18 @@ func IdentityWatcher(owner uuid.UUID) mage.Card {
 
 No production caller changes. Spell-source identity, recipient identity, typed
 `DealDamageFrom`, other intrinsic filters, batches, and results remain open.
+
+## RON single spell targets
+
+`Targeted([TargetSpell(filter)], ActionList([CounterSpell(Ref_TargetSpell)]))`
+uses a typed declaration local to the rule. Each factory creates a fresh target
+binding. Supported filters are `AnySpell`, `IsCardtype(type)`, `IsColor(color)`,
+and recursive nonempty `And([filters])` and `Or([filters])`. Filters match spell
+cards on the stack and exclude abilities. The engine checks legality at both
+announcement and resolution. Countering uses the selected stack object and puts
+its card in its owner's graveyard, unless it cannot be countered. Copies and
+clones keep separate target choices. Undeclared, incompatible, malformed and
+cross-rule reads fail compilation. Controller, mana-value and target-history
+filters, modes and multiple spell target groups remain unsupported.
+
+Contract and card tests: [RON spell scopes](designs/mtgish-ron-spell-scopes.md).

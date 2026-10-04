@@ -274,6 +274,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_reference"
 			}
+		case "CounterSpell":
+			if len(n.Args) == 1 {
+				return "spell_reference"
+			}
 		case "PlayerAction":
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "player_action"}[index]
@@ -294,6 +298,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "player_action":
 		if (n.Name == "DrawNumberCards" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
 			return "value"
+		}
+	case "spell_filter":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return role
 		}
 	case "permanent_filter":
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
