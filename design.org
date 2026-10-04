@@ -1,0 +1,8 @@
+Write a design doc made for an AI that describes how to implement the missing functions needed to execute the cards defined by the RON files in cards/mtgish. Current partial implementation is in pkg/mage/dsl/ron. Then update prompt.md so we can iterate implementing the missing functions.
+
+Goals are:
+- remove all the Go card definitions in cards/ directory and use the cards/mtgish/ RON files.
+- remove unused DSL functions (in pkg/mage/dsl)
+- implement support for all cards in cards/mtgish/
+
+I've removed unneeded skills (implement-card and implement-set) since mtgish is now defining cards and sets and aren't needed anymore.

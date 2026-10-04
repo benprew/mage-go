@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 	"sync"
 )
@@ -25,6 +26,21 @@ func NewRegistry() *Registry {
 		factories: make(map[string]CardFactory),
 		folded:    make(map[string]string),
 	}
+}
+
+// ReplaceWith installs a complete registry in one operation.
+// The registry maps stay separate so later registration cannot change both.
+func (r *Registry) ReplaceWith(other *Registry) {
+	if r == other {
+		return
+	}
+	other.mu.RLock()
+	factories := maps.Clone(other.factories)
+	folded := maps.Clone(other.folded)
+	other.mu.RUnlock()
+	r.mu.Lock()
+	r.factories, r.folded = factories, folded
+	r.mu.Unlock()
 }
 
 // Register adds a card factory to this registry.

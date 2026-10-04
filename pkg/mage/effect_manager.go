@@ -660,6 +660,19 @@ func (em *EffectManager) Apply(g *Game) {
 			_ = e.ApplyContinuous(&EffectContext{Game: g})
 			em.syncAttrDeltas(g)
 		}
+
+		if layer == LayerType {
+			// Printed land types also supply mana abilities under CR 305.6.
+			for _, permanent := range g.zones.battlefield {
+				if permanent.PhasedOut || permanent.FaceDown || !permanent.HasType(TypeLand) ||
+					!slices.ContainsFunc(permanent.computedSubtypes(), isBasicLandSubtype) {
+					continue
+				}
+				if permanent = g.MutablePermanent(permanent.ID()); permanent != nil {
+					refreshIntrinsicBasicLandManaAbilities(permanent)
+				}
+			}
+		}
 	}
 
 	// Sync mana conversions to all player mana pools

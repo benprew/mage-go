@@ -41,6 +41,29 @@ func countManaAbilityColor(perm *Permanent, color Color) int {
 	return total
 }
 
+func TestPrintedBasicLandTypesHaveIntrinsicMana(t *testing.T) {
+	player := NewBasePlayer("Alice")
+	g := NewGame(player, NewBasePlayer("Bob"))
+	card := NewLand("Typed Dual", WithSubTypes("Forest", "Island"))
+	card.SetOwner(player.PlayerID())
+	land := g.PutOnBattlefield(card, player.PlayerID())
+	for range 3 {
+		g.ApplyContinuousEffects()
+		land = g.FindPermanent(land.ID())
+		if countManaAbilityColor(land, Green) != 1 || countManaAbilityColor(land, Blue) != 1 {
+			t.Fatal("printed basic land types must each supply one mana ability")
+		}
+	}
+	clone := g.Clone()
+	clone.AddContinuousEffect(SetSubtypes(land.ID(), SubtypeLand, EndOfTurn, "Desert"))
+	if countManaAbilityColor(clone.FindPermanent(land.ID()), Green) != 0 || countManaAbilityColor(clone.FindPermanent(land.ID()), Blue) != 0 {
+		t.Fatal("old intrinsic mana abilities survived removal of their land types")
+	}
+	if countManaAbilityColor(g.FindPermanent(land.ID()), Green) != 1 {
+		t.Fatal("clone changed the original land")
+	}
+}
+
 func hasRuntimeAbility(perm *Permanent, abilityID Ability) bool {
 	for _, ability := range perm.RuntimeAbilities {
 		if ability.AbilityID() == abilityID.AbilityID() {

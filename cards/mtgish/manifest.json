@@ -1,0 +1,115 @@
+{
+  "ron_source": "/Users/ben/src/mtgish/data/mtgish.lines.ron",
+  "rules_text": "Current mtgish rules; no format-specific errata applied.",
+  "membership": "All set cards; banned cards are included; printing variants are deduplicated.",
+  "sets": [
+    {
+      "code": "2ED",
+      "name": "Unlimited Edition",
+      "file": "2ED.lines.ron",
+      "expected_cards": 292,
+      "exported_cards": 291,
+      "missing_cards": [
+        "Chaos Orb"
+      ]
+    },
+    {
+      "code": "3ED",
+      "name": "Revised Edition",
+      "file": "3ED.lines.ron",
+      "expected_cards": 296,
+      "exported_cards": 296,
+      "missing_cards": []
+    },
+    {
+      "code": "ARN",
+      "name": "Arabian Nights",
+      "file": "ARN.lines.ron",
+      "expected_cards": 78,
+      "exported_cards": 78,
+      "missing_cards": []
+    },
+    {
+      "code": "ATQ",
+      "name": "Antiquities",
+      "file": "ATQ.lines.ron",
+      "expected_cards": 85,
+      "exported_cards": 85,
+      "missing_cards": []
+    },
+    {
+      "code": "CED",
+      "name": "Collectors' Edition",
+      "file": "CED.lines.ron",
+      "expected_cards": 292,
+      "exported_cards": 291,
+      "missing_cards": [
+        "Chaos Orb"
+      ]
+    },
+    {
+      "code": "CEI",
+      "name": "Intl. Collectors' Edition",
+      "file": "CEI.lines.ron",
+      "expected_cards": 292,
+      "exported_cards": 291,
+      "missing_cards": [
+        "Chaos Orb"
+      ]
+    },
+    {
+      "code": "DRK",
+      "name": "The Dark",
+      "file": "DRK.lines.ron",
+      "expected_cards": 119,
+      "exported_cards": 119,
+      "missing_cards": []
+    },
+    {
+      "code": "FEM",
+      "name": "Fallen Empires",
+      "file": "FEM.lines.ron",
+      "expected_cards": 102,
+      "exported_cards": 102,
+      "missing_cards": []
+    },
+    {
+      "code": "LEA",
+      "name": "Limited Edition Alpha",
+      "file": "LEA.lines.ron",
+      "expected_cards": 290,
+      "exported_cards": 289,
+      "missing_cards": [
+        "Chaos Orb"
+      ]
+    },
+    {
+      "code": "LEB",
+      "name": "Limited Edition Beta",
+      "file": "LEB.lines.ron",
+      "expected_cards": 292,
+      "exported_cards": 291,
+      "missing_cards": [
+        "Chaos Orb"
+      ]
+    },
+    {
+      "code": "LEG",
+      "name": "Legends",
+      "file": "LEG.lines.ron",
+      "expected_cards": 310,
+      "exported_cards": 309,
+      "missing_cards": [
+        "Falling Star"
+      ]
+    },
+    {
+      "code": "PROMOS",
+      "name": "Eternal Central 93/94 allowed promos",
+      "file": "PROMOS.lines.ron",
+      "expected_cards": 3,
+      "exported_cards": 3,
+      "missing_cards": []
+    }
+  ]
+}

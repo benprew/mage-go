@@ -1,0 +1,966 @@
+package ron
+
+import (
+	"fmt"
+	"maps"
+	"slices"
+	"strconv"
+	"strings"
+
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
+
+type optionFactory func() mage.CardOption
+type effectFactory func(instanceBindings) mage.Effect
+type targetFactory func() mage.Target
+type costFactory func() mage.Cost
+
+type scope struct {
+	target          string
+	x               bool
+	permanent       bool
+	aura            bool
+	player          playerReferencePlan
+	playerTarget    *playerTargetPlan
+	permanentTarget *permanentTargetPlan
+}
+
+type actionPlan struct {
+	effects         []effectFactory
+	targets         []targetFactory
+	playerTarget    *playerTargetPlan
+	permanentTarget *permanentTargetPlan
+}
+
+func (p actionPlan) build() Actions {
+	targets := make([]mage.Target, len(p.targets))
+	bindings := instanceBindings{players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)}
+	var declared []mage.TargetBinding
+	for i, makeTarget := range p.targets {
+		targets[i] = makeTarget()
+		if target, ok := targets[i].(*mage.PermanentTargetBinding); ok {
+			bindings.permanents[p.permanentTarget] = target
+		}
+		if target, ok := targets[i].(*mage.PlayerTargetBinding); ok {
+			bindings.players[p.playerTarget] = target
+		}
+		if target, ok := targets[i].(mage.TargetBinding); ok {
+			declared = append(declared, target)
+		}
+	}
+	effects := make([]mage.Effect, len(p.effects))
+	for i, makeEffect := range p.effects {
+		effects[i] = makeEffect(bindings)
+	}
+	if len(declared) != 0 {
+		targets = mage.Spell(mage.Sequence(effects...), mage.WithTargets(declared...)).Targets()
+	}
+	return Targeted(targets, ActionList(effects...))
+}
+
+func problem(n Node, message string) error {
+	return fmt.Errorf("%s: %s (%s)", n.Position, message, n.Name)
+}
+func unsupported(n Node, role string) error { return problem(n, "unsupported "+role) }
+func arity(n Node, count int) error {
+	if n.Kind != Tuple || len(n.Args) != count {
+		return problem(n, fmt.Sprintf("expected %d positional arguments", count))
+	}
+	return nil
+}
+func list(n Node) ([]Node, error) {
+	if n.Kind != List {
+		return nil, problem(n, "expected list")
+	}
+	return n.Args, nil
+}
+func symbol(n Node) (string, error) {
+	if n.Kind != Symbol {
+		return "", problem(n, "expected symbol")
+	}
+	return n.Name, nil
+}
+func fields(n Node, required, optional []string) error {
+	if n.Kind != Struct {
+		return problem(n, "expected named fields")
+	}
+	for _, key := range required {
+		if _, ok := n.Fields[key]; !ok {
+			return problem(n, "missing field "+key)
+		}
+	}
+	for _, key := range slices.Sorted(maps.Keys(n.Fields)) {
+		if !slices.Contains(required, key) && !slices.Contains(optional, key) {
+			return problem(n, "unknown field "+key)
+		}
+	}
+	return nil
+}
+
+// Compile validates a complete card and returns a factory with private instance state.
+// No declaration can use a registered Go card as a substitute for a RON rule.
+func Compile(n Node) (mage.CardFactory, error) {
+	if n.Name != "Card" {
+		return nil, problem(n, "expected Card")
+	}
+	if err := fields(n, []string{"Name", "Typeline"}, []string{"ManaCost", "Rules", "CardPT", "ColorIndicator"}); err != nil {
+		return nil, err
+	}
+	nameNode := n.Fields["Name"]
+	if nameNode.Kind != String || strings.TrimSpace(nameNode.String) == "" {
+		return nil, problem(nameNode, "expected nonempty card name")
+	}
+	name := nameNode.String
+	typeline := n.Fields["Typeline"]
+	if err := fields(typeline, []string{"Supertypes", "Cardtypes", "Subtypes"}, nil); err != nil {
+		return nil, err
+	}
+	typeNodes, err := list(typeline.Fields["Cardtypes"])
+	if err != nil {
+		return nil, err
+	}
+	if len(typeNodes) == 0 {
+		return nil, problem(typeline, "card must have a type")
+	}
+	types := make([]core.CardType, len(typeNodes))
+	for i, typeNode := range typeNodes {
+		types[i], err = cardType(typeNode)
+		if err != nil {
+			return nil, err
+		}
+		if slices.Contains(types[:i], types[i]) {
+			return nil, problem(typeNode, "duplicate card type")
+		}
+	}
+	var supers []core.SuperType
+	superNodes, err := list(typeline.Fields["Supertypes"])
+	if err != nil {
+		return nil, err
+	}
+	for _, superNode := range superNodes {
+		value, err := symbol(superNode)
+		if err != nil {
+			return nil, err
+		}
+		super, ok := map[string]core.SuperType{"Basic": core.SuperBasic, "Legendary": core.SuperLegendary, "Snow": core.SuperSnow, "World": core.SuperWorld}[value]
+		if !ok {
+			return nil, unsupported(superNode, "supertype")
+		}
+		supers = append(supers, super)
+	}
+	var subtypes []string
+	subNodes, err := list(typeline.Fields["Subtypes"])
+	if err != nil {
+		return nil, err
+	}
+	for _, subNode := range subNodes {
+		subtype, err := symbol(subNode)
+		if err != nil {
+			return nil, err
+		}
+		subtypes = append(subtypes, subtypeName(subtype))
+	}
+	var cost string
+	var hasX bool
+	if mana, ok := n.Fields["ManaCost"]; ok {
+		cost, err = manaCost(mana)
+		if err != nil {
+			return nil, err
+		}
+		hasX = core.ParseManaCost(cost).HasX
+	}
+	if slices.Contains(types, core.TypeLand) && cost != "" {
+		return nil, unsupported(n.Fields["ManaCost"], "mana cost on a land")
+	}
+	var indicator []core.Color
+	if colorNode, ok := n.Fields["ColorIndicator"]; ok {
+		colors, err := list(colorNode)
+		if err != nil {
+			return nil, err
+		}
+		for _, entry := range colors {
+			value, err := color(entry)
+			if err != nil {
+				return nil, err
+			}
+			indicator = append(indicator, value)
+		}
+	}
+	power, toughness := 0, 0
+	if pt, ok := n.Fields["CardPT"]; ok {
+		if err := fields(pt, []string{"Power", "Toughness"}, nil); err != nil {
+			return nil, err
+		}
+		if pt.Fields["Power"].Kind != IntegerNode || pt.Fields["Toughness"].Kind != IntegerNode {
+			return nil, problem(pt, "base power and toughness must be integers")
+		}
+		power, toughness = pt.Fields["Power"].Integer, pt.Fields["Toughness"].Integer
+	} else if slices.Contains(types, core.TypeCreature) {
+		return nil, problem(n, "creature requires CardPT")
+	}
+	permanent := !slices.Contains(types, core.TypeInstant) && !slices.Contains(types, core.TypeSorcery)
+	ctx := scope{x: hasX, permanent: permanent, aura: slices.Contains(subtypes, "Aura"), player: playerReferencePlan{}}
+	var options []optionFactory
+	spellCount, enchantCount := 0, 0
+	if rulesNode, ok := n.Fields["Rules"]; ok {
+		rules, err := list(rulesNode)
+		if err != nil {
+			return nil, err
+		}
+		for _, rule := range rules {
+			if rule.Name == "SpellActions" {
+				spellCount++
+			}
+			if rule.Name == "EnchantPermanent" {
+				enchantCount++
+			}
+			option, err := compileRule(rule, ctx)
+			if err != nil {
+				return nil, err
+			}
+			options = append(options, option)
+		}
+	}
+	if !permanent && spellCount != 1 {
+		return nil, problem(n, "instant or sorcery requires one SpellActions rule")
+	}
+	if permanent && spellCount != 0 {
+		return nil, problem(n, "permanent cannot declare SpellActions")
+	}
+	if slices.Contains(subtypes, "Aura") && enchantCount != 1 {
+		return nil, problem(n, "Aura requires one enchant rule")
+	}
+	if enchantCount > 0 && (!slices.Contains(types, core.TypeEnchantment) || !slices.Contains(subtypes, "Aura")) {
+		return nil, problem(n, "enchant rule requires an Aura enchantment")
+	}
+	if types[0] == core.TypePlaneswalker {
+		return nil, unsupported(n, "planeswalker metadata")
+	}
+	return func() mage.Card {
+		opts := make([]mage.CardOption, 0, 1+len(types)+len(options))
+		opts = append(opts, mage.WithSubTypes(subtypes...), mage.WithSuperTypes(supers...))
+		for _, kind := range types[1:] {
+			opts = append(opts, mage.WithCardType(kind))
+		}
+		for _, buildOption := range options {
+			opts = append(opts, buildOption())
+		}
+		var card *mage.BaseCard
+		switch types[0] {
+		case core.TypeCreature:
+			card = mage.NewCreature(name, cost, power, toughness, opts...)
+		case core.TypeArtifact:
+			card = mage.NewArtifact(name, cost, opts...)
+		case core.TypeEnchantment:
+			card = mage.NewEnchantment(name, cost, opts...)
+		case core.TypeLand:
+			card = mage.NewLand(name, opts...)
+		case core.TypeInstant:
+			card = mage.NewInstant(name, cost)
+			for _, opt := range opts {
+				opt(card)
+			}
+		case core.TypeSorcery:
+			card = mage.NewSorcery(name, cost)
+			for _, opt := range opts {
+				opt(card)
+			}
+		}
+		if types[0] != core.TypeCreature {
+			card.SetBasePT(power, toughness)
+		}
+		if len(indicator) > 0 {
+			card.SetColorOverride(indicator)
+		}
+		return card
+	}, nil
+}
+
+func cardType(n Node) (core.CardType, error) {
+	name, err := symbol(n)
+	if err != nil {
+		return 0, err
+	}
+	kind, ok := map[string]core.CardType{"Creature": core.TypeCreature, "Artifact": core.TypeArtifact, "Land": core.TypeLand, "Enchantment": core.TypeEnchantment, "Instant": core.TypeInstant, "Sorcery": core.TypeSorcery}[name]
+	if !ok {
+		return 0, unsupported(n, "card type")
+	}
+	return kind, nil
+}
+
+func manaCost(n Node) (string, error) {
+	nodes, err := list(n)
+	if err != nil {
+		return "", err
+	}
+	var cost strings.Builder
+	for _, part := range nodes {
+		if part.Name == "ManaCostGeneric" {
+			if err := arity(part, 1); err != nil {
+				return "", err
+			}
+			if part.Args[0].Kind != IntegerNode || part.Args[0].Integer < 0 {
+				return "", problem(part, "generic mana must be a nonnegative integer")
+			}
+			cost.WriteString("{" + strconv.Itoa(part.Args[0].Integer) + "}")
+			continue
+		}
+		name, err := symbol(part)
+		if err != nil {
+			return "", err
+		}
+		value, ok := map[string]string{"ManaCostW": "W", "ManaCostU": "U", "ManaCostB": "B", "ManaCostR": "R", "ManaCostG": "G", "ManaCostX": "X"}[name]
+		if !ok {
+			return "", unsupported(part, "mana symbol")
+		}
+		cost.WriteString("{" + value + "}")
+	}
+	return cost.String(), nil
+}
+
+func compileRule(n Node, ctx scope) (optionFactory, error) {
+	if !ctx.permanent && n.Name != "SpellActions" {
+		return nil, unsupported(n, "non-spell rule on an instant or sorcery")
+	}
+	if n.Kind == Symbol {
+		kw, ok := keywords[n.Name]
+		if !ok {
+			return nil, unsupported(n, "rule")
+		}
+		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
+	}
+	switch n.Name {
+	case "TriggerA":
+		return compileTriggerRule(n, ctx)
+	case "PermanentLayerEffect", "EachPermanentLayerEffect":
+		return compileStaticLayer(n, ctx)
+	case "SpellActions":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		plan, err := compileActions(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithAbility(SpellActions(plan.build())) }, nil
+	case "Activated":
+		if !ctx.permanent {
+			return nil, unsupported(n, "activated rule on a spell")
+		}
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+		costs, hasX, err := compileCosts(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		ctx.x = hasX
+		plan, err := compileActions(n.Args[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			values := make([]mage.Cost, len(costs))
+			for i, build := range costs {
+				values[i] = build()
+			}
+			return mage.WithAbility(Activated(values, plan.build()))
+		}, nil
+	case "EnchantPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		filter, err := compileFilter(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithCastTarget(mage.TargetPermanent(filter)) }, nil
+	case "Protection":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		colors, err := protectionColors(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.ProtectionFromColors(append([]core.Color(nil), colors...)...))
+		}, nil
+	case "Landwalk":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		filter := n.Args[0]
+		if filter.Name != "IsLandType" {
+			return nil, unsupported(filter, "landwalk filter")
+		}
+		if err := arity(filter, 1); err != nil {
+			return nil, err
+		}
+		name, err := symbol(filter.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		kw, ok := map[string]core.Attr{"Plains": core.Plainswalk, "Island": core.Islandwalk, "Swamp": core.Swampwalk, "Mountain": core.Mountainwalk, "Forest": core.Forestwalk, "Desert": core.Desertwalk}[name]
+		if !ok {
+			return nil, unsupported(filter, "landwalk type")
+		}
+		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
+	default:
+		return nil, unsupported(n, "rule")
+	}
+}
+
+var keywords = map[string]core.Attr{
+	"Flying": core.Flying, "FirstStrike": core.FirstStrike, "Trample": core.Trample,
+	"Vigilance": core.Vigilance, "Haste": core.Haste, "Reach": core.Reach,
+	"Banding": core.Banding, "Defender": core.Defender, "Fear": core.Fear,
+	"Deathtouch": core.Deathtouch, "Lifelink": core.Lifelink, "Shroud": core.Shroud,
+	"Hexproof": core.Hexproof, "Menace": core.Menace, "Indestructible": core.Indestructible,
+}
+
+func compileCosts(n Node) ([]costFactory, bool, error) {
+	if n.Name == "And" {
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		parts, err := list(n.Args[0])
+		if err != nil {
+			return nil, false, err
+		}
+		var costs []costFactory
+		x := false
+		for _, part := range parts {
+			compiled, hasX, err := compileCosts(part)
+			if err != nil {
+				return nil, false, err
+			}
+			costs = append(costs, compiled...)
+			x = x || hasX
+		}
+		return costs, x, nil
+	}
+	switch n.Name {
+	case "PayMana":
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		cost, err := manaCost(n.Args[0])
+		if err != nil {
+			return nil, false, err
+		}
+		parsed := core.ParseManaCost(cost)
+		if parsed.HasX {
+			return nil, false, problem(n, "X payment requires PayManaX binding")
+		}
+		return []costFactory{func() mage.Cost { return PayMana(parsed) }}, false, nil
+	case "TapPermanent", "SacrificePermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, false, err
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "ThisPermanent" {
+			return nil, false, unsupported(n.Args[0], "cost reference")
+		}
+		if n.Name == "TapPermanent" {
+			return []costFactory{func() mage.Cost { return mage.Tap() }}, false, nil
+		}
+		return []costFactory{mage.SacrificeSourceCost}, false, nil
+	default:
+		return nil, false, unsupported(n, "cost")
+	}
+}
+
+func compileActions(n Node, ctx scope) (actionPlan, error) {
+	var plan actionPlan
+	if n.Name == "Targeted" {
+		if err := arity(n, 2); err != nil {
+			return plan, err
+		}
+		targets, err := list(n.Args[0])
+		if err != nil {
+			return plan, err
+		}
+		if len(targets) != 1 {
+			return plan, problem(n, "multiple target bindings are not supported")
+		}
+		buildTarget, binding, err := compileTarget(targets[0])
+		if err != nil {
+			return plan, err
+		}
+		ctx.target = binding
+		if binding == "Ref_TargetPermanent" {
+			ctx.permanentTarget = &permanentTargetPlan{name: binding}
+		}
+		if binding == "Ref_TargetPlayer" {
+			ctx.playerTarget = &playerTargetPlan{name: binding}
+		}
+		plan, err = compileActions(n.Args[1], ctx)
+		if err != nil {
+			return plan, err
+		}
+		if len(plan.targets) != 0 {
+			return plan, problem(n, "nested target declarations are not supported")
+		}
+		plan.targets = []targetFactory{buildTarget}
+		plan.playerTarget = ctx.playerTarget
+		plan.permanentTarget = ctx.permanentTarget
+		return plan, nil
+	}
+	if n.Name != "ActionList" {
+		return plan, unsupported(n, "action list")
+	}
+	if err := arity(n, 1); err != nil {
+		return plan, err
+	}
+	parts, err := list(n.Args[0])
+	if err != nil {
+		return plan, err
+	}
+	for _, part := range parts {
+		effects, err := compileEffect(part, ctx)
+		if err != nil {
+			return plan, err
+		}
+		plan.effects = append(plan.effects, effects...)
+	}
+	return plan, nil
+}
+
+func compileTarget(n Node) (targetFactory, string, error) {
+	if n.Kind == Symbol && n.Name == "AnyTarget" {
+		return mage.TargetDamageAnyTarget, "Ref_AnyTarget", nil
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, "", err
+	}
+	switch n.Name {
+	case "TargetPermanent":
+		filter, err := compileFilter(n.Args[0])
+		if err != nil {
+			return nil, "", err
+		}
+		return func() mage.Target { return mage.DeclarePermanentTarget("Ref_TargetPermanent", filter) }, "Ref_TargetPermanent", nil
+	case "TargetPlayer":
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
+			return nil, "", unsupported(n.Args[0], "player target filter")
+		}
+		return func() mage.Target { return mage.DeclarePlayerTarget("Ref_TargetPlayer") }, "Ref_TargetPlayer", nil
+	case "TargetSpell":
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnySpell" {
+			return nil, "", unsupported(n.Args[0], "spell target filter")
+		}
+		return func() mage.Target { return mage.TargetSpellOnStack() }, "Ref_TargetSpell", nil
+	default:
+		return nil, "", unsupported(n, "target")
+	}
+}
+
+func compileFilter(n Node) (mage.PermanentFilter, error) {
+	if n.Kind == Symbol {
+		switch n.Name {
+		case "AnyPermanent":
+			return mage.AnyPermanent, nil
+		case "IsTapped":
+			return mage.IsTapped, nil
+		case "IsUntapped":
+			return mage.IsUntapped, nil
+		case "IsAttacking":
+			return mage.IsAttacking, nil
+		case "IsBlocking":
+			return mage.IsBlocking, nil
+		default:
+			return mage.PermanentFilter{}, unsupported(n, "permanent filter")
+		}
+	}
+	if err := arity(n, 1); err != nil {
+		return mage.PermanentFilter{}, err
+	}
+	switch n.Name {
+	case "And", "Or":
+		parts, err := list(n.Args[0])
+		if err != nil {
+			return mage.PermanentFilter{}, err
+		}
+		filters := make([]mage.PermanentFilter, len(parts))
+		for i, part := range parts {
+			filters[i], err = compileFilter(part)
+			if err != nil {
+				return mage.PermanentFilter{}, err
+			}
+		}
+		if n.Name == "And" {
+			return mage.And(filters...), nil
+		}
+		return mage.Or(filters...), nil
+	case "IsCardtype", "IsNonCardtype":
+		kind, err := cardType(n.Args[0])
+		if err != nil {
+			return mage.PermanentFilter{}, err
+		}
+		filter := IsCardtype(kind)
+		if n.Name == "IsNonCardtype" {
+			filter = mage.Not(filter)
+		}
+		return filter, nil
+	case "IsCreatureType", "IsLandType", "IsEnchantmentType", "IsNonCreatureType", "IsNonLandType":
+		subtype, err := symbol(n.Args[0])
+		if err != nil {
+			return mage.PermanentFilter{}, err
+		}
+		filter := mage.HasSubType(subtypeName(subtype))
+		if strings.HasPrefix(n.Name, "IsNon") {
+			filter = mage.Not(filter)
+		}
+		return filter, nil
+	case "IsColor", "IsNonColor":
+		color, err := color(n.Args[0])
+		if err != nil {
+			return mage.PermanentFilter{}, err
+		}
+		filter := mage.HasColorFilter(color)
+		if n.Name == "IsNonColor" {
+			filter = mage.Not(filter)
+		}
+		return filter, nil
+	case "HasAbility", "DoesntHaveAbility":
+		keyword, ok := keywords[n.Args[0].Name]
+		if n.Args[0].Kind != Symbol || !ok {
+			return mage.PermanentFilter{}, unsupported(n.Args[0], "keyword filter")
+		}
+		filter := mage.HasKeywordFilter(keyword)
+		if n.Name == "DoesntHaveAbility" {
+			filter = mage.Not(filter)
+		}
+		return filter, nil
+	default:
+		return mage.PermanentFilter{}, unsupported(n, "permanent filter")
+	}
+}
+
+func color(n Node) (core.Color, error) {
+	name, err := symbol(n)
+	if err != nil {
+		return 0, err
+	}
+	value, ok := map[string]core.Color{"White": core.White, "Blue": core.Blue, "Black": core.Black, "Red": core.Red, "Green": core.Green, "Colorless": core.Colorless}[name]
+	if !ok {
+		return 0, unsupported(n, "color")
+	}
+	return value, nil
+}
+
+func subtypeName(name string) string {
+	switch name {
+	case "AssemblyWorker":
+		return "Assembly-Worker"
+	case "Urzas":
+		return "Urza's"
+	case "PowerPlant":
+		return "Power-Plant"
+	default:
+		return name
+	}
+}
+
+func protectionColors(n Node) ([]core.Color, error) {
+	if n.Name != "FromColor" {
+		return nil, unsupported(n, "protection filter")
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	n = n.Args[0]
+	if n.Name != "Colors" {
+		return nil, unsupported(n, "color list")
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	parts, err := list(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
+	var colors []core.Color
+	for _, part := range parts {
+		value, err := color(part)
+		if err != nil {
+			return nil, err
+		}
+		colors = append(colors, value)
+	}
+	return colors, nil
+}
+
+func compileValue(n Node, ctx scope) (mage.ValueSource, error) {
+	if n.Kind == Symbol && n.Name == "ValueX" {
+		if !ctx.x {
+			return nil, problem(n, "unbound ValueX")
+		}
+		return mage.XValue(), nil
+	}
+	if n.Name != "Integer" {
+		return nil, unsupported(n, "value")
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	if n.Args[0].Kind != IntegerNode {
+		return nil, problem(n, "expected integer literal")
+	}
+	return Integer(n.Args[0].Integer), nil
+}
+
+func requireRef(n Node, name string, ctx scope) error {
+	if n.Kind != Symbol || n.Name != name || ctx.target != name {
+		return problem(n, "unbound or incompatible target reference")
+	}
+	return nil
+}
+
+func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
+	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
+	switch n.Name {
+	case "SpellDealsDamage", "PermanentDealsDamage":
+		if err := arity(n, 3); err != nil {
+			return nil, err
+		}
+		source := "ThisSpell"
+		if n.Name == "PermanentDealsDamage" {
+			source = "ThisPermanent"
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != source || (source == "ThisPermanent") != ctx.permanent {
+			return nil, unsupported(n.Args[0], "damage source")
+		}
+		amount, err := compileValue(n.Args[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		if err := requireRef(n.Args[2], ctx.target, ctx); err != nil {
+			return nil, err
+		}
+		if ctx.target != "Ref_AnyTarget" && ctx.target != "Ref_TargetPlayer" && ctx.target != "Ref_TargetPermanent" {
+			return nil, unsupported(n.Args[2], "damage recipient")
+		}
+		if n.Name == "SpellDealsDamage" {
+			return one(func(bindings instanceBindings) mage.Effect { return SpellDealsDamage(amount) })
+		}
+		return one(func(bindings instanceBindings) mage.Effect { return PermanentDealsDamage(amount) })
+	case "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		ref := n.Args[0]
+		if n.Name == "CounterSpell" {
+			if err := requireRef(ref, "Ref_TargetSpell", ctx); err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect { return mage.CounterSpell() })
+		}
+		subject, err := compilePermanentRef(ref, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(func(bindings instanceBindings) mage.Effect {
+			ref := subject.build(bindings)
+			switch n.Name {
+			case "DestroyPermanent":
+				return mage.Destroy(ref)
+			case "DestroyPermanentNoRegen":
+				return mage.DestroyWithoutRegeneration(ref)
+			case "TapPermanent":
+				return mage.TapSubject(ref)
+			case "UntapPermanent":
+				return mage.UntapPermanent(ref)
+			case "RegeneratePermanent":
+				return mage.Regenerate(ref)
+			default:
+				return mage.Sacrifice(ref)
+			}
+		})
+	case "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		filter, err := compileFilter(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		if n.Name == "DestroyEachPermanent" {
+			return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanent(filter) })
+		}
+		return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanentNoRegen(filter) })
+	case "PlayerAction":
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+		who, err := compilePlayerRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		ctx.player = who
+		return compilePlayerEffect(n.Args[1], ctx)
+	case "DrawNumberCards", "GainLife", "LoseLife":
+		return compilePlayerEffect(n, ctx)
+	case "AddMana", "AddManaRepeated":
+		count := 1
+		args := 1
+		if n.Name == "AddManaRepeated" {
+			args = 2
+		}
+		if err := arity(n, args); err != nil {
+			return nil, err
+		}
+		if args == 2 {
+			value := n.Args[1]
+			if value.Name != "Integer" {
+				return nil, unsupported(value, "mana amount")
+			}
+			if err := arity(value, 1); err != nil {
+				return nil, err
+			}
+			if value.Args[0].Kind != IntegerNode || value.Args[0].Integer < 0 {
+				return nil, problem(value, "mana amount must be nonnegative")
+			}
+			count = value.Args[0].Integer
+		}
+		productions, err := compileMana(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		var effects []effectFactory
+		for _, production := range productions {
+			amount, color := production.Amount*count, production.Color
+			effects = append(effects, func(bindings instanceBindings) mage.Effect { return mage.AddMana(color, amount) })
+		}
+		return effects, nil
+	case "CreatePermanentLayerEffectUntil":
+		if err := arity(n, 3); err != nil {
+			return nil, err
+		}
+		if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
+			return nil, unsupported(n.Args[2], "duration")
+		}
+		selector := mage.ToTarget()
+		switch {
+		case n.Args[0].Kind == Symbol && n.Args[0].Name == "ThisPermanent" && ctx.permanent:
+			selector = mage.ToSource()
+		case n.Args[0].Kind == Symbol && n.Args[0].Name == "HostPermanent" && ctx.aura:
+			selector = mage.ToAttached()
+		default:
+			if err := requireRef(n.Args[0], "Ref_TargetPermanent", ctx); err != nil {
+				return nil, err
+			}
+		}
+		parts, err := list(n.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		var effects []effectFactory
+		for _, part := range parts {
+			if part.Name == "AddAbility" {
+				if err := arity(part, 1); err != nil {
+					return nil, err
+				}
+				abilities, err := list(part.Args[0])
+				if err != nil {
+					return nil, err
+				}
+				for _, ability := range abilities {
+					keyword, ok := keywords[ability.Name]
+					if ability.Kind != Symbol || !ok {
+						return nil, unsupported(ability, "temporary ability grant")
+					}
+					effects = append(effects, func(bindings instanceBindings) mage.Effect {
+						return mage.GrantKeyword(keyword).Targeting(selector).Until(core.EndOfTurn)
+					})
+				}
+				continue
+			}
+			if part.Name != "AdjustPT" {
+				return nil, unsupported(part, "temporary layer action")
+			}
+			power, toughness, err := compilePT(part)
+			if err != nil {
+				return nil, err
+			}
+			effects = append(effects, func(bindings instanceBindings) mage.Effect {
+				return mage.Boost(Integer(power), Integer(toughness)).Targeting(selector).Until(core.EndOfTurn)
+			})
+		}
+		return effects, nil
+	}
+	return nil, unsupported(n, "action")
+}
+
+func compilePT(n Node) (power, toughness int, err error) {
+	if err := arity(n, 2); err != nil {
+		return 0, 0, err
+	}
+	if n.Args[0].Kind != IntegerNode || n.Args[1].Kind != IntegerNode {
+		return 0, 0, problem(n, "AdjustPT requires integer literals")
+	}
+	return n.Args[0].Integer, n.Args[1].Integer, nil
+}
+
+func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	amount, err := compileValue(n.Args[0], ctx)
+	if err != nil {
+		return nil, err
+	}
+	switch n.Name {
+	case "DrawNumberCards":
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.DrawFor(ctx.player.build(bindings), mage.ValueAtResolution(amount))
+		}}, nil
+	case "GainLife":
+		if ctx.target == "Ref_TargetPlayer" {
+			return nil, unsupported(n, "life action in a player target scope")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.GainLifeFor(mage.You, mage.ValueAtResolution(amount))
+		}}, nil
+	case "LoseLife":
+		if ctx.target == "Ref_TargetPlayer" {
+			return nil, unsupported(n, "life action in a player target scope")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.LoseLifeFor(mage.You, mage.ValueAtResolution(amount))
+		}}, nil
+	default:
+		return nil, unsupported(n, "player action")
+	}
+}
+
+func compileMana(n Node) ([]mage.ManaProduction, error) {
+	if n.Name == "And" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		parts, err := list(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		var values []mage.ManaProduction
+		for _, part := range parts {
+			value, err := compileMana(part)
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, value...)
+		}
+		return values, nil
+	}
+	name, err := symbol(n)
+	if err != nil {
+		return nil, err
+	}
+	color, ok := map[string]core.Color{"ManaProduceW": core.White, "ManaProduceU": core.Blue, "ManaProduceB": core.Black, "ManaProduceR": core.Red, "ManaProduceG": core.Green, "ManaProduceC": core.Colorless, "AnyManaColor": core.AnyColor}[name]
+	if !ok {
+		return nil, unsupported(n, "mana production")
+	}
+	return []mage.ManaProduction{{Color: color, Amount: 1}}, nil
+}

@@ -313,7 +313,7 @@ The planeswalker implementation is intentionally partial: entry loyalty and zero
 | Human input | Buffered game/action and choice request/response channel pairs |
 | AI strategy | Called synchronously by the owning game loop |
 | Search | Synchronous cloned-state exploration with copy-on-write permanents |
-| TUI/WASM | Game loop and transport pumps run in goroutines |
+| TUI | Game loop and transport pumps run in goroutines |
 | SSH server | Concurrent sessions and games; lobby state protected by a mutex |
 | C/Python FFI | Process-global handle table protected by mutexes; each game has a decision-loop goroutine |
 | Batch/text rollout FFI | Coordinates multiple handles and inference batches across goroutines |
@@ -364,7 +364,6 @@ mage-go/
 |-- cmd/
 |   |-- tui/                        # Local terminal game
 |   |-- server/                     # SSH lobby and game server
-|   |-- wasm/                       # Browser/WASM adapter
 |   |-- pylib/                      # C shared library and Python package
 |   |-- gametest/                   # Interactive/profilable AI-vs-AI runner
 |   |-- scenariotest/               # Batch AI-vs-AI JSONL runner
@@ -377,7 +376,6 @@ mage-go/
 |
 |-- data/                           # Set, catalog and tokenizer data
 |-- rogue_dck/                      # Shandalar rogue deck lists
-|-- web/                            # Browser UI assets
 |-- docs/ and active-design-docs/   # Stable references and evolving designs
 |-- .agents/skills/                 # Card, set and engine workflows
 |-- pyproject.toml / setup.py       # Python binding build/package metadata
@@ -411,7 +409,6 @@ Generated set packages normally contain:
 | Test everything | `make test` -> `go test ./...` |
 | Build packages | `make build` -> `go build ./...` |
 | Format/lint/fix | `make lint` -> `modernize -fix`, `golangci-lint fmt`, `golangci-lint run --fix` |
-| Build WASM | `make wasm` -> compile `cmd/wasm` and copy `wasm_exec.js` |
 | Build card art tool | `make cardart` |
 
 Engine and card changes follow test-driven development. Card behavior is tested through `gametest.TestGame`; lower-level engine tests live beside `pkg/mage` code. The suite also contains comprehensive-rules-oriented tests grouped by rule chapter, AI/search tests, replay tests, FFI encoder tests and catalog/tool tests.
@@ -462,29 +459,7 @@ SSH clients
 
 The server creates `.ssh/server_ed25519` through Wish's host-key handling, starts a Bubble Tea program per SSH session and forwards terminal resize events. Each player receives an independent channel set connected to the shared game loop. There is no database or durable match state.
 
-### 4.3 Browser/WASM
-
-```text
-Static HTTP server
-  -> index.html + game.js + wasm_exec.js + mage.wasm
-
-Browser tab
-  |-- JavaScript UI
-  |-- syscall/js bridge
-  |-- interactive game-loop goroutine
-  '-- Game + selected AI, entirely client-side
-```
-
-The Go module exports four JavaScript globals:
-
-- `mageGetCardList()`;
-- `mageStartGame(deckJSON, onGameMsg, onChoiceReq, aiDeckJSON?, personality?, mode?)`;
-- `mageSendAction(actionJSON)`; and
-- `mageSendChoice(choiceJSON)`.
-
-The web server only delivers static files; rules execution and AI run in the browser.
-
-### 4.4 C Shared Library and Python Binding
+### 4.3 C Shared Library and Python Binding
 
 ```text
 Python / C caller
@@ -500,7 +475,7 @@ Python / C caller
 
 `cmd/pylib` can be built with `go build -buildmode=c-shared`. `setup.py` builds and packages that library for the `mage-go` Python package. The ABI provides simple handle-based game control as well as high-throughput batch and tokenization paths intended for model training and inference.
 
-### 4.5 Offline and Validation Tools
+### 4.4 Offline and Validation Tools
 
 | Binary | Purpose |
 |--------|---------|
@@ -515,13 +490,13 @@ Python / C caller
 
 ### Deployment Comparison
 
-| Dimension | TUI | SSH | Browser/WASM | C/Python |
-|-----------|-----|-----|--------------|----------|
-| Boundary | Local terminal | SSH/PTTY | `syscall/js` callbacks | C ABI and Python wrapper |
-| Players | Human + AI | Human + human or human + AI | Human + AI | Caller-controlled players/batches |
-| Game ownership | One local process | One goroutine per game | One browser tab | Opaque process-global handle |
-| State transport | Go channels | Go channels through session TUIs | JSON callbacks | JSON or packed native buffers |
-| Persistence | None | None | None | Caller-owned |
+| Dimension | TUI | SSH | C/Python |
+|-----------|-----|-----|----------|
+| Boundary | Local terminal | SSH/PTTY | C ABI and Python wrapper |
+| Players | Human + AI | Human + human or human + AI | Caller-controlled players/batches |
+| Game ownership | One local process | One goroutine per game | Opaque process-global handle |
+| State transport | Go channels | Go channels through session TUIs | JSON or packed native buffers |
+| Persistence | None | None | Caller-owned |
 
 ---
 
@@ -554,14 +529,14 @@ The scenarios connect the other four views through representative workflows.
 
 ### Scenario 3: Play Through a UI Adapter
 
-1. TUI, SSH or browser code constructs players and decks and starts an interactive game loop.
+1. TUI or SSH code constructs players and decks and starts an interactive game loop.
 2. `SnapshotGameState` produces a viewer-oriented serializable state.
 3. `GetAvailableActions` builds legal action options.
-4. A human response returns through channels or a JavaScript callback bridge.
+4. A human response returns through channels.
 5. Modal choices use the separate choice request/response path.
 6. The adapter renders updates until the engine reports a winner or disconnection.
 
-**Views exercised:** Process (channels), Physical (native, SSH or WASM deployment)
+**Views exercised:** Process (channels), Physical (native or SSH deployment)
 
 ### Scenario 4: Implement a Card or Set
 

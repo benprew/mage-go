@@ -1,1545 +1,473 @@
-# Card Author Composable DSL Reference
+# DSL reference
 
-This document is the authoritative, comprehensive reference for the composable card Domain-Specific Language (DSL) in `mage-go`.
+This checkout has the legacy facade in `pkg/mage/dsl/dsl.go`. It does not have
+`pkg/mage/dsl/composable.go`. Proposed signatures in the migration plan are
+not implemented APIs.
 
-Cards import `pkg/mage/dsl` (and `pkg/mage/core` for enums/types). All card definitions, abilities, costs, targets, and effects are built using the typed combinators exported by `dsl`.
+## RON card loading
 
-The shared engine operation `(*mage.Game).Attach(sourceID, targetID uuid.UUID)` moves an Aura, Equipment, or Fortification between battlefield permanents. It checks the Aura's enchant restriction, protection, and attachment prohibitions before changing either host. A successful move gives its printed static effects a new timestamp; their relative order stays the same. An invalid move, including a move to a phased-out host, does nothing. A move to the current host also does nothing and does not change effect order. The typed `MayAttach(attachment PermanentRef, host PermanentRef) ResolvingEffect` offers a legal move to the resolving controller in spell, activation, and trigger bodies. Both references must identify current battlefield incarnations. An absent, phased-out, returned, illegal, or same-host pair offers no choice. An accepted move uses `Game.Attach`. This action does not declare a target. For example, a synthetic engine test can call:
-
-```go
-host := game.PutOnBattlefield(mage.NewCreature("Host", "", 2, 2), playerID)
-aura := game.PutOnBattlefield(mage.NewAura("Aura", ""), playerID)
-game.Attach(aura.ID(), host.ID())
-```
-
-This synthetic declaration compiles with `dsl` and `core` imported:
+`pkg/mage/dsl/ron` parses the card records in `cards/mtgish/*.ron` and compiles
+supported rules into the existing engine. It has these loading APIs:
 
 ```go
-entered := dsl.BindPermanent("entered enchantment")
-created := dsl.BindPermanent("created token")
-cat := dsl.DefineToken("Cat", dsl.TokenTypes(core.TypeCreature), dsl.TokenSubtypes("Cat"), dsl.TokenColors(core.White), dsl.TokenPT(2, 2))
-ability := dsl.WhenEvent(dsl.EnchantmentYouControlEnters().WithPermanent(entered),
-    dsl.Sequence(dsl.CreateOneToken(dsl.You, cat, created),
-        dsl.IfPermanentHasEnchantmentSubtype(dsl.From(entered), "Aura",
-            dsl.MayAttach(dsl.From(entered), dsl.From(created)))))
-_ = ability
+func Parse(reader io.Reader, filename string) ([]Node, error)
+func Compile(card Node) (mage.CardFactory, error)
+func LoadFS(files fs.FS, pattern string) (*mage.Registry, error)
+func LoadInto(registry *mage.Registry, files fs.FS, pattern string) error
 ```
 
-Typed token creation uses `DefineToken(name, options...)` with `TokenTypes`, `TokenSubtypes`, `TokenColors`, `TokenPT`, `TokenKeywords`, and `TokenAbilities`. Creature tokens require `TokenPT`; other tokens omit it. Omit `TokenColors` for a colorless token. `CreateTokenCopies(player, count, definition)` evaluates the player and count at resolution and enters all copies as one group. A nonpositive count creates no tokens. Each token ability has its own binding scope and cannot read a binding from the creating ability.
-
-`CreateOneToken(player PlayerRef, definition TokenDefinition, result *PermanentBinding) ResolvingEffect` creates one token and saves its battlefield incarnation in the resolving spell, activation, or trigger frame. Use `From(result)` in later instructions. If no token enters, the binding is absent. It is not a target and does not follow a token that leaves the battlefield.
-
-`BindCreatedTokens(name string) *CreatedTokensBinding` declares a result set. `CreateTokenCopiesInto(player PlayerRef, count ResolutionValue, definition TokenDefinition, result *CreatedTokensBinding) ResolvingEffect` creates the tokens in one entry batch and saves only the accepted battlefield incarnations. `FromCreatedTokens(result) PermanentSet` reads the current, unphased members during later spell, activation, trigger, or delayed-step instructions. Tokens that leave and return do not rejoin the saved set. A zero count or rejected entry clears an earlier value. Registration checks the named result and producer dominance. The result is not a target. Use a batch action on the set when the rules require simultaneous actions; `ForEach` runs its body in sequence.
-
-```go
-created := BindCreatedTokens("created Cats")
-member := BindPermanent("Cat")
-cat := DefineToken("Cat", TokenTypes(TypeCreature), TokenPT(1, 1))
-ability := Spell(Sequence(
-    CreateTokenCopiesInto(You, Fixed(2), cat, created),
-    ForEach(FromCreatedTokens(created), member, Tap(From(member))),
-))
-```
-
-```go
-created := BindPermanent("created Cat")
-cat := DefineToken("Cat", TokenTypes(TypeCreature), TokenSubtypes("Cat"), TokenColors(White), TokenPT(2, 2))
-ability := Spell(Sequence(
-    CreateOneToken(You, cat, created),
-    AddCounters(From(created), P1P1, Fixed(1)),
-))
-```
-
----
-
-## Table of Contents
-
-1. [Core Design Principles](#1-core-design-principles)
-2. [Card Registration & Lifecycle](#2-card-registration--lifecycle)
-3. [Subjects and Selectors](#3-subjects-and-selectors)
-4. [Target Declarations](#4-target-declarations)
-5. [Pure State Conditions & Filters](#5-pure-state-conditions--filters)
-6. [Resolving Effects (Actions & Verbs)](#6-resolving-effects-actions--verbs)
-7. [Control Flow, Choices, and Branches](#7-control-flow-choices-and-branches)
-8. [Saved Bindings & Snapshots](#8-saved-bindings--snapshots)
-9. [Triggered Abilities](#9-triggered-abilities)
-10. [Spells, Activations, and Costs](#10-spells-activations-and-costs)
-11. [Continuous Effects, Modifications, and Durations](#11-continuous-effects-modifications-and-durations)
-12. [Replacements and Prevention](#12-replacements-and-prevention)
-13. [Values and Dynamic Calculations](#13-values-and-dynamic-calculations)
-14. [Representative Card Implementations](#14-representative-card-implementations)
-
----
-
-## 1. Core Design Principles
-
-1. **One Concept, One Function**: Functions do not bundle multiple concepts into their names (e.g. use `WhenState(Controls(HasSubType("Dwarf")), Sacrifice(This))` instead of legacy `SacrificeIfControls`).
-2. **Compile-Time Rejection over Runtime Panics**: Sealed Go interfaces distinguish roles. You cannot pass a `PlayerRef` to `Destroy`, use a `ResolvingEffect` as a cost, or install a resolving effect as a static rule.
-3. **Registration Validation**: Value-dependent constraints (empty sequences, duplicate binding names, unbound variable reads) fail during card registration with clear diagnostics identifying the card and expression path.
-4. **Typed Bindings over String Maps**: Target declarations and resolution-time captures use Go variables (`creature := TargetPermanent("creature", IsCreature)`), avoiding string-key dictionaries.
-5. **No Universal Object Identity**: Physical card IDs are distinguished from rules objects. `PermanentRef` resolves only the captured battlefield incarnation. Phasing preserves incarnation; zone changes (leave-and-return) create a brand-new object.
-
----
-
-## 2. Card Registration & Lifecycle
-
-Cards register in `init()` in their set package:
-
-```go
-func init() {
-    Register("Grizzly Bears", NewGrizzlyBears)
-}
-```
-
-Card factories construct a card blueprint. Characteristics and abilities are added via builder methods:
-
-```go
-func NewGrizzlyBears() Card {
-    return NewCreature("Grizzly Bears", "{1}{G}", 2, 2).
-        WithSubTypes("Bear")
-}
-```
-
-For non-creature cards:
-* `NewInstant(name, manaCost)`
-* `NewSorcery(name, manaCost)`
-* `NewEnchantment(name, manaCost)`
-* `NewArtifact(name, manaCost)`
-* `NewLand(name)`
-
-Abilities are attached with `.WithAbility(...)`, `.WithManaAbility(...)`, or `.WithStaticAbility(...)`.
-
----
-
-## 3. Subjects and Selectors
-
-Operations accept explicit subjects rather than baking the subject into the verb name:
-
-### Singular Subjects (`PermanentRef`)
-* `This`: The permanent or spell hosting the ability. For battlefield actions, resolves the battlefield incarnation.
-* `AttachedPermanent`: The permanent to which the source Aura/Equipment is currently attached. If the source left the battlefield, reads the last attachment via Last-Known Information (CR 608.2h).
-* `From(binding)`: The permanent captured in a `PermanentBinding` (from a target declaration or earlier `Snapshot`).
-* `LowestPower(PermanentSet)`: Selects the permanent with the lowest power among a set.
-
-### Permanent Sets (`PermanentSet`)
-* `BlockersOf(attacker PermanentRef) PermanentSet`: Creatures currently blocking the referenced attacking creature. It reads combat links when a resolving spell, activation, or trigger consumes the set. It excludes phased-out, removed, departed, or returned combat objects. The referenced attacker must still be attacking. This set has no implicit target; declare a target separately if the spell targets the attacker.
-
-    ```go
-    func blockerCount() dsl.Card {
-        attacker := dsl.TargetPermanent("attacker", dsl.IsCreature)
-        return dsl.NewInstant("Blocker count", "",
-            dsl.WithAbility(dsl.Spell(
-                dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.BlockersOf(attacker))),
-                dsl.WithTargets(attacker))))
-    }
-    ```
-
-* `BlockedAttackersOf(blocker PermanentRef) PermanentSet`: Attacking creatures that the referenced blocking creature is currently blocking. It reads combat links when a resolving spell, activation, or trigger consumes the set. It excludes phased-out, removed, departed, or returned combat objects. The referenced creature must still be blocking. The set does not declare a target.
-
-    ```go
-    func blockedAttackerCount() dsl.Card {
-        blocker := dsl.TargetPermanent("blocker", dsl.IsCreature)
-        return dsl.NewInstant("Blocked attacker count", "",
-            dsl.WithAbility(dsl.Spell(
-                dsl.GainLife(dsl.You, dsl.CountPermanents(dsl.BlockedAttackersOf(blocker))),
-                dsl.WithTargets(blocker))))
-    }
-    ```
-
-* `MatchingPermanents(filter)`: All permanents on the battlefield matching the filter.
-* `ControlledPermanents(filter)`: All permanents controlled by the ability controller matching the filter.
-* `PermanentsControlledBy(player PlayerRef, filter PermanentFilter) PermanentSet`: Current battlefield permanents controlled by the resolved player and matching the filter. Use it in a resolving spell, activation, or trigger body. It excludes phased-out permanents. Control changes and zone changes affect the set when it is read; ownership does not. A missing player yields an empty set. The player can be `You` or a declared player target.
-
-    ```go
-    func controlledArtifactCount() dsl.Card {
-        player := dsl.TargetPlayer("player")
-        return dsl.NewInstant("Controlled artifact count", "{1}{U}",
-            dsl.WithAbility(dsl.Spell(
-                dsl.GainLife(dsl.You,
-                    dsl.CountPermanents(dsl.PermanentsControlledBy(player, dsl.IsArtifact))),
-                dsl.WithTargets(player))))
-    }
-* `AttachedAuras(host PermanentRef) PermanentSet`: Auras attached to the current battlefield incarnation of `host`. The set changes with attachments, zone changes, and phasing. It excludes Equipment and other non-Aura attachments. Use `CountPermanents` to read its current size in a resolving or static value.
-
-    ```go
-    func syntheticWombat() dsl.Card {
-        bonus := dsl.MultiplyValues(dsl.Fixed(2),
-            dsl.CountPermanents(dsl.AttachedAuras(dsl.This)))
-        return dsl.NewCreature("Synthetic wombat", "", 0, 1,
-            dsl.WithAbility(dsl.Static(dsl.While(dsl.Controls(dsl.IsCreature),
-                dsl.ModifyPT(dsl.This, bonus, bonus)))))
-    }
-    ```
-* `PermanentsOwnedBy(player PlayerRef, filter PermanentFilter) PermanentSet`: Battlefield permanents owned by the resolved player, regardless of their controllers. Use it in a resolving spell, activation, or trigger body. A zero-value filter selects all permanent types. The set excludes phased-out permanents and reads current battlefield membership when consumed. The player can be `You`, `OwnerOf(...)`, or a declared player target. A missing player yields an empty set.
-
-    ```go
-    func ownedArtifactCount() dsl.Card {
-        player := dsl.TargetPlayer("player")
-        return dsl.NewInstant("Owned artifact count", "{1}{U}",
-            dsl.WithAbility(dsl.Spell(
-                dsl.GainLife(dsl.You,
-                    dsl.CountPermanents(dsl.PermanentsOwnedBy(player, dsl.IsArtifact))),
-                dsl.WithTargets(player))))
-    }
-    ```
-* `ControlledSinceTurnStart(subject PermanentRef) StateCondition`: Checks whether the current ability controller has controlled `This` or `AttachedPermanent` continuously since their most recent turn began. Use it with `ActivationIf`, `IfState`, or `While` on a battlefield source. A new, absent, phased-out, returned, or newly controlled permanent fails. Registration rejects other permanent references. This synthetic declaration compiles:
-
-    ```go
-    card := dsl.NewArtifact("Gate", "", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(), dsl.GainLife(dsl.You, dsl.Fixed(1)),
-        dsl.ActivationIf(dsl.ControlledSinceTurnStart(dsl.This)))))
-    ```
-* `BlockingOrBlockedBy(permanentRef) PermanentSet`: Creatures currently blocking or blocked by the referenced permanent. The set uses current combat links and battlefield incarnations when an action reads it. A phased-out, returned, or absent creature is excluded. Use it in a resolving body; `GrantEachKeyword` captures its members when `Until` resolves.
-
-    ```go
-    func combatWatcher() dsl.Card {
-        return dsl.NewCreature("Combat Watcher", "{1}{G}", 2, 4,
-            dsl.WithAbility(dsl.WhenEvent(dsl.BlocksOrBecomesBlockedBy(dsl.This),
-                dsl.Until(dsl.EndOfTurn,
-                    dsl.GrantEachKeyword(dsl.BlockingOrBlockedBy(dsl.This), dsl.FirstStrike)))))
-    }
-    ```
-* `WithoutPermanent(set, ref)`: Excludes one specific permanent (e.g. `WithoutPermanent(MatchingPermanents(HasSubType("Zombie")), This)`).
-
-### Player Selectors (`PlayerRef` and `PlayerSet`)
-* `You`: The stored resolving controller of the spell or ability.
-* `ActivePlayer`: The player whose turn it currently is.
-* `FromPlayer(binding)`: The player captured in a `PlayerBinding` (from target, snapshot, or event pattern).
-* `ControllerOf(permanentRef)`: The player who controls the referenced permanent at resolution time.
-* `OwnerOf(permanentRef) PlayerRef`: The player who owns the referenced battlefield permanent at resolution time. It accepts one `PermanentRef`, including `This` or a declared permanent target, in a resolving spell, activation, or trigger body. An absent, phased-out, or returned incarnation supplies no player. Use `SnapshotPlayer` when a later instruction must keep the owner after the permanent leaves.
-
-```go
-target := dsl.TargetPermanent("permanent", dsl.AnyPermanent)
-owner := dsl.BindPlayer("owner")
-spell := dsl.Spell(dsl.Sequence(
-    dsl.SnapshotPlayer(dsl.OwnerOf(target), owner),
-    dsl.GainLife(dsl.FromPlayer(owner), dsl.Fixed(1)),
-), dsl.WithTargets(target))
-_ = spell
-```
-
-* `EachPlayer`: Collection of all players in active-player-first order.
-* `OpponentsOf(playerRef)`: All opponents of the specified player (for 2-player, the single opponent).
-
----
-
-## 4. Target Declarations
-
-Targets are declared as typed bindings and attached to abilities using `WithTargets(...)`:
-
-```go
-target := TargetPermanent("creature", IsCreature)
-
-Spell(
-    Destroy(target),
-    WithTargets(target),
-)
-```
-
-### Legacy Random Target Announcement
-
-The legacy announcement adapters `TargetRandom(inner Target) Target` and
-`TargetRandomCount(inner Target) Target` remain available for unmigrated callers.
-They work in legacy spell, activation, and trigger target declarations.
-`TargetRandom` samples distinct legal identities without replacement; the
-controller chooses the count within variable bounds. `TargetRandomCount` also
-samples the count uniformly within the legal bounds. These are announcement
-operations, before payment or trigger stack placement, rather than resolution
-choices. The shared sampler returns choices to the announcement and does not
-store them in the reusable declaration. Read an instance's stack targets rather
-than the declaration's `Chosen()` method. Explicit legacy `Choose` and `Reset`
-methods retain their signatures. Typed random target bindings and grouped random
-announcement are still separate work.
-
-The engine also detects these random specifications inside its internal
-`targetDeclaration` wrapper in spell, activation, trigger, and target-prompt
-paths. Stack specifications retain the wrapper so typed effects can read the
-sampled target from their instance frame. This is an engine prerequisite; no
-public typed random constructor is available yet. The signatures above and the
-compiling legacy example below remain unchanged.
-
-This synthetic legacy declaration compiles with `dsl` imported. It is also the
-public integration test's source definition:
-
-```go
-targets := dsl.TargetRandom(dsl.TargetCreature())
-source := dsl.NewArtifact("Synthetic random source", "", dsl.WithActivatedAbility(
-    dsl.GainLife(dsl.You, dsl.Fixed(1)), dsl.GenericCost(0), dsl.WithTarget(targets)))
-_ = source
-```
-
-### Permanent Targets
-
-* `TargetPermanent(label, filter, options...)`: Declares a single permanent target matching the filter.
-* `TargetPermanents(label, min, max, filter, options...)`: Declares multiple permanent targets.
-* `TargetPermanentsExactlyX(label, filter, options...)`: Declares exactly the announced X as a permanent target set. `TargetPermanentsUpToX(label, filter, options...)` declares zero through X targets. Both return a `PermanentSet` and a target declaration. They work in spells and activations through `WithTargets`; use `WithTargetGroups` or `WithActivationTargetGroups` when another variable group is present. Choose X before targets. The target count stays fixed on a copy, and an illegal target is absent at resolution. The legacy `TargetXPermanents` has a different return type and remains available to unmigrated cards.
-* `TargetDamageRecipientsExactlyX(name string) *DamageTargetsBinding` and `TargetDamageRecipientsUpToX(name string) *DamageTargetsBinding`: Declare exactly X or zero through X player, creature, or planeswalker targets for a spell or activation. X is announced before targets and payment. X=0 allows an empty group, which still resolves. Use `WithTargets` for one group, or the recorded `WithTargetGroups` / `WithActivationTargetGroups` path for independent groups. Copies retain the chosen count and X; new targets must occupy the same group positions. At resolution, an illegal, phased-out, or returned permanent is absent; remaining legal targets still receive damage. These declarations specify recipient counts, not damage amounts or division. `DealDamageEach` uses one simultaneous batch. Use `DealAllocatedDamageX` for chosen division of announced X; general announcement expressions remain separate work. This synthetic declaration compiles:
-
-```go
-recipients := dsl.TargetDamageRecipientsUpToX("recipients")
-card := dsl.NewInstant("X recipients", "{X}{R}", dsl.Spell(
-    dsl.DealDamageEach(dsl.This, recipients, dsl.Fixed(2)),
-    dsl.WithTargets(recipients)))
-_ = card
-```
-
-* `AnnouncedTargetCount(*PermanentTargetsBinding) ResolutionValue`: Reads the number chosen for one permanent target group when the spell or ability was put on the stack. Use it in a `Spell`, `Activate`, or targeted trigger body. The count includes a target that later becomes illegal. It stays with a copied or retargeted stack object. Registration rejects a nil or undeclared group. If every target of the stack object becomes illegal, it does not resolve under CR 608.2b.
-
-```go
-lands := dsl.TargetPermanentsExactlyX("lands", dsl.IsLand)
-member := dsl.BindPermanent("land")
-ability := dsl.Activate(dsl.Costs(dsl.Mana("{X}"), dsl.TapCost(dsl.This)),
-    dsl.ForEach(lands, member, dsl.Untap(dsl.From(member))),
-    dsl.WithTargets(lands))
-_ = dsl.NewArtifact("Example", "", dsl.WithAbility(ability))
-
-creatures := dsl.TargetPermanentsUpToX("creatures", dsl.IsCreature)
-_ = dsl.NewInstant("Count example", "{X}", dsl.WithAbility(dsl.Spell(
-    dsl.GainLife(dsl.You, dsl.AnnouncedTargetCount(creatures)),
-    dsl.WithTargets(creatures))))
-```
-
-  For “up to two target creatures,” use `TargetPermanents("creatures", 0, 2, IsCreature)`
-  with `WithTargets(creatures)`. Dauntless Onslaught and Tandem Tactics pass this
-  collection to `Until(EndOfTurn, ModifyEachPT(creatures, ...))`. Only targets
-  that remain legal receive the boost. A cast with zero targets still resolves;
-  a cast whose chosen targets all become illegal does not resolve. Tandem
-  Tactics gains life after the boost with `Sequence` and `GainLife(You, Fixed(2))`.
-  Spell and ability copies keep the recorded number and position of chosen targets
-  in this group. A copy that chooses new targets cannot move a choice to a
-  different group. `WhenEvent` and `WhenEventModes` can declare multiple
-  variable-size groups: the controller chooses each group separately when the
-  trigger goes on the stack. `Spell(effect, WithTargetGroups(bindings...))`
-  declares independent groups for `Game.CastSpellByNameWithTargetGroups(playerID,
-  name, groups, optionalX)`. The cast argument has one UUID slice per declared
-  group, including an empty slice for an unchosen optional group. The flat cast
-  path rejects this declaration before payment. `Activate(costs, effect,
-  WithActivationTargetGroups(bindings...))` uses
-  `Game.ActivateAbilityByIndexWithTargetGroups(playerID, permanentID,
-  abilityIndex, groups)` for independent activation target groups. The flat
-  activation path rejects that declaration before payment. Delayed
-  declarations still allow only one variable-size group.
-
-```go
-creatures := dsl.TargetPermanents("creatures", 0, 2, dsl.IsCreature)
-ability := dsl.Spell(dsl.DestroyEach(creatures), dsl.WithTargets(creatures))
-_ = ability
-```
-
-For a required opponent target and two independent optional creature targets:
-
-```go
-opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
-first := dsl.TargetPermanents("first", 0, 1, dsl.IsCreature)
-second := dsl.TargetPermanents("second", 0, 1, dsl.IsCreature)
-ability := dsl.Spell(dsl.Sequence(
-    dsl.LoseLife(opponent, dsl.Fixed(1)),
-    dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(first, dsl.Fixed(1), dsl.Fixed(1))),
-    dsl.Until(dsl.EndOfTurn, dsl.ModifyEachPT(second, dsl.Fixed(-1), dsl.Fixed(-1))),
-), dsl.WithTargetGroups(opponent, first, second))
-_ = dsl.NewInstant("Example", "", dsl.WithAbility(ability))
-```
-
-The cast input `[][]uuid.UUID{{opponentID}, {}, {creatureID}}` chooses only the
-second optional creature group. Each group is checked before costs are paid.
-Its target positions remain fixed through resolution and copying.
-
-An activation can use the same group shape:
-
-```go
-first := dsl.TargetPermanents("first", 0, 1, dsl.IsCreature)
-second := dsl.TargetPermanents("second", 0, 1, dsl.IsCreature)
-member := dsl.BindPermanent("member")
-ability := dsl.Activate(dsl.Costs(dsl.TapCost(dsl.This)),
-    dsl.Sequence(dsl.DestroyEach(first),
-        dsl.ForEach(second, member, dsl.Tap(dsl.From(member)))),
-    dsl.WithActivationTargetGroups(first, second))
-_ = dsl.NewArtifact("Example", "", dsl.WithAbility(ability))
-```
-
-The activation input `[][]uuid.UUID{{}, {creatureID}}` selects only the second
-group. Group counts and legal choices are checked before activation costs are
-paid. Copying and resolving the ability keep the group identity and target
-incarnation.
-
-For two independent optional targets on a trigger, declare separate bindings:
-
-```go
-first := dsl.TargetPermanents("first", 0, 1, dsl.IsCreature)
-second := dsl.TargetPermanents("second", 0, 1, dsl.IsCreature)
-member := dsl.BindPermanent("member")
-ability := dsl.WhenEvent(dsl.Enters(dsl.This),
-    dsl.Sequence(
-        dsl.DestroyEach(first),
-        dsl.ForEach(second, member, dsl.Tap(dsl.From(member))),
-    ),
-    dsl.WithTargets(first, second),
-)
-_ = dsl.NewCreature("Example", "", 1, 1, dsl.WithAbility(ability))
-```
-
-Each choice keeps its own group at resolution and on a stack copy. A choice
-in one group does not fill an empty group. The same permanent can be chosen
-once in each group if it is legal for both.
-
-* Target Options:
-  * `TargetYouControl()`: Target must be controlled by the ability controller.
-  * `TargetOtherThanSource()`: Target must be a different permanent from the source.
-  * `TargetAttachedToYouControl()`: Target must be attached to a permanent controlled by the ability controller. This does not restrict the attachment's controller.
-  * `TargetYouOwn()`: Target must be owned by the ability controller.
-  * `TargetOpponentControls()`: Target must be controlled by an opponent.
-  * `TargetOpponentOnly()`: Target must be an opponent (for player targets).
-  * `TargetChosenByOpponent()`: The opponent makes the target choice when the ability is put on the stack.
-
-### Player Targets
-* `TargetPlayer(label, options...)`: Declares a target player.
-* `TargetDamageRecipient(label, filter, options...)`: Declares a target creature or player.
-
-### Spell Targets
-* `TargetSpell(label, filters...)`: Declares one spell target on the stack. Card filters restrict legal choices at announcement and resolution.
-* `ControllerOfSpell(spell StackObjectRef) PlayerRef`: Reads the current controller of a legal spell reference at resolution. `TargetSpell` supplies the reference. The player is absent if the stack object is gone. It works in resolving effects, including `UnlessPaid` and `IfPaid`; it is not a target declaration.
-* `ManaValueOfSpell(spell StackObjectRef) ResolutionValue`: Reads the mana value of a legal spell on the stack at resolution. The announced X contributes once per `{X}` in its mana cost. An absent spell supplies zero. Use `SnapshotNumber` before `Counter` when a later instruction needs the value after the spell leaves the stack. It works in resolving effect bodies, not target eligibility at announcement.
-* `Counter(spell)`: Counters the referenced spell if it remains legal and can be countered. A copy disappears from the stack when countered. Declare the binding with `WithTargets(spell)`.
-
-```go
-spell := TargetSpell("spell")
-ability := Spell(
-    UnlessPaid(ControllerOfSpell(spell), Costs(ManaPayment("{1}")), Counter(spell)),
-    WithTargets(spell),
-)
-_ = NewInstant("Example", "{U}", WithAbility(ability))
-
-valueSpell := TargetSpell("value spell")
-valueAbility := Spell(
-    GainLifeFor(You, ManaValueOfSpell(valueSpell)),
-    WithTargets(valueSpell),
-)
-_ = NewInstant("Value example", "{U}", WithAbility(valueAbility))
-```
-
-### Graveyard Card Targets
-* `TargetGraveyardCard(label, options...)`: Declares one card target in your graveyard by default. `InAnyGraveyard()` permits any player's graveyard. `GraveyardCardFilter(filter)` restricts its characteristics. Declare the binding with `WithTargets(card)`.
-* `GraveyardUpToOne() GraveyardTargetOption`: Permits zero or one target. It works in typed spells, activations, and triggers. Choosing zero is legal even if a matching card exists. The target body reads an absent card and takes no card action. Registration rejects a repeated option.
-* `GraveyardCardManaValueAtMost(TargetNumber) GraveyardTargetOption`: Restricts a graveyard card target to cards whose current mana value is at most the supplied number. `ControllerLifeGainedThisTurn() TargetNumber` reads the ability controller's actual life gain this turn; `FixedTargetNumber(int) TargetNumber` supplies a fixed nonnegative limit. These target numbers work only in target declarations. The limit is checked when a spell, activation, or trigger chooses a target and again at resolution. Registration rejects a missing, negative, or repeated limit. The target keeps its graveyard visit, so a card that leaves and returns is still illegal.
-
-```go
-func lifeGainTarget() dsl.Card {
-    card := dsl.TargetGraveyardCard("card",
-        dsl.GraveyardUpToOne(),
-        dsl.GraveyardCardFilter(dsl.IsCreatureCard),
-        dsl.GraveyardCardManaValueAtMost(dsl.ControllerLifeGainedThisTurn()))
-    return dsl.NewCreature("Life Gain Watcher", "", 1, 1,
-        dsl.WithAbility(dsl.WhenEvent(dsl.Enters(dsl.This),
-            dsl.ReturnCardToBattlefield(card, dsl.You), dsl.WithTargets(card))))
-}
-```
-
-The example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. It can choose no target and still resolve the trigger. A chosen target must remain legal at resolution.
-* `ReturnCardToHand(card)`: Moves the bound graveyard card to its owner's hand. A card that leaves and returns to the graveyard is a new object, so the old binding cannot move it.
-* `ReturnCardToBattlefield(card CardRef, controller PlayerRef, options ...BattlefieldEntryOption) ResolvingEffect`: Moves the bound graveyard card onto the battlefield under the selected player's control. The card keeps its owner. A stale graveyard binding does nothing. Use `EnterTapped()` when the instruction says that the card enters tapped. The option applies during battlefield entry, before entry triggers are detected. It works in spell, activation, and trigger resolving bodies. Registration rejects nil or repeated entry options. Existing two-argument calls remain valid.
-
-```go
-discarded := dsl.BindCards("discarded")
-picked := dsl.BindCard("picked")
-player := dsl.TargetPlayer("player")
-var _ = dsl.NewInstant("Synthetic return", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-    dsl.Discard(player, dsl.Fixed(2), dsl.DiscardCardsInto(discarded)),
-    dsl.ChooseUpToOneCard(dsl.You, dsl.FromCards(discarded), dsl.IsLandCard, picked),
-    dsl.ReturnCardToBattlefield(dsl.FromCard(picked), dsl.You, dsl.EnterTapped()),
-), dsl.WithTargets(player))))
-```
-
----
-
-## 5. Pure State Conditions & Filters
-
-`CanAttackOnlyIfDefendingPlayerControls(filter PermanentFilter) StaticRule` restricts the permanent with the ability at attacker declaration. The filter checks current permanents controlled by the defending player, including permanents owned by the attacker controller and controlled by the defender. Phased-out permanents do not match. Install it with `Static`; it cannot be used as a resolving effect. A zero-value filter matches any permanent. This declaration compiles:
-
-```go
-card := dsl.NewCreature("Island-bound attacker", "", 2, 2,
-    dsl.WithAbility(dsl.Static(dsl.CanAttackOnlyIfDefendingPlayerControls(
-        dsl.And(dsl.IsLand, dsl.HasSubType("Island"))))))
-_ = card
-```
-
-State conditions must be **pure functions** of game state (no random choices, mutations, or player prompts):
-
-### State Conditions (`StateCondition`)
-* `Controls(filter)`: Ability controller controls at least one permanent matching filter (includes source).
-* `ControlsNone(filter)`: Ability controller controls zero permanents matching filter.
-* `PlayerControls(player PlayerRef, filter PermanentFilter) StateCondition`: Check current control of a matching, unphased battlefield permanent. The state role accepts `You` or `ActivePlayer`; registration rejects target and saved player references because they have no pure state frame. A zero-value filter matches any permanent. Use the condition in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, or `While`. It checks again at each evaluation. This declaration compiles:
-
-```go
-card := dsl.NewInstant("Watch the active player", "", dsl.WithAbility(dsl.Spell(
-    dsl.IfState(dsl.PlayerControls(dsl.ActivePlayer, dsl.IsLand),
-        dsl.GainLife(dsl.You, dsl.Fixed(1))))))
-_ = card
-```
-
-* `BattlefieldHasNone(filter)`: Neither player controls a permanent matching filter.
-* `ControllerHandSizeIs(size int) StateCondition`: Check the ability controller's current number of cards in hand. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. A missing controller does not match. Registration rejects a negative size.
-* `ControllerGainedLifeThisTurn() StateCondition`: Check whether the ability controller gained a positive amount of life this turn, after life-gain replacement. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`. It reads the turn tracker, so source departure does not erase the result. A missing controller does not match. The history clears at final cleanup. Use `LifeGainedThisTurn(You)` for a number in a resolving effect.
-```go
-card := dsl.NewInstant("Life history example", "", dsl.WithAbility(dsl.Spell(
-    dsl.IfState(dsl.ControllerGainedLifeThisTurn(), dsl.Draw(dsl.You, dsl.Fixed(1))))))
-_ = card
-```
-
-* `SourceDamagedOpponentThisTurnCondition() StateCondition`: Check whether the current battlefield source incarnation dealt positive damage to the ability controller's opponent this turn. The damage record uses the final player recipient after replacement and prevention. The condition returns false for an absent, phased-out, or returned source, and turn cleanup clears the record. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While` on permanent abilities. The opponent relationship is checked when the condition is evaluated.
-
-```go
-card := dsl.NewCreature("History watcher", "", 1, 1,
-    dsl.WithAbility(dsl.At(dsl.EachEndStep,
-        dsl.GainLife(dsl.You, dsl.Fixed(1)),
-        dsl.WithInterveningIf(dsl.SourceDamagedOpponentThisTurnCondition()))))
-_ = card
-```
-
-* `HasUniqueHighestLife() StateCondition`: True when one player has more life than every other player. Ties return false. The condition reads all players at each check and does not depend on the ability controller or source. It works in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, and `While`.
-
-  ```go
-  ability := dsl.Activate(
-      dsl.Costs(),
-      dsl.Draw(dsl.You, dsl.Fixed(1)),
-      dsl.ActivationIf(dsl.HasUniqueHighestLife()),
-  )
-  _ = ability
-  ```
-
-* `PlayerWithUniqueHighestLife() PlayerRef`: Selects the sole player with the most life when a resolving instruction reads the reference. A tie produces an absent player, so the instruction does nothing to that player. Use it where a singular `PlayerRef` is accepted in a spell, activation, or trigger body. It does not save the player at trigger creation or payment.
-
-  ```go
-  card := dsl.NewArtifact("Life selector", "", dsl.WithAbility(dsl.Activate(
-      dsl.Costs(), dsl.GainLife(dsl.PlayerWithUniqueHighestLife(), dsl.Fixed(1)))))
-  _ = card
-  ```
-
-* `ControllerLifeAtLeastStartingLife() StateCondition`: True when the ability controller's current life total is at least that player's starting life total. It reads the player at each check and returns false if the controller is absent. Use it in `ActivationIf`, `IfState`, `WhenState`, `WithInterveningIf`, or `While`. It does not select the player with the most life.
-
-  ```go
-  card := dsl.NewEnchantment("Life watcher", "", dsl.WithAbility(dsl.Static(dsl.While(
-      dsl.ControllerLifeAtLeastStartingLife(),
-      dsl.ModifyEachPT(dsl.ControlledPermanents(dsl.IsCreature), dsl.Fixed(1), dsl.Fixed(1)),
-  ))))
-  _ = card
-  ```
-
-* `SourceHasCounters(counter, min)`: The source permanent has at least `min` counters of the specified type.
-* `SourceTappedCondition()` and `SourceUntappedCondition()`: The current battlefield source is tapped or untapped, respectively. Both return false when the source is absent or phased out. They work in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, and `IfState` on permanent abilities.
-* `PermanentIsTapped(subject PermanentRef)` and `PermanentIsUntapped(subject PermanentRef)`: Check `This` or `AttachedPermanent` at state evaluation. Both return false if the source or selected permanent is absent or phased out. A returned source or attachment is a new object. Use these conditions in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects target and saved bindings in this state context.
-* `PermanentIsAttacking(subject PermanentRef) StateCondition`: Check whether `This` or `AttachedPermanent` is in combat as an attacker now. A creature put onto the battlefield attacking matches, although it did not attack for trigger purposes. An absent, phased-out, or returned object does not match. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects targets and saved bindings in this state context.
-* `IfPermanentAttacking(subject PermanentRef, body ResolvingEffect) ResolvingEffect` and `IfPermanentBlocking(subject PermanentRef, body ResolvingEffect) ResolvingEffect`: Check one current battlefield incarnation when a spell, activation, or trigger resolves. `subject` can be `This`, `AttachedPermanent`, a declared permanent target, or a dominating saved permanent binding. An absent, phased-out, returned, or no longer participating permanent does not run `body`. These are resolution branches; use `PermanentIsAttacking` or `PermanentIsBlocking` for static and trigger conditions. The branches do not target a permanent by themselves. This declaration compiles:
-
-  ```go
-  target := dsl.TargetPermanent("creature", dsl.IsCreature)
-  card := dsl.NewInstant("Combat check", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-      dsl.IfPermanentAttacking(target, dsl.GainLife(dsl.You, dsl.Fixed(1))),
-      dsl.IfPermanentBlocking(target, dsl.GainLife(dsl.You, dsl.Fixed(1))),
-  ), dsl.WithTargets(target))))
-  ```
-* `PermanentIsBlocking(subject PermanentRef) StateCondition`: Check whether `This` or `AttachedPermanent` is in combat as a blocker now. A creature put onto the battlefield blocking matches even though it did not block for trigger purposes. An absent, phased-out, removed, or returned object does not match. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on permanent abilities. Registration rejects targets and saved bindings in this state context.
-* `SourceAttackedThisTurnCondition()`: The current battlefield source was declared as an attacker this turn. It returns false before an attack, after the source leaves or phases out, or after it returns as a new object. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability.
-* `SourceAttackedOrBlockedThisTurnCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker this turn. It uses the source incarnation and returns false if the source is absent, phased out, or returned as a new object. Turn cleanup clears the history. Use it in pure state contexts such as `IfState`, `While`, `WhenState`, `WithInterveningIf`, and `ActivationIf` on a permanent ability. It does not mean "this combat".
-* `SourceAttackedOrBlockedThisCombatCondition() StateCondition`: The current battlefield source was declared as an attacker or blocker in the current combat. It returns false before a declaration, after the combat phase, for a phased-out or absent source, and after that card returns as a new object. A later combat in the same turn starts with no combat history. Use it in `IfState`, `While`, `WhenState`, `WithInterveningIf`, or `ActivationIf` on a permanent ability. It reads declarations, so a creature put onto the battlefield attacking or blocking does not match.
-
-```go
-func handGate() dsl.Card {
-    return dsl.NewLand("Hand gate", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.TapCost(dsl.This)),
-        dsl.Draw(dsl.You, dsl.Fixed(1)),
-        dsl.ActivationIf(dsl.ControllerHandSizeIs(7)),
-    )))
-}
-```
-
-```go
-func combatHistoryWatcher() dsl.Card {
-    return dsl.NewCreature("Combat History Watcher", "{2}", 2, 2,
-        dsl.WithAbility(dsl.At(dsl.EachEndOfCombat,
-            dsl.IfState(dsl.SourceAttackedOrBlockedThisCombatCondition(),
-                dsl.GainLife(dsl.You, dsl.Fixed(1))))))
-}
-```
-
-```go
-func historyWatcher() dsl.Card {
-    return dsl.NewCreature("History Watcher", "{2}", 2, 2,
-        dsl.WithAbility(dsl.At(dsl.EachEndStep,
-            dsl.IfState(dsl.SourceAttackedOrBlockedThisTurnCondition(),
-                dsl.GainLife(dsl.You, dsl.Fixed(1))))))
-}
-```
-* `SourceBlockingCondition()`: The current battlefield source is blocking now. It returns false when the source is absent, phased out, removed from combat, or a new incarnation of the same card. Use it in `While`, `WhenState`, `WithInterveningIf`, `ActivationIf`, or `IfState` on a permanent ability. It does not report whether the source blocked earlier in combat.
-
-```go
-var _ = NewCreature("Untapped guardian", "", 1, 1,
-    WithAbility(Static(While(
-        SourceUntappedCondition(),
-        ModifyPT(This, Fixed(0), Fixed(3)),
-    ))),
-)
-
-var _ = NewAura("Untapped cloak", "",
-    WithAbility(Static(While(
-        PermanentIsUntapped(AttachedPermanent),
-        GrantKeyword(AttachedPermanent, Shroud),
-    ))),
-)
-
-var _ = NewCreature("Attack watcher", "", 2, 2,
-    WithAbility(WhenEvent(Attacks(This),
-        IfState(SourceAttackedThisTurnCondition(), GainLife(You, Fixed(1))))),
-)
-
-var _ = NewCreature("Attacking guardian", "", 2, 2,
-    WithAbility(Static(While(
-        PermanentIsAttacking(This),
-        ModifyPT(This, Fixed(0), Fixed(2)),
-    ))),
-)
-
-var _ = NewCreature("Blocking guardian", "", 2, 2,
-    WithAbility(Static(While(
-        PermanentIsBlocking(This),
-        ModifyPT(This, Fixed(0), Fixed(2)),
-    ))),
-)
-
-var _ = NewAura("Blocking cloak", "",
-    WithAbility(Static(While(
-        PermanentIsBlocking(AttachedPermanent),
-        GrantKeyword(AttachedPermanent, Shroud),
-    ))),
-)
-```
-* Logical combinators:
-  * `AllConditions(conds...)`: Logical AND.
-  * `AnyCondition(conds...)`: Logical OR.
-  * `NotCondition(cond)`: Logical NOT.
-* `StateConditionFunc(desc, deps, fn)`: Pure read-only escape hatch with declared dependencies.
-
-### Permanent & Card Filters (`PermanentFilter`, `CardFilter`)
-* Type filters: `IsCreature`, `IsArtifact`, `IsLand`, `IsEnchantment`, `IsPlaneswalker`, `IsToken`, `IsNonToken`.
-* Characteristic filters: `HasSubType("Dwarf")`, `HasColorFilter(Red)`, `HasKeywordFilter(Flying)`.
-* `HasPowerEqual(n)` and `HasToughnessEqual(n)`: Match current power or toughness exactly, including continuous effects and counters. Combine both with `IsCreature` for Pendelhaven's 1/1 target; legality is checked at activation and resolution.
-* `HasToughnessGTE(n)`: Matches current toughness at least `n`, including continuous effects and counters. Combine with `IsCreature` for creature targets. Valorous Stance uses this filter in its destruction mode; check it at casting and resolution.
-* Combinators: `And(filters...)`, `Or(filters...)`, `Not(filter)`.
-* `IsAttachedTo(filter)`: Matches attachments whose current, unphased host matches the filter. This does not require an Aura subtype or restrict either controller.
-
----
-
-## 6. Resolving Effects (Actions & Verbs)
-
-Resolving effects implement `ResolvingEffect` and mutate the game during resolution:
-
-* `GrantLandPlays(PlayerRef, ResolutionValue)`: Adds land plays for the selected player for this turn. Grants accumulate; the amount is read once at resolution. An absent player or nonpositive amount does nothing. This does not play a land, grant access to another zone, or override normal land-play timing.
-
-### Permanent Actions
-* `Sacrifice(PermanentRef, ...SacrificeResultOption)`: Stored controller sacrifices the permanent if it is present, unphased, and still controlled by that player. `SacrificeAmountInto(*NumberBinding)` saves 1 after a successful instruction and 0 otherwise. `SacrificeSubtypeInto(string, *NumberBinding)` saves 1 only if the permanent was sacrificed and had the named subtype immediately before it left; it saves 0 otherwise. Use one result option per instruction. The result is local to this resolution and can be read by later `FromNumber` expressions in a spell, activation, or trigger body. This is a resolving action result, not a cost-payment capture.
-
-```go
-package example
-
-import . "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func sacrificeAbility() {
-    done := BindNumber("sacrificed")
-    ability := Activate(Costs(), Sequence(
-        Sacrifice(This, SacrificeAmountInto(done)),
-        GainLife(You, FromNumber(done)),
-    ))
-    _ = ability
-}
-```
-
-This synthetic triggered ability chooses a land controlled by the trigger controller and uses the completed sacrifice result:
-
-```go
-package example
-
-import . "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func islandSacrificeAbility() TriggeredAbility {
-    land := BindPermanent("chosen land")
-    wasIsland := BindNumber("was Island")
-    return At(YourUpkeep, Sequence(
-        ChoosePermanent(You, ControlledPermanents(IsLand), land),
-        Sacrifice(From(land), SacrificeSubtypeInto("Island", wasIsland)),
-        IfPositive(FromNumber(wasIsland), DealDamageFrom(This, You, Fixed(3))),
-    ))
-}
-```
-* `Destroy(PermanentRef)`: Destroys the permanent (allows regeneration).
-* `DestroyWithoutRegeneration(PermanentRef)`: Destroys the captured permanent without regeneration. The prohibition belongs to this destruction action; it does not change permanent keywords or last-known characteristics. Indestructible still applies.
-* `DestroyEach(PermanentSet, ...DestroyEachResultOption) ResolvingEffect`: Simultaneously destroys all permanents in the set. For multiple card types, use one `MatchingPermanents(Or(...))` collection; a permanent with several matching types is destroyed only once. `PermanentsPutIntoGraveyardThisWayInto(*NumberBinding)` saves the number of selected permanents moved to a graveyard by this instruction, including tokens. It writes zero when none move. It can be read later in the same spell, activation, or trigger body with `FromNumber`. Only one destruction result option is allowed.
-* `DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption) ResolvingEffect`: Simultaneously destroys the set without regeneration and accepts the same result option. Indestructible still applies; the instruction does not change permanent keywords.
-
-This synthetic spell uses exactly X announced Mountain targets and one simultaneous damage instruction:
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func eruption() dsl.Card {
-    targets := dsl.TargetPermanentsExactlyX("mountains", dsl.And(dsl.IsLand, dsl.HasSubType("Mountain")))
-    moved := dsl.BindNumber("mountains put into graveyard")
-    return dsl.NewSorcery("Synthetic eruption", "{X}{U}{U}{U}", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-        dsl.DestroyEach(targets, dsl.PermanentsPutIntoGraveyardThisWayInto(moved)),
-        dsl.DealDamageEach(dsl.This,
-            dsl.DamageRecipients(dsl.EachPlayer, dsl.MatchingPermanents(dsl.IsCreature)),
-            dsl.FromNumber(moved)),
-    ), dsl.WithTargets(targets))))
-}
-```
-* `Exile(PermanentRef)`: Moves the permanent to the exile zone.
-* `ExileWithResult(PermanentRef, ExiledThisWayInto(*NumberBinding)) ResolvingEffect`: Moves one current battlefield incarnation through the shared exile operation and saves 1 when it moves or 0 when the subject is absent, phased out, or has left and returned. The result belongs to the resolving spell, activation, or trigger. Registration requires one named result binding and a dominating producer. This reports the move, including a token leaving the battlefield; it does not save an exiled card or link later returns.
-
-```go
-exiled := dsl.BindNumber("exiled")
-target := dsl.TargetPermanent("creature", dsl.IsCreature)
-ability := dsl.Spell(dsl.Sequence(
-    dsl.ExileWithResult(target, dsl.ExiledThisWayInto(exiled)),
-    dsl.IfPositive(dsl.FromNumber(exiled), dsl.GainLife(dsl.You, dsl.Fixed(1))),
-), dsl.WithTargets(target))
-_ = ability
-```
-* `ExileEach(PermanentSet) ResolvingEffect`: Exiles the selected battlefield incarnations in one instruction. Use it in `Spell`, `Activate`, or a triggered resolving body. The set is read once at resolution. Absent, phased-out, duplicate, and returned incarnations do not move. Tokens leave but do not remain in exile. Leave events are checked after all selected objects leave.
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func exileTwoArtifacts() dsl.Card {
-    artifacts := dsl.TargetPermanents("artifacts", 2, 2, dsl.IsArtifact)
-    return dsl.NewSorcery("Synthetic exile", "{1}{W}{W}", dsl.WithAbility(dsl.Spell(
-        dsl.ExileEach(artifacts), dsl.WithTargets(artifacts),
-    )))
-}
-```
-* `Tap(PermanentRef, ...TapResultOption) ResolvingEffect`: Taps the referenced battlefield incarnation. `TapAmountInto(*NumberBinding) TapResultOption` saves 1 when it changes from untapped to tapped, or 0 when it is already tapped, absent, phased out, or a returned incarnation. The option may occur once. The result is local to the resolving spell or ability. Existing `Tap(subject)` calls remain valid.
-* `TapAttachedPermanentCost() Cost`: Pays by tapping the untapped permanent attached to the battlefield ability source. Use it in `Costs` for an activated ability. Payment preparation locks both battlefield incarnations and their attachment; commit fails if either object leaves, phases out, changes attachment, or the host becomes tapped. The cost does not require control of the host and does not apply the creature summoning-sickness rule for the `{T}` symbol. A spell additional cost cannot use this battlefield-source operation. `PermanentIsUntapped(AttachedPermanent)` supplies a separate activation condition when the text requires one.
-
-This synthetic Aura declaration compiles:
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-var gate = dsl.NewAura("Synthetic gate", "{1}{B}{B}",
-    dsl.WithCastTarget(dsl.TargetLand()),
-    dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.TapAttachedPermanentCost()),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)),
-        dsl.ActivationIf(dsl.PermanentIsUntapped(dsl.AttachedPermanent)))))
-```
-* `IfPositive(ResolutionValue, ResolvingEffect) ResolvingEffect`: Runs the body only when the value is greater than zero. Use it after an action result in `Sequence`; a binding written only inside its body cannot be read after the branch.
-* `IfCardHasType(CardRef, core.CardType, ResolvingEffect) ResolvingEffect` and `IfCardLacksType(CardRef, core.CardType, ResolvingEffect) ResolvingEffect`: Check a saved hand or graveyard card, or a legal graveyard card target, at resolution. Both skip the body when the reference is absent. The body may read a binding written before the branch; a binding written in the body cannot be read after it. These branches work in resolving spell, activation, and trigger bodies, not in pure state or static conditions.
-
-For example, this synthetic spell reveals one drawn card and discards it if it is not a land card:
+`LoadInto` replaces the entire destination registry only after every record
+compiles. A failed load leaves its factories and name aliases unchanged. The
+loader never calls an existing Go factory to substitute for unsupported RON.
+Reprints with equal definitions share a factory. Conflicting definitions fail
+the load. Every factory creates separate card, ability, target, and effect state.
+
+This startup function compiles against the current API:
 
 ```go
 package example
 
 import (
-    dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-    "github.com/benprew/mage-go/pkg/mage/core"
+    "os"
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/dsl/ron"
 )
 
-func drawRevealDiscard() dsl.ResolvingEffect {
-    drawn := dsl.BindCard("drawn")
-    return dsl.Sequence(
-        dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawn)),
-        dsl.RevealCard(dsl.FromCard(drawn)),
-        dsl.IfCardLacksType(dsl.FromCard(drawn), core.TypeLand,
-            dsl.DiscardCard(dsl.FromCard(drawn))),
+func LoadCards(directory string) error {
+    return ron.LoadInto(mage.DefaultRegistry, os.DirFS(directory), "*.ron")
+}
+```
+
+The parser supports the syntax used by the supplied files: constructor names,
+named fields, lists, tuples, strings, signed decimal integers, trailing commas,
+and line and nested block comments. Records may span lines. Raw strings and
+Rust Unicode string escapes are supported. This is a card-file parser, not a
+general implementation of every RON extension.
+
+The initial compiler supports card metadata, color indicators, simple keywords,
+color protection, basic landwalk, tap/sacrifice/mana costs, single target
+declarations, source damage to a bound target, batch destruction, drawing,
+controller life changes, mana production, temporary boosts and keyword grants,
+Aura boosts and grants, creature-filtered global boosts and grants, self entry
+and death triggers, and controller upkeep triggers. It rejects unsupported
+constructors, target-role mismatches, unbound references, and unknown fields.
+It does not discard unsupported rules from otherwise supported cards.
+
+The public adapters include `ActionList`, `Targeted`, `SpellActions`, `Activated`,
+`TriggerA`, `Integer`, `PayMana`, `IsCardtype`, `IsCreatureType`,
+`SpellDealsDamage`, `PermanentDealsDamage`, `DrawNumberCards`,
+`DestroyPermanent`, `DestroyPermanentNoRegen`, `DestroyEachPermanent`, and
+`DestroyEachPermanentNoRegen`. Their typed Go parameters use existing engine
+values. The compiler validates the RON references before it calls these adapters.
+
+Run the full collection check with:
+
+```sh
+go run ./cmd/loadcards -dir cards/mtgish
+go run ./cmd/loadcards -dir cards/mtgish -json
+```
+
+Both commands return a nonzero exit status if any record fails. JSON diagnostics
+include record counts and each failed card's location and first compilation
+error. The current collection still has unsupported rules. Existing application
+registration therefore remains in place until the complete collection compiles.
+Remaining families include conditional costs and actions, other trigger forms,
+replacement and prevention effects, modes, copy effects, zone movement,
+permanent rule restrictions, dynamic values, and multiple result/target bindings.
+
+## Damage attribution through retained callers
+
+The existing engine services have these signatures:
+
+```go
+func (g *Game) GetArtifactDamageTaken(playerID uuid.UUID) int
+func (g *Game) SetOnDamageDealt(callback func(sourceName, targetName string, amount int, isCombat bool))
+func (ds *DamageSystem) CombatDamageSourcesThisStep(controllerID, recipientID uuid.UUID) map[uuid.UUID]int
+```
+
+These are engine services, not new sealed DSL expressions. Legacy resolving
+damage effects use them through the shared damage system. Artifact history and
+combat aggregation read the captured permanent incarnation's current information
+or retained LKI. Callbacks report that source's name and the action's combat flag.
+Copied abilities keep their original source attribution. History records damage
+after prevention and redirection. History keys and event participants remain UUIDs.
+
+This example compiles against the current engine and legacy DSL facade:
+
+```go
+package example
+
+import (
+    "github.com/google/uuid"
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/dsl"
+)
+
+func ArtifactHistory(g *mage.Game, player uuid.UUID) int {
+    return g.GetArtifactDamageTaken(player)
+}
+
+func DamageSource() dsl.Card {
+    return dsl.NewCreature("Example artifact damage source", "", 1, 3,
+        dsl.WithActivatedAbility(dsl.DealDamage(dsl.Fixed(2)),
+            dsl.GenericCost(0), dsl.WithTarget(dsl.TargetDamageAnyTarget())))
+}
+```
+
+`TestDamageAttributionSequence` makes a synthetic source an artifact, returns it
+under another controller, and resolves its damage instruction. The history uses
+the original source's artifact type. The example is a compiling declaration;
+the test supplies the characteristic change and source departure.
+No production cards or legacy exports are changed. Typed `DealDamageFrom`,
+spell-source LKI, recipient identity, and immutable event captures remain open.
+
+## Retained singular damage
+
+```go
+func DealDamage(amount ValueSource) Effect
+func TargetDamageAnyTarget() Target
+```
+
+`dsl.DealDamage` retains its single-argument signature and positional target
+behavior for production callers. The resolving effect can be used in a
+targeted spell or a legacy activated or triggered ability with a declared
+target. It uses the shared damage service. Damage to a planeswalker now removes
+loyalty after prevention and replacement. A creature-planeswalker also receives
+the existing creature damage result. Excess damage still counts in full for
+damage events and lifelink. State-based actions handle zero loyalty.
+
+This compiling declaration uses only the existing facade:
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage/dsl"
+
+func DamageSpell() dsl.Card {
+    return dsl.NewInstant("Example damage spell", "{R}",
+        dsl.NewTargetedSpell(dsl.TargetDamageAnyTarget(),
+            dsl.DealDamage(dsl.Fixed(3))),
     )
 }
 ```
 
-For example, this synthetic activation gains life only when the source becomes tapped during resolution:
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func tapAbility() {
-    done := dsl.BindNumber("tap result")
-    ability := dsl.Activate(dsl.Costs(), dsl.Sequence(
-        dsl.Tap(dsl.This, dsl.TapAmountInto(done)),
-        dsl.IfPositive(dsl.FromNumber(done), dsl.GainLife(dsl.You, dsl.Fixed(2))),
-    ))
-    _ = ability
-}
-```
-* `Fight(PermanentRef, PermanentRef)`: The two referenced creatures fight if both are present and creatures at resolution. A creature fighting itself deals twice its power to itself.
-* `Untap(PermanentRef)`: Untaps the permanent.
-* `UntapPermanentWithResult(PermanentRef, ...UntapResultOption) ResolvingEffect`: Untaps one battlefield permanent and saves the completed outcome with `UntappedThisWayInto(*NumberBinding)`. The result is 1 only when the permanent becomes untapped. It is 0 when the permanent is already untapped, absent, phased out, or has a stun counter that replaces the untap. Use it in a spell, activation, or trigger resolving body. `Untap(PermanentRef)` remains available for instructions that do not need the result. Registration requires one named result binding and a dominating producer.
-
-```go
-untapped := dsl.BindNumber("untapped")
-creature := dsl.TargetPermanent("creature", dsl.IsCreature)
-var _ = dsl.NewInstant("Synthetic untap", "", dsl.Spell(dsl.Sequence(
-    dsl.UntapPermanentWithResult(creature, dsl.UntappedThisWayInto(untapped)),
-    dsl.IfPositive(dsl.FromNumber(untapped), dsl.GainLife(dsl.You, dsl.Fixed(1))),
-), dsl.WithTargets(creature)))
-```
-* `PermanentBecomesTapped()`: An `EventPattern` for a permanent changing from untapped to tapped. Use it in a battlefield `WhenEvent` or `WhenEventModes` ability. `.OfType(CardType)` accepts a permanent card type; `.ByOpponent()` compares the tapped permanent's controller with the trigger source's controller when the event occurs. `.WithPermanent(*PermanentBinding)` saves the tapped battlefield incarnation, and `.WithController(*PlayerBinding)` saves its event-time controller. Each filter and capture can occur once. The saved permanent is absent after it leaves and returns or while it is phased out. Entering tapped and tapping an already tapped permanent do not match. For example:
-
-```go
-object := dsl.BindPermanent("tapped permanent")
-controller := dsl.BindPlayer("tap controller")
-card := dsl.NewEnchantment("Observer", "", dsl.WithAbility(dsl.WhenEvent(
-    dsl.PermanentBecomesTapped().OfType(dsl.TypeArtifact).ByOpponent().WithPermanent(object).WithController(controller),
-    dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1)))))
-```
-
-* `RemoveFromCombat(PermanentRef)`: Removes the captured permanent from combat. Removing a blocker does not make its attacker unblocked. An absent or different incarnation is unaffected.
-* `ReturnToHand(PermanentRef)`: Bounces the permanent to its owner's hand.
-* `ReturnEachToHand(PermanentSet) ResolvingEffect`: Returns the selected battlefield incarnations to their owners' hands in one simultaneous instruction. Use it in a spell, activation, or trigger body. It excludes phased-out objects and tokens do not remain in hand. The set is read once at resolution; later returned incarnations are not part of that instruction.
-* `TapEach(PermanentSet) ResolvingEffect`: Taps all untapped, present members of one selected set together in a spell, activation, or trigger body. A tap event fires once per permanent after all members have become tapped. Already tapped, phased-out, absent, and stale incarnations do not cause tap events. The set is read once at resolution. The argument must be a `PermanentSet`, such as `MatchingPermanents` or `TargetPermanents`.
-* `UntapEach(PermanentSet) ResolvingEffect`: Untaps all tapped, present members of one selected set together in a spell, activation, or trigger body. A stun counter on a selected permanent is removed instead of untapping it. Each successful untap sends one event after all successful untaps finish. Untapped, phased-out, absent, and stale incarnations have no effect. The set is read once at resolution.
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func blueTap() dsl.Card {
-    return dsl.NewInstant("Blue tap", "", dsl.WithAbility(dsl.Spell(
-        dsl.TapEach(dsl.MatchingPermanents(dsl.HasColorFilter(dsl.Blue))))))
-}
-
-func landUntap() dsl.Card {
-    return dsl.NewInstant("Land untap", "", dsl.WithAbility(dsl.Spell(
-        dsl.UntapEach(dsl.ControlledPermanents(dsl.IsLand)))))
-}
-```
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func returnOwnedArtifacts() dsl.Card {
-    player := dsl.TargetPlayer("player")
-    return dsl.NewInstant("Return owned artifacts", "{1}{U}", dsl.WithAbility(dsl.Spell(
-        dsl.ReturnEachToHand(dsl.PermanentsOwnedBy(player, dsl.IsArtifact)),
-        dsl.WithTargets(player),
-    )))
-}
-```
-
-For two declared creature targets, use `Spell(Fight(first, second), WithTargets(first, second))`. Each argument reads its own target binding; an absent target prevents the fight.
-
-For an Aura entry trigger, use `WhenEvent(Enters(This), Tap(AttachedPermanent))`.
-
-The engine event `core.EvtCreatureBecomesBlocked` reports an attacking creature's first transition from unblocked to blocked. Its `SourceID` is the attacker. It fires once when one or more blockers are declared for that attacker, or when a creature enters blocking an unblocked attacker. Use `WhenEvent(BecomesBlocked(This), body)` for a battlefield source. This pattern does not select or bind a blocker.
-
-The engine event `core.EvtCreatureBlockedBy` reports each new attacker and blocker pair. `SourceID` is the attacker, `TargetID` is the blocker, and `PlayerID` is the attacker's controller when the pair forms. The event fires after legal blocker declarations settle, and it also fires when a creature enters blocking an attacker. It fires for a new blocker even if that attacker was already blocked. Engine and test-only definitions can use `mage.NewTriggered(core.EvtCreatureBlockedBy, false, body)` with `mage.EventSourceIsSelf{}` on a battlefield source. This engine event has no typed `EventPattern` or blocker binding yet.
-
-```go
-package example
-
-import (
-    "github.com/benprew/mage-go/pkg/mage"
-    "github.com/benprew/mage-go/pkg/mage/core"
-)
-
-func blockedWatcher() mage.Card {
-    return mage.NewCreature("Blocked Watcher", "", 2, 2,
-        mage.WithAbility(mage.NewTriggered(core.EvtCreatureBecomesBlocked, false,
-            mage.GainLifeFor(mage.You, mage.Fixed(1))).SetConditionData(mage.EventSourceIsSelf{})))
-}
-
-func pairWatcher() mage.Card {
-    return mage.NewCreature("Pair Watcher", "", 2, 2,
-        mage.WithAbility(mage.NewTriggered(core.EvtCreatureBlockedBy, false,
-            mage.GainLifeFor(mage.You, mage.Fixed(1))).SetConditionData(mage.EventSourceIsSelf{})))
-}
-```
-The attachment is read at resolution, so moving the Aura changes the affected
-permanent. If the Aura has left, its last attachment is used. A returned Aura
-or host is a new incarnation and does not redirect the old reference.
-
-### Player Actions
-* `Draw(PlayerRef, ResolutionValue, ...DrawResultOption) ResolvingEffect`: Instructs one player to draw cards in a spell, activation, or trigger body. `DrawAmountInto(*NumberBinding) DrawResultOption` saves the number of cards actually drawn by this instruction. It writes zero for an absent player, an empty library, or a fully replaced draw. Read it later in the same `Sequence` with `FromNumber`. `DrawCardInto(*CardBinding) DrawResultOption` saves the card from one completed draw. It requires `Fixed(1)`. `DrawCardsInto(*CardsBinding) DrawResultOption` saves all cards actually drawn by the instruction. `FromCards` retains each card only during its captured hand visit. Supply one result option per instruction. `DrawEach` does not accept these options.
-
-```go
-drawn := dsl.BindNumber("drawn")
-ability := dsl.Spell(dsl.Sequence(
-    dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawAmountInto(drawn)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(drawn)),
-))
-_ = ability
-```
-For a multi-card result in a spell, activation, or trigger body:
-
-```go
-drawnCards := dsl.BindCards("drawn cards")
-ability := dsl.Spell(dsl.Sequence(
-    dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawCardsInto(drawnCards)),
-    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(drawnCards))),
-))
-_ = ability
-```
-`ForEachSavedCard(cards *CardsBinding, member *CardBinding, body ResolvingEffect) ResolvingEffect` runs a resolving body once per card saved by one instruction, in saved order. The member keeps the original zone visit. `FromCard(member)` is absent if that card has left and returned. Each iteration has its own bindings; the member and values produced inside the body cannot be read after the loop. The loop is sequential and does not make its body a simultaneous action. This declaration compiles:
-
-```go
-drawnCards := dsl.BindCards("drawn cards")
-card := dsl.BindCard("drawn card")
-ability := dsl.Spell(dsl.Sequence(
-    dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawCardsInto(drawnCards)),
-    dsl.ForEachSavedCard(drawnCards, card, dsl.RevealCard(dsl.FromCard(card))),
-))
-_ = ability
-```
-For a single-card result in a spell, activation, or trigger body:
-
-```go
-func drawnCardSpell() dsl.Card {
-    drawnCard := dsl.BindCard("drawn card")
-    return dsl.NewInstant("Synthetic Draw", "{U}",
-        dsl.Spell(dsl.Sequence(
-            dsl.Draw(dsl.You, dsl.Fixed(1), dsl.DrawCardInto(drawnCard)),
-            dsl.RevealCard(dsl.FromCard(drawnCard)),
-            dsl.DiscardCard(dsl.FromCard(drawnCard)),
-        )))
-}
-```
-
-Hand cards have an engine visit ID. A completed draw creates a new visit;
-discarding the card ends it. `FromCard(drawnCard)` is a `CardRef` while the
-original card remains in that hand visit. `DiscardCard(CardRef) ResolvingEffect`
-discards that exact card if it is still in its owner's hand. It uses effect
-discard replacements and does nothing if the reference is absent or in another
-zone. Use it in spell, activation, and trigger resolving bodies. Hand reveal
-uses `RevealCard(CardRef) ResolvingEffect`. It shows the referenced card to
-all players and leaves it in its zone. The engine stores a public snapshot in
-`Game.PublicReveals()` in reveal order. This is a record of what was shown,
-not an ongoing effect that keeps a card revealed. An absent reference has no
-effect. Multi-card draw-result consumers remain open.
-* `DrawEach(PlayerSet, ResolutionValue)`: Draws cards for each player in turn order.
-* `Discard(PlayerRef, ResolutionValue, ...DiscardCardResultOption) ResolvingEffect`: The selected player chooses and discards cards from hand in a spell, activation, or trigger body. `DiscardCardInto(*CardBinding) DiscardCardResultOption` saves the card from one completed discard into a graveyard. The amount must be `Fixed(1)`. `FromCard` reads that graveyard visit until the card leaves. An absent player, empty hand, prevented discard, or discard replaced with a move to another zone clears the binding. Registration rejects a nil, unnamed, duplicate, or undominated binding.
-* `BindCards(string) *CardsBinding`, `DiscardCardsInto(*CardsBinding) DiscardCardResultOption`, `FromCards(*CardsBinding) CardSet`, and `CountCards(CardSet) ResolutionValue`: Save all cards that one `Discard` instruction puts into graveyards, then count the cards still in those exact graveyard visits. These declarations work in spell, activation, and trigger resolving bodies. Prevention, another destination, an absent player, and an empty hand produce an empty set. Registration rejects nil, unnamed, repeated, or undominated set bindings. `CardSet` is a sealed collection and cannot be used as a singular `CardRef`. This synthetic declaration compiles:
-
-```go
-discarded := dsl.BindCards("discarded")
-player := dsl.TargetPlayer("player")
-card := dsl.NewInstant("Count discarded", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-    dsl.Discard(player, dsl.Fixed(2), dsl.DiscardCardsInto(discarded)),
-    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(discarded))),
-), dsl.WithTargets(player))))
-```
-
-* `ChooseUpToOneCard(PlayerRef, CardSet, CardFilter, *CardBinding) ResolvingEffect`: The named player may choose one filtered card from a saved graveyard card set at resolution. `IsLandCard` is the land-card filter. The effect saves the chosen graveyard visit; declining, an empty set, or an absent chooser leaves the binding absent. A card that leaves and returns is absent from `FromCard` even if it has the same card ID. The choice is not a target and works in spell, activation, and trigger resolving bodies. Registration checks the set producer, binding scope, and non-nil roles. This synthetic declaration compiles:
-
-```go
-discarded := dsl.BindCards("discarded")
-chosen := dsl.BindCard("chosen")
-player := dsl.TargetPlayer("player")
-card := dsl.NewInstant("Choose discarded land", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-    dsl.Discard(player, dsl.Fixed(2), dsl.DiscardCardsInto(discarded)),
-    dsl.ChooseUpToOneCard(dsl.You, dsl.FromCards(discarded), dsl.IsLandCard, chosen),
-    dsl.ReturnCardToHand(dsl.FromCard(chosen)),
-), dsl.WithTargets(player))))
-```
-
-This synthetic declaration compiles:
-
-```go
-discarded := dsl.BindCard("discarded")
-player := dsl.TargetPlayer("player")
-card := dsl.NewInstant("Return discarded card", "", dsl.WithAbility(dsl.Spell(
-    dsl.Sequence(
-        dsl.Discard(player, dsl.Fixed(1), dsl.DiscardCardInto(discarded)),
-        dsl.ReturnCardToHand(dsl.FromCard(discarded))),
-    dsl.WithTargets(player))))
-```
-* `DiscardAtRandom(PlayerRef, ResolutionValue)`: Discards cards at random from hand. Goblin Lore uses `Spell(Sequence(Draw(You, Fixed(4)), DiscardAtRandom(You, Fixed(3))))`; draw first, then select randomly from the entire current hand through the discard replacement and event services.
-* `DiscardEntireHand(PlayerRef, ...DiscardResultOption) ResolvingEffect`: Discards the player's hand at resolution. `DiscardAmountInto(*NumberBinding) DiscardResultOption` saves the number of cards actually discarded by this instruction. A prevented discard does not count; a discard redirected to another zone does count. An absent player or empty hand saves zero. Read the result later in the same spell, activation, or trigger with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated binding.
-* `DiscardEach(PlayerSet, ...DiscardEachResultOption) ResolvingEffect`: Makes each selected player discard their hand in one instruction. It snapshots the selected hands, prepares discard replacements, moves the cards, then sends discard events after all moves. `DiscardTotalInto(*NumberBinding) DiscardEachResultOption` saves the number of completed discards across the batch, including cards redirected to another zone. An empty or absent set, empty hands, and prevented discards save zero. It works in spell, activation, and trigger bodies. A singular `PlayerRef` is not a `PlayerSet`. For example, `dsl.NewSorcery("Shared discard", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(dsl.DiscardEach(dsl.EachPlayer), dsl.DrawEach(dsl.EachPlayer, dsl.Fixed(7))))))` compiles.
-
-This result example compiles:
-
-```go
-discarded := dsl.BindNumber("discarded")
-card := dsl.NewSorcery("Shared discard total", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-    dsl.DiscardEach(dsl.EachPlayer, dsl.DiscardTotalInto(discarded)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(discarded)),
-))))
-_ = card
-```
-
-* `HandSizeOf(PlayerRef) ResolutionValue`: Reads the selected player's current number of cards in hand when the value is used. It works in resolving spell, activation, and trigger bodies, including after a preceding discard or draw. An absent player supplies zero. A declared player target is rechecked through its target reference; registration rejects a nil, undeclared, or undominated player reference. This value reveals no cards.
-* `LifeTotalOf(PlayerRef) ResolutionValue`: Reads the selected player's current life total when the value is used in a resolving spell, activation, or trigger body. It reads the value after preceding instructions, including life gain, life loss, and damage. An absent player supplies zero. Target and saved-player references use their existing legality and scope rules. This is a resolution value; it does not define a static life-total comparison or an announcement-time target restriction. This synthetic declaration compiles:
-
-```go
-opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
-card := dsl.NewSorcery("Life total example", "", dsl.WithAbility(dsl.Spell(
-    dsl.Sequence(dsl.LoseLife(opponent, dsl.Fixed(3)),
-        dsl.GainLife(dsl.You, dsl.LifeTotalOf(opponent))),
-    dsl.WithTargets(opponent),
-)))
-_ = card
-```
-* `LifeGainedThisTurn(PlayerRef) ResolutionValue`: Reads the selected player's total actual positive life gain in the current turn. It works in resolving spell, activation, and trigger bodies and reads the turn tracker when used. Life-gain replacement affects the total; life loss does not subtract from it. A missing player supplies zero. Registration rejects a nil, undeclared, or undominated player reference. This resolution value cannot set target eligibility when targets are announced or serve as a pure static condition; use `ControllerLifeGainedThisTurn()` as a `TargetNumber` for the supported target restriction.
-
-```go
-card := dsl.NewCreature("Life history example", "", 1, 1,
-    dsl.WithAbility(dsl.At(dsl.YourEndStep,
-        dsl.GainLife(dsl.You, dsl.LifeGainedThisTurn(dsl.You)))))
-_ = card
-```
-
-```go
-opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
-spell := dsl.NewSorcery("Test Hand Size", "", dsl.WithAbility(dsl.Spell(
-    dsl.Sequence(
-        dsl.DiscardEntireHand(dsl.You),
-        dsl.Draw(dsl.You, dsl.HandSizeOf(opponent)),
-    ),
-    dsl.WithTargets(opponent),
-)))
-_ = spell
-```
-
-```go
-discarded := dsl.BindNumber("discarded")
-body := dsl.Sequence(
-    dsl.DiscardEntireHand(dsl.You, dsl.DiscardAmountInto(discarded)),
-    dsl.Draw(dsl.You, dsl.FromNumber(discarded)),
-)
-spell := dsl.NewSorcery("Test Discard", "", dsl.WithAbility(dsl.Spell(body)))
-_ = spell
-```
-* `Mill(PlayerRef, ResolutionValue)`: Mills cards from the top of the library to the graveyard.
-* `GainLife(PlayerRef, ResolutionValue)`: Gains life through the event-aware life gain pipeline.
-* `GainLifeForWithResult(PlayerRef, ResolutionValue, ...LifeGainResultOption) ResolvingEffect`: Gains life for one selected player in a spell, activation, or trigger body. `LifeGainedInto(*NumberBinding)` saves the amount actually gained after replacement. An absent player or nonpositive gain saves zero. The result belongs to this resolution instance. Registration requires exactly one named result option and rejects an undominated read. Existing `GainLifeFor` and `dsl.GainLife` calls keep their two-argument form. This declaration compiles:
-
-  ```go
-  gained := dsl.BindNumber("gained")
-  dsl.NewSorcery("Life result", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-      dsl.GainLifeForWithResult(dsl.You, dsl.Fixed(2), dsl.LifeGainedInto(gained)),
-      dsl.LoseLife(dsl.You, dsl.FromNumber(gained)),
-  ))))
-  ```
-
-* `GainLifeEach(PlayerSet, ResolutionValue, ...LifeGainResultOption) ResolvingEffect`: Gains life for each selected player in one spell, activation, or trigger instruction. It reads the set and amount once. Each gain uses the shared modifier and replacement path. Positive `EvtLifeGained` events are sent after all life totals change. A zero, negative, or fully replaced gain sends no gain event. `LifeGainedInto(*NumberBinding) LifeGainResultOption` saves the total life actually gained by this instruction after replacement. An empty set or nonpositive amount saves zero. Read the result later in the same body with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated result binding.
-
-```go
-gained := dsl.BindNumber("life gained")
-body := dsl.Sequence(
-    dsl.GainLifeEach(dsl.EachPlayer, dsl.Fixed(3), dsl.LifeGainedInto(gained)),
-    dsl.LoseLife(dsl.You, dsl.FromNumber(gained)),
-)
-card := dsl.NewArtifact("Shared gain", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body)))
-_ = card
-```
-* `LoseLife(PlayerRef, ResolutionValue)`: Causes player to lose life.
-* `LoseLifeEach(PlayerSet, ResolutionValue, ...LifeLossResultOption) ResolvingEffect`: Causes each player in the set to lose life. `LifeLostInto(*NumberBinding) LifeLossResultOption` saves the total life lost by this instruction; the life service measures the loss before it dispatches life-loss events. It writes zero for an empty set or a nonpositive amount. Read the result later in the same spell, activation, or trigger body with `FromNumber`. Registration rejects a nil, unnamed, duplicate, or undominated result binding. This is a life-loss result; it does not include damage dealt by another instruction.
-```go
-lost := dsl.BindNumber("life lost")
-body := dsl.Sequence(
-    dsl.LoseLifeEach(dsl.OpponentsOf(dsl.You), dsl.Fixed(4), dsl.LifeLostInto(lost)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(lost)),
-)
-card := dsl.NewArtifact("Life result example", "", dsl.WithAbility(dsl.Activate(dsl.Costs(), body)))
-_ = card
-```
-
-* `LoseLifeForWithResult(PlayerRef, ResolutionValue, ...LifeLossResultOption) ResolvingEffect`: Causes one selected player to lose life and saves the actual loss with `LifeLostInto`. It works in spell, activation, and triggered resolving bodies. An absent or illegal target, or a nonpositive amount, writes zero. The result is instance-local and excludes life payment and damage. `LoseLifeFor` and the public `LoseLife` alias keep their two-argument signatures. This synthetic spell declaration compiles:
-
-```go
-lost := dsl.BindNumber("life lost")
-opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
-spell := dsl.Spell(dsl.Sequence(
-    dsl.LoseLifeForWithResult(opponent, dsl.Fixed(4), dsl.LifeLostInto(lost)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(lost)),
-), dsl.WithTargets(opponent))
-_ = spell
-```
-
-### Destruction Actions
-`DestroyWithResult(PermanentRef, DestroyResultOption)` and `DestroyWithoutRegenerationWithResult(PermanentRef, DestroyResultOption)` save one when that instruction actually destroys its subject and zero otherwise. `DestroyedThisWayInto(*NumberBinding) DestroyResultOption` supplies the output binding. Use it in a spell, activation, or trigger resolving body. The result is zero for an absent, phased-out, indestructible, or regenerated subject, including a target that became illegal before resolution. The output is instance-local. Registration rejects nil, unnamed, or undominated bindings. The original `Destroy(PermanentRef)` and `DestroyWithoutRegeneration(PermanentRef)` signatures remain available, including as function values. This example compiles:
-
-```go
-destroyed := dsl.BindNumber("destroyed")
-dsl.Sequence(
-    dsl.DestroyWithResult(dsl.This, dsl.DestroyedThisWayInto(destroyed)),
-    dsl.IfPositive(dsl.FromNumber(destroyed),
-        dsl.DealDamageFrom(dsl.This, dsl.You, dsl.Fixed(7))),
-)
-```
-
-`DestroyEach(PermanentSet, ...DestroyEachResultOption)` and `DestroyEachWithoutRegeneration(PermanentSet, ...DestroyEachResultOption)` can save a result from one simultaneous destruction group. `CreaturesDiedThisWayInto(*NumberBinding) DestroyEachResultOption` saves the number of selected creatures that this instruction moved from the battlefield to a graveyard. Indestructible, regenerated, absent, phased-out, and noncreature objects do not add to the count. The result is zero for an empty group. Use `FromNumber` later in the same spell, activation, or trigger resolution. Registration rejects a nil, unnamed, repeated, or undominated binding. The existing one-argument calls remain valid. This example compiles:
-
-```go
-deaths := dsl.BindNumber("creatures died this way")
-body := dsl.Sequence(
-    dsl.DestroyEach(dsl.MatchingPermanents(dsl.IsCreature), dsl.CreaturesDiedThisWayInto(deaths)),
-    dsl.DealDamageFrom(dsl.This, dsl.You, dsl.FromNumber(deaths)),
-)
-spell := dsl.NewSorcery("Death count example", "", dsl.WithAbility(dsl.Spell(body)))
-_ = spell
-```
-
-### Damage Actions
-
-Spell target legality uses the resolving spell's printed colors or its current
-stack color override, including an explicit colorless override. This source
-view remains available after the spell is popped from the stack. Color
-protection can make a target illegal before any resolving instruction runs:
-if all targets are illegal, the entire body is skipped; mixed declarations
-retain their independent legal recipients. New spell copies check their own
-copiable colors before they enter the stack when choosing new targets. Ordinary
-color changes on the original spell are not copied (CR 608.2b, 702.16b, 707.2,
-707.10c).
-
-No constructor changes are required. The existing signatures are
-`TargetDamageRecipient(name string) *DamageTargetBinding` and
-`DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue,
-...DamageResultOption) ResolvingEffect`. Target-source checks also apply to
-other targeted spell instructions and spell modes, through the shared target
-service. The permanent-ability incarnation/LKI contract remains in effect.
-This synthetic declaration compiles and is covered by a gametest integration:
-
-```go
-recipient := dsl.TargetDamageRecipient("recipient")
-card := dsl.NewInstant("Synthetic Spell Source", "{R}",
-    dsl.Spell(dsl.Sequence(
-        dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2)),
-        dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipient)))
-```
-
-If the recipient gains protection from red before resolution, neither damage
-nor life gain occurs. Equal rounded-down division and per-target casting costs
-remain proposed work; this contract does not implement either adapter.
-
-`DealAllocatedDamage(source DamageSourceRef, recipients *DamageTargetsBinding, total int) ResolvingEffect`
-exposes chosen damage allocation for a positive fixed total. Use it as the direct
-body of `Spell` or `Activate`, or inside nested `Sequence` bodies. It also
-supports a single selected mode of `SpellModes` or `ActivateModes`. Each body or
-mode must have exactly one allocation instruction and that declaration as its
-only target group. Different modes may declare different allocations and totals;
-only the chosen mode announces shares and resolves. Use `WithTargets` within a
-mode. Nonmodal bodies also accept a single group declared with `WithTargetGroups`
-or `WithActivationTargetGroups`. Registration rejects branches, loops, triggers,
-multiple allocation instructions within one body or mode (including a legacy
-division sibling),
-extra groups, absent declarations, nonpositive totals, and a required minimum
-larger than the total. Go rejects player sources, arbitrary recipient sets, and resolution values in place of the integer total.
-
-```go
-recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
-card := dsl.NewSorcery("Allocated damage", "{2}{R}",
-    dsl.Spell(dsl.Sequence(
-        dsl.DealAllocatedDamage(dsl.This, recipients, 3),
-        dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
-```
-
-The same declaration works within one selected mode:
-
-```go
-recipients := dsl.TargetDamageRecipients("recipients", 1, 3)
-card := dsl.NewSorcery("Modal allocated damage", "{2}{R}",
-    dsl.WithAbility(dsl.SpellModes(
-        dsl.ModeOf("Damage", dsl.Sequence(
-            dsl.DealAllocatedDamage(dsl.This, recipients, 3),
-            dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)),
-        dsl.ModeOf("Life", dsl.GainLife(dsl.You, dsl.Fixed(3))))))
-```
-
-For an activation, put these `ModeOf` declarations in
-`ActivateModes(Costs(...), ...)`. Target bindings belong to their declaring mode.
-An inactive allocation mode has no target or division requirements. Copies keep
-the chosen mode and shares; retargeting does not select a new mode (CR 700.2).
-
-The controller chooses shares before payment. Each announced target receives at
-least one damage. The existing announcement service validates targets and
-normalizes the player's response; the stack owns the allocation map. Copies and
-game clones keep separate maps. Retargeting a stack copy preserves each share.
-At resolution, illegal targets lose their shares without redistribution. The
-adapter reads only the declared group's legal incarnations and deals the shares
-in one batch through the shared source, replacement, and prevention services.
-Damage and life-gain observers see the complete batch. A source that left can
-supply departure LKI; an absent source without that information does nothing.
-An optional group with no chosen targets needs no allocation prompt.
-
-`DealAllocatedDamageX(source DamageSourceRef, recipients *DamageTargetsBinding) ResolvingEffect`
-uses the nonnegative X announced for the spell or activation as the allocation
-total. The controller chooses positive shares before payment. The announcement
-service receives X explicitly; it does not read ambient X for this declaration.
-The shares and X belong to the stack instance. A later payment, another pending
-activation, or changed ambient X cannot change the shares. An announced zero
-stays zero and permits only an empty group. An empty optional group needs no
-allocation prompt, including when X is positive. A nonempty group with more
-targets than X fails before the prompt or payment.
-
-This declaration compiles:
-
-```go
-recipients := dsl.TargetDamageRecipientsUpToX("recipients")
-card := dsl.NewSorcery("Allocated X", "{X}{R}",
-    dsl.Spell(dsl.Sequence(
-        dsl.DealAllocatedDamageX(dsl.This, recipients),
-        dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipients)))
-```
-
-Use this constructor in the same spell, activation, nested `Sequence`, and
-single selected mode contexts as fixed allocation. It accepts a damage target
-binding, rather than an arbitrary recipient set. Its inspection total has the
-`announcement-value` role; damage metadata reports X. It shares the fixed
-adapter's registration, incarnation/LKI, target legality, replacement, batch,
-copy, and retargeting contracts. Supplied alternate-cost casts and the shared
-card-copy admission path use their recorded X. This does not correct prepared
-spell mana payment or choose X for a casting permission.
-
-The integer total and the separate X constructor keep announcement timing
-explicit. General announcement expressions remain proposed work;
-`ResolutionValue` would read at the wrong lifecycle. Instructions in a
-`Sequence` resolve in order; each allocated damage instruction remains one
-simultaneous batch. Multiple allocations within one body or mode, branches,
-loops, multiple selected modes, triggered allocations, result bindings, and
-Fireball's equal division at resolution remain separate work. The legacy
-`DealDividedDamage(ValueSource)` signature and its callers remain available.
-
-
-The engine compatibility constructor
-`mage.DealDividedDamage(total mage.ValueSource) mage.Effect` remains unchanged;
-it is not a typed `dsl` divided-damage export. Its spell and activation paths
-normalize chosen allocations so each target receives at least one damage
-(CR 601.2d). Valid shares are preserved. For malformed responses with a
-representable target list, the fallback gives one to each target and the
-remainder to the first announced target. The default player makes this same
-choice. Copies and game clones retain independent allocation maps, and an
-illegal target's share is not redistributed at resolution. This synthetic
-engine declaration compiles and is exercised by `TestDamageDivisionSpellActivationCopyClone`:
-
-```go
-spell := mage.NewInstant("Division spell", "",
-    mage.NewMultiTargetSpell(
-        []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
-        mage.DealDividedDamage(mage.Fixed(4))))
-_ = spell
-```
-
-At resolution, `DealDividedDamage` captures the source once and submits all
-remaining positive shares to `Game.DealSimultaneousDamage`. Replacement and
-prevention prepare every assignment before damage is applied. Damage and
-lifelink events and damage callbacks observe the complete batch. The shared
-stack resolver excludes illegal targets, including departed, returned, phased,
-and protected permanents; their shares are lost. The batch keeps the source's
-resolving incarnation and departure LKI for protection, lifelink, and deathtouch.
-This execution contract supports resolving spells and activated abilities,
-including their copies. It preserves legacy unknown-source ID behavior and
-the existing AI damage metadata. `TestDividedDamageBatch*` covers the adapter
-and synthetic spell/activation integration. No typed divided-target or allocation
-declaration is introduced.
-
-The internal signature is
-`sanitizeDamageDistribution(map[uuid.UUID]int, []uuid.UUID, int) map[uuid.UUID]int`.
-It returns nil for an empty target list, duplicate or nil target IDs, or a
-total smaller than the target count. Callers must not treat nil as proof of a
-legal announcement. Activations and ordinary hand casts now validate and lock
-their division before cost preparation and payment. The selected mode supplies the effects and targets.
-An impossible nonempty division fails before the player chooses shares, pays
-costs, or publishes payment, activation, or cast events. Each target needs at
-least one point; a negative calculated total is treated as zero (CR 107.1b). When the
-target declaration permits zero targets, the spell or ability can choose none and
-has no allocation prompt (CR 107.1c). Payment does not recalculate the shares,
-even if it changes the total's inputs or sacrifices the source. A failed payment
-creates no stack allocation. This synthetic activation declaration compiles and
-is exercised by the activation division contracts:
-
-```go
-source := mage.NewArtifact("Division source", "",
-    mage.WithActivatedAbility(mage.DealDividedDamage(mage.Fixed(3)),
-        mage.SacrificeSourceCost(),
-        mage.WithTarget(mage.TargetUpToNCreaturesOrPlayers(1))))
-_ = source
-```
-
-`Game.ActivateAbilityByIndex(playerID, permanentID uuid.UUID, abilityIndex int,
-targets []uuid.UUID) error` retains its signature. This is a shared engine
-prerequisite, with no new typed DSL export or role.
-`Game.CastSpellByName(playerID uuid.UUID, name string, targets []uuid.UUID,
-xValues ...int) error` and `Game.CastSpellByID(playerID, cardID uuid.UUID,
-targets []uuid.UUID, xValue int) error` now use this prepayment contract for
-ordinary casts from hand, including selected modal spells. The spell example
-above is also exercised by `TestSpellDamageDivision*`. Allocation occurs before
-mana abilities used for payment. Failed payment preserves the hand, life, mana,
-and stack. A prepared empty allocation does not prompt again after payment.
-The shared cast-from-zone path also validates targets and locks chosen damage
-before total-cost preparation, mana abilities, or payment. This includes free
-casts, supplied alternate mana costs, registered alternate costs, flashback,
-and exile permissions, with the caster as controller even for a foreign-owned
-exiled card. Failed admission or payment preserves the source zone and exile
-permission. The existing public signatures remain:
-
-```go
-func (g *Game) CastCardFromZoneWithoutPaying(playerID, cardID uuid.UUID, zone Zone, targets []uuid.UUID, xValue int) error
-func (g *Game) CastCardFromExileWithoutPaying(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error
-func (g *Game) CastCardFromZoneWithAlternateCost(playerID, cardID uuid.UUID, zone Zone, alternate ManaCost, targets []uuid.UUID, xValue int) error
-func (g *Game) CastCardWithAlternateCost(playerID, cardID uuid.UUID, altIdx int, targets []uuid.UUID, xValue int) error
-func (g *Game) CastExiledCardWithPermission(playerID, cardID uuid.UUID, targets []uuid.UUID, xValue int) error
-```
-
-This synthetic engine example compiles and its path is covered by
-`TestAlternateDamageDivisionBeforePayment`:
-
-```go
-spell := mage.NewInstant("Alternate division", "{R}",
-    mage.NewMultiTargetSpell(
-        []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
-        mage.DealDividedDamage(mage.Fixed(3))))
-spell.SetOwner(caster.PlayerID())
-caster.AddToGraveyard(spell)
-err := game.CastCardFromZoneWithAlternateCost(caster.PlayerID(), spell.ID(),
-    core.ZoneGraveyard, core.ParseManaCost("{R}"), []uuid.UUID{opponent.PlayerID()}, 0)
-_ = err
-```
-
-These helpers use the granting effect's casting permission and timing context.
-This slice adds no typed divided-damage export. Prepared spell payment,
-typed divided-target declarations and independent grouped allocations
-remain open. Fireball's equal division at resolution
-requires a separate contract.
-
-Prepared and Paradigm card-copy casts also validate their selected targets and
-positive-share division before publishing the spell. A failed announcement sends
-no cast or target event, leaves the prepared source prepared, and keeps the
-Paradigm original in exile. Nonmodal prepared target prompts use the stored X.
-Only the selected mode supplies an allocation. The stack stores an independent
-copy of the normalized map; later spell copies and game clones do the same.
-This admission contract does not correct the separate prepared mana-payment gap.
-These public engine signatures remain unchanged:
-
-```go
-func (g *Game) CastPreparedSpellCopy(playerID, permID uuid.UUID, spellFactory func() Card) error
-func (g *Game) CastParadigmCopyFromExile(playerID uuid.UUID, name string) (*StackObject, error)
-```
-
-The engine-level example below compiles. `TestCopyCastDamageDivision*` uses
-synthetic cards to exercise both routes, including failed announcements.
-
-```go
-func castSyntheticPreparedDivision(game *mage.Game, caster, source uuid.UUID) error {
-    return game.CastPreparedSpellCopy(caster, source, func() mage.Card {
-        return mage.NewInstant("Prepared division", "",
-            mage.NewMultiTargetSpell(
-                []mage.Target{mage.TargetUpToNCreaturesOrPlayers(2)},
-                mage.DealDividedDamage(mage.Fixed(3))))
-    })
-}
-```
-
-The engine retains game-long damage history for a captured permanent source and a player or permanent recipient by battlefield incarnation. The engine query signatures are `(*Game).HasDealtDamageToPlayerFromSource(DamageSource, uuid.UUID) bool` and `(*Game).HasDealtDamageToPermanentFromSource(DamageSource, *Permanent) bool`. `DealDamageFrom` and `DealDamageEach` feed this history through the shared damage pipeline. The typed set filters `PlayersDealtDamageBy(DamageSourceRef, PlayerSet) PlayerSet` and `PermanentsDealtDamageBy(DamageSourceRef, PermanentSet) PermanentSet` select current candidates that received positive damage from that source incarnation this game. They work in resolving spell, activation, and trigger bodies through set consumers such as `DamageRecipients`, `DealDamageEach`, `CountPermanents`, and `ForEach`. A spell source has no battlefield incarnation, so these filters select nothing for it. A permanent that leaves and returns has new history; a phased-out permanent is absent from a permanent set. This synthetic upkeep declaration compiles:
-
-```go
-players := dsl.PlayersDealtDamageBy(dsl.This, dsl.OpponentsOf(dsl.You))
-planeswalkers := dsl.PermanentsDealtDamageBy(dsl.This, dsl.MatchingPermanents(dsl.IsPlaneswalker))
-card := dsl.NewCreature("History source", "", 2, 3, dsl.WithAbility(dsl.At(dsl.YourUpkeep,
-    dsl.DealDamageEach(dsl.This, dsl.DamageRecipients(players, planeswalkers), dsl.Fixed(1)))))
-_ = card
-```
-
-The damage system also keeps a turn-scoped source-and-recipient incarnation record for damage to permanents. It records only positive damage after prevention and replacement and clears at final cleanup. `PermanentsDealtDamageByThisTurn(DamageSourceRef, PermanentSet) PermanentSet` selects current, unphased candidates damaged by that source incarnation this turn. It works in resolving spell, activation, and trigger bodies with permanent-set consumers such as `TapEach`, `CountPermanents`, and `ForEach`. An absent or spell source selects nothing. A returned permanent has a new identity. `CreatureDies().DamagedByThisTurn()` separately checks the dying creature's former incarnation. This synthetic declaration compiles:
-
-```go
-card := dsl.NewCreature("Turn history", "", 1, 5,
-    dsl.WithAbility(dsl.At(dsl.YourUpkeep,
-        dsl.TapEach(dsl.PermanentsDealtDamageByThisTurn(dsl.This,
-            dsl.MatchingPermanents(dsl.IsCreature))))))
-_ = card
-```
-
-`PermanentsThatDealtDamageToThisTurn(PermanentRef, PermanentSet) PermanentSet` selects current, unphased candidate permanents that dealt positive damage to the recipient this turn. It works in resolving spell, activation, and trigger bodies. When the recipient is `This`, a death trigger uses the original source incarnation even after the card leaves or returns. Other recipient references must still resolve to a battlefield permanent. The candidate set controls current characteristics, such as whether a source is now a creature. This synthetic declaration compiles:
-
-```go
-card := dsl.NewCreature("Watcher", "", 1, 4,
-    dsl.WithAbility(dsl.WhenEvent(dsl.Dies(dsl.This),
-        dsl.TapEach(dsl.PermanentsThatDealtDamageToThisTurn(dsl.This,
-            dsl.MatchingPermanents(dsl.IsCreature))))))
-_ = card
-```
-
-The existing `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption)` signature feeds this record in spell, activation, and trigger resolution. This synthetic spell declaration compiles:
-
-```go
-victim := dsl.DeclarePermanentTarget("victim", dsl.IsCreature)
-spell := dsl.Spell(dsl.DealDamageFrom(dsl.This, victim, dsl.Fixed(1)), dsl.WithTargets(victim))
-_ = spell
-```
-
-The set filters inspect the source and candidate declarations. Registration rejects missing inputs and undeclared target or binding references. They retain candidate order. They do not expose turn-scoped history or damage from a spell source. For example, this resolving spell declaration uses the damage pipeline, but its spell source does not enter permanent-incarnation history:
-
-```go
-target := dsl.TargetDamageRecipient("recipient")
-spell := dsl.Spell(dsl.DealDamageFrom(dsl.This, target, dsl.Fixed(1)), dsl.WithTargets(target))
-_ = spell
-```
-
-The engine event payload `core.GameEvent.SourceControllerID uuid.UUID` is available to engine trigger conditions for `EvtDamageDealt`. It records the controller of the damage source captured by the damage action, even if that source leaves before the event is observed. It is set for positive damage to a player or permanent after replacement and prevention. This is an engine integration field; the typed event pattern that will bind it for card declarations is not yet available. An engine condition can read it without looking up the source card again:
-
-```go
-func sourceWasControlledBy(evt *core.GameEvent, player uuid.UUID) bool {
-    return evt.Type == core.EvtDamageDealt && evt.SourceControllerID == player
-}
-```
-
-This example uses `core` from `github.com/benprew/mage-go/pkg/mage/core` and `uuid` from `github.com/google/uuid`.
-
-* `DealDamageFrom(DamageSourceRef, DamageRecipientRef, ResolutionValue, ...DamageResultOption) ResolvingEffect`: Deals one damage action from `This` to a player or battlefield permanent. Use it in `Spell`, `Activate`, or a triggered resolving body. The source keeps its resolving incarnation and last known characteristics after departure. A missing source or recipient has no effect. The current `DealDamage(ValueSource)` remains for unmigrated positional callers.
-
-Target legality also uses a departed ability source's incarnation LKI for protection. A returned source cannot replace the departed source's colors or types. Copied abilities use the same view when choosing new targets. If every announced target is illegal, the body does not resolve, including later life gain. The existing signatures remain unchanged; this compiling declaration uses the corrected shared contract:
-
-```go
-recipient := dsl.TargetDamageRecipient("recipient")
-card := dsl.NewCreature("Synthetic Departed Source", "{G}", 2, 2,
-    dsl.WithAbility(dsl.Activate(dsl.Costs(dsl.SacrificeSourceCost()),
-        dsl.Sequence(dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2)),
-            dsl.GainLife(dsl.You, dsl.Fixed(1))), dsl.WithTargets(recipient))))
-_ = card
-```
-
-* `DamageSourceOf(PermanentRef) DamageSourceRef`: Uses a typed permanent reference as the source of `DealDamageFrom` or `DealDamageEach`. A declared target or `From` snapshot keeps its captured battlefield incarnation; if that permanent has left, the damage instruction uses its departure characteristics and controller. A phased-out or missing permanent without departure information cannot supply damage. The argument must be a `PermanentRef`; player and stack-object references are rejected by Go. This source can be used in a spell, activation, or trigger body.
-
-```go
-other := dsl.TargetPermanent("other creature", dsl.IsCreature)
-ability := dsl.Activate(
-    dsl.Costs(dsl.Mana("{G}{G}"), dsl.TapCost(dsl.This)),
-    dsl.Sequence(
-        dsl.DealDamageFrom(dsl.This, other, dsl.PowerOf(dsl.This)),
-        dsl.DealDamageFrom(dsl.DamageSourceOf(other), dsl.This, dsl.PowerOf(other)),
-    ),
-    dsl.WithTargets(other),
-)
-_ = ability
-```
-* `DamageRecipients(PlayerSet, PermanentSet) DamageRecipientSet`: Combines the selected players and battlefield permanents for one damage instruction. Both sets are required. `TargetPermanents(name, minimum, maximum, filter, options...)` supplies a declared permanent target set when used with `WithTargets`. Triggered abilities, spells, and activations can use multiple variable-size groups through their respective group announcement paths. An illegal target is absent from the batch.
-* `TargetDamageRecipientsAnyNumber(name string) *DamageTargetsBinding`: Declares zero or more distinct players, creatures, or planeswalkers, independent of X. Use it in spells, activations, selected modes, or targeted triggers with the existing target announcement options. Multiple variable groups require the recorded group path. Empty groups resolve without a damage action. If all announced targets are illegal, the object does not resolve. This is a set, so it cannot be the singular recipient of `DealDamageFrom`. `DealAllocatedDamage` and `DealAllocatedDamageX` retain their narrower spell/activation contexts and require a positive share for each chosen target before payment. The declaration does not supply equal division or per-target costs.
-
-```go
-recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
-card := dsl.NewSorcery("Any number damage", "{X}{R}",
-    dsl.Spell(dsl.DealAllocatedDamageX(dsl.This, recipients),
-        dsl.WithTargets(recipients)))
-_ = card
-```
-
-* `TargetDamageRecipients(name string, minimum, maximum int) *DamageTargetsBinding`: Declares one bounded target group of players, creatures, and planeswalkers. It is both a `TargetBinding` and a `DamageRecipientSet`. Declare it with `WithTargets`, `WithTargetGroups`, or `WithActivationTargetGroups` as appropriate. Registration rejects invalid bounds. The target announcement rejects duplicate or illegal choices before payment. At resolution, an illegal, phased-out, or returned permanent is absent from the batch; each remaining recipient is dealt damage simultaneously. This collection cannot be used as the singular recipient of `DealDamageFrom`.
-* `DealDamageEach(DamageSourceRef, DamageRecipientSet, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Deals the same amount to each selected recipient simultaneously. Use it in a `Spell`, `Activate`, or triggered resolving body. The source and amount are read once before recipients are collected. The action uses the shared damage replacement and prevention pipeline.
-
-* `DealDamageEvenly(DamageSourceRef, *DamageTargetsBinding, ResolutionValue, ...DamageEachResultOption) ResolvingEffect`: Reads the total once at resolution and divides it by the number of surviving recipients in that declared target group, rounded down. It submits all shares as one simultaneous damage instruction. Use it in spells, activations, triggered resolving bodies, and selected modes. Recorded target groups divide independently. A legal recipient with prevention still counts in the denominator; an illegal, absent, phased-out, or returned target does not. Empty groups, nonpositive totals, and zero shares cause no damage. All-illegal announced targets stop the entire resolving body through the shared target resolver. `DamageTotalInto` and `DamageResultsInto` record actual post-replacement outcomes and clear earlier results for empty actions. Copies retain their own targets and divide again at resolution. This function does not ask for an allocation before payment or supply additional per-target costs.
-
-```go
-recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
-card := dsl.NewSorcery("Synthetic Equal Division", "{X}{R}",
-    dsl.Spell(dsl.DealDamageEvenly(dsl.This, recipients,
-        dsl.ValueAtResolution(dsl.XValue())), dsl.WithTargets(recipients)))
-_ = card
-```
-
-This synthetic declaration supplies division and the ordinary mana cost. Add `AdditionalManaPerTargetBeyondFirst(1)` inside `Spell` for Fireball's target surcharge; production card wiring remains separate.
-
-```go
-targets := dsl.TargetPermanents("creatures", 1, 2, dsl.IsCreature)
-ability := dsl.Spell(
-    dsl.DealDamageEach(dsl.This,
-        dsl.DamageRecipients(dsl.EachPlayer, targets), dsl.Fixed(1)),
-    dsl.WithTargets(targets),
-)
-_ = ability
-```
-
-```go
-targets := dsl.TargetDamageRecipients("recipients", 1, 2)
-ability := dsl.Spell(
-    dsl.DealDamageEach(dsl.This, targets, dsl.Fixed(1)),
-    dsl.WithTargets(targets),
-)
-_ = ability
-```
-* `DamageTotalInto(*NumberBinding) DamageEachResultOption`: Saves the sum of damage actually dealt by one `DealDamageEach` instruction after replacement, redirection, and prevention. It writes zero when no damage is dealt. The result is local to the resolving spell or ability. Use `FromNumber` in a later instruction. Each batch can declare this option once.
-* `BindDamageResults(string) *DamageResultsBinding`, `DamageResultsInto(*DamageResultsBinding) DamageEachResultOption`: Save each final positive damage action from one `DealDamageEach` instruction. The binding is empty if the source or recipients are absent, damage is zero, or all damage is prevented. It can be used with `DamageTotalInto` on the same instruction.
-* `BindDamageResult(string) *DamageResultBinding`, `ForEachDamageResult(*DamageResultsBinding, *DamageResultBinding, ResolvingEffect) ResolvingEffect`: Run a body once for each saved final action, after the complete batch. The body is sequential; it does not deal the batch damage. Each iteration has its own bindings.
-* `DamageResultAmount(*DamageResultBinding) ResolutionValue`, `DamageResultPlayer(*DamageResultBinding) PlayerRef`, `DamageResultPermanent(*DamageResultBinding) PermanentRef`, and `DamageResultSource(*DamageResultBinding) DamageSourceRef`: Read the actual amount, final player or permanent, and captured source in a result body. A player reference is absent for permanent damage, and a permanent reference is absent for player damage. A permanent reference keeps its battlefield incarnation and becomes absent after it leaves or phases out. The source keeps damage-time characteristics after departure. These readers require a dominating `ForEachDamageResult` member declaration.
-* `DamageAmountInto(*NumberBinding) DamageResultOption`: Saves the amount dealt by that instruction after damage replacement, redirection, and prevention. It writes zero when no damage is dealt.
-* `DamagePlayerInto(*PlayerBinding) DamageResultOption`: Saves the player who actually receives positive damage. A redirected-to-permanent, prevented, zero, or absent action clears the binding. Use `FromPlayer` in later instructions. Each result option can occur once per instruction; the amount and player options can occur together.
-* `DamagePermanentInto(*PermanentBinding) DamageResultOption`: Saves the battlefield incarnation that actually receives positive damage, after redirection. A redirected-to-player, prevented, zero, or absent action clears the binding. Use `From` in later instructions. Each result option can occur once per instruction and can combine with the amount and player options.
-* `BindDamageSource(string) *DamageSourceBinding`, `DamageSourceInto(*DamageSourceBinding) DamageResultOption`, and `FromDamageSource(*DamageSourceBinding) DamageSourceRef`: Save the source of positive damage and use its captured incarnation and characteristics in a later damage instruction in the same resolution. Zero, prevented, and absent damage clear the binding. The source option can combine with the amount and recipient options, once per instruction.
-* `PreventNextDamage(DamageRecipientRef, ResolutionValue)`: Installs a prevention shield on creature or player.
-* `PreventAllCombatDamage()`: Prevents all combat damage for the turn (Fog).
-* `PreventCombatDamageToAndBy(PermanentRef)`: Prevents combat damage to and by a specific permanent.
-* `PreventCombatDamageBy(PermanentRef) ResolvingEffect`: Prevents combat damage from one present permanent incarnation for the current combat. It does not prevent damage to that permanent or noncombat damage. Use it in a resolving spell, activation, or trigger.
-* `PreventCombatDamageByEach(PermanentSet) ResolvingEffect`: Selects the set once and prevents combat damage from each present incarnation for the current combat. A permanent that leaves and returns has a new incarnation; phasing does not change the captured incarnation. Use it in a resolving spell, activation, or trigger. Neither constructor accepts a player as a source.
-
-This test-only declaration compiles and validates:
-
-```go
-blocker := dsl.TargetPermanent("creature", dsl.IsCreature)
-card := dsl.NewInstant("Combat prevention", "", dsl.WithAbility(dsl.Spell(
-    dsl.IfPermanentBlocking(blocker, dsl.Sequence(
-        dsl.PreventCombatDamageBy(blocker),
-        dsl.PreventCombatDamageByEach(dsl.BlockedAttackersOf(blocker)))),
-    dsl.WithTargets(blocker))))
-_ = card
-```
-
-The engine APIs `(*Game).CaptureDamageSource(uuid.UUID) DamageSource`, `(*Game).DealDamageToPermanentFromSource(*Permanent, int, DamageSource)`, and `(*Game).DealDamageToPlayerFromSource(Player, int, DamageSource)` serve engine and integration code. Capture freezes a permanent's incarnation, controller, colors, types, and keywords. The damage methods keep that source through replacement and prevention. The existing UUID-based damage methods remain available and capture the source when called. A planeswalker loses loyalty counters after unprevented damage; a planeswalker creature also has damage marked.
-
-Engine and integration code can submit one mixed damage event with `(*Game).DealSimultaneousDamage(...DamageAssignment)`. Use `PlayerDamageAssignment(Player, int, DamageSource)` and `PermanentDamageAssignment(*Permanent, int, DamageSource)` to build its parts. Capture the source before the instruction. Each permanent assignment keeps its battlefield incarnation; a returned or phased-out recipient receives no damage. The engine prepares all assignments with the existing damage replacement and prevention service, applies their results, then sends the queued events and damage callbacks. `DealDamageEach` is the composable adapter for a player set and permanent set.
+The test-only spell in `TestPlaneswalkerDamageSpellResolution` covers actual
+announcement and resolution against a planeswalker. Engine tests cover
+prevention, protection, replacement order, excess damage, and clone isolation.
+
+`DealDamageFrom(source, recipient, amount)` remains proposed. Source LKI,
+sealed expression roles, explicit recipient bindings, batches, and actual-damage
+result bindings are not supplied by this change. No legacy export is retired.
+
+## Lifelink from a departed permanent
+
+The retained `DealDamage(amount ValueSource) Effect` also applies lifelink from
+live permanent characteristics or retained battlefield LKI. This works in
+legacy targeted activated abilities, including an ability whose source was
+sacrificed to pay its cost. Player and permanent damage both use the shared
+life-gain modifiers and replacements. Life-gain events report actual gain.
+
+This compiling synthetic declaration exercises source departure during payment:
 
 ```go
 package example
 
 import "github.com/benprew/mage-go/pkg/mage/dsl"
 
-func simultaneousDamage() dsl.Card {
-    total := dsl.BindNumber("damage dealt")
-    return dsl.NewSorcery("Test Burst", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-        dsl.DealDamageEach(dsl.This,
-            dsl.DamageRecipients(dsl.EachPlayer, dsl.MatchingPermanents(dsl.IsCreature)),
-            dsl.Fixed(2), dsl.DamageTotalInto(total)),
-        dsl.GainLife(dsl.You, dsl.FromNumber(total)),
-    ))))
+func LifelinkSource() dsl.Card {
+    return dsl.NewCreature("Example lifelink source", "", 1, 1,
+        dsl.WithKeyword(dsl.Lifelink),
+        dsl.WithActivatedAbility(dsl.DealDamage(dsl.Fixed(2)),
+            dsl.GenericCost(0),
+            dsl.WithTarget(dsl.TargetDamageAnyTarget()),
+            dsl.WithCost(dsl.SacrificeSourceCost())),
+    )
 }
 ```
+
+No public signature changed. The later damage propagation prerequisite below
+adds incarnation selection and retained LKI for captured permanent sources.
+Spell-source LKI and `DealDamageFrom` remain absent. Production cards remain
+unmigrated.
+
+## Engine prerequisite: permanent incarnation references
+
+Implemented in `mage`, without a new DSL export:
 
 ```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func damageByRecipient() dsl.Card {
-    results := dsl.BindDamageResults("results")
-    item := dsl.BindDamageResult("item")
-    return dsl.NewSorcery("Test Results", "", dsl.WithAbility(dsl.Spell(dsl.Sequence(
-        dsl.DealDamageEach(dsl.This,
-            dsl.DamageRecipients(dsl.EachPlayer, dsl.MatchingPermanents(dsl.IsCreature)),
-            dsl.Fixed(2), dsl.DamageResultsInto(results)),
-        dsl.ForEachDamageResult(results, item,
-            dsl.GainLife(dsl.You, dsl.DamageResultAmount(item))),
-    ))))
-}
+func (g *Game) PermanentRef(id uuid.UUID) (PermanentRef, bool)
+func (r PermanentRef) ID() uuid.UUID
+func (g *Game) LookupPermanentRef(ref PermanentRef) LKIView
 ```
+
+These engine queries capture a present battlefield incarnation and read its
+current characteristics or retained LKI. They work outside resolution as well
+as during engine actions. Capture rejects absent and phased-out permanents.
+Existing references retain phase-time information while the object is absent;
+phase-in resumes live reads without changing identity. Leave-and-return creates
+a different reference. Departure snapshots survive cleanup. The zero reference
+reads as absent. Reference values can be copied into instance-local storage and
+used in cloned games; callers must retain the complete value, not only `ID()`.
+
+This compiling engine example captures a source before its departure:
 
 ```go
 package example
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func damageTogether(game *mage.Game, sourcePermanent, creature *mage.Permanent, player mage.Player) {
-    source := game.CaptureDamageSource(sourcePermanent.ID())
-    game.DealSimultaneousDamage(
-        mage.PlayerDamageAssignment(player, 2, source),
-        mage.PermanentDamageAssignment(creature, 2, source),
+func DepartedSourcePower(g *mage.Game, p *mage.Permanent) int {
+    ref, ok := g.PermanentRef(p.ID())
+    if !ok {
+        return 0
+    }
+    g.BouncePermanentToHand(p)
+    if view := g.LookupPermanentRef(ref); view != nil {
+        return view.ViewPower()
+    }
+    return 0
+}
+```
+
+This is an engine identity prerequisite, not a sealed author expression role.
+The existing `LKIView` remains an engine reader with its existing read-only
+ability convention. Returned departure snapshots have independent permanent
+fields, but card and ability definitions follow existing shared-definition
+ownership. Captured references retain snapshots for the game's lifetime; there
+is no release API yet. Damage lifelink now consumes these references through
+the action propagation described below. `DealDamageFrom` remains proposed.
+No card wiring or gap status is complete.
+
+## Engine prerequisite: ability source references
+
+Implemented in `mage`; the legacy DSL signatures stay available:
+
+```go
+func (obj *StackObject) SourcePermanentRef() PermanentRef
+func (g *Game) ResolvingSourcePermanentRef() PermanentRef
+```
+
+Activated abilities capture the battlefield source before payment. Ordinary
+battlefield event and state triggers capture the source when they become
+pending; leave triggers use the departing source. Pending-to-stack transfer,
+ability copying, and game cloning preserve the complete reference. A copied
+ability can have a different controller while retaining the original source.
+This is identity capture, not an announcement-time characteristic snapshot:
+`LookupPermanentRef` reads current characteristics until departure or phasing,
+then retained LKI. Leave-and-return cannot substitute the new incarnation.
+
+The resolution query works in engine effects and nested resolution; it restores
+the previous reference on exit, including target failure. Outside resolution,
+on spells, on delayed triggers, and on non-battlefield-source abilities it
+returns zero. Manually constructed stack objects need engine capture to carry
+an identity; a UUID alone does not supply one. Direct printed mana abilities do
+not use the stack or this resolution query. The activation path for resolving
+mana abilities does capture its source.
+
+This complete example uses the retained facade and the new engine query:
+
+```go
+package example
+
+import (
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/dsl"
+    "github.com/google/uuid"
+)
+
+func AbilitySource() dsl.Card {
+    effect := dsl.FuncEffect("Gain life equal to the source power",
+        mage.EffectProperties{},
+        func(g *mage.Game, source, controller uuid.UUID, targets []uuid.UUID) error {
+            view := g.LookupPermanentRef(g.ResolvingSourcePermanentRef())
+            if view != nil {
+                g.PlayerGainLife(g.GetPlayer(controller), view.ViewPower())
+            }
+            return nil
+        })
+    return dsl.NewCreature("Example ability source", "", 2, 3,
+        dsl.WithActivatedAbility(effect, dsl.GenericCost(0),
+            dsl.WithCost(dsl.SacrificeSourceCost())))
+}
+```
+
+`TestAbilitySourceRefSacrificeResolution` tests this pattern with a synthetic
+card. Damage now carries the captured source as described below. Spell-source
+identity, delayed-source capture, protection/deathtouch integration, typed roles,
+and `DealDamageFrom` remain unimplemented. No card wiring or gap is complete.
+
+## Engine prerequisite: damage action source propagation
+
+Implemented in `mage`, with no new DSL author export:
+
+```go
+func (a *DamageToPlayerAction) SourcePermanentRef() PermanentRef
+func (a *DamageToCreatureAction) SourcePermanentRef() PermanentRef
+func (a *DamageToPlayerAction) RedirectToPermanent(id uuid.UUID) *DamageToCreatureAction
+func (a *DamageToCreatureAction) RedirectToPlayer(id uuid.UUID) *DamageToPlayerAction
+```
+
+These queries and transformations are for engine damage replacements. Both
+`WithAmount` methods preserve the captured source. The shared damage service
+captures before replacements, preferring a matching resolving ability source
+over the present incarnation. Built-in redirection preserves that identity.
+Direct damage from a present permanent also captures its identity. UUID-only
+action constructors keep their signatures and return zero references.
+
+This complete engine example redirects a player damage action without losing
+its original source:
+
+```go
+package example
+
+import (
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/google/uuid"
+)
+
+func RedirectDamage(a *mage.DamageToPlayerAction, recipient uuid.UUID) *mage.DamageToCreatureAction {
+    return a.RedirectToPermanent(recipient)
+}
+```
+
+The retained `dsl.DealDamage(amount ValueSource) Effect` now uses the exact
+permanent incarnation for lifelink in captured battlefield abilities, including
+copies and triggers. Source departure/return, cleanup, and phasing retain the
+original lifelink information. Current characteristics remain current until
+departure. An explicitly different damage source does not inherit the resolving
+ability's reference. Uncaptured absent sources keep legacy UUID lookup.
+
+Protection, deathtouch, notification identity, history, and recipient lookup
+retain their existing contracts. Spell/delayed-source identity, typed roles,
+`DealDamageFrom`, simultaneous batches, and damage results remain unimplemented.
+No production card is migrated and no inventory or gap is complete.
+
+## Engine prerequisite: permanent source filters in prevention rules
+
+The existing `WithFrom(from PermanentFilter)` option now uses captured permanent
+source information in the shared damage-prevention rule. No signature changed.
+The other relevant signatures remain:
+
+```go
+func (g *Game) AddDamagePreventionRule(opts ...damagePreventionRuleOption)
+func (g *Game) PreventAllDamageFrom(sourceID uuid.UUID)
+func WithFrom(from PermanentFilter) damagePreventionRuleOption
+func WithToPlayer(playerID uuid.UUID) damagePreventionRuleOption
+```
+
+`damagePreventionRuleOption` is package-private; callers compose options without
+naming its type. `AddDamagePreventionRule` installs a rule for the current effect
+cycle. Use it during continuous-effect application, or when no intervening
+cycle rebuild occurs before damage. `PreventAllDamageFrom` installs its existing
+source-ID rule until end of turn. Neither function is a typed DSL declaration.
+
+For captured damage, source filters read current characteristics while the same
+permanent is present and retained characteristics after departure or phasing.
+Copies, redirections, and cleanup preserve that identity. Custom filters must
+read the supplied permanent rather than perform another UUID lookup. Player and
+permanent recipients retain their existing selection and legality contracts.
+This complete engine example composes existing options:
+
+```go
+package example
+
+import (
+    "github.com/google/uuid"
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+func PreventRedDamageThisCycle(g *mage.Game, player uuid.UUID) {
+    g.AddDamagePreventionRule(
+        mage.WithFrom(mage.HasColorFilter(core.Red)),
+        mage.WithToPlayer(player),
     )
 }
 ```
+
+At this earlier slice boundary, the separate color/type prevention executors
+were unchanged. The contract below now extends their source reads. Protection,
+deathtouch, spell-source identity, typed `DealDamageFrom`, and card migration
+remain separate work. All production damage exports remain available.
+
+## Engine prerequisite: color and card-type prevention source reads
+
+Existing public signatures are unchanged:
+
+```go
+func (g *Game) AddColorPrevention(playerID uuid.UUID, color core.Color)
+func (g *Game) AddTypePrevention(playerID uuid.UUID, ct core.CardType)
+func AddColorPreventionStep(color core.Color) Effect
+```
+
+The two game methods install player-only, one-use prevention rules until end
+of turn. They prevent the first matching damage event in full, then expire.
+They can be called from resolving effects; the color step remains usable in
+legacy sequences. They are engine installers, not sealed typed declarations.
+
+Both rules read current color/type characteristics of the original permanent
+incarnation, or retained departure/phase-time LKI. This includes gained and
+lost characteristics, copied abilities, and source return followed by another
+departure. Missing captured information rejects the match without using the
+returned card. Nonmatching events do not consume the rule. Uncaptured live
+permanents use current characteristics; uncaptured color reads reuse
+`Game.EffectiveColors`, including spell color changes. Uncaptured card-type
+reads retain the existing card lookup for nonpermanent sources. This does not
+establish spell incarnation/LKI semantics.
+
+This complete example compiles:
+
+```go
+package example
+
+import (
+    "github.com/google/uuid"
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+func PreventNextArtifactDamageThisTurn(g *mage.Game, player uuid.UUID) {
+    g.AddTypePrevention(player, core.TypeArtifact)
+}
+```
+
+These installers do not choose a damage source. They do not implement the
+complete Circle of Protection requirements. Chosen-source identity, artifact
+redirection source matching, protection, deathtouch, notifications, recipient
+identity, typed damage adapters, and production card wiring remain open.
+
+## Engine prerequisite: protection in the damage pipeline
+
+Existing public signatures remain available:
+
+```go
+func ProtectionFromColor(c core.Color) *ProtectionAbility
+func ProtectionFromColors(cs ...core.Color) *ProtectionAbility
+func ProtectionFromCardType(ct core.CardType) *ProtectionAbility
+func ProtectionFromSubType(subtype string) *ProtectionAbility
+func ProtectionFromAll() *ProtectionAbility
+func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID)
+```
+
+Protection damage prevention now participates in recipient-chosen replacement
+ordering and is checked again after redirection to a permanent. Permanent
+sources use the action's captured incarnation: current characteristics while
+present, retained departure or phase-time LKI while absent. A returned card
+cannot replace the original source's characteristics. Color, card-type,
+subtype, and everything protection reuse existing abilities, including wrapped
+grants and Aura exemptions. Noncolor custom filters retain their CardFilter
+contract; effective type and subtype queries use the supplied permanent view.
+Uncaptured nonpermanent sources keep existing card and effective-color lookup;
+spell incarnation/LKI is still open.
+
+The same service supports legacy resolving damage effects, sequences, divided
+damage, fight instructions, combat damage, and direct engine actions. The
+existing `AttrDamageCantBePreventedOrRedirected` bypass now also bypasses
+protection on direct permanent damage. This does not establish general CR
+615.12 semantics. Targeting, blocking, and attachment checks remain separate.
+No sealed typed declaration or `DealDamageFrom` adapter is introduced here.
+
+This complete example compiles and uses nontargeted damage:
 
 ```go
 package example
@@ -1549,2694 +477,401 @@ import (
     "github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func damageWalker() {
-    a, b := mage.NewBasePlayer("A"), mage.NewBasePlayer("B")
-    game := mage.NewGame(a, b)
-    walker := game.PutOnBattlefield(mage.NewPlaneswalker("Test Walker", "", 4), b.PlayerID())
-    source := game.PutOnBattlefield(mage.NewCreature("Source", "", 1, 1), a.PlayerID())
-    game.DealDamageToPermanentFromSource(walker, 2, game.CaptureDamageSource(source.ID()))
-    _ = walker.Counters[core.Loyalty]
+func DamageProtectedPermanent(g *mage.Game, controller mage.Player) {
+    source := g.PutOnBattlefield(mage.NewCreature("Test red source", "{R}", 1, 3), controller.PlayerID())
+    recipient := g.PutOnBattlefield(mage.NewCreature("Test protected recipient", "", 1, 3,
+        mage.WithAbility(mage.ProtectionFromColor(core.Red))), controller.PlayerID())
+    g.DealDamageToPermanent(recipient, 2, source.ID())
 }
 ```
 
-The typed constructor can use a declared damage target and its actual result:
+Production cards remain unmigrated. Deathtouch, notifications, spell and recipient
+identity, batch damage, results, and typed adapters remain separate work.
+
+## Engine prerequisite: deathtouch damage and destruction
+
+Existing signatures are preserved:
 
 ```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func damageAbility() {
-    recipient := dsl.TargetDamageRecipient("recipient")
-    dealt := dsl.BindNumber("damage dealt")
-    damagedPlayer := dsl.BindPlayer("damaged player")
-    ability := dsl.Spell(dsl.Sequence(
-        dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(3), dsl.DamageAmountInto(dealt), dsl.DamagePlayerInto(damagedPlayer)),
-        dsl.GainLife(dsl.FromPlayer(damagedPlayer), dsl.FromNumber(dealt)),
-    ), dsl.WithTargets(recipient))
-    _ = ability
-}
+func DealDamage(amount ValueSource) Effect
+func WithKeyword(kw core.Keyword) CardOption
+func (g *Game) DealDamageToPermanent(perm *Permanent, amount int, sourceID uuid.UUID)
+func (g *Game) CheckStateBasedActions()
 ```
 
-`DamageSourceRef` accepts `This` and `FromDamageSource(binding)`. `DamageRecipientRef` accepts `You`, `ActivePlayer`, typed player and permanent references, and `TargetDamageRecipient`. `TargetPlayerOrPlaneswalkerDamage(name string) *DamageTargetBinding` declares one player-or-planeswalker target and excludes creatures. It works in `Spell`, `Activate`, and `WhenEvent` through `WithTargets`, and with `DealDamageFrom` or `PreventNextDamage`. The action rechecks a target's battlefield incarnation at resolution. The result amount is damage dealt, not the recipient's resulting life loss or loyalty loss.
-
-```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-var recipient = dsl.TargetPlayerOrPlaneswalkerDamage("recipient")
-var spell = dsl.Spell(dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2)), dsl.WithTargets(recipient))
-```
-
-This spell uses one captured source for two sequential damage instructions:
-
-```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func twoDamageInstructions() {
-    source := dsl.BindDamageSource("first damage source")
-    ability := dsl.Spell(dsl.Sequence(
-        dsl.DealDamageFrom(dsl.This, dsl.You, dsl.Fixed(1), dsl.DamageSourceInto(source)),
-        dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.Fixed(2)),
-    ))
-    _ = ability
-}
-```
-
-For a permanent result in a spell, the saved recipient can be used by a later instruction:
-
-```go
-recipient := dsl.TargetDamageRecipient("recipient")
-damaged := dsl.BindPermanent("damaged permanent")
-ability := dsl.Spell(dsl.Sequence(
-    dsl.DealDamageFrom(dsl.This, recipient, dsl.Fixed(2), dsl.DamagePermanentInto(damaged)),
-    dsl.AddCounters(dsl.From(damaged), dsl.P1P1, dsl.Fixed(1)),
-), dsl.WithTargets(recipient))
-_ = ability
-```
-
-This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. A player result leaves `damaged` absent, so the counter instruction has no subject. Collection damage and group totals remain separate work.
-
-### Counter Actions
-* `AddCounters(PermanentRef, CounterType, ResolutionValue)`: Adds counters through the replacement pipeline.
-* `AddCountersEach(PermanentSet, CounterType, ResolutionValue) ResolvingEffect`: Places the same number of counters on each selected battlefield permanent in one instruction. Use it in a spell, activation, or trigger body. The set and amount are read once at resolution. Each counter placement uses the shared replacement pipeline; all replacements are prepared before any counters change. An absent, phased-out, returned, or duplicate member receives no placement. Registration rejects a missing set or amount, an undeclared set binding, and an invalid counter type. A singular permanent is a Go type error. For example, this synthetic spell declaration compiles:
-
-  ```go
-  dsl.NewSorcery("Counter batch", "", dsl.WithAbility(dsl.Spell(
-      dsl.AddCountersEach(dsl.ControlledPermanents(dsl.IsCreature),
-          dsl.P1P1, dsl.Fixed(2)))))
-  ```
-* `RemoveCountersFrom(PermanentRef, CounterType, ResolutionValue)`: Removes up to the specified count.
-* `RemoveAllCounters(PermanentRef, CounterType)`: Removes all counters of that kind.
-
-### Library & Mana Actions
-* `ScryAtResolution(ResolutionValue)`: Scries cards equal to the amount.
-* `SurveilAtResolution(ResolutionValue)`: Surveils cards equal to the amount.
-* `AddManaAmount(Color, ResolutionValue)`: Adds mana of the specified color to the pool.
-* `AddManaToPlayer(PlayerRef, core.Color, ResolutionValue) ResolvingEffect`: Add a fixed mana type to the selected player's pool. The player and amount are read at resolution; an absent player or nonpositive amount adds nothing. Use it in a spell, activated ability, or trigger body. A targetless activated ability that can add mana this way resolves as a mana ability. A targetless `WhenEvent(LandTappedForMana(), ...)` trigger with a direct or sequenced mana action resolves immediately after the producing mana ability. Other event patterns still use ordinary trigger timing. This declaration compiles:
-
-  ```go
-  producer := dsl.BindPlayer("producer")
-  card := dsl.NewEnchantment("Mana watcher", "", dsl.WithAbility(dsl.WhenEvent(
-      dsl.LandTappedForMana().WithPlayer(producer),
-      dsl.AddManaToPlayer(dsl.FromPlayer(producer), core.Green, dsl.Fixed(1)))))
-  _ = card
-  ```
-* `AddManaOfAnyOneColor(ResolutionValue)`: The resolving controller chooses one color and adds the full amount in that color. It works in resolving spell, activation, and trigger bodies. A targetless activation that can produce mana resolves as a mana ability. A fixed positive amount in a tap-only mana activation is available to automatic payment planning; a dynamic amount is not.
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func choiceLand() *dsl.BaseCard {
-    return dsl.NewLand("Choice land", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.TapCost(dsl.This)),
-        dsl.AddManaOfAnyOneColor(dsl.Fixed(2)),
-    )))
-}
-```
-
----
-
-## 7. Control Flow, Choices, and Branches
-
-* `Sequence(effects...)`: Executes resolving effects in order, threading a single resolution frame.
-* `ForEach(set, memberBinding, body)`: Iterates sequentially over permanents in the set.
-* `FlipCoin(playerRef, OnWin(effect), OnLoss(effect))`: Resolves a coin flip through the game's deterministic RNG.
-* `IfState(condition, effect)`: Resolution-time branch based on pure game state.
-* `IsYourTurn() StateCondition`: Checks whether the active player is the stored controller when the condition is evaluated. Use it with `IfState` in a spell, activation, or trigger body; it also works in pure static and state conditions. It does not restrict announcement or activation. For example:
-
-```go
-package example
-
-import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func turnCheck() *dsl.BaseCard {
-    return dsl.NewInstant("Turn check", "{W}",
-        dsl.Spell(dsl.IfState(dsl.IsYourTurn(),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-}
-```
-* `IfPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body only if paid.
-* `UnlessPaid(playerRef, costGroup, effect)`: Offers payment transaction; executes body if declined/unpaid.
-  The payment choice is offered only when each cost component is currently payable. A later failed transaction also runs the unpaid body. Use it inside `ForEachSavedCard` for a separate choice per saved card.
-  For "destroy this creature unless you pay {1}", use
-  `UnlessPaid(You, Costs(Mana("{1}")), Destroy(This))`. A granted trigger
-  keeps its triggering controller and source incarnation through resolution.
-
-```go
-func perDrawnCardChoice() dsl.Card {
-    drawn, member := dsl.BindCards("drawn"), dsl.BindCard("member")
-    return dsl.NewInstant("Synthetic draw", "{X}{U}", dsl.Spell(dsl.Sequence(
-        dsl.Draw(dsl.You, dsl.Fixed(2), dsl.DrawCardsInto(drawn)),
-        dsl.ForEachSavedCard(drawn, member, dsl.UnlessPaid(dsl.You,
-            dsl.Costs(dsl.SacrificeMatchingIncludingSourceCost(dsl.AnyPermanent, "Sacrifice a permanent")),
-            dsl.Discard(dsl.You, dsl.Fixed(1)))),
-    )))
-}
-```
-
-The example uses a fixed draw count for a standalone declaration. A card with X in its text needs the announced-X value. The choice is a resolving spell, activation, or trigger body; it is not an additional cost.
-
-* `MillCost(count int) Cost`: Pay by milling `count` cards from the payer's library. Use it in `Costs` for spell or activation payment, or in a resolution-time `IfPaid` or `UnlessPaid` branch. Registration requires a positive count. Payment uses the current mill amount after replacement; if the library has fewer cards than that amount, the payment fails without milling cards or paying another component. A replacement that reduces the mill amount to zero permits payment. A player can decline an optional payment before preparation.
-
-```go
-var _ = NewCreature("Upkeep", "", 1, 1,
-    WithAbility(At(YourUpkeep,
-        UnlessPaid(You, Costs(MillCost(2)), Sacrifice(This)))))
-```
-
-* `MillCostInto(count int, paid *NumberBinding) Cost`: Use a direct activated cost or spell additional cost to save the final count milled during payment. The count includes mill amount modifiers and can be zero. `FromNumber(paid)` reads it in that spell or ability's resolving body. Registration rejects a nil or unnamed binding, duplicate producers, undominated reads, and use in `EitherCost` or a resolution-time payment. This binding records a count, not the identities of milled cards.
-
-```go
-paid := dsl.BindNumber("milled")
-card := dsl.NewArtifact("Mill source", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.MillCostInto(2, paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-)))
-_ = card
-```
-* `ChoosePermanent(playerRef, set, binding)`: Player chooses a permanent at resolution, storing it in `binding`.
-* `ChooseRandomPermanent(set, binding)`: Selects a random permanent from the set at resolution.
-* `ChooseRandomPlayer(playerSet, binding)`: Selects a random player from the set at resolution.
-
-For a random tap, use `ChooseRandomPermanent(MatchingPermanents(filter), chosen)`
-followed by `Tap(From(chosen))`. The collection excludes phased-out permanents;
-an empty choice consumes no random value. The choice does not declare a target.
-
----
-
-## 8. Saved Bindings & Snapshots
-
-Bindings bridge resolution steps without string dictionaries:
-
-```go
-host := BindPermanent("host")
-
-Sequence(
-    Snapshot(AttachedPermanent, host),
-    Sacrifice(This),
-    AddCounters(From(host), P1P1, Fixed(1)),
-)
-```
-
-* `BindPermanent(label)`: Declares a permanent binding variable.
-* `BindPlayer(label)`: Declares a player binding variable.
-* `BindNumber(label)`: Declares a numeric binding variable.
-* `Snapshot(subject, binding)`: Captures the subject's current battlefield incarnation.
-* `SnapshotPlayer(subject, binding)`: Captures a player reference at resolution.
-* `SnapshotNumber(value, binding)`: Evaluates and freezes a numeric value at resolution.
-* `From(binding)` / `FromPlayer(binding)` / `FromNumber(binding)`: Reads the saved value in later instructions.
-
-`SacrificeCreatureCost()` and `SacrificeMatchingCost(filter, text)` select one
-other permanent controlled by the payer. `SacrificeMatchingIncludingSourceCost`
-can select the source. `SacrificeNMatchingCost(count, filter, text)` selects the
-specified number of other permanents. These costs work in `Costs(...)` for
-`Activate`, `WithAdditionalCost` for spells, and payment branches. The payer
-chooses during payment preparation. The transaction validates and pays those
-same battlefield incarnations. A returned or phased-out choice cannot be
-silently replaced with another permanent at commit.
-
-```go
-ability := Activate(
-    Costs(SacrificeCreatureCost()),
-    GainLifeFor(You, Fixed(1)),
-)
-_ = NewArtifact("Offering", "", WithAbility(ability))
-```
-
-`SacrificeCreatureIncludingSourceCostWithStats(power, toughness *NumberBinding)`
-uses the same prepared-payment transaction and also permits the source when it
-is a creature. Use it only as an activation cost or spell additional cost.
-It saves the chosen creature's power and toughness immediately before payment
-in the resulting stack instance. The source can leave as payment; the saved
-numbers remain available at resolution.
-
-```go
-power, toughness := BindNumber("paid power"), BindNumber("paid toughness")
-ability := Activate(
-    Costs(SacrificeCreatureIncludingSourceCostWithStats(power, toughness)),
-    GainLifeFor(You, FromNumber(toughness)),
-)
-_ = NewCreature("Offering", "", 2, 2, WithAbility(ability))
-```
-
-Other sacrifice costs do not yet produce a typed paid-permanent value. A
-resolving `SacrificeAmountInto` binding reports a separate action and cannot
-read this payment.
-
-Crumble captures `ControllerOf(artifact)` with `SnapshotPlayer` and
-`ManaValueOf(artifact)` with `SnapshotNumber` before `DestroyWithoutRegeneration`.
-Its later `GainLife` reads those saved values, including when destruction fails.
-
-Launch Party captures `ControllerOf(creature)` with `SnapshotPlayer` before
-`Destroy(creature)`, then uses `LoseLife(FromPlayer(controller), Fixed(2))`.
-Life loss still occurs if regeneration or indestructible prevents destruction,
-and it emits a life-loss event. Attach `WithAdditionalCost(SacrificeCreatureCost())`
-to the card alongside `Spell`; choose the target before sacrifice payment.
-Sacrificing the sole target makes it illegal, so neither instruction resolves.
-
-Assassin's Strike uses the same controller snapshot before `Destroy`, followed
-by `Discard(FromPlayer(controller), Fixed(1))`. The captured player chooses the
-card, and the discard uses the shared replacement and event services. Discard
-still occurs when regeneration or indestructible prevents destruction.
-
-Swords to Plowshares captures `ControllerOf(creature)` and `PowerOf(creature)`
-before `Exile(creature)`, then gains life with those saved values. Nonpositive
-power gains no life. `Exile` retains exile targeting metadata through `Sequence`;
-it does not report destruction that regeneration can replace.
-
----
-
-## 9. Triggered Abilities
-
-Use distinct constructors for distinct trigger lifecycles:
-
-### Event Triggers (`WhenEvent`)
-Triggers on rules events dispatched by the engine:
-* `WhenEvent(EventPattern, ResolvingEffect, ...TriggerOption)`
-* Event patterns:
-  * `LandTappedForMana().WithPlayer(*PlayerBinding).WithAmount(*NumberBinding)`: Match a land's tap-cost mana ability when it resolves and produces mana. Both captures are optional and independent. `WithPlayer` saves the activating player; `WithAmount` saves the total mana produced by that ability as recorded in the event. Read them with `FromPlayer` and `FromNumber` in the trigger body. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. Each binding belongs to one trigger instance and is not a target. Zero production has no matching event. For example:
-  * `BindManaTypes(name) *ManaTypesBinding` declares an instance-local type set. `LandTappedForMana().WithManaTypes(binding)` saves the distinct mana types produced by the triggering land ability. `AddManaOfProducedTypeToPlayer(player PlayerRef, types *ManaTypesBinding, amount ResolutionValue) ResolvingEffect` lets the recipient choose one saved type and adds the full amount through the shared mana action. An absent player, empty type set, or nonpositive amount adds no mana. A choice outside the saved set uses its first type. The action works in a battlefield `WhenEvent` or `WhenEventModes` body and has triggered mana timing when the trigger has no target. Registration rejects nil, unnamed, repeated, and unproduced bindings. This declaration compiles:
-
-    ```go
-    producer := dsl.BindPlayer("producer")
-    types := dsl.BindManaTypes("produced types")
-    ability := dsl.WhenEvent(
-        dsl.LandTappedForMana().WithPlayer(producer).WithManaTypes(types),
-        dsl.AddManaOfProducedTypeToPlayer(dsl.FromPlayer(producer), types, dsl.Fixed(1)))
-    _ = ability
-    ```
-  * `LandTappedForMana().WithLand(*PermanentBinding)`: Save the exact land incarnation that produced mana. This optional capture composes with `WithPlayer` and `WithAmount` in `WhenEvent` and `WhenEventModes` on a battlefield permanent. `From(land)` is absent if that land leaves and returns or phases out before resolution. The land is an event participant, not a target. Registration rejects a nil, unnamed, repeated, or unbound land binding. This declaration compiles:
-    ```go
-    land := dsl.BindPermanent("producing land")
-    dsl.WhenEvent(
-        dsl.LandTappedForMana().WithLand(land),
-        dsl.Tap(dsl.From(land)),
-    )
-    ```
-
-    ```go
-    player := dsl.BindPlayer("mana player")
-    amount := dsl.BindNumber("mana amount")
-    ability := dsl.WhenEvent(
-        dsl.LandTappedForMana().WithPlayer(player).WithAmount(amount),
-        dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))
-    ```
-
-  * `LandTappedForMana().OfManaType(core.Color)`: Match a land's tapped-for-mana event only when its mana ability produced the specified type. The type is one of `Colorless`, `White`, `Blue`, `Black`, `Red`, or `Green`; registration rejects `AnyColor`, invalid values, and repeated filters. This filter composes with `WithLand`, `WithPlayer`, and `WithAmount` in battlefield `WhenEvent` and `WhenEventModes` abilities. The type is checked from the event, after the ability chooses its mana color. This declaration compiles:
-
-    ```go
-    player := dsl.BindPlayer("activator")
-    watcher := dsl.NewEnchantment("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.LandTappedForMana().OfManaType(core.Blue).WithPlayer(player),
-        dsl.GainLife(dsl.FromPlayer(player), dsl.Fixed(1)),
-    )))
-    _ = watcher
-    ```
-
-  * `LandTappedForMana().OfAttachedLand()`: Match only when the land that produced mana is attached to the battlefield source at event time. The filter compares the land's battlefield incarnation, so a returned card does not match an old event. It composes with `OfManaType`, `WithLand`, `WithPlayer`, and `WithAmount` in `WhenEvent` and `WhenEventModes`. Registration rejects a repeated filter. This declaration compiles:
-
-    ```go
-    producer := dsl.BindPlayer("producer")
-    amount := dsl.BindNumber("produced")
-    watcher := dsl.NewAura("Land watcher", "", dsl.WithCastTarget(dsl.TargetLand()), dsl.WithAbility(dsl.WhenEvent(
-        dsl.LandTappedForMana().OfAttachedLand().OfManaType(core.Blue).WithPlayer(producer).WithAmount(amount),
-        dsl.GainLife(dsl.FromPlayer(producer), dsl.FromNumber(amount)),
-    )))
-    _ = watcher
-    ```
-
-  * `Enters(This)`: Source enters the battlefield.
-  * `Dies(This)`: Source dies (moves from battlefield to graveyard).
-  * `LeavesBattlefield(This)`: Source moves from the battlefield to any other zone. Destruction, exile, and return to hand match. Phasing does not match. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The pending trigger keeps its controller and source incarnation.
-  * `OneOrMoreCreaturesYouControlAttack().WithCount(*NumberBinding)`: Match once when one or more creatures controlled by this permanent's controller are declared as attackers in one declare attackers step. `WithCount` is optional. It saves the number actually declared for this trigger instance; read it with `FromNumber`. Creatures put onto the battlefield attacking do not count. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var count = dsl.BindNumber("declared attackers")
-    var _ = dsl.NewEnchantment("Attack watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.OneOrMoreCreaturesYouControlAttack().WithCount(count),
-            dsl.GainLife(dsl.You, dsl.FromNumber(count)))))
-
-    func main() {}
-    ```
-  * `OneOrMoreCreaturesAttack().WithCount(*NumberBinding)`: Match once when either player declares one or more attackers. `WithCount` is optional and saves the number declared in that event. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. A creature that enters attacking does not count. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var count = dsl.BindNumber("declared attackers")
-    var _ = dsl.NewEnchantment("Attack observer", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.OneOrMoreCreaturesAttack().WithCount(count),
-            dsl.GainLife(dsl.You, dsl.FromNumber(count)))))
-
-    func main() {}
-    ```
-  * `OneOrMoreCardsLeaveYourGraveyard().WithCount(*NumberBinding)`: Match once for each event group in which one or more cards leave the source controller's graveyard. `WithCount` is optional and saves the number of cards in that group. Separate moves cause separate triggers. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding belongs to that trigger instance. Registration rejects nil, unnamed, repeated, or out-of-scope count bindings. This declaration compiles:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var count = dsl.BindNumber("cards that left")
-    var _ = dsl.NewEnchantment("Graveyard watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.OneOrMoreCardsLeaveYourGraveyard().WithCount(count),
-            dsl.GainLife(dsl.You, dsl.FromNumber(count)))))
-
-    func main() {}
-    ```
-  * `EachCreatureYouControlAttacks().WithAttacker(*PermanentBinding).WithDefendingPlayer(*PlayerBinding)`: Match once per creature you control that is declared as an attacker. Either capture is optional. `From` reads the attacking battlefield incarnation; `FromPlayer` reads the defending player. Both values belong to that trigger instance. A creature put onto the battlefield attacking does not match. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The combat service currently records player defenders only.
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var attacker = dsl.BindPermanent("attacker")
-    var defender = dsl.BindPlayer("defender")
-    var _ = dsl.NewEnchantment("Attack watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.EachCreatureYouControlAttacks().WithAttacker(attacker).WithDefendingPlayer(defender),
-            dsl.Sequence(dsl.Tap(dsl.From(attacker)),
-                dsl.GainLife(dsl.FromPlayer(defender), dsl.Fixed(1))))))
-
-    func main() {}
-    ```
-  * `CreatureYouSacrifice() creatureYouSacrificePattern`: Match each creature sacrificed by the source controller, including the source and tokens. It uses the completed sacrifice event and the creature type at sacrifice time. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. `WithPermanent(*PermanentBinding)` saves the departing battlefield incarnation in that trigger. `From(binding)` is absent after sacrifice; `DamageSourceOf(From(binding))` can use its departure LKI even if the card returns. Registration rejects nil, unnamed, repeated, and undominated bindings. For example:
-
-    ```go
-    paid := dsl.BindPermanent("sacrificed creature")
-    card := dsl.NewCreature("Sacrifice Watcher", "", 1, 1,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.CreatureYouSacrifice().WithPermanent(paid),
-            dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(paid)),
-                dsl.You, dsl.Fixed(1)))))
-    _ = card
-    ```
-  * `SpellCast().OfColor(core.Color) EventPattern`: Match a spell cast by any player while the source is on the battlefield. `OfColor` is optional and accepts one of the five Magic colors. It checks the spell's effective color on the stack when the cast event occurs, including color changes. The pattern does not target or bind the spell. Use it in `WhenEvent` or `WhenEventModes`.
-  * `SpellCast().FromZone(core.Zone) EventPattern`: Match a spell cast from the given card zone. The filter reads the exact cast stack object's `CastZone` when the cast event occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. It composes with cast filters and captures such as `ByOpponent` and `WithCaster`. Registration rejects a repeated filter, `ZoneStack`, `ZoneAny`, or an invalid zone. A copied spell does not create a cast event. This synthetic declaration compiles:
-
-    ```go
-    caster := dsl.BindPlayer("caster")
-    card := dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().FromZone(core.ZoneHand).WithCaster(caster),
-        dsl.GainLife(dsl.FromPlayer(caster), dsl.Fixed(1)))))
-    ```
-
-  * `SpellCast().NotOwnedByCaster() EventPattern`: Match a completed cast when the cast spell's card owner differs from its caster. The filter reads the exact stack object named by the cast event. It works in battlefield `WhenEvent` and `WhenEventModes`, and composes with `ByOpponent`, `FromZone`, and other cast filters. A copied spell does not create a cast event. Registration rejects a repeated ownership filter. This declaration compiles:
-
-    ```go
-    watcher := dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().NotOwnedByCaster(), dsl.Draw(dsl.You, dsl.Fixed(1)))))
-    _ = watcher
-    ```
-
-  * `SpellCast().OfType(core.CardType) EventPattern`: Match a cast spell of one nonland card type. The filter reads the spell on the stack at cast time, including more than one type. A repeated filter or a land type fails registration. It composes with `OfColor`, `ByOpponent`, and `WithCaster` in `WhenEvent` and `WhenEventModes` on a battlefield source. For example:
-
-    ```go
-    watcher := dsl.NewCreature("Watcher", "{2}{U}", 1, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.SpellCast().OfType(core.TypeArtifact),
-            dsl.Draw(dsl.You, dsl.Fixed(1)),
-        )),
-    )
-    _ = watcher
-    ```
-  * `SpellCast().ByController().OfInstantOrSorcery().TargetsCreature() EventPattern`: Match a spell cast by the source controller when that instant or sorcery has at least one chosen target that is currently a creature on the battlefield. The creature check uses the target's captured battlefield incarnation and does not use last-known information after it leaves. The pattern works in battlefield `WhenEvent` and `WhenEventModes`. Each filter can be used separately. Registration rejects repeated caster, type, or creature-target filters and conflicting caster filters. This declaration compiles:
-
-    ```go
-    dsl.NewArtifact("Repartee source", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().ByController().OfInstantOrSorcery().TargetsCreature(),
-        dsl.Draw(dsl.You, dsl.Fixed(1)))))
-    ```
-  * `SpellCast().ByOpponent().WithCaster(*PlayerBinding) EventPattern`: `ByOpponent` matches a caster who is an opponent of the source controller when the spell is cast. `WithCaster` is optional and saves that event player for this trigger instance. Read it with `FromPlayer` in the trigger body. The two filters compose with `OfColor`. A missing or repeated caster binding is rejected at registration. This does not bind or target the spell.
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var caster = dsl.BindPlayer("spell caster")
-    var _ = dsl.NewArtifact("Cast Watcher", "{1}",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.SpellCast().ByOpponent().WithCaster(caster),
-            dsl.GainLife(dsl.FromPlayer(caster), dsl.Fixed(1)),
-        )),
-    )
-
-    func main() {}
-    ```
-
-    ```go
-    package main
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    var _ = dsl.NewArtifact("Blue Spell Watcher", "{1}",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.SpellCast().OfColor(core.Blue),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)),
-        )),
-    )
-
-    func main() {}
-    ```
-  * `SpellCast().WithManaSpent(*NumberBinding) EventPattern`: Save the total mana paid for the cast spell when the cast event occurs. Read it with `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The saved value remains available after the spell leaves the stack. A cast without mana payment saves zero. It composes with `ByOpponent`, `WithCaster`, `OfColor`, `OfType`, and `OfEnchantmentSubtype`. Registration rejects a missing, unnamed, or repeated binding. This synthetic declaration compiles:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var spent = dsl.BindNumber("mana spent")
-    var _ = dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().WithManaSpent(spent),
-        dsl.GainLife(dsl.You, dsl.FromNumber(spent)))))
-
-    func main() {}
-    ```
-  * `SpellCast().WithColorsSpent(*NumberBinding) EventPattern`: Save the number of distinct colored mana colors spent for the cast spell. Colorless mana does not count. Read the value with `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The event saves the value before the spell leaves the stack. It composes with cast filters and `WithManaSpent` if the two captures use different bindings. Registration rejects a missing, unnamed, repeated, or out-of-scope binding. This synthetic declaration compiles:
-
-    ```go
-    package main
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    var colors = dsl.BindNumber("colors spent")
-    var _ = dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().OfType(core.TypeInstant).WithColorsSpent(colors),
-        dsl.GainLife(dsl.You, dsl.FromNumber(colors)))))
-
-    func main() {}
-    ```
-  * `ColorsSpentToCastThisSpell() ResolutionValue`: Read the number of distinct colored mana colors paid to cast the resolving spell. Use it in a typed `Spell` body, including a spell copied on the stack. Colorless mana and colors with zero payment do not count. Registration rejects use in an activation or trigger. This value does not read a spell-cast event or a creature's former cast payment. This synthetic declaration compiles:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var _ = dsl.NewInstant("Converge Test", "", dsl.Spell(
-        dsl.Draw(dsl.You, dsl.ColorsSpentToCastThisSpell())))
-
-    func main() {}
-    ```
-
-  * `Enters(This).WithColorsSpent(*NumberBinding) EventPattern`: Save the number of distinct colored mana colors paid to cast this permanent as a spell. Read the saved number with `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. Entry without casting saves zero. The value belongs to the entry event, so later zone changes do not alter a pending trigger. This is an entry-trigger capture, not an "enters with" replacement. Registration rejects missing, unnamed, repeated, or out-of-scope bindings and use on `Dies(This)` or `LeavesBattlefield(This)`. This synthetic declaration compiles:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var colors = dsl.BindNumber("entry colors")
-    var _ = dsl.NewCreature("Entry Colors", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(
-        dsl.Enters(dsl.This).WithColorsSpent(colors),
-        dsl.GainLife(dsl.You, dsl.FromNumber(colors)))))
-
-    func main() {}
-    ```
-  * `SpellCast().OfEnchantmentSubtype(string) EventPattern`: Match an enchantment spell with the named enchantment subtype when it is cast. The filter reads the cast stack object, not another copy of the same card. It composes with `OfType(core.TypeEnchantment)`, `OfColor`, `ByOpponent`, and `WithCaster` in battlefield `WhenEvent` and `WhenEventModes` abilities. Registration rejects an unknown or nonenchantment subtype, a repeated subtype filter, or an incompatible `OfType`. It does not target or save the spell.
-
-    ```go
-    package main
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    func auraWatcher() dsl.Card {
-        return dsl.NewArtifact("Aura Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.SpellCast().OfType(core.TypeEnchantment).OfEnchantmentSubtype("Aura"),
-            dsl.Draw(dsl.You, dsl.Fixed(1)))))
-    }
-
-    func main() {}
-    ```
-  * `BindSpell(name string) *SpellBinding`, `SpellCast().WithSpell(*SpellBinding)`, and `FromSpell(*SpellBinding) StackObjectRef`: Save the cast spell's stack identity in a battlefield `WhenEvent` or `WhenEventModes` trigger. `FromSpell` can be used with `Counter`, `ManaValueOfSpell`, and `ControllerOfSpell` while that exact spell remains on the stack. The reference is not a target. If the spell leaves the stack, it is absent even if the same card is cast again. Trigger copies keep the captured identity. Registration rejects missing, unnamed, repeated, and out-of-scope bindings. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var spell = dsl.BindSpell("cast spell")
-    var _ = dsl.NewArtifact("Cast Watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.SpellCast().WithSpell(spell),
-            dsl.Counter(dsl.FromSpell(spell)))))
-
-    func main() {}
-    ```
-  * `ArtifactBecomesTapped().ByOpponent().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match an artifact when it changes from untapped to tapped. `ByOpponent` is optional and limits the event to an artifact controlled by an opponent of the watcher controller at that time. Both captures are optional. `WithArtifact` saves the tapped artifact's battlefield incarnation for `From`; `WithController` saves its controller at the event for `FromPlayer`. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The artifact is not a target. A saved artifact that leaves and returns, or phases out, is absent at resolution. Entering tapped and tapping an already tapped artifact do not match. Registration rejects a repeated `ByOpponent` filter. For example:
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var tapped = dsl.BindPermanent("tapped artifact")
-    var controller = dsl.BindPlayer("tap controller")
-    var _ = dsl.NewEnchantment("Artifact watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.ArtifactBecomesTapped().ByOpponent().WithArtifact(tapped).WithController(controller),
-            dsl.Sequence(
-                dsl.AddCounters(dsl.From(tapped), dsl.Charge, dsl.Fixed(1)),
-                dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1))))))
-
-    func main() {}
-    ```
-  * `ActivatedAbilityEvent().WithActivator(*PlayerBinding).WithSource(*DamageSourceBinding) EventPattern`: Match each completed activated ability announcement, including planned mana abilities. Both captures are optional. `WithActivator` saves the activating player for `FromPlayer`. `WithSource` saves the activated permanent's event-time incarnation and characteristics for `FromDamageSource`, including when a cost sacrifices it. The saved source can deal damage after it leaves or returns. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The constructor uses `ActivatedAbilityEvent` because `AbilityActivated` is already a core ability-type constant. For example:
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var actor = dsl.BindPlayer("activator")
-    var source = dsl.BindDamageSource("activated source")
-    var _ = dsl.NewEnchantment("Activation watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.ActivatedAbilityEvent().WithActivator(actor).WithSource(source),
-            dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.FromPlayer(actor), dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-  * `ActivatedAbilityEvent().FromArtifact().ByOpponent().WithoutTapCost()`: All three filters are optional and can be used independently. `FromArtifact` checks the activated source's battlefield incarnation or departure LKI at the event. `ByOpponent` checks the activating player against the watcher controller at detection. `WithoutTapCost` checks that the activation cost has no `{T}` symbol; it does not exclude other ways to tap a permanent. The filters compose with both captures in battlefield `WhenEvent` and `WhenEventModes` declarations. Registration rejects a repeated filter. This declaration compiles:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var actor = dsl.BindPlayer("activator")
-    var _ = dsl.NewEnchantment("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.ActivatedAbilityEvent().FromArtifact().ByOpponent().WithoutTapCost().WithActivator(actor),
-        dsl.GainLife(dsl.FromPlayer(actor), dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-  * `ArtifactAbilityActivatedWithoutTapCost().AttachedToSource().WithArtifact(*PermanentBinding).WithController(*PlayerBinding) EventPattern`: Match an activated ability of a battlefield artifact when its activation cost has no `{T}`. `AttachedToSource` optionally requires the artifact to be attached to the trigger source. Either binding is optional. `WithArtifact` saves the battlefield incarnation for `From`; `WithController` saves its controller at activation for `FromPlayer`. A sacrificed artifact has no live permanent reference at resolution, but its saved controller remains available. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. For example:
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var controller = dsl.BindPlayer("artifact controller")
-    var _ = dsl.NewEnchantment("Ability watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.ArtifactAbilityActivatedWithoutTapCost().WithController(controller),
-            dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-  * `OpponentLandBecomesTapped().OfSubtype(string).WithLand(*PermanentBinding) EventPattern`: Match an opponent-controlled land when it changes from untapped to tapped. Both methods are optional. `OfSubtype` requires a valid land subtype at registration. `WithLand` saves the tapped land's battlefield incarnation for `From` in the trigger body. A land that leaves and returns, or phases out, is absent from that reference. Use the pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. The condition uses the land's type, subtype, and controller when it becomes tapped. It does not target the land.
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var tapped = dsl.BindPermanent("tapped Forest")
-    var _ = dsl.NewEnchantment("Forest watcher", "",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.OpponentLandBecomesTapped().OfSubtype("Forest").WithLand(tapped),
-            dsl.AddCounters(dsl.From(tapped), dsl.Charge, dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var _ = dsl.NewCreature("Leaving watcher", "", 1, 1,
-        dsl.WithAbility(dsl.WhenEvent(dsl.LeavesBattlefield(dsl.This),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-  * `BecomesTapped(This) EventPattern`: Match the battlefield source when it changes from untapped to tapped. Use it with `WhenEvent` or `WhenEventModes` on a permanent. It does not match entering tapped or a second tap while already tapped. The pending trigger keeps its event-time controller and source incarnation. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var _ = dsl.NewLand("Tap watcher",
-        dsl.WithAbility(dsl.WhenEvent(dsl.BecomesTapped(dsl.This),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-  * `Attacks(This)`: Source is declared as an attacker. A creature put onto the battlefield attacking does not match.
-  * `Attacks(This).WithDefendingPlayer(*PlayerBinding)`: Save the player defending against the source when it is declared as an attacker. Read the saved player with `FromPlayer` in the trigger body. The binding is instance-local and is not a target. It remains the same after the attacker leaves combat or changes controller. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. A creature put onto the battlefield attacking does not match. For example:
-
-    ```go
-    defender := dsl.BindPlayer("defender")
-    dsl.NewCreature("Example", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.Attacks(dsl.This).WithDefendingPlayer(defender),
-            dsl.GainLife(dsl.FromPlayer(defender), dsl.Fixed(1)))))
-    ```
-
-  * `Blocks(This)`: Source is declared as a blocker. It matches once when the source blocks one or more attackers, after block legality checks finish. A block removed by a minimum-blocker restriction does not match. A creature put onto the battlefield blocking does not match. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature.
-
-    ```go
-    var _ = dsl.NewCreature("Block watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(dsl.Blocks(dsl.This),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-    ```
-  * `BecomesBlocked(This).WithDefendingPlayer(*PlayerBinding)`: Source first becomes blocked in combat. It matches once even when multiple creatures block it, and also matches when a creature enters blocking an unblocked source. The optional binding saves the defending player when the event occurs. Use `FromPlayer` in the `WhenEvent` or `WhenEventModes` body on a battlefield source. The pattern does not bind or target a blocker. Registration rejects a nil, unnamed, repeated, or out-of-scope player binding. This declaration compiles:
-
-    ```go
-    defender := dsl.BindPlayer("defending player")
-    ability := dsl.WhenEvent(
-        dsl.BecomesBlocked(dsl.This).WithDefendingPlayer(defender),
-        dsl.Discard(dsl.FromPlayer(defender), dsl.Fixed(1)))
-    _ = ability
-    ```
-  * `BecomesTargetOfSpell(This) EventPattern`: Match the battlefield source when a spell targets it. An activated ability targeting the source does not match. Use it in `WhenEvent` or `WhenEventModes`; the pattern has no target or stack-object binding. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var _ = dsl.NewCreature("Spell watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BecomesTargetOfSpell(dsl.This), dsl.Sacrifice(dsl.This))))
-    ```
-  * `BecomesTargeted(This).ByOpponent().WithController(*PlayerBinding)`: Match the battlefield source when a spell or activated ability targets it. `ByOpponent` and `WithController` are optional. The filter compares the targeting object's controller with the source controller when the event occurs. The binding saves that player for this trigger instance; read it with `FromPlayer`. It is not a target or a reference to the stack object. Use this pattern in `WhenEvent` or `WhenEventModes`. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var actor = dsl.BindPlayer("actor")
-    var _ = dsl.NewCreature("Target watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BecomesTargeted(dsl.This).ByOpponent().WithController(actor),
-            dsl.GainLife(dsl.FromPlayer(actor), dsl.Fixed(1)))))
-    ```
-  * `AttacksUnblocked(This)`: Source is attacking and no creature blocks it when legal blocker declarations finish. A creature that entered attacking can match. Removing every blocker from an already blocked creature does not make it match. Use `.WithDefendingPlayer(*PlayerBinding)` to save the event-time defending player. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source. For example:
-
-    ```go
-    defender := dsl.BindPlayer("defender")
-    ability := dsl.WhenEvent(
-        dsl.AttacksUnblocked(dsl.This).WithDefendingPlayer(defender),
-        dsl.Draw(dsl.FromPlayer(defender), dsl.Fixed(1)),
-    )
-    ```
-  * `BecomesBlockedBy(This)`: Source becomes blocked by a creature. It matches once for each new attacker and blocker pair, including a creature that enters blocking. Add `.OfSubtype(string)` to require a creature subtype at the event, or `.WithoutSubtype(string)` to exclude it. These filters are exclusive. Add `.WithBlocker(*PermanentBinding)` to save that blocker's battlefield incarnation for the trigger body. The saved blocker is not a target and becomes absent if it leaves and returns or phases out. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield source.
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var blocker = dsl.BindPermanent("non-Wall blocker")
-    var _ = dsl.NewCreature("Block watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BecomesBlockedBy(dsl.This).WithoutSubtype("Wall").WithBlocker(blocker),
-            dsl.Tap(dsl.From(blocker)))))
-
-    func main() {}
-    ```
-
-    `BlocksCreature(This)` matches once for each attacking creature that the source blocks after a legal blocker declaration. It does not match a creature put onto the battlefield blocking. `.OfSubtype(string)` and `.WithoutSubtype(string)` test the attacker at detection; choose at most one. `.WithOpponent(*PermanentBinding)` saves that attacker's battlefield incarnation. The saved attacker is not a target and becomes absent after departure, return, or phasing. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature.
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var opponent = dsl.BindPermanent("blocked creature")
-    var _ = dsl.NewCreature("Block watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BlocksCreature(dsl.This).WithoutSubtype("Wall").WithOpponent(opponent),
-            dsl.Tap(dsl.From(opponent)))))
-
-    func main() {}
-    ```
-
-    `BlocksOrBecomesBlockedByCreature(This)` matches each new opposing creature when the source blocks it or becomes blocked by it. A blocker assigned to two attackers makes two pair events. A creature that enters blocking can match on the attacker side only. `.OfSubtype(string)` and `.WithoutSubtype(string)` inspect the opposing creature at event detection; use at most one filter. `.WithOpponent(*PermanentBinding)` saves that creature's battlefield incarnation in the pending trigger. The saved creature is not a target. It is absent if it leaves and returns or phases out. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. For example:
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var opponent = dsl.BindPermanent("opposing non-Wall creature")
-    var _ = dsl.NewCreature("Pair watcher", "", 2, 4,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BlocksOrBecomesBlockedByCreature(dsl.This).WithoutSubtype("Wall").WithOpponent(opponent),
-            dsl.Tap(dsl.From(opponent)))))
-
-    func main() {}
-    ```
-
-    `BlocksOrBecomesBlockedBy(This).OfSubtype(string)` matches one group when the source blocks or becomes blocked by one or more creatures of that subtype. `.WithoutSubtype(string)` matches one group that contains at least one creature without that subtype. The filters are exclusive. Both check the other creatures at event detection and trigger once for a group with several matches. A creature put onto the battlefield blocking can cause the attacker to match, but it did not itself block. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield creature. These group patterns do not capture each opposing creature for a per-pair effect.
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var _ = dsl.NewCreature("Orc watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BlocksOrBecomesBlockedBy(dsl.This).OfSubtype("Orc"),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    var _ = dsl.NewCreature("Non-Wall group watcher", "", 2, 4,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.BlocksOrBecomesBlockedBy(dsl.This).WithoutSubtype("Wall"),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-
-    func main() {}
-    ```
-
-    ```go
-    package example
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    func wallWatcher() dsl.Card {
-        blocker := dsl.BindPermanent("blocking Wall")
-        return dsl.NewCreature("Wall Watcher", "", 2, 2,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.BecomesBlockedBy(dsl.This).OfSubtype("Wall").WithBlocker(blocker),
-                dsl.AddCounters(dsl.From(blocker), core.P1P1, dsl.Fixed(1)))))
-    }
-    ```
-
-    ```go
-    var _ = dsl.NewCreature("Blocked watcher", "", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(dsl.BecomesBlocked(dsl.This),
-            dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-    ```
-
-  * `CreatureDies()`: Any creature dies.
-  * `EnchantmentYouControlEnters().OfSubtype(string).WithPermanent(*PermanentBinding)`: Match an enchantment that enters under the trigger controller's control, including the source itself if it is an enchantment. Both methods are optional. `OfSubtype` accepts one enchantment subtype, such as `"Aura"`, and checks the effective subtype at entry. `WithPermanent` saves the entering battlefield incarnation for the trigger body. The saved object is not a target. It becomes absent if it leaves and returns or phases out. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. Registration rejects an unknown or nonenchantment subtype, repeated subtype filters, and missing, unnamed, repeated, or unbound captures.
-
-    `IfPermanentHasEnchantmentSubtype(PermanentRef, string, ResolvingEffect) ResolvingEffect` checks an enchantment subtype when a spell, activation, or trigger body resolves. It accepts `This`, a saved permanent from `From`, or another typed permanent reference. A saved permanent uses its current characteristics while it remains on the battlefield and its last known characteristics if it left. A return does not replace the saved incarnation. A phased-out permanent has no current subject. This is a resolution branch, so it does not filter the entry event. Registration rejects a missing subject, an unknown or wrong-family subtype, a missing body, and a saved binding without a producer.
-
-    ```go
-    package example
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    func auraWatcher() dsl.Card {
-        entered := dsl.BindPermanent("entered enchantment")
-        return dsl.NewCreature("Watcher", "", 1, 1,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.EnchantmentYouControlEnters().WithPermanent(entered),
-                dsl.IfPermanentHasEnchantmentSubtype(dsl.From(entered), "Aura",
-                    dsl.GainLife(dsl.You, dsl.Fixed(1))))))
-    }
-    ```
-
-    ```go
-    package example
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    func enchantmentWatcher() dsl.Card {
-        entered := dsl.BindPermanent("entered enchantment")
-        return dsl.NewCreature("Watcher", "", 1, 1,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.EnchantmentYouControlEnters().OfSubtype("Aura").WithPermanent(entered),
-                dsl.AddCounters(dsl.From(entered), core.P1P1, dsl.Fixed(1)))))
-    }
-    ```
-  * `LandEnters().OfSubtype(string).WithActor(*PlayerBinding).WithController(*PlayerBinding)`: Match a land entering the battlefield. Each method is optional. `OfSubtype` filters by one land subtype. `WithActor` saves the player who put the land onto the battlefield; `WithController` saves its controller at entry. The two players can differ. Use this pattern with `WhenEvent` or `WhenEventModes` on a battlefield permanent. A saved player remains fixed after the land or trigger source leaves. Registration rejects an invalid subtype, missing or repeated binding, or one binding used for both players. An entry without a known actor does not match a pattern with `WithActor`. For example:
-
-    ```go
-    package example
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    func swampWatcher() dsl.Card {
-        actor := dsl.BindPlayer("entry actor")
-        return dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.LandEnters().OfSubtype("Swamp").WithActor(actor),
-            dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(actor), dsl.Fixed(2)))))
-    }
-    ```
-
-    This example uses `dsl` from `github.com/benprew/mage-go/pkg/mage/dsl`. `PutOnBattlefieldBy(card, controller, actor)` supplies the actor for an effect entry; normal land play supplies its player. The existing `PutOnBattlefield(card, controller)` does not supply an actor.
-  * `PermanentDies()`: Any permanent moves from the battlefield to a graveyard. Add `.OfType(core.TypeLand)` or another permanent card type to test the departing object's last-known type. `.YouControlled()` checks the departing permanent's controller against the trigger controller at detection. `.NotSacrificed()` excludes a completed sacrifice. `WithController`, `WithOwner`, and `Nontoken` use the same event-time captures and filters as creature-death patterns. The source must be a battlefield permanent. This pattern is valid in `WhenEvent` and `WhenEventModes` and declares no target. `OfType` accepts creature, land, artifact, enchantment, or planeswalker; registration rejects other types and repeated type filters. Repeating either new filter is invalid at registration.
-    ```go
-    former := dsl.BindPlayer("former land controller")
-    dsl.WhenEvent(
-        dsl.PermanentDies().OfType(core.TypeLand).WithController(former),
-        dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(former), dsl.Fixed(2)),
-    )
-    ```
-    A battlefield artifact can observe only artifacts its controller controlled that died without being sacrificed:
-
-    ```go
-    package example
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    func artifactWatcher() dsl.Card {
-        former := dsl.BindPlayer("former controller")
-        return dsl.NewArtifact("Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.PermanentDies().OfType(core.TypeArtifact).YouControlled().NotSacrificed().WithController(former),
-            dsl.GainLife(dsl.FromPlayer(former), dsl.Fixed(1)))))
-    }
-    ```
-  * `AnotherCreatureDies()`: A creature other than the source dies, regardless of its controller.
-  * Death patterns accept `.WithPermanent(*PermanentBinding)`. `From(binding)` names the departing battlefield incarnation in a `WhenEvent` or `WhenEventModes` body. It is absent as a battlefield subject after death. `DamageSourceOf(From(binding))` can use its departure LKI as a damage source, including after the card returns as a new permanent. A phased-out watcher does not trigger. Registration rejects a missing, unnamed, repeated, or unbound capture. This binding is not a target.
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    func watcher() dsl.Card {
-        dead := dsl.BindPermanent("departing creature")
-        return dsl.NewCreature("Watcher", "", 1, 1,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.AnotherCreatureDies().WithPermanent(dead),
-                dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(dead)), dsl.You, dsl.Fixed(1)))))
-    }
-
-    func main() {}
-    ```
-  * Death patterns accept `.WithCard(*CardBinding)`. `BindCard(name)` declares the binding, and `FromCard(binding)` is a `CardRef` for graveyard actions such as `ReturnCardToHand`. It saves the card's first graveyard visit when the trigger occurs. The reference is absent if a token dies, the card does not enter the graveyard, or it leaves and returns before resolution. This is an event binding, not a target. It works in `WhenEvent` and `WhenEventModes` on a battlefield permanent.
-
-    ```go
-    package main
-
-    import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    func watcher() dsl.Card {
-        dead := dsl.BindCard("dead creature")
-        return dsl.NewCreature("Watcher", "", 1, 1,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.AnotherCreatureDies().WithCard(dead),
-                dsl.ReturnCardToHand(dsl.FromCard(dead)))))
-    }
-
-    func main() {}
-    ```
-  * `CreatureYouControlDies()`: A creature controlled by ability controller dies.
-  * Creature-death patterns support `.PowerOrToughnessAtMost(int)`. The filter compares the creature's power **or** toughness just before it dies. It accepts negative limits and checks continuous effects. It is valid in `WhenEvent` and `WhenEventModes` on battlefield permanents. Registration rejects repeated use and use on `PermanentDies()`.
-
-    ```go
-    opponent := dsl.TargetPlayer("opponent", dsl.TargetOpponentOnly())
-    trigger := dsl.WhenEvent(
-        dsl.CreatureYouControlDies().PowerOrToughnessAtMost(1),
-        dsl.Sequence(dsl.LoseLife(opponent, dsl.Fixed(2)), dsl.GainLife(dsl.You, dsl.Fixed(2))),
-        dsl.WithTargets(opponent),
-    )
-    _ = dsl.NewCreature("Watcher", "", 2, 2, dsl.WithAbility(trigger))
-    ```
-  * `OpponentCreatureDies()`: A creature controlled by an opponent of the ability controller dies. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The filter uses the dying creature's controller and type before departure. It includes tokens. `.WithController(*PlayerBinding)` saves that controller for the resolving body; it does not declare a target.
-    ```go
-    former := dsl.BindPlayer("former controller")
-    ability := dsl.WhenEvent(
-        dsl.OpponentCreatureDies().WithController(former),
-        dsl.GainLife(dsl.FromPlayer(former), dsl.Fixed(1)),
-    )
-    _ = ability
-    ```
-  * `AnotherCreatureYouControlDies()`: A different creature controlled by the ability controller dies. The controller and creature type are checked before departure; the dying creature is not a target.
-  * `CreatureYouControlEnters()`: A creature enters under the ability controller's control, including the ability source itself. It is a sealed `EventPattern` for `WhenEvent` and `WhenEventModes` on battlefield permanents. It supports `.Nontoken()`, `.OfSubtype(string)`, `.HasKeyword(core.Keyword)`, `.WithPermanent(*PermanentBinding)`, and `.WithPower(*NumberBinding)`. The filters read effective entry characteristics. The bindings save an entry incarnation and entry power in the queued trigger. This does not target the entering creature.
-    ```go
-    power := dsl.BindNumber("entry power")
-    ability := dsl.WhenEvent(
-        dsl.CreatureYouControlEnters().HasKeyword(core.Flying).WithPower(power),
-        dsl.GainLife(dsl.You, dsl.FromNumber(power)),
-    )
-    _ = dsl.NewCreature("Watcher", "", 3, 3, dsl.WithAbility(ability))
-    ```
-  * `AnotherCreatureYouControlEnters()`: A different creature enters under the ability controller's control. Add `.Nontoken()` to exclude tokens. The check uses the entering permanent after entry effects and continuous effects apply. This pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield permanent. The entering creature is not a target.
-    Add `.HasKeyword(core.Keyword)` to require an effective keyword when the creature enters. It can combine with `.Nontoken()`, `.OfSubtype(string)`, `.WithPermanent`, and `.WithPower`. Registration rejects a nonkeyword attribute or a repeated keyword filter. The filter is checked at entry; later keyword changes do not undo the trigger.
-    ```go
-    dsl.WhenEvent(
-        dsl.AnotherCreatureYouControlEnters().HasKeyword(core.Flying),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)),
-    )
-    ```
-    ```go
-    dsl.WhenEvent(
-        dsl.AnotherCreatureYouControlEnters().Nontoken(),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)),
-    )
-    ```
-    Add `.OfSubtype(string)` to require one creature subtype at entry. The string must be nonempty and must not name a subtype in another family. Filters can be combined:
-    ```go
-    dsl.WhenEvent(
-        dsl.AnotherCreatureYouControlEnters().Nontoken().OfSubtype("Dragon"),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)),
-    )
-    ```
-    Add `.WithPermanent(*PermanentBinding)` to save the entering battlefield incarnation. Read it with `From(binding)` in the trigger body. The reference does not follow the card if it leaves and returns. The binding is local to each trigger and is not a target.
-    ```go
-    entered := dsl.BindPermanent("entered creature")
-    dsl.WhenEvent(
-        dsl.AnotherCreatureYouControlEnters().WithPermanent(entered),
-        dsl.AddCounters(dsl.From(entered), core.P1P1, dsl.Fixed(1)),
-    )
-    ```
-    Add `.WithPower(*NumberBinding)` to save the creature's effective power when it enters. Read it with `FromNumber` in the trigger body. The value stays fixed if the creature changes power, leaves, or returns. This binding is local to each trigger and is not a target. It works with `WhenEvent` and `WhenEventModes` on a battlefield permanent and can combine with `.WithPermanent` using separate bindings.
-    ```go
-    power := dsl.BindNumber("entering creature power")
-    dsl.WhenEvent(
-        dsl.AnotherCreatureYouControlEnters().WithPower(power),
-        dsl.GainLife(dsl.You, dsl.FromNumber(power)),
-    )
-    ```
-  * `AnotherCreatureEnters()`: A different creature enters under any player's control. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent. It supports the same entry filters and `.WithPermanent(*PermanentBinding)`, `.WithPower(*NumberBinding)`, and `.WithController(*PlayerBinding)` captures as `AnotherCreatureYouControlEnters()`. The power and controller are saved when the creature enters, so later changes do not change the trigger values. The entering creature is not a target. `CreatureYouControlEnters()` also supports `.WithController`. Registration rejects missing, unnamed, repeated, or undominated controller bindings.
-    ```go
-    power := dsl.BindNumber("entry power")
-    ability := dsl.WhenEvent(
-        dsl.AnotherCreatureEnters().WithPower(power),
-        dsl.AddCounters(dsl.This, core.P1P1, dsl.FromNumber(power)),
-    )
-    _ = dsl.NewCreature("Watcher", "", 6, 6, dsl.WithAbility(ability))
-    ```
-    ```go
-    controller := dsl.BindPlayer("entrant controller")
-    watcher := dsl.NewCreature("Watcher", "", 1, 1, dsl.WithAbility(dsl.WhenEvent(
-        dsl.AnotherCreatureEnters().WithController(controller),
-        dsl.GainLife(dsl.FromPlayer(controller), dsl.Fixed(1)),
-    )))
-    _ = watcher
-    ```
-  * Creature-death patterns support `.Nontoken()`: Match only a creature that was not a token before it died. For example, `dsl.WhenEvent(dsl.AnotherCreatureDies().Nontoken(), dsl.GainLife(dsl.You, dsl.Fixed(1)))` is valid on a battlefield permanent. This does not choose or target the dying creature.
-  * `CreatureDies().OfSubtype(string)` and the other creature-death patterns match a creature with the named creature subtype immediately before death. The filter works in battlefield `WhenEvent` and `WhenEventModes` declarations and composes with controller, source-exclusion, and nontoken filters. Registration rejects an empty, noncreature, or repeated subtype filter. It does not target the dying creature.
-    ```go
-    dsl.WhenEvent(
-        dsl.AnotherCreatureDies().OfSubtype("Goblin"),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)),
-    )
-    ```
-  * `CreatureDies().DamagedByThisTurn()` matches a dying creature whose departing battlefield incarnation was dealt positive damage by this source's current battlefield incarnation this turn. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. It uses damage after prevention and replacement. A source or creature that leaves and returns has a new incarnation; phasing preserves the incarnation. A simultaneous source death can still trigger. The filter does not target or save the dying creature. Registration rejects this filter on `PermanentDies()` and rejects repeated use.
-    ```go
-    package example
-
-    import dsl "github.com/benprew/mage-go/pkg/mage/dsl"
-
-    func damagedCreatureWatcher() dsl.Card {
-        return dsl.NewCreature("Synthetic watcher", "", 1, 5,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.CreatureDies().DamagedByThisTurn(),
-                dsl.GainLife(dsl.You, dsl.Fixed(1)),
-            )))
-    }
-    ```
-  * Creature-death patterns support `.WithoutColor(core.Color)`: Match a creature that did not have the specified color immediately before it died. Supply one of the five Magic colors. This filter can combine with `.Nontoken()` and the existing event bindings. Use it with `WhenEvent` or `WhenEventModes` on a battlefield permanent.
-    ```go
-    dsl.WhenEvent(
-        dsl.CreatureDies().WithoutColor(core.Black),
-        dsl.AddCounters(dsl.This, core.Husk, dsl.Fixed(1)),
-    )
-    ```
-  * `AttachedCreatureDies()`: The creature attached to the source dies. The event check uses the attachment's battlefield incarnation, so a returned copy of the same card does not match. It also matches when the source Aura leaves in the same batch.
-  * Each creature-death pattern supports `.WithController(*PlayerBinding)`: Save the dying creature's controller before departure. Read the player with `FromPlayer` in the trigger body. This is an event participant, not a target; the binding is local to each trigger resolution.
-  * Each creature-death pattern supports `.WithOwner(*PlayerBinding)`: Save the dying creature's owner at event detection. Read the player with `FromPlayer` in the trigger body. It works with `.WithController` and `.WithToughness` when each output has its own binding. It is available in `WhenEvent` and `WhenEventModes` on battlefield permanents.
-    ```go
-    owner := dsl.BindPlayer("dying creature owner")
-    dsl.WhenEvent(
-        dsl.AnotherCreatureDies().WithOwner(owner),
-        dsl.GainLife(dsl.FromPlayer(owner), dsl.Fixed(1)),
-    )
-    ```
-  * Each creature-death pattern supports `.WithToughness(*NumberBinding)`: Save the dying creature's toughness at event detection, including continuous effects. Read the number with `FromNumber` in the trigger body. The value remains fixed after the creature leaves or returns. This is an event value, not a target. It can combine with `.WithController`.
-  * Each creature-death pattern supports `.WithPower(*NumberBinding)`: Save the dying creature's power at event detection, including continuous effects. Read it with `FromNumber` in the trigger body. The value stays fixed after the creature leaves or returns. It can combine with `.WithController`, `.WithOwner`, and `.WithToughness` when each output has a separate binding. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. `PermanentDies()` cannot use this creature-only capture.
-    ```go
-    power := dsl.BindNumber("dying creature power")
-    dsl.WhenEvent(
-        dsl.AnotherCreatureYouControlDies().WithPower(power),
-        dsl.GainLife(dsl.You, dsl.FromNumber(power)),
-    )
-    ```
-  * `DealsDamage(source PermanentRef, amountBinding *NumberBinding) damageEventPattern`: `This` or `AttachedPermanent` deals positive damage to any player or permanent. The concrete pattern implements the sealed `EventPattern` role and offers `WithPermanent`. Use it in `WhenEvent` or `WhenEventModes` on a battlefield permanent. The binding saves the final amount after prevention and replacement in that trigger's frame. `AttachedPermanent` checks the attachment when damage occurs; a later attachment or controller change does not change a queued trigger. Registration rejects other permanent references, nil or unnamed amount bindings, and use outside a battlefield trigger.
-  * `DealsDamage(source, amountBinding).WithPermanent(recipientBinding *PermanentBinding)`: Save the permanent that receives positive damage after prevention and redirection. The binding is absent for damage to a player. `From(recipientBinding)` requires the same battlefield incarnation when the trigger resolves. Use this in a battlefield `WhenEvent` or `WhenEventModes` declaration. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
-    ```go
-    recipient := dsl.BindPermanent("recipient")
-    card := dsl.NewCreature("Damage watcher", "", 1, 1, dsl.WithAbility(
-        dsl.WhenEvent(dsl.DealsDamage(dsl.This, dsl.BindNumber("dealt")).WithPermanent(recipient),
-            dsl.AddCounters(dsl.From(recipient), dsl.P1P1, dsl.Fixed(1)))))
-    ```
-    ```go
-    func linkedAura() dsl.Card {
-        dealt := dsl.BindNumber("damage dealt")
-        return dsl.NewAura("Linked Aura", "{W}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.DealsDamage(dsl.AttachedPermanent, dealt),
-                dsl.GainLife(dsl.You, dsl.FromNumber(dealt))),
-        ))
-    }
-    ```
-  * `DealsDamage(source, amountBinding).WithRecipientPlayer(recipientBinding *PlayerBinding)`: Save the player who receives positive damage after prevention and redirection. For a permanent recipient, `FromPlayer` is absent. The player identity stays fixed in the queued trigger even if the source leaves or its controller changes. Use this in a battlefield `WhenEvent` or `WhenEventModes` declaration. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
-
-    ```go
-    recipient := dsl.BindPlayer("recipient")
-    ability := dsl.WhenEvent(
-        dsl.DealsDamage(dsl.This, dsl.BindNumber("dealt")).WithRecipientPlayer(recipient),
-        dsl.GainLife(dsl.FromPlayer(recipient), dsl.Fixed(1)),
-    )
-    _ = ability
-    ```
-  * `DealsDamage(source, amountBinding).WithSource(sourceBinding *DamageSourceBinding)`: Save the final damage action's source for a pending battlefield `WhenEvent` or `WhenEventModes` trigger. `source` is `This` or `AttachedPermanent`. The capture works for player and permanent recipients after replacement and prevention. `FromDamageSource(sourceBinding)` keeps the source incarnation and last-known characteristics after departure or return. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
-
-    ```go
-    dealt := dsl.BindNumber("dealt")
-    source := dsl.BindDamageSource("source")
-    ability := dsl.WhenEvent(dsl.DealsDamage(dsl.This, dealt).WithSource(source),
-        dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.FromNumber(dealt)))
-    _ = ability
-    ```
-  * `DealsDamageToPlayer(source PermanentRef, playerBinding *PlayerBinding).WithAmount(amountBinding)`: `This` or `AttachedPermanent` deals positive damage to a player. The player binding saves the damaged player, not a target. `WithAmount` optionally saves the final damage amount. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield permanent. An attached source is checked when damage occurs; queued bindings stay fixed if the attachment or its controller later changes. Registration rejects other source references and invalid bindings.
-  * `DealsDamageToPlayer(source, playerBinding).WithSource(sourceBinding *DamageSourceBinding)`: Save the final damage action's source at event detection. `FromDamageSource(sourceBinding)` keeps the source incarnation, controller, and characteristics for the pending trigger after departure or return. Use with `This` or `AttachedPermanent` in battlefield `WhenEvent` or `WhenEventModes`; the saved source is an event participant, not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. Example:
-
-    ```go
-    damaged := dsl.BindPlayer("damaged")
-    source := dsl.BindDamageSource("source")
-    card := dsl.NewCreature("Damage Watcher", "", 1, 3, dsl.WithAbility(dsl.WhenEvent(
-        dsl.DealsDamageToPlayer(dsl.This, damaged).WithSource(source),
-        dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.FromPlayer(damaged), dsl.Fixed(1)))))
-    _ = card
-    ```
-  * `DealsDamageToPlayer(source, playerBinding).ToController().WithAmount(amountBinding)`: Filter the player recipient to the trigger controller when damage occurs. `ToController` must follow `DealsDamageToPlayer`; registration rejects it on opponent or combat damage patterns. The damaged player and final amount remain event bindings. Use `This` or `AttachedPermanent` as the source in a battlefield `WhenEvent` or `WhenEventModes` ability.
-    ```go
-    func attachedDamageWatcher() dsl.Card {
-        player := dsl.BindPlayer("damaged player")
-        amount := dsl.BindNumber("damage dealt")
-        return dsl.NewAura("Damage Watcher", "{W}", dsl.WithAbility(
-            dsl.WhenEvent(
-                dsl.DealsDamageToPlayer(dsl.AttachedPermanent, player).ToController().WithAmount(amount),
-                dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)),
-            ),
-        ))
-    }
-    ```
-  * `DealsDamageToPlayer(source, playerBinding).WithSourceController(controllerBinding)`: Save the damage source's controller when positive damage occurs. Use `This` or `AttachedPermanent` in a battlefield `WhenEvent` or `WhenEventModes` ability. The controller and damaged player are separate event bindings, not targets. `ToController` and `WithAmount` can be combined; call `WithSourceController` before `WithAmount`. Prevention, departure, return, and later control changes do not change a queued capture. Registration rejects nil, repeated, shared, unnamed, and out-of-scope bindings. This option is not supported on other damage patterns.
-    ```go
-    func sourceControllerWatcher() dsl.Card {
-        player := dsl.BindPlayer("damaged player")
-        controller := dsl.BindPlayer("source controller")
-        amount := dsl.BindNumber("damage dealt")
-        return dsl.NewAura("Source Controller Watcher", "{U}", dsl.WithAbility(
-            dsl.WhenEvent(
-                dsl.DealsDamageToPlayer(dsl.AttachedPermanent, player).ToController().WithSourceController(controller).WithAmount(amount),
-                dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.FromNumber(amount)),
-            ),
-        ))
-    }
-    ```
-  * `DealsCombatDamageToPlayer(This, playerBinding).WithAmount(amountBinding)`: A battlefield source deals combat damage to a player. Use it in `WhenEvent` or `WhenEventModes`. It saves the damaged player and, when requested, the final positive amount after prevention. The player is an event participant, not a target. Registration rejects nil, unnamed, or out-of-scope bindings. The amount capture is optional.
-    ```go
-    func combatWatcher() dsl.Card {
-        player := dsl.BindPlayer("damaged player")
-        amount := dsl.BindNumber("combat damage")
-        return dsl.NewCreature("Combat Watcher", "{2}{G}", 2, 2,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.DealsCombatDamageToPlayer(dsl.This, player).WithAmount(amount),
-                dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)),
-            )))
-    }
-    ```
-  * `OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype(subtype string).WithPlayer(playerBinding)`: A battlefield `WhenEvent` or `WhenEventModes` pattern that matches once for each player dealt positive combat damage by one or more creatures controlled by the source controller in one combat damage step. `WithoutSubtype` is optional and requires at least one damaging creature without that subtype; it reads each source's characteristics when damage is dealt. `WithPlayer` is optional; it saves the damaged player in the pending trigger and does not target that player. Registration rejects an empty, noncreature, or repeated subtype filter and a nil, unnamed, repeated, or undominated player binding. The pattern does not operate from the graveyard.
-    ```go
-    func combatBatchWatcher() dsl.Card {
-        player := dsl.BindPlayer("damaged player")
-        return dsl.NewEnchantment("Combat Batch Watcher", "{G}",
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.OneOrMoreCreaturesYouControlDealCombatDamageToPlayer().WithoutSubtype("Human").WithPlayer(player),
-                dsl.GainLife(dsl.FromPlayer(player), dsl.Fixed(1)),
-            )))
-    }
-  * `DealsDamageToOpponent(source, playerBinding)`: Source deals damage to opponent.
-  * `ControllerIsDealtDamage(amountBinding).WithSource(sourceBinding *DamageSourceBinding)`: A battlefield source's controller is dealt positive damage by any source. The pattern saves the actual amount after damage replacement and prevention. `WithSource` also saves that damage event's source incarnation and characteristics. Use `FromNumber(amountBinding)` and `FromDamageSource(sourceBinding)` in a `WhenEvent` or `WhenEventModes` body. The damaged player is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. A source-only capture does not change target legality.
-    ```go
-    func damageWatcher() dsl.Card {
-        amount := dsl.BindNumber("damage dealt")
-        source := dsl.BindDamageSource("damage source")
-        return dsl.NewEnchantment("Damage Watcher", "{G}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.ControllerIsDealtDamage(amount).WithSource(source),
-                dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.FromNumber(amount))),
-        ))
-    }
-    ```
-  * `ReceivesDamage(This, amountBinding).WithSourceController(controllerBinding).WithSource(sourceBinding)`: A battlefield source permanent receives positive damage. The pattern saves the final amount and can save the damage source's controller and full damage source snapshot at event detection. Both captures are optional. `FromDamageSource(sourceBinding)` keeps the source's incarnation, controller, and characteristics after it leaves or returns; it also works for a spell that has left the stack. Use the pattern in `WhenEvent` or `WhenEventModes`. These participants are not targets. Registration rejects nil, unnamed, repeated, and out-of-scope source bindings. The amount binding is required.
-    ```go
-    func damageRecipient() dsl.Card {
-        amount := dsl.BindNumber("damage")
-        controller := dsl.BindPlayer("source controller")
-        return dsl.NewCreature("Damage Recipient", "{4}{U}", 2, 5,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.ReceivesDamage(dsl.This, amount).WithSourceController(controller),
-                dsl.Mill(dsl.FromPlayer(controller), dsl.FromNumber(amount)),
-            )))
-    }
-    ```
-    A synthetic source capture can use the same source in its trigger body:
-    ```go
-    func sourceEcho() dsl.Card {
-        amount := dsl.BindNumber("damage")
-        source := dsl.BindDamageSource("source")
-        return dsl.NewCreature("Source Echo", "", 1, 5,
-            dsl.WithAbility(dsl.WhenEvent(
-                dsl.ReceivesDamage(dsl.This, amount).WithSource(source),
-                dsl.DealDamageFrom(dsl.FromDamageSource(source), dsl.You, dsl.FromNumber(amount)))))
-    }
-    ```
-  * `ControllerDrawsCard(playerBinding)`: Source controller draws a card.
-  * `ControllerDrawsCardInto(playerBinding, cardBinding) EventPattern`: The source controller completes one draw. The player and the exact drawn card's current hand visit are saved in that trigger. Use this pattern in `WhenEvent` or `WhenEventModes` on a battlefield source. `FromCard(cardBinding)` is absent if that card leaves the hand and returns before resolution. It does not declare a target. The card binding is limited to the controller's draw so it does not expose another player's hand.
-    ```go
-    func drawWatcher() dsl.Card {
-        drawer := dsl.BindPlayer("drawer")
-        drawn := dsl.BindCard("drawn")
-        return dsl.NewEnchantment("Draw Watcher", "{1}{G}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.ControllerDrawsCardInto(drawer, drawn),
-                dsl.IfCardHasType(dsl.FromCard(drawn), core.TypeLand,
-                    dsl.GainLife(dsl.FromPlayer(drawer), dsl.Fixed(1))))))
-    }
-    ```
-  * `PlayerDrawsCard(playerBinding) EventPattern`: Either player completes one card draw. The pattern saves that player when the draw occurs. Use it in `WhenEvent` or `WhenEventModes` on a battlefield source, and read the player with `FromPlayer`. Each completed card draw matches once. A replaced draw or an empty-library attempt does not match. The player binding is not a target.
-    ```go
-    func anyDrawWatcher() dsl.Card {
-        drawer := dsl.BindPlayer("drawer")
-        return dsl.NewEnchantment("Any Draw Watcher", "{1}{B}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.PlayerDrawsCard(drawer),
-                dsl.LoseLife(dsl.FromPlayer(drawer), dsl.Fixed(2))),
-        ))
-    }
-    ```
-  * `SpellCast().WithXInManaCost()`: Match a cast spell whose mana cost contains an `{X}` symbol. The announced value can be zero. Use the pattern in `WhenEvent` or `WhenEventModes` on a battlefield source. The check reads the spell that caused the cast event, before that spell leaves the stack. Copies placed on the stack without being cast do not cause a cast event. Registration rejects a second use of the filter.
-
-    `SpellCast().WithAnnouncedX(*NumberBinding)` saves the cast spell's X value when the cast event occurs. Read it with `FromNumber` in the trigger body. It can follow `WithXInManaCost` when the trigger must match only spells with `{X}` in their mana cost. The binding is local to each pending trigger and is not a target. Registration rejects nil, unnamed, repeated, or out-of-scope bindings.
-
-    ```go
-    x := dsl.BindNumber("cast X")
-    watcher := dsl.NewArtifact("X Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().WithXInManaCost().WithAnnouncedX(x),
-        dsl.GainLife(dsl.You, dsl.FromNumber(x)))))
-    ```
-
-    ```go
-    dsl.NewCreature("X watcher", "{2}{U}", 2, 2, dsl.WithAbility(dsl.WhenEvent(
-        dsl.SpellCast().WithXInManaCost(),
-        dsl.Until(dsl.EndOfTurn, dsl.CantBeBlocked(dsl.This)),
-    )))
-    ```
-  * `OpponentDrawsCard(playerBinding) playerDrawEventPattern`: An opponent of the source controller draws one card. The pattern saves the drawer in a `PlayerBinding` when the draw occurs. Read it with `FromPlayer` in a `WhenEvent` or `WhenEventModes` body. A draw that is replaced or fails on an empty library does not match. The saved player is not a target.
-    ```go
-    func drawWatcher() dsl.Card {
-        drawer := dsl.BindPlayer("drawer")
-        return dsl.NewEnchantment("Draw Watcher", "{B}{B}{B}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.OpponentDrawsCard(drawer),
-                dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(drawer), dsl.Fixed(1))),
-        ))
-    }
-    ```
-  * `PlayerDrawsCard(*PlayerBinding) playerDrawEventPattern`: Either player completes one draw. `.WithCard(*CardBinding)` on this or `OpponentDrawsCard` saves that card's current hand visit. `FromCard` is absent if the card leaves and returns before the trigger resolves. Each draw gets a separate binding, including draws from one multi-card instruction. The saved card is not a target. Use these patterns in battlefield `WhenEvent` or `WhenEventModes` bodies. Registration rejects nil, unnamed, repeated, and out-of-scope card bindings. For example:
-    ```go
-    func landDrawWatcher() dsl.Card {
-        drawer := dsl.BindPlayer("drawer")
-        drawn := dsl.BindCard("drawn")
-        return dsl.NewEnchantment("Land Draw Watcher", "{1}{G}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.PlayerDrawsCard(drawer).WithCard(drawn),
-                dsl.IfCardHasType(dsl.FromCard(drawn), core.TypeLand,
-                    dsl.GainLife(dsl.FromPlayer(drawer), dsl.Fixed(1))))))
-    }
-    ```
-  * `PlayerDiscardsCard(*PlayerBinding) playerDiscardEventPattern`: Either player discards one card. Each completed discard triggers once, including a discard moved to another zone by a replacement. The pattern saves the discarding player at event time. A failed discard does not trigger. Use it with `WhenEvent` or `WhenEventModes` on a battlefield source. The saved player is not a target.
-    ```go
-    func anyDiscardWatcher() dsl.Card {
-        discarder := dsl.BindPlayer("discarder")
-        return dsl.NewEnchantment("Any Discard Watcher", "{1}{B}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.PlayerDiscardsCard(discarder),
-                dsl.GainLife(dsl.FromPlayer(discarder), dsl.Fixed(1)))))
-    }
-    ```
-  * `OpponentDiscardsCard(*PlayerBinding) playerDiscardEventPattern`: An opponent of the battlefield source controller discards one card. It retains the same capture and lifecycle contract as `PlayerDiscardsCard` but filters the event-time player against the source controller.
-    ```go
-    func discardWatcher() dsl.Card {
-        discarder := dsl.BindPlayer("discarder")
-        return dsl.NewEnchantment("Discard Watcher", "{1}{B}", dsl.WithAbility(
-            dsl.WhenEvent(dsl.OpponentDiscardsCard(discarder),
-                dsl.LoseLife(dsl.FromPlayer(discarder), dsl.Fixed(2))),
-        ))
-    }
-    ```
-  * `.WithCard(*CardBinding) playerDiscardEventPattern`: Either discard pattern can save the discarded card's exact graveyard visit. `FromCard` reads that card only while it remains in that visit. A discard replaced into a library still causes the discard trigger, but the card binding is absent. The binding is also absent after the card leaves and returns. It is not a target. Registration rejects nil, unnamed, repeated, and out-of-scope card bindings. This works in battlefield `WhenEvent` and `WhenEventModes` bodies:
-    ```go
-    package example
-
-    import (
-        "github.com/benprew/mage-go/pkg/mage/core"
-        "github.com/benprew/mage-go/pkg/mage/dsl"
-    )
-
-    func landDiscardWatcher() dsl.Card {
-        discarder := dsl.BindPlayer("discarder")
-        discarded := dsl.BindCard("discarded")
-        return dsl.NewEnchantment("Land Discard Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.OpponentDiscardsCard(discarder).WithCard(discarded),
-            dsl.IfCardHasType(dsl.FromCard(discarded), core.TypeLand,
-                dsl.LoseLife(dsl.FromPlayer(discarder), dsl.Fixed(2))))))
-    }
-    ```
-  * `ControllerGainsLife(*PlayerBinding) lifeGainEventPattern`, `PlayerGainsLife(*PlayerBinding) lifeGainEventPattern`, and `.WithAmount(*NumberBinding) lifeGainEventPattern`: The first pattern matches the source controller's positive life gain; the second matches either player's positive life gain. `WithAmount` is optional. The returned sealed pattern is accepted as an `EventPattern`. It saves the player and the actual amount after replacement in this trigger's frame. Read them with `FromPlayer` and `FromNumber` in a battlefield `WhenEvent` or `WhenEventModes` body. The bindings are not targets. A replaced gain triggers only if life is actually gained. Copies keep the saved values while `You` uses the copy's controller. Registration rejects nil, unnamed, repeated, and out-of-scope amount bindings. This declaration compiles:
-
-    ```go
-    func lifeGainWatcher() dsl.Card {
-        player := dsl.BindPlayer("gainer")
-        amount := dsl.BindNumber("gained")
-        return dsl.NewEnchantment("Life Gain Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.PlayerGainsLife(player).WithAmount(amount),
-            dsl.LoseLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))))
-    }
-    ```
-  * `PlayerLosesLife(*PlayerBinding) lifeLossEventPattern`, `OpponentLosesLife(*PlayerBinding) lifeLossEventPattern`, and `.WithAmount(*NumberBinding) lifeLossEventPattern`: The first pattern matches either player's positive life loss; the second matches an opponent of the source controller when the loss occurs. Both save the losing player without declaring a target. `WithAmount` also saves the completed event amount. Use either pattern in a battlefield `WhenEvent` or `WhenEventModes` body. Direct life loss and damage that causes life loss match; zero loss and fully prevented damage do not. Each simultaneous player loss has its own pending trigger and binding frame. Registration rejects nil, unnamed, repeated, and out-of-scope bindings. This declaration compiles:
-
-    ```go
-    func lifeLossWatcher() dsl.Card {
-        player := dsl.BindPlayer("loser")
-        amount := dsl.BindNumber("lost")
-        return dsl.NewEnchantment("Life Loss Watcher", "", dsl.WithAbility(dsl.WhenEvent(
-            dsl.PlayerLosesLife(player).WithAmount(amount),
-            dsl.GainLife(dsl.FromPlayer(player), dsl.FromNumber(amount)))))
-    }
-    ```
-
-  * `AttachedControllerUpkeep(hostBinding, playerBinding)`: Upkeep of enchanted permanent's controller.
-  * `AttachedBecomesTapped(hostBinding)`: Captures the attached permanent when it becomes tapped. Read with `From(hostBinding)`; it is not a target. Attachment moves and source departure do not change the captured incarnation.
-
-For a synthetic creature-death trigger, the same declaration supplies the event value and the body read:
-
-```go
-func toughnessWatcher() dsl.Card {
-    toughness := dsl.BindNumber("former toughness")
-    return dsl.NewCreature("Toughness Watcher", "", 1, 1,
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.CreatureDies().WithToughness(toughness),
-            dsl.GainLife(dsl.You, dsl.FromNumber(toughness)))))
-}
-```
-
-An Aura can capture the attached creature's former controller and toughness for one trigger resolution:
-
-```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func bondWatcher() dsl.Card {
-    controller := dsl.BindPlayer("former controller")
-    toughness := dsl.BindNumber("former toughness")
-    return dsl.NewAura("Bond Watcher", "{1}{U}",
-        dsl.WithAbility(dsl.WhenEvent(
-            dsl.AttachedCreatureDies().WithController(controller).WithToughness(toughness),
-            dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.FromNumber(toughness)))))
-}
-```
-
-The pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield source. The captured values are available in the resolving body after the Aura or creature leaves.
-
-For a source combat trigger:
-
-```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func combatWatcher() dsl.Card {
-    return dsl.NewCreature("Combat Watcher", "{1}{G}", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(dsl.Blocks(dsl.This),
-            dsl.Until(dsl.EndOfTurn, dsl.ModifyPT(dsl.This, dsl.Fixed(2), dsl.Fixed(2))))))
-}
-```
-
-The trigger keeps its controller if the source leaves before resolution. The boost applies only to the original battlefield incarnation. `Attacks` and `Blocks` accept the sealed source role; they do not declare a target.
-
-For a source that rewards another controlled creature's death:
+The damage service now keeps actual marked damage and recent deathtouch damage
+as separate facts. Permanent sources use the captured incarnation's current
+keywords or retained LKI, before notification callbacks. Returning the source
+cannot replace it. Positive damage after replacements and prevention can cause
+destruction at the next state-based check. That check uses the shared simultaneous
+destruction service, including regeneration and indestructibility. Each check
+consumes the fact, even when destruction cannot occur.
+
+Supported contexts include existing resolving damage effects, sequences,
+triggered and activated abilities (including copied abilities), fight and
+combat damage, and direct engine actions. Target legality remains an
+announcement/resolution requirement. A copy retains the original source card
+for target checks. No sealed typed constructor or `DealDamageFrom` is introduced.
+
+This complete engine example compiles:
 
 ```go
 package example
 
 import (
+    "github.com/benprew/mage-go/pkg/mage"
     "github.com/benprew/mage-go/pkg/mage/core"
-    "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
-func deathWatcher() dsl.Card {
-    return dsl.NewCreature("Death Watcher", "{1}{G}", 2, 2,
-        dsl.WithAbility(dsl.WhenEvent(dsl.AnotherCreatureYouControlDies(),
-            dsl.Sequence(dsl.GainLife(dsl.You, dsl.Fixed(1)),
-                dsl.AddCounters(dsl.This, core.P1P1, dsl.Fixed(1))))))
+func DealDeathtouchDamage(g *mage.Game, controller mage.Player) {
+    source := g.PutOnBattlefield(mage.NewCreature("Test source", "", 1, 3,
+        mage.WithKeyword(core.Deathtouch)), controller.PlayerID())
+    recipient := g.PutOnBattlefield(mage.NewCreature("Test recipient", "", 1, 10), controller.PlayerID())
+    g.DealDamageToPermanent(recipient, 1, source.ID())
+    g.CheckStateBasedActions()
 }
 ```
 
-The pattern is valid in `WhenEvent` and `WhenEventModes` on a battlefield permanent. The trigger can resolve after its source leaves. A source counter applies only if the original incarnation is still present.
+Spell-source identity/LKI, typed recipient bindings, damage batches and results,
+source notifications, and production card migration remain open. The separate
+legacy `BasiliskTouch` behavior is outside this contract.
 
-To use the former controller after a creature dies:
+## Engine prerequisite: artifact-source damage redirection
+
+The existing public signature is unchanged:
+
+```go
+func (g *Game) SetArtifactDamageRedirect(controllerID, permID uuid.UUID)
+```
+
+This installer redirects artifact-source damage from the specified player to
+an existing permanent for the current effect cycle. Use it in continuous-effect
+application, or during resolution when no cycle rebuild precedes the damage.
+It does not test whether the recipient is untapped; declarations must supply
+that condition. An absent or phased recipient makes the rule inactive.
+
+Source matching now reads the action's captured permanent incarnation, using
+current types while present and retained departure/phase-time types while absent.
+A later incarnation cannot supply those types. Missing captured information
+rejects the match. Uncaptured live sources use current types; other uncaptured
+sources keep the existing card lookup, without a spell-identity guarantee.
+Replacement ordering, amount, combat flag, and original source reference use
+the shared damage pipeline. This complete engine example compiles:
 
 ```go
 package example
 
-import "github.com/benprew/mage-go/pkg/mage/dsl"
+import "github.com/benprew/mage-go/pkg/mage"
 
-func deathControllerWatcher() dsl.Card {
-    former := dsl.BindPlayer("former controller")
-    return dsl.NewCreature("Death Controller Watcher", "{1}{B}", 1, 1,
-        dsl.WithAbility(dsl.WhenEvent(dsl.CreatureDies().WithController(former),
-            dsl.GainLife(dsl.FromPlayer(former), dsl.Fixed(1)))))
+func RedirectArtifactDamageThisCycle(g *mage.Game, player mage.Player, recipient *mage.Permanent) {
+    g.SetArtifactDamageRedirect(player.PlayerID(), recipient.ID())
 }
 ```
 
-The binding uses the dying permanent's controller at the death event. A later change of control or a stack copy does not change that saved player. The pattern still requires a battlefield source.
+There is no new DSL export. Martyrs of Korlis still requires a typed replacement
+and untapped condition. All production callers remain available. Notification
+identity, spell/recipient identity, typed singular damage, batches, results, and
+card migration remain separate work.
 
-### State Triggers (`WhenState`)
-Triggers whenever game state becomes true (CR 603.8):
-* `WhenState(StateCondition, ResolvingEffect, ...TriggerOption)`
-* Arming & Suppression: Triggers immediately when state is true (even between resolution instructions). Stays suppressed while its instance is pending, on the stack, or resolving. Rearms after that instance leaves the stack.
+## Engine prerequisite: immutable damage-event source colors
 
-### Turn-Step Triggers (`At` and `AtNext`)
-Triggers at step transitions:
-* `At(TurnStepPattern, ResolvingEffect, ...TriggerOption)`: Recurring step triggers (`YourUpkeep`, `EachUpkeep`, `EachEndStep`, `YourFirstMainPhase`, `YourPostcombatMainPhase`).
-* `AtNext(DelayedStepPattern, ResolvingEffect, ...DelayedStepOption)`: **One-shot delayed trigger** installed during resolution.
-  * Options: `WithTargets(...)`, `WithInterveningIf(condition)`.
-  * `TurnStepBegins(step, playerBinding)`: Captures the future step's active player.
-
-### Delayed Death Triggers
-
-`WhenDiesThisTurn(PermanentRef, ResolvingEffect) ResolvingEffect` watches one current battlefield incarnation. Use it in a spell, activation, or trigger body. It creates a delayed trigger when the instruction resolves. The trigger fires if that object moves from the battlefield to a graveyard before cleanup, even if the creating source has left. It does not follow a card that leaves and returns. Phasing does not count as death. The trigger uses the stored resolving controller and does not target the watched object again. The body may read bindings produced before this instruction; bindings produced inside the delayed body stay local to it.
+Existing DSL signatures remain available:
 
 ```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func watchDeath() dsl.Card {
-    watched := dsl.TargetPermanent("watched creature", dsl.IsCreature)
-    return dsl.NewSorcery("Watch Death", "{1}{G}",
-        dsl.Spell(dsl.WhenDiesThisTurn(watched,
-            dsl.GainLife(dsl.You, dsl.Fixed(3))),
-            dsl.WithTargets(watched)))
-}
+func (c EventSourceWasColor) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
+func (c EventSourceWasNotColor) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
 ```
 
-`WhenLeavesThisTurn(PermanentRef, ResolvingEffect) ResolvingEffect` watches one current battlefield incarnation in a spell, activation, or trigger body. It fires for that object's battlefield departure to any zone before cleanup. Phasing does not match. The creating source can leave before the watched object. The body keeps the resolving controller and earlier bindings; it does not follow a watched card that leaves and returns. A permanent set or player reference is not a valid subject.
-
-```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func watchDeparture() dsl.Card {
-    watched := dsl.TargetPermanent("watched artifact", dsl.IsArtifact)
-    return dsl.NewSorcery("Watch Departure", "{1}{U}",
-        dsl.Spell(dsl.WhenLeavesThisTurn(watched,
-            dsl.GainLife(dsl.You, dsl.Fixed(2))),
-            dsl.WithTargets(watched)))
-}
-```
-
-### Modal Triggers
-* `WhenEventModes(pattern, modes...)`: Choose a mode when the trigger is placed on stack.
-* `AtModes(stepPattern, modes...)`: Modal turn-step trigger.
-* `AtNextModes(stepPattern, modalOptions...)`: Modal one-shot delayed step trigger.
-
----
-
-## 10. Spells, Activations, and Costs
-
-`ExileFromGraveyardCost(n int) Cost` makes the payer choose `n` distinct cards from their graveyard. It works in an activated `Costs` group, a spell additional cost, and the graveyard branch of `EitherCost`. The choice is locked during payment preparation. Commit rechecks each card's graveyard visit before paying resources; a card that leaves and returns cannot pay in place of the chosen object. An invalid or stale choice exiles none of the chosen cards. Zero is allowed, and registration rejects a negative count. This form does not create a typed card binding.
-
-`ExileFromGraveyardCostWithCards(n int, paid *CardsBinding) Cost` saves the chosen cards in their new exile visits after payment commits. Use it as a direct activated `Costs` component or spell additional cost. `FromCards(paid)` is a `CardSet`; `CountCards(FromCards(paid))` counts only cards still in those exile visits. A card that leaves and returns to exile is absent. The binding belongs to the paid spell or ability, including stack copies and game clones. Registration rejects a nil or unnamed binding, duplicate producers, undominated reads, a negative count, and use inside `EitherCost` or a resolution-time payment. The existing `ExileFromGraveyardCost` remains available for alternative costs.
-
-```go
-paid := dsl.BindCards("exiled cards")
-card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.ExileFromGraveyardCostWithCards(2, paid)),
-    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(paid))),
-)))
-```
-
-```go
-ability := dsl.Activate(
-    dsl.Costs(dsl.Mana("{R}"), dsl.ExileFromGraveyardCost(2)),
-    dsl.DealDamageFrom(dsl.This, dsl.You, dsl.Fixed(2)))
-card := dsl.NewArtifact("Synthetic graveyard payment", "", dsl.WithAbility(ability))
-_ = card
-```
-
-`OptionalRevealFromHandCost(filter CardFilter, text, prompt string, paid *NumberBinding, card *CardBinding) Cost` offers one matching hand card as an optional spell additional cost or activated ability cost. The player chooses whether to pay during announcement. If paid, `FromNumber(paid)` is 1 and `FromCard(card)` refers to the chosen hand visit. If declined or no matching card exists, the number is 0 and the card reference is absent. The selected card is revealed on payment. A card that leaves and returns to hand is absent from the saved binding. The payment choice, card, and result belong to each spell or ability instance. Registration requires named bindings, cost text, and prompt text; it rejects duplicate producers and resolution-time costs.
-
-```go
-paid := dsl.BindNumber("paid")
-revealed := dsl.BindCard("revealed")
-spell := dsl.NewInstant("Synthetic reveal", "",
-    dsl.WithAbility(dsl.Spell(dsl.Sequence(
-        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-        dsl.IfCardHasType(dsl.FromCard(revealed), core.TypeCreature,
-            dsl.GainLife(dsl.You, dsl.Fixed(2)))))),
-    dsl.WithAdditionalCost(dsl.OptionalRevealFromHandCost(
-        dsl.IsCreatureCard, "Reveal a creature card", "Reveal a creature?", paid, revealed)))
-```
-
-`OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` offers one direct optional cost during spell additional-cost or activated-ability payment. `FromNumber(paid)` is 1 when the payer accepted and paid the cost, and 0 when the payer declined or could not pay it. The choice and result belong to that spell or activation instance; stack copies and game clones retain their own values. Registration rejects a nil or unnamed binding, empty prompt, nested choice, another captured cost, and resolution-time payment use. This result records payment acceptance; it does not save a card chosen to pay the inner cost.
-
-```go
-paid := dsl.BindNumber("paid")
-card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.OptionalCostInto(dsl.LifePayCost(2), "Pay two life?", paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
-```
-
-A direct uncaptured `RemoveCountersCost(counter CounterType, count int) Cost` inside `OptionalCost` or `OptionalCostInto` also locks acceptance and the source incarnation during total-payment preparation. Commit checks the combined counter total before spending mana or life. A returned, absent, phased-out, or counter-short source cannot pay an accepted cost. Fixed zero requires the original present source. Phase-out followed by phase-in keeps that source identity. `OptionalCostInto` remains limited to announcement-time spell additional costs and activated costs; the internal transaction does not add a resolution-time capture context. Nested wrappers and captured inner costs remain outside this contract. This declaration compiles and retains its acceptance result on stack copies and game clones:
-
-```go
-paid := dsl.BindNumber("paid")
-card := dsl.NewArtifact("Synthetic optional fixed", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.OptionalCostInto(dsl.RemoveCountersCost(core.Charge, 0), "Pay counters?", paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
-```
-
-A direct uncaptured `RemoveXCountersFromSourceCost(counter CounterType) Cost` inside `OptionalCostInto` fixes announced X before the affordability check for spell additional costs and activated `Costs`. Accepted positive removal uses the existing source-incarnation lock and combined-total preflight. Zero can be accepted without removing counters. The result records acceptance, not the number removed. This contract does not extend nested choices or resolution-time optional payment.
-
-Direct engine total-payment preparation also fixes current X for this direct inner cost in `OptionalCost(inner Cost, prompt string) Cost` and `OptionalCostInto`. It locks acceptance once, then uses the same counter preflight. Commit cannot repeat the choice or substitute a returned source. This internal transaction contract does not add a public resolution-payment capture context; registration still rejects `OptionalCostInto` in resolution-time payments. The example below remains an announcement-time declaration.
-
-```go
-paid := dsl.BindNumber("paid")
-card := dsl.NewArtifact("Synthetic optional X", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.Mana("{X}"), dsl.OptionalCostInto(
-        dsl.RemoveXCountersFromSourceCost(core.Charge), "Pay counters?", paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
-```
-
-`RevealFromHandCostWithCard(filter CardFilter, text string, card *CardBinding) Cost` pays a direct spell additional cost or activated ability cost by revealing one matching card from the payer's hand. `FromCard(card)` reads that same card in the resolving body while its hand visit remains current. The payer chooses once during payment preparation. A card that leaves and returns to hand is absent from the binding. Registration requires a named binding and nonempty cost text. This result is local to each spell or ability instance and follows stack copies and game clones. The existing `RevealFromHandCost` remains available for callers that do not need a card binding. This constructor does not declare an optional cost or a choice between costs.
-
-```go
-revealed := dsl.BindCard("revealed creature")
-spell := dsl.NewInstant("Synthetic reveal", "",
-    dsl.WithAbility(dsl.Spell(
-        dsl.IfCardHasType(dsl.FromCard(revealed), core.TypeCreature,
-            dsl.GainLife(dsl.You, dsl.Fixed(1))))),
-    dsl.WithAdditionalCost(dsl.RevealFromHandCostWithCard(
-        dsl.IsCreatureCard, "Reveal a creature card", revealed)))
-```
-
-### Spells
-* `Spell(ResolvingEffect, ...SpellOption)`: Instants and sorceries.
-* `SpellModes(modes...)`: Modal spells.
-* Options: `WithTargets(...)`, `WithAdditionalCost(cost)`, `WithSelfCostReduction(condition, amount)`.
-
-### Activated Abilities
-* `Activate(CostGroup, ResolvingEffect, ...ActivationOption)`: Standard activation.
-* `ActivateModes(CostGroup, modes...)`: Choose-one activated ability.
-* Costs (`Costs(...)`):
-  * `Mana(costString)`: Mana payment (e.g. `Mana("{1}{U}")`).
-  * `TapCost(This)`: {T} tap cost.
-  * `SacrificeSourceCost()`: Sacrifice source as cost.
-  * `SacrificeCreatureCostWithStats(power, toughness *NumberBinding)`: Sacrifice one creature and save its current power and toughness during payment. Both bindings are required. `FromNumber` reads either value in the resolving body. This cost works in `Activate`, `ActivateModes`, and spell additional costs. An activation excludes its source from the choice.
-  * `SacrificeCreatureCostWithSubtype(subtype string, result *NumberBinding) Cost`: Sacrifice one creature, including the ability source if it is a creature, and save 1 if it had the given creature subtype immediately before payment or 0 otherwise. Use `IfPositive(FromNumber(result), body)` in `Spell`, `Activate`, or `ActivateModes`. The value stays in that spell or ability instance, including copies. Registration requires a creature subtype and a named number binding. This cost is not available inside resolution-time `IfPaid` or `UnlessPaid`.
-
-    ```go
-    matched := dsl.BindNumber("paid Thrull")
-    ability := dsl.Activate(
-        dsl.Costs(dsl.SacrificeCreatureCostWithSubtype("Thrull", matched)),
-        dsl.IfPositive(dsl.FromNumber(matched), dsl.GainLife(dsl.You, dsl.Fixed(1))),
-    )
-    _ = ability
-    ```
-  * `SacrificeMatchingCostWithCard(filter PermanentFilter, text string, card *CardBinding) Cost`: Sacrifice one other matching permanent and save its card in the new graveyard visit. Use `FromCard(card)` in the resolving body of `Spell`, `Activate`, or `ActivateModes`. A token has no card in the graveyard, so its saved reference is absent. A later zone move also makes the saved reference absent. Registration requires a named card binding and nonempty cost text.
-
-    ```go
-    paid := dsl.BindCard("paid creature")
-    spell := dsl.NewInstant("Offering", "",
-        dsl.WithAbility(dsl.Spell(
-            dsl.IfCardHasType(dsl.FromCard(paid), core.TypeCreature,
-                dsl.GainLife(dsl.You, dsl.Fixed(2))))),
-        dsl.WithAdditionalCost(dsl.SacrificeMatchingCostWithCard(
-            dsl.IsCreature, "Sacrifice a creature", paid)))
-    _ = spell
-    ```
-  * `LifePayCost(amount)`: Pay life (permits paying exact life total CR 119.4).
-  * `LifePayCostInto(amount int, paid *NumberBinding) Cost`: Pay a fixed amount of life and save the committed amount for the resolving ability. Use it in `Activate`, `ActivateModes`, or a spell additional cost. Registration rejects a negative amount, a nil or unnamed binding, and duplicate producers. It is not a resolution-time `IfPaid` or `UnlessPaid` cost. Use `FromNumber(paid)` in the body; zero life is a valid payment.
-  * `LifePayXCostInto(paid *NumberBinding) Cost`: Pay the announced X life as a direct activation cost or direct spell additional cost. The cost locks X before payment and saves the committed amount for `FromNumber(paid)` in that stack instance. X must be nonnegative and cannot exceed the payer's life total. This is not a resolution-time payment.
-
-    ```go
-    paid := dsl.BindNumber("life paid")
-    spell := dsl.NewInstant("Variable life", "",
-        dsl.WithAbility(dsl.Spell(dsl.GainLife(dsl.You, dsl.FromNumber(paid)))),
-        dsl.WithAdditionalCost(dsl.LifePayXCostInto(paid)))
-    _ = spell
-    ```
-  * `RemoveCountersCost(counter CounterType, count int) Cost`: Remove a fixed nonnegative number of source counters. Direct prepared payments lock the source battlefield incarnation. Commit rejects an absent, returned, phased-out, or counter-short source before spending mana or life. This retains activated, spell additional, and resolution-payment contexts; those contexts still require a present source to pay. Direct fixed and chosen-count removals of the same counter type are checked as a total. A selected direct fixed-counter branch of `EitherCost(options ...Cost) Cost` uses the same lock and combined-total preflight. Optional and nested wrappers remain separate contracts. This synthetic activated declaration compiles:
-
-    ```go
-    card := dsl.NewArtifact("Synthetic counter payment", "", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.RemoveCountersCost(core.Charge, 2)),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-    ```
-
-    A fixed counter-removal alternative works in an activated cost group. The selected branch is locked during preparation and is not chosen again at commit:
-
-    ```go
-    card := dsl.NewArtifact("Synthetic alternative counter payment", "", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 2))),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-    ```
-
-  * `RemoveCountersCostInto(counter core.CounterType, count int, paid *NumberBinding) Cost`: Remove a fixed nonnegative number of counters from the source as an activated ability cost. `FromNumber(paid)` reads the committed count in that activation's resolving body. Payment locks the source battlefield incarnation; failed payment saves no value. Registration rejects a nil or unnamed binding, a negative count, duplicate producers, and use as a spell additional cost or resolution-time optional cost.
-
-    ```go
-    paid := dsl.BindNumber("paid counters")
-    ability := dsl.Activate(
-        dsl.Costs(dsl.RemoveCountersCostInto(core.Charge, 2, paid)),
-        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-    )
-    _ = ability
-    ```
-  * `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`: Remove the announced X counters without capturing an output. Direct activation and spell additional payments fix X before payment. Direct resolution payments fix the current X during preparation. Positive counts lock the source incarnation and join fixed/chosen counts in commit preflight, before mana or life is spent. Zero needs no counters or present source and remains zero if ambient X changes. Direct `CanPay`/`Pay` calls retain their current-X behavior. A direct `EitherCost(options ...Cost) Cost` option also fixes announced X before affordability checks and uses the same incarnation lock and combined-total preflight. Direct optional X wrappers are specified above; nested alternatives are specified below. This declaration compiles:
-
-    ```go
-    card := dsl.NewArtifact("Synthetic X counter payment", "", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.Mana("{X}"), dsl.RemoveXCountersFromSourceCost(core.Charge)),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-    ```
-
-    A synthetic alternative declaration uses the same public constructors:
-
-    ```go
-    card := dsl.NewArtifact("Synthetic alternative X payment", "", dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge))),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-    ```
-
-  * `RemoveXCountersFromSourceCostInto(counter core.CounterType, paid *NumberBinding) Cost`: Remove the announced X counters from the source as an activated ability cost. The cost fixes X before payment and locks the source battlefield incarnation. `FromNumber(paid)` reads the committed count in that activation's resolving body. Zero is valid while the source is present. A failed payment saves no value. Registration rejects a nil or unnamed binding, duplicate producers, and spell or resolution-time payment use. The existing `RemoveXCountersFromSourceCost` remains available.
-
-    ```go
-    paid := dsl.BindNumber("removed counters")
-    ability := dsl.Activate(
-        dsl.Costs(dsl.RemoveXCountersFromSourceCostInto(core.P1P1, paid)),
-        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-    )
-    _ = ability
-    ```
-  * `RemoveAnyCountersCost(counter core.CounterType, paid *NumberBinding) Cost`: In an activated ability cost, the payer chooses a number from zero through the source's current count and removes exactly that many counters. `FromNumber(paid)` reads the committed count in the resolving body. The choice is made once during payment preparation. The cost requires a battlefield source and cannot be used as a spell additional cost or an `IfPaid`/`UnlessPaid` cost.
-
-    All five counter-removal cost constructors (`RemoveCountersCost`, `RemoveCountersCostInto`, `RemoveXCountersFromSourceCost`, `RemoveXCountersFromSourceCostInto`, and `RemoveAnyCountersCost`) require `0 <= counter < core.NumCounters`. Registration rejects other values, including in nested payment declarations. Fixed counts must be nonnegative. The uncaptured fixed and X constructors retain their existing payment contexts; captured forms remain activated costs. These checks do not change the signatures or valid payment behavior.
-
-    ```go
-    paid := dsl.BindNumber("paid charge counters")
-    ability := dsl.Activate(
-        dsl.Costs(dsl.RemoveAnyCountersCost(core.Charge, paid)),
-        dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-    )
-    _ = ability
-    ```
-  * `TapNOtherMatchingCost(count int, filter PermanentFilter, text string) Cost`: Choose and tap exactly `count` distinct untapped matching permanents you control, excluding the ability source. Use it in `Costs(...)`, spell additional costs, or resolution-time payment groups. The choices are made once during payment preparation and kept by battlefield incarnation through commit. The other creatures can have summoning sickness; `{T}` on the ability source still uses `TapCost(This)`. Registration requires a positive count and nonempty text. It returns no payment binding.
-  * `TapNOtherMatchingCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost`: Choose and tap one other untapped matching permanent controlled by the payer. The committed spell or activation saves its battlefield incarnation in `paid`. Use `From(paid)` while that incarnation remains on the battlefield, or `DamageSourceOf(From(paid))` when its damage-source LKI is needed after departure. The binding stays with stack copies and game clones. A returned card does not become the paid permanent. Use this form in `Costs(...)` or as a spell additional cost; registration rejects it in a resolution-time payment group. Registration also requires nonempty text and a named, unique, dominating binding.
-
-    ```go
-    paid := dsl.BindPermanent("paid creature")
-    ability := dsl.Activate(
-        dsl.Costs(dsl.TapNOtherMatchingCostWithPermanent(
-            dsl.IsCreature, "Tap another creature", paid)),
-        dsl.Untap(dsl.From(paid)),
-    )
-    _ = ability
-    ```
-
-    ```go
-    target := dsl.TargetPermanent("creature", dsl.IsCreature)
-    ability := dsl.Activate(
-        dsl.Costs(
-            dsl.TapCost(dsl.This),
-            dsl.TapNOtherMatchingCost(3,
-                dsl.And(dsl.IsCreature, dsl.HasColorFilter(core.White)),
-                "Tap three untapped white creatures you control")),
-        dsl.Destroy(target),
-        dsl.WithTargets(target),
-    )
-    _ = ability
-    ```
-  * `DiscardCost(n int) Cost`: Discard exactly `n` cards from the payer's hand. Use it in `Costs(...)` or as a spell additional cost. The payer's card choice and each chosen hand visit are locked during total-cost validation and reused at commit. Before mana, life, or other costs are paid, commit rejects a missing chosen card or a card that left the hand and returned. Zero cards is a legal payment. Reordering the hand does not change a visit. All discard replacements are prepared before any chosen card moves. The accepted cards move together, then each completed discard emits its event. Event observers see the complete discard payment. If a replacement prevents a chosen discard, the whole discard cost fails before any chosen card moves. A replacement that applies only when an effect causes a discard does not apply to this cost.
-  * `DiscardMatchingCardCostInto(filter CardFilter, paid *CardBinding) Cost`: Choose one matching hand card and save its resulting graveyard visit. Use only as a direct activated cost or spell additional cost. `FromCard(paid)` becomes absent after that visit ends. The zero filter matches all cards. Locked choices, filter rechecks, replacement legality, and rollback use the shared discard payment transaction. Registration rejects nil or unnamed bindings, duplicate or missing producers, optional/alternative wrappers, and resolution-time captures.
-
-    ```go
-    paid := dsl.BindCard("paid")
-    ability := dsl.Activate(
-        dsl.Costs(dsl.DiscardMatchingCardCostInto(dsl.IsArtifactCard, paid)),
-        dsl.ReturnCardToHand(dsl.FromCard(paid)),
-    )
-    card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(ability))
-    ```
-
-  * `DiscardMatchingCardCost(filter CardFilter) Cost`: Discard one chosen hand card that matches `filter`. Use in activated `Costs`, spell additional costs, announcement-time optional/alternative costs, or resolution-time `IfPaid`/`UnlessPaid`. The zero filter matches all cards. Preparation offers only matching candidates and locks the chosen hand visit. Invalid choices fail without substitution; commit rechecks the visit and filter before spending resources. Prevention and unrevealed library replacement reject payment through the shared discard service (CR 701.9c). No paid-card or characteristic output is produced.
-  * `DiscardCardsWithDifferentNamesCost(n int) Cost`: Discard exactly `n` chosen cards whose names are distinct. Use it in activated `Costs`, a spell additional cost, or a resolution-time payment group. Announcement-time optional and alternative cost wrappers use the same locked payment. Preparation saves each chosen hand visit; commit checks the visits and names before spending other resources. Invalid, duplicate, missing, or same-name choices fail payment; the engine does not substitute a different selection. Zero is valid, and negative counts fail registration. The shared discard batch prepares replacements before movement and sends events after every chosen card moves. Prevention rejects the whole group. A replacement to the library without revelation makes this characteristic-constrained payment illegal (CR 701.9c). The current discard action has no revealed-library destination. Random discard and paid characteristic/card outputs are separate capabilities.
-  * `DiscardCostWithCards(n int, paid *CardsBinding) Cost`: Discard exactly `n` chosen cards and save their resulting graveyard visits in the paid spell or activation frame. Zero cards is valid. Use a direct activated `Costs` component or spell additional cost. `FromCards(paid)` excludes redirected cards and cards that leave their captured graveyard visits. Copies and game clones keep independent frames. Registration rejects nil or unnamed bindings, negative counts, duplicate producers, reads without a dominating producer, alternative or optional wrappers, and resolution-time payment captures. `DiscardCost` and `DiscardCardCostInto` remain available.
-  * `DiscardCardsWithDifferentNamesCostWithCards(n int, paid *CardsBinding) Cost`: Discard exactly `n` chosen cards with different names and save the resulting graveyard visits. The supported contexts, binding validation, visit identity, and copy/clone behavior are the same as `DiscardCostWithCards`. An unrevealed hidden-zone replacement cannot pay this characteristic-constrained cost (CR 701.9c). Optional/alternative wrappers and resolution-time captures are rejected. The existing distinct-name cost export remains available.
-  * `DiscardCardCostInto(card *CardBinding) Cost`: Discard one chosen card and save its new graveyard visit in the spell or activation frame. Use `FromCard(card)` in the resolving body. The reference is absent if a replacement sends the card to a different zone or it leaves the graveyard before resolution. Registration requires a named binding and a dominating payment producer. This cost uses the same locked choice and replacement path as `DiscardCost(1)`.
-  * `ExileMatchingCardFromGraveyardCostInto(filter CardFilter, text string, paid *NumberBinding) Cost`: Choose one matching card from the payer's graveyard during payment preparation, exile that same graveyard visit, and save its mana value when payment commits. Use `FromNumber(paid)` in a spell additional cost or an activated ability body. The saved number belongs to that stack instance and its copies. Registration requires a named binding and nonempty cost text. A resolution-time `IfPaid` or `UnlessPaid` cost cannot produce this binding.
-  * `ExileMatchingCardFromGraveyardCostWithCard(filter CardFilter, text string, paid *CardBinding) Cost`: Choose and exile one matching card from the payer's graveyard as a direct activated ability cost or spell additional cost. `FromCard(paid)` refers to the new exile visit in that stack instance. The reference is absent after the card leaves exile, even if it returns. Registration requires a named binding and nonempty cost text. A resolution-time payment branch cannot produce this binding. This constructor saves the card; use `ExileMatchingCardFromGraveyardCostInto` when the body needs only its mana value.
-
-```go
-paidCard := dsl.BindCard("exiled card")
-ability := dsl.Activate(
-    dsl.Costs(dsl.ExileMatchingCardFromGraveyardCostWithCard(
-        dsl.IsCreatureCard, "Exile a creature card", paidCard)),
-    dsl.IfCardHasType(dsl.FromCard(paidCard), dsl.TypeCreature,
-        dsl.GainLife(dsl.You, dsl.Fixed(1))),
-)
-_ = ability
-```
-
-```go
-paid := dsl.BindNumber("exiled mana value")
-ability := dsl.Activate(
-    dsl.Costs(dsl.ExileMatchingCardFromGraveyardCostInto(
-        dsl.IsCreatureCard, "Exile a creature card", paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-)
-_ = ability
-```
-  * `DiscardRandomCost(count)`: Discard cards at random.
-
-```go
-ability := dsl.Activate(
-    dsl.Costs(dsl.DiscardCost(2)),
-    dsl.Draw(dsl.You, dsl.Fixed(1)),
-)
-_ = ability
-```
-
-```go
-paid := dsl.BindCard("discarded land")
-ability := dsl.Activate(
-    dsl.Costs(dsl.DiscardCardCostInto(paid)),
-    dsl.IfCardHasType(dsl.FromCard(paid), core.TypeLand,
-        dsl.GainLife(dsl.You, dsl.Fixed(2))),
-)
-_ = ability
-```
-
-```go
-paid := dsl.BindNumber("life paid")
-ability := dsl.Activate(
-    dsl.Costs(dsl.LifePayCostInto(3, paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-)
-```
-
-```go
-paid := dsl.BindNumber("paid charge counters")
-ability := dsl.Activate(
-    dsl.Costs(dsl.RemoveAnyCountersCost(core.Charge, paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-)
-_ = ability
-```
-
-```go
-package example
-
-import . "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func lifeForSacrificedToughness() {
-    power := BindNumber("paid power")
-    toughness := BindNumber("paid toughness")
-    ability := Activate(
-        Costs(SacrificeCreatureCostWithStats(power, toughness)),
-        GainLife(You, FromNumber(toughness)),
-    )
-    _ = ability
-}
-
-func spellUsingSacrificedPower() {
-    power := BindNumber("paid power")
-    toughness := BindNumber("paid toughness")
-    spell := NewInstant("Offering", "{1}{R}",
-        WithAbility(Spell(GainLife(You, FromNumber(power)))),
-        WithAdditionalCost(SacrificeCreatureCostWithStats(power, toughness)))
-    _ = spell
-}
-```
-
-For a tap ability that prevents blocking, compose the target, cost, and duration:
-
-```go
-creature := TargetPermanent("creature", And(IsCreature, HasPowerLTE(2)))
-WithAbility(Activate(Costs(TapCost(This)),
-    Until(EndOfTurn, CantBeBlocked(creature)), WithTargets(creature)))
-```
-
-Dwarven Warriors uses this form. Suspicious Bookcase omits the power filter and
-adds `Mana("{3}")` to `Costs`. Target restrictions are checked on resolution;
-a power increase after resolution does not end the blocking restriction.
-
-* Activation Options:
-  * `WithTargets(...)`: Declares target bindings.
-  * `OnlyAsSorcery()`: Sorcery-speed timing.
-  * `OnlyDuring(step, moreSteps...)`: Restricts casting or activation to any specified step (e.g. `DeclareAttackers` or `Upkeep`). Returns `StepTimingOption`, which is accepted by `Spell` and all activation contexts. It adds a restriction; it does not grant permission to cast a sorcery outside normal timing.
-  * `OnlyOnYourTurn()`: Active player only.
-  * `ActivationLimit(maxPerTurn)`: Max activations per turn.
-  * `AnyPlayerMayActivate()`: Permits either player to activate and pay for
-    the ability. `You` refers to the activator at resolution. Other costs,
-    timing rules, and restrictions still apply. Use this option with `Activate`.
-    Feral Hydra combines it with `Costs(Mana("{3}"))` and
-    `AddCounters(This, P1P1, Fixed(1))`; the counter applies only to the
-    original source incarnation, even when the opponent activates the ability.
-  * `ActivationIf(condition)`: Pure state condition required to activate.
-  * `CaptureNumberBeforePayment(value, binding)`: Saves amount before mana production & cost payment.
-  * `CapturePermanentBeforePayment(subject, binding)`: Saves permanent (e.g. attachment) before sacrifice cost.
-
-`SacrificeMatchingCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost` chooses one other matching permanent controlled by the payer and saves its battlefield incarnation when the cost is paid. Use it in `Costs` for an activation or as a spell additional cost. `From(paid)` is absent after sacrifice, but `DamageSourceOf(From(paid))` reads the former incarnation's damage-source LKI. The binding belongs to the spell or ability instance, including stack copies and game clones. A returned card does not replace it. Registration requires nonempty text and a named binding and rejects duplicate or undominated reads. It cannot produce a binding in a resolution-time `IfPaid` or `UnlessPaid` cost. This synthetic declaration compiles:
-
-```go
-paid := dsl.BindPermanent("paid creature")
-card := dsl.NewInstant("Offering", "",
-    dsl.WithAbility(dsl.Spell(
-        dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(paid)), dsl.You, dsl.Fixed(1)))),
-    dsl.WithAdditionalCost(dsl.SacrificeMatchingCostWithPermanent(
-        dsl.IsCreature, "Sacrifice a creature", paid)))
-```
-
-`SacrificeMatchingIncludingSourceCostWithPermanent(filter PermanentFilter, text string, paid *PermanentBinding) Cost` has the same capture and validation contract, but the payer can choose the ability source if it matches. It works in an activated ability's `Costs` and in a spell's additional costs. Payment locks the chosen battlefield incarnation. The saved identity can supply damage-source LKI after the source is sacrificed; a phased-out source cannot pay. This synthetic activation compiles:
-
-```go
-paid := dsl.BindPermanent("paid source")
-card := dsl.NewCreature("Offering", "", 2, 2, dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.SacrificeMatchingIncludingSourceCostWithPermanent(
-        dsl.IsCreature, "Sacrifice a creature", paid)),
-    dsl.DealDamageFrom(dsl.DamageSourceOf(dsl.From(paid)), dsl.You, dsl.Fixed(1)))))
-```
-
-`SacrificeMatchingCostWithManaValue(filter, text, binding) Cost` chooses one matching permanent that the payer controls, except the source, and sacrifices it as an activation cost or spell additional cost. It saves that permanent's mana value at payment time in the `NumberBinding`. Use `FromNumber` in the resolving body. The binding belongs to that spell or ability instance, including copies. It is not available in `IfPaid` or `UnlessPaid` resolution-time costs. The text and binding must be present at registration. A zero-value filter matches all permanents.
-
-`SacrificeMatchingIncludingSourceCostWithManaValue(filter PermanentFilter, text string, value *NumberBinding) Cost` has the same payment and result contract but also permits the ability source when it matches the filter. Use it in `Costs` for an activation or as a spell additional cost. The payment transaction locks the chosen battlefield incarnation and reads its mana value immediately before sacrifice. The result is available only after successful payment and remains in that spell or ability instance when the source is gone. For example, this synthetic declaration compiles:
-
-```go
-paid := dsl.BindNumber("paid mana value")
-card := dsl.NewCreature("Synthetic", "{2}{U}", 1, 1,
-    dsl.WithAbility(dsl.Activate(
-        dsl.Costs(dsl.SacrificeMatchingIncludingSourceCostWithManaValue(
-            dsl.And(dsl.IsCreature, dsl.HasColorFilter(dsl.Blue)),
-            "Sacrifice a blue creature", paid)),
-        dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
-```
-
-```go
-func manaValueOffering() dsl.Card {
-    paid := dsl.BindNumber("paid mana value")
-    return dsl.NewArtifact("Mana Value Offering", "", dsl.WithAbility(
-        dsl.Activate(
-            dsl.Costs(dsl.SacrificeMatchingCostWithManaValue(
-                dsl.IsArtifact, "Sacrifice an artifact", paid)),
-            dsl.GainLife(dsl.You, dsl.FromNumber(paid)))))
-}
-
----
-
-## 11. Continuous Effects, Modifications, and Durations
-
-Continuous effects are broken down into **modifications** and their **durations**:
-
-### Continuous Modifications (`ContinuousModification`)
-* `ModifyPT(subject, powerValue, toughnessValue)`: Power/toughness boost (Layer 7c). For a repeatable self-pump activation, use `Activate(Costs(Mana("{R}")), Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(0))))`. Each resolution adds a separate bonus to the original source incarnation. Frozen Shade, Granite Gargoyle, Shivan Dragon, Wall of Fire, and Wall of Water use this form.
-  For targeted artifact activations, declare `TargetPermanent("creature", IsCreature)`, pass it to `ModifyPT` and `WithTargets`, and group all payments in `Costs`. Coral Helm uses `Mana("{3}")` and `DiscardRandomCost(1)`; Elven Lyre uses `Mana("{1}")`, `TapCost(This)`, and `SacrificeSourceCost()`. Both install +2/+2 with `Until(EndOfTurn, ...)`; the boost does not require the source to remain on the battlefield.
-  For Atog's sacrifice payment, use `Costs(SacrificeMatchingIncludingSourceCost(IsArtifact, "Sacrifice an artifact"))`. This permits sacrificing the source if it is an artifact. `SacrificeArtifactCost` excludes the source and does not express that requirement. Dragon Engine uses `Costs(Mana("{2}"))` with the same typed self-pump form.
-  Dragon Hatchling, Furnace Whelp, and Molten Ravager use `{R}` for +1/+0; Minotaur Sureshot uses `{1}{R}` for +1/+0; Jousting Dummy uses `{3}` for +1/+0; Tibalt’s Rager uses `{1}{R}` for +2/+0. Each uses the same untargeted `This` modification with an explicit end-of-turn duration.
-  Carrion Ants uses `{1}` for +1/+1; Wall of Opposition uses `{1}` for +1/+0; Killer Bees uses `{G}` for +1/+1; Arcades Sabboth uses `{W}` for +0/+1; Pavel Maliki uses `{B}{R}` for +1/+0. Vaevictis Asmadi has three separate +1/+0 activations costing `{B}`, `{R}`, and `{G}`. Each uses the same typed source modification and explicit duration.
-  Fire Drake and Mindful Biomancer add `ActivationLimit(1)` to their typed source-boost activations; Vampire Bats adds `ActivationLimit(2)`. Use the limit as an `Activate` option, separate from the end-of-turn duration. Costs are `{R}`, `{2}{G}`, and `{B}`, respectively.
-  Fallen Angel uses `Activate(Costs(SacrificeMatchingIncludingSourceCost(IsCreature, "Sacrifice a creature")), Until(EndOfTurn, ModifyPT(This, Fixed(2), Fixed(1))))`. Its cost permits sacrificing Fallen Angel itself; `SacrificeCreatureCost` excludes the source.
-  Osai Vultures uses `Activate(Costs(RemoveCountersCost(Carrion, 2)), Until(EndOfTurn, ModifyPT(This, Fixed(1), Fixed(1))))`. Remove the counters as payment before the bonus resolves. The ability has no mana or tap cost, targets, or per-turn limit.
-  Mishra’s Factory and Pendelhaven use the same typed activation with `Costs(TapCost(This))`. Their target filters require an Assembly-Worker creature and a creature with current power and toughness each equal to 1, respectively. These restrictions are checked at activation and resolution; they do not end a resolved bonus. Either player’s qualifying creature can be targeted.
-  Ghosts of the Damned, Pradesh Gypsies, and Tuknir Deathlock use `TargetPermanent("creature", IsCreature)` with `ModifyPT` and `Until(EndOfTurn, ...)` for -1/-0, -2/-0, and +2/+2, respectively. All three include `TapCost(This)` in `Costs`; Pradesh adds `Mana("{1}{G}")` and Tuknir adds `Mana("{R}{G}")`. Either player’s creature, including the source, can be targeted.
-  For an entry boost, use `WhenEvent(Enters(This), Until(EndOfTurn, ModifyPT(creature, Fixed(0), Fixed(3))), WithTargets(creature))` with `TargetPermanent("creature", IsCreature)`. Affa Guard Hound uses this form. Declare the target on the trigger, not with `WithCastTarget`: choose it when the trigger goes on the stack, after the creature enters. The creature can target itself, and entry without casting also triggers the ability.
-  Angelic Page combines `IsCreature` with `Or(IsAttacking, IsBlocking)` in its typed target and pays `Costs(TapCost(This))` for +1/+1. Either player’s attacking or blocking creature qualifies. The target must still qualify at resolution, but leaving combat afterward does not end the end-of-turn bonus.
-  Dwarven Lieutenant uses `TargetPermanent("dwarf", And(IsCreature, HasSubType("Dwarf")))`, `Costs(Mana("{1}{R}"))`, and `Until(EndOfTurn, ModifyPT(dwarf, Fixed(1), Fixed(0)))`. Either player's Dwarf creature, including the source, qualifies. The subtype restriction is checked at activation and resolution; losing the subtype after resolution does not end the bonus.
-  Icatian Lieutenant uses the same subtype-filtered form for Soldier creatures, with `{1}{W}` and +1/+0. Icatian Priest uses `IsCreature`, `{1}{W}{W}`, and +1/+1. Both can target either player's qualifying creature, including themselves, and have no tap cost or activation limit.
-* `ModifyEachPT(permanentSet, powerValue, toughnessValue)`: Collection power/toughness modification (Layer 7c). For “creatures you control,” use `ControlledPermanents(IsCreature)`. Install with `Until(EndOfTurn, ...)` to capture membership at resolution; later entries and returned cards do not receive the boost. Fortify uses this in `SpellModes`, Inspired Charge and Shield Wall in `Spell`, and Assault Formation in `Activate`. For attacking or blocking creatures, use `MatchingPermanents(And(IsCreature, IsAttacking))` or `MatchingPermanents(And(IsCreature, IsBlocking))`; Army of Allah, Morale, and Piety use these forms. The collection includes either player’s creatures. Combat membership is checked at resolution, and leaving combat afterward does not end the bonus.
-  Inspiring Captain and Inspiring Unicorn use the same controlled collection for their +1/+1 trigger bodies. Captain installs it with `WhenEvent(Enters(This), ...)`; Unicorn retains `AttacksTrigger` until a typed attack-event adapter is available. Both capture creatures at resolution and expire at cleanup.
-* `ChangeController(subject, player)`: Changes one permanent's controller in Layer 2. Install it with `Until(EndOfTurn, ChangeController(creature, You))`. The effect captures the permanent incarnation and the evaluated player when the ability resolves. It survives source departure, retains the target through phasing, and expires at cleanup. Registration rejects this modification inside `While`, `UntilSourceLeaves`, or another `Until` duration.
-* `GrantKeyword(subject, keyword)`: Grants keyword ability (Layer 6).
-  Blighted Bat uses `Activate(Costs(Mana("{1}")), Until(EndOfTurn, GrantKeyword(This, Haste)))`. The ability has no target, tap cost, or activation limit. Its printed flying ability remains separate.
-  Jump uses `Spell(Until(EndOfTurn, GrantKeyword(creature, Flying)), WithTargets(creature))` with `TargetPermanent("creature", IsCreature)`. Pixie Queen uses the same body in `Activate` with `Costs(Mana("{G}{G}{G}"), TapCost(This))`. Either player's creature can be targeted, including Pixie Queen itself. The resolved grant remains after the source leaves and expires at cleanup.
-  Icatian Scout and Svyelunite Priest use a `TargetPermanent("creature", IsCreature)` binding with `WithTargets` and `Until(EndOfTurn, GrantKeyword(creature, ...))`. Both pay mana and `TapCost(This)`. The Priest combines `OnlyDuring(core.Upkeep)` with `OnlyOnYourTurn()` to restrict activation to its controller's upkeep. Either player's creature can be targeted, including the source.
-  Order of Leitbur and Order of the Ebon Hand use `Activate(Costs(Mana("{W}")), Until(EndOfTurn, GrantKeyword(This, FirstStrike)))` and the corresponding `{B}` cost. Their separate +1/+0 activations use `ModifyPT(This, Fixed(1), Fixed(0))` with `{W}{W}` or `{B}{B}` and the same explicit end-of-turn duration.
-  Icatian Infantry uses separate `{1}` activations for first strike and banding with the same typed source grant and duration. River Merfolk grants mountainwalk for `{U}`, Vodalian Knights grants flying for `{U}`, and Orcish Veteran grants first strike for `{R}`. These activations have no targets, tap costs, or per-turn limits.
-  Alabaster Mage uses `TargetPermanent("creature", IsCreature, TargetYouControl())`, `{1}{W}`, and a temporary lifelink grant. Check the controller restriction at activation and resolution; a later control change does not end the resolved grant. Emerald Dragonfly uses `{G}{G}` and `GrantKeyword(This, FirstStrike)` with the same end-of-turn duration, keeping its printed flying ability. Neither activation has a tap cost or activation limit.
-* `RemoveKeyword(subject, keyword)`: Removes all instances of one keyword in Layer 6. Use `Until(EndOfTurn, RemoveKeyword(creature, Forestwalk))` for Scarwood Hag's second activation. Declare the creature with `TargetPermanent` and `WithTargets`; pay `Costs(TapCost(This))`. The first activation uses `GrantKeyword` and adds `Mana("{G}{G}{G}{G}")`. Both can target either player's creature, including the Hag. Removal uses timestamp order, so a later grant can restore the keyword. A resolved removal survives source departure, preserves the recipient through phasing, expires at cleanup, and does not affect a returned incarnation.
-* `RemoveLandwalk(subject)`: Removes all landwalk abilities in layer 6, including legendary landwalk and subtype-based landwalk. Hammerheim uses `Activate(Costs(TapCost(This)), Until(EndOfTurn, RemoveLandwalk(creature)), WithTargets(creature))` with `TargetPermanent("creature", IsCreature)`. Either player's creature can be targeted. Later grants restore landwalk in timestamp order; unrelated abilities remain. The resolved removal survives source departure and recipient phasing, expires at cleanup, and does not affect a returned incarnation.
-* `RemoveAbilities(PermanentRef)`: Removes all abilities from one permanent in Layer 6.
-* `RemoveAbilitiesEach(PermanentSet)`: Removes all abilities from each permanent in a set. `Until` captures the set at resolution; `While` reevaluates it while active. Later Layer 6 grants can restore abilities. Rules restrictions, such as regeneration prohibitions, remain in effect.
-* `CantBeBlocked(subject)`: Prevents all creatures from blocking the permanent. Install with `Until(EndOfTurn, CantBeBlocked(subject))`; this is a rules restriction, so ability removal does not erase it. Later blockers are also restricted. Source departure does not end the duration, and a returned subject is a new object.
-* `GrantEachKeyword(permanentSet, keyword)`: Grants keyword to set.
-* `SetColors(subject, colors...)`: Replaces colors (Layer 5).
-* `SetEachColors(permanentSet, colors...)`: Replaces colors for set.
-* `SetSubtypeFamily(subject, family, subtypes...)`: Replaces one subtype family (Layer 4). Wishful Merfolk combines `SetSubtypeFamily(This, SubtypeCreature, "Human")` and `RemoveKeyword(This, Defender)` in one `Until(EndOfTurn, ...)` activation. This replaces its creature subtypes and removes defender only on the original source incarnation. Both changes expire at cleanup.
-* `AddSubtypeFamily(subject, family, subtypes...)`: Adds subtypes within a family (Layer 4).
-* `ActivatedAbilityModification(subject, costs, effect, options...)`: Grants activated ability (Layer 6).
-* `ActivatedModesModification(subject, costs, options...)`: Grants modal activated ability.
-
-For “all creatures get -N/-M until end of turn,” use
-`Until(EndOfTurn, ModifyEachPT(MatchingPermanents(IsCreature), Fixed(-N), Fixed(-M)))`.
-Hell Swarm, Marsh Gas, Languish, and Bone Flute use this form. Both players'
-creatures are included, with no targets. Bone Flute installs the effect through
-`Activate(Costs(Mana("{2}"), TapCost(This)), ...)`. The resolved effect remains
-if the Flute leaves. Temporary-effect metadata reports a detrimental outcome
-when its summed fixed power or toughness modifier is negative; signed values
-and collection metadata remain available to AI inspection.
-
-For “Target creature can't be regenerated this turn,” use a typed creature
-target and `Until(EndOfTurn, GrantKeyword(creature, CantRegenerate))`. The
-prohibition remains after the source leaves. It expires at cleanup and does
-not prevent the creation of regeneration shields.
-
-### Durations & Installation
-* `Until(Duration, modifications...)`: Installs temporary continuous effects (e.g. `EndOfTurn`, `EndOfCombat`, `Indefinite`).
-* `UntilSourceLeaves(This, modifications...)`: Effect lasts until the source leaves the battlefield.
-* `While(condition, modifications...)`: Static conditional continuous effect.
-* `Static(rules...)`: Installs static rules on the permanent.
-
-### Static Ability Grants
-* `GrantActivatedAbility(subject, costs, body, options...)`: Statically grants an ability to a single subject (e.g. `AttachedPermanent`).
-* `GrantEachActivatedAbility(set, costs, body, options...)`: Statically grants an ability to each permanent in a set.
-* `GrantEachActivatedModes(set, costs, options...)`: Statically grants a modal ability.
-
----
-
-## 12. Replacements and Prevention
-
-Entry counter replacements use `EntersWithCounters(counter core.CounterType, amount EntryCounterValue) Ability` with `ColorsSpentToCastEnteringPermanent() EntryCounterValue`. Add the ability to a permanent card with `WithAbility`. The amount is the number of distinct colored mana colors paid to cast that exact permanent spell. An entry without casting supplies zero. This value is valid only for the entry replacement; it is not a resolving `ResolutionValue`.
-
-```go
-dsl.NewCreature("Converge Example", "{3}", 2, 2,
-    dsl.WithAbility(dsl.EntersWithCounters(core.P1P1,
-        dsl.ColorsSpentToCastEnteringPermanent())))
-```
-
-The counter placement uses the shared replacement service before the permanent enters. A counter doubler can change the final count. Registration rejects a missing amount or invalid counter type.
-
-* `PreventNextDamage(recipient, amount)`: Installs a prevention shield on permanent or player.
-* `SkipNextUntap(PermanentRef)`: Prevents untap during the controller's next untap step.
-* `SkipNextUntapOf(PermanentRef, PlayerRef)`: Prevents untap during the specified player's next untap step.
-* `SkipDrawStepForLife(amount)`: Static rule to skip draw step and gain life (CR 614.10b).
-* `EntersWithNCounters(counter, count)`: Replacement effect placing counters as the permanent enters.
-* `Regenerate(PermanentRef)`: Installs a regeneration shield on the target or source.
-
----
-
-## 13. Values and Dynamic Calculations
-
-Operations taking amounts accept `ResolutionValue`:
-
-* `Fixed(n)`: Static constant integer.
-* `XValue()`: The X announced during casting or activation.
-
-* `ManaValueOf(PermanentRef)`: Current mana value from the permanent's card; absent references supply zero. X contributes zero on the battlefield. Use `SnapshotNumber` before moving the permanent when a later instruction needs that value. This adapter uses the existing `ManaCost.CMC()` service and does not add mana-symbol support.
-* `ManaValueOfSpell(StackObjectRef)`: Current mana value of a spell on the stack. For example, `target := TargetSpell("spell"); ability := Spell(GainLifeFor(You, ManaValueOfSpell(target)), WithTargets(target))` compiles with the typed target and value roles. The value uses the stack object's announced X and the existing mana-cost parser; mana symbols that the parser cannot represent need a separate engine contract.
-* `PowerOf(PermanentRef)`: Current power of the permanent at resolution.
-* `ToughnessOf(PermanentRef)`: Current toughness of the permanent at resolution.
-* `CountersOn(PermanentRef, CounterType)`: Current count of counters on the live permanent.
-* `SourceCounters(CounterType)`: Counters on the source permanent, or its last-known count if departed.
-* `CountPermanents(PermanentSet)`: Counts the current collection when the value is used. Controlled collections use the resolving controller and exclude phased-out permanents. Use `SnapshotNumber` to preserve an earlier count. Aerial Assault counts controlled flying creatures after its destruction instruction. Take Heart uses `CountPermanents(ControlledPermanents(And(IsCreature, IsAttacking)))` after its typed end-of-turn +2/+2 boost. Count current attackers when the gain resolves, independently of the creature target's controller or combat status.
-* `CreaturesDiedThisTurn()`: Number of creatures that died this turn across all players.
-* Arithmetic:
-  * `MultiplyValues(a, b)`: The product of two resolution values. Use `MultiplyValues(Fixed(2), ValueAtResolution(XValue()))` for twice the announced X. Both operands keep their typed binding context.
-  * `SubtractValues(a, b)`: $a - b$.
-  * `MinValue(a, b)`: $\min(a, b)$.
-  * `MaxValue(a, b)`: $\max(a, b)$.
-  * `DivideRoundDown(numerator, denominator)` and `DivideRoundUp(numerator, denominator)`: Divide two `ResolutionValue` operands and round the quotient down or up. A dynamic zero divisor supplies zero; registration rejects a fixed zero divisor. Both operands read the current resolution frame. These values work in spell, activation, and triggered resolving bodies, and in existing continuous modifications that accept a `ResolutionValue`.
-
-  ```go
-  x := dsl.BindNumber("x")
-  card := dsl.NewCreature("Half X", "", 1, 1, dsl.WithAbility(dsl.Activate(
-      dsl.Costs(), dsl.Sequence(
-          dsl.SnapshotNumber(dsl.Fixed(5), x),
-          dsl.DealDamageFrom(dsl.This, dsl.You,
-              dsl.DivideRoundUp(dsl.FromNumber(x), dsl.Fixed(2))),
-      ))))
-  _ = card
-  ```
-* Adapters:
-  * `ValueAtResolution(legacyValueSource)`: Adapts legacy value sources.
-
-`ControlledCreatureSubtypeAtCast(subtype string) CastCondition` reads whether the spell's controller controlled a creature with that subtype when casting completed. Use it only in `IfCast(condition CastCondition, effect ResolvingEffect)` inside a typed spell body. The condition uses the saved cast snapshot even if the creature later leaves, changes controller, or phases out. Registration rejects an empty or known noncreature subtype and use outside a spell ability.
-
-`RevealedSubtypeAtCast(subtype string) CastCondition` reads whether a card with that subtype was revealed while paying an additional cost to cast this spell. It uses the saved cast snapshot, so moving the revealed card later does not change the result. Stack copies retain the cast fact. Registration rejects an empty subtype or use outside a spell ability. It does not read reveals from an activated ability cost.
-
-`AnyCast(conditions ...CastCondition) CastCondition` is true when at least one child cast condition is true. Use it inside `IfCast` in a typed spell body when either cast-time fact permits one effect. It runs that effect once even if several facts are true. The declaration copies its input list. Registration rejects an empty list, a nil child, or an invalid child condition. The sealed `CastCondition` role rejects player, target, and effect arguments at compile time.
-
-```go
-creature := dsl.TargetPermanent("creature", dsl.IsCreature)
-controller := dsl.BindPlayer("creature controller")
-spell := dsl.Spell(dsl.Sequence(
-    dsl.SnapshotPlayer(dsl.ControllerOf(creature), controller),
-    dsl.DealDamageFrom(dsl.This, creature, dsl.Fixed(3)),
-    dsl.IfCast(dsl.AnyCast(
-        dsl.RevealedSubtypeAtCast("Dragon"),
-        dsl.ControlledCreatureSubtypeAtCast("Dragon")),
-        dsl.DealDamageFrom(dsl.This, dsl.FromPlayer(controller), dsl.Fixed(3))),
-), dsl.WithTargets(creature))
-_ = spell
-```
-
-The controller snapshot occurs before damage can destroy the creature. If the target is illegal when the spell resolves, the spell does not resolve and no instruction runs (CR 608.2b). A missing or phased-out target supplies no controller.
-
-```go
-paid := dsl.BindNumber("reveal paid")
-card := dsl.BindCard("revealed Dragon")
-spell := dsl.NewInstant("Reveal example", "", dsl.WithAbility(dsl.Spell(
-    dsl.IfCast(dsl.RevealedSubtypeAtCast("Dragon"),
-        dsl.GainLife(dsl.You, dsl.Fixed(3))))),
-    dsl.WithAdditionalCost(dsl.OptionalRevealFromHandCost(
-        dsl.HasSubTypeCardFilter("Dragon"), "Reveal a Dragon card", "Reveal?", paid, card)))
-_ = spell
-```
-
-```go
-spell := dsl.NewInstant("Cast condition test", "", dsl.Spell(
-    dsl.IfCast(dsl.ControlledCreatureSubtypeAtCast("Dragon"),
-        dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-```
-
----
-
-## 14. Representative Card Implementations
-
-### Goblins of the Flarg (State Trigger)
-```go
-WithAbility(WhenState(
-    Controls(HasSubType("Dwarf")),
-    Sacrifice(This),
-))
-```
-
-### Island-Dependent Creatures (State Trigger with Negation)
-```go
-WithAbility(WhenState(
-    ControlsNone(HasSubType("Island")),
-    Sacrifice(This),
-))
-```
-
-### Blood Divination (Additional Cost Spell)
-```go
-Spell(
-    Draw(You, Fixed(3)),
-    WithAdditionalCost(SacrificeCreatureCost()),
-)
-```
-
-### Targeted Land Destruction
-```go
-land := TargetPermanent("land", IsLand)
-WithAbility(Spell(Destroy(land), WithTargets(land)))
-```
-
-The target can be a land controlled by either player. `Destroy` allows regeneration.
-
-### Land Destruction with a Sacrifice Cost
-
-Strip Mine uses `TargetPermanent("land", IsLand)` and
-`Activate(Costs(TapCost(This), SacrificeSourceCost()), Destroy(land), WithTargets(land))`.
-Select the target before paying the tap and sacrifice costs. Either player's
-land can be targeted, including Strip Mine itself. The ability resolves after
-the source leaves; a self-target is then absent. Its separate mana ability uses
-`Activate(Costs(TapCost(This)), AddManaAmount(Colorless, Fixed(1)))`, which
-resolves immediately and supports automatic mana planning.
-
-### Filtered Destruction Activations
-
-Royal Assassin uses `TargetPermanent("creature", And(IsCreature, IsTapped))`
-and `Activate(Costs(TapCost(This)), Destroy(creature), WithTargets(creature))`.
-Exorcist uses `And(IsCreature, HasColorFilter(Black))` and adds `Mana("{1}{W}")`
-to the cost group. Either player's qualifying creature can be targeted. The
-restriction is checked again at resolution; regeneration and indestructible
-still apply.
-
-Merfolk Assassin uses `And(IsCreature, HasKeywordFilter(Islandwalk))` with
-`Costs(TapCost(This))`. Savaen Elves uses `IsAuraOnLand` with
-`Costs(Mana("{G}{G}"), TapCost(This))`. `IsAuraOnLand` requires the Aura
-subtype, the enchantment type, and an attachment to a current land permanent.
-Neither the Aura nor its land has a controller restriction. Both activations
-use `Destroy(target)` and `WithTargets(target)`; their filters are checked
-again at resolution.
-
-### Filtered Permanent Destruction
-```go
-WithAbility(Spell(DestroyEach(MatchingPermanents(IsLand))))
-WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Island")))))
-WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Plains")))))
-WithAbility(Spell(DestroyEach(MatchingPermanents(HasSubType("Forest")))))
-WithAbility(Spell(DestroyEach(MatchingPermanents(And(IsCreature, HasColorFilter(Black))))))
-```
-
-These spells have no targets. The collection includes both players' matching
-permanents at resolution, excludes phased-out permanents, and is destroyed as
-one simultaneous group. Regeneration and indestructible still apply. Island
-matching uses the subtype, including nonbasic Islands, rather than the card name.
-The same rule applies to Plains and Forests. Black creature matching includes
-multicolored black creatures and excludes black permanents that are not creatures.
-
-`ManaValueAtMost(PermanentSet, ResolutionValue) PermanentSet` keeps members
-whose current mana value is no greater than the value read when the set is
-used. It can filter a set for `DestroyEach` in a spell, activation, or trigger.
-The set and value are required. `FromNumber` can read an announced cost payment
-from the same spell or ability instance. For example, this synthetic spell
-uses the X life paid during casting as its destruction threshold:
-
-```go
-paid := dsl.BindNumber("life paid")
-spell := dsl.NewInstant("Sweep", "",
-    dsl.WithAbility(dsl.Spell(dsl.DestroyEach(dsl.ManaValueAtMost(
-        dsl.MatchingPermanents(dsl.Or(dsl.IsArtifact, dsl.IsCreature)),
-        dsl.FromNumber(paid))))),
-    dsl.WithAdditionalCost(dsl.LifePayXCostInto(paid)))
-```
-
-This filter reads the limit once per set evaluation. It does not target or
-change destruction ordering. Existing `DestroyEach` replacement and batch
-rules still apply.
-
-### Fasting (Static Replacement + Upkeep Counters + Event Trigger)
-```go
-// Skip draw step for life
-WithAbility(Static(SkipDrawStepForLife(2)))
-
-// Put hunger counter, destroy if threshold reached
-WithAbility(At(YourUpkeep, Sequence(
-    AddCounters(This, Hunger, Fixed(1)),
-    IfState(SourceHasCounters(Hunger, 5), Destroy(This)),
-)))
-
-// Destroy if controller draws a card
-WithAbility(WhenEvent(
-    ControllerDrawsCard(BindPlayer("drawer")),
-    Destroy(This),
-))
-```
-
-### Thrull Retainer (Activation Capture Before Sacrifice)
-```go
-host := BindPermanent("host")
-WithAbility(Activate(
-    Costs(SacrificeSourceCost()),
-    Regenerate(From(host)),
-    CapturePermanentBeforePayment(AttachedPermanent, host),
-))
-```
-
-### Erosion (Attachment Event Capture + Payment Branch)
-```go
-land := BindPermanent("land")
-player := BindPlayer("player")
-
-WithAbility(WhenEvent(
-    AttachedControllerUpkeep(land, player),
-    UnlessPaid(FromPlayer(player),
-        Costs(EitherCost(Mana("{1}"), LifePayCost(1))),
-        Destroy(From(land)),
-    ),
-))
-```
-
-### Teleport (Spell Step Restriction)
-
-```go
-creature := TargetPermanent("creature", IsCreature)
-Spell(
-    Until(EndOfTurn, CantBeBlocked(creature)),
-    WithTargets(creature),
-    OnlyDuring(core.DeclareAttackers),
-)
-```
-
-The casting restriction applies on either player's turn, before choices and
-payment, including alternate-cost casts and casts of card copies. It does not
-restrict resolution or copying a spell already on the stack. The target may be
-any creature, including a creature that is not attacking.
-
-### Base Power and Toughness
-
-`Until(EndOfTurn, SetBasePowerToughness(creature, Fixed(0), Fixed(2)))`
-sets both base values through the existing layer executor. It preserves bonuses,
-counters, abilities, types, and colors. Temporary effects capture the subject's
-incarnation and both values at resolution. `While` evaluates them during layer
-evaluation. Base values are not reported as additive boosts in AI metadata.
-
-`Until(EndOfTurn, SetBasePower(creature, Fixed(0)))` changes only base power.
-Base toughness remains subject to other layer effects; it is not captured at
-resolution. This replaces `SetPowerUntilEndOfTurn` for Singing Tree and Island
-of Wak-Wak. The old UUID-based engine `SetBasePower` constructor is replaced
-by this typed modification; install it with an explicit duration.
-
-Disharmony uses `OnlyDuring(core.BeginCombat, core.DeclareAttackers)` for
-“during combat before blockers are declared.” This timing restriction does not
-remove its requirement for an attacking creature target. The constructor copies
-the supplied steps; later caller changes do not change the definition.
-
-### Aura Targets on Controlled Creatures
-
-Miracle Worker uses `TargetPermanent("aura", And(IsEnchantment,
-HasSubType("Aura"), IsAttachedTo(IsCreature)), TargetAttachedToYouControl())`
-with `Activate(Costs(TapCost(This)), Destroy(aura), WithTargets(aura))`.
-Either player's Aura qualifies if its current host is a creature you control.
-The host is not a target. Check the attachment, host type, and host controller
-again at resolution. Moving the Aura to another qualifying creature keeps it
-legal; returning the Aura from another zone creates a new target incarnation.
-
-### Enchanted Creature Destruction
-
-Ramses Overdark uses `TargetPermanent("creature", And(IsCreature, IsEnchanted))`
-with `Activate(Costs(TapCost(This)), Destroy(creature), WithTargets(creature))`.
-`IsEnchanted` requires an attached Aura enchantment; Equipment does not count.
-Either player's creature can qualify, regardless of the Aura's controller.
-Check the restriction at activation and resolution. An Aura that leaves or
-phases out no longer qualifies, but another attached Aura can keep the target
-legal. Destruction permits regeneration and respects indestructible.
-
-### Fixed Land Mana Activations
-
-Hammerheim, Karakas, and Pendelhaven use
-`Activate(Costs(TapCost(This)), AddManaAmount(color, Fixed(1)))` for red,
-white, and green mana, respectively. These untargeted abilities resolve
-immediately, emit the tapped-for-mana event, and support automatic payment.
-Their separate utility abilities use the stack.
-
-Desert, Elephant Graveyard, and Library of Alexandria use the same declaration
-with `Colorless` for `{T}: Add {C}`. The mana activation has no target, step,
-or hand-size restriction. Those restrictions belong to the separate utility
-abilities. Automatic payment can use the fixed colorless production.
-
-The test harness prefers non-mana abilities using the engine's
-`IsActivatedManaAbility` classification, including typed fixed and dynamic
-production. Use `ActivateAbilityIndex` to select a particular mana ability
-when a permanent has multiple activated abilities.
-
-Guardian Idol and Mana Crypt use `Activate(Costs(TapCost(This)),
-AddManaAmount(Colorless, Fixed(n)))` with one and two mana, respectively.
-These untargeted abilities resolve immediately and support automatic payment.
-Guardian Idol's entry-tapped rule prevents payment of the tap cost until it
-untaps. Its animation ability and Mana Crypt's upkeep ability are separate.
-
-### Optional Entry Target with a Dependent Value
-
-Brightmare declares `TargetPermanents("creature", 0, 1, IsCreature)` on
-`WhenEvent(Enters(This), ..., WithTargets(creatures))`. It uses
-`ForEach(creatures, creature, Sequence(Tap(From(creature)),
-GainLife(You, PowerOf(From(creature)))))` with a `BindPermanent` member.
-The collection has at most one member, so the loop preserves the singular
-instruction without an implicit first-member conversion. No chosen target means
-no tap or life gain. The target is chosen when the entry trigger goes on the
-stack, and Brightmare itself can be chosen. An already tapped target still
-supplies its current power for life gain. An illegal target prevents resolution.
-
-### Sacrifice for a Source Counter and Life Gain
-
-Blood Host uses `Activate(Costs(Mana("{1}{B}"), SacrificeCreatureCost()),
-Sequence(AddCounters(This, P1P1, Fixed(1)), GainLife(You, Fixed(2))))`.
-The sacrifice cost requires another creature. The ability has no targets or
-tap cost. At resolution, add the counter to the original source incarnation,
-then gain life for the stored controller. An absent source does not prevent
-life gain, and a returned Blood Host does not receive the old ability's counter.
-
-# Exact multi-sacrifice power payment
-
-`SacrificeNMatchingCostWithTotalPower(count int, filter PermanentFilter, text string, total *NumberBinding) Cost` chooses exactly `count` other matching permanents controlled by the payer. It reads their current power immediately before payment and saves the sum in the spell or activated ability instance. The choices are locked during payment preparation. A changed incarnation or phased-out choice fails payment without producing a result. Use this cost directly in `Costs` or as a spell additional cost; it cannot produce a binding in a resolution-time payment branch. Registration requires a positive count, nonempty text, and a named number binding. This constructor does not choose any number of permanents or include the source.
-
-```go
-total := dsl.BindNumber("paid power")
-offering := dsl.NewArtifact("Offering", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.SacrificeNMatchingCostWithTotalPower(
-        2, dsl.IsCreature, "Sacrifice two creatures", total)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(total)),
-)))
-_ = offering
-```
-
-## Singular Counter-Removal Result
-
-`RemoveCountersFromWithResult(subject PermanentRef, counter CounterType, amount ResolutionValue, result *NumberBinding) ResolvingEffect` removes up to the requested number of counters and saves the number actually removed. It is supported in spell, activated ability, and triggered resolving bodies. Nonpositive amounts and absent, phased-out, illegal, or returned subjects save zero. Zone departure does not count as counter removal. The result belongs to the resolving instance and follows stack copies and game clones. Registration rejects invalid counter types, nil subjects or amounts, and nil, unnamed, or undominated result bindings. The existing `RemoveCountersFrom` signature remains available.
-
-This compiling synthetic declaration uses qualified `dsl` names:
-
-```go
-removed := dsl.BindNumber("removed counters")
-target := dsl.TargetPermanent("permanent", dsl.AnyPermanent)
-card := dsl.NewInstant("Synthetic removal", "", dsl.Spell(dsl.Sequence(
-    dsl.RemoveCountersFromWithResult(target, dsl.Charge, dsl.Fixed(3), removed),
-    dsl.GainLife(dsl.You, dsl.FromNumber(removed)),
-), dsl.WithTargets(target)))
-_ = card
-```
-
-This action does not choose a removal quantity, pay a cost, move counters, or remove counters from a set. Those operations have separate contracts.
-
-### Multi-card discard payment output
-
-```go
-paid := dsl.BindCards("discarded cards")
-card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.DiscardCostWithCards(2, paid)),
-    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(paid))),
-)))
-```
-
-This example gains life for cards still in the saved graveyard visits at resolution. It does not count redirected discards or cards that left and returned. The payment uses the shared locked hand choices, simultaneous movement, and replacement service. This constructor does not add filtered choices, random discards, different-name costs, or a discarded-card characteristic snapshot.
-
-### Distinct-name discard payment example
-
-This declaration uses the existing public cost export and validates at registration:
-
-```go
-card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.DiscardCardsWithDifferentNamesCost(3)),
-    dsl.Draw(dsl.You, dsl.Fixed(5)),
-)))
-```
-
-The payer chooses the cards during payment preparation. Copying the paid activation does not pay the cost again.
-
-### Distinct-name discard payment output
-
-```go
-paid := dsl.BindCards("discarded cards")
-card := dsl.NewArtifact("Synthetic", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.DiscardCardsWithDifferentNamesCostWithCards(2, paid)),
-    dsl.GainLife(dsl.You, dsl.CountCards(dsl.FromCards(paid))),
-)))
-```
-
-The payer chooses distinct names once during payment preparation. The paid frame saves the batch's resulting graveyard visits. This example counts visits still present at resolution; it does not save discarded characteristics. Zero cards supplies an empty set. Failed payment supplies no output.
-
-### Filtered resolution-time discard payment
-
-```go
-card := dsl.NewInstant("Synthetic filtered discard", "{2}{U}",
-    dsl.WithAbility(dsl.Spell(dsl.Sequence(
-        dsl.Draw(dsl.You, dsl.Fixed(3)),
-        dsl.UnlessPaid(dsl.You,
-            dsl.Costs(dsl.DiscardMatchingCardCost(dsl.IsArtifactCard)),
-            dsl.Discard(dsl.You, dsl.Fixed(2))),
-    ))))
-```
-
-The payment choice occurs after drawing. The fallback occurs if the payer declines or cannot pay. This example compiles and validates in `TestFilteredDiscardPublicDeclaration`; production card wiring remains separate.
-
-### Nested fixed-counter alternatives
-
-`EitherCost(options ...Cost) Cost` can contain nested `EitherCost` declarations with uncaptured `RemoveCountersCost(counter CounterType, count int) Cost` leaves. In activated costs, spell additional costs, and direct engine total-payment preparation, selected fixed leaves use the existing source-incarnation lock and combined counter preflight. Each branch is selected during preparation; commit does not repeat that selection. A returned, absent, phased, or counter-short source fails before mana or life payment. Fixed zero still requires the original present source. This contract does not cover nested optional wrappers, captured leaves, or nested X.
-
-```go
-card := dsl.NewArtifact("Synthetic nested counter payment", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.EitherCost(dsl.EitherCost(dsl.RemoveCountersCost(core.Charge, 2)))),
-    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-```
-
-### Nested uncaptured X-counter alternatives
-
-`EitherCost(options ...Cost) Cost` supports nested alternatives with uncaptured `RemoveXCountersFromSourceCost(counter CounterType) Cost` leaves in activated costs and spell additional costs. Recursive preparation fixes announced X before branch affordability checks. Direct engine total-payment preparation fixes current X. Selection occurs once; commit uses the existing source-incarnation lock and combined counter preflight. Positive removal requires the original present, unphased source. Zero requires no counter action, including after source departure. Captured leaves and nested optional wrappers remain separate contracts.
-
-```go
-card := dsl.NewArtifact("Synthetic nested X counter payment", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.EitherCost(dsl.EitherCost(dsl.RemoveXCountersFromSourceCost(core.Charge)))),
-    dsl.GainLife(dsl.You, dsl.Fixed(1)),
-)))
-```
-
-This extends the earlier nested fixed-counter section's X exclusion. Existing signatures and production callers remain available.
-
-### Alternative Branch with an Optional Fixed-Counter Payment
-
-`EitherCost(options ...Cost) Cost` can select a branch containing `OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` with a direct uncaptured `RemoveCountersCost(counter core.CounterType, count int) Cost` inner cost. Activated costs and spell additional costs retain announcement-time locking. Direct engine total-payment preparation now also locks that branch's optional acceptance once and sends accepted fixed removal through the shared source-incarnation lock and combined-total preflight. Nested `EitherCost` ancestors use the same path. The engine's legacy `OptionalCost(inner Cost, prompt string) Cost` also retains this behavior and its signature.
-
-Decline or an unaffordable inner cost performs no counter removal. Accepted fixed zero requires the original present source. A returned, absent, phased-out, or counter-short source fails commit before mana or life payment. Phase-out followed by phase-in preserves identity. The declaration remains immutable; pending payments and game clones own separate locks and outputs.
-
-An optional result inside an alternative branch does not dominate a read outside that branch, even for a one-option alternative. Registration rejects that read. This example intentionally leaves the result unread and is compiled and executed by `TestEitherOptionalFixedCounterPublicDeclaration`:
-
-```go
-card := dsl.NewArtifact("Synthetic alternative optional fixed", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.EitherCost(dsl.OptionalCostInto(
-        dsl.RemoveCountersCost(core.Charge, 2), "Pay counters?", dsl.BindNumber("paid")))),
-    dsl.GainLife(dsl.You, dsl.Fixed(1)),
-)))
-```
-
-This extends the earlier nested-optional exclusion only for a selected alternative branch with a direct uncaptured fixed-counter inner cost. X costs, captured inner costs, optional-around-alternative declarations, general payment-order selection, and mutations during commit remain separate contracts. No public signature changed.
-
-### Optional X-counter branches in alternative payments
-
-`EitherCost(options ...Cost) Cost` supports a selected branch containing
-`OptionalCostInto(inner Cost, prompt string, paid *NumberBinding) Cost` with
-an uncaptured `RemoveXCountersFromSourceCost(counter core.CounterType) Cost`
-inner cost. Nested `EitherCost` ancestors use the same contract. Activated
-`Costs` and spell additional costs fix announced X before optional affordability;
-direct engine total-payment preparation fixes current X. Acceptance and branch
-selection occur once. Accepted positive removal uses the existing source-incarnation
-lock and combined counter-total preflight before mana, life, or counters change.
-Accepted zero requires no source or counter action. Decline and unaffordability
-remove no counters. Departure and return invalidate positive payment; phasing
-back in preserves the source identity.
-
-The legacy engine `OptionalCost(inner Cost, prompt string) Cost` keeps its
-signature and uses the same path. Declaration templates, caller outcome maps,
-pending payments, and cloned games remain isolated. This does not add captured
-inner costs, optional-around-alternative wrappers, or a public resolution-time
-capture context. An optional result inside an alternative branch does not dominate
-a read outside that branch; registration rejects that read. This synthetic example
-compiles and validates without reading the branch-local result:
-
-```go
-card := dsl.NewArtifact("Synthetic alternative optional X", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.Mana("{X}"), dsl.EitherCost(dsl.OptionalCostInto(
-        dsl.RemoveXCountersFromSourceCost(core.Charge), "Pay counters?", dsl.BindNumber("paid")))),
-    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-```
-
-### Optional payment of fixed-counter alternatives (engine prerequisite)
-
-The legacy engine `mage.OptionalCost(inner mage.Cost, prompt string) mage.Cost`
-can wrap an `EitherCost(options ...Cost) Cost` tree whose leaves are uncaptured
-`RemoveCountersCost(counter core.CounterType, count int) Cost` costs.
-Activated costs and spell additional costs retain announcement locking. Direct
-engine total-payment preparation now also locks optional acceptance and each
-selected branch once. The selected fixed leaf uses the existing source-incarnation
-lock and combined counter preflight before live mana, life, or counters change.
-Decline and unaffordability select no branch and remove no counters. Accepted
-zero requires the original present source. Phasing back in preserves identity;
-departure and return do not. Reused declarations and game clones keep separate locks.
-
-`OptionalCost` is an engine compatibility API, not a `dsl` export. No new author
-export is added by this prerequisite. `OptionalCostInto` now supports uncaptured
-fixed-counter alternative trees; see the typed acceptance section below. Captured
-leaves, X leaves, mixed leaf families, general payment-order selection, and mutations during commit remain
-outside this contract. This synthetic engine/DSL integration example compiles
-and validates in `TestOptionalEitherFixedCounterEngineDeclaration`:
-
-```go
-card := dsl.NewArtifact("Synthetic optional alternative", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(mage.OptionalCost(dsl.EitherCost(dsl.EitherCost(
-        dsl.RemoveCountersCost(core.Charge, 2))), "Pay counters?")),
-    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-```
-
-The engine wrapper preserves its legacy optional flag. It does not supply a
-new typed acceptance binding or permit source-wide flags as typed result reads.
-
-### Optional payment of X-counter alternatives (engine prerequisite)
-
-The legacy engine `mage.OptionalCost(inner mage.Cost, prompt string) mage.Cost`
-can wrap an `EitherCost(options ...Cost) Cost` tree with uncaptured
-`RemoveXCountersFromSourceCost(counter core.CounterType) Cost` leaves. Activated
-costs and spell additional costs fix announced X before optional affordability.
-Direct engine total-payment preparation fixes current X. Acceptance and each
-selected branch are locked once; commit does not ask again or read a later X.
-Only payable branches are offered, and a sole payable branch is selected without
-a choice. Decline or unaffordability selects no branch and removes no counters.
-
-Accepted positive X uses the shared source-incarnation lock and combined
-counter-total preflight before live mana, life, or counters change. An absent,
-returned, phased-out, or counter-short source cannot pay. Phasing out and back
-in preserves identity. Accepted zero requires no source or counter action.
-Declarations, caller outcome maps, pending payments, and game clones retain
-separate values. Costs are nontargeted and need current identity, not LKI.
-
-`OptionalCost` remains an engine compatibility API, not a `dsl` export. Its
-legacy flag is preserved; this adds no typed acceptance result or author export.
-`OptionalCostInto` supports X-counter alternative trees as described below.
-Captured leaves, mixed leaf families, nested optional gates, payment-order
-selection, and mutations during commit remain separate contracts. This example
-compiles and validates in `TestOptionalEitherXCounterEngineDeclaration`:
-
-```go
-card := dsl.NewArtifact("Synthetic optional X alternative", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.Mana("{X}"), mage.OptionalCost(dsl.EitherCost(dsl.EitherCost(
-        dsl.RemoveXCountersFromSourceCost(core.Charge))), "Pay counters?")),
-    dsl.GainLife(dsl.You, dsl.Fixed(1)))))
-```
-
-### Typed acceptance for fixed-counter alternatives
-
-`OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` accepts an
-`EitherCost(options ...Cost) Cost` tree with uncaptured
-`RemoveCountersCost(counter core.CounterType, count int) Cost` leaves. This is
-supported in activated costs, spell additional costs, and direct engine payment
-preparation. It saves 1 for accepted payment and 0 for decline or unaffordability.
-The result records acceptance, not the number of counters removed.
-
-```go
-paid := dsl.BindNumber("paid")
-card := dsl.NewArtifact("Synthetic optional counter result", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.OptionalCostInto(dsl.EitherCost(dsl.EitherCost(
-        dsl.RemoveCountersCost(core.Charge, 2))), "Pay counters?", paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-)))
-_ = card
-```
-
-Preparation offers only affordable branches, fixes acceptance before selecting a
-branch, and makes each choice once. A selected enclosing alternative branch uses
-the same preparation path. Commit checks the saved source incarnation
-and combined counter total before spending resources. Fixed zero still requires
-a present, unphased source. Phase-out followed by phase-in preserves identity;
-departure and return do not. Failed preflight publishes no result or payment
-event. Pending instances, copied stack objects, and game clones keep separate
-results. The typed result does not write the legacy optional-payment flag.
-
-Registration rejects empty trees, invalid counter types or negative counts,
-captured leaves, mixed fixed/X or other cost families, nil or unnamed results, and
-empty prompts. Resolution-time result capture remains invalid. An enclosing
-alternative branch cannot make this result dominate a read outside that branch.
-The legacy `OptionalCost` signature and existing callers remain available.
-
-### Typed acceptance for X-counter alternative trees
-
-`OptionalCostInto(inner Cost, prompt string, result *NumberBinding) Cost` also
-accepts an `EitherCost(options ...Cost) Cost` tree whose leaves are uncaptured
-`RemoveXCountersFromSourceCost(counter core.CounterType) Cost` costs. Supported
-contexts are activated costs, spell additional costs, and direct engine total
-payment preparation. `FromNumber(result)` reads 1 for accepted payment or 0 for
-decline or unaffordability; this is acceptance, not the removed counter count.
-
-```go
-paid := dsl.BindNumber("paid")
-card := dsl.NewArtifact("Synthetic optional X counter result", "", dsl.WithAbility(dsl.Activate(
-    dsl.Costs(dsl.Mana("{X}"), dsl.OptionalCostInto(dsl.EitherCost(dsl.EitherCost(
-        dsl.RemoveXCountersFromSourceCost(core.Charge))), "Pay counters?", paid)),
-    dsl.GainLife(dsl.You, dsl.FromNumber(paid)),
-)))
-_ = card
-```
-
-Preparation fixes announced X before affordability, acceptance, and branch
-selection. Direct engine preparation fixes current X. Commit repeats neither
-choice and uses the existing source-incarnation lock and combined counter
-preflight. Positive X requires the original present, unphased source. Zero
-requires no counter action and can record acceptance without a source. Failure
-publishes no result or payment event and spends no resources at preflight.
-Stack copies and game clones retain independent payment frames; the typed result
-does not write the legacy optional-payment flag.
-
-Registration rejects empty trees, invalid counter types, captured leaves,
-mixed fixed/X or other cost families, nested optional gates, nil or unnamed
-results, and empty prompts. Resolution-time capture and reads not dominated by
-this producer remain invalid. The legacy exports and production callers remain.
-
-### Total mana cost changes during casting
-
-The existing `ManaCostPerTarget(string) Cost`, `GenericCost(int) Cost`,
-`ManaPayment(string) Cost`, and printed X costs join one mana total before
-spell cost increases and reductions apply. Ordinary hand casting and the
-shared alternate-zone casting path use this contract. Increases apply first;
-color, type, and conditional reductions can reduce added generic mana and
-announced X, with a minimum generic cost of zero. They do not change announced
-X or the spell's mana value. The total is locked before mana planning and
-payment, so sacrificing a reducer as a cost does not recalculate it.
-
-This synthetic declaration compiles and uses existing public functions:
-
-```go
-recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
-card := dsl.NewInstant("Synthetic Reduced X", "{X}{R}",
-    dsl.Spell(dsl.DealDamageEvenly(dsl.This, recipients,
-        dsl.ValueAtResolution(dsl.XValue())), dsl.WithTargets(recipients)),
-    dsl.WithAdditionalCost(dsl.ManaCostPerTarget("{1}")),
-    dsl.WithSelfCostReduction(dsl.FixedAmount(2), nil))
-_ = card
-```
-
-For two targets and X=4, the total is {4}{R}: {4}{R} plus {2}, minus {2}.
-This example charges for every target. Use the spell-only
-`AdditionalManaPerTargetBeyondFirst` option below to exclude the first target.
-Branch selection inside optional/alternative costs, prepared/Paradigm card-copy
-payment, and new cost-reduction declarations remain separate work.
-
-### Additional mana for targets beyond the first
-
-`AdditionalManaPerTargetBeyondFirst(amount int) TargetSurchargeOption` adds generic mana
-for each announced target occurrence after the first. The amount must be
-positive; registration rejects zero and negative amounts. Use it in `Spell`,
-including spells with `WithTargetGroups`. It counts all groups together, including
-one object chosen once in each of two independent groups. Zero or one announced
-target adds no mana. Multiple options add their separate costs.
-
-The existing spell payment transaction combines this cost with printed or
-alternative mana and announced X before increases and reductions. Payment locks
-the count at announcement. Later target loss, phasing, or illegality cannot change
-the paid cost. Spell copies pay no additional cost. Declaration values are
-immutable and contain no target choices or payment results.
-
-This spell-only option cannot be used in `Costs`, `Activate`, a resolving body,
-or the mode list passed to `SpellModes`. Use `SpellModesWithOptions` below for
-a modal spell. Activation adapters remain separate work. The legacy
-`ManaCostPerTarget(string) Cost` still charges for every announced target and
-remains available for existing callers.
-
-This complete synthetic declaration compiles:
-
-```go
-package example
-
-import "github.com/benprew/mage-go/pkg/mage/dsl"
-
-func Card() dsl.Card {
-    recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
-    return dsl.NewSorcery("Synthetic Target Surcharge", "{X}{R}",
-        dsl.Spell(dsl.DealDamageEvenly(dsl.This, recipients,
-            dsl.ValueAtResolution(dsl.XValue())),
-            dsl.WithTargets(recipients),
-            dsl.AdditionalManaPerTargetBeyondFirst(1)))
-}
-```
-
-This supplies Fireball's target surcharge and equal-division requirements.
-Production card wiring remains separate.
-
-### Colored mana for each activation target
-
-`ActivationManaPerTarget(color core.Color, amount int) ActivationOption` adds
-`amount` mana of the selected color for each announced target occurrence.
-Use it in a single-body `Activate`, with `WithTargets` or
-`WithActivationTargetGroups`. Registration requires a positive amount and one
-of `White`, `Blue`, `Black`, `Red`, or `Green`. `Colorless` and `AnyColor` are
-invalid. Generic, hybrid, variable, and modal per-target costs are outside this
-adapter's supported contexts.
-
-Zero targets add no mana. A repeated object chosen in separate target groups
-counts once per occurrence. Multiple options add their separate costs. The
-existing contextual-cost service fixes the count before the combined mana
-payment and nonmana costs. Colored mana is not reduced by generic activation
-cost reductions. Failed payment or invalid target announcement spends no live
-resources and emits no live payment or activation events. Later target loss
-does not refund mana, and ability copies pay no costs. Declarations contain no
-mutable target choices or payment results; copies and game clones use their own
-existing target frames.
-
-The option cannot be used in `Costs`, `Spell`, `ActivateModes`, granted
-activations, or a resolving body. The legacy `ManaCostPerTarget` export remains
-available for unmigrated callers.
-
-This complete synthetic declaration compiles:
+For permanent-source damage, both predicates use colors captured from the damage
+action's original incarnation before life and damage notifications. Current
+colors apply while present; departure or phase-time LKI applies while absent.
+Later changes, return, cleanup, event value copies, and game clones cannot change
+this capture. Missing captured information satisfies neither predicate. Other
+events and uncaptured nonpermanent sources retain legacy UUID lookup behavior.
+These predicates remain usable with legacy triggered abilities; they are not
+sealed composable declarations.
+
+`core.GameEvent.DamageSourceColors` is an immutable `core.EventSourceColors`
+value. Its engine inspection methods are `Captured() bool`, `Known() bool`,
+`HasColor(Color) bool`, `SourceID() uuid.UUID`, and `Incarnation() uuid.UUID`.
+`core.NewEventSourceColors(sourceID, incarnation uuid.UUID, colors []Color,
+known bool) EventSourceColors` copies the color input into the value. A zero
+value means there is no capture; a captured unknown source is distinct from a
+known source with no colors. Damage executors produce this value, after
+replacement processing and before result notifications. It is not a resolution
+selector or a damage source declaration.
+
+This complete example compiles:
 
 ```go
 package example
 
 import (
+    "github.com/benprew/mage-go/pkg/mage"
     "github.com/benprew/mage-go/pkg/mage/core"
-    "github.com/benprew/mage-go/pkg/mage/dsl"
 )
 
-func Card() dsl.Card {
-    targets := dsl.TargetPermanents("creatures", 0, 3, dsl.IsCreature)
-    return dsl.NewArtifact("Synthetic Target Payment", "",
-        dsl.WithAbility(dsl.Activate(
-            dsl.Costs(dsl.Mana("{2}"), dsl.TapCost(dsl.This)),
-            dsl.TapEach(targets),
-            dsl.WithTargets(targets), dsl.ActivationManaPerTarget(core.Red, 1))))
+func BlackDamageWatcher() mage.Card {
+    condition := mage.EventSourceWasColor{Color: core.Black}
+    return mage.NewEnchantment("Test black damage watcher", "",
+        mage.WithAbility(mage.NewTriggered(core.EvtDamageDealt, false,
+            mage.GainLife(1)).SetCondition(condition.CheckTriggerCond)))
 }
 ```
 
-This supplies Goblin Polka Band's per-target colored payment requirement.
-Its random target announcement and dependent tap/untap behavior still need
-separate typed wiring; the example chooses targets normally.
+Controller/type/subtype/filter and self-identity event predicates, spell LKI,
+recipient identity, result bindings, typed damage, and production card migration
+remain separate work. All production exports and callers remain available.
 
-### Modal spell target surcharge
+## Permanent damage-source controller capture
 
-`SpellModesWithOptions(options []ModalSpellOption, modes ...ModeDefinition)
-*ModalSpellAbility` declares a spell that chooses exactly one mode, with
-spell-wide announcement options. Existing `SpellModes` callers remain valid.
-`AdditionalManaPerTargetBeyondFirst(amount int) TargetSurchargeOption` implements
-both sealed `SpellOption` and `ModalSpellOption`; existing `Spell` calls and
-assignments to `SpellOption` remain valid. This slice supplies only that modal
-option. Resolving effects and activation options cannot occupy its option list.
-Registration rejects nil options and nonpositive surcharge amounts.
+Implemented engine inspection API in `pkg/mage/core`:
 
-The surcharge counts only the selected mode's announced targets. A targetless
-mode adds no mana, and inactive modes add no targets or costs. Multiple options
-add their costs. Hand casting and the shared alternate-zone cast path combine
-these costs with printed or alternative mana and X before cost increases and
-reductions. The total locks before payment. Failed casting publishes no payment
-or targeting events and spends no resources. Target departure, return, or phasing
-after casting does not refund mana. Copies retain the mode and targets and pay
-nothing. Options contain no instance state; the constructor copies the option
-list. Existing damage, replacement, target, copy, and AI services remain in use.
+```go
+NewEventSourceController(sourceID, incarnation, controller uuid.UUID, known bool) EventSourceController
+(EventSourceController).Captured() bool
+(EventSourceController).Known() bool
+(EventSourceController).SourceID() uuid.UUID
+(EventSourceController).Incarnation() uuid.UUID
+(EventSourceController).ControllerID() uuid.UUID
+```
 
-This complete synthetic declaration compiles:
+`GameEvent.DamageSourceController` contains this immutable value on damage
+from a captured permanent. Both player and permanent damage paths save it
+before life or damage notifications. Current information applies to the original
+incarnation; retained departure or phase-time information applies while absent.
+Returning the card cannot replace the controller. Unknown captured information
+never falls back to UUID lookup. A source without a controller matches neither
+controller predicate; its owner is not a substitute.
+
+The existing engine conditions `EventSourceControlledByController{}` and
+`EventSourceControlledByOpponent{}` retain their
+`CheckTriggerCond(*GameEvent, GameReader, uuid.UUID, uuid.UUID) bool` signatures.
+They use the saved controller for captured damage events. Other events and
+uncaptured nonpermanent sources retain legacy lookup. These are event conditions,
+not pure state predicates. The facade does not export these conditions here.
+The scalar inspection API is not a sealed author expression or typed damage
+adapter; type/subtype, self matching, and spell participants remain separate work.
+
+This complete synthetic definition compiles with the current engine API:
 
 ```go
 package example
 
-import "github.com/benprew/mage-go/pkg/mage/dsl"
+import (
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
 
-func Card() dsl.Card {
-    recipients := dsl.TargetDamageRecipientsAnyNumber("recipients")
-    return dsl.NewInstant("Synthetic Modal Surcharge", "{X}{R}",
-        dsl.WithAbility(dsl.SpellModesWithOptions(
-            []dsl.ModalSpellOption{dsl.AdditionalManaPerTargetBeyondFirst(1)},
-            dsl.ModeOf("Damage", dsl.DealDamageEvenly(dsl.This, recipients,
-                dsl.ValueAtResolution(dsl.XValue())), dsl.WithTargets(recipients)),
-            dsl.ModeOf("Life", dsl.GainLife(dsl.You, dsl.Fixed(3))))))
+func DamageControllerWatcher() mage.Card {
+    condition := mage.EventSourceControlledByController{}
+    ability := mage.NewTriggered(core.EvtDamageDealt, false, mage.GainLife(1)).
+        SetCondition(condition.CheckTriggerCond)
+    return mage.NewEnchantment("Test damage controller watcher", "", mage.WithAbility(ability))
 }
 ```
 
-For the damage mode with two targets and X=4, pay {5}{R}. For the life mode
-with X=0, pay {R}. Production cards remain unmigrated. Mode-specific costs,
-multiple or repeated selected modes, modal activation costs, and grouped targets
-within a selected spell mode remain separate work.
+This demonstrates only the controller condition. A creature/combat/opponent
+restriction and optional draw require additional declarations for Coastal Piracy.
+
+## Permanent damage-source type capture
+
+Implemented engine inspection API in `pkg/mage/core`:
+
+```go
+NewEventSourceTypes(sourceID, incarnation uuid.UUID, types []CardType, subtypes []string, known bool) EventSourceTypes
+(EventSourceTypes).Captured() bool
+(EventSourceTypes).Known() bool
+(EventSourceTypes).SourceID() uuid.UUID
+(EventSourceTypes).Incarnation() uuid.UUID
+(EventSourceTypes).HasType(CardType) bool
+(EventSourceTypes).HasSubType(string) bool
+```
+
+`GameEvent.DamageSourceTypes` stores immutable copies of effective types and
+subtypes from the original permanent incarnation. Both damage recipient paths
+capture them before life or damage notifications. Current information applies
+while the original incarnation is present; retained LKI applies during absence,
+including phasing. Cleanup and a returned incarnation cannot replace the value.
+Unknown captured information matches no type or subtype.
+
+The existing `mage.EventSourceHasType`, `mage.EventSourceHasSubType`, and
+`mage.EventSourceWasOfType` conditions retain their
+`CheckTriggerCond(*GameEvent, GameReader, uuid.UUID, uuid.UUID) bool` signatures.
+They use the capture for permanent-source damage; other events and uncaptured
+nonpermanent sources retain existing lookup. This does not implement a general
+permanent filter, spell-source capture, sealed expression, or typed damage
+adapter. Legacy DSL exports remain compatible.
+
+This complete synthetic definition compiles:
+
+```go
+package example
+
+import (
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+func CreatureDamageWatcher() mage.Card {
+    condition := mage.EventSourceWasOfType{Type: core.TypeCreature}
+    ability := mage.NewTriggered(core.EvtDamageDealt, false, mage.GainLife(1)).
+        SetCondition(condition.CheckTriggerCond)
+    return mage.NewEnchantment("Test creature damage watcher", "", mage.WithAbility(ability))
+}
+```
+
+This example tests only source type. Coastal Piracy still needs controller,
+combat, opponent, optional draw, and typed event declarations.
+
+## Retained self-source damage conditions
+
+These existing engine declarations keep their signatures:
+
+```go
+func (EventSourceIsSelf) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
+func (EventSourceIsSelfDamageToPlayer) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
+func (EventSourceIsSelfDamageToOpponent) CheckTriggerCond(evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID) bool
+func DealsDamageToOpponentTrigger(effect Effect, optional bool) *GenericTriggered
+```
+
+For damage events with a permanent-source capture, self matching requires a
+present source with the captured battlefield incarnation. Departure, returning,
+phasing out, and missing captured information do not match. Phasing in keeps the
+same identity. Copies preserve the source, and clones use their own battlefield.
+Already pending triggers continue after source departure. Uncaptured events and
+non-damage events retain UUID matching. These are retained trigger-time engine
+conditions, not sealed typed expressions or resolution-time predicates.
+
+This complete example compiles with the retained engine API:
+
+```go
+package example
+
+import "github.com/benprew/mage-go/pkg/mage"
+
+func SelfDamageSource() mage.Card {
+    return mage.NewCreature("Example self damage source", "", 1, 4,
+        mage.WithAbility(mage.DealsDamageToOpponentTrigger(mage.GainLife(1), false)),
+        mage.WithActivatedAbility(mage.DealDamage(mage.Fixed(2)),
+            mage.GenericCost(0), mage.WithTarget(mage.TargetDamageAnyTarget())))
+}
+```
+
+The ability deals damage through the shared damage service. If the source leaves
+and returns before the activation resolves, its new trigger does not match the
+old source's damage. Typed `DealDamageFrom`, spell and recipient identity,
+full permanent-filter event captures, batches, and results remain proposed work.
+
+## Damage-event permanent-filter identity
+
+The retained engine condition has this signature:
+
+```go
+func (c EventSourceMatchesPermanentFilter) CheckTriggerCond(
+    evt *GameEvent, g GameReader, sourceID, controllerID uuid.UUID,
+) bool
+```
+
+For captured permanent damage, these existing filters use immutable event
+information: `AnyPermanent`, the zero filter, `IsCreature`, `IsArtifact`,
+`IsEnchantment`, `IsLand`, `IsPlaneswalker`, `HasSubType(string)`,
+`HasColorFilter(core.Color)`, `ControlledBy(uuid.UUID)`,
+`NotControlledBy(uuid.UUID)`, `IsID(uuid.UUID)`, `NotID(uuid.UUID)`,
+`Named(string)`, `OwnedBy(uuid.UUID)`, `NotOwnedBy(uuid.UUID)`, and `IsToken`.
+`Not(PermanentFilter)`, `And(...PermanentFilter)`, and `Or(...PermanentFilter)`
+use captures when every leaf supports them. `And` and `Or` copy their inputs.
+Their ordinary `Match(*Permanent, *Game)` behavior remains a current-state query.
+
+Captures describe the original incarnation at damage execution, before life or
+damage notifications. Later characteristic changes, departure, phasing, return,
+cleanup, and cloned-game changes cannot change the match. Missing or inconsistent
+required captures match nothing, including under negation or disjunction.
+Controller filters require a known nonzero controller. ID filters compare the
+saved UUID; they do not implement self-incarnation matching.
+
+Filters outside this list, including custom filters, power, attachment, combat,
+keyword and supertype filters, retain identity-safe lookup.
+If a composition includes such a filter, the entire composition uses this
+existing contract: current information for the same present incarnation or
+retained LKI for departure/phasing, with the supplied game for state queries.
+Uncaptured events and other event types keep current UUID lookup.
+
+This is a retained engine condition; this checkout's `dsl` facade does not
+export it. A complete compiling engine example is:
+
+```go
+package example
+
+import (
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+func Watcher() mage.Card {
+    condition := mage.EventSourceMatchesPermanentFilter{
+        Filter: mage.And(mage.IsCreature, mage.HasColorFilter(core.Green)),
+    }
+    return mage.NewEnchantment("Example damage filter watcher", "",
+        mage.WithAbility(mage.NewTriggered(core.EvtDamageDealt, false,
+            mage.GainLife(1)).SetCondition(condition.CheckTriggerCond)))
+}
+```
+
+This establishes captured characteristic matching for the listed filters only.
+Full permanent/game snapshots and exact typed declarations remain separate work.
+Existing production callers stay compatible; no typed damage adapter is added.
+
+
+## Damage-event source name, owner, and token status
+
+Both shared damage executors save `core.GameEvent.DamageSourceIdentity` before
+life and damage notifications. It contains an immutable `core.EventSourceIdentity`:
+
+```go
+func NewEventSourceIdentity(sourceID, incarnation, owner uuid.UUID,
+    name string, token, known bool) EventSourceIdentity
+func (s EventSourceIdentity) Captured() bool
+func (s EventSourceIdentity) Known() bool
+func (s EventSourceIdentity) SourceID() uuid.UUID
+func (s EventSourceIdentity) Incarnation() uuid.UUID
+func (s EventSourceIdentity) OwnerID() uuid.UUID
+func (s EventSourceIdentity) Name() string
+func (s EventSourceIdentity) IsToken() bool
+```
+
+`Named(name string) PermanentFilter`, `OwnedBy(playerID uuid.UUID) PermanentFilter`,
+`NotOwnedBy(playerID uuid.UUID) PermanentFilter`, and the `IsToken PermanentFilter`
+value now support captured damage matching through `EventSourceMatchesPermanentFilter`.
+They work in triggered conditions and supported `And`/`Or`/`Not` compositions.
+Ordinary permanent and prevention filtering retain their current/LKI contracts.
+Captures use the existing live/LKI owner query, independently of ability control;
+that service falls back to the permanent controller for ownerless engine fixtures.
+A captured zero owner is unknown for owner filters. Empty names and nontoken status
+remain known values. Missing, unknown, or mismatched captures never match, including
+through negation. Uncaptured and non-damage events retain current lookup.
+
+This complete engine example compiles:
+
+```go
+package example
+
+import (
+    "github.com/google/uuid"
+    "github.com/benprew/mage-go/pkg/mage"
+    "github.com/benprew/mage-go/pkg/mage/core"
+)
+
+func IdentityWatcher(owner uuid.UUID) mage.Card {
+    condition := mage.EventSourceMatchesPermanentFilter{
+        Filter: mage.And(mage.Named("Example source"), mage.OwnedBy(owner),
+            mage.Not(mage.IsToken)),
+    }
+    return mage.NewEnchantment("Example identity watcher", "",
+        mage.WithAbility(mage.NewTriggered(core.EvtDamageDealt, false,
+            mage.GainLife(1)).SetCondition(condition.CheckTriggerCond)))
+}
+```
+
+No production caller changes. Spell-source identity, recipient identity, typed
+`DealDamageFrom`, other intrinsic filters, batches, and results remain open.

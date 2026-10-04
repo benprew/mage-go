@@ -2,6 +2,28 @@ package mage
 
 import "testing"
 
+func TestRegistryReplaceWithReplacesNamesAndFoldedLookup(t *testing.T) {
+	old, replacement := NewRegistry(), NewRegistry()
+	old.Register("Old", func() Card { return NewLand("Old") })
+	replacement.Register("El-Hajjâj", func() Card { return NewLand("El-Hajjâj") })
+	old.ReplaceWith(replacement)
+	if old.CardRegistered("Old") {
+		t.Fatal("old factory survived replacement")
+	}
+	card, err := old.CreateCard("El-Hajjaj")
+	if err != nil || card.Name() != "El-Hajjâj" {
+		t.Fatalf("folded lookup: %v, %v", card, err)
+	}
+	replacement.Register("Later", func() Card { return NewLand("Later") })
+	if old.CardRegistered("Later") {
+		t.Fatal("registries share factory maps")
+	}
+	old.ReplaceWith(old)
+	if !old.CardRegistered("El-Hajjâj") {
+		t.Fatal("self replacement changed the registry")
+	}
+}
+
 func TestRegistryIsolation(t *testing.T) {
 	a := NewRegistry()
 	b := NewRegistry()
