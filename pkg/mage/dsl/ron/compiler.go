@@ -827,7 +827,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return one(func(bindings instanceBindings) mage.Effect { return SpellDealsDamage(amount) })
 		}
 		return one(func(bindings instanceBindings) mage.Effect { return PermanentDealsDamage(amount) })
-	case "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent":
+	case "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
@@ -856,6 +856,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return mage.UntapPermanent(ref)
 			case "RegeneratePermanent":
 				return mage.Regenerate(ref)
+			case "PermanentDoesntUntapDuringControllersNextUntap":
+				return mage.SkipNextUntap(ref)
 			default:
 				return mage.Sacrifice(ref)
 			}

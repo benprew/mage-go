@@ -26,7 +26,7 @@ func permanentScopeFactory(t *testing.T, types, rules string) mage.CardFactory {
 }
 
 func TestRONPermanentActionsDeclareTypedReads(t *testing.T) {
-	for _, action := range []string{"DestroyPermanent", "DestroyPermanentNoRegen", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent"} {
+	for _, action := range []string{"DestroyPermanent", "DestroyPermanentNoRegen", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap"} {
 		t.Run(action, func(t *testing.T) {
 			factory := permanentScopeFactory(t, "Instant", fmt.Sprintf(`SpellActions(Targeted([TargetPermanent(AnyPermanent)], ActionList([%s(Ref_TargetPermanent)])))`, action))
 			first, second := factory(), factory()

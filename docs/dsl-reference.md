@@ -1265,3 +1265,21 @@ Actions use the shared compiler and fresh instance bindings. Other operations,
 subjects, conditions and events remain declaration errors. Full-card and invalid
 shape evidence is recorded in the storage-land lifecycle entry in
 [the progress ledger](designs/mtgish-ron-progress.md).
+
+## RON next-untap restriction action
+
+`PermanentDoesntUntapDuringControllersNextUntap/1` accepts an in-scope symbol
+`ThisPermanent`, `HostPermanent`, or `Ref_TargetPermanent`. The shared resolving
+action compiler supports it in spell, activation and supported trigger action
+lists. The permanent source, Aura host or single typed target must exist in that
+declaration context. Wrong arity, tuple references, undeclared reads and reads
+from another rule fail compilation.
+
+The action lowers to `mage.SkipNextUntap` with the instance's typed reference.
+It does not tap the permanent or prevent other untap effects. The restriction
+expires during the next untap step of the permanent's current controller, even
+if the permanent is untapped. Control changes do not capture the old controller.
+Repeated applications expire together. See
+[the contract and tests](designs/mtgish-ron-next-untap.md).
+Collection actions and permanent static untap prohibitions remain unsupported
+by this adapter.

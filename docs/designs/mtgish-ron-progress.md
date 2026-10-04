@@ -3437,3 +3437,151 @@ Yawgmoth, Sacrifice and Metamorphosis;
 (3) shared trigger-condition lowering, including death history for Osai Vultures.
 Complete loading/gameplay, startup cutover, Go-card/generator deletion and DSL
 cleanup remain open. No second slice began.
+
+## Run 2026-10-04: P5-NEXT-UNTAP
+
+Status: complete one resolving next-untap action slice. The initial working tree
+had user changes in `.gitignore` and `mtgish-ron-execution.md`; both are preserved
+and excluded from the slice commit. No unrelated untracked files were present.
+Baseline focused tests, short engine tests and build passed. Strict and semantic
+loading returned exit 1 for unsupported collection records, not a build failure.
+
+### Candidate comparison and selection
+
+Fresh baseline: 1,065 compiled / 2,445 records, 1,380 rejected records;
+353 accepted unique names, 633 rejected unique names. The complete nested
+inventory has 72,938 occurrences, 8,528 context/shape signatures and 15,289
+unknown-role occurrences. This report and full records, rather than first-error
+frequency, selected the work. The vocabulary snapshot is not support evidence.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Next-untap suppression, selected | Barl's Cage; Elvish Hunter; Homarid Warrior; Deep Spawn | 3 | Deep Spawn still needs optional mill payment. Existing typed SkipNextUntap is ready. Small shared adapter, moderate legality/lifecycle tests. Establishes the singular execution prerequisite for Spore Cloud's collection restriction. |
+| Saved-sacrifice repeated mana | Priest of Yawgmoth; Sacrifice; Metamorphosis | 1 | Priest has ready bound payment values; Sacrifice needs casting-payment scope; Metamorphosis also needs Plus and restricted mana. Small activation adapter, moderate payment/solver tests, larger casting prerequisites. |
+| Death-history trigger condition | Osai Vultures | 1 | Ready history and counter services; condition adapter remains missing. Small adapter, moderate event/resolution/history tests. One immediate full unlock for this exact condition. |
+
+The selected shared action gives three credible full unlocks with no missing
+engine contract. It wins over one immediate mana unlock with further payment
+prerequisites and the single-card history condition. Selection, contract, reuse
+boundary and acceptance cases were stated before editing.
+
+Complete RON records were read for all candidate names, all six Sacrifice
+reprints, and Spore Cloud. Nested AST signatures for the selected action are
+`tuple(symbol:Ref_TargetPermanent)` in Activated/Targeted/ActionList and
+`tuple(symbol:ThisPermanent)` in Activated/ActionList. These contain exactly the
+four selected affected names. Spore Cloud's distinct collection spelling has
+`tuple(tuple:Or)` in SpellActions/ActionList and remains unsupported; it also
+needs combat tap and prevention. No Go card definition supplied requirements.
+
+### Contract, dependencies and reuse boundary
+
+Exact shape/context contract: [mtgish-ron-next-untap.md](mtgish-ron-next-untap.md).
+`compileEffect(Node, scope) ([]effectFactory, error)` accepts action tuple
+`PermanentDoesntUntapDuringControllersNextUntap/1`. The operand must be an
+in-scope symbol accepted by `compilePermanentRef(Node, scope)`:
+`ThisPermanent`, Aura `HostPermanent`, or declared `Ref_TargetPermanent`.
+The shared action compiler supports spells, activations, modifier-bearing
+activations and supported trigger actions. It rejects wrong arity, tuple
+references, wrong roles, unbound/wrong-type/cross-rule reads. General static
+untap prohibitions and collection actions remain unsupported.
+
+Lowering reuses `mage.SkipNextUntap(subject.build(instanceBindings))` in the
+existing unary permanent action builder. Fresh typed target declarations give
+each factory/action its own reads. Immutable plans store no selected state.
+RON owns spelling, scope, diagnostics and inventory operand roles; mage owns
+resolution, legality, source incarnations, Aura attachment/departure LKI,
+turn restriction storage/expiration, control, phasing, copies and clones.
+Payment still uses the existing transactional activation path. No engine API
+or rule changed; no fallback, card-name branch, global action slot, declaration
+panic, partial registry or parallel subsystem was added.
+
+The restriction starts at resolution. It neither taps the subject nor prevents
+other untap effects. The next untap step of the current controller consumes it,
+even when the subject is untapped. Repeated applications expire together.
+Control changes do not capture the old controller. Phasing after installation
+preserves the restriction; absent/phased subjects cannot receive it. Departure
+clears it, and return cannot redirect a pending typed reference. Read contracts:
+engine doc.go, composable permanent-reference/SkipNextUntap services, turn
+execution/TurnSystem, definition validation, DSL/API and rules-contract docs;
+CR 400.7, 502.1/3/4, 608.2b and 702.26b/d. No new LKI characteristic query,
+replacement ordering or simultaneous-operation contract is introduced.
+
+### TDD and card-to-test evidence
+
+Tests were written first. The initial run failed at the missing action adapter
+for each real record and separately at the missing inventory operand role.
+After implementation, shared-context tests found that the synthetic host fixture
+omitted its Aura subtype. The fixture was corrected to declare an Aura; the
+compiler rejection and scope contract were retained. No assertion was weakened.
+Lint found a local variable named `copy`; it was renamed `copied`. Automatic
+import formatting was reviewed, and affected tests were rerun.
+
+| Card or contract | Test mapping and evidence |
+| --- | --- |
+| Barl's Cage, Elvish Hunter | TestRONSkipUntapRealCards: full records and definition validation; exact mana/tap costs, unpaid rollback, resolution timing, no implied tap, inactive-player exclusion and one-step expiration |
+| Homarid Warrior | TestRONSkipUntapHomaridWarrior: full record and definition validation; U payment, ordered shroud/restriction/tap actions, cleanup expiration, self return, control changes, phase-in and clone isolation |
+| Barl's Cage | TestRONSkipUntapTargetLifecycle: source departure, target departure/return before resolution, phase-out before/after resolution, phase cycle, current-controller change, untapped-step consumption, other untap actions and repeated applications |
+| Barl's Cage | TestRONSkipUntapCopiesAndInstances: concurrent separate factory instances, copy retargeting, independent pending targets, cloned resolution and expiration of repeated restrictions |
+| Elvish Hunter | TestRONSkipUntapIllegalAnnouncementRollback: land/phased/shrouded/missing targets, wrong activating player, summoning sickness; retained mana/tap/stack state on failure |
+| Synthetic spell, entry trigger, Aura and departed Aura | TestRONSkipUntapSharedContexts: shared action lowering, target placement, attachment departure LKI across Aura return and next-step expiration |
+| Typed declarations | Extended TestRONPermanentActionsDeclareTypedReads: fresh declarations, typed-read metadata and engine rejection after declaration removal |
+| Invalid declarations | TestRONSkipUntapInvalid: wrong arity/context/role, tuple symbols, undeclared host/target, incompatible player, cross-rule reference |
+| Inventory | TestRONSkipUntapInventory and updated collection fixtures: permanent_reference operand role, exact collection counts and retained Lightning Bolt regression |
+
+Three unique collection cards gain explicit complete-record gameplay evidence.
+Synthetic contexts do not increase that count. Deep Spawn and Spore Cloud remain
+rejected and are not full-card gameplay claims. Collection-wide behavior and
+engine-validation totals remain unmeasured, separate from compilation counts.
+
+### Measurements, validation and remaining gaps
+
+Estimated and actual gains agree: **three unique names, three records**.
+Compiled **1,065 -> 1,068/2,445**; rejected **1,380 -> 1,377**.
+Accepted names **353 -> 356**; rejected names **633 -> 630**.
+Fresh rejected-name comparison shows zero accepted-card regressions. Strict and
+semantic issue arrays match. Occurrence/signature counts remain 72,938/8,528;
+unknown-role occurrences fall **15,289 -> 15,285**. Only the operand role changed;
+role assignment does not prove execution support.
+
+Leading diagnostics remain optional-untap operation gaps (67 records), non-spell
+CastEffect (53), rule If (48), ChooseADamageSource (46), Targeted_Modal (42),
+optional-untap HostPermanent (39), upkeep HostController (35), ControlledByAPlayer
+(29), TargetGraveyardCard (26) and WhenAPermanentBecomesTapped (25).
+These are first diagnostics, not unlock estimates. No data defect was corrected,
+no engine prerequisite was missing and no environment failure blocked checks.
+All twelve source hashes match the vocabulary snapshot, so no RON-source
+snapshot refresh is needed. Existing Gaea's Liege/Fastbond concerns remain open.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1; short engine tests; make build | PASS |
+| Baseline go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,065 compiled, 1,380 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONSkipUntap -count=1 | Expected adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS after lint correction |
+| go test ./pkg/mage/... -short -count=1 | PASS after lint correction |
+| make test | PASS after lint correction |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | Initial local-name error corrected; final PASS, zero issues |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,068 compiled, 1,377 rejected; matching diagnostics |
+| Accepted-record comparison and source-hash audit | PASS: zero regressions; twelve unchanged hashes |
+
+Slice files: compiler.go, inventory.go, inventory_test.go,
+permanent_scope_test.go, new skip_untap_test.go; dsl-reference.md,
+engine-rules-contracts.md, this ledger and new mtgish-ron-next-untap.md.
+No existing DSL function, Go definition, generator or startup caller was removed.
+The cutover/removal gates remain closed; no deletion caller audit or native
+startup cutover is claimed. Unrelated initial edits remain outside the commit.
+
+Ranked next candidates to reassess with fresh full-record evidence:
+(1) shared static untap prohibitions: Colossus of Sardia is close to complete;
+Basalt Monolith and Brass Man should be compared for multi-card gains. Island
+Fish Jasconius has combat/state-trigger gaps, Mana Vault also needs draw-step
+TriggerI, and Time Vault needs turn replacement, so their frequency cannot be
+counted as immediate unlocks;
+(2) saved-sacrifice repeated mana with concrete casting-payment dependencies for
+Priest of Yawgmoth, Sacrifice and Metamorphosis;
+(3) shared trigger-condition lowering, including death history for Osai Vultures.
+Complete collection gameplay, startup integration, Go-card/generator deletion
+and DSL cleanup remain open. No second slice began.

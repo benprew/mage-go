@@ -1042,3 +1042,23 @@ TestRONStorageInterveningIf and TestRONStorageUntapInstances cover source
 return, control, phasing, ability removal, copies and clones. No new engine
 execution rule or replacement/batch contract is introduced. Exact accepted RON
 shapes and coverage limits are in [the ledger](designs/mtgish-ron-progress.md).
+
+## RON next-untap restriction adapter
+
+RON `PermanentDoesntUntapDuringControllersNextUntap/1` reuses `SkipNextUntap`
+and the existing typed permanent references. Resolution installs a one-step
+restriction on the present incarnation. Source departure does not cancel a
+restriction on a target. A returned card cannot inherit it (CR 400.7).
+Target legality is checked before resolution (CR 608.2b). Phased subjects cannot
+receive it; phasing after installation preserves it (CR 702.26b/d).
+The current controller's next untap step consumes the restriction, including
+when the permanent is already untapped. Other untap effects remain legal.
+Repeated applications expire during the same step (CR 502.3).
+
+`TestRONSkipUntapRealCards`, `TestRONSkipUntapHomaridWarrior`,
+`TestRONSkipUntapTargetLifecycle`, `TestRONSkipUntapCopiesAndInstances` and
+`TestRONSkipUntapSharedContexts` cover RON execution through the existing
+engine. `TestRONSkipUntapIllegalAnnouncementRollback` verifies retained
+transactional payment behavior. No engine rule, replacement ordering or
+simultaneous operation changes. Exact declaration limits are in
+[the adapter contract](designs/mtgish-ron-next-untap.md).
