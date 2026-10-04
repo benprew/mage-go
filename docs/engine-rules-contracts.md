@@ -874,3 +874,20 @@ Evidence: `TestRONSacrificeCostRealCards`, `TestRONSacrificeCostSourceAndTargets
 and the existing tap-source planner exclusion for sacrifice costs. No new engine
 API, saved paid-result, automatic sacrifice planning, batch sacrifice or
 replacement-order contract is added by this adapter.
+
+## RON single-permanent counter placement
+
+RON PutCounters with one supported permanent instruction lowers to AddCountersTo
+through typed references and ValueAtResolution. It uses the original source or
+target incarnation, and the existing Aura attachment/LKI reference. Departed,
+returned and phased subjects cannot receive placement through stale references.
+P/T counters use layer 7c. Counters persist through cleanup (CR 122.1a/122.2, 400.7).
+
+Placement enters the shared AddCountersAction replacement pipeline. The target
+controller chooses among competing replacements; each applicable replacement
+acts once and conditions are checked again (CR 616.1/1f). A prevented placement
+does not prevent later independent actions. Costs still use the shared transaction;
+copies and clones preserve private target/source state. No engine execution
+contract changed and no new multi-object, entry or removal contract is claimed.
+Evidence: TestRONCounterPlacement*, with
+[exact contexts and card mappings](designs/mtgish-ron-counter-placement.md).

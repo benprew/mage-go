@@ -1129,3 +1129,18 @@ permanent they control, including the source when it matches. Costs are fresh
 per factory; nested filter `And`/`Or` lists must be nonempty. Saved sacrifice
 results, source-relative filters and resolution/optional/casting contexts remain
 unsupported. See [the exact contract and tests](designs/mtgish-ron-sacrifice-costs.md).
+
+## RON single-permanent counter placement
+
+`PutCounters([ACounterOfTypeOnPermanent(counter, permanentRef)])` places one
+counter. `NumberCountersOfTypeOnPermanent(value, counter, permanentRef)` in the
+same one-instruction list uses an integer literal value or already bound ValueX.
+Nonpositive amounts place nothing. Typed source, Aura host and declared permanent
+target references use the same scope and incarnation rules as other actions.
+Placement uses AddCountersTo and the shared replacement pipeline. Counters
+remain through cleanup; returned objects do not receive pending placement.
+
+Named permanent kinds and supported literal PTCounter pairs are validated before
+factory construction. Multiple instructions, player counters, unsupported
+values/kinds, entry/removal and placement-as-cost remain errors. See
+[the exact shapes, inventory audit and tests](designs/mtgish-ron-counter-placement.md).

@@ -2437,3 +2437,112 @@ The RON/CLI package tests were repeated after lint and pass. Fresh final strict
 and semantic-inventory loaders retain the recorded counts and identical issues;
 all source hashes were checked against the vocabulary snapshot. Final diff
 whitespace checks pass. All required native Go checks passed before commit.
+
+## Run 2026-10-04: P5-COUNTER-PLACEMENT
+
+Status: completed single-permanent resolving counter placement. This run stops
+here. Initial user edits in `.gitignore` and `mtgish-ron-execution.md` are
+preserved and excluded. No unrelated untracked files were present.
+
+The [counter placement report](mtgish-ron-counter-placement.md) gives the complete
+candidate comparison, exact signatures/contexts, 63-name full-record/nested audit,
+engine/rules reuse, card mappings and remaining blockers. Before edits, compared:
+
+| Candidate | Distinct names | Estimated complete unlocks | Other blockers | Downstream gain | Effort |
+| --- | --- | ---: | --- | --- | --- |
+| Single-permanent counters | Armor Thrull, Fungal Bloom, Dwarven Weaponsmith; 60 other names listed in the report | 3 | Citanul's Opponent event; Battery removal/results; other values/entry/choices/layers | Five Batteries and spore-counter prerequisites; source/host/target action reuse | Small adapter, medium tests; existing unusual counter kinds |
+| Sacrifice characteristics | Diamond Valley, Life Chisel, Priest of Yawgmoth; Homarid Spawning Bed downstream | 2 | Priest dynamic mana; Bed tokens/results | Typed independent payment characteristics | Medium adapter, substantial LKI/rollback/copy tests |
+| Variable optional mana | In the Eye of Chaos, Invoke Prejudice | 1 | Invoke's Opponent/color-sharing spell filters | Captured spell mana-value payment for two triggers | Medium adapter, substantial payment/choice tests |
+
+Counters won on credible direct multi-card gain for the effort. Reprints count
+once. The prior Citanul estimate was corrected after reading its complete record:
+placement alone does not supply the Opponent cast filter. Selection, contract,
+reuse boundary and acceptance cases were stated before edits. No missing engine
+contract, source defect or environment failure blocked this slice.
+
+Exact support: resolving PutCounters/1 with exactly one list instruction,
+ACounterOfTypeOnPermanent/2 or NumberCountersOfTypeOnPermanent/3. Counter kinds
+are 25 explicit named permanent symbols or ten existing literal PTCounter pairs
+listed in the report. Amounts use Integer/1 or already-bound ValueX. Typed
+ThisPermanent, Aura HostPermanent and local Ref_TargetPermanent use existing
+scope checks. Actions compose through existing supported spells, activations,
+triggers and optional-payment continuations. Empty/multiple lists, unknown kinds,
+player instructions, other values/refs, costs/static/entry contexts and removal
+remain errors. No new bindings or permissive registry path exist.
+
+Private adapters: compileCounterPlacement(Node, scope) (effectFactory, error),
+compilePermanentCounterType(Node) (core.CounterType, error). Fresh factories
+lower to mage.AddCountersTo with typed instance subjects and ValueAtResolution.
+Reusable rules stay in the engine. Inventory supplies counter_instruction,
+permanent_counter_type, value/reference and integer_literal roles; syntax still
+has unverified support. No DSL export or engine implementation changed.
+
+Engine reuse: source-incarnation and attachment LKI, targets, cost transactions,
+copy/clone state, counter P/T layers, cleanup and AddCountersAction replacement
+ordering/rechecks. CR 122.1/1a/2, 400.7, 602.2 and 616.1/1e/1f support these
+contracts. Departed/phased/returned subjects receive no pending placement;
+phase cycles retain incarnation. Counters survive cleanup. No simultaneous
+multi-object, entry or removal contract is introduced.
+
+| Card/context | Test mapping |
+| --- | --- |
+| Armor Thrull, Fungal Bloom, Dwarven Weaponsmith (ATQ and 3ED), all rules | TestRONCounterPlacementRealCards: validation, payment/timing, delayed placement, opposing targets, source/target identity, phasing/control/type legality, clones, P/T and cleanup |
+| Armor Thrull, Dwarven Weaponsmith and scope boundaries | TestRONCounterPlacementPaymentAndContexts: unpayable tap/sacrifice, missing artifact rollback, returned self-target, cost/static/cross-rule/source rejection |
+| Source, host, upkeep trigger | TestRONCounterPlacementSourceAndHost: amounts, identity, phase cycle, controller, resolution attachment and departed Aura LKI/returned objects, pending clone |
+| Copies/replacements | TestRONCounterPlacementCopiesAndReplacement; TestRONCounterPlacementReplacementOrder: independent factories/targets, copied controller, doublers/rechecks, clone mutation isolation, affected-player noncommutative ordering, prevention permits next action |
+| Values and P/T | TestRONCounterPlacementAmountsAndRollback; TestRONCounterPlacementSignedPT: nonpositive/fixed/X, rollback, copied X and unusual signed coordinates |
+| Declarations/inventory | TestRONCounterPlacementInvalid; TestRONCounterPlacementInventory: malformed shapes, lists, kinds/coordinates, values, refs/contexts and nested roles |
+
+The first gameplay tests failed on missing PutCounters support. After lowering,
+a noncreature Fungus test expectation was corrected: its creature subtype no
+longer qualifies. Fixture compile errors were corrected to core event names and
+actual counter count types. Returned sacrificed fixtures remove the original
+card from its graveyard before entry. Inventory assertions now use fresh counts;
+no gameplay or invalid-declaration requirement was bypassed.
+
+Estimated and actual gain agree: **three unique names, four records**. Loader
+**1,015 -> 1,019/2,445 compiled**, **1,430 -> 1,426 rejected**. Accepted names
+**319 -> 322**, rejected **667 -> 664**. Record-level accepted regression audit:
+zero. Strict/full-inventory diagnostics match exactly. Nodes/signatures stay
+72,938/8,528; unknown-role occurrences fall 17,801 -> 17,378. Global
+engine_validated/behavior_verified stay null; three additional complete cards
+have RON gameplay evidence. Compilation and global behavior coverage are separate.
+
+Largest remaining first diagnostics: PermanentRuleEffect (110), AsPermanentEnters
+(90), instant/sorcery CastEffect (53), If rule (48), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep (35), TriggerI (28), ControlledByAPlayer
+filter (28), TargetGraveyardCard (26). The five Batteries now reach removal costs.
+Citanul still reaches Opponent cast filtering. No dependent card is counted as
+complete. No RON source changed; all 12 hashes match the vocabulary snapshot.
+Soul Exchange's +2/+2 counter requires a missing engine counter kind, not a source
+correction. Gaea's Liege/Fastbond concerns remain open.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1; make build | PASS |
+| Baseline strict and semantic inventory loaders | Expected exit 1: 1,015 compiled, 1,430 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONCounterPlacement -count=1 | Expected missing-adapter failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS, repeated after lint and fixture refinement |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated after lint |
+| make test | PASS, repeated after lint |
+| make build | PASS, repeated after lint |
+| go vet ./... | PASS, repeated after lint |
+| make lint | PASS, zero issues; formatting and automatic changes reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and -inventory -json | Expected exit 1: 1,019 compiled, 1,426 rejected; identical issues |
+| Accepted-record audit/source hashes | Zero regressions; all 12 hashes unchanged |
+
+Slice files: compiler.go, new counter_placement.go/counter_placement_test.go,
+inventory.go/inventory_test.go, dsl-reference.md, engine-rules-contracts.md,
+new counter placement report and this ledger. Automatic lint passes introduced
+no semantic changes. Current startup, Go-card constructors/generators and DSL
+exports retain callers. Removal gates remain closed; no deletion, unused-DSL
+audit or runtime cutover is claimed. No required check was blocked.
+
+Ranked next candidates requiring fresh comparison: (1) fixed counter-removal
+activation costs, directly Feral Thallid/Thorn Thallid and spore-token prerequisites;
+(2) typed sacrifice toughness, directly Diamond Valley/Life Chisel with payment
+results reused for Priest/Bed; (3) any-number counter removal and typed payment
+amount/dynamic mana for five Batteries. Complete loading/gameplay, runtime/native
+validation, Go-card/generator removal and unused-DSL cleanup remain open.
+No second slice began.

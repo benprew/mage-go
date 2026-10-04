@@ -301,6 +301,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "PutCounters":
+			if len(n.Args) == 1 {
+				return "counter_instruction"
+			}
 		case "MayCost":
 			if len(n.Args) == 1 {
 				return "cost"
@@ -345,6 +349,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "value"
 			}
+		}
+	case "counter_instruction":
+		if n.Name == "ACounterOfTypeOnPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_counter_type", "permanent_reference"}[index]
+		}
+		if n.Name == "NumberCountersOfTypeOnPermanent" && len(n.Args) == 3 {
+			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
+		}
+	case "permanent_counter_type":
+		if n.Name == "PTCounter" && len(n.Args) == 2 {
+			return "integer_literal"
 		}
 	case "static_modification", "temporary_modification":
 		switch n.Name {
