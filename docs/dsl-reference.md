@@ -969,6 +969,22 @@ on each layer pass. No target or action-result binding is introduced.
 General sets lower to `MatchingPermanents`, `ControlledPermanents`,
 `WithoutPermanent`, `ModifyEachPT`, `GrantEachKeyword`, `While` and `Static`.
 Existing explicit-creature and Aura adapters retain their services. Static
-numeric P/T, base P/T setting, color/type changes, granted activated/triggered
+numeric P/T, independent base P/T/color/type changes, granted activated/triggered
 abilities and conditional rules remain separate unsupported shapes.
 See [the exact contract and tests](designs/mtgish-ron-static-permanents.md).
+
+## RON static animation
+
+`EachPermanentLayerEffect` supports a combined static animation list with exactly
+one `SetPT(PT(power, toughness))`, one `AddCardtype(Creature)`, and optionally one
+`SetColor(SimpleColorList(colors))`. Values are signed integer literals. The
+list order does not change layer order. Color symbols are White, Blue, Black,
+Red and Green; an empty list makes the recipients colorless. Omission keeps
+current colors. Other modifications cannot share this animation list.
+
+The existing static permanent filters apply. Factories lower the complete
+combination to `Static(AnimateEach(set, power, toughness, colors...))`.
+The engine selects subjects in layer 4 and retains those incarnations for
+layers 5 and 7b within the same application. Later applications use current
+membership. Other static, Aura and temporary type/base/color shapes remain
+separate compiler contexts. See [the contract and tests](designs/mtgish-ron-static-animation.md).

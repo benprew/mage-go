@@ -25,6 +25,13 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	} else if n.Args[0].Kind != Symbol || n.Args[0].Name != "HostPermanent" || !ctx.aura {
 		return nil, unsupported(n.Args[0], "static layer reference")
 	}
+	if global {
+		for _, part := range parts {
+			if part.Name == "SetPT" || part.Name == "AddCardtype" || part.Name == "SetColor" {
+				return compileStaticAnimation(n, parts, subjects)
+			}
+		}
+	}
 	var effects []func() mage.ContinuousEffect
 	var modifications []func() mage.ContinuousModification
 	for _, part := range parts {

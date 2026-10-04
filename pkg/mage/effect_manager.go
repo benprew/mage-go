@@ -34,11 +34,18 @@ type printedAbilityContinuousEffect struct {
 }
 
 func (e *printedAbilityContinuousEffect) IsActive(g *Game) bool {
+	if continuation, ok := e.ContinuousEffect.(interface{ continuesAcrossLayers(*Game) bool }); ok && continuation.continuesAcrossLayers(g) {
+		return true
+	}
 	source := g.FindPermanent(e.SourceID())
 	if source != nil && source.printedAbilitiesSuppressed {
 		return false
 	}
 	return e.ContinuousEffect.IsActive(g)
+}
+
+func (e *printedAbilityContinuousEffect) GetSublayer() SublayerPT {
+	return getEffectSublayer(e.ContinuousEffect)
 }
 
 func (e *printedAbilityContinuousEffect) DependsOn(other ContinuousEffect, g *Game) bool {
@@ -332,6 +339,7 @@ func (e *targetEffect) ApplyContinuous(ctx *EffectContext) error {
 
 // EffectManager manages and applies continuous effects.
 type EffectManager struct {
+	animationMembers           map[animationCycleKey][]capturedPermanent
 	effects                    []ContinuousEffect
 	attrDeltas                 map[uuid.UUID]map[Attr]int       // deltas accumulated during Apply(); written to perm.grantedAttrs
 	blockPairRestrictions      map[uuid.UUID]map[uuid.UUID]bool // attacker -> set of blockers that can't block it; reset each Apply
@@ -515,6 +523,8 @@ func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID
 
 // Apply resets computed bonuses and reapplies all active effects in layer order.
 func (em *EffectManager) Apply(g *Game) {
+	// CR 613.6 keeps each animation selection for this layer cycle.
+	em.animationMembers = make(map[animationCycleKey][]capturedPermanent)
 	clear(em.attrDeltas)
 	clear(em.blockPairRestrictions)
 	em.resetCombatRestrictions()

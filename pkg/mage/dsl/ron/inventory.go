@@ -304,6 +304,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "static_modification", "temporary_modification":
 		switch n.Name {
+		case "SetPT":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "fixed_pt"
+			}
+		case "AddCardtype":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "card_type"
+			}
+		case "SetColor":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "color_list"
+			}
 		case "AdjustPTX":
 			if len(n.Args) == 3 {
 				return []string{"pt_coordinate", "pt_coordinate", "value"}[index]
@@ -316,6 +328,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "keyword"
 			}
+		}
+	case "fixed_pt":
+		if n.Name == "PT" && len(n.Args) == 2 {
+			return "value"
+		}
+	case "color_list":
+		if n.Name == "SimpleColorList" && len(n.Args) == 1 {
+			return "color"
 		}
 	case "keyword":
 		if n.Name == "Landwalk" && len(n.Args) == 1 {

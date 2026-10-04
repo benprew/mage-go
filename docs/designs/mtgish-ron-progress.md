@@ -1149,3 +1149,131 @@ fresh evidence before selection. Defer singleton grants while useful multi-card
 work remains. Complete gameplay/loading, embedded startup, native startup,
 Go-card/generator deletion and unused-DSL removal gates remain unmet. No deletion
 or whole-repository caller audit is claimed. This run stops after this slice.
+
+## Run 2026-10-04: P7-STATIC-ANIMATION
+
+Status: complete combined static animation slice. No second slice was started.
+Initial user changes to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from the slice commit. No unrelated untracked files existed.
+
+The three-candidate comparison, complete name lists, exact supported contexts,
+dependencies, engine reuse, rules evidence, source findings and test mappings
+are in [mtgish-ron-static-animation.md](mtgish-ron-static-animation.md).
+Static animation offers three full-card unlocks; optional fixed counter payments
+offer two with broader payer/result scopes; numeric branches offer one with
+broader value/branch prerequisites. Complete records and nested forms were
+inspected, including identical reprints. Animation was selected for its largest
+credible gain. Missing exact engine behavior was implemented in this same slice
+using the implement-engine skill workflow, before compiler lowering.
+
+Supported rule: `EachPermanentLayerEffect(filter, modifications)/2` on permanent
+cards, with exactly one `SetPT(PT(signed_integer, signed_integer))/1`, exactly
+one `AddCardtype(Creature)/1`, and optionally one
+`SetColor(SimpleColorList(list))/1`. Colors are the five actual color symbols;
+an empty list makes subjects colorless. Omission preserves colors. List order
+is arbitrary; duplicates, dynamic values, other card types, standalone
+modifications and mixed unsupported lists remain errors. Existing static
+filters, source exclusion and controller conjunctions are reused. Aura and
+temporary contexts are unchanged.
+
+New engine signature:
+`AnimateEach(PermanentSet, int, int, ...core.Color) StaticRule`, installed by
+`Static`. The service adds Creature in layer 4, optionally sets color in layer
+5, and sets base P/T in layer 7b. The effect manager retains selected incarnation
+references for one layer cycle (CR 613.6), including after type addition or
+layer-6 source ability removal, then selects current membership on the next
+application. Rule/source identities keep instances distinct. Cloned effect
+managers have independent cycle state. The new service tests membership-changing
+type dependencies on isolated game/effect clones and uses the existing sorter.
+This does not establish complete dependency support for all engine effects.
+
+Prerequisite repairs: printed static wrappers forward P/T sublayers; added
+creature types supply ordinary combat eligibility without a Defender exception.
+Printed-creature base restrictions and explicit attack/block prohibitions remain
+in force. Existing source lifetime, incarnation, control, phasing, copy-on-write
+clones, intrinsic land mana, announcement costs, stack resolution and event
+capture services are reused. RON owns spelling and compilation rejection;
+reusable rules stay in the engine. No fallback, card-name branch, last-action
+slot or partial production registry was added.
+
+TDD confirmed absent AnimateEach and unsupported real SetPT. Additional engine
+tests failed on static timestamp order, Defender bypass and a later land-type
+dependency before their fixes. Inventory operand tests failed with unknown roles
+before the adapter. Fixture API errors were corrected without changing the
+contract. The first broader test run exposed the printed-creature base attack
+restriction regression and two old exact inventory counts. The eligibility
+change was narrowed to added creature types, those regression tests passed,
+and count assertions were updated to measured totals. Gameplay assertions were
+retained. No validation failure was waived.
+
+Affected cards and evidence:
+
+| Unique card or context | Tests |
+| --- | --- |
+| Living Lands, Living Plane, Kormus Bell | `TestRONStaticAnimationRealCards`: complete real records, casting costs and rollback, resolution timing, both players, current membership, matching bounds, late entry, summoning sickness, preserved land types/mana, colors, phasing, source ability removal, departure/return and cloned stack resolution |
+| Synthetic scope/instances/colors | `TestRONStaticAnimationInvalid`, `TestRONStaticAnimationInstancesAndControl`, `TestRONStaticAnimationColorsAndInventory` |
+| Engine layer/identity contracts | `TestStaticAnimationLayerContinuation`, `TestStaticAnimationLayerOrder`, `TestStaticAnimationTypeDependency`, `TestStaticAnimationCombatAndMana`, `TestStaticAnimationEntryAndIncarnations`, `TestStaticAnimationMetadataAndInvalidSet` |
+
+Engine tests add noncreature selection retention, layer-6 continuation, both
+7b timestamp orders, 7c boosts/counters, 7d switching, type dependencies,
+Defender/prohibitions, source and subject identities, entry-time creature/power
+capture, departure before trigger resolution, metadata and invalid sets.
+No new general LKI reader, replacement order, optional payment, APNAP or
+simultaneous zone-operation contract is claimed.
+
+Strict loader and fresh AST inventory: **917/2,445 compiled records**,
+**1,528 rejected records**, **269 compiled unique names**, **717 rejected
+unique names**. Actual gain: **13 records and three unique cards**, exactly the
+estimate: Living Lands and Kormus Bell each six reprints, Living Plane one.
+Before/after diagnostics show no accepted-record regressions; all remaining
+record diagnostics are identical. Each new card has direct complete-record
+RON gameplay coverage. Compilation and gameplay remain separate; no global
+behavior or engine-validation total is claimed. Strict loading still exits 1
+and publishes no registry.
+
+Remaining leading first gaps: PermanentRuleEffect 110 records, AsPermanentEnters
+90, If 63, ActivatedWithModifiers 61, CastEffect 54, ChooseADamageSource 46,
+MayCost/WhenAPlayerCastsASpell 43 each, Targeted_Modal 42, HostController 35,
+ControlledByAPlayer 29 and TriggerI 27. These are compiler/context gaps, not
+environment failures. The new inventory operand roles still report support
+unverified. Local LEA/LEG Oracle data agrees with the selected records. No RON
+source changed or defect was corrected; all 12 file hashes match the vocabulary
+snapshot, so no source refresh is required. Gaea's Liege/Fastbond concerns remain
+unresolved.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1`, `make build` | PASS |
+| Baseline strict loader and nested inventory | Expected exit 1; 904 compiled, 1,541 rejected |
+| New focused `TestStaticAnimation*` and `TestRONStaticAnimation*`, `-count=1` | Expected failures above before fixes; final PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| Post-lint focused engine/RON/CLI checks with `-count=1` | PASS |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; 917 compiled, 1,528 rejected |
+| Before/after diagnostics and vocabulary hashes | No accepted regression, remaining diagnostics unchanged, all source hashes match |
+
+Automatic formatting reordered the new engine service's import groups. Review
+found no semantic lint changes or changes to the two user files. No environment
+or pre-existing check failure blocks this slice. Native startup, WASM and
+runtime cutover were not changed, and no startup claim is made.
+
+Files: `pkg/mage/static_animation.go`, `static_animation_test.go`, `card.go`,
+`effect_manager.go`, `doc.go`; `pkg/mage/dsl/ron/static_animation.go`,
+`static_animation_test.go`, `layers.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, the new static-animation
+report and this ledger. Only these fourteen files are included in the slice
+commit.
+
+Next ranked candidates: optional fixed counter payments for Force Spike/Vodalian
+Mage (two immediate unlocks); shared temporary animation prerequisites for
+Mishra's Factory/Jade Statue/Thelonite Druid (fresh timing, cost, duration and
+collection audit required); then characteristic readers/branches for Blood Lust
+and downstream Berserk/Kry Shield/Subdue. Reassess fresh evidence before
+selection. Defer single-card adapters while useful multi-card work remains.
+Complete RON gameplay/loading, embedded runtime startup, native smoke tests,
+Go-card/generator deletion and unused-DSL cleanup gates remain unmet. No deletion
+or whole-repository caller audit is claimed. This run stops after this slice.

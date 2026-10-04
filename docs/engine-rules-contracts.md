@@ -668,3 +668,32 @@ sources, global/controlled sets, accumulated modifications, later entries,
 animation, subtype expiry, ability removal/restoration, leave/return, phasing,
 landwalk, cloned games and cloned stack resolution. No new cost, replacement,
 LKI or simultaneous zone-operation contract is established.
+
+## Static permanent animation
+
+`AnimateEach(set, power, toughness, colors...)` is a `StaticRule` for `Static`.
+It adds Creature in layer 4, optionally replaces colors in layer 5, and sets
+base P/T in layer 7b. Existing types, subtypes, supertypes and abilities remain.
+Nil colors preserve colors; a non-nil empty variadic slice makes the recipients
+colorless. Printed static wrappers forward their P/T sublayer, so base sets
+follow timestamp order before layer 7c bonuses/counters and layer 7d switches.
+
+The effect manager retains selected incarnation references from layer 4 through
+the later parts of the animation for one application (CR 613.6). Type addition
+or layer-6 source ability removal does not change that selection. Each new
+application selects current subjects. Phasing suspends source/subject membership;
+departure ends the source effect, and returned objects have new incarnations.
+Clone effect managers retain independent cycle state.
+
+The animation detects membership-changing layer-4 dependencies by testing the
+other type effect on an isolated game/effect clone. This uses the existing
+sorter and does not establish complete dependency detection for all engine
+forms. Ordinary creature combat eligibility applies to animated noncreatures;
+animation does not supply an exception to Defender or an attack/block
+prohibition. Summoning sickness and intrinsic land mana rules still apply.
+
+Evidence: all `TestStaticAnimation*` engine tests and `TestRONStaticAnimation*`
+RON tests, mapped in [the slice report](designs/mtgish-ron-static-animation.md).
+Creature entry detection sees the animated power before its trigger is queued.
+The event keeps that value after departure. No new replacement, payment-result,
+APNAP, general LKI reader or simultaneous zone-operation contract is introduced.

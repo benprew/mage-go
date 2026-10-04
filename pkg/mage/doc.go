@@ -154,6 +154,11 @@
 // Use [MatchingPermanents] with [IsCreature] for global P/T reductions.
 // Fixed negative P/T summaries report a detrimental outcome.
 //
+// Use [AnimateEach] with [Static] to add the creature type and set base values.
+// Supply colors to replace current colors. The selection stays the same across
+// layers in one application, even if the source loses its ability in layer 6.
+// Each later application uses current membership.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

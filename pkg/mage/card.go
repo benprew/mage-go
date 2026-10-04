@@ -723,6 +723,10 @@ func (p *Permanent) HasAttr(a Attr) bool {
 			return false
 		}
 	}
+	// Added creature types permit combat without an exception to defender.
+	if (a == AttrCanAttack || a == AttrCanBlock) && !p.Card.HasType(TypeCreature) && p.baseAttrs[a] == 0 && p.grantedAttrs[a] == 0 {
+		return p.HasType(TypeCreature)
+	}
 	base := p.baseAttrs[a]
 	if p.printedAbilitiesSuppressed && IsAbilityAttr(a) {
 		base -= min(base, p.printedAbilityAttrs[a])
