@@ -1573,3 +1573,108 @@ shared discard action (Jalum Tome now exposes this blocker, but its multi-card
 value requires a fresh nested and complete-record audit). No next slice was
 started. Complete loading/gameplay, embedded production startup and native
 smoke tests, Go-card/generator deletion and unused-DSL cleanup remain open.
+
+## Run 2026-10-04: P6-SPELL-CAST-LIFE
+
+Status: completed one shared spell-cast life-trigger slice. The initial user
+changes to `.gitignore` and `mtgish-ron-execution.md` remain intact and are
+excluded from the commit. No unrelated untracked files were present.
+
+The [spell-cast life report](mtgish-ron-spell-cast-life.md) records the candidate
+comparison, full-record/nested-form audit, signatures and contexts, rules
+references, engine reuse, affected names, diagnostics and card-to-test mappings.
+Candidates: spell-cast life triggers (seven complete unlocks, small adapters
+with an event/payment matrix), temporary animation (up to three unlocks with
+layer/timing/cost prerequisites), and fixed selected discard (two complete
+unlocks, with later result/event/timing dependencies). The selected slice gives
+the largest credible multi-card gain for its adapter effort. The initial
+commentary identified Jalum Tome; the completed discard audit also found Bazaar
+of Baghdad, without changing the selection. Reprints count once. Selection,
+reuse boundary and acceptance cases were stated before implementation.
+
+Supported event: `TriggerA(WhenAPlayerCastsASpell(AnyPlayer, spell-filter),
+actions)`, with symbol AnyPlayer and existing AnySpell, IsColor, IsCardtype and
+nonempty And/Or spell filters. Other caster scopes, self-spell and event
+references remain rejected. Fixed `MayCost(PayMana(...))` and typed
+`PlayerMayCost(player, PayMana(...))` can now have an adjacent nonempty
+`If(CostWasPaid, [actions])` continuation. Each pair lowers to a fresh IfPaid
+with separate costs/body. Nested and successive pairs keep separate results.
+The existing Unless form remains supported. X and nonmana optional payments,
+other conditions and escaped payment results remain errors. The paid form
+applies in supported spell/activation/source entry/death/controller-upkeep
+contexts. Inventory reports typed event operands and If condition/action roles.
+
+All rules execution is reused: WheneverSpellCastTrigger, existing pure card
+filters, pending trigger placement/APNAP and captured controller, IfPaid and
+Costs, transactional mana payment, life/draw actions, source incarnation,
+phasing and clone state. No engine service or RON source changed. No runtime
+startup, Go card definition or DSL export changed. Removal gates remain closed;
+this slice does not claim a fresh unused-DSL caller audit or cutover validation.
+
+Gameplay evidence for Crystal Rod, Iron Star, Ivory Cup, Throne of Bone,
+Wooden Sphere, Urza's Chalice and Sol'kanar the Swamp King is
+`TestRONSpellCastLifeRealCards`. It covers both casters, matching/nonmatching
+spells, timing, refusal/inability, mana sources, failed casts, copies,
+countered spells, departure/return/control/phasing and cloned resolution.
+Sol'kanar's swampwalk is also checked in TestRONSpellCastLifeFilterCombinations.
+IndependentInstances covers multicolor casting and four independently paid
+triggers across controllers. PaymentContexts covers zero costs, refusal,
+nested/successive bodies, fresh factories, explicit typed payer/target and
+unavailable colored payment without partial source use. SharedContexts covers
+paid activations, entry and upkeep. Invalid and Inventory tests cover
+rejected shapes/bindings and nested operand roles. The report gives the full
+mapping. Compilation progress and gameplay evidence remain separate.
+
+New tests first failed on unsupported WhenAPlayerCastsASpell and missing roles.
+Fixtures were corrected for the engine's priority placement, active caster,
+legal supported spells and explicit clone decisions. Clones normally use
+SearchPlayer, whose payment choice can differ from the test player's choice;
+the clone tests install an explicit choice wrapper around cloned player state.
+The old upkeep invalid case now rejects an orphan second If after a valid paid
+pair, with positive upkeep evidence for the newly supported first pair.
+Exact inventory expectations were refreshed. No gameplay expectation was
+weakened to hide a missing implementation. The existing targeted explicit life
+action compiler gap remains out of scope; typed payer coverage uses DrawACard.
+
+Estimated and actual gain agree: **seven names, 32 records**. Five colored
+artifacts contribute six reprints each; Urza's Chalice and Sol'kanar one each.
+Accepted records increase **949 to 981/2,445**; rejection falls **1,496 to
+1,464**. Accepted unique names increase **285 to 292/986**, leaving **694
+rejected unique names**. No formerly accepted record regresses. Twelve
+remaining diagnostics change, exposing caster scopes, event references and
+Rohgahh's permanent-list producer. Loader and full AST inventory diagnostics
+match. Global engine_validated and behavior_verified counts remain null.
+
+Local Oracle data in LEA/ATQ/LEG agrees with all seven selected full records.
+No source defect was corrected; all 12 RON hashes match the vocabulary snapshot.
+Gaea's Liege/Fastbond observations remain unresolved. No environment or
+pre-existing failure blocks this slice.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, engine short tests, `make build` | PASS |
+| Baseline strict loader / full inventory | Expected exit 1; 949 accepted, 1,496 rejected |
+| New `go test ./pkg/mage/dsl/ron -run TestRONSpellCastLife -count=1` | Expected adapter/role failures before implementation; final PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS, repeated after lint |
+| `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; 981 accepted, 1,464 rejected; identical diagnostics |
+| RON hashes and before/after diagnostics | All unchanged; zero accepted-record regression |
+
+Next ranked candidates: typed spell-cast event references (Presence of the
+Master and Nether Void, plus In the Eye of Chaos after variable payment),
+fixed selected discard (Jalum Tome and Bazaar of Baghdad), then temporary
+animation (Mishra's Factory/Jade Statue/Thelonite Druid). Reassess full records
+and dependencies next run. No next slice was started. Complete collection
+loading/gameplay, embedded production startup, native smoke tests, Go-card and
+generator deletion, and unused-DSL cleanup remain open.
+
+Automatic lint changes only reordered imports in the new test file. Reviewed
+changes have no semantic effect. Focused tests and diff checks passed again
+after lint; the final strict loader still rejects the remaining collection.
+Only the slice files are staged for one descriptive commit. No required check
+is waived and no environment failure blocks the commit.

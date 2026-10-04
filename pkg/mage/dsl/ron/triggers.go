@@ -18,15 +18,12 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	trigger := n.Args[0]
-	if trigger.Name != "WhenAPermanentEntersTheBattlefield" && trigger.Name != "WhenAPermanentDies" && trigger.Name != "AtTheBeginningOfAPlayersUpkeep" {
-		return nil, unsupported(trigger, "trigger")
-	}
-	if err := arity(trigger, 1); err != nil {
-		return nil, err
-	}
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
 	case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies":
+		if err := arity(trigger, 1); err != nil {
+			return nil, err
+		}
 		permanents := trigger.Args[0]
 		if permanents.Name != "SinglePermanent" {
 			return nil, unsupported(permanents, "trigger subject")
@@ -43,6 +40,9 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.DiesTrigger(effect, false) }
 		}
 	case "AtTheBeginningOfAPlayersUpkeep":
+		if err := arity(trigger, 1); err != nil {
+			return nil, err
+		}
 		players := trigger.Args[0]
 		if players.Name != "SinglePlayer" {
 			return nil, unsupported(players, "upkeep player filter")
@@ -54,6 +54,21 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, unsupported(players.Args[0], "upkeep player reference")
 		}
 		buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.BeginningOfUpkeepTrigger(effect, false) }
+	case "WhenAPlayerCastsASpell":
+		if err := arity(trigger, 2); err != nil {
+			return nil, err
+		}
+		players := trigger.Args[0]
+		if players.Kind != Symbol || players.Name != "AnyPlayer" {
+			return nil, unsupported(players, "spell-cast player filter")
+		}
+		filter, err := compileSpellFilter(trigger.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		buildTrigger = func(effect mage.Effect) *mage.GenericTriggered {
+			return mage.WheneverSpellCastTrigger(effect, false, filter)
+		}
 	default:
 		return nil, unsupported(trigger, "trigger")
 	}

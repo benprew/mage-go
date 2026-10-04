@@ -724,3 +724,15 @@ color for the whole amount and retains immediate mana-ability execution.
 This establishes compiler adapters for existing services, with no engine rule
 change. Evidence: all `TestRONFixed*` tests, mapped in
 [the slice report](designs/mtgish-ron-fixed-draw.md).
+
+## RON spell-cast life trigger adapters
+
+RON any-player spell-cast filters use `WheneverSpellCastTrigger`; matching is
+checked at cast time. The pending ability keeps its controller (CR 603.3a).
+Optional fixed mana payment is offered during resolution (CR 603.5), even when
+the source departs, returns, changes controller or phases out. A copy placed
+on the stack does not emit a cast event. Failed casting does not trigger.
+Adjacent paid continuations use `IfPaid` and the shared cost transaction;
+refusal or inability gives no paid body. Nested pairs keep separate results.
+This adds compiler support without a new engine contract. Evidence:
+`TestRONSpellCastLife*`, mapped in [the slice report](designs/mtgish-ron-spell-cast-life.md).

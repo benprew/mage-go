@@ -1016,3 +1016,13 @@ otherwise the resolving controller draws. Activation cost
 atomic total-cost payment. Optional and dynamic life costs remain rejected.
 Fixed `AnyManaColor` production asks for one color for the complete amount.
 See [the exact shape and gameplay report](designs/mtgish-ron-fixed-draw.md).
+
+## RON spell-cast life triggers and paid bodies
+
+`TriggerA(WhenAPlayerCastsASpell(AnyPlayer, filter), actions)` uses the existing
+spell filters and `WheneverSpellCastTrigger`. Other caster scopes and event
+references remain rejected. An adjacent fixed-mana MayCost or PlayerMayCost
+followed by `If(CostWasPaid, [actions])` uses `IfPaid`. Each nonempty body has
+its own payment result, including nested pairs. Payment is offered at resolution
+to the stored ability controller or explicit typed payer. X and nonmana
+payments remain separate shapes. See [the contract and tests](designs/mtgish-ron-spell-cast-life.md).

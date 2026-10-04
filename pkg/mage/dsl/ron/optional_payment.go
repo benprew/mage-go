@@ -8,7 +8,7 @@ func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 		part := parts[i]
 		if part.Name == "PlayerMayCost" || part.Name == "MayCost" {
 			if i+1 == len(parts) {
-				return nil, problem(part, "payment requires an adjacent unpaid continuation")
+				return nil, problem(part, "payment requires an adjacent payment continuation")
 			}
 			effect, err := compileOptionalPayment(part, parts[i+1], ctx)
 			if err != nil {
@@ -53,8 +53,8 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 	if err != nil {
 		return nil, err
 	}
-	if continuation.Name != "Unless" {
-		return nil, problem(continuation, "payment requires an adjacent unpaid continuation")
+	if continuation.Name != "Unless" && continuation.Name != "If" {
+		return nil, problem(continuation, "payment requires an adjacent payment continuation")
 	}
 	if err := arity(continuation, 2); err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		return nil, err
 	}
 	if len(parts) == 0 {
-		return nil, problem(continuation, "unpaid continuation requires at least one action")
+		return nil, problem(continuation, "payment continuation requires at least one action")
 	}
 	body, err := compileActionSequence(parts, ctx)
 	if err != nil {
@@ -83,6 +83,9 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		effects := make([]mage.Effect, len(body))
 		for i, build := range body {
 			effects[i] = build(bindings)
+		}
+		if continuation.Name == "If" {
+			return mage.IfPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 		}
 		return mage.UnlessPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 	}, nil

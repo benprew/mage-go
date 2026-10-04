@@ -284,7 +284,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "cost"}[index]
 			}
-		case "Unless":
+		case "Unless", "If":
 			if len(n.Args) == 2 {
 				return []string{"condition", "action"}[index]
 			}
@@ -398,6 +398,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "event":
+		if n.Name == "WhenAPlayerCastsASpell" && len(n.Args) == 2 {
+			return []string{"player_filter", "spell_filter"}[index]
+		}
 		if len(n.Args) == 1 {
 			switch n.Name {
 			case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies":
