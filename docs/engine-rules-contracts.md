@@ -908,3 +908,20 @@ Evidence: `TestRONCounterCostRealCards`, `TestRONCounterCostRollbackAndCompositi
 `TestRONCounterCostTargetsCopiesAndInstances`, and `TestRONCounterCostFormsAndTiming`.
 See [the exact RON shapes and mappings](designs/mtgish-ron-counter-costs.md).
 No engine service or simultaneous-operation contract changes in this adapter.
+
+## RON basic token batches
+
+The RON token adapter uses `CreateTokenCopies` with `You` and a validated immutable
+`DefineToken` declaration. The resolving controller creates and owns the tokens
+(CR 111.2). Source departure, phasing or later control change does not redirect a
+pending creation. Copied stack objects use their own controller and retain X.
+Nonpositive counts create no tokens. Printed token characteristics remain
+independent of the creating spell or ability (CR 111.3).
+
+RON derives an unnamed token's name from its subtypes plus ` Token` (CR 111.4).
+Named tokens retain their specified names. The existing engine token batch makes
+all accepted tokens visible together before entry events. RON gameplay evidence
+includes Icatian Town's four-token batch, Thallid copied abilities, clone isolation,
+all-illegal target rejection, payment rollback and token phasing/destruction.
+No replacement, entry-counter or token-result contract is added by this slice.
+Exact forms and tests: [basic token creation](designs/mtgish-ron-token-creation.md).

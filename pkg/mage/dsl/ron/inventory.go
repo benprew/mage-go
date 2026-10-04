@@ -302,8 +302,35 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PayLife" && len(n.Args) == 1 {
 			return "value"
 		}
+	case "token_instruction", "token_definition":
+		if n.Name == "NumberTokens" && len(n.Args) == 2 {
+			return []string{"value", "token_definition"}[index]
+		}
+		if n.Name == "TokenWithPT" && len(n.Args) == 6 {
+			return []string{"token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_keyword"}[index]
+		}
+		if n.Name == "NamedTokenWithPT" && len(n.Args) == 7 {
+			return []string{"token_name", "token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_keyword"}[index]
+		}
+	case "token_pt":
+		if n.Name == "PT" && len(n.Args) == 2 {
+			return "integer_literal"
+		}
+	case "token_colors":
+		if n.Name == "Colors" && len(n.Args) == 1 {
+			return "token_color"
+		}
+	case "token_subtypes":
+		if n.Name == "SubtypesList" && len(n.Args) == 1 {
+			return "token_subtype"
+		}
 	case "action":
 		switch n.Name {
+		case "CreateTokens":
+			if len(n.Args) == 2 {
+				return []string{"token_instruction", "token_creation_modifier"}[index]
+			}
+
 		case "PutCounters":
 			if len(n.Args) == 1 {
 				return "counter_instruction"

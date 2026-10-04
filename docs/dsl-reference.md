@@ -1156,3 +1156,17 @@ Factories create fresh `RemoveCountersCost` instances; payment uses the shared
 atomic transaction before resolution. Other source references, X/any/all amounts,
 removal actions and optional counter payments remain errors. See
 [the exact contexts and tests](designs/mtgish-ron-counter-costs.md).
+
+## RON basic creature-token creation
+
+RON `CreateTokens/2` lowers one creature-token instruction and an empty modifier
+list to `mage.CreateTokenCopies(mage.You, count, definition)`. Instructions accept
+`TokenWithPT/6`, `NamedTokenWithPT/7`, or `NumberTokens/2`. Printed characteristics
+use `DefineToken` with typed P/T, types, colors, subtypes and keyword options.
+Counts use fixed integers or in-scope announced spell X at resolution. Empty
+optional options are omitted. Each action builds a fresh effect; the engine's
+immutable token definition contains no chosen state.
+
+See [the supported shapes and card tests](designs/mtgish-ron-token-creation.md).
+Token abilities, supertype options, copying, creation modifiers and saved token
+results remain unsupported by this adapter.

@@ -2650,3 +2650,104 @@ Diamond Valley/Life Chisel with results reused for Priest/Bed; (3) any-number
 counter payment/results and dynamic mana for five Mana Batteries. Complete RON
 loading/gameplay, runtime/native startup, Go-card/generator deletion and unused-DSL
 cleanup remain unfinished.
+
+## Run 2026-10-04: P5-TOKEN-CREATION
+
+Status: completed one basic creature-token creation slice. Initial user changes
+in `.gitignore` and `mtgish-ron-execution.md` are preserved and excluded from the
+commit. No other unrelated untracked files were present.
+
+The [token creation report](mtgish-ron-token-creation.md) records the complete
+candidate comparison, exact signatures, nested/complete-record audit, dependencies,
+engine reuse and card-to-test mappings. Fresh evidence compared basic creature
+tokens (18 affected names, six estimated unlocks), sacrifice characteristics
+(four names, two unlocks), and variable optional mana (two names, one unlock).
+Token creation won on existing engine support and the largest credible gain for
+the effort. Names and remaining blockers are listed in the report. The contract,
+reuse boundary and acceptance cases were stated before implementation.
+
+Exact supported resolving contexts: `CreateTokens/2` with a one-instruction list
+and an empty modifier list; `TokenWithPT/6`, `NamedTokenWithPT/7`, and
+`NumberTokens/2` wrapping either. Counts accept existing fixed integer or in-scope
+announced spell X. Tokens have literal signed P/T, distinct colors/permanent
+card types/creature subtypes/simple keywords and no supertypes. Unnamed tokens
+use subtype names plus ` Token` (local CR 111.4); named tokens keep their explicit
+name. Cost/static contexts, token copying/abilities/modifiers/supertypes/results,
+and multiple instructions remain errors. Private adapters are
+`compileTokenCreation(Node, scope) (effectFactory, error)` and
+`compileCreatureToken(Node) (mage.TokenDefinition, error)`.
+
+Reusable engine behavior uses immutable `DefineToken` declarations and
+`CreateTokenCopies(You, ValueAtResolution(count), token)`. Per-factory actions
+have no mutable chosen state in the shared declaration. Payments, target legality,
+resolving controllers, source/event LKI, copy/X behavior, phasing, token lifecycle,
+clone isolation and simultaneous token entry stay in their existing services.
+No missing engine contract or engine implementation change was needed. No new
+replacement-order operation is introduced. Relevant CR: 111.2–8, 400.7, 602.2,
+608.2b. API/rules docs now record only these adapter contracts.
+
+TDD: real-card, batch and copy tests first failed on `unsupported action
+(CreateTokens)`; semantic inventory failed on missing token roles. Test fixture
+API errors were corrected before the expected adapter failure was confirmed.
+Lowering initially supplied nil optional token options, which engine validation
+rejects; it now omits empty options. Boris's tap-cost fixture advances through
+untap. Subtype rejection uses a known land subtype because the existing validator
+permits custom creature subtype names. No test requirement was weakened.
+
+New complete real-card gameplay mappings:
+
+| Names | Tests |
+| --- | --- |
+| Thallid, Thallid Devourer, Elvish Farmer | TestRONTokenCreationRealCards: complete upkeep/counter-cost/token/sacrifice/life/bonus rules and cleanup |
+| The Hive, Boris Devilboon | TestRONTokenCreationRealCards: definition validation, mana/tap costs, named token colors/types/keywords and resolution timing |
+| Icatian Town | TestRONTokenCreationTownBatch: definition validation, casting/payment, four simultaneous entries, characteristics and graveyard |
+| Shared contracts and Thallid | TestRONTokenCreationCopiesAndSource, TestRONTokenCreationCountsAndRollback, TestRONTokenCreationTriggerAndLegality: copied controllers/X, departure/return/phasing/control, clone isolation, atomic failed payments, trigger controller, all-illegal targets and token lifecycle |
+| Invalid declarations/inventory | TestRONTokenCreationInvalid, TestRONTokenCreationDeclarationBoundaries, TestRONTokenCreationInventory: typed shapes, context/scope boundaries and reporting roles |
+
+Estimated and actual gain agree: **six unique names, eleven records**. Loader
+**1,021 -> 1,032/2,445 compiled**, **1,424 -> 1,413 rejected**. Accepted names
+**324 -> 330**, rejected **662 -> 656**. The Hive accounts for six reprints;
+the other newly accepted names have one record each. Zero accepted-record
+regressions; strict and inventory issue arrays match. Nodes/signatures remain
+72,938/8,528; unknown-role occurrences fall **17,251 -> 16,921**. Global
+engine_validated/behavior_verified remain null. All six new unique cards have
+RON gameplay and explicit definition-validation evidence. Compilation progress
+is separate from collection-wide gameplay completion.
+
+Largest remaining first diagnostics: PermanentRuleEffect (110), AsPermanentEnters
+(90), instant/sorcery CastEffect (53), If rule (48), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep (35), TriggerI (28), ControlledByAPlayer
+filter (28), TargetGraveyardCard (26). Token-dependent records still report their
+remaining blockers; none is silently accepted. No source-data defect was corrected.
+All 12 source hashes match the vocabulary snapshot, so no refresh is needed.
+Gaea's Liege/Fastbond concerns remain open. No environment failure blocked work.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1; make build | PASS |
+| Baseline strict and inventory loaders | Expected exit 1: 1,021 compiled, 1,424 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONTokenCreation -count=1 | Expected adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS; repeated after lint and explicit validation assertions |
+| go test ./pkg/mage/... -short -count=1 | PASS; repeated after final test assertions |
+| make test | PASS; repeated after final test assertions |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; automatic changes reviewed: new-test import grouping only |
+| git diff --check | PASS |
+| Final strict and inventory loaders | Expected exit 1: 1,032 compiled, 1,413 rejected; identical diagnostics |
+| Accepted-record and source-hash audits | Zero regressions; all 12 hashes unchanged |
+
+Slice files: compiler.go; new token_creation.go/token_creation_test.go;
+inventory.go/inventory_test.go; dsl-reference.md; engine-rules-contracts.md;
+new token creation report and this ledger. Current production startup, Go-card
+constructors/generators and DSL exports retain their callers. Removal gates remain
+closed; no deletion, unused-DSL removal audit or runtime cutover is claimed.
+
+Ranked next candidates requiring fresh comparison: (1) typed sacrifice
+characteristic results for Diamond Valley/Life Chisel, with mana-value results
+also enabling Homarid Spawning Bed now that tokens work; (2) any-number counter
+payments/results and dynamic mana for the five Mana Batteries; (3) delayed/step
+trigger prerequisites for Breeding Pit, Rukh Egg and Hazezon Tamar. The next run
+must reassess these against fresh inventory. Full RON loading/gameplay,
+runtime/native startup, Go-card/generator deletion and DSL cleanup remain open.
+No second slice began.

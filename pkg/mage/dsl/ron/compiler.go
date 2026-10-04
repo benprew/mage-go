@@ -756,6 +756,12 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "CreateTokens":
+		build, err := compileTokenCreation(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PutCounters":
 		build, err := compileCounterPlacement(n, ctx)
 		if err != nil {
