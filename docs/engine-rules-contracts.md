@@ -891,3 +891,20 @@ copies and clones preserve private target/source state. No engine execution
 contract changed and no new multi-object, entry or removal contract is claimed.
 Evidence: TestRONCounterPlacement*, with
 [exact contexts and card mappings](designs/mtgish-ron-counter-placement.md).
+
+## RON fixed source-counter activation cost adapter
+
+Fixed source-counter costs use `RemoveCountersCost` and the shared total-cost
+transaction. Counters are paid during activation; insufficient counters or later
+mana failure restores the complete payment (CR 602.1a, 602.2/602.2b). Repeated
+costs cannot reuse already paid counters. Source permission, phasing, timing and
+activation limits use the existing activation service. Ability copies pay no new
+cost, and source departure does not stop independent targeted damage. Source
+regeneration keeps the original incarnation; a returned or phased source does
+not receive a pending shield. Damage uses existing target checks and prevention.
+
+Evidence: `TestRONCounterCostRealCards`, `TestRONCounterCostRollbackAndComposition`,
+`TestRONCounterCostFactoryIsolationAndManaRollback`,
+`TestRONCounterCostTargetsCopiesAndInstances`, and `TestRONCounterCostFormsAndTiming`.
+See [the exact RON shapes and mappings](designs/mtgish-ron-counter-costs.md).
+No engine service or simultaneous-operation contract changes in this adapter.

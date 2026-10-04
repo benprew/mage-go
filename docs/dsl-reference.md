@@ -1144,3 +1144,15 @@ Named permanent kinds and supported literal PTCounter pairs are validated before
 factory construction. Multiple instructions, player counters, unsupported
 values/kinds, entry/removal and placement-as-cost remain errors. See
 [the exact shapes, inventory audit and tests](designs/mtgish-ron-counter-placement.md).
+
+## RON fixed source-counter activation costs
+
+`RemoveCounters([ACounterOfTypeFromPermanent(counter, ThisPermanent)])` removes
+one counter as an activation cost. `NumberCountersOfTypeFromPermanent(Integer(n),
+counter, ThisPermanent)` uses a nonnegative fixed amount, including zero. The list
+must contain one instruction. Supported permanent counter types match placement.
+Use these costs in `Activated` or `ActivatedWithModifiers`, including `And` costs.
+Factories create fresh `RemoveCountersCost` instances; payment uses the shared
+atomic transaction before resolution. Other source references, X/any/all amounts,
+removal actions and optional counter payments remain errors. See
+[the exact contexts and tests](designs/mtgish-ron-counter-costs.md).

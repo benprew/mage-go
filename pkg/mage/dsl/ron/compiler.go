@@ -439,6 +439,12 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "RemoveCounters":
+		cost, err := compileCounterRemovalCost(n)
+		if err != nil {
+			return nil, false, err
+		}
+		return []costFactory{cost}, false, nil
 	case "SacrificeAPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, false, err

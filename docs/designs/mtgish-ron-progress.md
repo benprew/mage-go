@@ -2546,3 +2546,107 @@ results reused for Priest/Bed; (3) any-number counter removal and typed payment
 amount/dynamic mana for five Batteries. Complete loading/gameplay, runtime/native
 validation, Go-card/generator removal and unused-DSL cleanup remain open.
 No second slice began.
+
+## Run 2026-10-04: P4-COUNTER-COST
+
+Status: completed fixed source-counter activation costs. One slice only. Initial
+user edits in `.gitignore` and `mtgish-ron-execution.md` are preserved and excluded
+from this slice. The starting tree had no unrelated untracked files.
+
+The [counter costs report](mtgish-ron-counter-costs.md) records the full candidate
+comparison, complete-record/nested audit, exact support and card/test mappings.
+The pre-edit comparison was:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers/downstream capabilities | Effort |
+| --- | --- | ---: | --- | --- |
+| Fixed source-counter costs | Feral Thallid, Thorn Thallid, Elvish Farmer, Thallid, Thallid Devourer, Spore Flower, Icatian Javelineers, Triskelion, Delif's Cube, Osai Vultures, Scavenging Ghoul, Rasputin Dreamweaver, Life Matrix | 2 | Tokens, prevention, entry, events/history and grants block the other names; direct prerequisite for three token-producing cards | Small adapter, medium tests |
+| Sacrifice characteristics | Diamond Valley, Life Chisel, Priest of Yawgmoth, Homarid Spawning Bed | 2 | Priest needs repeated dynamic mana; Bed needs tokens; typed payment results serve all four | Medium adapter, substantial LKI/payment/copy tests |
+| Variable optional mana | In the Eye of Chaos, Invoke Prejudice | 1 | Invoke also needs Opponent/color-sharing spell filters; event mana-value payment serves both triggers | Medium adapter, substantial payment/event tests |
+
+Fixed removal won on the smallest credible effort for two complete cards and
+concrete multi-card downstream benefit. Reprints count once. First-error counts
+were not treated as unlock estimates. Contract, reuse boundary and acceptance
+cases were stated before editing. No missing engine prerequisite was found.
+
+Exact support: `RemoveCounters/1` in permanent-source `Activated/2` and
+`ActivatedWithModifiers/3`, including existing cost conjunctions and supported
+modifiers. Its single-instruction list accepts `ACounterOfTypeFromPermanent/2`
+or `NumberCountersOfTypeFromPermanent/3`; amount is `Integer/1` with a literal
+nonnegative number, counter kind uses `compilePermanentCounterType`, and source
+must be symbol `ThisPermanent`. Private
+`compileCounterRemovalCost(Node) (costFactory, error)` returns a factory that
+creates a fresh `mage.RemoveCountersCost` per card instance. Invalid declarations
+are rejected before factory execution. Other references, variable/any/all amounts,
+removal actions, entry/static contexts and optional counter payments remain gaps.
+No result binding, global state, name branch, fallback or partial registry exists.
+Inventory now supplies removal-instruction and typed operand roles under known
+cost contexts, without claiming execution for unsupported parent contexts.
+
+Engine reuse: total-cost transactions, locked source incarnation, permission,
+timing/limits, clones, typed targets, ability copies, LKI damage, regeneration,
+phasing and shared damage prevention. No engine API/service changed. CR 602.1a,
+602.2/2b, 122.1/1a/2, 400.7 and existing identity/phasing contracts apply. No new
+simultaneous-operation or counter-removal replacement contract is established.
+
+| Card/context | Test mapping |
+| --- | --- |
+| Feral Thallid and Thorn Thallid, complete records | TestRONCounterCostRealCards: definition validation, own/opponent upkeep, pending counter placement, three-counter payment, insufficient payment, source departure/return/control/phasing/phase cycle, clones, regeneration/destruction or damage |
+| Thorn Thallid | TestRONCounterCostTargetsCopiesAndInstances: permission and target rejection without costs, phased source, independent sources, cost-free copy, departed source LKI, target return/phasing/type legality, prevention, clone isolation |
+| Shared transactions | TestRONCounterCostRollbackAndComposition: mana/tap order, duplicate costs, rollback, exact payment and later resolution |
+| Shared factories/clones | TestRONCounterCostFactoryIsolationAndManaRollback: same compiled factory creates independent sources, later mana failure restores counter/tap payment, clones pay and resolve independently |
+| Forms/timing | TestRONCounterCostFormsAndTiming: one/zero/fixed P/T counters, validation, upkeep and once-per-turn, no resolution timing recheck |
+| Declarations/reporting | TestRONCounterCostInvalid; TestRONCounterCostInventory: shape/arity/value/type/reference/context rejection and typed nested roles |
+
+TDD: after correcting test fixture compile errors for counter types and PhaseIn,
+new gameplay/form/payment tests failed on `unsupported cost (RemoveCounters)`;
+inventory failed on missing removal roles. After implementation, real-card tests
+were corrected to use activation index 1 (index 0 is the upkeep trigger), explicit
+event/stack placement for unresolved upkeep, and a valid artifact timing fixture.
+No gameplay expectation was weakened. Broad checks then found two stale inventory
+count assertions; they now assert fresh measured counts and retain all registry
+and gameplay checks.
+
+Estimated and actual gain agree: **two unique names, two records**. Loader
+**1,019 -> 1,021/2,445 compiled**, **1,426 -> 1,424 rejected**. Accepted names
+**322 -> 324**, rejected **664 -> 662**. Zero previously accepted records regressed.
+Strict and semantic-inventory diagnostics match exactly. Nodes/signatures stay
+72,938/8,528; unknown-role occurrences fall **17,378 -> 17,251**. Global
+engine_validated/behavior_verified remain null. Two complete real cards gain RON
+behavior evidence; global gameplay completion is not inferred from compilation.
+
+Largest remaining first diagnostics: PermanentRuleEffect (110), AsPermanentEnters
+(90), instant/sorcery CastEffect (53), If rule (48), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep (35), TriggerI (28), ControlledByAPlayer
+filter (28), TargetGraveyardCard (26). Source hashes match the vocabulary snapshot;
+no source changed, and no vocabulary source refresh is needed. No source defect
+was corrected. Gaea's Liege/Fastbond concerns remain open. No environment or
+pre-existing failure blocked the work.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1; make build | PASS |
+| Baseline strict and inventory loaders | Expected exit 1: 1,019 compiled, 1,426 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONCounterCost -count=1 | Expected missing-adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | Initially stale inventory assertions; final PASS after measured-count update |
+| make test | Initially stale inventory assertions; final PASS after update |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; only new-test import grouping changed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and -inventory -json | Expected exit 1: 1,021 compiled, 1,424 rejected; identical issues |
+| Accepted-record audit/source hashes | Zero regressions; all 12 source hashes unchanged |
+
+Slice files: compiler.go; new counter_cost.go/counter_cost_test.go;
+inventory.go/inventory_test.go; dsl-reference.md; engine-rules-contracts.md;
+new counter costs report and this ledger. All required native checks pass.
+Current startup, Go constructors/generators and DSL exports retain their callers.
+Removal gates remain closed. No deletion, unused-DSL audit or runtime cutover is
+claimed. No second slice began.
+
+Ranked next candidates to reassess: (1) basic token creation, now directly
+Thallid/Thallid Devourer/Elvish Farmer; (2) typed sacrifice toughness, directly
+Diamond Valley/Life Chisel with results reused for Priest/Bed; (3) any-number
+counter payment/results and dynamic mana for five Mana Batteries. Complete RON
+loading/gameplay, runtime/native startup, Go-card/generator deletion and unused-DSL
+cleanup remain unfinished.

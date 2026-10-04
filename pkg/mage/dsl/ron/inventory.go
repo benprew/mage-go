@@ -284,6 +284,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "cost":
+		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
+			return "counter_removal_instruction"
+		}
 		if n.Name == "SacrificeAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -355,6 +358,13 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_counter_type", "permanent_reference"}[index]
 		}
 		if n.Name == "NumberCountersOfTypeOnPermanent" && len(n.Args) == 3 {
+			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
+		}
+	case "counter_removal_instruction":
+		if n.Name == "ACounterOfTypeFromPermanent" && len(n.Args) == 2 {
+			return []string{"permanent_counter_type", "permanent_reference"}[index]
+		}
+		if n.Name == "NumberCountersOfTypeFromPermanent" && len(n.Args) == 3 {
 			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
 		}
 	case "permanent_counter_type":
