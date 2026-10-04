@@ -3286,3 +3286,154 @@ Ranked next candidates to reassess: (1) storage-land optional untap and
  downstream casting-payment bindings; (3) death-history intervening-if for
  Osai Vultures, deferred while useful multi-card work remains unless required
  as a shared prerequisite. No second slice began.
+
+## Run 2026-10-04: P6-STORAGE-LAND-LIFECYCLE
+
+Status: complete one storage-land lifecycle slice. The initial working tree had
+user changes in `.gitignore` and `mtgish-ron-execution.md`. They remain unchanged
+and are excluded from the commit. No unrelated untracked files were present.
+Fresh focused tests, short engine tests and build passed. Strict loading returned
+exit 1 for unsupported collection records, not a build or environment failure.
+
+### Candidate comparison and selection
+
+Fresh strict loading: 1,060 compiled / 2,445 records, 1,385 rejected records,
+348 accepted unique names and 638 rejected unique names. Full nested inspection:
+72,938 occurrences, 8,528 context/shape signatures, 16,303 unknown-role
+occurrences. The vocabulary JSON is a syntax snapshot, not support evidence.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Storage-land lifecycle, selected | Bottomless Vault; Dwarven Hold; Hollow Trees; Icatian Store; Sand Silos | 5 | Two small adapters: optional self untap and tapped self upkeep intervening-if. All entry/counter/mana prerequisites exist. Moderate lifecycle and payment tests; opens optional untap for eleven other unique cards. |
+| Saved-sacrifice repeated mana | Priest of Yawgmoth; Sacrifice; Metamorphosis | 1 | Priest needs bound repeated mana; Sacrifice also needs casting-payment scope; Metamorphosis additionally needs Plus and restricted mana. Small activation adapter, moderate payment/solver tests, larger casting work. |
+| Death-history intervening-if | Osai Vultures | 1 | Existing history and counter/boost services are ready; condition lowering remains absent. Small adapter, moderate event/resolution/history tests. Enables shared history-condition use, but this collection has only one immediate full unlock for that shape. |
+
+Five credible complete unlocks for two small adapters won on benefit per effort.
+Selection, reuse boundary and acceptance cases were stated before editing.
+Complete records and nested forms were read for all three candidate groups,
+including all Sacrifice reprints. No first-error count was used as an unlock
+estimate. Optional untap occurs in sixteen unique cards. In addition to the five
+lands, complete records were inspected for Ashnod's Battle Gear, Old Man of the
+Sea, Phyrexian Gremlins, Preacher, Rubinia Soulsinger, Seasinger, Spirit Shield,
+Tawnos's Coffin, Tawnos's Weaponry, Willow Satyr and Zelyon Sword. Their remaining
+blockers include player-controlled filters, power/supertype filters, opponent
+choices, control durations, tapped-maintained modifications, action-result
+bindings, linked exile and future triggers. They remain rejected; no partial
+production registry is published. Mana Vault's complete record was also read:
+its tapped condition uses a draw-step event, which remains unsupported.
+
+### Supported contract and reuse boundary
+
+Private signatures:
+
+- `compileOptionalUntap(Node) (optionFactory, error)` supports only rule
+  `PermanentRuleEffect/2` with symbol `ThisPermanent` and a list containing
+  exactly symbol `MayChooseNotToUntapDuringUntap`.
+- `compileTappedUpkeep(Node, scope) (optionFactory, error)` supports only rule
+  `TriggerI/3`, event `AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You))`,
+  condition `PermanentPassesFilter(ThisPermanent, IsTapped)`, and an action
+  declaration accepted by the shared action compiler. Each constructor has its
+  exact tuple arity; source/player/filter operands are symbols.
+
+Both rules require a permanent card context. Spell, cost and action contexts,
+wrong arity, tuple-shaped symbols, other subjects, filters, events and mixed
+optional untap operations remain declaration errors. General PermanentRuleEffect
+and TriggerI families remain partial.
+
+Optional untap lowers to `Static(While(condition,
+GrantKeywordModification(This, AttrMayNotUntap)))` with an unconditional typed
+battlefield condition. It grants the attribute through the existing ability
+layer so ability removal disables it. The trigger lowers to
+`At(YourUpkeep, Sequence(actions...), WithInterveningIf(PermanentIsTapped(This)))`.
+Its action targets are added from the same freshly built action plan. No mutable
+choice is captured in a compiled factory. Per-instance target/cost bindings and
+source incarnations remain owned by existing engine services.
+
+Engine reuse: native land play, tapped entry, untap-step player decisions and
+restrictions, layer/ability lifecycle, YourUpkeep, typed state conditions,
+intervening-if detection and resolution checks, source incarnations, event and
+pending-trigger services, stack copies/countering, phasing, control changes,
+cloning, counter addition, typed chosen-counter payment, immediate mana ability
+resolution and transactional rollback. RON owns spelling, shape validation,
+inventory roles and lowering. No engine rule/API changed; no card-name branch,
+Go-card fallback, global last-action slot, declaration panic or parallel rules
+service was added. Relevant contracts read: CR 400.7, 502.1/3/4, 503.1a,
+603.3/4, 605.1a/3b and 702.26b–d, with API and engine rules-contract docs.
+No new LKI-characteristic query, replacement ordering or simultaneous batch
+operation was introduced; existing engine behavior remains the reuse boundary.
+
+Inventory now recognizes PermanentRuleEffect operands as permanent_reference /
+permanent_rule_operation, TriggerI operands as event / trigger_condition /
+actions, and PermanentPassesFilter condition operands as permanent_reference /
+permanent_filter. Roles do not assert syntax support or gameplay verification.
+
+### Tests and evidence
+
+Tests were written first. The initial gameplay run failed at unsupported
+PermanentRuleEffect for each complete land record. The inventory test separately
+failed because TriggerI's event operand had unknown role. Test fixtures were
+corrected to use the main phase for land play and ability index 2 (the full
+ability list includes the static and triggered abilities). No rule assertion was
+weakened. A native upkeep test was added and passed. Lint reordered imports;
+the automatic changes were reviewed.
+
+| Unique cards or contract | Test mapping and evidence |
+| --- | --- |
+| Bottomless Vault, Dwarven Hold, Hollow Trees, Icatian Store, Sand Silos | TestRONStorageLands: complete FEM records, definition validation, native land play/tapped entry, native untap decline/accept and upkeep, repeated accumulation, opponent-upkeep exclusion, untapped condition, correct immediate color/amount, zero payment, tapped/excess-payment rejection and rollback, pure solver query and clone isolation |
+| Sand Silos | TestRONStorageInterveningIf: false condition at resolution, untap/retap recheck, departure/return incarnation exclusion, phasing before detection/after placement, control change, copies with another controller, countered triggers and clone resolution |
+| Sand Silos | TestRONStorageUntapInstances: separate factories/controllers/choices, current-controller choice after control change, phase-in before untap, SkipNextUntap precedence, ability removal, counters retained and clone isolation |
+| Invalid declarations | TestRONStorageInvalid: malformed arity/operands, unbound target source, wrong filter/event/player, mixed operations, wrong role/context |
+| Semantic inventory | TestRONStorageInventory plus updated collection-count fixtures: nested roles and shared action contexts |
+
+These five complete cards gain explicit gameplay/definition evidence. This is
+separate from collection-wide behavior totals. Other optional-untap cards remain
+unsupported and are not claimed as full-card gameplay gains.
+
+### Results and validation
+
+Estimated and actual unlocks agree: **five unique names, five records**.
+Compiled **1,060 -> 1,065/2,445**; rejected **1,385 -> 1,380**. Accepted names
+**348 -> 353**, rejected names **638 -> 633**. Zero accepted-record regressions.
+Strict and inspection issue arrays match. Occurrences/signatures remain
+**72,938/8,528**; unknown-role occurrences **16,303 -> 15,289**.
+Collection-wide engine_validated and behavior_verified remain null.
+
+Leading fresh diagnostics include optional untap operation gaps (67), non-spell
+CastEffect (53), rule If (48), ChooseADamageSource (46), Targeted_Modal (42),
+optional untap HostPermanent (39), upkeep HostController (35), ControlledByAPlayer
+(29), TargetGraveyardCard (26) and WhenAPermanentBecomesTapped (25). Changes to
+first diagnostics are not full unlocks. There were no source defects or
+environment failures in this slice. All twelve source hashes still match the
+vocabulary snapshot; no RON source changed, so no source snapshot refresh was
+needed. Existing Gaea's Liege/Fastbond source concerns remain open.
+
+| Command | Result |
+| --- | --- |
+| Baseline focused tests; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,060 compiled, 1,385 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONStorage -count=1 | Expected adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; import formatting reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,065 compiled, 1,380 rejected; matching diagnostics |
+| Accepted-record regression and source-hash audits | PASS: zero regressions, twelve unchanged hashes |
+
+Slice files: new storage_land.go/storage_land_test.go; compiler.go;
+inventory.go/inventory_test.go; dsl-reference.md; engine-rules-contracts.md;
+this ledger. Final checks ran after final test and lint changes. Production
+startup, Go-card definitions, generators and current DSL callers are preserved.
+No DSL export was removed; cutover/removal gates are still closed, and no caller
+removal audit or native startup cutover is claimed.
+
+Ranked next candidates to reassess from fresh complete-record inventory:
+(1) shared untap prohibitions and tapped-source durations for artifact/control
+families, comparing immediate unlocks with prerequisite effort;
+(2) saved-sacrifice repeated mana plus casting-payment scope for Priest of
+Yawgmoth, Sacrifice and Metamorphosis;
+(3) shared trigger-condition lowering, including death history for Osai Vultures.
+Complete loading/gameplay, startup cutover, Go-card/generator deletion and DSL
+cleanup remain open. No second slice began.

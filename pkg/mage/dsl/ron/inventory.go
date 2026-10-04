@@ -234,6 +234,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"cost", "actions"}[index]
 			}
+		case "PermanentRuleEffect":
+			if len(n.Args) == 2 {
+				return []string{"permanent_reference", "permanent_rule_operation"}[index]
+			}
+		case "TriggerI":
+			if len(n.Args) == 3 {
+				return []string{"event", "trigger_condition", "actions"}[index]
+			}
 		case "TriggerA":
 			if len(n.Args) == 2 {
 				return []string{"event", "actions"}[index]
@@ -250,6 +258,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "trigger_condition":
+		if n.Name == "PermanentPassesFilter" && len(n.Args) == 2 {
+			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
 	case "activation_modifier":
 		if n.Name == "And" && len(n.Args) == 1 {

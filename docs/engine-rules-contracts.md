@@ -1025,3 +1025,20 @@ Evidence: `TestRONDeathHistoryCards`, `TestRONDeathHistoryEvents`, and
 and `TestCreatureDeathCountSnapshot`. Other card types, combined filters,
 intervening-if conditions and event-time history snapshots are not supported
 by this RON slice.
+
+## RON storage-land lifecycle adapter
+
+The storage-land adapter reuses the existing untap decision and ability layer
+services for a self-only optional untap rule. Ability removal disables the rule;
+untap restrictions take precedence over the optional choice. The current
+controller makes the untap choice (CR 502.3). A controller-upkeep trigger with
+PermanentIsTapped(This) uses WithInterveningIf for detection and resolution
+checks (CR 603.4). The source must still be the same phased-in incarnation;
+control change alone does not invalidate its tapped-state condition.
+
+TestRONStorageLands covers all five full FEM records, native land play/untap/
+upkeep, counter accumulation and immediate transactional mana payments.
+TestRONStorageInterveningIf and TestRONStorageUntapInstances cover source
+return, control, phasing, ability removal, copies and clones. No new engine
+execution rule or replacement/batch contract is introduced. Exact accepted RON
+shapes and coverage limits are in [the ledger](designs/mtgish-ron-progress.md).

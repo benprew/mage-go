@@ -358,6 +358,10 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileTappedEntry(n)
 	case "TriggerA":
 		return compileTriggerRule(n, ctx)
+	case "TriggerI":
+		return compileTappedUpkeep(n, ctx)
+	case "PermanentRuleEffect":
+		return compileOptionalUntap(n)
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":
 		return compileStaticLayer(n, ctx)
 	case "SpellActions":

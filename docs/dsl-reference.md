@@ -1252,3 +1252,16 @@ hand, phasing or prevented destruction. Other history filters remain errors.
 The existing typed subject and counter replacement contracts still apply.
 RON gameplay evidence: `TestRONDeathHistory*` for Khabál Ghoul and all six
 Scavenging Ghoul records. Intervening-if history conditions remain unsupported.
+
+## RON storage-land lifecycle
+
+RON supports `PermanentRuleEffect(ThisPermanent,
+[MayChooseNotToUntapDuringUntap])` and
+`TriggerI(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),
+PermanentPassesFilter(ThisPermanent, IsTapped), actions)` on permanent cards.
+The first uses the ability layer's optional untap attribute. The second checks
+current tapped state at detection and resolution through WithInterveningIf.
+Actions use the shared compiler and fresh instance bindings. Other operations,
+subjects, conditions and events remain declaration errors. Full-card and invalid
+shape evidence is recorded in the storage-land lifecycle entry in
+[the progress ledger](designs/mtgish-ron-progress.md).
