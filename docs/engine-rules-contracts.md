@@ -1062,3 +1062,25 @@ engine. `TestRONSkipUntapIllegalAnnouncementRollback` verifies retained
 transactional payment behavior. No engine rule, replacement ordering or
 simultaneous operation changes. Exact declaration limits are in
 [the adapter contract](designs/mtgish-ron-next-untap.md).
+
+## RON self static untap prohibition adapter
+
+RON `PermanentRuleEffect(ThisPermanent,
+[DoesntUntapDuringControllersUntap])` reuses the existing source-bound static
+ability service and `AttrDoesNotUntap`. The turn service reads that attribute
+when it determines which permanents untap (CR 502.3). It does not prohibit
+untapping from other effects. The source must retain its static ability
+(CR 604.2); ability removal disables this rule through the existing ability
+layer (CR 613.1f). Each returned incarnation acquires its own static rule,
+while pending untap actions retain the old incarnation (CR 400.7). Phase-in
+restores the rule before untap selection (CR 502.1, 702.26b/d).
+
+`TestRONStaticUntapBasaltMonolith`, `TestRONStaticUntapBrassMan`, and
+`TestRONStaticUntapColossus` execute the complete real RON records, including
+mana, optional payment, and upkeep-only activation behavior.
+`TestRONStaticUntapNativeUpkeep` verifies native upkeep execution.
+`TestRONStaticUntapLifecycle` verifies current control, phase-in, removal and
+restoration of abilities, returned objects, factory isolation and game clones.
+`TestRONStaticUntapInvalid` keeps unsupported roles and scopes rejected.
+No engine execution rule, replacement ordering, or simultaneous operation was
+changed. Aura-host, collection, conditional and temporary forms remain open.

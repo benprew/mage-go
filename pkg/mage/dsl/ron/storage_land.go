@@ -5,24 +5,33 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-func compileOptionalUntap(n Node) (optionFactory, error) {
+func compileSelfUntapRule(n Node) (optionFactory, error) {
 	if err := arity(n, 2); err != nil {
 		return nil, err
 	}
 	source := n.Args[0]
 	if source.Kind != Symbol || source.Name != "ThisPermanent" {
-		return nil, unsupported(source, "optional untap source")
+		return nil, unsupported(source, "self untap source")
 	}
 	operations, err := list(n.Args[1])
 	if err != nil {
 		return nil, err
 	}
-	if len(operations) != 1 || operations[0].Kind != Symbol || operations[0].Name != "MayChooseNotToUntapDuringUntap" {
-		return nil, unsupported(n.Args[1], "optional untap operations")
+	if len(operations) != 1 || operations[0].Kind != Symbol {
+		return nil, unsupported(n.Args[1], "self untap operations")
+	}
+	var attribute core.Attr
+	switch operations[0].Name {
+	case "MayChooseNotToUntapDuringUntap":
+		attribute = core.AttrMayNotUntap
+	case "DoesntUntapDuringControllersUntap":
+		attribute = core.AttrDoesNotUntap
+	default:
+		return nil, unsupported(operations[0], "self untap operation")
 	}
 	return func() mage.CardOption {
-		condition := mage.StateConditionFunc("optional untap", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
-		return mage.WithAbility(mage.Static(mage.While(condition, mage.GrantKeywordModification(mage.This, core.AttrMayNotUntap))))
+		condition := mage.StateConditionFunc("self untap rule", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
+		return mage.WithAbility(mage.Static(mage.While(condition, mage.GrantKeywordModification(mage.This, attribute))))
 	}, nil
 }
 

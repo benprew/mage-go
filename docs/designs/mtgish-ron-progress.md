@@ -3585,3 +3585,156 @@ Priest of Yawgmoth, Sacrifice and Metamorphosis;
 (3) shared trigger-condition lowering, including death history for Osai Vultures.
 Complete collection gameplay, startup integration, Go-card/generator deletion
 and DSL cleanup remain open. No second slice began.
+
+## Run 2026-10-04: P7-SELF-STATIC-UNTAP
+
+Status: complete self-only static untap prohibition adapter. This run stops after
+this slice. Initial user changes in `.gitignore` and the migration design are
+preserved and excluded from staging. No unrelated untracked files were present.
+
+### Fresh evidence and candidate selection
+
+Baseline focused tests, short engine tests and build passed. Strict and semantic
+loading returned exit 1 for collection rejection: 1,068 compiled / 2,445 records,
+1,377 rejected; 356 accepted names and 630 rejected names. Semantic inventory:
+72,938 occurrences, 8,528 signatures, 15,285 unknown-role occurrences.
+The vocabulary snapshot was read as syntax evidence, not proof of support.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Self static untap prohibition, selected | Basalt Monolith; Brass Man; Colossus of Sardia; Island Fish Jasconius; Leviathan; Mana Vault; Time Vault | 3 | Island Fish needs attack restrictions and state triggers; Leviathan needs plural optional sacrifice and attack costs; Mana Vault needs draw-step TriggerI; Time Vault needs turn replacement/extra turns. Shared source-bound prerequisite for these cards. Small adapter, moderate lifecycle/payment tests. |
+| Saved-sacrifice repeated mana | Priest of Yawgmoth; Sacrifice; Metamorphosis | 1 | Casting-payment scope is missing for Sacrifice; Metamorphosis also needs Plus and restricted mana. Shared paid-value lowering enables three cards after those prerequisites. Small activation adapter, moderate payment/solver tests; larger casting work. |
+| Death-history trigger condition | Osai Vultures | 1 | Existing end-step/history/counter services are ready; missing condition adapter. Enables general intervening-if history lowering. Small adapter, moderate detection/resolution/history tests. |
+
+The selected shape has three credible immediate unlocks for a small adapter
+using an exact existing engine contract. It wins over the two single-card
+immediate gains; no missing engine prerequisite requires a separate slice.
+Selection, reuse boundary and acceptance cases were stated before implementation.
+The initial commentary listed six self-rule cards; the full nested audit added
+Leviathan, which has further blockers and does not change the unlock estimate.
+
+All complete candidate records were read, including identical reprints. The
+nested operation audit also read the complete records for these twelve names:
+Arena of the Ancients, Cocoon, Glyph of Delusion, Goblin Rock Sled,
+Magnetic Mountain, Meekstone, Merseine, Paralyze, Phyrexian Gremlins,
+Tangle Kelp, Thelon's Curse, Venarian Gold. Together with the seven self-rule
+names, these are all nineteen unique names containing the operation. Aura-host,
+EachPermanentRuleEffect, conditional If, granted AddAbility, and temporary
+CreatePermanentRuleEffectUntil contexts remain unsupported. Counts of nested
+spellings are not full-card unlocks. No Go card definition supplied requirements.
+
+### Exact contract, dependencies and reuse
+
+`compileRule(Node, scope) (optionFactory, error)` delegates permanent rule tuple
+`PermanentRuleEffect/2` to
+`compileSelfUntapRule(Node) (optionFactory, error)` (renamed from
+`compileOptionalUntap`). Accepted operands are symbol `ThisPermanent` and a
+one-element list containing symbol `DoesntUntapDuringControllersUntap` or the
+retained symbol `MayChooseNotToUntapDuringUntap`. This is a top-level permanent
+rule context only. It rejects tuple spellings, bad arity/lists, mixed operations,
+unbound targets, host/player reads, costs/actions, instant/sorcery rules, and
+conditional wrappers. Diagnostics now describe self untap sources/operations
+because the compiler is no longer limited to optional untap.
+
+The immutable plan captures only `core.Attr`; each factory call creates its own
+`mage.Static(mage.While(condition,
+mage.GrantKeywordModification(mage.This, attribute)))` ability. The condition
+uses the existing pure StateConditionFunc with StateBattlefield dependency.
+RON owns spelling, shape validation and lowering. The engine owns static source
+lifetime, ability layers, current control, phase-in, untap selection, transactional
+payments, copies, incarnation identity and clones. Existing source references
+are typed `mage.This`, with no mutable choices shared by compiler factories.
+Inventory already assigns permanent_rule_operation to this list; no role adapter
+change is needed and inventory coverage totals are unchanged.
+
+Contracts read: engine doc.go, composable continuous modifications/Static/While,
+turn execution, current API and rules-contract documentation, CR 400.7,
+502.1/3/4, 604.2, 613.1f and 702.26b/d. No engine rule was added. No parallel
+rules service, Go fallback, card-name branch, global last-action slot, runtime
+declaration panic, or partial production registry was introduced. No new LKI
+query, replacement ordering or simultaneous batch operation is part of this
+shape. Existing payment and source identity services retain their contracts.
+
+### TDD and card-to-test mapping
+
+Meaningful tests were written first. The first test build found incorrect test
+getter names; these were corrected to CurrentPower/CurrentToughness before the
+red run. The red run then failed on the missing adapter for all three complete
+real records, with unsupported optional untap operations. Invalid declarations
+already remained rejected. Focused tests passed after implementation. A native
+upkeep regression was added and passed; no assertion was weakened.
+
+| Unique card or contract | Test and evidence |
+| --- | --- |
+| Basalt Monolith | TestRONStaticUntapBasaltMonolith: full LEB record/definition validation, immediate three colorless mana, ordinary untap prohibition, inactive-player exclusion, repeated untap steps, stack-based paid untap timing, insufficient payment rollback, instance identity, clone resolution, other untap effects |
+| Brass Man | TestRONStaticUntapBrassMan: full ARN record/definition validation, controller upkeep only, payment at resolution, accept/decline/unaffordable branches, unchanged static rule after paid untap, controller change, departed/returned incarnation, phased source, copied trigger with another paying controller |
+| Brass Man | TestRONStaticUntapNativeUpkeep: native untap/upkeep steps, payment offer, mana spent and untap resolution |
+| Colossus of Sardia | TestRONStaticUntapColossus: full ATQ record/definition validation, trample and 9/9, ordinary untap prohibition, own-upkeep activation timing, wrong step/turn/controller, insufficient payment and phased-source rollback, stack timing, old source on return, copies and controller change |
+| Basalt Monolith lifecycle | TestRONStaticUntapLifecycle: current controller, phase-in before untap, ability removal and cleanup restoration, return reinstalls restriction, another factory instance and clone stay independent |
+| Invalid declarations | TestRONStaticUntapInvalid: malformed arity/operand/list, tuple references/operations, unbound target/host, player operand, mixed operations, wrong cost/action/spell/conditional contexts |
+| Accepted collection | Updated TestInventoryRepositoryCollection and TestInventoryLeavesRealRONGameplayAndRegistryUnchanged: exact new counts, retained real Lightning Bolt execution and unchanged registry |
+
+Three unique collection cards gain complete-record engine execution evidence
+for the slice and their other declared abilities. This does not prove every
+possible combat/layer interaction. Compilation totals and gameplay evidence
+remain separate; collection-wide engine_validated/behavior_verified are null.
+The four other self-rule cards and twelve nested-context cards remain rejected.
+
+### Measurements, checks and remaining work
+
+Estimated and actual unlocks agree: **three unique names, nine records**
+(Basalt Monolith six, Brass Man two, Colossus of Sardia one).
+Compiled **1,068 -> 1,077/2,445**; rejected **1,377 -> 1,368**.
+Accepted names **356 -> 359**; rejected names **630 -> 627**.
+Fresh name comparison finds zero accepted-record regressions. Strict and semantic
+issues match. Occurrences/signatures/unknown roles remain 72,938/8,528/15,285.
+No source defect was corrected. All twelve source hashes match the vocabulary
+snapshot, so a source refresh is not required. Existing Gaea's Liege/Fastbond
+source concerns remain open. All gaps in this slice were compiler adapters;
+no engine contract or environment failure blocked implementation.
+
+Leading final first diagnostics: rule If (53), non-spell CastEffect (53),
+ChooseADamageSource (46), Targeted_Modal (42), self untap HostPermanent (39),
+upkeep HostController (35), other self untap operations (34),
+ControlledByAPlayer (29), TargetGraveyardCard (26),
+WhenAPermanentBecomesTapped (25), CreateFuturePreventDamage (24),
+Modal_ChooseOne (23). These are first-error counts, not full unlock estimates.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,068 compiled, 1,377 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONStaticUntap -count=1 | Expected missing-adapter failures before implementation |
+| go test ./pkg/mage/dsl/ron -run 'TestRONStaticUntap\|TestRONStorage' -count=1 | PASS after implementation |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS after final code/lint changes |
+| go test ./pkg/mage/... -short -count=1 | PASS after final code/lint changes |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; automatic formatting reviewed, no unrelated changes |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,077 compiled, 1,368 rejected; matching issues |
+| Fresh accepted-record and source-hash audits | PASS: zero accepted-record regressions; twelve unchanged source hashes |
+
+Slice files: compiler.go, storage_land.go, inventory_test.go, new
+static_untap_test.go; dsl-reference.md, engine-rules-contracts.md, this ledger.
+Required checks pass; this slice is ready for its descriptive commit. User
+changes in the design and .gitignore remain outside the commit. No production
+Go definitions, startup callers, generators or DSL exports were removed.
+The cutover and removal gates remain closed. No deletion audit or runtime
+cutover is claimed; the private helper rename has no other repository callers.
+
+Ranked next candidates to reassess from fresh full records:
+1. Shared collection static untap rules for Meekstone, Magnetic Mountain,
+   Thelon's Curse and Arena of the Ancients. Meekstone is the closest unlock;
+   others need player-event choices/payments or legendary collection tapping.
+   Compare shared filter prerequisites and engine collection layer behavior
+   against modal targeting before selecting an exact shape.
+2. Shared paid-sacrifice mana for Priest of Yawgmoth, Sacrifice and Metamorphosis,
+   including casting-payment scope and restricted mana as explicit dependencies.
+3. Shared trigger-condition lowering, including Osai Vultures' death history and
+   Mana Vault's draw-step tapped condition. Reassess event-context reuse before
+   choosing a single-card adapter.
+
+Complete collection gameplay, runtime loading, Go-card/generator removal and
+DSL cleanup remain unfinished. No second slice began.

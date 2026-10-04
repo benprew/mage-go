@@ -1281,5 +1281,20 @@ expires during the next untap step of the permanent's current controller, even
 if the permanent is untapped. Control changes do not capture the old controller.
 Repeated applications expire together. See
 [the contract and tests](designs/mtgish-ron-next-untap.md).
-Collection actions and permanent static untap prohibitions remain unsupported
-by this adapter.
+Collection actions remain unsupported by this adapter. The self static form
+is described below.
+
+## RON self untap prohibition
+
+The permanent-rule compiler accepts
+`PermanentRuleEffect(ThisPermanent, [DoesntUntapDuringControllersUntap])`.
+It creates a source-bound static ability through `Static`, `While`, and
+`GrantKeywordModification(This, AttrDoesNotUntap)`. The existing optional-untap
+form still uses `AttrMayNotUntap`. The operation list must contain exactly one
+symbol. Only the source symbol `ThisPermanent` is accepted in this context.
+
+The prohibition applies during each untap step of the current controller.
+Other untap effects remain permitted. Ability removal disables the prohibition;
+cleanup can restore it. Conditional, Aura-host, collection, and temporary rule
+forms remain rejected. See [the slice ledger](designs/mtgish-ron-progress.md)
+for the real-card tests and supported contexts.
