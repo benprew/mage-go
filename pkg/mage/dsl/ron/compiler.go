@@ -360,6 +360,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return compileTriggerRule(n, ctx)
 	case "TriggerI":
 		return compileTappedUpkeep(n, ctx)
+	case "EachPermanentRuleEffect":
+		return compileLandwalkBlockingRule(n)
 	case "PermanentRuleEffect":
 		return compileSelfUntapRule(n)
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":

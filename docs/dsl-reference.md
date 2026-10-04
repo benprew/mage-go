@@ -1298,3 +1298,19 @@ Other untap effects remain permitted. Ability removal disables the prohibition;
 cleanup can restore it. Conditional, Aura-host, collection, and temporary rule
 forms remain rejected. See [the slice ledger](designs/mtgish-ron-progress.md)
 for the real-card tests and supported contexts.
+
+## RON global landwalk blocking overrides
+
+`EachPermanentRuleEffect(And([IsCardtype(Creature),
+HasAbility(Landwalk(IsLandType(subtype)))]),
+[CanBeBlockedAsThoughItDidntHave(Landwalk(IsLandType(subtype)))])`
+uses the existing global landwalk blocking rule. The two filter terms may be
+in either order. Both subtype operands must match. Supported subtypes are
+Plains, Island, Swamp, Mountain, Forest and Desert.
+
+The creature keeps its landwalk ability. Only blocking checks ignore that
+landwalk; other evasion abilities still apply. The source must be phased in,
+on the battlefield, and have its static ability. Each factory builds a fresh
+effect. Extra filters, other ability operands, mixed operation lists, and
+self-only or temporary contexts remain unsupported. This adapter does not add
+general landwalk filter support to targets or other selectors.

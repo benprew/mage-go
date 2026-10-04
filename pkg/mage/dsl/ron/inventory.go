@@ -234,6 +234,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"cost", "actions"}[index]
 			}
+		case "EachPermanentRuleEffect":
+			if len(n.Args) == 2 {
+				return []string{"permanent_filter", "permanent_rule_operation"}[index]
+			}
 		case "PermanentRuleEffect":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "permanent_rule_operation"}[index]
@@ -465,6 +469,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "SimpleColorList" && len(n.Args) == 1 {
 			return "color"
 		}
+	case "permanent_rule_operation":
+		if n.Name == "CanBeBlockedAsThoughItDidntHave" && len(n.Args) == 1 {
+			return "keyword"
+		}
 	case "keyword":
 		if n.Name == "Landwalk" && len(n.Args) == 1 {
 			return "landwalk_filter"
@@ -501,6 +509,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "permanent_filter":
+		if (n.Name == "HasAbility" || n.Name == "DoesntHaveAbility") && len(n.Args) == 1 {
+			return "keyword"
+		}
 		if (n.Name == "IsCreatureType" || n.Name == "IsNonCreatureType") && len(n.Args) == 1 {
 			return "creature_subtype"
 		}

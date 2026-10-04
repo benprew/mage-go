@@ -3738,3 +3738,150 @@ Ranked next candidates to reassess from fresh full records:
 
 Complete collection gameplay, runtime loading, Go-card/generator removal and
 DSL cleanup remain unfinished. No second slice began.
+
+## Run 2026-10-04: P7-GLOBAL-LANDWALK-BLOCKING
+
+Status: complete global landwalk blocking override slice. This run stops here.
+Initial user changes in `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from staging. No unrelated untracked files were present.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, engine doc.go, the current migration design, vocabulary snapshot,
+ledger, selected compiler/engine code, and complete candidate RON records.
+Requirements came from RON; no Go card definition supplied requirements.
+Baseline focused RON tests, short engine tests and make build passed. Strict
+and semantic loaders returned expected exit 1: 1,077 compiled and 1,368 rejected
+of 2,445 records; 359 accepted and 627 rejected unique names. There are 986
+unique names, 72,938 expression occurrences and 8,528 signatures. Unknown-role
+occurrences were 15,285. First diagnostics were used to find candidates;
+full nested records supplied the unlock estimates.
+
+| Candidate | Distinct affected names | Estimated complete-card unlocks | Other blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Global landwalk blocking, selected | Crevasse; Deadfall; Gosta Dirk; Great Wall; Lord Magnus; Quagmire; Undertow; Ur-Drago | 8 | No other blockers in these full records. Reuses exact global engine rule and existing landwalk validation. Enables global rule operation lowering and semantic operand roles. Small adapter, moderate lifecycle/legality/native combat tests. |
+| Collection static untap prohibition | Meekstone; Magnetic Mountain; Thelon's Curse; Arena of the Ancients | 1 | Meekstone needs numeric PowerIs/GreaterThanOrEqualTo lowering as well as the collection adapter. Magnetic Mountain and Thelon's Curse need AnyPlayer upkeep, player-local choices, per-object payments and chosen collections. Arena needs IsSupertype for both static and tap collections. Enables shared untap rules for four cards; moderate adapter/filter work and lifecycle tests, larger payment follow-up. |
+| Saved-sacrifice repeated mana | Priest of Yawgmoth; Sacrifice; Metamorphosis | 1 | Priest needs bound mana amount/solver lowering. Sacrifice needs additional casting-payment scope; Metamorphosis also needs Plus and restricted mana. Shared paid-value work enables three cards after explicit prerequisites. Small activation adapter, moderate payment/solver tests; larger casting work. |
+
+All listed complete records were read, including Meekstone and Sacrifice's
+identical reprints in the six base sets. The AST semantic inventory confirms
+nine CanBeBlockedAsThoughItDidntHave occurrences across exactly eight names;
+Lord Magnus has two rules. No hidden action/trigger/cost blocker exists in the
+selected records. The selected adapter gives the largest credible immediate
+multi-card gain for this effort. It does not depend on an unimplemented engine
+contract. Selection, reuse boundary and acceptance cases were stated before
+editing. No second slice was started.
+
+### Exact supported contract and ownership
+
+Capability P7-GLOBAL-LANDWALK-BLOCKING is complete for this exact shape/context:
+
+- Top-level permanent rule tuple `EachPermanentRuleEffect/2`.
+- Filter tuple `And/1` containing a list of exactly `IsCardtype(Creature)` and
+  `HasAbility(Landwalk(IsLandType(subtype)))`, in either order.
+- Operation list containing exactly tuple `CanBeBlockedAsThoughItDidntHave/1`
+  with `Landwalk(IsLandType(subtype))`; the subtype must match the filter.
+- Plains, Island, Swamp, Mountain, Forest and Desert operands are supported.
+
+Private signatures: `compileLandwalkBlockingRule(Node) (optionFactory, error)`
+and `validateGlobalLandwalkFilter(Node, core.Attr) error`. `compileRule` delegates
+this family to the new adapter. RON owns spelling, arity/kind validation,
+filter-operation compatibility, diagnostics and inventory roles. It captures
+only an immutable core.Attr and constructs a fresh effect per factory call.
+There are no chosen bindings, targets, costs or mutable declaration instances
+in this shape. Existing `WithStaticAbility(NullifyLandwalkEffect(keyword))`
+provides the exact global rules behavior, source lifetime, clone isolation and
+ability-removal handling. Blocking checks use HasLandwalkEvasion with CanBlock;
+the landwalk keyword stays on the creature and other evasion remains active.
+
+The guard rejects narrower filters because the reused engine rule is global.
+It does not silently discard controller/color/source restrictions. Other
+EachPermanentRuleEffect operations, arbitrary landwalk filters, temporary or
+self-only contexts remain unsupported. No global last-action slot, card-name
+branch, Go fallback, runtime declaration panic or partial production registry
+was added. No engine service was changed. No new LKI, cost rollback,
+replacement-order or simultaneous-operation contract applies to this static
+shape. CR 509.1b, 702.14a-e, 604.2, 400.7 and 702.26b/d were consulted.
+
+Semantic roles now include EachPermanentRuleEffect's permanent_filter and
+permanent_rule_operation operands, the override's keyword operand, and
+HasAbility/DoesntHaveAbility keyword operands in permanent filters. Roles
+continue through Landwalk/IsLandType to land_subtype. This is syntax reporting,
+not a claim of general filter execution support.
+
+### TDD and card-to-test evidence
+
+Tests were written first. An initial test build found the incorrect test helper
+name WithSubtype; it was corrected to WithSubTypes before the red run. The red
+run then failed for all eight real records and six synthetic subtypes with
+unsupported EachPermanentRuleEffect, plus missing semantic roles. Invalid
+forms stayed rejected. The adapter and role lowering made the focused tests
+pass. Later tests added native combat and another landwalk evasion check.
+No assertion was weakened.
+
+| Cards or contract | Evidence |
+| --- | --- |
+| Crevasse, Deadfall, Gosta Dirk, Great Wall, Lord Magnus, Quagmire, Undertow, Ur-Drago | TestRONLandwalkRuleCards: each complete LEG record compiles and passes ValidateCardDefinition; all five basic landwalks checked against both defenders; only declared subtypes lose evasion; printed keywords retained; Gosta Dirk/Lord Magnus/Ur-Drago P/T and first strike; Lord Magnus's two overrides; source control, phase cycle, ability removal/restoration, departure/return and clone isolation |
+| Deadfall and existing Hidden Path grant | TestRONLandwalkRuleNativeCombat: native attacker/blocker declaration and combat damage with/without Deadfall; real RON forestwalk grant remains on attacker; a legal block survives Deadfall departure before damage |
+| Six subtype shapes, instances and legality | TestRONLandwalkRuleInstancesAndLegality: Plains/Island/Swamp/Mountain/Forest/Desert; two factory instances; one departure leaves the other active; last departure restores evasion; late-entry flying remains restrictive; another landwalk still prevents blocking |
+| Invalid declarations and contexts | TestRONLandwalkRuleInvalid: bad arity, missing/list shapes, mismatched subtype, invalid nested operand, wrong ability, empty/mixed operations, extra color/controller/source filters, disjunction, self and spell/action contexts; both instant and enchantment declaration contexts |
+| Inventory and accepted collection regression | TestRONLandwalkRuleInventory checks nested semantic roles and supported compile count; updated TestInventoryRepositoryCollection and TestInventoryLeavesRealRONGameplayAndRegistryUnchanged retain exact counts and real Lightning Bolt execution |
+
+Eight unique collection cards gain explicit complete-record behavior evidence.
+Synthetic cards are contract coverage only. Full collection gameplay totals and
+engine-validation totals remain unmeasured/null, separate from compilation.
+
+### Measurements, validation and remaining work
+
+Estimated versus actual gain: **eight unique names and eight records**, exactly
+as predicted. Compiled **1,077 -> 1,085/2,445**; rejected **1,368 -> 1,360**.
+Accepted unique names **359 -> 367**; rejected names **627 -> 619**. Fresh
+rejected-name comparison finds exactly the eight selected names newly accepted
+and zero regressions. Strict and semantic issue arrays match. Occurrences and
+signatures remain 72,938/8,528; unknown-role occurrences fall **15,285 -> 15,073**.
+No RON source changed; all twelve source SHA256 values match the vocabulary
+snapshot, so no source snapshot refresh is needed. No source defect was
+corrected. Existing Gaea's Liege/Fastbond concerns remain open. This slice's
+missing behavior was a compiler adapter, not an engine or environment failure.
+
+Leading final first diagnostics: rule If (53 records), non-spell CastEffect (53),
+ChooseADamageSource (46), Targeted_Modal (42), self untap HostPermanent (39),
+upkeep HostController (35), other self untap operations (34),
+ControlledByAPlayer (29), TargetGraveyardCard (26),
+WhenAPermanentBecomesTapped (25), CreateFuturePreventDamage (24),
+Modal_ChooseOne (23). These remain first-error counts, not unlock estimates.
+
+| Command | Result |
+| --- | --- |
+| Baseline focused RON tests, short engine tests, make build | PASS |
+| Baseline strict and semantic loader | Expected exit 1: 1,077 compiled, 1,368 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONLandwalkRule -count=1 | Expected missing-adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS including native combat and final legality cases |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; automatic formatting reviewed |
+| git diff --check | PASS |
+| Final strict and semantic loader | Expected exit 1: 1,085 compiled, 1,360 rejected; matching issues |
+| Accepted-record and source-hash audits | PASS: zero regressions, twelve unchanged source hashes |
+
+Changed files: compiler.go, inventory.go, inventory_test.go, new
+landwalk_rule.go and landwalk_rule_test.go; dsl-reference.md,
+engine-rules-contracts.md and this ledger. User changes remain outside the
+commit. No Go definitions, generators, startup callers or DSL exports were
+removed: complete loading, gameplay/test migration and startup gates are not
+met. No deletion caller audit or native registry startup cutover is claimed.
+
+Ranked next candidates to reassess:
+1. Modal_ChooseOne with mode-local typed targets: Blue Elemental Blast and Red
+   Elemental Blast have supported counter/destroy actions; Healing Salve also
+   needs future prevention. Compare full records and engine modal services.
+2. Collection static untap/filter prerequisites for Meekstone and Arena of the
+   Ancients; compare two-card gain after numeric and supertype filter work.
+   Magnetic Mountain and Thelon's Curse still need player choice/payment scopes.
+3. Bound sacrifice mana for Priest of Yawgmoth, Sacrifice and Metamorphosis,
+   with casting-payment and restricted-mana dependencies kept explicit.
+
+Complete collection gameplay, runtime loading, Go-card/generator removal and
+DSL cleanup remain unfinished. This run stops after this slice.

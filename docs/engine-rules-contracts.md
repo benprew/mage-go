@@ -1084,3 +1084,22 @@ restoration of abilities, returned objects, factory isolation and game clones.
 `TestRONStaticUntapInvalid` keeps unsupported roles and scopes rejected.
 No engine execution rule, replacement ordering, or simultaneous operation was
 changed. Aura-host, collection, conditional and temporary forms remain open.
+
+## RON global landwalk blocking overrides
+
+The RON global creature/landwalk shape lowers to `NullifyLandwalkEffect` through
+`WithStaticAbility`. `HasLandwalkEvasion` ignores only that subtype's evasion;
+it does not remove the keyword. `CanBlock` still checks other restrictions.
+The native declare-blockers step uses both queries (CR 509.1b, 702.14c).
+A legal block remains in place when the rule source leaves before damage.
+
+`TestRONLandwalkRuleCards` covers the eight complete Legends records, including
+Lord Magnus's two overrides and the three creatures' first strike and P/T.
+It checks both defenders, source control, departure/return, ability removal,
+phasing and clone isolation (CR 400.7, 604.2, 702.26b/d).
+`TestRONLandwalkRuleInstancesAndLegality` covers all six supported subtypes,
+independent factory instances, late entry, flying and another landwalk ability.
+`TestRONLandwalkRuleNativeCombat` uses real Hidden Path and Deadfall records to
+prove native block declaration and damage, including source departure after
+blocking. These tests establish adapter reuse of existing engine behavior;
+no new target, payment, replacement or event contract is added.
