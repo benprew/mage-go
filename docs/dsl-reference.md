@@ -1187,3 +1187,19 @@ spell additional costs. A declaration cannot combine both characteristic
 references or use more than one sacrifice cost, including source sacrifice.
 Each factory builds the cost and its consumers with the same private engine
 `NumberBinding`; copies keep the paid number without paying again.
+
+### RON source counter payment results
+
+An activation can pay one
+`RemoveCounters([AnyNumberOfCountersOfTypeFromPermanent(counter, ThisPermanent)])`
+cost. Symbol `TheNumberOfCountersRemovedThisWay` reads its saved paid count in
+that activation's life, draw, basic token-count or repeated-mana actions.
+`AddManaRepeated(production, TheNumberOfCountersRemovedThisWay)` adds the count
+in each declared production; `AnyManaColor` chooses one color for the amount.
+Zero is a valid payment. Each factory builds a private typed number binding.
+Unbound, tuple, cross-rule, non-source and ambiguous counter-payment forms fail
+compilation. Optional resolution payments remain unsupported. The shared engine
+transaction locks the choice and preserves rollback and source identity.
+Mana production queries do not choose counter payments; choice-cost abilities
+remain outside automatic mana planning. See the
+[counter payment report](designs/mtgish-ron-counter-payment.md) for shapes and tests.

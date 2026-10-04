@@ -945,3 +945,19 @@ Evidence: `TestRONSacrificeValueRealCards`,
 and `TestRONSacrificeValueInvalid`. These tests use complete RON records for
 Diamond Valley, Life Chisel and Homarid Spawning Bed. No engine service, new
 replacement operation, or simultaneous-operation contract is introduced.
+
+## RON source counter payment adapters
+
+RON activation counter choices use `RemoveAnyCountersCost` with a fresh
+`NumberBinding`. The shared payment transaction locks one choice from zero to
+current source counters and captures the amount only after successful payment
+(CR 602.2/2b). RON result reads use `FromNumber`, so counter changes, source
+return/control/phasing, copied stack abilities and clones cannot replace the
+saved count. Ambiguous or unbound result declarations fail compilation.
+`AddManaAmount` and `AddManaOfAnyOneColor` retain engine mana classification:
+untargeted activated mana resolves immediately, including a zero count
+(CR 605.1a, 605.2, 605.3b); targeted production uses the stack (605.5a).
+Automatic mana queries exclude these choice costs and never make the choice.
+This establishes compiler support for existing engine contracts, with no engine
+rule change. Evidence: `TestRONCounterPayment*`, mapped in the
+[counter payment report](designs/mtgish-ron-counter-payment.md).

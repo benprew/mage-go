@@ -15,6 +15,14 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "TheNumberOfCountersRemovedThisWay" {
+		if n.Kind != Symbol || ctx.counterPayment == nil {
+			return nil, problem(n, "unbound or incompatible counter payment value")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.counters[ctx.counterPayment])
+		}, nil
+	}
 	if n.Name == "ToughnessOfTheSacrificedCreature" || n.Name == "ManaValueOfTheSacrificedPermanent" {
 		if n.Kind != Symbol || ctx.sacrificeValue == nil || ctx.sacrificeValue.name != n.Name {
 			return nil, problem(n, "unbound or incompatible sacrifice payment value")

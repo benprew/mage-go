@@ -20,6 +20,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	counters   map[*counterPaymentPlan]*mage.NumberBinding
 	sacrifices map[*sacrificeValuePlan]sacrificeValueBindings
 	events     map[*castEventPlan]castEventBindings
 	permanents map[*permanentTargetPlan]*mage.PermanentTargetBinding

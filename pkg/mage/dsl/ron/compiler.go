@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	counterPayment  *counterPaymentPlan
 	sacrificeValue  *sacrificeValuePlan
 	target          string
 	x               bool
@@ -46,8 +47,14 @@ func (p actionPlan) buildWithEvents(events map[*castEventPlan]castEventBindings)
 }
 
 func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBindings, sacrifices map[*sacrificeValuePlan]sacrificeValueBindings) Actions {
+	return p.buildWithBindings(instanceBindings{sacrifices: sacrifices, events: events})
+}
+
+func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
-	bindings := instanceBindings{sacrifices: sacrifices, events: events, players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding), spells: make(map[*spellTargetPlan]*mage.SpellTargetBinding)}
+	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
+	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
+	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget()
@@ -881,6 +888,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		if args == 2 {
 			value := n.Args[1]
+			if value.Name == "TheNumberOfCountersRemovedThisWay" {
+				return compilePaidCounterMana(n, ctx)
+			}
 			if value.Name != "Integer" {
 				return nil, unsupported(value, "mana amount")
 			}

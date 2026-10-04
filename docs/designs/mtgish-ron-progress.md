@@ -2860,3 +2860,117 @@ prerequisites for Breeding Pit, Rukh Egg and Hazezon Tamar. The first candidate 
 a shared prerequisite despite its one direct unlock. Complete loading/gameplay,
 runtime/native startup, Go-card/generator deletion and DSL cleanup remain open.
 No second slice began.
+
+## Run 2026-10-04: P4-COUNTER-PAYMENT
+
+Status: completed one source-counter-payment and repeated-mana adapter slice.
+User changes to `.gitignore` and `mtgish-ron-execution.md` are preserved and
+excluded from the commit. No unrelated untracked files were present.
+
+The [counter payment report](mtgish-ron-counter-payment.md) contains the candidate
+comparison, all affected distinct names, complete-record/nested-form blockers,
+exact signatures and contexts, engine reuse and card-to-test mappings. Fresh
+comparison: counter payments and saved-count mana (eleven affected names, five
+estimated unlocks), saved-sacrifice mana (Priest of Yawgmoth, Sacrifice and the
+related Metamorphosis modifier form; one unlock), and step/delayed triggers
+(Breeding Pit, Rukh Egg, Hazezon Tamar; one end-step unlock or two with delay).
+The selected five-card gain has moderate adapter/test effort and reuses existing
+engine contracts. Selection, reuse boundary and acceptance cases preceded edits.
+The prior ledger suggestion was reassessed; no missing engine prerequisite was
+found. No source-data or environment defect was corrected.
+
+Exact supported shape: permanent-source `Activated/2` or
+`ActivatedWithModifiers/3`, one
+`RemoveCounters([AnyNumberOfCountersOfTypeFromPermanent(counter, ThisPermanent)])`
+cost, alone or in existing `And([costs...])`. The saved result is symbol
+`TheNumberOfCountersRemovedThisWay`. Repeated mana accepts concrete colors,
+`AnyManaColor` and existing `And` production lists. Existing instance-value
+consumers also accept the result for life, draw and basic token counts. Unused
+results are valid. Multiple/mixed removals, wrong subject/type, tuple results,
+unbound and cross-activation reads are compilation errors. Optional resolution
+counter payments, spell costs, X costs and general dynamic mana remain gaps.
+
+Private interfaces: `compileCounterPaymentPlan(Node) (*counterPaymentPlan,error)`;
+`compileActivationCosts(Node,*sacrificeValuePlan,*counterPaymentPlan)
+([]boundCostFactory,bool,error)`; `compilePaidCounterMana(Node,scope)
+([]effectFactory,error)`; `actionPlan.buildWithBindings(instanceBindings) Actions`.
+`compileInstanceValue` retains its signature and validates counter-result scope.
+Plans have no game state. Each factory builds a private typed number binding shared
+by its payment and effects. Existing build callers retain their behavior.
+
+Engine reuse: `RemoveAnyCountersCost`, `BindNumber`, `FromNumber`, total-cost
+transactions, `AddManaAmount`, `AddManaOfAnyOneColor`, mana classification,
+target/incarnation validation, copy/clone state and shared token entry. Zero is a
+valid payment. Untargeted mana resolves immediately; targeted production uses
+the stack. Solver queries do not choose/pay and exclude choice-cost abilities.
+No engine API or rule changed. CR 602.2/2b, 605.1a/2/3b/5a, 400.7 apply. Existing
+replacement and simultaneous-entry services remain in use. RON owns syntax and
+scope; no fallback, card-name branch, global last-action slot, game-time declaration
+panic or partial production registry was added.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Black, Blue, Green, Red and White Mana Battery | `TestRONCounterPaymentBatteries`: each complete RON record, definition validation, both abilities, charging payment/timing, zero/partial/all counter removal, correct color/controller, immediate mana and clone/solver purity |
+| Rollback and activation legality | `TestRONCounterPaymentInvalidChoicesAndRollback`: negative/excess choice, unpaid combined mana, unauthorized/phased/tapped source |
+| Saved amounts, LKI/identity, copies and clones | `TestRONCounterPaymentSavedInstances`: distinct pending payments, source leave/return/control/phasing, copied controller, clone isolation |
+| Target legality and mana classification | `TestRONCounterPaymentTargets`: announcement before payment, stacked target ability, return/phasing invalidation |
+| Fresh factories and result consumers | `TestRONCounterPaymentFactoriesAndConsumers`: independent factory instances, any-color/multiple-color mana, life/draw/token counts |
+| Zero/unconsumed result and other counter type | `TestRONCounterPaymentZeroAndUnused` |
+| Invalid declarations and semantic roles | `TestRONCounterPaymentInvalidDeclarations`, `TestRONCounterPaymentInventory` |
+
+TDD: fixture API errors were corrected, then new gameplay tests failed on the
+expected unsupported counter instruction. The inventory test failed on missing
+operand roles before the role adapter was added. A phased-source fixture now
+phases in before normal battlefield lookup. The old fixed-cost rejection fixture
+now rejects a host subject; repository inventory fixtures use fresh counts.
+No gameplay expectation was weakened. Automatic lint changes were reviewed:
+import grouping and a switch rewrite only. Final checks followed lint and the
+last zero/unconsumed-result assertions.
+
+Estimated and actual gain agree: **five unique names and five records**.
+Compiled **1,035 -> 1,040/2,445**; rejected **1,410 -> 1,405**. Accepted names
+**333 -> 338**, rejected **653 -> 648**. Zero previously accepted-record
+regressions; strict/inspection issue arrays match. AST nodes/signatures remain
+**72,938/8,528**, unknown-role occurrences **16,921 -> 16,599**. Global
+engine_validated/behavior_verified remain null. Five complete cards gain explicit
+RON gameplay/definition evidence; compilation is separate from collection-wide
+coverage. All twelve source hashes match the vocabulary snapshot, so no source
+refresh is needed. Gaea's Liege/Fastbond source concerns remain open.
+
+Largest remaining constructor diagnostics include PermanentRuleEffect (110),
+AsPermanentEnters (90), If (65 across diagnostic contexts), CastEffect (54 across
+contexts), ChooseADamageSource (46), Targeted_Modal (42), HostController (35),
+ControlledByAPlayer (29), TriggerI (28), TargetGraveyardCard (26). The report
+preserves the storage-land and Tetravus blockers rather than claiming full support
+for their payment contexts.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,035 compiled, 1,410 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONCounterPayment -count=1 | Expected adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS, repeated after final assertions/lint |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated after final assertions/lint |
+| make test | PASS, repeated after final assertions/lint |
+| make build | PASS, repeated on final code |
+| go vet ./... | PASS, repeated on final code |
+| make lint | PASS, zero issues; automatic changes reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and semantic loader | Expected exit 1: 1,040 compiled, 1,405 rejected; identical diagnostics |
+| Accepted-record and source-hash audits | Zero regressions; all twelve hashes unchanged |
+
+Changed files: new counter_payment.go/counter_payment_test.go; activation_timing.go,
+compiler.go, player_scope.go, sacrifice_value.go; inventory.go/inventory_test.go and
+counter_cost_test.go; dsl-reference.md, engine-rules-contracts.md, this ledger and
+the new report. Production startup, Go card definitions/generators and DSL exports
+retain their callers. Removal gates remain closed; no runtime cutover or DSL
+removal is claimed.
+
+Ranked next candidates to reassess with fresh evidence: (1) entry and optional
+untap/intervening-if prerequisites for Bottomless Vault, Dwarven Hold, Hollow Trees,
+Icatian Store and Sand Silos, whose counter/mana activation is now supported;
+(2) step/delayed-trigger services for Breeding Pit, Rukh Egg and Hazezon Tamar;
+(3) saved-sacrifice repeated mana as a shared consumer prerequisite for Priest
+of Yawgmoth, Sacrifice and Metamorphosis. Complete collection gameplay/loading,
+runtime/native startup, Go-card/generator deletion and DSL cleanup remain open.
+No second slice began.

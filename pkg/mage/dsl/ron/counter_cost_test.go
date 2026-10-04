@@ -319,7 +319,7 @@ func TestRONCounterCostInvalid(t *testing.T) {
 		`RemoveCounters([NumberCountersOfTypeFromPermanent(Integer(-1), ChargeCounter, ThisPermanent)])`,
 		`RemoveCounters([NumberCountersOfTypeFromPermanent(Integer("3"), ChargeCounter, ThisPermanent)])`,
 		`RemoveCounters([NumberCountersOfTypeFromPermanent(ValueX, ChargeCounter, ThisPermanent)])`,
-		`RemoveCounters([AnyNumberOfCountersOfTypeFromPermanent(ChargeCounter, ThisPermanent)])`,
+		`RemoveCounters([AnyNumberOfCountersOfTypeFromPermanent(ChargeCounter, HostPermanent)])`,
 	} {
 		t.Run(cost, func(t *testing.T) {
 			nodes, err := Parse(strings.NewReader(fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [Activated(%s, ActionList([GainLife(Integer(1))]))])`, cost)), "invalid.ron")

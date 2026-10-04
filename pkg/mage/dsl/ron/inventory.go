@@ -326,6 +326,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "AddMana":
+			if len(n.Args) == 1 {
+				return "mana_production"
+			}
+		case "AddManaRepeated":
+			if len(n.Args) == 2 {
+				return []string{"mana_production", "value"}[index]
+			}
 		case "CreateTokens":
 			if len(n.Args) == 2 {
 				return []string{"token_instruction", "token_creation_modifier"}[index]
@@ -388,11 +396,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
 		}
 	case "counter_removal_instruction":
-		if n.Name == "ACounterOfTypeFromPermanent" && len(n.Args) == 2 {
+		if (n.Name == "ACounterOfTypeFromPermanent" || n.Name == "AnyNumberOfCountersOfTypeFromPermanent") && len(n.Args) == 2 {
 			return []string{"permanent_counter_type", "permanent_reference"}[index]
 		}
 		if n.Name == "NumberCountersOfTypeFromPermanent" && len(n.Args) == 3 {
 			return []string{"value", "permanent_counter_type", "permanent_reference"}[index]
+		}
+	case "mana_production":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "mana_production"
 		}
 	case "permanent_counter_type":
 		if n.Name == "PTCounter" && len(n.Args) == 2 {
