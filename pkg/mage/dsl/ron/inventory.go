@@ -270,6 +270,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "CreatePermanentLayerEffectUntil":
+			if len(n.Args) == 3 {
+				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
+			}
 		case "TapPermanent", "UntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent":
 			if len(n.Args) == 1 {
 				return "permanent_reference"
@@ -293,6 +297,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "DrawNumberCards", "GainLife", "LoseLife":
 			if len(n.Args) == 1 {
 				return "value"
+			}
+		}
+	case "temporary_modification":
+		switch n.Name {
+		case "AdjustPT":
+			if len(n.Args) == 2 {
+				return "value"
+			}
+		case "AddAbility":
+			if len(n.Args) == 1 {
+				return "keyword"
 			}
 		}
 	case "player_action":

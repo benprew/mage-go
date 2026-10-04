@@ -852,22 +852,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
 			return nil, unsupported(n.Args[2], "duration")
 		}
-		selector := mage.ToTarget()
-		switch {
-		case n.Args[0].Kind == Symbol && n.Args[0].Name == "ThisPermanent" && ctx.permanent:
-			selector = mage.ToSource()
-		case n.Args[0].Kind == Symbol && n.Args[0].Name == "HostPermanent" && ctx.aura:
-			selector = mage.ToAttached()
-		default:
-			if err := requireRef(n.Args[0], "Ref_TargetPermanent", ctx); err != nil {
-				return nil, err
-			}
+		subject, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
 		}
 		parts, err := list(n.Args[1])
 		if err != nil {
 			return nil, err
 		}
-		var effects []effectFactory
+		var modifications []func(instanceBindings) mage.ContinuousModification
 		for _, part := range parts {
 			if part.Name == "AddAbility" {
 				if err := arity(part, 1); err != nil {
@@ -882,8 +875,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 					if ability.Kind != Symbol || !ok {
 						return nil, unsupported(ability, "temporary ability grant")
 					}
-					effects = append(effects, func(bindings instanceBindings) mage.Effect {
-						return mage.GrantKeyword(keyword).Targeting(selector).Until(core.EndOfTurn)
+					modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+						return mage.GrantKeywordModification(subject.build(bindings), keyword)
 					})
 				}
 				continue
@@ -895,11 +888,20 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			if err != nil {
 				return nil, err
 			}
-			effects = append(effects, func(bindings instanceBindings) mage.Effect {
-				return mage.Boost(Integer(power), Integer(toughness)).Targeting(selector).Until(core.EndOfTurn)
+			modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
+				return mage.ModifyPT(subject.build(bindings), mage.Fixed(power), mage.Fixed(toughness))
 			})
 		}
-		return effects, nil
+		if len(modifications) == 0 {
+			return nil, problem(n.Args[1], "supply at least one temporary modification")
+		}
+		return one(func(bindings instanceBindings) mage.Effect {
+			values := make([]mage.ContinuousModification, len(modifications))
+			for i, build := range modifications {
+				values[i] = build(bindings)
+			}
+			return mage.Until(core.EndOfTurn, values...)
+		})
 	}
 	return nil, unsupported(n, "action")
 }

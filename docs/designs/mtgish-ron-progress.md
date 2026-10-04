@@ -554,3 +554,101 @@ Next ranked slice: typed temporary-layer reference lowering; then permanent
 controller filters/references; then optional payment result scopes. No next slice
 was started. Full RON gameplay, runtime loading, Go-card deletion, obsolete
 Go-set generation retirement, and unused-DSL removal gates remain unmet.
+
+## Run 2026-10-03: P0-SCOPE-PERMANENT-LAYERS
+
+Status: complete typed fixed temporary-layer slice. No second slice was started.
+Initial user changes to `.gitignore` and `mtgish-ron-execution.md` remain outside
+this slice. No unrelated untracked files existed at the start.
+
+The fresh three-candidate comparison, complete affected-name lists, remaining
+card diagnostics, exact signatures/contexts, dependencies, engine reuse,
+card-to-test mapping and ranked next candidates are in
+[mtgish-ron-temporary-layers.md](mtgish-ron-temporary-layers.md).
+
+Selection: shared typed temporary-layer subjects for 35 accepted unique cards,
+with zero immediate full-card unlocks. Static controller filters have 15 affected
+names and four estimated unlocks; optional counter payments have four affected
+names and two estimated core unlocks. They need broader filter/payer/result
+contexts. This smaller prerequisite enables later dynamic boosts (Howl from
+Beyond, Great Defender), keyword removal (Radjan Spirit), switching
+(Transmutation) and subject identity for all 35 accepted cards. The phase order
+and previous ledger suggestion were not used as fixed priorities.
+
+Implemented `CreatePermanentLayerEffectUntil/3` with symbol source/host/local
+single target, fixed integer `AdjustPT/2`, basic keyword `AddAbility/1`, and
+symbol `UntilEndOfTurn` in existing spell, activation and supported trigger
+contexts. RON uses immutable permanentReferencePlan and per-instance target
+bindings. One `mage.Until` installs each layer action's modifications together,
+using `ModifyPT`, `Fixed` and `GrantKeywordModification`. No engine contract or
+service was missing. Empty modifications and invalid references are rejected
+at compilation. Engine definition validation now sees the typed subject reads.
+
+Reuse includes retained original-source attachment, captured incarnations,
+stack target/copy frames, clone isolation, shared layers, end-of-turn expiry
+and transactional activation costs. CR 113.7a, 400.7, 608.2b/c/h, 611.2a/c,
+613.1f/4c and 702.26b/d/e/f supply the contract. Replacement ordering,
+characteristic LKI readers, plural operation batches and payment-result scopes
+introduce no new behavior in this slice. No engine implementation, RON asset,
+startup wiring, Go definition, generator or DSL export was changed.
+
+TDD: executable tests first failed on absent typed layer subject metadata.
+Later inventory-role tests failed before the inventory adapter was added.
+Test setup corrections used ARN for Flying Carpet, read live objects after
+transactional payment replaced state, and checked pending-trigger effect timing
+instead of assuming immediate stack placement. Final tests cover declaration
+validation, fresh factories, one installation for mixed modifications,
+announcement/resolution timing, retargeted copies, clones, returned sources and
+targets before/after installation, source departure, host LKI/reattachment,
+phasing before/after resolution, rollback, sacrifice costs and expiry.
+
+Compilation remains **859/2,445 records**, with **1,586 rejected records**,
+**251 compiled unique names** and **735 rejected unique names**. Estimated
+unlock gain zero equals actual gain zero. No accepted record regressed and no
+first diagnostic changed. Strict loading publishes no partial registry.
+Nested inventory now reports temporary modifications, typed subjects, values,
+keywords and durations separately; support remains unverified.
+
+Six real cards have additional direct temporary-layer gameplay evidence:
+Giant Growth, Jump, Elven Lyre, Flying Carpet, Shivan Dragon and Blessing.
+Llanowar Elves is their real target fixture. This is behavior coverage for
+accepted cards, separate from compilation progress. No full-collection behavior
+verification total or all-rules certification for the 35 names is claimed.
+
+Leading remaining first gaps: PermanentRuleEffect 110 records, AsPermanentEnters
+90, ActivatedWithModifiers 61, instant/sorcery CastEffect 53, rule If 47,
+ChooseADamageSource 46, ControlledByAPlayer 43, MayCost 43,
+WhenAPlayerCastsASpell 43. These are compiler/context gaps, not build failures.
+No source defect was corrected. All 12 source hashes match the vocabulary
+snapshot; no snapshot refresh is needed. Gaea's Liege/Fastbond concerns remain
+open. No environment failure or pre-existing check failure blocked this run.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline `go run ./cmd/loadcards -json` | Expected exit 1; 859 compiled, 1,586 rejected |
+| Baseline `go run ./cmd/loadcards -inventory -json` | Expected exit 1; complete nested AST inventory |
+| New focused temporary-layer tests with `-count=1` | Expected failures before adapters; PASS afterward |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS; repeated after final changes and lint |
+| `make test` | PASS; repeated after final changes and lint |
+| `make build` | PASS; repeated after lint |
+| `go vet ./...` | PASS; repeated after lint |
+| `make lint` | First run found a redundant test assignment; fixed it. Final PASS, zero issues |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` | Expected exit 1; 859 compiled, 1,586 rejected |
+| Final `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same counts; updated nested roles |
+| Vocabulary hash comparison | All 12 source hashes match |
+
+Automatic lint changes only reordered the new test imports. No unrelated file
+changed during lint. Final required checks passed after the assignment fix.
+This slice changes `compiler.go`, `inventory.go`, new `temporary_layer_test.go`,
+`docs/dsl-reference.md`, the new temporary-layer contract document and this ledger.
+All dependencies are tracked; these six files form one standalone commit.
+
+Next ranked slice: source-aware static controller filters (four concrete card
+unlocks), then typed variable/numeric temporary modifications, then optional
+fixed mana-payment result scopes. No further slice was started. Complete RON
+loading/gameplay, embedded startup, native/WASM startup evidence, Go-card
+deletion, obsolete Go-set generator retirement and unused-DSL removal gates
+remain unmet. No DSL removal or whole-repository caller audit is claimed.

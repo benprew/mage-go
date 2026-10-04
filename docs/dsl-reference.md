@@ -60,6 +60,16 @@ The public adapters include `ActionList`, `Targeted`, `SpellActions`, `Activated
 `DestroyEachPermanentNoRegen`. Their typed Go parameters use existing engine
 values. The compiler validates the RON references before it calls these adapters.
 
+Temporary RON layers use typed permanent references. In existing spell,
+activation and trigger action lists, `CreatePermanentLayerEffectUntil/3`
+accepts `ThisPermanent`, Aura `HostPermanent`, or the local
+`Ref_TargetPermanent`, fixed `AdjustPT/2` and basic keyword `AddAbility/1`
+modifications, and `UntilEndOfTurn`. One engine `Until` installs each action's
+modifications together. Subjects are captured at resolution and retain their
+incarnations until expiry. The compiler rejects empty modifications and invalid
+or out-of-scope reads. Exact contracts and RON tests are in
+[the temporary-layer slice](designs/mtgish-ron-temporary-layers.md).
+
 Run the full collection check with:
 
 ```sh
