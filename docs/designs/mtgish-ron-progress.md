@@ -848,3 +848,97 @@ Master also requires granted activation support). Reassess fresh evidence first.
 Full RON gameplay/loading, embedded startup, native startup evidence, Go-card
 and obsolete-generator deletion, and unused-DSL removal gates remain unmet.
 No deletion or whole-repository caller audit is claimed. This run stops here.
+
+## Run 2026-10-03: P1-TEMPORARY-VALUES
+
+Status: complete captured temporary P/T slice. No second slice was started.
+Initial user changes to `.gitignore` and `mtgish-ron-execution.md` remain preserved
+and excluded from the commit. No unrelated untracked files existed initially.
+
+The fresh three-candidate comparison, affected-name lists, exact signatures and
+contexts, dependencies, engine reuse, card-to-test mappings and ranked next
+candidates are in [mtgish-ron-temporary-values.md](mtgish-ron-temporary-values.md).
+Selection: temporary variable P/T affects six unique names and unlocks two;
+optional fixed counter payments affect four and unlock two with broader
+payer/decision/result prerequisites; static landwalk/subtype subjects affect
+three and unlock two with two adapter families. Temporary values offer the
+smallest implementation with concrete downstream benefit for Kry Shield/Subdue
+and a numeric lowering boundary for Blood Lust/Berserk. The previous ledger
+suggestion was reassessed rather than used as fixed priority.
+
+Implemented `AdjustPTX/3` inside existing temporary layers, with PlusX, MinusX,
+Zero and Integer/1 coordinates. Numeric values support declared ValueX,
+Integer/1 and ManaValueOfPermanent/1 of the modified subject. ActionPermanent
+is local to the numeric modification and names that subject. Unbound,
+malformed, wrong-role and other-object references fail at compilation.
+Static AdjustPTXY, power/toughness readers, arithmetic and broader value
+contexts remain unsupported. Each factory builds values through its own typed
+permanent bindings; no shared mutable binding or last-action slot was added.
+
+Engine reuse: ModifyPT, Until, Fixed, ValueAtResolution, XValue, ManaValueOf,
+MultiplyValues, transactional casting, target legality, copy/clone frames,
+captured incarnations, layers and cleanup. No engine prerequisite was missing.
+Rules evidence: CR 107.3a/g, 202.3/3e, 400.7, 608.2b/c/h, 611.2a/c/d, 613.4c
+and 702.26b/d/f. Values are read when the layer starts, then captured. Other-object
+reads need a separate LKI contract and stay rejected. No replacement, batch zone
+operation, new engine API, source-data correction or RON asset change occurred.
+
+TDD first failed with unsupported AdjustPTX for both real cards and the synthetic
+mixed modification; nested inventory-role tests then failed before the adapter.
+Fixture corrections fixed an incorrect copy-method name, inactive source-less
+static fixture bonus and a missing synthetic Aura enchant declaration.
+Final tests cover invalid declarations, fresh factory/definition bindings,
+announced X and zero X, payment rollback, announcement/resolution timing,
+retargeted copies, clone isolation, returned and phased targets, installed
+phasing, expiry, source departure, local subject identity, signed coordinates,
+mixed modifications and changed mana values before/after resolution. Synthetic
+source, host and trigger contexts also execute through the engine. A returned
+target after installation gets no old bonus. No tests were weakened.
+
+Strict loading: **884/2,445 compiled records**, **1,561 rejected records**,
+**261 compiled unique names**, **725 rejected unique names**. Gain: **seven
+records and two unique cards**, exactly the estimate. Howl from Beyond's six
+records and Great Defender's one record gain direct RON gameplay coverage for
+all their rules. No accepted record regressed. Remaining records still cause
+exit 1, and strict loading publishes no partial registry. Compilation and
+gameplay coverage remain separate; no global behavior total is claimed.
+
+Remaining first gaps include PermanentRuleEffect (110 records), AsPermanentEnters
+(90), If (63 across contexts), ActivatedWithModifiers (61), CastEffect (54 across
+contexts), ChooseADamageSource (46), MayCost and WhenAPlayerCastsASpell (43 each),
+Targeted_Modal (42), HostController (35), ControlledByAPlayer (29 across contexts).
+These are compiler/context gaps. Gaea's Liege/Fastbond observations remain open.
+All 12 source hashes match the vocabulary snapshot; no refresh is needed.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline strict loader and nested inventory | Expected exit 1; 877 compiled, 1,568 rejected |
+| New focused `TestRONTemporaryValue` tests with `-count=1` | Expected unsupported-shape/inventory failures before adapters; final PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS |
+| Final strict loader and nested inventory | Expected exit 1; 884 compiled, 1,561 rejected |
+| Vocabulary hash comparison | All 12 hashes match |
+
+Two inventory assertions initially failed on old exact compilation counts;
+only those counts were updated, retaining gameplay/registry assertions.
+Automatic lint changes only reordered new test imports. Final required checks
+were run after the last test additions and lint. No environment or pre-existing
+failure blocks the slice.
+
+Files: compiler.go, inventory.go, inventory_test.go, new temporary_value.go and
+new temporary_value_test.go under pkg/mage/dsl/ron; docs/dsl-reference.md, new
+temporary-values report and this ledger. These eight files form one standalone
+slice commit. User-modified files remain excluded.
+
+Next ranked slice: optional fixed counter payments (Force Spike/Vodalian Mage),
+then static landwalk/subtype subjects (Goblin King/Lord of Atlantis), then
+power/toughness and branch prerequisites for Blood Lust/Berserk. Reassess fresh
+evidence before selection. Full RON gameplay/loading, startup cutover, native
+startup evidence, Go-card/generator deletion and unused-DSL removal gates remain
+unmet. No deletion or whole-repository caller audit is claimed. This run stops.

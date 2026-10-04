@@ -881,6 +881,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				}
 				continue
 			}
+			if part.Name == "AdjustPTX" {
+				build, err := compileTemporaryPTX(part, ctx, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, build)
+				continue
+			}
 			if part.Name != "AdjustPT" {
 				return nil, unsupported(part, "temporary layer action")
 			}

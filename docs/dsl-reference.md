@@ -922,3 +922,14 @@ and nested nonempty `And` filters. Each source excludes only itself; other
 instances can affect it. Source-dependent predicates below `Or`, other reference
 operands and target/cost/action contexts remain rejected.
 See [the contract and card tests](designs/mtgish-ron-static-other.md).
+
+### RON captured temporary P/T values
+
+`CreatePermanentLayerEffectUntil` supports `AdjustPTX(power, toughness, value)`
+with `PlusX`, `MinusX`, `Zero` or `Integer(n)` coordinates. Values can be bound
+`ValueX`, `Integer(n)`, or `ManaValueOfPermanent` of the modified permanent.
+In that reader, `ActionPermanent` names the modification's subject. The binding
+is local to the modification. Numeric values are captured at resolution and
+remain fixed until end of turn. Other-object characteristic reads, power and
+toughness readers, arithmetic and static AdjustPTXY remain unsupported.
+See [the exact contexts and tests](designs/mtgish-ron-temporary-values.md).

@@ -301,6 +301,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "temporary_modification":
 		switch n.Name {
+		case "AdjustPTX":
+			if len(n.Args) == 3 {
+				return []string{"pt_coordinate", "pt_coordinate", "value"}[index]
+			}
 		case "AdjustPT":
 			if len(n.Args) == 2 {
 				return "value"
@@ -309,6 +313,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "keyword"
 			}
+		}
+	case "pt_coordinate":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "value"
+		}
+	case "value":
+		if n.Name == "ManaValueOfPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
 		}
 	case "player_action":
 		if (n.Name == "DrawNumberCards" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
