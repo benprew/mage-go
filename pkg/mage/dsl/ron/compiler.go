@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	sacrificeValue  *sacrificeValuePlan
 	target          string
 	x               bool
 	permanent       bool
@@ -41,8 +42,12 @@ func (p actionPlan) build() Actions {
 }
 
 func (p actionPlan) buildWithEvents(events map[*castEventPlan]castEventBindings) Actions {
+	return p.buildWithPayments(events, nil)
+}
+
+func (p actionPlan) buildWithPayments(events map[*castEventPlan]castEventBindings, sacrifices map[*sacrificeValuePlan]sacrificeValueBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
-	bindings := instanceBindings{events: events, players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding), spells: make(map[*spellTargetPlan]*mage.SpellTargetBinding)}
+	bindings := instanceBindings{sacrifices: sacrifices, events: events, players: make(map[*playerTargetPlan]*mage.PlayerTargetBinding), permanents: make(map[*permanentTargetPlan]*mage.PermanentTargetBinding), spells: make(map[*spellTargetPlan]*mage.SpellTargetBinding)}
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget()
@@ -1010,14 +1015,14 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	if err := arity(n, 1); err != nil {
 		return nil, err
 	}
-	amount, err := compileValue(n.Args[0], ctx)
+	amount, err := compileInstanceValue(n.Args[0], ctx)
 	if err != nil {
 		return nil, err
 	}
 	switch n.Name {
 	case "DrawNumberCards":
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.DrawFor(ctx.player.build(bindings), mage.ValueAtResolution(amount))
+			return mage.DrawFor(ctx.player.build(bindings), amount(bindings))
 		}}, nil
 	case "GainLife":
 		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
@@ -1027,7 +1032,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, unsupported(n, "life action in a player target scope")
 		}
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.GainLifeFor(mage.You, mage.ValueAtResolution(amount))
+			return mage.GainLifeFor(mage.You, amount(bindings))
 		}}, nil
 	case "LoseLife":
 		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
@@ -1037,7 +1042,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, unsupported(n, "life action in a player target scope")
 		}
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.LoseLifeFor(mage.You, mage.ValueAtResolution(amount))
+			return mage.LoseLifeFor(mage.You, amount(bindings))
 		}}, nil
 	default:
 		return nil, unsupported(n, "player action")

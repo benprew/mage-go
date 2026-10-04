@@ -23,7 +23,12 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, err
 		}
 	}
-	costs, hasX, err := compileCosts(n.Args[0])
+	paid, err := compileSacrificeValuePlan(n.Args[0], n.Args[1])
+	if err != nil {
+		return nil, err
+	}
+	ctx.sacrificeValue = paid
+	costs, hasX, err := compileBoundCosts(n.Args[0], paid)
 	if err != nil {
 		return nil, err
 	}
@@ -33,9 +38,13 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	return func() mage.CardOption {
-		options := actionOptions(plan.build())
+		bindings := instanceBindings{sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+		if paid != nil {
+			bindings.sacrifices[paid] = sacrificeValueBindings{power: mage.BindNumber("paid sacrifice power"), value: mage.BindNumber("paid sacrifice value")}
+		}
+		options := actionOptions(plan.buildWithPayments(nil, bindings.sacrifices))
 		for _, build := range costs {
-			options = append(options, mage.WithCost(build()))
+			options = append(options, mage.WithCost(build(bindings)))
 		}
 		options = append(options, timing...)
 		return mage.WithAbility(mage.NewAction(mage.ActionActivated, options...))

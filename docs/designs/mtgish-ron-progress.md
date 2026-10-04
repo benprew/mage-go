@@ -2751,3 +2751,112 @@ trigger prerequisites for Breeding Pit, Rukh Egg and Hazezon Tamar. The next run
 must reassess these against fresh inventory. Full RON loading/gameplay,
 runtime/native startup, Go-card/generator deletion and DSL cleanup remain open.
 No second slice began.
+
+## Run 2026-10-04: P4-SACRIFICE-VALUES
+
+Status: completed one saved-sacrifice-characteristic slice. User changes in
+`.gitignore` and `mtgish-ron-execution.md` are preserved and excluded from the
+commit. No unrelated untracked files were present.
+
+The [sacrifice values report](mtgish-ron-sacrifice-values.md) records complete
+candidate names, nested/complete-record inspection, exact signatures, contexts,
+engine reuse and card-to-test mappings. Fresh evidence compared sacrifice values
+(four names, three estimated unlocks), any-number counter payments plus dynamic
+mana (five Batteries, five potential unlocks, larger effort), and variable
+optional mana (two names, one unlock). Sacrifice values won on three complete
+cards using existing typed engine services. The selection contract, reuse boundary
+and acceptance cases were stated before edits. No missing engine prerequisite,
+source defect or environmental blocker was found.
+
+Exact support: permanent-source Activated/2 and ActivatedWithModifiers/3 with
+one unambiguous SacrificeAPermanent/1 cost. ToughnessOfTheSacrificedCreature is a
+symbol and requires the exact IsCardtype(Creature) cost filter;
+ManaValueOfTheSacrificedPermanent is a symbol and accepts existing matching
+sacrifice filters. Consumers are GainLife/1, LoseLife/1, DrawNumberCards/1 and
+NumberTokens/2 counts in existing basic CreateTokens/2 forms. The declaration
+cannot combine characteristic kinds, multiple matching sacrifices or a source
+sacrifice with a matching sacrifice. Unbound, incompatible, tuple-shaped,
+ambiguous and cross-activation references fail compilation. Dynamic mana,
+damage values, filtered toughness costs, optional sacrifice payments, spell
+additional costs and static reads remain gaps.
+
+Private signatures: compileSacrificeValuePlan(Node, Node)
+(*sacrificeValuePlan, error); compileBoundCosts(Node, *sacrificeValuePlan)
+([]boundCostFactory, bool, error); compileInstanceValue(Node, scope)
+(valueFactory, error). A boundCostFactory is func(instanceBindings) mage.Cost;
+a valueFactory is func(instanceBindings) mage.ResolutionValue. Per-factory costs
+and effects use the same private typed NumberBinding. Immutable plans carry no
+game state. There is no global last-action read, name branch, fallback, declaration
+panic or partial production registry.
+
+Engine reuse: SacrificeCreatureIncludingSourceCostWithStats,
+SacrificeMatchingIncludingSourceCostWithManaValue, BindNumber, FromNumber,
+transactional costs, current characteristics, owner graveyards, target incarnations,
+ability copies, clones, life/draw actions and CreateTokenCopies. No engine API or
+implementation changed. CR 602.1a/1b, 602.2/2b, 400.7 and 608.2h apply with the
+existing phasing/copy/token contracts. No new replacement operation or simultaneous
+service is established. API/rules documentation records only this adapter behavior.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Diamond Valley, Life Chisel, Homarid Spawning Bed | TestRONSacrificeValueRealCards: complete-record gameplay and definition validation, counters/current toughness, exact mana/tap costs, payment timing, owners, returned victim, source departure/return/control/phasing, pending copies, clones, life or Camarid count/characteristics |
+| Diamond Valley copies | TestRONSacrificeValueCopyController: copied controller receives saved value without paying again |
+| Life Chisel timing | TestRONSacrificeValueRealRestrictions: step, turn, permission and phased-source rejection; real-card tests change timing after payment |
+| Payment/identity | TestRONSacrificeValuePendingAndRollback; TestRONSacrificeValueFactoriesAndSelfPayment: distinct pending amounts, same-factory sources, self-payment, nonpositive values, mana failure and invalid victim choices |
+| Consumer contexts | TestRONSacrificeValueConsumers: both saved characteristic kinds in each supported consumer |
+| Target legality | TestRONSacrificeValueTargetLegality: invalid announcement before payment; departed/returned/phased target at resolution |
+| Invalid declarations | TestRONSacrificeValueInvalid: missing producer, incompatible cost, ambiguous sacrifice, mixed characteristic kinds, tuple form, spell and cross-rule scope |
+
+TDD: after correcting fixture API errors, real-card and pending-payment tests
+failed on unsupported saved values. Implementation passed focused tests. Broad
+checks found two stale inventory counts and the old rejection of newly supported
+creature toughness; that fixture now rejects an incompatible artifact cost.
+No gameplay requirement was weakened. Final consumer/target/copy assertions
+passed, followed by lint and all required checks on the final code.
+
+Estimated and actual gain agree: **three unique names, three records**.
+Loader **1,032 -> 1,035/2,445 compiled**, **1,413 -> 1,410 rejected**.
+Accepted names **330 -> 333**, rejected **656 -> 653**. Zero accepted-record
+regressions; strict and semantic loader diagnostics match. Nodes/signatures remain
+72,938/8,528; unknown-role occurrences remain 16,921 because these operands already
+had value roles. Global engine_validated/behavior_verified remain null. Three
+complete cards gain explicit RON gameplay and definition-validation evidence;
+compilation and collection-wide gameplay completion remain separate.
+
+Largest remaining diagnostics: PermanentRuleEffect (110), AsPermanentEnters (90),
+instant/sorcery CastEffect (53), If rule (48), ChooseADamageSource (46),
+Targeted_Modal (42), HostController upkeep (35), TriggerI (28),
+ControlledByAPlayer filter (28), TargetGraveyardCard (26). Priest of Yawgmoth still
+rejects its dynamic mana consumer. All 12 RON hashes match the vocabulary snapshot;
+no source refresh is needed. No source defect was corrected. Gaea's Liege and
+Fastbond concerns remain open.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and inventory loaders | Expected exit 1: 1,032 compiled, 1,413 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONSacrificeValue -count=1 | Expected unsupported-value failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | Initial stale support/count fixtures; final PASS after updates, repeated after lint |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated after final tests/lint |
+| make test | PASS, repeated after final tests/lint |
+| make build | PASS, repeated on final code |
+| go vet ./... | PASS, repeated on final code |
+| make lint | PASS, zero issues; automatic changes reviewed, no semantic changes |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json and semantic loader | Expected exit 1: 1,035 compiled, 1,410 rejected; identical diagnostics |
+| Accepted-record and source-hash audits | Zero regressions; all 12 hashes unchanged |
+
+Slice files: new sacrifice_value.go/sacrifice_value_test.go;
+activation_timing.go, compiler.go, player_scope.go, token_creation.go;
+sacrifice_cost_test.go and inventory_test.go; dsl-reference.md,
+engine-rules-contracts.md; the new report and this ledger. Current production
+startup, Go-card definitions/generators and DSL exports retain callers. Removal
+gates remain closed; no deletion, DSL removal audit or runtime cutover is claimed.
+
+Ranked next candidates to reassess: (1) dynamic repeated mana with typed payment
+values, directly Priest of Yawgmoth and downstream five Batteries; (2) any-number
+counter payments/results for those Batteries; (3) shared end-step/delayed-trigger
+prerequisites for Breeding Pit, Rukh Egg and Hazezon Tamar. The first candidate is
+a shared prerequisite despite its one direct unlock. Complete loading/gameplay,
+runtime/native startup, Go-card/generator deletion and DSL cleanup remain open.
+No second slice began.

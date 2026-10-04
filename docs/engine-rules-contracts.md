@@ -925,3 +925,23 @@ includes Icatian Town's four-token batch, Thallid copied abilities, clone isolat
 all-illegal target rejection, payment rollback and token phasing/destruction.
 No replacement, entry-counter or token-result contract is added by this slice.
 Exact forms and tests: [basic token creation](designs/mtgish-ron-token-creation.md).
+
+## RON saved sacrifice characteristics
+
+The activation adapter uses `SacrificeCreatureIncludingSourceCostWithStats` or
+`SacrificeMatchingIncludingSourceCostWithManaValue`, with per-factory number
+bindings and `FromNumber`. The shared payment transaction saves current
+characteristics before departure. Counters affect saved toughness. A returned
+card, another payment, or a later characteristic change cannot replace the
+number (CR 400.7, 602.2b, 608.2h). The shared engine keeps separate paid values in
+pending activations, ability copies and game clones. A copy uses its own
+controller for life or token creation. Nonpositive life gain does nothing.
+Life Chisel's upkeep restriction applies during activation, not resolution.
+
+Evidence: `TestRONSacrificeValueRealCards`,
+`TestRONSacrificeValuePendingAndRollback`,
+`TestRONSacrificeValueFactoriesAndSelfPayment`,
+`TestRONSacrificeValueRealRestrictions`, `TestRONSacrificeValueCopyController`,
+and `TestRONSacrificeValueInvalid`. These tests use complete RON records for
+Diamond Valley, Life Chisel and Homarid Spawning Bed. No engine service, new
+replacement operation, or simultaneous-operation contract is introduced.

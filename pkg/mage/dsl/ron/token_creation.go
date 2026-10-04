@@ -27,12 +27,12 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 		return nil, unsupported(n.Args[1], "token creation modifiers")
 	}
 	tokenNode := instructions[0]
-	var count mage.ValueSource = mage.Fixed(1)
+	var count valueFactory = func(instanceBindings) mage.ResolutionValue { return mage.ValueAtResolution(mage.Fixed(1)) }
 	if tokenNode.Name == "NumberTokens" {
 		if err := arity(tokenNode, 2); err != nil {
 			return nil, err
 		}
-		count, err = compileValue(tokenNode.Args[0], ctx)
+		count, err = compileInstanceValue(tokenNode.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -42,8 +42,8 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	return func(instanceBindings) mage.Effect {
-		return mage.CreateTokenCopies(mage.You, mage.ValueAtResolution(count), token)
+	return func(bindings instanceBindings) mage.Effect {
+		return mage.CreateTokenCopies(mage.You, count(bindings), token)
 	}, nil
 }
 

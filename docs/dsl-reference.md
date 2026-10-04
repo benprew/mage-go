@@ -1170,3 +1170,20 @@ immutable token definition contains no chosen state.
 See [the supported shapes and card tests](designs/mtgish-ron-token-creation.md).
 Token abilities, supertype options, copying, creation modifiers and saved token
 results remain unsupported by this adapter.
+
+### RON sacrifice payment values
+
+In `Activated/2` and `ActivatedWithModifiers/3`, a single
+`SacrificeAPermanent/1` cost can supply a saved number to its resolving actions.
+`ToughnessOfTheSacrificedCreature` requires the exact filter
+`IsCardtype(Creature)`. `ManaValueOfTheSacrificedPermanent` accepts the existing
+matching-sacrifice filters. Both references are symbols. The number is captured
+at payment, before sacrifice, and belongs to that activation.
+
+The supported consumers are `GainLife/1`, `LoseLife/1`, `DrawNumberCards/1`, and
+`NumberTokens/2` in the existing basic token-creation forms. These references do
+not enable dynamic mana, damage, static values, optional sacrifice payments, or
+spell additional costs. A declaration cannot combine both characteristic
+references or use more than one sacrifice cost, including source sacrifice.
+Each factory builds the cost and its consumers with the same private engine
+`NumberBinding`; copies keep the paid number without paying again.
