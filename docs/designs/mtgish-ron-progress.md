@@ -1045,3 +1045,107 @@ arithmetic and branches for Blood Lust and downstream Berserk/Kry Shield/Subdue.
 Reassess fresh evidence before choosing. Complete RON gameplay/loading, embedded
 startup, native startup evidence, Go-card and generator deletion, and unused-DSL
 removal gates remain unmet. No deletion or caller audit is claimed. This run stops.
+
+## Run 2026-10-03: P7-STATIC-PERMANENTS
+
+Status: complete general static permanent subject slice. No second slice was
+started. Initial user changes to `.gitignore` and `mtgish-ron-execution.md` remain
+preserved and excluded. No unrelated untracked files existed initially.
+
+The fresh three-candidate comparison, exact affected-name lists, signatures,
+contexts, dependencies, source observations, rules evidence and card-to-test
+mapping are in [mtgish-ron-static-permanents.md](mtgish-ron-static-permanents.md).
+General static subjects unlock two unique cards for a small adapter using
+existing engine primitives. Optional counter payments also offer two unlocks
+but need broader scope/payment work; numeric branches offer one with broader
+value contracts. General subjects also supply concrete prerequisites for Zombie
+Master, Energy Flux, Kormus Bell, Living Lands, Living Plane, Conversion, Blood
+Moon and Guardian Beast. Complete records and nested forms were inspected;
+first-error counts were not used as full-card estimates.
+
+Implemented general `EachPermanentLayerEffect(filter, modifications)/2` for
+fixed `AdjustPT/2` and existing basic keyword or supported `Landwalk/1` grants
+inside `AddAbility/1`. Existing permanent filters select noncreatures when the
+RON does not specify Creature. Static And/Or lists are recursively nonempty.
+Other(ThisPermanent) and ControlledByAPlayer(SinglePlayer(You)) work at the root
+and in conjunctions, with source-dependent disjunctions still rejected. General
+modification lists must produce at least one modification. Other static
+modifiers and ability grants remain unsupported. Per-factory sets and rules use
+MatchingPermanents, ControlledPermanents, WithoutPermanent, ModifyEachPT,
+GrantEachKeyword, While, Static and a constant pure StateConditionFunc. The
+engine owns current membership, source lifetime, control, printed ability
+activity, incarnation capture, layers and clones. No engine repair or new public
+API was needed. Explicit-creature and Aura paths retain their engine services.
+
+TDD first confirmed unsupported-subject failures for both real lords and both
+synthetic noncreature contexts. The inventory-role test later confirmed an
+unknown subtype operand before its adapter. Two cleanup fixture API errors
+were corrected before that intended inventory failure. Focused tests establish
+complete real Goblin King/Lord of Atlantis rules, casting costs and timing,
+rejected unpaid casting, cloned stack resolution, global/controlled noncreature
+keywords, later animation, explicit creature boundaries, subtype changes and
+expiry, root/nested source exclusion, owner/control distinction, accumulation,
+independent same-factory sources, later entry, phasing, departure/return,
+source ability removal/restoration, landwalk defender identity and clone
+isolation. Invalid declarations cover malformed/unbound/wrong-role filters,
+controller forms, dependent disjunctions and nested empty logical lists.
+
+Inventory reports creature_subtype operands for unary IsCreatureType and
+IsNonCreatureType under permanent filters, including rejected ancestors. All
+signature support remains unverified; global engine-validation and behavior
+verification totals remain null. Two exact count assertions were updated.
+The former root-Other fixed-P/T rejection is now a supported contract, tested
+by the new root-exclusion test; its rejection case now checks unsupported
+static AdjustPTX. No other gameplay/registry assertion was weakened.
+
+Strict loading: **904/2,445 compiled records**, **1,541 rejected records**,
+**266 compiled unique names**, **720 rejected unique names**. Gain: **12 records
+and two unique cards**, exactly the estimate: Goblin King and Lord of Atlantis,
+six identical records each. Both gain direct full-record RON gameplay coverage.
+Before/after record diagnostic comparison found no accepted-record regression.
+Five rejected names advance to later modifiers/grants: Zombie Master to
+Activated; Energy Flux to TriggerA; Kormus Bell/Living Lands/Living Plane to
+SetPT. Strict loading still exits 1 and publishes no registry. Compilation and
+gameplay coverage remain separate; no global gameplay total is claimed.
+
+Leading first gaps: PermanentRuleEffect 110 records, AsPermanentEnters 90,
+If 63, ActivatedWithModifiers 61, CastEffect 54, ChooseADamageSource 46,
+MayCost/WhenAPlayerCastsASpell 43 each, Targeted_Modal 42, HostController 35,
+ControlledByAPlayer 29, TriggerI 27. These are compiler/context gaps. No source
+defect was corrected. Gaea's Liege/Fastbond observations remain open. All 12
+source hashes match the vocabulary snapshot; no refresh is needed.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline strict loader and nested inventory | Expected exit 1; 892 compiled, 1,553 rejected |
+| New `go test ./pkg/mage/dsl/ron -run TestRONStaticPermanent -count=1` | Expected subject and then inventory failures before adapters; final PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS; repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; 904 compiled, 1,541 rejected |
+| Vocabulary source hash comparison | All 12 hashes match |
+
+The first complete RON package run failed only on two old exact compilation
+counts and the newly supported declaration's old rejection assertion. These
+were updated as described above. Lint made no further source changes after
+gofmt. No environment or pre-existing failure blocks this slice.
+
+Files: layers.go, inventory.go, inventory_test.go, static_other_test.go and new
+static_permanent_test.go under pkg/mage/dsl/ron; docs/dsl-reference.md,
+docs/engine-rules-contracts.md, the new static-permanents report and this ledger.
+These nine files form one descriptive slice commit. No RON asset, Go card,
+engine implementation, generator or startup wiring changed.
+
+Next ranked candidates: shared static land animation for Living Lands/Living
+Plane/Kormus Bell (three possible unlocks); optional fixed counter payments for
+Force Spike/Vodalian Mage (two); numeric readers/arithmetic/branches for Blood
+Lust and downstream Berserk/Kry Shield/Subdue (one immediate unlock). Reassess
+fresh evidence before selection. Defer singleton grants while useful multi-card
+work remains. Complete gameplay/loading, embedded startup, native startup,
+Go-card/generator deletion and unused-DSL removal gates remain unmet. No deletion
+or whole-repository caller audit is claimed. This run stops after this slice.

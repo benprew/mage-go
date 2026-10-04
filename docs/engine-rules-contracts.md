@@ -639,3 +639,32 @@ landwalk attributes and legendary landwalk. RON Aura tests exercise this query
 with real grants and phased defending lands. This fixes the query used by the
 shared blocker-selection and declaration checks; it adds no replacement,
 payment, target or event behavior.
+
+## General static permanent sets
+
+`MatchingPermanents` and `ControlledPermanents` select current, phased-in
+permanents without an implicit creature restriction. `WithoutPermanent(set,
+This)` excludes only the current source. In a `While` static rule,
+`ModifyEachPT` and `GrantEachKeyword` use these sets on each layer pass.
+Controller membership follows the source's current controller; owner does not
+select the set. Source departure, phasing and printed ability removal suspend
+its static effects. Returned objects have new incarnations and obtain effects
+from current membership (CR 400.7, 611.3a–c, 702.26b/d).
+
+A subtype-only selector can match a noncreature permanent (CR 109.2, 205.3m).
+Keywords do not require a creature recipient. A P/T modification remains
+applicable if the permanent becomes a creature; layer 4 animation and layer 7
+base values precede the layer 7c modification (CR 208.3a, 613.1d, 613.4b/c).
+An explicit creature filter excludes noncreatures until animation. Subtype
+changes in layer 4 change later membership. This contract reuses existing
+engine behavior and does not add Kindred metadata support or noncreature P/T
+readers.
+
+Evidence: `TestRONStaticPermanentNoncreaturesAndInstances`,
+`TestRONStaticPermanentRootExclusionAndCreatureBoundary`,
+`TestRONStaticPermanentCurrentMembership`, `TestRONStaticPermanentLords` and
+`TestRONStaticPermanentCastTiming`. Tests distinguish independent factories and
+sources, global/controlled sets, accumulated modifications, later entries,
+animation, subtype expiry, ability removal/restoration, leave/return, phasing,
+landwalk, cloned games and cloned stack resolution. No new cost, replacement,
+LKI or simultaneous zone-operation contract is established.

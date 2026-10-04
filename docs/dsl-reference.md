@@ -904,10 +904,10 @@ Contract and card tests: [RON spell scopes](designs/mtgish-ron-spell-scopes.md).
 ### RON controlled static creature layers
 
 In `EachPermanentLayerEffect`, use
-`ControlledByAPlayer(SinglePlayer(You))` inside a creature-restricted `And` filter
+`ControlledByAPlayer(SinglePlayer(You))` inside an `And` filter
 for fixed P/T changes or basic keyword grants. Nested nonempty conjunctions are
 supported. The engine reads the source's current controller each time it applies
-the layers. Matching creature sources are included. Current membership changes
+the layers. Matching sources are included. Current membership changes
 with control, tap status, combat status, color and later entries. Controller
 predicates inside `Or` and other controller reference forms remain rejected.
 This adapter does not add controller support to target or collection filters.
@@ -915,7 +915,7 @@ See [the supported contract and tests](designs/mtgish-ron-static-controller.md).
 
 ### RON static source exclusion
 
-In a creature-restricted `EachPermanentLayerEffect` conjunction, use
+In an `EachPermanentLayerEffect` conjunction, use
 `Other(ThisPermanent)` to exclude the source from fixed P/T changes and basic
 keyword grants. It can be combined with `ControlledByAPlayer(SinglePlayer(You))`
 and nested nonempty `And` filters. Each source excludes only itself; other
@@ -938,16 +938,37 @@ See [the exact contexts and tests](designs/mtgish-ron-temporary-values.md).
 
 `AddAbility([Landwalk(IsLandType(subtype))])` is supported inside the existing
 `PermanentLayerEffect(HostPermanent, modifications)` Aura context and
-creature-restricted `EachPermanentLayerEffect(filter, modifications)` context.
+`EachPermanentLayerEffect(filter, modifications)` context.
 The subtype must be a symbol: Plains, Island, Swamp, Mountain, Forest or Desert.
 These grants use the same validated landwalk form as printed RON keywords.
 They can be mixed with existing fixed P/T modifications and basic keywords.
 Global source exclusion and controller conjunctions retain their existing
 contracts. Each factory creates fresh continuous effects.
 
-The global filter must still explicitly require creatures; a positive creature
-subtype predicate alone does not establish this requirement. Broader subtype
-subjects need an engine contract for matching noncreature permanents (CR 109.2,
-205.3m, 208.3a). Other landwalk filters, temporary grants and rule restrictions
-remain separate compiler contexts. See
+General permanent subjects are also supported as described below. Other
+landwalk filters, temporary grants and rule restrictions remain separate
+compiler contexts. See
 [the static-landwalk slice](designs/mtgish-ron-static-landwalk.md) for evidence.
+
+## RON general static permanent subjects
+
+`EachPermanentLayerEffect(filter, modifications)` accepts the existing permanent
+filters without an added creature restriction for fixed `AdjustPT(power,
+toughness)` and basic keyword or supported landwalk `AddAbility(list)` grants.
+`IsCreatureType(Goblin)` selects Goblin permanents; add `IsCardtype(Creature)`
+only when the declaration requires creatures. Keywords can apply to
+noncreatures. A P/T modification can apply when its recipient becomes a creature.
+
+Nonempty recursive `And` and `Or` filters retain their logical membership.
+`Other(ThisPermanent)` and `ControlledByAPlayer(SinglePlayer(You))` work at the
+root or inside conjunctions. Source-dependent predicates within a disjunction
+remain rejected. Each factory builds a fresh typed permanent set and static rule.
+The engine reads current membership, controller, subtype, type and phase status
+on each layer pass. No target or action-result binding is introduced.
+
+General sets lower to `MatchingPermanents`, `ControlledPermanents`,
+`WithoutPermanent`, `ModifyEachPT`, `GrantEachKeyword`, `While` and `Static`.
+Existing explicit-creature and Aura adapters retain their services. Static
+numeric P/T, base P/T setting, color/type changes, granted activated/triggered
+abilities and conditional rules remain separate unsupported shapes.
+See [the exact contract and tests](designs/mtgish-ron-static-permanents.md).

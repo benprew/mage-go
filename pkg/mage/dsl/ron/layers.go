@@ -14,19 +14,19 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	global := n.Name == "EachPermanentLayerEffect"
-	var subjects staticCreatureFilterPlan
+	var subjects staticPermanentFilterPlan
+	var general bool
 	if global {
-		subjects, err = compileStaticCreatureFilter(n.Args[0])
+		subjects, err = compileStaticPermanentFilter(n.Args[0])
 		if err != nil {
 			return nil, err
 		}
-		if !requiresCreature(n.Args[0]) {
-			return nil, unsupported(n.Args[0], "noncreature global layer filter")
-		}
+		general = !requiresCreature(n.Args[0])
 	} else if n.Args[0].Kind != Symbol || n.Args[0].Name != "HostPermanent" || !ctx.aura {
 		return nil, unsupported(n.Args[0], "static layer reference")
 	}
 	var effects []func() mage.ContinuousEffect
+	var modifications []func() mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
 		case "AdjustPT":
@@ -34,7 +34,11 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			if err != nil {
 				return nil, err
 			}
-			if global {
+			if general {
+				modifications = append(modifications, func() mage.ContinuousModification {
+					return mage.ModifyEachPT(subjects.build(), mage.Fixed(power), mage.Fixed(toughness))
+				})
+			} else if global {
 				if subjects.controlled && subjects.excludeSource {
 					effects = append(effects, func() mage.ContinuousEffect {
 						return mage.BoostOtherControlledCreatures(power, toughness, subjects.filter)
@@ -72,7 +76,11 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 					ok = true
 				}
 				if ok {
-					if global {
+					if general {
+						modifications = append(modifications, func() mage.ContinuousModification {
+							return mage.GrantEachKeyword(subjects.build(), keyword)
+						})
+					} else if global {
 						if subjects.controlled && subjects.excludeSource {
 							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToOtherControlled(keyword, subjects.filter) })
 						} else if subjects.controlled {
@@ -113,6 +121,19 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			return nil, unsupported(part, "static layer action")
 		}
 	}
+	if general {
+		if len(modifications) == 0 {
+			return nil, problem(n.Args[1], "empty static modification list")
+		}
+		return func() mage.CardOption {
+			values := make([]mage.ContinuousModification, len(modifications))
+			for i, build := range modifications {
+				values[i] = build()
+			}
+			condition := mage.StateConditionFunc("unconditional static layer", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
+			return mage.WithAbility(mage.Static(mage.While(condition, values...)))
+		}, nil
+	}
 	return func() mage.CardOption {
 		values := make([]mage.ContinuousEffect, len(effects))
 		for i, build := range effects {
@@ -144,63 +165,80 @@ func requiresCreature(n Node) bool {
 	return false
 }
 
-type staticCreatureFilterPlan struct {
+type staticPermanentFilterPlan struct {
 	filter        mage.PermanentFilter
 	controlled    bool
 	excludeSource bool
 }
 
-func compileStaticCreatureFilter(n Node) (staticCreatureFilterPlan, error) {
+func (p staticPermanentFilterPlan) build() mage.PermanentSet {
+	var subjects = mage.MatchingPermanents(p.filter)
+	if p.controlled {
+		subjects = mage.ControlledPermanents(p.filter)
+	}
+	if p.excludeSource {
+		subjects = mage.WithoutPermanent(subjects, mage.This)
+	}
+	return subjects
+}
+
+func compileStaticPermanentFilter(n Node) (staticPermanentFilterPlan, error) {
 	if n.Name == "Other" {
 		if err := arity(n, 1); err != nil {
-			return staticCreatureFilterPlan{}, err
+			return staticPermanentFilterPlan{}, err
 		}
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "ThisPermanent" {
-			return staticCreatureFilterPlan{}, unsupported(n.Args[0], "static exclusion reference")
+			return staticPermanentFilterPlan{}, unsupported(n.Args[0], "static exclusion reference")
 		}
-		return staticCreatureFilterPlan{filter: mage.AnyPermanent, excludeSource: true}, nil
+		return staticPermanentFilterPlan{filter: mage.AnyPermanent, excludeSource: true}, nil
 	}
 	if n.Name == "ControlledByAPlayer" {
 		if err := arity(n, 1); err != nil {
-			return staticCreatureFilterPlan{}, err
+			return staticPermanentFilterPlan{}, err
 		}
 		player := n.Args[0]
 		if player.Name != "SinglePlayer" {
-			return staticCreatureFilterPlan{}, unsupported(player, "static controller selector")
+			return staticPermanentFilterPlan{}, unsupported(player, "static controller selector")
 		}
 		if err := arity(player, 1); err != nil {
-			return staticCreatureFilterPlan{}, err
+			return staticPermanentFilterPlan{}, err
 		}
 		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
-			return staticCreatureFilterPlan{}, unsupported(player.Args[0], "static controller reference")
+			return staticPermanentFilterPlan{}, unsupported(player.Args[0], "static controller reference")
 		}
-		return staticCreatureFilterPlan{filter: mage.AnyPermanent, controlled: true}, nil
+		return staticPermanentFilterPlan{filter: mage.AnyPermanent, controlled: true}, nil
 	}
-	if n.Name == "And" {
+	if n.Name == "And" || n.Name == "Or" {
 		if err := arity(n, 1); err != nil {
-			return staticCreatureFilterPlan{}, err
+			return staticPermanentFilterPlan{}, err
 		}
 		parts, err := list(n.Args[0])
 		if err != nil {
-			return staticCreatureFilterPlan{}, err
+			return staticPermanentFilterPlan{}, err
 		}
 		if len(parts) == 0 {
-			return staticCreatureFilterPlan{}, problem(n, "empty static conjunction")
+			return staticPermanentFilterPlan{}, problem(n, "empty static filter")
 		}
 		filters := make([]mage.PermanentFilter, 0, len(parts))
-		plan := staticCreatureFilterPlan{}
+		plan := staticPermanentFilterPlan{}
 		for _, part := range parts {
-			child, err := compileStaticCreatureFilter(part)
+			child, err := compileStaticPermanentFilter(part)
 			if err != nil {
-				return staticCreatureFilterPlan{}, err
+				return staticPermanentFilterPlan{}, err
+			}
+			if n.Name == "Or" && (child.controlled || child.excludeSource) {
+				return staticPermanentFilterPlan{}, unsupported(part, "source-dependent static disjunction")
 			}
 			filters = append(filters, child.filter)
 			plan.controlled = plan.controlled || child.controlled
 			plan.excludeSource = plan.excludeSource || child.excludeSource
 		}
 		plan.filter = mage.And(filters...)
+		if n.Name == "Or" {
+			plan.filter = mage.Or(filters...)
+		}
 		return plan, nil
 	}
 	filter, err := compileFilter(n)
-	return staticCreatureFilterPlan{filter: filter}, err
+	return staticPermanentFilterPlan{filter: filter}, err
 }

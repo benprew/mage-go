@@ -342,6 +342,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "permanent_filter":
+		if (n.Name == "IsCreatureType" || n.Name == "IsNonCreatureType") && len(n.Args) == 1 {
+			return "creature_subtype"
+		}
 		if n.Name == "Other" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

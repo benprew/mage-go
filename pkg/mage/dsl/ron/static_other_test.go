@@ -199,7 +199,7 @@ func TestRONOtherStaticRejectsInvalidDeclarations(t *testing.T) {
 		}
 	}
 	for _, rule := range []string{
-		`EachPermanentLayerEffect(Other(ThisPermanent), [AdjustPT(1, 1)])`,
+		`EachPermanentLayerEffect(Other(ThisPermanent), [AdjustPTX(PlusX, Zero, Integer(1))])`,
 		`Activated(TapPermanent(ThisPermanent), Targeted([TargetPermanent(And([IsCardtype(Creature), Other(ThisPermanent)]))], ActionList([TapPermanent(Ref_TargetPermanent)])))`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [%s])`, rule)
