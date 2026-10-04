@@ -26,7 +26,7 @@ func permanentScopeFactory(t *testing.T, types, rules string) mage.CardFactory {
 }
 
 func TestRONPermanentActionsDeclareTypedReads(t *testing.T) {
-	for _, action := range []string{"DestroyPermanent", "DestroyPermanentNoRegen", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap"} {
+	for _, action := range []string{"PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap"} {
 		t.Run(action, func(t *testing.T) {
 			factory := permanentScopeFactory(t, "Instant", fmt.Sprintf(`SpellActions(Targeted([TargetPermanent(AnyPermanent)], ActionList([%s(Ref_TargetPermanent)])))`, action))
 			first, second := factory(), factory()
@@ -263,7 +263,7 @@ func TestRONHostReferenceReadsCurrentAttachmentAndRejectsNewIncarnation(t *testi
 }
 
 func TestRONUnaryPermanentActionsUseSharedRules(t *testing.T) {
-	for _, action := range []string{"DestroyPermanent", "DestroyPermanentNoRegen", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent"} {
+	for _, action := range []string{"PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent"} {
 		for _, own := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%s/%t", action, own), func(t *testing.T) {
 				g, a, b := ronGame()
@@ -290,6 +290,10 @@ func TestRONUnaryPermanentActionsUseSharedRules(t *testing.T) {
 				g.ResolveStack()
 				p := g.FindPermanent(host.ID())
 				switch action {
+				case "PutPermanentIntoItsOwnersHand":
+					if p != nil || len(owner.Hand()) != 1 || owner.Hand()[0].ID() != hostCard.ID() {
+						t.Fatal("return used the wrong owner or zone")
+					}
 				case "DestroyPermanent":
 					if p == nil || !p.Tapped || g.HasRegenerationShield(host.ID()) {
 						t.Fatal("destroy bypassed regeneration")

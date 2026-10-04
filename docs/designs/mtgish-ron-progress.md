@@ -4050,3 +4050,151 @@ Ranked next candidates to reassess from fresh evidence:
 
 Complete collection gameplay, runtime loading, Go-card/generator removal and
 DSL cleanup remain unfinished. No second slice began.
+
+## Run 2026-10-04: P5-RETURN-OWNER-HAND
+
+Status: complete singular permanent return action slice. This run stops here.
+Initial user changes in `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from staging. There were no unrelated untracked files.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, migration design, vocabulary snapshot, ledger,
+selected compiler/engine/API contracts, CR index and relevant sections, and all
+complete candidate and affected RON records. No Go card definitions supplied
+requirements. Baseline focused RON/CLI tests, short engine tests and make build
+passed. Baseline strict/semantic loaders returned expected exit 1: 1,097 compiled
+and 1,348 rejected records; 369 accepted and 617 rejected unique names.
+Nested inventory: 72,938 occurrences, 8,528 signatures, 14,661 unknown-role
+occurrences. Reprints are counted once in the comparison.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Blockers, downstream benefit and effort |
+| --- | --- | ---: | --- |
+| Singular return to owner's hand, selected | Unsummon; Boomerang; Active Volcano; Flash Flood; Obelisk of Undoing; Karakas; Time Elemental; Witch Hunter; Rakalite | 4 | First four have fully supported enclosing actions, modes and filters. Obelisk needs owner/controller filters; Karakas needs supertype filter; Time Elemental needs combat/delayed triggers and unenchantment filter; Witch Hunter needs player/permanent target union and opponent filter; Rakalite needs prevention and delayed triggers. Shared action enables all nine names when these dependencies arrive. Small adapter; moderate identity, zone, copy and declaration tests. |
+| Player-target life and future prevention | Healing Salve; Alabaster Potion | 2 after both adapters | Mode infrastructure exists, but both life and future prevention must work before either card unlocks. Prevention also benefits Rakalite. Larger adapter and damage shield/replacement test scope than return. Life alone unlocks neither of these two cards. |
+| Collection static untap restrictions | Meekstone; Arena of the Ancients; Magnetic Mountain; Thelon's Curse | 2 after prerequisites | Numeric/supertype filters and collection tapping needed for the first two. Mountain/Curse need upkeep player, per-object payment choices and chosen collections. Shared untap restrictions enable four names. Moderate filter/action work and larger payment follow-up. |
+
+The return action gives the largest credible immediate gain for the least
+implementation effort. Fresh nested inspection found 14 occurrences across four
+contexts: seven direct spell, two modal spell, four activation and one delayed
+trigger under an unsupported parent. All nine unique complete records, all six
+Unsummon reprints, and all candidate records/reprints were inspected. First-error
+counts alone did not select the slice. Contract, reuse boundary, selection and
+acceptance cases were stated before edits.
+
+### Contract and reuse boundary
+
+Exact signature: action `PutPermanentIntoItsOwnersHand/1`, one positional
+permanent-reference argument. Accepted references: symbol `Ref_TargetPermanent`
+within its single typed target group, `ThisPermanent` for a permanent source,
+and `HostPermanent` for an Aura source. Existing `compilePermanentRef(Node,
+scope) (permanentReferencePlan, error)` rejects wrong types, shapes and scopes.
+`compileEffect(Node, scope) ([]effectFactory, error)` builds
+`mage.ReturnToHand(subject.build(instanceBindings))`. Per-factory declarations
+and action bindings stay fresh; immutable plans capture no chosen game state.
+
+Supported enclosing contexts: existing ActionList in instant/sorcery spell
+rules, choose-one spell modes, activations and supported triggers. Unsupported
+parents such as CreateFutureTrigger remain rejected. The action does not make
+those enclosing contexts supported. No source data, public API or engine
+execution service changed. This is a missing compiler adapter, not a missing
+engine contract, data defect or environment failure.
+
+Reuse: typed permanent references, instanceBindings, definition validation,
+transactional casting/activation, stack target checks, modal copies,
+ReturnToHand, BouncePermanentToHand, battlefield incarnation identity,
+attachment LKI and Game.Clone. Owner is independent of controller; return is
+independent of regeneration. An absent/phased object cannot move; phase-in
+preserves identity, while departure/return creates a new object. Host reads use
+current attachment or the captured departed source's last attachment, and
+cannot follow a returned source. Existing rules: CR 400.7, 608.2b, 702.26b,
+700.2a/c/f/g. No new simultaneous-operation or replacement-order contract is
+introduced. Existing engine token/leave-trigger tests remain green.
+
+No Go fallback, card-name branch, global last-action slot, shared mutable
+bindings, game-time declaration panic or partial production registry was added.
+No Go definitions, generators, startup wiring or DSL exports were removed;
+complete loading, gameplay migration and startup removal gates remain unmet.
+A DSL deletion caller audit is not claimed because no deletion was attempted.
+
+### TDD and card-to-test mappings
+
+Tests were written first. Initial test builds found incorrect test API names
+for duration/type effects; these fixtures were corrected to core.Indefinite and
+TemporaryKeyword with core.Shroud. The confirmed red run failed all eleven real
+set/mode cases and identity/copy/rollback/reporting cases with unsupported
+PutPermanentIntoItsOwnersHand; invalid declarations remained rejected.
+The adapter and role lowering made those tests pass. Additional source-context
+fixtures initially omitted the Aura subtype; declaring Aura fixed the fixture,
+without changing production scope rules. No assertions were weakened.
+
+| Card or context | Tests and evidence |
+| --- | --- |
+| Unsummon | TestRONReturnHandCards: all six source reprints, creature target, return to owner with different controller, cast cost, graveyard, clone isolation |
+| Boomerang | TestRONReturnHandCards: complete LEG record, noncreature land target, owner hand and spell graveyard, clone isolation |
+| Active Volcano; Flash Flood | TestRONReturnHandCards: both modes, blue/red destruction and Island/Mountain return, mode chosen once, correct owner zones, clone isolation |
+| Unsummon identity/legality | TestRONReturnHandIdentityAndLegality: control change, departure/return, absence, phase-out and phase cycle, later shroud, regeneration independence |
+| Active Volcano copy | TestRONReturnHandCopyAndInstances: retained return mode, new target without a mode choice, original unaffected, copy leaves no graveyard card, clone isolation |
+| Declaration identity | TestRONPermanentActionsDeclareTypedReads extended for return: fresh factory declarations, typed read metadata and rejection by engine validation if target declaration is removed; TestRONReturnHandCopyAndInstances also validates separate instances |
+| Shared owner behavior | TestRONUnaryPermanentActionsUseSharedRules extended with explicit return assertions for either player's permanent |
+| Cast rollback | TestRONReturnHandRollback: unpaid cast, wrong creature type, wrong land subtype and phased target preserve hand/mana/stack/graveyard |
+| Source/attachment contracts | TestRONReturnHandSourceAndHostContexts: activation tap cost and entry trigger self return; Aura sacrifice payment before return, current attachment, departed source LKI, returned host rejection and returned source isolation |
+| Invalid declarations | TestRONReturnHandInvalid: symbol/zero/two arguments, list/tuple/wrong-type reference, spell source/host/event reference, undeclared/cross-mode/wrong-target reads |
+| Inventory/regressions | TestRONReturnHandInventory: permanent-reference role; updated full-collection counts and retained real Lightning Bolt/registry regression |
+
+Four unique collection cards gain complete-record behavior evidence. Synthetic
+cards test contracts only. Compilation totals remain distinct from unmeasured
+full-collection gameplay and engine-validation totals (null in the inventory).
+
+### Measurements and validation
+
+Estimated versus actual: **four unique names and nine records**, as predicted.
+Compiled **1,097 -> 1,106/2,445**; rejected **1,348 -> 1,339**. Accepted unique
+names **369 -> 373**; rejected unique names **617 -> 613**. Fresh rejection
+comparisons find exactly Unsummon, Boomerang, Active Volcano and Flash Flood
+newly accepted, and zero regressions. Strict/semantic issue arrays match.
+AST occurrences/signatures remain 72,938/8,528; unknown-role occurrences fall
+14,661 -> 14,648. All twelve source file hashes are unchanged and match the
+vocabulary snapshot. RON source did not change, so no vocabulary refresh was
+needed. No source defect was corrected; earlier Gaea's Liege/Fastbond concerns
+remain open.
+
+Leading first diagnostics: rule If (53 records), non-spell CastEffect (53),
+ChooseADamageSource (46), Targeted_Modal (42), self untap HostPermanent (39),
+upkeep HostController (35), other self untap operations (34),
+ControlledByAPlayer (29), TargetGraveyardCard (26),
+WhenAPermanentBecomesTapped (25), CreateFuturePreventDamage (24).
+These are first-error counts, not full-card unlock estimates.
+
+| Command | Result |
+| --- | --- |
+| Baseline focused RON/CLI tests, short engine tests, make build | PASS |
+| Baseline strict/semantic loader | Expected exit 1: 1,097 compiled, 1,348 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONReturnHand -count=1 | Confirmed missing-adapter failures first; final PASS |
+| Focused return and typed-reference tests with -count=1 | PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS; repeated after lint and final test assertions |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | Initial revive error for test variable copy; renamed to copied, reviewed automatic import formatting; final PASS |
+| git diff --check | PASS |
+| Final strict and semantic loader | Expected exit 1: 1,106 compiled, 1,339 rejected; matching issues |
+| Accepted-record/source audits | PASS: zero regressions and twelve unchanged hashes |
+
+Changed files: compiler.go, inventory.go, inventory_test.go,
+permanent_scope_test.go, new return_hand_test.go, dsl-reference.md,
+engine-rules-contracts.md and this ledger. Only these slice files are staged
+for one descriptive commit. User changes remain outside staging.
+
+Ranked next candidates to reassess:
+1. Shared targeted-player life action: inspect all complete records, especially
+   Stream of Life and Relic Bind; mode life in Healing Salve/Alabaster Potion
+   still requires prevention before full-card acceptance.
+2. Shared future prevention for Healing Salve, Alabaster Potion and Rakalite;
+   compare damage-recipient scopes and delayed-trigger dependencies.
+3. Collection untap/filter prerequisites for Meekstone/Arena of the Ancients;
+   compare IsSupertype's additional Karakas gain now that return is supported.
+
+Complete RON gameplay, runtime loading, Go-card/generator deletion, DSL cleanup
+and native startup validation remain unfinished. No second slice began.

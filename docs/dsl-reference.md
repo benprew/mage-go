@@ -1331,3 +1331,14 @@ an unsupported body rejects the entire record. Nested modes, activation modes,
 trigger modes, and `Targeted_Modal` remain unsupported. Life actions in player
 target scopes and future prevention remain separate gaps for Healing Salve
 and Alabaster Potion.
+
+RON `PutPermanentIntoItsOwnersHand(reference)` uses `mage.ReturnToHand`.
+The argument must be one in-scope permanent reference: `Ref_TargetPermanent`,
+`ThisPermanent` on a permanent source, or `HostPermanent` on an Aura.
+The existing action compiler accepts it in spells, choose-one spell modes,
+activations and supported triggers. Target declarations are built per factory
+instance. Unsupported enclosing forms still fail compilation.
+The action reads the current object through its captured incarnation and moves
+its card to its owner's hand. Phased or departed objects are absent; a returned
+card is a new object. An Aura uses its current attachment, or the last attachment
+of its captured source after departure. It cannot follow a returned source.

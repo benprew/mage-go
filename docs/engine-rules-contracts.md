@@ -1123,3 +1123,14 @@ retargeting with the chosen mode retained and independent original/clone state.
 draws and untargeted life gain. The relevant rules are CR 601.2b-c, 608.2b,
 700.2a/c/f/g, 400.7 and 702.26b. Declaration tests reject invalid arity, short
 mode lists, incompatible reads, cross-mode reads and unsupported contexts.
+
+RON return-to-hand adapter evidence: `PutPermanentIntoItsOwnersHand/1` lowers
+to the existing typed `ReturnToHand` effect. No engine rule changed.
+`TestRONReturnHandCards` executes Unsummon, Boomerang, Active Volcano and
+Flash Flood, including both modal instructions and owner/controller separation.
+`TestRONReturnHandIdentityAndLegality` verifies CR 400.7 and 608.2b incarnation
+and target checks, CR 702.26b phasing, control changes and regeneration independence.
+`TestRONReturnHandCopyAndInstances` verifies CR 700.2g retained mode, retargeting,
+fresh declarations and clone isolation. `TestRONReturnHandSourceAndHostContexts`
+verifies activation/entry-trigger source reads and attachment LKI after payment.
+This adds no simultaneous-operation or replacement-order contract.
