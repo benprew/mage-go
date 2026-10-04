@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	targetNamespace string
 	counterPayment  *counterPaymentPlan
 	sacrificeValue  *sacrificeValuePlan
 	target          string
@@ -370,6 +371,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
+		if n.Args[0].Name == "Modal_ChooseOne" {
+			return compileModalSpell(n.Args[0], ctx)
+		}
 		plan, err := compileActions(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
@@ -594,19 +598,19 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 			if other {
 				options = append(options, mage.TargetOtherThanSource())
 			}
-			return mage.DeclarePermanentTarget("Ref_TargetPermanent", filter, options...)
+			return mage.DeclarePermanentTarget(ctx.targetNamespace+"Ref_TargetPermanent", filter, options...)
 		}, "Ref_TargetPermanent", nil
 	case "TargetPlayer":
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
 			return nil, "", unsupported(n.Args[0], "player target filter")
 		}
-		return func() mage.Target { return mage.DeclarePlayerTarget("Ref_TargetPlayer") }, "Ref_TargetPlayer", nil
+		return func() mage.Target { return mage.DeclarePlayerTarget(ctx.targetNamespace + "Ref_TargetPlayer") }, "Ref_TargetPlayer", nil
 	case "TargetSpell":
 		filter, err := compileSpellFilter(n.Args[0])
 		if err != nil {
 			return nil, "", err
 		}
-		return func() mage.Target { return mage.DeclareSpellTarget("Ref_TargetSpell", filter) }, "Ref_TargetSpell", nil
+		return func() mage.Target { return mage.DeclareSpellTarget(ctx.targetNamespace+"Ref_TargetSpell", filter) }, "Ref_TargetSpell", nil
 	default:
 		return nil, "", unsupported(n, "target")
 	}

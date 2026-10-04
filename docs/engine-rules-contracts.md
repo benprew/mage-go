@@ -1103,3 +1103,23 @@ independent factory instances, late entry, flying and another landwalk ability.
 prove native block declaration and damage, including source departure after
 blocking. These tests establish adapter reuse of existing engine behavior;
 no new target, payment, replacement or event contract is added.
+
+## RON choose-one spell mode adapter
+
+`SpellActions(Modal_ChooseOne([...]))` lowers independent action plans to
+`NewModalSpell`. Mode-local declarations use distinct internal names and fresh
+binding instances. This uses existing announcement, payment, legality,
+regeneration and copy services; it adds no engine execution service.
+
+`TestRONModalBlastCards` executes both modes of Blue Elemental Blast and Red
+Elemental Blast from all six RON reprints. It checks announcement, owner zones,
+clone isolation and one mode prompt. `TestRONModalAnnouncementRollback` checks
+wrong-mode targets, wrong colors, invalid mode choice and failed payment.
+`TestRONModalResolutionLegality` checks color changes, departure/return,
+phasing, regeneration and uncounterable spells. `TestRONModalCopyTargets` checks
+retargeting with the chosen mode retained and independent original/clone state.
+`TestRONModalInstances` checks mode and factory binding isolation;
+`TestRONModalUntargetedAndPlayerModes` checks unchosen targets, explicit player
+draws and untargeted life gain. The relevant rules are CR 601.2b-c, 608.2b,
+700.2a/c/f/g, 400.7 and 702.26b. Declaration tests reject invalid arity, short
+mode lists, incompatible reads, cross-mode reads and unsupported contexts.

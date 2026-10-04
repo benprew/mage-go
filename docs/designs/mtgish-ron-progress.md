@@ -3885,3 +3885,168 @@ Ranked next candidates to reassess:
 
 Complete collection gameplay, runtime loading, Go-card/generator removal and
 DSL cleanup remain unfinished. This run stops after this slice.
+
+## Run 2026-10-04: P2-CHOOSE-ONE-SPELL-MODES
+
+Status: complete choose-one spell adapter slice. This run stops here.
+Initial user changes in `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from staging. No unrelated untracked files were present.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the migration design, vocabulary snapshot,
+ledger, selected compiler and engine services, and complete candidate RON
+records. No Go card definitions supplied requirements. Baseline focused RON
+tests, short engine tests and make build passed. Strict and semantic loaders
+returned expected exit 1: 1,085 compiled and 1,360 rejected records out of
+2,445; 367 accepted and 619 rejected unique names out of 986. AST inventory
+reported 72,938 occurrences, 8,528 signatures and 15,073 unknown-role
+occurrences. Nested forms and complete records supplied unlock estimates.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream capabilities and estimated effort |
+| --- | --- | ---: | --- |
+| Choose-one spell modes, selected | Blue Elemental Blast; Red Elemental Blast; Active Volcano; Flash Flood; Healing Salve; Alabaster Potion | 2 | Both Blasts have supported typed spell/permanent targets and counter/destruction actions. Volcano/Flood need PutPermanentIntoItsOwnersHand. Salve/Potion need targeted player life and future prevention. Enables independent spell mode scopes, announcement and copies for six names. Small adapter; moderate declaration, legality, copy and payment tests. |
+| Collection static untap rules | Meekstone; Arena of the Ancients; Magnetic Mountain; Thelon's Curse | 2 after prerequisites | Meekstone needs PowerIs/GreaterThanOrEqualTo; Arena needs IsSupertype and collection tapping. Mountain/Curse also need AnyPlayer upkeep, player-local choices, per-object payment and chosen collections. Enables shared four-card untap rules. Moderate adapter/filter and batch-action work; larger payment follow-up. |
+| Bound sacrifice repeated mana | Priest of Yawgmoth; Sacrifice; Metamorphosis | 1 after prerequisites | Priest needs bound amount and mana solver metadata. Sacrifice needs additional casting-payment scope; Metamorphosis also needs Plus and restricted mana. Enables shared paid-value mana for three names. Small activation adapter with moderate payment/solver tests; larger casting follow-up. |
+
+The selected shape has the lowest dependency cost for a credible two-card
+unlock. The ledger's suggested priority was reassessed. All twelve Blast
+reprints and the four other spell-mode records were read. The complete nested
+records for Pyramids, Balm of Restoration, Relic Bind and Triassic Egg were
+also read: these use activation/trigger contexts outside this slice and have
+additional prevention, replacement, host-event, choice or modifier blockers.
+All collection-untap and sacrifice-mana candidate records were read, including
+identical reprints. Modal_ChooseOne's first-error count was not treated as a
+full-card unlock estimate. Selection, reuse boundary, exact contract and
+acceptance cases were stated before editing.
+
+### Exact contract, signatures and reuse boundary
+
+Capability P2-CHOOSE-ONE-SPELL-MODES is complete for
+`SpellActions(Modal_ChooseOne([mode, mode, ...]))` on instants and sorceries.
+The constructor has one positional list argument and at least two modes.
+Each mode uses the existing supported ActionList/1 or Targeted/2 action-plan
+shape, with at most one target declaration. Every mode body must compile.
+Nested modal bodies, permanent SpellActions, activation/trigger modes and
+Targeted_Modal remain errors. Unsupported actions do not become accepted
+because their parent is modal.
+
+Private adapter signature:
+`compileModalSpell(Node, scope) (optionFactory, error)`.
+`scope.targetNamespace string` supplies distinct internal declaration names
+(`mode1/Ref_TargetPermanent`, etc.). RON spelling and lexical reads remain
+unchanged. `compileTarget(Node, scope) (targetFactory, string, error)` uses
+that namespace for permanent, player and spell declarations; its existing
+callers have an empty namespace and retain their names. Each mode clears
+inherited target plans, compiles independently, and builds fresh declarations
+and effects inside each factory call. Plans capture no chosen state.
+
+`actionPlan.build` and typed target bindings supply the existing group mapping.
+`mage.NewModalSpell` receives mode targets/effects and labels from effect
+sequence text with readable target names. Existing engine services choose mode/targets at announcement,
+pay costs transactionally, keep mode/targets on the stack, recheck legality,
+resolve only the chosen body, and copy/retarget without selecting a new mode.
+`CounterSpellRef` and `Destroy` continue to use stack/permanent identity and
+shared zone/regeneration services. No engine execution service was added.
+There is no Go fallback, card-name branch, mutable shared target state,
+last-action slot, partial production registry or game-time declaration panic.
+The minimum mode count is checked before factory construction.
+
+Semantic reporting propagates `actions` through Modal_ChooseOne's mode list,
+including descendants in unsupported contexts. This is syntax-role evidence,
+not general activation/trigger support. No new LKI producer, simultaneous
+operation or replacement-order contract is introduced. Existing regeneration
+is explicitly exercised. CR 601.2b-c, 608.2b, 700.2a/c/f/g, 400.7 and
+702.26b were read with the selected engine/API contracts.
+
+### TDD and card-to-test mappings
+
+Initial tests were written before implementation. The first red run found a
+fixture casting a creature on the wrong player's main phase; the fixture was
+corrected. The confirmed red run then failed all 24 real Blast set/mode cases
+and the synthetic instance test with unsupported Modal_ChooseOne. Invalid
+forms stayed rejected. The first implementation exposed duplicate engine
+binding names across two modes with the same RON spelling. Private mode
+namespaces fixed that compiler lowering issue without changing engine rules.
+A label test first failed when compiler binding names appeared in the mode
+menu. Labels now use readable target names.
+A later synthetic targeted-life test exposed an existing adapter gap; the test
+was changed to supported explicit-player drawing to test mode scopes. Targeted
+life remains an explicit blocker, not a claimed behavior. No production action
+or existing test was weakened to accept it.
+
+| Card or contract | Tests |
+| --- | --- |
+| Blue Elemental Blast; Red Elemental Blast | TestRONModalBlastCards executes both modes from LEA, LEB, 2ED, 3ED, CED and CEI; complete records and engine definition validation, mode-local targets at announcement, counter/destruction, owner graveyards, clone isolation and no new resolution mode choice |
+| Blue Elemental Blast legality and payment | TestRONModalAnnouncementRollback: wrong-mode target, wrong color, invalid choice and unpaid cast retain hand/mana/stack state |
+| Blue Elemental Blast resolution | TestRONModalResolutionLegality: spell/permanent color changes, spell recast, permanent leave/return, phased target restoration, regeneration shield and uncounterable spell |
+| Blue Elemental Blast copies | TestRONModalCopyTargets: engine copy with new permanent target retains mode, does not reprompt mode, leaves original target intact, moves only appropriate victims, copy leaves no card in graveyard, clone remains isolated |
+| Mode/factory identity | TestRONModalInstances: same reference spelling in two modes gives distinct declarations; second factory has fresh declarations; both definitions validate; labels hide compiler binding names |
+| Untargeted and player-target mode contracts | TestRONModalUntargetedAndPlayerModes: only chosen targets are required; player draw affects the explicit opponent; untargeted life gain affects caster |
+| Invalid declarations | TestRONModalInvalid: wrong kind/arity/list, fewer than two modes, cross-mode and incompatible references, unknown body, nested modes, permanent SpellActions and activation context |
+| Inventory and accepted collection | TestRONModalInventory verifies nested roles; updated repository inventory counts and existing Lightning Bolt/registry regression tests retain accepted gameplay and strict loading behavior |
+
+Two unique collection cards gain complete-record RON behavior evidence.
+Synthetic cards establish contracts only. Compilation is tracked separately
+from full-collection gameplay and engine-validation totals, which remain
+unmeasured/null in the inventory.
+
+### Final measurements and validation
+
+Estimated versus actual: **two unique names and twelve records**, exactly as
+predicted. Compiled **1,085 -> 1,097/2,445**; rejected **1,360 -> 1,348**.
+Accepted unique names **367 -> 369**; rejected names **619 -> 617**.
+Fresh record/file and unique-name rejection comparisons show exactly the
+Blast unlocks and zero accepted-record regressions. Strict/semantic issue
+arrays match. Occurrences/signatures remain 72,938/8,528; unknown-role
+occurrences fall **15,073 -> 14,661**. All twelve source SHA256 values match
+the initial inventory and vocabulary snapshot. RON source did not change,
+so no vocabulary source snapshot refresh was needed.
+
+Missing behavior was compiler lowering, not missing engine execution or an
+environment failure. No source defect was corrected. Existing Gaea's Liege,
+Fastbond and other unresolved source questions remain outside this slice.
+Healing Salve/Alabaster Potion now expose targeted life as their first error;
+Active Volcano/Flash Flood expose return-to-hand. These are explicit remaining
+gaps. Leading first diagnostics remain rule If (53), non-spell CastEffect (53),
+ChooseADamageSource (46), Targeted_Modal (42), self untap HostPermanent (39),
+upkeep HostController (35), other self untap operations (34),
+ControlledByAPlayer (29), TargetGraveyardCard (26),
+WhenAPermanentBecomesTapped (25) and CreateFuturePreventDamage (24).
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1 | PASS |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and semantic loader | Expected exit 1: 1,085 compiled, 1,360 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONModal -count=1 | Confirmed missing-adapter failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS; repeated after final label and lint changes |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | Initial test-fixture ineffassign; removed unused assignment, reviewed automatic formatting; rerun PASS with zero issues |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,097 compiled, 1,348 rejected; matching issues |
+| Fresh accepted-record and source-hash audits | PASS: zero regressions; twelve unchanged source hashes |
+
+Changed files: compiler.go, inventory.go, inventory_test.go, new modal_spell.go
+and modal_spell_test.go; dsl-reference.md, engine-rules-contracts.md and this
+ledger. The slice is ready for one descriptive commit. User changes remain
+outside staging. No Go definitions, generators, startup callers or DSL exports
+were removed; complete loading, gameplay/test migration and startup gates are
+not met. No deletion caller audit or full registry runtime cutover is claimed.
+
+Ranked next candidates to reassess from fresh evidence:
+1. Shared return-to-owner-hand action: Active Volcano and Flash Flood now have
+   supported modes and targets. Inspect all other complete records using this
+   action to estimate the larger shared gain and owner/incarnation contracts.
+2. Targeted player life plus future prevention for Healing Salve and Alabaster
+   Potion, with Balm of Restoration's activation-mode context kept separate.
+   Compare life adapters against a shared prevention prerequisite across the
+   collection before choosing scope.
+3. Collection untap/filter prerequisites for Meekstone and Arena of the
+   Ancients; Magnetic Mountain and Thelon's Curse still need payment choices.
+
+Complete collection gameplay, runtime loading, Go-card/generator removal and
+DSL cleanup remain unfinished. No second slice began.

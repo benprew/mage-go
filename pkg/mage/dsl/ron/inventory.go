@@ -286,6 +286,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"player_reference", "activation_player_filter"}[index]
 		}
 	case "actions":
+		if n.Name == "Modal_ChooseOne" && len(n.Args) == 1 {
+			return "actions"
+		}
 		if n.Name == "Targeted" && len(n.Args) == 2 {
 			return []string{"target", "actions"}[index]
 		}

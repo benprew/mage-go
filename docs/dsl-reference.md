@@ -1314,3 +1314,20 @@ on the battlefield, and have its static ability. Each factory builds a fresh
 effect. Extra filters, other ability operands, mixed operation lists, and
 self-only or temporary contexts remain unsupported. This adapter does not add
 general landwalk filter support to targets or other selectors.
+
+## RON choose-one spell modes
+
+`SpellActions(Modal_ChooseOne([mode, mode, ...]))` accepts at least two
+mode bodies. Each body uses the supported `ActionList` or `Targeted` grammar.
+Each mode has its own target scope. A target reference cannot read a declaration
+from another mode. Each factory call builds fresh targets and effects. Internal
+declaration names include a mode namespace; RON references keep their spelling.
+
+The adapter uses `NewModalSpell`. The controller chooses one mode and only its
+targets during casting. Resolution executes only that mode and checks its target
+legality. Copies retain the mode and can choose new targets for that mode.
+Mode labels use effect sequence text with readable target names. All mode bodies must compile;
+an unsupported body rejects the entire record. Nested modes, activation modes,
+trigger modes, and `Targeted_Modal` remain unsupported. Life actions in player
+target scopes and future prevention remain separate gaps for Healing Salve
+and Alabaster Potion.
