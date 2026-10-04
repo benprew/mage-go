@@ -62,7 +62,16 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 				return nil, err
 			}
 			for _, ability := range abilities {
-				if keyword, ok := keywords[ability.Name]; ok && ability.Kind == Symbol {
+				keyword, ok := keywords[ability.Name]
+				ok = ok && ability.Kind == Symbol
+				if ability.Name == "Landwalk" {
+					keyword, err = compileLandwalkKeyword(ability)
+					if err != nil {
+						return nil, err
+					}
+					ok = true
+				}
+				if ok {
 					if global {
 						if subjects.controlled && subjects.excludeSource {
 							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToOtherControlled(keyword, subjects.filter) })

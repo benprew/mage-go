@@ -393,28 +393,36 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return mage.WithAbility(mage.ProtectionFromColors(append([]core.Color(nil), colors...)...))
 		}, nil
 	case "Landwalk":
-		if err := arity(n, 1); err != nil {
-			return nil, err
-		}
-		filter := n.Args[0]
-		if filter.Name != "IsLandType" {
-			return nil, unsupported(filter, "landwalk filter")
-		}
-		if err := arity(filter, 1); err != nil {
-			return nil, err
-		}
-		name, err := symbol(filter.Args[0])
+		kw, err := compileLandwalkKeyword(n)
 		if err != nil {
 			return nil, err
-		}
-		kw, ok := map[string]core.Attr{"Plains": core.Plainswalk, "Island": core.Islandwalk, "Swamp": core.Swampwalk, "Mountain": core.Mountainwalk, "Forest": core.Forestwalk, "Desert": core.Desertwalk}[name]
-		if !ok {
-			return nil, unsupported(filter, "landwalk type")
 		}
 		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
 	default:
 		return nil, unsupported(n, "rule")
 	}
+}
+
+func compileLandwalkKeyword(n Node) (core.Attr, error) {
+	if err := arity(n, 1); err != nil {
+		return 0, err
+	}
+	filter := n.Args[0]
+	if filter.Name != "IsLandType" {
+		return 0, unsupported(filter, "landwalk filter")
+	}
+	if err := arity(filter, 1); err != nil {
+		return 0, err
+	}
+	name, err := symbol(filter.Args[0])
+	if err != nil {
+		return 0, err
+	}
+	kw, ok := map[string]core.Attr{"Plains": core.Plainswalk, "Island": core.Islandwalk, "Swamp": core.Swampwalk, "Mountain": core.Mountainwalk, "Forest": core.Forestwalk, "Desert": core.Desertwalk}[name]
+	if !ok {
+		return 0, unsupported(filter, "landwalk type")
+	}
+	return kw, nil
 }
 
 var keywords = map[string]core.Attr{

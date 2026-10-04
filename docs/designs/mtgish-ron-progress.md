@@ -942,3 +942,106 @@ power/toughness and branch prerequisites for Blood Lust/Berserk. Reassess fresh
 evidence before selection. Full RON gameplay/loading, startup cutover, native
 startup evidence, Go-card/generator deletion and unused-DSL removal gates remain
 unmet. No deletion or whole-repository caller audit is claimed. This run stops.
+
+## Run 2026-10-03: P7-STATIC-LANDWALK
+
+Status: complete static landwalk grant slice. No second slice was started.
+Initial user changes to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from the slice commit. No unrelated untracked files existed.
+
+The fresh three-candidate comparison, complete affected-name lists, exact
+signatures/contexts, dependencies, rules evidence, engine reuse, source findings
+and card-to-test mappings are in
+[mtgish-ron-static-landwalk.md](mtgish-ron-static-landwalk.md).
+Static landwalk affects six distinct names and unlocks three for a small adapter;
+optional fixed counter payments affect four and unlock two with broader scope
+and payment prerequisites; numeric branches/readers affect four and unlock one
+with broader value/LKI prerequisites. Fresh nested inventory found the Aura
+and Hidden Path gains beyond the prior ledger's lord-only suggestion.
+
+Implemented `AddAbility([Landwalk(IsLandType(symbol))])/1` in Aura-host
+`PermanentLayerEffect/2` and existing explicit creature-restricted
+`EachPermanentLayerEffect/2`, including controlled/source-excluded contexts.
+Accepted symbols: Plains, Island, Swamp, Mountain, Forest and Desert. Printed
+landwalk parsing is reused through a private helper. Each factory builds fresh
+effects. Inventory reports static keyword operands, landwalk filters and land
+subtypes without asserting support. Temporary and rule landwalk contexts remain
+separate. No public DSL export or mutable binding was added.
+
+The subtype-only global guard remains. CR 109.2/205.3m/208.3a require a contract
+for matching noncreature subtype permanents before accepting Goblin King/Lord
+of Atlantis. Zombie Master also needs granted activated abilities. No source
+defect was corrected. All 12 RON hashes match the vocabulary snapshot; no
+refresh is needed. Gaea's Liege/Fastbond observations remain open.
+
+Engine reuse: static plans, GrantAbilityToAttached, global/controlled keyword
+grants, printed-static registration, shared layer/removal ordering, attachments,
+phasing, control, clones and landwalk combat queries. TDD exposed a prerequisite:
+HasLandwalkEvasion counted phased defending lands. A focused engine regression
+failed for six subtype attributes plus legendary landwalk, then passed after
+both query branches excluded phased lands. The implement-engine skill supplied
+the contract-test workflow. No new engine API, replacement, cost, event, LKI
+reader or simultaneous operation was added.
+
+Tests first confirmed unsupported grants for Burrowing/Fishliver Oil/Hidden Path
+and missing inventory roles. Two initial fixture API errors were corrected
+before that expected failure. Real RON gameplay tests cover complete Aura
+records, target legality/return/phasing, mana state after rejected announcement,
+resolution timing, attachment changes, indirect phasing, source ability removal,
+source departure, defender control/land phasing and clone isolation. Hidden Path
+covers current color/creature membership, both controllers, late entry, source
+control, phase cycles, removal/restoration and departure/return. Synthetic tests
+cover all six subtypes, mixed grants/P/T, factory isolation, accumulation and
+controlled source exclusion. Engine tests add ownership/control, departure/return
+and independent clone phasing evidence. Complete test mappings are in the report.
+
+Strict loader: **892/2,445 compiled records**, **1,553 rejected records**,
+**264 compiled unique names**, **722 rejected unique names**. Gain: **eight
+records and three unique cards**, exactly the estimate. Burrowing (six reprints),
+Fishliver Oil and Hidden Path gain full-record RON gameplay evidence. No accepted
+record regressed. Six Zombie Master records advance their first diagnostic to
+the second subtype-only global selector; other rejected diagnostics are unchanged.
+Strict loading still exits 1 and publishes no partial registry. Compilation and
+gameplay coverage are separate; no global gameplay total is claimed.
+
+Remaining first gaps include PermanentRuleEffect (110 records), AsPermanentEnters
+(90), If (63 across contexts), ActivatedWithModifiers (61), CastEffect (54 across
+contexts), ChooseADamageSource (46), MayCost and WhenAPlayerCastsASpell (43 each),
+Targeted_Modal (42), HostController (35), And (31 across contexts) and
+ControlledByAPlayer (29 across contexts). These are compiler/context gaps.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline strict loader and AST inventory | Expected exit 1; 884 compiled, 1,561 rejected |
+| Focused `TestRONStaticLandwalk` with `-count=1` | Expected unsupported grants/inventory roles before adapters; final PASS |
+| Focused `TestLandwalkEvasionPhasingAndController` with `-count=1` | Expected phased-land failures before fix; final PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS after removing a trailing ledger blank line |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; 892 compiled, 1,553 rejected |
+| Vocabulary source hash comparison | All 12 hashes match |
+
+Two exact inventory count assertions were updated to fresh measured counts;
+existing gameplay/registry assertions remain. Automatic lint changed only the
+new RON test's import grouping. It did not change user files or unrelated code.
+No environment or pre-existing check failure blocks this slice.
+
+Files: compiler.go, layers.go, inventory.go, inventory_test.go and new
+static_landwalk_test.go under pkg/mage/dsl/ron; combat.go and new
+landwalk_evasion_test.go under pkg/mage; docs/dsl-reference.md,
+docs/engine-rules-contracts.md, the new static-landwalk report and this ledger.
+These eleven files form one descriptive commit. No RON record, runtime wiring,
+Go definition, generator or DSL export was changed.
+
+Next ranked slice: general static subtype subjects for Goblin King/Lord of
+Atlantis, with exact noncreature grant/P/T contracts first; then optional fixed
+counter payments for Force Spike/Vodalian Mage; then characteristic reads,
+arithmetic and branches for Blood Lust and downstream Berserk/Kry Shield/Subdue.
+Reassess fresh evidence before choosing. Complete RON gameplay/loading, embedded
+startup, native startup evidence, Go-card and generator deletion, and unused-DSL
+removal gates remain unmet. No deletion or caller audit is claimed. This run stops.

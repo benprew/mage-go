@@ -214,6 +214,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if n.Name == "Landwalk" && len(n.Args) == 1 {
+			return "landwalk_filter"
+		}
 		switch n.Name {
 		case "SpellActions":
 			if len(n.Args) == 1 {
@@ -299,7 +302,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "value"
 			}
 		}
-	case "temporary_modification":
+	case "static_modification", "temporary_modification":
 		switch n.Name {
 		case "AdjustPTX":
 			if len(n.Args) == 3 {
@@ -313,6 +316,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "keyword"
 			}
+		}
+	case "keyword":
+		if n.Name == "Landwalk" && len(n.Args) == 1 {
+			return "landwalk_filter"
+		}
+	case "landwalk_filter":
+		if n.Name == "IsLandType" && len(n.Args) == 1 {
+			return "land_subtype"
 		}
 	case "pt_coordinate":
 		if n.Name == "Integer" && len(n.Args) == 1 {

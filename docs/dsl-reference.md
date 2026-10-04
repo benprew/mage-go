@@ -933,3 +933,21 @@ is local to the modification. Numeric values are captured at resolution and
 remain fixed until end of turn. Other-object characteristic reads, power and
 toughness readers, arithmetic and static AdjustPTXY remain unsupported.
 See [the exact contexts and tests](designs/mtgish-ron-temporary-values.md).
+
+## RON static landwalk grants
+
+`AddAbility([Landwalk(IsLandType(subtype))])` is supported inside the existing
+`PermanentLayerEffect(HostPermanent, modifications)` Aura context and
+creature-restricted `EachPermanentLayerEffect(filter, modifications)` context.
+The subtype must be a symbol: Plains, Island, Swamp, Mountain, Forest or Desert.
+These grants use the same validated landwalk form as printed RON keywords.
+They can be mixed with existing fixed P/T modifications and basic keywords.
+Global source exclusion and controller conjunctions retain their existing
+contracts. Each factory creates fresh continuous effects.
+
+The global filter must still explicitly require creatures; a positive creature
+subtype predicate alone does not establish this requirement. Broader subtype
+subjects need an engine contract for matching noncreature permanents (CR 109.2,
+205.3m, 208.3a). Other landwalk filters, temporary grants and rule restrictions
+remain separate compiler contexts. See
+[the static-landwalk slice](designs/mtgish-ron-static-landwalk.md) for evidence.

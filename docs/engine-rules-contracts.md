@@ -626,3 +626,16 @@ This applies to printed or directly installed removal services. Removal expiry
 state is deep-cloned. It does not establish complete dependency detection for
 all layer forms. Evidence: `TestAbilityRemovalOrdersBeforePrintedKeywordGrant`,
 `TestPrintedAbilityRemovalOrdersBeforePrintedGrant`, and the RON Fortified Area/Goblin War Drums source-removal tests.
+
+## Landwalk and phased defending lands
+
+`HasLandwalkEvasion` tests lands controlled by the defending player, regardless
+of their owner. Phased-out lands do not enable subtype or legendary landwalk
+(CR 702.14c, 702.26b/d). Phase-in restores eligibility; changing control or
+leaving the battlefield changes eligibility immediately. A clone's phasing
+state cannot change the original query. Evidence:
+`TestLandwalkEvasionPhasingAndController` covers all six supported subtype
+landwalk attributes and legendary landwalk. RON Aura tests exercise this query
+with real grants and phased defending lands. This fixes the query used by the
+shared blocker-selection and declaration checks; it adds no replacement,
+payment, target or event behavior.
