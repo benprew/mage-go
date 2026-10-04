@@ -218,6 +218,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "landwalk_filter"
 		}
 		switch n.Name {
+		case "AsPermanentEnters":
+			if len(n.Args) == 2 {
+				return []string{"permanent_reference", "entry_operation"}[index]
+			}
 		case "SpellActions":
 			if len(n.Args) == 1 {
 				return "actions"

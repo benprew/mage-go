@@ -1223,3 +1223,19 @@ Other end-step player filters, `TriggerI`, and `CreateFutureTrigger` remain
 unsupported. This adapter does not provide history queries or a delayed trigger.
 Evidence: `TestRONEndStep*`, including complete Ball Lightning and Breeding Pit
 RON gameplay; [slice report](designs/mtgish-ron-end-step.md).
+
+### RON tapped entry
+
+Permanent cards accept exactly
+`AsPermanentEnters(ThisPermanent, [EntersTapped])`. The compiler lowers this
+form to the engine's `EntersTapped` entry attribute. The permanent is tapped
+before entry effects and triggers inspect it. Entry does not create a tap event
+or put a tapped-entry ability on the stack. Normal untapping is permitted.
+Re-entry applies the rule again; phasing does not. Card copies retain the rule,
+and cloned games keep separate tapped states.
+
+The source must be the symbol `ThisPermanent`, and the list must contain only
+the symbol `EntersTapped`. Empty lists, other subjects, tuple-shaped symbols,
+additional operations, entry choices and entry counters remain unsupported.
+`EntersTapped` is not a general action or a top-level keyword declaration.
+See `TestRONEntryTapped*` and the [slice report](designs/mtgish-ron-entry-tapped.md).

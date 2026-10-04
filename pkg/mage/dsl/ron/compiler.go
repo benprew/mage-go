@@ -354,6 +354,8 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
 	}
 	switch n.Name {
+	case "AsPermanentEnters":
+		return compileTappedEntry(n)
 	case "TriggerA":
 		return compileTriggerRule(n, ctx)
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":

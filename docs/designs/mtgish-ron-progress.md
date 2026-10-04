@@ -3084,3 +3084,111 @@ for Khabál Ghoul/Scavenging Ghoul, with TriggerI downstream for Osai Vultures;
 (3) next-end-step delayed capture for Rukh Egg and nested future-trigger users.
 Complete loading/gameplay, runtime/native startup, Go-card/generator deletion
 and DSL cleanup remain open. No second slice began.
+
+## Run 2026-10-04: P8-ENTRY-TAPPED
+
+Status: completed one tapped self-entry adapter slice. User changes in
+`.gitignore` and `mtgish-ron-execution.md` are preserved and excluded from this
+slice's commit. No unrelated untracked files were present at baseline.
+
+The [tapped-entry report](mtgish-ron-entry-tapped.md) contains complete-record
+inspection, exact shapes, dependencies, engine reuse, remaining per-card gaps
+and card-to-test mappings. Fresh short tests/build passed; strict and semantic
+loaders rejected unsupported records as expected. Selection and acceptance
+cases preceded edits. Candidate comparison:
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers / downstream benefit / effort |
+| --- | --- | ---: | --- |
+| Tapped self entry, selected | Bottomless Vault, Bronze Tablet, Dwarven Hold, Dwarven Ruins, Ebon Stronghold, Havenwood Battleground, Hollow Trees, Icatian Store, Leviathan, Nevinyrral's Disk, Ruins of Trokair, Sand Silos, Svyelunite Temple, Sword of the Ages, Time Vault | 6 | Other nine need untap, TriggerI, plural payment/results, ante/ownership or turn services. Entry is a prerequisite for five storage lands. Small adapter; moderate six-card gameplay coverage. |
+| Creature death history | Khabál Ghoul, Scavenging Ghoul | 2 | Exact records have no other blockers. Enables later end-step/intervening-if history consumers. Small adapter; moderate LKI/token/turn-reset tests. |
+| Saved-sacrifice repeated mana | Priest of Yawgmoth, Sacrifice, Metamorphosis | 1 | Spells need casting-payment bindings; Metamorphosis also Plus/restricted mana. Shared paid-value consumer. Small activation adapter; moderate saved-result/rollback/solver tests, larger casting work. |
+
+Six credible full-card unlocks with one small compiler adapter won on gain per
+estimated effort. The parent AST signature groups entry lists by kind; nested
+EntersTapped signatures were inspected to identify 15 unique affected names.
+All their complete RON records and both competing candidates' complete records
+were read. No engine prerequisite, environment failure or source-data defect
+was found for this context. No RON source changed.
+
+Exact support: permanent-source `AsPermanentEnters/2`, symbol `ThisPermanent`,
+list containing exactly symbol `EntersTapped`. Private signature:
+`compileTappedEntry(n Node) (optionFactory,error)`. Each factory lowers to
+`mage.WithKeyword(core.EntersTapped)`. There is no mutable binding or chosen
+state in this declaration. Inventory operands use permanent_reference and
+entry_operation roles, without claiming gameplay support. Invalid arity, lists,
+subjects, tuple symbols, mixed operations, spell context and general action or
+keyword use are errors. Other entry choices/copy/counter contexts remain gaps.
+
+Engine reuse: prepareBattlefieldEntry, attribute seeds, card/permanent/game
+cloning, normal untap, phase-in/out, source incarnations, land play, mana solver
+metadata/immediate abilities, atomic cost transactions, owner-directed sacrifice,
+shared destruction batches, regeneration/indestructible checks, leave-event LKI
+and stack resolution. RON owns declaration spelling and diagnostics. No engine
+API/rule changed; no fallback, card-name branch, global last-action slot,
+game-time declaration panic or partial registry was added. CR 400.6–7,
+614.1c–d/4/12, 702.26b–d, 701.21a and 602.2/5 were read with relevant API/rules
+contracts. No new competing-entry-replacement ordering contract is claimed.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Dwarven Ruins, Ebon Stronghold, Havenwood Battleground, Ruins of Trokair, Svyelunite Temple | TestRONEntryTappedLands: each full FEM record, definition validation, native land play, both abilities, exact immediate mana, illegal activations, solver and clone state |
+| All five lands / owner versus controller | TestRONEntryTappedNativeUntapAndOwner: native untap steps, normal untap, sacrifice ignores regeneration and goes to owner; controller receives mana |
+| Nevinyrral's Disk | TestRONEntryTappedDisk: full LEB record, definition validation, actual casting and entry, casting/activation rollback, departure, three-type destruction union, regeneration once, indestructible, land/phasing exclusions, complete pre-change battlefield at death detection and clone resolution |
+| All six complete cards | TestRONEntryTappedLifecycle: direct entry, separate controllers, return, phasing, independent factory instances and cloned state |
+| Entry timing / transition | TestRONEntryTappedEventTiming: synthetic RON entry/ETB with typed engine observer fixtures, tapped state before ETB, no entry tap event, later tap event |
+| Card cloning | TestRONEntryTappedCardCopy |
+| Declaration rejection / inventory | TestRONEntryTappedInvalid, TestRONEntryTappedInventory, updated collection inventory fixtures |
+
+TDD first corrected a fixture API typo, then confirmed expected unsupported
+AsPermanentEnters and missing operand-role failures. Native land-play fixtures
+now use the hand owner's card; the separate control test covers another owner.
+The simultaneous observer uses the engine's pre-change leave-event state and
+retains its original death filter when adding a batch condition. No gameplay
+expectation was weakened. Lint found a test variable named `copy`, which was
+renamed; automatic import formatting was reviewed. Final validation followed
+all test changes and the successful final lint run.
+
+Estimated and actual gains agree: **six unique names, eleven records** (six Disk
+reprints and five lands). Compiled **1,042 -> 1,053/2,445**; rejected
+**1,403 -> 1,392**. Accepted names **340 -> 346**, rejected names **646 -> 640**.
+Zero accepted-record regressions. Strict and inspection issue arrays match.
+AST occurrences/signatures remain **72,938/8,528**; unknown-role occurrences
+**16,588 -> 16,310**. Collection-wide engine_validated/behavior_verified remain
+null. Six complete cards gain explicit gameplay/definition evidence; compilation
+and collection-wide gameplay remain separate. All twelve source hashes match
+the vocabulary snapshot, so no syntax refresh is needed. Gaea's Liege/Fastbond
+source concerns remain open.
+
+Leading diagnostics: PermanentRuleEffect 121, If 65, CastEffect 54,
+ChooseADamageSource 46, Targeted_Modal 42, HostController 35,
+ControlledByAPlayer 29, TriggerI 28, TargetGraveyardCard 26. Storage-land and
+other affected-card blockers are listed in the report; changed first errors do
+not count as full-card unlocks.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline go run ./cmd/loadcards -json; semantic inspection | Expected exit 1: 1,042 compiled, 1,403 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONEntryTapped -count=1 | Expected adapter/role failures first; final PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS, repeated on final code after lint |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated on final code after lint |
+| make test | PASS, repeated on final code after lint |
+| make build | PASS, repeated on final code after lint |
+| go vet ./... | PASS, repeated on final code after lint |
+| make lint | Initial builtin-variable failure corrected; final PASS, zero issues |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; semantic inspection | Expected exit 1: 1,053 compiled, 1,392 rejected; identical diagnostics |
+| Accepted-record / snapshot source-hash audits | PASS: zero regressions, all twelve hashes unchanged |
+
+Slice files: entry_tapped.go/entry_tapped_test.go, compiler.go,
+inventory.go/inventory_test.go, dsl-reference.md, engine-rules-contracts.md,
+this ledger and the new report. Production startup, Go-card definitions,
+generators and existing DSL callers remain unchanged. Cutover/removal gates
+remain closed. No DSL export was removed; no deletion caller audit is claimed.
+
+Ranked next candidates to reassess: (1) creature-death history for Khabál Ghoul
+and Scavenging Ghoul; (2) optional untap and tapped-source TriggerI for the five
+storage lands, now with tapped entry and counter/mana payments supported;
+(3) saved-sacrifice repeated mana, with casting-payment scope downstream.
+Complete collection loading/gameplay, runtime/native startup, Go-card/generator
+deletion and DSL cleanup remain open. No second slice began.

@@ -983,3 +983,26 @@ Typed targets are selected at placement and checked again at resolution
 Evidence: `TestRONEndStep*`, mapped in
 [the slice report](designs/mtgish-ron-end-step.md). Intervening-if, histories,
 delayed triggers and other step player filters remain separate prerequisites.
+
+## RON tapped-entry adapter
+
+`AsPermanentEnters(ThisPermanent, [EntersTapped])` reuses the engine's existing
+entry attribute and `prepareBattlefieldEntry`. It establishes compiler support,
+with no engine rule change. The source enters tapped before entry observers
+inspect it (CR 614.1d, 614.12). It does not become tapped from an untapped state,
+so entry does not fire a tap transition event. Phasing keeps the current status
+and does not repeat entry (CR 702.26b–d). A zone return applies entry to a new
+permanent (CR 400.7); card copies retain the declaration. Entry does not impose
+an untap restriction.
+
+The six newly supported full records also exercise shared mana ability timing
+(CR 605.1a, 605.3b), atomic activation costs, owner-directed sacrifice
+(CR 701.21a), and batch destruction. Nevinyrral's Disk allows regeneration;
+an artifact creature is selected once by its union filter. Death trigger conditions use
+the complete battlefield before the batch. Phased permanents and lands are excluded;
+indestructible permanents survive. These are existing engine services, not new
+entry replacement ordering rules. General entry choices, copies, counters and
+competing entry replacements remain outside this adapter.
+
+Evidence: `TestRONEntryTapped*`, mapped in
+[the tapped-entry report](designs/mtgish-ron-entry-tapped.md).
