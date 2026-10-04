@@ -750,3 +750,101 @@ then optional fixed counter payments. Complete RON gameplay/loading, embedded
 startup, native startup evidence, Go-card deletion, obsolete Go-set generator
 retirement and unused-DSL removal gates remain unmet. No deletion or caller audit
 is claimed. This run stops after P1-STATIC-CONTROLLER.
+
+## Run 2026-10-03: P1-STATIC-OTHER
+
+Status: complete static source-exclusion slice. No second slice was started.
+Initial user changes to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from this commit. No unrelated untracked files existed initially.
+
+The fresh three-candidate comparison, complete affected-name lists, exact
+signatures/contexts, dependencies, engine reuse, source findings, card-to-test
+mappings and ranked next candidates are in
+[mtgish-ron-static-other.md](mtgish-ron-static-other.md).
+
+Selection: static source exclusion affects six unique names and unlocks three
+Kobold lords. Variable temporary P/T affects six names and unlocks two; optional
+fixed counter payments affect four names and unlock two with broader scope and
+payment prerequisites. Complete records exposed the remaining subtype-only,
+landwalk and granted-activation gaps of Goblin King, Lord of Atlantis and Zombie
+Master. Source exclusion offers the largest credible gain for this effort.
+
+Implemented `Other(ThisPermanent)/1` in creature-restricted
+`EachPermanentLayerEffect/2` filters below nonempty recursive `And/1`, with or
+without the existing `ControlledByAPlayer(SinglePlayer(You))/1` conjunct. Fixed
+`AdjustPT/2` and basic `AddAbility/1` modifications retain their contracts.
+RON keeps source exclusion in an immutable staticCreatureFilterPlan; each factory
+builds fresh effects. Inventory reports the typed permanent operand. Malformed
+and wrong-role operands, source-dependent Or predicates and unsupported compiler
+contexts remain rejected.
+
+Engine reuse: BoostOtherControlledCreatures, GrantKeywordToOtherControlled,
+BoostAllCreatures with WhileOnBattlefield, GrantKeywordToAll, printed static
+registration, layers, source-removal dependencies, control/phasing and clone
+services. No engine prerequisite was missing. CR 611.3a/b/c, 613.1b/f/g, 613.4c,
+613.8a/b and 702.26b/d supply the contract. No new cost, LKI value, target,
+replacement or batch operation was added. No RON asset, engine implementation,
+startup wiring, Go definition, generator or DSL export was changed.
+
+TDD: tests first failed with unsupported Other in the three real lords and the
+synthetic global declaration, and unknown source operand inventory roles. The
+synthetic creature fixture needed CardPT before the intended compiler failure.
+Focused tests now cover all three real cards, printed first strike, both fixed
+bonuses, granted keywords, source exclusion, independent products of the same
+factory, owner/control distinction, other-instance accumulation, later entry,
+non-Kobold/opposing exclusions, source and recipient control/phasing, source
+ability removal/restoration, departure/return and clone isolation. Declaration
+and nested/global tests establish the supported boundaries. Crimson Kobolds,
+Llanowar Elves and Forest are real RON fixtures.
+
+Strict loading: **877/2,445 compiled records**, **1,568 rejected records**,
+**259 compiled unique names**, **727 rejected unique names**. Gain: **three
+records and three unique cards**, exactly the estimate: Kobold Drill Sergeant,
+Kobold Overlord and Kobold Taskmaster. These cards also gain direct RON gameplay
+coverage for their printed rules. Compilation and behavior coverage remain
+separate; no global gameplay total or completion certification is claimed.
+No accepted record regressed. Eighteen reprints of three names advance their
+first errors: Goblin King/Lord of Atlantis to subtype-only global filters;
+Zombie Master to Landwalk. Strict loading still publishes no partial registry.
+
+Leading first gaps remain PermanentRuleEffect 110 records, AsPermanentEnters 90,
+ActivatedWithModifiers 61, spell CastEffect 53, rule If 47, ChooseADamageSource
+46, MayCost 43, WhenAPlayerCastsASpell 43, Targeted_Modal 42, HostController
+upkeep references 35, and ControlledByAPlayer in other contexts 28. These are
+compiler/context gaps, not build or environment failures. No source defect was
+corrected. All 12 RON hashes match the vocabulary snapshot; no refresh is needed.
+Gaea's Liege/Fastbond observations remain open.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; 874 compiled, 1,571 rejected |
+| New `go test ./pkg/mage/dsl/ron -run TestRONOtherStatic -count=1` | Expected compiler/inventory failures before implementation; PASS afterward |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | Final PASS |
+| `go test ./pkg/mage/... -short -count=1` | Final PASS after count updates and lint |
+| `make test` | Final PASS after count updates and lint |
+| `make build` | PASS; repeated after lint |
+| `go vet ./...` | PASS; repeated after lint |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1; 877 compiled, 1,568 rejected |
+| Vocabulary source hash comparison | All 12 hashes match |
+
+The first broad test run failed only on two exact inventory assertions that still
+expected the old compilation counts. They now assert the fresh measured counts;
+registry and gameplay checks were retained. Automatic lint formatting only
+reordered imports in the new test. No unrelated file was changed by lint.
+No environment or pre-existing check failure blocks this slice.
+
+Files: `layers.go`, `inventory.go`, `inventory_test.go`, new `static_other_test.go`
+under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`, new static-other report and this
+ledger. These seven files form one descriptive slice commit. Existing user
+changes remain outside it.
+
+Next ranked slice: variable temporary P/T for Howl from Beyond/Great Defender;
+then optional fixed counter payments for Force Spike/Vodalian Mage; then static
+landwalk and creature-subtype subjects for Goblin King/Lord of Atlantis (Zombie
+Master also requires granted activation support). Reassess fresh evidence first.
+Full RON gameplay/loading, embedded startup, native startup evidence, Go-card
+and obsolete-generator deletion, and unused-DSL removal gates remain unmet.
+No deletion or whole-repository caller audit is claimed. This run stops here.

@@ -14,10 +14,9 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	global := n.Name == "EachPermanentLayerEffect"
-	var filter mage.PermanentFilter
-	var controlled bool
+	var subjects staticCreatureFilterPlan
 	if global {
-		filter, controlled, err = compileStaticCreatureFilter(n.Args[0])
+		subjects, err = compileStaticCreatureFilter(n.Args[0])
 		if err != nil {
 			return nil, err
 		}
@@ -36,10 +35,20 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 				return nil, err
 			}
 			if global {
-				if controlled {
-					effects = append(effects, func() mage.ContinuousEffect { return mage.BoostControlledCreatures(power, toughness, filter) })
+				if subjects.controlled && subjects.excludeSource {
+					effects = append(effects, func() mage.ContinuousEffect {
+						return mage.BoostOtherControlledCreatures(power, toughness, subjects.filter)
+					})
+				} else if subjects.controlled {
+					effects = append(effects, func() mage.ContinuousEffect { return mage.BoostControlledCreatures(power, toughness, subjects.filter) })
+				} else if subjects.excludeSource {
+					effects = append(effects, func() mage.ContinuousEffect {
+						return mage.BoostAllCreatures(power, toughness, subjects.filter, core.WhileOnBattlefield)
+					})
 				} else {
-					effects = append(effects, func() mage.ContinuousEffect { return mage.BoostAllCreaturesIncludingSelf(power, toughness, filter) })
+					effects = append(effects, func() mage.ContinuousEffect {
+						return mage.BoostAllCreaturesIncludingSelf(power, toughness, subjects.filter)
+					})
 				}
 			} else {
 				effects = append(effects, func() mage.ContinuousEffect { return mage.BoostAttached(power, toughness, core.AttachAura) })
@@ -55,10 +64,14 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			for _, ability := range abilities {
 				if keyword, ok := keywords[ability.Name]; ok && ability.Kind == Symbol {
 					if global {
-						if controlled {
-							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToControlled(keyword, filter) })
+						if subjects.controlled && subjects.excludeSource {
+							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToOtherControlled(keyword, subjects.filter) })
+						} else if subjects.controlled {
+							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToControlled(keyword, subjects.filter) })
+						} else if subjects.excludeSource {
+							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToAll(keyword, subjects.filter) })
 						} else {
-							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToAllIncludingSource(keyword, filter) })
+							effects = append(effects, func() mage.ContinuousEffect { return mage.GrantKeywordToAllIncludingSource(keyword, subjects.filter) })
 						}
 					} else {
 						effects = append(effects, func() mage.ContinuousEffect { return mage.GrantAbilityToAttached(keyword, core.AttachAura) })
@@ -122,46 +135,63 @@ func requiresCreature(n Node) bool {
 	return false
 }
 
-func compileStaticCreatureFilter(n Node) (mage.PermanentFilter, bool, error) {
+type staticCreatureFilterPlan struct {
+	filter        mage.PermanentFilter
+	controlled    bool
+	excludeSource bool
+}
+
+func compileStaticCreatureFilter(n Node) (staticCreatureFilterPlan, error) {
+	if n.Name == "Other" {
+		if err := arity(n, 1); err != nil {
+			return staticCreatureFilterPlan{}, err
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "ThisPermanent" {
+			return staticCreatureFilterPlan{}, unsupported(n.Args[0], "static exclusion reference")
+		}
+		return staticCreatureFilterPlan{filter: mage.AnyPermanent, excludeSource: true}, nil
+	}
 	if n.Name == "ControlledByAPlayer" {
 		if err := arity(n, 1); err != nil {
-			return mage.PermanentFilter{}, false, err
+			return staticCreatureFilterPlan{}, err
 		}
 		player := n.Args[0]
 		if player.Name != "SinglePlayer" {
-			return mage.PermanentFilter{}, false, unsupported(player, "static controller selector")
+			return staticCreatureFilterPlan{}, unsupported(player, "static controller selector")
 		}
 		if err := arity(player, 1); err != nil {
-			return mage.PermanentFilter{}, false, err
+			return staticCreatureFilterPlan{}, err
 		}
 		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
-			return mage.PermanentFilter{}, false, unsupported(player.Args[0], "static controller reference")
+			return staticCreatureFilterPlan{}, unsupported(player.Args[0], "static controller reference")
 		}
-		return mage.AnyPermanent, true, nil
+		return staticCreatureFilterPlan{filter: mage.AnyPermanent, controlled: true}, nil
 	}
 	if n.Name == "And" {
 		if err := arity(n, 1); err != nil {
-			return mage.PermanentFilter{}, false, err
+			return staticCreatureFilterPlan{}, err
 		}
 		parts, err := list(n.Args[0])
 		if err != nil {
-			return mage.PermanentFilter{}, false, err
+			return staticCreatureFilterPlan{}, err
 		}
 		if len(parts) == 0 {
-			return mage.PermanentFilter{}, false, problem(n, "empty static conjunction")
+			return staticCreatureFilterPlan{}, problem(n, "empty static conjunction")
 		}
 		filters := make([]mage.PermanentFilter, 0, len(parts))
-		controlled := false
+		plan := staticCreatureFilterPlan{}
 		for _, part := range parts {
-			filter, usesController, err := compileStaticCreatureFilter(part)
+			child, err := compileStaticCreatureFilter(part)
 			if err != nil {
-				return mage.PermanentFilter{}, false, err
+				return staticCreatureFilterPlan{}, err
 			}
-			filters = append(filters, filter)
-			controlled = controlled || usesController
+			filters = append(filters, child.filter)
+			plan.controlled = plan.controlled || child.controlled
+			plan.excludeSource = plan.excludeSource || child.excludeSource
 		}
-		return mage.And(filters...), controlled, nil
+		plan.filter = mage.And(filters...)
+		return plan, nil
 	}
 	filter, err := compileFilter(n)
-	return filter, false, err
+	return staticCreatureFilterPlan{filter: filter}, err
 }

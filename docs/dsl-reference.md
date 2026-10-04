@@ -912,3 +912,13 @@ with control, tap status, combat status, color and later entries. Controller
 predicates inside `Or` and other controller reference forms remain rejected.
 This adapter does not add controller support to target or collection filters.
 See [the supported contract and tests](designs/mtgish-ron-static-controller.md).
+
+### RON static source exclusion
+
+In a creature-restricted `EachPermanentLayerEffect` conjunction, use
+`Other(ThisPermanent)` to exclude the source from fixed P/T changes and basic
+keyword grants. It can be combined with `ControlledByAPlayer(SinglePlayer(You))`
+and nested nonempty `And` filters. Each source excludes only itself; other
+instances can affect it. Source-dependent predicates below `Or`, other reference
+operands and target/cost/action contexts remain rejected.
+See [the contract and card tests](designs/mtgish-ron-static-other.md).
