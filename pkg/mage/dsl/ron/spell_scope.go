@@ -104,8 +104,19 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 		}
 	}
 	controlled := false
+	manaValueX := false
 	var filters []mage.CardFilter
 	for _, part := range parts {
+		if part.Name == "ManaValueIs" {
+			if manaValueX {
+				return nil, "", problem(part, "supply one spell mana value restriction")
+			}
+			if err := compileManaValueXRestriction(part, ctx); err != nil {
+				return nil, "", err
+			}
+			manaValueX = true
+			continue
+		}
 		if part.Name == "TargetsAPermanent" {
 			if controlled {
 				return nil, "", problem(part, "supply one permanent target restriction")
@@ -122,8 +133,14 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 		}
 		filters = append(filters, filter)
 	}
+	if controlled && manaValueX {
+		return nil, "", problem(n, "combined spell mana value and permanent target restrictions are not supported")
+	}
 	return func() mage.Target {
 		name := ctx.targetNamespace + "Ref_TargetSpell"
+		if manaValueX {
+			return mage.DeclareSpellTargetManaValueX(name, filters...)
+		}
 		if controlled {
 			return mage.DeclareSpellTargetTargetingControlledPermanent(name, filters...)
 		}

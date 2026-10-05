@@ -3915,3 +3915,33 @@ Evidence: engine `TestMillOwnerOrderAndBatch`,
 `TestRONMillDeclarations`, `TestRONMillScopesAndInstances`, and
 `TestRONMillStrictLoadAndInventory`. Existing mill modifier, payment, source
 lifetime, target and untap regressions remain in the required suites.
+
+## Announced X in mana value target restrictions
+
+`TargetManaValueEqualX()` restricts a typed permanent target to its current mana
+value. X in the target permanent's mana cost is zero (CR 202.3e).
+`DeclareSpellTargetManaValueX(name, filters...)` restricts a typed spell target
+by its current mana value on the stack, including that spell's own announced X
+and each X symbol in its cost. The action's X and the target spell's X are
+separate values (CR 107.3a, 202.3e).
+
+Announcement validation, target prompts, random target choices, copy retargeting
+and resolution legality supply the relevant action's X explicitly. A query uses
+a separate game view with its own X field; it cannot overwrite the current
+resolution's X. Resolution checks each object's stored X before effect execution
+begins. The existing target, incarnation, stack identity, transaction, copy and
+clone services retain ownership of choices and state (CR 601.2b-c, 608.2b).
+Target restrictions read current characteristics and do not use target LKI.
+
+RON supports `ManaValueIs(EqualTo(ValueX))` as a direct permanent or spell target
+restriction and within its supported `And` conjunction. The scope must supply
+announced X. Static filters, disjunctions, fixed amounts, other comparisons and
+combined spell mana value/current-permanent-target restrictions remain rejected.
+Detonate uses existing controller LKI after destruction; failed destruction does
+not suppress its damage. Spell Blast uses the target stack object's identity,
+so a returned card or another spell copy cannot replace it.
+
+Evidence: `TestTargetManaValueXQueries`, `AnnouncementAndCopy`,
+`TestRONDetonateManaValueX`, `TestRONSpellBlastManaValueX`,
+`TestRONManaValueXRetargetAndInstances`, `IndependentPendingCounters`,
+`Declarations`, and `StrictLoadAndInventory`.

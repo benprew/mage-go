@@ -4116,6 +4116,7 @@ func (r spellControllerRef) inspectDefinition() definitionNode {
 }
 
 type typedSpellTarget struct {
+	manaValueEqualX bool
 	BaseTarget
 	filters                    []CardFilter
 	targetsControlledPermanent bool
@@ -4125,6 +4126,9 @@ func (t *typedSpellTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uui
 	var result []uuid.UUID
 	for _, obj := range g.stack.Objects() {
 		if obj.IsAbility || obj.Card == nil {
+			continue
+		}
+		if t.manaValueEqualX && stackSpellManaValue(obj) != g.resolution.X() {
 			continue
 		}
 		if t.targetsControlledPermanent && !obj.targetsPermanentControlledBy(g, controller) {

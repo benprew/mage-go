@@ -333,6 +333,10 @@
 // or current output. [ControllerOfSpellWithLKI] keeps departure control
 // for instructions that run after a spell is countered.
 //
+// Use [TargetManaValueEqualX] for a permanent target with mana value equal to X.
+// [DeclareSpellTargetManaValueX] includes the target spell's own X in its value.
+// Target checks use the action's announced X before resolution begins.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -120,8 +120,12 @@ func (g *Game) pushStack(obj *StackObject) {
 // Check if target is still legal at resolution time. Used in stack responses and
 // resolutions.
 func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone, spec Target) bool {
+	return g.isTargetStillLegalWithX(targetID, sourceCard, controller, expectedZone, spec, g.resolution.X())
+}
+
+func (g *Game) isTargetStillLegalWithX(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone, spec Target, x int) bool {
 	if g.GetPlayer(targetID) != nil {
-		return spec == nil || slices.Contains(spec.Possible(controller, sourceCard, g), targetID)
+		return spec == nil || slices.Contains(g.possibleTargetsWithX(spec, controller, sourceCard, x), targetID)
 	}
 	// CR 608.2b: "A target that's no longer in the zone it was in when it was
 	// targeted is illegal."
@@ -133,7 +137,7 @@ func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controlle
 			return false
 		}
 	}
-	if spec != nil && !slices.Contains(spec.Possible(controller, sourceCard, g), targetID) {
+	if spec != nil && !slices.Contains(g.possibleTargetsWithX(spec, controller, sourceCard, x), targetID) {
 		return false
 	}
 	return true
@@ -198,7 +202,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 					incarnationLegal = p != nil && p.incarnationID == incarnation
 				}
 			}
-			if incarnationLegal && g.isTargetStillLegal(t, sourceCard, obj.Controller, obj.TargetZones[t], spec) {
+			if incarnationLegal && g.isTargetStillLegalWithX(t, sourceCard, obj.Controller, obj.TargetZones[t], spec, obj.XValue) {
 				resolvedTargets[i] = t
 				anyLegal = true
 				continue

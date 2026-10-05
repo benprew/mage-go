@@ -207,7 +207,7 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 			continue
 		}
 		old := obj.Targets[offset : offset+count]
-		possible := spec.Possible(obj.Controller, card, g)
+		possible := g.possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
 		chosen := g.GetPlayer(obj.Controller).ChooseTargets(possible, count, count, g)
 		valid := len(chosen) == count
 		seen := make(map[uuid.UUID]bool, count)
@@ -251,7 +251,7 @@ func (g *Game) promptTargetsForListWithX(controller uuid.UUID, sourceCard Card, 
 			continue
 		}
 		t.Reset()
-		possible := t.Possible(controller, sourceCard, g)
+		possible := g.possibleTargetsWithX(t, controller, sourceCard, x)
 		if len(possible) == 0 {
 			if minimum > 0 {
 				out = append(out, uuid.Nil)

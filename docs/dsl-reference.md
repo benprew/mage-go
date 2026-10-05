@@ -3466,3 +3466,18 @@ graveyard operation. All order choices precede the moves. An invalid selection
 uses the first remaining card; zero or one card needs no order choice. Payment
 queries and transaction validation make no live order choices. Existing library
 order remains the default for `BasePlayer` and cloned players.
+
+### Mana value targets with announced X
+
+Use `TargetManaValueEqualX()` with a typed permanent target to compare its
+current mana value with the action's announced X. Use
+`DeclareSpellTargetManaValueX(name, filters...)` for a typed spell target.
+The target spell's own X contributes to its mana value; X in a permanent's cost
+is zero. Target checks and copy choices use the action's stored X.
+
+RON lowers `TargetPermanent(And([IsCardtype(Artifact),
+ManaValueIs(EqualTo(ValueX))]))` and
+`TargetSpell(And([AnySpell, ManaValueIs(EqualTo(ValueX))]))` to these services.
+The compiler requires announced X in the scope. Other comparisons, static
+filters, disjunctions and combined spell mana value/permanent-target restrictions
+remain unsupported. Detonate and Spell Blast have complete RON gameplay tests.

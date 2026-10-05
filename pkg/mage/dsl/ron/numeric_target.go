@@ -75,3 +75,21 @@ func compileSourcePowerTarget(n Node, ctx scope) (mage.PermanentFilter, []mage.P
 	}
 	return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetToughnessLessThanSourcePower()}, nil
 }
+
+func compileManaValueXRestriction(n Node, ctx scope) error {
+	if err := arity(n, 1); err != nil {
+		return err
+	}
+	comparison := n.Args[0]
+	if comparison.Name != "EqualTo" {
+		return unsupported(comparison, "target mana value comparison")
+	}
+	if err := arity(comparison, 1); err != nil {
+		return err
+	}
+	value := comparison.Args[0]
+	if value.Kind != Symbol || value.Name != "ValueX" || !ctx.x {
+		return problem(value, "target mana value requires announced X")
+	}
+	return nil
+}

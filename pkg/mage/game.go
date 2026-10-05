@@ -2445,7 +2445,7 @@ func (g *Game) validateActionTargets(controller uuid.UUID, sourceCard Card, spec
 		if count < minimum {
 			return fmt.Errorf("not enough targets for %s", label)
 		}
-		possible := spec.Possible(controller, sourceCard, g)
+		possible := g.possibleTargetsWithX(spec, controller, sourceCard, x)
 		seen := make(map[uuid.UUID]bool, count)
 		for _, id := range chosen[offset : offset+count] {
 			if seen[id] || !slices.Contains(possible, id) {
@@ -2474,7 +2474,7 @@ func (g *Game) validateVariableSpellTargets(controller uuid.UUID, sourceCard Car
 	if len(chosen) < minTargets || len(chosen) > maxTargets {
 		return fmt.Errorf("%s requires exactly %d targets", sourceCard.Name(), minTargets)
 	}
-	possible := spec.Possible(controller, sourceCard, g)
+	possible := g.possibleTargetsWithX(spec, controller, sourceCard, x)
 	seen := make(map[uuid.UUID]bool, len(chosen))
 	for _, id := range chosen {
 		if seen[id] || !slices.Contains(possible, id) {

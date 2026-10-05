@@ -51,6 +51,12 @@ func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instance
 }
 
 func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if n.Name == "ManaValueIs" {
+		if err := compileManaValueXRestriction(n, ctx); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetManaValueEqualX()}, nil
+	}
 	if n.Name == "ToughnessIs" && len(n.Args) == 1 && n.Args[0].Name == "LessThan" {
 		return compileSourcePowerTarget(n, ctx)
 	}

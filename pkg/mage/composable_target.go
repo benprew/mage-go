@@ -222,6 +222,12 @@ func (b *targetDeclaration) inspectDefinition() definitionNode {
 	if isOpponentChosenTarget(b.spec) {
 		n.children = append(n.children, definitionEdge{"chooser", targetChosenByOpponentOption{}})
 	}
+	if spec, ok := b.spec.(*PermanentTarget); ok && spec.manaValueEqualX {
+		n.children = append(n.children, definitionEdge{"mana value", targetManaValueEqualXOption{}})
+	}
+	if spec, ok := b.spec.(*typedSpellTarget); ok && spec.manaValueEqualX {
+		n.children = append(n.children, definitionEdge{"mana value", targetManaValueEqualXOption{}})
+	}
 	if b.name == "" {
 		n.problem = "supply a target binding name"
 	} else if b.spec == nil || b.spec.Min() < 0 || b.spec.Max() < 1 || b.spec.Min() > b.spec.Max() {

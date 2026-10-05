@@ -156,7 +156,7 @@ func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target
 	if target == nil {
 		return nil
 	}
-	candidates := uniqueTargetCandidates(target.Possible(controller, sourceCard, g))
+	candidates := uniqueTargetCandidates(g.possibleTargetsWithX(target, controller, sourceCard, x))
 	minimum, maximum := TargetBounds(target, x)
 	maximum = min(maximum, len(candidates))
 	if maximum < minimum {
@@ -798,6 +798,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
+	manaValueEqualX              bool
 	excludeSource                bool
 	attachedToControllerOnly     bool
 	toughnessLessThanSourcePower bool
@@ -864,6 +865,9 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if t.manaValueEqualX && p.Card.ManaCost().CMC() != g.resolution.X() {
+			continue
+		}
 		if t.excludeSource && sourceCard != nil && p.ID() == sourceCard.ID() {
 			continue
 		}

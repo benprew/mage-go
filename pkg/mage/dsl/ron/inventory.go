@@ -856,11 +856,18 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "spell_reference"
 		}
 	case "spell_filter":
+		if n.Name == "ManaValueIs" && len(n.Args) == 1 {
+			return "mana_value_comparison"
+		}
 		if n.Name == "TargetsAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
+		}
+	case "mana_value_comparison":
+		if n.Name == "EqualTo" && len(n.Args) == 1 {
+			return "value"
 		}
 	case "toughness_comparison":
 		if len(n.Args) == 1 {
@@ -875,6 +882,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "ManaValueIs" && len(n.Args) == 1 {
+			return "mana_value_comparison"
+		}
 		if (n.Name == "IsCardtype" || n.Name == "IsNonCardtype") && len(n.Args) == 1 {
 			return "card_type"
 		}

@@ -19351,3 +19351,172 @@ Slice files: `ron/mill.go`, `ron/mill_test.go`, `ron/compiler.go`,
 `ron/inventory_test.go`, engine `cost_mill.go`, `mill_order_test.go`, `doc.go`,
 API reference, rules contracts and this ledger. One descriptive commit contains
 only this slice; its hash is reported in the final reply.
+
+## Run 2026-10-05: MANA-VALUE-EQUALS-ANNOUNCED-X-TARGETS
+
+Status: complete target restriction slice. This run stops after this slice.
+Production cutover and removal gates remain unmet.
+
+### Baseline and candidate comparison
+
+Initial user changes: `.gitignore`, execution design, progress ledger, and
+untracked `mtgish-ron-completed.md`. All are preserved. Only this new ledger
+entry is staged; the user's history move remains unstaged.
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current ledger, selected compiler/target/casting/resolution/copy/clone code,
+API and rules contracts, complete candidate RON records, all selected reprints,
+and local ATQ/LEA Oracle data. CR 107.3, 202.3e, 601.2b-c and 608.2b establish
+separate announced values, zone-sensitive mana value and current target legality.
+The implement-engine skill supplies the shared engine prerequisite workflow.
+No removed card/set skill or Go card definition supplied requirements.
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict and semantic loading exited 1 for unsupported collection records:
+1,634 compiled / 811 rejected records, 607 accepted / 379 rejected names.
+Inventory: 2,445 records, 986 names, 72,951 nodes, 8,540 signatures and
+8,437 unknown-role occurrences. Rejection is distinct from build/test failure.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Mana value equals announced X targets, selected | Detonate, Spell Blast: **2** names / **7** records. | Typed references, controller LKI, destruction without regeneration, damage, counters, payment and copies exist. Explicit action X must reach announcement and pre-effect resolution target queries. Enables other X-dependent target restrictions without a new mutable binding slot. | Small adapters; moderate shared timing prerequisite and gameplay/identity/copy tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential full cards. | Complete records require public-zone source choices, saved source identity, source characteristic checks and next-event consumption. Other first-error consumers have more operations. Enables additional source-selective prevention and redirection. | High: choice, identity, replacement and timing contracts plus adapters. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** direct potential full cards. | All-zone characteristic evaluation, controller/owner context and CDA layers are prerequisites. Gaea's Avenger is excluded because arithmetic and its source correction remain additional blockers. Enables copying and zone characteristic readers. | High: zone/layer contracts, adapters and controller/copy tests. |
+
+The selected slice has two complete consumers and substantially smaller
+prerequisites than the larger families. Nested Detonate actions already use
+controller LKI after destruction; Spell Blast needs the target spell's own X
+in its mana value. First-error frequency is not used as an unlock estimate.
+The selection, contract, reuse boundary and acceptance cases were stated before
+edits. No second slice is started.
+
+### Supported signatures, contexts and engine ownership
+
+RON target restriction: `ManaValueIs(EqualTo(ValueX))`, directly under
+`TargetPermanent` or `TargetSpell`, or in their supported `And` conjunction.
+Permanent conjunctions reuse existing recursive conjunction/filter/options.
+Spell conjunctions retain the existing top-level restriction partition.
+The scope must supply announced X from the spell mana cost or activation cost.
+Existing target scope/instance factories remain responsible for declarations.
+The slice does not add resolution reads, static predicates, result bindings,
+fixed amounts, disjunctions or other comparisons. Malformed tuples, callable X,
+unbound/incompatible operands and no-X scopes are rejected. Duplicate spell
+mana-value restrictions and combined spell mana-value/current-permanent-target
+restrictions are rejected. Existing accepted contexts retain their behavior.
+
+New engine APIs:
+
+- `TargetManaValueEqualX() PermanentTargetOption`: compare a current permanent's
+  mana value with the action's announced X. X in that permanent's cost is zero.
+- `DeclareSpellTargetManaValueX(name string, filters ...CardFilter)
+  *SpellTargetBinding`: compare current stack mana value, including each X in
+  the target spell's cost and that spell's own `XValue`, with the action's X.
+
+These options use existing target declarations and contain no chosen state.
+Definition inspection exposes the restriction. Targets are constructed per
+factory; copies keep their own stack identities, controller, targets and X.
+`possibleTargetsWithX` uses a separate game view with its own X field for pure
+candidate queries. Announcement validation, variable-target validation, prompts,
+random choices and copy retargeting supply their explicit action X. Resolution
+legality now supplies the resolving object's X before effects begin, rather
+than reading a previous resolution's X. Existing direct callers of
+`isTargetStillLegal` retain their current-frame interface.
+
+Reuse: `PermanentTarget`, `typedSpellTarget`, `stackSpellManaValue`,
+`ResolutionState`, `TargetBounds`, typed target references, existing incarnation
+and zone checks, stack-copy/group services, transactional mana payment,
+`DestroyWithoutRegeneration`, `ControllerOfWithLKI`, damage and `Counter`.
+Target restrictions use current information, not target LKI. Detonate's later
+controller read uses existing LKI even after destruction; indestructibility
+does not suppress its independent damage. No parallel target, payment, zone,
+replacement or simultaneous-operation service is introduced. No global
+last-action binding, game-time declaration panic, fallback or partial production
+registry is added.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for missing constructors. A fixture initially used a
+nonexistent stack helper; after correction, the constructor failures alone were
+confirmed. RON tests failed with unsupported `ManaValueIs` filters. After
+lowering, real casting and resolution failed because the shared target queries
+did not receive the action's X. Those failures established the timing
+prerequisite before it was implemented.
+
+Fixture corrections retained assertions: use `MutablePermanent` after cloning;
+`HasRegenerationShield` requires a live recipient, so destruction itself proves
+regeneration was forbidden; clone counter expectations must include both the
+counter and target leaving the stack; phased objects need phase-in before live
+lookup; changing test characteristics must preserve the original card ID.
+`BaseCard.Copy` creates a new ID, so that fixture explicitly restores the ID.
+Initial broad checks caught this last fixture error; final checks were rerun.
+
+| Card/contract | Tests |
+| --- | --- |
+| Detonate, complete ATQ record | `TestRONDetonateManaValueX`: X including zero, payment and illegal-target rollback, artifact restriction, pre-resolution timing, shroud, departure/return, phasing/cycle, control versus owner, current mana-value change, indestructibility, regeneration prohibition, damage after destruction with controller LKI, copies and cloned pending resolution. |
+| Spell Blast, all six identical records | `TestRONSpellBlastManaValueX`: independent action/target X, two X symbols in the target cost, unpaid/wrong-X rollback, counter timing, departure/recast stack identity, target copies, counter copies and cloned pending resolution. `TestRONSpellBlastZeroAndAbilityExclusion`: zero mana value and rejecting activated abilities without payment. |
+| Per-instance bindings and retargeting | `TestRONManaValueXRetargetAndInstances`: real Detonate copy retargets using copied X; original target survives until its own resolution. `TestRONManaValueXIndependentPendingCounters`: two real Spell Blast factories with separate targets and X resolve independently. |
+| Engine query/timing contract | `TestTargetManaValueXQueries`: permanent cost X is zero, changing query X, phasing/shroud, spell cost X multiplicity and definition validation. `TestTargetManaValueXAnnouncementAndCopy`: stale current frame cannot alter direct announcement or resolution, failed payment/legality preserves frame, copied X and candidate set, clone isolation. |
+| Declarations, reprints and strict loading | `TestRONManaValueXDeclarations`: invalid arity/kind/value/comparison/disjunction. `TestRONManaValueXStrictLoadAndInventory`: all seven complete source records compile, validate and load; invalid no-X sibling rejects atomically; nested comparison/value roles. Fresh repository inventory expectations remain strict and retain Lightning Bolt gameplay/registry checks. |
+
+This adds **two** complete-card gameplay mappings. Collection-wide
+engine-validation and behavior-verification totals remain null. Existing
+replacement ordering and simultaneous damage services are reused; this slice
+does not establish a new replacement or batch contract.
+
+### Source findings, actual gain and validation
+
+Local Oracle data agrees with both complete source definitions. No RON file
+changed, so vocabulary syntax counts and file hashes remain unchanged. The
+fresh strict/semantic reports provide new loader diagnostics; the earlier
+vocabulary diagnostic snapshot is historical. Existing source defects remain
+explicitly deferred.
+
+Actual gain matches the estimate: **2 names / 7 records**, exactly Detonate and
+Spell Blast. No previously accepted name is lost. Final reports show
+**1,641 compiled / 804 rejected records**, **609 accepted / 377 rejected names**.
+Inventory retains **72,951 nodes / 8,540 signatures**; unknown-role occurrences
+fall to **8,421**. Strict collection loading exits 1 and installs no registry.
+Remaining diagnostics include chosen damage sources, all-zone CDAs and
+sacrifice-value activation mana. Collection rejection is expected.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine/RON/loader target, copy and inventory regressions, `-count=1` | PASS after final tests and lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS; additional skill verification. |
+| `make test` | PASS. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, 0 issues. First run requested test slice preallocation; corrected and rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,641 compiled / 804 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same record counts, 609 accepted / 377 rejected names; 72,951 nodes / 8,540 signatures / 8,421 unknown-role occurrences. |
+
+Automatic lint/format edits were reviewed. Final focused, broad short, full
+make tests, build and vet checks pass. No environment or pre-existing blocker
+remains. The earlier broad failures came only from the new identity fixture
+and were corrected without weakening the behavior assertion.
+
+No Go definitions, startup callers, generators or DSL exports are removed:
+complete loading, collection gameplay and runtime cutover remain below the
+removal gates. No caller audit justifies a DSL deletion. API and rules docs
+cover only established behavior. All initial user work remains outside the
+slice commit.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Chosen-source choice/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+2. All-zone count CDAs for five direct consumers; keep Gaea's Avenger's
+   arithmetic and source correction separate.
+3. Restricted mana and sacrifice-value activation/solver contracts for
+   Metamorphosis and Priest of Yawgmoth.
+
+Slice files: engine `target_numeric.go`, `target_mana_x_test.go`, `target.go`,
+`composable_actions.go`, `composable_target.go`, `game.go`, `spell_copy.go`,
+`stack_resolver.go`, `doc.go`; compiler `numeric_target.go`,
+`temporary_animation.go`, `spell_scope.go`, `target_mana_x_test.go`,
+`inventory.go`, `inventory_test.go`; API/rules contracts and this ledger entry.
+One descriptive commit contains only this slice; its hash is reported in the
+final reply. This run stops after this slice.
