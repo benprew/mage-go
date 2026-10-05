@@ -1066,6 +1066,8 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanent(filter) })
 		}
 		return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanentNoRegen(filter) })
+	case "EachPlayerAction":
+		return compileEachPlayerAction(n)
 	case "PlayerAction":
 		if err := arity(n, 2); err != nil {
 			return nil, err

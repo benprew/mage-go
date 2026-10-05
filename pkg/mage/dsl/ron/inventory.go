@@ -529,6 +529,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "spell_reference"
 			}
+		case "EachPlayerAction":
+			if len(n.Args) == 2 {
+				return []string{"player_filter", "player_action"}[index]
+			}
 		case "PlayerAction":
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "player_action"}[index]

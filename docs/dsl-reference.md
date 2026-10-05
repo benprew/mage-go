@@ -2656,3 +2656,23 @@ Al-abara's Carpet. The latter two records include their Oracle source
 restrictions: flying creatures, and attacking creatures without flying,
 respectively. Other finite, chosen-source, redirection, and additional-operation
 prevention declarations remain unsupported.
+
+### RON all-player hand and fixed draw actions
+
+Resolving action lists accept `EachPlayerAction(AnyPlayer, DiscardHand)` and
+`EachPlayerAction(AnyPlayer, DrawNumberCards(Integer(n)))`, where `n` is a
+nonnegative integer. `AnyPlayer` and `DiscardHand` are bare symbols. These forms
+use `DiscardEach(EachPlayer)` and `DrawEach(EachPlayer, Fixed(n))`.
+
+Discard selects both current hands at resolution and uses one simultaneous
+batch. All discard moves finish before discard events. Draw uses individual
+draw actions; the active player completes all draws before the other player.
+Both operations use the shared replacement pipeline. Empty hands and zero
+draws permit later instructions. Existing spell, mode, activation, trigger and
+delayed action lists use the same lowering. The forms create no targets or
+loop-local player binding and preserve surrounding target scopes.
+
+Other player filters, action-list bodies, shuffle actions, optional discards,
+X and player-dependent draw amounts remain compile errors in this context.
+Complete Wheel of Fortune gameplay evidence is in `TestRONEachPlayerWheel`,
+`TestRONEachPlayerCopies` and `TestRONEachPlayerReplacements`.

@@ -13920,3 +13920,155 @@ No second slice is started. Slice files: engine `recipient_prevention.go` and
 its tests, `lki.go`, `zone_system.go`, `doc.go`; compiler `recipient_prevention.go`
 and its tests, `combat_prevention.go`, `inventory.go`, `inventory_test.go`;
 DRK and LEG RON records; vocabulary snapshot; API/rules contracts and this ledger.
+
+## Run 2026-10-05: ALL-PLAYER-HAND-DRAW
+
+Status: complete adapter slice. Stop after this slice. Production cutover and
+removal gates remain unmet.
+
+### Fresh evidence and selection
+
+Initial user changes: `.gitignore` and `mtgish-ron-execution.md`; neither was
+staged. During the run, concurrent edits moved older ledger entries into
+`mtgish-ron-completed.md`. Those edits are preserved. This commit contains only
+this entry in the ledger, without the concurrent restructuring or history file.
+
+Baseline short engine tests, compiler tests and build passed. Strict loader and
+semantic inventory exited 1 because unsupported records remain: 1,494 compiled,
+951 rejected records; 539 accepted, 447 rejected unique names. There are 2,445
+records and 986 names. Inventory: 72,951 nodes, 8,540 signatures and 10,817
+unknown-role occurrences. Reprints count once for candidate selection.
+
+| Candidate | Distinct affected cards and credible full-card gain | Blockers and downstream reuse | Effort |
+| --- | --- | --- | --- |
+| All-player hand/fixed draw actions, selected | Wheel of Fortune and Timetwister use fixed all-player draws; **1** immediate full-card unlock, Wheel of Fortune. Winds of Change and Martyr's Cry have player-dependent amounts and are not included in this supported shape. | Timetwister still needs hand/graveyard shuffle. The shared fixed draw operation is ready for it. The collection adapter establishes a boundary for further player actions while preserving simultaneous operations. | Low: existing typed player sets, discard batch and ordered draw services; adapter, invalid declarations, real gameplay and context tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** full-card unlocks after allocation work; zero adapter-only gain. | CR 615.7 simultaneous-source allocation remains an engine prerequisite. Enables finite shields with competing replacements and X. | Medium/high: player choices, finite consumption, replacement rechecks and batch tests. |
+| Numeric P/T filters | Stone Giant, Pendelhaven, Goblin Kites, Infinite Authority: **2** credible full-card unlocks after exact-stat and source-dependent target contracts, Stone Giant and Pendelhaven. | Stone Giant requires a dynamic toughness/source-power legality check. Goblin Kites still needs coin-flip actions; Infinite Authority needs successful destruction/result and delayed-result bindings. Enables shared numeric target/event predicates. | Medium: target-context numeric queries, fixed/dynamic filters and delayed identity tests. |
+
+The selected slice gives the smallest complete shared adapter over exact existing
+services. It establishes the fixed all-player draw prerequisite for two unique
+cards and one immediate full card; this is not a card-specific executor.
+Other candidates have larger engine/target prerequisites. First-error frequency
+was not treated as an unlock count. Contract, reuse boundary and acceptance
+cases were stated before edits.
+
+The complete records for all 12 nested `EachPlayerAction` consumers were read:
+Balance, Demonic Attorney, Mana Clash, Martyr's Cry, Mind Bomb, Raging River,
+Raiding Party, Rebirth, Shahrazad, Timetwister, Wheel of Fortune, Winds of Change.
+Nested alternatives use ante, subgames, flips, filtered/player-dependent loops,
+choice/result bindings, sacrifice and shuffle services. They remain errors.
+Complete records for all finite-prevention and numeric-filter candidates above
+were also read. Card requirements came from RON, not Go card definitions.
+
+### Exact signatures, contexts and reuse
+
+Supported resolving actions:
+
+- `EachPlayerAction(AnyPlayer, DiscardHand)/2`: both operands are bare symbols.
+- `EachPlayerAction(AnyPlayer, DrawNumberCards(Integer(n)))/2`: exact one-argument
+  tuples for the action and number, with a nonnegative integer literal.
+
+Lowering: `mage.DiscardEach(mage.EachPlayer)` and
+`mage.DrawEach(mage.EachPlayer, mage.Fixed(n))`. The compiler entry point is
+`compileEachPlayerAction(Node) ([]effectFactory, error)`.
+The shared resolving-action dispatcher permits these in supported spell/mode,
+activation, trigger and delayed action lists. No static, cost, entry,
+replacement-operation or nested `PlayerAction` body support is added.
+
+Existing engine services select players and current hands at resolution.
+Discard prepares replacements, moves the complete batch, then sends events.
+Draw performs individual actions, active player's draws first (CR 121.2/121.2c).
+Separate instructions remain sequential (CR 608.2c). Empty hands and zero draws
+permit continuation. Spell disposal follows CR 608.2n. Relevant local API and
+rules contracts, draw rules and resolution rules were read.
+
+No typed target, event reference, result binding or loop-local player reference
+is created by these actions. Surrounding bindings retain their identity. Fresh
+effect factories build each operation; no mutable chosen state is captured.
+Source departure, control change or phasing cannot change the all-player set.
+Existing transactional casting, stack copying, clones, draw/discard replacements,
+graveyard visits, trackers and event ordering remain in use. No engine changes,
+parallel rules services or LKI queries are required.
+
+Wrong arity/kind, tuple `AnyPlayer` or `DiscardHand`, player filters other than
+bare `AnyPlayer`, action-list bodies, negative/noninteger/malformed counts,
+X/result-dependent amounts, shuffle and other player actions are rejected.
+`ActionPlayer` remains unbound after this operation. Inventory now assigns
+`EachPlayerAction/2` arguments `player_filter` and `player_action`; amount
+children use the established value role. Inventory roles do not prove support.
+
+### TDD and card-to-test mapping
+
+Tests first had a fixture compile failure from the wrong draw-event constant;
+that was corrected to `EvtCardDrawn`. The intended pre-implementation failures
+were then confirmed: all six Wheel reprints failed on unsupported
+`EachPlayerAction`; inventory reported unknown roles for its arguments.
+Invalid declarations already rejected and remain rejected after implementation.
+
+| Card or contract | Tests and acceptance evidence |
+| --- | --- |
+| Wheel of Fortune, all six complete reprints | `TestRONEachPlayerWheel`: definition validation, unpaid casting rollback, 2R payment, both active players, resolution-time hands, simultaneous discard events before drawing, fourteen individual draws in active-player order, final hands/libraries/graves and independent cloned resolution. |
+| Wheel of Fortune | `TestRONEachPlayerCopies`: opponent-controlled copy draws for both players, original later discards those new hands, independent resolution and original-only graveyard disposal. `TestRONEachPlayerReplacements`: accepted optional discard-to-library replacement, prevented draws for one player, complete discard event destinations and continued draws for the other player. |
+| Shared action contexts | `TestRONEachPlayerContexts`: fresh factory abilities, activation timing and source departure/return/phasing/control changes; source-entry and delayed-end-step triggers. |
+| Empty/zero and lexical scope | `TestRONEachPlayerZeroAndTargetScope`: empty hands, zero draws, independent surrounding target read and continuation, rejection of leaked `ActionPlayer`. |
+| Declarations and reporting | `TestRONEachPlayerInvalid`: invalid shapes, filters, operands and unsupported result/shuffle operations. `TestRONEachPlayerInventory`: argument/value roles. |
+| Retained behavior | Full RON/loader tests, including Lightning Bolt registry isolation and all previously accepted cards' existing regressions. Collection assertions now require the exact new 1,500/945 totals. |
+
+Additional fixture corrections supplied the complete replacement interface,
+used `EndStep`, and made the discard-replacement player accept its optional
+choice. No requirement was removed. Lint found two built-in `copy` name
+shadowings; they were renamed. No environment or pre-existing blocker remains.
+
+### Measurements and validation
+
+Actual gain matches estimate: **1 unique card / 6 records**, exactly Wheel of
+Fortune. Final loader: **1,500 compiled / 945 rejected records**, **540 accepted /
+446 rejected unique names**. No accepted name was lost. Inventory: **72,951 nodes,
+8,540 signatures, 10,685 unknown-role occurrences**. Reporting roles reduce
+unknown descendants even beneath unsupported operations; this is not gameplay
+support. Collection engine-validation and behavior totals remain null.
+
+One complete-card RON gameplay mapping is added. Timetwister and other consumers
+remain rejected until their other rules are implemented. No source defects were
+corrected. All twelve source hashes match the vocabulary snapshot, so a source
+snapshot refresh is unnecessary. Fresh diagnostics remain in the loader output;
+leading gaps include CastEffect (53 records), ChooseADamageSource (46),
+Targeted_Modal (42), CreateFuturePreventDamage (32), PlayerEffect (23),
+EachPlayerEffect (22), host rule subjects (20), and CDA_Power (20).
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage/dsl/ron -run TestRONEachPlayer -count=1` | PASS after implementation and fixture corrections. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after the two name repairs; automatic formatting reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,500 compiled / 945 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same issues and counts, 446 rejected names. |
+
+Initial broad test runs failed only because two exact inventory expectations
+still used the old totals. Those expectations were updated to the independently
+measured gain; all checks were rerun. Focused and required checks were repeated
+after lint. No tests were weakened and no partial production registry was added.
+
+Changed files: `ron/each_player.go`, `each_player_test.go`, `compiler.go`,
+`inventory.go`, `inventory_test.go`, `docs/dsl-reference.md`, and this ledger.
+The API reference documents only these supported adapters. No new engine rule
+contract, startup wiring, Go-card deletion, generator deletion or DSL deletion
+is justified by this slice. Complete loading/gameplay/runtime removal gates
+remain unmet; no caller audit authorizes cleanup yet.
+
+Ranked next candidates to reassess:
+
+1. Finite recipient prevention allocation: four complete consumers; retain
+   simultaneous-source choices and affected-player replacement ordering.
+2. All-zone count CDAs: Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats;
+   preserve off-battlefield characteristics and controller/owner contexts.
+3. Shared hand/graveyard shuffle actions and per-player results: Timetwister and
+   Winds of Change, using established all-player draw operations where applicable.
+
+Only this validated slice is committed. The hash is reported in the final
+response. No second slice is started.
