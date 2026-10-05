@@ -462,6 +462,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "FlipACoin_OnLose":
+			if len(n.Args) == 1 {
+				return "action"
+			}
+		case "FlipACoin_OnWinAndLose":
+			if len(n.Args) == 2 {
+				return "action"
+			}
 		case "CreateFutureTrigger":
 			if len(n.Args) == 2 {
 				return []string{"delayed_step_event", "actions"}[index]

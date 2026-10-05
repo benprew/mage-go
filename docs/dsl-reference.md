@@ -2819,3 +2819,28 @@ this restriction with `And` filters and controller restrictions. The engine
 checks it at announcement and resolution with retained source information.
 The Go API is `TargetToughnessLessThanSourcePower()` in
 `DeclarePermanentTarget` or `DeclarePermanentTargets`.
+
+## RON win/loss coin branches
+
+Resolving actions support `FlipACoin_OnLose([actions])` and
+`FlipACoin_OnWinAndLose([win-actions], [loss-actions])`. Each supplied list must
+contain at least one action. The compiler checks both branches, including
+unbound references and adjacent optional-payment continuations. Branches use
+the surrounding lexical target, event, X and payment scopes. They cannot declare
+targets or export payment results. Nested coin branches are supported.
+
+Lowering uses `FlipCoin(You, OnWin(Sequence(...)), OnLoss(Sequence(...)))`,
+omitting OnWin for the loss-only form. One flip occurs at resolution, and only
+the matching branch runs. An omitted win branch does nothing. You is the
+resolving controller, including on a copied ability. Independent instances use
+their own target declarations; the engine owns random outcomes and clone state.
+
+These forms work in supported spell/mode, activation, trigger and delayed
+resolving action lists. Delayed bodies retain captured target incarnations and
+do not target again. No cost, static, entry, replacement or PlayerAction body
+context is added. Bare heads/tails `FlipACoin`, result predicates, repeat
+procedures and additional combat actions remain unsupported.
+
+Complete-card evidence: `TestRONCoinBottle`, `BottleDamageAndLKI`, `Captain`,
+`Kites`, `CastingAndInstances`, `NestedSequencing`, and `InvalidAndInventory`.
+The three mappings are Bottle of Suleiman, Goblin Kites and Orcish Captain.

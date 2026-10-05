@@ -899,6 +899,12 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "FlipACoin_OnLose", "FlipACoin_OnWinAndLose":
+		build, err := compileCoinBranch(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateFutureTrigger":
 		build, err := compileDelayedStep(n, ctx)
 		if err != nil {

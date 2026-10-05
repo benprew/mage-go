@@ -14974,3 +14974,155 @@ Ranked next candidates to reassess:
    color effects; the other two need word choices/text changes. Adapter-only
    full-card gain is zero. Goblin Kites' coin action also merits reassessment
    alongside other complete coin consumers; its numeric target blocker is gone.
+
+
+## Run 2026-10-05: WIN-LOSS-COIN-BRANCHES
+
+Status: completed adapter slice. These measurements supersede older current
+status figures. This run stops after this slice. Initial user changes to
+.gitignore, the execution design, the ledger restructuring and untracked
+mtgish-ron-completed.md are preserved. The commit adds only this entry to the
+committed ledger; it does not stage the restructuring or history file.
+
+### Fresh evidence, candidates and selection
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary, current ledger,
+selected compiler/engine code, complete RON candidate records and relevant
+API/rules contracts. CR 400.7, 603.7, 608.2b/c/h, 701.21a, 702.26b and 705
+supply identity, delayed timing, resolution, sacrifice, phasing and coin rules.
+Baseline short engine tests and make build passed. Strict loader and full AST
+inspection exited 1 for collection rejection, not a build/test failure:
+2,445 records, 1,524 compiled, 921 rejected; 553 accepted / 433 rejected unique
+names. Inventory: 72,951 nodes / 8,540 signatures / 10,433 unknown roles.
+Reprints count once; requirements came from RON, not Go card definitions.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Win/loss coin branches, selected | Bottle of Suleiman, Goblin Kites, Orcish Captain: **3** complete consumers / **4** records. | Mijae Djinn also uses loss branches but needs RemoveCreatureFromCombat; Ydwen Efreet needs source-block triggering, removal/unblocking and temporary CantBlock; Goblin Artisans needs spell controller/other-ability targeting filters. These three names are excluded from the unlock estimate. Mana Clash uses a separate repeated heads/tails procedure, not these constructors. Enables shared nested branch execution through the existing coin service. | Low/medium: two adapters, branch validation/reporting, real-card timing/identity/payment/copy/clone tests. No new engine prerequisite. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full-card unlocks after allocation; **0** adapter-only gains. | Complete records include targets, player modes, tap/mana costs and X. CR 615.7 allocation across simultaneous sources remains missing. Enables further finite shield consumers. | Medium/high: shared allocation decisions, consumption, competing replacements, batch and rollback tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after characteristic prerequisites. | Complete records need controller land/Swamp/non-Wall counts or named creatures. All-zone characteristics, owner/controller contexts and CDA lowering remain missing. Enables later CDA/copy/layer consumers. | High: all-zone evaluation, count contexts, copy/controller/layer tests. |
+
+The coin slice gives the largest credible gain for its smaller effort, reusing
+exact existing engine behavior. All six unique win/loss consumers and their
+nested forms, Mana Clash, all four finite shield candidates and all four CDA
+candidates were inspected as complete records. Fresh structural loading finds
+no conflicting reprints. First-error frequency did not supply unlock estimates.
+The contract, reuse boundary and acceptance cases were stated before editing.
+No engine skill or delegated agent was needed; no missing engine contract,
+source defect or environment failure was found.
+
+### Exact signatures, contexts and reuse boundary
+
+Private adapter: compileCoinBranch(Node, scope) (effectFactory, error).
+Supported resolving forms: FlipACoin_OnLose([actions])/1 and
+FlipACoin_OnWinAndLose([win-actions], [loss-actions])/2. Each supplied list is
+nonempty. Both branches are compiled and validated. Nested branches are allowed.
+Existing spell/mode, activation, trigger and delayed resolving contexts use the
+same dispatcher. No cost/static/entry/replacement/PlayerAction body context,
+new target declaration, heads/tails result binding or repeat procedure is added.
+
+Each branch receives the surrounding scope by value and builds its effects
+with the same per-instance typed instanceBindings. Target, event, X and paid
+cost reads keep their lexical producer and identity. Optional payment and its
+adjacent continuation stay together inside a branch; results cannot escape to
+another branch or later action. Malformed kinds/arities, empty lists, unbound
+or incompatible refs, nested target declarations and unsupported children are
+positioned compile errors, even when they are in an unselected branch.
+
+RON owns spelling, declaration validation, lexical scope and inventory roles.
+Engine reuse: FlipCoin(You), OnWin, OnLoss, Sequence, RandomSource and its Clone,
+typed target declarations/resolution frames, transactional casting/activation,
+AtNext captured delayed references, source LKI, token creation, damage prevention,
+sacrifice and temporary layer modifications. There is one flip at resolution;
+only the selected branch runs. Loss-only wins consume a flip with no action.
+Stack copies flip separately with their resolving controller. Failed casting,
+activation and all-illegal resolution do not consume live random outcomes.
+
+Goblin Kites installs its flying effect and delay before any flip. The next
+end-step trigger keeps the controller and target incarnation and has no new
+target. Return cannot substitute a new creature. Phasing can prevent sacrifice;
+a phase cycle retains identity. Shroud and toughness changes after installation
+do not repeat targeting. Losing control prevents the original controller's
+sacrifice. The one-shot trigger still flips once and is consumed when its
+sacrifice cannot happen. Bottle's source sacrifice is a cost; later damage uses
+the shared prevention/source services. Its token uses the resolving controller.
+No engine API, replacement order or simultaneous-operation contract is added.
+No global result slot, Go fallback, card-name executor, declaration panic,
+parallel rules service or partial production registry is introduced.
+
+### TDD and card-to-test mappings
+
+Tests first failed on the two unsupported coin constructors in all three real
+cards and the nested inventory fixture. Invalid declarations already rejected.
+Implementation then passed the initial cases. Later instance fixtures initially
+called Permanent.Abilities instead of Permanent.Card.Abilities; that test API
+mistake was fixed. No behavior assertion or test requirement was weakened.
+Exact collection-count assertions were updated to the independently measured
+gain. The delayed RNG sentinel was strengthened to detect flips during delay
+installation and missing flips when sacrifice is impossible.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Bottle of Suleiman, full ARN record and identical 3ED reprint | TestRONCoinBottle: definition validation, four-mana casting, unpaid cast/activation rollback, one-mana plus sacrifice cost, resolution timing, both branches, complete colorless 5/5 flying Djinn artifact creature metadata, owner/controller, opponent-controlled stack copy and independent pending clones. BottleDamageAndLKI: departed/returned source, correct damaged player, finite prevention and one flip. |
+| Orcish Captain, full FEM record | TestRONCoinCaptain: Orc-creature restriction, opposing targets, pre-resolution timing, both exact bonuses, all-illegal shroud/return/phase resolution without RNG use, source departure, target control changes, copied ability's independent outcome, cloned resolution and expiry. CastingAndInstances: R casting, 1/1 Orc Warrior metadata, same compiled factory with distinct targets/controllers, concurrent pending abilities, separate outcomes and state-based death. |
+| Goblin Kites, full FEM record | TestRONCoinKites: toughness recheck, flying/delay timing, both outcomes, return/phase/cycle/control/source departure, post-installation shroud/toughness changes, copied delayed trigger, exact RNG consumption, one-shot lifetime and cloned pending resolution. CastingAndInstances: 1R casting, enchantment metadata, R activation, opponent-target rejection with payment rollback, same factory's independent target declarations and two pending delayed references. |
+| Branch scope and reporting | TestRONCoinNestedSequencing: explicit player target, continuation after either outcome, nested loss-only branch, unselected branch does not consume RNG. InvalidAndInventory: malformed shape, empty branch, unavailable ref, missing or leaked payment continuation, nested target rejection and nested AST action roles. |
+| Retained shared services | TestComposableCoinFlipBranches/Validation, TestRONDelayedStep*, TestRONPermanentDamage*, TestRONTokenCreation*, TestRONNumeric* and inventory/registry tests pass. No new simultaneous operation or replacement-order policy requires a new test. |
+
+Three complete-card behavior mappings are added. Compilation and gameplay
+coverage remain separate; collection engine_validated and behavior_verified
+fields remain null. Local data/ARN.json and data/FEM.json Oracle text agrees
+with all three complete records. No source was changed; all twelve SHA-256
+hashes match the vocabulary snapshot, so no source snapshot refresh is required.
+
+### Final measurements and validation
+
+Actual gain matches estimate: **3 unique names / 4 records**, exactly Bottle of
+Suleiman, Goblin Kites and Orcish Captain. No accepted name is lost. Final strict
+loader: **1,528 compiled / 917 rejected records**, **556 accepted / 430 rejected
+unique names**. It exits 1 and publishes no partial production registry.
+Inventory: **72,951 nodes / 8,540 signatures / 10,346 unknown-role occurrences**.
+Nested coin actions now receive action roles, reducing unknown roles by 87.
+Mijae Djinn advances to unsupported RemoveCreatureFromCombat; Ydwen Efreet,
+Goblin Artisans and Mana Clash remain rejected at their separate blockers.
+Leading first-error families include CreateFuturePreventDamage (12 names),
+ChooseADamageSource (11), If/PlayerEffect/CreateTriggerUntil (8 each),
+Targeted_Modal/EachPlayerEffect (7 each), and CDA_Power (5). These are not unlock
+estimates. No environmental or pre-existing check blocker remains.
+
+| Command | Final result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS. |
+| Focused go test ./pkg/mage/dsl/ron ./cmd/loadcards ./pkg/mage -run 'TestRONCoin\|TestInventory\|TestComposableCoinFlip\|TestRONDelayedStep\|TestRONPermanentDamage\|TestRONTokenCreation\|TestRONNumeric' -count=1 | PASS. |
+| go test ./pkg/mage/... -short -count=1 | PASS on final tests. |
+| make test | PASS on final tests. |
+| make build | PASS. |
+| go vet ./... | PASS. |
+| make lint | PASS, zero issues; final automatic changes reviewed. |
+| git diff --check | PASS, including staged slice. |
+| go run ./cmd/loadcards -json | Expected exit 1: 1,528 / 917. |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1: same issues/counts; nested roles inspected. |
+| Source hash and accepted-name audits | PASS: all sources unchanged, exact three-name gain, no regressions. |
+
+Changed files: ron/coin_branch.go, coin_branch_test.go, compiler.go,
+inventory.go, inventory_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger addition. Lint found zero issues.
+Final focused and repository tests were repeated after the strengthened RNG
+assertion. Existing callers remain intact. No Go cards, generators, startup
+callers or DSL functions were removed. Complete collection loading, full RON
+gameplay, embedded runtime wiring, Go-card removal and obsolete DSL cleanup
+remain below their removal gates. No caller audit authorizes deletion here.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient prevention allocation prerequisite and adapters for Samite
+   Healer, Healing Salve, Conservator and Alabaster Potion: four full consumers.
+2. All-zone count CDAs for Dakkon Blackblade, Keldon Warlord, Nightmare and
+   Plague Rats: four full consumers after characteristic prerequisites.
+3. Shared combat removal/source-block prerequisites for Mijae Djinn and Ydwen
+   Efreet; their coin gap is gone, but Ydwen needs exact unblocking/CantBlock
+   behavior. Compare these with the seven Targeted_Modal consumers before
+   choosing another slice.
+
+Only this slice is committed; its hash is in the final response. The original
+user work stays unstaged. No second implementation slice is started.

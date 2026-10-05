@@ -3012,3 +3012,32 @@ Departure/return and phasing retain their existing delayed identity contracts.
 Evidence: `TestTargetToughnessBelowSourcePower`, `LayerLKI`, and
 `TestRONNumericTargetsCards`, `Legality`, `MetadataAndPayment`,
 `DelayedIdentity`, `Instances`, `Invalid`, `FixedQueries`, `Inventory`.
+
+## RON coin branch execution
+
+RON win/loss branches reuse `FlipCoin`, `OnWin`, `OnLoss` and `Sequence`.
+The resolving controller makes one random choice at resolution (CR 705.1–2).
+Only the selected branch runs, in order (CR 608.2c). No outcome is chosen during
+compilation, casting, activation payment or delayed-trigger installation.
+All-illegal targets stop resolution before the flip (CR 608.2b). Stack copies
+flip separately and use their own controllers. `RandomSource.Clone` keeps
+scripted outcomes independent between cloned games.
+
+Goblin Kites uses the existing `AtNext` captured delayed body. Its coin is
+flipped at the next end-step trigger's resolution, even if the saved creature
+has left or phased out. A returned creature has a new incarnation (CR 400.7).
+Phasing preserves identity but prevents sacrifice while absent (CR 702.26b).
+The trigger has no new target and does not recheck toughness or shroud
+(CR 603.7c). The original resolving controller cannot sacrifice a creature now
+controlled by the opponent (CR 701.21a). The one-shot trigger is consumed even
+when its branch cannot perform the sacrifice.
+
+Bottle of Suleiman's sacrifice is a payment. Its later damage uses the existing
+source-information and prevention pipeline (CR 608.2h, 615); it cannot follow a
+returned source's controller. Token creation uses the resolving controller.
+Orcish Captain uses existing target legality and temporary layer modifications.
+This adapter adds no engine API, replacement order, simultaneous-operation or
+transaction contract. Supplied actions retain their established services.
+
+Evidence: `TestRONCoin*` and retained `TestComposableCoinFlipBranches`,
+`TestComposableCoinFlipValidation`, `TestRONDelayedStep*` and token/damage tests.
