@@ -1727,3 +1727,17 @@ Akron Legionnaire in `TestRONAttackRuleCards`, `Lifecycle`, `FlyingChanges`,
 `Native`, `NativeCast`, `StaticFilterScopes`, and `StrictLoadAndInventory`.
 Other `CantAttack` contexts, temporary rules, attacking-player restrictions,
 and mixed operation lists remain unsupported.
+
+## RON static Aura control
+
+On an Aura with `EnchantPermanent/1`, `PermanentLayerEffect/2` accepts
+`HostPermanent` and a modification list containing `SetController(You)/1`.
+`You` must be a bare symbol. This modification can accompany the existing
+supported Aura modifications. Each factory creates a separate `ControlAttached`
+continuous effect through `WithStaticAbility`. The controller is the Aura's
+current controller in layer 2, not a player saved when the spell was cast.
+
+`ThisPermanent`, collection control, chosen/target players, resolving actions,
+and other control contexts remain unsupported. Control Magic and Steal Artifact
+are covered by `TestRONStaticControl*`; their creature/artifact enchant filters
+still govern casting and attachment legality. Collection loading remains strict.

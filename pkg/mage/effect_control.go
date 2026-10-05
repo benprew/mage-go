@@ -115,7 +115,11 @@ func (e *attachedControlEffect) GetLayer() Layer              { return LayerCont
 func (e *attachedControlEffect) GetDuration() Duration        { return WhileOnBattlefield }
 func (e *attachedControlEffect) IsActive(g *Game) bool {
 	source := g.FindPermanent(e.SourceID())
-	return source != nil && source.IsAttached() && g.FindPermanent(source.AttachedTo) != nil
+	if source == nil || !source.IsAttached() {
+		return false
+	}
+	target := g.FindPermanent(source.AttachedTo)
+	return target != nil && target.incarnationID == source.attachedIncarnation
 }
 func (e *attachedControlEffect) ApplyContinuous(ctx *EffectContext) error {
 	g := ctx.Game
@@ -124,7 +128,7 @@ func (e *attachedControlEffect) ApplyContinuous(ctx *EffectContext) error {
 		return nil
 	}
 	target := g.MutablePermanent(source.AttachedTo)
-	if target == nil {
+	if target == nil || target.incarnationID != source.attachedIncarnation {
 		return nil
 	}
 	controller := source.ControllerID()

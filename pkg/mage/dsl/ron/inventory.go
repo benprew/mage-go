@@ -465,6 +465,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "static_modification", "temporary_modification":
 		switch n.Name {
+		case "SetController":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "player_reference"
+			}
 		case "SetPT":
 			if len(n.Args) == 1 {
 				return "fixed_pt"

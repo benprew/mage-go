@@ -7029,3 +7029,164 @@ Changed files: `pkg/mage/attack_matching.go`, `attack_matching_test.go`, `card.g
 `collection_untap.go`, `layers.go`, `inventory.go`, `inventory_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 Stop after this completed slice.
+
+## Slice: Static Aura control (2026-10-04)
+
+Status: complete dependency-ready slice. Stop after this slice. The initial
+modifications to `.gitignore` and `mtgish-ron-execution.md` are preserved and
+excluded from the commit. No unrelated untracked files were present.
+
+Read the project instructions, `pkg/mage/doc.go`, execution design, vocabulary
+snapshot, ledger, selected compiler/engine code, relevant DSL/rules contracts,
+and CR 303.4a–e, 400.7, 611.3a–b, 613.1b/f, 613.7a/e, 613.8 and 702.26b–i.
+The implement-engine skill was used for the attachment identity prerequisite;
+its reference to the removed implement-card schema is missing. No removed skill
+or schema was recreated. Requirements came from complete RON records.
+
+### Fresh evidence and candidate comparison
+
+Baseline focused RON/CLI tests, mage short tests and `make build` passed.
+Strict and semantic loader commands returned expected exit 1 for collection
+rejection: **1,221 compiled / 1,224 rejected records**, 432 accepted / 554 rejected
+unique names. Inventory walked all 12 files: 2,445 records, 986 unique names,
+72,938 node occurrences, 8,528 signatures and 14,059 unknown-role occurrences.
+This was not a compiler build failure or environment failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream capability and effort |
+| --- | --- | ---: | --- |
+| Static Aura control, selected | Control Magic; Steal Artifact | 2 names / 12 records | Complete records have supported enchant filters and metadata. Existing `ControlAttached` provides current-controller layer-2 execution. Small adapter and moderate lifecycle/casting tests. Enables shared static attachment control and combinations with existing Aura modifications. An incarnation defect discovered by tests requires a small engine repair. |
+| Finite prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for engine prerequisite; up to 7 after adapter | Complete records have supported payments and targets. Simultaneous finite-shield allocation still needs a shared decision/replacement contract. Larger engine/allocation/ordering test effort. Modes, optional payments and delayed returns block adjacent consumers and are excluded from this estimate. |
+| Filtered bands with others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after adapter | Complete records share supported legendary/color/current-controller filters. Filtered band formation and damage assignment need a combat contract before the grant adapter. Larger combat/native test effort. |
+
+All candidate records were read in full, including nested forms. Reprints are
+counted once as cards. The selected candidate offers the largest credible gain
+for its implementation effort. First-error frequency was not used as an unlock
+estimate. The pre-edit contract was static Aura `HostPermanent` control by bare
+`You`, lowered to an existing engine effect with fresh factory state. Acceptance
+cases stated before editing included invalid declarations, real RON casting,
+target legality, rollback, current controller, competing timestamps, phasing,
+departure/return and independent factories/clones.
+
+### Exact signatures, dependencies and engine reuse
+
+RON: `PermanentLayerEffect/2(HostPermanent, [SetController/1(You)])` on an Aura.
+`SetController` requires a tuple with one bare `You` symbol. It can accompany
+existing supported Aura P/T and keyword modifications. Non-Aura declarations,
+`ThisPermanent`, collection control, chosen/target players, action contexts,
+malformed arity and unknown companion modifications remain errors.
+`compileStaticLayer(Node, scope) (optionFactory, error)` appends the immutable
+constructor `mage.ControlAttached` to its effect builders. Each factory builds
+separate effects/abilities through `mage.WithStaticAbility`. No target or player
+state is saved in the compiler, and static `You` is read in layer 2 from the
+current Aura controller, not from a resolving spell context.
+
+Inventory reports `SetController/1`'s argument as `player_reference` in the
+static-modification role. Other contexts remain distinct. This role report does
+not assert support for all static controller expressions.
+
+Engine API remains `ControlAttached() ContinuousEffect`. The existing
+`attachedControlEffect` now checks the host's saved attachment incarnation in
+both activity and application. A card ID that leaves and returns cannot receive
+control from the old attachment, including before SBAs remove the invalid Aura.
+A fresh legal attachment records the new incarnation. This is a reusable engine
+identity repair, not a RON identity workaround.
+
+Reused services: `ControlAttached`, layer-2 controller reconciliation, attachment
+legality and timestamp refresh, static ability lifetime, incarnation identity,
+phasing, state-based actions, summoning sickness, owner/controller separation,
+can't-change-control restrictions, transactional casting and clone isolation.
+Current callers remain intact. No new rules executor, saved last-action slot,
+card-name branch, Go-card fallback or partial production registry was introduced.
+
+### TDD, complete-record audit and gameplay evidence
+
+Initial tests had three fixture API errors (owner getter, keyword construction,
+nonexistent type-removal constructor). A later combined-modification fixture
+also used wrapped values where static `AdjustPT` requires integer literals;
+that fixture was corrected. After correcting the initial fixtures, the tests
+failed on the expected `unsupported static layer action (SetController)`.
+After adapter implementation, the RON host-return test exposed an engine gap.
+The synthetic engine test then failed with `old attachment controlled returned
+host` before the engine repair. The inventory acceptance test failed with
+`controller role: unknown` before the reporting adapter.
+
+Direct phase fixtures explicitly call `ApplyContinuousEffects` after low-level
+phase methods before reading computed characteristics. The engine phase API is
+unchanged. The original source-phase failure was stale fixture computation;
+the host-return failure was a real engine identity defect. No assertion was
+weakened. Layer-6 ability removal leaves layer-2 control applied during the same
+computation; repeated computations also retain correct control.
+
+Complete selected records and all reprints: Control Magic and Steal Artifact,
+in LEA, LEB, 2ED, 3ED, CED and CEI. The only other nested `SetController/1` use is
+Ghazbán Ogre's resolving `CreatePermanentLayerEffect` with
+`ThePlayerWithTheMostLife`; its complete record was inspected and remains
+unsupported. Its intervening-if and resolving control contexts are not included.
+
+| Cards / context | Test mapping and evidence |
+| --- | --- |
+| Control Magic; Steal Artifact | `TestRONStaticControlLifecycle`: owner/controller separation, source-controller changes, departure/return of source and host, new attachment, direct and indirect phasing, competing Aura timestamps, can't-change-control, host/source ability removal, clones. |
+| Control Magic; Steal Artifact | `TestRONStaticControlNativeCasting`: real mana payment and stack timing; unpaid/wrong-type/shroud rollback; target departure/phasing/type loss before resolution; independent clone resolution; actual entry/attachment/control; source bounce restores base control. Control Magic also checks summoning sickness prevents immediate attack. |
+| Control Magic; Steal Artifact | `TestRONStaticControlFactories`: two calls of each compiled factory control different hosts for different players; removing one source does not affect the other. |
+| Both complete records / strict collection | `TestRONStaticControlStrictLoadAndInventory`: strict subset loads, role evidence and whole-subset rejection after an invalid record is added. |
+| Invalid declarations | `TestRONStaticControlInvalid`: missing/extra arguments, constructor instead of symbol, unbound player, wrong subject, collection/action context, unknown companion and non-Aura. |
+| Synthetic combined static context | `TestRONStaticControlCombinedModifications`: control, P/T and flying coexist and all end after source departure. |
+| Synthetic engine identity | `TestControlAttachedKeepsHostIncarnation`: old host departure/return, independent clone, explicit new attachment and phase cycle. |
+| Synthetic engine lifetime/layers | `TestControlAttachedDirectPhaseAndLayers`: repeated direct source phase cycles and source ability removal across repeated layer computations. |
+
+No source-data defect was found or corrected. All twelve source hashes match the
+vocabulary snapshot; no source refresh is needed. Gaea's Liege and Fastbond's
+previously noted source concerns remain open. No new LKI reads, costs,
+replacement ordering or simultaneous operations are introduced. Static control
+reads a live attachment; it must not substitute LKI for an absent host.
+
+### Actual gain and validation
+
+Actual compilation gain matches the estimate: **2 unique cards / 12 records**.
+Final strict loader: **1,233 compiled / 1,212 rejected**, 434 accepted / 552 rejected
+unique names. Exactly six Control Magic and six Steal Artifact diagnostics were
+removed. No new rejection and no changed surviving diagnostic occurred.
+Two new complete RON gameplay mappings are separate from compilation progress;
+collection-wide engine-validation and behavior-verification totals remain null.
+
+Final semantic inventory: 72,938 occurrences / 8,528 signatures / 14,047
+unknown-role occurrences. The twelve static `You` reads now have a known role.
+The strict issue list and semantic issue list remain identical.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline focused tests, mage short tests and `make build` | PASS |
+| New adapter, engine identity and inventory tests before implementation | Expected unsupported adapter, returned-host identity and unknown-role failures |
+| `go test ./pkg/mage -run TestControlAttached -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS with final combined-modification fixture |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues; automatic import formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,233 compiled / 1,212 rejected |
+| Semantic loader / diagnostic comparison | Expected exit 1; strict issues identical; exact twelve removals, no regressions |
+| Twelve source hashes | Unchanged from vocabulary snapshot |
+
+No environment or pre-existing check failure blocks this slice. The descriptive
+commit hash is reported in the final response. Only the nine slice files below
+are staged; the two initial user modifications remain outside the commit.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Finite simultaneous prevention allocation prerequisite, then the seven
+   otherwise-ready consumers listed above.
+2. Filtered bands-with-others combat contract for the five lands.
+3. Entry opponent choice and durable chosen-player bindings for Black Vise,
+   The Rack and Cursed Rack; inspect full nested records and remaining trigger,
+   value and hand-size requirements before estimating unlocks.
+
+Complete collection loading/gameplay and runtime startup gates remain unmet.
+No Go definitions, obsolete generators or DSL functions are removed. No deletion
+caller audit or migration completion is claimed. This run does not start another
+slice.
+
+Changed files: `pkg/mage/dsl/ron/layers.go`, `static_control_test.go`,
+`inventory.go`, `inventory_test.go`; `pkg/mage/effect_control.go`,
+`attached_control_identity_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.

@@ -36,6 +36,17 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	var modifications []func() mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
+		case "SetController":
+			if global {
+				return nil, unsupported(part, "static collection control")
+			}
+			if err := arity(part, 1); err != nil {
+				return nil, err
+			}
+			if part.Args[0].Kind != Symbol || part.Args[0].Name != "You" {
+				return nil, unsupported(part.Args[0], "static attachment controller")
+			}
+			effects = append(effects, mage.ControlAttached)
 		case "AdjustPT":
 			power, toughness, err := compilePT(part)
 			if err != nil {

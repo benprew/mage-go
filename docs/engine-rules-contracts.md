@@ -1600,3 +1600,27 @@ invalid declarations. RON tests named `TestRONAttackRule*` cover all three real
 consumers, source and recipient control, phasing, return, suppression, independent
 instances, strict loading, native casting/payment rollback and native combat.
 No new optional costs, damage replacements or simultaneous operations are added.
+
+## Static attachment control identity
+
+`ControlAttached() ContinuousEffect` uses the source's current attachment and
+current layer-2 controller. The host must match both the attachment ID and its
+saved incarnation. A host that leaves and returns cannot receive control from
+the old attachment, including the interval before state-based actions remove
+an invalid Aura (CR 400.7, 303.4c, 611.3a–b). A new legal attachment records the
+new incarnation and receives a new timestamp (CR 613.7e).
+
+A directly phased source cannot supply this effect. Phasing the host also phases
+its Aura; their attachment identity survives the phase cycle (CR 702.26b–d, g).
+Tests that use the low-level phase methods explicitly recompute continuous
+effects before reading characteristics. Layer-6 ability removal does not erase
+control already applied in layer 2 of the same computation (CR 613.1b/f).
+
+`TestControlAttachedKeepsHostIncarnation` covers departure/return, a new
+attachment, phase cycles and clone isolation with synthetic engine cards.
+`TestControlAttachedDirectPhaseAndLayers` covers repeated source phase cycles
+and ability removal across repeated layer computations.
+`TestRONStaticControlLifecycle`, `TestRONStaticControlNativeCasting` and
+`TestRONStaticControlFactories` exercise these services through both real RON
+Aura definitions, including current controller, competing timestamps,
+can't-change-control restrictions, payment rollback and target legality.
