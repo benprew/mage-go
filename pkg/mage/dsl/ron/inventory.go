@@ -214,6 +214,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if n.Name == "PreventDamage" && len(n.Args) == 2 {
+			return []string{"prevention_event", "prevention_operation"}[index]
+		}
 		if n.Name == "Landwalk" && len(n.Args) == 1 {
 			return "landwalk_filter"
 		}
@@ -370,6 +373,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "token_subtype"
 		}
 	case "prevention_event":
+		if n.Name == "DamageWouldBeDealtByAPermanentToRecipient" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "prevention_recipient"}[index]
+		}
 		if n.Name == "Or" && len(n.Args) == 1 {
 			return "prevention_event"
 		}

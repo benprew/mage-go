@@ -1821,3 +1821,31 @@ isolation, phase/zone/control changes, recipient ability removal and cleanup.
 Wall of Wonder also exercises the shared P/T action before its source permission.
 No replacement, simultaneous-operation, event-LKI or new payment contract is
 introduced by this slice.
+
+## RON static prevention with a permanent source filter
+
+RON now lowers
+`PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(filter, Permanent(ThisPermanent)), [PreventThatDamage])`
+to the existing `PreventDamageFromTo(filter, IsID)` static service. The adapter
+validates the event, recipient and operation list at compilation. Each factory
+creates an independent static ability. No engine signature or replacement
+algorithm changes.
+
+The shared continuous cycle installs prevention only while the recipient has
+this ability on the battlefield. Source filters use the captured source contract
+above: current characteristics while present and retained incarnation data after
+departure or phasing. The recipient is the current source of the static ability;
+control changes do not remove it. A phase cycle restores the ability, and a
+returned recipient has a fresh ability. Clones and separate factory instances
+keep independent continuous state. Combat and noncombat packets use the same
+prevention pipeline. Spell sources do not match this permanent-source event.
+Finite shield allocation under CR 615.7 remains outside this adapter.
+
+Evidence: `TestRONStaticPreventionCards`, `TestRONStaticPreventionLifecycle`,
+`TestRONStaticPreventionPendingActivation`, `TestRONStaticPreventionCombatAndSpell`,
+`TestRONStaticPreventionReplacementOrder`, `TestRONStaticPreventionStrictLoadAndInstances`
+and `TestRONStaticPreventionInvalid`. Replacement choice tests show prevention
+first cancels the packet, while redirection first moves it outside the recipient
+filter. Rules: CR 113.6, 400.7, 609.7b–c, 615.1/615.2/615.6, 616.1/616.1f,
+and 702.26b–d. Full-card tests also cover Pixies' blocking restriction and
+Nomads' landwalk with the existing combat services.

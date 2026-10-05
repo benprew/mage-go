@@ -8475,3 +8475,192 @@ Ranked next candidates for fresh reassessment:
 
 Runtime loading, complete RON gameplay, Go-card deletion and unused DSL cleanup
 remain incomplete. This run implements no next slice.
+
+## 2026-10-04 — Static permanent-source prevention adapter
+
+Capability `RON-STATIC-PERMANENT-SOURCE-PREVENTION`: complete for the signature
+and context below; the broader prevention family remains partial. This run
+implements one slice and stops. Initial user changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain excluded from staging and commit.
+
+### Fresh selection evidence
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+prior ledger, compiler and typed permanent references, semantic inventory,
+static blocking and landwalk adapters, continuous prevention, replacement
+matching, damage-source capture, simultaneous damage and clone services, and
+relevant API/rules contracts. Read CR 615 and 616 through their index entries.
+Complete RON records and nested forms supplied card requirements; no Go card
+implementation or removed card skill was used. Local Oracle records in
+`data/ATQ.json`, `ARN.json` and `DRK.json` confirm the selected rules.
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Fresh strict inspection rejected the collection with exit 1:
+2,445 records, 986 unique names, **1,283 compiled / 1,162 rejected**, 454 accepted
+and 532 rejected unique names. This is collection rejection, not a build failure.
+The fresh AST inventory contained 72,938 occurrences, 8,528 signatures and
+13,322 unknown-role occurrences. The prior ledger's suggested adapter was
+reassessed against two other shared candidates:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream benefit and effort |
+| --- | --- | --- | --- |
+| Static permanent-source prevention (selected) | Argothian Pixies; Desert Nomads; Uncle Istvan | 3 unique names / 3 records | All remaining rules compile: Pixies' blocking restriction and Nomads' Desertwalk have adapters. The previous source identity prerequisite is complete. Low adapter effort, medium gameplay/lifecycle test effort. Reuses continuous prevention and captured source filters; supplies a base for later static attachment and filtered prevention forms. |
+| Finite simultaneous prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 in prerequisite alone, then up to 7 unique names | Full records have ready costs/targets but still need `CreateFuturePreventDamage` adapters. CR 615.7 source-packet allocation is a missing engine decision contract. High engine/test effort. Also enables later Healing Salve/Alabaster Potion prevention modes. |
+| Static permanent characteristic predicates | Goblin Caves; Goblin Shrine; Animate Artifact | 1 immediately; prerequisite for 2 more | Caves needs a host basic-Mountain condition. Shrine also needs source-departure triggers and collection damage; Animate Artifact needs conditional membership across type/P/T layers and mana-value base values. Low adapter / medium layer and attachment test effort. Enables shared host/source characteristic conditions. |
+
+Complete candidate records were read, with identical reprints counted once.
+The selected candidate has the largest credible immediate gain at low effort;
+finite allocation has more consumers but a substantial missing engine contract,
+and characteristic predicates unlock only one complete card immediately.
+The contract, reuse boundary and acceptance cases were stated before edits.
+
+Additional prevention records audited in this family: Argothian Treefolk,
+Artifact Ward, Enchanted Being, Gaseous Form, Wall of Putrid Flesh, Wall of Shadows
+and Wall of Vapor. These remain rejected. Their blockers include general source
+filters, static combat events/unions, attachment recipients, enchanted-source
+predicates, blocked-by relationships, and targeting restrictions. Treefolk alone
+would not justify widening to general spell sources while shared work remains.
+
+### Exact supported context and reuse
+
+Private adapter: `compileStaticPrevention(Node, scope) (optionFactory, error)`.
+Supported top-level rule on a permanent:
+
+```ron
+PreventDamage(
+    DamageWouldBeDealtByAPermanentToRecipient(
+        source_filter,
+        Permanent(ThisPermanent)
+    ),
+    [PreventThatDamage]
+)
+```
+
+`source_filter` uses the existing validated permanent filter grammar, including
+nested `And`/`Or`. The recipient uses `compilePermanentRef` and must have
+`permanentSource` kind. Exactly one symbol operation is required. Invalid arity,
+wrappers, operations, undeclared event/target references, host/player recipients,
+spell rules and resolving-action contexts fail at compilation. Other static
+prevention event shapes remain unsupported; no declarations panic during play.
+
+Each factory creates a fresh static ability with
+`mage.WithStaticAbility(mage.PreventDamageFromTo(from, mage.IsID))`.
+The existing service binds the recipient to that ability's own battlefield
+source. No mutable game state is captured by the compiler. The engine owns
+continuous lifetime, ability removal, current characteristics, captured source
+incarnation/LKI, phasing, clone state, damage packets and replacement ordering.
+No engine API changes, parallel replacement services, global result slots,
+card-name executor branches, Go factory fallbacks or production registries are
+introduced. Fixture-only strict collections are tested; production keeps strict
+whole-collection rejection.
+
+Prevention covers all matching combat and noncombat damage repeatedly, without a
+finite amount. It protects only the ability source, follows its controller and
+phase cycle, and is installed afresh on a returned recipient. Ability removal
+ends it. A present damage source supplies current characteristics; departed or
+phased sources supply their captured incarnation data. A returned source does
+not replace that data. Permanent filters do not match spell sources. Competing
+redirection follows affected-player choice and rechecks recipient membership.
+Costs and targets are unchanged and retain the previous engine contracts.
+
+Inventory now assigns `PreventDamage` children to `prevention_event` and
+`prevention_operation`, and assigns this event's children to `permanent_filter`
+and `prevention_recipient`. Nested references keep `permanent_reference` roles.
+This reporting change does not imply support for the rejected sibling shapes.
+API and rules documentation describe only this shape and engine reuse.
+
+### TDD and full-card evidence
+
+The first focused red run failed on `unsupported rule (PreventDamage)` for all
+three complete repository cards, before adapter implementation. Invalid
+synthetic declarations also remained rejected. The implementation then exposed
+two fixture errors, corrected without weakening the intended rule assertions:
+landwalk needs the defender-aware query/normal turn declaration path, and a
+Desert subtype on a synthetic creature needs the land type to survive the type
+layer. Focused tests pass with those engine-valid fixtures.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Argothian Pixies; Desert Nomads; Uncle Istvan | `TestRONStaticPreventionCards`: complete RON records, engine definition validation, two independent recipients under different controllers, matching/nonmatching creature/artifact/Desert sources, repeated damage, simultaneous recipients and unaffected player damage. |
+| All three prevention lifecycles | `TestRONStaticPreventionLifecycle`: departed/returned/phased damage sources, current source type changes, recipient control changes, phase cycle, recipient return, ability removal and clone isolation. Desert subtype changes are not claimed by the type-change fixture. |
+| Pixies and Istvan with real RON damage | `TestRONStaticPreventionPendingActivation`: Grapeshot Catapult/Prodigal Sorcerer activations, pending source departure/return/phasing, copied activations and cloned pending resolution. |
+| All three combat/noncombat contracts | `TestRONStaticPreventionCombatAndSpell`: native combat packets, independent reciprocal damage, then cast/resolved complete Lightning Bolt RON showing spell damage is not prevented. |
+| Replacement choice | `TestRONStaticPreventionReplacementOrder`: recipient chooses prevention first or creature-to-player redirection first; the shared pipeline rechecks and protects only the original recipient. |
+| Pixies' complete additional rule | `TestRONStaticPreventionOtherRules`: artifact/nonartifact blocking legality, native attack/block rejection and unblocked combat damage. |
+| Nomads' complete additional rule | `TestRONStaticPreventionOtherRules` and `TestRONStaticPreventionNativeLandwalk`: defender-aware evasion with/without a Desert, normal turn block declaration rejects the block only with a Desert. |
+| Factory isolation / strict loading | `TestRONStaticPreventionStrictLoadAndInstances`: strict load of the three actual records, separate factory instances, one recipient loses abilities without affecting another; adding an unsupported record rejects the entire registry. |
+| Invalid declarations / inventory | `TestRONStaticPreventionInvalid`: bad arity, wrappers, operation count/kind, unbound/incompatible references, spell/action contexts and role reporting. |
+
+Inherited engine contracts are also covered by the existing
+`TestDamageSourceFilter*` tests (captured identity, LKI cleanup, missing sources,
+redirection, clones and simultaneous source death). No finite shield, new
+payment, result binding or allocation contract is claimed by this slice.
+
+A separate pre-existing discrepancy was observed: `Game.ExecuteBlockers`, the
+AI helper, checks `CanBlock` but omits `HasLandwalkEvasion`; normal
+`doDeclareBlockers` checks both. The Nomads test exercises normal turn execution.
+This is an engine/AI caller gap, not a missing adapter or source-data defect.
+It was not changed in this slice. Do not treat these card mappings as proof of
+all AI/native caller paths or collection-wide gameplay certification.
+
+### Fresh outcome and validation
+
+Actual gain equals the estimate: **3 records / 3 unique names**. Final strict
+and inspection counts are **1,286 compiled / 1,159 rejected**, 457 accepted and
+529 rejected unique names. Compilation, engine-validation and gameplay remain
+separate: the three cards have definition/gameplay evidence above, while the
+collection-wide engine-validation and behavior-verification aggregates remain
+null. This run adds three complete normal-gameplay card mappings.
+
+Inventory remains 72,938 occurrences and 8,528 signatures; unknown-role
+occurrences decrease to 13,225. The three unlocked first diagnostics disappear.
+Seven surviving cards now have more specific diagnostics: general-source event
+on Argothian Treefolk and Artifact Ward; combat event on Enchanted Being;
+static union on Gaseous Form; `IsEnchanted` on Wall of Putrid Flesh;
+`IsBlockedByDefender` on Wall of Shadows and Wall of Vapor. No rejected card
+became accepted except the three intended names. Strict and inspection issues
+agree. No RON source was changed and no source defect was corrected; all 12
+file hashes match the baseline/vocabulary snapshot, so no source snapshot
+refresh is needed. Gaea's Liege/Fastbond concerns remain separate.
+
+Validation results are appended after final checks below. An intermediate broad
+short test run caught the same fixture failures described above; it was rerun
+with fresh `-count=1` after correction. The first lint run reported a redundant
+lambda around `mage.IsID`; removed it, reran lint and reviewed automatic import
+formatting. User files were not changed by lint.
+
+Ranked next candidates for fresh reassessment:
+1. CR 615.7 finite simultaneous prevention allocation prerequisite: seven ready
+   consumers and later modal prevention cards.
+2. Filtered bands-with-others for Adventurers' Guildhouse, Cathedral of Serra,
+   Mountain Stronghold, Seafarer's Quay and Unholy Citadel: shared five-card rule;
+   reassess exact engine combat contract before lowering.
+3. Static permanent characteristic predicates: Goblin Caves immediately, with
+   separate Shrine and Animate Artifact dependencies above.
+
+Keep the AI landwalk helper discrepancy in the engine audit queue. Full RON
+loading, collection-wide gameplay, runtime startup wiring, Go-card deletion and
+DSL cleanup remain incomplete. Removal gates are unmet; no Go definition,
+generator or DSL export is removed and no removal caller audit is claimed.
+Changed slice files: `pkg/mage/dsl/ron/static_prevention.go`,
+`static_prevention_test.go`, `compiler.go`, `inventory.go`, `inventory_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONStaticPrevention -count=1` | PASS; rerun after lint review |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final code/lint changes |
+| `make test` | PASS after final code/lint changes |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues after removing redundant lambda; automatic test import formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,286 compiled / 1,159 rejected; no production registry publication |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict and inspection issues equal |
+| Diagnostic audit | 3 unlocked cards; 7 surviving first errors become more specific; no additional rejected records |
+| Source audit | All 12 source hashes match baseline and vocabulary; no RON edits |
+
+No environmental or required-validation blocker remains. The AI landwalk helper
+gap is explicitly recorded above. The eight listed slice files are staged and
+committed; the initial user files remain unstaged. The descriptive commit hash
+is reported in the final response. No next slice is started.

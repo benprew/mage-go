@@ -1893,3 +1893,40 @@ Tower of Coireall uses the filtered rule with its creature target and tap cost.
 Wall of Wonder uses the source defender permission after its temporary +4/-4.
 `TestRONTemporaryCombatRule*` supplies real-record gameplay, native combat,
 invalid-declaration, payment, target-copy, lifecycle and context evidence.
+
+### RON static prevention from permanent sources
+
+The top-level permanent rule supports this complete shape:
+
+```ron
+PreventDamage(
+    DamageWouldBeDealtByAPermanentToRecipient(
+        source_filter,
+        Permanent(ThisPermanent)
+    ),
+    [PreventThatDamage]
+)
+```
+
+`source_filter` uses the existing permanent filter grammar. The recipient is
+only the source of the static ability. The operation list must contain exactly
+the symbol `PreventThatDamage`. Player recipients, Aura hosts, event or target
+references, general damage sources, combat-only events, finite amounts and
+additional operations remain unsupported in this context. These declarations
+fail compilation before a factory is returned.
+
+Each factory builds a fresh static ability using `PreventDamageFromTo` and
+`IsID`. It prevents all matching damage to that permanent while the ability
+is active. It covers combat and noncombat damage without a finite shield.
+Current source characteristics and retained source incarnations use the engine
+source filter contract. This does not make permanent filters match spell sources.
+The rule follows the recipient across control changes and phase cycles; a
+returned recipient gets its own new static ability. Removing that ability
+removes the prevention. Other instances and cloned games keep separate state.
+
+Tests: `TestRONStaticPreventionCards`, `TestRONStaticPreventionLifecycle`,
+`TestRONStaticPreventionPendingActivation`, `TestRONStaticPreventionCombatAndSpell`,
+`TestRONStaticPreventionReplacementOrder`, `TestRONStaticPreventionOtherRules`,
+`TestRONStaticPreventionNativeLandwalk`, `TestRONStaticPreventionStrictLoadAndInstances`
+and `TestRONStaticPreventionInvalid`. These execute the complete Argothian Pixies,
+Desert Nomads and Uncle Istvan records, including their other rules.
