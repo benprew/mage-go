@@ -3039,3 +3039,20 @@ result values remain unsupported. `TestRONDamageRecipientValue*` covers both
 complete Legends records, Storm Seeker and Typhoon, plus declaration, scope,
 instance, activation, copy, clone, payment, timing and simultaneous contracts.
 Mind Bomb still requires optional discard and saved per-player results.
+
+## Simultaneous allocation for finite recipient shields
+
+The existing `mage.PreventNextDamage(recipient, amount)` and
+`Game.AddPreventionShield(recipientID, amount)` APIs now support affected-player
+allocation among simultaneous damage sources. `DealSimultaneousDamage` and
+native combat steps retain all assignments until replacement choices finish.
+The affected player or permanent's current controller uses `ChooseNumber` with
+legal bounds to allocate limited shield capacity. Replacement ordering uses
+`ChooseMode`, including a choice that applies to a later packet. Source
+incarnations, shield consumption, cleanup and game clones use the existing
+engine services. Single-damage callers keep their current signatures.
+
+This is an engine prerequisite. The RON compiler still rejects finite
+`CreateFuturePreventDamage` declarations. No new RON shape or card factory is
+accepted. See the finite-shield contract and test mappings in
+[engine-rules-contracts.md](engine-rules-contracts.md).

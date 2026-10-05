@@ -16421,3 +16421,182 @@ Slice files: engine `composable_player_damage.go`, its tests, `definition.go`,
 `player_scope.go`, `inventory.go`, `inventory_test.go`; API/rules docs and this
 ledger entry. One descriptive commit is made only after all required checks
 pass. No second slice starts.
+
+## 2026-10-05: finite recipient shield allocation prerequisite
+
+Status: completed slice `FINITE-RECIPIENT-ALLOCATION`. Stop after this slice.
+This is an engine prerequisite; no finite-prevention compiler adapter is added.
+Runtime cutover and removal gates remain unmet.
+
+### Fresh evidence and candidate comparison
+
+Initial user work: `.gitignore`, the execution design, and the progress ledger
+were modified; `mtgish-ron-completed.md` was untracked. Preserve these changes,
+including the user's ledger restructuring. Stage only this appended entry
+against the committed ledger, rather than staging that restructuring.
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+progress ledger, selected damage/replacement/combat/compiler services, API and
+rules contracts, and complete candidate RON records. No Go card definition was
+used as a requirement. The `implement-engine` skill supplied the engine
+workflow. No removed card/set skill was invoked or recreated. Relevant rules:
+CR 400.7, 510.2/4, 615.3/4/6/7/12, 616.1/1f and 702.26b/d/e.
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Fresh semantic loading exited 1 for collection rejection: **1,547 compiled /
+898 rejected records**, **569 accepted / 417 rejected unique names**, from
+2,445 records and 986 names. Inventory: 72,951 nodes, 8,540 signatures and
+10,181 unknown-role occurrences. This was not a build or test failure.
+
+| Candidate | Distinct names and estimated complete-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Finite recipient allocation, selected prerequisite | Samite Healer, Healing Salve, Conservator, Alabaster Potion, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Kei Takahashi, Rakalite: **0 immediate / 10 likely after adapters and remaining gameplay audits**. Balm of Restoration is an additional dependent consumer. | CR 615.7 affected-player allocation was missing from shared batches; native combat also executed assignments separately. Compiler recipient/amount/operation lowering remains missing. Balm additionally needs activated modes. Guardian Angel needs a player permission; Personal Incarnation uses a replacement operation rather than prevention. Enables fixed/X finite shields in spells, modes and activations without a parallel RON damage system. | Medium: batch choices/rechecks, combat assignment collection, identity, source outcomes, priority, allocation bounds, clones and gameplay evidence. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **0 safe adapter-only / 5 likely complete consumers**. | Requires all-zone characteristic evaluation, owner/controller context, named counts, CDA/copy/layer contracts. Gaea's Avenger also needs Plus and has the ledger's unresolved controller-count source defect. Wood Elemental needs entry-sacrifice results. Enables reusable count-based characteristics. | High: zone, CDA and layer services plus gameplay. |
+| Target alternatives | Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace, Magical Hack, Sleight of Mind: **0 immediate / 7 downstream consumers**. | Complete nested records require both spell/permanent alternatives and color or text operations. Target-union and retargeting services need exact lowering; first-error removal alone does not unlock them. Enables broader alternative-target spells. | Medium/high: announcement, alternative targets, copies, then color/text services. |
+
+Selection favors a bounded shared prerequisite with concrete ten-card downstream
+benefit. The contract, reuse boundary, acceptance cases and zero immediate gain
+were stated before editing. Full records were read, including modes, tap/mana
+costs, X, Rakalite's delayed return and Balm's sacrifice. Reprints count once.
+An initial commentary estimate included Balm as an eleventh likely complete
+adapter consumer. Inspection of its nested activated mode and fresh diagnostic
+`FEM.lines.ron:3:252: unsupported action list (Modal_ChooseOne)` corrects that
+estimate to ten. It remains a dependent consumer, not an estimated full unlock.
+
+### Established signatures, contexts and reuse
+
+Public signatures remain unchanged:
+
+- `Game.AddPreventionShield(id uuid.UUID, amount int)`.
+- `PreventNextDamage(recipient DamageRecipientRef, amount ResolutionValue) ResolvingEffect`.
+- `Game.DealSimultaneousDamage(assignments ...DamageAssignment)`.
+- `Combat.ResolveDamage(g *Game, isFirstStrikeStep bool)`.
+
+The supported engine context is the ordinary finite recipient shield over
+explicit player/permanent damage packets. Current recipient control determines
+the chooser. With distinct source identities and insufficient capacity,
+`ChooseNumber` supplies legally bounded amounts, including zero for a packet.
+Capacity sums are bounded by the shield amount to avoid overflow. A focused
+maximum-integer test confirmed this failure before its fix. Bounds ensure all
+applicable capacity is spent. Invalid answers use the legal
+maximum. Forced amounts, enough capacity and a single source require no prompt.
+Nonpositive or absent/phased/returned recipient packets are excluded. Saved
+source ID and incarnation distinguish sources; a returned card cannot replace
+retained source/controller/lifelink information. Prompts identify packet,
+amount and retained source controller.
+
+The batch replacement path reuses the existing matching service, priority tiers,
+affected-player lookup, replacement labels and `ChooseMode`. It offers
+replacement choices for later packets, not only the first assignment. Each
+packet keeps its own applied-effect set, local to this invocation. Self
+replacements run before ordinary shield choices; matching and priority are
+checked again after changes. Prevention and redirection can be selected in
+either order. A redirected packet can join a recipient shield group. Shield
+consumption remains in `preventionShieldReplacement`; no state is held in RON,
+no global last-action slot is added, and clone/captured-incarnation/expiry
+ownership stays in the existing engine services. Unpreventable/unredirectable
+packets do not consume the ordinary shield.
+
+Native combat now collects assignments and uses the same batch, separately for
+first-strike and normal steps. Both blocked and unblocked paths, including
+existing band paths, feed that collection. Existing combat assignment and band
+source-attribution behavior is preserved, rather than claimed as a new contract.
+In particular, aggregate band source attribution remains a separate audit item
+before claiming complete finite-card gameplay across all combat interactions.
+Damage and lifelink execute before damage events and notifications. Single-damage
+callers retain their existing replacement path. Shared candidate/label helpers
+avoid duplicating matching, priority and replacement-label policy.
+
+`ron` still owns spelling, lexical scope and declaration plans. No new RON
+signature or context is authorized. The downstream shape remains rejected:
+`CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(amount, recipient), [PreventThatDamage])/2`.
+Fixed/X values, typed any-target/permanent/player recipients, spell modes,
+activations, delayed return and additional operations require subsequent adapter
+and complete-card gameplay evidence. Source-specific prevention is outside this
+ordinary recipient-shield contract.
+
+### TDD and gameplay evidence
+
+Before implementation, new engine tests confirmed missing split allocation,
+missing APNAP decisions and incorrect source outcomes under competing
+replacements. A real RON combat test separately failed with zero allocation
+choices. It exposed the native combat assignment prerequisite. A later focused
+priority test failed because a shield ran before a self replacement on a later
+packet; this was fixed before validation. Test fixture errors were corrected:
+an unavailable source-history method was replaced with the existing API, an
+unavailable damage accessor was replaced with the engine test's subsystem, and
+the redirection expectation was corrected for its existing one-shot duration.
+The combat-step fixture uses one attacker with two legal blockers. No production
+contract or rejection assertion was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Savannah Lions and War Mammoth, complete LEB records | `TestRONPreventionAllocationCombat`: native two-source combat, split shield allocation and positive damage history for both retained sources. These are accepted RON consumers; no new complete-card coverage claim is made. |
+| Hurricane, complete LEB record | `TestRONPreventionAllocationSpellRollbackAndClone`: announced X, unpaid rollback, mana payment, resolution timing, finite player shields, pending game clone and independent capacity consumption. Extends existing gameplay evidence. |
+| Invalid declarations | `TestRONPreventionAllocationKeepsDeclarationsStrict`: unbound/incompatible recipients and unsupported finite production declarations remain rejected. Retained `TestTypedPreventionAmountValidation` covers nil and unbound amount declarations. |
+| Split amounts and simultaneous outcomes | `TestPreventionAllocationSplit`, `BoundsAndCapacity`, `OneSource`, `LargeAmounts`: player/permanent recipients, split or all-to-one allocation, invalid answers, spare capacity, zero/negative/absent packets, consumption, retained lifelink and complete-batch notifications. |
+| Identity and decisions | `APNAP`, `IdentityAndClone`, `SourceIncarnations`: both active players, current control versus ownership, phase cycles/phased absence, source departure/return, recipient return, cleanup, unpreventable damage, clone isolation and two source incarnations with one physical UUID. |
+| Replacement contracts | `Rechecks`, `RedirectIntoShield`, `ChooseLaterPacket`, `Priority`: both prevention/redirection orders, redirected recipient rechecks, choosing the later source packet, and self-replacement priority before allocation. |
+| Native damage steps | `CombatStepBatch`: legal blocked combat in normal and first-strike steps, two blocking sources, split allocation and notifications after the entire step's damage. Existing combat/band regressions also pass. |
+| Ten finite card consumers and Balm | Prerequisite only. No complete-card gameplay mapping or compilation gain is attributed to them. |
+
+### Validation, actual gain and next work
+
+Compilation gain is **0 unique names / 0 records**, matching the selected
+prerequisite estimate. Strict loading and semantic inspection still report
+**1,547 compiled / 898 rejected records**, **569 accepted / 417 rejected names**.
+All baseline diagnostics and semantic signatures are identical. Inventory
+remains **72,951 nodes / 8,540 signatures / 10,181 unknown-role occurrences**.
+Both loader modes exit 1 and install no partial production registry. Example:
+`2ED.lines.ron:211:231: unsupported action (CreateFuturePreventDamage)` for
+Samite Healer. Aggregate engine-validated and behavior-verified totals remain
+null; compilation and gameplay coverage are separate.
+
+No RON source changed and no source defect was corrected. All twelve hashes
+match the baseline, so no syntax snapshot refresh is needed. Known ledger
+source defects remain unresolved. No Go definitions, generators, runtime callers
+or DSL functions are removed: collection loading, gameplay, startup integration
+and the removal gates remain unmet. No fresh whole-repository caller audit
+would authorize a DSL deletion in this prerequisite slice.
+
+Validation commands/results are recorded below after their final runs. API and
+rules documentation describe only this established engine behavior. The only
+lint formatting changes were new-test import spacing; they were reviewed.
+
+Ranked next candidates to reassess:
+
+1. Finite recipient prevention adapter for fixed/X amounts, typed recipients,
+   `[PreventThatDamage]`, spell modes and activations. Ten likely consumers;
+   preserve rejection of Guardian Angel's permission and Balm's activated modes.
+   Audit band source attribution before full combat gameplay claims.
+2. All-zone count CDA prerequisite for the five consumers listed above; keep
+   Gaea's Avenger's source defect separate from its arithmetic adapter.
+3. `Targeted_Modal` target alternatives for seven color/text consumers.
+
+Slice files: `pkg/mage/prevention_allocation.go`, its engine test;
+`combat.go`, `damage_system.go`, `effect_manager.go`, `doc.go`;
+`pkg/mage/dsl/ron/prevention_allocation_test.go`; API/rules docs and this ledger
+entry. One descriptive commit is made only after required checks pass. No second
+slice starts.
+
+Final verification:
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine tests and `make build` | PASS. |
+| New engine and RON tests before implementation | Expected allocation/APNAP/source-outcome and zero-choice combat failures confirmed. Priority and maximum-integer tests also failed before their fixes. |
+| `go test ./pkg/mage -run 'TestPreventionAllocation\|TestMixedDamageBatch\|TestPreventDamageThisTurn\|TestTypedPrevention\|TestCombatPrevention\|TestCombatDamageBatch' -count=1` | PASS on final code. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONPreventionAllocation\|TestRONMixedDamage\|TestRONDamagePackets\|TestRONDamageRecipientValue' -count=1` | PASS on final code. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, final post-lint run. |
+| `make test` | PASS, final post-lint run. |
+| `go test ./... -short -count=1` | PASS, final post-lint skill verification. |
+| `make build` | PASS on final code. |
+| `go vet ./...` | PASS on final code. |
+| `make lint` | PASS, zero issues. Final source hashes were unchanged by lint. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,547 compiled / 898 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts, diagnostics, signatures and source hashes unchanged. |
+
+No validation failure or environment blocker remains. This slice is committed
+only after all required checks pass. The commit hash is reported in the final
+response. User edits and the untracked completed-slices document remain intact.

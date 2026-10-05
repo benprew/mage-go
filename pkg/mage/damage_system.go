@@ -426,7 +426,7 @@ func (ds *DamageSystem) prepareDamageToPlayer(g *Game, request damageRequest) Ac
 		return nil
 	}
 	action := NewDamageToPlayerAction(request.sourceID, request.playerID, request.amount, ds.resolvingCombatDamage).withDamageSource(request.source)
-	return g.effects.ApplyReplacements(action, g)
+	return action
 }
 
 // ExecuteDamageToPlayer applies damage to a player after all replacements have been applied.
@@ -588,7 +588,7 @@ func (ds *DamageSystem) dealDamageToPermanentFromSource(g *Game, perm *Permanent
 }
 
 func (ds *DamageSystem) dealDamageToPermanentFromSourceOutcome(g *Game, perm *Permanent, amount int, source DamageSource) damageOutcome {
-	if action := ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}); action != nil {
+	if action := g.effects.ApplyReplacements(ds.prepareDamageToPermanent(g, damageRequest{permanent: perm, amount: amount, sourceID: source.ID(), source: source}), g); action != nil {
 		return executeDamageOutcome(g, action)
 	}
 	return damageOutcome{}
@@ -613,7 +613,7 @@ func (ds *DamageSystem) prepareDamageToPermanent(g *Game, request damageRequest)
 		return nil
 	}
 	action := NewDamageToCreatureAction(sourceID, perm.ID(), amount, ds.resolvingCombatDamage).withDamageSource(source)
-	return g.effects.ApplyReplacements(action, g)
+	return action
 }
 
 // dealSimultaneousDamageToPermanents applies one group of damage before it sends events.
@@ -642,6 +642,7 @@ func (ds *DamageSystem) dealSimultaneousDamageOutcomes(g *Game, requests []damag
 			actions = append(actions, action)
 		}
 	}
+	actions = g.effects.applyDamageBatchReplacements(actions, g)
 	batch := &damageBatch{}
 	g.damageBatch = batch
 	outcomes := make([]damageOutcome, 0, len(actions))

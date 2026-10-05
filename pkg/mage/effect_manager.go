@@ -972,59 +972,77 @@ func (em *EffectManager) ApplyReplacements(action Action, g *Game) Action {
 				return nil
 			}
 		}
-		var candidates []ReplacementEffect
-		seen := make(map[ReplacementEffect]bool)
-		for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
-			for _, r := range list {
-				if !applied[r] && !seen[r] && r.IsActive(g) && r.Matches(action, g) {
-					candidates = append(candidates, r)
-					seen[r] = true
-				}
-			}
-		}
+		candidates := em.replacementCandidates(action, g, applied)
 		if len(candidates) == 0 {
 			break
 		}
-		bestPriority := ReplacementPriorityDefault
-		for _, r := range candidates {
-			p := getReplacementPriority(r)
-			if p < bestPriority {
-				bestPriority = p
-			}
-		}
-		var tierCandidates []ReplacementEffect
-		for _, r := range candidates {
-			if getReplacementPriority(r) == bestPriority {
-				tierCandidates = append(tierCandidates, r)
-			}
-		}
-		candidates = tierCandidates
-
-		index := 0
-		if len(candidates) > 1 {
-			if player := replacementAffectedPlayer(action, g); player != nil {
-				labels := make([]string, len(candidates))
-				for i, r := range candidates {
-					labels[i] = fmt.Sprintf("Replacement effect %d", i+1)
-					if card := g.FindCardAnywhere(r.SourceID()); card != nil {
-						labels[i] += ": " + card.Name()
-					}
-					if description, ok := r.(interface{ Text() string }); ok {
-						labels[i] += ": " + description.Text()
-					}
-				}
-				index = player.ChooseMode(labels, "Choose a replacement or prevention effect")
-				if index < 0 || index >= len(candidates) {
-					index = 0
-				}
-			}
-		}
+		index := chooseReplacement(candidates, action, g)
 		r := candidates[index]
 		applied[r] = true
 		action = r.Replace(action, g)
 	}
 
 	return action
+}
+
+func (em *EffectManager) replacementCandidates(action Action, g *Game, applied map[ReplacementEffect]bool) []ReplacementEffect {
+	var candidates []ReplacementEffect
+	seen := make(map[ReplacementEffect]bool)
+	for _, list := range [2][]ReplacementEffect{em.replacements, em.cycleReplacements} {
+		for _, r := range list {
+			if !applied[r] && !seen[r] && r.IsActive(g) && r.Matches(action, g) {
+				candidates = append(candidates, r)
+				seen[r] = true
+			}
+		}
+	}
+	if len(candidates) == 0 {
+		return nil
+	}
+	bestPriority := ReplacementPriorityDefault
+	for _, r := range candidates {
+		p := getReplacementPriority(r)
+		if p < bestPriority {
+			bestPriority = p
+		}
+	}
+	var tierCandidates []ReplacementEffect
+	for _, r := range candidates {
+		if getReplacementPriority(r) == bestPriority {
+			tierCandidates = append(tierCandidates, r)
+		}
+	}
+	candidates = tierCandidates
+
+	return candidates
+}
+
+func chooseReplacement(candidates []ReplacementEffect, action Action, g *Game) int {
+	index := 0
+	if len(candidates) > 1 {
+		if player := replacementAffectedPlayer(action, g); player != nil {
+			labels := make([]string, len(candidates))
+			for i, r := range candidates {
+				labels[i] = replacementLabel(r, i, g)
+			}
+			index = player.ChooseMode(labels, "Choose a replacement or prevention effect")
+			if index < 0 || index >= len(candidates) {
+				index = 0
+			}
+		}
+	}
+	return index
+}
+
+func replacementLabel(r ReplacementEffect, index int, g *Game) string {
+	label := fmt.Sprintf("Replacement effect %d", index+1)
+	if card := g.FindCardAnywhere(r.SourceID()); card != nil {
+		label += ": " + card.Name()
+	}
+	if description, ok := r.(interface{ Text() string }); ok {
+		label += ": " + description.Text()
+	}
+	return label
 }
 
 // ClearReplacementsEndOfTurn removes all replacement effects with EndOfTurn duration.

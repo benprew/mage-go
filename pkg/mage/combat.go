@@ -377,12 +377,23 @@ func combatDamageValue(p *Permanent, g *Game) int {
 	return p.CurrentPower(g)
 }
 
+type combatDamagePlan struct{ assignments []DamageAssignment }
+
+func (p *combatDamagePlan) player(g *Game, recipient Player, amount int, sourceID uuid.UUID) {
+	p.assignments = append(p.assignments, PlayerDamageAssignment(recipient, amount, g.CaptureDamageSource(sourceID)))
+}
+func (p *combatDamagePlan) permanent(g *Game, recipient *Permanent, amount int, sourceID uuid.UUID) {
+	p.assignments = append(p.assignments, PermanentDamageAssignment(recipient, amount, g.CaptureDamageSource(sourceID)))
+}
+
 // ResolveDamage executes combat damage for all combat groups. It replaces the
 // old Game.DoCombatDamage method and operates on the Combat receiver so the
 // logic lives alongside the rest of the combat state.
 func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 	// Track which band leaders we've already processed to avoid double-dealing.
 	processedBands := make(map[uuid.UUID]bool)
+	// Save all assignments before replacement choices can change game state.
+	plan := &combatDamagePlan{}
 
 	for _, group := range c.Groups {
 		atk := g.FindPermanent(group.AttackerID)
@@ -398,7 +409,7 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 				continue
 			}
 			processedBands[leaderID] = true
-			c.doBandedAttackDamage(g, bandMembers, group.DefenderID, isFirstStrikeStep)
+			c.doBandedAttackDamage(g, plan, bandMembers, group.DefenderID, isFirstStrikeStep)
 			continue
 		}
 
@@ -410,7 +421,7 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := combatDamageValue(atk, g)
-					g.DealDamageToPlayer(defender, dmg, atk.ID())
+					plan.player(g, defender, dmg, atk.ID())
 				}
 			}
 		} else if len(group.BlockerIDs) == 0 {
@@ -420,18 +431,19 @@ func (c *Combat) ResolveDamage(g *Game, isFirstStrikeStep bool) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
 					dmg := atk.CurrentPower(g)
-					g.DealDamageToPlayer(defender, dmg, atk.ID())
+					plan.player(g, defender, dmg, atk.ID())
 				}
 			}
 		} else if c.isBlockingBand(g, group.BlockerIDs) {
 			// Blocking band: defending player distributes attacker's damage.
-			c.doBlockingBandDamage(g, atk, group, isFirstStrikeStep)
+			c.doBlockingBandDamage(g, plan, atk, group, isFirstStrikeStep)
 		} else {
 			// Normal blocked combat.
-			c.doNormalBlockedDamage(g, atk, group, isFirstStrikeStep)
+			c.doNormalBlockedDamage(g, plan, atk, group, isFirstStrikeStep)
 		}
 	}
 
+	g.DealSimultaneousDamage(plan.assignments...)
 	g.CheckStateBasedActions()
 }
 
@@ -451,7 +463,7 @@ func (c *Combat) isBlockingBand(g *Game, blockerIDs []uuid.UUID) bool {
 }
 
 // doNormalBlockedDamage handles blocked combat for a single non-banded attacker.
-func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
+func (c *Combat) doNormalBlockedDamage(g *Game, plan *combatDamagePlan, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
 	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
 		atkPower := combatDamageValue(atk, g)
 		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
@@ -499,18 +511,18 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 				}
 				dmg := assignment[bid]
 				if dmg > 0 {
-					g.DealDamageToPermanent(blk, dmg, atk.ID())
+					plan.permanent(g, blk, dmg, atk.ID())
 					usedDmg += dmg
 				}
 			}
 			remainingDmg = atkPower - usedDmg
 		} else {
-			remainingDmg = dealDefaultBlockedCombatDamage(g, atk, orderedPerms, atkPower, atk.HasKeyword(Trample))
+			remainingDmg = dealDefaultBlockedCombatDamage(g, plan, atk, orderedPerms, atkPower, atk.HasKeyword(Trample))
 		}
 		if remainingDmg > 0 && atk.HasKeyword(Trample) {
 			defender := g.GetPlayer(group.DefenderID)
 			if defender != nil {
-				g.DealDamageToPlayer(defender, remainingDmg, atk.ID())
+				plan.player(g, defender, remainingDmg, atk.ID())
 			}
 		}
 	}
@@ -520,7 +532,7 @@ func (c *Combat) doNormalBlockedDamage(g *Game, atk *Permanent, group *CombatGro
 			continue
 		}
 		if c.DealsDamageInStep(blk, isFirstStrikeStep) {
-			g.DealDamageToPermanent(atk, combatDamageValue(blk, g), blk.ID())
+			plan.permanent(g, atk, combatDamageValue(blk, g), blk.ID())
 		}
 	}
 }
@@ -633,7 +645,7 @@ func lethalCombatDamageRequired(source, target *Permanent, g *Game) int {
 	return needed
 }
 
-func dealDefaultBlockedCombatDamage(g *Game, source *Permanent, blockers []*Permanent, total int, hasTrample bool) int {
+func dealDefaultBlockedCombatDamage(g *Game, plan *combatDamagePlan, source *Permanent, blockers []*Permanent, total int, hasTrample bool) int {
 	remaining := total
 	for i, blocker := range blockers {
 		dealt := min(remaining, lethalCombatDamageRequired(source, blocker, g))
@@ -641,7 +653,7 @@ func dealDefaultBlockedCombatDamage(g *Game, source *Permanent, blockers []*Perm
 			dealt = remaining
 		}
 		if dealt > 0 {
-			g.DealDamageToPermanent(blocker, dealt, source.ID())
+			plan.permanent(g, blocker, dealt, source.ID())
 			remaining -= dealt
 		}
 		if remaining <= 0 {
@@ -654,7 +666,7 @@ func dealDefaultBlockedCombatDamage(g *Game, source *Permanent, blockers []*Perm
 // doBlockingBandDamage handles combat where multiple blockers with banding block
 // a single attacker. The defending player (controller of the blocking band) chooses
 // how the attacker's damage is distributed across band members.
-func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
+func (c *Combat) doBlockingBandDamage(g *Game, plan *combatDamagePlan, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
 	// Collect blocker permanents.
 	var blockerPerms []*Permanent
 	for _, bid := range group.BlockerIDs {
@@ -684,7 +696,7 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 			for _, blk := range blockerPerms {
 				dmg := distribution[blk.ID()]
 				if dmg > 0 {
-					g.DealDamageToPermanent(blk, dmg, atk.ID())
+					plan.permanent(g, blk, dmg, atk.ID())
 					usedDmg += dmg
 				}
 			}
@@ -693,17 +705,17 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 				if trampleDmg := atkPower - usedDmg; trampleDmg > 0 {
 					defender := g.GetPlayer(group.DefenderID)
 					if defender != nil {
-						g.DealDamageToPlayer(defender, trampleDmg, atk.ID())
+						plan.player(g, defender, trampleDmg, atk.ID())
 					}
 				}
 			}
 		} else {
 			// Default: normal distribution (no banding benefit).
-			remainingDmg := dealDefaultBlockedCombatDamage(g, atk, blockerPerms, atkPower, atk.HasKeyword(Trample))
+			remainingDmg := dealDefaultBlockedCombatDamage(g, plan, atk, blockerPerms, atkPower, atk.HasKeyword(Trample))
 			if remainingDmg > 0 && atk.HasKeyword(Trample) {
 				defender := g.GetPlayer(group.DefenderID)
 				if defender != nil {
-					g.DealDamageToPlayer(defender, remainingDmg, atk.ID())
+					plan.player(g, defender, remainingDmg, atk.ID())
 				}
 			}
 		}
@@ -712,14 +724,14 @@ func (c *Combat) doBlockingBandDamage(g *Game, atk *Permanent, group *CombatGrou
 	// Each blocker still deals its own damage to the attacker.
 	for _, blk := range blockerPerms {
 		if c.DealsDamageInStep(blk, isFirstStrikeStep) {
-			g.DealDamageToPermanent(atk, combatDamageValue(blk, g), blk.ID())
+			plan.permanent(g, atk, combatDamageValue(blk, g), blk.ID())
 		}
 	}
 }
 
 // doBandedAttackDamage handles combat for an entire attacking band. It collects
 // blockers from all band members' groups and processes them together.
-func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defenderID uuid.UUID, isFirstStrikeStep bool) {
+func (c *Combat) doBandedAttackDamage(g *Game, plan *combatDamagePlan, bandMemberIDs []uuid.UUID, defenderID uuid.UUID, isFirstStrikeStep bool) {
 	// Collect all blockers across all band members' groups (deduplicated).
 	seen := make(map[uuid.UUID]bool)
 	var allBlockerIDs []uuid.UUID
@@ -775,7 +787,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 				continue
 			}
 			// Forcefield and bodyguard are now replacement effects in the pipeline.
-			g.DealDamageToPlayer(defender, dmg, member.ID())
+			plan.player(g, defender, dmg, member.ID())
 		}
 		return
 	}
@@ -822,18 +834,18 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 			usedDmg := 0
 			for _, blk := range blockerPerms {
 				if dmg := assignment[blk.ID()]; dmg > 0 {
-					g.DealDamageToPermanent(blk, dmg, primaryAttacker.ID())
+					plan.permanent(g, blk, dmg, primaryAttacker.ID())
 					usedDmg += dmg
 				}
 			}
 			remainingDmg = totalBandPower - usedDmg
 		} else {
-			remainingDmg = dealDefaultBlockedCombatDamage(g, primaryAttacker, blockerPerms, totalBandPower, hasTrample)
+			remainingDmg = dealDefaultBlockedCombatDamage(g, plan, primaryAttacker, blockerPerms, totalBandPower, hasTrample)
 		}
 		if remainingDmg > 0 && hasTrample {
 			defender := g.GetPlayer(defenderID)
 			if defender != nil {
-				g.DealDamageToPlayer(defender, remainingDmg, primaryAttacker.ID())
+				plan.player(g, defender, remainingDmg, primaryAttacker.ID())
 			}
 		}
 	}
@@ -879,12 +891,12 @@ func (c *Combat) doBandedAttackDamage(g *Game, bandMemberIDs []uuid.UUID, defend
 				}
 				member := g.FindPermanent(memberID)
 				if member != nil {
-					g.DealDamageToPermanent(member, dmg, sourceID)
+					plan.permanent(g, member, dmg, sourceID)
 				}
 			}
 		} else if len(memberPerms) > 0 {
 			// Default: all incoming damage falls on the first band member.
-			g.DealDamageToPermanent(memberPerms[0], totalIncoming, sourceID)
+			plan.permanent(g, memberPerms[0], totalIncoming, sourceID)
 		}
 	}
 }

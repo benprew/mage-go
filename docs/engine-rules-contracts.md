@@ -3253,3 +3253,57 @@ control/departure/return/phasing, lifelink and cloned pending activations.
 `TestRONDamageRecipientValue*` covers the compiler adapter and complete
 Storm Seeker and Typhoon records. No optional-payment or discard-result
 contract is established here.
+
+## Finite recipient shields in simultaneous damage batches
+
+`Game.AddPreventionShield(uuid.UUID, int)` and
+`PreventNextDamage(DamageRecipientRef, ResolutionValue)` keep their signatures.
+The ordinary recipient shield now allocates its capacity across the current
+simultaneous damage packets before any damage executes (CR 615.7). With multiple
+source identities and insufficient capacity, the affected player or the
+permanent's current controller chooses each prevention amount through the
+existing `Player.ChooseNumber` service. Bounds reserve enough capacity for the
+remaining packets, so all applicable shield capacity is used. Capacity sums are
+bounded by the shield amount to avoid integer overflow. A forced amount,
+a single source, or sufficient capacity requires no allocation prompt. Invalid
+answers use the legal maximum. Source identity includes the saved incarnation;
+labels use retained source information, without a live-source requirement.
+
+Batch replacement choices use the existing priority tiers, effect labels and
+`Player.ChooseMode` service (CR 616.1). Choices occur in APNAP order. A player can
+select a replacement for a later packet before allocating a shield. Each
+packet keeps its own applied-effect set; redirection cannot reapply the same
+rule to that packet. Matching and priority are checked again after each selected
+replacement (CR 616.1f). Redirected packets can join a recipient's shield group.
+A shield allocation changes the damage amounts, not the saved damage sources.
+Shield capacity, captured recipient incarnation, cleanup expiry and clone
+ownership remain in the existing replacement service. Damage with the existing
+unpreventable/unredirectable attribute does not consume shield capacity.
+
+Native `Combat.ResolveDamage` now collects its assignments before calling
+`DealSimultaneousDamage`, once for each damage step (CR 510.2, 510.4). Normal,
+blocking-band and attacking-band paths use this collection. This change keeps
+the existing combat assignment and band source-attribution behavior; it does
+not establish a new banding assignment contract. All damage and lifelink in the
+batch precede damage events and notifications. First-strike and normal steps
+remain separate batches. Single-damage callers retain their existing API.
+
+Evidence: `TestPreventionAllocationSplit`, `APNAP`, `Rechecks`,
+`BoundsAndCapacity`, `IdentityAndClone`, `OneSource`, `RedirectIntoShield`,
+`CombatStepBatch`, `Priority`, `ChooseLaterPacket`, `SourceIncarnations`, and `LargeAmounts`. These cover split
+prevention and source outcomes, both active players, replacement order and
+rechecks, later-packet choices, invalid answers, spare capacity, nonpositive
+packets, control versus ownership, departure/return, phasing, clone isolation,
+retained lifelink, native combat batches and cleanup. Retained
+`TestTypedPrevention*` tests cover declaration validation and resolution-time
+amounts. `TestRONPreventionAllocationCombat` uses the complete Savannah Lions
+and War Mammoth records in native combat; `SpellRollbackAndClone` uses the
+complete Hurricane record with announced X, payment rollback, pending clones
+and independent shield consumption. `KeepsDeclarationsStrict` proves that the
+engine prerequisite does not authorize unsupported RON declarations.
+
+No finite-prevention RON action is enabled by this slice. In particular,
+`CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(...),
+[PreventThatDamage])` remains rejected. Source-specific shields, additional
+prevention operations and full finite-prevention card gameplay mappings require
+separate adapter and contract evidence.

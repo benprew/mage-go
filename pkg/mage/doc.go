@@ -122,6 +122,11 @@
 // Its player binding is local to the amount. All amounts are read before one
 // simultaneous damage batch. Replacement effects do not recalculate them.
 //
+// [PreventNextDamage] permits allocation across simultaneous damage sources.
+// The affected player or recipient controller chooses within legal bounds.
+// Native combat saves all assignments before the damage batch starts.
+// First-strike and normal damage steps use separate batches.
+//
 // Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
 // twice the announced X with [AddCountersTo] after [TapSubject].
 //
