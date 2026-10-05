@@ -707,6 +707,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "event":
+		if n.Name == "WhenAPermanentIsPutIntoAPlayersGraveyard" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "player_filter"}[index]
+		}
 		if n.Name == "WhenAPlayerTapsAPermanentForMana" && len(n.Args) == 2 {
 			return []string{"player_filter", "permanent_filter"}[index]
 		}

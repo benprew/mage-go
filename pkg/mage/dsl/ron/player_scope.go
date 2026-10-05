@@ -7,12 +7,14 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
-	permanent *permanentReferencePlan
-	target    *playerTargetPlan
-	spell     *spellReferencePlan
-	event     *castEventPlan
-	step      *stepEventPlan
-	landMana  *landManaEventPlan
+	permanent       *permanentReferencePlan
+	target          *playerTargetPlan
+	spell           *spellReferencePlan
+	event           *castEventPlan
+	step            *stepEventPlan
+	landMana        *landManaEventPlan
+	graveyard       *graveyardEventPlan
+	deathController *graveyardEventPlan
 }
 
 type castEventPlan struct{ spellName, casterName string }
@@ -23,17 +25,19 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
-	counters   map[*counterPaymentPlan]*mage.NumberBinding
-	sacrifices map[*sacrificeValuePlan]sacrificeValueBindings
-	events     map[*castEventPlan]castEventBindings
-	steps      map[*stepEventPlan]*mage.PlayerBinding
-	landMana   map[*landManaEventPlan]landManaEventBindings
-	tapped     map[*permanentEventPlan]*mage.PermanentBinding
-	permanents map[*permanentTargetPlan]*mage.PermanentTargetBinding
-	players    map[*playerTargetPlan]*mage.PlayerTargetBinding
-	spells     map[*spellTargetPlan]*mage.SpellTargetBinding
-	cards      map[*cardTargetPlan]*mage.CardTargetBinding
-	recipients map[*damageTargetPlan]*mage.DamageTargetBinding
+	graveyardControllers map[*graveyardEventPlan]*mage.PlayerBinding
+	graveyardOwners      map[*graveyardEventPlan]*mage.PlayerBinding
+	counters             map[*counterPaymentPlan]*mage.NumberBinding
+	sacrifices           map[*sacrificeValuePlan]sacrificeValueBindings
+	events               map[*castEventPlan]castEventBindings
+	steps                map[*stepEventPlan]*mage.PlayerBinding
+	landMana             map[*landManaEventPlan]landManaEventBindings
+	tapped               map[*permanentEventPlan]*mage.PermanentBinding
+	permanents           map[*permanentTargetPlan]*mage.PermanentTargetBinding
+	players              map[*playerTargetPlan]*mage.PlayerTargetBinding
+	spells               map[*spellTargetPlan]*mage.SpellTargetBinding
+	cards                map[*cardTargetPlan]*mage.CardTargetBinding
+	recipients           map[*damageTargetPlan]*mage.DamageTargetBinding
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
@@ -54,6 +58,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	if n.Kind == Symbol {
 		switch n.Name {
 		case "Trigger_ThatPlayer":
+			if ctx.graveyardEvent != nil {
+				return playerReferencePlan{graveyard: ctx.graveyardEvent}, nil
+			}
 			if ctx.landManaEvent != nil {
 				return playerReferencePlan{landMana: ctx.landManaEvent}, nil
 			}
@@ -62,6 +69,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 			}
 			if ctx.castEvent != nil && n.Name == ctx.castEvent.casterName {
 				return playerReferencePlan{event: ctx.castEvent}, nil
+			}
+		case "ControllerOfDeadPermanent":
+			if ctx.graveyardEvent != nil {
+				return playerReferencePlan{deathController: ctx.graveyardEvent}, nil
 			}
 		case "You":
 			return playerReferencePlan{}, nil
@@ -79,6 +90,12 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.deathController != nil {
+		return mage.FromPlayer(bindings.graveyardControllers[p.deathController])
+	}
+	if p.graveyard != nil {
+		return mage.FromPlayer(bindings.graveyardOwners[p.graveyard])
+	}
 	if p.landMana != nil {
 		return mage.FromPlayer(bindings.landMana[p.landMana].player)
 	}

@@ -34,6 +34,7 @@ type scope struct {
 	stepEvent       *stepEventPlan
 	permanentEvent  *permanentEventPlan
 	landManaEvent   *landManaEventPlan
+	graveyardEvent  *graveyardEventPlan
 }
 
 type actionPlan struct {

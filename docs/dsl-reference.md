@@ -2219,3 +2219,32 @@ and `IsEnchanted(ThisPermanent)` are invalid.
 RON gameplay tests: `TestRONEnchantedFilter*` cover Ramses Overdark and Wall of
 Putrid Flesh. Enchanted Being still requires an unsupported combat-only static
 prevention event; this filter does not establish support for that event.
+
+## RON land and artifact graveyard-event adapters
+
+`TriggerA(WhenAPermanentIsPutIntoAPlayersGraveyard(filter, AnyPlayer), actions)`
+accepts `IsCardtype(Land)` or `IsCardtype(Artifact)`. It also accepts
+`And([IsCardtype(type), ControlledByAPlayer(SinglePlayer(You))])` in either
+order, with exactly one type and one controller restriction. The type and
+controller are checked before the permanent leaves the battlefield. A move
+from another zone, phasing, regeneration, or an exile destination does not
+match. Tokens and the source itself can match.
+
+Inside this trigger, `Trigger_ThatPlayer` is the owner of the destination
+graveyard. `ControllerOfDeadPermanent` is the permanent's controller before
+it left. Both use separate `PlayerBinding` values created for each factory
+instance. Each pending trigger saves its own values. A later return or control
+change does not redirect them. These symbols are not available in other event
+contexts. Singular source/host selectors, other types, restricted destination
+players and `TriggerI` remain unsupported for this event.
+
+The adapter uses `PermanentDies().OfType(type).WithOwner(owner)` and
+`WithController(controller)`, with `YouControlled()` for the controller
+restriction. Existing action lists, optional mana payments and typed targets
+apply. No new engine API is required.
+
+Dingus Egg's six records use `ControllerOfDeadPermanent`, in accord with the
+local Oracle text in `data/LEA.json`. Tablet of Epityr uses the existing optional
+payment action. Full-card evidence is in `TestRONGraveyardEvent*`, including
+strict loading and native casting. This does not establish support for Lich,
+Cyclopean Tomb or Urza's Miter.

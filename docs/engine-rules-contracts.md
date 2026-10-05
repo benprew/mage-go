@@ -2286,3 +2286,33 @@ introduced. Evidence: `TestRONTemporaryPowerDeclarations`,
 `TestRONTemporaryPowerRealCards`, `TestRONTemporaryPowerLegality`,
 `TestRONTemporaryPowerStrictLoadAndNativeGame`,
 `TestRONTemporaryPowerSharedContexts` and `TestRONTemporaryPowerSpellAndInventory`.
+
+## RON land and artifact graveyard events
+
+The RON `WhenAPermanentIsPutIntoAPlayersGraveyard` adapter uses the existing
+`PermanentDies` event service. `OfType` checks the type before departure;
+`YouControlled` checks the last controller against the trigger controller.
+`WithOwner` saves the destination graveyard owner and `WithController` saves
+the last battlefield controller in separate typed bindings. The compiler
+exposes these as `Trigger_ThatPlayer` and `ControllerOfDeadPermanent` only
+inside the matching trigger body. Each factory and pending event keeps its
+own bindings. Returned objects and later control changes do not redirect them.
+
+The supported RON context is `TriggerA` with land/artifact type filters and an
+optional controller restriction, and `AnyPlayer` as the destination filter.
+The existing engine detects each occurrence in simultaneous deaths, including
+self-death, and uses its pre-batch observer when the source dies too. Tokens
+can trigger without leaving a card in the graveyard. APNAP placement, trigger
+copies, cloned games, source LKI for damage, prevention and optional mana
+payment remain in their existing services. No engine implementation changed.
+
+Rules: CR 400.3, 400.7, 603.2c/g, 603.3a/b, 603.6c, 603.10a and 700.4.
+Evidence: `TestRONGraveyardEventDingusEgg`, `TestRONGraveyardEventTablet`,
+`TestRONGraveyardEventBatchInstancesAndCopy`,
+`TestRONGraveyardEventDeathKindsAndLKI`,
+`TestRONGraveyardEventOwnerControllerAndAPNAP`,
+`TestRONGraveyardEventNonEvents`, `TestRONGraveyardEventDeclarations`,
+`TestRONGraveyardEventInventoryAndScopes` and
+`TestRONGraveyardEventNativeLoad`. The local Oracle data requires Dingus Egg
+to damage the last controller, not the graveyard owner; all six RON reprints
+now use the separate controller binding.

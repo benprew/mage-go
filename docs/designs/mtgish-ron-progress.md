@@ -11059,3 +11059,156 @@ Changed slice files: `pkg/mage/dsl/ron/compiler.go`, `temporary_value.go`,
 Commit hash is reported in the final response. Complete collection gameplay,
 runtime/startup cutover, Go-card/generator deletion and unused DSL cleanup
 remain open. Stop after this one slice.
+
+## 2026-10-05: land/artifact graveyard events with saved players
+
+Status: completed compiler-adapter slice, `graveyard-event.land-artifact-players`.
+The initial changes to `.gitignore` and `docs/designs/mtgish-ron-execution.md`
+remain excluded from this slice. Runtime cutover and removal gates remain open.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot, ledger,
+selected compiler/scope/inventory code, engine death patterns and capture code,
+optional payment services, API/rules-contract docs, and CR 400.3/7, 603.2/3/6/10
+and 700.4. Requirements came from complete RON records, including all reprints
+and nested forms. The existing semantic inventory and typed instance scopes
+satisfy this slice's prerequisites. Baseline `go test ./pkg/mage/dsl/ron -count=1`
+and `make build` passed. Fresh inventory loading exited 1 for collection
+rejection, not a build failure: 2,445 records / 986 names, 1,418 compiled /
+1,027 rejected records, 494 accepted / 492 rejected names; 72,938 nodes,
+8,528 semantic signatures, 12,266 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| Land/artifact graveyard events (selected) | Dingus Egg, Tablet of Epityr; related but separate forms: Urza's Miter, Cyclopean Tomb, Lich | 2 names / 7 records with the non-intervening type-filter context. Miter needs its sacrifice-outcome/intervening-if context; Tomb needs singular source selection, persistent mire history, counter-dependent durations and persistent upkeep triggers; Lich needs entry life, player rules, replacements, damage triggers and sacrifice payments. The later Oracle check also requires a Dingus source correction. | Shared typed death-player environment and existing pre-death type/controller tests; small compiler effort, medium gameplay-test effort. Enables later Miter lowering without a new death executor. |
+| Random-discard activation costs | Coral Helm, Draconian Cylix: 2 | 0 until the engine prerequisite is repaired; 2 names / 2 records after it and the adapter. Complete records otherwise use supported targeted boosts/regeneration and mana/tap costs. Existing `discardRandomCost.Pay` uses process `rand.Intn`, bypasses cost-discard replacement/batch services, and needs the random-payment ordering contract. | Deterministic random costs, shared replacement handling and CR 601.2h payment ordering. Medium/high engine transaction and rollback effort, then a small compiler adapter. This gap was investigated, not changed here. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Rasputin Dreamweaver: 12 | 0 for the shared prerequisite alone; 9 likely after its adapters. Guardian needs repeatable optional payments, Rakalite delayed return, Rasputin source-based prevention, untapped-turn history and a counter cap. | Shared CR 615.7 simultaneous prevention allocation, typed recipients and X amounts. High engine/decision/batch and gameplay-test effort. |
+
+The selected event adapter gives two credible immediate gains using exact
+existing engine contracts. It has lower effort than either alternative. The
+contract, reuse boundary and acceptance cases were stated before editing.
+First-error frequencies were not treated as unlock estimates. No second slice
+was begun; correcting the selected card's recipient is part of this slice.
+
+### Exact contract, dependencies and engine reuse
+
+Supported context:
+`TriggerA(WhenAPermanentIsPutIntoAPlayersGraveyard(filter, AnyPlayer), actions)`.
+`filter` is `IsCardtype(Land)` or `IsCardtype(Artifact)`, or
+`And([IsCardtype(type), ControlledByAPlayer(SinglePlayer(You))])` in either
+order, with exactly those two restrictions. Other filters, other types,
+singular source selectors and restricted destination players
+are not added by this contract. `TriggerI` remains rejected for this event.
+
+New private signatures:
+- `compileGraveyardTrigger(event, body Node, ctx scope) (optionFactory, error)`.
+- `compileGraveyardEventFilter(Node) (core.CardType, bool, error)`.
+
+The event lowers to `mage.PermanentDies().OfType(type).WithOwner(owner)` with
+`WithController(controller)`, and optionally `YouControlled()`. Types and
+controller restrictions use the pre-death object. `Trigger_ThatPlayer` reads
+the destination graveyard owner; `ControllerOfDeadPermanent` reads the last
+battlefield controller. The separate typed player bindings are created per
+factory. Every pending trigger keeps its own captures, so later source/land
+control changes, departure, return, phasing, copying or cloned games cannot
+redirect either player. Source damage uses the existing original-incarnation
+LKI service. Optional mana payment remains an adjacent `IfPaid` continuation.
+
+The engine retains all timing, APNAP, simultaneous-death observation, source
+self-death, token handling, replacement/prevention and payment behavior. No
+public engine API or implementation changed. No card-name branch, fallback,
+mutable shared target state, global action slot, partial production registry
+or new game-time declaration panic was introduced. Semantic inventory now
+reports both event arguments and their descendants even under unsupported
+parents. Syntax support remains separate from gameplay evidence.
+
+### Source defect and correction
+
+All six Dingus Egg records (LEA, LEB, 2ED, 3ED, CED, CEI) used
+`Player(Trigger_ThatPlayer)` in their damage action. The complete local Oracle
+record in `data/LEA.json` says: "Whenever a land is put into a graveyard from
+the battlefield, this artifact deals 2 damage to that land's controller."
+CR 400.3 assigns the graveyard to the owner; CR 603.6c/603.10a require the
+pre-departure controller. These can be different players. All six identical
+RON records now use `Player(ControllerOfDeadPermanent)`. No predicate or owner
+binding was inverted to hide the defect. `data/ATQ.json` confirms Tablet of
+Epityr's complete RON requirements, including the optional {1} payment.
+
+The vocabulary snapshot was refreshed from the parser-backed `InspectFS`
+report: aggregate named signatures by `(name, kind, arity)`, sum occurrences,
+sort source examples by file/line/column, retain three examples, copy fresh file
+hashes and loader diagnostics. Only two vocabulary occurrence counts change:
+`ControllerOfDeadPermanent` 8 -> 14; `Trigger_ThatPlayer` 145 -> 139.
+The twelve file hashes agree with the fresh report; only the six corrected
+RON files changed. There are still 600 tuple signatures, 51 top-level rule
+names, 2,445 records and 986 names. Known Liege/Fastbond/Avenger concerns remain
+separate. No environment defect was found.
+
+### TDD and card-to-test mappings
+
+The initial focused suite failed at the expected unsupported event diagnostic.
+After the source correction, the Dingus tests failed at the expected unbound
+`ControllerOfDeadPermanent` diagnostic before its adapter was added. All focused
+tests now pass. Test-only corrections: avoid passing a nil live-only lookup to
+`DestroyPermanent` for a phased victim; use an end-of-turn continuous fixture
+so the type-removal effect is active; use `StackObject.Controller` for the
+APNAP assertion. The first broad run failed only on two stale inventory-count
+assertions. They now assert the fresh measured gains. No existing behavior
+assertion was weakened or removed.
+
+| Card / context | Evidence |
+| --- | --- |
+| Dingus Egg, all six complete records | `TestRONGraveyardEventDingusEgg`: owner versus last controller, delayed placement/resolution, source departure/return/control/phasing, land return, damage prevention and clone isolation. `TestRONGraveyardEventBatchInstancesAndCopy`: multiple factories/events, simultaneous distinct lands, duplicate input, copied trigger preserving recipient. `TestRONGraveyardEventDeathKindsAndLKI`: destruction, sacrifice, direct graveyard movement, tokens, gained/lost land type, phase cycle and simultaneous source death. `TestRONGraveyardEventNonEvents`: bounce, exile, discard from hand, phasing, nonland, absent source and regeneration. Full-card gameplay mapping. |
+| Tablet of Epityr, complete ATQ record | `TestRONGraveyardEventTablet`: pay/decline/unaffordable, correct pre-death controller, source control changes before/after event, source departure/return, phased source/victim, ability removal, self-death and batch death; payment occurs only at resolution and uses the original trigger controller. Full-card gameplay mapping. |
+| Both cards / strict native loading | `TestRONGraveyardEventNativeLoad`: strict loading of all seven complete records, canonical reprint count, unpaid casting rejection and state preservation, paid native casting, actual batch deaths and effects, atomic invalid-collection rejection without changing the existing test registry. |
+| Shared event/player contract | `TestRONGraveyardEventOwnerControllerAndAPNAP`: separate owner/controller captures after land return, APNAP placement and original land controller despite different trigger controllers. `TestRONGraveyardEventDeclarations`: valid reversed filter order and factory definition validation; invalid arities, duplicate/empty filters, incompatible/unbound refs, unsupported players/types/selectors. `TestRONGraveyardEventInventoryAndScopes`: argument roles, descendant reporting, out-of-scope event values and continued intervening-if rejection. |
+
+Two unique cards gain complete gameplay mappings, separately from the seven
+compiled-record gains. Collection `engine_validated` and `behavior_verified`
+remain null. Accepted Lightning Bolt gameplay and registry isolation remain
+covered by the existing inventory regression test. Removal gates are not met;
+no Go card, generator or DSL function was deleted, and no caller-removal audit
+is claimed.
+
+### Validation and actual gain
+
+Actual gain matches the estimate: **2 unique names / 7 records**.
+Fresh reports: **1,425 compiled / 1,020 rejected records**, **496 accepted /
+490 rejected names**. Only the six Dingus Egg diagnostics and Tablet of Epityr
+at `ATQ.lines.ron:66:146` disappeared. All other remaining diagnostics are
+unchanged and no accepted record regressed. Inventory: **72,938 nodes / 8,530
+semantic signatures / 12,210 unknown-role occurrences**. Two new semantic
+contexts reflect the corrected controller symbol; the raw tuple vocabulary
+is unchanged.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONGraveyardEvent -count=1` | Expected TDD failure, then PASS, including the source-correction controller test. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, rerun after final lint formatting. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after updating stale inventory counts. Earlier failure was confined to those two assertions. |
+| `make test` | PASS after the same inventory update; all other packages passed in the earlier run too. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Reviewed automatic formatting and final import grouping; no unrelated file changed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,425 compiled / 1,020 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict, inventory and vocabulary diagnostics agree, hashes refreshed. |
+
+Ranked next candidates to reassess from fresh evidence:
+1. Mandatory random-discard cost transaction prerequisite, then the Coral Helm
+   and Draconian Cylix adapter. Keep random operations after deterministic
+   payments, use game randomness and cost replacements, and prove rollback.
+2. Finite recipient-prevention allocation prerequisite and adapters for the
+   nine otherwise-ready names above, with the three remaining blockers retained.
+3. All-zone CDA characteristics for Keldon Warlord, Nightmare, Plague Rats,
+   Gaea's Avenger, Dakkon Blackblade and People of the Woods; the Avenger source
+   audit remains a separate blocker.
+
+Changed slice files: seven compiler/test files (`compiler.go`, `player_scope.go`,
+`triggers.go`, `graveyard_event.go`, `graveyard_event_test.go`, `inventory.go`,
+`inventory_test.go`); six Dingus Egg RON files; API/rules-contract docs, vocabulary
+snapshot and this ledger. Stage only these seventeen files. The commit hash is
+reported in the final response. Complete collection gameplay, runtime/startup
+cutover, Go-card/generator deletion and unused DSL cleanup remain open. Stop
+here after this slice.
