@@ -82,7 +82,10 @@ func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
 // AddBlockerIncarnation records the battlefield object that blocks.
 func (c *Combat) AddBlockerIncarnation(blockerID, incarnation, attackerID uuid.UUID) {
 	for _, g := range c.Groups {
-		if g.AttackerID != attackerID {
+		if g.AttackerID != attackerID && !c.IsBandedWith(g.AttackerID, attackerID) {
+			continue
+		}
+		if slices.Contains(g.BlockerIDs, blockerID) {
 			continue
 		}
 		g.BlockerIDs = append(g.BlockerIDs, blockerID)
@@ -92,7 +95,6 @@ func (c *Combat) AddBlockerIncarnation(blockerID, incarnation, attackerID uuid.U
 			g.blockedBy = make(map[capturedPermanent]bool)
 		}
 		g.blockedBy[capturedPermanent{blockerID, incarnation}] = true
-		return
 	}
 }
 
@@ -146,8 +148,13 @@ func (c *Combat) SnapshotAttackedAlone() {
 func (c *Combat) SnapshotBlockedAlone() {
 	var only uuid.UUID
 	count := 0
+	seen := make(map[uuid.UUID]bool)
 	for _, g := range c.Groups {
 		for _, bid := range g.BlockerIDs {
+			if seen[bid] {
+				continue
+			}
+			seen[bid] = true
 			only = bid
 			count++
 			if count > 1 {
@@ -850,55 +857,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, plan *combatDamagePlan, bandMembe
 		}
 	}
 
-	// 2. Blockers' total damage is distributed by the attacking player across band members.
-	totalIncoming := 0
-	for _, bid := range allBlockerIDs {
-		blk := g.FindPermanent(bid)
-		if blk != nil && c.DealsDamageInStep(blk, isFirstStrikeStep) {
-			totalIncoming += combatDamageValue(blk, g)
-		}
-	}
-
-	if totalIncoming > 0 {
-		var attackingPlayerID uuid.UUID
-		for _, memberID := range bandMemberIDs {
-			member := g.FindPermanent(memberID)
-			if member != nil {
-				attackingPlayerID = member.ControllerID()
-				break
-			}
-		}
-		attackingPlayer := g.GetPlayer(attackingPlayerID)
-
-		var memberPerms []*Permanent
-		for _, memberID := range bandMemberIDs {
-			member := g.FindPermanent(memberID)
-			if member != nil {
-				memberPerms = append(memberPerms, member)
-			}
-		}
-
-		var distribution map[uuid.UUID]int
-		if distributor, ok := attackingPlayer.(BandingDamageDistributor); ok {
-			distribution = distributor.GetBandingDamageDistribution(memberPerms)
-		}
-
-		sourceID := allBlockerIDs[0] // use first blocker as damage source for tracking
-		if distribution != nil {
-			for memberID, dmg := range distribution {
-				if dmg <= 0 {
-					continue
-				}
-				member := g.FindPermanent(memberID)
-				if member != nil {
-					plan.permanent(g, member, dmg, sourceID)
-				}
-			}
-		} else if len(memberPerms) > 0 {
-			// Default: all incoming damage falls on the first band member.
-			plan.permanent(g, memberPerms[0], totalIncoming, sourceID)
-		}
-	}
+	c.assignIncomingBandDamage(g, plan, bandMemberIDs, allBlockerIDs, isFirstStrikeStep)
 }
 
 // Legacy card effects also make attackers with only this blocker unblocked.

@@ -24,6 +24,13 @@ type BandingDamageDistributor interface {
 	GetBandingDamageDistribution(members []*Permanent) map[uuid.UUID]int
 }
 
+// BandingDamageAssigner permits separate assignments for each blocking source.
+// The engine checks the full amount before it adds damage to the batch.
+// A nil or invalid assignment uses bounded number choices instead.
+type BandingDamageAssigner interface {
+	GetBandingDamageAssignment(g *Game, source *Permanent, recipients []*Permanent, amount int) map[uuid.UUID]int
+}
+
 // CombatDamageAssigner is an optional interface for the attacking player to
 // (a) order multiple blockers for damage assignment (CR 510.1c, CR 702.19b)
 // and (b) divide the attacker's combat damage among them, subject to the

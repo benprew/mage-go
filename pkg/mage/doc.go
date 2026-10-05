@@ -126,6 +126,9 @@
 // The affected player or recipient controller chooses within legal bounds.
 // Native combat saves all assignments before the damage batch starts.
 // First-strike and normal damage steps use separate batches.
+// [BandingDamageAssigner] lets a player assign each blocking source separately
+// to an attacking band. Each source keeps its own damage information.
+// The old [BandingDamageDistributor] can still set the total for each recipient.
 //
 // Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
 // twice the announced X with [AddCountersTo] after [TapSubject].

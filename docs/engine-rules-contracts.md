@@ -3307,3 +3307,58 @@ No finite-prevention RON action is enabled by this slice. In particular,
 [PreventThatDamage])` remains rejected. Source-specific shields, additional
 prevention operations and full finite-prevention card gameplay mappings require
 separate adapter and contract evidence.
+
+## Incoming damage to attacking bands: separate sources
+
+`BandingDamageAssigner.GetBandingDamageAssignment(g *Game, source *Permanent,
+recipients []*Permanent, amount int) map[uuid.UUID]int` is an optional player
+service for the incoming side of ordinary attacking bands. It runs once for
+each positive blocking source that assigns damage in the current damage step.
+Each map must contain only eligible recipient IDs, nonnegative amounts and the
+source's exact damage total. Validation subtracts from the available amount to
+avoid overflow. Nil and invalid maps use `Player.ChooseNumber`, with bounds that
+assign the complete source amount. Invalid number answers use the legal maximum;
+forced choices need no prompt. Assignment makes no payments or zone changes.
+
+While a current member has banding, the attacking player chooses the incoming
+assignments. After the members lose banding, each blocking source's controller
+chooses instead (CR 510.1d, 702.22e/g/k). Formation alone does not preserve the
+assignment permission. The existing `BandingDamageDistributor` signature remains
+valid: when no source-aware service exists, one valid aggregate recipient map
+sets the recipient totals for the step. Bounded source choices divide those
+totals into individual source packets, without changing the caller's map.
+Invalid aggregate maps use unrestricted per-source number choices. An aggregate
+total that exceeds the integer range also uses the per-source path.
+
+`Combat.AddBlockerIncarnation` records each blocker for all members of the
+attacking band (CR 702.22h). Duplicate declarations do not add duplicate packets.
+Removing the originally named member cannot erase surviving members' blocking
+relationships. Departure, return and phasing remove the object from combat;
+phase-in and a new incarnation do not restore its membership (CR 400.7, 506.4,
+702.22f, 702.26). Current attack incarnations limit eligible recipients.
+
+Every blocking source retains its own amount, ID, incarnation, controller,
+owner, characteristics and keywords in `DamageSource`. Zero and negative source
+amounts are excluded individually (CR 510.1a). First strike and double strike
+use the existing step service. All packets join the existing combat damage
+batch before replacement choices. Finite prevention can therefore distinguish
+sources (CR 615.7); redirection, rechecks and priority remain in the existing
+replacement pipeline (CR 616.1). Actual damage supplies source histories and
+lifelink; notifications follow the complete damage batch. A replacement-time
+source departure or return cannot replace saved source information. Game clones
+keep their own combat, shield and damage state.
+
+Evidence: `TestBandIncomingDamageSources`, `IndependentAssignments`,
+`InvalidAssignments`, `LegacyTotals`, `Steps`, `IdentityAndClone`,
+`RetainedSource`, `ReplacementOrder`, `Unpreventable` and `NonpositiveSources`.
+`TestRONBandIncomingDamage` casts complete Benalish Hero, Timber Wolves and
+War Elephant records, then uses complete Savannah Lions and War Mammoth records
+as blockers. It checks unpaid rollback, casting timing, band metadata, native
+combat, split shields, both source histories and clone isolation. It adds
+incoming-combat evidence rather than complete-card gameplay certification.
+
+This contract does not change outgoing attacking-band assignment, blocking-band
+assignment, "bands with other", or the old lethal-order policy for other combat
+paths. Outgoing aggregation and shared trample/deathtouch handling remain open
+migration prerequisites. The RON compiler accepts no new shape in this slice;
+finite `CreateFuturePreventDamage` declarations remain rejected.

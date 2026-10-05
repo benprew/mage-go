@@ -3056,3 +3056,23 @@ This is an engine prerequisite. The RON compiler still rejects finite
 `CreateFuturePreventDamage` declarations. No new RON shape or card factory is
 accepted. See the finite-shield contract and test mappings in
 [engine-rules-contracts.md](engine-rules-contracts.md).
+
+## Source identity for incoming damage to an attacking band
+
+The optional engine player service `mage.BandingDamageAssigner` supplies a
+separate assignment for each blocker. `GetBandingDamageAssignment` receives the
+game, blocking source, eligible band members and exact source amount. The result
+must assign that amount among those members. Nil or invalid results use bounded
+`Player.ChooseNumber` choices. This service has no RON spelling.
+
+Existing `BandingDamageDistributor` callers can still supply one map of
+recipient totals. The engine preserves valid totals while assigning each
+blocking source separately. Sources keep their own identities and abilities
+through finite prevention, redirection, actual damage and cloned games. Losing
+banding restores the blocking controller's assignment choice. Blocker links are
+recorded for every band member so a departed member does not erase other links.
+
+Only incoming damage to ordinary attacking bands has this new contract.
+Outgoing band aggregation remains a migration prerequisite. See
+[engine-rules-contracts.md](engine-rules-contracts.md) for signatures and tests.
+No additional RON declaration is accepted.

@@ -16600,3 +16600,188 @@ Final verification:
 No validation failure or environment blocker remains. This slice is committed
 only after all required checks pass. The commit hash is reported in the final
 response. User edits and the untracked completed-slices document remain intact.
+
+## Run 2026-10-05: BAND-INCOMING-SOURCE-IDENTITY
+
+Status: complete engine prerequisite slice. Stop after this slice. The contract
+covers incoming damage from blockers to an ordinary attacking band; it does not
+claim complete banding or finite-prevention card support.
+
+### Baseline and candidate comparison
+
+Initial user changes were `.gitignore`, the execution design, and the progress
+ledger; `mtgish-ron-completed.md` was untracked. All remain intact and unstaged.
+This entry alone is added to the committed ledger; the user's ledger relocation
+is not included in this commit. Baseline short engine tests and `make build`
+passed. Strict loading exited 1 for unsupported records: **1,547 compiled / 898
+rejected records**, **569 accepted / 417 rejected unique names**, out of 2,445
+records and 986 names. Semantic inspection reported 72,951 nodes, 8,540 signatures
+and 10,181 unknown-role occurrences. Collection rejection was not a build error.
+
+The design, current and completed ledger evidence, vocabulary snapshot, engine
+reference, selected compiler/engine services, API/rules contracts, and complete
+candidate RON records were read. CR 400.7, 506.4, 510.1–4, 608.2h, 615.7, 616.1,
+702.22 and 702.26 informed the contract. Reprints count once. First-error
+frequency was not treated as an unlock estimate.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Incoming band source identity, selected | **0** immediate compilation unlocks. Shared prerequisite for the ten finite consumers below; improves the accepted banding consumers listed below. | Engine merged all incoming blocker damage under the first blocker. Separate source assignment, source outcomes and band-member departure relationships were missing. Enables exact finite source choices, source-specific lifelink and histories in this combat context. Outgoing band aggregation remains another prerequisite. | Low/medium: bounded engine assignment service, preserve legacy totals, native batch reuse, identity/ordering/clone and RON combat tests. |
+| Finite recipient prevention adapter | Alabaster Potion, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Healing Salve, Kei Takahashi, Oasis, Rakalite, Samite Healer: **0 safe adapter-only / 10 likely full consumers after combat prerequisites**. | Complete records include fixed/X amounts, typed recipients, modes, tap/mana costs and Rakalite's delayed return. Incoming and outgoing band source attribution prevent a full combat claim. Guardian Angel also needs its permission; Balm of Restoration needs activated modes; Rasputin Dreamweaver needs other source/counter/history rules. Enables ordinary finite shields in resolving actions. | Medium for adapters/gameplay, plus the missing band contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **0 safe adapter-only / 5 likely full consumers**. | All-zone evaluation, owner/controller context, named counts and CDA/copy/layer contracts are missing. Gaea's Avenger also has arithmetic and the recorded source defect; Wood Elemental needs entry sacrifice results. | High: characteristic evaluation across zones and layers, then compiler and gameplay work. |
+| Target alternatives | Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace, Magical Hack, Sleight of Mind: **0 immediate / 7 downstream consumers**. | Complete records require spell/permanent alternatives plus color or text effects and word choices. Target announcement and retargeting must precede those actions. | Medium/high: alternative targets, copy contracts, color/text services and gameplay. |
+
+Selection rationale: the incoming band defect is concrete and independently
+reproducible, blocks a ten-card capability, and can be closed through a small
+shared engine service. Complete finite records and the fresh ledger evidence
+showed why an adapter alone would be premature. The contract, reuse boundary,
+acceptance cases and zero immediate gain were stated before edits. The
+`implement-engine` skill supplied the workflow; no removed card skill or Go card
+requirements were used. No subagents were used.
+
+### Exact service and contexts
+
+New optional player interface:
+
+```go
+type BandingDamageAssigner interface {
+    GetBandingDamageAssignment(g *Game, source *Permanent,
+        recipients []*Permanent, amount int) map[uuid.UUID]int
+}
+```
+
+Context: each positive blocking source assigning incoming damage to the current
+members of an ordinary attacking band, separately in each damage step. Current
+banding gives the choice to the attacking player; after its loss, the blocking
+source's controller chooses. A result must use only eligible recipient IDs,
+nonnegative amounts and the source's exact total. Nil/invalid maps use bounded
+`Player.ChooseNumber`; invalid number answers use the legal maximum. No mutable
+assignment state survives this invocation. Zero/negative sources are excluded
+individually; `combatDamageValue` retains the toughness-assignment service.
+
+The old `BandingDamageDistributor.GetBandingDamageDistribution([]*Permanent)`
+signature is retained. Without a source-aware hook, one valid aggregate map
+sets the recipient totals. Bounded per-source choices preserve those totals
+and leave the caller's map unchanged. Invalid totals and an overflowing
+aggregate total use independent source choices. Assignment validation subtracts
+from the source budget, rather than adding untrusted amounts.
+
+`Combat.AddBlockerIncarnation` now saves each blocker link for every attacking
+band member, without duplicates. Removing the named member does not remove the
+survivors' links. `SnapshotBlockedAlone` counts distinct blockers rather than
+links. Current attack incarnations limit recipients. Native departure/phasing
+removes combat membership; returned and phased-in objects do not regain it.
+
+Reuse: `combatDamageValue`, `DealsDamageInStep`, `CaptureDamageSource`,
+`PermanentDamageAssignment`, the existing `combatDamagePlan`,
+`DealSimultaneousDamage`, finite shield allocation, replacement ordering/rechecks,
+source/recipient incarnations, damage histories, lifelink, state checks and game
+cloning. Source packets retain their own amount, ID, incarnation, controller,
+owner, characteristics and keywords before replacements run. No RON spelling,
+scope, binding or production-registry change is added. No parallel damage or
+zone service, global last-action slot, fallback Go factory or card-name branch
+is introduced.
+
+Outgoing attacking-band aggregation and its shared trample/deathtouch decisions,
+blocking-band assignment, "bands with other", and the old lethal-order policy
+in other combat paths are excluded and remain open. This slice does not certify
+complete banding gameplay. The finite RON shape remains rejected:
+`CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(amount, recipient), [PreventThatDamage])/2`.
+
+### Affected unique cards and gameplay mappings
+
+The syntax inventory contains 19 names using or removing `Banding`: Ayesha
+Tanaka, Battering Ram, Benalish Hero, Camel, Fortified Area, Helm of Chatzuk,
+Icatian Infantry, Icatian Phalanx, Icatian Skirmishers, Knights of Thorn, Mesa
+Pegasus, Mishra's War Machine, Nalathni Dragon, Pikemen, Timber Wolves, Tolaria,
+Urza's Avenger, Wall of Caltrops and War Elephant. All complete records were
+inspected. Ten are accepted: Benalish Hero, Fortified Area, Helm of Chatzuk,
+Icatian Infantry, Icatian Phalanx, Knights of Thorn, Mesa Pegasus, Pikemen,
+Timber Wolves and War Elephant. These are affected capability consumers, not
+nineteen newly verified cards. Other creatures can also receive banding or join
+a band. The ten finite consumers in the comparison remain deferred.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Benalish Hero (LEB), Timber Wolves (LEB), War Elephant (ARN) | `TestRONBandIncomingDamage`: complete records, engine definition validation, unpaid cast rollback, casting mana and entry timing, printed banding/power, native blocked combat, split finite shields, source histories, survival and clone isolation. Incoming-context evidence only; outgoing behavior is not fully certified. |
+| Savannah Lions and War Mammoth (LEB) | Same RON test: complete records as distinct native blockers, both captured source histories even when a blocker dies in simultaneous combat, and no defending-player trample damage from blocking. Existing gameplay mappings remain in force. |
+| Source packets and shield allocation | `TestBandIncomingDamageSources`: independent 2/3 source packets, affected-player split choice, retained lifelink, full-batch notifications. `IndependentAssignments`: different recipients for each source, shield consumption and no duplicated source. |
+| Invalid assignments and compatibility | `InvalidAssignments`: nil/empty, negative, insufficient/excessive, foreign IDs and maximum integers; invalid numeric answers use legal bounds. `LegacyTotals`: valid totals retained, invalid totals rejected, source abilities and caller-map isolation. |
+| Timing and identity | `Steps`: separate first-strike/normal and double-strike packets. `IdentityAndClone`: blocker departure/return/phasing/phase cycle; member departure/return/phase cycle; current banding removal, correct chooser, surviving links and independent clone combat. `RetainedSource`: replacement-time source return to another controller with changed lifelink cannot alter saved source information or histories. |
+| Replacement and amount contracts | `ReplacementOrder`: both prevention/redirection choices in native band combat, redirected recipient rechecks and source-specific lifelink. `Unpreventable`: the existing recipient bypass attribute preserves shield capacity across both packets. `NonpositiveSources`: zero/negative power does not reduce another source's damage. |
+| Blocker links and existing declarations | `BlockRelationships`: all-member incarnation links, duplicate declaration rejection and distinct "blocks alone" snapshot. Existing `TestRONPreventionAllocationKeepsDeclarationsStrict` continues rejecting unbound/incompatible finite declarations. Existing banding, prevention and combat regressions pass. |
+
+TDD: the initial engine tests failed with one notification, no finite allocation
+choice, missing second-source lifelink, and ignored per-source assignments.
+The RON test was also run against the saved original engine and failed the
+finite-choice assertion after its casting-step fixture was corrected. Original
+engine code was restored in a `finally` block after that control run. The
+member-departure tests exposed missing all-member blocker relationships, which
+were implemented as a prerequisite within this context. The distinct-blocker
+snapshot test then failed before its fix. Test/API setup corrections included
+using the actual per-step combat entry point, `core.EndOfTurn`, and the existing
+recipient unpreventable attribute. No assertions or production rules were
+weakened.
+
+### Measurements, validation and boundaries
+
+Actual gain is **0 unique names / 0 compiled records**, matching the prerequisite
+estimate. Final strict loading is **1,547 compiled / 898 rejected records**,
+**569 accepted / 417 rejected names**. Both loader JSON documents exactly match
+the baseline, including every diagnostic and semantic signature. Example:
+`2ED.lines.ron:211:231: unsupported action (CreateFuturePreventDamage)` for
+Samite Healer. All previously accepted records remain accepted. Collection
+loading still exits 1 and publishes no partial registry. Inventory remains
+72,951 nodes, 8,540 signatures and 10,181 unknown-role occurrences.
+
+Five unique RON cards gain incoming-combat scenario evidence; there are **zero
+new complete-card certification claims**. Compilation and gameplay coverage are
+separate. Collection engine-validation and behavior totals remain null. No RON
+source or source defect changed, and all twelve hashes match the baseline;
+there is no vocabulary snapshot refresh. Previously recorded defects remain.
+
+No Go card definitions, startup callers, generators or DSL exports are removed.
+Complete loading, complete-card gameplay, runtime cutover and removal gates
+remain unmet. No deletion is authorized by a fresh caller audit in this slice.
+API/rules documentation describes only the established incoming-band behavior.
+User edits and the unrelated untracked document are preserved.
+
+Final validation results are appended below after the post-lint checks finish.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Outgoing attacking-band source assignments: per-creature identities and
+   abilities, source-specific trample/deathtouch, legal combined assignments and
+   replacement outcomes. This is the other concrete blocker for full finite
+   prevention gameplay; do not attribute the band's aggregate damage to one
+   primary attacker.
+2. The fixed/X finite recipient adapter and complete gameplay for the ten
+   consumers listed above, after the remaining combat prerequisite.
+3. All-zone count CDAs for Dakkon Blackblade, Keldon Warlord, Nightmare, Plague
+   Rats and People of the Woods; keep other data/entry blockers separate.
+4. Target alternatives for the seven color/text consumers.
+
+Slice files: `pkg/mage/band_incoming_damage.go` and its tests, `combat.go`,
+`player.go`, `doc.go`, `pkg/mage/dsl/ron/band_incoming_damage_test.go`,
+API/rules documentation and this ledger entry. One descriptive commit is made
+only after all required checks pass. No second slice is started.
+
+Final verification (all on final code after lint):
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./pkg/mage/gametest -run 'TestBandIncomingDamage\|TestRONBandIncomingDamage\|TestBand\|TestPreventionAllocation\|TestRONPreventionAllocationKeepsDeclarationsStrict' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; import formatting and `maps.Copy` modernization reviewed. |
+| `go test ./... -short -count=1` | PASS; additional implement-engine verification. |
+| `git diff --check` | PASS, including the finished ledger. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,547 compiled / 898 rejected; final JSON identical to baseline. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same counts, diagnostics, signatures and all twelve source hashes. |
+
+No pre-existing or environment validation blocker remains. No new complete-card
+unlock is claimed. Only this slice is committed; its hash is reported in the
+final response. User ledger relocation, design edits, `.gitignore` edits and
+the untracked completed-slices document remain outside the commit.
