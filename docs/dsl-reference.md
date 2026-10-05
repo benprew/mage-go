@@ -2871,3 +2871,28 @@ equipment does not count as an Aura. Tuple spellings remain invalid.
 next-end-of-combat sacrifice and damage, casting, activation payments, target
 rechecks, source LKI, identity, phasing, copies, clones and factory isolation.
 Other block consumers retain their separate unsupported actions.
+
+## RON static and indefinite keyword removal
+
+`EachPermanentLayerEffect(IsCardtype(Creature), [LosesAbility(keyword)])`
+removes one fixed keyword from all current creatures in layer 6. The list must
+contain exactly one modification. Fixed keyword symbols and fixed
+`Landwalk(IsLandType(...))` declarations use the existing keyword validator.
+Other selectors, Aura hosts, `AnyLandwalk`, chosen abilities and combined static
+modifications remain unsupported in this context.
+
+`CreatePermanentLayerEffect(reference, [LosesAbility(keyword)])` installs an
+indefinite layer-6 removal on the permanent selected at resolution. This action
+uses the existing source, host, target and event reference scopes. It
+accepts the fixed keywords and `AnyLandwalk` supported by temporary removal.
+The list must contain exactly one modification. References must be bound in the
+current scope. An absent or phased subject receives no effect. A returned card
+cannot inherit the removal; a phase cycle retains an installed removal.
+
+Engine API: `mage.RemoveEachKeyword(mage.PermanentSet, core.Attr)` returns a
+`ContinuousModification`. `Until` captures the set at resolution; `While` reads
+current membership at each layer application. Both reuse keyword removal and
+timestamp order. A later grant can restore the keyword.
+
+Evidence: `TestRemoveEachKeyword*` and `TestRONLastingKeyword*`. The complete
+Gravity Sphere and Elder Land Wurm records have native RON gameplay tests.

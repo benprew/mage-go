@@ -15279,3 +15279,159 @@ Ranked next candidates to reassess:
 
 This run stops after this slice. The descriptive commit hash is reported in the
 final response. User work remains unstaged.
+
+## 2026-10-05 — Static and indefinite keyword removal
+
+Status: completed slice `LASTING-KEYWORD-REMOVAL`. This run stops after this
+slice. Initial user edits to .gitignore, the execution design and ledger, and
+the untracked mtgish-ron-completed.md remain intact and unstaged. Only this entry
+is staged against the committed ledger; the user's ledger restructuring remains
+unstaged. No delegation or removed card/set skill was used.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary and ledger,
+selected compiler/engine code, complete candidate RON records and relevant API
+and rules contracts. Local data/LEG.json confirms both selected Oracle records.
+CR 509.1/3, 611.2a/c, 611.3a/b, 613.1f, 613.7/8/9, 400.7 and 702.3/26 govern
+blocking, duration, membership, timestamps, dependencies and identity.
+Baseline RON tests with -count=1 and make build passed. Repeated fresh strict
+loading and semantic inventory rejected the collection with expected exit 1:
+2,445 records; 1,529 compiled / 916 rejected; 557 accepted / 429 rejected unique
+names. The first captured CLI result reported 1,528 compiled, but had the same
+916 issues; a fresh rerun and independent inventory both established 1,529.
+The selection uses those consistent fresh measurements.
+
+| Candidate | Distinct affected names; full-card estimate | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- |
+| Static and indefinite keyword removal, selected | Gravity Sphere and Elder Land Wurm: **2** immediate full cards. Earthbind, Animate Dead and Takklemaggot contain related nested indefinite forms, but add no estimated unlocks. | Both selected records need only fixed-keyword removal. Source block events, typed source references and temporary keyword removal exist. Earthbind needs intervening-if entry and a nested ability grant; Animate Dead needs graveyard attachment, movement and links; Takklemaggot needs host death, choices, movement and ability grants. Adds a collection removal primitive and reuse for further layer consumers. | Low/medium: collection wrapper, two adapters, gameplay/lifecycle tests and a shared dependency repair found by tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** full cards after the shared prerequisite; **0** adapter-only gains. | Full records use existing single/modal recipients, tap/mana costs and X. Simultaneous finite-shield allocation under CR 615.7 remains missing. Enables further finite-shield consumers. | Medium/high: shared allocation decisions, replacement competition, consumption and batch tests, then adapters. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** full cards after the characteristic prerequisite. | Records need controller land/Swamp/non-Wall counts or named creatures and characteristic evaluation outside the battlefield. Requires owner/controller context, copy and CDA layer contracts. | High: all-zone characteristic queries, layer/copy/controller tests, then adapters. |
+
+The selected slice offers two credible complete consumers for less effort than
+the larger prerequisites. Reprints count once. Complete nested records, rather
+than first-error frequency, establish the estimates. The contract, boundary and
+acceptance cases were stated before editing. Static removal is scoped to one
+fixed keyword on all creatures; other static selectors remain rejected.
+
+### Exact support, dependencies and engine reuse
+
+Engine API: RemoveEachKeyword(PermanentSet, core.Attr) ContinuousModification.
+It uses the existing layerModification subjects/keyword/removeKeyword fields.
+Until captures the collection at resolution; While selects current members in
+layer 6. The shared removal service removes all earlier instances, preserves
+other keywords and permits later grants. Captured membership retains incarnation
+identity through control and phasing; it does not follow departure and return.
+Source departure ends static selection but does not end a captured removal.
+
+RON additions:
+
+- EachPermanentLayerEffect(IsCardtype(Creature), [LosesAbility(keyword)]),
+  exactly one modification. Keywords use the existing fixed symbol and fixed
+  Landwalk(IsLandType(...)) validator. Other selectors, Aura hosts, combined
+  modifications, chosen keywords, AnyBandsWithOthers and static AnyLandwalk
+  remain rejected. Factories construct separate static abilities.
+- CreatePermanentLayerEffect(reference, [LosesAbility(keyword)]), exactly one
+  modification in existing resolving contexts. It reuses the temporary keyword
+  removal validator, including fixed landwalk and AnyLandwalk, and lowers to
+  Until(core.Indefinite, ...). ThisPermanent, Aura HostPermanent, bound singular
+  Ref_TargetPermanent and existing event references use compilePermanentRef.
+  Trigger_ThatCreature is available only in source attack/block scope. Other
+  references remain unbound or incompatible. Actions install nothing for absent
+  or phased subjects and never act on LKI objects.
+
+RON owns spelling, arity, scope and lowering. No new scope, global last-action
+slot, card-name branch, fallback, declaration panic or partial production
+registry is introduced. Typed references and instanceBindings remain shared.
+
+Tests exposed a missing engine dependency: printed static effects recognized
+legacy abilityRemovalContinuousEffect but not composed RemoveAbilities actions.
+printedAbilityContinuousEffect.DependsOn now uses the existing isolated layer
+probe for composed effects containing ability removal. Both singular and plural
+removal suppress the printed effect before it applies in the same layer.
+No parallel layer service is introduced. Tests also confirmed PhaseIn requires
+an explicit layer refresh for immediate queries; the test now performs that
+refresh. No phasing API change was needed.
+
+### Tests and card mappings
+
+Tests first failed on unsupported static/indefinite LosesAbility and undefined
+RemoveEachKeyword. After the adapters, lifecycle tests exposed the composed
+ability-removal dependency gap. A dedicated engine test confirmed that failure
+before the dependency fix. No assertion was weakened and no test is skipped.
+The prior temporary invalid-declaration fixture now uses Flying() to test its
+original malformed-keyword contract, because the valid static shape is supported.
+Inventory count assertions follow the independently measured gain.
+
+| Card or contract | Tests and coverage |
+| --- | --- |
+| Gravity Sphere, full LEG record | TestRONLastingKeywordGravitySphere: definition validation, 2R casting and unpaid rollback, World metadata, both players' creatures, noncreature exclusion, preserved vigilance, late entries, source departure/phasing/ability removal, phase-in, current control, later grants, cleanup and clone isolation. |
+| Elder Land Wurm, full LEG record | TestRONLastingKeywordWurmNative: 4WWW casting, 5/5 metadata, trample/defender, native legal blocking, removal after the trigger resolves, cleanup persistence and resulting attack permission. TestRONLastingKeywordWurmIdentity: deferred work, return before/after resolution, phasing before/after installation, phase cycles, control, ability removal, copied triggers and cloned pending triggers. |
+| Generic resolving declarations and per-instance targets | TestRONLastingKeywordTargetInstances: fresh factory abilities, distinct target groups across instances, illegal-target tap-cost rollback, copies, source departure and clone resolution isolation. TestRONLastingKeywordInvalid: invalid arity/kind, combined shapes, unsupported static selectors, chosen abilities and unbound/escaped references. |
+| Shared collection engine contract | TestRemoveEachKeywordSelectionAndLifetime: live versus captured membership, late entries, nonmembers, preserved keywords, source lifetime, phasing, return and independent clones. TestRemoveEachKeywordSourceAbilityDependency: singular/plural composed ability removal and restored static work after cleanup. |
+
+Retained focused tests include TestComposableKeywordRemoval*,
+TestRONTemporaryKeyword*, TestRONIndefiniteType* and TestInventory*. Existing
+source-block contracts supply event legality, multiple-block detection and LKI
+coverage. No damage, replacement ordering, simultaneous damage or cost execution
+service changes. The new shared collection operation applies through the normal
+layer pass, rather than sequential resolving actions.
+
+### Final evidence and remaining work
+
+Actual gain: **2 unique cards / 2 records**, exactly Gravity Sphere and Elder
+Land Wurm, matching the estimate. No previously accepted name regressed.
+Fresh strict loader and inventory: **1,531 compiled / 914 rejected records**;
+**559 accepted / 427 rejected unique names**. Expected exit 1 remains collection
+rejection, with no registry installation. The inventory retains 72,951 nodes,
+8,540 signatures and 10,336 unknown-role occurrences. Compilation progress and
+gameplay coverage remain separate; collection engine_validated and
+behavior_verified fields remain null. This slice adds two complete-card behavior
+mappings, not a collection-wide gameplay claim.
+
+Source defects: none found in the selected records. All twelve RON file hashes
+match the baseline. No RON source change requires a vocabulary snapshot refresh.
+Remaining example diagnostics: Conservator rejects CreateFuturePreventDamage;
+Nightmare rejects CDA_Power; Earthbind rejects the intervening-if entry event;
+Animate Dead rejects EnchantGraveyardCard; Takklemaggot rejects its host-death
+reference. These remain explicit unsupported contexts.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; make build | PASS. |
+| New compiler and engine tests before implementation | Expected missing-adapter/undefined-primitive failures; composed dependency regression failed before its fix. |
+| Focused new and retained tests with -count=1 | PASS, repeated after lint formatting. |
+| go test ./pkg/mage/... -short -count=1 | PASS. |
+| make test | PASS. |
+| make build | PASS. |
+| go vet ./... | PASS. |
+| make lint | PASS, zero issues. Formatting changes reviewed; no unrelated files changed. |
+| go test ./... -short -count=1 | PASS after lint, as required by implement-engine. |
+| git diff --check | PASS. |
+| go run ./cmd/loadcards -json | Expected collection rejection, exit 1: 1,531 compiled / 914 rejected. |
+| go run ./cmd/loadcards -inventory -json | Expected collection rejection, exit 1; same counts and unchanged syntax inventory. |
+| Accepted-name and source-hash comparison | Exact two-card gain; no regressions; twelve hashes unchanged. |
+
+There are no failed required checks or environment blockers. The expected
+loader rejection is the remaining unsupported collection, not a build failure.
+
+No Go card definitions, startup callers, generators or DSL functions were
+removed. Complete collection loading, complete gameplay, runtime integration
+and test migration remain below their removal gates. No caller audit or cutover
+authorizes deletion in this slice. Existing callers are preserved.
+
+Ranked next candidates to reassess:
+
+1. Finite recipient prevention allocation prerequisite and adapters: four
+   complete consumers (Samite Healer, Healing Salve, Conservator, Alabaster Potion).
+2. All-zone count CDA prerequisite and adapters: four complete consumers
+   (Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats).
+3. Combat removal/unblocking and temporary blocking rules for Mijae Djinn and
+   Ydwen Efreet; compare complete dependencies with paid/unpaid Spitting Slug
+   branches and the seven Targeted_Modal consumers before selection.
+
+Changed files: pkg/mage/composable_continuous.go, effect_manager.go,
+keyword_set_test.go; pkg/mage/dsl/ron/indefinite_type.go, layers.go,
+lasting_keyword_test.go, temporary_keyword_test.go, inventory_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
+Commit hash is reported in the final response. No second slice is started.

@@ -3061,3 +3061,35 @@ legality checks (CR 601.2c, 608.2b). No new engine API or replacement policy is
 established. `TestRONSourceBlockTimeElementalNative`, `Identity`, `Activation`,
 `LegalPairsAndEntry`, `FactoryAndFilterRecheck` and `InvalidAndInventory` provide
 real-record and declaration evidence for these adapter contracts.
+
+## Collection keyword removal and composed ability-removal dependencies
+
+`RemoveEachKeyword(PermanentSet, Attr) ContinuousModification` removes all
+instances of the selected keyword in layer 6 (CR 613.1f, 613.9). Other keywords
+and nonmembers retain their abilities. It uses the shared collection selection,
+incarnation capture, attribute removal, timestamps and layer installation.
+`Until` captures membership at resolution (CR 611.2c); `While` selects current
+members (CR 611.3a). Captured removals survive source departure and subject
+phasing, but cannot follow returned incarnations (CR 400.7, 702.26).
+
+Printed static effects now also detect dependencies on composed
+`RemoveAbilities` and `RemoveAbilitiesEach` actions. The existing isolated layer
+probe checks whether the proposed removal changes the printed effect's active
+state. This permits removal to suppress the source before its static effect
+applies in the same layer (CR 613.8a/b). The legacy ability-removal dependency
+path remains available. Probes do not change live or cloned game state.
+
+`TestRemoveEachKeywordSelectionAndLifetime` checks current versus captured
+membership, later entries, preserved keywords, noncreatures, source departure,
+phasing, return and clone isolation. `TestRemoveEachKeywordSourceAbilityDependency`
+checks both composed removal forms and restoration after cleanup.
+`TestRONLastingKeywordGravitySphere` covers casting payment rollback, global
+selection, World metadata, source lifecycle, current control, later entries,
+timestamp order and clones. `TestRONLastingKeywordWurmNative` covers full casting,
+P/T, defender/trample, native blocking, indefinite duration and attack legality.
+`TestRONLastingKeywordWurmIdentity` covers pending source incarnations, absence,
+phasing, control, copied triggers and cloned pending work.
+`TestRONLastingKeywordTargetInstances` checks independent factory bindings,
+invalid-target cost rollback, copies, source departure and clones.
+`TestRONLastingKeywordInvalid` checks declaration and context rejection.
+No damage, LKI read, replacement ordering or cost execution service changes.

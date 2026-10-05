@@ -87,6 +87,12 @@ func RemoveKeyword(subject PermanentRef, keyword Attr) ContinuousModification {
 	return &layerModification{subject: subject, keyword: keyword, removeKeyword: true, layer: LayerAbility}
 }
 
+// RemoveEachKeyword removes all instances of one keyword from each selected permanent.
+// Until saves the set at resolution. While reads the current set in layer 6.
+func RemoveEachKeyword(subjects PermanentSet, keyword Attr) ContinuousModification {
+	return &layerModification{subjects: subjects, keyword: keyword, removeKeyword: true, layer: LayerAbility}
+}
+
 // RemoveLandwalk removes all landwalk abilities from a permanent in layer 6.
 func RemoveLandwalk(subject PermanentRef) ContinuousModification {
 	return &layerModification{subject: subject, removeLandwalk: true, layer: LayerAbility}
@@ -503,6 +509,20 @@ func (e *composedLayerEffect) IsActive(g *Game) bool {
 	p := g.FindPermanent(e.sourceID)
 	return p != nil && !p.PhasedOut
 }
+func (e *composedLayerEffect) removesAbilities() bool {
+	for _, m := range e.modifications {
+		if m.removeAbilities {
+			return true
+		}
+	}
+	for _, m := range e.captured {
+		if m.removeAbilities {
+			return true
+		}
+	}
+	return false
+}
+
 func (e *composedLayerEffect) ApplyContinuous(ctx *EffectContext) error {
 	if e.rule == nil {
 		if e.layer == LayerType {

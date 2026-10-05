@@ -23,6 +23,12 @@ func compileIndefiniteType(n Node, ctx scope) (effectFactory, error) {
 	var modifications []func(instanceBindings) mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
+		case "LosesAbility":
+			build, err := compileTemporaryKeywordRemoval(part, subject)
+			if err != nil {
+				return nil, err
+			}
+			modifications = append(modifications, build)
 		case "AddCardtype":
 			build, err := compileTemporaryType(part, subject)
 			if err != nil {

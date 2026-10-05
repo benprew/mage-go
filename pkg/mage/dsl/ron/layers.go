@@ -25,6 +25,30 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	} else if n.Args[0].Kind != Symbol || n.Args[0].Name != "HostPermanent" || !ctx.aura {
 		return nil, unsupported(n.Args[0], "static layer reference")
 	}
+	for _, part := range parts {
+		if part.Name != "LosesAbility" {
+			continue
+		}
+		filter := n.Args[0]
+		if !global || filter.Name != "IsCardtype" || filter.Kind != Tuple || len(filter.Args) != 1 || filter.Args[0].Kind != Symbol || filter.Args[0].Name != "Creature" {
+			return nil, unsupported(filter, "static keyword removal collection")
+		}
+		if len(parts) != 1 {
+			return nil, unsupported(n.Args[1], "combined static keyword removal")
+		}
+		if err := arity(part, 1); err != nil {
+			return nil, err
+		}
+		keyword, err := compileTemporaryKeyword(part.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			modification := mage.RemoveEachKeyword(subjects.build(), keyword)
+			condition := mage.StateConditionFunc("unconditional static keyword removal", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
+			return mage.WithAbility(mage.Static(mage.While(condition, modification)))
+		}, nil
+	}
 	if global {
 		for _, part := range parts {
 			if part.Name == "SetPT" || part.Name == "AddCardtype" || part.Name == "SetColor" {

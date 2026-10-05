@@ -56,6 +56,12 @@ func (e *printedAbilityContinuousEffect) DependsOn(other ContinuousEffect, g *Ga
 		source := g.FindPermanent(e.SourceID())
 		return source != nil && removal.matches(source, g)
 	}
+	if removal, ok := other.(*composedLayerEffect); ok && removal.removesAbilities() {
+		probe := probeContinuousEffect(other, g)
+		if probe != nil && e.IsActive(g) != e.IsActive(probe) {
+			return true
+		}
+	}
 	if e.GetLayer() == LayerType && other.GetLayer() == LayerType {
 		probe := probeContinuousEffect(other, g)
 		if probe != nil && e.IsActive(g) != e.IsActive(probe) {
