@@ -2877,9 +2877,12 @@ func TestCombatDeparturePreservesAttackerBlockedStatus(t *testing.T) {
 				t.Fatal("departed blocker remained in combat or attacker became unblocked")
 			}
 			if departure == "leave" {
-				if !g.IsBlockingIncarnation(blocker.ID(), oldIncarnation) ||
+				if g.IsBlockingIncarnation(blocker.ID(), oldIncarnation) ||
 					g.IsBlockingIncarnation(blocker.ID(), g.FindPermanent(blocker.ID()).incarnationID) {
-					t.Fatal("return changed the old combat relationship")
+					t.Fatal("departed or returned object stayed in combat")
+				}
+				if !g.combat.GroupFor(attacker.ID()).blockedBy[capturedPermanent{blocker.ID(), oldIncarnation}] {
+					t.Fatal("departure erased the old blocker history")
 				}
 			} else if g.IsBlockingInCombat(blocker.ID()) {
 				t.Fatal("phased blocker stayed in combat")

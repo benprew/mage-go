@@ -57,6 +57,11 @@ func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	operation := operations[0]
 	var modification func(mage.PermanentRef) mage.ContinuousModification
 	switch operation.Name {
+	case "CantBlock":
+		if operation.Kind != Symbol {
+			return nil, unsupported(operation, "temporary blocking operation")
+		}
+		modification = mage.CantBlock
 	case "CantBeBlocked":
 		if operation.Kind != Symbol || subject.kind != permanentTarget {
 			return nil, unsupported(operation, "temporary blocking operation")

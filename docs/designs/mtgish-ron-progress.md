@@ -1,5 +1,17 @@
 # mtgish RON execution progress
 
+## Current status
+
+The latest recorded inventory reports **562 accepted / 424 rejected unique card
+names** (986 total), and **1,536 compiled / 909 rejected records** (2,445 total).
+Compilation does not establish complete gameplay validation. The strict loader
+rejects the collection and installs no partial registry.
+
+Complete collection loading, collection gameplay validation, runtime integration
+and removal of the old definitions remain unfinished. The completed
+`COMBAT-EXIT-AND-BLOCK-PROHIBITION` slice and its validation evidence are recorded
+below. Its next candidates and remaining gates are recorded at the end of the entry.
+
 ## Run 2026-10-03: P0-INVENTORY
 
 Status: complete semantic inventory/reporting slice. Scope/instance prerequisites
@@ -15559,3 +15571,180 @@ No second slice is started. Slice files: `pkg/mage/dsl/ron/return_collection.go`
 
 Only this validated slice is committed. The commit hash is reported in the final
 response. User edits and the untracked history document remain unstaged.
+
+## Run 2026-10-05: COMBAT-EXIT-AND-BLOCK-PROHIBITION
+
+Status: complete dependency-ready engine/compiler slice. Stop after this slice.
+
+### Fresh evidence and candidate comparison
+
+Initial user changes to `.gitignore`, execution design and progress ledger, and
+untracked `mtgish-ron-completed.md`, were preserved. Only the fresh status and
+this entry are staged from the ledger; its user restructuring is not committed.
+Baseline short engine tests and `make build` passed. Fresh strict inspection
+exited 1 for collection rejection: 2,445 records, 1,533 compiled, 912 rejected;
+560 accepted and 426 rejected unique names. Inventory: 72,951 nodes, 8,540
+signatures, 10,287 unknown-role occurrences. The design, ledger, vocabulary,
+engine reference, selected engine/compiler files, API/rules contracts, complete
+candidate records and CR 400.7, 506.4, 509.1g–h/509.3a/509.3g and cleanup were
+inspected. RON and local Oracle data supply requirements, not Go definitions.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Combat exit and blocking prohibition, selected | Mijae Djinn, Ydwen Efreet: **2** full cards. Mijae has identical ARN/3ED records. | Existing triggers and coin branches are ready. Typed access to explicit unblocking and temporary blocking restriction is missing. Historical sole-blocker information is required. Also supplies removal prerequisites for False Orders (defending-player target/reassignment), Imprison (activation events, host event union, payment branches), and Disharmony (combat casting window/control). | Medium: shared combat history, typed action and captured rule, lifecycle/native/copy tests. Actual work also needed departure cleanup and retained opponents for an existing death-effect caller. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full cards after allocation; zero safe adapter-only unlocks. | Complete records have supported modes/targets/costs/X, but simultaneous-source allocation under CR 615.7 needs a shared engine contract. Enables additional finite-prevention consumers. | Medium/high: allocation decisions, consumption, competing replacements and batch tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full cards after zone-aware characteristics. | All-zone evaluation, controller/owner contexts, named counts, CDA/copy/layer contracts remain missing. Gaea's Avenger and Wood Elemental have additional blockers. | High: shared zone characteristic evaluation plus count/layer/copy tests. |
+
+Selection gives two complete cards with a small shared extension over existing
+combat, binding, coin and continuous-rule services. The alternatives need larger
+engine contracts. Complete nested records, not first-error frequencies, establish
+these estimates. Reprints count once. The contract, reuse boundary and acceptance
+cases were stated before editing. The `implement-engine` skill supplied the
+engine workflow; no removed card skills or Go stubs were used.
+
+### Exact shapes, engine contracts and reuse boundary
+
+RON resolving actions: `RemoveCreatureFromCombat(ref)/1` and
+`RemoveCreatureFromCombatAndUnblockBlockers(ref)/1`, using `compilePermanentRef`
+and per-factory `instanceBindings` in existing spell/mode/activation/trigger
+bodies and coin branches. They declare no targets. The former lowers to existing
+`RemovePermanentFromCombat`; the latter to new
+`RemovePermanentFromCombatAndUnblock(PermanentRef) ResolvingEffect`.
+Unbound/incompatible refs, wrong kind/arity and cost/static uses remain errors.
+
+`CreatePermanentRuleEffectUntil(ref, [CantBlock], UntilEndOfTurn)/3` accepts the
+existing source or singular target scope, exactly one symbol operation and the
+symbol duration. It lowers to `Until(EndOfTurn, CantBlock(ref))`.
+`CantBlock(PermanentRef) ContinuousModification` uses `AddCanBlockOnly` with
+`Not(AnyPermanent)`, preserving native legality, cumulative restrictions,
+incarnation capture, duration, layers and clone behavior. It survives ability
+removal, source departure, control changes and phase cycles after installation;
+returned objects are distinct. Later combats are restricted; existing blocks
+are not removed by the restriction. Absent/phased refs install no rule.
+
+Combat groups retain a per-attacker set of blocker ID/incarnation pairs added
+this combat. Explicit unblocking requires that the resolved incarnation is still
+blocking the attacker and is its sole historical blocker. A different blocker's
+departure does not make it historically sole. Multiple groups are independent;
+clones copy the history maps and combat reset discards them. Ordinary removal
+continues to leave attackers blocked. Existing legacy unblocking callers retain
+their behavior. No new unblocked-attack event is fired by this action.
+
+Required departure prerequisite: `RemoveFromBattlefield` removes live combat
+membership after `captureLKI`. The snapshot keeps attacking status and exact
+current combat-opponent incarnations. Existing `ForEachCombatOpponent` uses the
+source's captured incarnation to read departure information, then acts only on
+still-present, unphased matching opponents. This preserves its death-effect
+caller without retaining stale live combat membership or following returned
+objects. Snapshot lists are private immutable values; clone queries reuse the
+existing incarnation-keyed LKI service. The legacy live-only typed
+`BlockingOrBlockedBy` contract is unchanged.
+
+RON owns spelling/validation/lowering. Combat, LKI, references, definition
+validation, native triggers/APNAP, costs, coin/RNG, copied stack objects,
+continuous rules and cleanup remain engine services. There is no card-name
+executor, fallback, global last-action slot, production subset registry or
+parallel subsystem. The inventory assigns permanent-reference roles to the
+new action operands; reporting is not support proof.
+
+### TDD and card-to-test mappings
+
+New engine tests failed for missing typed unblocking and `CantBlock` constructors.
+New RON gameplay failed for both unsupported removal actions. After lowering,
+focused tests exposed missing live combat removal on departure; a synthetic
+engine regression then failed for a departed object that still blocked. A test
+used an incorrect LKI getter; it was corrected to `LKI` before confirming that
+behavior failure. The native casting fixture needed its precombat-main setup.
+
+The short suite exposed an older regression that expected the departed
+incarnation to remain in live combat. Its assertion now requires both old and
+returned incarnations to be absent from combat, and separately requires the
+old pair in retained history. This is a contract correction under CR 506.4,
+not a skipped assertion. The full suite then exposed an existing death effect's
+dependency on stale combat membership (two Abu Ja'far cases). Synthetic tests
+failed for absent/returned sources before the retained-opponent compatibility
+fix; those regressions now pass without changing Go card definitions or tests.
+The existing caller was inspected only to locate its engine dependency; Abu
+Ja'far's complete RON record supplies the rules requirement. It remains rejected
+by the compiler and is not added to full-card RON coverage.
+
+The later-combat fixture initially omitted the next scripted coin result.
+`ExecuteBlockers` resolves triggers, so a subsequent loss can remove a legally
+declared blocker. A deterministic win now isolates the declaration restriction;
+no assertion is weakened and no production rule is changed for the fixture.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Mijae Djinn, complete ARN and identical 3ED record | `TestRONCombatExitNative`: RRR casting/payment rollback, 6/3 metadata, native attack trigger, both coin outcomes, combat removal, actual combat damage. `Vigilance`: pre-resolution timing and the independent tap instruction on loss. `PendingIdentity`: departure/return/phasing/control/ability removal, copied triggers and clones. `InventoryAndReprints`: definition validation of both records. |
+| Ydwen Efreet, complete ARN record | `Native`: RRR casting/payment rollback, 3/6 metadata, native block trigger, win/loss, unblocking, combat damage, untapped state, blocking restriction and native cleanup. `PendingIdentity`: two blockers, departed other blocker, absent/returned/phased/control-changed source, copied triggers, ability removal and clones. `LaterCombatsAndInstances`: independent factories, two pending outcomes, native legality in a later combat. |
+| Other supported resolving target contexts | `TestRONCombatExitTargetContexts`: both actions, bound target, illegal/shrouded/returned/phased targets, phase cycle, copy, clone and source-independent rule duration. `Invalid`: malformed actions/operations/durations/unbound/incompatible refs. `InventoryAndReprints`: complete AST roles and engine definition validation. |
+| Shared engine combat history and rule | `TestCombatExitSoleBlockerHistory`: sole/two/removed-other/returned-incarnation/reset/clone and actual damage. `MultipleGroupsAndCloneHistory`: independent groups and clone history writes. `TestCantBlockDurationAndIdentity`: ability removal, phase cycle, return, cloned expiry, native cleanup and legal-block persistence. `Declarations`: nil, unwritten and undeclared refs plus valid typed target. |
+| Departure compatibility | `TestCombatExitDepartureKeepsHistory`: live removal, retained blocked status/history and attacking LKI. `DepartedOpponentCompatibility`: both combat directions, source/opponent return, phasing and cloned LKI. Corrected `TestCombatDeparturePreservesAttackerBlockedStatus`, existing `TestAbuJafar`, ordinary typed removal and coin regressions. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay coverage
+remain separate. Collection `engine_validated` and `behavior_verified` totals
+remain null. No source defect was found or corrected. All twelve RON source
+hashes are unchanged, so no vocabulary source refresh is needed. Existing
+unrelated source defects remain unresolved.
+
+### Validation and measured gain
+
+Actual gain matches the estimate: **2 unique cards / 3 records**, exactly Mijae
+Djinn (ARN/3ED) and Ydwen Efreet (ARN). No accepted name regressed. Final strict
+loader and semantic inventory report **1,536 compiled / 909 rejected records**,
+**562 accepted / 424 rejected unique names**. Inventory still has **72,951 nodes /
+8,540 signatures**, with **10,277 unknown-role occurrences**. The loader exits 1
+for unsupported collection records and publishes no partial registry.
+
+All required checks passed after the compatibility fixes and final fixtures.
+The earlier short/full suite failures are recorded above and resolved. The
+first lint run requested reduced nesting in blocker registration; that change
+was made. The second lint run passed with zero issues. Automatic import spacing
+and formatting edits were reviewed; no unrelated code changed. No environment
+or pre-existing validation blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`; `make build` | PASS. |
+| New tests before implementation | Expected missing constructors/adapters; later departure and retained-opponent behavior failures confirmed before their fixes. |
+| Focused engine/RON/native compatibility/coin/inventory tests with `-count=1` | PASS, repeated after final tests and lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final changes and lint. |
+| `make test` | PASS after the compatibility fix and lint. |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS after lint. |
+| `make lint` | PASS, zero issues on the second run; automatic changes reviewed. |
+| `go test ./... -short -count=1` | PASS after lint; implement-engine verification. |
+| `git diff --check` | PASS after ledger completion and staged review. |
+| `go run ./cmd/loadcards -json` | Expected collection rejection, exit 1: 1,536 compiled / 909 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected collection rejection, exit 1; same counts, 562 accepted / 424 rejected names; fresh syntax/role totals above. |
+| Source hashes and accepted-name comparison | All twelve hashes match the vocabulary snapshot; exact two-name gain, no regressions. |
+
+
+Fresh remaining diagnostic examples (first error per record):
+
+- False Orders: `2ED.lines.ron:78:268: unsupported permanent target controller (SpellDefendingPlayer)`.
+- Imprison: `LEG.lines.ron:129:217: supply one artifact source and one non-tap cost filter (And)`.
+- Disharmony: `LEG.lines.ron:63:174: unsupported casting window condition (IsDuringCombat)`.
+- Conservator: `2ED.lines.ron:42:221: unsupported action (CreateFuturePreventDamage)`.
+- Nightmare: `2ED.lines.ron:174:165: unsupported rule (CDA_Power)`.
+- Abu Ja'far: `ARN.lines.ron:1:259: unsupported permanent filter (BlockedDeadAttacker)`.
+
+No Go card definitions, startup callers, generators or DSL functions were
+removed. Full loading, collection gameplay, runtime cutover and migrated tests
+remain below removal gates. No fresh caller audit authorizes DSL deletion.
+API/rules documentation describes only behavior established by this slice.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient allocation prerequisite and four complete consumers.
+2. All-zone count CDA prerequisite and four complete consumers.
+3. `Targeted_Modal` target-alternative prerequisite for seven consumers;
+   compare complete records and later color/text-changing dependencies.
+
+Slice files: `pkg/mage/combat.go`, `clone.go`, `composable_actions.go`,
+`composable_continuous.go`, `game.go`, `lki.go`, `zone_system.go`,
+`effect_pipeline_ext.go`, `doc.go`, `combat_exit_test.go`,
+`composable_combat_test.go`; compiler `compiler.go`, `temporary_blocking.go`,
+`inventory.go`, `inventory_test.go`, `combat_exit_test.go`; API/rules contracts
+and this ledger. Only this validated slice is committed. Its commit hash is
+reported in the final response. No second slice is started.

@@ -485,6 +485,7 @@ func (e *ForEachAttackerBlockedBySourceData) Apply(ctx *EffectContext) error {
 // ForEachCombatOpponentData iterates all creatures in combat with the source
 // (blockers if source is attacking, attacker if source is blocking).
 // Each opponent's ID is set as targets[0].
+// Departure information keeps these references after live combat removal.
 type ForEachCombatOpponentData struct {
 	Inner Effect
 	Txt   string
@@ -498,20 +499,22 @@ func (e *ForEachCombatOpponentData) Text() string                 { return e.Txt
 func (e *ForEachCombatOpponentData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *ForEachCombatOpponentData) Apply(ctx *EffectContext) error {
-	var opponentIDs []uuid.UUID
-	for _, group := range ctx.Game.CombatGroups() {
-		if group.AttackerID == ctx.SourceID {
-			opponentIDs = append(opponentIDs, group.BlockerIDs...)
-		}
-		for _, bid := range group.BlockerIDs {
-			if bid == ctx.SourceID {
-				opponentIDs = append(opponentIDs, group.AttackerID)
-			}
-		}
+	var opponents []capturedPermanent
+	source, lki := readPermanentInformation(This, ctx)
+	if lki != nil {
+		opponents = lki.combatOpponents
+	} else if source != nil {
+		opponents = snapshotCombatOpponents(source, ctx.Game)
 	}
+
 	savedTargets := ctx.Targets
-	for _, id := range opponentIDs {
-		ctx.Targets = []uuid.UUID{id}
+	defer func() { ctx.Targets = savedTargets }()
+	for _, ref := range opponents {
+		p := ctx.Game.FindPermanent(ref.id)
+		if p == nil || p.PhasedOut || p.incarnationID != ref.incarnation {
+			continue
+		}
+		ctx.Targets = []uuid.UUID{ref.id}
 		if err := e.Inner.Apply(ctx); err != nil {
 			return err
 		}

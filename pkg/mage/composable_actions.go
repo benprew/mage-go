@@ -1059,9 +1059,20 @@ func RemovePermanentFromCombat(subject PermanentRef) ResolvingEffect {
 	return &removePermanentFromCombatEffect{subject: subject}
 }
 
-type removePermanentFromCombatEffect struct{ subject PermanentRef }
+// RemovePermanentFromCombatAndUnblock makes attackers blocked only by this object unblocked.
+func RemovePermanentFromCombatAndUnblock(subject PermanentRef) ResolvingEffect {
+	return &removePermanentFromCombatEffect{subject: subject, unblock: true}
+}
+
+type removePermanentFromCombatEffect struct {
+	subject PermanentRef
+	unblock bool
+}
 
 func (e *removePermanentFromCombatEffect) Text() string {
+	if e.unblock {
+		return "remove from combat and unblock " + InspectDefinition(e.subject).Text
+	}
 	return "remove from combat " + InspectDefinition(e.subject).Text
 }
 func (e *removePermanentFromCombatEffect) Properties() EffectProperties { return EffectProperties{} }
@@ -1070,7 +1081,11 @@ func (e *removePermanentFromCombatEffect) inspectDefinition() definitionNode {
 }
 func (e *removePermanentFromCombatEffect) Apply(ctx *EffectContext) error {
 	if permanent, ok := e.subject.resolvePermanent(ctx); ok {
-		ctx.Game.RemoveFromCombat(permanent.ID())
+		if e.unblock {
+			ctx.Game.combat.removeIncarnationAndUnblock(permanent.ID(), permanent.incarnationID)
+		} else {
+			ctx.Game.RemoveFromCombat(permanent.ID())
+		}
 	}
 	return nil
 }

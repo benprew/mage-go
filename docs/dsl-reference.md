@@ -2914,3 +2914,34 @@ return through one engine batch. The action does not target those permanents.
 `TestRONReturnCollection*` covers Hurkyl's Recall, declaration rejection,
 instance/copy/clone isolation and simultaneous returns. Attachment and dynamic
 controller predicates in Remove Enchantments remain unsupported.
+
+## RON combat removal and temporary blocking prohibition
+
+Resolving actions `RemoveCreatureFromCombat(ref)/1` and
+`RemoveCreatureFromCombatAndUnblockBlockers(ref)/1` use existing scoped typed
+permanent references. They are available in supported spell, mode, activation
+and trigger action lists, including coin branches. They declare no targets.
+Wrong arity, unbound and incompatible references, and cost/static contexts are
+rejected. The ordinary action lowers to `RemovePermanentFromCombat`. The second
+lowers to `RemovePermanentFromCombatAndUnblock` and explicitly makes qualifying
+attackers unblocked. It checks both current blocking membership and the set of
+blocker incarnations recorded for that attacker during this combat. Removing a
+different blocker does not make the remaining blocker historically sole.
+A returned card cannot replace an old blocker. Combat reset clears the history;
+game clones keep independent history maps. No attack-unblocked trigger is fired
+by removal after blocker declaration.
+
+`CreatePermanentRuleEffectUntil(ref, [CantBlock], UntilEndOfTurn)/3` accepts the
+symbol operation, one scoped source or singular target reference, and the symbol
+duration. It lowers to `Until(EndOfTurn, CantBlock(ref))`. This rules restriction
+uses the shared blocker-filter service, survives recipient ability removal and
+phase cycles, and applies in later combats this turn. It keeps the captured
+incarnation and expires at cleanup. It does not remove an already declared
+block. Other operation lists and durations retain their current support limits.
+
+Complete records for Mijae Djinn (ARN and 3ED) and Ydwen Efreet (ARN) use these
+forms with existing coin and source-combat triggers. Evidence:
+`TestRONCombatExitNative`, `PendingIdentity`, `Vigilance`, `TargetContexts`,
+`Invalid` and `InventoryAndReprints`. False Orders, Imprison and Disharmony gain
+shared prerequisites but retain other compiler gaps; no full-card support is
+claimed for those records.

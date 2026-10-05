@@ -561,14 +561,15 @@ func snapshotPermanentInformation(p *Permanent, g GameReader) *PermanentLKI {
 	snap := &Permanent{}
 	clonePermanentInto(snap, p)
 	return &PermanentLKI{
-		ID:        p.ID(),
-		Name:      p.Name(),
-		Owner:     owner,
-		Power:     p.CurrentPower(g),
-		Toughness: p.CurrentToughness(g),
-		IsToken:   isToken,
-		Attacking: g.IsAttackingIncarnation(p.ID(), p.incarnationID),
-		Snapshot:  snap,
+		ID:              p.ID(),
+		Name:            p.Name(),
+		Owner:           owner,
+		Power:           p.CurrentPower(g),
+		Toughness:       p.CurrentToughness(g),
+		IsToken:         isToken,
+		Attacking:       g.IsAttackingIncarnation(p.ID(), p.incarnationID),
+		combatOpponents: snapshotCombatOpponents(p, g),
+		Snapshot:        snap,
 	}
 }
 

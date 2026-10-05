@@ -156,6 +156,9 @@
 //
 // Use [RemovePermanentFromCombat] with a typed reference to remove combat
 // membership. An attacker stays blocked when its last blocker is removed.
+// Use [RemovePermanentFromCombatAndUnblock] when the instruction makes
+// historically sole-blocked attackers unblocked. [CantBlock] with [Until]
+// restricts later blocks and keeps its captured incarnation until cleanup.
 //
 // Use [GrantLandPlays] to add to a player's land allowance for this turn.
 // Grants accumulate and remain separate in cloned games. The action does not

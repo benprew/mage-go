@@ -32,6 +32,7 @@ type CombatGroup struct {
 	BlockerIncarnations []uuid.UUID
 	DefenderID          uuid.UUID
 	Blocked             bool
+	blockedBy           map[capturedPermanent]bool
 }
 
 func NewCombat() *Combat {
@@ -81,12 +82,17 @@ func (c *Combat) AddBlocker(blockerID, attackerID uuid.UUID) {
 // AddBlockerIncarnation records the battlefield object that blocks.
 func (c *Combat) AddBlockerIncarnation(blockerID, incarnation, attackerID uuid.UUID) {
 	for _, g := range c.Groups {
-		if g.AttackerID == attackerID {
-			g.BlockerIDs = append(g.BlockerIDs, blockerID)
-			g.BlockerIncarnations = append(g.BlockerIncarnations, incarnation)
-			g.Blocked = true
-			return
+		if g.AttackerID != attackerID {
+			continue
 		}
+		g.BlockerIDs = append(g.BlockerIDs, blockerID)
+		g.BlockerIncarnations = append(g.BlockerIncarnations, incarnation)
+		g.Blocked = true
+		if g.blockedBy == nil {
+			g.blockedBy = make(map[capturedPermanent]bool)
+		}
+		g.blockedBy[capturedPermanent{blockerID, incarnation}] = true
+		return
 	}
 }
 
@@ -891,4 +897,49 @@ func (c *Combat) removeFromCombatAndUnblock(id uuid.UUID) {
 		}
 	}
 	c.RemoveFromCombat(id)
+}
+
+// The current blocker list cannot establish which objects blocked this combat.
+func (c *Combat) removeIncarnationAndUnblock(id, incarnation uuid.UUID) {
+	for _, group := range c.Groups {
+		if len(group.blockedBy) != 1 || !group.blockedBy[capturedPermanent{id, incarnation}] {
+			continue
+		}
+		for i, blockerID := range group.BlockerIDs {
+			if blockerID == id && i < len(group.BlockerIncarnations) && group.BlockerIncarnations[i] == incarnation {
+				group.Blocked = false
+				break
+			}
+		}
+	}
+	c.RemoveFromCombat(id)
+}
+
+func snapshotCombatOpponents(source *Permanent, g GameReader) []capturedPermanent {
+	var result []capturedPermanent
+	seen := make(map[capturedPermanent]bool)
+	add := func(id uuid.UUID) {
+		p := g.FindPermanent(id)
+		if p == nil || p.PhasedOut {
+			return
+		}
+		ref := capturedPermanent{p.ID(), p.incarnationID}
+		if !seen[ref] {
+			seen[ref] = true
+			result = append(result, ref)
+		}
+	}
+	for _, group := range g.CombatGroups() {
+		if group.AttackerID == source.ID() {
+			for _, id := range group.BlockerIDs {
+				add(id)
+			}
+		}
+		for i, id := range group.BlockerIDs {
+			if id == source.ID() && i < len(group.BlockerIncarnations) && group.BlockerIncarnations[i] == source.incarnationID {
+				add(group.AttackerID)
+			}
+		}
+	}
+	return result
 }

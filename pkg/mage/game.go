@@ -836,6 +836,7 @@ func (g *Game) RemoveFromBattlefield(perm *Permanent) {
 	// Snapshot LKI before any state mutation so death/leave-triggers can
 	// read the dying permanent's controller, types, and P/T after the move.
 	g.captureLKI(perm)
+	g.RemoveFromCombat(perm.ID())
 
 	// Remove continuous effects sourced from this permanent
 	g.effects.Remove(perm.ID())

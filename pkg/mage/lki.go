@@ -133,13 +133,14 @@ func (v livePermanentView) ViewAbilities() []Ability        { return v.p.Runtime
 // leaves g.battlefield, read via Game.LKI(id) or Game.LookupObject(id),
 // and cleared after the final cleanup pass. Cleanup priority retains it.
 type PermanentLKI struct {
-	ID        uuid.UUID
-	Name      string
-	Owner     uuid.UUID
-	Power     int
-	Toughness int
-	IsToken   bool
-	Attacking bool
+	ID              uuid.UUID
+	Name            string
+	Owner           uuid.UUID
+	Power           int
+	Toughness       int
+	IsToken         bool
+	Attacking       bool
+	combatOpponents []capturedPermanent
 
 	// Snapshot is a frozen *Permanent capturing controller, types,
 	// subtypes, keywords, counters, runtime abilities, attachments, and

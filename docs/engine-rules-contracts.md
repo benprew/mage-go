@@ -3110,3 +3110,45 @@ The adapter reuses `ReturnEachToHand`, `PermanentsOwnedBy`,
 Rules: CR 400.3, 400.7, 608.2b/c/f/h and 702.26b–d. Current membership has no
 saved permanent or LKI read. Existing target and zone services retain legality,
 replacement and identity handling. No new replacement ordering is established.
+
+## Combat removal with historical sole-blocker unblocking
+
+`RemovePermanentFromCombatAndUnblock(PermanentRef) ResolvingEffect` removes the
+resolved live incarnation and makes its historically sole-blocked attackers
+unblocked. Each combat group retains the set of blocker ID/incarnation pairs
+added during that combat. The operation requires a matching current blocker and
+exactly that one historical pair. A blocker removed before resolution, including
+by departure, control change or phasing, cannot unblock its former attackers.
+A different blocker that left earlier still disqualifies sole-blocker status.
+Returned incarnations remain distinct. Multiple attacker groups are checked
+independently. Combat reset discards history and `Game.Clone` copies each map.
+Existing ordinary removal keeps attackers blocked (CR 509.1h); legacy unblocking
+callers retain their existing API behavior.
+
+Battlefield departure now removes live combat membership after its LKI snapshot
+(CR 506.4). The snapshot retains attacking status, while historical blockers and
+the attacker's blocked status remain separate from current combat membership.
+The old departure regression now asserts this separation for both incarnations.
+
+`CantBlock(PermanentRef) ContinuousModification` uses the existing per-blocker
+filter service with an always-false filter. With `Until(EndOfTurn, ...)`, it keeps
+its captured incarnation through control changes and phase cycles, survives
+ability removal, and expires at cleanup. It cannot affect a returned object.
+It restricts later declarations and does not undo a legal block (CR 506.4a,
+509.1b). Nil and unbound references fail definition validation.
+
+Evidence: `TestCombatExitSoleBlockerHistory`, `DepartureKeepsHistory`,
+`MultipleGroupsAndCloneHistory`, `Declarations`, `TestCantBlockDurationAndIdentity`
+and `TestCombatDeparturePreservesAttackerBlockedStatus`; RON native gameplay and
+pending/copy/target tests are mapped in the progress ledger. This slice adds no
+new payment, damage, replacement, LKI-action or APNAP service.
+
+The departure snapshot also retains the exact current combat-opponent
+incarnations for `ForEachCombatOpponent`, an existing engine caller of combat
+state after death. It uses the source's captured incarnation to read that
+snapshot, then resolves only still-present, unphased opponents of those exact
+incarnations. A returned source or opponent cannot replace a saved object.
+`TestCombatExitDepartedOpponentCompatibility` verifies both directions, source
+and opponent return, opponent phasing and cloned departure information. Existing
+Abu Ja'far regressions pass without a Go card-definition change. This establishes
+compatibility, not RON compilation or full behavior coverage for Abu Ja'far.
