@@ -301,6 +301,13 @@
 // [DiscardMatchingHand] moves all matching hand cards before discard events.
 // [CountMatchingHand] reads the current count without reveal history or LKI.
 //
+// Use [LookAtLibraryTop] for private inspection and optional top ordering.
+// The viewer and library player are separate typed references.
+// [MayShuffleLibrary] lets the chooser decide after the inspection.
+// [Game.LibraryLooks] returns copied history for the selected viewer.
+// Optional [LibraryLookObserver] and [LibraryTopOrderChooser] interfaces
+// supply private display and ordering without a change to [Player].
+//
 // Use [SearchLibraryToHand] for a required single-card search, followed by
 // a shuffle. Use [SearchLibraryToBattlefield] with a card filter for a search
 // that can find no card. A zero filter requires a card when one is available.

@@ -56,6 +56,7 @@ func (ec *ExiledCard) VisibleTo(playerID uuid.UUID) bool {
 type Game struct {
 	players           []Player
 	publicReveals     []PublicCardReveal
+	libraryLooks      map[uuid.UUID][]PublicCardReveal
 	anteEnabled       bool
 	originalOwners    map[uuid.UUID]uuid.UUID
 	anteResult        []OwnershipChange

@@ -515,6 +515,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "LookAtTheTopNumberCardsOfPlayersLibrary":
+			if len(n.Args) == 3 {
+				return []string{"player_reference", "value", "library_ordering_operation"}[index]
+			}
+		case "MayHavePlayerAction":
+			if len(n.Args) == 2 {
+				return []string{"player_reference", "optional_library_action"}[index]
+			}
 		case "FlipACoin_OnLose":
 			if len(n.Args) == 1 {
 				return "action"

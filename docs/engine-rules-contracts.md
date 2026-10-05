@@ -3785,3 +3785,42 @@ Evidence: `TestUntapLimitsChoiceAndOverlap`, `TestUntapLimitsSnapshotAndSimultan
 `Reprints`, `Invalid` and `Inventory`. Smoke and Damping Field have complete
 record mappings. No new damage replacement, cost, trigger or APNAP contract is
 established.
+
+## Private library-top inspection and optional shuffle
+
+`LookAtLibraryTop(viewer, library PlayerRef, count int, reorder bool)` reads the
+current top `min(count, library size)` cards during resolution (CR 401.2,
+701.20e, 608.2c). It records independent private snapshots before any ordering
+choice. Only the viewer receives `LibraryLookObserver` notifications. The library
+owner receives no notification unless that player is the viewer. Public reveal
+history is unchanged. `Game.LibraryLooks(viewerID)` returns copies of the past
+observations, including copied card definitions and type slices; it does not
+expose later library changes. Games clone all observation maps, slices and cards.
+
+When reordering is permitted, the viewer supplies a permutation of the inspected
+cards through `LibraryTopOrderChooser`. Existing players can use the scry choice
+service; its two partitions are joined into one top order. Unknown, duplicate,
+missing or extra IDs leave the library order unchanged. All inspected cards stay
+on top, and the uninspected suffix stays in the same order. The engine does not
+remove/reinsert cards, change their zone identities, or emit zone-change events.
+No order decision is made for an empty inspection. A negative count or invalid
+player declaration fails definition validation. An absent resolved player causes
+no inspection or choice.
+
+`MayShuffleLibrary(chooser, library PlayerRef)` reads the selected player at
+resolution. The chooser decides after preceding instructions. Acceptance calls
+the existing `Player.ShuffleLibrary`, including for zero or one cards
+(CR 701.24a/e). Decline preserves order. Player ownership and stack controller
+are distinct: a copied spell or activation uses its copy controller as viewer
+and chooser. Departure, return, control change or phasing of an activation source
+does not redirect the queued library instruction. No permanent LKI, replacement
+operation, simultaneous zone movement or cost-payment contract is added.
+
+HumanPlayer uses private display and top-order choices; the existing Player
+interface and shuffle callers remain valid. Evidence: engine
+`TestLibraryInspectionPrivacyOrderAndClone`, `BoundsInvalidOrderAndShuffle`,
+`DeclarationsAndMissingPlayers`; RON `TestRONLibraryInspectionCards`, `Reprints`,
+`Invalid`, `InstancesAndInventory`, `SpyCastingAndSickness`, `RetargetAndControl`,
+`SorceryTiming`; interactive `TestHumanLibraryInspectionAndOrder`.
+`TestLibraryInspectionOrderValidation` also covers duplicate, missing, extra,
+and unknown IDs without loss of library cards.

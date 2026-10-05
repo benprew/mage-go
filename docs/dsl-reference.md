@@ -3374,3 +3374,43 @@ Smoke and Damping Field use this form. The engine saves membership and lets the
 active player choose a legal set before simultaneous untap. Overlapping filters
 apply together. The spell, cost, entry and resolving-action contexts do not gain
 this declaration.
+
+### RON library-top inspection
+
+Resolving action lists accept:
+
+- `LookAtTheTopNumberCardsOfPlayersLibrary(player, Integer(n),
+  [LeaveRemainingCardsOnTopOfLibraryInSameOrder])`.
+- The same form with `[PutTheRemainingCardsOnTopOfLibraryInAnyOrder]`.
+- `MayHavePlayerAction(player, Shuffle)`.
+
+`n` is a nonnegative integer literal. Each form reads an existing typed player
+reference; it does not declare a target. Unbound references, dynamic counts,
+other ordering operations, multiple operations, and other optional actions
+remain errors. Rules, costs and entry operations do not gain these actions.
+The resolving controller sees the cards and chooses their order or optional
+shuffle, even when the library belongs to another player. Factories build fresh
+target references. Copies can retain or change their own targets.
+
+Lowering uses `LookAtLibraryTop(You, player, n, reorder)` and
+`MayShuffleLibrary(You, player)`. Short libraries supply all remaining cards;
+empty libraries permit a later optional shuffle. Inspection neither reveals
+cards publicly nor changes their zones. Evidence: `TestRONLibraryInspection*`.
+
+### Library inspection engine API
+
+`LookAtLibraryTop(viewer, library PlayerRef, count int, reorder bool)` records
+private card snapshots at resolution. `Game.LibraryLooks(viewerID)` returns
+independent copies of that viewer's history. History records past observations;
+it does not grant access to the current library order. Optional
+`LibraryLookObserver` callers receive private copies before the next choice.
+`LibraryTopOrderChooser` callers choose a complete order of the inspected cards.
+Other players use the existing scry choice service; both returned partitions
+stay on top. Invalid orders retain the complete original order.
+
+`MayShuffleLibrary(chooser, library PlayerRef)` offers a resolution decision to
+the chooser and uses the selected player's existing shuffle service on acceptance.
+Both APIs validate their player references. Negative inspection counts fail
+card-definition validation. Missing players perform no actions or choices.
+HumanPlayer displays private cards and supplies ordering choices through its
+own choice channels. The Player interface remains unchanged.

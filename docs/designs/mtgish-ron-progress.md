@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **598 accepted / 388 rejected unique card
-names** (986 total), and **1,615 compiled / 830 rejected records** (2,445 total).
+The latest recorded inventory reports **601 accepted / 385 rejected unique card
+names** (986 total), and **1,622 compiled / 823 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`UNTAP-LIMIT-SELECTION` slice and its validation evidence are recorded
+`LIBRARY-TOP-INSPECTION` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -18730,3 +18730,167 @@ Slice files: `pkg/mage/untap_limit.go`, `untap_limit_test.go`, `turn_execution.g
 
 No environment or pre-existing check failure remains. One descriptive commit
 contains only this slice; its hash is reported in the final response.
+
+## 2026-10-05: private library-top inspection
+
+Status: complete slice `LIBRARY-TOP-INSPECTION`. Stop after this slice.
+Initial user edits to `.gitignore`, the execution design and the progress ledger,
+and the untracked `mtgish-ron-completed.md`, are preserved. The commit includes
+only this entry and current measurements from the ledger, without the user's
+history restructuring.
+
+### Fresh evidence and candidate selection
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed.
+Strict loader and semantic inventory exited 1 for collection rejection:
+2,445 records, 1,615 compiled / 830 rejected; 598 accepted / 388 rejected
+unique names. Inventory: 72,951 nodes, 8,540 signatures, 9,486 unknown-role
+occurrences. All candidates below were checked against complete records,
+including nested expressions. Reprints count once.
+
+| Candidate | Distinct affected names / estimated full-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Library-top inspection, selected | Natural Selection, Orcish Spy, Visions: **3** | Private observations and controller-selected ordering are missing engine contracts. Natural Selection and Visions also need the adjacent optional shuffle action. Typed players, targets and existing shuffle services are ready. Enables private library observations and top ordering for further library actions. | Medium: two ordering forms, private history/notification, optional shuffle, native human choices, declaration and gameplay tests. |
+| Chosen-source prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after prerequisites | Damage-source choices, source universe and identity, local choice bindings and next-event prevention remain missing. Dark Sphere, Reverse Damage, Eye for an Eye and Jade Monolith additionally need arithmetic, outcome or redirection contracts and are excluded from unlocks. | High: source selection and identity, property rechecks, competing replacements, shield consumption and cloning. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after prerequisites | All-zone characteristic evaluation, owner/controller context and CDA layer order remain missing. Gaea's Avenger and Wood Elemental have independent arithmetic/data and entry-result blockers and are excluded. | High: zone-aware characteristics, named/controlled counts, copies, layers and five gameplay mappings. |
+
+Selection: three complete records share a bounded library-inspection contract.
+This offers a larger credible gain for the effort than the two larger engine
+prerequisites. First-error frequencies were not treated as unlock estimates.
+The contract, engine reuse boundary and acceptance cases were stated before
+edits. The `implement-engine` skill supplied the engine workflow; no removed
+card/set skill, Go card requirement or Go stub was used.
+
+### Exact signatures, scope and dependencies
+
+RON resolving actions:
+
+- `LookAtTheTopNumberCardsOfPlayersLibrary(player, Integer(n), operations)/3`,
+  with a nonnegative integer literal and exactly one bare ordering symbol:
+  `LeaveRemainingCardsOnTopOfLibraryInSameOrder` or
+  `PutTheRemainingCardsOnTopOfLibraryInAnyOrder`.
+- `MayHavePlayerAction(player, Shuffle)/2`, with bare `Shuffle` only.
+
+Player arguments use existing typed reference plans and per-factory bindings.
+These actions declare no target. Supported resolving spell, activation, mode,
+trigger and delayed-action lists use the same lowering. Rules, static effects,
+costs, entry operations and restricted scoped-player action lists gain no new
+support. Dynamic counts, malformed/negative literals, multiple ordering
+operations, unknown operations, other optional actions, and unbound or
+incompatible references remain compile errors. Inventory descendants report
+`player_reference`, `value`, `library_ordering_operation` and
+`optional_library_action`, including under unsupported outer contexts.
+
+Engine APIs:
+`LookAtLibraryTop(viewer, library PlayerRef, count int, reorder bool)
+ResolvingEffect`, `MayShuffleLibrary(chooser, library PlayerRef)
+ResolvingEffect`, and `Game.LibraryLooks(viewerID) []PublicCardReveal`.
+Optional `LibraryLookObserver.ObserveLibraryLook([]Card, GameReader)` and
+`LibraryTopOrderChooser.ChooseLibraryTopOrder([]Card, GameReader) []uuid.UUID`
+provide private display and ordering without changing the Player interface.
+
+Inspection reads current library cards at resolution and records copied private
+observations before choices. It does not publish public reveals or move cards.
+History is past information, not permission to read current library order.
+Getters and Game.Clone copy maps, slices, card definitions and types.
+Only the viewer receives copied inspection notifications. The viewer chooses
+a complete permutation of inspected cards; the uninspected suffix remains
+unchanged. Invalid/missing/duplicate/extra IDs preserve original order.
+Existing scry callers can supply an order with both partitions kept on top.
+Empty inspection makes no order choice. Missing resolved players do nothing;
+nil/unbound references and negative counts fail definition validation.
+
+Optional shuffle uses the resolving chooser, separately from the library owner,
+and calls the existing Player.ShuffleLibrary on acceptance, even for empty or
+one-card libraries. HumanPlayer displays private cards on its own choice channel
+and chooses successive top cards. Base/AI/search callers retain their existing
+choice interfaces. This slice adds no shuffle event, RNG, replacement, cost,
+simultaneous-operation, or permanent-LKI service. Source departure, phasing or
+control change cannot redirect an already queued library instruction.
+
+Reuse: typed player/target resolution and definition validation, fresh instance
+bindings, RevealTopN, card snapshots, clone isolation, existing shuffle and scry
+choices, native stack/copy/retarget and transactional casting/activation services.
+RON owns spelling, shapes and scope; library state and player decisions stay in
+the engine. No card-name branch, fallback, global last-result slot or partial
+production registry was added.
+
+### TDD and card-to-test mapping
+
+Engine tests first failed for the missing inspection/history/shuffle APIs.
+Initial fixture errors used an absent Opponent reference and Card.Zone method;
+these were corrected before confirming the missing-capability failure alone.
+Real records then failed for unsupported library inspection. Fixture corrections
+used the engine's summoning-sickness attribute and a legal sorcery step. A proposed
+player-shroud fixture had no engine API and was replaced with source-phasing
+coverage; no player-shroud capability is claimed. Copied Natural Selection
+correctly changes the order before the original resolves, so its original
+observation assertion was corrected to require that changed order.
+Human-player tests separately failed for missing display/order methods before
+native integration. No behavior assertion or existing test was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Natural Selection, full LEA record | `TestRONLibraryInspectionCards`: G payment and rollback, self/opponent libraries, three-card inspection, short/empty libraries, controller order, accepted/declined shuffle, resolution timing, copies and clones. `Reprints`: all five complete records compile and validate. |
+| Orcish Spy, full FEM record | `Cards`: three-card private inspection, tap costs/rollback, source departure/phasing, copies, empty/short libraries and unchanged order. `SpyCastingAndSickness`: R creature casting, 1/1 entry, no early entry, unpaid rollback and summoning-sickness rejection. `RetargetAndControl`: copied activation chooses another library; later source control change preserves original controller/target. |
+| Visions, full LEG record | `Cards`: W payment, five-card inspection, self/opponent/short/empty libraries, unchanged order, accepted/declined shuffle, copies/clones and rollback. `SorceryTiming`: combat-step casting rejection preserves mana and hand. |
+| Compiler scopes and inventory | `Invalid`: malformed counts/operations, unsupported optional actions and unbound/incompatible references. `InstancesAndInventory`: two factory instances and pending controllers/targets, known descendant roles, wrong rule/cost/entry contexts. |
+| Engine contracts | `TestLibraryInspectionPrivacyOrderAndClone`: viewer/owner separation, saved typed player reference, private history/observer copies and clone isolation. `BoundsInvalidOrderAndShuffle`: short/empty/one-card libraries, invalid order and accepted/declined shuffle calls. `DeclarationsAndMissingPlayers`: nil/unbound references, negative counts and absent players. `OrderValidation`: complete, duplicate, missing, extra and unknown-ID permutations preserve cards and suffix. |
+| Native player decisions | `TestHumanLibraryInspectionAndOrder`: engine resolution displays private cards, waits for acknowledgement, then uses two human choices to order three cards. |
+| Accepted behavior | Whole-repository tests and updated inventory-count regressions; inspection retains the production registry and Lightning Bolt behavior. |
+
+Three complete-card gameplay mappings are added. Collection-wide engine-validated
+and behavior-verified counts remain null. Compilation and gameplay are separate.
+Local `data/LEA.json`, `data/FEM.json` and `data/LEG.json` Oracle texts agree with
+all selected complete records. CR 401.2, 701.20e, 701.24 and 608.2 supply the
+inspection, choice, shuffle and instruction-order contracts. No source defect
+was found or changed. All twelve RON hashes remain unchanged; the vocabulary
+syntax snapshot needs no refresh. Prior source defects remain unresolved.
+
+### Final measurements, checks and next candidates
+
+Actual gain matches estimate: **3 unique cards / 7 records**, exactly Natural
+Selection, Orcish Spy and Visions. No accepted name was lost. Strict and semantic
+loading: **1,622 compiled / 823 rejected records**, **601 accepted / 385 rejected
+unique names**. Inventory remains **72,951 nodes / 8,540 signatures**, with
+**9,446 unknown-role occurrences** (40 fewer). Both loader commands exit 1
+because unsupported records remain and no partial registry is installed.
+Representative diagnostics remain: Animate Artifact's conditional AddCardtype,
+Animate Dead's EnchantGraveyardCard, Ankh of Mishra's entry subject; the Circle
+cards still reject ChooseADamageSource and the five CDA candidates remain errors.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine/RON/inventory/human tests with `-count=1` | PASS, repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `go test ./... -short -count=1` | PASS; additional skill check. |
+| `make lint` | PASS; automatic import formatting and equivalent max/index change reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,622 compiled / 823 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 385 rejected names, 9,446 unknown-role occurrences. |
+| Accepted-name/source audit | Exactly the three selected names gained; none lost; all source hashes unchanged. |
+
+No environment or pre-existing validation blocker remains. No Go definition,
+generator, runtime caller or DSL function is removed: complete collection loading,
+gameplay and startup cutover gates remain unmet. No unused-DSL removal audit is
+claimed. API/rules documentation covers only this slice. One descriptive commit
+contains only the validated slice, and its hash is reported in the final response.
+
+Ranked next candidates, to reassess from fresh evidence:
+
+1. Chosen-source identity/choice and next-event prevention for the seven Circle/
+   Realm consumers; separate arithmetic and redirection consumers remain blocked.
+2. All-zone battlefield-count CDAs for the five named complete consumers.
+3. Alternative spell/permanent targets for Chaoslace, Deathlace, Lifelace,
+   Purelace, Thoughtlace, Magical Hack and Sleight of Mind: zero adapter-only
+   unlocks until their color or text-effect prerequisites are ready.
+
+Slice files: engine `library_inspection.go`, `library_inspection_test.go`,
+`game.go`, `clone.go`, `doc.go`; compiler `library_inspection.go`, its tests,
+`compiler.go`, `inventory.go`, `inventory_test.go`; interactive
+`library_inspection.go` and its tests; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry. No second slice.

@@ -974,6 +974,18 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "LookAtTheTopNumberCardsOfPlayersLibrary":
+		build, err := compileLibraryInspection(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "MayHavePlayerAction":
+		build, err := compileMayShuffleLibrary(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateFuturePreventDamage":
 		build, err := compileFinitePrevention(n, ctx)
 		if err != nil {
