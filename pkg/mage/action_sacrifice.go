@@ -167,6 +167,11 @@ func SacrificeNMatchingCost(n int, filter PermanentFilter, text string) Cost {
 	return &sacrificeMatchingCost{filter: filter, text: text, count: n}
 }
 
+// SacrificeNMatchingIncludingSourceCost permits the source to pay when it matches.
+func SacrificeNMatchingIncludingSourceCost(n int, filter PermanentFilter, text string) Cost {
+	return &sacrificeMatchingCost{filter: filter, text: text, count: n, includeSource: true}
+}
+
 // SacrificeNMatchingCostWithTotalPower saves the chosen permanents' power at payment.
 func SacrificeNMatchingCostWithTotalPower(n int, filter PermanentFilter, text string, total *NumberBinding) Cost {
 	return &sacrificeMatchingCost{filter: filter, text: text, count: n, paidTotalPower: total, captureTotalPower: true}
@@ -236,6 +241,10 @@ func SacrificeMatchingIncludingSourceCostWithPermanent(filter PermanentFilter, t
 
 func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "sacrifice-cost", Text: c.text}
+	if c.count <= 0 {
+		n.problem = "supply a positive sacrifice count"
+		return n
+	}
 	if !c.captureStats && !c.captureManaValue && !c.captureSubtype && !c.captureCard && !c.capturePermanent && !c.captureTotalPower {
 		return n
 	}
@@ -304,6 +313,9 @@ func (c *sacrificeMatchingCost) inspectDefinition() definitionNode {
 }
 
 func (c *sacrificeMatchingCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
+	if c.count <= 0 {
+		return false
+	}
 	if c.locked {
 		if len(c.selected) != c.count {
 			return false
@@ -332,49 +344,66 @@ func (c *sacrificeMatchingCost) Pay(sourceID, controller uuid.UUID, g *Game) err
 	if !c.CanPay(sourceID, controller, g) {
 		return fmt.Errorf("not enough permanents to sacrifice")
 	}
-	if c.locked {
-		for _, choice := range c.selected {
+	selected := c.selected
+	if !c.locked {
+		selected = make([]capturedPermanent, 0, c.count)
+		player := g.GetPlayer(controller)
+		if c.chooser != nil {
+			player = c.chooser
+		}
+		for range c.count {
+			var candidates []*Permanent
+			for _, p := range g.zones.battlefield {
+				if p.PhasedOut || p.ControllerID() != controller || (!c.includeSource && p.ID() == sourceID) || !c.filter.Match(p, g) {
+					continue
+				}
+				used := false
+				for _, choice := range selected {
+					if choice.id == p.ID() {
+						used = true
+						break
+					}
+				}
+				if !used {
+					candidates = append(candidates, p)
+				}
+			}
+			if len(candidates) == 0 {
+				return fmt.Errorf("no permanent to sacrifice")
+			}
+			chosen := player.ChoosePermanent(candidates, c.text, g)
+			if chosen == nil {
+				return fmt.Errorf("no permanent chosen")
+			}
+			valid := false
+			for _, candidate := range candidates {
+				if chosen.ID() == candidate.ID() && chosen.incarnationID == candidate.incarnationID {
+					selected = append(selected, capturedPermanent{candidate.ID(), candidate.incarnationID})
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return fmt.Errorf("invalid permanent chosen for sacrifice")
+			}
+		}
+	}
+	// All choices must remain legal before any permanent leaves.
+	locked := *c
+	locked.locked, locked.selected = true, selected
+	if !locked.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay chosen sacrifice")
+	}
+	if c.selected != nil {
+		c.selected = selected
+	}
+	g.withZoneChangeBatch(func() {
+		for _, choice := range selected {
 			p := g.FindPermanent(choice.id)
 			g.CaptureSacrificed(p)
 			g.DoSacrifice(p)
 		}
-		return nil
-	}
-	player := g.GetPlayer(controller)
-	if c.chooser != nil {
-		player = c.chooser
-	}
-	for i := 0; i < c.count; i++ {
-		var candidates []*Permanent
-		for _, p := range g.zones.battlefield {
-			if !p.PhasedOut && p.ControllerID() == controller && (c.includeSource || p.ID() != sourceID) && c.filter.Match(p, g) {
-				candidates = append(candidates, p)
-			}
-		}
-		if len(candidates) == 0 {
-			return fmt.Errorf("no permanent to sacrifice")
-		}
-		chosen := player.ChoosePermanent(candidates, c.text, g)
-		if chosen == nil {
-			return fmt.Errorf("no permanent chosen")
-		}
-		valid := false
-		for _, candidate := range candidates {
-			if chosen.ID() == candidate.ID() && chosen.incarnationID == candidate.incarnationID {
-				chosen = candidate
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return fmt.Errorf("invalid permanent chosen for sacrifice")
-		}
-		if c.selected != nil {
-			c.selected = append(c.selected, capturedPermanent{chosen.ID(), chosen.incarnationID})
-		}
-		g.CaptureSacrificed(chosen)
-		g.DoSacrifice(chosen)
-	}
+	})
 	return nil
 }
 

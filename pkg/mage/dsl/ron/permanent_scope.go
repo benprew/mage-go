@@ -31,6 +31,10 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 			if ctx.sourceAttack || ctx.sourceBlock {
 				return permanentReferencePlan{kind: permanentSource}, nil
 			}
+		case "ThatEnteringPermanent":
+			if ctx.enteringSource {
+				return permanentReferencePlan{kind: permanentSource}, nil
+			}
 		case "ThisPermanent":
 			if ctx.permanent {
 				return permanentReferencePlan{kind: permanentSource}, nil

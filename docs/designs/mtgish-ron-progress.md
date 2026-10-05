@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **593 accepted / 393 rejected unique card
-names** (986 total), and **1,605 compiled / 840 rejected records** (2,445 total).
+The latest recorded inventory reports **596 accepted / 390 rejected unique card
+names** (986 total), and **1,608 compiled / 837 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`PLAYER-SPELL-COST-REDUCTION` slice and its validation evidence are recorded
+`FIXED-COUNT-SACRIFICE` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -18407,4 +18407,173 @@ Ranked next candidates for fresh reassessment:
 3. Alternative spell/permanent target groups: seven color/text consumers, zero
    adapter-only gains until the downstream actions are supported.
 
+No second slice.
+
+## 2026-10-05: fixed-count sacrifice costs and scoped entry source
+
+Status: complete slice `FIXED-COUNT-SACRIFICE`. Stop after this slice.
+Initial user edits to `.gitignore`, the execution design and the ledger, and
+untracked `mtgish-ron-completed.md`, are preserved. Only this entry and the
+current-status counts are staged from the ledger, without the user's history
+reorganization. The implement-engine skill supplied the engine workflow.
+
+### Fresh evidence, candidates and selection
+
+Baseline compiler tests, short engine tests and `make build` passed. The first
+loader process reported 1,602 compiled records while the inventory reported
+1,605. A fresh strict-loader rerun agreed with inventory and HEAD's last slice:
+**1,605 compiled / 840 rejected records**, **593 accepted / 393 rejected unique
+names**, from 2,445 records and 986 names. There was no build failure; each
+strict-loader rejection exited 1. No changes to the initial tracked-file status
+were observed. Baseline inventory: 72,951 nodes, 8,540 signatures, 9,609
+unknown-role occurrences. The later consistent measurement selects this run.
+
+Read instructions, engine reference, migration design, current ledger and
+vocabulary snapshot, relevant compiler/engine services and API/rules contracts.
+Complete records and nested forms were inspected for all candidates below,
+including each selected consumer and Electric Eel when its additional gain was
+measured. Requirements came from RON, not Go definitions. CR 118.3, 118.10–12,
+601.2f–h, 602.2, 701.21 and 702.26 were read; existing departure contracts supply
+CR 400.7 and 603.6c/603.10 semantics.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Fixed-count sacrifice, selected | Goblin Warrens, Mold Demon, Leviathan, Psychic Allergy, Worms of the Earth: **2** estimated complete cards, Goblin Warrens and Mold Demon. | Existing count cost excludes source and pays sequentially. Needed source-inclusive constructor, locked simultaneous choices/departures and stale-payment rollback; optional and activation adapters. Mold Demon additionally needs its scoped entering-source reference. Leviathan needs attack payment; Psychic Allergy needs entry color choice; Worms needs player/entry prohibitions and any-player alternative payments. Shared exact count payment enables all five downstream consumers. | Low/medium: reuse transaction, filters, typed source and zone batch; engine contracts, declaration and complete-record gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after prerequisites. | CR 609.7a source-choice universe, typed chosen-source identity/snapshots and next-event shield remain missing. Complete Circle/Realm records have the same nested choice/shield forms, with color/artifact filters. Enables seven complete consumers and later blocked redirection/fractional-prevention consumers. | High: shared choice and damage-source identity services, shield consumption, simultaneous damage and replacement ordering, adapter and gameplay tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after prerequisites. | Zone-aware characteristics, controller/owner contexts, named counts and CDA lowering. Avenger also needs arithmetic and its recorded opponent-count correction; Wood Elemental requires entry sacrifice/results. Complete nested filters include subtype exclusions, controller counts and named creatures. Enables all-zone P/T queries and later copy/layer consumers. | High: shared characteristic/zone/CDA services, copy/layer/identity tests and adapters. |
+
+Selection: two immediate complete consumers and five concrete count-payment
+consumers with less work than source-choice prevention or all-zone CDAs. Count
+payments are shared engine rules, not card-name branches. First errors were not
+used as unlock estimates. Contract, reuse boundary and acceptance cases were
+stated before edits. No second slice is started.
+
+### Exact shapes, contexts and engine contracts
+
+RON `SacrificeNumberPermanents(Integer(n), filter)/2` accepts positive integer
+literals. Existing sacrifice filters and nonempty recursive `And`/`Or` apply.
+Supported in activation costs, including cost `And`, and resolution
+`MayCost`/`PlayerMayCost` paired with an adjacent `If`/`Unless` payment condition.
+The payer controls the distinct phased-in matching permanents; the source can
+pay if it matches. Dynamic/zero/negative counts, malformed lists/arity/kinds,
+unbound permanent references, and unsupported action/static contexts fail
+compilation. No sacrifice-result binding, any-number or alternative cost shape
+is added. Each factory constructs separate cost objects. RON owns spelling,
+context checking, diagnostics and semantic roles.
+
+Engine API:
+`SacrificeNMatchingIncludingSourceCost(n int, filter PermanentFilter, text string)
+Cost`. Existing `SacrificeNMatchingCost` keeps its source exclusion. Ordinary
+matching sacrifice costs now participate in definition validation, with positive
+count checks. No old export is removed. A caller audit found only positive
+existing fixed-count uses; no compatibility caller depends on an invalid count.
+
+All matching sacrifice costs select every distinct permanent before any removal,
+then validate all choices together by current control, filter, presence and
+incarnation. The shared total-cost transaction retains those choices and never
+asks again on commit. Its existing cloned preflight now also runs for matching
+sacrifice costs, including count one, so stale choices fail before mana or other
+live resources are spent. One matching count cost uses `withZoneChangeBatch`;
+separate cost objects stay separate payments. Sacrifice and zone-change events
+use completed departures with prior-battlefield trigger detection, including
+observers that leave in the same batch. The existing sacrifice/LKI path retains
+ownership, indestructible/regeneration bypass and per-source departure facts.
+No new replacement operation or global result slot is introduced.
+
+Dependency: bare `ThatEnteringPermanent` is supported only inside the body of
+`WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent))`. It lowers
+to the typed original source reference. Returned objects cannot replace it.
+Other triggers, activation bodies and tuple spellings reject it. This completes
+Mold Demon's unpaid branch and also unlocks Electric Eel's entry damage.
+
+Reuse: `compileSacrificeCostFilter`, `compileCosts`, `compileOptionalPayment`,
+`IfPaid`/`UnlessPaid`, per-instance action/source bindings, cost transaction and
+cloning, `sacrificeMatchingCost`, `withZoneChangeBatch`, LKI, trigger capture,
+`CreateTokenCopies`/`DefineToken`, source damage and temporary layer services.
+No registry fallback, subset production registry, Go stub, card executor or
+new payment/departure pipeline is introduced.
+
+### TDD and card-to-test mappings
+
+Initial tests had fixture API errors (`Battlefield`, `HasColor`, `Mana`, legacy
+`GainLife`). These were corrected; engine tests then failed only for the missing
+constructor, and RON tests failed for unsupported fixed-count costs. After the
+constructor was added, engine tests demonstrated intermediate departures,
+stale-payment mana loss and missing definition validation. After adapters,
+Mold Demon failed for unbound `ThatEnteringPermanent`, confirming that scoped
+prerequisite. A broad scripted edit briefly duplicated count costs in ordering;
+it was corrected before focused success. Entry-observer tests exclude entry
+events; clone assertions use the actual departure snapshot; Electric Eel uses
+activation index 1 and clears casting-fixture surplus mana. No assertion or
+behavior requirement was weakened.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Goblin Warrens, complete FEM record | `TestRONSacrificeNumberWarrens`: mana plus two distinct controlled Goblins, insufficient/opponent/phased payments, owner graveyards, pre-resolution timing, departure, copied ability controller, clone isolation and three red 1/1 Goblin tokens. `TestRONSacrificeNumberCasting`: unpaid rollback and native paid enchantment entry. |
+| Mold Demon, complete LEG record | `TestRONSacrificeNumberMoldDemon`: two Swamps, decline, missing/wrong/phased resources, trigger timing, source departure/control/return and independent returned-source trigger payment. `Casting`: native creature casting, entry payment and unpaid sacrifice. |
+| Electric Eel, complete DRK record | `TestRONEnteringSourceElectricEel`: native casting and entry damage timing, original source/controller after departure/return/phasing/control, prevention, trigger-copy controller, clone isolation, RR activation rollback, +2/+0 and independent self-player damage, cleanup. |
+| Compiler declarations and contexts | `TestRONSacrificeNumberInvalid`, `Inventory`, `SelfAndExplicitPlayer`: malformed declarations/counts/filters, descendant roles, source-inclusive synthetic RON activation, nonempty nested filters, targeted explicit payer, and independent adjacent payment results. `TestRONEnteringSourceScopeRejected`: unsupported entering-reference contexts and kinds. Existing optional-payment and sacrifice declaration regressions pass. |
+| Engine simultaneous/identity/payment | `TestSacrificeCountIncludingSourceBatch`: all choices before removal, prior-battlefield detection for a departing observer across both zone/sacrifice events, completed departures, owner graveyards, regeneration/indestructible bypass and clones. `Rollback`: shortage, phasing, opponent control, invalid second choice, return/control/phase between prepare and commit, unchanged mana/battlefield/graveyards. `SingleStaleRollback`: same resource protection for count one. `Invalid`: declaration rejection. `Activation`: source inclusion, pending effect after source sacrifice/return and clone isolation. Existing `TestSacrificePayment*`, `TestRONSacrificeCost*` and `TestRONOptionalSacrifice*` pass. |
+
+Adds **three complete-card gameplay mappings**. Compilation and gameplay remain
+separate measurements. Collection-wide engine-validated and behavior-verified
+totals remain null; this slice does not claim complete collection gameplay.
+
+### Final inventory, source evidence and remaining work
+
+Actual gain: **3 unique names / 3 records**, Goblin Warrens, Mold Demon and
+Electric Eel; no accepted names lost. Estimate was two. The one extra gain comes
+from the exact self-entry reference prerequisite shared by Mold Demon and
+Electric Eel, not from count-payment support on an unrelated card.
+Final strict loader: **1,608 compiled / 837 rejected records**, **596 accepted /
+390 rejected unique names**. Inventory: **72,951 nodes / 8,540 signatures /
+9,600 unknown-role occurrences**, nine fewer unknown descendants. Both loader
+modes exit 1 for remaining unsupported records and publish no partial registry.
+Leviathan now rejects its separate attack payment; Psychic Allergy still rejects
+entry color choice; Worms of the Earth still rejects player prohibitions.
+
+Local `data/FEM.json`, `data/LEG.json`, and `data/DRK.json` Oracle text agrees
+with all three complete affected records. No source defect or RON edit in this
+slice. All twelve source hashes match the vocabulary snapshot; no syntax
+snapshot refresh is required. Existing source defects remain deferred.
+
+No Go card definition, generator, startup wiring or DSL function is removed.
+Complete collection loading/gameplay and runtime cutover gates remain unmet.
+No whole-repository unused-DSL caller audit is claimed. API/rules documentation
+covers only established behavior. No environment/pre-existing validation failure
+was found. One descriptive commit stages only this slice; its hash is in the
+final response. User history restructuring and other initial edits stay unstaged.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source identity/universe and next-event prevention: seven complete
+   Circle/Realm consumers and concrete additional blocked consumers.
+2. All-zone battlefield-count CDAs: five complete consumers; keep Avenger's
+   source defect/arithmetic and Wood Elemental's entry results separate.
+3. Alternative spell/permanent target groups: seven color/text consumers, zero
+   adapter-only unlocks until their color/text effects are supported.
+
+All required checks passed. Final evidence follows.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine suite, `make build` | PASS. |
+| Focused engine/RON/CLI tests with `-count=1` | PASS, including matching-sacrifice/optional-payment regressions and inventory; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint fixes. |
+| `make test` | PASS, repeated after lint fixes. |
+| `make build` | PASS, repeated after lint fixes. |
+| `go vet ./...` | PASS, repeated after lint fixes. |
+| `go test ./... -short -count=1` | PASS, additional engine-skill validation. |
+| `make lint` | Initial run found two new test preallocation issues. Fixed; final run PASS, zero issues. Automatic import formatting reviewed. |
+| `git diff --check` | PASS; staged check also PASS before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,608 compiled / 837 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 390 rejected names, inventory totals above. |
+| Accepted-name/source audit | Exactly three gained, none lost; all twelve source hashes unchanged and match the vocabulary snapshot. |
+
+Changed files: engine `action_sacrifice.go`, `definition.go`,
+`payment_transaction.go`, `zone_change_batch.go`, `doc.go`, and new
+`sacrifice_count_including_source_test.go`; compiler `sacrifice_cost.go`,
+`compiler.go`, `optional_payment.go`, `permanent_scope.go`, `triggers.go`,
+`inventory.go`, `inventory_test.go`, and new `sacrifice_number_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
 No second slice.

@@ -398,8 +398,10 @@ func (tx *costPaymentTransaction) Commit() error {
 	tx.paidCardSets = nil
 	tx.paidPermanents = nil
 	for _, cost := range tx.costs {
-		if _, random := cost.(*discardRandomCost); random {
-			// A stale hand or replacement must fail before other resources are spent.
+		_, random := cost.(*discardRandomCost)
+		_, isSacrifice := cost.(*sacrificeMatchingCost)
+		if random || isSacrifice {
+			// Stale choices must fail before other resources are spent.
 			preflight := *tx
 			preflight.game = cloneGameForCostPayment(tx.game)
 			if err := preflight.commit(); err != nil {

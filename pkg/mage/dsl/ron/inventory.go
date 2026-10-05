@@ -429,6 +429,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
 			return "counter_removal_instruction"
 		}
+		if n.Name == "SacrificeNumberPermanents" && len(n.Args) == 2 {
+			return []string{"value", "permanent_filter"}[index]
+		}
 		if n.Name == "SacrificeAPermanent" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	enteringSource   bool
 	actionPlayer     *playerActionsPlan
 	damageRecipient  *playerReferencePlan
 	activation       bool
@@ -541,6 +542,12 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return []costFactory{func() mage.Cost { return mage.DiscardRandomCost(1) }}, false, nil
 	case "RemoveCounters":
 		cost, err := compileCounterRemovalCost(n)
+		if err != nil {
+			return nil, false, err
+		}
+		return []costFactory{cost}, false, nil
+	case "SacrificeNumberPermanents":
+		cost, err := compileSacrificeNumberCost(n)
 		if err != nil {
 			return nil, false, err
 		}

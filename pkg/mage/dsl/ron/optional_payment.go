@@ -67,7 +67,7 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 	var err error
 	if cost.Name == "PayManaX" {
 		mana, dynamic, err = compileResolutionManaCost(cost, ctx)
-	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" {
+	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" && cost.Name != "SacrificeNumberPermanents" {
 		return nil, unsupported(cost, "optional payment cost")
 	} else {
 		costs, _, err = compileCosts(cost)

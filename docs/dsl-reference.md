@@ -3338,3 +3338,26 @@ Real RON tests: `TestRONSpellCostReductionCards`, `Casting`, `Lifecycle`,
 `Totals`, `StackingAndColoredCosts`, `Shapes`, `StrictRecords`,
 `LockedBeforeSourcePayment`, `Invalid` and `Inventory`
 (all names have the `TestRONSpellCostReduction` prefix).
+
+## Fixed-count RON sacrifice costs
+
+`SacrificeNumberPermanents(Integer(n), filter)` accepts a positive integer literal
+and the existing sacrifice filter vocabulary, including nonempty nested `And`
+and `Or`. It works in activation costs (including `And` cost groups) and in
+`MayCost`/`PlayerMayCost` paired with an adjacent `If`/`Unless` payment result.
+Dynamic counts, empty logical filters, and action/static contexts remain errors.
+
+The adapter uses `SacrificeNMatchingIncludingSourceCost(n, filter, text)`.
+Matching permanents must belong to the payer's current control and be phased in.
+The source is eligible when it matches. All distinct choices are locked before
+any sacrifice and rechecked by incarnation before payment. One count cost is
+one simultaneous departure batch; separate cost declarations remain separate
+payments. The total-cost service protects mana and other resources when a locked
+count payment becomes stale. Existing `SacrificeNMatchingCost` excludes the
+source as before. Positive counts are checked during definition validation.
+
+`ThatEnteringPermanent` is a typed source reference only within
+`TriggerA(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)), body)`.
+It uses the stack source's saved incarnation, including in copied triggers and
+clones. Other events, activation bodies, and tuple spellings reject this name.
+This permits Mold Demon's unpaid sacrifice and Electric Eel's entry damage.

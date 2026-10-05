@@ -3718,3 +3718,40 @@ source departure/return, controller identity and clone isolation.
 `TestSpellCostReducerPhasedCastingRollback` covers native casting, rejected
 payment rollback and restoration after phase-in. RON tests cover source ability
 removal, control changes, independent sources, cost increases, X and added costs.
+
+## Fixed-count sacrifice payment
+
+`SacrificeNMatchingIncludingSourceCost(n, filter, text) Cost` permits a matching
+source among n distinct phased-in permanents under the payer's current control.
+The count must be positive. `SacrificeNMatchingCost` retains its source exclusion.
+Definition validation now visits ordinary matching sacrifice costs as well as
+costs with captured results. Unpayable counts fail before gameplay.
+
+Matching sacrifice costs choose every permanent before any leaves. The payment
+transaction saves each ID and incarnation, with no new choice on commit. A stale
+incarnation, control change, or phasing fails the payment. Count costs use the
+existing transaction preflight before spending mana or other resources. A second
+invalid choice leaves all live resources unchanged (CR 118.3, 601.2h, 602.2b).
+
+One matching count cost uses `withZoneChangeBatch`. Zone-change and sacrifice
+events observe the completed departure and detect battlefield abilities against
+the prior battlefield (CR 603.6c, 603.10). Departing observers can see every
+member of the same batch. All choices see the same battlefield, so sacrificing
+a static source cannot change eligibility during selection. Separate cost
+objects are separate payments. Sacrifice goes to the owner and bypasses
+indestructible and regeneration (CR 701.21a). The existing sacrifice path and
+LKI service remain responsible for departure information; this slice introduces
+no new replacement operation, result slot, or sacrifice replacement contract.
+
+Evidence: `TestSacrificeCountIncludingSourceBatch`, `Rollback`, `Invalid`, and
+`Activation`, plus existing `TestSacrificePayment*` and RON sacrifice regressions.
+RON mappings: `TestRONSacrificeNumberWarrens` covers complete Goblin Warrens
+payment, token characteristics, copies and pending clones; `MoldDemon` covers
+complete optional entry payment and original/returned source identity;
+`Casting` covers native casting and entry. `SelfAndExplicitPlayer` covers
+source inclusion, recursive filters and separate payment results. `Invalid`
+and `Inventory` cover rejected declarations and semantic reporting.
+`TestRONEnteringSourceElectricEel` covers the additional complete consumer's
+entry damage, source departure/return/phasing/control, prevention, trigger copy,
+clone isolation, paid boost and cleanup. `TestRONEnteringSourceScopeRejected`
+keeps the entry reference local to the supported self-entry event.

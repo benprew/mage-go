@@ -32,7 +32,7 @@ func (g *Game) withZoneChangeBatch(apply func()) {
 }
 
 func isBattlefieldLeaveEvent(evt *GameEvent) bool {
-	return evt.Type == EvtZoneChange && evt.FromZone == ZoneBattlefield
+	return (evt.Type == EvtZoneChange || evt.Type == EvtSacrifice) && evt.FromZone == ZoneBattlefield
 }
 
 // DestroyPermanents destroys the permanents as one simultaneous action.

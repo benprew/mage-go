@@ -67,6 +67,10 @@
 // Jumpstart and Legends source bonuses use this form with explicit mana costs.
 // Osai Vultures uses [RemoveCountersCost] to pay two carrion counters
 // before its temporary source bonus resolves.
+// Use [SacrificeNMatchingIncludingSourceCost] for a fixed count payment that
+// permits the source. All choices precede one simultaneous sacrifice batch.
+// Stale count choices fail before mana and other resources are spent.
+// RON Goblin Warrens and Mold Demon use this cost in activation and resolution.
 // Fallen Angel uses [SacrificeMatchingIncludingSourceCost] with [IsCreature].
 // The source can pay this cost. The bonus uses its original incarnation.
 // Use [OpponentControls] with [While] for a static condition that reads
