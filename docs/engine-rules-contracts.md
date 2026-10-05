@@ -2215,3 +2215,35 @@ source and member lifecycle, copies, clones, declaration errors, and action
 sequencing. All-zone CDA, historical counts and recipient-local damage counts
 remain separate contracts. No new replacement ordering or simultaneous-operation
 contract is established by this adapter.
+
+## RON land mana event and bonus contracts
+
+CR 106.12/106.12a and 605.1b/605.4a distinguish tapping for mana from an ordinary
+tap. The new RON adapter uses `LandTappedForMana` for ordinary triggered actions.
+The engine saves the activating player and land incarnation for each event.
+Manabarbs damage waits for trigger placement and resolution. A copied trigger
+keeps the original event actor even when its controller changes. Controller
+information about the saved land uses current information, departure LKI or
+phase information through `ControllerOfWithLKI`; it cannot follow a returned
+incarnation. No new LKI or phase-information rule is introduced.
+
+The exact single-instruction RON mana bonuses use `NewManaFlareAbility` and
+`NewAttachedManaBonusAbility`. Their shared production and payment-planning
+service adds one mana immediately to the activating player, regardless of the
+bonus source's controller. A produced-type choice uses only the original
+ability's produced types, including colorless. Multiple bonus instances each
+add one mana. Bonus mana does not cause another tapped-for-mana event.
+
+`ManaSystem.ManaBonuses` now excludes phased sources and checks both card ID and
+incarnation for attached bonuses. An Aura cannot supply a bonus to a returned
+host through a stale attachment. Removal of source abilities removes its bonus.
+Clones retain independent phasing, attachments, pools and payment state. Existing
+transactional casting keeps failed payment from leaking taps, mana or triggers.
+There is no new API or replacement-ordering contract.
+
+Evidence: `TestManaBonusLifecycle` and `TestRONLandMana*`. The RON tests cover
+native casts for all 18 reprints of Mana Flare, Manabarbs and Wild Growth,
+automatic payment and rollback, Aura legality, source/host lifecycle, fixed and
+produced-type choices, copies, independent instances/events, native prevention
+and lifelink, typed LKI/phase reads, invalid scopes and nested inventory roles.
+Subtype events and temporary triggers remain compiler gaps.

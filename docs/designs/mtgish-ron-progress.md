@@ -10607,3 +10607,185 @@ Slice files: `pkg/mage/dsl/ron/battlefield_count.go`, `battlefield_count_test.go
 `docs/engine-rules-contracts.md`, and this ledger. Stage only these eight files.
 Initial user edits remain unstaged. The commit hash is reported in the final
 response.
+
+## Run 2026-10-05: LAND-MANA-EVENTS
+
+Status: completed supported slice; stop after validation and one commit.
+Runtime cutover and removal gates remain open.
+
+### Baseline and candidate selection
+
+Preserved the initial user edits to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`. Read AGENTS.md, `pkg/mage/doc.go`, the
+execution design, vocabulary snapshot, current ledger, selected compiler and
+engine code, API/rules-contract docs, and CR 106.12/106.12a, 603.2/603.3,
+605.1b/605.4a and 608.2h. Full RON records and identical reprints supplied
+requirements. Go card definitions did not. Applied the implement-engine skill
+for the shared mana-bonus lifecycle repair; no card files changed.
+
+Fresh baseline: `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict and inventory loaders exited 1 for collection rejection, not a build or
+test failure: 2,445 records, **1,396 compiled / 1,049 rejected**, **487 accepted /
+499 rejected unique names**. Inventory walked all 72,938 nodes / 8,528 signatures.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Land mana events and explicit-player bonus mana (selected) | Mana Flare, Manabarbs, Wild Growth: 3 names / 18 records. Downstream: Gauntlet of Might and High Tide. | 3 names / 18 records. Existing mana-bonus services support payment planning and execution. Gauntlet requires subtype event filtering; High Tide requires temporary triggers and subtype filtering, with recipient semantics still to audit. | Shared event actor/land identity, produced-type choices and planner-aware immediate mana. Medium compiler/gameplay-test effort plus small engine lifecycle repair. |
+| Finite recipient-prevention allocation | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Balm of Restoration: 12 names / 32 records. | Prerequisite alone: 0; adapters could unlock 9. Guardian needs repeat mana payments, Rakalite delayed return, Balm activated modes. | Shared CR 615.7 finite allocation and multi-packet replacement behavior. High engine/decision/batch-test effort. |
+| All-zone CDA P/T/count evaluation | Keldon Warlord, Nightmare, Plague Rats, Gaea's Avenger, Dakkon Blackblade, People of the Woods: 6 names / 21 records. | Prerequisite alone: 0; up to 6 after adapters. All-zone/static evaluation, name filters and addition remain; Avenger's controller-artifact count is a known source concern. | Shared all-zone characteristics and layer 7a. High zone/layer/controller/ability-removal test effort and source audit. |
+
+Complete records and nested forms supplied these estimates, rather than
+first-error frequency. The selected slice gives three credible immediate
+unlocks at lower effort. The contract, reuse boundary and acceptance cases were
+stated before editing. No second slice was begun.
+
+### Supported shapes, contexts and reuse
+
+```ron
+TriggerA(WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land)), body)
+TriggerA(WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land)),
+  ActionList([PlayerAction(Trigger_ThatPlayer,
+    AddMana(Trigger_AnyManaTypeProduced))]))
+TriggerA(WhenAPermanentIsTappedForMana(SinglePermanent(HostPermanent)),
+  ActionList([PlayerAction(ControllerOfPermanent(Trigger_ThatPermanent),
+    AddMana(ManaProduceG))]))
+```
+
+The general any-player land event permits existing non-mana action bodies. It
+introduces typed, per-factory/per-trigger `Trigger_ThatPlayer` and
+`Trigger_ThatPermanent` bindings. The first saves the activating player; the
+second saves the exact event land incarnation. The body is a lexical scope;
+neither reference escapes into sibling abilities. Current controller reads use
+existing `ControllerOfWithLKI`, including departure LKI and phase information.
+Targets keep existing declaration, legality and instance rules.
+
+Mana-producing bodies are supported only in the two exact single-instruction
+bonus shapes. The attached form needs an Aura scope. It accepts one concrete
+white/blue/black/red/green/colorless production, including `And` of exactly one
+production. The produced-type symbol is a declared event value, not a fixed
+color or arbitrary choice. Other bodies, recipients, multiple instructions,
+multiple productions, `AnyManaColor`, wrong arities/kinds, nonland filters,
+numbered/unbound references, source/target mana events and sibling leaks fail
+compilation. Attached non-mana actions remain unsupported. General explicit
+player mana actions outside this event context remain unsupported.
+
+Private signatures:
+- `compileLandManaTrigger(Node, Node, scope) (optionFactory, error)`.
+- `compileLandManaBonus(Node, bool) (optionFactory, bool)`.
+- `compilePlayerMana(Node, scope) ([]effectFactory, error)`.
+- `usesManaAction(Node) bool`.
+
+RON owns spelling, structural/scope checks, immutable event plans, fresh binding
+construction, diagnostics and lowering. `LandTappedForMana().WithLand().WithPlayer()`
+provides ordinary event capture. The compiler validates the typed action plan
+before selecting the exact mana-bonus lowering. The mana bonuses use stateless
+`NewManaFlareAbility(IsLand)` and `NewAttachedManaBonusAbility(color)` declarations;
+there is no runtime chosen binding state to share in these declarations. The
+shared service handles both solver metadata and production, so no bonus can be
+counted twice. It adds one mana immediately to the activating player. Multiple
+instances each add one; the produced-type choice reads only the original mana
+ability's types and does not multiply its amount. Manabarbs remains an ordinary
+trigger using native damage, prevention and lifelink.
+
+A native payment probe showed that the first generic mana-trigger lowering
+resolved correctly but supplied no solver bonus metadata. It failed both real
+mana-bonus payment cases. This was a missing adapter to an existing engine
+service, resolved by exact bonus lowering. The engine contract tests then
+exposed real shared-service defects: phased bonus sources were counted, and
+attached bonuses followed a returned card ID. `ManaSystem.ManaBonuses` now skips
+phased sources and checks the attached incarnation. Existing callers remain.
+This is the only engine change; there is no new public API, parallel event or
+mana subsystem, global last-action slot, card-name branch, fallback or partial
+production registry. No new simultaneous-operation or replacement-ordering rule
+was needed. No production card definitions, generators or DSL exports were
+removed because the cutover gate remains unmet.
+
+Inventory gives the two event constructors' children player/permanent-filter
+roles and explicit-player `AddMana`'s child the mana-production role. Reporting
+still says support is unverified; syntax alone does not establish gameplay.
+
+### TDD and card-to-test mappings
+
+The first tests failed on unsupported mana-event declarations for all 18 real
+records. The first adapter passed those tests. The automatic-payment test then
+failed on missing solver bonus metadata before the bonus lowering was changed.
+`TestManaBonusLifecycle` failed on source phasing, clone phasing and stale host
+identity before the engine repair. Fixture corrections used the existing
+`WithSubTypes` API and an Aura typeline. A synthetic information-read expectation
+was corrected after inspecting the existing phase-information contract: phasing
+retains information for this typed read, so both controller gains still occur.
+This did not remove an assertion or change existing tests.
+
+| Card or context | Tests and coverage |
+| --- | --- |
+| Mana Flare, complete six RON reprints | `TestRONLandManaRealCards`: native paid/unpaid casts, opposing land and explicit recipient, immediate extra mana. `AutomaticPayment`, `RollbackAndLegality`: solver planning, exact payment, failed-payment rollback. `ProducedTypesAndInstances`, `BonusContexts`: original produced-type set, amount independence, multiple bonus instances, multi-type choice, invalid-choice fallback, colorless. `Lifecycle`: phasing, ability removal, departure, host return/control, clone, nonland/zero/ordinary-tap exclusions. Full-card gameplay mapping. |
+| Wild Growth, complete six RON reprints | `RealCards`: native Aura casting, attachment and opposing recipient. `AutomaticPayment`, `RollbackAndLegality`: exact payment, failed rollback, nonland/shroud/phased target rejection. `Lifecycle`: source phasing/removal/departure, returned host, changed host controller, reattachment, clone, zero/ordinary-tap exclusions. `BonusContexts`: shared attached shape across all six concrete mana types. Full-card gameplay mapping. |
+| Manabarbs, complete six RON reprints | `RealCards`: native mana cost and stack timing. `Lifecycle`: source/land/control/phasing/clone and event exclusions. `PendingCopiesAndLKI`: copied event actor survives source/land departure and source return, clone isolation. `IndependentEventsAndDamage`: distinct activating players, real prevention and lifelink. Full-card gameplay mapping. |
+| Shared engine bonus lifecycle | `TestManaBonusLifecycle`: global/attached query behavior, phased source/land, returned host, source control, ability removal and clone isolation. Existing mana-bonus, triggered-mana, produced-type and transactional cost tests remain. |
+| Typed ordinary event scope | `TestRONLandManaTypedEvents`: fresh factory instances, fixed actor versus current controller, returned/departed land LKI, phased information and phase cycle. |
+| Declaration and semantic reporting | `TestRONLandManaInvalid`: malformed arities/kinds/filters, wrong recipient/production shapes, unbound/numbered/sibling references and illegal source/host scopes. `TestRONLandManaInventory`: nested semantic roles. Repository inventory count assertions use fresh measurements and retain strict registry isolation. |
+
+Three unique cards gain complete RON gameplay mappings, separately from 18 new
+compiled records. Collection-wide `engine_validated` and `behavior_verified`
+remain null. No full collection gameplay verification is claimed.
+
+### Final measurements, checks and next candidates
+
+Actual gain matches the estimate: **3 unique names / 18 records**. Final strict
+and inventory reports: **1,414 compiled / 1,031 rejected records**, **490 accepted /
+496 rejected unique names**. All 18 selected errors disappear. No accepted
+record regresses. Five Gauntlet of Might diagnostics advance from unsupported
+trigger to `unsupported land mana event subject (IsLandType)` at:
+`2ED.lines.ron:96:266`, `CED.lines.ron:96:266`, `CEI.lines.ron:96:266`,
+`LEA.lines.ron:95:266`, and `LEB.lines.ron:96:266`. Every other remaining first
+diagnostic is unchanged. Strict and inventory issue arrays agree.
+
+Inventory retains **72,938 nodes / 8,528 signatures**. Unknown-role occurrences
+decrease from 12,326 to **12,268**. All twelve source hashes still match the
+vocabulary snapshot. No RON source changed; no vocabulary refresh was required.
+No source defect was corrected. Known Avenger/Liege/Fastbond concerns remain
+open. No environmental or pre-existing failure blocked this slice.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage -run TestManaBonusLifecycle -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -run TestRONLandMana -count=1` | PASS, including final unsupported-bonus-shape cases. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after final code and lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final test changes. |
+| `go test ./... -short -count=1` | PASS for engine-skill verification. |
+| `make test` | PASS after final test changes. |
+| `make build` | PASS after final test changes. |
+| `go vet ./...` | PASS after final test changes. |
+| `make lint` | PASS, zero issues. Reviewed automatic formatting and modernize changes, including `slices.ContainsFunc`; no unrelated file changed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records / 1,414 compiled / 1,031 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict diagnostics agree and all nodes are walked. |
+| Source and diagnostic audit | PASS: twelve hashes match, 18 gained records, three gained names, five advanced diagnostics, zero accepted regressions. |
+
+`TestRONLandManaInvalidBonusShapes` also covers valid Aura scope with unsupported
+multi/empty productions, arbitrary-color and produced-type attached bonuses,
+wrong recipient, attached non-mana actions, repeated mana and malformed host
+references. These declarations fail before gameplay.
+
+Ranked next candidates, to reassess from fresh evidence:
+1. Finite recipient-prevention allocation prerequisite, then adapters for nine
+   otherwise-ready names; keep Balm/Guardian/Rakalite blockers explicit.
+2. All-zone CDA P/T contracts for six names, followed by typed count/name/addition
+   adapters and evidence-based Avenger source repair.
+3. End-of-combat/intervening-if and bounded counter replenishment prerequisites
+   shared by Clockwork Avian and Clockwork Beast.
+
+Gauntlet of Might's subtype event is now closer but remains a single-card
+capability; defer it while useful multi-card work remains. High Tide additionally
+needs temporary-trigger lifecycle and a recipient-semantics audit. Complete
+collection loading/gameplay, application/runtime loading, native startup,
+Go-card/generator deletion and unused DSL cleanup remain open. The removal gate
+was not reached. No caller-removal audit or DSL deletion was performed. Stop
+with this one slice.
+
+Slice files: `pkg/mage/dsl/ron/compiler.go`, `land_mana.go`, `land_mana_test.go`,
+`player_scope.go`, `triggers.go`, `inventory.go`, `inventory_test.go`,
+`pkg/mage/mana_system.go`, `mana_bonus_lifecycle_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Stage only these twelve files. Preserve the two initial user edits unstaged.
+The descriptive slice commit hash is reported in the final response.

@@ -2161,3 +2161,36 @@ The adapter uses `CountPermanents`, `MatchingPermanents`,
 `PermanentsControlledBy`, and `MultiplyValues`. Typed references keep factory,
 copy, event, and target bindings separate. Full-card evidence is Karma
 (LEA/LEB/2ED/3ED/CED/CEI) and Jovial Evil (LEG), in `TestRONBattlefieldCount*`.
+
+### RON land mana events
+
+RON supports `TriggerA(WhenAPlayerTapsAPermanentForMana(AnyPlayer,
+IsCardtype(Land)), body)` for non-mana resolving actions. Each factory has its
+own typed event bindings. `Trigger_ThatPlayer` saves the activating player;
+`Trigger_ThatPermanent` saves the land incarnation. Information reads use the
+existing LKI and phase-information contracts. These names do not escape the
+trigger body.
+
+Two complete mana-bonus bodies use the shared mana-bonus service so automatic
+payment and actual production agree:
+
+```ron
+TriggerA(WhenAPlayerTapsAPermanentForMana(AnyPlayer, IsCardtype(Land)),
+  ActionList([PlayerAction(Trigger_ThatPlayer,
+    AddMana(Trigger_AnyManaTypeProduced))]))
+TriggerA(WhenAPermanentIsTappedForMana(SinglePermanent(HostPermanent)),
+  ActionList([PlayerAction(ControllerOfPermanent(Trigger_ThatPermanent),
+    AddMana(ManaProduceG))]))
+```
+
+The attached form needs an Aura scope and one concrete production. White, blue,
+black, red, green and colorless productions work; `And` with exactly one concrete
+production also works. The bonus goes to the player who taps the host for mana.
+These bonuses add one mana, resolve immediately, and do not create stack objects.
+The produced-type form permits only a type produced by the triggering ability;
+it does not copy the amount produced or the types of other bonuses.
+
+Other mana-producing bodies in these events remain declaration errors. Subtype
+events, other player filters, temporary triggers, source/target mana events and
+attached non-mana bodies remain unsupported. This does not add general
+`PlayerAction(..., AddMana(...))` support outside this event scope.

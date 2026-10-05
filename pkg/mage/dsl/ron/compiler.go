@@ -33,6 +33,7 @@ type scope struct {
 	castEvent       *castEventPlan
 	stepEvent       *stepEventPlan
 	permanentEvent  *permanentEventPlan
+	landManaEvent   *landManaEventPlan
 }
 
 type actionPlan struct {
@@ -1034,6 +1035,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	case "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
+		if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
+			return compilePlayerMana(n, ctx)
+		}
 		count := 1
 		args := 1
 		if n.Name == "AddManaRepeated" {
@@ -1176,6 +1180,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "AddMana" {
+		return compilePlayerMana(n, ctx)
+	}
 	if n.Name == "DiscardACardAtRandom" || n.Name == "DiscardNumberCardsAtRandom" {
 		return compileRandomDiscard(n, ctx)
 	}

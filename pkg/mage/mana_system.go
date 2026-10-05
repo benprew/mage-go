@@ -42,11 +42,14 @@ func (ms *ManaSystem) ManaBonuses(g *Game, permanentID uuid.UUID) []ManaBonusCol
 	}
 	var bonuses []ManaBonusColor
 	for _, perm := range g.zones.battlefield {
+		if perm.PhasedOut {
+			continue
+		}
 		for _, a := range perm.RuntimeAbilities {
 			inner := UnwrapAbility(a)
 			if mb, ok := inner.(*ManaBonusAbility); ok {
 				if mb.AttachedOnly {
-					if perm.AttachedTo == tappedPerm.ID() {
+					if perm.AttachedTo == tappedPerm.ID() && perm.attachedIncarnation == tappedPerm.incarnationID {
 						bonuses = append(bonuses, ManaBonusColor(mb.BonusMana))
 					}
 				} else if mb.Filter.Match(tappedPerm, g) {

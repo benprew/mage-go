@@ -625,6 +625,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "player_action":
+		if n.Name == "AddMana" && len(n.Args) == 1 {
+			return "mana_production"
+		}
 		if (n.Name == "DrawNumberCards" || n.Name == "DiscardNumberCards" || n.Name == "DiscardNumberCardsAtRandom" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
 			return "value"
 		}
@@ -700,12 +703,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return role
 		}
 	case "event":
+		if n.Name == "WhenAPlayerTapsAPermanentForMana" && len(n.Args) == 2 {
+			return []string{"player_filter", "permanent_filter"}[index]
+		}
 		if n.Name == "WhenAPlayerCastsASpell" && len(n.Args) == 2 {
 			return []string{"player_filter", "spell_filter"}[index]
 		}
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped":
+			case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped", "WhenAPermanentIsTappedForMana":
 				return "permanent_filter"
 			case "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep", "AtTheBeginningOfAPlayersDrawStep":
 				return "player_filter"

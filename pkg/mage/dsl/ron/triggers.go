@@ -20,6 +20,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAPlayerTapsAPermanentForMana", "WhenAPermanentIsTappedForMana":
+		return compileLandManaTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentBecomesTapped":
 		if trigger.Kind == Tuple && len(trigger.Args) == 1 && trigger.Args[0].Name == "SinglePermanent" {
 			return compileHostTapTrigger(trigger, n.Args[1], ctx)
