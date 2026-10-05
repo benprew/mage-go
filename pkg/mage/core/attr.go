@@ -34,8 +34,7 @@ const (
 	AttrIsEnchantment
 
 	// Keyword attrs — all existing keywords as Attr values.
-	// IMPORTANT: Flying must remain the first keyword attr; code uses (a >= Flying) to
-	// identify keyword-range attrs (e.g. for doppelganger copy).
+	// Flying starts the keyword range. Use IsKeywordAttr to exclude rule permissions.
 	Flying
 	Reach
 	FirstStrike
@@ -77,6 +76,9 @@ const (
 	// Game.SetPrepared, Game.IsPrepared, Game.CastPreparedSpellCopy).
 	AttrPrepared
 
+	// Keep this permission separate from haste because tap costs remain restricted.
+	AttrAttackAsThoughHaste
+
 	// attrCount is a sentinel marking one past the last Attr value.
 	// NumAttrs exposes this as a sized array bound for Permanent attr storage.
 	attrCount
@@ -96,9 +98,9 @@ const (
 	MustBeBlocked  = AttrMustBeBlocked
 )
 
-// IsKeywordAttr returns true if a is in the keyword range (>= Flying).
+// IsKeywordAttr excludes rule permissions from the keyword range.
 func IsKeywordAttr(a Attr) bool {
-	return a >= Flying
+	return a >= Flying && a != AttrAttackAsThoughHaste
 }
 
 // IsAbilityAttr reports whether an attribute represents an ability that can be
@@ -135,6 +137,8 @@ func IsAbilityAttr(a Attr) bool {
 
 func (a Attr) String() string {
 	switch a {
+	case AttrAttackAsThoughHaste:
+		return "Attack As Though Haste"
 	case AttrCanAttack:
 		return "CanAttack"
 	case AttrCanBlock:

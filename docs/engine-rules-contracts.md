@@ -1748,3 +1748,29 @@ source ability removal and restoration, native block declarations, declared
 block persistence, controller changes, phase cycles, source return, independent
 factories and Aura attachment identity. Orcish Veteran's separate activation
 also resolves and expires through the existing temporary keyword service.
+
+## Attack permissions: haste only for attacking
+
+`AttackAsThoughHaste(subject PermanentRef) ContinuousModification` permits the
+subject to attack without continuous control since the turn began (CR 302.6,
+702.10b, 609.4). It does not grant haste and does not permit tap or untap symbol
+costs while the creature has summoning sickness (CR 702.10c). Tapping, defender,
+phasing and other attack restrictions still apply. Combine it with
+`GrantKeywordModification(subject, core.AttrCanAttack)` to permit attacks
+through defender as well. Neither rule permission is an ability of the recipient.
+Removing the recipient's abilities does not remove a permission from another
+source; removing the source's static ability stops its permission.
+
+The new `core.AttrAttackAsThoughHaste` is appended without changing existing attr
+values. `IsKeywordAttr` and `IsAbilityAttr` exclude it. Current attack legality
+reads it; `CanTapForEffect` retains its existing haste check. Existing layer,
+attachment, source ability, clone and incarnation services supply its lifecycle.
+A static rule follows the current attachment; an `Until` rule captures the current
+incarnation. A returned permanent cannot inherit a captured permission. Changing
+legality after declaration does not remove an attacker (CR 508.1).
+
+Evidence: `TestAttackOnlyHastePermission`, `TestAttackOnlyHasteOtherRestrictions`,
+and `TestRONAttackPermission*`. The latter covers real Aura casting, native
+attacks and combat damage, payment and target rejection, source/host lifecycle,
+and Instill Energy's complete untap activation. No replacement, simultaneous
+action, LKI, or payment service is changed.

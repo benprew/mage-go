@@ -997,7 +997,7 @@ func (p *Permanent) CanDeclareAsAttacker(g *Game) bool {
 		!p.PhasedOut &&
 		(g == nil || !g.restrictedFromAttacking(p)) &&
 		!p.Tapped &&
-		(!p.HasAttr(AttrSummonSick) || p.HasAttr(Haste)) &&
+		(!p.HasAttr(AttrSummonSick) || p.HasAttr(Haste) || p.HasAttr(AttrAttackAsThoughHaste)) &&
 		(!p.HasAttr(Defender) || p.grantedAttrs[AttrCanAttack] > 0)
 }
 

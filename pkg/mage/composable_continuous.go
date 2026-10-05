@@ -77,6 +77,11 @@ func GrantKeywordModification(subject PermanentRef, keyword Attr) ContinuousModi
 	return &layerModification{subject: subject, keyword: keyword, layer: LayerAbility}
 }
 
+// AttackAsThoughHaste permits attacks without changing tap cost legality.
+func AttackAsThoughHaste(subject PermanentRef) ContinuousModification {
+	return &layerModification{subject: subject, keyword: AttrAttackAsThoughHaste, layer: LayerAbility}
+}
+
 // RemoveKeyword removes all instances of one keyword from a permanent in layer 6.
 func RemoveKeyword(subject PermanentRef, keyword Attr) ContinuousModification {
 	return &layerModification{subject: subject, keyword: keyword, removeKeyword: true, layer: LayerAbility}

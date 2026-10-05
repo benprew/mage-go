@@ -193,6 +193,12 @@
 // blockers. Filters read current characteristics at the block legality check.
 // Clones keep both filter maps for queries before the next layer pass.
 //
+// Use [AttackAsThoughHaste] for an attack permission that leaves tap costs
+// restricted by summoning sickness. It does not grant the haste ability.
+// The permission keeps its subject incarnation with [Until] and reads the
+// current subject with [While]. Use [GrantKeywordModification] with
+// AttrCanAttack to permit attacks through defender.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

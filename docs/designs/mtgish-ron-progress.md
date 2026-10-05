@@ -8000,3 +8000,172 @@ Final checks are recorded below after completion.
 No environment or pre-existing validation blocker remains. Only the ten listed
 slice files are committed; the two initial user changes remain unstaged. The
 commit hash is reported in the final response. This run stops after this slice.
+
+## 2026-10-04 — Static attack permissions
+
+Capability `STATIC-ATTACK-PERMISSIONS`: complete for the exact static forms below.
+This run implements one slice and stops. Initial user changes in `.gitignore`
+and `docs/designs/mtgish-ron-execution.md` are preserved and excluded from staging.
+Read `AGENTS.md`, `pkg/mage/doc.go`, the current design, vocabulary snapshot,
+ledger, compiler/reference/static/activation/inventory code, engine attr and
+continuous modification services, API/rules-contract docs, and CR 302.6,
+303.4, 508.1, 609.4, 702.3 and 702.10. The `implement-engine` skill was used
+for the reusable attack-only haste prerequisite. No removed card/set skill,
+Go-card requirements, or generator was used.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+The strict loader and inventory each returned expected exit 1 for collection
+rejection: 2,445 records, 986 names, **1,269 compiled / 1,176 rejected** records,
+450 accepted / 536 rejected unique names. Full nested inventory: 72,938 node
+occurrences, 8,528 signatures and 13,322 unknown-role occurrences. All 12 source
+hashes match the vocabulary snapshot. No build/test/environment failure was found.
+
+| Candidate | Distinct affected cards | Estimated complete-card unlocks | Other blockers, downstream value, effort |
+| --- | --- | --- | --- |
+| Static attack permissions (selected) | Animate Wall; Instill Energy. Later temporary consumers: Wall of Wonder; Vodalian War Machine. | 2 names / 12 records | Both complete static consumers have ready enchant targets. Instill's host untap, controller-turn and once-per-turn adapters already exist. Missing attack-only haste is a small shared engine prerequisite. Temporary consumers still need their rule context; War Machine also needs matching tap payments and paid-object history. Low implementation / medium test effort. Enables exact attack-only haste without incorrectly granting tap-cost haste. |
+| Finite simultaneous prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite; up to 7 after adapters | Complete records have supported target/cost forms, but finite allocation among simultaneous damage packets and affected-player replacement ordering need a shared engine/decision contract. High implementation/test effort. Enables these seven consumers and later modal prevention. |
+| Filtered bands-with-others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after adapters | Color/legendary/controller filters are ready. Filtered band formation and damage assignment still need a combat contract. High implementation/test effort. Enables the five lands and later Master of the Hunt tokens, whose complete card has separate token blockers. |
+
+Complete candidate records and nested forms were inspected, including all
+selected reprints. Reprints count once. The two immediate static unlocks give
+the largest credible gain for this small implementation; the broader prevention
+and banding prerequisites remain useful multi-card work. Wall of Wonder and
+Vodalian War Machine remain rejected and are downstream consumers, not unlocks.
+Before editing, selection, exact subject/context boundaries, engine reuse and
+acceptance cases were stated. The fresh loader gain matches the estimate.
+
+### Contract, dependencies and reuse boundary
+
+Permanent static rule `PermanentRuleEffect/2` accepts exactly one operation:
+
+- `PermanentRuleEffect(subject, [CanAttackAsThoughItDidntHaveDefender])`.
+- `PermanentRuleEffect(subject, [CanAttackAsThoughItHadHaste])`.
+
+Each operation is a symbol, with no arguments. `subject` is symbol
+`ThisPermanent` or Aura-only symbol `HostPermanent`. Wrong subjects/types,
+unbound target references, tuple spellings, operation arguments, multiple
+operations, collection rules and temporary/action contexts remain rejected.
+This does not claim support for the whole permanent-rule family.
+
+RON owns spelling, arity, scope validation and lowering. Typed permanent plans
+are built through the existing instance services; each factory constructs a
+fresh static action and modification. Existing `Static`, `While`, reference,
+attachment, continuous-effect, ability-removal, cloning, incarnation, attack
+legality, native declaration and casting services own runtime behavior.
+The defender permission reuses `GrantKeywordModification(ref, AttrCanAttack)`.
+
+Missing engine contract: attack-only haste. New public signature:
+`AttackAsThoughHaste(subject PermanentRef) ContinuousModification`.
+It installs a rule permission, not the haste ability. `CanDeclareAsAttacker`
+reads it alongside full haste. `CanTapForEffect` retains its existing check, so
+summoning-sick tap-cost activations remain illegal. The internal capability is
+`core.AttrAttackAsThoughHaste`, appended without renumbering existing attrs.
+`IsKeywordAttr` and `IsAbilityAttr` exclude it; copying or removing recipient
+abilities cannot treat it as haste. No new mutable state service is needed.
+
+Both rules retain tapping and independent attack restrictions. Static host
+membership reads the current attachment and does not use LKI. Phasing suspends
+source rules; host/source phase cycles restore current membership. Source ability
+removal stops a static permission. Recipient ability removal does not remove a
+permission supplied by an Aura. Control changes do not change its attachment.
+A returned source needs a new attachment; a returned host does not inherit an
+old attachment or captured temporary rule. A declaration already made remains
+in combat after the permission ends. `Until` uses the existing incarnation
+capture service; its cleanup and clone isolation remain shared engine behavior.
+
+Complete local Oracle text in `data/LEA.json` confirms the two RON records:
+Animate Wall ignores defender for attacking; Instill Energy ignores control
+history for attacking and has the separate zero-mana untap restricted to its
+controller's turn and once each turn. CR 609.4 limits an as-though effect to its
+stated operation; CR 702.10b/c separates haste's attack and cost permissions.
+There is no source-data defect in this slice. Existing Gaea's Liege/Fastbond
+concerns remain outside it. No RON source changes or vocabulary refresh are needed.
+
+No replacement ordering, simultaneous operation, event LKI, new payment,
+saved result, global state slot, card-name execution branch, Go fallback, or
+partial production registry is introduced. Existing callers are preserved.
+No removal gate is met, so no Go definitions, generators or DSL functions are
+removed, and no removal caller audit or authoring cutover is claimed.
+
+### Tests and card-to-test mapping
+
+Tests were written first. The engine test failed because the API and capability
+were absent. After fixing a test-only subtype helper spelling, the real RON
+records failed with `unsupported self untap source (HostPermanent)` before the
+adapter existed. Implementing the adapter and prerequisite made them pass.
+During test development, a repeated physical card was replaced with a separate
+factory-created host so the attachment test used independent object IDs. Later
+fixtures corrected a pointer-to-interface spelling. No assertion was weakened.
+
+| Card / contract | Tests and evidence |
+| --- | --- |
+| Animate Wall, Instill Energy | `TestRONAttackPermissionRealCards`: full real records, definition validation, paid native casting, unpaid rollback, no permission before resolution, current attachment, phase suspension/return, clone isolation and source ability removal. |
+| Instill Energy's second rule | `RealCards`: untap only at resolution, zero mana cost, rejection of a second use in the same turn and of use during the opponent's turn. Host remains unable to pay summoning-sick tap costs and never gains haste. |
+| Both cards | `TestRONAttackPermissionLifecycle`: host ability removal, phase cycle, source/host control changes, source departure/return with fresh attachment, host departure/return. |
+| Both cards | `TestRONAttackPermissionNativeAttack`: native illegal/then legal attack declaration, attack tapping, persistence of a declared attack after Aura departure, actual unblocked combat damage. |
+| Both cards | `TestRONAttackPermissionAuraLegality`: wrong host type, target/payment rollback, departed and phased targets become illegal at resolution, Aura goes to graveyard. |
+| All 12 records / 2 names | `TestRONAttackPermissionReprints`: parse all repository files, compile every selected reprint, fresh identities and engine validation per factory, strict selected test-only collection, atomic rejection when an invalid record is added. |
+| Synthetic source/static shapes | `TestRONAttackPermissionSourceInstances`: both source operations, independent instances for opposing players and removal of one source's ability. `Invalid`: arity, incompatible/undeclared subjects, tuple spellings, mixed operation lists and wrong collection/non-Aura contexts. |
+| Shared engine rule | `TestAttackOnlyHastePermission`: attack versus tap distinction, no haste keyword, recipient ability removal, tapping, cleanup and clone isolation, rule/keyword classification. |
+| Shared engine lifecycle | `TestAttackOnlyHasteOtherRestrictions`: defender remains, independent permissions combine, phasing, control change, incarnation capture, returned card exclusion, unchanged full haste. |
+| Shared engine payment | `TestAttackOnlyHasteTapCostRollback`: native tap activation fails while summoning-sick, leaves permanent/stack/life unchanged; adding full haste allows payment and resolution. |
+
+This adds **two complete-card RON gameplay mappings**, separately from compiler
+counts. Aggregate engine-validation and behavior-verification fields remain
+null; collection-wide gameplay is not proved. Inventory already assigns these
+symbol operations and their subjects the established permanent-rule and typed
+reference roles, so no role adapter is needed. Repository inventory assertions
+were updated only to fresh measured compiled/rejected counts.
+
+### Actual gain, remaining diagnostics and next candidates
+
+Final strict loader: **1,281 compiled / 1,164 rejected** records, 452 accepted /
+534 rejected unique names. Exactly 12 diagnostics disappeared: six Animate Wall
+and six Instill Energy reprints. There are zero additions or changes to surviving
+diagnostics. Strict and inspection issues agree. Actual gain equals the estimate:
+12 records / 2 unique cards. Final inventory remains 12 files, 2,445 records,
+986 names, 72,938 occurrences, 8,528 signatures, 13,322 unknown-role occurrences.
+All 12 source hashes still match the vocabulary snapshot.
+
+Remaining leading diagnostics include `CastEffect` on spells (53 records),
+`ChooseADamageSource` (46), `Targeted_Modal` (42), graveyard targets (26) and
+`CreateFuturePreventDamage` (24). These are first errors, not unlock estimates.
+Complete loading, runtime wiring, all-card gameplay, Go-card deletion and DSL
+cleanup remain open.
+
+Ranked next candidates for fresh reassessment:
+1. Finite prevention allocation prerequisite for the seven listed consumers.
+2. Filtered bands-with-others combat prerequisite for the five lands.
+3. Temporary attack permission context; compare Wall of Wonder's complete record
+   with other temporary-rule consumers before selection. War Machine's payment
+   and paid-object history are separate blockers, so do not count it as ready.
+
+Changed slice files: `pkg/mage/core/attr.go`, `pkg/mage/card.go`,
+`pkg/mage/composable_continuous.go`, `pkg/mage/attack_permission_test.go`,
+`pkg/mage/doc.go`, `pkg/mage/dsl/ron/attack_permission.go`,
+`attack_permission_test.go`, `filtered_blocking.go`, `inventory_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+
+Validation results follow after final lint review.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage -run TestAttackOnlyHaste -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron -run TestRONAttackPermission -count=1` | PASS |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after final lint, including the native tap-cost rollback test |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues; automatic test import formatting reviewed; no changes outside this slice |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,281 compiled / 1,164 rejected; final diagnostics match the earlier post-implementation report |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; issues equal final strict diagnostics |
+| Source/diagnostic audit | All source hashes match vocabulary; 12 removed diagnostics, zero additions or surviving changes |
+
+No environment or pre-existing validation blocker remains. Only the twelve
+listed slice files are committed; the two initial user changes remain unstaged.
+The descriptive commit hash is reported in the final response. This run stops
+here. Runtime cutover and removal gates remain unmet.

@@ -1841,3 +1841,24 @@ host, and a departed host is not followed through its return.
 forms. The five complete-card mappings are Ironclaw Orcs, Brassclaw Orcs,
 Orcish Veteran, Amrou Kithkin and Bog Rats. Other records with these operations
 can still have unsupported rules. Temporary forms are unchanged.
+
+## RON static attack permissions
+
+Permanent rules accept these exact forms:
+
+```ron
+PermanentRuleEffect(HostPermanent, [CanAttackAsThoughItDidntHaveDefender])
+PermanentRuleEffect(HostPermanent, [CanAttackAsThoughItHadHaste])
+```
+
+Each operation is a symbol in a one-element list. The subject is symbol
+`ThisPermanent` or, only on an Aura, symbol `HostPermanent`. Target/event reads,
+operation arguments, mixed lists and temporary or collection contexts remain
+rejected. Both forms use typed current references and fresh static abilities per
+factory, through the shared `While` service. The first reuses `AttrCanAttack`;
+the second uses `mage.AttackAsThoughHaste` and preserves tap-cost restrictions.
+They do not grant haste or remove defender from the host's characteristics.
+
+Animate Wall and Instill Energy now compile in all six reprints each. Instill
+Energy's separate zero-mana untap activation uses the existing controller-turn
+and once-per-turn checks. No Go definition or production registry is replaced.

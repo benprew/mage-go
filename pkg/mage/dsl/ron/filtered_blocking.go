@@ -15,6 +15,8 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	operation := operations[0]
 	switch operation.Name {
+	case "CanAttackAsThoughItDidntHaveDefender", "CanAttackAsThoughItHadHaste":
+		return compileStaticAttackPermission(n, operation, ctx)
 	case "CantBeBlockedExceptByDefenders", "CantBeBlockedByDefenders", "CantBlockAttackers":
 	default:
 		return compileSelfUntapRule(n)
