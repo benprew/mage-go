@@ -21,6 +21,9 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
 	case "WhenAPermanentBecomesTapped":
+		if trigger.Kind == Tuple && len(trigger.Args) == 1 && trigger.Args[0].Name == "SinglePermanent" {
+			return compileHostTapTrigger(trigger, n.Args[1], ctx)
+		}
 		var err error
 		buildTrigger, err = compileOpponentLandTap(trigger)
 		if err != nil {

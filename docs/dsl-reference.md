@@ -1521,3 +1521,17 @@ Real RON evidence: Lifetap (all six reprints) and Lifeblood in
 `TestRONOpponentLandTapRealCards` and `TestRONOpponentLandTapPaymentAndBatch`.
 Declaration and syntax evidence: `TestRONOpponentLandTapInvalidAndInventory`
 and `TestRONOpponentLandTapSubtypeAndOrder`.
+
+### RON Aura host tap events
+
+On an Aura, `TriggerA(WhenAPermanentBecomesTapped(SinglePermanent(HostPermanent)),
+actions)` declares `Trigger_ThatPermanent` for that action body. The reference
+reads the permanent captured when the enchanted permanent becomes tapped.
+It is distinct from `HostPermanent`, which reads the attachment at resolution.
+Existing typed permanent actions can use this binding. It does not declare
+`Trigger_ThatPlayer` or supply a controller query or damage-source adapter.
+
+Each factory call creates its own `BindPermanent` declaration. Lowering uses
+`AttachedBecomesTapped` and `From`; the engine retains separate captures for
+pending events, copies and clones. The exact form executes Blight and Spirit
+Shackle. Other `SinglePermanent` tap-event subjects remain unsupported.

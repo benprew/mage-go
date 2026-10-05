@@ -25,6 +25,7 @@ type instanceBindings struct {
 	sacrifices map[*sacrificeValuePlan]sacrificeValueBindings
 	events     map[*castEventPlan]castEventBindings
 	steps      map[*stepEventPlan]*mage.PlayerBinding
+	tapped     map[*permanentEventPlan]*mage.PermanentBinding
 	permanents map[*permanentTargetPlan]*mage.PermanentTargetBinding
 	players    map[*playerTargetPlan]*mage.PlayerTargetBinding
 	spells     map[*spellTargetPlan]*mage.SpellTargetBinding

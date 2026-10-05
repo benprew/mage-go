@@ -31,6 +31,7 @@ type scope struct {
 	damageTarget    *damageTargetPlan
 	castEvent       *castEventPlan
 	stepEvent       *stepEventPlan
+	permanentEvent  *permanentEventPlan
 }
 
 type actionPlan struct {

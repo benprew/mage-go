@@ -5595,3 +5595,156 @@ Complete collection gameplay, runtime loading, Go-card/generator deletion,
 DSL cleanup and native startup validation remain open. No definitions or DSL
 functions were removed because their removal gates are not met. No whole-repo
 DSL deletion audit or authoring cutover is claimed. Migration is incomplete.
+
+## Run 2026-10-04: AURA-HOST-TAP-BINDING
+
+Status: complete Aura host tap-event adapter slice. This run stops here.
+The initial user changes in `.gitignore` and `mtgish-ron-execution.md` are
+preserved and excluded from the commit. No unrelated untracked files existed.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and
+`go build ./...` passed. Fresh `go run ./cmd/loadcards -inventory -json`
+exited 1 for collection rejection: **1,158 compiled / 1,287 rejected records**,
+405 accepted / 581 rejected names among 2,445 records / 986 names.
+Inventory: 72,938 occurrences, 8,528 signatures, 14,279 unknown-role occurrences.
+The design, engine API, vocabulary snapshot, latest ledger, selected compiler
+and engine contracts were inspected. Complete RON records were read for the
+candidates below and all host-tap consumers. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Aura host tap-event binding, selected | Blight, Spirit Shackle, Psychic Venom, Kudzu, Artifact Possession | 2 | Blight and Spirit Shackle have no later blockers. Psychic Venom needs a controller query with LKI on departure; Kudzu needs optional reattachment and controller reads; Artifact Possession also needs activation events. Small compiler adapter, moderate identity/transaction/gameplay test effort. Establishes a shared typed event-permanent scope for further host events and actions. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi | 0 for prerequisite; 7 after adapter | Needs CR 615.7 simultaneous shield allocation before the RON adapter. Large damage/replacement/decision test effort. Concrete benefit to all seven otherwise-ready cards; Guardian Angel and Rakalite retain further blockers. |
+| Filtered legendary banding | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 | Requires filtered band formation and damage-assignment engine contracts. Moderate-to-large implementation and combat/layer test effort. Master of the Hunt additionally needs named membership and token contracts. |
+| Source tap-event binding | City of Brass | 1 | Needs a source-event capture and typed event damage-source lowering. Smaller follow-up, but only one full unlock. Deferred while useful multi-card work remains. |
+
+Host tap binding gives the largest credible immediate gain for a small adapter
+that reuses exact engine behavior. Five host-tap names do not imply five full
+unlocks. The current `ControllerOf` service reads only a present incarnation;
+it cannot supply Psychic Venom's required controller information after departure
+(CR 608.2h). No controller adapter was added to conceal that engine prerequisite.
+
+### Contract, dependencies and reuse boundary
+
+Exact supported shape on an Aura:
+`TriggerA(WhenAPermanentBecomesTapped(SinglePermanent(HostPermanent)), actions)`.
+Both event and subject require one positional argument; `HostPermanent` must
+be a symbol bound by the Aura context. `Trigger_ThatPermanent` is a symbol
+available only in this trigger's resolving action body, including its existing
+targeted action form. It is a typed permanent reference, distinct from a player,
+damage source, target group or resolution-time `HostPermanent` read.
+Other subjects, wrong kinds/arity, unbound event reads, sibling-ability reads
+and event-player reads remain declaration errors. The opponent-land tap adapter
+retains its prior context and exposes no new event binding.
+
+`compileHostTapTrigger(event, body Node, ctx scope) (optionFactory, error)` owns
+RON declaration checking and lowering. `permanentEventPlan` is immutable, and
+`scope.permanentEvent` declares the lexical producer. `instanceBindings.tapped`
+provides a fresh `*mage.PermanentBinding` for each factory call.
+`compilePermanentRef` lowers its event kind with `mage.From`. Each event pattern
+and body are built together, including existing per-instance target builders.
+No mutable chosen state is stored in the plan.
+
+Engine reuse: `BindPermanent`, `AttachedBecomesTapped`, `From`, `WhenEvent`,
+`Sequence`, existing destruction/regeneration, counter and Aura state-based
+services, transactional mana/casting, `TapEach`, pending trigger captures,
+trigger copies and game cloning. This is a missing compiler adapter; no engine
+contract was changed. No parallel event or resolution store, Go-card fallback,
+card-name executor, declaration panic or partial production registry was added.
+
+The event captures the enchanted permanent before trigger placement. Attachment
+changes, source departure or return, and source control changes do not redirect
+that pending event. A departed/returned host cannot receive its old instruction.
+Host phasing suspends an action; phase-in before resolution retains identity.
+There is no characteristic or controller LKI query in the selected actions.
+Blight uses ordinary destruction and allows regeneration. Spirit Shackle places
+one -0/-2 counter. Neither trigger targets; shroud does not stop these actions.
+Entry tapped, an already-tapped host, absent attachment and a phased source do
+not produce a matching transition. Mana taps queue ordinary triggers and failed
+payments roll back taps and pending events. Batch taps remain simultaneous.
+Rules inspected: CR 603.1–603.3, 603.2e, 608.2h, 701.26a/b, 702.26b/d; existing
+attachment capture, incarnation and transactional-payment contracts.
+
+No source-data defect or environment failure was found. The Gaea's Liege and
+Fastbond observations remain open. No RON source changed. The twelve source
+hashes match the fresh baseline and vocabulary snapshot, so no syntax snapshot
+refresh is required. Runtime loading and card/DSL removal gates remain unmet;
+no Go definition or DSL service was deleted, and no deletion audit is claimed.
+
+### TDD and card-to-test mappings
+
+Real-card tests were written before the adapter. Initial fixture build errors
+used the wrong keyword constructor and counter integer type; these were fixed
+before the semantic red run. The tests then failed with the expected
+`unsupported opponent land tap filter (SinglePermanent)` diagnostics for both
+complete LEG records. After implementation, missing fixture owners caused an
+Aura state-based-action panic; setting fixture owners fixed the test setup.
+No rule assertion was removed or weakened. Fresh loader measurements justified
+changing the repository inventory count assertions.
+
+| Cards / contract | Evidence |
+| --- | --- |
+| Blight, Spirit Shackle (complete LEG records) | `TestRONHostTapRealCards`: engine definition validation; exact destruction and -0/-2 counters/toughness; retap versus untap-retap, entry tapped, other/unattached hosts, attachment changes, source departure/return, host departure/return, source/host phasing and phase cycles, host/source control changes, ability removal, shroud, regeneration, trigger copies and independent clone resolution. |
+| Blight, Spirit Shackle | `TestRONHostTapNativeCastingAndPayment`: native Aura casting and attachment; ordinary nontargeted tap triggers; Blight mana tap and failed-cast rollback with no leaked mana/tap/pending event, destroyed land and subsequent Aura state checks; Spirit Shackle's actual counter. |
+| Spirit Shackle / per-instance and per-event captures | `TestRONHostTapPendingBindingsAndBatch`: two events from one moving Aura and simultaneous taps watched by two cards from the same compiled factory; each captured host receives one counter. Pending game clones retain isolated events. |
+| Invalid declarations | `TestRONHostTapInvalid`: subject arity and kind, incompatible target reference, malformed event read, unbound player read, event binding escaping to sibling activation, host event on a non-Aura. |
+| Existing accepted behavior and shared contracts | Full RON/CLI tests, `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged`, retained `TestAttachedBecomesTappedCapture`, `TestAttachedBecomesTappedValidation`, and `TestTapEachTransitionsTogether`, plus required engine and repository checks. |
+
+These are two new full-record behavior mappings. Compilation counts remain
+separate from gameplay coverage; collection engine-validation and behavior-
+verification totals are still null, and complete collection gameplay is not
+claimed.
+
+### Actual gains and required validation
+
+Actual gain equals estimate: **2 unique names / 2 records**, exactly Blight and
+Spirit Shackle. Final strict and semantic loaders agree at **1,160 compiled /
+1,285 rejected records**, 407 accepted / 579 rejected names. No accepted name
+regresses. Fourteen remaining record diagnostics change: six Kudzu reprints now
+reach `PlayerMayAction`, six Psychic Venom reprints and Artifact Possession now
+reach the unsupported `ControllerOfPermanent` damage-player reference, and City
+of Brass receives the more precise unsupported source-reference diagnostic.
+All other remaining diagnostics are unchanged. Semantic inventory remains
+72,938 occurrences / 8,528 signatures / 14,279 unknown-role occurrences: existing
+inventory roles already classified this nested shape correctly.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON/CLI tests with `-count=1`, `go build ./...` | PASS |
+| Baseline strict semantic loader | Expected exit 1: 1,158 compiled / 1,287 rejected |
+| New real-card tests before adapter | Expected unsupported-event-subject failures |
+| `go test ./pkg/mage/dsl/ron -run TestRONHostTap -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; formatting reviewed and unrelated changes preserved |
+| Post-lint focused RON/CLI checks | PASS |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` | Expected exit 1: 1,160 compiled / 1,285 rejected |
+| Strict/semantic issue comparison, accepted-name audit and source hashes | PASS; loaders agree, no regressions, all twelve source hashes unchanged |
+
+No required check has a build/test/environment blocker. Collection rejection
+remains expected and does not publish a production registry. No startup or
+cutover claim is made.
+
+Slice files: new `pkg/mage/dsl/ron/host_tap.go` and `host_tap_test.go`;
+`compiler.go`, `triggers.go`, `permanent_scope.go`, `player_scope.go` and
+`inventory_test.go` in that package; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger. Only these files are staged.
+
+Ranked next candidates to reassess:
+1. CR 615.7 simultaneous amount-shield allocation, followed in a later slice by
+   recipient prevention: seven concrete otherwise-ready cards.
+2. Filtered legendary banding: five lands requiring combat contracts.
+3. Scoped controller filters: Ashnod's Battle Gear has an otherwise-ready full
+   record; inspect the nineteen other consumers and downstream blockers again.
+4. Event-object LKI/controller query prerequisite: Psychic Venom, Kudzu and
+   Artifact Possession now expose concrete downstream consumers, with optional
+   reattachment and activation events still required for the latter two.
+
+Complete collection gameplay, runtime loading, Go-card/generator removal, DSL
+cleanup and native startup validation remain open. No second slice began.

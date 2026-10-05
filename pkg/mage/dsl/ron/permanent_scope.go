@@ -12,11 +12,13 @@ const (
 	permanentSource permanentReferenceKind = iota
 	permanentHost
 	permanentTarget
+	permanentEvent
 )
 
 type permanentReferencePlan struct {
 	kind   permanentReferenceKind
 	target *permanentTargetPlan
+	event  *permanentEventPlan
 }
 
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
@@ -29,6 +31,10 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 		case "HostPermanent":
 			if ctx.aura {
 				return permanentReferencePlan{kind: permanentHost}, nil
+			}
+		case "Trigger_ThatPermanent":
+			if ctx.permanentEvent != nil {
+				return permanentReferencePlan{kind: permanentEvent, event: ctx.permanentEvent}, nil
 			}
 		case "Ref_TargetPermanent":
 			if ctx.permanentTarget != nil && ctx.permanentTarget.name == n.Name {
@@ -45,6 +51,8 @@ func (p permanentReferencePlan) build(bindings instanceBindings) mage.PermanentR
 		return mage.This
 	case permanentHost:
 		return mage.AttachedPermanent
+	case permanentEvent:
+		return mage.From(bindings.tapped[p.event])
 	default:
 		return bindings.permanents[p.target]
 	}

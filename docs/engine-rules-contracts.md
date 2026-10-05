@@ -1344,3 +1344,29 @@ service and queue one trigger per matching land.
 
 Evidence: `TestRONOpponentLandTap*`, with retained engine tests
 `TestOpponentLandBecomesTapped*` and `TestTapEachTransitionsTogether`.
+
+## RON Aura host tap event binding
+
+The RON Aura adapter lowers
+`WhenAPermanentBecomesTapped(SinglePermanent(HostPermanent))` to
+`AttachedBecomesTapped(BindPermanent(...))`. Its action body reads the event
+incarnation through `From`, using `Trigger_ThatPermanent`. Attachment changes
+and source departure cannot redirect this reference. Host departure and return
+produce a different incarnation; a phased host cannot be affected, while a
+phase cycle retains identity. Trigger copies and cloned games keep their own
+resolution captures. This adapter adds no engine rule.
+
+The trigger is not targeted. Shroud does not stop its actions. Blight uses the
+existing destruction service, including regeneration and subsequent Aura state
+checks. Spirit Shackle uses the existing counter service with one -0/-2 counter.
+CR 603.2e and 701.26a require a transition to tapped; entry tapped and a second
+tap without untapping do not trigger. CR 603.3a retains the event controller.
+Mana taps queue a normal trigger, and failed casting payments roll back taps
+and their pending events. Simultaneous taps use the shared batch service.
+
+Evidence: `TestRONHostTapRealCards`, `TestRONHostTapNativeCastingAndPayment`,
+`TestRONHostTapPendingBindingsAndBatch` and `TestRONHostTapInvalid`, with retained
+engine contracts `TestAttachedBecomesTappedCapture`,
+`TestAttachedBecomesTappedValidation` and `TestTapEachTransitionsTogether`.
+Controller queries that require LKI, source tap events and new damage-source
+forms are outside this adapter.
