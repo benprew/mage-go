@@ -30,6 +30,9 @@ func compileLandwalkBlockingRule(n Node) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if keyword == core.LegendaryLandwalk {
+		return nil, unsupported(operation.Args[0], "global landwalk blocking override")
+	}
 	if err := validateGlobalLandwalkFilter(n.Args[0], keyword); err != nil {
 		return nil, err
 	}

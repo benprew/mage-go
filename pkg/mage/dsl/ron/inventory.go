@@ -785,6 +785,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "landwalk_filter"
 		}
 	case "landwalk_filter":
+		if n.Name == "IsSupertype" && len(n.Args) == 1 {
+			return "supertype"
+		}
 		if n.Name == "IsLandType" && len(n.Args) == 1 {
 			return "land_subtype"
 		}

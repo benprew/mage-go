@@ -19667,3 +19667,139 @@ Slice files: engine `graveyard_exile.go`, `graveyard_exile_test.go` and
 API/rules-contract documentation and this ledger entry. One descriptive commit
 contains this slice; its hash is reported in the final reply. No second slice
 is started.
+
+## Slice: fixed landwalk declarations and keyword filters (2026-10-05)
+
+Capability ID: `fixed-landwalk/keyword-and-filter`. Status: implemented,
+declaration validated and behavior tested. This run stops after this slice.
+
+### Fresh baseline and candidate comparison
+
+Initial user edits in `.gitignore`, the execution design and this ledger, and
+untracked `mtgish-ron-completed.md`, are preserved. The slice's ledger entry is
+staged separately from the user's ledger reorganization.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot,
+progress ledger, selected compiler, inventory, keyword, combat, target and
+replacement code, API/rules contracts and complete candidate RON records.
+The semantic AST inventory walks nested forms. RON records, not Go card
+constructors, supplied requirements. Local `data/LEG.json` and `data/DRK.json`
+Oracle text agrees with Livonya Silone and Merfolk Assassin. CR 702.14,
+608.2b, 400.7, 701.8 and 701.19 establish the relevant rules.
+
+Fresh baseline engine short tests and build passed. Strict and semantic loaders
+exited 1 for unsupported collection records, not build/test failure:
+**1,643 compiled / 802 rejected records**, **611 accepted / 375 rejected names**.
+Inventory contained 72,951 nodes / 8,540 signatures / 8,418 unknown-role
+occurrences. Reprints count once.
+
+| Candidate | Distinct affected names and full-card unlock estimate | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Fixed landwalk declarations and filters, selected | Livonya Silone; Merfolk Assassin: **2** complete cards / **2** records. | No engine prerequisite: fixed keyword, evasion, targets and destruction exist. Adds legendary fixed declarations and landwalk keyword predicates to existing filter consumers. Island Sanctuary still needs draw replacement/player restrictions; Giant Slug still needs chosen subtype binding; neither is counted. | Low: two adapters and inventory role; moderate legality, combat, identity, copies, clone, rollback and replacement tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential complete cards. | Full nested records need public-zone source choices, saved source identity and next-event shield consumption. Existing prerequisite tests do not supply the complete choice/replacement contract. Enables shared source-selective prevention and later redirection. | High: shared source choice and identity, replacement timing/consumption, adapters and gameplay. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods: **5** potential complete cards. | Needs all-zone characteristic evaluation, owner/controller context, named counts and CDA layer behavior. Gaea's Avenger arithmetic/source correction and Wood Elemental entry payments are excluded. Enables off-battlefield characteristics and copying. | High: engine zone/layer contracts, adapters and zone/control/copy tests. |
+
+Selection rationale: two complete consumers have no missing engine contract and
+can use exact existing rules for substantially less implementation effort than
+the larger families. Complete records confirm both unlock estimates; first
+errors alone did not select the slice. The selection, contract, reuse boundary
+and acceptance cases were stated before editing.
+
+### Exact shapes, contexts and dependencies
+
+`Landwalk(IsSupertype(Legendary))` maps to `core.LegendaryLandwalk`.
+The shared fixed-keyword validator is used by printed keywords, existing static
+keyword grants and existing temporary grant/removal contexts. This does not
+add new static subject, duration, cost, trigger or choice contexts.
+
+`HasAbility(Landwalk(filter))` and `DoesntHaveAbility(Landwalk(filter))` use the
+existing permanent-filter contexts, including nested `And`/`Or` and targets.
+`filter` is exactly `IsLandType(symbol)` for Plains, Island, Swamp, Mountain,
+Forest or Desert, or `IsSupertype(Legendary)`. Current keyword queries run at
+the engine's existing query/target-recheck times. The separate `ManaAbility`
+class predicate is preserved. Bare, malformed, callable-symbol, unknown,
+variable and combined landwalk declarations remain rejected.
+
+The global blocking override explicitly rejects legendary landwalk: its existing
+engine path nullifies subtype landwalk only. Sharing the decoder must not admit
+an unsupported override. Matching subtype overrides continue to pass existing
+tests. Inventory reports `IsSupertype` as `landwalk_filter` and its argument as
+`supertype`, including descendants of rejected parents.
+
+Reuse boundary: RON owns spelling/arity/roles and lowering. Engine services
+`WithKeyword`, `HasKeywordFilter`, `Not`, current ability layers,
+`HasLandwalkEvasion`, native block declaration, first-strike combat, typed
+permanent targets, `Destroy`, transactional tap costs, incarnation references,
+phasing, stack retarget/copy and clone isolation own execution. No engine API
+or execution behavior changes. No binding or mutable game state is added to a
+compiled declaration. No card-name branch, fallback, skipped rule, declaration
+panic, global last-action slot or partial production registry is introduced.
+
+### TDD and card-to-test mappings
+
+The new tests first failed on the expected unsupported `IsSupertype` landwalk
+and `HasAbility(Landwalk(...))` declarations, plus the missing inventory role.
+The broad run found one stale static-grant rejection for legendary landwalk.
+It now rejects unsupported basic landwalk; new positive gameplay tests cover the
+newly supported legendary grant. Fixture corrections did not weaken requirements: use `TotalMana`, query phased
+objects with `FindPermanentIncludingPhased`, test landwalk block legality through
+native declaration (the pair-only `CanBlock` helper does not test landwalk), and
+remove all eligible targets before testing failed automatic target selection.
+
+| Card or shared contract | Evidence |
+| --- | --- |
+| Livonya Silone, full LEG record | `TestRONFixedLandwalkLivonya`: 4/4, first strike, legendary landwalk, legendary nonland exclusion, defender control versus ownership, land departure/return, phasing, ability removal/restoration and clone isolation. `TestRONFixedLandwalkNativeCombat`: actual block declaration and first-strike combat, with and without a legendary land. |
+| Merfolk Assassin, full DRK record | `TestRONFixedLandwalkAssassin`: 1/2 and subtypes, tap/stack timing, gained/lost keyword, return, phasing and phase cycle, shroud, either controller, source departure/return/control/phasing, regeneration, indestructible, copied ability and pending clone. `AssassinRollback`: sick/tapped/phased source, wrong controller, wrong keyword/type, phased target and absent/excess legal targets preserve resources. `InstancesAndRetargetedCopy`: independent activations and new copied target preserve original target/controller. |
+| Shared filters | `TestRONFixedLandwalkFilters`: positive and negative predicates for all seven variants recheck current keywords at resolution. |
+| Existing layer contexts | `TestRONFixedLandwalkGrantRemoval`: static legendary grant and source phasing, temporary grant/removal, source departure, native cleanup expiry and clone isolation. |
+| Invalid declarations and reporting | `TestRONFixedLandwalkInvalid`: malformed/unsupported keyword forms and unsupported legendary override. `Inventory`: nested roles below unsupported actions remain visible without accepting the record. Existing inventory tests retain strict registry isolation and real Lightning Bolt gameplay. |
+
+Two complete-card gameplay mappings are added. Collection-wide engine-validation
+and behavior-verification totals remain null; compilation is not gameplay
+coverage. Existing replacement ordering and simultaneous-operation services are
+reused; this slice establishes no new ordering or batching contract.
+
+### Actual gain, source findings and validation
+
+Actual gain matches the estimate: **2 names / 2 records**, exactly Livonya Silone
+and Merfolk Assassin. No previously accepted name is lost. Final strict loading
+reports **1,645 compiled / 800 rejected records**, **613 accepted / 373 rejected
+names**. Semantic inventory remains 72,951 nodes / 8,540 signatures; unknown-role
+occurrences fall to 8,417. Both loaders exit 1 and publish no partial registry.
+Remaining diagnostics include `ChooseADamageSource`, `CDA_Power`,
+`Targeted_Modal` and unrelated nested gaps.
+
+No source defect was found. RON source and vocabulary hashes are unchanged;
+the historical vocabulary loader snapshot remains an inventory, not a support
+claim. No environment or pre-existing build/test failure was found.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'TestRON(FixedLandwalk|LandwalkRule|StaticLandwalk|TemporaryKeyword)|TestInventory' -count=1` | PASS after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint. |
+| `make test` | PASS after lint. |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS after lint. |
+| `make lint` | PASS, 0 issues; first run requested a test slice allocation fix, corrected and rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,645 compiled / 800 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same records; 613 accepted / 373 rejected names; 72,951 nodes / 8,540 signatures / 8,417 unknown-role occurrences. |
+
+Automatic lint edits were reviewed. No Go definitions, startup consumers,
+generators or DSL functions are removed: complete loading, gameplay and runtime
+cutover remain below the removal gates. No caller audit justifies deleting a DSL
+function in this compiler-only slice. Engine services used by RON remain intact.
+API/rules docs describe only established compiler reuse.
+
+Ranked next candidates to reassess with fresh complete-record evidence:
+
+1. Chosen-source choice/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+2. All-zone battlefield-count CDAs for five direct consumers.
+3. Restricted mana and sacrifice-value activation/solver contracts for
+   Metamorphosis and Priest of Yawgmoth.
+
+Slice files: compiler `compiler.go`, `landwalk_rule.go`, `inventory.go`,
+`inventory_test.go`, `static_landwalk_test.go`, new `fixed_landwalk_test.go`; API/rules-contract documents
+and this ledger entry. One descriptive commit contains only the slice; its hash
+is reported in the final reply. This run does not begin another slice.

@@ -3503,3 +3503,24 @@ gain. Cyclopean Mummy uses its captured death card without a target. Phasing
 does not cause a death event. See `TestRONGraveRobbers*`,
 `TestRONCyclopeanMummyDeathCard`, `TestRONGraveyardExile*` and
 `TestRONDeathCard*`.
+
+## RON fixed landwalk keyword filters
+
+`Landwalk(IsSupertype(Legendary))` lowers to the engine's legendary landwalk
+keyword. The existing printed, static grant, temporary grant and removal
+contexts use the same validator. `HasAbility(Landwalk(filter))` and
+`DoesntHaveAbility(Landwalk(filter))` now accept fixed `IsLandType` filters
+for Plains, Island, Swamp, Mountain, Forest and Desert, and
+`IsSupertype(Legendary)`. They query the current keyword, including layer
+changes, and targeted abilities check the filter again at resolution.
+The existing `ManaAbility` predicate keeps its separate ability-class behavior.
+Unknown, variable, combined and callable-symbol forms remain rejected.
+Legendary landwalk blocking overrides remain rejected: the existing override
+service supports subtype landwalk only.
+
+`TestRONFixedLandwalkLivonya` and `NativeCombat` execute Livonya Silone's full
+record, including first strike. `TestRONFixedLandwalkAssassin`,
+`AssassinRollback` and `InstancesAndRetargetedCopy` execute Merfolk Assassin's
+full record with live keyword legality, source and target identity, phasing,
+regeneration, costs, copies and clone isolation. `Filters`, `GrantRemoval`,
+`Invalid` and `Inventory` cover the shared shapes and semantic roles.

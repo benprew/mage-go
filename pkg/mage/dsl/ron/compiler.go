@@ -521,6 +521,15 @@ func compileLandwalkKeyword(n Node) (core.Attr, error) {
 		return 0, err
 	}
 	filter := n.Args[0]
+	if filter.Name == "IsSupertype" {
+		if err := arity(filter, 1); err != nil {
+			return 0, err
+		}
+		if filter.Args[0].Kind != Symbol || filter.Args[0].Name != "Legendary" {
+			return 0, unsupported(filter.Args[0], "landwalk supertype")
+		}
+		return core.LegendaryLandwalk, nil
+	}
 	if filter.Name != "IsLandType" {
 		return 0, unsupported(filter, "landwalk filter")
 	}
@@ -867,9 +876,9 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			}
 			return filter, nil
 		}
-		keyword, ok := keywords[n.Args[0].Name]
-		if n.Args[0].Kind != Symbol || !ok {
-			return mage.PermanentFilter{}, unsupported(n.Args[0], "keyword filter")
+		keyword, err := compileTemporaryKeyword(n.Args[0])
+		if err != nil {
+			return mage.PermanentFilter{}, err
 		}
 		filter := mage.HasKeywordFilter(keyword)
 		if n.Name == "DoesntHaveAbility" {

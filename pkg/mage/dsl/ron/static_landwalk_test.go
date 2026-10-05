@@ -219,7 +219,7 @@ func TestRONStaticLandwalkShapesAndInstances(t *testing.T) {
 }
 
 func TestRONStaticLandwalkInvalidAndInventory(t *testing.T) {
-	for _, ability := range []string{`Landwalk`, `Landwalk()`, `Landwalk(IsLandType(Island), IsLandType(Swamp))`, `Landwalk(IsLandType)`, `Landwalk(IsLandType())`, `Landwalk(IsLandType(Island()))`, `Landwalk(IsLandType(You))`, `Landwalk(IsCreatureType(Island))`, `Landwalk(IsSupertype(Legendary))`} {
+	for _, ability := range []string{`Landwalk`, `Landwalk()`, `Landwalk(IsLandType(Island), IsLandType(Swamp))`, `Landwalk(IsLandType)`, `Landwalk(IsLandType())`, `Landwalk(IsLandType(Island()))`, `Landwalk(IsLandType(You))`, `Landwalk(IsCreatureType(Island))`, `Landwalk(IsSupertype(Basic))`} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Enchantment], Subtypes: []), Rules: [EachPermanentLayerEffect(IsCardtype(Creature), [AddAbility([%s])])])`, ability)
 		nodes, err := Parse(strings.NewReader(src), "invalid-walk.ron")
 		if err != nil {

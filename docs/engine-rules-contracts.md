@@ -3969,3 +3969,25 @@ Evidence: `TestExileGraveyardCardVisit`,
 `TestRONGraveRobbersExile`, `TestRONGraveRobbersRollback`,
 `TestRONGraveRobbersRetargetedCopy`, `TestRONCyclopeanMummyDeathCard`,
 `TestRONGraveyardExileIndependentDeaths` and `TestRONDeathCardReturnUsesFirstVisit`.
+
+## RON fixed landwalk declarations and keyword queries
+
+The compiler now reuses `LegendaryLandwalk`, `HasKeywordFilter`, `Not`, typed
+permanent targets and `Destroy`. No engine execution behavior changes.
+Legendary landwalk requires a legendary land controlled by the defender;
+a legendary nonland does not qualify (CR 702.14c). Phased lands do not qualify.
+Printed first strike remains a separate ability (CR 702.7).
+
+`TestRONFixedLandwalkLivonya` covers current land control, departure, phasing,
+ability removal/restoration and clones. `TestRONFixedLandwalkNativeCombat`
+checks actual block declaration and first-strike combat with the real record.
+`TestRONFixedLandwalkAssassin` checks keyword legality at announcement and
+resolution (CR 608.2b), permanent incarnation changes (CR 400.7), source
+independence, phasing, clones, indestructibility and regeneration (CR 701.8,
+701.19). `AssassinRollback` checks failed activation resource preservation.
+`InstancesAndRetargetedCopy` checks independent activations and copied targets.
+`Filters` checks positive and negative current keyword predicates for all seven
+fixed variants. `GrantRemoval` covers legendary static grants and temporary
+grant/removal expiry through native cleanup. Existing replacement ordering and
+simultaneous-operation contracts are reused; this slice establishes no new
+ordering or batching behavior. Legendary blocking overrides remain rejected.
