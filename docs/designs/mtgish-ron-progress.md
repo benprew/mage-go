@@ -6530,3 +6530,171 @@ Slice files: `pkg/mage/dsl/ron/compiler.go`, `end_step.go`, `end_step_test.go`,
 `spell_cast_reference_test.go`, `triggers.go`, new `hand_size_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 Stage only these files. The final response supplies the commit hash.
+
+## Run 2026-10-04: STATIC-FILTERED-BLOCKING
+
+Status: one complete supported static compiler shape and its typed engine
+prerequisite. User changes to `.gitignore` and the execution design remain
+untouched and outside this slice. No unrelated untracked files were present.
+Read AGENTS.md, mage/doc.go, execution design, vocabulary and prior progress;
+selected compiler/reference/layer/filter/combat/clone code, complete affected
+RON records, API/rules-contract documentation and CR 506.4a/509.1b. Existing
+identity/duration contracts supply CR 400.7/702.26 behavior. The
+`implement-engine` skill supplied the engine-extension workflow. No removed
+card/set skill, Go card requirements or Go stubs were used.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Strict and semantic loaders returned expected exit 1 for collection
+rejection: 2,445 records, **1,185 compiled / 1,260 rejected**, 421 accepted /
+565 rejected unique names. Nested inventory had 72,938 occurrences / 8,528
+signatures, with 14,102 unknown-role occurrences. Complete records and nested
+forms, rather than first-error frequency alone, supplied these estimates.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Static filtered blocking, selected | Invisibility, Seeker, Elven Riders; Evil Eye of Orms-by-Gore and Raging River downstream | 3 unique / 7 records after reprint audit | Shared combat filters and restriction service exist; a typed modification is missing for Aura hosts. Small engine/adapter implementation, moderate lifetime/declaration/combat tests. Evil Eye also needs its global attack restriction. Raging River needs attack-batch player bindings, piles and loop scopes. All five complete records were inspected, including the nested disjunctions. |
+| Finite recipient prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve; Guardian Angel downstream | 0 for prerequisite, then 8 | CR 615.7 simultaneous finite-shield allocation still needs a shared engine contract. Existing target, mode and cost forms cover the eight inspected complete consumers. Guardian Angel adds X and repeated payment. Larger engine/decision/replacement effort than the selected slice. |
+| Filtered bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel; Master of the Hunt downstream | 0 for prerequisite, then 5 | The five complete land records differ by color and use legendary-creature membership. Band membership and damage assignment require engine work plus layer adapters. Master of the Hunt also needs named token membership and token ability support. Moderate-to-large implementation and combat test effort. |
+
+Selection rationale: three complete cards at smaller credible cost, with an
+existing combat service to reuse and a clear typed boundary. The initial spoken
+record estimate was eight; the complete reprint check showed Invisibility is
+absent from 3ED, so the corrected pre-implementation estimate was seven. This
+was a fixture/inventory error, not a missing implementation or source defect.
+
+Pre-edit contract: a static source or Aura host rule requires each blocker to
+pass a supported permanent filter and all other combat restrictions. RON owns
+spelling, arity, lexical reference validation and lowering. Mage owns layer
+membership, incarnation identity, combat legality, duration and cloning.
+Acceptance cases: malformed/unbound declarations, current blocker color/type/
+keyword, cumulative restrictions, source/recipient ability removal, attachment
+changes, control, phase cycles, departure/return, factory instances, immediate
+clone queries, casting rollback, actual block declaration and combat, and
+existing-block finality. No missing rule was silently simplified.
+
+### Exact signatures, dependencies and engine reuse
+
+- `PermanentRuleEffect/2`, in the existing top-level permanent rule context,
+  accepts `[CantBeBlockedExceptByDefenders(filter)]` with exactly one operation.
+- `CantBeBlockedExceptByDefenders/1` must be a positional tuple. Its operand uses
+  the existing `compileFilter(Node) (mage.PermanentFilter, error)` grammar,
+  including nested `And`/`Or`, subtype, type, color and keyword filters. The
+  operation's word `Defenders` means blockers, not the defender keyword.
+- Subjects are bare `ThisPermanent` on a permanent and bare `HostPermanent` on
+  an Aura. Target, event, numbered, malformed and nonpermanent references remain
+  rejected in this static shape. Multiple operations and new temporary,
+  collection or source-dependent filter contexts remain unsupported.
+- `compilePermanentBlockingRule(Node, scope) (optionFactory, error)` delegates
+  other shapes to the retained self-untap compiler. Each factory constructs a
+  fresh static `While` rule and builds a typed source/attachment reference.
+- New engine API:
+  `CantBeBlockedExceptBy(PermanentRef, PermanentFilter) ContinuousModification`.
+  It extends `layerModification`/`capturedModification` and delegates to
+  `EffectManager.AddCantBeBlockedExceptBy`. It installs a rules restriction,
+  not a keyword on the subject. `While` reads current source/host membership;
+  `Until(EndOfTurn, ...)` captures the recipient incarnation. Existing
+  `SourceCantBeBlockedExceptBy`/`TargetCantBeBlockedExceptBy` callers remain.
+- `cloneEffectManager` now copies `cantBeBlockedExceptByRules` and each filter
+  slice. Before this repair, immediate clone queries lost active filtered
+  restrictions until another layer pass. The immutable filter declarations
+  remain shared; the map and slices are independent. This repair is limited to
+  this filtered-attacker map, not a claim about every other computed map.
+- Inventory assigns the operation operand `permanent_filter`, including nested
+  descendants of unsupported enclosing records. Reporting is not gameplay proof.
+
+Reuse: `compilePermanentRef`, `PermanentFilter`, `AttachedPermanent`, static
+source lifetime/ability visibility, continuous layers, typed incarnation capture,
+combat restriction conjunctions, `CanBlock`, casting/target/payment services,
+native attacker/blocker execution and combat damage. No separate combat system,
+card-name branch, shared chosen state, global last-action slot, Go fallback,
+declaration panic or partial production registry was added.
+
+Gap classification: missing compiler adapter and typed engine adapter, plus an
+existing engine clone contract defect exposed by gameplay tests. No source data
+or environment defect was found. All twelve RON hashes still match the vocabulary
+snapshot; no source refresh is required. Prior Gaea's Liege and Fastbond source
+concerns remain open.
+
+### TDD and card-to-test mapping
+
+The first RON tests failed for unsupported host/source rule declarations.
+Initial fixtures used a nonexistent keyword setter and a nonexistent 3ED
+reprint; corrected before interpreting semantic failures. The engine test first
+failed because the typed API was absent. A separate added clone assertion then
+failed with `clone lost the active filter` before the map-copy repair; the
+complete-record instance test independently exposed the same defect. Inventory
+failed with nested `And: unknown` before its role adapter. Invalid fixtures use
+malformed list syntax rather than claiming the existing empty conjunction is
+invalid. No rule assertion was weakened. Measured inventory totals were updated.
+
+| Unique card / contract | Full-record and behavior evidence |
+| --- | --- |
+| Invisibility (LEA, LEB, 2ED, CED, CEI) | `TestRONFilteredBlockingRealCards`: all five complete reprints, definition validation, Wall-only filter; flying and reach alone fail. `Lifecycle`: Aura attachment, source phase/departure/return/removal, host return, phase cycle, control, recipient removal and clone state. `NativeCombat`: actual Aura casting, unpaid/invalid-target rollback, illegal/legal blocker declarations, damage and existing-block finality. |
+| Seeker (LEG) | Same suites: exact artifact-creature OR white-creature restriction, white noncreature exclusion, source/host lifetime, native casting/payment and combat. `CurrentFiltersAndIntersection`: current color, cumulative Invisibility restriction, flying/reach independence and cleanup rechecks. |
+| Elven Riders (LEG) | Same real-record suite: Wall OR flying creature, reach exclusion, complete metadata and definition validation. `Lifecycle`: source ability removal, phase cycle, source control and clone state. `NativeCombat`: actual attacker/blocker declaration and combat, block preserved after source ability removal. |
+| Independent factories and strict loading | `TestRONFilteredBlockingInstancesAndStrictLoad`: seven complete records strictly load into three canonical definitions in an explicit test registry; two instances of one compiled factory keep separate sources/hosts, immediate clone query retains its rule. |
+| Invalid declarations and reporting | `TestRONFilteredBlockingInvalid`: wrong host context, malformed/unbound refs, symbol/arity/list errors, mixed operations and instant context. `Inventory`: nested permanent filter and keyword roles. |
+| Shared typed engine rule | `TestFilteredBlockingCapturedRestriction`: temporary captured identity, recipient ability removal, phase cycle, immediate clone query, independent cleanup and no returned-card inheritance. `TestFilteredBlockingDefinitionValidation`: nil/unwritten references fail and declared typed targets validate. |
+
+Compilation and gameplay coverage are separate. Three unique cards gain
+complete-record behavior mappings. Collection-wide engine-validation and
+behavior-verification totals remain null. Static rules perform no resolving
+choice, optional payment, event capture, damage replacement or simultaneous
+operation; LKI/APNAP/replacement ordering are not new contracts in this slice.
+Casting payment rollback is tested through existing transactional services.
+
+### Measurements, validation and remaining work
+
+Actual gain: **3 unique names / 7 records**, matching the corrected estimate.
+Final strict and semantic loaders: **1,192 compiled / 1,253 rejected records**,
+424 accepted / 562 rejected unique names. The seven removed diagnostics are
+exactly Invisibility's five reprints plus Seeker and Elven Riders. All remaining
+first diagnostics are identical and no previously accepted card regressed.
+Strict and semantic diagnostic arrays agree. Inventory remains 72,938
+occurrences / 8,528 signatures; unknown-role occurrences fall to 14,071.
+
+Most frequent remaining first diagnostics: `If` (53 records), non-spell
+`CastEffect` (53), `ChooseADamageSource` (46), `Targeted_Modal` (42), upkeep
+`HostController` (35), host self-untap source (33), self-untap operations (33),
+graveyard targets (26). These counts are not complete-card unlock estimates.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline RON/CLI tests `-count=1`, `make build` | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,185 / 1,260; collection rejection |
+| New engine/RON declaration and gameplay tests before implementation | Expected missing typed API and unsupported source/host operation failures |
+| New engine clone test before repair | Expected active filter lost in clone |
+| New nested inventory test before adapter | Expected `And: unknown` failure |
+| Focused `TestFilteredBlocking*` / `TestRONFilteredBlocking* -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; import formatting reviewed |
+| Post-lint focused tests `-count=1`, `go test ./... -short -count=1`, `make test` | PASS |
+| `git diff --check` | PASS |
+| Final strict and semantic loaders | Expected exit 1: 1,192 / 1,253; incomplete collection stays rejected atomically |
+| Accepted-name/full diagnostic comparison, twelve RON hashes | PASS: exact seven removals, zero other changes; hashes unchanged |
+
+The descriptive commit hash is recorded in the final response.
+No check failure or environment blocker remains. Only slice files are staged;
+user edits remain outside the commit. No Go definition, generator or DSL function
+was removed: complete loading/gameplay, runtime cutover and removal gates are
+still unmet. No deletion caller audit or collection-wide completion is claimed.
+
+Ranked next candidates to reassess:
+1. Finite simultaneous prevention allocation prerequisite, then its eight
+   otherwise supported consumers.
+2. Filtered bands-with-others contracts, then the five legendary-creature lands.
+3. Entry opponent choice and durable chosen-player binding for Black Vise and
+   The Rack; or the next shared static host combat restriction after full-record
+   comparison. Raging River's piles and loops remain a separate larger scope.
+
+Slice files: `pkg/mage/composable_continuous.go`, `clone.go`, `doc.go`, new
+`filtered_blocking_test.go`; `pkg/mage/dsl/ron/compiler.go`, `inventory.go`,
+`inventory_test.go`, new `filtered_blocking.go` and `filtered_blocking_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Stop after this slice; do not start another capability.

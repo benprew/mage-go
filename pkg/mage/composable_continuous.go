@@ -25,6 +25,7 @@ type layerModification struct {
 	removeLandwalk   bool
 	removeAbilities  bool
 	cantBeBlocked    bool
+	blockerFilter    *PermanentFilter
 	setBasePT        bool
 	setPowerOnly     bool
 	isSwitch         bool
@@ -100,6 +101,12 @@ func RemoveAbilitiesEach(subjects PermanentSet) ContinuousModification {
 // Install this rules restriction with a duration; it does not grant an ability.
 func CantBeBlocked(subject PermanentRef) ContinuousModification {
 	return &layerModification{subject: subject, cantBeBlocked: true, layer: LayerAbility}
+}
+
+// CantBeBlockedExceptBy requires each blocker to pass the filter.
+// Use this rule with a duration; it does not give the subject an ability.
+func CantBeBlockedExceptBy(subject PermanentRef, filter PermanentFilter) ContinuousModification {
+	return &layerModification{subject: subject, blockerFilter: &filter, layer: LayerAbility}
 }
 
 // GrantEachKeyword grants a keyword to each member of a permanent set.
@@ -206,6 +213,9 @@ func (m *layerModification) description() string {
 	case LayerColor:
 		return fmt.Sprintf("set colors %v", m.colors)
 	case LayerAbility:
+		if m.blockerFilter != nil {
+			return "can’t be blocked except by " + m.blockerFilter.Text()
+		}
 		if m.cantBeBlocked {
 			return "can’t be blocked"
 		}
@@ -252,6 +262,7 @@ type capturedModification struct {
 	removeLandwalk   bool
 	removeAbilities  bool
 	cantBeBlocked    bool
+	blockerFilter    *PermanentFilter
 	setBasePT        bool
 	setPowerOnly     bool
 	isSwitch         bool
@@ -268,7 +279,7 @@ func (m *layerModification) capture(ctx *EffectContext) []capturedModification {
 	members := m.members(ctx)
 	result := make([]capturedModification, 0, len(members))
 	for _, p := range members {
-		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
+		v := capturedModification{permanent: capturedPermanent{p.ID(), p.incarnationID}, keyword: m.keyword, removeKeyword: m.removeKeyword, removeLandwalk: m.removeLandwalk, removeAbilities: m.removeAbilities, cantBeBlocked: m.cantBeBlocked, blockerFilter: m.blockerFilter, setBasePT: m.setBasePT, setPowerOnly: m.setPowerOnly, isSwitch: m.isSwitch, colors: m.colors, family: m.family, subtypes: m.subtypes, addSubtypes: m.addSubtypes, addType: m.addType}
 		if m.layer == LayerControl {
 			controller, ok := m.controller.resolvePlayer(ctx)
 			if !ok {
@@ -318,7 +329,9 @@ func (v capturedModification) apply(g *Game, layer Layer) {
 			p.toughBonus += v.toughness
 		}
 	case LayerAbility:
-		if v.cantBeBlocked {
+		if v.blockerFilter != nil {
+			g.effects.AddCantBeBlockedExceptBy(p.ID(), *v.blockerFilter)
+		} else if v.cantBeBlocked {
 			g.effects.AddCantBeBlockedExceptBy(p.ID(), Not(AnyPermanent))
 		} else if v.ability != nil {
 			installGrantedActivation(p, v.ability, v.grantID)

@@ -1,0 +1,35 @@
+package ron
+
+import "github.com/benprew/mage-go/pkg/mage"
+
+func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
+	if err := arity(n, 2); err != nil {
+		return nil, err
+	}
+	operations, err := list(n.Args[1])
+	if err != nil {
+		return nil, err
+	}
+	if len(operations) != 1 || operations[0].Name != "CantBeBlockedExceptByDefenders" {
+		return compileSelfUntapRule(n)
+	}
+	subject, err := compilePermanentRef(n.Args[0], ctx)
+	if err != nil {
+		return nil, err
+	}
+	if subject.kind != permanentSource && subject.kind != permanentHost {
+		return nil, unsupported(n.Args[0], "static blocking reference")
+	}
+	operation := operations[0]
+	if err := arity(operation, 1); err != nil {
+		return nil, err
+	}
+	filter, err := compileFilter(operation.Args[0])
+	if err != nil {
+		return nil, err
+	}
+	return func() mage.CardOption {
+		condition := mage.StateConditionFunc("static blocking rule", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
+		return mage.WithAbility(mage.Static(mage.While(condition, mage.CantBeBlockedExceptBy(subject.build(instanceBindings{}), filter))))
+	}, nil
+}

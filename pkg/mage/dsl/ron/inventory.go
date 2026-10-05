@@ -507,6 +507,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantBeBlockedExceptByDefenders" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "CanBeBlockedAsThoughItDidntHave" && len(n.Args) == 1 {
 			return "keyword"
 		}

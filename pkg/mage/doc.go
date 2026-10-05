@@ -177,6 +177,10 @@
 // incarnation after control changes or a phase cycle. A returned permanent
 // has a new incarnation. [PreventCombatDamageBy] still ends at end of combat.
 //
+// Use [CantBeBlockedExceptBy] with [While] for a static blocking restriction.
+// With [Until], the rule keeps the selected incarnation until cleanup.
+// Each blocker must pass its filter and all other combat restrictions.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -1658,3 +1658,28 @@ existing bare target recipients and targeted `Permanent(...)` remain supported.
 The shared engine supplies target checks, source snapshots and prevention.
 Full-record evidence: Ivory Tower (ATQ/3ED), Storm World (LEG), and Copper Tablet
 (LEA/LEB/2ED/CED/CEI) in `TestRONHandSize*`.
+
+## RON static filtered blocking restriction
+
+`PermanentRuleEffect(ThisPermanent, [CantBeBlockedExceptByDefenders(filter)])`
+and the Aura form with `HostPermanent` support exactly one operation. The filter
+uses the existing source-independent permanent-filter grammar, including nested
+`And`/`Or`, type, subtype, color and keyword queries. Each possible blocker must
+pass this filter and every other combat restriction. `Defenders` here means
+blocking creatures; it does not require the defender keyword. Reach does not
+satisfy a filter that requires flying.
+
+The compiler uses `mage.CantBeBlockedExceptBy(subject, filter)` in a static
+`While` rule. The Aura reads its current attachment each layer pass. Source
+ability removal, source departure or source phasing stops the rule; recipient
+ability removal does not remove an Aura's rule. The rule does not grant an
+ability to the recipient. Blocker characteristics are queried when block
+legality is checked. A restriction change after a legal block does not remove
+that block.
+
+The typed engine modification also supports `Until(EndOfTurn, ...)`: it captures
+its subject incarnation at resolution, survives source departure and a phase
+cycle, and expires at cleanup. A returned card does not inherit the restriction.
+This run adds only the static RON spelling, not new temporary RON operations.
+Existing source and target constructors remain available. Evidence:
+`TestFilteredBlocking*` and `TestRONFilteredBlocking*`.

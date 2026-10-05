@@ -380,7 +380,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "EachPermanentRuleEffect":
 		return compileCollectionPermanentRule(n)
 	case "PermanentRuleEffect":
-		return compileSelfUntapRule(n)
+		return compilePermanentBlockingRule(n, ctx)
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":
 		return compileStaticLayer(n, ctx)
 	case "SpellActions":

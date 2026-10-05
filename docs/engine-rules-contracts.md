@@ -1512,3 +1512,36 @@ Tablet, invalid declarations, lexical isolation, independent factory instances
 and events, resolution-time hand changes, signed arithmetic, native boundaries,
 source lifecycle, copies, clones, and prevention. Chosen entry players and
 intervening-if upkeep conditions remain separate capabilities.
+
+## Typed filtered blocking restrictions
+
+`CantBeBlockedExceptBy(PermanentRef, PermanentFilter)` uses the continuous
+modification and combat restriction services. It is a rule change, not a granted
+keyword. Every filter registered for an attacker must pass for the blocker,
+and `CanBlock` still checks flying, reach, protection and other restrictions
+(CR 509.1b). The filter reads the blocker's current characteristics at the query.
+Changing a restriction after a legal declaration does not remove the block
+(CR 506.4a, 509.1b).
+
+`While` supplies current source/attachment membership on each layer pass.
+Removing the source ability stops its static rule. Removing a recipient's
+abilities does not remove another source's rule. Source phasing suspends a
+static rule; an Aura does not follow a departed and returned host. `Until` keeps
+the captured recipient incarnation and the filter until cleanup, including
+across a phase cycle; it does not follow a returned card (CR 400.7, 702.26).
+
+`Game.Clone` copies the computed `cantBeBlockedExceptByRules` map and each
+filter slice. Immediate block queries on a clone retain these rules before a
+new layer pass. Clearing or rebuilding that map in either game cannot change
+the other game. Filters are immutable declarations, as with the existing
+combat constructors; this change introduces no game state in a filter.
+
+Evidence: `TestFilteredBlockingCapturedRestriction` covers typed temporary
+identity, ability removal, phase cycle, immediate clone queries and independent
+cleanup. `TestFilteredBlockingDefinitionValidation` covers nil/unwritten
+subjects and a valid typed target. `TestRONFilteredBlockingRealCards`,
+`Lifecycle`, `CurrentFiltersAndIntersection`, `NativeCombat`, and
+`InstancesAndStrictLoad` (with the same prefix) cover complete Invisibility,
+Seeker and Elven Riders records, current filters, static lifetime, casting
+rollback, native block declaration/combat, existing-block finality and separate
+factory instances. Existing combat services still own declaration execution.
