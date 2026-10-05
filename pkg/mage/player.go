@@ -32,15 +32,12 @@ type BandingDamageAssigner interface {
 	GetBandingDamageAssignment(g *Game, source *Permanent, recipients []*Permanent, amount int) map[uuid.UUID]int
 }
 
-// CombatDamageAssigner is an optional interface for the attacking player to
-// (a) order multiple blockers for damage assignment (CR 510.1c, CR 702.19b)
-// and (b) divide the attacker's combat damage among them, subject to the
-// "lethal damage to each blocker before the next" constraint. Returning a
-// nil order or distribution falls back to the engine default (BlockerIDs
-// order, lethal-first greedy).
-// For an attacking band, the engine asks once for each source. Its assignments
-// have no lethal order. Only a source with trample can leave damage for the
-// defender, and all blockers must receive lethal damage in the complete plan.
+// CombatDamageAssigner lets the attacker controller divide combat damage.
+// A normal nontrample source must assign its complete amount among its blockers.
+// It has no lethal order. Invalid maps use the default assignment.
+// GetBlockerOrder remains available for the existing normal trample path.
+// An attacking band asks for each source separately. Only a source with trample
+// can leave damage for the defender after the complete plan supplies lethal damage.
 type CombatDamageAssigner interface {
 	GetBlockerOrder(g *Game, attacker *Permanent, blockers []*Permanent, totalPower int) []uuid.UUID
 	GetCombatDamageAssignment(g *Game, attacker *Permanent, blockers []*Permanent, totalPower int) map[uuid.UUID]int

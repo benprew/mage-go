@@ -129,6 +129,9 @@
 // [BandingDamageAssigner] lets a player assign each blocking source separately
 // to an attacking band. Each source keeps its own damage information.
 // The old [BandingDamageDistributor] can still set the total for each recipient.
+// Normal nontrample attackers use [CombatDamageAssigner] to divide their
+// complete amount freely among current blockers. There is no lethal order.
+// Invalid maps use a legal default. Single blockers need no choice.
 // Outgoing attacking-band damage uses [CombatDamageAssigner] for each source.
 // A blocking band uses [BandingDamageAssigner] or the existing distributor.
 // Each source keeps its own trample and deathtouch. Shared assignments can

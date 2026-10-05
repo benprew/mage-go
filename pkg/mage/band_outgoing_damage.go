@@ -17,24 +17,6 @@ type outgoingBandSource struct {
 	assignment  map[uuid.UUID]int
 }
 
-func validOutgoingBandAssignment(assignment map[uuid.UUID]int, recipients []*Permanent, amount int, trample bool) bool {
-	if assignment == nil {
-		return false
-	}
-	legal := make(map[uuid.UUID]bool, len(recipients))
-	for _, recipient := range recipients {
-		legal[recipient.ID()] = true
-	}
-	remaining := amount
-	for id, assigned := range assignment {
-		if !legal[id] || assigned < 0 || assigned > remaining {
-			return false
-		}
-		remaining -= assigned
-	}
-	return remaining == 0 || trample
-}
-
 // Other sources can supply lethal damage, but they cannot supply trample.
 func outgoingBandLethalRequirements(g *Game, sources []outgoingBandSource, recipients []*Permanent) map[uuid.UUID]int {
 	needed := make(map[uuid.UUID]int, len(recipients))
@@ -153,7 +135,7 @@ func (c *Combat) assignOutgoingBandDamage(g *Game, plan *combatDamagePlan, membe
 		} else if assigner, ok := chooser.(CombatDamageAssigner); ok {
 			assignment = assigner.GetCombatDamageAssignment(g, source.permanent, recipients, source.amount)
 		}
-		if validOutgoingBandAssignment(assignment, recipients, source.amount, source.trample) {
+		if validCombatDamageAssignment(assignment, recipients, source.amount, source.trample) {
 			source.assignment = maps.Clone(assignment)
 		} else if defendingBand && !source.trample {
 			source.assignment = chooseBandDamageAssignment(chooser, incomingBandSource{source.permanent, source.amount, source.information}, recipients, nil)

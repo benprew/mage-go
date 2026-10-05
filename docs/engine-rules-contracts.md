@@ -3476,3 +3476,46 @@ band contract above. It establishes the ordinary attacking-band path. The
 separate non-band and blocking-band combat paths, their old lethal-order policy,
 "bands with other", and multi-blocker damage choices outside this path are not
 changed. No new RON syntax is accepted and no collection loading gate changes.
+
+## Normal nontrample attacking damage assignments
+
+For a blocked, non-band attacker without trample, CR 510.1c permits any division
+of its complete positive damage amount among current blockers. There is no
+lethal order. With two or more eligible blockers, the current controller's
+`CombatDamageAssigner.GetCombatDamageAssignment` receives that source, the
+blockers, and its amount. `GetBlockerOrder` is not called on this path. A single
+blocker receives the complete amount without a choice. Zero or negative amounts
+make no assignment and require no choice. No remaining blocker means no damage
+to the defender. Existing damage-equal-to-toughness and damage-step services
+still determine the source amount and first/double-strike timing.
+
+Maps may contain only eligible blocker IDs and nonnegative amounts whose sum
+is exactly the source amount. The shared map validator subtracts available
+amounts to avoid overflow. Missing or invalid maps use the existing legal
+default distribution. Each map is consumed into separate immutable damage
+assignments before another source is queried; caller maps remain unchanged.
+No payment or live damage occurs during assignment.
+
+Source and blocker incarnations must match combat membership. Departure,
+control changes, combat removal and phasing remove membership; a return or
+phase-in does not restore it. Legacy nil-incarnation combat declarations retain
+their compatibility. Damage sources are captured before replacement choices.
+Replacement-time source departure and return cannot change damage attribution,
+keywords or lifelink's beneficiary. All packets enter the existing simultaneous
+combat batch; prevention allocation, redirection order, damage histories,
+notifications and cloned state use the shared pipeline (CR 510.2, 615.7, 616.1).
+
+Evidence: `TestNontrampleAssignmentFreeDivision`, `Invalid`,
+`TimingAndIdentity`, `BatchAndRetainedSource`, `ReplacementOrder`, and
+`Deathtouch`. `TestRONNontrampleAssignment` casts complete Craw Wurm, Hill Giant,
+Savannah Lions, Grizzly Bears, Serra Angel and Air Elemental records, then uses
+Wall of Air blockers and an activated Amulet of Kroog shield. It checks unpaid
+rollback, payment, timing, flying/vigilance interactions, free assignment,
+actual prevention, histories and independent cloned combat. Malformed keywords,
+costs and incompatible target references remain compile errors in
+`TestRONNontrampleAssignmentDeclarations`.
+
+This establishes the normal nontrample attacking assignment context. Normal
+trample's existing lethal-order policy, blocking-band decisions, and assignment
+by a blocker to multiple attackers remain separate contracts. No RON syntax,
+production registry, casting permission or banding policy changes.

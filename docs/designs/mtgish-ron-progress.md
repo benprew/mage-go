@@ -17277,3 +17277,165 @@ Changed files: `pkg/mage/band_outgoing_damage.go`, `band_outgoing_damage_test.go
 `pkg/mage/dsl/ron/band_outgoing_damage_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry. Commit only after final
 checks pass; the final response reports its hash. User changes remain unstaged.
+
+## Run 2026-10-05: NORMAL-NONTRAMPLE-ASSIGNMENT
+
+Status: completed engine prerequisite and validated implementation slice. This run
+stops after this slice. Initial changes to `.gitignore`, the execution design,
+and this progress ledger, plus the untracked completed ledger, are preserved.
+Only this appended entry is staged from the already modified progress file.
+
+### Fresh evidence and selection
+
+Baseline compiler tests and short engine tests (`-count=1`) and `make build`
+passed. Strict loading exited 1 for unsupported collection records, not a
+build/test failure: **1,579 compiled / 866 rejected records**, **581 accepted /
+405 rejected unique names**. Fresh semantic inspection reports **2,445 records /
+986 names / 72,951 nodes / 8,540 signatures / 9,809 unknown-role occurrences**.
+The design, vocabulary snapshot, ledger, engine reference, selected compiler and
+engine paths, complete candidate records and nested forms, API/rules contracts,
+and local CR 400.7, 506.4, 510.1a/c/e, 510.2/4, 608.2h, 615.6/7, 616.1 and
+702.26b/d were inspected. Reprints count once. First-error counts did not supply
+unlock estimates.
+
+| Candidate | Distinct affected names and estimated complete-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Gaea's Avenger; **0 adapter-only / 5 after the prerequisite**. | Missing all-zone characteristics, owner/controller-aware counts, CDA layers and copy behavior. Avenger also has an opponent-count source defect. Enables characteristic queries in hand, library, graveyard and exile for five complete consumers. | High: shared engine characteristic service, values, layers, all-zone/copy/controller tests. |
+| Activated modal scopes | Balm of Restoration, Pyramids, Triassic Egg; **1 immediate / up to 3 after other prerequisites**. | Balm's costs and finite shields exist. Pyramids needs attached-land filtering and destruction replacement. Egg needs a counter condition, hand entry, graveyard targeting/movement and a source correction. Enables independent activated mode targets. | Medium: mode scopes, payments, legality, copies and instance isolation; other prerequisites add work. |
+| Normal nontrample attacking assignment, selected | Craw Wurm, Hill Giant, Savannah Lions, Grizzly Bears, Serra Angel, Air Elemental; Wall of Air and Amulet of Kroog provide interactions. **0 compiler unlocks**, a shared gameplay repair for six already accepted complete creatures. | Existing CR 510.1c validation wrongly requires lethal damage to earlier blockers. No new zone, targeting, payment or replacement prerequisite. Enables exact multi-blocker division, finite prevention, per-source histories and lifelink for these six and other ordinary nontrample sources. Trample and banding paths remain separate. | Low/medium: reuse the existing band map validator and damage batches; free divisions, invalid maps, identity, step, replacement and RON gameplay tests. |
+
+Selection rationale: this bounded engine defect rejects legal choices for many
+already accepted RON creatures. Six concrete complete consumers have no other
+compiler blockers, and their shared repair costs less than all-zone CDAs.
+Activated modes immediately unlock only one card. Zero compiler unlocks were
+estimated and observed. The exact supported context, reuse boundary and
+acceptance cases were stated before edits. The `implement-engine` skill supplied
+the shared-engine workflow. No removed card skill, Go card requirement,
+card-name branch, fallback or partial production registry was used.
+
+### Exact context, signatures and reuse
+
+No new RON spelling or compiler adapter is added. This slice establishes the
+normal blocked **non-band attacking source without trample** context of
+`CombatDamageAssigner.GetCombatDamageAssignment(g *Game, attacker *Permanent,
+blockers []*Permanent, totalPower int) map[uuid.UUID]int`. Each current source's
+controller may divide its complete positive amount freely among its eligible
+blockers (CR 510.1c). There is no lethal order or `GetBlockerOrder` call. A single
+blocker receives the complete amount without a query. Zero/negative sources do
+not assign damage or request a choice. No remaining blocker gives no outgoing
+damage to the defender. Damage-equal-to-toughness and damage-step services retain
+their existing behavior.
+
+`validOutgoingBandAssignment` was moved and renamed to private shared
+`validCombatDamageAssignment`. Its behavior is unchanged: eligible IDs,
+nonnegative amounts, subtraction-based overflow protection and full use of the
+amount for nontrample. A fresh repository search found the old helper's sole
+band caller and no other references; that caller now uses the shared name.
+Maps, including zero-valued foreign IDs, are rejected if invalid. Nil or invalid
+choices use `dealDefaultBlockedCombatDamage`, which gives a legal full
+assignment. Each returned map is consumed into independent damage assignments
+before another source is queried; no mutable caller map is retained or changed.
+
+The new normal path checks source and blocker combat incarnations, while legacy
+nil-incarnation declarations remain compatible. Absence, removal, phasing,
+control changes and leave/return cannot restore old membership. Existing
+`DealsDamageInStep`, `combatDamageValue`, `CaptureDamageSource`, typed damage
+assignments, `DealSimultaneousDamage`, finite shield allocation, replacement
+priority/rechecks, actual lifelink, histories, notifications and game cloning
+execute the results. All assignments precede the shared batch. No parallel
+combat, damage, identity, targeting, cost or resolution service is introduced.
+There is no new binding scope or action result slot.
+
+Normal trample's old lethal-order policy, blocking-band choice validation,
+assignment by a blocker to multiple attackers, and “bands with other” are not
+established here. Existing band callers and trample callers keep their behavior
+and signatures. Runtime cutover, complete collection gameplay, Go-card removal
+and DSL cleanup remain below their gates. No DSL deletion is authorized by the
+private helper audit. No Go definitions, generators or startup callers change.
+
+### TDD and card-to-test mappings
+
+Engine tests were written first. After correcting fixture calls for bounce,
+control and phase-in, they failed for the expected behavior: legal 1+2 and 2+1
+splits became 3+0, and the obsolete blocker-order query ran. RON tests were also
+written before implementation and failed with the obsolete order query. Their
+clone assertions initially read stale pointers; final assertions read current
+permanents after copy-on-write. A phased-source assertion was corrected to use
+a present source after phase-in. These were fixture corrections; no gameplay
+assertion was removed. A replacement-order expected lifelink total was corrected
+from three to two after one actual damage was prevented (CR 615.6).
+
+| Card or contract | Tests |
+| --- | --- |
+| Craw Wurm, Hill Giant, Savannah Lions, Grizzly Bears, Serra Angel, Air Elemental; complete LEB records | `TestRONNontrampleAssignment`: native casting, exact mana costs, unpaid rollback, stack timing, legal two-blocker combat, free 1+(power-1) assignment, no order query, actual shield prevention, source histories and independent pending-clone combat. Serra Angel checks vigilance; flying sources use flying blockers. |
+| Wall of Air and Amulet of Kroog; complete LEB/ATQ records | Same RON test: legal flying blocks, outgoing damage and SBA interactions, mana-plus-tap shield activation, unpaid rollback, payment/stack timing, finite consumption and clone independence. These are interaction mappings, not new complete-card certification. |
+| Free division and invalid player declarations | `TestNontrampleAssignmentFreeDivision`: all four splits of three damage, actual lifelink, simultaneous incoming damage and caller-map preservation. `Invalid`: nil/empty, under/over, negative, foreign/foreign-zero IDs and integer overflow with a distinguishable legal fallback. |
+| Timing, legality and identity | `TestNontrampleAssignmentTimingAndIdentity`: first/double strike, zero/negative power, removed, returned, phased and phase-cycled blockers, control change, returned/phased sources and mismatched source/blocker incarnations. |
+| Source information, map isolation and simultaneous replacements | `BatchAndRetainedSource`: two separate sources reuse one mutable caller map, finite allocation, replacement-time source departure/return under another controller, original lifelink, source histories and notifications after the complete batch. `ReplacementOrder`: both prevention/redirection orders with exact actual damage and lifelink. `Deathtouch`: freely divided damage kills both blockers after their simultaneous incoming damage. |
+| RON validation and retained regression | `TestRONNontrampleAssignmentDeclarations`: malformed keywords, incompatible cost/action roles and unbound player references fail compilation. Existing attacking-band and `TestCombatDamage` regressions pass. The old gametest's inaccurate lethal-order comments were corrected; its assignments and all assertions are retained. |
+
+Six complete RON creatures gain new assignment interaction mappings, with two
+additional unique RON interaction records. Gameplay coverage is tracked by these
+mappings, separately from compilation. Collection-wide behavior and engine
+validation totals remain null; no complete collection certification is claimed.
+
+### Source defects and measurements
+
+No RON source changes. Selected card costs, P/T and keywords agree with local
+`data/LEA.json` and `data/ATQ.json`. `data/LEB.json` is absent; the local LEA Oracle
+records provide the matching requirements. This is not a validation blocker.
+Candidate defects remain deferred: local ATQ Oracle text says Gaea's Avenger
+counts opponents' artifacts, but its RON counts `You`; local LEG Oracle text
+makes Triassic Egg's second mode a targeted graveyard return, but its RON repeats
+the hand-entry mode. Neither record is changed in this slice.
+
+Actual compiler gain matches the estimate: **0 names / 0 records**. Strict
+loader JSON is identical to the fresh baseline: **1,579 compiled / 866 rejected
+records**, **581 accepted / 405 rejected unique names**. No accepted name is
+lost. Inventory JSON is also identical: **72,951 nodes / 8,540 signatures /
+9,809 unknown-role occurrences**. Both commands exit 1 and publish no registry.
+All twelve hashes match the vocabulary snapshot, so it needs no refresh.
+Example remaining diagnostics: Animate Artifact (conditional `AddCardtype`),
+Animate Dead (`EnchantGraveyardCard`) and Ankh of Mishra (entry event subject
+`IsCardtype`). This is compilation reporting, independent of gameplay coverage.
+
+### Final checks and next candidates
+
+All required checks passed after lint. The first lint run found an unused
+assignment to a returned-blocker fixture pointer; it was removed. Automatic
+import spacing and function formatting were reviewed. No unrelated Go changes
+were made. Focused, short, full, build and vet checks then passed after lint.
+No environment or pre-existing validation blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| New engine/RON tests before implementation | Expected free-division and obsolete-order failures confirmed after fixture API corrections. |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./pkg/mage/gametest -run 'TestNontrampleAssignment\|TestRONNontrampleAssignment\|TestBandOutgoingDamage\|TestCombatDamage' -count=1` | PASS, repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint. |
+| `make test` | PASS, repeated after the final tests and lint. |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS after lint. |
+| `make lint` | PASS, zero issues on the second run. Initial unused fixture assignment corrected; automatic edits reviewed. |
+| `go test ./... -short -count=1` | PASS after lint; additional engine-skill verification. |
+| `git diff --check` | PASS, including the final ledger and staged patch. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,579 compiled / 866 rejected; post-lint diagnostics identical to baseline. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: unchanged inventory, counts, diagnostics and hashes. |
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. All-zone count CDA prerequisite and adapters: five credible complete
+   consumers, with the Avenger source correction investigated alongside its
+   eventual opponent-count capability.
+2. Activated modal scopes: Balm immediately; Pyramids and Egg after their
+   explicit filter, replacement, entry and graveyard prerequisites.
+3. Remaining combat assignment contexts: current-CR normal trample without
+   lethal order, shared lethal validation across sources, blocking-band map
+   validation and blocker division among multiple attackers.
+
+Changed files: engine `nontrample_assignment.go`, its tests,
+`band_outgoing_damage.go`, `combat.go`, `player.go`, `doc.go`; retained gametest
+comments in `gametest/turn_combat_damage_test.go`; RON
+`nontrample_assignment_test.go`; API/rules contracts and this ledger entry.
+Only this slice is committed after final checks. The final response reports its
+hash. Initial user changes remain unstaged. No second slice is started.

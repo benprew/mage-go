@@ -175,17 +175,8 @@ func TestCombatDamage(t *testing.T) {
 		tg.AssertLife(PlayerA, 27)
 	})
 
-	// CR 510.1c — If an attacking creature is blocked by multiple creatures,
-	// the attacking creature's controller chooses the damage assignment order
-	// among the blockers and divides the attacker's combat damage among them,
-	// subject to lethal-damage-first constraints. A 4/4 blocked by two 2/3s
-	// should be able to assign 4 to exactly one blocker, killing it, and 0 to
-	// the other (the first blocker already took lethal).
+	// CR 510.1c permits the controller to divide damage freely among blockers.
 	t.Run("CR 510.1c controller divides damage among multiple blockers", func(t *testing.T) {
-		// 4/4 attacker blocked by two 2/3s. Attacker's controller orders the
-		// blockers and assigns 3 (lethal) to the first and 1 to the second.
-		// First blocker dies; second survives with 1 damage marked. The 4/4
-		// also takes 2+2=4 simultaneous damage from the blockers and dies.
 		atk := "510.1c Attacker 4/4"
 		blkA := "510.1c Blocker 2/3 A"
 		blkB := "510.1c Blocker 2/3 B"

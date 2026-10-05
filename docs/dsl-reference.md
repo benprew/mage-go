@@ -3149,3 +3149,23 @@ this native combat interaction. This resolves the outgoing aggregation prerequis
 listed above. No additional RON declaration is accepted. See
 [engine-rules-contracts.md](engine-rules-contracts.md) for the exact context,
 validation rules and engine tests.
+
+## Normal nontrample combat division
+
+The existing `mage.CombatDamageAssigner.GetCombatDamageAssignment` also permits
+free division for a normal blocked attacker without trample. With multiple
+eligible blockers, return nonnegative amounts for their IDs totaling the exact
+source amount. No lethal order applies (CR 510.1c). The engine does not call
+`GetBlockerOrder` for this context. Nil or invalid maps use the legal default;
+one blocker receives all damage without a choice. Zero and negative sources
+make no assignment. No remaining blocker means no player damage.
+
+Combat membership keeps the original incarnations. Separate captured source
+packets enter the shared simultaneous damage service, including finite shield
+allocation and actual lifelink. Existing player implementations keep their
+signatures. The trample and banding contexts keep their existing behavior.
+No RON shape is added. `TestRONNontrampleAssignment` supplies native combat
+interaction evidence for six complete RON creature records with Wall of Air
+and Amulet of Kroog. See the normal nontrample contract in
+[engine-rules-contracts.md](engine-rules-contracts.md) for exact test mappings
+and remaining contexts.

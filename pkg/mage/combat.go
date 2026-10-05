@@ -471,6 +471,10 @@ func (c *Combat) isBlockingBand(g *Game, blockerIDs []uuid.UUID) bool {
 
 // doNormalBlockedDamage handles blocked combat for a single non-banded attacker.
 func (c *Combat) doNormalBlockedDamage(g *Game, plan *combatDamagePlan, atk *Permanent, group *CombatGroup, isFirstStrikeStep bool) {
+	if !atk.HasKeyword(Trample) {
+		c.doNontrampleBlockedDamage(g, plan, atk, group, isFirstStrikeStep)
+		return
+	}
 	if c.DealsDamageInStep(atk, isFirstStrikeStep) {
 		atkPower := combatDamageValue(atk, g)
 		// Order: ask attacker controller (CR 510.1c) for the damage-assignment
