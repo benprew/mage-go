@@ -1756,8 +1756,15 @@ land types and printed rules-text abilities, retains other subtype families and
 supertypes, and permits separately granted abilities. Details and test evidence
 are in [the engine contract](engine-rules-contracts.md#static-basic-land-types-dependency-and-attachment-identity).
 
-RON `SetLandType/1` and `SetLandTypeVariable/1` remain unsupported. This prerequisite
-adds no compiler spelling, reference scope, entry choice, or duration adapter.
-Conversion and Evil Presence need static lowering; Blood Moon also needs the
-nonbasic-supertype filter. Their complete records must pass RON gameplay tests
-before the loader can accept them.
+RON supports `PermanentLayerEffect(HostPermanent, [SetLandType(BasicType)])`
+on Auras and `EachPermanentLayerEffect(PureFilter, [SetLandType(BasicType)])`.
+`BasicType` is a symbol: Plains, Island, Swamp, Mountain or Forest. Host effects
+can include the existing P/T and keyword modifications. Collection effects must
+contain only the type operation; combined operations need a shared membership
+capture contract. Source-dependent collection filters remain rejected.
+
+`IsSupertype(Basic)` and `IsNonSupertype(Basic)` read the basic supertype, not the
+land subtype. Both filter forms also support Legendary. These forms use the
+existing pure predicate and negation services. Conversion, Evil Presence and
+Blood Moon have RON gameplay evidence. `SetLandTypeVariable`, resolving type
+changes and entry choices remain unsupported.

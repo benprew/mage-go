@@ -7372,3 +7372,140 @@ Changed files: `pkg/mage/basic_land_set_effect.go`,
 `clone_test.go`; `pkg/mage/dsl/ron/land_dependency_prerequisite_test.go`;
 `cards/thedark/enchantments_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger.
+
+## Slice: RON static basic land types (2026-10-04)
+
+Status: complete compiler slice. The initial user changes to `.gitignore` and
+`mtgish-ron-execution.md` remain outside this slice and its commit. Read the
+project instructions, engine reference, design, vocabulary, ledger, selected
+compiler/layer/inventory/loader code, existing engine type and dependency
+services, API and rules contracts, and CR 305.6–8 and 613.3, 613.6–8. Requirements
+came from complete RON records, including nested forms and identical reprints.
+No Go card implementation supplied requirements. No removed skill was used.
+
+### Fresh candidate comparison and selection
+
+Baseline mage short tests and build passed. Strict loader returned expected exit
+1: **1,233 compiled / 1,212 rejected records**, 434 accepted / 552 rejected names.
+The collection rejection was not a build or test failure.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Blockers, downstream benefit, effort |
+| --- | --- | ---: | --- |
+| Static land-type lowering, selected | Conversion; Evil Presence; Blood Moon | 3 | Previous engine prerequisite is complete. Missing compiler adapters and nonbasic supertype filter only. Low to moderate implementation and gameplay-test effort. Establishes fixed static type lowering and supertype predicates for later type/choice work. |
+| Finite prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite; up to 7 after lowering | Nested target, cost and recipient forms are ready, but finite shields need shared simultaneous allocation and replacement-order contracts. High engine/decision/test effort. Enables seven consumers and later mode/prevention work. |
+| Filtered bands with others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after lowering | Legendary/color/controller predicates are ready. Filtered band formation and damage assignment still need a shared engine contract. High combat/test effort; enables the five land grants. |
+
+Complete candidate records were inspected, including Oasis in ARN. Reprints
+count once. Static lowering gives three credible complete cards with an existing
+engine contract and the lowest effort. First-error frequency did not supply the
+unlock estimate. The contract, reuse boundary and acceptance cases were stated
+before edits. This slice implements adapters, not a second engine type system.
+
+### Exact supported contexts and engine reuse
+
+- `PermanentLayerEffect(HostPermanent, [SetLandType(BasicType), ...])` on Auras.
+  Existing host boosts and keyword grants can share the modification list.
+- `EachPermanentLayerEffect(PureFilter, [SetLandType(BasicType)])`, with exactly
+  one modification. Pure static filters use current unphased lands. Controller
+  bindings and source exclusions remain rejected for this operation.
+- `BasicType` must be the symbol Plains, Island, Swamp, Mountain or Forest.
+  Empty/wrong arity, tuple-shaped symbols and other types fail compilation.
+- `IsSupertype(Basic|Legendary)` and `IsNonSupertype(Basic|Legendary)` in existing
+  permanent-filter contexts. The Basic query reads `Card.HasSuperType`, not the
+  presence of a basic land subtype. Negation uses `mage.Not`.
+- Inventory assigns `land_subtype` to the static type argument and `supertype`
+  to the filter argument. It does not claim resolving type support.
+
+Factories create fresh `BecomesBasicLandAttachedEffect` or
+`BecomesBasicLandsEffect` instances. Existing attachment-incarnation, printed
+ability suppression, intrinsic mana, dependency ordering, phasing and clone
+services execute the rules. No public engine API changes are needed. Global
+mixed type/other modifications remain errors because filters can change between
+layers and need a shared membership capture contract. The prior general static
+modification path stays intact. No card-name dispatch, Go fallback, global action
+slot, new replacement order or simultaneous-operation service is introduced.
+Costs and optional payments retain the existing transactional services.
+
+`SetLandTypeVariable`, entry choices, resolving/temporary land-type changes and
+source-dependent collections remain gaps. Full records for Phantasmal Terrain,
+Cyclopean Tomb, Gaea's Liege and Thelonite Monk retain their other blockers.
+No source defect was corrected. The earlier Gaea's Liege and Fastbond concerns
+remain open. All twelve source hashes match the vocabulary snapshot; no snapshot
+refresh is needed.
+
+### TDD and card-to-test mapping
+
+The first new suite failed on unsupported `SetLandType`, inventory roles and
+Conversion's same adapter gap. Those failures were confirmed before compiler
+edits. Additional fixtures initially used the nonexistent `WithTypes` option;
+they were corrected to `WithCardType`. Fresh compilation made the two exact
+inventory-count assertions stale; the assertions now require the measured
+1,246/1,199 counts. No gameplay assertion was weakened.
+
+| Card / context | Test mapping |
+| --- | --- |
+| Conversion; Blood Moon | `TestRONStaticLandTypeDependencies`: both timestamp orders, basic versus nonbasic dual lands, later entries, final intrinsic mana, source removal, direct source phasing and clone isolation. |
+| Conversion; Blood Moon | `TestRONStaticLandTypeNativeSpells`: real casting payment, resolution timing, definition validation and later-layer source ability removal. |
+| Conversion | Every scenario in `TestRONUpkeepPaymentRealCards`: pay/decline, affordability, wrong color, mana sources, departure/return, phasing, controller changes and captured payer/source identity. `TestRONConversionUsesConvertedManaForUpkeep`: converted Mountains pay WW; unpaid sacrifice restores land types. |
+| Evil Presence | `TestRONEvilPresenceCasting`: unpaid/wrong-type/shroud casting rejection and rollback; departed/phased target resolution; exact dual-land subtype replacement; intrinsic mana and retained nonbasic supertype; direct and indirect phasing, returned host incarnation, new attachment, source departure and clones. |
+| Evil Presence; Blood Moon; Strip Mine regression | `TestRONStaticLandTypeRemovesPrintedRules`: printed activation removal, failed activation without cost changes, restoration and real sacrifice/destruction after source departure. This is interaction evidence, not a new complete Strip Mine mapping. |
+| All three and every reprint | `TestRONStaticLandTypeStrictLoading`: all 13 real records compile, pass engine definition validation and load together; adding an invalid record prevents registry publication. |
+| Synthetic Aura factories | `TestRONStaticLandTypeCombinedFactories`: all five basic types, separate factory instances, combined boost/flying, retained creature type/subtype and legendary supertype. |
+| Synthetic declarations/inventory | `TestRONStaticLandTypeInvalidAndInventory` plus retained invalid declarations in strict-loading test: scope, arity, symbol shape, unknown type/filter, mixed global operations, unsupported actions and role evidence. |
+| Synthetic supertype predicates | `TestRONPermanentSupertypeFilters`: positive/negative Basic and Legendary, including a Forest subtype without the Basic supertype. |
+
+Three new full-card RON gameplay mappings are separate from compilation totals.
+Aggregate collection engine-validation and behavior-verification totals remain
+null. Engine LKI/replacement/batch APIs are unchanged; the static adapters read
+live objects, and source upkeep triggers retain the existing captured identity.
+
+### Actual gain, validation and next work
+
+Actual gain matches the estimate: **3 unique cards / 13 records** (six Conversion,
+six Evil Presence, one Blood Moon). Final strict loader: **1,246 compiled / 1,199
+rejected records**, 437 accepted / 549 rejected unique names. Before/after issue
+comparison removes exactly those 13 diagnostics, with no added or changed
+surviving diagnostic. Full collection loading still rejects and publishes no
+registry. Semantic inventory: 72,938 occurrences, 8,528 signatures, 14,024
+unknown-role occurrences (23 fewer); 12 files, 2,445 records, 986 names.
+
+Validation results are recorded below after the final checks. Lint initially
+reported two test slice-preallocation issues; both were fixed. Automatic import
+formatting is reviewed. No environment or pre-existing failure is claimed.
+
+Ranked next candidates to reassess:
+1. Finite simultaneous prevention allocation prerequisite for the seven
+   otherwise-ready consumers in the comparison table.
+2. Filtered bands-with-others combat contract for the five lands.
+3. Entry opponent choice and durable chosen-player bindings for Black Vise,
+   The Rack and Cursed Rack; reassess full trigger/value/hand-size blockers.
+
+Complete RON gameplay, full loading, startup wiring, Go-card removal and DSL
+cleanup gates remain unmet. No Go definitions, generators or DSL functions are
+removed. No removal caller audit or completion claim is made. Stop after this
+slice; do not start another capability.
+
+Changed files: `pkg/mage/dsl/ron/compiler.go`, `layers.go`, `inventory.go`,
+`inventory_test.go`, `land_dependency_prerequisite_test.go`,
+`static_land_type_test.go`, `upkeep_payment_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+| Final command / audit | Result |
+| --- | --- |
+| Focused new gameplay/payment/filter tests with `-count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after final lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues; automatic import formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,246 compiled / 1,199 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict issue list matches |
+| Diagnostic comparison and twelve source hashes | Exactly 13 removals, no added/changed surviving issues; hashes unchanged |
+
+Examples of remaining diagnostics: Animate Artifact rejects `If`; Animate Dead
+rejects `EnchantGraveyardCard`; Animate Wall rejects `HostPermanent` as its self
+untap source. There is no environment or pre-existing check blocker. Only the ten
+slice files are committed; the two initial user modifications stay outside the
+commit. The descriptive commit hash is reported in the final response.

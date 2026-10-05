@@ -1661,6 +1661,20 @@ Evidence: `TestBasicLandDependency*`, `TestBasicLandSetDeclarationIsolation`,
 attachment-timestamp, dependency, and clone tests. RON-backed regression evidence
 is `TestRONLandDependencyPrerequisite` (Forest, Tropical Island, Savannah) and
 `TestRONAttachedEffectsRejectReturnedHost` (Holy Strength, Flight, Grizzly Bears).
-These tests do not compile Conversion, Evil Presence, or Blood Moon; their RON
-adapters remain strict errors. No replacement, payment, or batch-operation API
-is added by this contract.
+The RON static adapters now reuse these services for Conversion, Evil Presence
+and Blood Moon. `TestRONStaticLandTypeDependencies` proves Blood Moon and
+Conversion use dependency order in both timestamp orders, with current entries,
+source departure, phasing, intrinsic mana and clone isolation.
+`TestRONEvilPresenceCasting` covers announcement legality, payment rollback,
+resolution legality, attachment incarnations and direct/indirect phasing.
+`TestRONStaticLandTypeRemovesPrintedRules` proves printed rules disappear and
+return, including failed activation without payment. `TestRONStaticLandTypeCombinedFactories`
+checks all five basic types, separate Aura instances and retained creature
+characteristics. `TestRONStaticLandTypeNativeSpells` covers native spell payment
+and resolution. Conversion also runs every scenario in
+`TestRONUpkeepPaymentRealCards`, including captured payer/source identity.
+
+The collection adapter accepts one type operation and pure filters. It rejects
+source-dependent selection and combined collection operations. The host adapter
+uses the saved attachment identity and can use the existing host modifications.
+No new engine, replacement, payment, or batch-operation API is added.

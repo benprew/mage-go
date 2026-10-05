@@ -465,6 +465,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "static_modification", "temporary_modification":
 		switch n.Name {
+		case "SetLandType":
+			if role == "static_modification" && len(n.Args) == 1 {
+				return "land_subtype"
+			}
 		case "SetController":
 			if role == "static_modification" && len(n.Args) == 1 {
 				return "player_reference"
@@ -570,6 +574,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if (n.Name == "IsSupertype" || n.Name == "IsNonSupertype") && len(n.Args) == 1 {
+			return "supertype"
+		}
 		if n.Name == "ExceptFor" && len(n.Args) == 1 {
 			return role
 		}

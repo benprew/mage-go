@@ -17,6 +17,7 @@ var upkeepPaymentCards = []struct {
 	colors    []core.Color
 }{
 	{"LEB", "Force of Nature", []core.Color{core.Green, core.Green, core.Green, core.Green}},
+	{"LEB", "Conversion", []core.Color{core.White, core.White}},
 	{"LEB", "Phantasmal Forces", []core.Color{core.Blue}},
 	{"ARN", "Junún Efreet", []core.Color{core.Black, core.Black}},
 	{"DRK", "Sunken City", []core.Color{core.Blue, core.Blue}},
@@ -229,7 +230,7 @@ func TestRONUpkeepPaymentOtherRules(t *testing.T) {
 		t.Fatal("city boost survived unpaid sacrifice")
 	}
 	for _, tc := range upkeepPaymentCards {
-		if tc.name == "Sunken City" || tc.name == "Phantasmal Forces" {
+		if tc.name == "Sunken City" || tc.name == "Phantasmal Forces" || tc.name == "Conversion" {
 			continue
 		}
 		card := repositoryCard(t, tc.set, tc.name)

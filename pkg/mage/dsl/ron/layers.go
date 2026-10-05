@@ -36,6 +36,34 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	var modifications []func() mage.ContinuousModification
 	for _, part := range parts {
 		switch part.Name {
+		case "SetLandType":
+			if global && len(parts) != 1 {
+				return nil, unsupported(n.Args[1], "combined static land modifications")
+			}
+			if err := arity(part, 1); err != nil {
+				return nil, err
+			}
+			typeNode := part.Args[0]
+			if typeNode.Kind != Symbol {
+				return nil, unsupported(typeNode, "static basic land type")
+			}
+			switch typeNode.Name {
+			case "Plains", "Island", "Swamp", "Mountain", "Forest":
+			default:
+				return nil, unsupported(typeNode, "static basic land type")
+			}
+			if global {
+				if subjects.controlled || subjects.excludeSource {
+					return nil, unsupported(n.Args[0], "source-dependent static land selection")
+				}
+				effects = append(effects, func() mage.ContinuousEffect {
+					return mage.BecomesBasicLandsEffect(subjects.filter, typeNode.Name)
+				})
+			} else {
+				effects = append(effects, func() mage.ContinuousEffect {
+					return mage.BecomesBasicLandAttachedEffect(typeNode.Name)
+				})
+			}
 		case "SetController":
 			if global {
 				return nil, unsupported(part, "static collection control")
@@ -139,7 +167,7 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 			return nil, unsupported(part, "static layer action")
 		}
 	}
-	if general {
+	if general && len(effects) == 0 {
 		if len(modifications) == 0 {
 			return nil, problem(n.Args[1], "empty static modification list")
 		}

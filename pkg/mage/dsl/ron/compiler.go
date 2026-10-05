@@ -669,11 +669,25 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.And(filters...), nil
 		}
 		return mage.Or(filters...), nil
-	case "IsSupertype":
-		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Legendary" {
+	case "IsSupertype", "IsNonSupertype":
+		if n.Args[0].Kind != Symbol {
 			return mage.PermanentFilter{}, unsupported(n.Args[0], "permanent supertype")
 		}
-		return mage.IsLegendary, nil
+		var filter mage.PermanentFilter
+		switch n.Args[0].Name {
+		case "Legendary":
+			filter = mage.IsLegendary
+		case "Basic":
+			filter = mage.NewPermanentFilter("basic", func(p *mage.Permanent, _ *mage.Game) bool {
+				return p.Card.HasSuperType(core.SuperBasic)
+			})
+		default:
+			return mage.PermanentFilter{}, unsupported(n.Args[0], "permanent supertype")
+		}
+		if n.Name == "IsNonSupertype" {
+			filter = mage.Not(filter)
+		}
+		return filter, nil
 	case "PowerIs":
 		return compileFixedPowerFilter(n)
 	case "IsCardtype", "IsNonCardtype":

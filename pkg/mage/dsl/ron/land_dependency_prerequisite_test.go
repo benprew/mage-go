@@ -96,9 +96,9 @@ func TestRONAttachedEffectsRejectReturnedHost(t *testing.T) {
 	}
 }
 
-func TestRONStaticLandTypePrerequisiteKeepsStrictLoading(t *testing.T) {
+func TestRONStaticLandTypeStrictLoading(t *testing.T) {
 	var records []byte
-	for _, set := range []string{"LEB", "DRK"} {
+	for _, set := range []string{"2ED", "3ED", "ARN", "ATQ", "CED", "CEI", "DRK", "FEM", "LEA", "LEB", "LEG", "PROMOS"} {
 		data, err := os.ReadFile("../../../../cards/mtgish/" + set + ".lines.ron")
 		if err != nil {
 			t.Fatal(err)
@@ -110,15 +110,27 @@ func TestRONStaticLandTypePrerequisiteKeepsStrictLoading(t *testing.T) {
 		for _, node := range nodes {
 			switch node.Fields["Name"].String {
 			case "Conversion", "Evil Presence", "Blood Moon":
-				if _, err := Compile(node); err == nil {
-					t.Fatal("prerequisite enabled an untested RON adapter")
+				factory, err := Compile(node)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := mage.ValidateCardDefinition(node.Fields["Name"].String, factory()); err != nil {
+					t.Fatal(err)
 				}
 				records = append(records, []byte(strings.Split(string(data), "\n")[node.Position.Line-1]+"\n")...)
 			}
 		}
 	}
-	if _, err := LoadFS(fstest.MapFS{"types.ron": {Data: records}}, "*.ron"); err == nil {
-		t.Fatal("unsupported collection was accepted")
+	if strings.Count(string(records), "Card(Name:") != 13 {
+		t.Fatal("missing reprints")
+	}
+	files := fstest.MapFS{"types.ron": {Data: records}}
+	if _, err := LoadFS(files, "*.ron"); err != nil {
+		t.Fatal(err)
+	}
+	files["bad.ron"] = &fstest.MapFile{Data: []byte(`Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Enchantment],Subtypes:[]),Rules:[EachPermanentLayerEffect(AnyPermanent,[SetLandType(Desert)])])`)}
+	if registry, err := LoadFS(files, "*.ron"); err == nil || registry != nil {
+		t.Fatal("invalid collection published a registry")
 	}
 	for _, rule := range []string{
 		`PermanentLayerEffect(Ref_TargetPermanent,[SetLandType(Swamp)])`,
