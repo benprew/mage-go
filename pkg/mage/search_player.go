@@ -107,11 +107,11 @@ func (sp *SearchPlayer) DeclareBlockers(g *Game) []BlockAssignment {
 	return nil
 }
 
-// ChooseMayAbility accepts if the description contains "draw", "damage", or "destroy".
-// Declines unknown optional abilities.
+// ChooseMayAbility accepts known beneficial choices.
 func (sp *SearchPlayer) ChooseMayAbility(description string) bool {
 	lower := strings.ToLower(description)
-	return strings.Contains(lower, "draw") ||
+	return lower == "untap another permanent within the limits" ||
+		strings.Contains(lower, "draw") ||
 		strings.Contains(lower, "damage") ||
 		strings.Contains(lower, "destroy")
 }

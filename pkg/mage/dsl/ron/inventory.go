@@ -214,6 +214,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if n.Name == "EachPlayerEffect" && len(n.Args) == 2 {
+			return []string{"player_filter", "player_rule_operation"}[index]
+		}
 		if n.Name == "PlayerEffect" && len(n.Args) == 2 {
 			return []string{"player_reference", "player_rule_operation"}[index]
 		}
@@ -282,6 +285,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "player_rule_operation":
+		if n.Name == "CantUntapMoreThanNumberPermanentsDuringTheirUntapStep" && len(n.Args) == 2 {
+			return []string{"value", "permanent_filter"}[index]
+		}
 		if n.Name == "DecreaseSpellCost" && len(n.Args) == 2 {
 			return []string{"cost_spell_filter", "spell_cost_reduction"}[index]
 		}

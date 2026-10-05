@@ -225,3 +225,10 @@ func TestNewAIPlayer_StoresStrategy(t *testing.T) {
 		t.Error("AIPlayer should hold the supplied strategy")
 	}
 }
+
+func TestAIChooseMayAbilityUntapLimit(t *testing.T) {
+	ai := NewAIPlayer("Bot", &dummyStrategy{})
+	if !ai.ChooseMayAbility("untap another permanent within the limits") {
+		t.Fatal("AI declined the untap selection")
+	}
+}

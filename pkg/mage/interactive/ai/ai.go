@@ -44,7 +44,8 @@ func NewAIPlayer(name string, strategy AIStrategy) *AIPlayer {
 func (ai *AIPlayer) ChooseMayAbility(description string) bool {
 	lower := strings.ToLower(description)
 	switch {
-	case strings.Contains(lower, "keep"),
+	case lower == "untap another permanent within the limits",
+		strings.Contains(lower, "keep"),
 		strings.Contains(lower, "draw"),
 		strings.Contains(lower, "damage"),
 		strings.Contains(lower, "destroy"),

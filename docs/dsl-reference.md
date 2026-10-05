@@ -3361,3 +3361,16 @@ source as before. Positive counts are checked during definition validation.
 It uses the stack source's saved incarnation, including in copied triggers and
 clones. Other events, activation bodies, and tuple spellings reject this name.
 This permits Mold Demon's unpaid sacrifice and Electric Eel's entry damage.
+
+### RON all-player untap limits
+
+The compiler accepts
+`EachPlayerEffect(AnyPlayer, [CantUntapMoreThanNumberPermanentsDuringTheirUntapStep(Integer(n), filter)])`
+in a permanent's rules, with exactly one operation and nonnegative literal `n`.
+`filter` uses the existing permanent-filter grammar. It lowers to
+`Static(LimitUntapsDuringStep(filter, n))`; it does not grant a recipient ability.
+Other player filters, dynamic limits and other operations remain unsupported.
+Smoke and Damping Field use this form. The engine saves membership and lets the
+active player choose a legal set before simultaneous untap. Overlapping filters
+apply together. The spell, cost, entry and resolving-action contexts do not gain
+this declaration.

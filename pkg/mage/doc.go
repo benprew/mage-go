@@ -240,6 +240,9 @@
 // layers in one application, even if the source loses its ability in layer 6.
 // Each later application uses current membership.
 //
+// Use [LimitUntapsDuringStep] with [Static] for a fixed untap-step limit.
+// The active player chooses a set that satisfies all limits before untap.
+// Type overlap counts against each limit. Other untap effects remain legal.
 // Use [PreventUntapDuringStepForMatching] for a static untap-step restriction.
 // It checks final characteristics before the untap operation. Other untap
 // effects remain legal. Recipient ability removal does not remove the rule.

@@ -3755,3 +3755,33 @@ and `Inventory` cover rejected declarations and semantic reporting.
 entry damage, source departure/return/phasing/control, prevention, trigger copy,
 clone isolation, paid boost and cleanup. `TestRONEnteringSourceScopeRejected`
 keeps the entry reference local to the supported self-entry event.
+
+## Untap limits and simultaneous selection
+
+`LimitUntapsDuringStep(filter PermanentFilter, maximum int) StaticRule` limits
+matching permanents for each player's untap step. Definition validation rejects
+negative limits. A zero filter matches all permanents; zero is a valid limit.
+Printed source presence, phasing and ability suppression use the shared effect
+lifecycle. Recipient ability removal does not remove this rule.
+
+After phase-in and final layer evaluation, the engine saves each limit's members
+and selects the active player's eligible tapped permanents. Skip-next-untap,
+captured restrictions and other untap prohibitions exclude candidates. The player
+can decline `ChooseMayAbility` to stop, then selects each object through
+`ChoosePermanent`. Nil also stops; an invalid object uses the first legal
+candidate. Each selected object consumes every applicable quota. Artifact lands
+and artifact creatures do not bypass a second limit. Existing land, artifact
+and creature limit fields use this same selection service; their callers remain.
+
+All selections precede `untapPermanentsTogether` (CR 502.3). Stun replacement
+removes a counter from a selected object without backfilling the selection.
+Untap observers see the completed operation. Membership cannot change during
+that operation; the next step makes a new selection. Other untap effects do not
+use these limits. Each decision uses local state; effect clones own their source
+metadata. No LKI is used for a departed static source.
+
+Evidence: `TestUntapLimitsChoiceAndOverlap`, `TestUntapLimitsSnapshotAndSimultaneous`,
+`TestUntapLimitInvalid`, and real-RON `TestRONUntapLimitsRealCards`, `Casting`,
+`Reprints`, `Invalid` and `Inventory`. Smoke and Damping Field have complete
+record mappings. No new damage replacement, cost, trigger or APNAP contract is
+established.

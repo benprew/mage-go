@@ -75,13 +75,6 @@ func (g *Game) SkipNextUntap(permanentID uuid.UUID) {
 	g.turns.SkipNextUntap(permanentID)
 }
 
-func (g *Game) untapPermanentDuringUntapStep(p *Permanent) bool {
-	if p == nil || !p.Tapped {
-		return false
-	}
-	return g.UntapPermanent(p)
-}
-
 func (g *Game) doUntap() {
 	active := g.ActivePlayerObj()
 
@@ -116,54 +109,16 @@ func (g *Game) doUntap() {
 	}
 	g.trackers.Turn.SetUntappedLandsAtTurnStart(active.PlayerID(), count)
 
-	landUntapLimit := g.effects.Rules.LandUntapMax
-	landsUntapped := 0
-	artifactUntapLimit := g.effects.Rules.ArtifactUntapMax
-	artifactsUntapped := 0
-	creatureUntapLimit := g.effects.Rules.CreatureUntapMax
-	creaturesUntapped := 0
-
+	blocked := matchingUntap
 	for _, p := range g.zones.battlefield {
-		if p.ControllerID() == active.PlayerID() {
-			if g.turns.ConsumeSkipNextUntap(p.ID()) || capturedUntap[p.ID()] || matchingUntap[p.ID()] || p.HasAttr(AttrDoesNotUntap) {
-				// The restriction expires even when no untap is possible.
-			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
-				// Player may choose not to untap, but only when staying tapped
-				// still maintains a continuous effect on a target that remains
-				// on the battlefield. Once that target is gone (e.g. Tawnos's
-				// Weaponry's boosted creature or Phyrexian Gremlins' tapped
-				// artifact left play), there is nothing left to maintain, so
-				// untap automatically instead of asking.
-				hasTapEffect, targetLives := g.effects.SourceTapMaintainedStatus(g, p.ID())
-				autoUntap := hasTapEffect && !targetLives
-				if !autoUntap && !active.ChooseMayAbility("untap "+p.Name()) {
-					continue
-				}
-				g.untapPermanentDuringUntapStep(p)
-			} else if p.HasType(TypeLand) && landUntapLimit >= 0 {
-				// Land with untap limit in effect
-				if p.Tapped && landsUntapped < landUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						landsUntapped++
-					}
-				}
-			} else if p.HasType(TypeArtifact) && !p.HasType(TypeLand) && artifactUntapLimit >= 0 {
-				// Artifact (non-land) with untap limit in effect (Damping Field)
-				if p.Tapped && artifactsUntapped < artifactUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						artifactsUntapped++
-					}
-				}
-			} else if p.HasType(TypeCreature) && creatureUntapLimit >= 0 {
-				// Creature with untap limit in effect (Smoke)
-				if p.Tapped && creaturesUntapped < creatureUntapLimit {
-					if g.untapPermanentDuringUntapStep(p) {
-						creaturesUntapped++
-					}
-				}
-			} else if p.Tapped {
-				g.untapPermanentDuringUntapStep(p)
-			}
+		if p.ControllerID() == active.PlayerID() && (g.turns.ConsumeSkipNextUntap(p.ID()) || capturedUntap[p.ID()]) {
+			blocked[p.ID()] = true
+		}
+	}
+	selected := g.chooseStepUntaps(active, blocked)
+	g.untapPermanentsTogether(selected)
+	for _, p := range g.zones.battlefield {
+		if !p.PhasedOut && p.ControllerID() == active.PlayerID() {
 			if mp := g.MutablePermanent(p.ID()); mp != nil {
 				mp.RevokeBaseAttr(AttrSummonSick)
 			}

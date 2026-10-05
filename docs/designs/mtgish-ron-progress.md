@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **596 accepted / 390 rejected unique card
-names** (986 total), and **1,608 compiled / 837 rejected records** (2,445 total).
+The latest recorded inventory reports **598 accepted / 388 rejected unique card
+names** (986 total), and **1,615 compiled / 830 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`FIXED-COUNT-SACRIFICE` slice and its validation evidence are recorded
+`UNTAP-LIMIT-SELECTION` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -18577,3 +18577,156 @@ Changed files: engine `action_sacrifice.go`, `definition.go`,
 `inventory.go`, `inventory_test.go`, and new `sacrifice_number_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
 No second slice.
+
+## 2026-10-05: chosen untap sets with overlapping limits
+
+Status: completed slice `UNTAP-LIMIT-SELECTION`; other all-player operations remain
+unsupported. This run stops after this slice. Initial user edits to `.gitignore`,
+`mtgish-ron-execution.md`, the ledger's history restructuring, and untracked
+`mtgish-ron-completed.md` remain untouched and are excluded from the commit.
+Only this entry and the current counts are staged from the ledger.
+
+### Fresh evidence and selection
+
+Baseline RON tests, short engine tests and build passed. Strict loader exit 1 was
+collection rejection: 2,445 records, 1,608 compiled, 837 rejected; 596 accepted /
+390 rejected unique names. Fresh semantic inventory: 72,951 nodes, 8,540
+signatures, 9,600 unknown-role occurrences. Existing scope and instance
+prerequisites are present. Complete selected records and nested candidate forms
+were inspected; estimates count reprints once.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers; downstream reuse | Effort |
+| --- | --- | --- | --- |
+| Untap-limit selection, selected | Smoke, Damping Field; **2** | Both full records otherwise compile. Existing native untap chooses battlefield order, bypasses overlapping type limits and sends events between untaps. Shared selection also serves existing land/artifact/creature limit callers and future Winter Orb lowering. Winter Orb's separate conditional body remains blocked. | Medium: fixed filtered static rule, native decision integration, overlap/choice/simultaneous tests and two complete RON records. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** after the full prerequisite | Source universe, spell/permanent identity, result binding and next-instance shields require engine contracts. Dark Sphere additionally needs partial prevention arithmetic; Reverse Damage needs actual prevented results; Jade Monolith and Eye for an Eye need replacement/redirection operations. Those four are additional consumers, not estimated unlocks. | High: source choices and retained identity, rechecked properties (CR 615.9), competing replacements, next-event consumption and clone isolation. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** | Requires all-zone characteristic evaluation, owner/controller context and CDA layer order. Gaea's Avenger additionally has arithmetic and a recorded controller source defect; Wood Elemental needs entry-sacrifice results. Those two are excluded from unlocks. | High: zone-aware characteristic service, named and controlled counts, copies, layers and five gameplay mappings. |
+
+Selection: two credible complete records share one bounded engine correction,
+with existing native callers benefiting immediately. The other candidates have
+larger gains but need substantially larger contracts before any safe adapter
+unlock. This slice supplies reusable selection rather than separate card logic.
+Contract, reuse boundary and acceptance cases were stated before edits. The
+`implement-engine` skill was used for the engine gap; no removed card skill or
+Go card definition was used as a requirement.
+
+### Exact signatures, contexts and engine contract
+
+Engine: `LimitUntapsDuringStep(PermanentFilter, int) StaticRule`. Nonnegative
+fixed maximum, including zero; zero filter matches all. Negative declarations
+fail definition validation. Effects clone their mutable source metadata. Printed
+source departure, phasing and ability suppression use existing lifecycle checks;
+recipient ability removal does not remove a static restriction. A returned source
+is a new active instance. No departed-source LKI applies.
+
+RON: `EachPlayerEffect(AnyPlayer,
+[CantUntapMoreThanNumberPermanentsDuringTheirUntapStep(Integer(n), filter)])`
+in permanent rules only. Exactly one operation, bare `AnyPlayer`, nonnegative
+integer literal and existing permanent-filter grammar. Dynamic values, bound
+references, other player filters and operations remain rejected. Other roles
+(cost, entry, resolving action, spell rules) gain no support. Inventory reports
+player filter, player rule operation, value and permanent filter descendants,
+even when another parent remains unsupported. Factories produce fresh static
+abilities and effects; no chosen state is captured in the compiler plan.
+
+At the untap decision, final filters and quotas are saved after phase-in and
+layer evaluation. Current control, phasing, tapped status, skip-next-untap,
+captured prohibitions and existing optional-source choices determine eligibility.
+Unrestricted eligible objects are selected automatically. For limited objects,
+`ChooseMayAbility` permits stopping below the maximum, then `ChoosePermanent`
+selects one remaining legal object. Nil stops; invalid choices use a legal
+fallback. A selected artifact creature or artifact land consumes every matching
+quota. Separate limits combine; duplicate limits cannot add allowances.
+
+All choices finish before the shared `untapPermanentsTogether` batch (CR 502.3).
+Stun replacement consumes a counter without backfilling that choice. Untap events
+see the completed operation. A later decision uses fresh membership; explicit
+untap effects remain legal. Existing land/artifact/creature limit fields remain
+supported and now use the same selection. Native AI and search accept the exact
+new optional untap prompt, preserving their ability to use these existing limits.
+The old private `untapPermanentDuringUntapStep` helper had zero whole-repository
+callers after integration and was removed from the modified engine file.
+
+Reuse: static definition validation, effect source/layer lifecycle and cloning,
+`FilterBattlefield`, player decision interfaces, captured/next-untap services,
+source-tap-maintained decisions, stun handling and simultaneous untap. No separate
+RON game state, global result slot, card-name branch, production subset registry
+or Go fallback. No new cost, damage-replacement or APNAP contract is established.
+
+### TDD and card-to-test mappings
+
+Initial engine tests had a fixture constructor typo, corrected before recording
+the expected missing `LimitUntapsDuringStep` failure. Complete real RON records
+failed for unsupported `EachPlayerEffect`. After implementation, an invalid-choice
+fixture and event names needed correction; no behavior assertion was weakened.
+Native UI inspection showed permanent choices are mandatory, so the explicit
+stop decision was added. New AI/search tests then failed for declining this prompt
+before those callers were corrected. Lint found one ineffectual fixture assignment;
+it was corrected. Automatic import formatting was reviewed.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Smoke, full LEA record | `TestRONUntapLimitsRealCards`: two creatures, other player, source departure/phasing/control/return, recipient and source ability removal, recipient phase-in, clone isolation, explicit untap. `TestRONUntapLimitsCasting`: native RR payment, unpaid rollback, stack timing and enchantment entry. |
+| Damping Field, full ATQ record | Same real-record matrix for artifacts; native 2W payment and casting rollback. |
+| All seven reprints | `TestRONUntapLimitsReprints`: AST parsing, compilation and engine definition validation for each selected complete record. |
+| Engine set legality | `TestUntapLimitsChoiceAndOverlap`: player-selected separate types or overlapping artifact creature, decline, invalid choice, zero limit, stun replacement and next-untap exclusion; choices observe no early untap. |
+| Snapshot and simultaneous operation | `TestUntapLimitsSnapshotAndSimultaneous`: filter tied to source's tapped state, source plus selected creature untap before observer events, excluded creature stays tapped, next decision refreshes membership. |
+| Invalid and scoped declarations | `TestUntapLimitInvalid`, `TestRONUntapLimitsInvalid`: negative/dynamic/malformed limits, wrong player filters, unbound target refs and empty operations. `TestRONUntapLimitsInventory`: typed descendant roles. |
+| Native decision callers | `TestAIChooseMayAbilityUntapLimit`, `TestSearchPlayerChooseMayUntapLimit`: both accept the new optional selection. Existing unknown/source-optional choices retain their policy. |
+| Prior accepted behavior | Fresh complete suites and updated `TestInventoryRepositoryCollection` / `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged`; strict loader keeps rejecting remaining records without installing a partial registry. |
+
+Adds two complete-card gameplay mappings. Aggregate collection engine-validation
+and behavior-verification remain null; compilation and gameplay are separate.
+Local `data/LEA.json` and `data/ATQ.json` Oracle text agrees with both records:
+players cannot untap more than one creature/artifact during their untap steps.
+CR 502.3 requires choice before simultaneous untap; CR 122.1g supplies stun
+replacement. No source defect was found or corrected. All twelve RON hashes are
+unchanged; the vocabulary syntax snapshot needs no refresh. Previously recorded
+source defects remain unresolved.
+
+### Final evidence and remaining work
+
+Actual gain matches estimate: **2 unique cards / 7 records**, Smoke and Damping
+Field. No accepted name was lost. Strict and semantic loading report **1,615
+compiled / 830 rejected records**, **598 accepted / 388 rejected unique names**.
+Inventory remains **72,951 nodes / 8,540 signatures**, with **9,486 unknown-role
+occurrences** (114 fewer). Strict loading still exits 1 for collection rejection;
+all-player visibility, Stasis, Gloom and Worms of the Earth remain rejected.
+
+Required final command results are recorded below after validation. No Go card,
+generator or DSL export is removed: complete loading, gameplay and runtime
+cutover gates remain unmet. No unused-DSL caller audit is claimed. API and rules
+documentation describe only the established untap contract.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Chosen-source identity/universe and next-instance prevention: the seven
+   complete Circle/Realm consumers above, with concrete additional dependents.
+2. All-zone battlefield-count CDAs: five complete consumers; keep Avenger and
+   Wood Elemental's independent blockers separate.
+3. Alternative spell/permanent target groups: Chaoslace, Deathlace, Lifelace,
+   Purelace, Thoughtlace, Magical Hack and Sleight of Mind; zero adapter-only
+   unlocks until spell/permanent color or text effects are ready.
+
+Slice files: `pkg/mage/untap_limit.go`, `untap_limit_test.go`, `turn_execution.go`,
+`doc.go`, `search_player.go`, `search_player_test.go`; `pkg/mage/interactive/ai/ai.go`,
+`ai_test.go`; `pkg/mage/dsl/ron/untap_limit.go`, `untap_limit_test.go`, `compiler.go`,
+`inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry. No second slice.
+
+| Command | Final result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused engine/RON/inventory/AI/search tests with `-count=1` | PASS, repeated after lint formatting. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final implementation and lint. |
+| `make test` | PASS after final implementation and lint. |
+| `make build` | PASS after final implementation and lint. |
+| `go vet ./...` | PASS after final implementation and lint. |
+| `go test ./... -short -count=1` | PASS; additional implement-engine skill check. |
+| `make lint` | Initial new fixture assignment issue corrected; final PASS, zero issues. Automatic import formatting reviewed; no unrelated edits. |
+| `git diff --check` | PASS; staged slice also checked before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,615 compiled / 830 rejected; collection rejection, not a build failure. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 388 rejected names, 9,486 unknown-role occurrences. |
+| Accepted-name/source audit | Exactly Smoke and Damping Field gained, none lost; all twelve RON hashes unchanged. |
+
+No environment or pre-existing check failure remains. One descriptive commit
+contains only this slice; its hash is reported in the final response.

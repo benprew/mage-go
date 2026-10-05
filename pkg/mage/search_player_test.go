@@ -118,3 +118,10 @@ func TestSearchPlayer_ChoosePermanent_DestroyBiggest(t *testing.T) {
 		t.Errorf("destroy should pick biggest: got %s, want Dragon", name)
 	}
 }
+
+func TestSearchPlayerChooseMayUntapLimit(t *testing.T) {
+	player := NewSearchPlayer(NewBasePlayer("Search"))
+	if !player.ChooseMayAbility("untap another permanent within the limits") {
+		t.Fatal("search declined the untap selection")
+	}
+}
