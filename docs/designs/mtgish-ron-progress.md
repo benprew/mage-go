@@ -10789,3 +10789,138 @@ Slice files: `pkg/mage/dsl/ron/compiler.go`, `land_mana.go`, `land_mana_test.go`
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 Stage only these twelve files. Preserve the two initial user edits unstaged.
 The descriptive slice commit hash is reported in the final response.
+
+## 2026-10-05: enchanted permanent filter
+
+Status: one completed compiler-adapter slice. Runtime cutover remains blocked
+by collection gaps. Preserve the user's initial edits to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`; neither belongs to this commit.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot,
+existing ledger, compiler/filter/target/prevention/inventory code, API and
+rules-contract documentation, CR 303.4, 608.2 and 615. Read complete RON records
+for every candidate name below, including nested forms and reprints; Go card
+definitions did not supply requirements. Existing semantic inventory and
+per-instance reference prerequisites are present.
+
+Fresh baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Both strict and inventory loaders exited 1 because the collection was rejected:
+2,445 records, 986 unique names, 1,414 compiled / 1,031 rejected records,
+490 accepted / 496 rejected unique names. This is not a build failure.
+Inventory: 72,938 nodes, 8,528 signatures, 12,268 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Credible full-card gain and other blockers | Downstream capabilities and effort |
+| --- | --- | --- | --- |
+| Enchanted permanent filter (selected) | Ramses Overdark, Wall of Putrid Flesh, Enchanted Being: 3 | 2 names / 2 records. Ramses's activation/destruction and Wall's static prevention, defender and protection are already supported. Enchanted Being also needs `CombatDamageWouldBeDealtByACreatureToRecipient`. | Shared attachment query in target, collection and damage-source filters. Small adapter; medium gameplay-test effort for legality, identity and prevention lifecycle. |
+| Finite recipient-prevention allocation | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Balm of Restoration: 12 | Prerequisite alone 0; 9 likely after adapters. Guardian needs repeated optional mana payments, Rakalite needs delayed return, Balm needs activated modes. | CR 615.7 allocation across simultaneous packets, typed recipient and X adapters. High engine/decision/batch and gameplay-test effort. |
+| All-zone CDA evaluation | Keldon Warlord, Nightmare, Plague Rats, Gaea's Avenger, Dakkon Blackblade, People of the Woods: 6 | Prerequisite alone 0; 5 credible after adapters, sixth conditional on source audit. All-zone characteristics, count/name and addition lowering are still needed. Avenger's controller-artifact count remains a known data concern. | Layer 7a characteristics in all zones, shared count/name values. High zone/layer/controller test effort plus data audit. |
+
+The selected slice provides the smallest dependency-ready multi-card gain.
+First-error frequency did not supply unlock estimates. The contract, reuse
+boundary and acceptance cases were stated before editing. No second slice
+was begun; single-card combat-only prevention is deferred while useful
+multi-card work remains.
+
+### Exact contract and reuse boundary
+
+Capability `permanent-filter.enchanted`: supported.
+
+- Exact signature: symbol `IsEnchanted`, no arguments, in contexts that use
+  `compileFilter`, including permanent targets and static prevention source
+  filters. It composes with existing `And([filters])` and `Or([filters])`.
+  General `Not` and the separate static-condition filter whitelist remain
+  unsupported for this symbol.
+- `compileFilter(Node) (mage.PermanentFilter, error)` lowers directly to the
+  existing `mage.IsEnchanted`. No new public API or engine behavior.
+- CR 303.4b: an attached, present Aura qualifies; Equipment alone does not.
+  Aura and permanent controllers need not match. Phased attachments are absent
+  from this query. It is a pure current-state query, not an attachment binding.
+- Ramses uses the existing typed permanent target, transactional tap payment,
+  resolution legality check and destruction/regeneration service. An Aura
+  departure or phase-out invalidates the target; returned targets are new
+  incarnations. Source departure does not cancel a pending ability.
+- Wall uses the existing static `PreventDamageFromTo` service and damage-source
+  information/LKI contract. Recipient identity, layer ability removal, source
+  snapshots, simultaneous packets and replacement ordering remain engine-owned.
+- Constructor forms `IsEnchanted()`, `IsEnchanted(AnyPermanent)`,
+  `IsEnchanted(ThisPermanent)`, `IsEnchanted(You)` and `IsEnchanted(1)` fail
+  compilation. No declaration panic or runtime spelling dispatch is added.
+- No new mutable state, global result slot, card-name branch, Go fallback,
+  production subset registry or engine subsystem. Test-only strict collections
+  validate actual RON records and retain rejection of an invalid collection.
+
+This was a missing compiler adapter, not a missing engine contract. No source
+or environment defect was found for this slice. Enchanted Being's combat-only
+prevention event remains a separate unsupported adapter. Known Avenger, Liege
+and Fastbond source concerns remain open. No source changed; the vocabulary
+snapshot does not need a source refresh. Removal gates remain unmet, so no Go
+card definitions, generators or DSL functions were deleted. No caller-removal
+audit was needed or claimed.
+
+### TDD and gameplay evidence
+
+The new tests first failed with unsupported `IsEnchanted` diagnostics at
+`LEG.ron:209:274` and `LEG.ron:296:267`. The implementation adds only the symbol
+adapter. Tests retain existing engine rules. Fixture corrections supplied card
+owners for destruction and checked a phased target after phase-in, because
+`FindPermanent` excludes phased objects. A reporting assertion was corrected
+to aggregate separate context entries rather than expect one combined entry.
+No assertion was removed from an existing test. Inventory count assertions
+were updated to measured values.
+
+| Card / context | Test mapping |
+| --- | --- |
+| Ramses Overdark, complete LEG record | `TestRONEnchantedFilterRamses`: native activation, Aura departure/phasing, target phasing/return, control change, source departure, clone, stack copy and regeneration. `LegalityRollback`: rejects plain and Equipment-only targets, phased Aura, shroud, noncreature and summoning-sick activation; failed activation leaves source untapped and stack empty. `StrictLoad`: actual record factory validation and paid native creature casting. Full-card gameplay mapping. |
+| Wall of Putrid Flesh, complete LEG record | `TestRONEnchantedFilterWall`: enchanted/plain/Equipment sources, Aura departure/phasing, source control/phase cycle, ability removal, clone isolation, departed/returned damage-source LKI, repeated simultaneous creature/player packets and recipient restriction. `WallCombatAndOtherRules`: real combat prevention, defender attack prohibition, 2 power, protection from white and native Lightning Bolt casting/damage. `ReplacementOrder`: affected-player choice between prevention and redirection, followed by recipient recheck. `StrictLoad`: actual record validation and paid native casting. Full-card gameplay mapping. |
+| Declaration/reporting/registry | `TestRONEnchantedFilterDeclarations`: malformed symbol constructors and supported filter combinations. `StrictLoad`: both names loaded atomically, semantic permanent-filter entries checked by context, invalid collection publishes no registry. Existing `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged` still verifies accepted Bolt gameplay and production registry isolation. |
+
+Two unique cards gain RON gameplay mappings, separately from two newly compiled
+records. Collection `engine_validated` and `behavior_verified` remain null;
+complete collection gameplay has not been proved.
+
+### Final validation and actual gain
+
+Actual gain matches the estimate: 2 names / 2 records. Final strict and inventory
+reports agree: **1,416 compiled / 1,029 rejected records**, **492 accepted /
+494 rejected unique names**, of 2,445 records / 986 names. The only removed
+issues are Ramses Overdark (`LEG.lines.ron:209:274`) and Wall of Putrid Flesh
+(`LEG.lines.ron:296:267`). All remaining first diagnostics are unchanged; no
+accepted record regresses. Enchanted Being remains rejected at the unsupported
+combat-only static prevention event.
+
+Inventory remains 72,938 nodes / 8,528 signatures / 12,268 unknown-role
+occurrences. Source hashes before and after agree for all twelve files.
+`IsEnchanted` has separate target-filter and prevention-source-filter contexts;
+Enchanted Being's unsupported event retains an unknown child role. No new
+semantic reporting contract is claimed for that event.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONEnchantedFilter -count=1` | PASS after expected TDD failure and fixture/reporting corrections. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final test correction. Earlier run failed on this slice's inventory context assertion; rerun passed. |
+| `make test` | PASS after final test correction. Earlier run failed on the same assertion; rerun passed. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Reviewed formatting; no unrelated file changed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for 1,029 remaining collection issues. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict diagnostics agree. |
+
+Ranked next candidates, to reassess from fresh evidence:
+1. Finite recipient-prevention allocation prerequisite and subsequent adapters
+   for the nine otherwise-ready names; keep the three additional blockers.
+2. All-zone CDA characteristics prerequisite for the six named cards, with
+   Avenger source audit separate from compiler support.
+3. End-of-combat/intervening-if and bounded counter replenishment prerequisites
+   shared by Clockwork Avian and Clockwork Beast.
+
+Changed slice files: `pkg/mage/dsl/ron/compiler.go`,
+`pkg/mage/dsl/ron/enchanted_filter_test.go`,
+`pkg/mage/dsl/ron/inventory_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Stage only these six files.
+Commit hash is reported in the final response. Complete collection gameplay,
+loading/startup cutover, Go-card/generator deletion and unused DSL cleanup
+remain open. Stop after this slice.

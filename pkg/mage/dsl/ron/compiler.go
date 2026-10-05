@@ -661,6 +661,8 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 		switch n.Name {
 		case "AnyPermanent":
 			return mage.AnyPermanent, nil
+		case "IsEnchanted":
+			return mage.IsEnchanted, nil
 		case "IsTapped":
 			return mage.IsTapped, nil
 		case "IsUntapped":

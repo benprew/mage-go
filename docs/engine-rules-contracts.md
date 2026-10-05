@@ -2247,3 +2247,20 @@ automatic payment and rollback, Aura legality, source/host lifecycle, fixed and
 produced-type choices, copies, independent instances/events, native prevention
 and lifelink, typed LKI/phase reads, invalid scopes and nested inventory roles.
 Subtype events and temporary triggers remain compiler gaps.
+
+### RON enchanted filter adapter
+
+RON `IsEnchanted` now uses the existing `mage.IsEnchanted` permanent query.
+CR 303.4b defines the enchanted object by its attached Aura. The adapter adds
+no engine behavior. Existing target services apply CR 608.2b at announcement
+and resolution, including attachment departure, Aura phasing, target phasing,
+and target incarnation changes. Equipment does not satisfy the filter.
+
+`TestRONEnchantedFilterRamses` and `LegalityRollback` verify real RON activation,
+source departure, control changes, copied abilities, regeneration and clone
+isolation. `TestRONEnchantedFilterWall*` verify static prevention through the
+shared damage-source/LKI query and replacement pipeline (CR 608.2h, 615.1),
+including repeated and simultaneous damage, Aura departure/phasing, source
+return, ability removal, combat damage, protection from white and spell damage.
+`TestRONEnchantedFilterReplacementOrder` verifies affected-player ordering and
+recipient rechecks. No finite prevention allocation contract is added.

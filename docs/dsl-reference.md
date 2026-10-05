@@ -2194,3 +2194,18 @@ Other mana-producing bodies in these events remain declaration errors. Subtype
 events, other player filters, temporary triggers, source/target mana events and
 attached non-mana bodies remain unsupported. This does not add general
 `PlayerAction(..., AddMana(...))` support outside this event scope.
+
+### RON enchanted permanent filter
+
+The bare symbol `IsEnchanted` is a permanent filter. It uses the shared
+`mage.IsEnchanted` query: a permanent must have an attached, present Aura.
+Equipment alone does not qualify. The filter composes with the supported
+`And` and `Or` forms and works in existing permanent target and static damage
+source filters. Target legality is checked at announcement and resolution;
+prevention reads source information when damage would occur. The query does
+not choose or save an attachment. Constructor forms such as `IsEnchanted()`
+and `IsEnchanted(ThisPermanent)` are invalid.
+
+RON gameplay tests: `TestRONEnchantedFilter*` cover Ramses Overdark and Wall of
+Putrid Flesh. Enchanted Being still requires an unsupported combat-only static
+prevention event; this filter does not establish support for that event.
