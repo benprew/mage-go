@@ -1007,6 +1007,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		var modifications []func(instanceBindings) mage.ContinuousModification
 		for _, part := range parts {
+			if part.Name == "LosesAbility" {
+				build, err := compileTemporaryKeywordRemoval(part, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, build)
+				continue
+			}
 			if part.Name == "SetPT" || part.Name == "AddCardtype" || part.Name == "AddCreatureType" || part.Name == "SetCreatureType" {
 				build, err := compileTemporaryType(part, subject)
 				if err != nil {
@@ -1024,9 +1032,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 					return nil, err
 				}
 				for _, ability := range abilities {
-					keyword, ok := keywords[ability.Name]
-					if ability.Kind != Symbol || !ok {
-						return nil, unsupported(ability, "temporary ability grant")
+					keyword, err := compileTemporaryKeyword(ability)
+					if err != nil {
+						return nil, err
 					}
 					modifications = append(modifications, func(bindings instanceBindings) mage.ContinuousModification {
 						return mage.GrantKeywordModification(subject.build(bindings), keyword)

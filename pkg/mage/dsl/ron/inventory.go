@@ -471,7 +471,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return "value"
 			}
-		case "AddAbility":
+		case "AddAbility", "LosesAbility":
 			if len(n.Args) == 1 {
 				return "keyword"
 			}

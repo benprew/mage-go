@@ -70,6 +70,17 @@ incarnations until expiry. The compiler rejects empty modifications and invalid
 or out-of-scope reads. Exact contracts and RON tests are in
 [the temporary-layer slice](designs/mtgish-ron-temporary-layers.md).
 
+In this end-of-turn context, `LosesAbility(keyword)` removes all instances of
+one supported keyword. `Landwalk(IsLandType(symbol))` is accepted for both
+`LosesAbility/1` and the existing `AddAbility([keyword, ...])` form. The supported
+land symbols are Plains, Island, Swamp, Mountain, Forest and Desert.
+`LosesAbility(AnyLandwalk)` uses the engine's complete landwalk removal service,
+including legendary landwalk. These operations use layer 6 and timestamp order:
+a later grant can restore an ability. Removal does not prohibit later grants.
+Static removal, `AnyBandsWithOthers`, `TheChosenAbility`, non-keyword removal and
+additional durations remain unsupported. Evidence is in
+`TestRONTemporaryKeyword*` and `TestRONTemporaryLayersDeclareTypedReads`.
+
 Run the full collection check with:
 
 ```sh

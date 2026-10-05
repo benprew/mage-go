@@ -12,7 +12,7 @@ import (
 )
 
 func TestRONTemporaryLayersDeclareTypedReads(t *testing.T) {
-	for _, modification := range []string{`AdjustPT(3, 3)`, `AddAbility([Flying])`, `AdjustPT(-1, 0), AddAbility([Flying, FirstStrike])`} {
+	for _, modification := range []string{`AdjustPT(3, 3)`, `AddAbility([Flying])`, `AdjustPT(-1, 0), AddAbility([Flying, FirstStrike])`, `LosesAbility(Flying)`, `LosesAbility(AnyLandwalk)`, `LosesAbility(Landwalk(IsLandType(Forest)))`} {
 		t.Run(modification, func(t *testing.T) {
 			factory := permanentScopeFactory(t, "Instant", fmt.Sprintf(`SpellActions(Targeted([TargetPermanent(AnyPermanent)], ActionList([CreatePermanentLayerEffectUntil(Ref_TargetPermanent, [%s], UntilEndOfTurn)])))`, modification))
 			first, second := factory(), factory()

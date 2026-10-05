@@ -4997,3 +4997,155 @@ Ranked next candidates to reassess:
 
 Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
 and native startup validation remain unfinished. No second slice began.
+
+## Run 2026-10-04: TEMPORARY-KEYWORDS
+
+Status: complete end-of-turn keyword removal and landwalk grant adapter slice.
+This run stops after this capability. User changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from the commit.
+No unrelated untracked files were present at the start.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`, engine short tests and `make build`
+passed. Strict and semantic loaders exited 1 for collection rejection:
+**1,138 compiled / 1,307 rejected records**, 390 accepted / 596 rejected unique
+names. Inventory walks all nested forms: 72,938 occurrences / 8,528 signatures;
+14,391 occurrences have an unknown role. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream benefit, effort |
+| --- | --- | ---: | --- |
+| Temporary keyword removal and fixed landwalk grants, selected | Radjan Spirit, Hammerheim, Scarwood Hag; the same grant also affects River Merfolk and Wormwood Treefolk | Initial estimate 3; actual 5 | Exact engine services already exist. Small adapter and moderate lifecycle/legality tests. Related partial consumers: Sandals of Abdallah and War Barge need delayed triggers; Cave People needs attack-event binding; Giant Slug needs delayed choice and variable landwalk; Part Water needs multiple targets and collection grants; Erhnam Djinn needs next-upkeep duration. Removal also supplies a future prerequisite for Earthbind, Elder Land Wurm, Gravity Sphere, Tolaria, Urborg, Shelkin Brownie, Animate Dead and Takklemaggot, whose static/event/choice/non-keyword forms remain separate. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi | 0 for allocation prerequisite; 7 after exact lowering | Missing shared CR 615.7 simultaneous amount-shield allocation. Concrete seven-card downstream benefit, but large damage/replacement/choice test effort. Other prevention consumers still need player life, modes, casting payments, entry or delayed-return contracts. |
+| Bands with other legendary creatures | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 | Missing filtered band formation and damage-assignment engine contracts. Moderate-to-large combat/layer work. Ordinary Banding cannot substitute. Also enables the specific removal prerequisite for Shelkin Brownie and Tolaria; Master of the Hunt needs a named group and token support. |
+
+The selected capability has the largest credible immediate gain for the effort:
+no new rules engine, decisions, event binding or payment system is required.
+Contract, reuse boundary and acceptance cases were stated before implementation.
+Complete records for the original three selected cards and both competing
+multi-card groups were read before editing. The first post-adapter loader audit
+exposed two missed grant consumers, River Merfolk and Wormwood Treefolk. Their
+complete records and the remaining landwalk consumers were then read, and the
+two newly accepted cards received gameplay tests before final validation.
+This was an initial inventory undercount, not two additional capabilities.
+The scope remains one temporary keyword adapter, with actual gain 5 versus
+initial estimate 3. Future selection should inspect all grant consumers when a
+removal slice also expands the grant vocabulary.
+
+### Exact supported shapes and reuse boundary
+
+Inside `CreatePermanentLayerEffectUntil(permanent_reference, [modification, ...],
+UntilEndOfTurn)/3`, supported resolving spell, activation and trigger contexts
+now accept:
+
+- `LosesAbility(keyword_symbol)/1` for the existing concrete keyword vocabulary:
+  Flying, FirstStrike, Trample, Vigilance, Haste, Reach, Banding, Defender, Fear,
+  Deathtouch, Lifelink, Shroud, Hexproof, Menace and Indestructible.
+- `LosesAbility(Landwalk(IsLandType(land_symbol)))/1` and
+  `AddAbility([Landwalk(IsLandType(land_symbol)), ...])/1`, where land_symbol is
+  Plains, Island, Swamp, Mountain, Forest or Desert.
+- `LosesAbility(AnyLandwalk)/1`, using the engine's complete landwalk family,
+  including legendary landwalk.
+
+Existing typed source, Aura host and local permanent target references retain
+scope validation and per-factory bindings. Modification lists remain nonempty;
+all modifications in an action share one `Until` installation. Symbol keywords
+must be symbols; parameterized landwalk must have the exact tuple shape.
+No chosen ability, bands-with-other family, enchant removal, static removal,
+collection removal, variable landwalk or additional duration is accepted.
+The inventory assigns `LosesAbility/1`'s argument the keyword role in known
+static/temporary modification contexts. This reports syntax roles for rejected
+static forms without claiming support. Descendants of unsupported contexts
+remain unknown.
+
+`ron` owns syntax and lowering in new `temporary_keyword.go`; `mage` owns all
+execution. Reused exact services: `RemoveKeyword(PermanentRef, Attr)
+ContinuousModification`, `RemoveLandwalk(PermanentRef) ContinuousModification`,
+`GrantKeywordModification(PermanentRef, Attr) ContinuousModification`, `Until`,
+source/attachment/target references, layer-6 timestamps, cost transactions,
+stack copy frames, clone isolation, source LKI and the existing damage pipeline.
+No engine implementation or API changed. Rules read: CR 611.2a/c, 613.1f,
+613.7 and 702.14a-e; current identity, target and cost contracts remain applicable.
+Removal erases earlier instances but does not prohibit a later grant.
+There is no new simultaneous operation or replacement-order implementation.
+Wormwood Treefolk's independent damage uses the existing prevention pipeline.
+
+### TDD and card-to-test mappings
+
+New declaration and gameplay tests first failed at the intended compiler gaps:
+`LosesAbility` and temporary `Landwalk` grants were unsupported. A fixture used
+an unavailable nonbasic-landwalk attribute; it was corrected to the supported
+legendary-landwalk attribute before the semantic failing run. After lowering,
+creature tap-cost fixtures failed due to summoning sickness. The tests now
+assert this rejection and clear the engine's sickness attribute for subsequent
+activation cases. Advancing only the turn number does not perform an untap-step
+transition, so it was removed from the fixtures. Other fixture API corrections
+use `ManaPool.Count` and the void stack-resolution method. No assertions or
+rules were weakened.
+
+| Cards / contracts | Tests |
+| --- | --- |
+| Radjan Spirit, Hammerheim, Scarwood Hag | `TestRONTemporaryKeywordRealCards`: complete RON records, definition validation, creature-only targets, sickness/tap-cost legality, resolution timing, ability copies, source departure, target leave/return before and after resolution, phasing before/after resolution, target control change, gained shroud, unrelated keyword preservation, clone isolation and cleanup. Hammerheim's red mana ability resolves immediately. Hammerheim removes all seven engine landwalk variants; Scarwood Hag preserves islandwalk. |
+| Scarwood Hag, both abilities | `TestRONTemporaryKeywordScarwoodOrder`: failed mana payment leaves tap/stack unchanged; exact four-green payment, repeated landwalk grants, removal of all earlier instances, later grant/removal timestamp order, actual defender-land evasion, cleanup. |
+| River Merfolk; Wormwood Treefolk, both abilities | `TestRONTemporaryKeywordSourceLandwalk`: complete RON records, definition validation, colored payment/rollback, source-bound landwalk and defender evasion, independent damage after source leave/return or control change, source LKI, ability-controller retention, prevention, phasing, clones and cleanup. |
+| Copied spell bindings | `TestRONTemporaryKeywordCopyRetarget`: synthetic RON spell copy selects a different legal target; copied and original effects use independent frames. |
+| Invalid declarations and inventory | `TestRONTemporaryKeywordInvalid`, `TestRONTemporaryKeywordInstancesAndInventory`: wrong arity/kind, unknown/non-keyword/choice/family reads, invalid land types, unbound and incompatible target references, host outside Aura scope, wrong duration, unsupported static context, fresh factory targets and nested role reporting. |
+| Definition reference metadata | Extended `TestRONTemporaryLayersDeclareTypedReads`: concrete, specific-landwalk and family removals keep typed reads; removing the target declaration fails engine definition validation. |
+| Shared existing engine contracts | `TestComposableKeywordRemoval`, `TestComposableKeywordRemovalLifetime`: existing removal, timestamp and incarnation contracts remain passing. |
+
+### Measurements and validation
+
+Final strict and semantic loaders exit 1 with identical issue arrays:
+**1,143 compiled / 1,302 rejected records**, 395 accepted / 591 rejected unique
+names. Exactly five records are newly accepted: Radjan Spirit, Hammerheim,
+Scarwood Hag, River Merfolk and Wormwood Treefolk. No previously accepted record
+is rejected. Three remaining first diagnostics change: Sandals of Abdallah and
+War Barge now reach `CreateTriggerUntil`; Shelkin Brownie still rejects
+`AnyBandsWithOthers`, now in the keyword diagnostic. Other diagnostics remain
+unchanged. AST totals remain 72,938 occurrences / 8,528 signatures; unknown-role
+occurrences decrease to 14,381. All twelve RON file hashes are unchanged.
+Collection engine-validation and behavior-verification totals remain null;
+five new full-record gameplay mappings do not establish collection completion.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, engine short tests, `make build` | PASS |
+| Baseline strict and semantic loader | Expected exit 1: 1,138 compiled / 1,307 rejected |
+| New focused tests before lowering | Expected semantic failures at unsupported removal/grant shapes |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| Focused keyword/layer/inventory and shared engine removal tests with `-count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic formatting reviewed |
+| Post-lint engine short tests, `make test`, `make build`, `go vet ./...` | PASS |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1: 1,143 compiled / 1,302 rejected; issue arrays agree |
+| Accepted-record and source-hash audit | PASS: no regressions, no source changes |
+
+No required check is blocked. Missing compiler adapters were the selected gap;
+no missing engine contract, source defect or environment failure was found.
+Gaea's Liege and Fastbond concerns remain open. No RON source changed, so the
+vocabulary source snapshot needs no refresh. Strict loading remains atomic and
+rejects the remaining collection; no fallback or partial production registry
+was added. No Go-card or DSL function was removed; removal gates remain unmet
+and no whole-repository deletion caller audit is claimed.
+
+Slice files: compiler.go, inventory.go, inventory_test.go,
+temporary_layer_test.go, new temporary_keyword.go and temporary_keyword_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger.
+Only these changes are included in the slice commit.
+
+Ranked next candidates to reassess from fresh evidence:
+1. Shared CR 615.7 simultaneous amount-shield allocation and recipient prevention:
+   seven otherwise-ready cards, requiring ordering/allocation evidence.
+2. Filtered bands with other legendary creatures: five otherwise-ready lands,
+   with combat formation and damage-assignment contracts before lowering.
+3. Damage-event player/source snapshots: prerequisite for Hypnotic Specter,
+   Nicol Bolas, Marsh Viper, Pit Scorpion and Nafs Asp; inspect discard/counter/
+   delayed-result blockers before estimating full unlocks.
+
+Complete RON gameplay, application startup loading, Go-card/generator removal,
+DSL cleanup and native startup smoke tests remain unfinished. No second slice
+began.

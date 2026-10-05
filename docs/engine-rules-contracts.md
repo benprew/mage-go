@@ -1254,3 +1254,23 @@ own identity and lifecycle. Evidence: `TestRampageBlockedTransition`,
 `TestRampageOriginalIncarnation`, `TestRampagePendingLifecycle`,
 `TestRONRampageRealCards`, and `TestRONRampageNativeCombat`. The existing API
 signatures and `RampageEffectData` remain available; a standalone blocker-declaration event no longer substitutes for a becomes-blocked transition.
+
+## RON temporary keyword removal
+
+RON now lowers `LosesAbility` inside the existing end-of-turn permanent layer
+action to `RemoveKeyword(PermanentRef, Attr) ContinuousModification` or
+`RemoveLandwalk(PermanentRef) ContinuousModification`. Temporary fixed landwalk
+grants use `GrantKeywordModification`. No engine API or execution rule changed.
+`Until` captures the subject's incarnation at resolution (CR 611.2c), and layer 6
+uses the existing timestamp order (CR 613.1f, 613.7). Removal affects all earlier
+instances of the selected keyword; a later grant can restore it.
+
+RON evidence: `TestRONTemporaryKeywordRealCards` covers target legality,
+summoning sickness, copies, departure, control, phasing, returned incarnations
+and clone cleanup. `TestRONTemporaryKeywordScarwoodOrder` covers colored payment
+rollback, repeated grants, timestamp order and landwalk evasion (CR 702.14).
+`TestRONTemporaryKeywordSourceLandwalk` covers source-bound grants, independent
+subsequent damage, source LKI, captured ability controller and damage prevention.
+`TestRONTemporaryKeywordCopyRetarget` checks separate copied target frames.
+The shared engine's `TestComposableKeywordRemoval` and
+`TestComposableKeywordRemovalLifetime` remain the engine contract tests.
