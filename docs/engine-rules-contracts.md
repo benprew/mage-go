@@ -1958,3 +1958,43 @@ optional upkeep payment, mana classification, failed payment rollback, damage
 prevention, event identity and current controller. Existing Fasting tests cover
 whole-step skipping. No new simultaneous-operation or replacement-order service
 is introduced.
+
+## RON graveyard targets and returns
+
+RON `TargetGraveyardCard(filter)` declares one `CardTargetBinding` per card
+factory instance. `IsCardtype(type)` and nonempty nested `And([filters])` read
+card characteristics. `InAPlayersGraveyard(SinglePlayer(You))` restricts the
+zone to the announcing controller's graveyard. Without that restriction, or
+with `InAPlayersGraveyard(AnyPlayer)`, both graveyards are available. A
+conjunction that includes the controller restriction retains that restriction.
+Other player filters and disjunctions remain unsupported.
+
+`Ref_TargetGraveyardCard` is a card reference within its target body. It cannot
+be read as a permanent, player, or spell, or escape to a different mode or
+ability. The adapter uses `DeclareGraveyardCardTarget`, `GraveyardCardFilter`,
+`InAnyGraveyard`, and the existing target declaration and resolution services.
+Targets are chosen before payment and checked again at resolution. Graveyard
+visit identity prevents a selected card from following a leave-and-return cycle
+(CR 400.7, 601.2c, 602.2b, 608.2b).
+
+`PutGraveyardCardIntoHand(Ref_TargetGraveyardCard)` uses `ReturnCardToHand` and
+puts the card into its owner's hand at resolution. The battlefield form is
+`PutGraveyardCardOntoBattlefield(Ref_TargetGraveyardCard, [EntersNormally])`.
+This slice requires a target filter that includes `IsCardtype(Creature)`.
+Other card types and entry modifiers remain unsupported in this context.
+The adapter uses `ReturnCardToBattlefield(card, You)` for normal entry under
+the resolving controller. Entry effects and ETB triggers use the shared engine
+path. A later instruction cannot use the old graveyard reference after the
+first instruction moves the card (CR 400.7, 608.2c). Source departure, phasing,
+or a control change does not change the controller of a pending ability.
+Copies keep independent targets and recheck legality for their controller.
+
+Evidence: `TestRONGraveyardReturnCards`, `AnnouncementRollback`,
+`CopiesAndInstances`, `Invalid`, `ReprintsAndInventory`, `SharedContexts`,
+`NormalEntry`, `BattlefieldRequiresCreatureTarget`,
+`ConjunctionAndCopyLegality`, and `Caretaker` in
+`pkg/mage/dsl/ron/graveyard_return_test.go` (all names have the
+`TestRONGraveyardReturn` prefix). All eight complete card names and 24 reprint
+records compile and validate. Gameplay evidence covers seven return cards and
+Hell's Caretaker's upkeep, tap, sacrifice, and target contracts. No engine
+execution rule, simultaneous batch, replacement order, or LKI service changes.

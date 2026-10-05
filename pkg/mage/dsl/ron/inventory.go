@@ -327,9 +327,21 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "permanent_filter"
 			case "TargetPlayer":
 				return "player_filter"
+			case "TargetGraveyardCard":
+				return "card_filter"
 			case "TargetSpell":
 				return "spell_filter"
 			}
+		}
+	case "card_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "card_filter"
+		}
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
+		if n.Name == "InAPlayersGraveyard" && len(n.Args) == 1 {
+			return "player_filter"
 		}
 	case "cost":
 		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
@@ -391,6 +403,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "PutGraveyardCardIntoHand":
+			if len(n.Args) == 1 {
+				return "card_reference"
+			}
+		case "PutGraveyardCardOntoBattlefield":
+			if len(n.Args) == 2 {
+				return []string{"card_reference", "entry_operation"}[index]
+			}
 		case "CreatePreventDamageUntil":
 			if len(n.Args) == 3 {
 				return []string{"prevention_event", "prevention_operation", "duration"}[index]

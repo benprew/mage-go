@@ -30,6 +30,7 @@ func compileModalSpell(n Node, ctx scope) (optionFactory, error) {
 		local.playerTarget = nil
 		local.permanentTarget = nil
 		local.spellTarget = nil
+		local.cardTarget = nil
 		local.damageTarget = nil
 		plans[i], err = compileActions(body, local)
 		if err != nil {
@@ -45,6 +46,7 @@ func compileModalSpell(n Node, ctx scope) (optionFactory, error) {
 				prefix+"Ref_TargetPermanent", "target permanent",
 				prefix+"Ref_TargetPlayer", "target player",
 				prefix+"Ref_TargetSpell", "target spell",
+				prefix+"Ref_TargetGraveyardCard", "target graveyard card",
 				"Ref_AnyTarget", "any target",
 			).Replace(mage.Sequence(actions.effects...).Text())
 			modes[i] = mage.Mode{Label: label, Targets: actions.targets, Effects: actions.effects}

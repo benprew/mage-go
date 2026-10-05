@@ -9240,3 +9240,195 @@ Changed slice files: `pkg/mage/composable_tapped_lki.go` and its test,
 No required check or environment blocker remains. These 13 files form one
 commit; its hash is reported in the final response. The initial two user changes
 remain unstaged. Migration completion criteria remain unmet.
+
+## Run 2026-10-05: P2-GRAVEYARD-RETURNS
+
+Status: complete compiler adapter and RON gameplay slice. The initial user
+changes to `.gitignore` and `mtgish-ron-execution.md` remain outside this slice.
+No RON data, Go card definition, generator, startup registry, or DSL export was
+changed. Removal gates remain unmet; no deletion or caller-audit claim is made.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, mage/doc.go, the execution design, vocabulary snapshot, ledger,
+selected compiler/engine code, and complete records for every candidate below,
+including identical reprints. Baseline compiler tests with `-count=1` and
+`make build` passed. Strict loader and nested inventory both exited 1 because
+of collection rejection: **1,324 compiled / 1,121 rejected records**, **466
+accepted / 520 rejected unique names**. Build and tests were healthy.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| Typed graveyard targets and returns | Adun Oakenshield, Argivian Archaeologist, Eater of the Dead, Grave Robbers, Hell's Caretaker, Raise Dead, Reconstruction, Regrowth, Resurrection, Skull of Orm | 7 estimated. Eater needs conditional actions and exile; Grave Robbers needs exile. Hell's Caretaker was initially thought to need upkeep activation support. | Card references with zone-visit identity, future graveyard exile and choices. Medium compiler and integration-test effort; target, movement and entry services already exist. |
+| Explicit targeted life gain | Alabaster Potion, Healing Salve, Stream of Life | 1: Stream of Life. Both modal cards still need finite prevention. | Shared explicit-player life actions and mode-local bindings. Low adapter/test effort, but only one complete-card gain. |
+| Source attack restrictions | Bartel Runeaxe, Dandân, Giant Shark, Island Fish Jasconius, Marble Priest, Merchant Ship, Orgg, Pirate Ship, Raiding Party, Sea Serpent, Tetsuo Umezawa, Vodalian Knights | 1 estimated for attack restrictions alone: Orgg. Island-dependent creatures still need state triggers; Giant Shark and Merchant Ship need combat triggers. Bartel, Tetsuo, Marble Priest and Raiding Party use other source restrictions. | Defending-player queries and attack legality. Medium adapter/test effort; broad first-error grouping hides different rule contracts. |
+
+Selected graveyard targets and returns for the largest credible complete-card
+gain per effort. The selection, shape, engine reuse boundary and acceptance
+cases were stated before editing. The initial estimate undercounted one card:
+`compileActivationModifiers` already supports Hell's Caretaker's own-upkeep
+restriction. Fresh loader evidence exposed that fact; the complete card received
+its own gameplay tests. Actual gain is **8 unique names / 24 records**, rather
+than the estimated 7 names / 23 records. This remains one shared slice.
+
+### Exact supported declarations and reuse boundary
+
+Private adapters in `graveyard_return.go`:
+
+```go
+compileCardRef(Node, scope) (cardReferencePlan, error)
+compileGraveyardTarget(Node, scope) (targetFactory, string, error)
+compileGraveyardTargetFilter(Node) ([]mage.CardFilter, bool, error)
+compileGraveyardReturn(Node, scope) (effectFactory, error)
+```
+
+`Targeted([TargetGraveyardCard(filter)], ActionList([...]))` declares one typed
+card target. Supported filters are `IsCardtype(type)`, nonempty recursively
+nested `And([filters])`, and `InAPlayersGraveyard(players)`. `players` is exactly
+`SinglePlayer(You)` or the symbol `AnyPlayer`. A filter without a player
+restriction selects from any graveyard. Any controller restriction in an
+`And` remains in force, including when combined with an any-player operand.
+Other player filters, `Or`, permanent filters, malformed tuples and empty
+conjunctions fail declaration validation. These filters read cards in their
+current graveyard zone, without permanent/LKI conversion or mutation.
+
+The target body may read the symbol `Ref_TargetGraveyardCard` as a `CardRef`.
+`scope.cardTarget`, `actionPlan.cardTarget` and `instanceBindings.cards` carry
+its typed plan and instance declaration. Each factory call creates a separate
+`CardTargetBinding`; each body builds its actions against that declaration.
+The reference cannot escape to another mode or ability, or stand in for a
+permanent, player or spell. Modal scopes clear card targets and use their own
+target namespace. Supported shared contexts are spells, modal spell bodies,
+activated abilities and ordinary triggered ability bodies.
+
+Actions:
+
+```ron
+PutGraveyardCardIntoHand(Ref_TargetGraveyardCard)
+PutGraveyardCardOntoBattlefield(Ref_TargetGraveyardCard, [EntersNormally])
+```
+
+The hand action goes to the card owner's hand. The battlefield shape requires
+a target filter that includes `IsCardtype(Creature)`, including nested `And`.
+Other card types, unrestricted battlefield targets, entry lists, or modifiers
+remain rejected; the restriction has an explicit invalid-declaration test.
+Normal entry uses the resolving controller and retains the shared entry path,
+including tapped-entry operations and ETB triggers. A subsequent action cannot
+use the old card reference after the first action moves it.
+
+Engine reuse: `DeclareGraveyardCardTarget`, `GraveyardCardFilter`,
+`InAnyGraveyard`, `CardTargetBinding`, `ReturnCardToHand`,
+`ReturnCardToBattlefield`, `You`, target declaration preparation, announcement
+and legality checks, graveyard-visit identity, transactional mana/tap/sacrifice
+costs, shared zone movement, normal battlefield entry, trigger placement,
+stack copying and game cloning. No engine rule or state store was added.
+CR 400.7, 601.2c/f/h, 602.2b and 608.2b/c/h were read from the local rules.
+The API/rules documentation records only this established compiler context in
+`docs/engine-rules-contracts.md`. No game-time declaration panic, last-action
+slot, fallback, card-name branch, skipped rule or production partial registry
+was introduced.
+
+Inventory now assigns graveyard-target descendants the `card_filter` role,
+`InAPlayersGraveyard` children `player_filter`, card-type operands `card_type`,
+return subjects `card_reference`, and battlefield entry lists `entry_operation`.
+Support remains unverified in the inventory; engine-validation and aggregate
+behavior totals remain null. Compilation is not collection gameplay coverage.
+
+### TDD and card-to-test mappings
+
+Initial gameplay and invalid-declaration tests were written before adapters.
+Fixture compile errors used nonexistent summoning-sickness methods and the
+wrong zone namespace; these were corrected before confirming the expected
+failure on `TargetGraveyardCard`. A later boundary test first failed because
+unrestricted battlefield targets compiled; the adapter now rejects them.
+Additional shared-context and entry tests had fixture errors for missing
+creature P/T and copied-controller graveyard permission. The corrected tests
+use explicit P/T and an any-graveyard target for that shared-controller case.
+A separate test confirms a copy of real Resurrection under the other controller
+cannot keep permission to target the original controller's graveyard.
+
+A nil target list on activation asks the engine to choose targets. The
+no-target rollback fixture therefore uses an empty eligible graveyard. It does
+not change the engine's existing automatic-choice contract. No rules assertion
+was weakened.
+
+| Complete card / established contract | Test mapping |
+| --- | --- |
+| Raise Dead, Reconstruction, Regrowth, Resurrection, Adun Oakenshield, Argivian Archaeologist, Skull of Orm | `TestRONGraveyardReturnCards`: real RON, definition validation, native casting/activation, exact mana and tap payment, return timing, destinations, source departure/control/phasing, target absence/leave-and-return, clone isolation. |
+| Same seven cards | `TestRONGraveyardReturnAnnouncementRollback`: unpaid mana, wrong graveyard/type, target count, phased/tapped/summoning-sick activation source; failed announcements retain resources. |
+| Hell's Caretaker | `TestRONGraveyardReturnCaretaker`: real RON definition, own-upkeep activation, opponent-upkeep/main-step rejection, summoning sickness, empty/opponent/sacrificed-object target rejection, self-sacrifice payment before resolution, resurrection after source departure, independent clones. |
+| All eight names and 24 complete reprints | `TestRONGraveyardReturnReprintsAndInventory`: complete AST compilation, engine definition validation, canonical reprint registry, semantic roles, strict atomic rejection when an unsupported record is added. |
+| Raise Dead and seven factory instances | `TestRONGraveyardReturnCopiesAndInstances`: fresh typed declarations, native retargeted copies, original target isolation and cloned stacks. |
+| Resurrection; nested card-type and graveyard conjunctions | `TestRONGraveyardReturnConjunctionAndCopyLegality`: conjunction intersection, own/any scope composition, real RON Brass Man as artifact creature, copied-controller target legality. |
+| Shared adapters | `TestRONGraveyardReturnSharedContexts`: any-graveyard typed references in spells, mode-local bodies and triggers; owner destination and choice timing. |
+| Shared normal creature entry and ordered actions | `TestRONGraveyardReturnNormalEntry`: tapped entry, pending ETB life trigger, copied ability controller, owner's identity, old-reference invalidation after a hand move. |
+| Invalid declarations and unsupported contexts | `TestRONGraveyardReturnInvalid`, `TestRONGraveyardReturnBattlefieldRequiresCreatureTarget`: arities, types, player scopes, entries, unbound references and mode/ability leakage. |
+
+No damage, LKI, simultaneous-operation or replacement-order rule was changed.
+Phasing applies to activated sources; graveyard cards do not phase. Target zone
+visits use current-zone identity, not LKI. Broader entry replacement ordering
+continues to use existing engine contracts. This slice adds eight complete-card
+mappings without claiming the rest of the collection has gameplay evidence.
+
+### Fresh outcome and remaining gaps
+
+Strict loader and inventory: **1,348 compiled / 1,097 rejected records**, **474
+accepted / 512 rejected unique names**. Exactly 24 previously rejected records
+now compile: Raise Dead (6), Regrowth (6), Resurrection (6), Reconstruction (2),
+and Adun Oakenshield, Argivian Archaeologist, Skull of Orm and Hell's Caretaker
+(1 each). No previously accepted record regressed. Two surviving first errors
+advanced: Eater of the Dead now rejects `If`; Grave Robbers now rejects `Exile`.
+Other surviving first diagnostics are unchanged. Strict and inventory issue
+arrays agree. Both commands continue to reject the incomplete collection.
+
+Inventory: 72,938 nodes and 8,528 signatures; unknown-role occurrences fall
+from 12,849 to 12,635. All 12 RON hashes match both the baseline inventory and
+vocabulary snapshot. No RON source changed, so the historical vocabulary
+snapshot was not rewritten. No source defect or environment failure was found.
+Previously recorded source defects remain open.
+
+Ranked next candidates for fresh reassessment:
+1. Finite prevention allocation prerequisite, then Amulet of Kroog, Argivian
+   Blacksmith, Combat Medic, Conservator, Kei Takahashi, Oasis and Samite Healer.
+   Guardian Angel and Rakalite retain additional blockers. Medium/high shared
+   engine and adapter effort; seven credible complete-card consumers.
+2. Filtered bands-with-others prerequisite and layer adapter for Adventurers'
+   Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay and
+   Unholy Citadel. Five complete-card consumers; high combat-contract effort.
+3. Controller-scoped counts and CDA P/T for Nightmare, Dakkon Blackblade,
+   Keldon Warlord, Gaea's Avenger and Plague Rats. Audit applicable zones,
+   nested counts, layers and other blockers before estimating full unlocks.
+
+Runtime loading, full-collection gameplay, Go-card removal, obsolete generators
+and DSL cleanup remain unfinished. This run stops after this slice.
+
+### Validation and changed files
+
+The first broad test run failed only because two inventory assertions retained
+1,324/1,121. They now assert the exact measured 1,348/1,097; strict rejection and
+registry isolation assertions remain intact. First lint rejected the built-in
+name `copy` in a new test; it was renamed. Automatic lint changes were reviewed.
+A later nested-filter fixture used the wrong set for Brass Man. Reading its
+complete ARN/3ED records resolved that test-data error. Focused tests then
+passed without changing rules assertions. Final validation results follow.
+
+Slice files: `pkg/mage/dsl/ron/graveyard_return.go`, its test, `compiler.go`,
+`player_scope.go`, `modal_spell.go`, `inventory.go`, `inventory_test.go`,
+`docs/engine-rules-contracts.md`, and this progress ledger.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after all gameplay and fixture edits. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint. |
+| `make test` | PASS after final lint. |
+| `make build` | PASS after final lint. |
+| `go vet ./...` | PASS after final lint. |
+| `make lint` | PASS, zero issues. Reviewed modernize's `slices.ContainsFunc` change in the new filter helper and formatting. Subsequent tests, build and vet passed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records, 1,348 compiled, 1,097 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; complete nested inventory and strict issue arrays agree. |
+| Diagnostic / source audit | PASS: exactly 24 records / 8 names gained, no regressions, only two surviving diagnostics advanced, 12 source hashes unchanged. |
+
+All required checks passed. These nine slice files form one descriptive commit;
+its hash is reported in the final response. The two initial user changes remain
+unstaged. Migration completion criteria remain unmet.

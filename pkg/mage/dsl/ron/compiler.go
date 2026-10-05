@@ -28,6 +28,7 @@ type scope struct {
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
 	spellTarget     *spellTargetPlan
+	cardTarget      *cardTargetPlan
 	damageTarget    *damageTargetPlan
 	castEvent       *castEventPlan
 	stepEvent       *stepEventPlan
@@ -40,6 +41,7 @@ type actionPlan struct {
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
 	spellTarget     *spellTargetPlan
+	cardTarget      *cardTargetPlan
 	damageTarget    *damageTargetPlan
 }
 
@@ -60,6 +62,7 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
 	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
 	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
+	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
 	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
@@ -69,6 +72,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		}
 		if target, ok := targets[i].(*mage.PlayerTargetBinding); ok {
 			bindings.players[p.playerTarget] = target
+		}
+		if target, ok := targets[i].(*mage.CardTargetBinding); ok {
+			bindings.cards[p.cardTarget] = target
 		}
 		if target, ok := targets[i].(*mage.SpellTargetBinding); ok {
 			bindings.spells[p.spellTarget] = target
@@ -570,6 +576,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if binding == "Ref_TargetPlayer" {
 			ctx.playerTarget = &playerTargetPlan{name: binding}
 		}
+		if binding == "Ref_TargetGraveyardCard" {
+			ctx.cardTarget = &cardTargetPlan{name: binding, creatureOnly: graveyardFilterRequiresCreature(targets[0].Args[0])}
+		}
 		if binding == "Ref_TargetSpell" {
 			ctx.spellTarget = &spellTargetPlan{name: binding}
 		}
@@ -587,6 +596,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		plan.playerTarget = ctx.playerTarget
 		plan.permanentTarget = ctx.permanentTarget
 		plan.spellTarget = ctx.spellTarget
+		plan.cardTarget = ctx.cardTarget
 		plan.damageTarget = ctx.damageTarget
 		return plan, nil
 	}
@@ -625,6 +635,8 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 			return nil, "", unsupported(n.Args[0], "player target filter")
 		}
 		return func() mage.Target { return mage.DeclarePlayerTarget(ctx.targetNamespace + "Ref_TargetPlayer") }, "Ref_TargetPlayer", nil
+	case "TargetGraveyardCard":
+		return compileGraveyardTarget(n, ctx)
 	case "TargetSpell":
 		filter, err := compileSpellFilter(n.Args[0])
 		if err != nil {
@@ -822,6 +834,12 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "PutGraveyardCardIntoHand", "PutGraveyardCardOntoBattlefield":
+		build, err := compileGraveyardReturn(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreatePreventDamageUntil":
 		build, err := compileCombatPrevention(n, ctx)
 		if err != nil {
