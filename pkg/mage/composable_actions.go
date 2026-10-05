@@ -3216,21 +3216,30 @@ func (e *combatPreventionInstallation) inspectDefinition() definitionNode {
 }
 
 type combatSourcePreventionInstallation struct {
+	duration Duration
 	subject  PermanentRef
 	subjects PermanentSet
 }
 
 // PreventCombatDamageBy prevents combat damage from one permanent this combat.
 func PreventCombatDamageBy(subject PermanentRef) ResolvingEffect {
-	return &combatSourcePreventionInstallation{subject: subject}
+	return &combatSourcePreventionInstallation{subject: subject, duration: EndOfCombat}
 }
 
 // PreventCombatDamageByEach prevents combat damage from a selected set this combat.
 func PreventCombatDamageByEach(subjects PermanentSet) ResolvingEffect {
-	return &combatSourcePreventionInstallation{subjects: subjects}
+	return &combatSourcePreventionInstallation{subjects: subjects, duration: EndOfCombat}
 }
 
-func (*combatSourcePreventionInstallation) Text() string {
+// PreventCombatDamageByThisTurn prevents combat damage from one permanent this turn.
+func PreventCombatDamageByThisTurn(subject PermanentRef) ResolvingEffect {
+	return &combatSourcePreventionInstallation{subject: subject, duration: EndOfTurn}
+}
+
+func (e *combatSourcePreventionInstallation) Text() string {
+	if e.duration == EndOfTurn {
+		return "prevent combat damage by selected source this turn"
+	}
 	return "prevent combat damage by selected sources this combat"
 }
 func (*combatSourcePreventionInstallation) Properties() EffectProperties {
@@ -3256,7 +3265,7 @@ func (e *combatSourcePreventionInstallation) Apply(ctx *EffectContext) error {
 		}
 		seen[p.incarnationID] = true
 		ctx.Game.effects.AddReplacement(&combatSourcePreventionReplacement{
-			replacementBase: replacementBase{duration: EndOfCombat},
+			replacementBase: replacementBase{duration: e.duration},
 			preventedID:     p.ID(), incarnation: p.incarnationID,
 		})
 	}

@@ -1551,3 +1551,26 @@ and leaves noncombat damage unchanged. Fog, Darkness and Holy Day use this
 form in spells; Spore Flower uses it after its three-counter activation cost.
 Tests: `TestRONGlobalCombatPrevention*`. Other `CreatePreventDamageUntil` shapes
 and future amount shields remain separate gaps.
+
+## RON source combat prevention
+
+`CreatePreventDamageUntil(CombatDamageWouldBeDealtByCreature(ref), [PreventThatDamage], UntilEndOfTurn)`
+accepts a bound typed permanent reference in a resolving action. The event is
+an exact one-argument tuple; its operation list has exactly the symbol
+`PreventThatDamage`, and the duration is exactly the symbol `UntilEndOfTurn`.
+Other events, operations, durations, unbound references and cost/static/rule
+contexts remain declaration errors. The existing target filter checks creature
+legality at announcement and resolution.
+
+The adapter builds `mage.PreventCombatDamageByThisTurn(PermanentRef)` with
+per-instance bindings. It captures the resolved incarnation and installs the
+existing source prevention replacement until cleanup. It prevents combat damage
+by that source, including later combats, but allows damage to that source and
+noncombat damage. A returned permanent is a new source; phasing and control
+changes preserve the captured identity. Captured old-source damage keeps its
+identity after departure. `PreventCombatDamageBy` and `PreventCombatDamageByEach`
+still end at end of combat.
+
+Real RON tests cover Horn of Deafening, Lady Evangela and both Subdue instructions.
+Telekinesis still requires its separate future untap action. Filtered source sets,
+recipient prevention and finite shields are outside this supported shape.

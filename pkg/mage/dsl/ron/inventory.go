@@ -351,6 +351,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "SubtypesList" && len(n.Args) == 1 {
 			return "token_subtype"
 		}
+	case "prevention_event":
+		if n.Name == "CombatDamageWouldBeDealtByCreature" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "action":
 		switch n.Name {
 		case "CreatePreventDamageUntil":

@@ -809,7 +809,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
 	case "CreatePreventDamageUntil":
-		build, err := compileGlobalCombatPrevention(n)
+		build, err := compileCombatPrevention(n, ctx)
 		if err != nil {
 			return nil, err
 		}

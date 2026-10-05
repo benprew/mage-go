@@ -5896,3 +5896,155 @@ Ranked next candidates to reassess:
 
 Complete collection gameplay, runtime loading, Go-card/generator removal,
 DSL cleanup and native startup validation remain open. No second slice began.
+
+## Run 2026-10-04: SOURCE-COMBAT-PREVENTION-TURN
+
+Status: complete one slice; stop after validation and the slice commit.
+Initial user changes in `.gitignore` and `mtgish-ron-execution.md` remain
+excluded from staging. No unrelated untracked files existed initially.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, mage/doc.go, execution design, vocabulary snapshot, ledger,
+selected compiler/engine code, relevant API/contracts, CR 400.7, 514.2,
+609.7, 615.1–615.12, 616.1 and 702.26. Fresh baseline RON/CLI tests
+with `-count=1` and `go build ./...` passed. Semantic loader exited 1 for
+collection rejection: **1,169 compiled / 1,276 rejected records**, 411 accepted
+and 575 rejected unique names. Collection rejection is separate from build/test
+failure. Complete candidate records and nested actions were inspected; reprints
+count once. The syntax snapshot is not support evidence.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Blockers, downstream capabilities and effort |
+| --- | --- | ---: | --- |
+| Turn-long source combat prevention, selected | Horn of Deafening, Lady Evangela, Subdue, Telekinesis | Initially 2; measured 3 | Small engine duration extension and RON adapter, moderate identity/combat/payment tests. Horn and Lady have supported targets and costs. Subdue's mana-value bonus was initially treated as a possible blocker; fresh compilation confirms its existing adapter. Telekinesis still needs its future untap action. The source replacement also enables a later source-set adapter for Feint and Sewers of Estark, which retain collection/filter/branch blockers. |
+| Finite recipient prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve | 0 for prerequisite; 8 after adapter | CR 615.7 simultaneous shield allocation must come first. Large shared damage/decision/replacement test effort. Complete records otherwise use supported fixed costs, single recipient targets and modal forms. Shared allocation will serve all later finite shields. |
+| Legendary filtered banding | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 after contract/adapter | Shared band membership and damage-assignment contracts are missing. Existing static wrappers/filters are ready. Moderate-to-large combat/layer implementation and tests. Master of the Hunt adds named membership/token consumers; Shelkin Brownie and Tolaria add removal/timing contexts. |
+
+Selected source prevention has the largest credible immediate gain for this
+small extension of a proven replacement. No single-card capability was selected.
+No unrelated second slice began. Initial estimate understated the gain by one:
+Subdue already has exact `AdjustPTX(Zero, PlusX, ManaValueOfPermanent(ActionPermanent))`
+support. Its complete record received gameplay tests for both instructions.
+The actual gain is **3 unique names / 3 records**. Telekinesis stays rejected.
+
+### Contract, dependencies and reuse boundary
+
+RON resolving action:
+`CreatePreventDamageUntil(CombatDamageWouldBeDealtByCreature(ref), [PreventThatDamage], UntilEndOfTurn)`.
+Both constructors require exact positional tuple arity. The operation list must
+contain exactly the symbol `PreventThatDamage`; the duration must be exactly
+the symbol `UntilEndOfTurn`. `ref` uses existing `compilePermanentRef` scope
+validation: source, attachment, declared target or matching event references
+only in their valid scopes. Unbound, incompatible, tuple-spelled and numbered
+undeclared references remain errors. Cost/static/top-level rule contexts reject
+the action. Filtered source sets and other events/durations remain unsupported.
+
+`compileCombatPrevention(Node, scope) (effectFactory, error)` owns spelling,
+validation and typed lowering. Each factory invocation builds fresh bindings.
+`mage.PreventCombatDamageByThisTurn(PermanentRef) ResolvingEffect` adds an explicit
+end-of-turn constructor to the existing `combatSourcePreventionInstallation`.
+Existing `PreventCombatDamageBy` and `PreventCombatDamageByEach` callers keep
+end-of-combat duration. No DSL export alias was needed. The shared replacement
+captures permanent ID and incarnation at resolution and uses existing damage
+source snapshots, replacement ordering, cloning and cleanup. No parallel damage
+system, mutable global result, card-name branch, declaration panic or production
+registry exception was added. The implement-engine skill supplied the reusable
+engine workflow; RON card definitions did not change.
+
+Prevention starts only on resolution, lasts through later combats, and prevents
+combat damage by the captured object to players/permanents. Damage to that
+object and noncombat damage remain legal. Return gives a new incarnation;
+phasing and controller changes do not change captured identity. Captured damage
+from the old source after departure remains prevented. The creature target
+filter is checked at announcement and resolution; it is not a dynamic filter
+on every later source packet. Cleanup expires the replacement. Copied abilities
+and spells use existing engine services and do not repay costs.
+
+The gap was an engine duration constructor plus compiler adapter. No new source
+data defect or environmental failure was found. Open earlier data observations
+remain open. All twelve RON source hashes match baseline; no vocabulary snapshot
+refresh is required. Runtime cutover/removal gates remain unmet. No Go card,
+generator or DSL function was deleted; no deletion audit is claimed.
+
+### TDD and gameplay mappings
+
+Tests were written before implementation. Initial fixture builds exposed wrong
+public test API assumptions (`SetDamageSource`, phasing result type and duration
+namespace); those were corrected to existing APIs and native combat. Semantic
+RON red tests then rejected both real activation records at the missing event
+and reported an unknown nested reference role. Engine tests using the existing
+end-of-combat constructor failed the turn-long lifetime cases; the new public
+constructor was also absent. After implementation, fixture cleanup was corrected
+to native cleanup (continuous-only `RemoveEndOfTurn` does not clear replacements),
+and combat probes chose the opposing player after control changes. No acceptance
+assertion was weakened. Inventory totals changed only after loader measurement.
+
+| Cards / contract | Test mapping |
+| --- | --- |
+| Horn of Deafening, Lady Evangela (LEG) | `TestRONSourceCombatPreventionCards`: complete records, definition validation, exact mana/tap costs, sickness, failed payment/illegal targets with rollback, no pre-resolution prevention, player/land rejection, departure/return/phasing/shroud resolution checks, source departure, control changes, copied activations, pending clones, post-resolution return, native double-strike/trample/lifelink, simultaneous opposing combat damage, repeat combats, noncombat damage and native cleanup. |
+| Subdue (LEG) | `TestRONSourceCombatPreventionSubdue`: complete record and definition validation, unpaid/paid casting, no announcement-time effects, both prevention and exact mana-value toughness bonus, target return/phasing, independently retargeted copies with distinct mana values, countering, pending clone isolation and expiry of both instructions. |
+| Horn of Deafening / replacement ordering | `TestRONSourceCombatPreventionReplacementOrder`: native combat with affected-player choice between redirection and prevention, both orders recheck correctly, and unpreventable recipient damage bypasses prevention. |
+| Shared engine | `TestCombatSourcePreventionThisTurn`: player/permanent packets, LKI old-source damage after departure, new incarnations, phase cycles, control changes, unrelated sources, end-of-combat persistence, noncombat damage, cleanup and clone isolation. `TestCombatSourcePreventionThisTurnDeclarations`: bound/nil/unbound references. Existing `TestCombatSourcePrevention*` keeps original durations validated. |
+| Declarations / inventory | `TestRONSourceCombatPreventionDeclarations`: invalid event/reference/operation/duration forms and rule/cost/static/unbound contexts; nested reference role is `permanent_reference`. Existing global prevention and inventory behavior tests remain passing. |
+
+Compilation and gameplay remain separate. Three unique names gain full-record
+behavior mappings; collection engine-validation and behavior totals remain null.
+
+`TestRONSourceCombatPreventionInstances` compiles the complete Horn record once,
+builds two card instances, activates each on a different creature and
+resolves one at a time. It proves that pending target bindings remain independent.
+The activation table also covers source phasing and controller changes;
+declarations reject attachment/event/numbered reads without matching scopes.
+
+### Final measurements and validation
+
+Fresh semantic results: **1,172 compiled / 1,273 rejected records**, 414 accepted
+and 572 rejected unique names. Only Horn of Deafening, Lady Evangela and Subdue
+leave the issue list. No previously accepted name regresses. Telekinesis reaches
+`PermanentDoesntUntapDuringControllersNextNumberUntaps`; six other remaining
+prevention diagnostics change only from “global combat prevention event” to
+“combat prevention event.” There are 72,938 occurrences and 8,528 signatures;
+unknown-role occurrences fall from 14,166 to 14,162. Inventory classification
+is not proof of gameplay support. All twelve source hashes match the baseline.
+
+Ranked next candidates to reassess from fresh evidence:
+1. CR 615.7 simultaneous finite-shield allocation prerequisite, then recipient
+   prevention for eight otherwise-ready cards, including Healing Salve.
+2. Filtered legendary banding for five lands, with combat contract tests first.
+3. Typed combat prevention to-and-by a recipient: Maze of Ith, Ebony Horse and
+   Elvish Scout have concrete complete-record consumers and an existing engine
+   service; inspect its incarnation/replacement contract before adding an adapter.
+4. Event-object LKI/controller queries for Psychic Venom, Kudzu and Artifact
+   Possession; the latter two retain reattachment/activation event dependencies.
+
+Full collection gameplay, complete runtime loading, Go-card/generator removal,
+DSL cleanup and native startup validation remain open. No second slice began.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1`, `go build ./...` | PASS |
+| Baseline `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 1,169 compiled / 1,276 rejected |
+| New engine and RON tests before implementation | Expected missing API, end-of-combat expiry, unsupported event and unknown inventory-role failures |
+| Focused engine/source/global prevention and inventory tests with `-count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| Skill check `go test ./... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic import formatting reviewed; no unrelated changes |
+| Post-lint focused engine/RON/CLI checks with `-count=1` | PASS |
+| `git diff --check` | PASS |
+| Final strict and semantic loaders | Expected exit 1: 1,172 compiled / 1,273 rejected; diagnostic arrays agree |
+| Accepted-name audit and vocabulary source hashes | PASS; zero regressions, all twelve hashes match |
+
+No required check has a build, test or environment blocker. The strict loader
+still rejects the incomplete collection and publishes no registry. Native RON
+gameplay evidence covers the three selected names; complete runtime startup
+is not claimed.
+
+Slice files: `pkg/mage/composable_actions.go`, `doc.go`, new
+`combat_source_turn_test.go`; RON `combat_prevention.go`, `compiler.go`,
+`inventory.go`, `inventory_test.go`, new `source_combat_prevention_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Only these files are staged for the descriptive slice commit.

@@ -172,6 +172,11 @@
 // It checks final characteristics before the untap operation. Other untap
 // effects remain legal. Recipient ability removal does not remove the rule.
 //
+// Use [PreventCombatDamageByThisTurn] with a typed permanent reference for
+// combat damage from that source until cleanup. It keeps the captured
+// incarnation after control changes or a phase cycle. A returned permanent
+// has a new incarnation. [PreventCombatDamageBy] still ends at end of combat.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

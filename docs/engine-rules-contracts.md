@@ -1396,3 +1396,32 @@ check exact argument kinds, arity, operation count, contexts and nested roles.
 
 This adapter does not establish finite shield allocation, source-specific
 prevention durations or new LKI reads. The CR 615.7 prerequisite remains open.
+
+## Turn-long source combat prevention
+
+`PreventCombatDamageByThisTurn(PermanentRef)` uses the same typed reference,
+incarnation capture and `combatSourcePreventionReplacement` as the existing
+end-of-combat constructors. Only its duration differs. Resolution installs the
+replacement; payment and announcement install nothing (CR 615.3–615.4).
+It matches combat packets by source ID and incarnation, for players and
+permanents. Source departure does not erase a captured old-source packet;
+a returned source gets no shield (CR 400.7). Control changes and a phase cycle
+preserve identity (CR 702.26). Cleanup expires the replacement (CR 514.2).
+A target's creature filter applies at announcement and resolution; this is
+prevention by a captured object, not a dynamic creature-source filter.
+
+`TestCombatSourcePreventionThisTurn` checks later-combat lifetime, old-source
+packets after departure, return, phase cycles, control changes, player/permanent
+recipients, unrelated sources, noncombat damage and independent clone cleanup.
+`TestCombatSourcePreventionThisTurnDeclarations` checks bound, nil and unbound
+references. Existing end-of-combat constructor tests still pass.
+`TestRONSourceCombatPreventionCards` checks complete Horn of Deafening and Lady
+Evangela records through native activation and combat, double strike, trample,
+lifelink, simultaneous opposing damage, rollback, legality, copies and clones.
+`TestRONSourceCombatPreventionSubdue` checks both spell instructions, independent
+retargeted copy bonuses, countering and shared cleanup. Replacement-order tests
+check recipient choice, redirection rechecks and unpreventable damage
+(CR 615.6, 615.12, 616.1). Declaration tests check shapes, scopes and inventory.
+
+No finite shield allocation or new damage batch contract is established here.
+The CR 615.7 prerequisite remains open. No runtime registry cutover occurs.
