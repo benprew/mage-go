@@ -1999,3 +1999,42 @@ complete shape. Evidence: `TestRONDamagePackets*` and `TestDamagePackets*`.
 The general `DamageToRecipients` family remains partial: recipient sets,
 opponent-chosen targets, history target filters and rounded/counting values
 still require their own adapters and contracts.
+
+## RON draw-step intervening-if triggers
+
+Permanent cards support this exact rule shape:
+
+```ron
+TriggerI(AtTheBeginningOfAPlayersDrawStep(players),
+    PermanentPassesFilter(ThisPermanent, state), actions)
+```
+
+`players` is symbol `AnyPlayer` or `SinglePlayer(You)`. `state` is symbol
+`IsTapped` or `IsUntapped`. The body uses the existing action-list compiler and
+may read `Trigger_ThatPlayer` as a typed player reference. Each factory creates
+its own binding; independent events, copies and cloned games keep their captured
+player. `You` in the body uses the resolving ability controller. The controller
+filter uses the source controller at detection. Other event players, conditions,
+subjects and spell contexts remain declaration errors.
+
+The adapter lowers to `TurnStepBegins(EachDrawStep, binding)` and
+`WithInterveningIf(SourceTappedStateWithLKI(state == IsTapped))`. The engine
+checks the condition before the normal draw and again at resolution. A departed
+source uses the last-known tapped state of its captured incarnation. A returned
+card cannot replace that information. A source that phases out after detection
+keeps its tapped state for this information read. Phased sources do not trigger.
+Normal draws and trigger draws use the shared replacement pipeline.
+
+The complete-card mappings are Howling Mine and Mana Vault, each in all six
+reprints. `TestRONDrawStepCards`, `ConditionsAndIdentity`, `VaultPayment`,
+`Bindings`, `Invalid`, `InventoryAndReprints`, `BeforeNormalDrawReplacement` and
+`VaultDamagePrevention` (all with prefix `TestRONDrawStep`) cover their rules
+and interactions. The vocabulary family remains partial: this does not add
+other intervening-if events, conditions, or ordinary `TriggerA` draw-step rules.
+
+`mage.SourceTappedStateWithLKI(bool) StateCondition` is a source-only condition
+for information reads at resolution. At detection, with no captured incarnation,
+it requires a live phased-in source. With a captured incarnation, it reads that
+object's current tapped state or its departure snapshot. Existing
+`PermanentIsTapped`, `PermanentIsUntapped`, `SourceTappedCondition` and
+`SourceUntappedCondition` keep their live-only semantics.

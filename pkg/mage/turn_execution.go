@@ -191,12 +191,11 @@ func (g *Game) doUpkeepActions() {
 func (g *Game) doDrawActions() {
 	active := g.ActivePlayerObj()
 
-	// Fire draw step event after the normal draw so triggers can queue
+	// Step conditions must use the state before the normal draw.
 	g.FireEvent(GameEvent{
 		Type:     EvtDrawStep,
 		PlayerID: active.PlayerID(),
 	})
-	g.PutTriggersOnStack()
 }
 
 func (g *Game) doDrawNormalDraw() {

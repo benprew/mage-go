@@ -199,6 +199,11 @@
 // current subject with [While]. Use [GrantKeywordModification] with
 // AttrCanAttack to permit attacks through defender.
 //
+// Use [SourceTappedStateWithLKI] for a source tapped-state check that needs
+// departure information at resolution. Live-only state conditions remain
+// available for static membership checks. Draw-step events are detected before
+// the normal draw; pending triggers go on the stack after that draw.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

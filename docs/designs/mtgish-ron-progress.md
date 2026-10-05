@@ -9059,3 +9059,184 @@ No required check or environmental blocker remains. The ten listed slice files
 are committed together; the descriptive commit hash is reported in the final
 response. The initial two user changes remain unstaged. This run stops after
 this slice. Full migration completion criteria remain unmet.
+
+## Run 2026-10-04: DRAW-STEP-INTERVENING-IF
+
+Status: one complete draw-step intervening-if slice, including its required
+engine contracts. Runtime cutover and removal gates remain unmet. The initial
+user changes to `.gitignore` and `mtgish-ron-execution.md` remain unstaged.
+No unrelated file or RON source is changed.
+
+### Fresh baseline and candidate selection
+
+Before editing, `go test ./pkg/mage/dsl/ron -count=1`, `make test` and
+`make build` passed. Strict loader and semantic inventory both exited 1 for
+collection rejection: 2,445 records, 986 unique names, 1,312 compiled records,
+1,133 rejected records, 464 accepted and 522 rejected unique names. No build,
+test or environmental failure was mistaken for collection rejection.
+Complete selected records were read in all six files. Nested forms and complete
+records were also inspected for the prevention and bands-with-others candidates.
+Reprints count once in this comparison.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream capability / effort |
+| --- | --- | --- | --- |
+| Finite prevention shields | Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Guardian Angel, Kei Takahashi, Oasis, Rakalite, Samite Healer | 7 after the engine prerequisite and adapter; Guardian Angel still needs resolution-time player payment permission; Rakalite needs a future trigger. | Shared finite shields and later modal prevention; high engine/adapter/test effort because CR 615.7 simultaneous multi-source allocation is missing. A prerequisite alone gives 0 immediate unlocks. |
+| Filtered bands-with-others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 after the engine prerequisite and layer adapter; the filters already compile, but the filtered ability and exact band/combat contracts are missing. | Shared filtered ability grants and band legality/damage; high engine/layer/combat test effort. A prerequisite alone gives 0 immediate unlocks. |
+| Draw-step source-state intervening-if | Howling Mine, Mana Vault | 2, 12 records; all other nested rules already compile. Exact source LKI and event-before-normal-draw timing must be checked. | Typed draw-step event players, information checks, future draw-step consumers; low adapter effort and medium contract-test effort, including two small engine prerequisites found during inspection/testing. |
+
+Selected the largest credible complete-card gain for the effort. This is shared
+multi-card work; larger prevention and banding families need substantially more
+engine work. The two engine gaps did not change the unlock estimate, and their
+small shared fixes remain part of this coherent slice. Selection, shape, reuse
+boundary and acceptance cases were stated before editing. The engine skill
+`.agents/skills/implement-engine/SKILL.md` was read and applied when the LKI gap
+was found. The user's slice scope includes the compiler adapter; no production
+card definition is wired or modified by the engine work.
+
+### Established contracts and exact supported context
+
+New engine signature:
+
+```go
+SourceTappedStateWithLKI(tapped bool) StateCondition
+```
+
+The immutable source-only declaration performs pure information checks.
+Without a captured source incarnation it requires a live phased-in source.
+With a captured incarnation it reads the matching present object, including
+its retained state after phasing, or the ZoneSystem departure snapshot for
+that incarnation. Unknown identities do not match. Return and a second
+departure of the same physical card cannot overwrite the original state.
+Existing retained incarnation snapshots survive transient LKI cleanup. This
+adds no global last-action slot or new snapshot store. Live-only tapped-state
+conditions keep their behavior and callers.
+
+`RunStepWithPriority(Draw)` now detects beginning-of-step triggers before the
+normal draw, runs the normal draw through replacements, then places pending
+triggers through the shared APNAP path before priority. A normal-draw replacement
+can no longer create a beginning-of-step trigger by untapping a source or erase
+one by removing it. Skipped steps still emit no draw event. CR 603.2b, 603.4,
+504.1, 608.2h, 400.7 and 702.26b/d establish these timing/information contracts.
+Local `data/LEA.json` Oracle text confirms both complete records. Howling Mine's
+published departure ruling also specifies last-known tapped state:
+https://mtg.wtf/card/2ed/248/Howling-Mine . No source transcription defect was found.
+
+Private compiler signature:
+`compileDrawStepIntervening(Node, scope) (optionFactory, error)`.
+Exact supported shape on permanent cards:
+
+```ron
+TriggerI(AtTheBeginningOfAPlayersDrawStep(players),
+    PermanentPassesFilter(ThisPermanent, state), actions)
+```
+
+`players` is the symbol `AnyPlayer` or `SinglePlayer(You)`; `state` is the
+symbol `IsTapped` or `IsUntapped`. Other subjects, player declarations, condition
+shapes, arities and spell contexts are rejected. Actions use the existing
+`compileActions` grammar. Each factory creates a fresh `BindPlayer` and builds
+its body with `instanceBindings.steps`. `Trigger_ThatPlayer` is scoped to this
+body, remains a player reference, and is not a target. The adapter uses
+`TurnStepBegins(EachDrawStep, binding)`, `WhenEvent`, `WithInterveningIf` and
+`EventPlayerIsController` for the controller-only case. Source control at
+detection filters the event; `You` at resolution uses the captured ability
+controller. Copies can change that controller while keeping the event player.
+The action sequence is fully inside the condition's resolution check.
+
+The existing `compileTappedUpkeep` dispatcher retains its supported upkeep
+shape and selects the draw-step helper for this event. Existing storage-land
+regressions and invalid-shape tests remain active. Ordinary draw-step `TriggerA`
+and other `TriggerI` events/conditions remain unsupported. Inventory assigns
+`AtTheBeginningOfAPlayersDrawStep/1` a `player_filter` child role; nested
+`SinglePlayer/1` supplies `player_reference`. Support is still marked unverified,
+and aggregate engine-validation/gameplay counts remain null.
+
+Reuse: ZoneSystem incarnation/LKI snapshots, trigger detection/placement,
+resolution source/controller snapshots, typed player bindings, clone/copy paths,
+normal draw and replacement pipelines, `PermanentDealsDamage`, prevention,
+transactional casting/mana/payment and untap restrictions. RON owns spelling,
+shape checks and binding scope; reusable timing and LKI rules stay in mage.
+No fallback, partial production registry, name branch, skipped rule, Go-card
+deletion, obsolete generator removal or unused DSL deletion is introduced.
+No deletion caller audit or native startup completion claim is made.
+
+### TDD and complete-card mappings
+
+Initial real RON tests failed on the unsupported draw-step intervening-if event;
+engine tests failed on the missing typed condition. All initial gameplay,
+identity, payment, scope and reprint tests were written before implementation.
+Additional engine and real-RON timing tests then failed because detection ran
+after the normal draw, before the native order was fixed. One timing fixture
+needed an owner before destruction, and the initial reprint fixture used the
+wrong AST position field; both were corrected before confirming expected red
+test results. No rules assertion was weakened.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Howling Mine and Mana Vault, all 12 complete records | `TestRONDrawStepCards`: definition validation, unpaid cast rollback, paid native casting, own/opponent native draws, extra draw versus damage, immediate three-mana production, tap-cost rejection and untap-step restriction. |
+| Both cards | `TestRONDrawStepConditionsAndIdentity`: both states at event and resolution, restoration, source departure in both states, returned incarnation, phasing before/after and phase cycle, control changes, ability removal before/after, copied trigger controllers and independent clones. |
+| Mana Vault | `TestRONDrawStepVaultPayment`: optional payment at resolution, decline/insufficient mana rollback, current controller payment and untap preventing the later damage trigger. |
+| Both cards | `TestRONDrawStepBindings`: two Howling Mine instances and two pending event players, plus Mana Vault under a new controller. |
+| Howling Mine | `TestRONDrawStepBeforeNormalDrawReplacement`: normal draw replacement destroys an initially untapped source or untaps an initially tapped source; only the beginning-of-step state determines detection. Subsequent draws use the same replacement service. |
+| Mana Vault | `TestRONDrawStepVaultDamagePrevention`: damage consumes a shield and the next trigger deals damage; it is not life loss. |
+| Both cards, strict loading | `TestRONDrawStepInventoryAndReprints`: all 12 records form two canonical names, repeated factory calls have separate card and ability identities, scoped semantic roles remain unverified, adding a rejected record publishes no partial registry. |
+| Invalid declarations | `TestRONDrawStepInvalid`: malformed player/reference/filter/arity, host/target subjects, wrong event-binding type and binding leakage into another ability. |
+| Shared engine condition | `TestSourceTappedStateWithLKILifecycle`: both states, changed live state, departure, return, second departure, phasing, unknown incarnation, transient LKI cleanup and clones. |
+| Shared engine trigger | `TestSourceTappedStateWithLKITrigger`: detection and resolution, tapped departure, copies, captured controller, clones and invalid spell-source context. |
+| Shared native timing | `TestDrawStepDetectionBeforeNormalDraw`, `TestDrawStepPriorityAfterNormalDraw`: pre-draw detection, normal draw before stack/priority, subsequent triggered draw. Retained Fasting tests cover skipped draw steps. |
+
+No new simultaneous-operation, target-legality or cost implementation is added.
+Existing action/target/payment contracts remain in force; source information,
+event timing, bindings, clones, payment rollback and damage replacement are the
+applicable new integration evidence. Aggregate collection gameplay coverage is
+not inferred from compilation totals. This run adds two complete-card mappings.
+
+### Measured outcome and next candidates
+
+Actual gains match the estimate: **12 records / 2 unique cards**. Final strict
+loader and inventory show **1,324 compiled / 1,121 rejected records**, with
+466 accepted and 520 rejected unique names. The 12 removed first diagnostics
+are exactly Howling Mine and Mana Vault in LEA, LEB, 2ED, 3ED, CED and CEI.
+No accepted record regressed, no surviving first diagnostic changed, and strict
+and inspection diagnostics agree. Inventory retains 72,938 node occurrences and
+8,528 signatures; unknown-role occurrences fall from 12,873 to 12,849.
+All 12 source hashes are unchanged, so no RON
+vocabulary source refresh is needed. The original vocabulary snapshot remains
+historical; fresh measurements are recorded here. No new data defect or
+environmental blocker was found. Earlier recorded source defects remain open.
+
+Ranked next candidates for fresh reassessment:
+1. Finite prevention allocation engine prerequisite, then seven ready consumers.
+2. Filtered bands-with-others engine prerequisite and five land consumers.
+3. Shared end-step intervening-if conditions, including Pestilence and Osai
+   Vultures; audit the remaining history/body blockers before estimating unlocks.
+4. Controller-scoped permanent counts and characteristic-defining P/T for
+   Nightmare, Dakkon Blackblade, Keldon Warlord, Gaea's Avenger and Plague Rats;
+   establish applicable-zone and layer contracts first.
+
+Full-collection gameplay, runtime loading, Go-card removal, obsolete generation
+and DSL cleanup remain unfinished. This run stops after this slice.
+
+### Final validation and changed files
+
+| Command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(SourceTappedStateWithLKI\|RONDrawStep\|DrawStep\|Fasting)' -count=1` | PASS. |
+| Focused post-review tests, including `./cmd/loadcards` and inventory tests, with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final test edits and lint. |
+| `make test` | PASS after final test edits and lint. |
+| `make build` | PASS after final test edits and lint. |
+| `go vet ./...` | PASS after final test edits and lint. |
+| `make lint` | PASS twice, zero issues; formatting/fix review shows only slice files and the two initial user changes. Final affected checks were rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,324 compiled / 1,121 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; complete nested inventory, strict issue arrays match. |
+| `go test ./... -short -count=1` | PASS; additional engine-skill check. |
+| Diagnostic and source audit | Exactly 12 records / 2 names gained, zero regressions, unchanged surviving diagnostics, all 12 hashes match the vocabulary source snapshot. |
+
+Changed slice files: `pkg/mage/composable_tapped_lki.go` and its test,
+`pkg/mage/dsl/ron/draw_step.go` and its test, `storage_land.go`, `inventory.go`,
+`inventory_test.go`, `pkg/mage/turn.go`, `turn_execution.go`, `doc.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+No required check or environment blocker remains. These 13 files form one
+commit; its hash is reported in the final response. The initial two user changes
+remain unstaged. Migration completion criteria remain unmet.

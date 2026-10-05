@@ -1921,3 +1921,40 @@ clone isolation, rollback, phasing, source return/LKI, controller changes,
 planeswalker results, lethal self damage and affected-player replacement order.
 This contract adds neither finite multi-source prevention allocation nor new
 recipient collections, event bindings or announcement choices.
+
+## Draw-step detection and source tapped-state information
+
+CR 603.2b and 603.4 require beginning-of-draw-step trigger detection and its
+intervening-if check before the normal draw changes the game state. CR 504.1
+requires the normal draw before priority. The engine now dispatches `EvtDrawStep`
+first, performs the normal draw through replacements, then places all pending
+triggers on the stack in the existing APNAP path. No priority or trigger
+resolution occurs between detection and the normal draw. Skipped draw steps
+still produce neither the event nor the draw.
+
+`SourceTappedStateWithLKI(tapped bool) StateCondition` implements a pure source
+information check. Without a captured incarnation it requires a live phased-in
+source. Resolution uses the captured incarnation and reads its current state,
+or the ZoneSystem departure snapshot under CR 608.2h. Another incarnation of
+the same card cannot supply the result (CR 400.7). The existing retained
+incarnation snapshot survives transient LKI cleanup and later departures.
+Phasing after detection permits a tapped-state information read from the retained
+object, with no action on that phased object (CR 702.26b/d). Phasing before
+an event prevents detection. The condition requires a permanent source in
+engine definition validation; it does not change live-only conditions used by
+static membership rules. It stores no game state and clones share only the
+immutable declaration.
+
+`TestSourceTappedStateWithLKILifecycle` covers both states, live changes,
+departure/return, a second departure, phasing, unknown identity, transient LKI
+cleanup and clones. `TestSourceTappedStateWithLKITrigger` covers detection,
+resolution rechecks, departed states, returned objects, copies, clones and
+invalid spell context. `TestDrawStepDetectionBeforeNormalDraw` and
+`TestDrawStepPriorityAfterNormalDraw` establish the native timing contract.
+`TestRONDrawStepBeforeNormalDrawReplacement` proves both directions with a
+real Howling Mine record and a normal-draw replacement. The other
+`TestRONDrawStep*` tests cover all Howling Mine and Mana Vault rules, including
+optional upkeep payment, mana classification, failed payment rollback, damage
+prevention, event identity and current controller. Existing Fasting tests cover
+whole-step skipping. No new simultaneous-operation or replacement-order service
+is introduced.
