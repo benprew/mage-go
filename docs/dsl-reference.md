@@ -1701,3 +1701,29 @@ Complete-record tests cover Cursed Land, Feedback, Wanderlust, Warp Artifact,
 and Unstable Mutation. This adapter does not add a resolving `HostController`
 reference, optional payments, host-death triggers, or a host-controller end-step
 pattern. Unsupported declarations remain errors.
+
+## RON static collection attack restrictions
+
+`EachPermanentRuleEffect(filter, [CantAttack])` accepts one bare `CantAttack`
+symbol on a permanent. It lowers the static filter plan to
+`Static(CantAttackEach(PermanentSet))`. The collection reads final characteristics
+at attack declaration, including later flying grants or removal. Source control
+and collection membership are current. The rule does not grant an ability to
+recipients and does not remove creatures already in combat.
+
+Static filters also accept `ExceptFor(filter)` for a pure complement and
+`IsNamed(NamedCard("name"))` with a nonempty string. A complement with a contextual
+controller or source exclusion is rejected. Existing conjunctions,
+`ControlledByAPlayer(SinglePlayer(You))`, and `Other(ThisPermanent)` keep their
+scope rules; source-dependent disjunctions remain errors. These adapters also
+serve existing static layer contexts and the existing end-of-turn temporary
+collection P/T adapter. Temporary collections keep their existing resolution-time
+membership capture. No current RON record uses these new filters in that temporary
+context. They do not add generic target filters,
+card-zone filters or name choices.
+
+Complete RON gameplay evidence covers Moat, Evil Eye of Orms-by-Gore, and
+Akron Legionnaire in `TestRONAttackRuleCards`, `Lifecycle`, `FlyingChanges`,
+`Native`, `NativeCast`, `StaticFilterScopes`, and `StrictLoadAndInventory`.
+Other `CantAttack` contexts, temporary rules, attacking-player restrictions,
+and mixed operation lists remain unsupported.

@@ -1572,3 +1572,31 @@ verify these contracts through complete RON records. The supported event is
 on an Aura. Resolving `HostController`, optional payments, host-death events,
 intervening-if host conditions, and host-controller end-step events remain
 separate compiler work.
+
+## Static collection attack restrictions
+
+`CantAttackEach(PermanentSet) StaticRule` checks current members through
+`Permanent.CanDeclareAsAttacker(*Game)`. Its static effect uses the existing
+printed-ability lifetime service. Membership is queried after characteristic
+layers, rather than encoded as a layer-6 attribute removal (CR 613.11). This
+keeps flying, types, names and controllers current regardless of effect
+timestamp order. Each active restriction can prohibit declaration (CR 508.1c).
+The query does not make choices or mutate the collection.
+
+`ControlledPermanents` reads the source's current controller. Removing a
+recipient's abilities does not remove another source's restriction. Removing
+the source ability or phasing/removing the source suspends the restriction
+(CR 611.3a–b). Returned and newly entered objects use current membership;
+there is no saved recipient list or LKI read. Changes after declaration do not
+remove attackers from combat (CR 506.4a). Phased recipients cannot be declared.
+Other attack restrictions, summoning sickness, tapping and Defender still apply.
+
+The declaration validator sees the typed set and rejects missing sets and
+unbound references. Factories create separate continuous effects; game clones
+copy their source storage and retain immutable collection declarations.
+`TestCantAttackEachFinalCharacteristics` covers both timestamp orders, recipient
+ability removal and clone isolation; `TestCantAttackEachDefinition` covers
+invalid declarations. RON tests named `TestRONAttackRule*` cover all three real
+consumers, source and recipient control, phasing, return, suppression, independent
+instances, strict loading, native casting/payment rollback and native combat.
+No new optional costs, damage replacements or simultaneous operations are added.

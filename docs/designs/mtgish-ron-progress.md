@@ -6853,3 +6853,179 @@ Ranked next candidates to reassess with fresh evidence:
 Changed files: `pkg/mage/dsl/ron/end_step.go`, `host_upkeep_test.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
 and this ledger. Stop after this slice.
+
+## Slice: Static collection attack restrictions (2026-10-04)
+
+Status: implementation complete; validation results below. Stop after this slice.
+Initial user changes to `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from the slice commit. Read `AGENTS.md`, `pkg/mage/doc.go`, execution
+design, vocabulary snapshot, ledger, selected compiler/engine code, relevant
+API/rules contracts, and CR 508.1a–d, 611.3a–b, 613.11. Requirements came from
+complete RON records, not Go card definitions.
+
+### Fresh inventory and candidate comparison
+
+Baseline focused compiler/CLI tests, mage short tests and `make build` passed.
+Strict and semantic loaders rejected the collection as expected: **1,218 compiled
+/ 1,227 rejected records**, 429 accepted / 557 rejected unique names. All 12 files
+were parsed: 2,445 records / 986 names, 72,938 node occurrences / 8,528 signatures.
+The baseline inventory had 14,071 unknown-role occurrences. This is collection
+rejection, not a build or environment failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Blockers, downstream capability, effort |
+| --- | --- | ---: | --- |
+| Static collection attack restriction, selected | Moat; Evil Eye of Orms-by-Gore; Akron Legionnaire | 3 names / 3 records | Current-controller static filters already exist, unlike the previous ledger's estimate. Pure named exclusions need an adapter. Existing attribute-revocation helpers run in layer 6, so a final-characteristic declaration contract is needed. Shared typed collection restriction enables all three and provides a prerequisite for other attack contexts. Small adapter plus moderate engine/lifecycle/combat tests. |
+| Finite prevention allocation prerequisite | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 immediately; then 7 otherwise-ready names | Complete records have supported costs/targets but need finite simultaneous shield allocation and its adapter. Shared prevention is concrete multi-card work; larger engine/decision/replacement test effort. Healing Salve, Guardian Angel and Rakalite have additional modes/payment/delayed-return blockers and are not counted. |
+| Filtered bands-with-others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after adapter | All five complete records need the same filtered banding contract. Legendary/color/controller filters already exist. Combat band formation and damage assignment must preserve the filter. Larger combat implementation and native tests than the selected slice. |
+
+The selected slice has the largest credible immediate gain for its effort.
+First-error frequency was not used as an unlock count. Each candidate's complete
+records and nested forms were inspected; the selected three each occur once.
+No additional prerequisite was silently omitted.
+
+The pre-edit contract was one `EachPermanentRuleEffect(filter, [CantAttack])`
+on a permanent, with current membership/controller at declaration. RON owns
+spelling, filter context and declaration rejection; mage owns legality and static
+lifetime. Pre-edit acceptance cases included all three real records, invalid
+shapes, final flying, source/recipient changes, phasing, clones and native combat.
+Tests failed first on undefined `CantAttackEach` and unsupported global landwalk
+operation `CantAttack`. Engine definition tests additionally exposed the need to
+forward inspection from the installed continuous effect to its typed rule.
+
+### Exact contract and engine reuse
+
+New engine signature: `CantAttackEach(PermanentSet) StaticRule`. It installs
+`matchingAttackRestriction` using the existing continuous-effect and printed
+ability lifetime services. `Permanent.CanDeclareAsAttacker(*Game)` checks the
+active typed collections against final characteristics without changing state.
+Its existing tapping, sickness, Defender and attribute checks remain in force.
+Phased recipients cannot be declared. The effect copies its source storage on
+clone; the immutable set plan is shared. Nil sets and unbound set references
+are definition errors, with no game-time declaration panic.
+
+RON signature/context: permanent top-level `EachPermanentRuleEffect/2`, with a
+static permanent filter and a list containing one bare symbol `CantAttack`.
+`compileCollectionAttackRule(Node, Node) (optionFactory, error)` reuses
+`compileStaticPermanentFilter` and `staticPermanentFilterPlan.build()`.
+Each factory builds a fresh static ability and continuous effect.
+
+Additional static filter signatures: `ExceptFor/1(filter)` is a pure complement;
+`IsNamed/1(NamedCard/1(nonempty string))` uses `mage.Named`. These work in the
+shared static layer/collection context. The existing temporary collection P/T
+adapter also uses this helper and retains resolution-time membership capture;
+no current record uses the new filters there. Contextual complements involving source
+exclusion or controller selection are rejected; existing source-dependent
+`Or` rejection is retained. Pure conjunctions/disjunctions, `Other(ThisPermanent)`
+and `ControlledByAPlayer(SinglePlayer(You))` retain existing contracts. Semantic
+inventory now walks exclusion descendants as permanent filters and named-card
+arguments as `card_name` with metadata strings. Reporting is still unverified
+support, and collection-wide engine/gameplay totals remain null.
+
+Reused services: `Static`, `StaticRule`, `PermanentSet`, `MatchingPermanents`,
+`ControlledPermanents`, `WithoutPermanent`, `Named`, `Not`, `And`, subtype/keyword
+filters, `EffectContext`, continuous-effect source storage, printed ability
+suppression, `CanDeclareAsAttacker`, native declaration/turn execution, incarnation
+identity, phasing, cloning and transactional casting. Existing Go callers are
+preserved. No Go fallback, card-name executor branch, mutable compiled binding,
+last-action slot, or partial production registry was added.
+
+This is one adapter slice with its required engine prerequisite. Existing
+`RevokeKeywordFromAll` and `RevokeAttrFromControlled` were not reused to implement
+this rule: layer-6 revocation can read flying before a later grant. CR 613.11 and
+508.1c require final-characteristic restriction checks. Source suppression and
+membership are checked at the query, not frozen into a recipient attribute.
+Removing a recipient ability does not remove another source's rule. Changing
+the restriction after declaration does not remove an attacker from combat.
+
+### Full-record audit, tests and source findings
+
+Complete selected records: Moat, Evil Eye of Orms-by-Gore, Akron Legionnaire.
+Both Evil Eye rules are tested: non-Eye creatures controlled by its controller
+cannot attack, and only Walls can block it. Akron excludes every creature named
+Akron Legionnaire, not just the source, and every artifact creature. Moat applies
+to either player's nonflying creatures.
+
+Nested adjacent forms and their complete records were also inspected:
+Demonic Torment (host restriction plus prevention), Wall of Dust (block event and
+next-turn duration), Festival (opponent upkeep casting plus temporary collection),
+Arboria (defending-player history), Rohgahh of Kher Keep (named static boost plus
+optional payment/list/control), Plague Rats (named count CDAs), Goblin Artisans
+(ability-target history and coin branch), Tidal Influence (casting, entry counters,
+conditional layers and counter trigger). These remain blocked and are not new
+full-card coverage claims. Pure named/exclusion adapters provide reusable support
+inside static plans; generic target/zone/name-choice adapters remain unsupported.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| All three selected cards | `TestRONAttackRuleCards`: engine validation, both players, flying/Eye/artifact/named/noncreature cases; complete Evil Eye blocking rule. `TestRONAttackRuleLifecycle`: source phase/cycle, source and recipient control, departure/return, source/recipient ability removal, recipient phase/cycle/return, clones and second instances. |
+| All three selected cards | `TestRONAttackRuleNative`: native attack declaration rejects restricted creatures without tapping; departure permits declaration; a returned source does not remove an already declared attacker. |
+| Moat | `TestRONAttackRuleFlyingChanges`: flying grant before/after source and later removal. `TestRONAttackRuleNativeCast`: unpaid-cast rollback, stack timing, mana payment and entry. |
+| Full records / strict collection | `TestRONAttackRuleStrictLoadAndInventory`: all three records load and validate; nested role reporting; adding a malformed record rejects the entire subset. |
+| Invalid declarations | `TestRONAttackRuleInvalid`: constructor instead of symbol, mixed lists, malformed names, empty conjunction, source-dependent complement/disjunction, unbound player reference. |
+| Typed scopes / instances | `TestRONAttackRuleStaticFilterScopes`: pure named exclusion, source exclusion, current-controller membership and independent factories. |
+| Engine final-characteristic contract | `TestCantAttackEachFinalCharacteristics`: both flying grant timestamp orders, recipient ability removal, clone isolation. `TestCantAttackEachDefinition`: valid set, missing set, unbound target reference. |
+
+A control-change fixture initially expected an immediately legal attack without
+clearing control-change summoning sickness. It now clears sickness explicitly to
+measure only collection membership. A strict-subset fixture used the wrong AST
+position field; the compile failure and initial lint failure were corrected.
+No gameplay assertion was removed. Automatic lint changes were import formatting
+only and were reviewed before final checks.
+
+Gap classification: compiler adapter plus final-characteristic engine contract.
+No source-data defect or environment failure was found. No RON file changed;
+all twelve hashes match the vocabulary snapshot, so no source refresh is needed.
+Earlier Gaea's Liege/Fastbond concerns remain open. There are no event/result
+bindings, LKI reads, optional costs, damage replacements or simultaneous batches
+in this slice. Identity, timing, phasing, cloning and cast rollback use existing
+services and have explicit tests.
+
+### Actual gain, validation and next work
+
+Actual gain matches the estimate: **3 unique cards / 3 records**. Strict loader:
+**1,221 compiled / 1,224 rejected**, 432 accepted / 554 rejected names. The only
+removed diagnostics are the selected three; all surviving diagnostics are exact
+matches and no accepted record regressed. Compilation and the three new complete
+RON behavior mappings are separate evidence, not collection completion.
+
+Final semantic inventory: 72,938 occurrences / 8,528 signatures; unknown roles
+fall from 14,071 to 14,059 because the two exclusion subtrees and named-card
+arguments now have explicit roles. No support status is inferred from this gain.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline focused tests, mage short tests, `make build` | PASS |
+| New tests before implementation | Expected undefined engine API / unsupported `CantAttack` failures |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| Post-lint focused engine, RON attack and inventory tests `-count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint |
+| `make test` | PASS after lint |
+| `make build` | PASS after lint |
+| `go vet ./...` | PASS after lint |
+| `make lint` | PASS, zero issues after fixture compile repair; import formatting reviewed |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` | Expected exit 1: 1,221 compiled / 1,224 rejected |
+| Final semantic loader | Expected exit 1; same strict issues; validation/behavior totals remain null |
+| Diagnostic/name comparison and twelve source hashes | PASS: exact three removals, no other diagnostic changes, no regressions or source edits |
+
+No remaining check failure or environment blocker prevents a commit. The final
+response records the descriptive commit hash. Stage only the slice files below.
+No Go definitions, generators or DSL functions are deleted: complete collection
+loading/gameplay, startup wiring and removal gates remain unmet. No deletion
+caller audit or collection completion is claimed.
+
+Ranked next candidates to reassess:
+1. Finite simultaneous prevention allocation prerequisite, enabling the seven
+   otherwise-ready prevention consumers listed above.
+2. Filtered bands-with-others combat contract, enabling the five lands.
+3. Entry opponent choice and durable chosen-player binding for Black Vise,
+   The Rack and Cursed Rack, after checking player/static-hand-size and trigger
+   prerequisites. Temporary attack restrictions now have a shared declaration
+   service, but Festival/Wall of Dust still need timing/duration/event contracts;
+   do not select a lone host restriction while useful multi-card work remains.
+
+Changed files: `pkg/mage/attack_matching.go`, `attack_matching_test.go`, `card.go`,
+`doc.go`; `pkg/mage/dsl/ron/attack_rule.go`, `attack_rule_test.go`,
+`collection_untap.go`, `layers.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Stop after this completed slice.

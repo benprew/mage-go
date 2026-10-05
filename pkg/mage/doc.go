@@ -181,6 +181,10 @@
 // With [Until], the rule keeps the selected incarnation until cleanup.
 // Each blocker must pass its filter and all other combat restrictions.
 //
+// Use [CantAttackEach] with [Static] for a current collection attack restriction.
+// It checks final characteristics at declaration. [ControlledPermanents] reads
+// the current source controller. Later rule changes do not remove attackers.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

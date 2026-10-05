@@ -14,6 +14,9 @@ func compileCollectionPermanentRule(n Node) (optionFactory, error) {
 		return nil, unsupported(n.Args[1], "collection permanent rule operations")
 	}
 	operation := operations[0]
+	if operation.Name == "CantAttack" {
+		return compileCollectionAttackRule(n, operation)
+	}
 	if operation.Name != "DoesntUntapDuringControllersUntap" {
 		return compileLandwalkBlockingRule(n)
 	}

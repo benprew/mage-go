@@ -561,7 +561,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if len(n.Args) == 1 && (n.Name == "LessThanOrEqualTo" || n.Name == "GreaterThanOrEqualTo" || n.Name == "EqualTo") {
 			return "value"
 		}
+	case "card_name":
+		if n.Name == "NamedCard" && len(n.Args) == 1 {
+			return "metadata"
+		}
 	case "permanent_filter":
+		if n.Name == "ExceptFor" && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "IsNamed" && len(n.Args) == 1 {
+			return "card_name"
+		}
 		if n.Name == "PowerIs" && len(n.Args) == 1 {
 			return "power_comparison"
 		}

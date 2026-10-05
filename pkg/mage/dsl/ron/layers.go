@@ -190,6 +190,36 @@ func (p staticPermanentFilterPlan) build() mage.PermanentSet {
 }
 
 func compileStaticPermanentFilter(n Node) (staticPermanentFilterPlan, error) {
+	if n.Name == "ExceptFor" {
+		if err := arity(n, 1); err != nil {
+			return staticPermanentFilterPlan{}, err
+		}
+		child, err := compileStaticPermanentFilter(n.Args[0])
+		if err != nil {
+			return staticPermanentFilterPlan{}, err
+		}
+		if child.controlled || child.excludeSource {
+			return staticPermanentFilterPlan{}, unsupported(n, "source-dependent static exclusion")
+		}
+		return staticPermanentFilterPlan{filter: mage.Not(child.filter)}, nil
+	}
+	if n.Name == "IsNamed" {
+		if err := arity(n, 1); err != nil {
+			return staticPermanentFilterPlan{}, err
+		}
+		name := n.Args[0]
+		if name.Name != "NamedCard" {
+			return staticPermanentFilterPlan{}, unsupported(name, "static card name")
+		}
+		if err := arity(name, 1); err != nil {
+			return staticPermanentFilterPlan{}, err
+		}
+		if name.Args[0].Kind != String || name.Args[0].String == "" {
+			return staticPermanentFilterPlan{}, problem(name.Args[0], "card name requires a nonempty string")
+		}
+		return staticPermanentFilterPlan{filter: mage.Named(name.Args[0].String)}, nil
+	}
+
 	if n.Name == "Other" {
 		if err := arity(n, 1); err != nil {
 			return staticPermanentFilterPlan{}, err

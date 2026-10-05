@@ -990,15 +990,12 @@ func (p *Permanent) IsAttached() bool {
 	return p.AttachedTo != uuid.Nil
 }
 
-// CanDeclareAsAttacker returns true if this permanent may be declared as an attacker.
-// Reads like the rulebook: must be a creature (AttrCanAttack), must be untapped,
-// must not be summoning sick (unless it has Haste), must not have Defender.
-// Attack prevention by effects writes a negative attrDelta for AttrCanAttack, so
-// HasAttr(AttrCanAttack) returning false captures both "not a creature" and "prevented".
-// A granted AttrCanAttack (e.g. Animate Wall) overrides Defender, matching
-// "can attack as though it didn't have defender."
+// CanDeclareAsAttacker checks attack restrictions against current characteristics.
+// A grant of AttrCanAttack permits a creature with Defender to attack.
 func (p *Permanent) CanDeclareAsAttacker(g *Game) bool {
 	return p.HasAttr(AttrCanAttack) &&
+		!p.PhasedOut &&
+		(g == nil || !g.restrictedFromAttacking(p)) &&
 		!p.Tapped &&
 		(!p.HasAttr(AttrSummonSick) || p.HasAttr(Haste)) &&
 		(!p.HasAttr(Defender) || p.grantedAttrs[AttrCanAttack] > 0)
