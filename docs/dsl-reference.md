@@ -385,6 +385,9 @@ source-ID rule until end of turn. Neither function is a typed DSL declaration.
 
 For captured damage, source filters read current characteristics while the same
 permanent is present and retained characteristics after departure or phasing.
+Captured spell sources and unknown battlefield incarnations do not match these
+permanent filters. UUID-only actions keep live permanent lookup. The shared
+lookup is internal; the public signatures above do not change.
 Copies, redirections, and cleanup preserve that identity. Custom filters must
 read the supplied permanent rather than perform another UUID lookup. Player and
 permanent recipients retain their existing selection and legality contracts.

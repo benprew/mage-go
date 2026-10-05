@@ -8313,3 +8313,165 @@ on Vodalian War Machine. No environmental or pre-existing validation blocker
 remains. Only the seven listed slice files are staged and committed; both
 initial user changes remain unstaged. The descriptive commit hash is reported
 in the final response. This run stops after this slice.
+
+## 2026-10-04 — Permanent prevention source identity prerequisite
+
+Capability `PREVENTION-PERMANENT-SOURCE-IDENTITY`: complete engine prerequisite.
+This run stops after this slice. The initial edits to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain unstaged and are excluded from the
+commit. No RON source, Go card definition, generator or DSL export is changed.
+The removal gates remain unmet.
+
+### Selection and fresh evidence
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+ledger, fresh semantic inventory, compiler/reference/damage adapters, damage
+source and action implementations, prevention and redirection replacements,
+zone/LKI/cloning services, relevant API/rules contracts, and CR 113, 400.7,
+609.7, 615 and 616. Applied the `implement-engine` skill for the missing engine
+contract. No removed card skill or Go card definition supplied requirements.
+Local Oracle data in `data/ATQ.json`, `ARN.json`, `DRK.json`, `LEA.json`,
+`LEG.json` and `FEM.json` confirms the compared card requirements.
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Baseline strict inspection exited 1 for collection rejection: 2,445
+records, 986 unique names, **1,283 compiled / 1,162 rejected**, 454 accepted /
+532 rejected unique names. This is not a build failure. The inventory contains
+72,938 occurrences, 8,528 signatures and 13,322 unknown-role occurrences.
+
+Complete RON records and nested forms were inspected before selection; reprints
+count once. Candidate comparison:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream capabilities and effort |
+| --- | --- | --- | --- |
+| Permanent prevention source identity (selected prerequisite) | Argothian Pixies; Desert Nomads; Uncle Istvan. Existing RON damage regression consumers: Prodigal Sorcerer; Grapeshot Catapult. | 0 in this engine slice; 3 names / 3 records after the next shared adapter | The three prevention cards share `PreventDamage(DamageWouldBeDealtByAPermanentToRecipient(filter, Permanent(ThisPermanent)), [PreventThatDamage])`. Their complete remaining rules already compile. The compiler adapter is missing, and its engine source-filter service incorrectly uses live UUID lookup. Repair that prerequisite first. Low implementation / medium lifecycle, replacement and gameplay test effort. Concrete downstream gain is the three-card adapter, plus source-filter composition with existing redirection and damage services. |
+| Static permanent characteristic predicates | Goblin Caves; Goblin Shrine; Animate Artifact | 1 immediate; prerequisite for 2 more | Caves needs a basic Mountain host predicate. Shrine also needs source-departure events and collection damage. Animate Artifact needs conditional membership across type and P/T layers plus mana-value base P/T. Low implementation / medium layer and attachment test effort. Useful host/source queries, but only one immediate complete card. |
+| Finite simultaneous prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite; up to 7 after adapters | Complete costs, targets and wrappers are ready. CR 615.7 requires recipient choice among simultaneous source packets before finite shields are consumed; this engine decision contract is missing. High implementation/test effort. Enables seven cards and later Healing Salve/Alabaster Potion modes. |
+
+Selected the small identity prerequisite because it enables a concrete ready
+three-card capability at lower effort than finite allocation. The characteristic
+predicate candidate has fewer immediate complete cards and more follow-on layer
+and event dependencies. No compiler adapter is added on top of an incomplete
+engine contract. Selection, reuse boundary and acceptance cases were stated
+before edits.
+
+Complete additional `PreventDamage` records were also read: Argothian Treefolk,
+Artifact Ward, Enchanted Being, Gaseous Form, Wall of Putrid Flesh, Wall of Shadows
+and Wall of Vapor. They still need other shapes: general source filters,
+attachment subjects, combat-only unions, enchanted-source predicates,
+blocked-by relationships and targeting restrictions. The fresh inventory also
+exposes the same event spelling beneath rejected `ReplaceWouldDealDamage`
+bodies on Veteran Bodyguard and Martyrs of Korlis; their full records were read.
+Those conditional redirection bodies remain separate compiler work. No unlock
+estimate is based on their first diagnostics alone.
+
+### Exact contract and reuse
+
+Internal signature:
+`(*Game).damageFilterSource(uuid.UUID, DamageSource) *Permanent`.
+`damagePreventionRuleReplacement.Matches(Action, GameReader) bool` uses it for
+all three existing source-filter contexts: permanent recipients, explicitly
+scoped player recipients, and source-only player rules.
+
+Public APIs remain `Game.AddDamagePreventionRule`, `WithFrom`, `WithTo`,
+`WithToPlayer`, and `PreventDamageFromTo`. No signature or declaration spelling
+changes. The future RON adapter owns RON syntax and scope, and can reuse those
+engine services. No new RON shape is claimed by this prerequisite slice.
+
+A captured battlefield source has an ID and incarnation. The same present
+incarnation supplies current characteristics, including changes made after
+capture. A phased incarnation supplies a copy of its retained permanent.
+A departed incarnation supplies a copy of `ZoneSystem.LKIByIncarnation`'s
+snapshot. Ordinary LKI cleanup does not erase that incarnation map. A returned
+card, including a later departure, cannot substitute for the original source.
+Invalid IDs/incarnations and captured spell sources do not fall back to live
+permanent lookup. Actions without captured source state retain UUID-only
+compatibility. Filters must read the supplied permanent, rather than look up
+its ID again. Pure callbacks remain the caller's contract.
+
+Reuse: existing `DamageSource`, `CaptureDamageSource`, `clonePermanentInto`,
+incarnation LKI storage, `DamageToPlayerAction`/`DamageToCreatureAction` source
+metadata, redirection, amount-copy methods, simultaneous damage batches,
+replacement choice/rechecking and cloned effect state. No parallel replacement,
+zone, binding, payment or damage system is introduced. Recipient identity,
+spell-source/general-source filtering, finite prevention allocation, protection
+and the separate color/type prevention services remain outside this slice.
+
+The earlier rules-contract section described this behavior, but the baseline
+implementation still had three `FindPermanent(ActionSource())` lookups and none
+of the named source-filter tests existed. This slice supplies the implementation
+and actual evidence, and corrects the stale test mapping. That documentation
+mismatch is distinct from a RON source-data defect. No source defect was found
+or corrected, and all 12 RON hashes match the vocabulary snapshot.
+
+### TDD and gameplay mappings
+
+Tests were written first. An initial redirection fixture referenced an absent
+helper/field; it was corrected to use the existing replacement type before the
+expected red run. The meaningful red run failed on departure, return, phasing,
+missing captured source, redirection and damage after simultaneous source death.
+Both real RON source cards failed their pending-activation prevention scenarios.
+No assertion was weakened. Focused tests pass after the three source lookups
+were replaced. Additional acceptance tests establish current-characteristic
+rechecks, independent one-shot consumption, affected-player choice, invalid RON
+source reads and transactional summoning-sickness rejection.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Prodigal Sorcerer; Grapeshot Catapult | `TestRONPreventionSourcePrerequisite`: complete repository RON records, native activation, tap-payment timing, sickness rejection without payment, source departure/return to another controller/phasing, copied pending activations, cloned pending resolution, and filtered prevention through the shared engine. Engine prevention is installed explicitly for this prerequisite test; unsupported RON prevention records are not made available. |
+| Invalid RON source declarations | `TestRONPreventionSourcePrerequisiteInvalid`: undeclared permanent target, incompatible player target, and tuple source spelling remain compile errors. |
+| All three engine recipient contexts | `TestDamageSourceFilterIncarnation`: live/departed/returned/later-departed/phased/phase-cycle source, current artifact/color/controller characteristics, ordinary LKI cleanup and replacement installation timing. |
+| Missing or incompatible source identity | `TestDamageSourceFilterMissingSource`: missing incarnation, wrong ID for retained incarnation, spell source, and UUID-only compatibility. |
+| Copy and clone state | `TestDamageSourceFilterCopyClone`: amount copies retain source identity; one-shot consumption is independent between clone and original. |
+| Redirection and legality filters | `TestDamageSourceFilterRedirect`: player-to-permanent redirect preserves original departed source and combat flag; combat-only filter still rejects noncombat damage. |
+| Replacement ordering | `TestDamageSourceFilterReplacementOrder`: affected player chooses prevention or creature-to-player redirect first; rechecking prevents the damage in either order. |
+| Simultaneous operation | `TestDamageSourceFilterSimultaneousDeath`: existing batch service prevents matching packet while source receives lethal damage; later damage from the departed source also matches. |
+| Pure characteristic views and retained state | `TestDamageSourceFilterCurrentAndRetainedViews`: type additions/removals while present, exclusion of returned artifact, later departure, copied snapshot counters/types, clone isolation. |
+
+Compilation gain: **0 records / 0 unique cards**, as estimated. This strengthens
+RON gameplay evidence for two already accepted source cards. It adds **0 newly
+complete-card mappings** for the three still-rejected prevention cards.
+Engine-validation and behavior-verification collection aggregates remain null;
+these targeted tests are not collection-wide certification.
+
+### Validation and remaining work
+
+Final strict loader and strict inspection both exit 1 as expected:
+**1,283 compiled / 1,162 rejected**, 454 accepted / 532 rejected unique names.
+Baseline and final inventory JSON are identical, and final strict issues equal
+inspection issues exactly: zero diagnostic removals, additions or changes.
+All source hashes match the vocabulary snapshot; no refresh is needed.
+Remaining first errors include `PreventDamage` on the three intended downstream
+cards. Finite prevention, filtered bands, and other rule families remain gaps.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(DamageSourceFilter\|RONPreventionSourcePrerequisite)' -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `go test ./... -short -count=1` | PASS; additional implement-engine skill check |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic test import formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1; unchanged strict rejection |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; identical baseline/final inventory and strict diagnostics |
+
+No environment or baseline test/build blocker remains. Only these seven slice
+files are staged and committed: `pkg/mage/damage_source.go`, `replacement.go`,
+`damage_source_filter_test.go`, `pkg/mage/dsl/ron/prevention_source_prerequisite_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger. The
+commit hash is reported in the final response. No DSL removal audit is claimed,
+and no Go definition is removed because runtime and gameplay removal gates
+remain unmet.
+
+Ranked next candidates for fresh reassessment:
+1. Shared permanent-source `PreventDamage` adapter for Argothian Pixies, Desert
+   Nomads and Uncle Istvan: now dependency-ready; estimate three complete cards.
+2. CR 615.7 finite simultaneous prevention allocation: seven listed consumers,
+   then modal prevention cards; keep decision and replacement ordering exact.
+3. Static permanent characteristic predicates: Goblin Caves immediately, with
+   separate Goblin Shrine and Animate Artifact blockers recorded above.
+
+Runtime loading, complete RON gameplay, Go-card deletion and unused DSL cleanup
+remain incomplete. This run implements no next slice.

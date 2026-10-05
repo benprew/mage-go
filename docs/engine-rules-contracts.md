@@ -238,15 +238,32 @@ without a captured reference retain live-permanent lookup.
 Filters must read the supplied permanent for source characteristics. A custom
 callback that looks up that UUID again in the game can read another incarnation;
 this change does not rewrite arbitrary callbacks or create a frozen game.
-Spell sources, the separate color/type prevention implementations, protection,
+Captured spell sources have no battlefield incarnation and do not match these
+permanent filters. Unknown captured incarnations cannot use a live UUID match.
+The phase view uses a copy of the retained permanent; the departure view uses
+`ZoneSystem.LKIByIncarnation`, which survives ordinary LKI cleanup. Tests check
+that mutations of either departure view or clone view cannot change retained
+counters or types.
+
+The separate color/type prevention implementations, protection,
 deathtouch, source notifications, recipient incarnation, batch damage, and typed
 adapters remain separate work. No payment or action transaction changed.
 
 Evidence: `TestDamageSourceFilterIncarnation`, `TestDamageSourceFilterCopyClone`,
 `TestDamageSourceFilterRedirect`, `TestDamageSourceFilterMissingSource`,
 `TestDamageSourceFilterReplacementOrder`, `TestDamageSourceFilterSimultaneousDeath`,
-and synthetic `TestDamageSourceFilterSequence`. Rules: CR 113.7a, 608.2h,
+`TestDamageSourceFilterCurrentAndRetainedViews`, and
+`TestRONPreventionSourcePrerequisite`. Rules: CR 113.7a, 608.2h,
 609.7b–c, 615.6/615.9, 616.1/616.1f, and 702.26b–d.
+
+The 2026-10-04 implementation supplies this contract. Before this slice, this
+section described behavior that was absent from `Matches`, and the named
+source-filter tests were absent. The new RON integration test executes complete
+Prodigal Sorcerer and Grapeshot Catapult records with existing engine prevention
+rules. It covers departure, return to another controller, phasing, copied
+activations and cloned pending resolution. It does not compile the collection's
+unsupported `PreventDamage` declarations. The finite-shield allocation contract
+in CR 615.7 remains separate.
 
 ## Damage prevention: color and card-type source characteristics
 

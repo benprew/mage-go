@@ -1009,7 +1009,7 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 				return false
 			}
 			if !r.from.IsZero() {
-				source := g.FindPermanent(act.ActionSource())
+				source := game.damageFilterSource(act.ActionSource(), act.DamageSource())
 				if source == nil || !r.from.Match(source, game) {
 					return false
 				}
@@ -1028,7 +1028,7 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		if r.from.IsZero() {
 			return false
 		}
-		source := g.FindPermanent(act.ActionSource())
+		source := game.damageFilterSource(act.ActionSource(), act.DamageSource())
 		if source == nil || !r.from.Match(source, game) {
 			return false
 		}
@@ -1048,7 +1048,7 @@ func (r *damagePreventionRuleReplacement) Matches(a Action, g GameReader) bool {
 		if r.from.IsZero() && r.to.IsZero() {
 			return false
 		}
-		source := g.FindPermanent(act.ActionSource())
+		source := game.damageFilterSource(act.ActionSource(), act.DamageSource())
 		target := g.FindPermanent(act.PermanentID())
 		if target == nil {
 			return false

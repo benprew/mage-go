@@ -125,3 +125,30 @@ func protectedFromDamageSource(perm *Permanent, source DamageSource) bool {
 	}
 	return false
 }
+
+// damageFilterSource keeps a returned card separate from the original source.
+func (g *Game) damageFilterSource(id uuid.UUID, source DamageSource) *Permanent {
+	if source.Incarnation() == uuid.Nil {
+		if source.Valid() {
+			return nil
+		}
+		return g.FindPermanent(id)
+	}
+	if source.ID() != id {
+		return nil
+	}
+	if p := g.FindPermanentIncludingPhased(id); p != nil && p.incarnationID == source.Incarnation() {
+		if !p.PhasedOut {
+			return p
+		}
+		snapshot := &Permanent{}
+		clonePermanentInto(snapshot, p)
+		return snapshot
+	}
+	if lki := g.zones.LKIByIncarnation(source.Incarnation()); lki != nil && lki.ID == id && lki.Snapshot != nil {
+		snapshot := &Permanent{}
+		clonePermanentInto(snapshot, lki.Snapshot)
+		return snapshot
+	}
+	return nil
+}
