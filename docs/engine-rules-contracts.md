@@ -3204,3 +3204,25 @@ retargeted copies, independent factories and cloned pending abilities. Identity
 and phasing use CR 400.7, 608.2b and 702.26b/d. Absent targets are not actions
 on LKI. This slice adds no replacement ordering or simultaneous-operation rule;
 existing mana and untap services supply those operations.
+
+## RON activation step adapter and combat-duration reuse
+
+Bare activation step conditions use `WithActivationCondition` with an immutable
+list of allowed steps. They add no engine timing or permission service.
+`IsDuringCombat` covers `BeginCombat` through `EndCombat`, including the optional
+first-strike damage step (CR 506.1). The other supported predicates select
+`EndCombat`, `DeclareBlockers`, or `Upkeep`. They permit either player's turn.
+The existing activation gate checks these instructions before payment; copies
+and resolution do not repeat them (CR 602.1b, 602.2, 602.5). Modifier conjunctions
+preserve own-turn restrictions and activation limits. Mana queries remain pure.
+
+Immediate singular activation modifications with `UntilEndOfCombat` reuse
+`Until(core.EndOfCombat, ...)`. Source departure does not end the captured
+modification. Subject return creates a new object; phase cycles keep identity.
+Native end-of-combat execution removes effects after its priority round and
+before combat reset (CR 511.2–3). No new replacement-order or simultaneous-operation
+contract is established. Existing damage and target services execute Desert.
+
+Evidence: `TestRONActivationSteps`, `Invalid`, `ConjunctionAndMana`,
+`JadeStatue`, `Desert`, `CombatDurationTargets`, `CombatDurationInvalid`,
+`JadeCombatAndInstances`, and `Inventory` in `dsl/ron/activation_step_test.go`.

@@ -204,7 +204,7 @@ func TestRONTemporaryKeywordInvalid(t *testing.T) {
 		`Activated(PayMana([]), ActionList([CreatePermanentLayerEffectUntil(Ref_TargetPermanent, [LosesAbility(Flying)], UntilEndOfTurn)]))`,
 		`Activated(PayMana([]), Targeted([TargetPlayer(AnyPlayer)], ActionList([CreatePermanentLayerEffectUntil(Ref_TargetPermanent, [LosesAbility(Flying)], UntilEndOfTurn)])))`,
 		`Activated(PayMana([]), ActionList([CreatePermanentLayerEffectUntil(HostPermanent, [LosesAbility(Flying)], UntilEndOfTurn)]))`,
-		`Activated(PayMana([]), ActionList([CreatePermanentLayerEffectUntil(ThisPermanent, [LosesAbility(Flying)], UntilEndOfCombat)]))`,
+		`Activated(PayMana([]), ActionList([CreatePermanentLayerEffectUntil(ThisPermanent, [LosesAbility(Flying)], UntilEndOfCombat())]))`,
 		`EachPermanentLayerEffect(IsCardtype(Creature), [LosesAbility(Flying())])`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid scope", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [%s])`, body)

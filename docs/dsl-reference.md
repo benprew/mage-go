@@ -1175,6 +1175,33 @@ can be combined with this timing. Other modifier forms remain errors. See [the t
 for exact shapes and real-card evidence.
 
 
+## RON activation step restrictions
+
+`ActivatedWithModifiers/3` also accepts
+`ActivateOnlyIf(IsDuringCombat)`, `ActivateOnlyIf(IsDuringEndOfCombatStep)`,
+`ActivateOnlyIf(IsDuringDeclareBlockersStep)`, and `ActivateOnlyIf(IsDuringUpkeep)`.
+The conditions are bare symbols. Combat includes beginning of combat, declare
+attackers, declare blockers, both damage steps, and end of combat. Each form
+permits either player's turn. Existing controller permissions still apply.
+
+These forms lower to `WithActivationCondition` and can be combined through the
+existing modifier `And([modifiers])`. Conditions, own-turn restrictions and use
+limits remain conjunctive. Queries and mana planning check the same conditions
+without payment. Resolution does not repeat the announcement restriction.
+Malformed tuples and other step predicates remain errors.
+
+In an immediate activation body, `CreatePermanentLayerEffectUntil/3` accepts
+bare `UntilEndOfCombat` for supported singular permanent modifications.
+It reuses `Until(core.EndOfCombat, modifications...)`, captures each subject's
+incarnation at resolution, and expires after end-of-combat priority. Spell,
+delayed and collection modification contexts gain no new duration support.
+The existing source-attack trigger context retains its duration support.
+
+Evidence: `TestRONActivationSteps*` covers Jade Statue and Desert through their
+complete repository records, including animation, damage, timing, payment,
+identity, phasing, copies, clones, combat and native expiry. Tolaria and Lesser
+Werewolf have only the timing prerequisite; their other rules remain unsupported.
+
 ## RON activation limits
 
 Permanent `ActivatedWithModifiers` accepts the symbol `ActivateOnlyOnceEachTurn`

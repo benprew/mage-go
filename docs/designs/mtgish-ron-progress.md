@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **565 accepted / 421 rejected unique card
-names** (986 total), and **1,539 compiled / 906 rejected records** (2,445 total).
+The latest recorded inventory reports **567 accepted / 419 rejected unique card
+names** (986 total), and **1,545 compiled / 900 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`ANNOUNCED-X-ACTIVATION` slice and its validation evidence are recorded
+`ACTIVATION-STEP-WINDOWS` slice and its validation evidence are recorded
 below. Its next candidates and remaining gates are recorded at the end of the entry.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -16063,3 +16063,179 @@ Slice files: engine `payment_transaction.go`, `x_activation_payment_test.go`,
 `doc.go`; compiler `compiler.go`, `numbered_targets.go`, `inventory.go`,
 `inventory_test.go`, `x_activation_test.go`; API/rules contracts and this ledger.
 No second slice is started.
+
+## 2026-10-05: activation step restrictions and combat duration
+
+Status: completed slice `ACTIVATION-STEP-WINDOWS`. This run stops after this
+slice. Production cutover and deletion gates remain unmet.
+
+### Fresh evidence and candidate comparison
+
+Initial user changes were `.gitignore`, the execution design, and the progress
+ledger; `mtgish-ron-completed.md` was untracked. Preserve those changes. Stage
+only this entry and current status against the committed ledger, without its user restructuring.
+No unrelated file is staged or removed.
+
+Baseline `go test ./pkg/mage/... -short -count=1` (including compiler tests) and
+`make build` passed. Fresh strict loading and semantic inspection exited 1 for
+collection rejection, not build/test failure: **1,539 compiled / 906 rejected
+records**, **565 accepted / 421 rejected unique names**, out of 2,445 records and
+986 names. Inventory: **72,951 nodes / 8,540 signatures / 10,186 unknown-role
+occurrences**. Reprints count once for selection.
+
+The design, ledger, vocabulary snapshot, engine reference, selected compiler and
+engine services, full candidate records and local Oracle data were read. Rules
+references include CR 503, 506.1/4, 511.1–3 and 602.1b/2/5. The removed card skills
+and old Go card definitions were not used as requirements.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Activation step restrictions, selected | Jade Statue, Desert, Tolaria, Lesser Werewolf; **2** full-card unlocks, Jade Statue and Desert. Final nested inventory review also found Armageddon Clock, with no additional unlock. | Jade Statue needs activation-context combat duration. Tolaria still needs `AnyBandsWithOthers` removal. Lesser Werewolf needs combat-relative target filters and a resolving `If` branch. Armageddon Clock needs draw-step triggers, counter removal and other-player permission. The pure timing adapter serves all five names and future restricted mana/target abilities. | Small: shared activation predicates and existing duration service; declaration, timing, payment, identity, copy/clone, mana and combat tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion; **4** credible full-card unlocks after the engine prerequisite, zero safe adapter-only gain. | Complete nested records require finite allocation among simultaneous sources (CR 615.7), affected-player choices and replacement rechecks. Enables finite shields with fixed/X amounts. | Medium/high: engine allocation, replacement ordering and gameplay matrix. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats; **4** credible full-card unlocks after the engine prerequisite. | All-zone characteristic evaluation, owner/controller count context and CDA layering remain prerequisites. Enables future count-based characteristic definitions. | High: zone characteristics, layer/copy/controller contracts and gameplay matrix. |
+
+Selection favors two complete cards through small shared adapters over larger
+engine prerequisites. First-error counts were not used as unlock estimates.
+The initial complete-record review identified Jade Statue's duration, but missed
+that the existing duration adapter was restricted to source-attack triggers.
+Its gameplay test exposed that boundary. Before extending it, the activation
+context and its acceptance cases were stated, then separate failing duration
+identity tests confirmed the gap. This prerequisite stays within the selected
+activation slice; it introduces no engine execution service.
+
+All unique `UntilEndOfCombat` consumers were also inspected: Jade Statue,
+Battering Ram, Goblin Flotilla, Murk Dwellers, Raging River, Glyph of Destruction
+and Johan. Their other contexts gain no duration support; source-attack support
+is retained. Armageddon Clock's two complete records were inspected during the
+final nested inventory audit. All selected reprints were enumerated: five Jade
+Statue records (LEA, LEB, 2ED, CED, CEI), one Desert record (ARN), one each Tolaria
+and Lesser Werewolf (LEG), and two Armageddon Clock records (ATQ, 3ED).
+
+### Exact signatures, context, dependencies and reuse
+
+Permanent rule `ActivatedWithModifiers(cost, actions, modifier)/3` accepts
+`ActivateOnlyIf(condition)/1` where `condition` is one of these bare symbols:
+
+- `IsDuringCombat`: BeginCombat, DeclareAttackers, DeclareBlockers,
+  FirstStrikeDamage, CombatDamage or EndCombat.
+- `IsDuringEndOfCombatStep`: EndCombat only.
+- `IsDuringDeclareBlockersStep`: DeclareBlockers only.
+- `IsDuringUpkeep`: Upkeep only, in either player's turn.
+
+Each lowers to `mage.WithActivationCondition` with an immutable allowed-step
+list. Existing modifier `And([modifiers])/1` combines predicates, turn restrictions
+and use limits. Conditions do not set or replace the action's timing field.
+They supply neither controller permission nor priority. The shared activation
+query, mana solver and transactional announcement path check them before
+payment. Resolution and copied stack abilities do not repeat the check.
+Malformed tuples, unknown predicates, conditions with arguments and an inner
+condition `And` remain errors. Casting conditions are unchanged.
+
+Immediate activation actions in `Activated/2` and `ActivatedWithModifiers/3`
+now accept bare `UntilEndOfCombat` in
+`CreatePermanentLayerEffectUntil(permanentReference, [modifications], duration)/3`.
+The existing typed singular source, host and declared-target reference grammar
+and supported modification grammar are reused. Compilation marks the copied
+activation scope; delayed bodies are explicitly excluded from this extension.
+It lowers to `mage.Until(core.EndOfCombat, modifications...)`. Source-attack
+trigger duration support is retained. Spell, other trigger, delayed, collection,
+rule-effect and prevention contexts gain no new combat-duration support.
+Malformed durations and unbound references remain errors.
+
+Existing `instanceBindings`, typed references, action conditions, mana planning,
+payment transactions, target legality, incarnation capture, damage, continuous
+layers, stack copying and game cloning provide execution. Combat effects end
+when native EndCombat finishes its priority round, before combat reset. Source
+control/departure cannot redirect a captured subject. Return creates a new
+incarnation. Phasing retains incarnation, but removes combat membership: a
+phase-cycle Desert target is no longer attacking and is illegal at resolution.
+No LKI action, global result slot, card-name branch, fallback, partial production
+registry, new replacement ordering or simultaneous-operation service is added.
+
+Semantic inspection already assigns bare predicates the `activation_condition`
+role. The new inventory test confirms it visits them below an unsupported action
+body and does not claim compiler support for that body. No inventory schema
+change is needed.
+
+### TDD and card-to-test mappings
+
+The first test run found a fixture call to a nonexistent game combat-removal
+method. It was changed to the typed existing effect. The next run confirmed
+unsupported activation conditions in synthetic and complete RON gameplay tests.
+After timing lowering, Desert passed and Jade Statue failed for unsupported
+`UntilEndOfCombat`. New captured-target duration tests confirmed that failure
+before the duration adapter extension. Focused tests then passed. The compiler
+suite failed only its two exact collection-count assertions; these were updated
+to the fresh 1,545/900 measurements. Two former bare-duration rejection fixtures
+now use malformed `UntilEndOfCombat()`; positive tests cover the newly supported
+P/T and keyword grant/removal behavior. Other rejection assertions remain.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Jade Statue, complete LEB record; five identical collection reprints | `TestRONActivationStepsJadeStatue`: four-mana casting and rollback, entry timing, two-mana activation/rollback, opponent combat, printed artifact type, 3/6 Golem animation, resolution timing, source return/control/phasing/cycle, copied activation, cloned pending state and native combat expiry. `JadeCombatAndInstances`: independent factories/controllers, repeat activations set rather than accumulate base values, newly entered Statue blocks with 3/6 characteristics, separate effects expire together. |
+| Desert, complete ARN record | `TestRONActivationStepsDesert`: land play and Desert subtype; pure mana affordability, unrestricted tap mana ability and immediate mana resolution; end-combat tap damage, timing/controller/target rollback, attacking-creature legality, source departure/return/control/phasing, target return/control/phasing/cycle/shroud/combat removal, saved target identity, copies and pending clones. |
+| Step predicates and shared gates | `TestRONActivationSteps`: all four predicates across all 13 steps and both active players, pure query, payment rollback, announcement/resolution separation. `ConjunctionAndMana`: conjunction with own-turn and once-per-turn restrictions, pure solver queries, restricted mana ability timing and no replacement of existing limits. |
+| Combat-duration target contract | `TestRONActivationStepsCombatDurationTargets`: typed target, P/T and flying, source departure, target control/return/phasing/cycle, copies, native expiry. `CombatKeywordRemoval`: non-modifier activation, temporary keyword removal and restoration at native combat expiry. |
+| Invalid declarations and reporting | `TestRONActivationStepsInvalid`, `CombatDurationInvalid`, `Inventory`: malformed predicates/durations, unsupported contexts, delayed scope exclusion, nested role inspection and strict rejection of unsupported bodies. Retained activation/temporary-layer/keyword/inventory suites pass. |
+| Tolaria, Lesser Werewolf, Armageddon Clock | Shared timing prerequisite only. No complete-card gameplay claim. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay coverage
+remain separate; aggregate engine-validated and behavior-verified totals remain
+null. Local `data/LEA.json`, `ARN.json` and `LEG.json` Oracle text agrees with the
+four initial candidate records. No source defect was corrected. Existing defects
+remain unresolved. All twelve RON hashes match the syntax snapshot, so there is
+no source snapshot refresh.
+
+### Final validation and remaining work
+
+Actual gain matches the estimate: **2 unique names / 6 records**, exactly Jade
+Statue and Desert, with no previously accepted name lost. Strict and semantic
+loading report **1,545 compiled / 900 rejected records**, **567 accepted / 419
+rejected names**. Inventory totals remain **72,951 nodes / 8,540 signatures /
+10,186 unknown-role occurrences**. Both loader modes exit 1 for unsupported
+records and publish no partial registry.
+
+Fresh diagnostics:
+
+- Lesser Werewolf: `LEG.lines.ron:161:257: unsupported permanent filter (IsBlockingAttacker)`.
+- Tolaria: `LEG.lines.ron:269:382: unsupported temporary keyword (AnyBandsWithOthers)`.
+- Armageddon Clock: `3ED.lines.ron:9:291: unsupported trigger (AtTheBeginningOfAPlayersDrawStep)` (also ATQ).
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine/compiler tests and `make build` | PASS. |
+| New timing and duration tests before their adapters | Expected unsupported-condition and unsupported-duration failures confirmed after fixture correction. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONActivationSteps\|TestRONActivationTiming\|TestRONTemporaryLayers\|TestRONTemporaryKeyword\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic test import spacing reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,545/900. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts above, no hash changes. |
+
+The final keyword-removal test passes with focused `-count=1` and lint; short
+engine tests, full tests, build and vet were rerun afterward. All required checks
+pass. There is no environment or pre-existing validation blocker.
+
+No Go definitions, runtime callers, generators or DSL functions are removed.
+Complete loading, collection gameplay and startup wiring remain below the
+removal gate. No whole-repository caller audit authorizes DSL deletion. API/rules
+documentation states only this slice's established adapter behavior. Only this
+slice is committed after validation; its hash is reported in the final response.
+
+Ranked next candidates to reassess with fresh complete-record evidence:
+
+1. Finite recipient prevention allocation and its four complete consumers.
+2. All-zone count CDA prerequisite and its four complete consumers.
+3. `Targeted_Modal` alternatives for Chaoslace, Deathlace, Lifelace, Purelace,
+   Thoughtlace, Magical Hack and Sleight of Mind, followed by color/text services.
+
+Tolaria's bands removal and Lesser Werewolf's combat-relative filters remain
+single-card dependent work to defer while useful multi-card work remains.
+
+Slice files: compiler `activation_timing.go`, `compiler.go`,
+`source_tapped_duration.go`; tests `activation_step_test.go`, `inventory_test.go`,
+`temporary_layer_test.go`, `temporary_keyword_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry. No second slice starts.

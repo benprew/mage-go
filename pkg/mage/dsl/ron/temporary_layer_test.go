@@ -61,7 +61,7 @@ func TestRONTemporaryLayersRejectInvalidDeclarations(t *testing.T) {
 		`ActionList([CreatePermanentLayerEffectUntil(Trigger_ThatPermanent, [AdjustPT(1, 1)], UntilEndOfTurn)])`,
 		`ActionList([CreatePermanentLayerEffectUntil(ThisPermanent, [AdjustPT(Integer(1), 1)], UntilEndOfTurn)])`,
 		`ActionList([CreatePermanentLayerEffectUntil(ThisPermanent, [AddAbility([Flying()])], UntilEndOfTurn)])`,
-		`ActionList([CreatePermanentLayerEffectUntil(ThisPermanent, [AdjustPT(1, 1)], UntilEndOfCombat)])`,
+		`ActionList([CreatePermanentLayerEffectUntil(ThisPermanent, [AdjustPT(1, 1)], UntilEndOfCombat())])`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [Activated(PayMana([]), %s)])`, body)
 		nodes, err := Parse(strings.NewReader(src), "invalid-layer.ron")

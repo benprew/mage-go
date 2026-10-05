@@ -41,6 +41,7 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	ctx.x = hasX
+	ctx.activation = true
 	plan, err := compileActions(n.Args[1], ctx)
 	if err != nil {
 		return nil, err
@@ -130,6 +131,29 @@ func compileActivationTiming(n Node) ([]mage.ActionOption, error) {
 		return nil, err
 	}
 	filter := n.Args[0]
+	if filter.Kind == Symbol {
+		var steps []core.PhaseStep
+		switch filter.Name {
+		case "IsDuringCombat":
+			steps = []core.PhaseStep{core.BeginCombat, core.DeclareAttackers, core.DeclareBlockers, core.FirstStrikeDamage, core.CombatDamage, core.EndCombat}
+		case "IsDuringEndOfCombatStep":
+			steps = []core.PhaseStep{core.EndCombat}
+		case "IsDuringDeclareBlockersStep":
+			steps = []core.PhaseStep{core.DeclareBlockers}
+		case "IsDuringUpkeep":
+			steps = []core.PhaseStep{core.Upkeep}
+		default:
+			return nil, unsupported(filter, "activation timing condition")
+		}
+		return []mage.ActionOption{mage.WithActivationCondition(func(g *mage.Game, _ *mage.Permanent, _ uuid.UUID) bool {
+			for _, step := range steps {
+				if g.GetStep() == step {
+					return true
+				}
+			}
+			return false
+		})}, nil
+	}
 	if filter.Name != "PlayerPassesFilter" {
 		return nil, unsupported(filter, "activation timing condition")
 	}

@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	activation       bool
 	castingCondition mage.StateCondition
 	damagePlayer     *damagePlayerPlan
 	damageAmount     *damageAmountPlan

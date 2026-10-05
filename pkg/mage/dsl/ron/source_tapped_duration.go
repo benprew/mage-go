@@ -20,7 +20,7 @@ func compileTemporaryDuration(n Node, ctx scope) (func([]mage.ContinuousModifica
 	if n.Kind == Symbol && n.Name == "UntilEndOfTurn" {
 		return func(values []mage.ContinuousModification) mage.Effect { return mage.Until(core.EndOfTurn, values...) }, nil
 	}
-	if ctx.sourceAttack && n.Kind == Symbol && n.Name == "UntilEndOfCombat" {
+	if (ctx.sourceAttack || (ctx.activation && !ctx.delayedStep)) && n.Kind == Symbol && n.Name == "UntilEndOfCombat" {
 		return func(values []mage.ContinuousModification) mage.Effect { return mage.Until(core.EndOfCombat, values...) }, nil
 	}
 	if n.Name != "ForAsLongAsPermanentRemainsTapped" {
