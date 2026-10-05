@@ -7826,3 +7826,177 @@ condition; Animate Dead rejects `EnchantGraveyardCard`; Goblin Caves rejects its
 host basic-Mountain condition. There is no environment or pre-existing check
 blocker. Only the eleven slice files are committed; the two initial user changes
 remain unstaged. The descriptive commit hash is reported in the final response.
+
+## 2026-10-04 — Static filtered blocking prohibitions
+
+Capability `STATIC-BLOCKING-PROHIBITIONS`: complete for the shapes below.
+This run implements one slice and stops. Initial user changes in `.gitignore`
+and `docs/designs/mtgish-ron-execution.md` are preserved and excluded from staging.
+Read the current design, vocabulary snapshot, ledger, `AGENTS.md`, `pkg/mage/doc.go`,
+compiler/reference/filter/inventory code, combat restriction and clone services,
+API/rules-contract docs, and CR 509.1b, 509.1g–h and 509.4b. Card requirements came
+from complete RON records, including identical reprints, never Go definitions.
+No removed implementation skill or generator was used.
+
+### Fresh evidence and candidate selection
+
+Baseline `make build` and `go test ./pkg/mage/... -short -count=1` passed.
+Strict loader and semantic inventory each exited 1 for collection rejection,
+not a build/test failure: 2,445 records, 986 names, 1,260 compiled / 1,185 rejected
+records; 445 accepted / 541 rejected unique names. Inventory had 72,938
+occurrences, 8,528 signatures and 13,405 unknown-role occurrences. All 12 RON
+hashes matched the vocabulary snapshot. No environment failure was found.
+
+| Candidate | Distinct affected names | Estimated complete-card gain | Other blockers, downstream value and effort |
+| --- | --- | --- | --- |
+| Static filtered blocking prohibitions (selected) | Ironclaw Orcs; Brassclaw Orcs; Orcish Veteran; Amrou Kithkin; Bog Rats; Argothian Pixies; Artifact Ward; Orgg; Juggernaut; Elder Spawn | 5 names / 9 records | Five complete records need only adapters, and Veteran's keyword activation is supported. Pixies and Ward still need prevention; Ward also needs ability targeting restrictions. Orgg needs its defending-player attack condition, Juggernaut needs mandatory attacks, and Elder Spawn needs optional sacrifice payment. Reuses current permanent filters and combat restrictions. Low implementation / medium gameplay-test effort. Enables restrictions in these later consumers and supports Aura host membership. |
+| Finite prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite; up to 7 after adapters | Complete records have ready cost/target forms. Shared finite-shield allocation across simultaneous damage packets and affected-player replacement ordering need an engine/decision contract. High implementation/test effort. Enables these seven consumers plus later modal prevention. |
+| Filtered bands-with-others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after adapters | The complete land records have ready color/legendary/controller filters, but filtered band formation and damage assignment need a shared combat contract. High implementation/test effort. Also enables Master of the Hunt's named Wolf token ability; that complete record has a separate named-token shape blocker. |
+| Static host characteristic predicates | Goblin Caves; Goblin Shrine | 1 name for condition adapter | Both require basic-Mountain host predicates. Shrine separately needs departure-trigger collection damage. Low/medium effort, but less immediate multi-card value. Enables later conditional characteristic effects; Animate Artifact also needs animation body support. |
+
+All candidate records and nested forms were inspected. Reprints count once.
+The selected slice gives the largest credible immediate gain for the effort;
+phase order and the previous next-slice suggestions do not override this evidence.
+Tower of Coireall's complete record was also inspected: its temporary restriction
+is a separate context and remains rejected. No optional-payment or prevention
+adapter is added to claim an incomplete consumer as supported.
+
+Before editing, the selection, source/host contract, existing-engine reuse and
+acceptance cases were stated. Investigation separated two missing compiler
+adapters from a shared engine clone defect: `canBlockOnlyRules` was omitted by
+`cloneEffectManager`, so immediate clone block queries lost the restriction.
+The clone repair is required by this slice and preserves existing callers.
+There was no selected source-data defect.
+
+### Exact shapes, contexts and reuse
+
+Permanent static rule `PermanentRuleEffect/2` accepts exactly one operation:
+
+- `PermanentRuleEffect(ThisPermanent, [CantBlockAttackers(filter)])`.
+  `ThisPermanent` is a symbol and uses the typed source reference. Lower to a
+  fresh `WithStaticAbility(SourceCanBlockOnly(Not(filter)))` per factory.
+  Aura hosts, target, event and other subjects are rejected in this form.
+- `PermanentRuleEffect(subject, [CantBeBlockedByDefenders(filter)])`.
+  Subject is symbol `ThisPermanent` or Aura-only symbol `HostPermanent`.
+  Lower to existing `Static(While(condition,
+  CantBeBlockedExceptBy(subject, Not(filter))))`. The always-true condition and
+  typed source/attachment selection reuse the established static blocking adapter.
+
+Both operations have arity 1 and use the existing `compileFilter` grammar,
+including recursive `And/Or`, type, subtype, color, keyword, tap/combat predicates
+and fixed power comparisons. `PowerIs/1` accepts `GreaterThanOrEqualTo/1`,
+`LessThanOrEqualTo/1` or `EqualTo/1`, whose argument is `Integer/1` with an integer
+literal. Dynamic X and malformed declarations remain rejected. No filter
+meaning is inverted globally: only the two prohibitions lower their filter
+through `mage.Not`. `Defenders` denotes candidate blockers, not the defender
+keyword. Existing `CantBeBlockedExceptByDefenders` semantics are unchanged.
+Resolving-action, temporary, mixed operation lists and other static contexts
+remain unsupported. Inventory now assigns their filter descendants the existing
+permanent-filter, power-comparison, value, subtype and color roles independently
+of whether another rule rejects the card.
+
+Reuse: `SourceCanBlockOnly`, `CantBeBlockedExceptBy`, `Not`, `Static`, `While`,
+`compilePermanentRef`, `compileFilter`, `HasPowerGTE/LTE/Equal`, current layers,
+attachment/incarnation services, `CanBlock`, native blocker declaration and
+combat damage, cleanup and ability-removal services. No new public API,
+parallel combat rules, choice state, targets, global result slot, game-time
+panic, card-name execution branch or Go fallback is introduced.
+
+Only new engine behavior: clone the computed `canBlockOnlyRules` map and its
+filter slices, alongside the existing attacker restriction map. Filters remain
+immutable declarations. The shared engine owns clone state; RON owns spelling,
+shape validation and lowering.
+
+Static source rules stop on ability removal or phasing. Source return constructs
+a fresh rule for its new incarnation and controller. Aura rules read the current
+attachment; host ability removal does not remove the Aura's rule, and a returned
+host does not inherit it. Static membership needs current objects and uses no
+LKI. Filters read final characteristics at the block legality query. Existing
+blocks persist after later filter changes (CR 509.1b). No replacement ordering,
+simultaneous operation, trigger LKI or payment contract is changed. Native casting
+and Veteran's activation exercise existing payment rollback and timing.
+
+### Tests and gameplay mappings
+
+`TestCanBlockOnlyClone` was written first and failed with "clone lost restriction
+before layer pass". RON tests were written before adapters; after fixing a
+test-only AST position field, the real records failed at unsupported self untap
+operations, and nested inventory roles failed. The adapter and clone fix made
+these pass. Later lifecycle fixtures needed explicit `ApplyContinuousEffects`
+after `PhaseIn`, as required by the engine API; Veteran's activated ability index
+is 1 because its static ability occupies index 0. Test-only subtype/controller
+names were corrected before gameplay assertions ran. No assertion or unsupported
+production boundary was weakened. Inventory totals were updated to measured
+counts after focused tests passed.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| All five complete cards | `TestRONBlockingProhibitionCards`: full stats, power boundaries including nonpositive values, white/multicolor/nonwhite attackers, Wall/non-Wall blockers, direction, definition validation, immediate clone queries, source ability removal and cleanup restoration. |
+| All five complete cards | `TestRONBlockingProhibitionCurrentCharacteristics`: layered power/color/subtype changes, expiration, clone isolation, flying/reach intersection. `Lifecycle`: phase cycle, control change, departure/return, unrelated object exclusion and independent factory-created instances. |
+| All five complete cards | `TestRONBlockingProhibitionNativeCombat`: native paid casting, unpaid rollback, no entry before resolution, illegal and legal block declarations. `DeclaredBlock`: current legality changes after layered characteristics, but the declared block remains and native combat damage does not reach the player. |
+| Orcish Veteran's other rule | `TestRONBlockingProhibitionNativeCombat`: red activation payment, unpaid rollback, grant only at resolution, first strike and cleanup expiration. |
+| All 9 records / 5 names | `TestRONBlockingProhibitionStrictCollection`: AST scan of all files, each reprint compiles, fresh independent ability instances validate, selected test-only collection loads; one invalid declaration prevents publication. No partial production registry is installed. |
+| Aura-host shape | `TestRONBlockingProhibitionHost`: synthetic RON Aura, source phase suspension, source/host phase cycle, reattachment, source departure and return, host departure/return, source versus recipient ability removal, clone isolation. Artifact Ward's other rules stay rejected, so this is shape evidence, not complete-card evidence for Ward. |
+| Invalid declarations and reporting | `TestRONBlockingProhibitionInvalid`: operation arity, malformed filters/value arity, dynamic values, mixed lists, incompatible/unbound subjects and wrong contexts. `Inventory`: independent nested roles for both operations. Existing `TestRONFilteredBlocking*` remains passing. |
+| Shared clone contract | `TestCanBlockOnlyClone`: immediate query, filter slice isolation, independent reset/rebuild, source phase suspension/restoration and clone isolation. |
+
+This adds **five complete-card RON gameplay mappings**, separately from compiler
+counts. Collection-wide engine-validation and behavior-verification aggregates
+remain null; the entire collection has not been validated or exercised.
+
+### Actual gain, diagnostics and next work
+
+Actual gain matches the estimate: **9 records / 5 unique names**. Final strict
+loader: **1,269 compiled / 1,176 rejected records**, 450 accepted / 536 rejected
+unique names. Removed diagnostics: Ironclaw Orcs (5 records), Brassclaw Orcs,
+Orcish Veteran, Amrou Kithkin and Bog Rats (1 each). Zero newly rejected records.
+Two surviving diagnostics advance: Argothian Pixies and Artifact Ward now reject
+`PreventDamage` after their blocking adapter succeeds. All other surviving
+first diagnostics are unchanged. Remaining examples: Juggernaut rejects
+`MustAttack`; Orgg rejects its defending-player attack condition; Elder Spawn
+rejects optional `SacrificeAPermanent`; Tower of Coireall rejects the temporary
+blocking operation. Strict and inspection issues agree.
+
+Final inventory: 12 files, 2,445 records, 986 names, 72,938 occurrences,
+8,528 signatures, **13,322 unknown-role occurrences** (83 fewer). All source
+hashes match the vocabulary snapshot. RON source is unchanged, so no source
+snapshot refresh is needed. Existing Gaea's Liege/Fastbond defect findings remain
+unresolved and are outside this slice.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Finite simultaneous prevention allocation prerequisite for the seven consumers.
+2. Filtered bands-with-others combat contract for the five lands and later tokens.
+3. Static host characteristic predicates for Goblin Caves and Goblin Shrine;
+   compare Shrine's departure-damage blocker before selecting the complete scope.
+
+Runtime cutover, complete collection gameplay, Go-card deletion and DSL cleanup
+remain open. Removal gates are unmet; no Go definitions, generators or DSL
+functions were removed. No removal caller audit is claimed. The RON tests use
+explicit factories/test-only registries and keep the production loader strict.
+No obsolete cutover authoring instructions are changed before the cutover.
+
+Changed slice files: `pkg/mage/clone.go`, `blocking_filter_clone_test.go`, `doc.go`;
+`pkg/mage/dsl/ron/filtered_blocking.go`, `blocking_prohibition_test.go`,
+`inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Final checks are recorded below after completion.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage -run TestCanBlockOnlyClone -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron -run 'TestRON(BlockingProhibition\|FilteredBlocking)' -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues; automatic formatting reviewed, no changes outside this slice |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,269 compiled / 1,176 rejected; no registry publication |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; issues equal final strict diagnostics |
+| Final diagnostic/source audit | 9 removals, 0 additions, only Pixies/Ward surviving diagnostics advance; all 12 hashes match vocabulary |
+
+No environment or pre-existing validation blocker remains. Only the ten listed
+slice files are committed; the two initial user changes remain unstaged. The
+commit hash is reported in the final response. This run stops after this slice.

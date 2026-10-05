@@ -10,7 +10,13 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(operations) != 1 || operations[0].Name != "CantBeBlockedExceptByDefenders" {
+	if len(operations) != 1 {
+		return compileSelfUntapRule(n)
+	}
+	operation := operations[0]
+	switch operation.Name {
+	case "CantBeBlockedExceptByDefenders", "CantBeBlockedByDefenders", "CantBlockAttackers":
+	default:
 		return compileSelfUntapRule(n)
 	}
 	subject, err := compilePermanentRef(n.Args[0], ctx)
@@ -20,7 +26,9 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	if subject.kind != permanentSource && subject.kind != permanentHost {
 		return nil, unsupported(n.Args[0], "static blocking reference")
 	}
-	operation := operations[0]
+	if operation.Name == "CantBlockAttackers" && subject.kind != permanentSource {
+		return nil, unsupported(n.Args[0], "static blocker reference")
+	}
 	if err := arity(operation, 1); err != nil {
 		return nil, err
 	}
@@ -28,7 +36,13 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	if operation.Name == "CantBeBlockedByDefenders" || operation.Name == "CantBlockAttackers" {
+		filter = mage.Not(filter)
+	}
 	return func() mage.CardOption {
+		if operation.Name == "CantBlockAttackers" {
+			return mage.WithStaticAbility(mage.SourceCanBlockOnly(filter))
+		}
 		condition := mage.StateConditionFunc("static blocking rule", []mage.StateDependency{mage.StateBattlefield}, func(mage.StateReader, mage.StateContext) bool { return true })
 		return mage.WithAbility(mage.Static(mage.While(condition, mage.CantBeBlockedExceptBy(subject.build(instanceBindings{}), filter))))
 	}, nil

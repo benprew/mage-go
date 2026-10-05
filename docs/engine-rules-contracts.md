@@ -1723,3 +1723,28 @@ qualifiers, live source/qualifier control, phase cycles, source departure,
 returned source identity, colors, ability removal, Blood Moon layer ordering,
 independent factory instances and clones. No delayed binding, optional payment,
 replacement ordering or simultaneous-operation contract is added.
+
+## Static blocking prohibitions and clone queries
+
+`SourceCanBlockOnly(Not(filter))` prohibits the source from blocking a matching
+attacker. `CantBeBlockedExceptBy(subject, Not(filter))` prohibits a matching
+creature from blocking the subject. These reuse the existing per-blocker and
+per-attacker filter maps and `CanBlock`; every applicable restriction must pass
+(CR 509.1b). The fixed power and color filters read final current characteristics
+at the legality query. A later filter or characteristic change does not remove
+a block that was legally declared (CR 509.1b, 509.1g–h). Creatures put onto the
+battlefield blocking do not undergo declaration restrictions (CR 509.4b).
+
+`Game.Clone` now copies `canBlockOnlyRules` and each filter slice, as it already
+does for `cantBeBlockedExceptByRules`. Immediate clone queries preserve the
+computed restrictions before the next layer pass. Resetting, rebuilding or
+changing a clone's filter slice cannot change the original game. Filters remain
+immutable declarations; no separate combat execution path is added.
+
+Evidence: `TestCanBlockOnlyClone` tests immediate queries, filter slice isolation,
+reset and reconstruction. The RON `TestRONBlockingProhibition*` suite tests
+current power, color and subtype changes, cumulative flying/reach restrictions,
+source ability removal and restoration, native block declarations, declared
+block persistence, controller changes, phase cycles, source return, independent
+factories and Aura attachment identity. Orcish Veteran's separate activation
+also resolves and expires through the existing temporary keyword service.

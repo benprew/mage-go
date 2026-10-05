@@ -188,6 +188,11 @@
 // It checks final characteristics at declaration. [ControlledPermanents] reads
 // the current source controller. Later rule changes do not remove attackers.
 //
+// Use [SourceCanBlockOnly] with [Not] to prevent the source from blocking
+// matching attackers. Use [CantBeBlockedExceptBy] with [Not] for matching
+// blockers. Filters read current characteristics at the block legality check.
+// Clones keep both filter maps for queries before the next layer pass.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

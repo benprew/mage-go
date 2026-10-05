@@ -367,6 +367,12 @@ func cloneEffectManager(em *EffectManager) *EffectManager {
 			clone.cantBeBlockedExceptByRules[id] = slices.Clone(filters)
 		}
 	}
+	if len(em.canBlockOnlyRules) > 0 {
+		clone.canBlockOnlyRules = make(map[uuid.UUID][]PermanentFilter, len(em.canBlockOnlyRules))
+		for id, filters := range em.canBlockOnlyRules {
+			clone.canBlockOnlyRules[id] = slices.Clone(filters)
+		}
+	}
 	// Copy continuous effects slice. Effects are shared interface values (they
 	// receive *Game as a parameter and are otherwise stateless), except those
 	// implementing deepCloneableEffect, which carry mutable per-game state and

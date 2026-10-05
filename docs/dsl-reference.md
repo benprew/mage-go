@@ -1810,3 +1810,34 @@ battlefields, cumulative bonuses, protection and layer ordering.
 controller's current opponent and current unphased battlefield membership.
 An absent or unknown controller does not satisfy the condition. The declaration
 holds no chosen state and is safe to reuse across factories and cloned games.
+
+## RON static blocking prohibitions
+
+`PermanentRuleEffect(ThisPermanent, [CantBlockAttackers(filter)])` prevents the
+source from blocking attackers that match the filter. It lowers to
+`SourceCanBlockOnly(Not(filter))`. The source restriction uses exactly one
+operation; `HostPermanent`, target and event subjects remain rejected for this
+form.
+
+`PermanentRuleEffect(subject, [CantBeBlockedByDefenders(filter)])` prevents
+creatures that match the filter from blocking the subject. Its subject is
+`ThisPermanent` or the current `HostPermanent` of an Aura. It lowers to the
+existing typed static `CantBeBlockedExceptBy(subject, Not(filter))` rule. This
+form also uses exactly one operation. Here, `Defenders` means candidate blocking
+creatures, regardless of whether they have defender.
+
+Both forms reuse the existing permanent-filter grammar, including nested
+`And`/`Or`, card type, creature subtype, color and fixed power comparisons.
+`PowerIs(GreaterThanOrEqualTo(Integer(n)))`, `LessThanOrEqualTo` and `EqualTo`
+read current power when block legality is checked. Filters do not create target
+bindings or choices. All other combat restrictions still apply. Removing the
+source ability stops the static rule. Removing a host's abilities does not stop
+an Aura's rule. Phasing suspends the rule; attachment changes select the new
+host, and a departed host is not followed through its return.
+
+`TestRONBlockingProhibitionCards`, `CurrentCharacteristics`, `Lifecycle`,
+`Host`, `NativeCombat`, `DeclaredBlock`, `Invalid`, `Inventory` and
+`StrictCollection` (each with prefix `TestRONBlockingProhibition`) cover these
+forms. The five complete-card mappings are Ironclaw Orcs, Brassclaw Orcs,
+Orcish Veteran, Amrou Kithkin and Bog Rats. Other records with these operations
+can still have unsupported rules. Temporary forms are unchanged.
