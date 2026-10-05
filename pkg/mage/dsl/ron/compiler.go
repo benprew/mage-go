@@ -22,6 +22,7 @@ type scope struct {
 	damageRecipient  *playerReferencePlan
 	activation       bool
 	castingCondition mage.StateCondition
+	castingCost      *Node
 	damagePlayer     *damagePlayerPlan
 	damageAmount     *damageAmountPlan
 	delayedStep      bool
@@ -264,6 +265,7 @@ func Compile(n Node) (mage.CardFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		castingRule := false
 		for _, rule := range rules {
 			if rule.Name != "CastEffect" {
 				continue
@@ -271,8 +273,16 @@ func Compile(n Node) (mage.CardFactory, error) {
 			if permanent {
 				return nil, unsupported(rule, "casting window on a permanent")
 			}
-			if ctx.castingCondition != nil {
+			if castingRule {
 				return nil, problem(rule, "duplicate CastEffect rule")
+			}
+			castingRule = true
+			if rule.Kind == Tuple && len(rule.Args) == 1 && rule.Args[0].Name == "AdditionalCastingCost" {
+				ctx.castingCost, ctx.sacrificeValue, err = compileAdditionalSacrifice(rule.Args[0], rules)
+				if err != nil {
+					return nil, err
+				}
+				continue
 			}
 			ctx.castingCondition, err = compileCastingWindow(rule)
 			if err != nil {
@@ -439,18 +449,38 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, err
 		}
 		if n.Args[0].Name == "Modal_ChooseOne" {
+			if ctx.castingCost != nil {
+				return nil, unsupported(n.Args[0], "additional sacrifice cost on a modal spell")
+			}
 			return compileModalSpell(n.Args[0], ctx)
 		}
 		plan, err := compileActions(n.Args[0], ctx)
 		if err != nil {
 			return nil, err
 		}
+		var costs []boundCostFactory
+		if ctx.castingCost != nil {
+			costs, _, err = compileBoundCosts(*ctx.castingCost, ctx.sacrificeValue)
+			if err != nil {
+				return nil, err
+			}
+		}
 		return func() mage.CardOption {
-			options := actionOptions(plan.build())
+			bindings := instanceBindings{sacrifices: make(map[*sacrificeValuePlan]sacrificeValueBindings)}
+			if ctx.sacrificeValue != nil {
+				bindings.sacrifices[ctx.sacrificeValue] = sacrificeValueBindings{power: mage.BindNumber("paid sacrifice power"), value: mage.BindNumber("paid sacrifice value")}
+			}
+			options := actionOptions(plan.buildWithBindings(bindings))
 			if ctx.castingCondition != nil {
 				options = append(options, mage.WithCastingCondition(ctx.castingCondition))
 			}
-			return mage.WithAbility(mage.NewAction(mage.ActionSpell, options...))
+			action := mage.NewAction(mage.ActionSpell, options...)
+			return func(card *mage.BaseCard) {
+				mage.WithAbility(action)(card)
+				for _, cost := range costs {
+					mage.WithAdditionalCost(cost(bindings))(card)
+				}
+			}
 		}, nil
 	case "Activated", "ActivatedWithModifiers":
 		return compileActivatedRule(n, ctx)
@@ -1241,7 +1271,17 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if args == 2 {
 			value := n.Args[1]
 			if value.Name == "TheNumberOfCountersRemovedThisWay" {
-				return compilePaidCounterMana(n, ctx)
+				return compileBoundRepeatedMana(n, ctx)
+			}
+			if value.Name == "ManaValueOfTheSacrificedPermanent" {
+				if ctx.castingCost == nil {
+					return nil, unsupported(value, "mana amount outside an additional sacrifice spell")
+				}
+				production := n.Args[0]
+				if production.Kind != Symbol || production.Name == "AnyManaColor" {
+					return nil, unsupported(production, "fixed-color sacrifice mana production")
+				}
+				return compileBoundRepeatedMana(n, ctx)
 			}
 			if value.Name != "Integer" {
 				return nil, unsupported(value, "mana amount")

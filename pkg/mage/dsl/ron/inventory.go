@@ -353,6 +353,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"player_reference", "activation_player_filter"}[index]
 		}
 	case "casting_restriction":
+		if n.Name == "AdditionalCastingCost" && len(n.Args) == 1 {
+			return "cost"
+		}
 		if n.Name == "CantBeCastUnless" && len(n.Args) == 1 {
 			return "casting_condition"
 		}

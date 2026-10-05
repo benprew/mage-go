@@ -1279,11 +1279,26 @@ at payment, before sacrifice, and belongs to that activation.
 
 The supported consumers are `GainLife/1`, `LoseLife/1`, `DrawNumberCards/1`, and
 `NumberTokens/2` in the existing basic token-creation forms. These references do
-not enable dynamic mana, damage, static values, optional sacrifice payments, or
-spell additional costs. A declaration cannot combine both characteristic
+not enable activation mana, damage, static values, or optional sacrifice
+payments. A declaration cannot combine both characteristic
 references or use more than one sacrifice cost, including source sacrifice.
 Each factory builds the cost and its consumers with the same private engine
 `NumberBinding`; copies keep the paid number without paying again.
+
+For a nonmodal instant or sorcery, one
+`CastEffect(AdditionalCastingCost(SacrificeAPermanent(filter)))` supplies the
+same saved values to `SpellActions`. It uses the existing matching-sacrifice
+filters and consumers above. `AddManaRepeated(production,
+ManaValueOfTheSacrificedPermanent)` also accepts one fixed production symbol:
+`ManaProduceW`, `ManaProduceU`, `ManaProduceB`, `ManaProduceR`, `ManaProduceG`, or
+`ManaProduceC`. The spell pays its printed mana and sacrifice during casting;
+the mana action runs during resolution. Each factory builds the additional cost
+and effects with the same private binding. Copies retain the payment and use
+their own controller. Goblin Grenade and Sacrifice use this form.
+
+Malformed, duplicate, permanent-card and modal declarations remain errors.
+Other additional costs, optional costs, activation mana from sacrifice values,
+compound/any-color productions and restricted mana remain unsupported.
 
 ### RON source counter payment results
 

@@ -1054,6 +1054,31 @@ and `TestRONSacrificeValueInvalid`. These tests use complete RON records for
 Diamond Valley, Life Chisel and Homarid Spawning Bed. No engine service, new
 replacement operation, or simultaneous-operation contract is introduced.
 
+### RON additional sacrifice casting costs
+
+One `CastEffect(AdditionalCastingCost(SacrificeAPermanent(filter)))` on a
+nonmodal instant or sorcery uses `WithAdditionalCost` and the existing matching
+sacrifice costs. The caster must control the payment permanent; ownership does
+not grant payment permission. The cost moves it to its owner's graveyard.
+Indestructible and regeneration do not prevent sacrifice (CR 701.21a).
+Targets and casting timing are checked before payment. Printed mana and the
+additional cost use one transaction; an unpaid or invalid cast keeps the card,
+mana and permanent (CR 601.2c, e–h). Costs remain paid if the spell is countered
+or its target becomes illegal.
+
+Saved toughness or mana value uses the same typed number bindings as activation
+payments. Each stack object keeps its own captured number. Spell copies keep
+that number and do not pay again (CR 707.10). Resolution uses the copy's
+controller. Mana value uses the cost before sacrifice, with battlefield X equal
+to zero; counters do not increase it (CR 202.3, 608.2h). Zero adds no mana.
+This adapter does not change engine payment, damage, replacement or batch rules.
+
+Evidence: `TestRONAdditionalSacrificeRealCards`, `Rollback`, `PendingValues`,
+`GrenadeTargets`, `ZeroAndRecast`, `FactoriesAndQueries`, `Declarations`, and
+`StrictLoadAndInventory` in `pkg/mage/dsl/ron/additional_sacrifice_test.go`.
+The complete Goblin Grenade and Sacrifice records supply the real-card cases.
+Other additional costs and sacrifice activation mana remain separate contexts.
+
 ## RON source counter payment adapters
 
 RON activation counter choices use `RemoveAnyCountersCost` with a fresh

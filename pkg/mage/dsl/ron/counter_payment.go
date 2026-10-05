@@ -98,7 +98,7 @@ func compileActivationCosts(n Node, sacrifice *sacrificeValuePlan, counters *cou
 	return compileBoundCosts(n, sacrifice)
 }
 
-func compilePaidCounterMana(n Node, ctx scope) ([]effectFactory, error) {
+func compileBoundRepeatedMana(n Node, ctx scope) ([]effectFactory, error) {
 	value, err := compileInstanceValue(n.Args[1], ctx)
 	if err != nil {
 		return nil, err

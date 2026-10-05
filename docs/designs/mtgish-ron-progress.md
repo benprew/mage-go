@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **603 accepted / 383 rejected unique card
-names** (986 total), and **1,624 compiled / 821 rejected records** (2,445 total).
+The latest recorded inventory reports **605 accepted / 381 rejected unique card
+names** (986 total), and **1,631 compiled / 814 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`PLAYER-PLANESWALKER-TARGET` slice and its validation evidence are recorded
+`ADDITIONAL-SACRIFICE-SPELL` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -19029,3 +19029,175 @@ Slice files: compiler `compiler.go`, `damage_scope.go`, `damage_packets.go`,
 `inventory.go`, `inventory_test.go`, `player_planeswalker_target_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 One descriptive commit records only this slice; its hash is in the final reply.
+
+## Run 2026-10-05: ADDITIONAL-SACRIFICE-SPELL
+
+Status: complete compiler adapter slice. This run stops after this slice.
+
+### Baseline and candidate comparison
+
+The working tree initially contained user edits to `.gitignore`, the execution
+design and this progress file, plus untracked `mtgish-ron-completed.md`. Those
+changes are preserved. Only this entry and the current measurement changes in
+this file are staged; the user's history move is not part of this commit.
+
+Read: AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot,
+progress ledger, selected compiler/payment/stack/definition code, API and rules
+contracts, complete candidate RON records, and CR 202.3–4, 601.2, 608.2h,
+701.21a and 707.10. Complete reprints agree through the strict loader's structural
+comparison. Requirements came from RON and local Oracle JSON, not Go cards.
+
+Fresh baseline: compiler tests with `-count=1`, short engine tests with
+`-count=1`, and `make build` passed. Both strict and semantic loaders exited 1
+for unsupported records: **1,624 compiled / 821 rejected records**, **603 accepted
+/ 383 rejected names**, 2,445 records and 986 names total. Inventory: 72,951 nodes,
+8,540 signatures and 8,465 unknown-role occurrences. These are collection
+rejections, not build/test failures.
+
+| Candidate | Distinct affected names and full-card unlock estimate | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Additional sacrifice casting costs, selected | Goblin Grenade, Sacrifice, Metamorphosis, Soul Exchange. **2** full cards: Goblin Grenade and Sacrifice. | Metamorphosis needs `AddManaRepeatedWithModifiers`, arithmetic and restricted mana; Soul Exchange needs exile payment, its paid subtype result, return and entry-result counters. Shared transactional cost and captured-number services already exist. Enables spell payment bindings and exact fixed-color mana from a paid value. | Medium: declaration and binding adapter, reuse payment captures, real gameplay and rollback/copy/identity tests. |
+| Chosen-source prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation. **7** complete consumers after source-choice and next-event prerequisites. | Choose damage sources across public zones, bind their identity, consume only the next qualifying damage event, and preserve source-property rechecks. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage also need arithmetic, redirection or actual prevention results and are excluded from the estimate. | High: new source-choice and replacement contracts plus adapters and multi-source timing/identity/ordering tests. |
+| All-zone count CDAs | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats. **4** direct full-card gains; a fifth is contingent on source correction and arithmetic. | Needs all-zone characteristic evaluation, count scope, CDA layers and named counts. Gaea's Avenger additionally uses `Plus` and incorrectly counts its controller's artifacts. Concrete benefit extends to future characteristic readers and copying. | High: zone-aware characteristic prerequisite, count/CDA lowering, layer/copy/owner/controller tests and data audit. |
+
+Selection: additional casting costs have two complete consumers for a smaller,
+well-defined adapter over exact existing engine services. The prevention and
+CDA families have more eventual consumers but need larger engine contracts.
+First-error frequency was not used as an unlock estimate. Contract, reuse
+boundary and acceptance cases were stated before edits. No removed card/set
+skill, Go stub, Go-card fallback, partial production registry or card-name
+execution branch was used. No second slice was started.
+
+The initial commentary estimated five CDA consumers; complete-record and Oracle
+inspection reduces that to four direct consumers, with the fifth contingent.
+This correction does not change the selected slice.
+
+### Exact shapes, contexts and reuse
+
+Supported: one top-level
+`CastEffect(AdditionalCastingCost(SacrificeAPermanent(filter)))` on a nonmodal
+instant or sorcery with one `SpellActions` rule. The cost uses the existing
+nonempty matching-sacrifice filter compiler. `ToughnessOfTheSacrificedCreature`
+requires `IsCardtype(Creature)`; `ManaValueOfTheSacrificedPermanent` accepts the
+supported sacrifice filters. Both are symbols and use the existing saved-number
+consumers in resolving actions. One declaration cannot combine both
+characteristic-result names. Each card factory builds fresh costs, abilities
+and typed number bindings shared by that cost and its effects.
+
+Added mana context:
+`AddManaRepeated(production, ManaValueOfTheSacrificedPermanent)` inside those
+spell actions. Production is one of the six fixed symbols `ManaProduceW/U/B/R/G/C`.
+This lowers to `AddManaAmount` with `FromNumber`. Zero adds no mana. Compound,
+any-color, restricted and activation sacrifice-value mana remain rejected.
+Other additional costs, duplicate CastEffect declarations, permanent cards,
+modal spells, malformed filters/arity and unbound/incompatible reads remain
+compile errors. Existing casting-window declarations and activation/counter
+payment callers retain their behavior.
+
+RON owns spelling, declaration validation, contexts and binding plans. Engine
+reuse: `WithAdditionalCost`, `SacrificeMatchingIncludingSourceCost`,
+`SacrificeCreatureIncludingSourceCostWithStats`,
+`SacrificeMatchingIncludingSourceCostWithManaValue`, `BindNumber`, `FromNumber`,
+`AddManaAmount`, transactional casting preparation/commit, `CapturedNumbers`
+on stack objects, native copy/clone services, target announcement/rechecks,
+source LKI, damage/prevention and owner-directed zone movement. The existing
+counter repeated-mana helper is renamed `compileBoundRepeatedMana` and reused;
+its execution is unchanged. No new engine API, global last-action slot,
+replacement system, or simultaneous-operation service is introduced.
+
+A first broader repeated-mana lowering also accepted Priest of Yawgmoth. Its
+complete record needs a tap/sacrifice activation and exact mana-ability/solver
+behavior. The adapter was narrowed to the selected spell context before final
+validation. Priest remains rejected and is not counted as covered. This is a
+scope correction, not an additional slice.
+
+### TDD and gameplay mapping
+
+Tests were written first. Initial fixture build errors used unavailable API
+names; these were corrected before confirming the expected failure:
+`unsupported casting restriction (AdditionalCastingCost)` for both complete
+real records and all gameplay fixtures. The declaration-rejection tests passed
+before and after implementation. Later fixture corrections used `core.Loyalty`
+and `CounterStackObject` with a stack object ID. The previous counter helper
+expects a spell source ID. Assertions were retained.
+
+All names below have prefix `TestRONAdditionalSacrifice`:
+
+| Card or contract | Test mappings |
+| --- | --- |
+| Goblin Grenade, complete FEM record | `RealCards`: full R plus Goblin payment, damage delayed until resolution, owner-directed indestructible sacrifice, copies, clones. `Rollback`: unpaid mana, opponent control, phased payment, wrong subtype, invalid chosen object, illegal target, sorcery timing. `GrenadeTargets`: creature/player/planeswalker damage, self-payment target becoming illegal, target return/phasing/phase cycle/shroud/control, finite prevention, countered spell and retained costs. |
+| Sacrifice, complete LEA record and five identical reprints | `RealCards`: full B plus creature payment, captured mana value with battlefield X zero and counters excluded, returned payment, copied spell and clone isolation. `PendingValues`: independent pending captures and copied controller without another payment. `ZeroAndRecast`: zero output and fresh payment for repeated casts of one factory object. |
+| Shared declarations/instances | `Declarations`: malformed/duplicate costs, wrong filters/refs, unbound and tuple results, wrong result type, modal/any-color/compound exclusions. `FactoriesAndQueries`: fresh factory cost/ability objects, independent captured toughness, pure repeated cast queries, six fixed production declarations and permanent-card rejection. |
+| Loading and semantic reporting | `StrictLoadAndInventory`: successful isolated fixture loading and engine validation; invalid sibling rejects the collection with no registry; casting cost/filter/value roles. Updated `TestInventoryRepositoryCollection` and `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged` retain strict counts, production registry identity and Lightning Bolt gameplay. |
+
+Two complete-card behavior mappings are added. Compilation and gameplay remain
+separate: collection-wide engine-validation and behavior totals stay null.
+This single-sacrifice shape adds no simultaneous action or replacement-order
+contract. Existing engine batch and replacement regressions pass in required
+engine/full tests; no broader contract is claimed.
+
+### Source findings, actual gains and remaining gates
+
+Local `data/FEM.json` Goblin Grenade and `data/LEA.json` Sacrifice Oracle text
+agrees with the complete selected records. No selected source defect or
+prerequisite engine gap remains. No RON source was changed; vocabulary file
+hashes and syntax snapshot need no refresh.
+
+Deferred source defect: `ATQ.lines.ron:32` Gaea's Avenger uses
+`ControlledByAPlayer(SinglePlayer(You))` in both CDA counts. Local `data/ATQ.json`
+requires artifacts opponents control. CR 608.2c requires the written instruction;
+this cannot be repaired by globally changing `You`. There is one record for
+this name. Correct it with its eventual CDA implementation, not this slice.
+Previously recorded unrelated source defects remain unresolved.
+
+Actual gain matches the estimate: **2 unique names / 7 records**, exactly
+Goblin Grenade and Sacrifice; no accepted name is lost. Strict and semantic
+loading report **1,631 compiled / 814 rejected records**, **605 accepted / 381
+rejected names**. Inventory remains **72,951 nodes / 8,540 signatures**;
+unknown-role occurrences fall from **8,465 to 8,440**. All 12 source hashes are
+unchanged. Both loaders exit 1 and publish no partial production registry.
+Remaining first diagnostics include Metamorphosis's
+`AddManaRepeatedWithModifiers`, Soul Exchange's additional cost `Exile`, and
+Priest of Yawgmoth's sacrifice-value mana outside the supported spell context.
+
+No Go definitions, generators, startup callers or DSL exports are removed.
+Complete collection loading, collection gameplay and runtime cutover remain
+below the removal gate. No whole-repository caller audit authorizes DSL export
+removal. The renamed helper is private to RON; its existing caller is updated.
+User edits and the untracked completed-history file are preserved.
+
+### Validation and next candidates
+
+All required checks passed. Lint made no behavior changes; formatting and all
+changed files were reviewed. Focused affected tests passed again after lint.
+There is no environmental or pre-existing validation blocker.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| TDD `go test ./pkg/mage/dsl/ron -run TestRONAdditionalSacrifice -count=1` | Expected adapter failure after fixture repair, then PASS. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONAdditionalSacrifice\|TestRONSacrificeValue\|TestRONCounterPayment\|TestRONCastingWindow\|TestInventory' -count=1` | PASS before and after lint. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,631 compiled / 814 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same loading counts and 381 rejected names. |
+
+Ranked next candidates to reassess:
+
+1. Chosen-source identity/choice and next-event prevention for the seven
+   Circle/Realm consumers; retain source-property and affected-player ordering.
+2. All-zone count CDAs for the four direct consumers; treat Gaea's Avenger's
+   source correction and arithmetic as separate blockers to its fifth gain.
+3. Restricted mana and payment-value activation/solver contracts for
+   Metamorphosis and Priest of Yawgmoth. Both complete records must be tested;
+   accepting the action spelling alone is not sufficient.
+
+Slice files: compiler `additional_sacrifice.go`, `additional_sacrifice_test.go`,
+`compiler.go`, `counter_payment.go`, `inventory.go`, `inventory_test.go`; API
+reference, rules contracts and this ledger. One descriptive commit contains
+only this slice. Its hash is reported in the final reply.
