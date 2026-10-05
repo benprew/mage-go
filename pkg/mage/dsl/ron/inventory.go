@@ -476,6 +476,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "keyword"
 			}
 		}
+	case "duration":
+		if n.Name == "ForAsLongAsPermanentRemainsTapped" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "fixed_pt":
 		if n.Name == "PT" && len(n.Args) == 2 {
 			return "value"

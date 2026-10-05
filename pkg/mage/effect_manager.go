@@ -428,6 +428,18 @@ func (em *EffectManager) retimestampAttachment(sourceID uuid.UUID) {
 	em.effects = ordered
 }
 
+// A later tap or phase-in must not start the old duration again.
+func (em *EffectManager) expireSourceTapped(sourceID uuid.UUID) bool {
+	changed := false
+	for _, effect := range em.effects {
+		if e, ok := effect.(*composedLayerEffect); ok && e.sourceTapped && e.SourceID() == sourceID && !e.expired {
+			e.expired = true
+			changed = true
+		}
+	}
+	return changed
+}
+
 // SourceTapMaintainedStatus inspects the tap-maintained continuous effects the
 // given source keeps active by remaining tapped. hasEffect reports whether the
 // source has any such effect at all; targetLives reports whether at least one of

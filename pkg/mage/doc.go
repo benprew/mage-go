@@ -69,6 +69,12 @@
 // Jump and Pixie Queen use the same typed flying grant in [Spell] and [Activate].
 // Either player's creature can be the target. The grant expires at cleanup.
 //
+// Use [UntilSourceUntaps] with continuous modifications for a bonus that lasts
+// while the source remains tapped. The duration starts at resolution. Untapping,
+// source phasing, and source departure end it permanently. A phased recipient
+// keeps its captured identity. Target departure does not remove a source's
+// separate choice to remain tapped during its untap step.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

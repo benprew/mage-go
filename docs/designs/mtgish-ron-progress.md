@@ -5278,3 +5278,168 @@ Ranked next candidates to reassess:
 
 Complete RON gameplay, runtime loading, Go-card/generator deletion, DSL cleanup
 and native startup validation remain unfinished. No second slice began.
+
+## Run 2026-10-04: SOURCE-TAPPED-DURATION
+
+Status: complete tapped-source continuous duration slice. This run stops after
+this capability. Initial user changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are outside the slice. No unrelated
+untracked files were present.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1` and `go build ./...` passed.
+Strict and semantic loaders rejected the incomplete collection as expected:
+2,445 records / 986 unique names, **1,148 compiled / 1,297 rejected records**,
+400 accepted / 586 rejected names. Fresh semantic inventory reports 72,938
+occurrences, 8,528 context/shape signatures and 14,361 unknown-role occurrences.
+The vocabulary snapshot remains syntax evidence, with ten occurrences of
+`ForAsLongAsPermanentRemainsTapped/1` in complete records.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Blockers, downstream benefit and effort |
+| --- | --- | ---: | --- |
+| Tapped-source continuous duration, selected | Tawnos's Weaponry, Spirit Shield, Zelyon Sword, Ashnod's Battle Gear | 3 | Small-to-moderate engine lifetime extension and compiler adapter; moderate transition, identity, layer, choice and clone tests. Ashnod's Battle Gear also needs scoped controller filtering. The reusable lifetime establishes the tapped-state transition contract for later Phyrexian Gremlins, Old Man of the Sea, Rubinia Soulsinger, Willow Satyr, Preacher and Seasinger adapters; their action-result, control-duration, comparison, choice and state-trigger forms remain blockers. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi | 0 for prerequisite; 7 after adapter | Missing CR 615.7 simultaneous amount-shield allocation; large damage/replacement/decision test effort. Guardian Angel additionally needs casting/variable-payment contracts; Rakalite needs its future-trigger/bounce behavior. |
+| Filtered bands with other legendary creatures | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 | Missing filtered band formation and damage assignment; moderate-to-large combat, layer and declaration test effort. Master of the Hunt also needs named-band-member and token contracts. |
+
+All selected and competing seven-card prevention/five-card banding records were
+read in full. All ten tapped-duration records and their nested forms were
+inspected. Reprints count once. The chosen slice offers three credible unlocks
+for a smaller coherent change than the higher-unlock engine prerequisites.
+The selection contract and acceptance cases were stated before editing.
+The implement-engine skill supplied the reusable service workflow; the user's
+migration request also authorizes the RON adapter. No removed card/set skill,
+Go stubs, Go-card requirements, fallback or partial production registry was used.
+
+### Exact support, engine contract and boundaries
+
+Supported RON shape:
+`CreatePermanentLayerEffectUntil(subject, modifications,
+ForAsLongAsPermanentRemainsTapped(ThisPermanent))/3`. The duration constructor
+has exactly one symbol operand. It must bind to the permanent source of the
+resolving ability. Existing source, host and local single-permanent target
+subjects and temporary modifications are reused. Supported contexts are
+resolving permanent activations and existing supported permanent triggers.
+Spell-only, static, cost, collection-layer, non-source-duration operands and
+control-duration forms remain rejected. `UntilEndOfTurn` remains supported.
+
+`ron.compileTemporaryDuration` validates spelling, arity, symbol role and source
+scope, then lowers to
+`mage.UntilSourceUntaps(This, modifications ...ContinuousModification)
+ResolvingEffect`. Typed permanent target plans and per-factory bindings remain
+unchanged. Definition validation checks the duration's battlefield source and
+all captured target reads; deleting a declaration makes the definition invalid.
+Inventory reports the duration operand as `permanent_reference` only within a
+known duration context and does not claim unsupported parent actions work.
+
+The engine extends the existing `untilEffect` and `composedLayerEffect` capture
+and layer installation services. A duration starts only while its original
+source incarnation is present, phased in and tapped at resolution. Untapping
+then retapping before resolution can start the duration; an absent, returned,
+phased or untapped source installs nothing. After installation, actual untap,
+source departure or source phasing ends it permanently. `EffectManager` owns
+expiration flags; single and simultaneous untap services and `Game.PhaseOut`
+record expiration at the transition, before untap notifications or a possible
+retap/phase-in. Each installed layer has a clone-local expiration flag.
+Indirect source phasing is included.
+
+Subjects and values use existing capture semantics. Target phasing suspends
+application without ending a source-dependent duration. Source expiration
+while the target is phased still ends it. Returned targets receive no old bonus.
+End-of-turn cleanup, source control changes and source ability removal do not
+end the installed duration. A stun counter replacing untap leaves it active.
+The new service does not adopt the legacy target-dependent auto-untap policy:
+the separate printed permission to remain tapped is still a choice after the
+target leaves. Existing callers are preserved.
+
+This slice includes a missing reusable engine lifetime contract and its compiler
+adapter. Existing layer ordering, declaration validation, target announcement
+and rechecks, transactional costs, source/target incarnations, stack copies,
+untap replacements and cloning supply the rest. Rules read: CR 611.2a–d,
+702.26b–g and the existing identity/control-phasing contracts. No RON source
+changed and no new data defect was found. Gaea's Liege and Fastbond observations
+remain open. No Go definition or DSL function was removed; collection loading,
+test migration and startup gates remain unmet. No deletion caller audit is
+claimed.
+
+### TDD and gameplay mappings
+
+Tests were written before implementation. Engine tests first failed at the
+missing `UntilSourceUntaps` API. Real RON tests failed with the expected
+`unsupported duration (ForAsLongAsPermanentRemainsTapped)` error and the missing
+inventory operand role. An initial lifetime implementation then failed the
+untap-retap and phase-cycle assertions, proving that layer-pass-only checks were
+insufficient. Transition expiration fixed those failures.
+
+Fixture corrections used activation index 1 because index 0 is the printed
+untap rule, moved the Forest fixture to the other player so the mana solver
+could not fund an intended unpaid activation, and used the actual
+`GenericTriggered` engine type. Tests were not weakened. Inventory count
+assertions were updated only after fresh loaders proved the three-record gain.
+
+| Cards / contract | Evidence |
+| --- | --- |
+| Tawnos's Weaponry, Spirit Shield, Zelyon Sword | `TestRONSourceTappedDurationCards`: full RON definitions, exact +1/+1, +0/+2, +2/+0 bonuses and 2/2/3 generic mana plus tap costs; unpaid rollback, noncreature rejection, resolution timing, source untap/retap, departure/return, phasing, control changes, shroud recheck, target return/phasing/phase-in, indefinite cleanup, copied abilities and clone isolation. |
+| Same three cards: separate untap permission and instances | `TestRONSourceTappedDurationUntapChoiceAndInstances`: accumulated independent sources, ending only one lifetime, native untap choices, target departure retains the choice, current controller chooses, stun replacement and ability removal. |
+| Declaration/instance/trigger context | `TestRONSourceTappedDurationInvalidAndInventory` and `TestRONSourceTappedDurationTriggerAndDefinition`: arity/kind/unbound/incompatible operands, wrong contexts, semantic operand role, fresh factory target declarations, removed declaration rejection and mixed P/T/flying trigger gameplay. |
+| Shared engine lifetime | `TestUntilSourceUntapsLifetime` and `TestUntilSourceUntapsStartAndValidation`: captured collection membership, late objects excluded, source/target identity and phasing, cleanup, control changes, stun, multi-layer expiration and clone-local flags; start-time incarnation checks, invalid spell/empty/control declarations. |
+| Timing and simultaneous operations | `TestUntilSourceUntapsTransitionsBeforeNotifications`: untap notifications see expired P/T and keyword layers; simultaneous untaps expose no intermediate state; indirect Aura-source phasing cannot revive the duration. |
+| Accepted RON regression evidence | Full RON package tests and `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged`; all existing end-of-turn temporary-layer tests retain their contracts. |
+
+### Measured gain and validation
+
+Actual gain equals estimate: **3 unique cards / 3 records**. Fresh strict and
+semantic loaders agree: **1,151 compiled / 1,294 rejected records**, 403 accepted
+/ 583 rejected names. Exactly Spirit Shield, Tawnos's Weaponry and Zelyon Sword
+leave the issue list. No accepted name regresses and no remaining first
+diagnostic changes. Inventory stays at 72,938 occurrences and 8,528 signatures;
+unknown-role occurrences fall to 14,356. The twelve source hashes match the
+baseline; no vocabulary source refresh is needed. Collection engine-validation
+and behavior-verification totals remain null. Three new full-card behavior
+mappings do not establish complete collection gameplay.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, engine short tests and `go build ./...` | PASS |
+| Baseline strict/semantic loaders | Expected exit 1: 1,148 compiled / 1,297 rejected |
+| New engine tests before implementation | Expected missing-API failure, then expected untap/phase lifetime failures |
+| New real RON tests before adapter | Expected unsupported-duration and inventory-role failures |
+| Focused `TestUntilSourceUntaps*` / `TestRONSourceTappedDuration*`, `-count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after measured inventory count update |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `go test ./... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; import formatting reviewed |
+| Post-lint focused package tests, engine short tests, `make test`, `make build`, `go vet ./...` | PASS |
+| Strict/semantic report comparison and accepted-name audit | Expected exit 1: 1,151 compiled / 1,294 rejected; no regressions or changed remaining diagnostics |
+| Source hashes versus baseline and vocabulary | PASS for all twelve files |
+| Final `go run ./cmd/loadcards -json` | Expected exit 1; identical final counts and diagnostics |
+| `git diff --check` | PASS |
+
+No required check is blocked. Loader rejection is a collection gap, not a
+build/test failure. Lint changed no unrelated file. The source snapshot remains
+unchanged; compiler progress is recorded here instead of treating vocabulary
+entries as support claims.
+
+Changed slice files: `pkg/mage/composable_continuous.go`,
+`pkg/mage/effect_manager.go`, `pkg/mage/game.go`, `pkg/mage/turn_execution.go`,
+`pkg/mage/doc.go`, new `pkg/mage/source_tapped_duration_test.go`,
+`pkg/mage/dsl/ron/compiler.go`, `inventory.go`, `inventory_test.go`, new
+`source_tapped_duration.go` and `source_tapped_duration_test.go` in that RON
+package, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Only these files are included in the slice commit.
+
+Ranked next candidates to reassess from fresh evidence:
+1. CR 615.7 simultaneous amount-shield allocation and recipient prevention:
+   seven concrete otherwise-ready cards after the prerequisite.
+2. Filtered bands with other legendary creatures: five otherwise-ready lands,
+   requiring combat formation and damage-assignment contracts.
+3. Scoped controller filters: nineteen remaining first-error consumers,
+   including Ashnod's Battle Gear, now with its duration available. Reinspect
+   complete records and later blockers before estimating unlocks.
+
+Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
+and native startup validation remain unfinished. No second slice began.

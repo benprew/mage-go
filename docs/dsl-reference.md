@@ -78,7 +78,8 @@ land symbols are Plains, Island, Swamp, Mountain, Forest and Desert.
 including legendary landwalk. These operations use layer 6 and timestamp order:
 a later grant can restore an ability. Removal does not prohibit later grants.
 Static removal, `AnyBandsWithOthers`, `TheChosenAbility`, non-keyword removal and
-additional durations remain unsupported. Evidence is in
+other durations remain unsupported. The tapped-source duration below also
+accepts these modifications. Evidence is in
 `TestRONTemporaryKeyword*` and `TestRONTemporaryLayersDeclareTypedReads`.
 
 Run the full collection check with:
@@ -1467,3 +1468,32 @@ Its source remains the original incarnation. Full-record gameplay mappings:
 Giant, Hunding Gjornersen, Marhault Elsdragon and Wolverine Pack.
 `TestRONRampageNativeCombat` checks declared-blocker legality, flying and trample.
 Chromium also uses the shared `TestRONUpkeepPayment*` lifecycle tests.
+
+## RON tapped-source continuous duration
+
+`CreatePermanentLayerEffectUntil(subject, modifications,
+ForAsLongAsPermanentRemainsTapped(ThisPermanent))` supports the existing typed
+subjects and temporary modifications in resolving permanent abilities, including
+activations and supported triggers. The source operand must be the symbol
+`ThisPermanent`. Host, target, event and numbered source operands are rejected.
+Spell-only, static, cost, collection-layer and control-duration contexts are not
+added. Existing `UntilEndOfTurn` declarations retain their behavior.
+
+The compiler lowers to this engine service:
+
+```go
+func UntilSourceUntaps(source sourceRef, modifications ...ContinuousModification) ResolvingEffect
+```
+
+Call it with `mage.This`. The service captures the source incarnation and
+modification subjects/values at resolution. It starts only if that source is
+present, phased in and tapped. An untap replaced by removal of a stun counter
+does not end it. Actual untapping, source departure and source phasing end it
+permanently; retapping or phase-in cannot restart it. Control changes do not
+end this tapped-state duration. Target phasing suspends application, and target
+return does not change the captured membership.
+
+Tawnos's Weaponry, Spirit Shield and Zelyon Sword use this duration with their
+printed mana/tap costs and P/T bonuses. Their separate permission to remain
+tapped during untap still permits the choice after the target leaves.
+Evidence: `TestRONSourceTappedDuration*` and `TestUntilSourceUntaps*`.

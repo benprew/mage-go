@@ -1288,3 +1288,40 @@ subsequent damage, source LKI, captured ability controller and damage prevention
 `TestRONTemporaryKeywordCopyRetarget` checks separate copied target frames.
 The shared engine's `TestComposableKeywordRemoval` and
 `TestComposableKeywordRemovalLifetime` remain the engine contract tests.
+
+## Tapped-source continuous duration
+
+`UntilSourceUntaps(This, modifications...)` uses the same capture and layer
+installation as `Until`, with an incarnation-bound source lifetime. CR 611.2b
+requires a present, phased-in, tapped original source when the instruction
+resolves. An absent, untapped, phased or returned source installs nothing.
+Untapping then retapping before resolution can start a new duration at resolution.
+
+Once installed, actual untapping, source departure or source phasing ends every
+installed layer permanently (CR 611.2a/b, 702.26f). Transition hooks record
+expiration before untap notifications or another tap/phase-in can occur. The
+simultaneous untap service completes all untaps, expires all affected layers,
+and reapplies them before sending any untap event. A stun counter replacing
+untap preserves the lifetime and emits no untap event. Indirect source phasing
+also ends it. Layer activity provides a second check for absent, changed or
+untapped sources. Expiration state is independent in cloned games.
+
+Captured recipients and values use the existing CR 611.2c/d contracts. Target
+phasing suspends application without ending a duration that tracks the source;
+source expiration while the target is phased still ends the effect. A returned
+target is a new incarnation and receives no old bonus. Source control changes,
+ability removal and end-of-turn cleanup do not end this duration. Control layer
+modifications still require their separate lifetime adapter and are rejected.
+
+This service does not register a target-dependent untap policy. A separate
+printed permission to remain tapped remains a choice even after a recipient
+leaves. Existing legacy tap-maintained callers retain their behavior.
+
+Engine evidence: `TestUntilSourceUntapsLifetime`,
+`TestUntilSourceUntapsStartAndValidation`, and
+`TestUntilSourceUntapsTransitionsBeforeNotifications`. Real RON evidence for
+Tawnos's Weaponry, Spirit Shield and Zelyon Sword:
+`TestRONSourceTappedDurationCards`,
+`TestRONSourceTappedDurationUntapChoiceAndInstances`,
+`TestRONSourceTappedDurationInvalidAndInventory`, and
+`TestRONSourceTappedDurationTriggerAndDefinition`.

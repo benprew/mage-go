@@ -204,8 +204,13 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 // phase exactly that set back in with PhaseIn.
 func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
 	phased := g.zones.PhaseOut(id)
+	expired := false
 	for _, permanentID := range phased {
 		g.combat.RemoveFromCombat(permanentID)
+		expired = g.effects.expireSourceTapped(permanentID) || expired
+	}
+	if expired {
+		g.ApplyContinuousEffects()
 	}
 	return phased
 }

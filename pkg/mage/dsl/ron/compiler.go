@@ -1009,8 +1009,9 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err := arity(n, 3); err != nil {
 			return nil, err
 		}
-		if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
-			return nil, unsupported(n.Args[2], "duration")
+		duration, err := compileTemporaryDuration(n.Args[2], ctx)
+		if err != nil {
+			return nil, err
 		}
 		subject, err := compilePermanentRef(n.Args[0], ctx)
 		if err != nil {
@@ -1084,7 +1085,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			for i, build := range modifications {
 				values[i] = build(bindings)
 			}
-			return mage.Until(core.EndOfTurn, values...)
+			return duration(values)
 		})
 	}
 	return nil, unsupported(n, "action")

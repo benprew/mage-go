@@ -26,6 +26,9 @@ func (g *Game) UntapPermanent(p *Permanent) bool {
 	if !g.untapWithoutEvent(p) {
 		return false
 	}
+	if g.effects.expireSourceTapped(p.ID()) {
+		g.ApplyContinuousEffects()
+	}
 	g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: p.ID()})
 	return true
 }
@@ -50,6 +53,13 @@ func (g *Game) untapPermanentsTogether(permanents []*Permanent) {
 		if live != nil && g.untapWithoutEvent(live) {
 			untapped = append(untapped, live)
 		}
+	}
+	expired := false
+	for _, permanent := range untapped {
+		expired = g.effects.expireSourceTapped(permanent.ID()) || expired
+	}
+	if expired {
+		g.ApplyContinuousEffects()
 	}
 	for _, permanent := range untapped {
 		g.FireEvent(GameEvent{Type: EvtBecameUntapped, SourceID: permanent.ID()})
