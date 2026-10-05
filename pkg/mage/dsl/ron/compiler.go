@@ -1105,6 +1105,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "CreatePermanentLayerEffect":
+		build, err := compileIndefiniteType(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreatePermanentLayerEffectUntil":
 		if err := arity(n, 3); err != nil {
 			return nil, err

@@ -12486,3 +12486,161 @@ cover the final implementation; lint changes were reviewed and focused checks
 rerun. One descriptive commit stages only the ten slice files listed above;
 the user's `.gitignore` and execution-design edits stay unstaged. The commit hash
 is reported in the final response. No additional slice is started.
+
+## 2026-10-05: indefinite resolving type changes
+
+Status: completed `layers.resolving-indefinite-type` compiler slice, pending
+final validation and commit evidence below. One slice only. Preserve the user's
+`.gitignore` and execution-design edits. No RON source, engine implementation,
+Go card definition, generator, production registry or DSL export is changed.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, `pkg/mage/doc.go`, the full execution design, vocabulary snapshot,
+current ledger, typed permanent references, action/instance factories, temporary
+and static layer adapters, sacrifice costs, counter placement and replacement
+contracts, inventory roles, continuous modifications, basic land type execution,
+target resolution, relevant API/rules-contract docs and CR 305.6–9, 611.1–3,
+613.1–7. Full RON records supplied the requirements; no Go card definition,
+removed skill, generated stub, subagent or fallback supplied requirements.
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Strict and semantic loaders exited 1 for collection rejection:
+1,472 compiled / 973 rejected records, 517 accepted / 469 rejected unique names.
+Fresh semantic inventory: 2,445 records, 986 names, 72,938 AST nodes,
+8,530 context signatures and 11,242 unknown-role occurrences.
+
+Full canonical candidate records, nested forms and selected reprints were read.
+Reprints count once in this comparison:
+
+| Candidate | Distinct affected names | Estimated complete-card gains and remaining blockers | Downstream value; effort |
+| --- | --- | --- | --- |
+| Indefinite resolving type changes, selected | Ashnod's Transmogrant, Thelonite Monk | 2 unique / 2 records. Existing target, sacrifice, tap, counter and layer services cover both full records. | Establish the indefinite action adapter and resolution capture boundary for later color, P/T and ability modifications. Low adapter effort, medium gameplay/identity test effort. |
+| Finite recipient prevention | Alabaster Potion, Amulet of Kroog, Argivian Blacksmith, Balm of Restoration, Combat Medic, Conservator, Guardian Angel, Healing Salve, Kei Takahashi, Oasis, Personal Incarnation, Rakalite, Samite Healer; Rasputin Dreamweaver has a source form | 0 from allocation prerequisite alone; 10 credible full gains after adapters. Balm needs activated modes; Guardian repeatable optional payments; Incarnation owner/redirection/death values; Rasputin history/counter cap/source prevention. | Shared CR 615.7 recipient allocation across simultaneous packets. High engine/decision/batch and test effort. |
+| All-zone CDAs | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, People of the Woods, Plague Rats, Wood Elemental | 5 credible gains. Avenger has the existing controller-filter source concern; Wood needs entry sacrifice results. All-zone characteristics and count/arithmetic contexts need contracts. | Shared all-zone characteristic queries and CDA ordering. High engine/regression effort, medium adapter effort. |
+
+Indefinite types provide the largest bounded immediate gain for the effort of
+these candidates. Prevention and CDA totals require substantial prerequisites.
+The selection contract and acceptance cases were stated before editing.
+First-error frequency alone did not determine the estimate. Other indefinite
+consumers still need their own modifications: Aisling Leprechaun's `AddColor`,
+Life Matrix's granted activation and Wall of Tombstones' graveyard-count value
+remain errors. This run does not establish or reinterpret those forms.
+
+### Exact shapes, scope and reuse
+
+`compileIndefiniteType(n Node, ctx scope) (effectFactory, error)` accepts:
+
+```ron
+CreatePermanentLayerEffect(reference, [AddCardtype(type)])
+CreatePermanentLayerEffect(reference, [SetLandType(type)])
+```
+
+Exactly one operation is supported. `AddCardtype` accepts Creature, Artifact,
+Enchantment or Land; `SetLandType` accepts Plains, Island, Swamp, Mountain or
+Forest as symbols. Empty/combined modifications, malformed symbols, unsupported
+types and other modification families fail compilation with positioned errors.
+This is a resolving action, not a static rule or entry replacement. The subject
+uses the existing `compilePermanentRef` lexical contract: source, Aura host,
+singular declared target or matching event binding, only where bound. No new
+reference aliases or scope lifetimes are invented.
+
+Dependencies are already present: instance-bound action factories, permanent
+references and target declarations, activation/casting payment transactions,
+sacrifice costs, counter replacements and the engine's continuous layer services.
+`AddCardtype` reuses `compileTemporaryType` validation/lowering. Each factory
+builds `AddCardType` or `SetSubtypeFamily(..., SubtypeLand, type)` with its own
+bindings and installs it through `Until(Indefinite)` at resolution.
+
+Engine reuse is exact: captured incarnation identity, source-independent lifetime,
+clone isolation, shared layer ordering, target legality and cleanup are unchanged.
+Basic land subtype replacement already calls the CR 305.7 service: remove printed
+rules/land types, grant intrinsic mana, preserve other families/types/supertypes
+and abilities granted by other effects. There is no missing engine prerequisite.
+No RON runtime state or last-action slot is added. LKI is not used to act on absent
+objects. No simultaneous operation is introduced; Transmogrant's counter and
+artifact instructions remain ordered and use existing replacement services.
+
+Inventory assigns `CreatePermanentLayerEffect` arguments the
+`permanent_reference` and `resolving_modification` roles. Descendants retain
+`card_type` and `land_subtype` roles even when another modification is rejected.
+Inventory support remains unverified by default; known syntax is not proof of
+engine or gameplay support.
+
+### TDD and behavior mappings
+
+The first fixture build exposed wrong test API names and concrete/interface
+assignment. After those were corrected, both real-card gameplay tests failed at
+the intended missing `CreatePermanentLayerEffect` adapter. Initial broader
+fixtures assumed Mishra's Factory was a printed artifact, used an inactive
+source-less indefinite callback, and attached a counter doubler to a sacrificed
+source. Inspection corrected these fixtures to their actual engine contracts;
+assertions still check resolution timing, changed-target illegality and doubling.
+A reporting fixture incorrectly expected an unknown parent to invent child roles;
+it now uses a recognized but rejected modification list, preserving that invariant.
+
+All test suffixes below share the prefix `TestRONIndefiniteType`:
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Ashnod's Transmogrant, complete ATQ RON record | `RealCards`: tap/self-sacrifice payment, ordered +1/+1 counter and artifact addition, retained creature/subtype/flying/P/T, opponent recipient, source departure, target return/control/phasing, clones and cleanup. `Casting`: actual mana cost and rollback, fresh abilities. `LegalityAndReplacement`: target becomes artifact before resolution, counter prevention/doubling, copied activation. `InstanceBindings`: two real sources and separate recipients. |
+| Thelonite Monk, complete FEM RON record | `RealCards`: tap and green-creature sacrifice, opponent Factory replacement, removed printed abilities, Forest intrinsic mana, source departure, target return/control/phasing, clones and cleanup. `Casting`: actual 2GG cost, 1/2 Monk characteristics, rollback and factory isolation. `MonkSelfPayment`: summoning sickness rollback and source as its own green-creature payment. |
+| Basic type contract | `AllBasicTypes`: five basic types and intrinsic colors, retained land/creature types, Bird subtype, legendary supertype and P/T, removed printed flying, retained granted vigilance. |
+| Invalid declarations and reporting | `Invalid`: empty/combined operations, unsupported/malformed types, unbound target/event references and unsupported color/ability families. `Inventory`: nested roles under rejected operations. Existing inventory totals updated to fresh measured counts. |
+
+Adds two complete-card behavior mappings. Compilation and collection-wide gameplay
+coverage remain separate; `engine_validated` and `behavior_verified` in the semantic
+report remain null. The complete collection is not runtime-ready.
+
+### Fresh measurements and next candidates
+
+Actual gain matches the estimate: **2 unique names / 2 records**. Strict and
+semantic loaders now report **1,474 compiled / 971 rejected records**, with
+**519 accepted / 467 rejected unique names**. Name-set comparison reports no
+accepted-name regression. Nodes/signatures remain 72,938 / 8,530; unknown-role
+occurrences fall to **11,127**. Source hashes are unchanged, so the vocabulary
+snapshot does not need a source refresh. Both loaders still exit 1 and strict
+loading publishes no partial registry. No source-data correction is made;
+previous source concerns remain open. No environment failure is observed.
+
+Ranked next candidates to reassess from fresh evidence:
+1. Finite recipient prevention allocation, a prerequisite for ten credible cards.
+2. All-zone CDA characteristics, with Gaea's Avenger source audit.
+3. Combat-pair filter/host/union and event-reference contracts for Abomination,
+   Giant Shark, Infernal Medusa and Venom. Their distinct remaining blockers
+   must be checked before selecting an adapter.
+
+No Go definitions or DSL functions are removed: complete loading, gameplay test
+migration and application cutover gates remain unmet. No whole-repository caller
+audit authorizes removal in this slice. API/rules documentation describes only
+the new adapter and its established reuse contracts.
+
+Slice files: `pkg/mage/dsl/ron/indefinite_type.go`, `indefinite_type_test.go`,
+`compiler.go`, `inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+Final validation:
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'Test(RONIndefiniteType\|Inventory)' -count=1` | PASS after the final single-operation boundary and declaration test. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. The first full rerun exposed only two stale inventory-count assertions; refreshed from measured loader output, then passed. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on final implementation. |
+| `make test` | PASS on final implementation. The initial run failed on the same stale inventory assertions; final rerun passed. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic formatting/import changes reviewed; no unrelated source changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for collection rejection: 1,474 compiled / 971 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same records/issues; 467 rejected unique names, 11,127 unknown-role occurrences; source hashes unchanged. |
+
+Final diagnostics include Aisling Leprechaun's unsupported indefinite `AddColor`,
+Life Matrix's `AddAbility`, Wall of Tombstones' `SetToughness`, Abomination's
+combat-pair `Or` filter, Giant Shark's damage-history shape and Venom's event
+union. These remain explicit gaps. Previously accepted RON records keep working.
+No environmental or pre-existing blocker remains. Required checks cover the
+final code; lint changes were reviewed and affected checks rerun.
+
+One descriptive commit stages only the eight slice files listed above. The
+user's `.gitignore` and execution-design edits stay unstaged. Its hash is reported
+in the final response. No additional slice is started.

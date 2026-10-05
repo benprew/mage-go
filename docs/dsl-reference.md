@@ -2425,3 +2425,26 @@ recheck the event filter, and it cannot follow a returned card.
 These are per-creature pair events, not once-per-combat block transitions.
 `WhenACreatureBlocks`, event unions, host subjects and the other event-reference
 spellings require separate adapters. No collection record is partially installed.
+
+### RON indefinite type changes
+
+`CreatePermanentLayerEffect(reference, [AddCardtype(type)])` accepts Creature,
+Artifact, Enchantment or Land. `CreatePermanentLayerEffect(reference,
+[SetLandType(type)])` accepts Plains, Island, Swamp, Mountain or Forest.
+Each form requires exactly one operation and a bound singular permanent
+reference in a resolving action body. Empty or combined operations, unsupported
+card types, nonbasic land types and malformed or unbound references are errors.
+Other indefinite modification families remain unsupported.
+
+The compiler builds each subject with the action instance's bindings and uses
+`Until(Indefinite, AddCardType(...))` or
+`Until(Indefinite, SetSubtypeFamily(..., SubtypeLand, ...))`. Resolution captures
+one incarnation. The effect survives cleanup and source departure. Phasing
+preserves an installed effect; departure and return do not preserve it. An
+absent or illegal target at resolution receives no modification. Basic land
+subtype replacement uses the engine's printed-ability removal and intrinsic
+mana rules; it preserves other card types, subtype families and supertypes.
+
+Complete RON gameplay evidence covers Ashnod's Transmogrant and Thelonite Monk
+in `TestRONIndefiniteType*`. The latter can sacrifice itself as its green creature
+payment. Counter replacement on Transmogrant does not stop its next instruction.

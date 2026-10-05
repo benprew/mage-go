@@ -2567,3 +2567,28 @@ records' costs, metadata, flying and failed-payment rollback. `FilterShapes`
 covers both event directions with the bare creature filter, one-element `And`
 and an excluded Goblin subtype. `Invalid` rejects incompatible, unbound and
 out-of-scope declarations. These names have the prefix `TestRONCombatPair`.
+
+## RON indefinite resolving type changes
+
+`CreatePermanentLayerEffect` with one `AddCardtype` or basic `SetLandType`
+operation reuses the existing `Until(Indefinite)` capture contract (CR 611.2a,
+611.2c). The source does not control its lifetime. Subject departure invalidates
+its captured incarnation; phasing preserves that incarnation. Targets must pass
+resolution legality before capture. No absent-object action uses LKI.
+
+`SetSubtypeFamily(subject, SubtypeLand, basicType)` applies CR 305.6–7 in layer
+4: replace land subtypes, remove printed abilities, grant intrinsic mana and
+retain other card types, subtype families, supertypes and later granted abilities.
+`AddCardType` retains existing types and abilities. No engine service changes.
+
+Evidence: `TestRONIndefiniteTypeRealCards` exercises both full RON records with
+source departure, target return, phasing, control changes, cloned pending and
+installed effects, and cleanup. `Casting` checks native mana payment and
+rollback, metadata and fresh factories. `MonkSelfPayment` checks summoning
+sickness rollback and source sacrifice. `LegalityAndReplacement` checks a target
+becoming an artifact before resolution, counter prevention/doubling, and copied
+abilities. `InstanceBindings` checks distinct sources and recipients.
+`AllBasicTypes` checks all five mana colors, retained creature characteristics
+and legendary supertype, removed printed flying and retained granted vigilance.
+`Invalid` and `Inventory` cover declaration rejection and nested reporting.
+These suffixes share the prefix `TestRONIndefiniteType`.

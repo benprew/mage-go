@@ -479,6 +479,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "permanent_rule_operation", "duration"}[index]
 			}
+		case "CreatePermanentLayerEffect":
+			if len(n.Args) == 2 {
+				return []string{"permanent_reference", "resolving_modification"}[index]
+			}
 		case "CreatePermanentLayerEffectUntil":
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
@@ -550,14 +554,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PTCounter" && len(n.Args) == 2 {
 			return "integer_literal"
 		}
-	case "static_modification", "temporary_modification":
+	case "static_modification", "temporary_modification", "resolving_modification":
 		switch n.Name {
 		case "SetPower":
 			if role == "temporary_modification" && len(n.Args) == 1 {
 				return "value"
 			}
 		case "SetLandType":
-			if role == "static_modification" && len(n.Args) == 1 {
+			if (role == "static_modification" || role == "resolving_modification") && len(n.Args) == 1 {
 				return "land_subtype"
 			}
 		case "SetController":
