@@ -118,6 +118,10 @@
 // Use [Until] with [GrantKeywordModification] and CantRegenerate for a
 // prohibition that lasts until end of turn, even after its source leaves.
 //
+// Use [DealDamageEachPlayer] for amounts that depend on each selected player.
+// Its player binding is local to the amount. All amounts are read before one
+// simultaneous damage batch. Replacement effects do not recalculate them.
+//
 // Use [MultiplyValues] to multiply two resolution values. Procrastinate uses
 // twice the announced X with [AddCountersTo] after [TapSubject].
 //

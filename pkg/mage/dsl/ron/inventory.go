@@ -750,6 +750,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "recipient"}[index]
 		}
 	case "recipient":
+		if n.Name == "EachPlayer" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "MultipleRecipients" && len(n.Args) == 1 {
 			return "recipient_set"
 		}

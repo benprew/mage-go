@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	damageRecipient  *playerReferencePlan
 	activation       bool
 	castingCondition mage.StateCondition
 	damagePlayer     *damagePlayerPlan
@@ -1000,6 +1001,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		} else if n.Args[0].Kind != Symbol || n.Args[0].Name != source || ctx.permanent {
 			return nil, unsupported(n.Args[0], "damage source")
 		}
+		if n.Args[2].Name == "Player" || n.Args[2].Name == "EachPlayer" {
+			build, err := compilePlayerRecipientDamage(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		amount, err := compileInstanceValue(n.Args[1], ctx)
 		if err != nil {
 			return nil, err
@@ -1026,18 +1034,6 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
 				return mage.DealDamageFrom(mage.This, bindings.permanents[recipient.target], amount(bindings))
-			})
-		}
-		if n.Args[2].Name == "Player" {
-			if err := arity(n.Args[2], 1); err != nil {
-				return nil, err
-			}
-			player, err := compilePlayerRef(n.Args[2].Args[0], ctx)
-			if err != nil {
-				return nil, err
-			}
-			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageFrom(mage.This, player.build(bindings), amount(bindings))
 			})
 		}
 		if err := requireRef(n.Args[2], ctx.target, ctx); err != nil {

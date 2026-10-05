@@ -3014,3 +3014,28 @@ defined-X modifiers, and rounded-half values still require separate adapters.
 
 Evidence: `TestRONXActivation*` and `TestXActivationPayment*`. The complete
 Candelabra of Tawnos record has native casting, activation and resolution tests.
+
+## RON recipient-relative player damage
+
+`SpellDealsDamage(ThisSpell, amount, Player(player-reference))` and
+`PermanentDealsDamage(ThisPermanent, amount, Player(player-reference))` bind
+bare `DealsDamage_ThatPlayer` within `amount` to that typed player reference.
+Existing player references and resolution values retain their contracts.
+The binding is unavailable to the recipient declaration, other actions,
+other modes, delayed bodies, and permanent or mixed recipient amounts.
+
+The same damage actions accept `EachPlayer(AnyPlayer)` or
+`EachPlayer(Opponent)`. Each factory creates its own amount-member binding.
+`DealsDamage_ThatPlayer` reads that member during amount evaluation. The engine
+selects players in turn order, evaluates all amounts before any damage, and
+uses one simultaneous batch. Opponents are relative to the resolving controller,
+including copied spells. Nonpositive amounts deal no damage. Prevention and
+redirection operate through the existing replacement pipeline; changing a
+recipient there does not recalculate the original amount.
+
+Malformed player collections and unbound reads are compile errors. General
+player filters, permanent-recipient bindings, mixed collections and discard
+result values remain unsupported. `TestRONDamageRecipientValue*` covers both
+complete Legends records, Storm Seeker and Typhoon, plus declaration, scope,
+instance, activation, copy, clone, payment, timing and simultaneous contracts.
+Mind Bomb still requires optional discard and saved per-player results.

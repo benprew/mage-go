@@ -3226,3 +3226,30 @@ contract is established. Existing damage and target services execute Desert.
 Evidence: `TestRONActivationSteps`, `Invalid`, `ConjunctionAndMana`,
 `JadeStatue`, `Desert`, `CombatDurationTargets`, `CombatDurationInvalid`,
 `JadeCombatAndInstances`, and `Inventory` in `dsl/ron/activation_step_test.go`.
+
+## Player-relative amounts in one damage instruction
+
+`DealDamageEachPlayer(source DamageSourceRef, subjects PlayerSet,
+member *PlayerBinding, amount ResolutionValue) ResolvingEffect` selects current
+player membership once. Each distinct existing player receives one assignment.
+The member is a local producer for `amount` only. Definition validation rejects
+nil inputs, unnamed bindings, unbound reads and reads that escape into the
+player set or later actions. Outer bindings are restored before replacement
+processing and damage notifications.
+
+All amounts are evaluated before the first replacement or damage action
+(CR 608.2h). Nonpositive amounts produce no assignment. The shared
+`DealSimultaneousDamage` service processes replacements, prevention and damage
+(CR 120.4, 615.6, 616.1); redirection does not reevaluate the amount. Damage
+notifications observe the complete batch. Existing damage-source capture retains
+incarnations and departure information (CR 400.7, 608.2h). A pending activation
+keeps its controller; lifelink uses its source's current or retained controller.
+Phasing does not create a new source incarnation.
+
+`TestPlayerDamageAmounts*` covers definition validation, local scope restoration,
+empty/duplicate/absent membership, nonpositive amounts, pre-batch information,
+prevention, affected-player replacement ordering and rechecks, source
+control/departure/return/phasing, lifelink and cloned pending activations.
+`TestRONDamageRecipientValue*` covers the compiler adapter and complete
+Storm Seeker and Typhoon records. No optional-payment or discard-result
+contract is established here.

@@ -2,8 +2,8 @@
 
 ## Current status
 
-The latest recorded inventory reports **567 accepted / 419 rejected unique card
-names** (986 total), and **1,545 compiled / 900 rejected records** (2,445 total).
+The latest recorded inventory reports **569 accepted / 417 rejected unique card
+names** (986 total), and **1,547 compiled / 898 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
@@ -16239,3 +16239,185 @@ Slice files: compiler `activation_timing.go`, `compiler.go`,
 `source_tapped_duration.go`; tests `activation_step_test.go`, `inventory_test.go`,
 `temporary_layer_test.go`, `temporary_keyword_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry. No second slice starts.
+
+## 2026-10-05: recipient-relative player damage amounts
+
+Status: completed slice `PLAYER-DAMAGE-AMOUNTS`. Stop after this slice.
+Runtime cutover and removal gates remain unmet.
+
+### Fresh evidence, comparison and selection
+
+Initial user changes: `.gitignore`, the execution design and this ledger;
+`mtgish-ron-completed.md` was untracked. Preserve all of them. Stage only this
+entry and its current-status update against the committed ledger; do not stage
+the user's history restructuring or untracked completed-slices document.
+
+Read AGENTS.md, the engine reference, execution design, vocabulary snapshot,
+progress ledger, selected compiler/engine services, API/rules contracts and
+complete candidate records. Requirements come from RON, not Go definitions.
+The implement-engine skill supplied the engine workflow; removed card/set skills
+were not used. Relevant rules: CR 120.1–4, 400.7, 608.2b/h, 615.6, 616.1 and
+702.26. Local `data/LEG.json` Oracle text agrees with both selected records.
+
+Baseline short engine/compiler tests and `make build` passed. Fresh semantic
+loading rejected the collection with exit 1: **1,545 compiled / 900 rejected
+records**, **567 accepted / 419 rejected unique names**, 2,445 records and 986
+names. This was collection rejection, not a build or test failure. Inventory:
+72,951 nodes, 8,540 signatures, 10,186 unknown-role occurrences. Complete nested
+records were inspected; first-error frequency did not determine unlocks.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Recipient-relative player damage, selected | Storm Seeker and Typhoon: **2** complete unlocks. Mind Bomb: shared prerequisite only. | Storm Seeker needs an amount-local typed player reference. Typhoon also needs per-player amounts evaluated before a damage batch. Mind Bomb still needs optional discard and saved per-player results. Enables targeted and collection player damage without global last-action state. | Small/medium: one engine operation, private compiler scopes, declaration, information timing, copy/clone, payment and batch/replacement tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible unlocks after the engine prerequisite, zero safe adapter-only gain. | Full records use fixed/X shields, typed recipients, modes and costs. Finite allocation across simultaneous sources (CR 615.7), affected-player decisions and replacement rechecks need a shared engine contract. | Medium/high: allocation and shield consumption plus gameplay/ordering tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible unlocks after the engine prerequisite. | Full records require owner/controller count context, named counts and all-zone characteristic evaluation. Enables shared count-based P/T characteristics. | High: zone evaluation, CDA layering/copy/control contracts and gameplay tests. |
+
+Selection favors two complete consumers with a small reusable prerequisite.
+The contract, reuse boundary and acceptance cases were stated before editing.
+All three `DealsDamage_ThatPlayer` consumers were read in full, including Mind
+Bomb's earlier unsupported discard and nested result read. Each occurs once:
+Storm Seeker and Typhoon in LEG, Mind Bomb in DRK. No reprint inflation.
+
+### Signatures, contexts, dependencies and reuse
+
+Engine API:
+`DealDamageEachPlayer(source DamageSourceRef, subjects PlayerSet,
+member *PlayerBinding, amount ResolutionValue) ResolvingEffect`.
+
+Select current player membership once, in the set's order. Ignore duplicate and
+absent IDs. Bind each player only while reading its amount. Evaluate all amounts
+before any replacement or damage processing. Restore outer saved-player state
+before the batch and callbacks. Nonpositive amounts create no assignment.
+Definition validation treats the member as a local producer for the amount;
+it cannot authorize reads in the set, before the operation or afterward. Nil
+inputs, empty binding names and unbound reads fail validation.
+
+RON resolving actions `SpellDealsDamage(ThisSpell, amount, recipient)/3` and
+`PermanentDealsDamage(ThisPermanent, amount, recipient)/3` now accept:
+
+- Existing `Player(player-reference)/1`, with bare `DealsDamage_ThatPlayer`
+  bound only inside `amount` to that existing typed reference.
+- `EachPlayer(AnyPlayer)/1` and `EachPlayer(Opponent)/1`, with a fresh typed
+  amount-member declaration for each operation and factory instance.
+
+Existing resolution values can read the local reference, including
+`TheNumberOfCardsInPlayersHand(player)/1` and
+`TheNumberOfPermanentsOnTheBattlefield(filter)/1` with
+`ControlledByAPlayer(SinglePlayer(player))`. Existing value grammar is retained.
+Recipient declarations compile outside the local scope. Other actions, modes,
+permanent/mixed amounts and delayed bodies cannot inherit the local reference.
+General player filters, payment results and per-player discard results remain
+unsupported. Bare player-target damage and other accepted recipients retain
+their existing lowering. Both spell and permanent action contexts are covered.
+
+`ron` owns spelling, lexical scope and typed plans. The engine owns the local
+runtime frame and batch execution. Reuse: `DealDamageFrom`, `PlayerBinding`,
+`HandSizeOf`, `CountPermanents`, `PermanentsControlledBy`, `EachPlayer`,
+`OpponentsOf(You)`, shared definition validation, `DamageSourceRef`,
+`PlayerDamageAssignment`, `DealSimultaneousDamage`, replacement choice/rechecks,
+transactional casting/activation, target declarations, stack copies and game
+cloning. No card-name branch, fallback, game-time declaration panic, partial
+production registry or global last-action slot is added.
+
+The native source service retains departure incarnation and LKI. A pending
+activation keeps its controller; lifelink uses the live or retained source
+controller. Return cannot substitute a new source incarnation. Phasing keeps
+identity. Copies read their own target and controller. Prevention/redirection
+change the proposed damage; they do not change the player used to compute the
+original amount. Amounts are read at resolution, not announcement.
+
+Semantic inventory now assigns the argument of recipient `EachPlayer/1` the
+player-filter role even below an earlier unsupported action. Inventory remains
+report-only and cannot authorize compilation of unsupported bodies.
+
+### TDD and card-to-test mappings
+
+Initial engine tests tried a name already used by a legacy operation. The fresh
+API was renamed to preserve that caller. Tests then confirmed the missing
+`DealDamageEachPlayer` API. Complete RON gameplay tests separately confirmed
+unbound `DealsDamage_ThatPlayer` failures for both cards before compiler edits.
+The nested inventory test confirmed its missing player-filter role before the
+role adapter. Test fixture errors (direct spell source without a resolving
+stack object; unavailable activation/turn fixture members; a creature fixture
+without CardPT) were corrected using native engine services and a synthetic
+permanent fixture. No production contract was relaxed.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Storm Seeker, complete LEG record | `TestRONDamageRecipientValueCards`: any-player target, self/opponent damage, announcement versus resolution hand counts, validation and cloned pending state. `Copies`: retargeted spell copy retains its own recipient; original and clone retain theirs. `RollbackAndPrevention`: unpaid and invalid-target rollback, correct mana payment, finite prevention. |
+| Typhoon, complete LEG record | `Cards`: opponent-only damage, resolution-time Island entries, control changes, phased Island exclusion, cloned pending state. `Copies`: copied spell's controller determines its opponent and count. `RollbackAndPrevention`: unpaid casting and sorcery-timing rollback, finite prevention. |
+| Compiler local scope and instances | `TestRONDamageRecipientValueLocalScopes`: adjacent singular amounts have independent recipients, factories do not share target declarations, adjacent collections and modal contexts validate. `AllPlayers`: each amount reads its own player's hand and callbacks see the complete batch. `Activation`: permanent source departure and pending clone. `Invalid`: malformed sets, invalid recipient declarations, unbound/permanent/mixed amount reads, forward/escaped/delayed reads. `Inventory`: nested role classification with strict unsupported-body rejection. |
+| Engine batch, identity and rules | `TestPlayerDamageAmountsBatchAndScope`, `Validation`, `SnapshotAndPrevention`, `BeforeFirstDamage`, `SourceIdentity`, `ReplacementOrder`, `EmptyAndDuplicateSet`: local binding restoration, producer scope, nil declarations, pre-batch values, nonpositive damage, finite prevention, both affected-player choices between prevention and redirection and their rechecks, source departure/return/control/phasing/cycle, retained lifelink, clone isolation and collection membership. |
+| Mind Bomb | Amount-member prerequisite only. No complete-card gameplay claim. Optional discard and saved per-player results remain rejected. |
+
+Two complete-card behavior mappings are added. Compilation and gameplay remain
+separate; aggregate engine-validated/behavior-verified inventory totals remain
+null. No source defect was corrected. All twelve RON hashes are unchanged, so
+no source vocabulary snapshot refresh is required. Known prior data defects
+remain unresolved.
+
+### Validation and remaining work
+
+Actual gains match the estimate: **2 unique names / 2 records**, exactly Storm
+Seeker and Typhoon. No previously accepted name was lost. Fresh strict loading
+and semantic inspection report **1,547 compiled / 898 rejected records**,
+**569 accepted / 417 rejected unique names**. Inventory: **72,951 nodes / 8,540
+signatures / 10,181 unknown-role occurrences**. Five occurrences now have known
+player-filter roles. Both loader modes exit 1 for unsupported records and publish
+no partial registry.
+
+Fresh diagnostic: Mind Bomb remains
+`DRK.lines.ron:72:173: unsupported all-player action (DiscardUptoNumberCards)`.
+Finite prevention and all-zone CDA diagnostics remain unsupported. No
+compilation progress is attributed to Mind Bomb.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Engine API, complete RON and inventory tests before adapters | Expected missing-API, unbound-reference and missing-role failures confirmed. |
+| `go test ./pkg/mage -run TestPlayerDamageAmounts -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONDamageRecipientValue\|TestRONHandSize\|TestRONDamagePackets\|TestRONMixedDamage\|TestInventory' -count=1` | PASS. |
+| Full compiler suite before count update | Only two exact baseline-count assertions failed; updated to freshly measured 1,547/898. No behavior or rejection assertion weakened. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, rerun after lint. |
+| `go test ./... -short -count=1` | PASS, skill verification. |
+| `make test` | PASS, rerun after lint. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues after renaming a test variable that shadowed `copy`. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,547/898. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts above, unchanged hashes. |
+
+No engine/environment or pre-existing validation failure was found. Lint changed
+only new-test import spacing; these changes were reviewed. Its first run found
+a test variable that shadowed `copy`; renaming it resolved the issue. Focused
+tests, short engine tests, all-repository short tests, full tests, build and vet
+passed after lint. All current callers remain. Complete loading, gameplay migration and startup wiring remain
+below the Go-definition and generator removal gate. No whole-repository audit
+authorizes DSL removal in this slice. API/rules documentation describes only
+established behavior.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Finite recipient prevention allocation. A final complete-record breadth audit
+   adds Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Kei Takahashi
+   and Rakalite to the initial four consumers: **10 likely complete unlocks**.
+   Rakalite also uses the existing delayed-end-step return service. Guardian
+   Angel retains its unsupported player-effect permission. This improves the
+   next-run estimate; the initial four-card comparison was conservative.
+2. All-zone count CDA evaluation. People of the Woods adds the toughness-only
+   context to the initial four paired-CDAs: **5 likely complete unlocks**.
+   Gaea's Avenger also requires `Plus` and has a source-data defect: its full
+   ATQ record counts `You`, while local ATQ Oracle text counts artifacts your
+   opponents control. No predicate was inverted or RON corrected here. Wood
+   Elemental still requires entry sacrifice and saved entry results.
+3. Target alternatives for the seven `Targeted_Modal` consumers: Chaoslace,
+   Deathlace, Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind.
+   This needs target-union semantics and later color/text operations; first-error
+   elimination alone is not a complete unlock.
+
+Slice files: engine `composable_player_damage.go`, its tests, `definition.go`,
+`doc.go`; compiler `damage_recipient_value.go`, its tests, `compiler.go`,
+`player_scope.go`, `inventory.go`, `inventory_test.go`; API/rules docs and this
+ledger entry. One descriptive commit is made only after all required checks
+pass. No second slice starts.
