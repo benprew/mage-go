@@ -2838,3 +2838,29 @@ Evidence: `TestPreventDamageThisTurnIdentity`, `SourceAndBatch`, `Declarations`,
 `AttackingSourceLKI`, and `ReplacementOrder` under the same test prefix;
 `TestRONRecipientPreventionAura`, `Artifacts`, `ArtifactCasting`, `Combat`,
 `Instances`, `CopyRetarget`, and `InvalidAndInventory`.
+
+## Typed current-hand operations
+
+`RevealHandFor(PlayerRef)` records each card in the resolved player's current
+hand with the existing public reveal service. It does not move cards or make a
+choice (CR 701.20a–c). History entries are snapshots; later changes and game
+clones do not change earlier entries. `CountMatchingHand(PlayerRef, CardFilter)`
+is a pure resolution query of current hand membership and card characteristics.
+It does not use reveal history or LKI. An unresolved or absent player supplies
+no cards and a count of zero.
+
+`DiscardMatchingHand(PlayerRef, CardFilter)` selects every matching card at
+resolution, then uses `discardActionsTogetherWithEvents`. All proposed effect discards
+are prepared through the existing affected-player replacement pipeline before
+any move. Discard events follow all moves (CR 608.2f, 701.9). A replaced or
+prevented discard does not stop other selected discards. No hand-choice prompt,
+random selection, payment or result binding is introduced. A zero card filter
+matches every card, as in the existing `CardFilter` contract.
+
+Player references retain the resolving controller and target binding. A source
+control change, departure or phasing does not change a captured ability's
+controller. Fresh definitions, stack copies and cloned games use the existing
+binding and resolution frame services. Declaration validation rejects nil and
+unbound player references. `TestHandOperations*` establishes engine evidence;
+`TestRONHandOperations*` covers complete Amnesia and Inquisition records, their
+casting, copies, replacement effects and supported resolving contexts.

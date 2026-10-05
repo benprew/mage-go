@@ -1247,6 +1247,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "RevealHand" || n.Name == "DiscardCards" {
+		return compileHandPlayerAction(n, ctx)
+	}
 	if n.Name == "AddMana" {
 		return compilePlayerMana(n, ctx)
 	}

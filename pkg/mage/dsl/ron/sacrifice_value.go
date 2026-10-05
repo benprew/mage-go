@@ -15,6 +15,9 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "TheNumberOfCardsOfTypeInPlayersHand" {
+		return compileHandCount(n, ctx)
+	}
 	if n.Name == "TheNumberOfPermanentsOnTheBattlefield" {
 		return compileBattlefieldCount(n, ctx)
 	}

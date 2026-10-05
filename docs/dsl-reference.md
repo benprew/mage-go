@@ -2676,3 +2676,25 @@ Other player filters, action-list bodies, shuffle actions, optional discards,
 X and player-dependent draw amounts remain compile errors in this context.
 Complete Wheel of Fortune gameplay evidence is in `TestRONEachPlayerWheel`,
 `TestRONEachPlayerCopies` and `TestRONEachPlayerReplacements`.
+
+### RON current-hand operations
+
+`PlayerAction(player, RevealHand)` reveals that player's current hand at
+resolution. `RevealHand` must be a bare symbol.
+`PlayerAction(player, DiscardCards(filter))` discards all matching cards in one
+batch. `TheNumberOfCardsOfTypeInPlayersHand(filter, player)` is a current-hand
+resolution value. Player references use the existing typed lexical scope;
+these forms create no new binding or target declaration.
+
+Hand filters accept `IsCardtype(type)`, `IsNonCardtype(type)`, `IsColor(color)`,
+`IsNonColor(color)` and nonempty nested `And([...])` or `Or([...])` forms. They
+read card characteristics, not permanent characteristics. Unbound players,
+malformed declarations, battlefield predicates and empty logical filters are
+compile errors. The adapters apply in resolving spell, mode, activation,
+trigger and delayed action scopes; they do not add cost, entry, static or
+replacement-operation forms. The count uses existing resolution-value contexts.
+
+The engine primitives are `RevealHandFor`, `DiscardMatchingHand` and
+`CountMatchingHand`. Complete card evidence is in `TestRONHandOperationsCards`,
+`TestRONHandOperationsCopiesAndPrevention` and
+`TestRONHandOperationsEmptyAndReplacements` for Amnesia and Inquisition.

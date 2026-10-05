@@ -233,6 +233,10 @@
 // Payment queries and activation use the same current-state condition.
 // The condition must stay the same when the source taps.
 //
+// Use [RevealHandFor] to show a player's current hand to all players.
+// [DiscardMatchingHand] moves all matching hand cards before discard events.
+// [CountMatchingHand] reads the current count without reveal history or LKI.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -355,10 +355,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "integer_literal"
 		}
 	case "card_filter":
-		if n.Name == "And" && len(n.Args) == 1 {
+		if n.Name == "IsColor" || n.Name == "IsNonColor" {
+			if len(n.Args) == 1 {
+				return "color"
+			}
+		}
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return "card_filter"
 		}
-		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+		if (n.Name == "IsCardtype" || n.Name == "IsNonCardtype") && len(n.Args) == 1 {
 			return "card_type"
 		}
 		if n.Name == "InAPlayersGraveyard" && len(n.Args) == 1 {
@@ -678,6 +683,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Minus" && len(n.Args) == 2 {
 			return "value"
 		}
+		if n.Name == "TheNumberOfCardsOfTypeInPlayersHand" && len(n.Args) == 2 {
+			return []string{"card_filter", "player_reference"}[index]
+		}
 		if n.Name == "TheNumberOfCardsInPlayersHand" && len(n.Args) == 1 {
 			return "player_reference"
 		}
@@ -688,6 +696,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "player_action":
+		if n.Name == "DiscardCards" && len(n.Args) == 1 {
+			return "card_filter"
+		}
 		if n.Name == "AddMana" && len(n.Args) == 1 {
 			return "mana_production"
 		}

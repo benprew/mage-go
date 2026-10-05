@@ -14072,3 +14072,166 @@ Ranked next candidates to reassess:
 
 Only this validated slice is committed. The hash is reported in the final
 response. No second slice is started.
+
+## Run 2026-10-05: CURRENT-HAND-OPERATIONS
+
+Status: complete implementation slice; validation results below. Stop after this
+slice. Full collection loading, gameplay, startup integration and removal gates
+remain unfinished.
+
+### Baseline, candidates and selection
+
+Initial worktree changes were `.gitignore`, the execution design and this ledger,
+plus untracked `mtgish-ron-completed.md`. They are preserved. Only this run's
+ledger addition is staged; the existing ledger reorganization stays unstaged.
+Fresh baseline RON tests, short engine tests and `make build` passed. Loader and
+semantic inspection exited 1 for collection rejection: 2,445 records, 1,500
+compiled, 945 rejected; 540 accepted / 446 rejected unique names. Inventory:
+72,951 occurrences, 8,540 signatures, 10,685 unknown-role occurrences.
+
+Instructions, engine reference, execution design, existing ledger, vocabulary,
+selected engine/compiler services and complete candidate records were read.
+Requirements came from RON and local `data/DRK.json`, not Go card definitions.
+The relevant API/rules contracts and CR 400.7, 608.2b–h, 701.9 and 701.20 were
+inspected. Reprints count once.
+
+| Candidate | Distinct affected names; estimated complete-card unlocks | Blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Current hand operations, selected | Amnesia, Inquisition: **2** unique cards / **2** records. Both complete DRK records have supported player targeting, costs, spell damage and sequencing around the missing operations. | Missing typed public hand reveal, filtered simultaneous discard, filtered current-hand count and compiler adapters. Reuses existing reveal history, card-color queries and discard batches. Enables future player-hand consumers without name branches or global result slots. | Medium/low: three small engine primitives, adapters, invalid declarations and real gameplay/context tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible complete unlocks, **0** adapter-only gains. Additional complete source records inspected include Combat Medic and Kei Takahashi; they can share the eventual recipient contract. | Missing CR 615.7 simultaneous-source allocation; target, mode, tap/mana and X forms surround the prevention instructions. Guardian Angel has a separate player-effect blocker; Rasputin and Rock Hydra have counter/replacement restrictions. Enables multiple finite prevention consumers. | Medium/high: allocation choices, competing replacements, finite consumption, transaction and batch contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible complete unlocks. | Missing zone-aware characteristic evaluation and CDA lowering; controller and named-count filters also matter. Gaea's Avenger and Wood Elemental retain other blockers. Enables characteristics in hand, library, graveyard, exile and stack, plus copy/layer interactions. | High: all-zone characteristics, owner/controller counts, copy/CDA/layer tests. |
+
+Current-hand operations give two complete consumers with less effort and risk
+than the larger shared prerequisites. First-error frequency was not used as an
+unlock estimate. A further combat candidate was inspected and rejected before
+selection: Lure's current engine path redirects declared blocks to one attacker
+but does not enforce all able blockers, so its adapter is not dependency-ready.
+No combat adapter was started. The selection, contract, engine/compiler boundary
+and acceptance cases were stated before implementation. The `implement-engine`
+skill was used for reusable engine work; no removed card/set skill was invoked.
+
+### Supported signatures, contexts and reuse
+
+Engine APIs:
+
+- `RevealHandFor(player PlayerRef) ResolvingEffect`: resolve the player, copy the
+  current hand through `Game.RevealHand`, record each card through
+  `recordPublicReveal`. No moves or choices; repeat reveals remain legal.
+- `DiscardMatchingHand(player PlayerRef, filter CardFilter) ResolvingEffect`:
+  select all matching current hand cards, construct effect-caused
+  `DiscardAction`s, use `discardActionsTogetherWithEvents(actions, false)`. Replacements
+  see the original hand; events see all moves. Prevented or redirected discards
+  do not stop the other cards. No payment, random selection or discard choices.
+- `CountMatchingHand(player PlayerRef, filter CardFilter) ResolutionValue`:
+  pure current-player/current-hand count; no history, snapshot, LKI or RNG read.
+  Each matching multicolor card counts once. Zero engine filters match all cards.
+
+Nil and unbound player refs are declaration errors; unresolved or absent players
+supply no reveal/discard and zero count. Existing typed player bindings,
+resolution frames, casting transactions, copied targets, clone services, hand
+membership, public reveal snapshots, discard replacements/events/trackers and
+spell damage/prevention are reused. No parallel zone or replacement system is
+introduced. Source departure, return, phasing or control change cannot redirect
+an ability's resolving controller. These operations read current hands; no
+permanent LKI or saved card visit is required. Selection does not follow a
+previous reveal history entry. No result binding is produced or overwritten.
+
+RON forms:
+`PlayerAction(player, RevealHand)` (bare symbol only),
+`PlayerAction(player, DiscardCards(filter))`, and
+`TheNumberOfCardsOfTypeInPlayersHand(filter, player)` in existing resolution-value
+contexts. Hand card filters: `IsCardtype(type)`, `IsNonCardtype(type)`,
+`IsColor(color)`, `IsNonColor(color)`, nonempty nested `And([...])` / `Or([...])`.
+RON owns spelling, filter validation and lexical reference checks. Engine owns
+hand execution. This does not add bare reveal/discard actions, EachPlayerAction
+bodies, cost, entry, static or replacement-operation contexts. Existing spell,
+mode, activation, trigger and delayed resolving scopes use per-factory typed
+references. Inventory assigns hand count operands card-filter/player-reference
+roles and filtered-discard operands card-filter roles; all nested nodes remain
+visible even under unsupported parents.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for the missing three constructors. Initial fixture
+calls incorrectly assumed card color methods; these were corrected to the
+existing `HasColorCardFilter`, and missing-constructor failure was confirmed
+alone before implementation. RON tests then failed on bare `RevealHand` being
+unsupported. No requirements were removed.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Amnesia, complete DRK record | `TestRONHandOperationsCards`: validated definition, exact casting payment and unpaid/illegal rollback, self/opponent target, resolution-time late hand card, reveal before all nonland discards, complete discard batch/events, land retained, independent clone, spell disposal. |
+| Inquisition, complete DRK record | Same `Cards` test: exact payment, explicit target, revealed current hand, late white multicolor card counted once, actual spell damage and unchanged hand. |
+| Both cards | `TestRONHandOperationsCopiesAndPrevention`: opponent-controlled copy keeps target, original uses later current hand, original-only graveyard disposal; repeated reveal and finite damage prevention. `CopyTargets`: changed legal copy target has separate binding from original. `EmptyAndReplacements`: empty hands complete normally; real Amnesia accepts discard-to-library replacement, retains land and discard tracker count. |
+| Context/instance lifetime | `TestRONHandOperationsResolvingContexts`: nested And/Or/type/color/noncolor filters, two factories/controllers and pending activations, source departure/return/phasing/control, entry trigger and delayed end-step resolution, current counts after discards. |
+| Declaration/inventory | `TestRONHandOperationsInvalid`: wrong kind/arity, unknown type/color, incompatible/unbound refs, empty logical filters and battlefield-only predicates rejected. `Inventory`: both real records compile and all descendant roles are assigned. Existing repository inventory and registry-isolation regressions pass. |
+| Engine contract | `TestHandOperationsCurrentPlayerAndClone`: pure current query, explicit player, complete batch at event time, public reveal order/history-copy isolation, repeat reveal and independent clones. `Declarations`: nil/unbound refs rejected and absent refs are harmless. `DiscardReplacements`: source/current-hand replacement query before moves, prevention and library redirection. |
+
+The clone event observer initially closed over the original game; installation
+was moved after cloned resolution so the test observes the intended game.
+A trigger fixture used a nonexistent phase event and was corrected to the native
+end-step runner. The real replacement fixture initially cast a sorcery for the
+inactive player; it now explicitly sets that caster active. Early full checks
+failed only on that timing fixture and were repeated after correction. This was
+not an environment or pre-existing failure and no assertion was weakened.
+
+### Measurements, source evidence and validation
+
+Actual gain matches estimate: **2 unique names / 2 records**, exactly Amnesia
+and Inquisition. No previously accepted name was lost. Fresh strict loading:
+**1,502 compiled / 943 rejected records**, **542 accepted / 444 rejected names**.
+Inventory: **72,951 occurrences / 8,540 signatures / 10,680 unknown-role
+occurrences**. Engine-validation and behavior totals remain null; compilation
+and the two new complete-card gameplay mappings are separate measurements.
+
+Local DRK Oracle text agrees with both full RON records. No source defect was
+found or corrected in this slice. All twelve source hashes still match the
+vocabulary snapshot; no RON source change requires a syntax snapshot refresh.
+Fresh loader diagnostics remain explicit: leading gaps include CastEffect
+(53 records), ChooseADamageSource (46), Targeted_Modal (42),
+CreateFuturePreventDamage (32), PlayerEffect (23), EachPlayerEffect (22),
+host rule subjects (20), and CDA_Power (20). Strict collection rejection remains;
+no partial production registry is installed.
+
+All required checks pass on the final code. Lint first reported constant
+parameters in two existing private discard helpers after the new calls reached
+its analysis threshold. A clean HEAD worktree passed baseline lint. This slice
+now calls the existing event-returning batch service directly and reuses the
+existing library-redirection fixture, preserving shared helper signatures and
+behavior. Final lint passes with zero issues. Automatic formatting changed
+import spacing; it was reviewed. No environment or pre-existing blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestHandOperations\|TestRONHandOperations\|TestInventory' -count=1` | PASS; repeated after final lint repair. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on final code. |
+| `go test ./... -short -count=1` | PASS; additional engine-skill verification. |
+| `make test` | PASS on final code. |
+| `make build` | PASS on final code. |
+| `go vet ./...` | PASS on final code. |
+| `make lint` | PASS, zero issues after fixture/service reuse adjustment. |
+| `git diff --check` | PASS, including ledger and staged slice. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,502 compiled / 943 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 542 accepted / 444 rejected names; final counts above. |
+| Source hash audit | All twelve RON hashes match the vocabulary snapshot. |
+
+Changed files: engine `hand_operations.go`, `hand_operations_test.go`, `doc.go`;
+compiler `ron/hand_operations.go`, its tests, `compiler.go`, `sacrifice_value.go`,
+`inventory.go`, `inventory_test.go`; API/rules references and this ledger addition.
+No Go card, generator, startup or obsolete DSL deletion is authorized by the
+current removal gates. No whole-repository caller audit was needed for deletion,
+because no function was removed. Existing callers remain intact.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Finite recipient prevention allocation and exact recipient adapters; multiple
+   complete consumers, simultaneous-source choices and replacement ordering.
+2. All-zone count CDAs for the four listed cards; characteristic/copy/controller
+   contracts before adapters.
+3. Shared hand/graveyard shuffle and per-player result services for Timetwister
+   and Winds of Change; keep each player's actual result separate.
+
+Only this validated slice is committed. The hash is in the final response.
+The existing user edits and untracked completed-slices document remain intact.
+No second implementation slice is started.
