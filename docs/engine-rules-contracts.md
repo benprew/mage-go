@@ -3519,3 +3519,32 @@ This establishes the normal nontrample attacking assignment context. Normal
 trample's existing lethal-order policy, blocking-band decisions, and assignment
 by a blocker to multiple attackers remain separate contracts. No RON syntax,
 production registry, casting permission or banding policy changes.
+
+## RON choose-one activated mode adapter
+
+`Activated` and `ActivatedWithModifiers` with `Modal_ChooseOne` reuse
+`NewModalActivated`, activation transactions, per-mode target validation, payment
+snapshots and stack copying. The compiler shares mode-plan construction with
+spells. Each factory builds separate targets in each mode. This establishes no
+new engine service. Supported modifiers remain on the complete activation.
+
+`TestRONModalActivationBalm` executes the complete FEM record: artifact casting,
+both modes, mana/tap/sacrifice timing, failed payment and illegal-target rollback,
+source departure, target shroud/phasing/return, phase cycles, copied retargeting,
+pending clones, shield consumption and cleanup. `BalmSimultaneous` checks the
+finite amount across simultaneous sources after recipient control and phasing
+changes, plus independent cloned shields. `Declarations` rejects malformed,
+incompatible and cross-mode reads and checks independent factory/mode targets,
+mode labels and once-per-turn modifiers. `PaymentBindings` checks announced X,
+sacrifice characteristics after return, source departure, zero-cost declarations
+and cloned pending resolution. `CounterBindings` checks two pending instances'
+separate counter payments. `StrictLoad` checks the complete accepted record,
+semantic inventory and collection rejection with an invalid mode.
+
+Rules: CR 602.2a-b, 601.2b-c/f-h, 700.2a/c/f/g, 608.2b/h, 400.7,
+702.26b/d, 615.6-7 and 514.2. Existing finite-prevention ordering and allocation
+tests remain applicable; the adapter does not create another replacement path.
+Pyramids still needs its destruction replacement; its attached-land filter
+is already supported.
+Triassic Egg still needs entry/graveyard operations, its counter condition and
+correction of its second mode. Neither card gains complete behavior coverage.

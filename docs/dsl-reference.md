@@ -1424,10 +1424,9 @@ The adapter uses `NewModalSpell`. The controller chooses one mode and only its
 targets during casting. Resolution executes only that mode and checks its target
 legality. Copies retain the mode and can choose new targets for that mode.
 Mode labels use effect sequence text with readable target names. All mode bodies must compile;
-an unsupported body rejects the entire record. Nested modes, activation modes,
-trigger modes, and `Targeted_Modal` remain unsupported. Life actions in player
-target scopes and future prevention remain separate gaps for Healing Salve
-and Alabaster Potion.
+an unsupported body rejects the entire record. Nested modes,
+trigger modes, and `Targeted_Modal` remain unsupported. Supported player life
+actions and finite prevention can run in each mode.
 
 RON `PutPermanentIntoItsOwnersHand(reference)` uses `mage.ReturnToHand`.
 The argument must be one in-scope permanent reference: `Ref_TargetPermanent`,
@@ -3169,3 +3168,21 @@ interaction evidence for six complete RON creature records with Wall of Air
 and Amulet of Kroog. See the normal nontrample contract in
 [engine-rules-contracts.md](engine-rules-contracts.md) for exact test mappings
 and remaining contexts.
+
+## RON choose-one activated modes
+
+`Activated(cost, Modal_ChooseOne([mode, mode, ...]))` and
+`ActivatedWithModifiers(cost, Modal_ChooseOne([mode, mode, ...]), modifiers)`
+accept at least two bodies with the supported `ActionList` or `Targeted` grammar.
+All bodies must compile. Each mode has a separate target namespace and fresh
+factory bindings. Activation costs and supported modifiers apply to the ability.
+Payment-result bindings are available in each mode; target declarations stay
+local to their mode. Nested modes and triggered modes remain unsupported.
+
+The adapter uses `NewModalActivated` and the existing activation transaction.
+The controller chooses a legal mode and its targets before payment. Only that
+mode resolves. Copies keep the selected mode and can select new targets for it.
+Source sacrifice does not stop resolution. Target legality and incarnation
+checks still apply. Finite shields start at resolution and expire at cleanup.
+Balm of Restoration has RON gameplay evidence for both modes, casting, costs,
+rollback, copies, clones, recipient identity and simultaneous damage.

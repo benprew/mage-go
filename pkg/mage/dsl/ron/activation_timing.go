@@ -42,7 +42,13 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	ctx.x = hasX
 	ctx.activation = true
-	plan, err := compileActions(n.Args[1], ctx)
+	var plan actionPlan
+	var modes []actionPlan
+	if n.Args[1].Name == "Modal_ChooseOne" {
+		modes, err = compileChooseOneModes(n.Args[1], ctx)
+	} else {
+		plan, err = compileActions(n.Args[1], ctx)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +59,23 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 		}
 		if counters != nil {
 			bindings.counters[counters] = mage.BindNumber("paid source counters")
+		}
+		if modes != nil {
+			primary := mage.GenericCost(0)
+			if len(costs) != 0 {
+				primary = costs[0](bindings)
+			}
+			action := mage.NewModalActivated(primary, buildChooseOneModes(modes, bindings))
+			for i, build := range costs {
+				if i == 0 {
+					continue
+				}
+				mage.WithCost(build(bindings))(action)
+			}
+			for _, option := range timing {
+				option(action)
+			}
+			return mage.WithAbility(action)
 		}
 		options := actionOptions(plan.buildWithBindings(bindings))
 		for _, build := range costs {

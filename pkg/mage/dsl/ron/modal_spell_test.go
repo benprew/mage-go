@@ -100,7 +100,7 @@ func TestRONModalInvalid(t *testing.T) {
 			t.Fatalf("accepted %s", body)
 		}
 	}
-	for _, rule := range []string{`Activated(PayMana([]), Modal_ChooseOne([` + good + `, ` + good + `]))`, `SpellActions(Modal_ChooseOne([` + good + `, ` + good + `]))`} {
+	for _, rule := range []string{`SpellActions(Modal_ChooseOne([` + good + `, ` + good + `]))`} {
 		nodes, err := Parse(strings.NewReader(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [`+rule+`])`), "invalid-context.ron")
 		if err != nil {
 			t.Fatal(err)

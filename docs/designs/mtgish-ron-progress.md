@@ -17439,3 +17439,146 @@ comments in `gametest/turn_combat_damage_test.go`; RON
 `nontrample_assignment_test.go`; API/rules contracts and this ledger entry.
 Only this slice is committed after final checks. The final response reports its
 hash. Initial user changes remain unstaged. No second slice is started.
+
+## Run 2026-10-05: ACTIVATED-CHOOSE-ONE-MODES
+
+Status: complete compiler adapter slice. Stop after this slice. Initial user
+changes to `.gitignore`, the execution design and this progress file, and the
+untracked completed ledger, are preserved. Only this appended entry is staged
+from the already modified progress file.
+
+### Fresh evidence and selection
+
+Baseline compiler tests (`-count=1`), short engine tests (`-count=1`) and build
+passed. Strict loading and semantic inspection exited 1 for collection rejection,
+not build/test failure: **1,579 compiled / 866 rejected records**, **581 accepted /
+405 rejected names**. Inventory: 2,445 records, 986 names, 72,951 nodes, 8,540
+signatures, 9,809 unknown-role occurrences. The design, full progress ledger,
+vocabulary snapshot, engine reference, compiler/activation/mode/payment code,
+API/rules contracts and complete candidate records were read. Rules inspected:
+CR 602.2a-b, 601.2b, 608.2b and 700.2a/c/f/g; existing identity/prevention
+contracts supply CR 400.7, 702.26, 615.6-7 and 514.2.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream reuse | Effort |
+| --- | --- | --- | --- |
+| Activated choose-one modes, selected | Balm of Restoration, Pyramids, Triassic Egg. **1 immediate unlock** (Balm), up to three consumers after separate prerequisites. | Pyramids needs a destruction replacement. Its attached-land filter is already supported, correcting an older ledger assumption. Egg needs its counter condition, optional hand entry, graveyard targets/return and a source correction. Enables independent mode target scopes and payment results for all three. | Low/medium: exact `NewModalActivated` engine path exists. Share spell mode compilation, preserve activation costs/modifiers, test rollback, identity, copies, clones and payment results. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Gaea's Avenger. **0 adapter-only / 5 credible unlocks after prerequisite**. | All-zone characteristic evaluation, owner/controller-aware counts and CDA/copy layers remain missing. Avenger also counts the wrong player's artifacts in RON. Enables characteristics in library, hand, graveyard and exile. | High: engine characteristic service, layer/copy/zone contracts and adapters. |
+| Chosen-source one-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Dark Sphere, Jade Monolith, Reverse Damage, Eye for an Eye. **0 adapter-only / 7 credible unlocks** for the six Circles and Realm after prerequisite. | Typed damage-source choice and one-event shield identity/lifetime must cover spells, permanents and retained sources. Sphere additionally needs dynamic fractional prevention; Monolith needs redirection; Reverse Damage needs actual prevented results; Eye needs continuation/reflection context. Enables concrete source-choice consumers and later replacement operations. | High: choice bindings, source information, simultaneous one-event grouping, replacement rechecks/ordering, then adapters and full gameplay tests. |
+
+Selection: activated modes are shared work for three concrete consumers, with
+one immediate full-card gain and no missing engine prerequisite. Both larger
+multi-card alternatives require substantially more engine work. This is a
+shared prerequisite, not a card-specific implementation. Full nested records,
+not first-error frequency, supplied estimates. The selected context, reuse
+boundary and acceptance cases were stated before editing. No removed skill,
+Go-card requirement, stub generation or card-name branch was used.
+
+### Exact signatures, context and reuse boundary
+
+`Activated(cost, Modal_ChooseOne([body, body, ...]))` and
+`ActivatedWithModifiers(cost, Modal_ChooseOne([body, body, ...]), modifiers)`
+accept two or more supported `ActionList`/`Targeted` bodies. Every body must
+compile. Unsupported nested modes, unbound/incompatible/cross-mode targets,
+wrong arity and short mode lists reject the record. Supported activation costs
+and modifiers retain their existing contracts. Costs apply to the complete
+ability; chosen payment values are available in each mode, with distinct
+per-instance bindings. The RON spelling and lexical scope remain in `ron`.
+
+`compileChooseOneModes` and `buildChooseOneModes` are private shared compiler
+helpers for spells and activations. Each mode resets target scope and uses its
+own namespace. Each factory builds fresh targets and effects; payment bindings
+are shared only within that ability instance. `compileActivatedRule` lowers to
+`mage.NewModalActivated`. An empty supported cost declaration uses an explicit
+zero cost. There are no game-time declaration panics or global action-result
+slots. Existing nonmodal callers keep their signatures and behavior.
+
+Reuse: engine mode legality/announcement, activation transaction, saved payment
+numbers, target bindings/incarnations, source information, stack copies,
+resolution legality, finite prevention/allocation, simultaneous damage and
+cleanup. Mode choice and chosen-mode targets precede payment. Resolution and
+copies retain that mode. Source sacrifice does not stop its effect; returned
+and phased targets still fail legality as appropriate. No new engine rule,
+parallel execution service, fallback or partial production registry is added.
+
+### TDD and card-to-test mappings
+
+The new real-card and positive declaration tests were written first and failed
+for `unsupported action list (Modal_ChooseOne)`. After implementation they
+passed. The old spell test's assertion that all activated modes are unsupported
+was replaced by positive activated-mode declaration/instance coverage. Its
+permanent modal-spell rejection and every other invalid declaration remain.
+A new counter fixture initially used `core.ChargeCounter`; the engine name is
+`core.Charge`. Correcting that fixture did not change its assertions.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Balm of Restoration, complete FEM record | `TestRONModalActivationBalm`: native {2} casting, both modes, {1}/tap/sacrifice cost timing, failed payment, tapped source, wrong controller, invalid choice and illegal/shrouded target rollback; chosen target groups, source sacrifice, life/prevention exclusivity, permanent/player recipients, target phasing and phase cycle, return, copied retargeting with retained mode, pending cloned resolution, shield consumption and native cleanup. |
+| Balm simultaneous prevention | `TestRONModalActivationBalmSimultaneous`: two damage sources consume a total shield of two, recipient control/phase cycle retains identity, cloned shields remain independent. |
+| Compiler scope, factory and modifiers | `TestRONModalActivationDeclarations`: malformed forms, short lists, nested/unsupported bodies, incompatible and cross-mode references; both activation signatures, separate mode and factory targets, readable labels, two pending instances and once-per-turn enforcement. |
+| Payment snapshots | `TestRONModalActivationPaymentBindings`: announced X survives later X changes; sacrificed toughness survives return with changed characteristics; original controller after source departure; zero-cost form; pending clones. `TestRONModalActivationCounterBindings`: two pending factory instances keep distinct chosen counter payments through native resolution and cloning. |
+| Strict loading and inventory | `TestRONModalActivationStrictLoad`: complete real Balm record loads in an explicit test fixture, modal AST role remains `actions`, invalid mode rejects the complete fixture without returning a partial registry. |
+| Retained contracts | Existing `TestRONModal*`, `TestRONFinitePrevention*`, attachment-target and full engine/card regressions. Existing finite allocation/replacement-order tests use the same engine service; this slice adds no replacement execution path. |
+
+One complete unique card gains gameplay mapping and compilation. Pyramids and
+Egg remain explicitly unsupported; no partial card behavior is installed.
+Collection-wide engine-validation and gameplay totals remain null.
+
+### Source defects and final measurements
+
+No RON records changed. Local `data/FEM.json` confirms Balm's cost and both
+modes. Local ARN Oracle data confirms Pyramids' destruction replacement.
+Local LEG Oracle data confirms Egg's second mode should target and return a
+creature card from your graveyard; RON instead duplicates hand entry. This
+source defect stays deferred with its dependent capability. Avenger's deferred
+opponent-count defect remains recorded. No source semantics were invented.
+
+Actual gain matches the estimate: **1 unique name / 1 record**, exactly Balm.
+No accepted names are lost. Final loader: **1,580 compiled / 865 rejected
+records**, **582 accepted / 404 rejected names**. Loader and inventory exit 1
+and install no registry. Inventory remains **72,951 nodes / 8,540 signatures /
+9,809 unknown-role occurrences**. All twelve RON hashes match the vocabulary
+snapshot, so source vocabulary needs no refresh. Fresh diagnostics live in this
+entry: Pyramids now fails at `CreateFutureReplaceWouldDestroy`; Egg still fails
+at activation `PermanentPassesFilter`. Animate Dead remains blocked by
+`EnchantGraveyardCard` and the collection has many other separate gaps.
+
+### Validation and next work
+
+The initial broad suites failed only because two inventory assertions retained
+1,579/866. They now require exact measured counts 1,580/865. No gameplay,
+registry, declaration or rejection assertion was weakened. Lint made import
+spacing and function formatting edits; these were reviewed. Only slice files
+changed. No environment or pre-existing validation blocker remains.
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler tests, short engine tests and `make build` | PASS. |
+| New `TestRONModalActivation*` before implementation | Expected unsupported-modal failures confirmed. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONModal\|TestRONFinitePrevention\|TestRONAttachment\|TestInventory' -count=1` | PASS after lint and inventory-count updates. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint and count updates. |
+| `make test` | PASS after final lint and count updates. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic edits reviewed. |
+| `git diff --check` | PASS, including final ledger/index patch. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,580 compiled / 865 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, counts/roles/hashes as above. |
+
+Ranked next candidates for fresh reassessment:
+
+1. Chosen damage-source identity and one-event prevention prerequisite: seven
+   concrete prevention consumers, plus four with additional operations.
+2. All-zone count CDAs: five credible consumers; investigate Avenger's source
+   correction with its eventual opponent-count capability.
+3. Remaining shared static permanent-rule contexts or combat assignment
+   contracts; compare actual multi-card gain with prerequisite effort.
+   Pyramids' remaining destruction replacement is a single immediate consumer
+   and should wait while useful multi-card work remains.
+
+Changed files: `ron/activation_timing.go`, shared `ron/modal_spell.go`, new
+`ron/modal_activation_test.go`, retained `ron/modal_spell_test.go`, exact
+`ron/inventory_test.go` counts, API/rules contracts, and this ledger entry.
+No Go definitions, generators, startup callers or DSL functions were removed:
+complete loading, gameplay, runtime wiring and caller-audit removal gates remain
+unmet. Commit only after required checks pass. Report its hash in the final
+response. No second slice is started.
