@@ -51,6 +51,9 @@ func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instance
 }
 
 func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if n.Name == "AttachedToAPermanent" {
+		return compileAttachmentTargetFilter(n)
+	}
 	if n.Name == "ControlledByAPlayer" {
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, nil, err

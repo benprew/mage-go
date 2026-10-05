@@ -698,6 +698,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "AttachedToAPermanent" && len(n.Args) == 1 {
+			return role
+		}
 		if n.Name == "DealtDamageToAnyPlayerThisTurn" && len(n.Args) == 1 {
 			return "player_filter"
 		}

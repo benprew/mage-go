@@ -2592,3 +2592,29 @@ abilities. `InstanceBindings` checks distinct sources and recipients.
 and legendary supertype, removed printed flying and retained granted vigilance.
 `Invalid` and `Inventory` cover declaration rejection and nested reporting.
 These suffixes share the prefix `TestRONIndefiniteType`.
+
+## RON attachment target lowering
+
+The RON `AttachedToAPermanent(hostFilter)` target adapter reuses `IsAttachedTo`
+and `TargetAttachedToYouControl`. No engine rule changes. CR 303.4b/e separates
+the Aura from its host and their controllers. CR 601.2c, 602.2b and 608.2b require
+target legality at announcement and resolution. The host query uses current
+characteristics and attachment, including after reattachment. Only the Aura
+is targeted; host shroud does not prevent the activation. The ability controller
+stays fixed after source control changes or departure. A copied ability uses
+its own controller for the host restriction.
+
+The target uses the existing captured incarnation (CR 400.7). A returned Aura
+cannot be affected by an older activation. Returning the host and attaching the
+original Aura to it does not invalidate that Aura target if the new host
+qualifies. Phasing follows CR 702.26b/d: phased targets are illegal; a phase
+cycle preserves identity. Destruction uses normal regeneration, indestructible
+and owner-zone services. Transactional cost payment and clone isolation remain
+in the shared engine services.
+
+`TestRONAttachmentTargetRealCards`, `Rollback`, `Casting`,
+`InstancesAndCopyController`, `ShapesAndInventory` and `TriggerPlacement`
+(all with the `TestRONAttachmentTarget` prefix) cover these contracts. The real
+DRK records for Miracle Worker and Savaen Elves supply complete behavior tests.
+No LKI read is used to act on an absent object. No batch or replacement-order
+contract is added by this adapter.

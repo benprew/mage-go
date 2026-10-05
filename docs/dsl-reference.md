@@ -2448,3 +2448,25 @@ mana rules; it preserves other card types, subtype families and supertypes.
 Complete RON gameplay evidence covers Ashnod's Transmogrant and Thelonite Monk
 in `TestRONIndefiniteType*`. The latter can sacrifice itself as its green creature
 payment. Counter replacement on Transmogrant does not stop its next instruction.
+
+## RON attachment target filters
+
+`TargetPermanent(AttachedToAPermanent(hostFilter))` selects an attachment by its
+current battlefield host. Combine it with `IsEnchantmentType(Aura)` in `And`
+to select Auras. This adapter works in spell, activation and trigger targets.
+The host filter accepts existing pure permanent filters and nonempty nested
+`And`/`Or` lists. A conjunctive `ControlledByAPlayer(SinglePlayer(You))` restricts
+the host to the stack object's controller. It does not restrict the Aura's
+controller or owner. The host controller restriction can occur once.
+
+The compiler lowers the host query to `IsAttachedTo` and the controller rule to
+`TargetAttachedToYouControl`. The target remains the attachment; the host is
+read again at resolution. Reattachment to a qualifying host keeps the target
+legal. Source departure does not change the activation controller. Copies use
+their own controller. Each card factory builds a separate target declaration.
+
+Opponent/event/target player references, controller rules inside a disjunction,
+source exclusions and nested attachment queries are rejected in this host
+context. This slice does not add collection attachment filters, movement,
+activated modes or replacement operations. Miracle Worker and Savaen Elves have
+complete RON gameplay tests in `attachment_target_test.go`.

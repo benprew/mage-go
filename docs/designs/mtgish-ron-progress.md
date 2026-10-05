@@ -12644,3 +12644,149 @@ final code; lint changes were reviewed and affected checks rerun.
 One descriptive commit stages only the eight slice files listed above. The
 user's `.gitignore` and execution-design edits stay unstaged. Its hash is reported
 in the final response. No additional slice is started.
+
+## 2026-10-05: attachment-aware permanent targets
+
+Status: completed `targets.attachment-host` compiler slice; validation evidence
+is recorded below. One slice only. Preserve the user's `.gitignore` and execution
+design edits. No RON record, engine implementation, Go card definition,
+production registry, generator or DSL export changes.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+ledger, compiler target/scoping code, semantic inventory, engine attachment
+filters, target options, clone/copy and legality tests, relevant API/rules
+contracts, and CR 303.4, 400.7, 601.2c, 602.2, 608.2b and 702.26b/d.
+Complete RON records supplied requirements. No Go definition, removed skill,
+generated stub, fallback or subagent supplied requirements.
+
+Fresh baseline: `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict and semantic loaders exited 1 for collection rejection, not build failure:
+2,445 records, 986 names, 1,474 compiled / 971 rejected records, 519 accepted /
+467 rejected names. Semantic inventory: 72,938 nodes, 8,530 context signatures,
+11,127 unknown-role occurrences. Full canonical candidate records and nested
+forms were read. Reprints count once:
+
+| Candidate | Distinct affected names | Estimated complete-card gains; other blockers | Downstream value; effort |
+| --- | --- | --- | --- |
+| Attachment targets, selected | Miracle Worker, Savaen Elves, Enchantment Alteration, Pyramids, Remove Enchantments | 2 names / 2 records. Alteration needs movement and shared-type choices; Pyramids needs activated modes and destruction replacement; Remove Enchantments needs collection/owner/controller filters and zone batches. | Reuses exact host-query and host-control target services. Enables the target portions of later attachment movement and modal cards. Low adapter effort, medium gameplay/identity test effort. |
+| Finite recipient prevention | Alabaster Potion, Amulet of Kroog, Argivian Blacksmith, Balm of Restoration, Combat Medic, Conservator, Guardian Angel, Healing Salve, Kei Takahashi, Oasis, Personal Incarnation, Rakalite, Samite Healer; Rasputin Dreamweaver uses source prevention | 0 from allocation prerequisite alone; 10 credible gains after adapters. Balm needs activated modes; Guardian repeatable optional payment; Incarnation owner/redirection/death values; Rasputin history/counter cap/source prevention. | Shared recipient allocation across simultaneous damage packets. High engine, decision, batch and test effort. |
+| All-zone CDAs | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, People of the Woods, Plague Rats, Wood Elemental | 5 credible gains. Avenger has a controller source-data concern; Wood needs entry sacrifice results. | All-zone characteristic and count/arithmetic contracts, CDA ordering. High engine/regression effort and medium adapter effort. |
+| Combat-pair extensions | Abomination, Giant Shark, Infernal Medusa, Venom, Wall of Dust | 2 credible gains for color filtering plus host/event-union support (Abomination and Venom). Shark also needs damage-history identity; Medusa needs reference/source review; Wall of Dust needs untap-duration behavior. | Shared event filters, host subjects, unions and typed opponent bindings. Medium/high engine/adapter/test effort. |
+
+Attachment targets give two immediate complete-card gains through existing
+engine services, with a smaller bounded effort than the other multi-card
+candidates. First-error counts alone did not determine unlock estimates.
+The contract, reuse boundary and acceptance cases were stated before editing.
+No engine prerequisite is missing. Remaining source concerns are distinct from
+missing compiler adapters; none is silently corrected or reinterpreted.
+
+### Exact shapes, dependencies and reuse
+
+`compileAttachmentTargetFilter(n Node) (mage.PermanentFilter,
+[]mage.PermanentTargetOption, error)` handles the one-argument
+`AttachedToAPermanent(hostFilter)` in a `TargetPermanent` declaration, including
+conjunctive target filters. `compileAttachmentHostFilter(n Node,
+allowController bool) (mage.PermanentFilter, bool, error)` accepts existing pure
+permanent-filter leaves and nonempty nested `And([filters])` / `Or([filters])`.
+A host `ControlledByAPlayer(SinglePlayer(You))` can occur once, on a conjunctive
+path. It can be the complete host filter. Controller restrictions inside `Or`,
+Opponent/event/target players, source exclusions, empty/malformed lists and
+nested attachment queries fail with positioned compilation errors. This is a
+target context, not a general static/collection filter or movement adapter.
+
+`compilePermanentTargetFilter` integrates the adapter for existing spell,
+activation and trigger target declarations. Host queries use `IsAttachedTo`;
+controller restrictions use `TargetAttachedToYouControl`. No target restriction
+is lifted from the host to the Aura. The engine reads the current host at
+announcement and resolution; the captured target is the Aura incarnation.
+Factory-local declarations and existing instance bindings isolate activations,
+copies and clones. The resolving stack controller supplies You, so source
+control/departure cannot redirect the restriction. Copies use their own
+controller. The adapter neither captures mutable game state nor adds a global
+last-action slot. No new scope aliases are added.
+
+Dependencies are already present: typed singular targets, target legality,
+attachment queries, transactional payments, incarnation tracking, copy/clone
+services, destruction/regeneration/indestructible and owner-zone execution.
+LKI does not permit actions on an absent target. No simultaneous operation or
+replacement-order contract is introduced. Inventory assigns the attachment
+operand `permanent_filter`, including under a recognized but rejected record;
+syntax support stays unverified by default.
+
+### TDD and card-to-test mapping
+
+The first test build used the wrong `NewLand` argument type. After correcting
+the fixture, both real-card tests failed at the intended missing
+`AttachedToAPermanent` adapter. One payment fixture initially assumed an empty
+pool meant no available mana. Wild Growth on a Forest can produce the needed
+mana automatically; the no-mana fixture now taps that host before activation.
+No gameplay assertion or production rule was weakened.
+
+All mappings use the prefix `TestRONAttachmentTarget`:
+
+| Card/context | Test mapping |
+| --- | --- |
+| Miracle Worker, full DRK record | `RealCards`: tap payment, delayed resolution, opponent-owned/controlled Aura on own creature, Aura/host/source control changes, reattachment, host/Aura return, source departure, host versus Aura shroud, phasing/cycle, copies, regeneration/indestructible, owner graveyard, clone isolation. `Rollback`: sickness, unattached or wrong host, opponent host, target shroud, phasing and non-Aura rejection. `Casting`: W cost and 1/1 characteristics. `InstancesAndCopyController`: one compiled factory, fresh declarations, independent sources/targets and opposing copy controller. |
+| Savaen Elves, full DRK record | `RealCards`: GG and tap costs, Aura on either player's land (host control changes remain legal), plus the same identity/attachment/destruction/clone cases. `Rollback`: failed GG payment, sickness, wrong host, unattached/non-Aura/shroud/phased targets; all preserve live mana/tap/stack. `Casting`: G cost and 1/1 characteristics. |
+| Spell/trigger and declarations | `ShapesAndInventory`: pure host filters, nested conjunction/disjunction, host-only controller restriction, spell resolution, nested reporting under an unsupported action. `TriggerPlacement`: target selected at stack placement and destruction at resolution. `Invalid`: arity, unbound players, malformed symbols, empty/duplicate restrictions, disjunctive controller, source exclusion and nested attachment rejection. |
+
+Two complete-card behavior mappings are added. Compilation is separate from
+collection-wide gameplay: report `engine_validated` and `behavior_verified`
+remain null. The collection is not ready for runtime cutover.
+
+### Fresh measurements, removal gates and next work
+
+Actual gains match the estimate: **2 unique names / 2 records**. Strict and
+semantic loaders report **1,476 compiled / 969 rejected records**, **521 accepted /
+465 rejected unique names**. Accepted-name comparison has no regressions.
+Nodes/signatures stay 72,938 / 8,530; unknown-role occurrences fall to **11,115**.
+Source hashes are unchanged. No vocabulary source refresh is needed. Strict
+loading still exits 1 and publishes no partial registry. No source correction
+or environment failure is observed.
+
+No Go definitions or DSL functions are removed: complete loading, gameplay,
+startup wiring and removal gates remain unmet. A caller audit is not a reason
+to remove services that still have active callers. Authoring cutover instructions
+remain for the future cutover phase. API/rules docs cover only this adapter and
+its reuse contracts.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Finite recipient prevention allocation, prerequisite for ten credible cards.
+2. All-zone CDA characteristics, with Gaea's Avenger source audit.
+3. Combat-pair filter/host/event-union support for Abomination and Venom; inspect
+   the additional blockers on Giant Shark, Infernal Medusa and Wall of Dust.
+
+Slice files: `pkg/mage/dsl/ron/attachment_target.go`,
+`attachment_target_test.go`, `temporary_animation.go`, `inventory.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this ledger. User changes stay unstaged. No additional slice is started.
+
+### Final validation
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONAttachmentTarget -count=1` | PASS on final tests. Intended missing-adapter failures and fixture repairs are recorded above. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS before and after lint, including collection-count assertions and target context tests. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic edits reviewed; no unrelated files or semantic changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for strict collection rejection: 1,476 compiled / 969 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same compilation/issues; 465 rejected names, 11,115 unknown-role occurrences. File hashes unchanged. |
+
+Remaining attachment diagnostics: Enchantment Alteration rejects
+`AttachPermanentToAPermanent` at LEG line 75; Pyramids rejects activated
+`Modal_ChooseOne` at ARN line 62; Remove Enchantments rejects
+`PutEachPermanentIntoItsOwnersHand` at LEG line 218. Other candidate diagnostics
+remain: Abomination's combat-pair `Or`, Giant Shark's damage-history shape,
+Infernal Medusa's `Trigger_ThatOtherPermanent`, Venom's event `Or`, and Wall of
+Dust's `Trigger_ThatOtherPermanent`. No accepted-name regression or environmental
+blocker remains. Required checks cover the final implementation and tests.
+
+One descriptive commit stages only the eight slice files above. The user's
+`.gitignore` and execution-design edits stay unstaged. The commit hash is
+reported in the final response. This run stops after this slice.
