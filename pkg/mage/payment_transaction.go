@@ -94,13 +94,25 @@ func (g *Game) prepareCostPaymentTransaction(spec costPaymentSpec, validation *G
 	if err != nil {
 		return nil, err
 	}
+	// Random costs must follow deterministic costs (CR 601.2h).
+	ordered := make([]Cost, 0, len(spec.Costs))
+	for _, cost := range spec.Costs {
+		if _, random := cost.(*discardRandomCost); !random {
+			ordered = append(ordered, cost)
+		}
+	}
+	for _, cost := range spec.Costs {
+		if _, random := cost.(*discardRandomCost); random {
+			ordered = append(ordered, cost)
+		}
+	}
 	tx := &costPaymentTransaction{
 		game:                   g,
 		controller:             spec.Controller,
 		sourceID:               spec.SourceID,
 		mana:                   spec.Mana,
 		lifeLoss:               spec.LifeLoss,
-		costs:                  append([]Cost(nil), spec.Costs...),
+		costs:                  ordered,
 		optionalOutcomes:       spec.OptionalOutcomes,
 		spellContext:           spec.SpellContext,
 		manaSolution:           solution,
@@ -266,7 +278,12 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 			validationCost = &locked
 		}
 		if randomDiscard, ok := cost.(*discardRandomCost); ok {
-			validationCost = &discardCost{amount: randomDiscard.amount}
+			locked, err := randomDiscard.lock(tx.controller, validation)
+			if err != nil {
+				return err
+			}
+			tx.costs[i] = locked
+			validationCost = &locked.discard
 		}
 		if sacrifice, ok := cost.(*sacrificeMatchingCost); ok {
 			sacCopy := *sacrifice
@@ -375,7 +392,26 @@ func (tx *costPaymentTransaction) validate(validation *Game) error {
 	return nil
 }
 
-func (tx *costPaymentTransaction) Commit() (commitErr error) {
+func (tx *costPaymentTransaction) Commit() error {
+	tx.paidNumbers = nil
+	tx.paidCards = nil
+	tx.paidCardSets = nil
+	tx.paidPermanents = nil
+	for _, cost := range tx.costs {
+		if _, random := cost.(*discardRandomCost); random {
+			// A stale hand or replacement must fail before other resources are spent.
+			preflight := *tx
+			preflight.game = cloneGameForCostPayment(tx.game)
+			if err := preflight.commit(); err != nil {
+				return err
+			}
+			break
+		}
+	}
+	return tx.commit()
+}
+
+func (tx *costPaymentTransaction) commit() (commitErr error) {
 	tx.paidNumbers = nil
 	tx.paidCards = nil
 	tx.paidCardSets = nil

@@ -149,6 +149,9 @@ func describeDefinition(v any) definitionNode {
 			if mill, ok := cost.(*millCost); ok && mill.capture {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}
+			if _, ok := cost.(*discardRandomCost); ok {
+				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
+			}
 			if _, ok := cost.(*eitherCost); ok {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("costs[%d]", i), cost})
 			}

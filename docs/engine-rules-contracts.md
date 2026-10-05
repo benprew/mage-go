@@ -2401,3 +2401,49 @@ Evidence: `TestArtifactActivationCapture*`, retained
 `TestArtifactAbilityWithoutTapCost*` and `TestArtifactBecomesTapped*`, and
 `TestRONArtifactEvent*` for complete Haunting Wind, Powerleech and Artifact
 Possession records, native loading/casting, independent factories and tap batches.
+
+
+## Random discard costs: locked selection and payment order
+
+`DiscardRandomCost(n int) Cost` requires a nonnegative count and enough hand
+cards to pay the full count. Definition validation rejects a negative count.
+`CanPay` is a pure affordability query. Selection never calls the payer's hand
+choice interface. Each distinct card selected consumes one game random result,
+including the last card. Zero consumes none and does not lock unrelated hand
+visits or random state.
+
+The shared action/spell payment transaction moves direct random discard costs
+after deterministic costs while preserving order within both groups. It locks
+selection on the validation game after mana and deterministic payments. The
+locked payment saves the candidate hand visits, selected hand visits and the
+scripted random state before and after selection. The reusable declaration
+stores no payment choice. Commit does not select again. A changed candidate
+hand or scripted random state rejects the prepared payment. Clones keep their
+own hand visits and random queues.
+
+A transaction with random discard repeats the locked total payment on an
+isolated game before spending live resources. A stale visit or changed discard
+replacement therefore rejects the total payment before mana, tap or life costs
+are spent. Direct `Pay` uses the same transaction. The random state advances
+before discard replacements, so replacement choices see the post-selection
+state. The existing game random service supplies unscripted outcomes; this
+change does not add a seeded process random generator.
+
+Random discard uses the existing cost-discard action and batch service:
+prepare replacements before movement, check every proposed payment, move all
+selected cards, then send events. Library destinations still pay this
+unfiltered cost; prevention rejects the full payment. Effect-only discard
+replacements do not apply. A prevented random card is not replaced with another
+selection. Existing replacement ordering and affected-player decisions remain
+owned by the shared service. No new LKI or phasing service is introduced.
+
+Rules: CR 118.3/11, 601.2h, 602.2b, 616.1, 701.9a/b/c and 732.1.
+Evidence: `TestRandomDiscardCostPayment`, `TestRandomDiscardCostOrderAndBatch`,
+`TestRandomDiscardCostInvalidAndDirect`, `TestRandomDiscardCostCommitRecheck`,
+`TestRandomDiscardCostRepeatedPayments`,
+`TestRandomDiscardCostFailedCommitClearsResults`,
+`TestRandomDiscardCostZeroIgnoresHandAndRandomChanges`, `TestRONRandomDiscardCosts`,
+`TestRONRandomDiscardCostInvalid`,
+`TestRONRandomDiscardCostModifierAndNestedContext` and
+`TestRONRandomDiscardCostNativeLoadAndInstances`. Existing selected-discard
+batch/replacement tests remain the shared-service evidence.

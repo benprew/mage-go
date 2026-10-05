@@ -11640,3 +11640,161 @@ under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
 the final response. Complete collection gameplay, runtime startup, Go-card and
 generator removal, and unused DSL cleanup remain open. No removal audit is
 claimed. No second slice is begun.
+
+## 2026-10-05: random discard activation costs
+
+Status: completed `costs.random-discard` slice. This run stops here. Initial
+`.gitignore` and execution-design edits are user work and are excluded from
+staging. No RON source, Go card definition, generator, production registry or DSL
+export is changed or deleted. The removal gates remain unmet.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot and
+ledger; compiler cost/action/instance adapters and inventory; shared payment,
+discard, replacement, hand-visit, random and clone services; relevant API and
+rules-contract docs and CR 118.3/11, 601.2h, 602.2b, 616.1, 701.9 and 732.1.
+The implement-engine skill was used for the reusable payment prerequisite.
+Requirements came from complete RON records. Local `data/ATQ.json` and
+`data/FEM.json` Oracle text confirms both selected cards without a data repair.
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Strict/inventory loaders exited 1 for collection rejection, not a build
+failure: **1,437 compiled / 1,008 rejected records**, **503 accepted / 483
+rejected unique names**, 2,445 records and 986 names. The full nested inventory
+had 72,938 nodes, 8,530 signatures and 12,172 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| Random discard costs (selected) | Coral Helm, Draconian Cylix | 2 unique names / 2 records with the shared transaction prerequisite and one-card cost adapter. Complete remaining target, mana/tap cost, temporary bonus and regeneration forms already compile. | Shared random payments, locked hand visits, game RNG, payment ordering and discard replacements. Medium implementation and medium/high payment/gameplay test effort. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Alabaster Potion, Kei Takahashi, Rakalite, Rasputin Dreamweaver | Allocation prerequisite alone 0; 9 credible gains after adapters. Guardian Angel still needs repeatable optional payments, Rakalite delayed return, Rasputin source prevention, untapped-turn history and counter cap. | Shared CR 615.7 simultaneous-packet allocation, typed recipients and X amounts. High engine/decision/batch effort before adapters. |
+| Toughness comparisons | Goblin Kites, Stone Giant; Blood Lust and Infinite Authority have nested consumers | 0 for the filter alone. Both target-filter consumers still need delayed triggers; Goblin Kites also needs a coin-loss branch. Blood Lust needs conditional/value-dependent boosts; Infinite Authority needs combat event bindings, optional destruction and delayed counters. | Dynamic source-power and fixed-toughness target checks enable future delayed-effect consumers. Medium filter/identity tests followed by substantial delayed binding work. |
+
+Complete unique records were read for all candidate names. Nested forms were
+checked beyond the first diagnostic. The selected random symbol also occurs in
+resolving actions on Ring of Renewal, Gwendlyn Di Corci and Hypnotic Specter;
+those full records were inspected to keep action and cost meanings separate.
+Hypnotic Specter remains blocked on its damage event. Reprints count once.
+The random-payment candidate has the strongest credible immediate gain for
+its effort. The contract, reuse boundary and acceptance cases were stated
+before editing; the engine prerequisite and its small cost adapter form this
+one supported slice. No second capability is started.
+
+### Exact signatures, dependencies and ownership
+
+`compileCosts(Node) ([]costFactory, bool, error)` accepts bare symbol
+`DiscardACardAtRandom` as a cost in `Activated/2` and
+`ActivatedWithModifiers/3`, including nested `And([costs])/1` lists. Each
+factory produces `mage.DiscardRandomCost(1)`. Tuple forms of the singular cost,
+random-number costs and optional random-payment declarations stay rejected.
+Resolving random actions keep their existing explicit player scope.
+
+RON owns spelling and declaration validation. The engine owns reusable
+`DiscardRandomCost(n int) Cost`, negative-count definition checks, random
+selection, hand-visit locking, deterministic-before-random payment ordering,
+replacement processing and simultaneous discard events. Existing public callers
+remain supported. The current caller audit found the two Go definitions and DSL
+alias still using the service; none is removed. This is not a DSL removal audit.
+
+Dependencies and reuse: `costPaymentTransaction`, `lockPaymentCosts`, isolated
+payment clones, `RandomSource`, `capturedCard` hand visits, locked `discardCost`,
+`newCostDiscardAction`, `discardActionsTogetherWithEvents`, engine target plans,
+`Until/ModifyPT`, regeneration shields, stack copies and game clones.
+Random costs are moved after deterministic costs, preserving each group's
+order. Selection takes place on the validation game after prior payments;
+validation no longer substitutes a player-selected discard. The transaction
+saves the complete candidate hand visits, selected visits and random state.
+Commit uses the locked selection and repeats the total payment on an isolated
+game before live spending, so changed visits, random queues or replacement
+outcomes fail before other costs are spent. Direct `Pay` uses the same path.
+No hand-choice interface, global last-action slot, card-name branch, skipped
+rule, registry fallback or game-time declaration panic is introduced.
+
+The random service retains its existing unscripted process RNG fallback; this
+slice does not add a seeded game generator. Scripted queues stay independent
+and advance once on successful live payment. Copies do not pay costs again.
+Source/target identity, phasing, boost duration and regeneration reuse existing
+engine behavior. No new LKI, replacement-order or phasing service is claimed.
+
+### TDD and card-to-test mappings
+
+Initial engine tests failed on wrong RNG/payment, validating a chosen card
+instead of the random card, accepting a returned hand visit, partial batch
+observations and negative-count definition acceptance. The RON tests, after a
+fixture API typo was fixed, failed with `unsupported cost (DiscardACardAtRandom)`
+for both complete records before implementation. Focused tests pass afterward.
+Further fixture corrections used `FindPermanentIncludingPhased` for phased
+objects, retained explicit cast source IDs, and tested both shields from a copied
+Cylix activation instead of expecting one destruction to consume two shields.
+No implementation behavior or existing assertion was weakened. Final review
+added `TestRandomDiscardCostFailedCommitClearsResults`, which failed because
+the new preflight return retained a previous successful payment result. Commit
+now clears result maps before preflight; the test passes and checks no second
+resource payment. A second boundary test confirmed that a prepared zero-card
+payment must ignore unrelated hand/RNG changes. Zero now bypasses visit/RNG
+checks and does not reset the current random state.
+
+| Card/context | Test and evidence |
+| --- | --- |
+| Coral Helm, Draconian Cylix (complete ATQ/FEM records) | `TestRONRandomDiscardCosts`: exact random payment, mana/empty-hand/illegal-target rollback, own paying player with opponent creature target, target phasing and departure/return, source departure/phasing, copied abilities without another payment, independent pending clone resolution, end-of-turn bonus expiry and regeneration replacement consumption, including separate copied shields. |
+| Both complete records | `TestRONRandomDiscardCostNativeLoadAndInstances`: strict native fixture load, paid casting from hand, two factories and separate target bindings, concurrent payments and one-at-a-time resolution, unchanged process registry. This is a fixture, not full-collection production startup. |
+| Synthetic nested/modifier declaration | `TestRONRandomDiscardCostModifierAndNestedContext`: nested `And` costs with random cost first, tap/mana payment and once-per-turn rejection without another payment. |
+| Invalid RON declarations | `TestRONRandomDiscardCostInvalid`: singular tuple arities and random-number cost rejection. |
+| Shared engine payment | `TestRandomDiscardCostPayment`: game RNG, full payment, library replacement, prevented random selection, replacement-result recheck, returned hand visit, clone hand/RNG isolation. |
+| Shared ordering/batch | `TestRandomDiscardCostOrderAndBatch`: a random cost declared first executes after the chosen discard; deterministic selection cannot be stolen; distinct random selections move before batch events. |
+| Shared declaration/direct payment | `TestRandomDiscardCostInvalidAndDirect`: negative definition rejection, zero RNG use, short-hand failure; `TestRandomDiscardCostRepeatedPayments`: reusable declaration, no hand-choice calls and one RNG advance per selection. |
+| Shared zero-payment boundary | `TestRandomDiscardCostZeroIgnoresHandAndRandomChanges`: zero remains payable after unrelated hand/RNG changes and does not reset random state. |
+| Shared result isolation | `TestRandomDiscardCostFailedCommitClearsResults`: a stale retry clears prior payment results without paying again. |
+| Shared commit recheck | `TestRandomDiscardCostCommitRecheck`: replacement added after preparation, changed RNG, nonselected candidate hand visit and short hand reject before spending mana/life or publishing discard events; affordability queries make no choices. |
+
+Retained RON random-action, selected-discard, batch, replacement and engine
+payment tests still pass. Gameplay coverage and compilation counts remain
+separate; these tests add two complete-record behavior mappings, not a
+collection-wide gameplay claim.
+
+### Validation and actual gain
+
+Actual gain matches the estimate: **2 unique names / 2 records**.
+Fresh strict/inventory loaders: **1,439 compiled / 1,006 rejected records**,
+**505 accepted / 481 rejected unique names**. Only Coral Helm and Draconian
+Cylix diagnostics disappear. Every other remaining diagnostic is byte-for-byte
+unchanged; no accepted record regresses. Semantic inventory remains 72,938
+nodes / 8,530 signatures / 12,172 unknown-role occurrences. Collection-wide
+`engine_validated` and `behavior_verified` remain null. All source hashes match
+the vocabulary snapshot; no source refresh or source-defect correction is
+needed. No environment or pre-existing build failure blocks this slice.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(RONRandomDiscardCost\|RandomDiscardCost)' -count=1` | Expected TDD failures, then PASS. |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final fixture checks. |
+| `go test ./... -short -count=1` | PASS; implement-engine skill final check. |
+| `make test` | PASS after final fixture checks. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after preallocation fix in the source list. Automatic test import ordering and `SplitSeq` change reviewed; affected checks rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,439 compiled / 1,006 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; matching strict issues, unchanged semantic counts and source hashes. |
+
+The final nested-cost/modifier fixture initially supplied a UUID to
+`UntapPermanent` instead of a permanent. The fixture was corrected, and checks
+were rerun. This was a test build error, not an environment failure.
+
+
+Ranked next candidates to reassess with fresh evidence:
+1. Finite recipient-prevention allocation prerequisite, then its nine otherwise
+   ready card consumers.
+2. All-zone CDA characteristics for Dakkon Blackblade, Gaea's Avenger, Keldon
+   Warlord, Nightmare, Plague Rats and People of the Woods; retain the Avenger
+   source-data audit before gameplay claims.
+3. Typed delayed-trigger capture, including Stone Giant, Goblin Kites and
+   Rakalite; compare all nested consumers and prerequisites before selection.
+
+Slice files: `pkg/mage/cost.go`, `payment_transaction.go`, `definition.go`,
+`doc.go`, new `random_discard_cost_test.go`; `compiler.go`, `inventory_test.go`
+and new `random_discard_cost_test.go` under `pkg/mage/dsl/ron`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
+Commit hash is reported in the final response. Complete collection gameplay,
+runtime startup, Go-card/generator deletion and unused DSL cleanup remain open.

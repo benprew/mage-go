@@ -1478,8 +1478,9 @@ leaves or phases out. See the progress ledger for complete real-card mappings.
 In resolving spell, mode, activation and supported trigger action lists,
 `DiscardACardAtRandom` is a bare symbol. `DiscardNumberCardsAtRandom(Integer(n))`
 requires a nonnegative integer; `DiscardNumberCardsAtRandom(ValueX)` requires an
-announced X scope. Other amounts, tuple forms of the singular action, and random
-discard costs remain rejected. These actions lower to `mage.DiscardAtRandom`.
+announced X scope. Other amounts and tuple forms of the singular action remain
+rejected. These actions lower to `mage.DiscardAtRandom`. Random discard costs
+have the separate declaration contract below.
 
 Direct actions affect the resolving controller. `PlayerAction(player, action)`
 uses the existing typed player reference plan: `You`, declared `Ref_TargetPlayer`,
@@ -2319,3 +2320,23 @@ current controller or departure LKI at resolution. `Trigger_ThatPlayer` is not
 introduced by these forms. Haunting Wind, Powerleech and Artifact Possession
 use these adapters. The attached tap adapter and land tap adapters remain
 available with their existing contracts.
+
+
+### RON random discard costs
+
+`DiscardACardAtRandom` is a bare cost symbol in `Activated/2` and
+`ActivatedWithModifiers/3`, including nested cost `And([costs])` lists.
+It creates `mage.DiscardRandomCost(1)` for each factory instance. Tuple forms,
+random-number discard costs and optional random payments remain rejected.
+The payer is the activation controller; declaring a target does not change it.
+
+The engine locks a random hand selection after deterministic payments. It uses
+hand-visit identity and the game's random service, with no hand-choice prompt.
+Shared discard replacements and simultaneous batch events apply to the payment.
+An unpaid activation changes no live resources or scripted random results.
+Copies resolve their effects without paying the original cost again.
+
+Complete-record mappings: Coral Helm and Draconian Cylix in
+`TestRONRandomDiscardCosts` and `TestRONRandomDiscardCostNativeLoadAndInstances`.
+The latter loads a strict native fixture collection; production cutover remains
+pending complete collection support.

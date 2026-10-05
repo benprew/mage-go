@@ -2,7 +2,6 @@ package mage
 
 import (
 	"fmt"
-	"math/rand"
 	"slices"
 	"strings"
 
@@ -1284,38 +1283,99 @@ func (c *xManaCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
 
 func (c *xManaCost) Text() string { return "{X}" }
 
-// discardRandomCost requires discarding n cards at random from hand.
+// discardRandomCost keeps each payment separate from the reusable declaration.
 type discardRandomCost struct {
-	amount int
+	amount        int
+	locked        bool
+	hand          []capturedCard
+	discard       discardCost
+	before, after RandomSource
 }
 
-// DiscardRandomCost creates a cost that requires the controller to discard n cards at random.
+// DiscardRandomCost requires a full random discard payment.
 func DiscardRandomCost(n int) Cost {
 	return &discardRandomCost{amount: n}
 }
 
+func (c *discardRandomCost) inspectDefinition() definitionNode {
+	n := definitionNode{Role: "random-discard-cost", Text: c.Text()}
+	if c.amount < 0 {
+		n.problem = "supply a nonnegative discard count"
+	}
+	return n
+}
+
 func (c *discardRandomCost) CanPay(sourceID, controller uuid.UUID, g *Game) bool {
 	p := g.GetPlayer(controller)
-	return p != nil && len(p.Hand()) >= c.amount
+	if p == nil || c.amount < 0 || len(p.Hand()) < c.amount {
+		return false
+	}
+	if !c.locked || c.amount == 0 {
+		return true
+	}
+	if !slices.Equal(g.random.randomResults, c.before.randomResults) || !slices.Equal(g.random.coinFlipResults, c.before.coinFlipResults) {
+		return false
+	}
+	if len(p.Hand()) != len(c.hand) {
+		return false
+	}
+	visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID })
+	if len(c.hand) > 0 && !ok {
+		return false
+	}
+	for i, card := range p.Hand() {
+		if card.ID() != c.hand[i].id || visitor.handVisit(card.ID()) != c.hand[i].visit {
+			return false
+		}
+	}
+	return c.discard.CanPay(sourceID, controller, g)
+}
+
+func (c *discardRandomCost) lock(controller uuid.UUID, g *Game) (*discardRandomCost, error) {
+	if !c.CanPay(uuid.Nil, controller, g) {
+		return nil, fmt.Errorf("cannot pay random discard")
+	}
+	if c.amount == 0 {
+		return &discardRandomCost{locked: true, discard: discardCost{locked: true}}, nil
+	}
+	p := g.GetPlayer(controller)
+	visitor, ok := p.(interface{ handVisit(uuid.UUID) uuid.UUID })
+	if len(p.Hand()) > 0 && !ok {
+		return nil, fmt.Errorf("random discard requires hand visits")
+	}
+	locked := &discardRandomCost{amount: c.amount, locked: true, before: g.random.Clone(), discard: discardCost{amount: c.amount, locked: true}}
+	for _, card := range p.Hand() {
+		locked.hand = append(locked.hand, capturedCard{id: card.ID(), visit: visitor.handVisit(card.ID()), zone: ZoneHand})
+	}
+	hand := slices.Clone(locked.hand)
+	for range c.amount {
+		index := g.RandIntn(len(hand))
+		locked.discard.selected = append(locked.discard.selected, hand[index])
+		hand = append(hand[:index], hand[index+1:]...)
+	}
+	locked.after = g.random.Clone()
+	return locked, nil
 }
 
 func (c *discardRandomCost) Pay(sourceID, controller uuid.UUID, g *Game) error {
-	p := g.GetPlayer(controller)
-	if p == nil {
-		return ErrPlayerNotFound
-	}
-	hand := p.Hand()
-	if len(hand) < c.amount {
-		return fmt.Errorf("not enough cards in hand to discard")
-	}
-	for i := 0; i < c.amount; i++ {
-		hand = p.Hand()
-		if len(hand) == 0 {
-			break
+	if !c.locked {
+		tx, err := g.prepareActionPaymentTransaction(actionPaymentSpec{SourceID: sourceID, Controller: controller, Costs: []Cost{c}})
+		if err != nil {
+			return err
 		}
-		idx := rand.Intn(len(hand))
-		card := hand[idx]
-		g.PlayerDiscard(p, card.ID())
+		return tx.Commit()
+	}
+	if !c.CanPay(sourceID, controller, g) {
+		return fmt.Errorf("cannot pay locked random discard")
+	}
+	if c.amount == 0 {
+		return nil
+	}
+	// Replacement choices must use the random state after selection.
+	g.random = c.after.Clone()
+	if err := c.discard.Pay(sourceID, controller, g); err != nil {
+		g.random = c.before.Clone()
+		return err
 	}
 	return nil
 }

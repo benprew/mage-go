@@ -492,6 +492,11 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		return costs, x, nil
 	}
 	switch n.Name {
+	case "DiscardACardAtRandom":
+		if _, err := symbol(n); err != nil {
+			return nil, false, err
+		}
+		return []costFactory{func() mage.Cost { return mage.DiscardRandomCost(1) }}, false, nil
 	case "RemoveCounters":
 		cost, err := compileCounterRemovalCost(n)
 		if err != nil {

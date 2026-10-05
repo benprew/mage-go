@@ -150,6 +150,9 @@
 // Use [Activate] with [ModifyPT] and [Until] for targeted temporary boosts.
 // Put mana, tap, sacrifice, and discard costs in [Costs]. A source sacrificed
 // to pay a cost does not end the boost on the target.
+// Use [DiscardRandomCost] for a random hand payment after deterministic costs.
+// The payment keeps hand visits and random results separate for each use.
+// Failed payment checks do not spend live resources or scripted random results.
 // Put subtype and current power/toughness limits in the target filter.
 // These limits are checked again at resolution, not during the boost.
 // Icatian Lieutenant uses a Soldier creature target; Icatian Priest uses any
