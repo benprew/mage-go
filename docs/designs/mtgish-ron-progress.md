@@ -7509,3 +7509,165 @@ rejects `EnchantGraveyardCard`; Animate Wall rejects `HostPermanent` as its self
 untap source. There is no environment or pre-existing check blocker. Only the ten
 slice files are committed; the two initial user modifications stay outside the
 commit. The descriptive commit hash is reported in the final response.
+
+## Slice: RON conditional static bonuses and keywords (2026-10-04)
+
+Status: complete compiler slice; stop after this capability. Initial user changes
+in `.gitignore` and `mtgish-ron-execution.md` are preserved outside the commit.
+Read AGENTS.md, mage/doc.go, migration design/vocabulary/ledger, selected
+compiler/inventory/layer/reference code, existing condition and continuous-rule
+services, API/rules contracts, and CR 604.1–4/7, 611.3 and 613.1/4–6. No removed
+skill, Go card requirements or Go stubs were used.
+
+### Fresh comparison and selection
+
+Baseline focused compiler/loader tests and `make build` passed. Strict loader
+returned expected exit 1: **1,246 compiled / 1,199 rejected records**, 437 accepted
+and 549 rejected unique names. This is collection rejection, not build failure.
+The fresh semantic inventory includes nested descendants of rejected records.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers, downstream benefit, effort |
+| --- | --- | ---: | --- |
+| Conditional static bonuses/keywords, selected | Kird Ape; Sedge Troll; Giant Tortoise; Spectral Cloak; Angelic Voices | 5 | Existing engine conditions, static modifications, identity and layer services suffice. Moderate adapter/gameplay effort. Establishes a rule-level conditional body and static condition role for later counter, chosen-player and attachment predicates. |
+| Finite prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 prerequisite; up to 7 consumers | Simultaneous finite allocation and replacement ordering need a shared engine/decision contract. High implementation/test effort; enables finite shields and later mode/prevention actions. |
+| Filtered bands with others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 prerequisite; up to 5 consumers | Filtered band formation and combat damage assignment need shared engine contracts. High implementation/test effort; enables the five land grants. |
+
+Complete candidate records and identical reprints were read. All 28 distinct
+cards with inventory role `rule/If` were also inspected: the five selected cards;
+Animate Artifact, Beasts of Bogardan, Bronze Horse, Camel, Cocoon, Gaea's Liege,
+Giant Turtle, Goblin Caves, Goblin Rock Sled, Goblin Shrine, Guardian Beast,
+Homarid, Ivory Guardians, Jihad, Martyrs of Korlis, Merseine, Tangle Kelp,
+Tidal Influence, Time Vault, Venarian Gold, Veteran Bodyguard, Water Wurm and
+Winter Orb. Their complete nested records reveal counter/history/choice,
+replacement/rule-body and opponent predicate blockers. Their first diagnostics
+are not unlock estimates. Reprints count once.
+
+The selected adapter has the largest credible complete-card gain for its effort
+among these candidates. The selected contract/reuse/acceptance cases were stated
+before edits. Missing adapters are in RON; no missing engine contract or source
+correction is needed for the selected shapes. No environment blocker was found.
+
+### Exact signatures, contexts and dependencies
+
+Permanent rule `If/2` accepts `(static_condition, list:rule)`. Body rules are
+`PermanentLayerEffect/2` and `EachPermanentLayerEffect/2`. Singular subjects are
+symbol `ThisPermanent` or Aura-only symbol `HostPermanent`, compiled through the
+existing typed permanent reference plan. Collections use the existing static
+filter plan, including control/exclusion and their existing declaration limits.
+
+Supported static conditions:
+- `PlayerPassesFilter(You, ControlsA(filter))` and `ControlsNo(filter)`, with
+  symbol `You`, and exactly one permanent filter on the controller selector.
+- `PermanentPassesFilter(subject, IsUntapped)` for the source or Aura host,
+  with symbol `IsUntapped`.
+- Controller condition filters: existing card-type/subtype/color/supertype,
+  `AnyPermanent`, tap/combat-state predicates and nonempty `And`/`Or` forms.
+  Ability/P/T predicates are rejected to avoid reading body-modified values.
+
+Supported body modifications: fixed `AdjustPT/2` and `AddAbility/1` with a
+nonempty list of existing basic keyword symbols or supported `Landwalk/1`.
+One complete conditional body uses only layer 6 or only layer 7c. Mixed layers
+remain rejected because one captured membership across layers is not established
+by this adapter. Empty lists, invalid arities/shapes, nested `If`, other rule
+bodies, target/event/chosen reads, opponent conditions, counters, type/base-value
+changes and replacements remain compilation errors. Resolving action `If` is
+unchanged and unsupported.
+
+Reuse: `PlayerControls(You, PermanentFilter)`, `ControlsNone(PermanentFilter)`,
+`PermanentIsUntapped(PermanentRef)`, `While(StateCondition, ...ContinuousModification)`,
+`Static(...StaticRule)`, `ModifyPT`, `ModifyEachPT`, `GrantKeywordModification`,
+`GrantEachKeyword`, typed `This`/`AttachedPermanent`, and existing permanent sets.
+Factories build fresh modifications/static rules. Conditions and filters are
+immutable; they contain no chosen game state. Engine services own live control,
+phasing, attachment incarnation checks, layer timing, ability suppression and
+clone isolation. No action result, LKI read, replacement ordering or simultaneous
+operation is introduced. Sedge Troll retains existing transactional regeneration.
+
+Inventory adds `static_condition` and `static_player_filter` argument roles;
+conditional bodies retain the rule and static-modification roles. Support remains
+unverified in syntax inventory. No production registry or Go fallback changes.
+No Go definitions, generators or DSL functions are deleted: removal gates remain
+unmet, so no DSL removal caller audit is claimed.
+
+### TDD and gameplay evidence
+
+Tests were written before the adapter. After correcting test-only API/set
+fixtures, real-card tests failed on `unsupported rule (If)`. Inventory-role tests
+separately failed on the missing static condition role. A later invalid-declaration
+test failed because a P/T-reading controller condition was accepted; the filter
+boundary now rejects it. No gameplay assertion was weakened. Test phase operations
+use the engine's explicit layer refresh; insufficient regeneration payment is
+checked before Swamps enter, since the existing mana solver can pay from lands.
+The measured reprint count is 11, replacing the initial test fixture estimate.
+
+| Cards/context | Test mapping and evidence |
+| --- | --- |
+| Kird Ape; Sedge Troll | `TestRONConditionalStaticController`: real casting, resolving entry, both players' lands, owner/control distinction, live land/source control changes, phased qualifying land, clones; Sedge Troll's unpaid and paid regeneration, shield survival/tap and retained bonus. |
+| Giant Tortoise | `TestRONConditionalStaticUntapped`: native casting, untapped/tapped bonus, counters, phase cycle, returned source and clone isolation. |
+| Spectral Cloak | `TestRONConditionalStaticAura`: native Aura targeting/payment, unpaid and wrong-type rollback, departed/phased targets, shroud targeting rejection/rollback, tapped host, new attachment, phased source, returned host identity and clones. |
+| Angelic Voices | `TestRONConditionalStaticCollection`: native casting, controlled versus opposing creatures, nonwhite artifact exception, a disqualifying nonwhite nonartifact creature, later entries, phasing, current control, source departure and clones. |
+| Kird Ape; Blood Moon interaction | `TestRONConditionalStaticLayerInteractions`: both timestamp orders, nonbasic Forest becomes Mountain before the bonus check, restoration, source ability removal and cleanup restoration. Blood Moon is regression interaction evidence. |
+| All five and all reprints | `TestRONConditionalStaticStrictReprints`: all 11 records compile, two factory definitions each validate, complete selected collection loads and invalid addition prevents registry publication. |
+| Synthetic declarations | `TestRONConditionalStaticInvalid`: reference type/scope/syntax, arities, empty bodies/keywords, unsupported predicates/operations, nesting and mixed-layer rejection. |
+| Synthetic static bodies | `TestRONConditionalStaticFactoriesAndBodies`: separate factory/controller instances, multiple same-layer rules/keywords, controller collection/source exclusion, repeated layer passes and clones. |
+| Synthetic inventory | `TestRONConditionalStaticInventory`: exact condition, selector, filter, rule and modification roles. |
+
+These add five full-card gameplay mappings independently of loader totals.
+Aggregate collection engine-validation and behavior-verification counts remain
+null; selected factories pass definition validation. Accepted cards retain the
+existing RON regression suite.
+
+### Measured gain and validation
+
+Actual gain matches the five-name estimate: **11 records / 5 unique names**:
+six Sedge Troll, two Kird Ape, one each Giant Tortoise, Spectral Cloak and Angelic
+Voices. Strict loader: **1,257 compiled / 1,188 rejected**, 442 accepted and 544
+rejected unique names. Exactly 11 diagnostics disappear, no new rejected records
+appear. First diagnostics change for 42 surviving records / 18 names because
+`If` now reports a specific unsupported predicate/body instead of its parent.
+The remaining five conditional cards blocked earlier in their records retain
+their earlier diagnostics. The collection still rejects atomically.
+
+Semantic inventory: 12 files, 2,445 records, 986 unique names, 72,938 occurrences,
+8,528 signatures, 13,420 unknown-role occurrences (604 fewer). All twelve hashes
+match the vocabulary snapshot; RON source is unchanged, so no snapshot refresh
+is needed. No source defect is corrected; prior Gaea's Liege/Fastbond findings
+remain unresolved in their own behavior work.
+
+Required final validation results are recorded below after execution.
+
+Ranked next candidates to reassess:
+1. Finite simultaneous prevention allocation prerequisite for seven ready consumers.
+2. Filtered bands-with-others contract for the five land grants.
+3. Broader static condition prerequisites: opponent existence for Water Wurm,
+   Beasts of Bogardan and Ivory Guardians (including nontoken filtering); Aura
+   basic Mountain predicate for Goblin Caves/Goblin Shrine, with Shrine's departure
+   damage still a separate blocker. Compare full records and engine contracts.
+
+Complete collection gameplay/loading, runtime startup, Go-card deletion and DSL
+cleanup remain open. This run stops after the conditional static compiler slice.
+
+Changed files: `pkg/mage/dsl/ron/conditional_static.go`,
+`conditional_static_test.go`, `compiler.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONConditionalStatic -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint |
+| `make test` | PASS after lint |
+| `make build` | PASS after lint |
+| `go vet ./...` | PASS after lint |
+| `make lint` | PASS, zero issues; automatic test import formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,257 compiled / 1,188 rejected; no registry publication |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; issues equal final strict loader diagnostics |
+| Diagnostic and source-hash audit | 11 removals, zero added rejected records, 42 more-specific surviving diagnostics; all twelve source hashes unchanged |
+
+Examples of remaining diagnostics: Animate Artifact rejects its noncreature host
+condition; Veteran Bodyguard and Winter Orb reject replacement/player-rule
+conditional bodies; Water Wurm rejects opponent existence. No environment or
+pre-existing validation failure blocks this slice. The eight slice files are
+committed; the two initial user modifications remain outside the commit. The
+commit hash is reported in the final response.

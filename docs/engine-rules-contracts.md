@@ -1678,3 +1678,24 @@ The collection adapter accepts one type operation and pure filters. It rejects
 source-dependent selection and combined collection operations. The host adapter
 uses the saved attachment identity and can use the existing host modifications.
 No new engine, replacement, payment, or batch-operation API is added.
+
+## RON conditional static layer contract
+
+RON static `If` uses the existing `While` contract. Controller conditions read
+current control of unphased permanents; `ControlsNo` uses the same current
+membership with an absence check. An untapped condition reads the current source
+or its current attachment with the attachment incarnation check. Static effects
+use no last known information (CR 604.4, 604.7, 611.3a–c).
+
+Conditional fixed bonuses apply in layer 7c; keyword grants apply in layer 6
+(CR 613.1f, 613.4c). Source ability removal stops the static effect. Earlier land
+type changes affect controller conditions before bonuses apply. P/T counters
+remain separate from bonuses. Source phasing suspends grants, phase return
+restores them, and a returned host cannot inherit an old attachment's grant.
+The RON adapter rejects mixed layers until a shared membership contract supports
+those bodies. It adds no engine execution or replacement service.
+
+`TestRONConditionalStatic*` verifies real casting and target legality, failed
+payment rollback, current controller/membership and tap changes, regeneration,
+layer ordering with Blood Moon and ability removal, attachment changes and
+returned host identity, phasing, independent factories and cloned games.

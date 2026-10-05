@@ -982,7 +982,8 @@ General sets lower to `MatchingPermanents`, `ControlledPermanents`,
 `WithoutPermanent`, `ModifyEachPT`, `GrantEachKeyword`, `While` and `Static`.
 Existing explicit-creature and Aura adapters retain their services. Static
 numeric P/T, independent base P/T/color/type changes, granted activated/triggered
-abilities and conditional rules remain separate unsupported shapes.
+abilities remain separate unsupported shapes. Conditional rules have the
+restricted contract below.
 See [the exact contract and tests](designs/mtgish-ron-static-permanents.md).
 
 ## RON optional fixed mana payments
@@ -1768,3 +1769,31 @@ land subtype. Both filter forms also support Legendary. These forms use the
 existing pure predicate and negation services. Conversion, Evil Presence and
 Blood Moon have RON gameplay evidence. `SetLandTypeVariable`, resolving type
 changes and entry choices remain unsupported.
+
+## RON conditional static modifications
+
+`If(condition, [layer_rules...])` on a permanent accepts a nonempty body of
+`PermanentLayerEffect(subject, modifications)` and
+`EachPermanentLayerEffect(filter, modifications)`. Singular subjects use
+`ThisPermanent` or, on an Aura, `HostPermanent`. Collections use the existing
+static filter adapter, including controller selection and source exclusion.
+
+Conditions accept `PlayerPassesFilter(You, ControlsA(filter))`,
+`PlayerPassesFilter(You, ControlsNo(filter))`, or
+`PermanentPassesFilter(subject, IsUntapped)`. Controller filters accept existing
+card-type, subtype, color, supertype, tap/combat-state and `AnyPermanent` filters,
+with nonempty recursive `And`/`Or`. They reject ability and P/T queries.
+
+Modifications accept fixed `AdjustPT(power, toughness)` or nonempty
+`AddAbility([keyword...])` with existing basic keywords and supported landwalk
+forms. One `If` body must use only layer 6 grants or only layer 7c bonuses.
+Nested conditions, other body rules, mixed layers, chosen/event/target references,
+counters, opponent conditions, type/base-value changes and replacements remain
+errors. No resolving `If` action support is implied.
+
+The adapter reuses `PlayerControls`, `ControlsNone`, `PermanentIsUntapped`,
+`While`, `Static`, typed source/attachment references, permanent sets and
+continuous modifications. Conditions and membership are live at each layer pass.
+Factories create separate static rules and modifications without chosen state.
+`TestRONConditionalStatic*` covers Kird Ape, Sedge Troll, Giant Tortoise,
+Spectral Cloak and Angelic Voices, their reprints and invalid declarations.
