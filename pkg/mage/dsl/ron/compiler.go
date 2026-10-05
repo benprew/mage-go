@@ -609,15 +609,11 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	}
 	switch n.Name {
 	case "TargetPermanent":
-		filter, other, err := compilePermanentTargetFilter(n.Args[0], ctx)
+		filter, options, err := compilePermanentTargetFilter(n.Args[0], ctx)
 		if err != nil {
 			return nil, "", err
 		}
 		return func() mage.Target {
-			var options []mage.PermanentTargetOption
-			if other {
-				options = append(options, mage.TargetOtherThanSource())
-			}
 			return mage.DeclarePermanentTarget(ctx.targetNamespace+"Ref_TargetPermanent", filter, options...)
 		}, "Ref_TargetPermanent", nil
 	case "TargetPlayer":

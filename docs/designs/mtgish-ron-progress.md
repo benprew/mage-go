@@ -6048,3 +6048,164 @@ Slice files: `pkg/mage/composable_actions.go`, `doc.go`, new
 `inventory.go`, `inventory_test.go`, new `source_combat_prevention_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Only these files are staged for the descriptive slice commit.
+
+## Run 2026-10-04: TARGET-CONTROLLER-YOU
+
+Status: one complete prerequisite slice; stop after validation and commit.
+Initial user changes in `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from staging. No unrelated untracked files were present.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, mage/doc.go, execution design, vocabulary, prior ledger,
+compiler target/filter/instance code, engine target options and activation code,
+API/contracts, and relevant CR 400.7, 601.2c, 602.2b, 603.3a, 608.2b,
+611.2b–c and 702.26. Candidate prevention investigation also read CR 506.4b,
+609.7, 615 and 616. Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards
+-count=1` and `go build ./...` passed. Strict and semantic loaders exited 1
+for collection rejection: **1,172 compiled / 1,273 rejected records**, 414
+accepted and 572 rejected unique names. Strict loading published no registry.
+The semantic AST inventory inspected nested forms; the syntax snapshot was not
+used as support evidence. Complete records for all candidate names were read.
+Reprints count once in the following comparison.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers, downstream value, effort |
+| --- | --- | ---: | --- |
+| Permanent target controller restriction, selected prerequisite | Alchor's Tomb, Arena, Ashnod's Battle Gear, Delif's Cone, Delif's Cube, Ebony Horse, Elvish Scout, Energy Tap, Gauntlets of Chaos, Glyph of Destruction, Goblin Kites, Kry Shield, Obelisk of Undoing, Safe Haven, Simulacrum, Stone Giant | 1 | Small adapter/refactor; moderate declaration, gameplay and instance tests. Exact engine option already exists. Removes a shared prerequisite for 16 names. Ashnod's Battle Gear's other rules already compile. Remaining consumers need colors/choices, target groups/fight/exchange, delayed triggers, prevention, resolution costs, numeric filters, ownership, linked exile or history values. |
+| Combat prevention to and by one target | Maze of Ith, Ebony Horse, Elvish Scout | 1 now; 3 after selected prerequisite | Initially estimated 3 using the static controller adapter. Real-record red tests showed that controller restriction was absent from target filters. The engine's existing to-and-by replacement also loses a captured source after departure and matches source UUID without source incarnation. Moderate engine contract and adapter tests after the prerequisite; enables two more names and establishes Maze of Ith. |
+| Finite recipient prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve | 0 prerequisite; 8 after adapter | CR 615.7 simultaneous finite-shield allocation is still missing. Large damage/decision/replacement test effort; complete records otherwise use supported costs, single recipients and modes. Allocation is shared by later finite shields. |
+| Legendary filtered banding | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 after contracts/adapter | Shared band membership and damage assignment contracts remain missing. Moderate-to-large combat/layer effort; Master of the Hunt adds a later named-membership/token consumer. |
+
+The target controller prerequisite wins on effort and concrete multi-card reuse.
+It has only one immediate full-card gain, but is shared infrastructure for 16
+unique names, including the next three-card prevention slice. This is not a
+single-card executor. The first selection was reassessed when failing real-card
+tests exposed the missing prerequisite, as required by the execution design.
+Exploratory prevention tests were removed before implementation; no prevention
+or engine changes remain in this slice. The early commentary count of 13 missed
+Arena, Gauntlets of Chaos and Obelisk of Undoing, whose other blockers hide this
+nested form. The final inventory-based count is 16.
+
+### Contract and implementation boundary
+
+Exact supported shape:
+`TargetPermanent(ControlledByAPlayer(SinglePlayer(You)))`, either alone or inside
+nested `And` with existing filters and `Other(ThisPermanent)`. Both constructors
+require exact positional tuple arity and `You` must be a symbol. Available in
+supported spell, mode, activation and trigger target declarations. Opponent,
+owner, event-player, other player expressions, numbered/unbound player reads,
+malformed forms and disjunctions containing this restriction remain errors.
+Static, collection, cost, action and rule contexts retain their own contracts.
+
+`compilePermanentTargetFilter(Node, scope)
+(mage.PermanentFilter, []mage.PermanentTargetOption, error)` replaces its former
+single source-exclusion boolean with immutable declaration options. Nested
+conjunctions accumulate restrictions and characteristic filters. `compileTarget`
+uses these options when each instance builds its fresh target declaration.
+The new adapter calls `mage.TargetYouControl()`. Existing source exclusion calls
+`mage.TargetOtherThanSource()`. All callers of the private compiler function were
+audited; they are `compileTarget` and its recursive filter call. No exported DSL
+function or engine service changed. No runtime state, global action slot,
+card-name branch, fallback, partial registry or declaration panic was added.
+
+The engine's existing target legality uses the stack controller at announcement
+and resolution. Source control changes and departure do not change that
+controller. Ownership is independent. Before resolution, recipient control
+changes can make a target illegal; after resolution they do not end its bonus.
+Targets preserve incarnation identity and phasing follows existing rules.
+Costs retain transactional payment and rollback. Copies and cloned games retain
+separate pending target context. Ashnod's Battle Gear also retains its exact
++2/-2 effect, optional untap choice and source-tapped lifetime, including lethal
+toughness reduction. No new replacement or simultaneous-operation contract was
+needed for this adapter; existing services remain in use.
+
+Gap classification: missing compiler adapter, with exact engine behavior already
+available. No new source-data defect or environment failure was found. The
+prevention engine identity defect observed during candidate investigation stays
+open for that later slice. Existing Gaea's Liege/Fastbond observations stay open.
+All twelve RON hashes match the vocabulary snapshot; no source changed and no
+snapshot refresh is required. Runtime cutover/removal gates remain unmet. No
+Go card, generator, DSL export or engine function was deleted; no deletion caller
+audit is claimed. Authoring cutover instructions remain for their gated phase.
+
+### TDD and card-to-test mappings
+
+Tests preceded the selected implementation and failed at the exact missing
+`ControlledByAPlayer` permanent filter. Initial test API errors (ability concrete
+type and metadata for a synthetic creature) were corrected before semantic red
+confirmation. A Forest fixture initially let the native mana solver pay the
+missing mana; it was replaced by a synthetic land without a mana ability, keeping
+the failed-payment assertion. Instance probes were corrected to use distinct
+legal creature targets. No acceptance assertion was removed or weakened.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Ashnod's Battle Gear (complete ATQ record) | `TestRONControlledTargetBattleGear`: definition validation, mana/tap costs, failed payment and illegal targets with rollback, timing, ownership versus control, pre/post-resolution controller changes, shroud, source/recipient departure and return, phasing, copied activations, pending clone isolation, +2/-2 and source-tapped expiry. |
+| Ashnod's Battle Gear: remaining rules | `TestRONControlledTargetUntapChoice`: accept/decline optional native untap and bonus lifetime. `TestRONControlledTargetBattleGearLethal`: native state-based actions for zero toughness. Existing `TestRONSourceTappedDuration*` retains shared duration, stun, ability removal and replacement evidence. |
+| Binding and declaration contract | `TestRONControlledTargetDeclarationsAndInstances`: standalone/nested conjunctions, source exclusion, exact invalid declarations, two fresh factory targets and independent pending chosen objects. |
+| Spell/trigger/mode reuse | `TestRONControlledTargetSpellAndTriggerContexts`: synthetic RON spell and entry trigger, illegal announcement, event controller retention, departed/changed source, illegal recipient controller, opponent copies and pending clones. `TestRONControlledTargetModes`: each mode's target restriction and mode-local target selection. |
+| Inventory and accepted records | Existing `TestInventoryRepositoryCollection` and `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged` updated only to the measured totals; all other inventory, RON and CLI tests pass. Existing role/context traversal already distinguishes nested player filters/references. |
+
+Compilation and gameplay remain separate. One unique card gains a complete-record
+behavior mapping. Collection-wide engine-validated and behavior-verified totals
+remain null. Fifteen other named consumers are not claimed as working cards.
+
+### Measurements, validation and next work
+
+Actual gain matches the revised estimate: **1 unique name / 1 record**,
+Ashnod's Battle Gear. Strict and semantic measurements are **1,173 compiled /
+1,272 rejected records**, 415 accepted and 571 rejected unique names. No accepted
+name regressed. Fourteen remaining unique first diagnostics change because unsupported
+opponent expressions now report the narrower target-controller context and
+supported controller restrictions expose later blockers. In particular Ebony
+Horse and Elvish Scout now reach `Or` combat prevention; Alchor's Tomb reaches
+`ChooseAColor`; Delif's Cone/Cube reach `CreateTriggerUntil`; Energy Tap reaches
+`MustCost`; Kry Shield reaches `DamageWouldBeDealtByPermanent`; Safe Haven reaches
+`Exile`; Simulacrum reaches `DamageDealtToPlayerThisTurn`; Stone Giant and Goblin
+Kites reach `ToughnessIs`; Glyph of Destruction reaches `UntilEndOfCombat`.
+Arena, Gauntlets and Obelisk retain their earlier target-group/ownership errors.
+The inventory stays at 72,938 occurrences, 8,528 signatures and 14,162 unknown-role
+occurrences. Inspection remains report-only and strict production loading rejects
+the incomplete collection.
+
+Ranked next candidates to reassess:
+1. Typed combat prevention to and by one target: Maze of Ith, Ebony Horse and
+   Elvish Scout now share a concrete path. First repair/test captured damage-source
+   incarnation and departure matching in the existing engine replacement, then
+   lower the exact two-event union with one bound reference.
+2. CR 615.7 simultaneous shield allocation prerequisite for the eight finite
+   prevention cards, including Healing Salve.
+3. Legendary filtered banding for five lands, with shared combat contracts first.
+4. Target ownership restrictions: Obelisk of Undoing now lacks only its
+   `OwnedByAPlayer(SinglePlayer(You))` filter, but defer isolated single-card work
+   while the shared multi-card capabilities above remain useful.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1`, `go build ./...` | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,172 compiled / 1,273 rejected |
+| Selected tests before implementation | Expected unsupported `ControlledByAPlayer` permanent filter failures |
+| Focused `go test ./pkg/mage/dsl/ron -run TestRONControlledTarget -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; import formatting reviewed; no unrelated automatic changes |
+| Post-lint `go test ./... -short -count=1` | PASS; includes strengthened source-exclusion assertion |
+| Final strict `go run ./cmd/loadcards -json` and semantic loader | Expected exit 1: 1,173 compiled / 1,272 rejected |
+| Diagnostic arrays, accepted-name audit, twelve source hashes | PASS: strict/semantic arrays agree; zero regressions; all hashes match |
+| `git diff --check` | PASS |
+
+No required check has a build, test or environment blocker. Complete collection
+loading, collection gameplay, embedded startup, Go-card/generator deletion and
+unused DSL cleanup remain open. No second slice was implemented.
+
+Slice files: `pkg/mage/dsl/ron/compiler.go`, `temporary_animation.go`,
+`inventory_test.go`, new `controlled_target_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Only these files are staged
+for the descriptive slice commit. The final report supplies its commit hash.
+
+Final repeat after the stronger exclusion assertion: `make lint` (zero issues),
+RON/CLI tests with `-count=1`, `make test` and `git diff --check` pass. The
+post-lint strict loader still exits 1 with the same 1,173/1,272 counts.

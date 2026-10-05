@@ -50,40 +50,56 @@ func compileTemporaryType(n Node, subject permanentReferencePlan) (func(instance
 	}
 }
 
-func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, bool, error) {
+func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []mage.PermanentTargetOption, error) {
+	if n.Name == "ControlledByAPlayer" {
+		if err := arity(n, 1); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		player := n.Args[0]
+		if player.Name != "SinglePlayer" {
+			return mage.PermanentFilter{}, nil, unsupported(player, "permanent target controller")
+		}
+		if err := arity(player, 1); err != nil {
+			return mage.PermanentFilter{}, nil, err
+		}
+		if player.Args[0].Kind != Symbol || player.Args[0].Name != "You" {
+			return mage.PermanentFilter{}, nil, unsupported(player.Args[0], "permanent target controller")
+		}
+		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetYouControl()}, nil
+	}
 	if n.Name == "Other" {
 		if err := arity(n, 1); err != nil {
-			return mage.PermanentFilter{}, false, err
+			return mage.PermanentFilter{}, nil, err
 		}
 		ref, err := compilePermanentRef(n.Args[0], ctx)
 		if err != nil {
-			return mage.PermanentFilter{}, false, err
+			return mage.PermanentFilter{}, nil, err
 		}
 		if ref.kind != permanentSource {
-			return mage.PermanentFilter{}, false, unsupported(n.Args[0], "target exclusion")
+			return mage.PermanentFilter{}, nil, unsupported(n.Args[0], "target exclusion")
 		}
-		return mage.AnyPermanent, true, nil
+		return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOtherThanSource()}, nil
 	}
 	if n.Name == "And" {
 		if err := arity(n, 1); err != nil {
-			return mage.PermanentFilter{}, false, err
+			return mage.PermanentFilter{}, nil, err
 		}
 		parts, err := list(n.Args[0])
 		if err != nil {
-			return mage.PermanentFilter{}, false, err
+			return mage.PermanentFilter{}, nil, err
 		}
 		var filters []mage.PermanentFilter
-		var other bool
+		var options []mage.PermanentTargetOption
 		for _, part := range parts {
-			filter, excludes, err := compilePermanentTargetFilter(part, ctx)
+			filter, restrictions, err := compilePermanentTargetFilter(part, ctx)
 			if err != nil {
-				return mage.PermanentFilter{}, false, err
+				return mage.PermanentFilter{}, nil, err
 			}
 			filters = append(filters, filter)
-			other = other || excludes
+			options = append(options, restrictions...)
 		}
-		return mage.And(filters...), other, nil
+		return mage.And(filters...), options, nil
 	}
 	filter, err := compileFilter(n)
-	return filter, false, err
+	return filter, nil, err
 }

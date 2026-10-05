@@ -1425,3 +1425,32 @@ check recipient choice, redirection rechecks and unpreventable damage
 
 No finite shield allocation or new damage batch contract is established here.
 The CR 615.7 prerequisite remains open. No runtime registry cutover occurs.
+
+## RON permanent targets controlled by the ability controller
+
+`ControlledByAPlayer(SinglePlayer(You))` in `TargetPermanent` lowers to the
+existing `TargetYouControl` option. Nested conjunctions preserve characteristic
+filters and source exclusions. Each factory call creates fresh target bindings;
+only immutable declaration options are shared. No engine rule changes.
+
+Announcement and resolution use the stack object's controller, including for
+copied spells and abilities (CR 601.2c, 602.2b, 603.3a, 608.2b).
+Source departure or a later source control change does not change that
+controller. Ownership is independent. A target control change before resolution
+can make the target illegal. After resolution, a characteristic modification
+keeps its captured recipient even if its controller changes (CR 611.2c).
+Return creates a new incarnation; phasing preserves identity but can make a
+pending target absent (CR 400.7, 702.26).
+
+Evidence: `TestRONControlledTargetBattleGear` checks the complete Ashnod's Battle
+Gear record, mana and tap payment, rollback, layered +2/-2, ownership, legality,
+return, phasing, copies, clones, and source-tapped lifetime.
+`TestRONControlledTargetUntapChoice` checks both optional untap decisions.
+`TestRONControlledTargetBattleGearLethal` checks the toughness reduction with
+native state-based actions. `TestRONControlledTargetDeclarationsAndInstances`
+checks nested filters, source exclusion, distinct factory bindings and invalid
+shapes. `TestRONControlledTargetSpellAndTriggerContexts` checks spell and trigger
+controllers, source departure/control changes, opponent copies and clone
+isolation. Opponent/owner expressions and controller restrictions inside `Or`
+remain unsupported. This adapter adds no replacement or simultaneous-operation
+contract.

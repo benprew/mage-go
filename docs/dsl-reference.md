@@ -1574,3 +1574,20 @@ still end at end of combat.
 Real RON tests cover Horn of Deafening, Lady Evangela and both Subdue instructions.
 Telekinesis still requires its separate future untap action. Filtered source sets,
 recipient prevention and finite shields are outside this supported shape.
+
+## RON controller restriction on permanent targets
+
+`TargetPermanent(ControlledByAPlayer(SinglePlayer(You)))` restricts a target
+by the controller of the spell or ability. It can occur inside nested `And`
+filters with existing permanent filters and `Other(ThisPermanent)`.
+The adapter uses `mage.TargetYouControl()` on each fresh target declaration.
+This restriction is available in supported spell, mode, activation and trigger
+contexts. Ownership does not determine target legality. The target must remain
+under that controller at resolution. A later control change does not end an
+already resolved characteristic modification.
+
+Only the exact `SinglePlayer(You)` shape is supported here. Opponent expressions,
+other player references, ownership restrictions and disjunctions containing
+controller restrictions remain errors. Static and collection filters retain
+their separate adapters. Ashnod's Battle Gear uses this target restriction with
+the existing source-tapped duration and optional untap services.
