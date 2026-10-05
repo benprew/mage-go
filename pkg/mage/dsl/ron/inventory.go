@@ -452,6 +452,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "player_action"}[index]
 			}
+		case "SpellDealsMultipleDamage":
+			if len(n.Args) == 2 {
+				return []string{"spell_reference", "damage_packet"}[index]
+			}
+		case "PermanentDealsMultipleDamage":
+			if len(n.Args) == 2 {
+				return []string{"permanent_reference", "damage_packet"}[index]
+			}
 		case "SpellDealsDamage":
 			if len(n.Args) == 3 {
 				return []string{"spell_reference", "value", "recipient"}[index]
@@ -573,6 +581,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "player_action":
 		if (n.Name == "DrawNumberCards" || n.Name == "DiscardNumberCards" || n.Name == "DiscardNumberCardsAtRandom" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
 			return "value"
+		}
+	case "damage_packet":
+		if n.Name == "DamageToRecipients" && len(n.Args) == 2 {
+			return []string{"value", "recipient"}[index]
 		}
 	case "recipient":
 		if n.Name == "MultipleRecipients" && len(n.Args) == 1 {

@@ -1959,3 +1959,43 @@ same amount to all of them in one simultaneous batch. No target declaration is
 created. Earthquake, Hurricane, and Inferno use this complete shape.
 
 Evidence: `TestRONMixedDamage*` in `pkg/mage/dsl/ron/mixed_damage_test.go`.
+
+## RON simultaneous damage packets
+
+Resolving action lists accept these forms:
+
+```ron
+SpellDealsMultipleDamage(ThisSpell, [
+    DamageToRecipients(Integer(4), Ref_AnyTarget),
+    DamageToRecipients(Integer(2), Player(You))
+])
+PermanentDealsMultipleDamage(ThisPermanent, [
+    DamageToRecipients(Integer(2), Ref_AnyTarget),
+    DamageToRecipients(Integer(3), Permanent(ThisPermanent))
+])
+```
+
+The action has arity two. Its second operand is a nonempty list of
+`DamageToRecipients(amount, recipient)/2`. The source must match the enclosing
+spell or permanent context. Each amount uses the existing resolution-value
+compiler. A recipient is the in-scope symbol `Ref_AnyTarget`, `Player(ref)` with
+an existing typed player reference, or `Permanent(ref)` with an existing typed
+permanent reference. Collections, numbered target groups and undeclared reads
+remain errors. This adds no target declaration or target-choice service.
+Spells, supported activations, supported triggers and supported modal action
+bodies use the same lowering and retain their existing declaration scopes.
+
+The compiler builds fresh `mage.DamagePacketTo(recipient, amount)` values for
+`mage.DealDamagePackets(mage.This, packets...)`. The engine reads all recipients
+and positive amounts before damage. Overlapping recipient identities receive
+one combined amount before replacement processing. All assignments use one
+captured source and one existing simultaneous batch. Nontargeted self damage
+still requires the enclosing targeted spell or ability to resolve. The source
+as a damage recipient must remain its original, unphased incarnation; as a
+damage source it can use retained LKI after departure.
+
+Orcish Artillery, Psionic Entity, Brothers of Fire and Psionic Blast use this
+complete shape. Evidence: `TestRONDamagePackets*` and `TestDamagePackets*`.
+The general `DamageToRecipients` family remains partial: recipient sets,
+opponent-chosen targets, history target filters and rounded/counting values
+still require their own adapters and contracts.

@@ -8854,3 +8854,208 @@ committed in one descriptive commit; its hash is reported in the final response.
 The original two user changes remain unstaged. This run starts no next slice.
 Full collection gameplay, runtime cutover, Go-card deletion, and unused DSL
 removal remain unfinished.
+
+## 2026-10-04 — Simultaneous damage packets with separate amounts
+
+Capability `RON-DAMAGE-PACKETS`: complete for a nonempty list of singular typed
+recipients and existing resolution amounts, from one source. The wider multiple
+recipient/damage family remains partial. This run implements one slice and stops.
+Initial user changes in `.gitignore` and `docs/designs/mtgish-ron-execution.md`
+are preserved and excluded from the slice commit. No untracked input was removed.
+
+### Fresh evidence and selection
+
+Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design including removal gates,
+the vocabulary snapshot, prior progress, selected compiler and engine contracts,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and CR 120, 608.2,
+615.7 and 616.1 using the Comprehensive Rules index. Applied the
+`implement-engine` skill to the reusable engine portion; no card implementation
+skill, Go definition or generator supplied requirements. No card file is modified.
+All complete records named below were read, including nested forms and reprints.
+Local Oracle records in `data/LEA.json`, `DRK.json`, `ARN.json` and `4ED.json`
+provide additional wording evidence. No web retrieval was required.
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` pass.
+Fresh strict loader exits 1 for expected collection rejection: 2,445 records,
+986 unique names, **1,299 compiled / 1,146 rejected**, 460 accepted and 526
+rejected unique names. Inventory has 72,938 node occurrences, 8,528 signatures,
+and 13,026 unknown-role occurrences. First-error frequency did not select work.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream benefit, effort |
+| --- | --- | ---: | --- |
+| Separate-amount simultaneous packets, selected | Orcish Artillery; Psionic Entity; Brothers of Fire; Psionic Blast; Banshee; Eternal Flame; Fire and Brimstone; Cuombajj Witches | 4 names / 13 records | Existing batch, source, typed recipient and value services are ready. A reusable typed action to prepare different amounts together is missing. Remaining consumers need X activation payments/rounding (Banshee), player-or-planeswalker targets plus counting/rounding and source correction (Eternal Flame), attack-history player targeting (Fire and Brimstone), or independent opponent-chosen target groups (Witches). Low engine/adapter effort; medium identity, legality and batch test effort. Enables their common damage instruction after those prerequisites. |
+| Finite simultaneous prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite, then up to 7 | Full records have ready targets/costs, but CR 615.7 multi-source allocation needs a player-decision contract before finite-shield adapters. Also enables later modal Healing Salve and Alabaster Potion. High engine and combinatorial replacement test effort. |
+| Conditional static permanent predicates | Goblin Caves; Goblin Shrine; Animate Artifact | 1 | Caves needs the basic-Mountain host predicate; Shrine also needs departure-event source bindings and collection damage; Animate Artifact needs noncreature membership across type/P/T layers and mana-value setting. Low adapter/medium layer test effort; enables parts of the two blocked cards. |
+
+Selected the largest credible immediate multi-card gain for a small reusable
+change. The batch engine contract is ready; adding the typed action and its RON
+adapter together gives a usable, tested shape rather than an unconnected export.
+Selection, reuse boundary and acceptance cases were stated before editing.
+Reprints count once. Finite prevention remains valuable but needs more work;
+single-card static work is deferred while useful multi-card work remains.
+
+### Exact signatures, contexts, and ownership
+
+Engine signatures:
+
+```go
+DamagePacketTo(DamageRecipientRef, ResolutionValue) DamagePacket
+DealDamagePackets(DamageSourceRef, ...DamagePacket) ResolvingEffect
+```
+
+The packet stores typed immutable declarations. The action copies its input
+slice, visits every packet in definition inspection, rejects empty/nil/unbound
+declarations, and resolves one source and all positive recipient amounts before
+submitting damage. Positive amounts for the same resolved recipient identity
+are summed before replacement processing. Zero/negative packets do not create
+an event or subtract another packet's amount. Stable first-recipient order is
+retained. Existing `Game.DealSimultaneousDamage`, assignment constructors and
+source/reference/value resolvers execute the instruction. No parallel damage
+system, generic dispatch, scratch result slot or new replacement service exists.
+
+RON private signatures:
+`compileDamagePackets(Node, scope) (effectFactory, error)` and
+`compileDamagePacketRecipient(Node, scope) (damageRecipientFactory, error)`.
+Exact action shapes:
+
+```ron
+SpellDealsMultipleDamage(ThisSpell, [DamageToRecipients(amount, recipient), ...])
+PermanentDealsMultipleDamage(ThisPermanent, [DamageToRecipients(amount, recipient), ...])
+```
+
+Both have arity two. The second operand is a nonempty list and each member is
+exactly `DamageToRecipients/2`. The source must be the matching symbol in an
+existing spell/permanent context. Amounts use `compileInstanceValue` unchanged.
+Recipients are the in-scope symbol `Ref_AnyTarget`, `Player(ref)/1` using
+`compilePlayerRef`, or `Permanent(ref)/1` using `compilePermanentRef`.
+Existing scope, type, incarnation and binding requirements remain in force.
+No plural recipient set, numbered/unbound target, opponent choice, malformed
+wrapper or mismatched source is silently accepted. Each factory lowers fresh
+packet effects against that action's `instanceBindings`. Existing spell,
+activation, supported trigger and modal envelopes share this lowering; the slice
+adds no envelope, target declaration, event binding, result or announcement rule.
+Real cards cover spells and activations; synthetic RON covers player/permanent
+wrappers in spells, activations and entry triggers. Modal envelope lowering is
+reused without a new mode contract or additional real-card coverage claim.
+
+Inventory now gives the action's packet operand role `damage_packet` and
+`DamageToRecipients/2` children roles `value` and `recipient`. Existing wrappers
+then provide player/permanent-reference roles. Descendants of still-rejected
+records remain reported, with support explicitly unverified.
+
+Reuse includes definition validation, per-factory targets, stack legality,
+transactional casting/activation, stack copies and retargeting, clone isolation,
+current source characteristics and retained incarnation LKI, phasing, damage
+assignment/batches, protection/prevention/redirection, affected-player replacement
+order, lifelink, planeswalker loyalty, and post-resolution state-based actions.
+RON owns only spelling, shape/scope checks and lowering. No Go fallback,
+card-name branch or partial production registry is introduced. Old callers stay
+available. API and rules docs describe only this shape and inherited behavior.
+
+### TDD and card-to-test mappings
+
+The first real RON tests failed on unsupported `PermanentDealsMultipleDamage`
+and `SpellDealsMultipleDamage`. Engine tests failed on the absent typed API.
+The complete initial gameplay, invalid-declaration, rollback, source/copy/clone
+and replacement-order tests were run before implementation. Supplemental tests
+then covered construction isolation, value evaluation, strict reprints,
+metadata/scopes and trigger placement. Focused tests pass.
+
+Fixture corrections used actual API contracts: `PhaseIn` takes a slice, runtime
+protection needs a granted ability, Psionic Entity is blue, and entry triggers
+need an explicit target-choice player to select the opponent. The expected
+lifelink from copied Psionic Entity was corrected because its first resolution
+kills the self recipient: the original still damages its legal target, but has
+no live self recipient. No rules assertion was weakened to mask a code failure.
+
+| Cards / contract | Test evidence |
+| --- | --- |
+| All four new cards | `TestRONDamagePacketsCards`: complete real records, engine definition validation, player/creature/planeswalker targets, independent amounts, damage timing, final payment and graveyard, complete batch visible to callbacks, overlapping target/self recipient emits one combined event, lethal self removal after callbacks. |
+| All four new cards | `TestRONDamagePacketsLegalityAndRollback`: wrong land targets, summoning sickness and insufficient payment roll back; target departure/return, phasing, shroud and source-color protection recheck legality; all-illegal sole targets prevent untargeted self damage; phase cycle preserves legality. |
+| All four new cards | `TestRONDamagePacketsSourceCopiesAndClones`: retargeted copies under another controller, resolving `You`, source departure/return/phasing/control, original source lifelink/LKI, absent self recipients, copied self-lethal ability followed by original, independent cloned game resolution. |
+| Psionic Blast | `TestRONDamagePacketsReplacementOrder`: prevention versus redirection in both affected-player orders, independent partial prevention of controller packet, one replacement decision. |
+| All four, all 13 reprints | `TestRONDamagePacketsStrictReprintsAndBindings`: strict reprint loading as four names, fresh factory card/ability/target identity, undeclared typed packet reads rejected by engine validation, nested semantic inventory, rejection rather than partial registry when a gap is added. |
+| Synthetic RON contexts | `TestRONDamagePacketsScopedRecipients`: typed player/permanent targets in spells, activations and entry triggers; explicit placement-time trigger choice selects another player; both target and controller packets resolve. |
+| Invalid RON | `TestRONDamagePacketsInvalid`: empty/nonlist packet operand, wrong member name/arity, mismatched or out-of-context source, undeclared/wrong-type target reads, invalid source recipient and collection recipient. |
+| Reusable engine | `TestDamagePacketsSimultaneousAndMerged`: mixed amounts, same-recipient sum and one event, all results visible together, caller slice mutation cannot change the instruction. |
+| Reusable engine | `TestDamagePacketsDefinitionValidation`: nil/zero declarations, empty instruction, undeclared target and unbound number value. |
+| Reusable engine | `TestDamagePacketsValuesBeforeDamage`: controller life read before the first packet changes it; nonpositive packets emit no event and do not reduce a positive packet. |
+
+These add four complete-card rule mappings; aggregate collection gameplay
+verification remains unmeasured. Existing accepted RON regressions remain
+active, including the whole-collection strict-rejection/Lightning Bolt test.
+Its two exact count assertions now match measured totals; no rule test is deleted.
+
+### Outcome, defects, and next work
+
+Actual gain matches the estimate: **13 records / 4 names** (Orcish Artillery 6,
+Psionic Blast 5, Brothers of Fire 1, Psionic Entity 1). Final loader and inventory:
+**1,312 compiled / 1,133 rejected**, 464 accepted and 522 rejected unique names.
+No accepted record regressed and no surviving first diagnostic changed. Strict
+and inspection issue arrays agree. Engine-validation and behavior-verification
+aggregate fields remain null; individual card/gameplay evidence is above.
+
+Inventory still has 72,938 node occurrences and 8,528 signatures; unknown-role
+occurrences fall from 13,026 to 12,873. All 12 RON hashes still match the
+vocabulary snapshot, so no source snapshot refresh is needed. No source data is
+changed and no environment failure blocks this slice.
+
+Source-data finding, separated from adapter support: the complete Eternal Flame
+record at `DRK.lines.ron:33` uses `HalfRoundedUp(Mountains)` for target damage and
+`HalfRoundedDown(Mountains)` for controller damage. Local `data/DRK.json` Oracle
+text instead requires Mountains damage to the target and half Mountains rounded
+up to you. With three Mountains the record expresses 2/1 instead of 3/2.
+CR 608.2c requires the written instructions; no predicate/value adapter should
+invert or reinterpret those constructors to hide the defect. Only one record
+exists in this collection. The record is still rejected by its target filter,
+and its counting/rounding forms are outside this slice's supported shape.
+Correction and source-snapshot refresh are recorded for that dependent slice;
+this run establishes no Eternal Flame gameplay claim. The prior Gaea's Liege
+and Fastbond source observations remain open.
+
+Remaining dependency blockers for the packet family: Banshee's X activation
+payment and halves; Eternal Flame's target filter/count/rounding/data correction;
+Fire and Brimstone's player attack history; Cuombajj Witches' two target groups
+and opponent choice. The finite-shield engine prerequisite still lacks CR 615.7
+multi-source allocation; this one-source packet action does not solve it.
+
+Ranked next candidates for fresh reassessment:
+1. Finite simultaneous prevention allocation prerequisite for the seven ready
+   consumers listed in the comparison, with later modal prevention consumers.
+2. Filtered bands-with-others prerequisite for Adventurers' Guildhouse,
+   Cathedral of Serra, Mountain Stronghold, Seafarer's Quay and Unholy Citadel.
+3. Shared X activation-payment plus rounded resolution-value capability; audit
+   complete other X consumers before selecting scope, now including Banshee's
+   dependency-ready packet action.
+4. Shared intervening-if/end-step membership work, now with Pestilence's damage
+   action ready; compare other conditional event consumers before selection.
+
+Removal gates remain unmet: whole-collection execution, RON runtime startup,
+Go-card test migration/deletion, obsolete generator removal and unused DSL
+cleanup stay unfinished. No deletion, removal caller audit, authoring cutover or
+native startup claim is made. No next slice is started.
+
+Changed slice files: `pkg/mage/composable_damage_packets.go`,
+`composable_damage_packets_test.go`, `pkg/mage/dsl/ron/damage_packets.go`,
+`damage_packets_test.go`, `compiler.go`, `inventory.go`, `inventory_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Final required validation and commit evidence follow below.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(DamagePackets\|RONDamagePackets)' -count=1` | PASS; focused packet tests rerun with inventory/CLI tests after lint review. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final changes and lint. |
+| `make test` | PASS after final changes and lint. |
+| `make build` | PASS after final changes and lint. |
+| `go vet ./...` | PASS after final changes and lint. |
+| `make lint` | PASS, zero issues. First run found a test variable shadowing builtin `copy`; renamed to `copied`, reviewed automatic import/format changes, reran lint and affected checks. No unrelated file was changed by lint. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,312 compiled / 1,133 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; all nested records walked, issue arrays equal strict loader. |
+| `go test ./... -short -count=1`, `go build ./...` | PASS; additional checks required by the engine skill. |
+| Diagnostic / source audit | Exactly 13 records / 4 names gained; zero regressions and unchanged surviving first diagnostics. All 12 source hashes match vocabulary. |
+
+No required check or environmental blocker remains. The ten listed slice files
+are committed together; the descriptive commit hash is reported in the final
+response. The initial two user changes remain unstaged. This run stops after
+this slice. Full migration completion criteria remain unmet.

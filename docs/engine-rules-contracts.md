@@ -1884,3 +1884,40 @@ loading, factory identity, and nested inventory roles have separate tests in
 that file. Finite shields across simultaneous packets from multiple sources,
 history filters, singular/overlapping recipient unions, and multiple damage
 amounts remain separate capabilities.
+
+## Simultaneous damage with separate amounts
+
+`DamagePacketTo(DamageRecipientRef, ResolutionValue) DamagePacket` and
+`DealDamagePackets(DamageSourceRef, ...DamagePacket) ResolvingEffect` define
+one simultaneous instruction from one source. The action copies the packet
+slice at construction. Definition inspection visits every recipient and value,
+so undeclared targets and unbound values are rejected before gameplay. Empty
+instructions and nil source, recipient or value declarations are invalid.
+
+The action captures its damage source once, then resolves all recipient
+identities and amounts before submitting any damage. Nonpositive packets have
+no event (CR 120.8). Absent or phased recipients are omitted. Positive packets
+for the same recipient are added before replacements, so one source deals one
+combined amount to that recipient. Selection order is stable. Typed reference
+resolution keeps permanent incarnation identity and existing target legality.
+A copied ability uses its own resolving controller for `You`, while source
+characteristics and lifelink retain the original source's controller or LKI.
+
+The action submits the prepared assignments to `Game.DealSimultaneousDamage`.
+Existing prevention, redirection, protection, lifelink and damage results apply
+through that service (CR 120.3–4, 616.1). Damage callbacks see all results;
+state-based lethal removal follows resolution. A sole illegal target prevents
+the entire spell or ability from resolving, including nontargeted packets
+(CR 608.2b). Two successive resolutions remain two instructions: if a copy kills
+a self recipient, the original cannot deal its self packet to the departed
+incarnation, but can still deal its legal targeted packet.
+
+Evidence: `TestDamagePacketsSimultaneousAndMerged`,
+`TestDamagePacketsDefinitionValidation`, `TestDamagePacketsValuesBeforeDamage`,
+and `TestRONDamagePackets*`. These cover different amounts, overlapping
+recipients, construction isolation, reads before damage, declaration errors,
+real RON spell/activation gameplay, placement-time trigger targets, copies,
+clone isolation, rollback, phasing, source return/LKI, controller changes,
+planeswalker results, lethal self damage and affected-player replacement order.
+This contract adds neither finite multi-source prevention allocation nor new
+recipient collections, event bindings or announcement choices.

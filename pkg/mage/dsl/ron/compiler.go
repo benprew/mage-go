@@ -846,6 +846,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "SpellDealsMultipleDamage", "PermanentDealsMultipleDamage":
+		build, err := compileDamagePackets(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "SpellDealsDamage", "PermanentDealsDamage":
 		if err := arity(n, 3); err != nil {
 			return nil, err
