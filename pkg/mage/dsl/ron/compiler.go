@@ -28,6 +28,7 @@ type scope struct {
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
 	spellTarget     *spellTargetPlan
+	damageTarget    *damageTargetPlan
 	castEvent       *castEventPlan
 	stepEvent       *stepEventPlan
 }
@@ -38,6 +39,7 @@ type actionPlan struct {
 	playerTarget    *playerTargetPlan
 	permanentTarget *permanentTargetPlan
 	spellTarget     *spellTargetPlan
+	damageTarget    *damageTargetPlan
 }
 
 func (p actionPlan) build() Actions {
@@ -57,6 +59,7 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
 	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
 	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
+	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
 		targets[i] = makeTarget()
@@ -68,6 +71,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		}
 		if target, ok := targets[i].(*mage.SpellTargetBinding); ok {
 			bindings.spells[p.spellTarget] = target
+		}
+		if target, ok := targets[i].(*mage.DamageTargetBinding); ok {
+			bindings.recipients[p.damageTarget] = target
 		}
 		if target, ok := targets[i].(mage.TargetBinding); ok {
 			declared = append(declared, target)
@@ -553,6 +559,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if binding == "Ref_TargetSpell" {
 			ctx.spellTarget = &spellTargetPlan{name: binding}
 		}
+		if binding == "Ref_AnyTarget" {
+			ctx.damageTarget = &damageTargetPlan{name: binding}
+		}
 		plan, err = compileActions(n.Args[1], ctx)
 		if err != nil {
 			return plan, err
@@ -564,6 +573,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		plan.playerTarget = ctx.playerTarget
 		plan.permanentTarget = ctx.permanentTarget
 		plan.spellTarget = ctx.spellTarget
+		plan.damageTarget = ctx.damageTarget
 		return plan, nil
 	}
 	if n.Name != "ActionList" {
@@ -582,7 +592,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 
 func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	if n.Kind == Symbol && n.Name == "AnyTarget" {
-		return mage.TargetDamageAnyTarget, "Ref_AnyTarget", nil
+		return func() mage.Target { return mage.DeclareDamageTarget(ctx.targetNamespace + "Ref_AnyTarget") }, "Ref_AnyTarget", nil
 	}
 	if err := arity(n, 1); err != nil {
 		return nil, "", err
@@ -828,6 +838,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		if ctx.target != "Ref_AnyTarget" && ctx.target != "Ref_TargetPlayer" && ctx.target != "Ref_TargetPermanent" {
 			return nil, unsupported(n.Args[2], "damage recipient")
+		}
+		if ctx.target == "Ref_AnyTarget" {
+			recipient, err := compileDamageTargetRef(n.Args[2], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.DealDamageFrom(mage.This, bindings.recipients[recipient], mage.ValueAtResolution(amount))
+			})
 		}
 		if n.Name == "SpellDealsDamage" {
 			return one(func(bindings instanceBindings) mage.Effect { return SpellDealsDamage(amount) })

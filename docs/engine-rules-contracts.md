@@ -1134,3 +1134,18 @@ and target checks, CR 702.26b phasing, control changes and regeneration independ
 fresh declarations and clone isolation. `TestRONReturnHandSourceAndHostContexts`
 verifies activation/entry-trigger source reads and attachment LKI after payment.
 This adds no simultaneous-operation or replacement-order contract.
+
+## RON single damage recipient bindings
+
+RON's single `AnyTarget` declaration and `Ref_AnyTarget` damage read now use
+`DeclareDamageTarget`, per-instance `DamageTargetBinding`, and `DealDamageFrom`.
+The adapter preserves the shared engine contracts for announcement, rollback,
+resolution legality, incarnation identity, source LKI, mode copying and clone
+isolation. `TestRONDamageScope*` verifies real RON damage to players, creatures
+and planeswalkers; missing declaration rejection; departure/return; phasing;
+source sacrifice; announced X; and recipient choice between competing damage
+replacements. No engine execution behavior changed in this slice.
+
+This does not establish a simultaneous shared-shield allocation contract.
+The migration ledger records the CR 615.7 gap in `DamageSystem` that must be
+resolved before RON future recipient prevention can be accepted.

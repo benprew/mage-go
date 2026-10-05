@@ -4198,3 +4198,182 @@ Ranked next candidates to reassess:
 
 Complete RON gameplay, runtime loading, Go-card/generator deletion, DSL cleanup
 and native startup validation remain unfinished. No second slice began.
+
+## Run 2026-10-04: P0-TYPED-DAMAGE-RECIPIENT
+
+Status: complete single mixed damage-recipient binding prerequisite. This run
+stops after this slice. Initial changes in `.gitignore` and the execution design
+are preserved and excluded from staging. No unrelated untracked files existed.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, ledger,
+selected compiler/engine code and API/rules contracts. Used the positioned AST
+inventory to find names and nested contexts, then read complete candidate and
+affected RON records, including identical reprints. No Go card definitions were
+used as requirements. Baseline RON/CLI tests, short engine tests and make build
+passed. Strict/semantic loaders returned expected exit 1: 1,106 compiled,
+1,339 rejected; 373 accepted and 613 rejected unique names.
+
+| Candidate | Distinct affected names | Estimated complete-card unlocks | Other blockers, downstream gain, effort |
+| --- | --- | ---: | --- |
+| Explicit-player life | Stream of Life; Healing Salve; Alabaster Potion; Relic Bind; Spiritual Sanctuary; Swords to Plowshares; Crumble; Personal Incarnation; Nafs Asp; Psychic Purge; Shahrazad | 1 | Stream is ready. Salve/Potion need prevention; Relic needs opponent filter, tapped-host event, trigger modes and player/planeswalker union; Sanctuary needs intervening-if/player filter; Swords/Crumble need zone/value snapshots; others need event/zone/subgame/delayed services. Small adapter, moderate scope and gameplay tests. Shared life remains a useful multi-card prerequisite. |
+| Next amount of recipient damage prevention | Samite Healer; Conservator; Amulet of Kroog; Argivian Blacksmith; Combat Medic; Oasis; Kei Takahashi; Healing Salve; Alabaster Potion; Balm of Restoration; Rakalite; Guardian Angel | 7 after prerequisites | First seven enclosing records are otherwise ready (17 records). Salve/Potion need player life; Balm needs activation modes; Rakalite needs delayed triggers; Guardian needs granted player payment actions. Typed recipients were missing in ron; engine shared shields lack simultaneous source allocation choice. Adapter would be small; complete engine allocation/replacement tests are substantial. |
+| Collection untap restrictions | Meekstone; Arena of the Ancients; Magnetic Mountain; Thelon's Curse | 2 after prerequisites | Meekstone needs numeric power filters; Arena needs supertype filter and collection tap; Mountain/Curse need per-object payment/choice scopes. Enables four names, moderate adapter/filter work plus lifecycle tests and larger payment follow-up. |
+| Typed single AnyTarget prerequisite, selected final scope | 32 declaration users below; 18 direct single-source damage users | 0 | Needed for recipient prevention and future mixed/multiple damage. Existing raw target plus implicit damage execution supplied no typed recipient read. Small compiler change with substantial declaration, identity, LKI, copy, mode and replacement tests. No engine allocation behavior is added. |
+
+Selection was reassessed during engine-contract inspection. The initial life
+candidate had one immediate unlock. The expanded nested inventory showed seven
+prevention unlocks, so prevention was preferred. A trial adapter reached those
+17 records, but the simultaneous audit found a missing CR 615.7 engine contract.
+That trial and all its tests were removed; it is not part of this slice and none
+of its temporary compilation gains are counted. The final scope is the complete
+per-instance typed recipient prerequisite, which enables the larger shared
+prevention capability without accepting incomplete prevention rules. Contract,
+reuse boundary and acceptance cases for each scope change were stated before
+implementing that scope. No second completed capability was retained.
+
+### Engine gap and exact supported contract
+
+Missing compiler prerequisite: a typed single mixed recipient declaration/read.
+Missing engine prerequisite for future prevention: `DamageSystem` prepares each
+simultaneous request in slice order, applying the shared shield immediately.
+There is no allocation choice among simultaneous damage sources. CR 615.7 gives
+that choice to the affected player or permanent's controller. A temporary,
+standalone Go probe used two sources dealing 2 each to one player, one with
+lifelink, and a shield of 2. The recipient implemented both ChooseMode and
+ChooseDamageDistribution. `go run /tmp/ron-prevention-probe.go` reported
+`choice calls=0; source controller life=20; recipient life=18`. Choosing one
+prevented damage from each source would instead give the source controller one
+life. `dealSimultaneousDamageOutcomes` and `preventionShieldReplacement` confirm
+the packet-order consumption. This is engine behavior, not a source defect or
+an environment failure. Future prevention remains rejected in production.
+
+Exact supported declaration: symbol `AnyTarget` as the one target in
+`Targeted([AnyTarget], ActionList(...))`. Exact read: symbol `Ref_AnyTarget` as
+argument 3 of `SpellDealsDamage(ThisSpell, value, Ref_AnyTarget)` or
+`PermanentDealsDamage(ThisPermanent, value, Ref_AnyTarget)`. Existing fixed/X
+values and spell/activation/trigger action-list contexts remain supported.
+Existing spell choose-one modes give each declaration a private namespace.
+Multiple groups, numbered recipients, wrapping this mixed reference as a
+permanent/player, and unsupported enclosing actions remain rejected.
+
+`compileDamageTargetRef(Node, scope) (*damageTargetPlan, error)` checks the
+lexical typed plan. `scope.damageTarget`, `actionPlan.damageTarget` and
+`instanceBindings.recipients map[*damageTargetPlan]*mage.DamageTargetBinding`
+carry immutable plan identity and fresh per-factory declarations. `compileTarget`
+builds `mage.DeclareDamageTarget(namespace+"Ref_AnyTarget")`; action-plan building
+includes the declaration with existing typed target groups. The damage body
+uses `mage.DealDamageFrom(mage.This, boundRecipient,
+mage.ValueAtResolution(amount))`. Mode scopes clear inherited mixed plans.
+
+Reuse: definition validation, transactional casting/activation, target binding
+and retargeting, current legality, permanent incarnation, source LKI,
+DamageSystem, replacement/prevention ordering, modal and game cloning. No
+engine service or public Go API changed. Rules read: CR 400.7, 601.2b-c, 608.2b,
+702.26b-d, 615.3-7 and 616.1. No new simultaneous operation is lowered and no
+simultaneous shield-allocation support is claimed. Comments added: none.
+
+### Affected unique cards and gameplay mapping
+
+The AST inventory finds 32 names with a target-role AnyTarget declaration:
+Aeolipile; Alabaster Potion; Aladdin's Ring; Amulet of Kroog; Balm of Restoration;
+Banshee; Brothers of Fire; Chain Lightning; Combat Medic; Cuombajj Witches;
+Disintegrate; Drain Life; Goblin Grenade; Guardian Angel; Healing Salve;
+Icatian Javelineers; Lightning Bolt; Orcish Artillery; Orcish Mechanics;
+Pirate Ship; Prodigal Sorcerer; Psionic Blast; Psionic Entity; Psychic Purge;
+Rakalite; Rocket Launcher; Rod of Ruin; Samite Healer; Sword of the Ages;
+Thorn Thallid; Triskelion; Voodoo Doll. All complete records were read. Nested
+unsupported parents are counted as syntax users, not accepted behavior.
+
+Direct single-source damage users are Aeolipile, Aladdin's Ring, Chain
+Lightning, Disintegrate, Drain Life, Goblin Grenade, Icatian Javelineers,
+Lightning Bolt, Orcish Mechanics, Pirate Ship, Prodigal Sorcerer, Psychic Purge,
+Rocket Launcher, Rod of Ruin, Sword of the Ages, Thorn Thallid, Triskelion and
+Voodoo Doll. Seven already compile: Aeolipile, Aladdin's Ring, Lightning Bolt,
+Orcish Mechanics, Prodigal Sorcerer, Rod of Ruin and Thorn Thallid. All others
+retain their prior blockers and first diagnostics.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Lightning Bolt | TestRONDamageScopeRealCards: all six reprints, complete records and definition validation, player/creature/planeswalker targets, payment, damage and clone isolation |
+| Prodigal Sorcerer; Rod of Ruin; Aladdin's Ring; Aeolipile | TestRONDamageScopeRealCards: complete LEA/ARN/FEM records, mana/tap/sacrifice costs, three recipient categories, source LKI after self-sacrifice, cloned resolution |
+| Orcish Mechanics | Retained TestRONSacrificeCost* and TestRONSacrificeCostSourceAndTargets / TestRONSacrificeCostInstancesAndCopy: real RON sacrifice selection, timing, rollback, source LKI and recipient damage; all pass with typed lowering |
+| Thorn Thallid | Retained TestRONCounterCost* real RON upkeep/counter removal, invalid payment, instance/copy and target damage scenarios; all pass with typed lowering |
+| Typed read and fresh factory | TestRONDamageScopeDeclarations: distinct target declarations, exactly one typed read, definition validation and rejection after removing its declaration |
+| Identity/legality | TestRONDamageScopeIdentity: current control, leave/return, phased target, phase cycle, shroud at resolution |
+| Mode/copy/instance scopes | TestRONDamageScopeModesCopies: two modes with same RON spelling, fresh instances, retargeted copies retain mode, one announcement choice |
+| X/payment | TestRONDamageScopeAnnouncedX: unpaid X rollback, announced X payment and copied X with new recipient |
+| Replacement ordering | TestRONDamageScopeReplacementOrder: selected player chooses half-damage versus fixed shield ordering; two choices yield different actual damage |
+| Trigger timing/LKI | TestRONDamageScopeTrigger: entry trigger target at placement, damage only at resolution, phased source retains its LKI |
+| Self-sacrifice/LKI/rollback | TestRONDamageScopeRollbackAndSourceLKI: unpaid/illegal activation preserves state; source sacrificed at payment and returned under another controller; live and clone retain original source and target |
+| Invalid declarations | TestRONDamageScopeInvalid: undeclared reference, incompatible player target, tuple read, cross-mode read, AnyTarget tuple, future prevention remains rejected |
+| Accepted registry/inventory | Retained full RON/CLI tests, strict rejection, atomic registry and inventory tests |
+
+TDD: draft life/prevention tests exposed missing adapters; these drafts were
+removed with their trial implementations. The final typed-declaration test was
+run against restored baseline production files and failed as expected with
+`typed recipient reads=0 want=1`. Restoring the final typed implementation made
+all new gameplay and declaration tests pass. Test fixtures initially confused
+turn count with clearing summoning sickness and PhaseIn's slice argument; those
+were corrected without weakening engine rules. The final shape's tests cover
+five previously accepted names directly and retain broader RON coverage for two
+more. No newly accepted card or full-collection gameplay total is claimed.
+
+### Final measurements and validation
+
+Final prerequisite estimate versus actual: **zero new unique cards and zero
+records**, as expected. The seven/17 prevention estimate was conditional on
+prerequisites; it remains a downstream estimate, not delivered compilation.
+Compiled stays **1,106/2,445**; rejected stays **1,339**. Accepted/rejected unique
+names stay **373/613**. Strict issue arrays are byte-for-byte equal as decoded
+JSON before/after, and strict/semantic final issues match. Zero regressions and
+zero new gaps. Inventory stays 72,938 occurrences, 8,528 signatures and 14,648
+unknown-role occurrences. Source hashes match all twelve baseline files and the
+vocabulary snapshot. RON source did not change, so no snapshot refresh was needed.
+Engine-validated and behavior-verified collection totals remain unmeasured/null.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and semantic loader | Expected exit 1: 1,106 compiled / 1,339 rejected |
+| go test ./pkg/mage/dsl/ron -run TestRONDamageScopeDeclarations -count=1 against baseline | Expected FAIL: missing typed recipient read |
+| go test ./pkg/mage/dsl/ron -run TestRONDamageScope -count=1 | PASS |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; formatting changes reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1: 1,106 compiled / 1,339 rejected; identical diagnostics |
+| Source hashes and accepted-record comparison | PASS, unchanged hashes and zero regressions |
+
+Leading first diagnostics remain rule If (53 records), non-spell CastEffect
+(53), ChooseADamageSource (46), Targeted_Modal (42), self untap HostPermanent
+(39), upkeep HostController (35), other self untap operations (34),
+ControlledByAPlayer (29), TargetGraveyardCard (26),
+WhenAPermanentBecomesTapped (25) and CreateFuturePreventDamage (24).
+These counts are first errors and are not unlock estimates.
+
+Changed files: compiler.go, player_scope.go, modal_spell.go, new damage_scope.go
+and damage_scope_test.go; dsl-reference.md, engine-rules-contracts.md and this
+ledger. No source-data correction occurred. Earlier Gaea's Liege/Fastbond
+questions remain open. No Go definitions, generators, startup code or DSL
+exports were removed; removal gates are not met. No deletion caller audit is
+claimed. No fallback, card-name branch, shared mutable binding, global action
+slot, runtime declaration panic or partial production registry was added.
+
+Ranked next candidates:
+1. Shared simultaneous shield allocation in the engine (CR 615.7), then reassess
+   exact recipient prevention lowering for the seven ready cards. Test split
+   prevention across sources, lifelink/deathtouch, competing replacements,
+   redirection, APNAP, source/recipient identity, phasing and clone isolation.
+2. Explicit-player life: Stream of Life plus the Salve/Potion prerequisite;
+   preserve current event player versus current spell controller contracts.
+3. Collection untap/numeric/supertype prerequisites for Meekstone and Arena of
+   the Ancients; Karakas also benefits from supertype support.
+
+Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
+and native startup validation remain unfinished. This run stops here.

@@ -30,6 +30,7 @@ func compileModalSpell(n Node, ctx scope) (optionFactory, error) {
 		local.playerTarget = nil
 		local.permanentTarget = nil
 		local.spellTarget = nil
+		local.damageTarget = nil
 		plans[i], err = compileActions(body, local)
 		if err != nil {
 			return nil, err

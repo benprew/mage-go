@@ -28,6 +28,7 @@ type instanceBindings struct {
 	permanents map[*permanentTargetPlan]*mage.PermanentTargetBinding
 	players    map[*playerTargetPlan]*mage.PlayerTargetBinding
 	spells     map[*spellTargetPlan]*mage.SpellTargetBinding
+	recipients map[*damageTargetPlan]*mage.DamageTargetBinding
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {

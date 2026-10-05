@@ -1342,3 +1342,22 @@ The action reads the current object through its captured incarnation and moves
 its card to its owner's hand. Phased or departed objects are absent; a returned
 card is a new object. An Aura uses its current attachment, or the last attachment
 of its captured source after departure. It cannot follow a returned source.
+
+## RON typed single damage targets
+
+Symbol `AnyTarget` in the existing single-target `Targeted` form now creates a
+fresh `mage.DeclareDamageTarget` declaration. Symbol `Ref_AnyTarget` in
+`SpellDealsDamage(ThisSpell, value, Ref_AnyTarget)` or
+`PermanentDealsDamage(ThisPermanent, value, Ref_AnyTarget)` reads that instance's
+recipient through `mage.DealDamageFrom`. The engine validates the declaration
+and read together. The recipient can be a player, creature or planeswalker;
+an ordinary land cannot be the target. Values retain the existing fixed/X
+resolution contract.
+
+Spell modes have separate declaration names and bindings. Copies retain their
+mode and can change the recipient through the engine's target service. Target
+legality, permanent incarnation, source LKI, damage replacement and prevention
+remain engine behavior. This adapter also works in existing activation and
+trigger action lists. Numbered references, multiple target groups, target unions
+with other filters, and future prevention remain unsupported shapes. Evidence:
+`TestRONDamageScope*` and the migration ledger's P0-TYPED-DAMAGE-RECIPIENT entry.
