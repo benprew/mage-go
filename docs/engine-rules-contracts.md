@@ -2447,3 +2447,31 @@ Evidence: `TestRandomDiscardCostPayment`, `TestRandomDiscardCostOrderAndBatch`,
 `TestRONRandomDiscardCostModifierAndNestedContext` and
 `TestRONRandomDiscardCostNativeLoadAndInstances`. Existing selected-discard
 batch/replacement tests remain the shared-service evidence.
+
+### RON land-dependent creatures
+
+The RON adapter reuses `CanAttackOnlyIfDefendingPlayerControls`, `ControlsNone`
+and `WhenState`. It adds no engine execution service. The defending-player
+restriction reads current control and land subtype in the two-player combat
+model (CR 508.1c). Phased matching permanents do not satisfy either player's
+condition. Removing source abilities removes its static restriction and stops
+new state triggers. A restriction that becomes false after attack declaration
+does not remove that attacker.
+
+The no-land condition is a state trigger (CR 603.8). It queues once while an
+instance is pending or on the stack, and can trigger again after countering.
+Acquiring a matching permanent before resolution does not cancel it. Its source
+and controller use the existing instance capture contract. A returned source
+cannot be sacrificed by an old trigger (CR 400.7); a phased source is absent
+for sacrifice. Control changes do not transfer an existing trigger's controller.
+A copied sacrifice ability uses its copy controller. Game clones keep pending
+state triggers and their resolution independent.
+
+Evidence: `TestRONLandDependenceCards`, `TestRONLandDependenceStateInstances`,
+`TestRONLandDependenceInactiveSources`, `TestRONLandDependenceNativeAttack`,
+`TestRONLandDependenceSubtypes`, `TestRONLandDependenceCasting`,
+`TestRONLandDependenceOtherAbilities`, `TestRONLandDependenceInvalid` and
+`TestRONLandDependenceReprints` in `pkg/mage/dsl/ron`. Complete RON gameplay
+mappings cover Dandân, Sea Serpent, Pirate Ship, Island Fish Jasconius and
+Vodalian Knights. Seasinger, Merchant Ship and Giant Shark retain other blockers.
+This adapter does not establish general state filters or multiplayer combat.

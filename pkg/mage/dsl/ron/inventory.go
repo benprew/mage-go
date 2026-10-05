@@ -288,6 +288,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "ControlsA" || n.Name == "ControlsNo") && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
+	case "defending_player_condition":
+		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
+			return []string{"player_reference", "static_player_filter"}[index]
+		}
 	case "trigger_condition":
 		if n.Name == "NoPermanentsPassFilter" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "zone"}[index]
@@ -594,6 +598,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "color"
 		}
 	case "permanent_rule_operation":
+		if n.Name == "CantAttackUnlessDefendingPlayer" && len(n.Args) == 1 {
+			return "defending_player_condition"
+		}
 		if (n.Name == "CantBeBlockedExceptByDefenders" || n.Name == "CantBeBlockedByDefenders" || n.Name == "CantBlockAttackers") && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -723,6 +730,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "event":
+		if n.Name == "WhenAPlayerControlsNoPermanents" && len(n.Args) == 2 {
+			return []string{"player_filter", "permanent_filter"}[index]
+		}
 		if n.Name == "WhenAPlayerActivatesAnAbility" && len(n.Args) == 2 {
 			return []string{"player_filter", "activation_event_filter"}[index]
 		}

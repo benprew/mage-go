@@ -11798,3 +11798,174 @@ and new `random_discard_cost_test.go` under `pkg/mage/dsl/ron`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and this ledger.
 Commit hash is reported in the final response. Complete collection gameplay,
 runtime startup, Go-card/generator deletion and unused DSL cleanup remain open.
+
+## 2026-10-05: land-dependent attack restrictions and state triggers
+
+Status: completed `rules.land-dependence` compiler slice. This run stops here.
+The initial `.gitignore` and execution-design edits are user work and are
+excluded from staging. No RON source, engine implementation, Go card definition,
+DSL export, generator or production registry is changed or removed. The removal
+and runtime cutover gates remain unmet.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot and
+ledger; compiler references, filters, static rules, action/factory plans and
+inventory; engine combat restrictions, state conditions, state-trigger arming,
+source instance capture; API/rules contracts and CR 508.1a/c and 603.8. Existing
+source-incarnation and phasing contracts supply CR 400.7 and 702.26 behavior.
+Requirements came from complete RON records, including nested forms, not Go
+card definitions. No removed implementation skill, subagent or Go stub was used.
+
+Initial compiler tests and `make build` passed. The fresh engine short suite
+also passed. Strict and semantic loaders exited 1 for collection rejection:
+**1,439 compiled / 1,006 rejected records**, **505 accepted / 481 rejected unique
+names**, 2,445 records / 986 names. Inventory: 72,938 nodes, 8,530 context
+signatures and 12,172 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| Land dependence (selected) | Dandân, Sea Serpent, Pirate Ship, Island Fish Jasconius, Vodalian Knights, Merchant Ship, Giant Shark; Seasinger has the same state event | 5 unique names / 16 records. Merchant Ship needs an unblocked-attack trigger; Giant Shark needs two damage-history block triggers. Seasinger needs a controller filter and temporary control. | Reusable source attack conditions and state-trigger lowering, with concrete eight-card use. Low adapter effort, medium gameplay/identity test effort; exact engine contracts already exist. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Alabaster Potion, Kei Takahashi, Rakalite, Rasputin Dreamweaver | Allocation prerequisite alone 0; 9 credible gains after adapters. Guardian Angel needs repeatable optional payments, Rakalite delayed return, Rasputin source shields, turn-start history and counter cap. | Shared CR 615.7 simultaneous-packet shield allocation, typed recipients and X. High engine/decision/batch effort plus adapters. |
+| All-zone CDA characteristics | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats, People of the Woods | 5 credible gains with all-zone engine work and count/arithmetic adapters; Gaea's Avenger remains subject to its controller-filter source audit. | Shared characteristic queries in all zones, captured controller context, CDA/set/modify layers. High engine and regression effort, medium adapters. |
+
+Complete records for every candidate name above were inspected. The selected
+state-event spelling also occurs in Jihad and Serendib Djinn; both full records
+were read. Jihad needs entry choices and chosen-color/player scopes. Serendib
+Djinn needs sacrifice-result branching and a general land-type state filter.
+Those forms remain rejected. Seasinger's latent adapter benefit became visible
+in the post-implementation loader comparison; it adds no full-card unlock.
+Reprints count once. The selection gives the strongest credible immediate gain
+for effort. Before editing, the contract, reuse boundary and acceptance cases
+were stated. The two adapters form one complete slice for shared land dependence;
+no second slice was started.
+
+### Exact signatures and reuse boundary
+
+`compileDefendingLandRule(Node, Node, scope) (optionFactory, error)` lowers:
+
+```ron
+PermanentRuleEffect(ThisPermanent, [
+  CantAttackUnlessDefendingPlayer(
+    PlayerPassesFilter(DefendingPlayer, ControlsA(IsLandType(Island))))
+])
+```
+
+Only one operation, the typed source permanent, bare `DefendingPlayer`, and
+`ControlsA/1` are accepted. It reuses
+`mage.Static(mage.CanAttackOnlyIfDefendingPlayerControls(filter))`. Current
+control/subtype and phased absence affect attack legality. The nonactive player
+is the defending player in this engine. Ability removal stops the restriction;
+later rule changes do not remove an already declared attacker.
+
+`compileNoLandTrigger(Node, Node, scope) (optionFactory, error)` lowers
+`TriggerA(WhenAPlayerControlsNoPermanents(SinglePlayer(You),
+IsLandType(Island)), actions)` to `mage.WhenState(mage.ControlsNone(filter),
+sequence)`, with targets from the existing action plan. `SinglePlayer/1` must
+contain bare `You`. The current controller supplies the state condition. The
+pending instance keeps its source incarnation and trigger controller. There is
+no event-player/permanent binding and no intervening-if resolution check.
+A later matching permanent does not cancel the queued sacrifice. Pending/stack
+instances suppress repeated state triggers; a countered instance can rearm.
+
+Both adapters use `compileLandDependenceFilter(Node) (mage.PermanentFilter,
+error)`: `IsLandType/1` with bare Plains, Island, Swamp, Mountain, Forest or
+Desert. Other predicates, subtype names, tuple operands, Aura hosts, chosen
+players, opponent state conditions, inverse attack conditions, multi-operation
+lists and unbound event reads remain rejected in these contexts. Other existing
+compiler filter contexts keep their behavior.
+
+RON owns spelling, arity, context validation, inventory roles and lowering.
+The engine owns legality, continuous layers, phasing, current control, state
+arming/APNAP, transactional payment, source identity, sacrifice, pending/stack
+copying and clones. Existing `compilePermanentRef`, `compileFilter`,
+`compileActions`, per-factory `plan.build`, `TriggerA`, and engine source capture
+are reused. Factories build separate abilities and targets. No game-time
+panics, global last-action state, card-name branches, skipped rules or Go
+fallback are introduced. No engine prerequisite was missing. No new LKI,
+replacement-order or simultaneous-zone service is claimed.
+
+### TDD and gameplay mappings
+
+The first focused tests failed with `unsupported self untap operations ()` for
+all five complete cards and all 16 reprints. Invalid declarations already
+remained rejected. After adapters, the tests exposed fixture assumptions:
+activation indexes include static/trigger abilities; an untapped Island can
+autopay blue mana; control effects must be applied before checking their new
+controller. A later synthetic creature fixture required `CardPT`. These test
+fixtures were corrected without weakening contract assertions. A helper name
+mistake briefly caused a compiler build error during implementation; no
+environment failure is claimed.
+
+| Card/context | Test evidence |
+| --- | --- |
+| All five complete records | `TestRONLandDependenceCards`: own versus defending land, nonbasic Tropical Island, control change, phase cycle, clone isolation, ability removal/restoration, no-land state queue deduplication, sacrifice to owner, condition changes before resolution. |
+| Dandân source/state contract shared by all five | `TestRONLandDependenceStateInstances`: active-trigger suppression, counter rearming, control change after triggering, returned incarnation, phased source, copied trigger with another controller, clone resolution, two factory instances. `TestRONLandDependenceInactiveSources`: phased/abilityless sources and current-controller checks. |
+| Dandân combat declaration shared restriction | `TestRONLandDependenceNativeAttack`: native illegal/valid declaration, illegal attack does not tap, loss of defender Island after declaration does not remove attacker. |
+| Pirate Ship | `TestRONLandDependenceOtherAbilities`: real RON activated damage to opponent and tap-cost payment. |
+| Vodalian Knights | `TestRONLandDependenceOtherAbilities`: printed first strike, unpaid mana rollback, flying activation and cleanup expiry. Existing shared temporary-keyword/payment tests cover other target/source interactions. |
+| Island Fish Jasconius | `TestRONLandDependenceOtherAbilities`: does not untap during untap step, controller-upkeep optional blue payment and untap. Existing optional-payment and source-reference contracts remain in use. |
+| All five complete records | `TestRONLandDependenceCasting`: failed payment preserves hand/stack, successful paid creature cast/entry. `TestRONLandDependenceReprints`: all 16 reprints strictly load into an isolated fixture registry, merge to five names, engine definition validation and independent factory instances; inventory nested role evidence. This is not a partial production registry or collection-startup claim. |
+| Full supported subtype shape | `TestRONLandDependenceSubtypes`: Plains, Island, Swamp, Mountain, Forest, Desert; correct player, pure attack checks and no-land sacrifice through the engine. |
+| Invalid declarations | `TestRONLandDependenceInvalid`: kinds/arity, wrong source/player, unbound event reference, unsupported filter/subtype, empty control filter and multiple operations. |
+
+Compilation progress and gameplay coverage remain separate. These tests add five
+complete-record gameplay mappings; they do not claim complete collection
+behavior. Retained accepted-card gameplay tests still run.
+
+### Validation and measured gain
+
+Actual gain matches the estimate: **5 unique names / 16 records**. Fresh strict
+and semantic loaders report **1,455 compiled / 990 rejected records**, **510
+accepted / 476 rejected unique names**. Only those five names disappear from
+rejections. Merchant Ship advances to
+`unsupported trigger (WhenACreatureAttacksAndIsntBlocked)`, Giant Shark to
+`unsupported trigger (WhenACreatureBlocksACreature)`, and Seasinger to
+`unsupported permanent target controller (ControlsA)`. All other diagnostics
+are unchanged; no previously accepted record regresses.
+
+Semantic inventory stays at 72,938 nodes / 8,530 signatures, with unknown-role
+occurrences reduced from 12,172 to **12,030** by role reporting. Source hashes
+match the pre-run inventory and vocabulary snapshot. No RON source changes,
+vocabulary refresh or data-defect correction are needed. Collection-wide
+`engine_validated` and `behavior_verified` remain null. Gaea's Avenger remains
+an explicit candidate source-data concern, not a corrected/verified card.
+
+The first broad runs failed only on two stale inventory expected counts. They
+were updated from the measured 1,439/1,006 to 1,455/990; assertions retain exact
+counts. Final required checks are recorded below after their completion.
+
+Ranked next candidates to reassess:
+1. Finite recipient-prevention allocation prerequisite and its nine ready
+   consumers; substantial shared engine benefit.
+2. Typed source combat events: inspect Cave People, Hasran Ogress, Merchant Ship,
+   Murk Dwellers, Mindstab Thrull, Necrite, Floral Spuzzem, Farrel's Mantle and
+   Farrel's Zealot for self attack/unblocked bindings and nested blockers.
+3. All-zone CDA characteristics for the six candidate names above; resolve the
+   Avenger source audit before gameplay claims.
+
+Slice files: new `land_dependence.go` and `land_dependence_test.go`,
+`filtered_blocking.go`, `triggers.go`, `inventory.go` and `inventory_test.go`
+under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No DSL deletion is attempted
+without its required caller/removal-gate audit. Complete collection gameplay,
+startup, Go-card/generator deletion and unused DSL cleanup remain open.
+
+Final checks for this slice:
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'Test(RONLandDependence\|Inventory)' -count=1` | PASS after expected TDD failures and fixture corrections. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after exact inventory-count update. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on final implementation. |
+| `make test` | PASS on final implementation. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic formatting reviewed; final tests/build/vet rerun afterward. |
+| `git diff --check` | PASS before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,455 compiled / 990 rejected; no production registry published. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: matching strict counts/issues; unchanged source hashes. |
+
+No environmental or pre-existing check failure blocks the commit. Commit hash
+is reported in the final response. This slice is complete; no further capability
+work is started in this run.

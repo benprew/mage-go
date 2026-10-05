@@ -2340,3 +2340,24 @@ Complete-record mappings: Coral Helm and Draconian Cylix in
 `TestRONRandomDiscardCosts` and `TestRONRandomDiscardCostNativeLoadAndInstances`.
 The latter loads a strict native fixture collection; production cutover remains
 pending complete collection support.
+
+### RON land dependence
+
+`PermanentRuleEffect(ThisPermanent, [CantAttackUnlessDefendingPlayer(
+PlayerPassesFilter(DefendingPlayer, ControlsA(IsLandType(Island))))])` uses
+`Static(CanAttackOnlyIfDefendingPlayerControls(filter))`. In this two-player
+engine, the nonactive player is the defender. The rule checks current subtype
+and control for attack legality; it does not remove a declared attacker.
+
+`TriggerA(WhenAPlayerControlsNoPermanents(SinglePlayer(You),
+IsLandType(Island)), actions)` uses `WhenState(ControlsNone(filter), actions)`.
+The condition uses the current source controller. Once triggered, the ability
+resolves even if that player acquires a matching permanent. This is a state
+trigger, with no intervening-if check and no event-player binding.
+
+These forms accept `IsLandType` with Plains, Island, Swamp, Mountain, Forest or
+Desert. The attack rule accepts only the source, one operation, `DefendingPlayer`
+and `ControlsA`. The state event accepts only `SinglePlayer(You)`. Actions and
+targets use the existing action compiler and fresh factory declarations.
+Other filters, chosen players, Aura hosts and inverse attack conditions remain
+unsupported in these contexts. The entire collection still fails strict loading.
