@@ -20,7 +20,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
-	case "WhenACreatureBlocksACreature", "WhenACreatureBecomesBlockedByACreature":
+	case "Or", "WhenACreatureBlocksACreature", "WhenACreatureBecomesBlockedByACreature":
 		return compileCombatPairTrigger(trigger, n.Args[1], ctx)
 	case "WhenACreatureAttacks", "WhenACreatureAttacksAndIsntBlocked":
 		return compileSourceAttackTrigger(trigger, n.Args[1], ctx)

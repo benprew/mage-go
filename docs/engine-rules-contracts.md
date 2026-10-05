@@ -2543,30 +2543,54 @@ independent X and target frames, captured event players, nesting, countered
 triggers, all-illegal original targets, and invalid declarations. Event spell
 bindings are not captured by the engine and are rejected in delayed RON bodies.
 
-## RON directional combat-pair capture
+## Filtered source and attachment combat-pair capture
 
-The RON compiler lowers source-only `WhenACreatureBlocksACreature` and
-`WhenACreatureBecomesBlockedByACreature` to the existing `BlocksCreature(This)`
-and `BecomesBlockedBy(This)` patterns. Their `WithOpponent` and `WithBlocker`
-bindings save each opposing incarnation at detection. Optional `WithoutSubtype`
-checks apply at the event (CR 509.3b, 509.3d, 509.3f). The body and a later
-`AtNext(EachEndOfCombat, ...)` action use that captured identity, without a new
-target or another subtype check (CR 603.7c). Departure of the ability's source
-does not cancel the pending or delayed ability. Destruction still permits
-regeneration, and phased-out or returned subjects keep their existing action
-legality contracts. No event generation, LKI, payment, replacement order, or
-simultaneous-operation service is changed.
+`BlocksCreatureMatching(subject PermanentRef, filter PermanentFilter)`,
+`BecomesBlockedByCreatureMatching(subject PermanentRef, filter PermanentFilter)`
+and `BlocksOrBecomesBlockedByCreatureMatching(subject PermanentRef, filter
+PermanentFilter)` return event patterns with `WithOpponent(*PermanentBinding)`.
+Subjects are `This` or `AttachedPermanent`; other references, nil/empty captures
+and repeated captures fail definition validation. Existing patterns retain their
+API. A zero-value filter follows the existing match-all filter contract, while
+both event creatures must still be present, phased in and creatures.
 
-`TestRONCombatPairNative` covers complete Cockatrice and Thicket Basilisk RON
-records in both combat directions, Wall exclusions, combat damage, and end of
-combat destruction. `Identity` covers source departure and ability removal,
-opponent return/phasing/control/subtype changes, regeneration, stack copying
-and clone isolation. `IndependentOpponents` and `FactoryBindings` cover multiple
-captured events and fresh factory bindings. `Casting` covers both complete
-records' costs, metadata, flying and failed-payment rollback. `FilterShapes`
-covers both event directions with the bare creature filter, one-element `And`
-and an excluded Goblin subtype. `Invalid` rejects incompatible, unbound and
-out-of-scope declarations. These names have the prefix `TestRONCombatPair`.
+Each pattern checks the matching direction, subject identity and opponent filter
+at detection (CR 509.3b/d/f). Attachment lookup uses the current source and host
+incarnations. Explicit event incarnations, when supplied, must match the live
+objects. The filter is a pure query. It is not a target restriction or an
+intervening-if condition. Shroud does not stop these untargeted triggers.
+`WithOpponent` declares a typed producer and captures the exact opposing
+incarnation before stack placement. Pending events, copied triggers and delayed
+frames keep independent values. Later attachment or characteristic changes do
+not recheck the event condition (CR 608.2k, 603.7c). Departure of the source does
+not cancel pending or delayed abilities. Ordinary destruction still permits
+regeneration and honors indestructibility. Return invalidates the captured
+identity; phasing preserves it but prevents actions while phased out.
+
+`TestCombatPairMatchingEngine` covers source/host and all three directions with
+attachment movement, source departure, opponent return, phasing, control/color
+changes, copying, regeneration and clone isolation. `Declarations` rejects invalid
+subjects/captures; `Detection` covers color unions (including multicolor), Wall
+exclusion, noncreatures, wrong direction/host, stale incarnations, source/host/
+opponent phasing, source departure, ability removal and Aura-controller ownership.
+These names have the prefix `TestCombatPairMatching`.
+
+`TestRONCombatPairExtendedRealCards` covers complete Abomination and Venom RON
+records in both combat directions, all color/Wall combinations, combat damage
+and end-of-combat destruction. `Identity` covers saved opponents through stack
+copies, pending clones, attachment changes, source departure, return, phasing,
+color/Wall/control changes, regeneration and indestructibility. `Casting`
+covers both costs and characteristics, Aura attachment/legality and rollback.
+`IndependentEvents` checks two factory instances, two events each, multicolor
+opponents, shroud and clone isolation. `Invalid` checks union shape, lexical
+bindings and unsupported filters; `Inventory` checks nested event/filter/reference
+roles under an unsupported body. These names have the prefix
+`TestRONCombatPairExtended`. The existing `TestRONCombatPair*` suite retains
+Cockatrice and Thicket Basilisk coverage for the shared compiler path.
+
+No new LKI read, cost service, replacement ordering, simultaneous-operation or
+combat event generation is introduced. This adapter does not support history
+filters, group unions or conditional destruction results.
 
 ## RON indefinite resolving type changes
 

@@ -13092,3 +13092,178 @@ Slice files: `pkg/mage/dsl/ron/numbered_targets.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
 and this ledger. Stage only these nine files. The descriptive commit hash is
 reported in the final response. This run stops after this slice.
+
+## 2026-10-05: filtered source/host combat pairs and symmetric event unions
+
+Status: completed `events.filtered-combat-pair` slice. This run stops here.
+The initial user changes to `.gitignore` and the execution design are preserved
+and excluded from the slice commit.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+ledger, complete candidate RON records and nested expressions, compiler scopes,
+combat patterns, event capture, definition validation, attachment services,
+relevant API/rules contracts, and CR 400.7, 509.3b/d/f, 603.3, 603.7 and 608.2k.
+Applied the implement-engine skill to the shared engine gap. No subagents,
+removed card/set skills, Go card requirements, stubs or fallbacks were used.
+Baseline focused RON tests, short engine tests and build passed. The loader
+exited 1 for collection rejection: 2,445 records / 986 names; 1,484 compiled /
+961 rejected records; 529 accepted / 457 rejected names. Semantic inventory:
+72,938 nodes, 8,530 signatures, 11,059 unknown-role occurrences.
+
+| Candidate | Distinct affected card names | Estimated complete-card gains and remaining blockers | Downstream capabilities and implementation/test effort |
+| --- | --- | --- | --- |
+| Filtered source/host combat pairs and symmetric unions, selected | Abomination, Venom, Infinite Authority; related remaining forms on Giant Shark, Infernal Medusa, Wall of Dust, Aisling Leprechaun | 2 names / 2 records: Abomination and Venom. Infinite Authority still needs toughness filters, destruction success results and nested delayed bindings. Shark needs damage history. Medusa and Wall need separate reference/source audits; Wall also needs next-turn duration. Leprechaun needs indefinite color addition. | Shared current-host detection, event-time filters and per-opponent union captures. Small engine extension and adapters; moderate declaration, native combat, identity, clone and cost test effort. Existing capture/delay/destruction services are ready. |
+| Finite recipient prevention shields | Samite Healer, Healing Salve, Conservator, Alabaster Potion | At least 4 credible gains from these fully inspected records. Optional activation modes and later player effects on other shield cards are separate blockers and are not included in this estimate. | Shared finite allocation across damage packets, typed recipient identity and prevention adapters. Higher engine/test effort: allocation, competing replacements, shield exhaustion, expiry, X and modes. |
+| All-zone CDA values | Dakkon Blackblade, Nightmare, Keldon Warlord, Plague Rats, People of the Woods, Gaea's Avenger, Wood Elemental | 5 credible gains. Avenger has an independent controller source concern; Wood needs entry-sacrifice results. Named and controller-aware count adapters must work in the CDA context. | Reusable characteristic queries in every zone and CDA layers. High engine/regression effort plus adapters; must verify zone transitions, controller/owner contexts, copy values and layer ordering. |
+
+Selection rationale and acceptance cases were stated before editing. The
+selected slice offers two complete cards and a concrete host/union prerequisite
+for later multi-card work at lower cost than prevention or all-zone CDA services.
+Counts use unique names, not first-error frequencies or reprints. Filter and host
+support required an engine extension; spelling, union validation and lexical
+bindings remain in `ron`. No selected data defect or environment failure was
+found. Known source concerns were not silently repaired.
+
+### Exact supported signatures, contexts and reuse
+
+`compileCombatPairTrigger(event, body Node, ctx scope) (optionFactory, error)`
+supports both two-argument directional events in `TriggerA`. Subjects are
+`SinglePermanent(ThisPermanent)` and, in Aura scope,
+`SinglePermanent(HostPermanent)`. The body uses existing resolving actions and
+supported delayed actions; complete-card tests use `ActionList`.
+
+`compileCombatPairFilter(n Node) (mage.PermanentFilter, error)` accepts bare
+`IsCardtype(Creature)` or `And([conditions...])` with exactly one such creature
+condition. Optional conditions are one `IsNonCreatureType(creatureSubtype)` and
+one `IsColor(color)` or nonempty `Or([IsColor(color), ...])`. Subtypes and colors
+are validated. Top-level condition order is unrestricted. Other types, numeric,
+history, controller and nested-conjunction forms stay unsupported.
+
+The event-level `Or([blockingEvent, blockedByEvent])` accepts exactly one of each
+direction in either order. Both branches must have identical position-free
+subject/filter declarations. Arbitrary or unequal unions are rejected. The
+union has only `Trigger_ThatOtherCreature`; separate blocking and blocked-by
+rules retain `Trigger_ThatOtherCreature` and `Trigger_TheBlockingCreature`.
+Each is a typed `permanentEventPlan` local to its body, built as a fresh
+`PermanentBinding` in each factory call. No game state is held in the plan.
+
+Engine signatures:
+
+- `BlocksCreatureMatching(subject PermanentRef, filter PermanentFilter) filteredCombatPairPattern`
+- `BecomesBlockedByCreatureMatching(subject PermanentRef, filter PermanentFilter) filteredCombatPairPattern`
+- `BlocksOrBecomesBlockedByCreatureMatching(subject PermanentRef, filter PermanentFilter) filteredCombatPairPattern`
+- `(filteredCombatPairPattern).WithOpponent(*PermanentBinding) filteredCombatPairPattern`
+
+These use existing `EvtDeclaredBlocker`, `EvtCreatureBlockedBy`, `EvtCombatPair`,
+`PermanentRef`, immutable filters, definition producers, `eventPermanentCapture`,
+trigger stacking, delayed frames and `Destroy`. Existing source-only APIs and
+callers remain available. Engine subjects are restricted to `This` and
+`AttachedPermanent`; invalid subjects and captures fail definition validation.
+The existing zero-value filter means match all, but both event creatures must
+still be present and phased in. Explicit supplied event incarnations are checked.
+
+Event filters run only at detection. Current attachment lookup checks the host
+incarnation; later attachment/color/subtype/control changes do not redirect the
+opponent or recheck the filter. Bindings survive source departure, pending
+clones and copied triggers. Actions cannot follow a returned opponent or act on
+a phased-out opponent. Regeneration and indestructibility use ordinary engine
+destruction. These are untargeted events; shroud does not stop them. No new LKI
+read, payment, replacement ordering, simultaneous-operation or event-generation
+contract is introduced. Existing transactional casting and scheduling services
+remain responsible for those rules.
+
+Inventory now preserves the `event` role under `Or/1`, including unsupported
+parent/body forms. Descendant subjects, colors and references keep their roles.
+Reporting does not claim compiler or gameplay support for arbitrary unions.
+
+### TDD and card-to-test mappings
+
+The initial RON test fixture used a nonexistent color option. It was corrected
+before observing the intended failures: Abomination rejected the `Or` color
+filter and Venom rejected the event union. Engine tests then failed for the three
+missing matching APIs. A nonexistent synthetic color-effect helper was repaired
+before confirming those API failures. After implementation, definition validation
+exposed the missing producer declaration; this was fixed in the event pattern.
+The nested inventory test failed with `HostPermanent` role `unknown` before its
+role adapter was added. Tests retain strict invalid-declaration assertions.
+
+A later synthetic Aura shape omitted its required enchant rule; the first broad
+checks failed on that fixture. The fixture now has the complete declaration.
+Focused and broad checks were rerun successfully. These were local test-fixture
+failures, not environment or pre-existing failures, and no assertion was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Abomination | `TestRONCombatPairExtendedRealCards`: complete LEG record; both event directions, green/white/blue/colorless opponents and Walls, normal combat damage, destruction only at end of combat. `Casting`: 3BB, 2/6 Horror and payment rollback. |
+| Venom | `TestRONCombatPairExtendedRealCards`: complete DRK record; host in both directions, every tested color and Wall exclusion, combat timing and delayed destruction. `Casting`: 1GG, creature enchantment, attachment, illegal land target and rollback. |
+| Both full cards | `Identity`: source departure, attachment movement, opponent return/phasing/phase cycle, color/Wall/control changes, indestructibility, regeneration, copied triggers and cloned pending stacks. `IndependentEvents`: two factories, two events each, multicolor and shroud, separate opponent captures and clone isolation. |
+| Every supported compiler shape | `TestRONCombatPairExtendedShapes`: source/host, both directions, both union orders, bare creature, single-color, color union, combined color/subtype and reordered conditions. Real engine resolution reads the expected binding. |
+| Invalid declarations and inventory | `TestRONCombatPairExtendedInvalid`: union counts/directions/list shapes, unequal subjects/filters, malformed refs, invalid colors, empty/noncolor unions, duplicate color conditions, history rejection and lexical leakage. `Inventory`: nested roles under a rejected body. Existing `TestRONCombatPairInvalid` keeps non-Aura hosts and other invalid forms rejected. |
+| Reusable engine contract | `TestCombatPairMatchingEngine`: three patterns × source/host × ten identity/timing/copy scenarios. `Declarations`: nil/saved subjects, nil/empty/duplicate captures. `Detection`: colors, multicolor, Wall/noncreature exclusion, stale incarnations, wrong subject/direction, source/host/opponent phasing, departure, ability removal and correct Aura-controller ownership. |
+| Accepted-card regressions | Existing `TestRONCombatPair*` retains complete Cockatrice and Thicket Basilisk gameplay, independent captures, factory isolation, costs and declaration tests on the shared compiler path. |
+
+Two complete-card behavior mappings are added. Collection compilation and
+collection-wide gameplay remain separate; reporting validation/behavior fields
+stay null. No complete-gameplay claim is made for the other 455 rejected names.
+
+### Fresh results and validation
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly
+Abomination and Venom. There are no accepted-name regressions. Strict/semantic
+loaders report **1,486 compiled / 959 rejected records**, **531 accepted / 455
+rejected names**. Nodes/signatures stay **72,938 / 8,530**; unknown-role occurrences
+fall to **11,019**. All 12 RON file hashes are unchanged; no source or vocabulary
+snapshot refresh is required. Loading exits 1 and installs no partial registry.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine tests and `make build` | PASS. |
+| `go test ./pkg/mage -run TestCombatPairMatching -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after the complete synthetic Aura declaration was added. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on the corrected final tests. |
+| `go test ./... -short -count=1` | PASS; implement-engine skill verification. |
+| `make test` | PASS on the corrected final tests. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | Initial run reported fixture preallocation and conflicting automatic boolean edits. Added capacity and normalized union direction explicitly. Final run PASS, zero issues; formatting/import edits reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for collection rejection: 1,486 compiled / 959 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same counts/issues, 455 rejected names, 11,019 unknown-role occurrences, unchanged source hashes. |
+
+After lint, focused tests, short engine and whole-repository tests, `make test`,
+build and vet were rerun. No unrelated automatic edits were retained. There is
+no environment or pre-existing validation blocker.
+
+Remaining combat diagnostics include Giant Shark's `WasDealtDamageThisTurn`,
+Infernal Medusa and Wall of Dust's `Trigger_ThatOtherPermanent`, and Infinite
+Authority's `ToughnessIs`. The latter now passes its union declaration and reaches
+its actual next filter gap. Other collection blockers include Samite Healer's
+`CreateFuturePreventDamage` and Dakkon Blackblade's `CDA_Power`. No source defects
+were corrected. Gaea's Avenger, Infernal Medusa and Winter Blast concerns remain
+explicit, separate source-audit work.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient prevention allocation: at least four credible full-card
+   gains from Samite Healer, Healing Salve, Conservator and Alabaster Potion,
+   with concrete further shield consumers after modes/player-effect prerequisites.
+2. All-zone CDA values: five credible immediate gains after the shared engine
+   contract, keeping Avenger's source audit and Wood's entry results separate.
+3. Plural collection keyword/damage/destruction operations: numbered target
+   bindings are ready, but full-card gains depend on actual results, activation X
+   and the Winter Blast source audit. Reassess those dependencies before selecting.
+
+Complete loading, all-card gameplay and startup wiring still do not meet the
+Go-definition/generator removal gates. No DSL functions were removed and no
+fresh caller audit was used to authorize deletion. Cutover authoring instructions
+remain deferred to cutover. API/rules documentation describes only this slice's
+established behavior.
+
+Slice files: `pkg/mage/combat_pair_matching.go`, `combat_pair_matching_test.go`,
+`doc.go`; `pkg/mage/dsl/ron/combat_pair.go`, `combat_pair_extended_test.go`,
+`triggers.go`, `inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger. Stage only these eleven files.
+The descriptive commit hash is reported in the final response. Do not start
+another slice in this run.

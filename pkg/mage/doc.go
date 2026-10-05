@@ -213,6 +213,12 @@
 // remains separate from departure information. These reads do not permit actions
 // on absent objects. The existing live-only queries keep their behavior.
 //
+// Use [BlocksCreatureMatching], [BecomesBlockedByCreatureMatching], and
+// [BlocksOrBecomesBlockedByCreatureMatching] for creature pair events.
+// Supply [This] or [AttachedPermanent] and a permanent filter. WithOpponent
+// saves the opposing incarnation before trigger placement. Later attachment
+// and characteristic changes do not change that saved object.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

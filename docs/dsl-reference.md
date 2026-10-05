@@ -2403,28 +2403,39 @@ an explicit scheduling contract. `AtNextEndOfCombatThisTurn` is distinct from
 `AtTheNextEndOfCombat` and remains unsupported. This adapter does not add casting
 restrictions, combat events, choices, histories, links, or finite prevention.
 
-### RON directional combat-pair triggers
+### RON combat-pair triggers
 
 `TriggerA` accepts `WhenACreatureBlocksACreature(subject, filter)` and
-`WhenACreatureBecomesBlockedByACreature(subject, filter)` with exactly
-`SinglePermanent(ThisPermanent)` as the subject. The filter is
-`IsCardtype(Creature)` or `And([IsCardtype(Creature),
-IsNonCreatureType(subtype)])`, in either order. A one-element `And` is also
-valid. The excluded subtype must pass creature-family validation. Duplicate
-filters, other types, color/history filters and Aura subjects remain errors.
+`WhenACreatureBecomesBlockedByACreature(subject, filter)` with
+`SinglePermanent(ThisPermanent)` or, in an Aura, `SinglePermanent(HostPermanent)`.
+The filter is `IsCardtype(Creature)` or a one-argument `And` list containing it
+exactly once, optionally with one `IsNonCreatureType(subtype)` and one color
+condition. The color condition is `IsColor(color)` or a nonempty
+`Or([IsColor(color), ...])`. Each subtype must pass creature-family validation.
+Other type, history, numeric, controller and nested conjunction forms remain
+unsupported. Duplicate top-level conditions are errors.
+
+An event union is exactly `Or([blockingEvent, blockedByEvent])`, in either order.
+Both branches must have the same position-free subject and filter declarations.
+It lowers to the engine's per-opponent combat-pair event, not two abilities or a
+once-per-combat group. Arbitrary unions and unequal branch declarations remain
+errors. Inventory walks nested events even in unsupported unions.
 
 The blocking event provides `Trigger_ThatOtherCreature`; the blocked-by event
-provides `Trigger_TheBlockingCreature`. Each is a typed event binding available
-only in that body's lexical scope, including supported delayed step actions.
-They lower to `BlocksCreature(This).WithOpponent(binding)` and
-`BecomesBlockedBy(This).WithBlocker(binding)`, with `WithoutSubtype` when needed.
-Each factory builds its own binding. Each detected event saves the opposing
-creature's incarnation before trigger placement. The action body does not
-recheck the event filter, and it cannot follow a returned card.
+provides `Trigger_TheBlockingCreature`; the union provides only
+`Trigger_ThatOtherCreature`. Each is a typed event binding available only in its
+body, including supported delayed step actions. Each factory builds a fresh
+binding. The matching engine patterns save the opposing incarnation at detection.
+Aura events read the current attachment at detection. Later attachment, color,
+subtype or controller changes do not recheck filters or redirect the saved object.
+Departure of the source does not end pending or delayed abilities. A returned
+opponent is a new object; a phased-out opponent cannot be destroyed.
 
-These are per-creature pair events, not once-per-combat block transitions.
-`WhenACreatureBlocks`, event unions, host subjects and the other event-reference
-spellings require separate adapters. No collection record is partially installed.
+The compiler uses `BlocksCreatureMatching`, `BecomesBlockedByCreatureMatching`,
+and `BlocksOrBecomesBlockedByCreatureMatching` with a typed source/host reference,
+immutable `PermanentFilter`, and `WithOpponent(binding)`. Previous source-only
+engine patterns remain available. `WhenACreatureBlocks`, group events and other
+event-reference spellings still require separate adapters.
 
 ### RON indefinite type changes
 
