@@ -4377,3 +4377,147 @@ Ranked next candidates:
 
 Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
 and native startup validation remain unfinished. This run stops here.
+
+## Run 2026-10-04: P7-TARGETED-TEMPORARY-UNBLOCKABILITY
+
+Status: complete one supported targeted rule shape, with its fixed-power filter
+prerequisite. This run stops here. Initial user changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from staging.
+No unrelated untracked files existed. No delegation or removed skills were used.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot and
+ledger. Read selected compiler, typed permanent references, inventory, engine
+filters/continuous modifications/combat tests and relevant API/rules contracts.
+Used the fresh positioned AST inventory for nested forms and distinct names,
+then read complete RON records, including all six Dwarven Warriors reprints.
+No Go card definitions were used as requirements.
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed. Strict and
+semantic loaders exited 1 as expected: 1,106 compiled, 1,339 rejected records;
+373 accepted and 613 rejected unique names. This was collection rejection, not
+an environment/build failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream gain, effort |
+| --- | --- | ---: | --- |
+| Fixed-power targeting plus temporary unblockability, selected | Dwarven Warriors; Tawnos's Wand; Meekstone; Amrou Kithkin; Brassclaw Orcs; Ironclaw Orcs; Orcish Veteran; Orgg; Lesser Werewolf; Old Man of the Sea; Drop of Honey. Same CantBeBlocked operation also occurs in Teleport and Sewers of Estark. | 2 / 7 records | Warriors/Wand are otherwise ready. Meekstone needs collection untap rules; Kithkin/Orcs/Veteran/Orgg need static combat rules; Werewolf needs combat filters, conditions and counters; Old Man needs dynamic power/control durations; Drop needs minimum values, choice destruction and state triggers. Teleport needs casting restrictions; Sewers needs conditions and prevention. Two small compiler adapters with moderate target/lifecycle/gameplay tests. |
+| Supertype permanent filter | Karakas; Livonya Silone; Arena of the Ancients; Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel; Willow Satyr; Gaea's Touch; Goblin Caves; Goblin Shrine; Land Tax; Untamed Wilds | 1 | Karakas is otherwise ready. Livonya needs separate landwalk lowering; Arena needs collection tap/untap; five lands need controlled-player filters and bands-with-other grants; remaining cards need control durations, choices, conditions, search or intervening-if. Small filter adapter with moderate legality tests; useful downstream multi-card prerequisite. |
+| Explicit-player life | Stream of Life; Healing Salve; Alabaster Potion; Relic Bind; Spiritual Sanctuary; Swords to Plowshares; Crumble; Personal Incarnation; Nafs Asp; Psychic Purge; Shahrazad | 1 | Stream is ready. Salve/Potion need prevention; Relic needs tapped-host event, modes, opponent filter and union targets; Sanctuary needs intervening-if; Swords/Crumble need snapshots/zone actions; others need event, delayed, source-zone or subgame services. Small adapter with moderate player/X/copy tests. |
+| Shared simultaneous prevention allocation prerequisite | Samite Healer; Conservator; Amulet of Kroog; Argivian Blacksmith; Combat Medic; Oasis; Kei Takahashi; Healing Salve; Alabaster Potion; Balm of Restoration; Rakalite; Guardian Angel | 0 immediately; 7 after adapter | Prior ledger gives seven otherwise-ready records' unique names (17 records). Salve/Potion also need life; Balm activation modes; Rakalite delayed triggers; Guardian player payment actions. CR 615.7 source allocation needs a reusable engine contract and substantial damage/replacement/choice tests. Higher total benefit, materially larger effort than the selected pair. |
+
+Selection: the selected slice gives the largest credible immediate unique-card
+gain among the small ready adapters, and also establishes fixed numeric filters
+for several later combat/untap cards. It reuses an already tested engine blocking
+restriction. The larger prevention prerequisite remains valuable; it was not
+silently bypassed. First-error counts were not treated as unlock estimates.
+Contract, reuse boundary and acceptance cases were stated before production edits.
+
+### Exact shapes, contexts and reuse boundary
+
+- `compileFixedPowerFilter(Node) (mage.PermanentFilter, error)` accepts
+  `PowerIs(LessThanOrEqualTo(Integer(n)))`,
+  `PowerIs(GreaterThanOrEqualTo(Integer(n)))` and `PowerIs(EqualTo(Integer(n)))`.
+  Signed integer constants are allowed. Lowering uses `HasPowerLTE`,
+  `HasPowerGTE`, `HasPowerEqual`; each query reads current layered power.
+  These are permanent filters, including nested And/Or in supported contexts.
+  Dynamic values, other comparisons, malformed tuples and bare integers reject.
+- `compileTemporaryBlocking(Node, scope) (effectFactory, error)` accepts only
+  `CreatePermanentRuleEffectUntil(Ref_TargetPermanent, [CantBeBlocked],
+  UntilEndOfTurn)` with a declared permanent target in resolving action lists.
+  Supported spell, choose-one mode, activation and trigger contexts share the
+  adapter. Source/host/result references, other operations, mixed operation
+  lists and other durations remain rejected. It uses `compilePermanentRef`,
+  per-instance bindings and `Until(EndOfTurn, CantBeBlocked(typedTarget))`.
+- Inventory now assigns the rule subject/operation/duration roles and nested
+  power comparison/value roles. Role reporting does not claim gameplay support.
+
+RON owns syntax, declaration validation and scope; mage retains all reusable
+rules. Existing definition validation, target selection/rechecks, transactional
+costs, source LKI, incarnation capture, phasing, combat rules, cleanup, ability
+copying and clone services are reused. No engine behavior or public API changed.
+Rules read: CR 400.7, 601.2c, 608.2b/h, 611.2c, 514.2 and 702.26b-f.
+No new replacement, choice or simultaneous-operation behavior is introduced.
+No comments were added to code. API and rules-contract docs describe only the
+supported shapes and tested reuse.
+
+### Card-to-test mapping and TDD
+
+| Card/contract | Evidence |
+| --- | --- |
+| Dwarven Warriors, LEA/LEB/2ED/3ED/CED/CEI | TestRONTemporaryBlockingRealCards: complete records, definition validation, tap payment, either player's power-two creature, stack timing, clone isolation and cleanup |
+| Tawnos's Wand, ATQ | Same real-card test plus mana payment; all gameplay contract tests below use its complete RON record |
+| Target rechecks and captured lifetime | TestRONTemporaryBlockingLegality: power before/after resolution, target departure/return before/after resolution, phased target, phase cycle, departed source, control change and ability removal |
+| Payment/legality rollback | TestRONTemporaryBlockingRollback: insufficient mana, power-three target, noncreature, phased target, shroud and Dwarven Warriors summoning sickness; tap, pool and stack remain unchanged |
+| Typed identity/copies | TestRONTemporaryBlockingCopiesAndBindings: fresh factory declarations, definition rejection without target declaration, independently retargeted ability copy and original |
+| Phasing/source/expiry | TestRONTemporaryBlockingPhaseAndSourceLifetime: source departure after resolution, target phase cycle, later blockers and cleanup while phased |
+| Enclosing contexts | TestRONTemporaryBlockingSpellAndTriggerContexts: synthetic spell, choose-one mode and entry trigger, target placement and resolution timing |
+| Numeric predicate | TestRONFixedPowerFilters: all three comparisons, signed bounds and changing current power from layers |
+| Invalid declarations/roles | TestRONTemporaryBlockingInvalid and TestRONTemporaryBlockingInventory; retained modal scope, registry rejection and inventory tests |
+
+The initial test fixture used a nonexistent summoning-sickness member. It was
+corrected to the engine's existing RevokeBaseAttr service before confirming the
+expected semantic failure. Against baseline, real-card and fixed-filter tests
+failed with `unsupported permanent filter (PowerIs)`. After implementation all
+acceptance tests passed. Broad checks initially exposed two old hardcoded loader
+counts, updated to the measured 1,113/1,332 without relaxing assertions. The new
+inventory test initially counted only Warriors' six reprints in a shared signature;
+it was corrected to seven, including Wand. No gameplay assertions were weakened.
+
+### Final measurements and validation
+
+Actual gain equals estimate: **2 unique cards and 7 records**. Compiled is
+**1,113/2,445**, rejected is **1,332**; accepted/rejected unique names are
+**375/611**. Zero accepted-record regressions. Only the seven Warriors/Wand
+records leave the issue list. Six remaining records receive different diagnostics:
+Hurr Jackal (CantBeRegenerated), Old Man of the Sea (dynamic PowerOfPermanent),
+Phyrexian Gremlins (ThePermanentTappedThisWay), Tower of Coireall
+(CantBeBlockedByDefenders), Whippoorwill (mixed unsupported rule list), and Wall
+of Wonder (source rule target). All remain rejected; these are not unlocks.
+
+Inventory retains 72,938 occurrences and 8,528 signatures. Unknown-role
+occurrences decrease from 14,648 to 14,466. Strict and semantic issues agree.
+All twelve source file hashes are unchanged; no vocabulary refresh was needed.
+The newly accepted pair has complete real-RON behavior mappings above. Collection
+engine-validated and behavior-verified totals remain unmeasured/null; compilation
+progress is not full-collection gameplay coverage.
+
+| Command | Final result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1; make build | PASS |
+| Baseline strict and semantic loader | Expected exit 1, 1,106 compiled / 1,339 rejected |
+| New real-card/fixed-filter tests against baseline | Expected semantic FAIL, missing PowerIs adapter |
+| go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS; automatic changes reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1, 1,113 compiled / 1,332 rejected |
+| Source hashes and accepted-record comparison | PASS; unchanged sources, zero regressions |
+
+No source defect was found in this slice. Prior Gaea's Liege/Fastbond questions
+remain open. No environment blocker occurred. The first-error leaders remain
+rule If (53), non-spell CastEffect (53), ChooseADamageSource (46), Targeted_Modal
+(42), host self-untap (39), upkeep HostController (35), other self-untap operations
+(34), ControlledByAPlayer (29), TargetGraveyardCard (26), tapped events (25), and
+CreateFuturePreventDamage (24). These are record counts, not card unlock estimates.
+
+Changed files: compiler.go, temporary_blocking.go, temporary_blocking_test.go,
+inventory.go, inventory_test.go, dsl-reference.md, engine-rules-contracts.md and
+this ledger. No Go definitions, generators, startup paths or DSL exports were
+removed; removal gates are not met. No deletion caller audit is claimed. No
+fallback, card-name branch, global action slot, shared mutable target, declaration
+panic or partial production registry was added.
+
+Ranked next candidates:
+1. Collection untap restriction: numeric filters now remove Meekstone's filter
+   prerequisite. Combine with supertype/collection tap prerequisites to reassess
+   Arena of the Ancients; investigate Mountain/Curse payment scopes separately.
+2. Shared CR 615.7 simultaneous shield allocation, then exact recipient prevention
+   adapter for the seven otherwise-ready cards. Do not bypass the engine gap.
+3. Supertype filters for Karakas and downstream Arena/banding/search services;
+   explicit-player life for Stream and the Salve/Potion prerequisite is also ready.
+
+Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
+and native startup validation remain unfinished. No second slice began.

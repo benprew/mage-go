@@ -382,6 +382,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_filter", "temporary_modification", "duration"}[index]
 			}
+		case "CreatePermanentRuleEffectUntil":
+			if len(n.Args) == 3 {
+				return []string{"permanent_reference", "permanent_rule_operation", "duration"}[index]
+			}
 		case "CreatePermanentLayerEffectUntil":
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
@@ -511,7 +515,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
+	case "power_comparison":
+		if len(n.Args) == 1 && (n.Name == "LessThanOrEqualTo" || n.Name == "GreaterThanOrEqualTo" || n.Name == "EqualTo") {
+			return "value"
+		}
 	case "permanent_filter":
+		if n.Name == "PowerIs" && len(n.Args) == 1 {
+			return "power_comparison"
+		}
 		if (n.Name == "HasAbility" || n.Name == "DoesntHaveAbility") && len(n.Args) == 1 {
 			return "keyword"
 		}

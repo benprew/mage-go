@@ -1149,3 +1149,32 @@ replacements. No engine execution behavior changed in this slice.
 This does not establish a simultaneous shared-shield allocation contract.
 The migration ledger records the CR 615.7 gap in `DamageSystem` that must be
 resolved before RON future recipient prevention can be accepted.
+
+## RON fixed-power targeting and temporary unblockability
+
+RON lowers fixed `PowerIs` comparisons to `HasPowerLTE`, `HasPowerGTE` and
+`HasPowerEqual`. The filters read current layered power at announcement and
+resolution; they do not capture power when the factory is built. RON lowers
+`CreatePermanentRuleEffectUntil(Ref_TargetPermanent, [CantBeBlocked],
+UntilEndOfTurn)` to `Until(EndOfTurn, CantBeBlocked(typedTarget))`.
+The existing per-instance permanent target, transactional cost, resolution,
+combat restriction and duration services supply execution. No engine API changed.
+
+The target must be legal at resolution (CR 608.2b). Once installed, the rule
+keeps its subject incarnation (CR 400.7), survives source departure and ability
+removal, and applies to later blockers (CR 611.2c). Phasing preserves identity
+(CR 702.26b-d); cleanup ends the restriction even while the subject is phased
+out (CR 514.2, 702.26f).
+
+Evidence: `TestRONTemporaryBlockingRealCards` covers complete Dwarven Warriors
+records from all six sets and Tawnos's Wand, including costs, resolution,
+clones and cleanup. `TestRONTemporaryBlockingLegality`,
+`TestRONTemporaryBlockingRollback`, `TestRONTemporaryBlockingCopiesAndBindings`
+and `TestRONTemporaryBlockingPhaseAndSourceLifetime` cover power rechecks,
+returned targets, phasing, source LKI, control, ability removal, failed payment,
+summoning sickness, shroud, copied targets and fresh declarations.
+`TestRONTemporaryBlockingSpellAndTriggerContexts` covers spell, mode and entry
+trigger lowering; `TestRONFixedPowerFilters` checks signed bounds and changing
+layered power. Invalid declarations and nested inventory roles have separate
+tests. These tests establish adapter reuse of existing engine rules, not new
+replacement or simultaneous-operation behavior.

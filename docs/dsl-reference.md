@@ -1361,3 +1361,23 @@ remain engine behavior. This adapter also works in existing activation and
 trigger action lists. Numbered references, multiple target groups, target unions
 with other filters, and future prevention remain unsupported shapes. Evidence:
 `TestRONDamageScope*` and the migration ledger's P0-TYPED-DAMAGE-RECIPIENT entry.
+
+## RON targeted temporary blocking restriction
+
+`CreatePermanentRuleEffectUntil(Ref_TargetPermanent, [CantBeBlocked],
+UntilEndOfTurn)` is supported in resolving action lists with a declared
+`TargetPermanent`. Spell, choose-one spell mode, activated ability and supported
+trigger contexts use the same per-instance target binding. Other rule operations,
+subjects and durations remain rejected.
+
+Permanent filters accept `PowerIs(LessThanOrEqualTo(Integer(n)))`,
+`PowerIs(GreaterThanOrEqualTo(Integer(n)))` and `PowerIs(EqualTo(Integer(n)))`
+for signed integer constants. These filters read current power at each query;
+combine them with `IsCardtype(Creature)` when the subject must be a creature.
+Dynamic bounds and other comparison forms remain unsupported.
+
+Dwarven Warriors and Tawnos's Wand use the power-at-most-two target and the
+same blocking restriction. Target legality is checked at announcement and
+resolution. A later power change does not end a resolved restriction. The
+restriction follows the captured incarnation until cleanup and survives source
+departure, ability removal and a phase cycle. It does not follow a returned card.

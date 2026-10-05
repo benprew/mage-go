@@ -663,6 +663,8 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.And(filters...), nil
 		}
 		return mage.Or(filters...), nil
+	case "PowerIs":
+		return compileFixedPowerFilter(n)
 	case "IsCardtype", "IsNonCardtype":
 		kind, err := cardType(n.Args[0])
 		if err != nil {
@@ -791,6 +793,12 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "CreatePermanentRuleEffectUntil":
+		build, err := compileTemporaryBlocking(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "CreateTokens":
 		build, err := compileTokenCreation(n, ctx)
 		if err != nil {
