@@ -35,6 +35,10 @@
 // Spell definitions can use OnlyDuring to restrict casting to one or more turn steps.
 // Game checks the restriction before choices and payment. Copies of stack spells
 // and spell resolution do not repeat the casting check.
+// Use [ReduceSpellCostStatic] for a generic cost reduction on matching spells
+// cast by the current controller. A phased or departed source cannot supply
+// the reduction. The saved source incarnation prevents a returned card from
+// restoring an old entry before the next layer pass.
 // Use [UnlessManaPaid] or [IfManaPaid] for a mana payment during resolution.
 // Supply a mana cost with X and a [ResolutionValue]. The amount is read once
 // before the payment choice. Activation cost reductions do not change it.

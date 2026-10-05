@@ -3313,3 +3313,28 @@ creature already in combat.
 
 Evidence: `TestStaticCombatPrevention*` and `TestRONStaticCombatPrevention*`.
 Complete RON records: Demonic Torment, Gaseous Form, Enchanted Being.
+
+
+## RON controller spell-cost reductions
+
+Permanent rules accept `PlayerEffect(You,
+[DecreaseSpellCost(filter, [CostReduceGeneric(n)])])`. The amount is one
+nonnegative integer literal. Filters accept bare `AnySpell`,
+`IsCardtype(Creature|Artifact|Enchantment|Instant|Sorcery)`, and nonempty nested
+`And([filters])` or `Or([filters])`. A union applies its reduction once even
+when a spell has both matching types. Other player selectors, operations,
+reduction kinds, values and contexts remain declaration errors.
+
+The compiler uses `ReduceSpellCostStatic`, `FixedAmount`, `SpellAny`,
+`SpellHasType`, `SpellsAnd` and `SpellsOr`. Each factory builds a fresh static
+ability and effect. The current controller receives the reduction while the
+source is present and has its ability. Phasing makes the source inactive.
+Different sources add their reductions. Only generic mana is reduced, including
+announced X and additional mana costs. Colored mana and nonmana costs remain
+required. Cost increases precede reductions, and the final cost cannot be
+negative. The existing payment transaction locks the total before payment.
+
+Real RON tests: `TestRONSpellCostReductionCards`, `Casting`, `Lifecycle`,
+`Totals`, `StackingAndColoredCosts`, `Shapes`, `StrictRecords`,
+`LockedBeforeSourcePayment`, `Invalid` and `Inventory`
+(all names have the `TestRONSpellCostReduction` prefix).

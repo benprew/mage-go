@@ -214,6 +214,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	}
 	switch role {
 	case "rule":
+		if n.Name == "PlayerEffect" && len(n.Args) == 2 {
+			return []string{"player_reference", "player_rule_operation"}[index]
+		}
 		if n.Name == "PreventDamage" && len(n.Args) == 2 {
 			return []string{"prevention_event", "prevention_operation"}[index]
 		}
@@ -277,6 +280,21 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
+		}
+	case "player_rule_operation":
+		if n.Name == "DecreaseSpellCost" && len(n.Args) == 2 {
+			return []string{"cost_spell_filter", "spell_cost_reduction"}[index]
+		}
+	case "cost_spell_filter":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
+	case "spell_cost_reduction":
+		if n.Name == "CostReduceGeneric" && len(n.Args) == 1 {
+			return "integer_literal"
 		}
 	case "condition":
 		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {

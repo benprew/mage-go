@@ -59,18 +59,25 @@ func FixedAmount(n int) SpellAmount {
 // installed by ReduceSpellCostStatic while the source permanent is on the
 // battlefield, and consulted at cast time.
 type SpellCostReducer struct {
-	SourceID   uuid.UUID
-	Controller uuid.UUID // the player whose spells are affected (typically the source's controller)
-	Filter     SpellPredicate
-	Amount     SpellAmount
-	Condition  SpellCondition
-	Label      string
+	SourceID          uuid.UUID
+	Controller        uuid.UUID // the player whose spells are affected (typically the source's controller)
+	Filter            SpellPredicate
+	Amount            SpellAmount
+	Condition         SpellCondition
+	Label             string
+	sourceIncarnation uuid.UUID
 }
 
 // applies reports whether this reducer should reduce the cost of the given
 // cast. The cast's sourceID is the *card being cast*; the reducer's own
 // SourceID is the permanent that registered it.
 func (r *SpellCostReducer) applies(g *Game, casterID uuid.UUID, card Card) bool {
+	if r.sourceIncarnation != uuid.Nil {
+		source := g.FindPermanent(r.SourceID)
+		if source == nil || source.incarnationID != r.sourceIncarnation || source.ControllerID() != casterID {
+			return false
+		}
+	}
 	if r.Controller != uuid.Nil && r.Controller != casterID {
 		return false
 	}
@@ -303,12 +310,13 @@ func ReduceSpellCostStaticLabeled(label string, filter SpellPredicate, amount Sp
 			return nil
 		}
 		g.effects.Rules.AddSpellCostReducer(SpellCostReducer{
-			SourceID:   sourceID,
-			Controller: perm.ControllerID(),
-			Filter:     filter,
-			Amount:     amount,
-			Condition:  condition,
-			Label:      label,
+			SourceID:          sourceID,
+			Controller:        perm.ControllerID(),
+			Filter:            filter,
+			Amount:            amount,
+			Condition:         condition,
+			Label:             label,
+			sourceIncarnation: perm.incarnationID,
 		})
 		return nil
 	})

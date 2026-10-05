@@ -3698,3 +3698,23 @@ factory/clone separation and strict loading.
 Rules: CR 120.2, 400.7, 508.1, 611.3a–b, 615.1–6, 615.12, 616.1/616.1f,
 609.7c, and 702.26b–i. No timing, payment, damage allocation or replacement ordering
 algorithm is changed.
+
+
+## Live identity for static spell-cost reducers
+
+`ReduceSpellCostStatic` and `ReduceSpellCostStaticLabeled` register the source
+incarnation with each reducer. A cost query or payment ignores that entry when
+the source is absent, phased out, or has a different incarnation. Phase-in can
+restore the same entry before another layer pass. A returned card cannot restore
+its old entry. The controller must match the current source and the registered
+player. Normal layer passes update registration after control or ability changes.
+Explicit `GameRules.AddSpellCostReducer` entries without a captured incarnation
+keep their existing behavior.
+
+This establishes CR 400.7, 601.2f–h, 611.3a–b and 702.26b for static generic
+spell-cost reductions. It adds no new cost-payment or replacement system.
+`TestSpellCostReducerSourceIdentity` covers phase-out/in without a layer pass,
+source departure/return, controller identity and clone isolation.
+`TestSpellCostReducerPhasedCastingRollback` covers native casting, rejected
+payment rollback and restoration after phase-in. RON tests cover source ability
+removal, control changes, independent sources, cost increases, X and added costs.

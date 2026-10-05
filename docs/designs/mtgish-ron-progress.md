@@ -2,15 +2,15 @@
 
 ## Current status
 
-The latest recorded inventory reports **569 accepted / 417 rejected unique card
-names** (986 total), and **1,547 compiled / 898 rejected records** (2,445 total).
+The latest recorded inventory reports **593 accepted / 393 rejected unique card
+names** (986 total), and **1,605 compiled / 840 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`ACTIVATION-STEP-WINDOWS` slice and its validation evidence are recorded
-below. Its next candidates and remaining gates are recorded at the end of the entry.
+`PLAYER-SPELL-COST-REDUCTION` slice and its validation evidence are recorded
+at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
 
@@ -18251,4 +18251,160 @@ Slice files: new engine static_combat_prevention.go and tests;
 attack_matching.go, filter.go, lki.go, zone_system.go, doc.go; new compiler
 static_combat_prevention.go and tests; static_prevention.go, filtered_blocking.go,
 inventory.go/inventory_test.go; API/rules contracts and this ledger entry.
+No second slice.
+
+## 2026-10-05: controller-scoped generic spell-cost reductions
+
+Status: completed slice `PLAYER-SPELL-COST-REDUCTION`. Stop after this slice.
+Initial changes to `.gitignore`, the execution design and the progress ledger,
+and untracked `mtgish-ron-completed.md`, are preserved. Only this slice's entry
+and current status are staged; the user's history reorganization remains unstaged.
+
+### Fresh evidence, candidates and selection
+
+Fresh `make build` and `go test ./pkg/mage/... -short -count=1` passed.
+Strict loader and inventory each exited 1 for collection rejection, not a build
+or test failure: **1,602 compiled / 843 rejected records**, **590 accepted /
+396 rejected unique names**, from 2,445 records and 986 names. Inventory:
+72,951 nodes, 8,540 signatures, 9,714 unknown-role occurrences. The engine
+reference, migration design/ledger/vocabulary, relevant compiler and engine code,
+complete candidate RON records, API/rules contracts and CR 400.7, 601.2a–h,
+611.3a–b and 702.26b–f were inspected. Nested forms and reprints were considered.
+
+| Candidate | Distinct affected names and estimated complete-card gains | Other blockers and concrete downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Controller generic spell-cost reductions, selected | Stone Calendar, Mana Matrix, Planar Gate: **3** complete cards. | Missing compiler adapter. Existing exact generic reduction, type predicates, controller registration and total-payment services. Enables controller player rules and reusable cost-context spell filters. Tests exposed a live-source identity prerequisite, included here. | Low/medium: one adapter, role reporting, small engine identity fix, real gameplay/declaration/lifecycle/total-cost tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** credible complete cards after prerequisites. | Requires CR 609.7a source-choice universe, typed chosen-source identity and a next-event shield. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage also use source choice but need fractional prevention, replacement operations, redirection or actual-result life gain; excluded from the seven. Enables all eleven named consumers downstream. | High: shared source choices and snapshots, event shields, prevention/replacement order and simultaneous damage tests, then adapter. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** credible complete cards. | Missing zone-aware characteristic evaluation, owner/controller contexts, named counts and CDA lowering. Gaea's Avenger also needs arithmetic and a source correction: local ATQ Oracle counts opponents' artifacts, but RON counts You. Wood Elemental needs entry sacrifice/results. Enables characteristics in all zones and later layer consumers. | High: engine zone/CDA/copy/layer services and adapter/gameplay tests. |
+| Alternative spell/permanent target declarations | Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace, Magical Hack, Sleight of Mind: **0** immediate complete cards. | Complete nested records still require permanent/spell color changes or text-variable choices and edits. Enables independent alternative target groups for seven later consumers. | Medium prerequisite plus substantial downstream work. |
+
+Selection: three complete consumers with the largest credible gain for the
+small implementation effort. The seven-card source-choice candidate has more
+absolute benefit but requires several engine contracts. First-error frequencies
+were not treated as unlock estimates. The supported contract, reuse boundary,
+estimated gain and acceptance cases were stated before edits. The phasing
+failure changed the boundary to include the exact prerequisite rather than
+shipping an incomplete adapter. The implement-engine skill supplied its workflow.
+No removed card/set skill, Go card requirement, card-name executor or fallback
+was used.
+
+### Exact contracts, signatures and reuse boundary
+
+Permanent top-level rule:
+`PlayerEffect(You, [DecreaseSpellCost(filter, [CostReduceGeneric(n)])])`.
+Both operation lists contain exactly one item; n is a nonnegative integer
+literal. Filters accept symbol `AnySpell`, `IsCardtype` with Creature, Artifact,
+Enchantment, Instant or Sorcery, and nonempty recursively nested `And([filters])`
+and `Or([filters])`. A union applies once when multiple types match. Zero is
+accepted. Unsupported players, dynamic/colored reductions, mixed operations,
+other filters, arities, kinds and action/cost/instant/sorcery contexts remain
+compile errors. This does not claim support for the full PlayerEffect family.
+
+RON owns declaration spelling, diagnostics, context checks, and lowering.
+`compilePlayerCostReduction(Node) (optionFactory, error)` and
+`compileCostSpellFilter(Node) (mage.SpellPredicate, error)` are private adapters.
+They reuse ReduceSpellCostStatic, FixedAmount, SpellAny, SpellHasType, SpellsAnd,
+SpellsOr, StaticAbilityHolder, definition validation, controller registration,
+shared layer passes and the existing locked spell-payment transaction. Each
+factory builds fresh source/ability/effect identities. Predicates are immutable;
+there is no chosen state, target declaration, global result slot or new payment
+pipeline. Costs apply to casting, not damage, life, activation or resolution.
+
+Engine prerequisite: ReduceSpellCostStatic and its Labeled variant capture a
+private sourceIncarnation on SpellCostReducer. `applies` checks current presence,
+incarnation and controller before the existing player/filter/condition checks.
+Phase-out suppresses the registered reduction without another layer pass;
+phase-in restores the same source. Absent or returned sources cannot revive old
+entries. Clone copies already copy the reducer value, including incarnation.
+Explicit AddSpellCostReducer entries without the captured identity retain their
+previous contract. No new public engine API. Whole-repository constructor search
+found only the updated internal SpellCostReducer literal.
+
+The source's current controller receives the reduction, independent of owner.
+Ability removal and source/control changes use normal layer registration.
+Independent sources add their reductions. Generic portions of printed, X and
+additional mana costs are reduced after cost increases and never below zero.
+Colored and nonmana costs remain required. Total costs lock before payments,
+including sacrifice of the reducer itself. Source LKI must not keep a static
+reduction active after departure. No new replacement, batch or APNAP operation
+is established by this slice; the existing cost service remains responsible.
+
+Inventory adds PlayerEffect player/operation roles and the cost_spell_filter,
+spell_cost_reduction and integer_literal descendants. Reporting stays unverified
+and cannot publish a production subset registry. Other unsupported player
+operations retain unknown descendants rather than fabricated contracts.
+
+### TDD and complete-card mappings
+
+Initial RON tests, after correcting a fixture's nonexistent SetTypes API, failed
+on unsupported PlayerEffect and unknown inventory roles. Engine tests then
+failed because phase-out left a reduction visible and allowed an underpaid cast.
+The engine fix makes both tests pass. Fixture corrections used the established
+SetActivePlayerIndex API and gave opposing sorcery-speed casts their active turn.
+No requirement or assertion was weakened. Exact inventory expectations changed
+only after the fresh loader measured 1,605/840.
+
+| Card or contract | Tests and behavior |
+| --- | --- |
+| Stone Calendar, complete DRK record | TestRONSpellCostReductionCards: every supported spell type, either caster, owner versus controller and native full payment/resolution. Casting: printed 5 cost, rollback, no reduction while on stack, entry. Lifecycle: ability removal/restoration, phase-out/in, control, departure/return and clones. Totals and StackingAndColoredCosts: printed/X/added costs, increases, colored requirements, zero generic and independent source stacking. |
+| Mana Matrix, complete LEG record | Same Cards/Casting/Lifecycle/Totals tests, printed 6 cost, only instant/enchantment spells, union membership once. StrictRecords: strict loading of actual records, two independent factory instances, overlapping instant/enchantment types, repeated layer passes without accumulation. LockedBeforeSourcePayment: reduction survives in the locked payment after its source is sacrificed. |
+| Planar Gate, complete LEG record | Same Cards/Casting/Lifecycle/Totals tests, printed 6 cost, creature spells only; StackingAndColoredCosts includes an artifact/enchantment creature and proves reductions add across sources. |
+| Compiler declarations and instances | TestRONSpellCostReductionInvalid: malformed/empty lists, values, selectors, filters, reduction operations, unbound player, wrong scope and land filters. Shapes: zero and positive values, nested AND/OR and separate controllers/factory identities. Inventory and StrictRecords: exact roles, complete-record loading and rejection without a partial registry. All abbreviated names share the TestRONSpellCostReduction prefix. |
+| Engine live identity | TestSpellCostReducerSourceIdentity: presence, phase-out/in without a layer pass, retained old entry after departure/return, both controllers and clone separation. TestSpellCostReducerPhasedCastingRollback: native casting rejection, unchanged hand/mana/stack and phase-in restoration. Existing TestSpellTotalModifiers and TestCondControls regressions also pass. |
+
+Adds **three complete-card gameplay mappings**. This is separate from compiler
+progress. Collection-wide engine-validation and behavior-verified totals remain
+null; no collection-wide gameplay completeness is claimed.
+
+### Final evidence, source audit and remaining work
+
+Actual gains exactly match estimates: **3 unique names / 3 records**, only
+Stone Calendar, Mana Matrix and Planar Gate. No previously accepted name is lost.
+Final strict loader: **1,605 compiled / 840 rejected records**, **593 accepted /
+393 rejected unique names**. Both loader modes exit 1 and publish no partial
+registry. Inventory: **72,951 nodes / 8,540 signatures / 9,609 unknown-role
+occurrences**. Nested reporting removes 105 unknown occurrences without changing
+source syntax. Circle of Protection: Black still reports unsupported
+ChooseADamageSource; Nightmare still reports unsupported CDA_Power.
+
+Local data/DRK.json and data/LEG.json Oracle text agrees with all three selected
+records. No selected source defect and no RON edit. All twelve RON hashes match
+the vocabulary snapshot, so no vocabulary source refresh is required. The
+Gaea's Avenger defect above remains deferred, together with earlier recorded
+source defects. No environment or pre-existing validation blocker remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline make build and go test ./pkg/mage/... -short -count=1 | PASS. |
+| Focused engine/RON/CLI tests with -count=1 | PASS, including identity, phasing rollback, declarations, real records, gameplay, inventory and existing total-cost regressions. |
+| go test ./pkg/mage/... -short -count=1 | PASS. |
+| make test | PASS. |
+| make build | PASS. |
+| go vet ./... | PASS. |
+| go test ./... -short -count=1 | PASS, additional engine-skill check. |
+| make lint | PASS; automatic edits reviewed. |
+| git diff --check and staged diff check | PASS. |
+| go run ./cmd/loadcards -json | Expected exit 1, 1,605 compiled / 840 rejected. |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1, same counts; totals above. |
+| Accepted-name and source-hash audit | Exactly three gains, none lost; all twelve source hashes unchanged. |
+
+Changes: compiler spell_cost_reduction.go and tests, compiler.go, inventory.go
+and its count assertions; engine cost_reduction.go, source-identity tests and
+doc.go; API/rules documentation and this entry. One descriptive commit stages
+only this slice, including this new ledger entry. Its hash is in the final report.
+
+No Go card definition, obsolete generator, startup wiring or DSL function is
+removed. Complete collection loading/gameplay and runtime cutover gates remain
+unmet. No caller audit justifies DSL deletion in this slice.
+
+Ranked next candidates for fresh reassessment:
+
+1. Chosen-source identity/universe and next-event prevention: seven complete
+   Circle/Realm consumers and four additional blocked consumers.
+2. All-zone battlefield-count CDAs: five credible complete consumers; separately
+   resolve Avenger's opponent-count defect/arithmetic and Wood Elemental's entry
+   sacrifice/results.
+3. Alternative spell/permanent target groups: seven color/text consumers, zero
+   adapter-only gains until the downstream actions are supported.
+
 No second slice.
