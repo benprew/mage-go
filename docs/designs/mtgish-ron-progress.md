@@ -11493,3 +11493,150 @@ Changed slice files: `optional_payment.go`, new `optional_sacrifice_test.go`,
 Commit hash is reported in the final response. Full collection gameplay,
 runtime startup, Go-card/generator deletion and whole-repository DSL removal
 gates remain open. No deletion audit is claimed and no second slice is begun.
+
+## 2026-10-05: artifact tap and non-tap activation events
+
+Status: completed `events.artifact-tap-activation` slice. This run stops here.
+The initial `.gitignore` and execution-design edits are user work, excluded
+from staging. No RON source, Go card, generator, production registry or DSL
+export was changed or deleted. The removal gates remain unmet.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot and
+ledger; compiler triggers, scopes, actions and inventory; engine event patterns,
+activation/payment paths, LKI and clone services; relevant API/rules-contract
+docs and CR 113.7a, 602.2/2b, 603.2/2e/3a/3b, 605.3, 608.2h and 702.26b.
+The implement-engine skill was used for the reusable capture repair. Requirements
+came from full RON records, with local `data/ATQ.json` Oracle text confirming
+Haunting Wind, Powerleech and Artifact Possession. No source correction is needed.
+
+Baseline focused RON/CLI tests and `make build` passed. Fresh strict and
+inventory loaders exited 1 for collection rejection, not a build failure:
+**1,434 compiled / 1,011 rejected records**, **500 accepted / 486 rejected
+unique names**, 2,445 records and 986 names. Semantic inventory contained
+72,938 nodes, 8,530 signatures and 12,197 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| Artifact tap and non-tap activation events (selected) | Haunting Wind, Powerleech, Artifact Possession; Imprison is a separate activation consumer | 3 names / 3 records. Their remaining rules already have exact adapters. Imprison needs tap-cost/nonmana filtering, an activated-ability binding/counter operation, alternate payment branches and combat events. | Existing typed artifact event patterns make both global and attached contexts dependency-ready, apart from sacrificed-source capture. Shared activation-source identity also serves later activation consumers. Low/medium implementation and medium/high lifecycle/gameplay test effort. |
+| Random-discard costs | Coral Helm, Draconian Cylix | Shared transaction prerequisite alone 0; 2 after the cost adapter. Their complete target, mana/tap cost, temporary boost and regeneration forms are supported. Current random cost uses process RNG and a chosen-discard validation substitute. | Requires game RNG, random payment ordering after deterministic costs, selection locking, shared discard replacements and rollback. Medium/high engine and payment test effort, then a small adapter. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Rasputin Dreamweaver | Allocation prerequisite alone 0; 9 credible gains after adapters. Guardian Angel needs repeatable optional payments; Rakalite delayed return; Rasputin source prevention, untapped-turn history and counter cap. | Shared CR 615.7 simultaneous-packet allocation, typed recipients and X amounts. High engine, decision, batch and gameplay test effort. |
+
+Full nested inventory was inspected for both selected event families, including
+unsupported parents. Complete unique records were read for all 13 tap/activation
+consumers: the three selected cards, Imprison, Blight, Spirit Shackle, Lifetap,
+Lifeblood, City of Brass, Kudzu, Psychic Venom, Relic Bind and Sorrow's Path.
+Complete random-cost and prevention candidate records were also read. Reprints
+were counted once. The ledger's two-card event estimate omitted Artifact
+Possession's otherwise-supported host-tap/Aura rules. This run estimated three
+before editing. Event patterns already exist, so this candidate provides the
+largest credible immediate gain for less work than the two engine prerequisites.
+The exact contract, reuse boundary and acceptance cases were stated before edits.
+
+### Exact supported signatures and ownership
+
+`compileArtifactTapTrigger(event, body Node, ctx scope) (optionFactory, error)`:
+inside `TriggerA/2`, `WhenAPermanentBecomesTapped/1` accepts
+`IsCardtype(Artifact)/1`, or `And/1` containing exactly that filter and
+`ControlledByAPlayer(Opponent)/1`, in either order.
+
+`compileArtifactActivationTrigger(event, body Node, ctx scope) (optionFactory, error)`:
+inside `TriggerA/2`, `WhenAPlayerActivatesAnAbility/2` accepts symbol `AnyPlayer`
+or `Opponent`, and `And/1` with exactly one source filter plus symbol
+`DoesntHaveTapSelfInCost`. Source is `AbilityOfAPermanent(IsCardtype(Artifact))/1`
+or `AbilityOfPermanent(HostPermanent)/1` in an Aura scope. The two members may
+occur in either order. Other activation contexts remain rejected.
+
+`compileArtifactEventBody` gives the action plan a lexical `permanentEventPlan`
+and builds a fresh `PermanentBinding` for each factory/rule. Symbol
+`Trigger_ThatPermanent` uses existing typed reads; no event player or activated
+ability binding is invented. Arity, literal kinds, duplicate/missing filters,
+wrong host scopes and unrelated event reads are compilation errors.
+
+RON owns syntax, context and lexical identity. Engine reuse:
+`ArtifactBecomesTapped().WithArtifact` with optional `ByOpponent`,
+`ArtifactAbilityActivatedWithoutTapCost().WithArtifact` with optional
+`AttachedToSource`, `EventPlayerIsOpponent`, `WhenEvent`, `ControllerOfWithLKI`,
+existing source damage/life actions, APNAP pending triggers, payment events,
+stack copy and game clone services. No global last-action state or fallback.
+
+The engine prerequisite repair changes the existing artifact activation pattern
+to use `activatedSourceIsArtifact` and exact `SourceIncarnation` capture.
+A source sacrificed during payment remains capturable from incarnation LKI.
+A returned physical card cannot replace its type, permanent binding or saved
+event controller. `WithController` saves detection-time information; RON's
+`ControllerOfPermanent` reads current or departure information at resolution.
+The public API remains unchanged. Production activation paths already emit the
+incarnation; malformed events without it cannot match. Existing callers/tests
+remain supported. No payment, replacement ordering or batch service changed.
+
+### TDD and card-to-test mappings
+
+Initial new tests failed as expected: Haunting Wind/Powerleech rejected their
+tap filter; Artifact Possession rejected its activation event; the synthetic
+engine sacrificed-source capture test left both players at 20 instead of
+executing the bound read. After implementation, an empty placeholder sequence
+was removed from event construction by passing the complete actions to the
+constructor, then appending only targets, as existing trigger adapters do.
+Fixture repairs used the actual `EffectContext.Controller` and core event type.
+Two initial life expectations were corrected without changing implementation:
+a copied Powerleech trigger gains life for its copy controller, and the existing
+information service reads a saved phased incarnation's retained information.
+
+| Card/context | Test and evidence |
+| --- | --- |
+| Haunting Wind, Powerleech, Artifact Possession (complete ATQ records) | `TestRONArtifactEvents`: ordinary and repeated taps, independent untap/tap transitions, entry-tapped exclusion, artifact type/opponent/host filtering, tap-symbol exclusion, tap and non-tap mana activations, unpaid and failed tap payments, sacrifice during payment, source ability removal/phasing at detection, pending source departure, artifact departure/return/control/phasing, phase cycle, attachment changes, source controller changes, copied triggers, prevention and pending clone isolation. Nonartifact host is inapplicable to an artifact Aura and is not a claimed legal attachment test. |
+| All three complete records | `TestRONArtifactEventNativeLoad`: strict fixture collection, engine definition validation, unpaid/paid native casting, artifact Aura attachment, real event execution. This is an integration fixture, not a partial production registry or full-collection startup claim. |
+| Haunting Wind | `TestRONArtifactEventInstancesAndBatch`: two separate factories, simultaneous artifact taps for different controllers, four independent pending bindings and clone resolution. |
+| Shared declaration/context | `TestRONArtifactEventInvalid`, `TestRONArtifactEventScopeAndTapDeclarations`: incorrect filters/kinds/arities/duplicates, non-Aura host, wrong or undeclared event reads, cross-rule read rejection, reordered conjunction gameplay. |
+| Reusable engine capture | `TestArtifactActivationCaptureSacrificedSource`: exact saved permanent and saved controller after self-sacrifice and return to another controller. `TestArtifactActivationCaptureUsesEventIncarnation`: type and controller from the old incarnation, positive/negative type cases and independent clone resolution. |
+
+Retained `TestArtifactAbilityWithoutTapCost*`, `TestArtifactBecomesTapped*`,
+RON host-tap and opponent-land-tap tests also pass. No new simultaneous-operation
+or replacement-order contract is claimed; the adapters reuse those services.
+Compilation gain and gameplay evidence remain separate measurements.
+
+### Validation and actual gain
+
+Actual gain matches the estimate: **3 unique names / 3 records**.
+Strict/inventory reports: **1,437 compiled / 1,008 rejected**, **503 accepted /
+483 rejected unique names**. Only the three selected card issues disappear;
+no accepted record regresses. Imprison remains rejected, with the more specific
+activation filter diagnostic (`supply one artifact source and one non-tap cost
+filter (And)`) instead of the prior unsupported-trigger message. Every other
+remaining issue is unchanged. Semantic inventory has 72,938 nodes / 8,530
+signatures / 12,172 unknown-role occurrences; activation filter descendants now
+have explicit roles. Collection engine-validation and behavior-verification
+fields remain null. RON hashes are unchanged, so no vocabulary source refresh
+is required. No new source defect or environment blocker was found.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'Test(ArtifactActivationCapture\|RONArtifactEvent)' -count=1` | Expected TDD failures, then PASS after implementation and fixture corrections. |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; only new test imports reformatted, reviewed. |
+| `git diff --check` | PASS; final recheck before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,437 compiled / 1,008 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; matching strict issues, unchanged source hashes. |
+
+Ranked next candidates to reassess:
+1. Random-discard transaction prerequisite for Coral Helm and Draconian Cylix,
+   then the compiler adapter, with deterministic payments first and rollback.
+2. Finite recipient-prevention allocation prerequisite and its nine ready consumers.
+3. All-zone CDA characteristics for Dakkon Blackblade, Gaea's Avenger, Keldon
+   Warlord, Nightmare, Plague Rats and People of the Woods; retain the Avenger source
+   audit as a separate blocker until rules evidence resolves it.
+
+Slice files: `pkg/mage/composable_events.go`, new
+`pkg/mage/artifact_activation_capture_test.go`; `artifact_event.go`, new
+`artifact_event_test.go`, `triggers.go`, `inventory.go`, `inventory_test.go`
+under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Commit hash is reported in
+the final response. Complete collection gameplay, runtime startup, Go-card and
+generator removal, and unused DSL cleanup remain open. No removal audit is
+claimed. No second slice is begun.

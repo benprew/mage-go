@@ -712,7 +712,20 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
+	case "activation_event_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "AbilityOfAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
+		if n.Name == "AbilityOfPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "event":
+		if n.Name == "WhenAPlayerActivatesAnAbility" && len(n.Args) == 2 {
+			return []string{"player_filter", "activation_event_filter"}[index]
+		}
 		if n.Name == "WhenAPermanentIsPutIntoAPlayersGraveyard" && len(n.Args) == 2 {
 			return []string{"permanent_filter", "player_filter"}[index]
 		}

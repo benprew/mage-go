@@ -2372,3 +2372,32 @@ and `TestRONEndStepInterveningNativeLoad` prove declaration errors, event scope,
 semantic roles, strict reprint loading, unpaid casting rejection and native
 execution. These adapters establish no new LKI, payment, damage, replacement
 or history service.
+
+## Artifact tap and non-tap activation events in RON
+
+`ArtifactAbilityActivatedWithoutTapCost` matches the activation source's exact
+`SourceIncarnation`. It reads current characteristics for that incarnation or
+its departure LKI. A returned physical card cannot change the match or capture.
+`WithArtifact` saves that incarnation even when the source was sacrificed during
+payment. `WithController` saves the controller of the same incarnation at
+detection. A later `ControllerOfWithLKI(From(artifact))` reads the current
+controller or departure information at resolution; it is distinct from the
+saved event controller. Sources without an event incarnation do not match.
+
+RON `TriggerA` lowers artifact tap events, optional opponent control filters,
+and artifact non-tap activation events through the existing event patterns.
+Each rule and each factory gets a separate permanent binding. Attached-host
+activation filters require an Aura scope. Unsupported activation filters and
+undeclared event reads remain compilation errors. The tap and activation rules
+are separate: a tap-symbol activation emits the tap trigger once and is excluded
+from the non-tap activation trigger. Mana activations still emit these events;
+failed payments emit neither. Copies do not repeat activation or pay costs.
+
+These adapters reuse trigger detection, APNAP placement, pending captures,
+source/controller LKI, damage prevention, phasing and clone services. They add
+no new payment, replacement-order or simultaneous-operation rules.
+Rules: CR 113.7a, 602.2/2b, 603.2/2e/3a/3b, 605.3 and 608.2h.
+Evidence: `TestArtifactActivationCapture*`, retained
+`TestArtifactAbilityWithoutTapCost*` and `TestArtifactBecomesTapped*`, and
+`TestRONArtifactEvent*` for complete Haunting Wind, Powerleech and Artifact
+Possession records, native loading/casting, independent factories and tap batches.

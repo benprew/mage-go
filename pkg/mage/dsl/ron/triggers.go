@@ -24,9 +24,14 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		return compileGraveyardTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerTapsAPermanentForMana", "WhenAPermanentIsTappedForMana":
 		return compileLandManaTrigger(trigger, n.Args[1], ctx)
+	case "WhenAPlayerActivatesAnAbility":
+		return compileArtifactActivationTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentBecomesTapped":
 		if trigger.Kind == Tuple && len(trigger.Args) == 1 && trigger.Args[0].Name == "SinglePermanent" {
 			return compileHostTapTrigger(trigger, n.Args[1], ctx)
+		}
+		if trigger.Kind == Tuple && len(trigger.Args) == 1 && (trigger.Args[0].Name == "IsCardtype" || artifactTapFilter(trigger.Args[0])) {
+			return compileArtifactTapTrigger(trigger, n.Args[1], ctx)
 		}
 		var err error
 		buildTrigger, err = compileOpponentLandTap(trigger)

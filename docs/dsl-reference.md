@@ -2298,3 +2298,24 @@ remain separate between factories and cloned games. Other end-step conditions,
 including tapped state, death history and attack history, remain unsupported.
 Evidence: `TestRONEndStepIntervening*` covers the complete Pestilence and
 Whirling Dervish records, reprints, native casting and engine gameplay.
+
+### RON artifact event adapters
+
+In `TriggerA(event, actions)`, the following event forms create a fresh typed
+`Trigger_ThatPermanent` binding per rule and factory:
+
+- `WhenAPermanentBecomesTapped(IsCardtype(Artifact))`.
+- `WhenAPermanentBecomesTapped(And([IsCardtype(Artifact), ControlledByAPlayer(Opponent)]))`;
+  the two conjunction members may occur in either order.
+- `WhenAPlayerActivatesAnAbility(player, And([AbilityOfAPermanent(IsCardtype(Artifact)), DoesntHaveTapSelfInCost]))`,
+  where `player` is symbol `AnyPlayer` or `Opponent`.
+- The same activation form with `AbilityOfPermanent(HostPermanent)` in an Aura.
+
+The two activation conjunction members may occur in either order. Arity,
+source kind, non-tap symbol spelling, duplicates and lexical reads are checked
+before factory construction. Other activation filters remain unsupported.
+`ControllerOfPermanent(Trigger_ThatPermanent)` uses the saved incarnation's
+current controller or departure LKI at resolution. `Trigger_ThatPlayer` is not
+introduced by these forms. Haunting Wind, Powerleech and Artifact Possession
+use these adapters. The attached tap adapter and land tap adapters remain
+available with their existing contracts.

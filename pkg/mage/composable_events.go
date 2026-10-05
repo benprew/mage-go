@@ -215,7 +215,7 @@ func (artifactActivationPattern) eventPattern() {}
 
 func (p artifactActivationPattern) makeTrigger(effect ResolvingEffect) *GenericTriggered {
 	t := NewTriggered(EvtAbilityActivated, false, effect).SetConditionData(AndTriggerCond{Conditions: []TriggerConditionData{
-		activationWithoutTapCost{}, EventSourceHasType{Type: TypeArtifact},
+		activationWithoutTapCost{}, activatedSourceIsArtifact{},
 	}})
 	if p.attachedOnly {
 		t.AndConditionData(AttachedToIsEventSourceNoTapCost{})
@@ -254,20 +254,24 @@ func (p artifactActivationPattern) inspectDefinition() definitionNode {
 }
 
 func (p artifactActivationPattern) captureDetectedEvent(event *GameEvent, observer GameReader, _ uuid.UUID) []Effect {
+	game, ok := observer.(*Game)
+	if !ok || event.SourceIncarnation == uuid.Nil {
+		return nil
+	}
+	var controller uuid.UUID
+	if artifact := game.FindPermanentIncludingPhased(event.SourceID); artifact != nil && artifact.incarnationID == event.SourceIncarnation {
+		controller = artifact.ControllerID()
+	} else if lki := game.zones.LKIByIncarnation(event.SourceIncarnation); lki != nil && lki.ID == event.SourceID {
+		controller = lki.ViewController()
+	} else {
+		return nil
+	}
 	var captures []Effect
 	if p.captureArtifact && p.artifact != nil {
-		if artifact := observer.FindPermanent(event.SourceID); artifact != nil && !artifact.PhasedOut {
-			captures = append(captures, &eventPermanentCapture{binding: p.artifact, value: capturedPermanent{artifact.ID(), artifact.incarnationID}})
-		}
+		captures = append(captures, &eventPermanentCapture{binding: p.artifact, value: capturedPermanent{event.SourceID, event.SourceIncarnation}})
 	}
 	if p.captureController && p.controller != nil {
-		if artifact := observer.FindPermanent(event.SourceID); artifact != nil {
-			captures = append(captures, &eventPlayerCapture{binding: p.controller, player: artifact.ControllerID()})
-		} else if game, ok := observer.(*Game); ok {
-			if lki := game.LKI(event.SourceID); lki != nil {
-				captures = append(captures, &eventPlayerCapture{binding: p.controller, player: lki.ViewController()})
-			}
-		}
+		captures = append(captures, &eventPlayerCapture{binding: p.controller, player: controller})
 	}
 	return captures
 }
