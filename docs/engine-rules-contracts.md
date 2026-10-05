@@ -2181,6 +2181,31 @@ incarnation history, simultaneous deaths, copied triggers and clone isolation.
 The existing `TestCreatureDiesDamagedByThisTurn*` engine tests retain their
 contracts. No engine execution API changed in this slice.
 
+## RON player-or-planeswalker target adapter
+
+RON `TargetPlayerOrPermanent(AnyPlayer, IsCardtype(Planeswalker))` uses the
+existing `DeclarePlayerOrPlaneswalkerTarget` declaration. Its typed recipient
+read keeps the declaration and permanent incarnation. Target choice occurs at
+announcement or trigger placement (CR 601.2c, 603.3d). Resolution checks current
+type, shroud, phasing and incarnation (CR 400.7, 608.2b). An illegal sole target
+prevents the complete ability from resolving, including an independent life
+gain. A legal target with prevented damage still permits the life gain.
+Damage to a planeswalker removes loyalty (CR 306.8). The existing damage and
+replacement pipeline handles amounts, prevention and affected-player order.
+
+`TestRONPlayerPlaneswalkerAxelrod` covers the complete LEG record: source-specific
+damage history, actual prevented damage, turn cleanup, simultaneous deaths with
+the source, two pending triggers, target choice, independent life gain, source
+departure/return/control/phasing, copied controller, clones and native trample
+combat. `AxelrodCasting` checks the creature's full mana payment and metadata.
+`WitchHunter` covers the complete DRK damage ability, target exclusions, tap and
+sickness checks, player/planeswalker damage, source information, copies and
+clones. `WitchHunterBounceAndCast` covers casting and the separate paid bounce,
+current opponent control, return to the owner, rollback and target rechecks.
+`TargetIdentity`, `SpellModesInstancesAndRetarget`, `PacketsAndReplacementOrder`,
+`Declarations` and `StrictLoadAndInventory` cover the shared target contracts.
+No engine rule, replacement service or simultaneous-operation service is added.
+
 ## RON fixed entry counters
 
 RON lowers a single `EntersWithNumberCounters(Integer(n), counter)` entry

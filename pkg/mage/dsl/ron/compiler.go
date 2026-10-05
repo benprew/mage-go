@@ -654,7 +654,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if binding == "Ref_TargetSpell" {
 			ctx.spellTarget = &spellTargetPlan{name: binding}
 		}
-		if binding == "Ref_AnyTarget" {
+		if binding == "Ref_AnyTarget" || binding == "Ref_TargetPlayerOrPermanent" {
 			ctx.damageTarget = &damageTargetPlan{name: binding}
 		}
 		plan, err = compileActions(n.Args[1], ctx)
@@ -688,6 +688,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 }
 
 func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
+	if n.Name == "TargetPlayerOrPermanent" {
+		return compilePlayerPlaneswalkerTarget(n, ctx)
+	}
 	if n.Name == "NumberTargetPermanents" {
 		return compileNumberedPermanentTarget(n, ctx)
 	}
@@ -1082,10 +1085,10 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err := requireRef(n.Args[2], ctx.target, ctx); err != nil {
 			return nil, err
 		}
-		if ctx.target != "Ref_AnyTarget" && ctx.target != "Ref_TargetPlayer" && ctx.target != "Ref_TargetPermanent" {
+		if ctx.damageTarget == nil && ctx.target != "Ref_TargetPlayer" && ctx.target != "Ref_TargetPermanent" {
 			return nil, unsupported(n.Args[2], "damage recipient")
 		}
-		if ctx.target == "Ref_AnyTarget" {
+		if ctx.damageTarget != nil {
 			recipient, err := compileDamageTargetRef(n.Args[2], ctx)
 			if err != nil {
 				return nil, err

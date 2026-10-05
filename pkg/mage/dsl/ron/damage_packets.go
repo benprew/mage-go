@@ -24,7 +24,7 @@ func compileDamagePacketRecipient(n Node, ctx scope) (damageRecipientFactory, er
 			return nil, err
 		}
 		return func(bindings instanceBindings) mage.DamageRecipientRef { return ref.build(bindings) }, nil
-	case "Ref_AnyTarget":
+	case "Ref_AnyTarget", "Ref_TargetPlayerOrPermanent":
 		ref, err := compileDamageTargetRef(n, ctx)
 		if err != nil {
 			return nil, err

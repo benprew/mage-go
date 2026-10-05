@@ -1454,9 +1454,23 @@ Spell modes have separate declaration names and bindings. Copies retain their
 mode and can change the recipient through the engine's target service. Target
 legality, permanent incarnation, source LKI, damage replacement and prevention
 remain engine behavior. This adapter also works in existing activation and
-trigger action lists. Numbered references, multiple target groups, target unions
-with other filters, and future prevention remain unsupported shapes. Evidence:
+trigger action lists. Numbered references, multiple target groups and target unions
+with arbitrary filters remain unsupported shapes. Evidence:
 `TestRONDamageScope*` and the migration ledger's P0-TYPED-DAMAGE-RECIPIENT entry.
+
+`TargetPlayerOrPermanent(AnyPlayer, IsCardtype(Planeswalker))` in the same
+single-target form builds `mage.DeclarePlayerOrPlaneswalkerTarget`.
+`Ref_TargetPlayerOrPermanent` reads that declaration as a damage recipient.
+Either player or either player's planeswalker can be selected. A creature that
+is also a planeswalker qualifies; a creature without that type does not.
+This exact shape works in supported spells, choose-one spell modes, activations
+and triggers, including damage packets. The reference is not a singular player
+or permanent reference. It cannot be used as one. Other player filters, permanent
+filters, arities and unbound or cross-mode reads fail compilation.
+Each factory and spell mode builds its own declaration. Copies and clones use
+the engine's target identity and legality services. This adapter adds no engine
+API. Evidence: `TestRONPlayerPlaneswalker*`; complete records for Axelrod
+Gunnarson and Witch Hunter supply the gameplay mappings.
 
 ## RON typed permanent damage recipients
 

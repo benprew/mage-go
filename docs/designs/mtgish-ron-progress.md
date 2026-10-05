@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **601 accepted / 385 rejected unique card
-names** (986 total), and **1,622 compiled / 823 rejected records** (2,445 total).
+The latest recorded inventory reports **603 accepted / 383 rejected unique card
+names** (986 total), and **1,624 compiled / 821 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`LIBRARY-TOP-INSPECTION` slice and its validation evidence are recorded
+`PLAYER-PLANESWALKER-TARGET` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -18894,3 +18894,138 @@ Slice files: engine `library_inspection.go`, `library_inspection_test.go`,
 `compiler.go`, `inventory.go`, `inventory_test.go`; interactive
 `library_inspection.go` and its tests; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry. No second slice.
+
+## 2026-10-05: typed player-or-planeswalker targets
+
+Status: completed implementation slice `PLAYER-PLANESWALKER-TARGET`.
+This run stops after this slice. Initial user changes to `.gitignore`, the
+execution design and this ledger, and untracked `mtgish-ron-completed.md`, are
+preserved. The commit contains only this slice's ledger changes, not the user's
+history relocation.
+
+### Fresh evidence and selection
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading and semantic inventory both exited 1 for collection rejection:
+**1,622 compiled / 823 rejected records**, **601 accepted / 385 rejected names**.
+Inventory: **72,951 nodes / 8,540 signatures / 9,446 unknown-role occurrences**.
+Complete candidate records, selected compiler and engine code, API and rules
+contracts, and CR 306.8, 400.7, 601.2c, 603.3d, 608.2b/c/h and 702.19b were read.
+Reprints count once. First-error frequency did not determine unlock estimates.
+
+| Candidate | Distinct affected names and estimated complete-card gain | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Player-or-planeswalker targets, selected | Axelrod Gunnarson, Witch Hunter: **2**. Eternal Flame shares the family but is excluded from the estimate. | Existing typed engine declaration, damage, death history, tap costs and opponent-only bounce are ready. Eternal Flame additionally needs an opponent player restriction, rounding adapters and a source-data repair. Enables a typed union recipient in spell, mode, activation, trigger, packet and prevention contexts. | Low/medium: one bounded adapter, scope validation, two complete-card mappings, identity, timing, copies/clones, rollback and replacement regression tests. |
+| Chosen-source prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** after prerequisites, zero adapter-only gains. | Damage-source choice universe and identity, local choice bindings and next-event prevention are missing. Concrete downstream benefit is seven complete records. Other arithmetic/redirection consumers remain excluded. | High: source selection, saved identity, live property checks, competing replacements, shield consumption and native decisions. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** after prerequisites, zero adapter-only gains. | All-zone characteristic evaluation, owner/controller context and CDA layer order are missing. Gaea's Avenger and Wood Elemental have additional arithmetic/data and entry-result blockers and are excluded. | High: zone-aware characteristics, named and controlled counts, copies, layers, five gameplay mappings. |
+
+Selection: two complete records can reuse an exact existing engine declaration.
+The credible gain per effort is better than the larger new engine prerequisites.
+This is shared multi-card work, not a single-card exception. Contract, reuse
+boundary and acceptance cases were stated before editing. No skill, delegation,
+old card implementation, Go stub or fallback was used.
+
+### Exact supported shape, contexts and reuse
+
+`TargetPlayerOrPermanent(AnyPlayer, IsCardtype(Planeswalker))/2` is supported in
+the existing single-declaration `Targeted` action form. Bare
+`Ref_TargetPlayerOrPermanent` reads that declaration as `DamageRecipientRef`.
+It is not a `PlayerRef` or `PermanentRef`. Supported spell, choose-one mode,
+activation and trigger contexts use the same plan. Damage packets and finite
+recipient prevention use the shared recipient compiler. This does not enable
+unsupported outer contexts, multiple target groups, numbered references,
+arbitrary filters, opponent-only unions or delayed target capture.
+Wrong arity/kind, malformed filters, unbound or incompatible reads and cross-mode
+reads remain declaration errors. No game-time declaration panic is introduced.
+
+Reuse: `DeclarePlayerOrPlaneswalkerTarget`, `DamageTargetBinding`, the existing
+per-factory `instanceBindings.recipients` map and mode namespace, definition
+validation, native announcement/recheck/copy/retarget services, saved permanent
+incarnations, source LKI, transactional payments, `DealDamageFrom`,
+`DealDamagePackets`, `PreventNextDamage`, death damage history and simultaneous
+destruction. There is no engine API or execution change. RON owns spelling,
+shape, scope and lowering. No global last-action slot or partial production
+registry is added.
+
+The inventory now reports union descendants as `player_filter` and
+`permanent_filter`, and card-type filter arguments as `card_type`. Descendants
+below unknown parents remain unknown and are still visited. Support stays
+unverified in inventory; accepted syntax is not a gameplay claim.
+
+### TDD and card-to-test mapping
+
+Tests were written first. Initial fixture compile errors used unavailable
+Permanent.Abilities and Card.RemoveType APIs; these were repaired before the
+expected missing-adapter failure was confirmed: `expected 1 positional arguments
+(TargetPlayerOrPermanent)` for both complete records and synthetic declarations.
+Post-adapter fixture repairs supplied owners for destroyed creatures and fixed
+an extra closing parenthesis. No existing assertion was weakened.
+
+All test names below have prefix `TestRONPlayerPlaneswalker`:
+
+| Card or contract | Evidence |
+| --- | --- |
+| Axelrod Gunnarson, complete LEG record | `Axelrod`: source-specific actual damage history; undamaged/other-source/previous-turn/fully-prevented exclusions; two deaths; simultaneous source death; announcement target choice; legal player and planeswalker damage; independent gain with prevention; no gain when the sole target becomes illegal; source departure/return/control/phasing; copies with another controller; clones; native lethal trample combat. `AxelrodCasting`: full 4BBRR cost, unpaid rollback, targetless creature casting, 5/5, legendary, trample, sickness and no entry trigger. |
+| Witch Hunter, complete DRK record | `WitchHunter`: self/opponent/planeswalker recipients, creature/land exclusion, sickness/tap rollback, delayed damage, source departure/return/control/phasing, prevention, stack copies and clones. `WitchHunterBounceAndCast`: full 2WW casting and 1/1 entry; separate 1WW and tap payment; opponent-controlled creature targeting; move to owner; current-control/shroud/phasing/return rechecks and source departure. |
+| Shared target contract | `Declarations`: fresh factory declarations, missing-declaration validation, malformed filters/arities, unbound/incompatible/cross-mode reads. `TargetIdentity`: current type, shroud, phasing, phase cycle, control and returned incarnation. `SpellModesInstancesAndRetarget`: two independent pending instances, selected modes and retargeted copy. |
+| Shared damage and prevention | `PacketsAndReplacementOrder`: typed union recipient plus controller damage in the existing batch; affected player's choice between half-damage and finite prevention. `PreventionRecipient`: finite shield bound to the selected player or planeswalker. |
+| Strict loading/reporting | `StrictLoadAndInventory`: both complete source records compile and validate; an invalid sibling rejects the whole collection; nested roles and unknown descendants remain distinct. Updated collection-count tests retain production registry and Lightning Bolt behavior. |
+
+Two complete-card gameplay mappings are added. Aggregate engine-validated and
+behavior-verified totals remain null; compilation and gameplay are separate.
+
+### Source findings and remaining gates
+
+Local `data/LEG.json` and `data/DRK.json` Oracle text agrees with both selected
+records. Eternal Flame (`DRK.lines.ron:33`) is a separate source defect: its RON
+uses HalfRoundedUp(N) for the target and HalfRoundedDown(N) for its controller.
+Local Oracle requires N damage to the target and half N, rounded up, to its
+controller; N is the number of controlled Mountains. CR 608.2c requires the
+written instructions. The only record is deferred with its opponent-only union
+and arithmetic adapters; it is not accepted or counted as an unlock. No RON
+source changed, so the vocabulary source snapshot needs no refresh. Prior
+source defects remain unresolved.
+
+Missing adapters are distinct from the prevention/CDA engine prerequisites and
+the Eternal Flame data defect. No environment failure remains. Go-card and
+generator deletion, runtime cutover, collection gameplay and unused-DSL removal
+gates remain unmet. No deletion or unused-DSL caller audit is claimed.
+
+### Final evidence and next candidates
+
+Actual gain matches estimate: **2 unique cards / 2 records**, exactly Axelrod
+Gunnarson and Witch Hunter, with no accepted name lost. Strict and semantic
+loading: **1,624 compiled / 821 rejected records**, **603 accepted / 383 rejected
+names**. Inventory remains **72,951 nodes / 8,540 signatures**; unknown-role
+occurrences fall to **8,465** (981 fewer), including the general card-type filter
+argument reporting correction. All 12 source hashes are unchanged. Both loaders
+exit 1 for remaining unsupported records and publish no partial registry.
+Eternal Flame now reports unsupported player-or-planeswalker player filter
+`Opponent`; the Circle cards still report `ChooseADamageSource`, and CDAs remain
+unsupported. Animate Dead still reports `EnchantGraveyardCard`.
+
+| Command | Result |
+| --- | --- |
+| Focused RON target/damage/inventory tests with `-count=1` | PASS, including after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after renaming a test variable that shadowed builtin copy; formatting changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,624 compiled / 821 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same loading counts; 383 rejected names and 8,465 unknown-role occurrences. |
+
+Ranked next candidates, to reassess from fresh evidence:
+
+1. Chosen-source identity/choice and next-event prevention for seven Circle/Realm
+   consumers. Keep arithmetic and redirection consumers separate.
+2. All-zone count CDAs for the five named complete consumers.
+3. Alternative spell/permanent target prerequisite for Chaoslace, Deathlace,
+   Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind; the color
+   and text-effect prerequisites still block adapter-only full-card gains.
+
+Slice files: compiler `compiler.go`, `damage_scope.go`, `damage_packets.go`,
+`inventory.go`, `inventory_test.go`, `player_planeswalker_target_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+One descriptive commit records only this slice; its hash is in the final reply.
