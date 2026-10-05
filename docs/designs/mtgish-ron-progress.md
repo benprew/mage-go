@@ -5748,3 +5748,151 @@ Ranked next candidates to reassess:
 
 Complete collection gameplay, runtime loading, Go-card/generator removal, DSL
 cleanup and native startup validation remain open. No second slice began.
+
+
+## Run 2026-10-04: GLOBAL-COMBAT-PREVENTION
+
+Status: complete global combat prevention adapter slice. This run stops here.
+This run contains one slice. Initial user changes in `.gitignore` and
+`mtgish-ron-execution.md` are preserved and excluded from staging.
+No unrelated untracked files existed at the start.
+
+### Fresh evidence and candidate comparison
+
+Baseline RON/CLI tests with `-count=1` and `go build ./...` passed.
+Fresh semantic loader exited 1 for collection rejection: **1,160 compiled /
+1,285 rejected records**, 407 accepted / 579 rejected unique names.
+The design, engine API, vocabulary JSON, progress ledger, selected compiler and
+engine code, and complete candidate RON records were read. The source snapshot
+is syntax evidence only. Nested actions and remaining blockers informed the
+estimates below. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers, downstream value and effort |
+| --- | --- | ---: | --- |
+| Global combat prevention, selected | Fog, Darkness, Holy Day, Spore Flower, Angus Mackenzie, Spore Cloud | 4 / 9 records | No later blockers for the first four. Angus Mackenzie needs `IsBeforeCombatDamageStep` activation timing; Spore Cloud needs `EachPermanentDoesntUntapDuringControllersNextUntap`. Small compiler adapter and moderate native combat/lifetime/payment tests. Shared action serves spells, counter-cost activations and later composite actions. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve | 0 in prerequisite; 8 after adapter | CR 615.7 simultaneous shield allocation must precede the adapter. Large shared damage/replacement/decision test effort. All eight complete records otherwise have supported fixed costs, single recipient targets and, for Healing Salve, existing modal support. Guardian Angel retains player-effect/X forms; Rakalite needs a delayed return trigger. The prior seven-card suggestion omitted Healing Salve; its complete record and current modal compiler justify the revised estimate. |
+| Legendary filtered banding | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 after engine contract and adapter | Filters and static layer wrappers exist; `BandsWithOthers` needs band membership and damage-assignment contracts. Moderate-to-large combat/layer implementation and tests. Master of the Hunt adds named membership and token requirements. |
+
+Global combat prevention has the largest credible immediate gain for the effort.
+It reuses the exact existing turn-long global prevention service. The per-source
+`PreventCombatDamageBy` service lasts for this combat, so it cannot substitute
+for the other turn-long source prevention forms. Those remain rejected.
+All complete `CreatePreventDamageUntil` consumer records were inspected:
+in addition to the six global consumers, Al-abara's Carpet, Ebony Horse,
+Elvish Scout, Feint, Glyph of Destruction, Horn of Deafening, Indestructible Aura,
+Kry Shield, Lady Evangela, Silhouette, Subdue, Telekinesis, Heroism,
+Sewers of Estark, Maze of Ith and Scarecrow use other event/operation/duration
+shapes or additional unsupported rules. They do not count as unlocks.
+
+### Exact contract, dependencies and reuse
+
+Supported resolving action signature:
+`CreatePreventDamageUntil(CombatDamageWouldBeDealt, [PreventThatDamage], UntilEndOfTurn)`.
+`CreatePreventDamageUntil/3` must be a positional tuple. The event and duration
+must be the exact symbols above. The second argument must be a one-element list
+containing the exact symbol `PreventThatDamage`. The compiler rejects empty or
+multiple operations, extra effects, tuple spellings of symbols, other events,
+other durations, wrong arity and cost/static/top-level rule contexts.
+The existing resolving action compiler can use this shape in spell or activation
+bodies. No reference or result is produced; no scope can read a prevention result.
+
+`compileGlobalCombatPrevention(n Node) (effectFactory, error)` owns only RON
+syntax, declaration diagnostics and lowering. Each build returns a fresh
+`mage.PreventAllCombatDamage()` effect. The shared engine installs an independent
+end-of-turn `fogReplacement` through `Game.SetPreventCombatDamage`. Existing
+`ActionList`/`Sequence`, trigger/counter costs, casting transactions, cloning,
+stack copies, combat batches, damage source services, replacement ordering and
+cleanup own execution. There is no new engine rule, parallel damage system,
+source lifetime, recipient binding, Go-card fallback, card-name branch,
+global action-result slot, declaration panic or partial production registry.
+
+Prevention starts at resolution, never at declaration or payment. It applies
+to all combat damage for either player, first-strike and normal damage steps,
+new sources and later combats in the same turn. It remains after its source
+leaves, returns, phases or changes controller. Noncombat damage stays legal;
+cleanup ends the effect. Copies can install the effect without repaying costs;
+a countered spell installs nothing. No characteristic/controller LKI query,
+finite shield allocation or new simultaneous operation is introduced.
+Rules read: CR 514.2, 615.1–615.4, 615.6, 615.7, 615.12 and 616.1–616.1f.
+
+This is a missing compiler adapter, not an engine or environment defect.
+No selected source-data defect was found. Gaea's Liege and Fastbond observations
+remain open. No RON data changed; all twelve source hashes match baseline and
+the vocabulary snapshot. No syntax snapshot refresh is required. Runtime/card
+removal and unused DSL removal gates remain unmet; no definitions or DSL
+functions were removed and no deletion audit or authoring cutover is claimed.
+
+### TDD and card-to-test mappings
+
+Tests preceded implementation. The first fixture build used the wrong public
+accessor (`GetEffectManager`); it was corrected to existing `GetEffects`.
+The semantic red run then failed for all real records with expected
+`unsupported action (CreatePreventDamageUntil)` errors and unknown inventory
+roles. The adapter and nested role classification made the tests pass.
+No assertions were weakened. Inventory count assertions were updated only
+after fresh loader evidence established the nine-record gain.
+
+| Cards / contracts | Evidence |
+| --- | --- |
+| Fog: LEA, LEB, 2ED, 3ED, CED, CEI; Darkness and Holy Day: LEG | `TestRONGlobalCombatPreventionRealSpells`: complete records, engine definition validation, native casting, failed mana payment, no announcement-time prevention, no targets, resolution and graveyard movement. Shared helper uses native first-strike/normal combat, simultaneous damage, trample, lifelink, player and permanent recipients, new sources, repeated combats, noncombat damage, cleanup expiry and clone isolation. |
+| Spore Flower: FEM | `TestRONGlobalCombatPreventionSporeFlower`: complete record and engine validation, own versus opponent upkeep, exact counters at resolution, failed/successful three-counter payment without tapping, source leave/return/phasing/control changes, copied activations without repayment, independent pending clones and the same native combat/lifetime checks. |
+| Holy Day: LEG | `TestRONGlobalCombatPreventionLateCopyAndCounter`: opponent-turn/postcombat casting, native prior damage remains, spell copy with original countered, pending clone isolation and countering the copy installs no effect. |
+| Darkness: LEG / replacement ordering | `TestRONGlobalCombatPreventionReplacementOrder`: recipient chooses between redirection and global prevention; both choices prevent redirected combat damage. Existing unpreventable recipient attribute bypasses prevention. |
+| Declarations / semantic inventory | `TestRONGlobalCombatPreventionInvalidAndInventory`: exact argument kinds/arity, event/operation/duration checks, invalid contexts, nested `prevention_event`, `prevention_operation` and `duration` roles. |
+| Existing accepted behavior | Full RON/CLI tests and `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged`; retained `TestGlobalCombatPreventionLifetime`, engine and repository checks. |
+
+Four unique real cards gain full-record behavior mappings. Compilation and
+collection gameplay coverage remain separate; collection engine-validation and
+behavior-verification totals remain null. No collection-wide completion is claimed.
+
+### Actual gain and validation
+
+Actual gain matches estimate: **4 unique names / 9 records**. Fresh semantic
+loader reports **1,169 compiled / 1,276 rejected records**, 411 accepted /
+575 rejected unique names. Only the four selected names leave the issue list;
+no accepted name regresses. Eleven remaining record diagnostics change:
+Spore Cloud now reaches its collection untap restriction; Maze of Ith, Scarecrow,
+Heroism, Al-abara's Carpet, Horn of Deafening, Indestructible Aura, Lady Evangela,
+Silhouette, Subdue and Telekinesis identify their unsupported prevention event.
+Inventory retains 72,938 occurrences / 8,528 signatures; unknown-role occurrences
+fall from 14,279 to 14,166. New role classification is not proof that those
+other prevention shapes execute.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1`, `go build ./...` | PASS |
+| Baseline `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 1,160 compiled / 1,285 rejected |
+| New real-card and inventory tests before adapter | Expected unsupported-action / unknown-role failures |
+| `go test ./pkg/mage/dsl/ron -run TestRONGlobalCombatPrevention -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; formatting reviewed, no unrelated files changed |
+| Post-lint RON/CLI tests with `-count=1` | PASS |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1: 1,169 compiled / 1,276 rejected |
+| Strict/semantic issue arrays, accepted-name audit, source hashes | PASS; identical issues, no regressions, all twelve hashes match baseline and vocabulary |
+
+No required check has a build/test/environment blocker. Strict collection
+rejection is expected and publishes no registry. Native RON gameplay is tested
+for the four selected names; complete embedded startup/cutover is not claimed.
+
+Slice files: new `pkg/mage/dsl/ron/combat_prevention.go` and
+`combat_prevention_test.go`; `compiler.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Only these files are staged for the descriptive slice commit.
+
+Ranked next candidates to reassess:
+1. CR 615.7 simultaneous finite-shield allocation prerequisite, then recipient
+   prevention for eight otherwise-ready cards, including Healing Salve.
+2. Filtered legendary banding: five lands requiring combat contracts.
+3. Turn-long typed source combat prevention: Horn of Deafening and Lady Evangela
+   have concrete nearby paths; the existing typed service lasts only this combat.
+4. Event-object LKI/controller queries: Psychic Venom, Kudzu and Artifact
+   Possession expose downstream uses, with reattachment/activation events still
+   required for the latter two.
+
+Complete collection gameplay, runtime loading, Go-card/generator removal,
+DSL cleanup and native startup validation remain open. No second slice began.

@@ -1370,3 +1370,29 @@ engine contracts `TestAttachedBecomesTappedCapture`,
 `TestAttachedBecomesTappedValidation` and `TestTapEachTransitionsTogether`.
 Controller queries that require LKI, source tap events and new damage-source
 forms are outside this adapter.
+
+## RON global combat prevention adapter
+
+`CreatePreventDamageUntil(CombatDamageWouldBeDealt, [PreventThatDamage], UntilEndOfTurn)`
+lowers to the existing `PreventAllCombatDamage` effect. The adapter changes no
+engine rule. Resolution installs an end-of-turn `fogReplacement` in the shared
+replacement pipeline. It has no battlefield source lifetime or recipient binding.
+It prevents combat damage from current and later sources to either player or
+permanents, through first-strike and normal damage steps and later combats.
+Noncombat damage remains legal. Cleanup ends the effect (CR 514.2, 615.3).
+A later resolution cannot change past damage (CR 615.4).
+
+`TestRONGlobalCombatPreventionRealSpells` checks all Fog reprints, Darkness and
+Holy Day through native casting and combat, including simultaneous attacker and
+blocker damage, trample, first strike, lifelink, later sources, repeat combats,
+noncombat damage and independent clone cleanup. `TestRONGlobalCombatPreventionSporeFlower`
+checks upkeep counters, failed and successful counter payment, source departure,
+return, phasing, control changes, copied activations and pending clone isolation.
+`TestRONGlobalCombatPreventionLateCopyAndCounter` checks opponent-turn casting,
+past damage, copied spells and countered spells. `TestRONGlobalCombatPreventionReplacementOrder`
+checks affected-player choice with redirection and the existing unpreventable
+recipient attribute (CR 615.6, 615.12, 616.1). Declaration and inventory tests
+check exact argument kinds, arity, operation count, contexts and nested roles.
+
+This adapter does not establish finite shield allocation, source-specific
+prevention durations or new LKI reads. The CR 615.7 prerequisite remains open.

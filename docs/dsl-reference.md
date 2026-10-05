@@ -1535,3 +1535,19 @@ Each factory call creates its own `BindPermanent` declaration. Lowering uses
 `AttachedBecomesTapped` and `From`; the engine retains separate captures for
 pending events, copies and clones. The exact form executes Blight and Spirit
 Shackle. Other `SinglePermanent` tap-event subjects remain unsupported.
+
+## RON global combat prevention
+
+In a resolving action list, the RON form
+`CreatePreventDamageUntil(CombatDamageWouldBeDealt, [PreventThatDamage], UntilEndOfTurn)`
+uses `mage.PreventAllCombatDamage`. The event and duration must be symbols.
+The operation list must contain exactly the symbol `PreventThatDamage`.
+The adapter rejects other events, operations and durations before factory creation.
+It does not declare a source, recipient, target or result binding.
+
+The shared engine installs prevention at resolution and removes it at cleanup.
+It applies to all combat damage for the rest of the turn, including later combats,
+and leaves noncombat damage unchanged. Fog, Darkness and Holy Day use this
+form in spells; Spore Flower uses it after its three-counter activation cost.
+Tests: `TestRONGlobalCombatPrevention*`. Other `CreatePreventDamageUntil` shapes
+and future amount shields remain separate gaps.

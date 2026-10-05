@@ -353,6 +353,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "CreatePreventDamageUntil":
+			if len(n.Args) == 3 {
+				return []string{"prevention_event", "prevention_operation", "duration"}[index]
+			}
 		case "AddMana":
 			if len(n.Args) == 1 {
 				return "mana_production"
