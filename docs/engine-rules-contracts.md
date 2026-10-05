@@ -2864,3 +2864,24 @@ binding and resolution frame services. Declaration validation rejects nil and
 unbound player references. `TestHandOperations*` establishes engine evidence;
 `TestRONHandOperations*` covers complete Amnesia and Inquisition records, their
 casting, copies, replacement effects and supported resolving contexts.
+
+## RON damage amount capture
+
+The RON `WhenAPermanentDealsDamage(SinglePermanent(ThisPermanent))` event
+uses the existing `DealsDamage(This, amount)` pattern. An Aura's
+`SinglePermanent(HostPermanent)` uses `AttachedPermanent`. This adapter adds
+no damage or event rule. CR 603.2c/g and 603.3a/b require actual event amounts,
+separate occurrences, deferred resolution, and the event-time controller.
+The engine saves each actual post-replacement amount in its pending trigger.
+Each RON factory creates a separate number binding. `Trigger_AmountOfDamageDealt`
+reads that binding only in the trigger's resolving scope.
+
+`TestRONDamageAmountCards` covers prevention, event/controller capture,
+attachment changes, source departure/return/phasing, ability removal, copies and
+clone isolation. `TestRONDamageAmountBatchAndInstances` covers independent
+factory bindings, a pending-trigger clone, and simultaneous player/permanent
+packets from two sources. `TestRONDamageAmountCombat` covers native combat to
+players and blockers. `Casting` and `AuraTargetLegality` cover payment rollback,
+attachment and resolution target legality. `Invalid` rejects malformed subjects,
+amount tuples, cross-event amount reads and unavailable player bindings.
+These tests map the complete El-Hajjâj and Spirit Link RON records.

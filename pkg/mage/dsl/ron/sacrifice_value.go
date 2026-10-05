@@ -15,6 +15,14 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "Trigger_AmountOfDamageDealt" {
+		if n.Kind != Symbol || ctx.damageAmount == nil {
+			return nil, problem(n, "unbound or incompatible damage event amount")
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.FromNumber(bindings.damageAmounts[ctx.damageAmount])
+		}, nil
+	}
 	if n.Name == "TheNumberOfCardsOfTypeInPlayersHand" {
 		return compileHandCount(n, ctx)
 	}

@@ -2698,3 +2698,21 @@ The engine primitives are `RevealHandFor`, `DiscardMatchingHand` and
 `CountMatchingHand`. Complete card evidence is in `TestRONHandOperationsCards`,
 `TestRONHandOperationsCopiesAndPrevention` and
 `TestRONHandOperationsEmptyAndReplacements` for Amnesia and Inquisition.
+
+## RON damage-amount triggers
+
+`TriggerA(WhenAPermanentDealsDamage(SinglePermanent(ThisPermanent)), body)`
+uses `DealsDamage(This, amount)`. An Aura can use `HostPermanent` in the same
+shape, which uses `DealsDamage(AttachedPermanent, amount)`.
+`Trigger_AmountOfDamageDealt` is a bare value symbol in that trigger's resolving
+body. Each factory call creates a number binding. The value is the actual damage
+after prevention, for combat or noncombat damage to a player or permanent.
+Zero and fully prevented damage do not trigger. Each event keeps its own amount.
+The body has no damaged-player or damaged-permanent binding in this shape.
+Other source collections and damage-to-player events remain unsupported.
+
+The engine captures the event before stack placement. Later source departure,
+phasing, control changes, or attachment changes do not change the saved amount.
+The trigger keeps its controller; a copied trigger uses its copy controller for
+`You`. `TestRONDamageAmountCards`, `BatchAndInstances`, `Combat`, `Casting`,
+`AuraTargetLegality`, `Invalid`, and `Inventory` provide the RON evidence.

@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	damageAmount     *damageAmountPlan
 	delayedStep      bool
 	sourceAttack     bool
 	combatOpponent   *permanentEventPlan

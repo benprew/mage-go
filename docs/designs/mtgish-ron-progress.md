@@ -14235,3 +14235,127 @@ Ranked next candidates to reassess from fresh evidence:
 Only this validated slice is committed. The hash is in the final response.
 The existing user edits and untracked completed-slices document remain intact.
 No second implementation slice is started.
+
+## 2026-10-05: source and Aura-host damage amount triggers
+
+Status: completed slice `DAMAGE-AMOUNT-TRIGGERS`. This entry supersedes older
+current-status measurements. This run implements only this slice.
+
+### Fresh evidence and selection
+
+Initial user changes: `.gitignore`, execution design and progress ledger;
+untracked `mtgish-ron-completed.md`. These remain user work. The commit stages
+only this entry on the original committed ledger; it does not stage the user's
+ledger rearrangement or completed-slices document.
+
+Read AGENTS.md, engine reference, execution design, vocabulary, current ledger,
+selected compiler/event/binding code, all three affected RON records, local
+Oracle data, API/rules contracts and CR 603.1–603.3. Baseline short engine tests
+and build passed. Strict loader and full AST inventory exited 1 because the
+collection remains unsupported: 1,502 compiled / 943 rejected records;
+542 accepted / 444 rejected unique names. Inventory: 72,951 occurrences,
+8,540 signatures, 10,680 unknown-role occurrences. Counts deduplicate reprints.
+
+| Candidate | Distinct names and estimated full-card unlocks | Blockers and downstream gain | Effort |
+| --- | --- | --- | --- |
+| Damage amount triggers, selected | El-Hajjâj, Spirit Link: **2** names / **3** records. | Missing compiler adapter and scoped number read only. Exact engine event amount capture already exists. Enables resolving values for source and Aura-host damage; player-damage events remain a separate adapter. | Low: adapter, typed binding, invalid declarations, payment/target and full-card event tests. |
+| Finite prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** likely full cards. | Complete records use targets, tap/mana costs, modes and X. Shared CR 615.7 simultaneous-source allocation is still a prerequisite; zero adapter-only unlocks. Enables further finite prevention consumers. | Medium/high: allocation choices, amount consumption, replacement ordering and simultaneous contracts. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** likely full cards. | Zone-aware characteristic evaluation, CDA lowering, controller/named count contracts. Gaea's Avenger and Wood Elemental have further blockers and are excluded. Enables characteristics outside the battlefield. | High: all-zone counts, copy/layer and owner/controller contracts. |
+
+Selected the two-card adapter because it reuses complete engine behavior and
+gives the largest credible gain for its small effort. First-error frequency did
+not supply the unlock estimate. Contract, reuse boundary and acceptance cases
+were stated before editing. No missing engine contract or environment failure
+was found. No engine/card skill or sub-agent was needed.
+
+### Supported contract and reuse
+
+Exact event shape:
+`TriggerA(WhenAPermanentDealsDamage(SinglePermanent(reference)), actions)`,
+where `reference` is bare `ThisPermanent` on a permanent or bare `HostPermanent`
+on an Aura. Other collections, references and arities are rejected.
+`Trigger_AmountOfDamageDealt` is a bare symbol in the event body's existing
+resolving-value contexts. It has no producer in other abilities or events;
+no damaged-player/permanent binding is supplied by this shape. Static, cost,
+entry, replacement and damage-to-player event contexts are not added.
+
+RON owns validation, lexical scope, positioned errors, inventory roles and
+lowering. `damageAmountPlan` has identity; each factory creates its own
+`NumberBinding` in `instanceBindings`. Reuse: `DealsDamage`, `This`,
+`AttachedPermanent`, `BindNumber`, `FromNumber`, `WhenEvent`, `Sequence`, existing
+action/target construction, event capture, controller snapshots, resolution
+frames, stack copies, pending-trigger clones, damage/prevention and combat.
+No new engine rule, global last-action slot or gameplay declaration panic.
+
+Actual damage after replacements supplies the amount, for combat/noncombat
+player/permanent recipients. Zero and fully prevented damage do not trigger.
+Events queue separate amounts before stack placement. Later attachment changes,
+source control/departure/return/phasing do not redirect saved values or the
+original trigger controller. Copies use their own controller for `You`.
+
+### TDD and gameplay mappings
+
+Tests first failed with `unsupported trigger (WhenAPermanentDealsDamage)` for
+both complete real records. No acceptance condition was removed. The inventory
+subject assertion was aligned with existing roles: the SinglePermanent wrapper
+is a permanent filter and its child is a permanent reference.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| El-Hajjâj (ARN and identical 3ED reprint), Spirit Link (LEG), complete rules | `TestRONDamageAmountCards`: player/permanent damage, full/partial prevention, separate events, other-source exclusion, departure/return/phasing, controller timing, attachment change, ability removal, stack copy and clone isolation. |
+| Both cards' costs and entry | `TestRONDamageAmountCasting`: unpaid rollback, exact casting payment, permanent entry, real damage and deferred life gain. |
+| Both cards' combat | `TestRONDamageAmountCombat`: native attack/block/damage steps; unblocked player and blocked permanent damage; Spirit Link life goes to the Aura controller. |
+| El-Hajjâj reprint and factory/event isolation | `TestRONDamageAmountBatchAndInstances`: two real factories/controllers, simultaneous player/permanent damage, prevention, separate pending amounts and pending-trigger clone. |
+| Spirit Link enchant restriction | `TestRONDamageAmountAuraTargetLegality`: land/shroud rejection with resource rollback; phase/return illegality at resolution; legal attachment. |
+| Declaration and semantic inventory | `TestRONDamageAmountInvalid`: wrong kind/arity, unavailable host/target/player refs, tuple amount and amount in unrelated abilities/events. `Inventory`: valid compiled declaration and descendant reference/value roles. |
+
+Local ARN and LEG Oracle text agrees with all selected RON records. No source
+defect was corrected. All twelve source hashes match the vocabulary snapshot;
+no source change requires refreshing its syntax snapshot. Compilation and
+complete-card gameplay mappings remain separate; collection engine-validation
+and behavior totals remain null.
+
+### Final checks and measurements
+
+Actual gain matches the estimate: **2 unique names / 3 records**, exactly
+El-Hajjâj and Spirit Link; no previously accepted name was lost. Final strict
+loading: **1,505 compiled / 940 rejected records**, **544 accepted / 442 rejected
+names**. Inventory: **72,951 occurrences / 8,540 signatures / 10,674 unknown-role
+occurrences**. Loader exits 1 and publishes no partial production registry.
+
+Initial full tests caught two stale inventory count assertions (1,502/943).
+They now assert the exact new totals (1,505/940); all other assertions remain.
+This was an expected measurement update, not an environment blocker. Lint
+reported zero issues; its import spacing changes were reviewed.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestRONDamageAmount\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after inventory assertion update. |
+| `make test` | PASS after inventory assertion update. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; final counts above. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; final counts above. |
+
+Changed files: `ron/damage_amount.go` and its tests; `compiler.go`,
+`player_scope.go`, `sacrifice_value.go`, `triggers.go`, `inventory.go` and its
+exact-count tests; API/rules references and this ledger entry. No engine service,
+Go card definition, generator, startup caller or DSL function was removed.
+The full-loading, gameplay and runtime gates remain unmet. No caller audit was
+used to justify deletion because this slice removes no function.
+
+Ranked next candidates to reassess:
+
+1. Damage-to-player event adapters for Hypnotic Specter and Nicol Bolas, plus
+   actual-result player bindings; inspect discard-hand and other nested gaps.
+2. Finite recipient prevention allocation prerequisite and exact adapters for
+   the four listed consumers.
+3. All-zone count CDAs for the four listed consumers.
+
+Other leading diagnostics remain CastEffect (17 unique names),
+CreateFuturePreventDamage (12), ChooseADamageSource (11), If (8), PlayerEffect (8),
+CreateTriggerUntil (8), Targeted_Modal (7) and EachPlayerEffect (7).
+This run stops after committing this slice. The commit hash is in the final reply.

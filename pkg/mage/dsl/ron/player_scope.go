@@ -25,6 +25,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	damageAmounts        map[*damageAmountPlan]*mage.NumberBinding
 	graveyardControllers map[*graveyardEventPlan]*mage.PlayerBinding
 	graveyardOwners      map[*graveyardEventPlan]*mage.PlayerBinding
 	counters             map[*counterPaymentPlan]*mage.NumberBinding
