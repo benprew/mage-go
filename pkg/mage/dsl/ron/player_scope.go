@@ -33,6 +33,7 @@ type instanceBindings struct {
 	steps                map[*stepEventPlan]*mage.PlayerBinding
 	landMana             map[*landManaEventPlan]landManaEventBindings
 	tapped               map[*permanentEventPlan]*mage.PermanentBinding
+	permanentSets        map[*permanentTargetsPlan]*mage.PermanentTargetsBinding
 	permanents           map[*permanentTargetPlan]*mage.PermanentTargetBinding
 	players              map[*playerTargetPlan]*mage.PlayerTargetBinding
 	spells               map[*spellTargetPlan]*mage.SpellTargetBinding

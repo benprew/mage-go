@@ -17,37 +17,39 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
-	delayedStep     bool
-	sourceAttack    bool
-	combatOpponent  *permanentEventPlan
-	targetNamespace string
-	counterPayment  *counterPaymentPlan
-	sacrificeValue  *sacrificeValuePlan
-	target          string
-	x               bool
-	permanent       bool
-	aura            bool
-	player          playerReferencePlan
-	playerTarget    *playerTargetPlan
-	permanentTarget *permanentTargetPlan
-	spellTarget     *spellTargetPlan
-	cardTarget      *cardTargetPlan
-	damageTarget    *damageTargetPlan
-	castEvent       *castEventPlan
-	stepEvent       *stepEventPlan
-	permanentEvent  *permanentEventPlan
-	landManaEvent   *landManaEventPlan
-	graveyardEvent  *graveyardEventPlan
+	delayedStep      bool
+	sourceAttack     bool
+	combatOpponent   *permanentEventPlan
+	targetNamespace  string
+	counterPayment   *counterPaymentPlan
+	sacrificeValue   *sacrificeValuePlan
+	target           string
+	x                bool
+	permanent        bool
+	aura             bool
+	player           playerReferencePlan
+	playerTarget     *playerTargetPlan
+	permanentTarget  *permanentTargetPlan
+	permanentTargets *permanentTargetsPlan
+	spellTarget      *spellTargetPlan
+	cardTarget       *cardTargetPlan
+	damageTarget     *damageTargetPlan
+	castEvent        *castEventPlan
+	stepEvent        *stepEventPlan
+	permanentEvent   *permanentEventPlan
+	landManaEvent    *landManaEventPlan
+	graveyardEvent   *graveyardEventPlan
 }
 
 type actionPlan struct {
-	effects         []effectFactory
-	targets         []targetFactory
-	playerTarget    *playerTargetPlan
-	permanentTarget *permanentTargetPlan
-	spellTarget     *spellTargetPlan
-	cardTarget      *cardTargetPlan
-	damageTarget    *damageTargetPlan
+	effects          []effectFactory
+	targets          []targetFactory
+	playerTarget     *playerTargetPlan
+	permanentTarget  *permanentTargetPlan
+	permanentTargets *permanentTargetsPlan
+	spellTarget      *spellTargetPlan
+	cardTarget       *cardTargetPlan
+	damageTarget     *damageTargetPlan
 }
 
 func (p actionPlan) build() Actions {
@@ -66,6 +68,7 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	targets := make([]mage.Target, len(p.targets))
 	bindings.players = make(map[*playerTargetPlan]*mage.PlayerTargetBinding)
 	bindings.permanents = make(map[*permanentTargetPlan]*mage.PermanentTargetBinding)
+	bindings.permanentSets = make(map[*permanentTargetsPlan]*mage.PermanentTargetsBinding)
 	bindings.spells = make(map[*spellTargetPlan]*mage.SpellTargetBinding)
 	bindings.cards = make(map[*cardTargetPlan]*mage.CardTargetBinding)
 	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
@@ -74,6 +77,9 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 		targets[i] = makeTarget()
 		if target, ok := targets[i].(*mage.PermanentTargetBinding); ok {
 			bindings.permanents[p.permanentTarget] = target
+		}
+		if target, ok := targets[i].(*mage.PermanentTargetsBinding); ok {
+			bindings.permanentSets[p.permanentTargets] = target
 		}
 		if target, ok := targets[i].(*mage.PlayerTargetBinding); ok {
 			bindings.players[p.playerTarget] = target
@@ -583,6 +589,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		if binding == "Ref_TargetPermanent" {
 			ctx.permanentTarget = &permanentTargetPlan{name: binding}
 		}
+		if binding == "Ref_TargetPermanents" {
+			ctx.permanentTargets = &permanentTargetsPlan{name: binding}
+		}
 		if binding == "Ref_TargetPlayer" {
 			ctx.playerTarget = &playerTargetPlan{name: binding}
 		}
@@ -605,6 +614,7 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 		plan.targets = []targetFactory{buildTarget}
 		plan.playerTarget = ctx.playerTarget
 		plan.permanentTarget = ctx.permanentTarget
+		plan.permanentTargets = ctx.permanentTargets
 		plan.spellTarget = ctx.spellTarget
 		plan.cardTarget = ctx.cardTarget
 		plan.damageTarget = ctx.damageTarget
@@ -632,6 +642,8 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 		return nil, "", err
 	}
 	switch n.Name {
+	case "OneOrMoreTargetPermanents":
+		return compilePluralPermanentTarget(n, ctx)
 	case "TargetPermanent":
 		filter, options, err := compilePermanentTargetFilter(n.Args[0], ctx)
 		if err != nil {
@@ -1100,6 +1112,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return effects, nil
 	case "CreateEachPermanentLayerEffectUntil":
+		if n.Kind == Tuple && len(n.Args) == 3 && n.Args[0].Name == "Ref_TargetPermanents" {
+			build, err := compilePluralColor(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		build, err := compileTemporaryCollection(n)
 		if err != nil {
 			return nil, err

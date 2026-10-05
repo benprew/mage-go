@@ -2470,3 +2470,22 @@ source exclusions and nested attachment queries are rejected in this host
 context. This slice does not add collection attachment filters, movement,
 activated modes or replacement operations. Miracle Worker and Savaen Elves have
 complete RON gameplay tests in `attachment_target_test.go`.
+
+### RON plural targets and temporary colors
+
+The RON compiler accepts `OneOrMoreTargetPermanents(filter)` as the sole target
+group of a spell, mode, activation, or trigger. Its typed collection reference
+is `Ref_TargetPermanents`; the singular `Ref_TargetPermanent` cannot read this
+group. Existing permanent target filters and options apply to each member.
+
+`CreateEachPermanentLayerEffectUntil(Ref_TargetPermanents,
+[SetColor(SimpleColorList([colors]))], UntilEndOfTurn)` replaces the colors of
+legal targets at resolution. The list can contain White, Blue, Black, Red, and
+Green. An empty list makes the targets colorless. Supply one modification.
+The compiler rejects delayed-action use of this form until that context has
+contract tests. Collection P/T effects retain their existing filter context.
+
+The adapter uses `DeclarePermanentTargets`, `SetEachColors`, and `Until`.
+Targets are chosen at announcement. The color effect captures each legal
+incarnation at resolution and ends at cleanup. The compiler creates fresh target
+bindings for every factory call.

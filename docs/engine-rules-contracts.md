@@ -2618,3 +2618,34 @@ in the shared engine services.
 DRK records for Miracle Worker and Savaen Elves supply complete behavior tests.
 No LKI read is used to act on an absent object. No batch or replacement-order
 contract is added by this adapter.
+
+### RON plural target color adapter
+
+`OneOrMoreTargetPermanents(filter)` lowers to a typed
+`DeclarePermanentTargets(name, 1, math.MaxInt, filter, options...)` declaration.
+The upper bound imposes no additional game limit. The declaration has no chosen
+state. Factory-local bindings connect `Ref_TargetPermanents` to this group.
+Spell, mode, activation, and trigger contexts use the same adapter. Delayed
+color actions remain compile errors.
+
+The one-operation `SetColor(SimpleColorList(colors))` action on this collection
+uses `Until(EndOfTurn, SetEachColors(binding, colors...))`. Target legality is
+checked at announcement and resolution (CR 115, 601.2c, 608.2b). Legal members
+are captured together when the effect starts (CR 611.2c). Layer 5 replaces their
+colors (CR 613.1e); it does not change types, abilities, or P/T. Departure ends
+the captured incarnation's participation (CR 400.7). Phasing retains identity
+but excludes a phased target from resolution (CR 702.26b). Cleanup ends the
+effect. These engine services retain their existing contracts.
+
+`TestRONPluralColorRealCards` verifies complete Dwarven Song, Heaven's Gate,
+Sea Kings' Blessing, Sylvan Paradise, and Touch of Darkness records, their mana
+payments, plural selection, replacement colors, timing, clones, and cleanup.
+`TestRONPluralColorLegalityAndIdentity` checks partial/all-illegal targets,
+return, phasing, control, copies, and clone isolation. `Announcement` checks
+zero/duplicate targets, wrong types, shroud, phasing, and payment rollback.
+`InstancesAndLayerOrder` checks independent factory instances, multiple colors,
+later layer-5 effects, and departure after resolution. `RetargetCopy` checks
+separate copy choices. `Contexts` checks modes, activation source departure,
+trigger placement, and an empty color list. `Invalid` and `Inventory` check
+rejected declarations, mode scope, and nested semantic roles. All test names
+have the prefix `TestRONPluralColor`.

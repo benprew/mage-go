@@ -12790,3 +12790,149 @@ blocker remains. Required checks cover the final implementation and tests.
 One descriptive commit stages only the eight slice files above. The user's
 `.gitignore` and execution-design edits stay unstaged. The commit hash is
 reported in the final response. This run stops after this slice.
+
+## 2026-10-05: plural permanent targets and temporary color replacement
+
+Status: completed `targets.plural-color` compiler slice. One slice only.
+The user's `.gitignore` and execution-design edits stay outside the commit.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+ledger, target/scoping/layer/compiler/inventory code, engine typed collections,
+color modifications, target copy/clone/legality tests, relevant API and rules
+contracts, and CR 115, 400.7, 608.2b, 611.2 and 613.1e. Complete candidate RON
+records supplied requirements. No Go card definition supplied requirements.
+No removed skill, generated stub, fallback, or subagent was used.
+
+Fresh baseline: `go test ./pkg/mage/dsl/ron -count=1`,
+`go test ./pkg/mage/... -short -count=1`, and `make build` passed. Strict and
+semantic loaders exited 1 for collection rejection, not a build failure:
+2,445 records / 986 names; 1,476 compiled / 969 rejected records;
+521 accepted / 465 rejected names. Inventory: 72,938 nodes, 8,530 context
+signatures, 11,115 unknown-role occurrences. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream value and effort |
+| --- | --- | --- | --- |
+| Plural permanent targets with temporary colors, selected | Dwarven Song, Heaven's Gate, Sea Kings' Blessing, Sylvan Paradise, Touch of Darkness | 5 names / 5 records; no additional blocker in their complete records. | Typed plural binding prerequisite for fixed/X collections, collection exile, tap, grants and destruction. Low adapter effort; medium legality, identity, copy, clone and gameplay test effort. |
+| All-zone CDA characteristics | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, People of the Woods, Plague Rats, Wood Elemental | 5 credible full-card gains; Avenger has the existing controller source concern; Wood needs entry sacrifice results. | All-zone characteristic evaluation, count/arithmetic and CDA layer ordering. High engine/regression effort, medium adapter effort. |
+| Combat-pair filter, host and union extensions | Abomination, Giant Shark, Infernal Medusa, Venom, Wall of Dust; Infinite Authority also has the host/union form | 2 credible gains, Abomination and Venom. Shark needs damage-history filtering; Medusa has reference/direction concerns; Wall of Dust needs next-turn duration; Infinite Authority needs success results and nested delayed bindings. | Shared event-time filtering, host identity, event unions and captured opponent references. Medium/high engine, compiler and gameplay test effort. |
+
+The selected shape offers five immediate gains through existing exact engine
+services. Complete records and nested forms establish this estimate; first-error
+frequency does not. The alternatives need engine prerequisites or additional
+contracts. The selection, reuse boundary, contract and acceptance cases were
+stated before editing. Missing compiler adapters are the only prerequisites
+for the selected cards. No selected source-data defect or environment failure
+was found; existing source concerns remain open.
+
+### Exact signatures, contexts and engine reuse
+
+`compilePluralPermanentTarget(n Node, ctx scope)
+(targetFactory, string, error)` lowers one-argument
+`OneOrMoreTargetPermanents(filter)` in the sole group of `Targeted` to
+`DeclarePermanentTargets(name, 1, math.MaxInt, filter, options...)`.
+Existing permanent target filters/options are reused. The typed
+`permanentTargetsPlan` and factory-local `instanceBindings.permanentSets` keep
+`Ref_TargetPermanents` distinct from singular references. Each mode clears its
+local plural scope and uses its own namespace. Fresh factory calls build fresh
+declarations. No chosen state is captured in the compiled factory.
+
+`compilePluralColor(n Node, ctx scope) (effectFactory, error)` accepts
+`CreateEachPermanentLayerEffectUntil(Ref_TargetPermanents,
+[SetColor(SimpleColorList([colors]))], UntilEndOfTurn)` in spell, mode,
+activation and trigger actions. Supply exactly one color modification. Colors
+are White, Blue, Black, Red and Green; an empty list makes objects colorless.
+Colorless as a list member, malformed arities, unknown colors, wrong/unbound
+references, other modifications/durations and delayed-action contexts fail at
+compilation. Existing filter-based temporary collection P/T behavior is kept.
+Other plural target counts/actions remain unsupported.
+
+Reusable execution stays in the engine: `DeclarePermanentTargets`, target
+legality and incarnation capture, `SetEachColors`, `Until`, layer 5, stack
+copy/retarget, clone, payment transactions and cleanup. The resolving effect
+captures legal group members together. Returned cards have new incarnations;
+phased targets are not affected at resolution; a later phase cycle preserves an
+already captured color effect. Source departure does not end the fixed duration.
+No LKI read, cost, replacement-order rule or new simultaneous-operation service
+is introduced. No global last-action state or partial production registry is
+added. Semantic inventory now reports the plural target's filter, plural
+collection reference and temporary color-list descendants, including descendants
+of rejected parents. Support remains unverified by default in inventory.
+
+### TDD and complete-card behavior mappings
+
+Initial real-card tests failed at the intended missing
+`OneOrMoreTargetPermanents` declaration for all five names. No test build failure
+obscured that evidence. The nested inventory test then failed because temporary
+color-list descendants still had unknown roles; the role adapter was corrected.
+One lint finding required replacing a duplicate-target fixture's append with
+an explicit slice. No gameplay assertion was weakened.
+
+All test names below have the prefix `TestRONPluralColor`:
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Dwarven Song | `RealCards/Dwarven_Song`: complete LEG record, R payment, plural own/enemy selection, replacement colors, resolution timing, unselected objects, clone and cleanup. |
+| Heaven's Gate | `RealCards/Heaven's_Gate`: complete LEG record and the same cases with W payment/white replacement. |
+| Sea Kings' Blessing | `RealCards/Sea_Kings'_Blessing`: complete LEG record and the same cases with U payment/blue replacement. |
+| Sylvan Paradise | `RealCards/Sylvan_Paradise`: complete LEG record and the same cases with G payment/green replacement. |
+| Touch of Darkness | `RealCards/Touch_of_Darkness`: complete LEG record and the same cases with B payment/black replacement; `InstancesAndLayerOrder` adds later color replacement. |
+| Shared legality/identity | `LegalityAndIdentity`: partial/all-illegal resolution, shroud, return before resolution, phase/cycle, control changes, copied stack objects, pending clones and phase cycles after resolution. `Announcement`: zero/duplicate targets, wrong type, shroud/phasing and mana/hand/stack rollback. |
+| Shared binding/layers | `InstancesAndLayerOrder`: one compiled factory, independent declarations and targets, multicolor lists, timestamp order and return after resolution. `RetargetCopy`: new copy target with original binding preserved. `Contexts`: mode, activation with source departure, trigger placement and empty color list. |
+| Declarations/reporting | `Invalid`: arities, unbound/singular mismatch, mode leakage, invalid colors, empty/duplicate modifications, invalid duration and unsupported delayed context. `Inventory`: nested roles under a rejected action. |
+
+Five complete-card behavior mappings are added. Compilation counts remain
+separate from gameplay coverage. Inventory `engine_validated` and
+`behavior_verified` remain null; they do not assert collection-wide support.
+
+### Final measurements, validation and remaining work
+
+Actual gain matches the estimate: **5 unique names / 5 records**. Strict and
+semantic loaders report **1,481 compiled / 964 rejected records**, **526 accepted /
+460 rejected names**. Comparing rejected-name sets shows the five selected
+names are the only gains and no accepted-name regression. Nodes/signatures stay
+72,938 / 8,530; unknown-role occurrences fall to **11,095**. File hashes are
+unchanged. No RON source correction or vocabulary source refresh is needed.
+Strict loading still rejects the collection and publishes no partial registry.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONPluralColor -count=1` | PASS after implementation, including copy retargeting. Expected TDD failures recorded above. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS; measured collection assertions updated to 1,481/964; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | Initial fixture preallocation warning fixed; final run PASS, zero issues. Formatting/import edits reviewed; no unrelated files changed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,481 compiled / 964 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts/issues; 460 rejected names, 11,095 unknown-role occurrences; file hashes unchanged. |
+
+Remaining diagnostics include `NumberTargetPermanents` on Ashes to Ashes and
+Word of Binding, `CreateFuturePreventDamage` on Samite Healer, `CDA_Power` on
+Dakkon Blackblade, combat-pair `Or` on Abomination and trigger `Or` on Venom.
+They remain explicit collection blockers, distinct from successful builds/tests.
+No environment or pre-existing check failure blocks this slice.
+
+Ranked next candidates to reassess:
+1. Fixed/X plural target collections and batch actions. The new binding service
+   is a prerequisite for Ashes to Ashes, Dust to Dust, Word of Binding, Part
+   Water, Winter Blast, Volcanic Eruption and Candelabra of Tawnos. Reuse existing
+   `ExileEach`, `TapEach`, keyword grants and X target declarations; inspect
+   damage/results, source fidelity and activation-X blockers before estimating
+   a complete shape.
+2. Finite recipient prevention allocation, the existing multi-card engine
+   prerequisite for about ten credible complete-card gains after adapters.
+3. All-zone CDA characteristics, with the Gaea's Avenger source audit.
+
+No Go definitions, generators or DSL functions are removed. Complete loading,
+all-card gameplay, startup wiring and the removal gates remain unmet. No fresh
+caller audit authorizes deletion in this slice. Cutover authoring instructions
+remain for the cutover phase. API/rules docs describe only established behavior.
+
+Slice files: `pkg/mage/dsl/ron/plural_color.go`, `plural_color_test.go`,
+`compiler.go`, `player_scope.go`, `modal_spell.go`, `inventory.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this ledger. Stage only these ten files. The descriptive commit hash is
+reported in the final response. Stop after this slice.

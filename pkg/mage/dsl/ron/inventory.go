@@ -330,7 +330,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "target":
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "TargetPermanent":
+			case "TargetPermanent", "OneOrMoreTargetPermanents":
 				return "permanent_filter"
 			case "TargetPlayer":
 				return "player_filter"
@@ -473,6 +473,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "CreateEachPermanentLayerEffectUntil":
 			if len(n.Args) == 3 {
+				if index == 0 && n.Args[0].Name == "Ref_TargetPermanents" {
+					return "permanent_collection_reference"
+				}
 				return []string{"permanent_filter", "temporary_modification", "duration"}[index]
 			}
 		case "CreatePermanentRuleEffectUntil":
@@ -581,7 +584,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "creature_subtype"
 			}
 		case "SetColor":
-			if role == "static_modification" && len(n.Args) == 1 {
+			if (role == "static_modification" || role == "temporary_modification") && len(n.Args) == 1 {
 				return "color_list"
 			}
 		case "AdjustPTX":
