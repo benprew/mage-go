@@ -3041,3 +3041,23 @@ transaction contract. Supplied actions retain their established services.
 
 Evidence: `TestRONCoin*` and retained `TestComposableCoinFlipBranches`,
 `TestComposableCoinFlipValidation`, `TestRONDelayedStep*` and token/damage tests.
+
+
+## RON source block event adapter
+
+RON `WhenACreatureBlocks(SinglePermanent(ThisPermanent))/1` reuses `Blocks(This)`
+and the engine's final legal block assignments (CR 509.1, 509.3a). The adapter
+adds no event system. Multiple pairs produce one source block trigger; entering
+blocking produces none (CR 509.4). `Trigger_ThatCreature` uses the pending
+ability's source incarnation, not a global event slot. Delayed actions keep
+that source and the resolving controller through `AtNext` (CR 400.7, 603.7).
+Departure, control changes and phasing retain the existing source-reference,
+sacrifice and damage LKI contracts. Damage still occurs if sacrifice cannot
+occur. Copies and clones keep independent pending actions.
+
+RON symbol filter `IsntEnchanted` reuses `Not(IsEnchanted)`. Only current,
+unphased Aura attachments count. Casting and resolution use the existing target
+legality checks (CR 601.2c, 608.2b). No new engine API or replacement policy is
+established. `TestRONSourceBlockTimeElementalNative`, `Identity`, `Activation`,
+`LegalPairsAndEntry`, `FactoryAndFilterRecheck` and `InvalidAndInventory` provide
+real-record and declaration evidence for these adapter contracts.

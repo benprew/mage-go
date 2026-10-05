@@ -2467,7 +2467,8 @@ opponent is a new object; a phased-out opponent cannot be destroyed.
 The compiler uses `BlocksCreatureMatching`, `BecomesBlockedByCreatureMatching`,
 and `BlocksOrBecomesBlockedByCreatureMatching` with a typed source/host reference,
 immutable `PermanentFilter`, and `WithOpponent(binding)`. Previous source-only
-engine patterns remain available. `WhenACreatureBlocks`, group events and other
+engine patterns remain available. Source-only `WhenACreatureBlocks` uses the
+adapter described below. Host block events, group events and other
 event-reference spellings still require separate adapters.
 
 ### RON indefinite type changes
@@ -2844,3 +2845,29 @@ procedures and additional combat actions remain unsupported.
 Complete-card evidence: `TestRONCoinBottle`, `BottleDamageAndLKI`, `Captain`,
 `Kites`, `CastingAndInstances`, `NestedSequencing`, and `InvalidAndInventory`.
 The three mappings are Bottle of Suleiman, Goblin Kites and Orcish Captain.
+
+
+## RON source block events
+
+`TriggerA(WhenACreatureBlocks(SinglePermanent(ThisPermanent)), body)` uses
+`mage.Blocks(mage.This)`. The body is a supported resolving action list or
+single target declaration with actions. `Trigger_ThatCreature` denotes the
+captured source incarnation in this body and its supported delayed actions.
+The binding cannot escape to another ability. Host subjects and filtered
+collections remain unsupported. The event has exactly one positional argument;
+its selector has exactly one symbol reference.
+
+The event triggers once when the source blocks, including when it blocks
+multiple attackers. Entering the battlefield blocking does not trigger it.
+The shared engine selects final legal block assignments and preserves pending
+trigger controllers, source identity, copies and clone isolation.
+
+`IsntEnchanted` is a zero-argument symbol permanent filter. It lowers to
+`mage.Not(mage.IsEnchanted)` and reads current Aura attachments. A phased Aura
+does not count. Targets use this filter at announcement and resolution;
+equipment does not count as an Aura. Tuple spellings remain invalid.
+
+`TestRONSourceBlock*` maps the complete Time Elemental record to native combat,
+next-end-of-combat sacrifice and damage, casting, activation payments, target
+rechecks, source LKI, identity, phasing, copies, clones and factory isolation.
+Other block consumers retain their separate unsupported actions.

@@ -28,7 +28,7 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 		}
 		switch n.Name {
 		case "Trigger_ThatCreature":
-			if ctx.sourceAttack {
+			if ctx.sourceAttack || ctx.sourceBlock {
 				return permanentReferencePlan{kind: permanentSource}, nil
 			}
 		case "ThisPermanent":

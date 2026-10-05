@@ -22,6 +22,7 @@ type scope struct {
 	damageAmount     *damageAmountPlan
 	delayedStep      bool
 	sourceAttack     bool
+	sourceBlock      bool
 	combatOpponent   *permanentEventPlan
 	targetNamespace  string
 	counterPayment   *counterPaymentPlan
@@ -714,6 +715,8 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.AnyPermanent, nil
 		case "IsEnchanted":
 			return mage.IsEnchanted, nil
+		case "IsntEnchanted":
+			return mage.Not(mage.IsEnchanted), nil
 		case "IsTapped":
 			return mage.IsTapped, nil
 		case "IsUntapped":

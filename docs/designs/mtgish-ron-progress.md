@@ -15126,3 +15126,156 @@ Ranked next candidates to reassess with fresh evidence:
 
 Only this slice is committed; its hash is in the final response. The original
 user work stays unstaged. No second implementation slice is started.
+
+## 2026-10-05 — Source block event prerequisite and complete Time Elemental
+
+Status: complete adapter slice. Runtime cutover and removal gates remain unmet.
+User work in .gitignore, execution design, ledger restructuring and untracked
+mtgish-ron-completed.md is preserved. Only this appended entry is staged against
+the committed ledger; the user's ledger changes remain unstaged.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary, current ledger,
+selected compiler/engine code, complete candidate RON records and relevant API
+and rules contracts. CR 400.7, 509.1/3a/4, 603.3/7 and 608.2b supply identity,
+block timing, delayed triggers and target rechecks. Baseline focused RON/loader
+tests, short engine tests and make build passed. Loader and AST inventory each
+exited 1 for strict collection rejection, not a build or test failure:
+2,445 records, 1,528 compiled / 917 rejected; 556 accepted / 430 rejected unique
+names. Inventory: 72,951 nodes / 8,540 signatures / 10,346 unknown-role occurrences.
+The stored vocabulary loader diagnostics predate this fresh baseline.
+
+| Candidate | Unique names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Source block event, selected | Time Elemental, Elder Land Wurm, Ydwen Efreet, Spitting Slug; estimated **1** full card after source-event adapter. | Elder needs indefinite LosesAbility(Defender); Ydwen needs removal/unblocking and temporary CantBlock; Slug needs paid/unpaid branching plus opposing-combat collection filters and becomes-blocked event. Host consumer Imprison has ability targeting/payment blockers and needs a separate captured host event contract. Enables four source consumers through a shared event adapter. | Low: existing Blocks/This/AtNext contracts; compiler scope and inventory adapters plus native RON and lifecycle tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion; **4** full cards after allocation prerequisite, **0** adapter-only gains. | Complete records need single or modal recipients, tap/mana costs and X. Shared CR 615.7 allocation for simultaneous sources is still missing. Enables further finite shield consumers. | Medium/high: engine decisions, shield consumption, replacement/batch and rollback tests, then adapters. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats; **4** full cards after characteristics prerequisite. | Complete records need controller land/Swamp/non-Wall counts or named creatures, plus all-zone characteristic evaluation and owner/controller context. Enables CDA, copy and layer consumers. | High: engine all-zone evaluation and characteristic/copy/controller/layer tests, then adapters. |
+
+The source-block prerequisite has the smallest effort and concrete shared use
+across four cards. The selection, reuse boundary and acceptance cases were
+stated before implementation. First-error counts did not determine the estimate;
+complete records, including every nested action, were inspected. The estimate
+missed Time Elemental's IsntEnchanted adapter: initial source-block implementation
+revealed this exact missing filter. The full-record tests then failed on it.
+The slice includes its exact negation adapter to make Time Elemental complete.
+This is a compiler gap, not an engine or data defect. It is the only occurrence
+of that symbol. No source correction, environment failure or engine change was
+needed. No sub-agent or removed card/set skill was used.
+
+### Signatures, contexts, dependencies and reuse
+
+Private lowering: compileSourceCombatTrigger(event, body Node, ctx scope)
+(optionFactory, error), shared with existing source attack adapters.
+Supported addition: TriggerA(WhenACreatureBlocks(SinglePermanent(ThisPermanent)),
+body). Event and selector each have exactly one positional argument; source
+reference must be the symbol ThisPermanent. Body uses existing action-list or
+single-target resolving contexts. Trigger_ThatCreature is available only inside
+this body's lexical scope and supported delayed actions. It lowers to This,
+which keeps the pending source incarnation. Source block scope is distinct from
+source attack scope; attack-only duration permission is not broadened.
+Host, collection, union and becomes-blocked events remain separate unsupported
+contexts. Malformed kinds/arities, incompatible refs and references escaping to
+another ability fail at compilation. The full collection still fails atomically.
+
+IsntEnchanted is a zero-argument symbol in permanent-filter contexts accepted
+by compileFilter. It reuses Not(IsEnchanted), with live Aura attachments; phased
+Auras do not count. Tuple spellings are rejected. Targets check the filter at
+announcement and resolution. Other callers retain their current behavior.
+
+RON owns spelling, scope and AST roles. Engine reuse: Blocks(This),
+BlocksTrigger, final legal block assignments, This incarnation resolution,
+WhenEvent, Sequence, AtNext/EachEndOfCombat, source damage LKI, prevention,
+sacrifice, typed target legality, transactional costs, stack copy and Clone.
+Each factory builds fresh abilities and target declarations. No global event
+slot, parallel rules service, card-name branch, Go fallback, declaration panic
+or partial production registry is introduced. No new simultaneous-operation or
+replacement ordering contract is added. Existing shared tests remain intact.
+
+### Tests and complete-card mapping
+
+Tests first hit a duplicate test-helper build error; the duplicate was removed.
+The resulting tests failed as expected on unsupported WhenACreatureBlocks.
+After the event adapter, full-record tests failed on IsntEnchanted. The exact
+filter adapter made the tests pass. No behavior assertion was weakened.
+Collection count assertions were updated to the independently measured gain.
+
+Time Elemental, complete LEG record, maps to:
+
+- TestRONSourceBlockTimeElementalNative: native attacks and blocks, exact
+  delay installation, next-end-of-combat sacrifice and five damage, one-shot
+  delay, complete definition validation and unchanged opposing player.
+- TestRONSourceBlockTimeElementalIdentity: no resolution work at detection,
+  first-pair versus subsequent-pair event flags, return before/after installation,
+  phasing/cycle, current control and sacrifice permission, ability removal
+  before/after detection, inactive source, copied trigger controller, independent
+  clones and two source instances, damage LKI and prevention even when sacrifice
+  cannot occur.
+- TestRONSourceBlockTimeElementalActivation: full 2U casting and 0/2 metadata,
+  no entry trigger, 2UU/tap payment, failed cast and activation rollback,
+  enchanted target rejection and return to the target owner's hand.
+- TestRONSourceBlockLegalPairsAndEntry: real RON ability blocking two legal
+  attackers produces one delay; illegal tapped blocks produce none; entering
+  blocking does not trigger blocks.
+- TestRONSourceBlockFactoryAndFilterRecheck: fresh factory abilities/targets,
+  Aura addition or phasing, target return/phasing, source departure, stack copy,
+  pending-clone isolation and malformed filter rejection.
+- TestRONSourceBlockInvalidAndInventory: malformed event/selector declarations,
+  unbound, incompatible or escaped references and nested AST subject roles.
+
+Focused retained coverage includes TestRONSourceAttack*, TestRONDelayedStep*,
+TestRONEnchantedFilter* and TestInventory*. No Go definitions are requirements.
+Local data/LEG.json Oracle text agrees with the complete Time Elemental record.
+All twelve RON source hashes match the vocabulary snapshot; no source defect or
+source edit was found, so the syntax snapshot does not need a source refresh.
+
+### Final evidence and gain
+
+Actual gain is **1 unique card / 1 record**, exactly Time Elemental, with no
+accepted-name regressions. The estimate is met after the extra filter adapter;
+the event adapter alone gives zero collection unlocks. One complete-card behavior
+mapping is added. Compilation progress and gameplay coverage remain separate:
+collection engine_validated and behavior_verified fields remain null.
+Final loader and inventory: **1,529 compiled / 916 rejected records**,
+**557 accepted / 429 rejected unique names**, expected exit 1. Inventory remains
+72,951 nodes / 8,540 signatures; unknown-role occurrences fall to 10,336.
+Ydwen now diagnoses RemoveCreatureFromCombatAndUnblockBlockers; Elder diagnoses
+LosesAbility; Slug diagnoses unsupported IfElse payment continuation. Imprison
+still fails at the separate activation-filter gap.
+
+| Command | Result |
+| --- | --- |
+| Baseline focused RON/loader tests, short engine tests, make build | PASS. |
+| Focused source block/attack, delayed, enchanted-filter and inventory tests with -count=1 | PASS. |
+| go test ./pkg/mage/... -short -count=1 | PASS. |
+| make test | PASS. |
+| make build | PASS. |
+| go vet ./... | PASS. |
+| make lint | PASS, zero issues; automatic changes reviewed. |
+| git diff --check | PASS. |
+| go run ./cmd/loadcards -json | Expected rejection, exit 1: 1,529 / 916. |
+| go run ./cmd/loadcards -inventory -json | Expected rejection, exit 1; same counts, nested roles inspected. |
+| Accepted-name and source-hash audit | Exact Time Elemental gain, no regressions or source changes. |
+
+Changed files: ron/compiler.go, triggers.go, source_attack.go,
+permanent_scope.go, inventory.go, inventory_test.go, source_block_test.go;
+docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
+Lint converted the event conditional to a switch and formatted the new test
+file. Final focused tests, short engine tests, make test, make build and go vet
+passed again after those changes.
+Existing callers remain. No Go card, generator, startup caller or DSL function
+was removed. Removal gates require complete collection support and runtime/test
+cutover first; no caller audit authorizes deletion in this slice.
+
+Ranked next candidates to reassess:
+
+1. Finite recipient prevention allocation prerequisite and adapters: four
+   complete consumers (Samite Healer, Healing Salve, Conservator, Alabaster Potion).
+2. All-zone count CDA prerequisites/adapters: four complete consumers (Dakkon
+   Blackblade, Keldon Warlord, Nightmare, Plague Rats).
+3. Shared source combat removal/unblocking and temporary blocking rules for
+   Mijae Djinn/Ydwen Efreet, or paid/unpaid branches for Spitting Slug; compare
+   their full dependencies with the seven Targeted_Modal consumers.
+
+This run stops after this slice. The descriptive commit hash is reported in the
+final response. User work remains unstaged.

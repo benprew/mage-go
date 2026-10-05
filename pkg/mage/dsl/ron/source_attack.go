@@ -2,13 +2,13 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
-func compileSourceAttackTrigger(event, body Node, ctx scope) (optionFactory, error) {
+func compileSourceCombatTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if err := arity(event, 1); err != nil {
 		return nil, err
 	}
 	subject := event.Args[0]
 	if subject.Name != "SinglePermanent" {
-		return nil, unsupported(subject, "source attack subject")
+		return nil, unsupported(subject, "source combat subject")
 	}
 	if err := arity(subject, 1); err != nil {
 		return nil, err
@@ -18,9 +18,10 @@ func compileSourceAttackTrigger(event, body Node, ctx scope) (optionFactory, err
 		return nil, err
 	}
 	if ref.kind != permanentSource {
-		return nil, unsupported(subject.Args[0], "source attack reference")
+		return nil, unsupported(subject.Args[0], "source combat reference")
 	}
-	ctx.sourceAttack = true
+	ctx.sourceAttack = event.Name != "WhenACreatureBlocks"
+	ctx.sourceBlock = event.Name == "WhenACreatureBlocks"
 	plan, err := compileActions(body, ctx)
 	if err != nil {
 		return nil, err
@@ -28,7 +29,10 @@ func compileSourceAttackTrigger(event, body Node, ctx scope) (optionFactory, err
 	return func() mage.CardOption {
 		actions := plan.build()
 		var pattern mage.EventPattern = mage.Attacks(mage.This)
-		if event.Name == "WhenACreatureAttacksAndIsntBlocked" {
+		switch event.Name {
+		case "WhenACreatureBlocks":
+			pattern = mage.Blocks(mage.This)
+		case "WhenACreatureAttacksAndIsntBlocked":
 			pattern = mage.AttacksUnblocked(mage.This)
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
