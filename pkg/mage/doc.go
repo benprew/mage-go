@@ -289,6 +289,11 @@
 // at ten poison counters. [TokenAbilities] gives each token its own ability
 // identity; event bindings keep their values in the resolution frame.
 //
+// Use [ShuffleHandsAndGraveyardsIntoLibraries] before a separate draw action.
+// Use [ShuffleHandsIntoLibrariesAndDraw] to draw each player's moved count.
+// All moves finish before zone events, and all shuffles finish before draws.
+// Counts stay local to each resolution. Empty hands still cause a shuffle.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

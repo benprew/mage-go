@@ -656,25 +656,7 @@ func (*searchLibraryToTopEffect) Apply(ctx *EffectContext) error {
 }
 
 func (e *shuffleHandAndGraveyardIntoLibraryAndDrawEffect) Apply(ctx *EffectContext) error {
-	for _, p := range ctx.Game.AllPlayers() {
-		// Move hand into library (copy slice since RemoveFromHand modifies it)
-		hand := append([]Card(nil), p.Hand()...)
-		for _, c := range hand {
-			p.RemoveFromHand(c.ID())
-			p.AddToLibrary(c)
-		}
-		// Move graveyard into library
-		for _, c := range p.Graveyard() {
-			p.AddToLibrary(c)
-		}
-		p.ClearGraveyard()
-		p.ShuffleLibrary()
-		// Draw N cards
-		for i := 0; i < e.drawCount; i++ {
-			ctx.Game.PlayerDrawCard(p)
-		}
-	}
-	return nil
+	return Sequence(ShuffleHandsAndGraveyardsIntoLibraries(EachPlayer), DrawEach(EachPlayer, Fixed(e.drawCount))).Apply(ctx)
 }
 
 func (*shuffleLibraryEffect) Apply(ctx *EffectContext) error {

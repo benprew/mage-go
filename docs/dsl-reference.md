@@ -2716,10 +2716,33 @@ draws permit later instructions. Existing spell, mode, activation, trigger and
 delayed action lists use the same lowering. The forms create no targets or
 loop-local player binding and preserve surrounding target scopes.
 
-Other player filters, action-list bodies, shuffle actions, optional discards,
+Other player filters, action-list bodies, optional discards,
 X and player-dependent draw amounts remain compile errors in this context.
 Complete Wheel of Fortune gameplay evidence is in `TestRONEachPlayerWheel`,
 `TestRONEachPlayerCopies` and `TestRONEachPlayerReplacements`.
+
+### RON all-player library shuffle actions
+
+`EachPlayerAction(AnyPlayer, ShuffleHandAndGraveyardIntoLibrary)` moves both
+players' hands and graveyards into their own libraries, then shuffles each
+library. Later fixed draw actions remain separate instructions. This uses
+`ShuffleHandsAndGraveyardsIntoLibraries(EachPlayer)`.
+
+The adjacent pair `EachPlayerAction(AnyPlayer, ShuffleHandIntoLibrary)` followed
+by `EachPlayerAction(AnyPlayer, DrawNumberCards(NumCardsShuffledIntoLibraryThisWay))`
+uses `ShuffleHandsIntoLibrariesAndDraw(EachPlayer)`. The engine keeps each
+player's moved count local to that resolution. It finishes all shuffles before
+any draw. This pair creates no readable result outside its continuation.
+Missing, nonadjacent, incompatible, or malformed continuations are compile
+errors. Other shuffle-result consumers remain unsupported.
+
+Both forms use resolving action lists, including mode and activation bodies.
+They create no targets. They shuffle empty libraries and hands, preserve
+owners, and exclude battlefield, exile, and stack cards. Movement is not
+discard. Zone events see all completed moves; graveyard departures report one
+batch per player. Draws use the existing replacement pipeline and active-player
+order. The resolving spell moves to the graveyard after its instructions.
+Evidence: `TestRONLibraryRecycle*` and engine `TestLibraryRecycle*`.
 
 ### RON current-hand operations
 

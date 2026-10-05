@@ -109,7 +109,7 @@ func TestRONEachPlayerInvalid(t *testing.T) {
 		`EachPlayerAction(AnyPlayer,DrawNumberCards(Integer(1,2)))`, `EachPlayerAction(AnyPlayer,DrawNumberCards(ValueX))`,
 		`EachPlayerAction(AnyPlayer,DrawNumberCards(NumCardsShuffledIntoLibraryThisWay))`,
 		`EachPlayerAction(AnyPlayer,PlayerAction(ActionPlayer,DrawACard))`,
-		`EachPlayerAction(AnyPlayer,ShuffleHandAndGraveyardIntoLibrary)`,
+		`EachPlayerAction(AnyPlayer,ShuffleHandAndGraveyardIntoLibrary())`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Sorcery],Subtypes:[]),Rules:[SpellActions(ActionList([`+action+`]))])`), "invalid-each.ron")
 		if err != nil {

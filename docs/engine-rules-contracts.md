@@ -790,6 +790,34 @@ Evidence: `TestRONOptionalSacrificeCards`, `BranchesAndScope`,
 `DetectionAndCurrentFilters`, `OtherCardRules`, `Inventory` and `NativeLoad`
 under the same `TestRONOptionalSacrifice` prefix.
 
+## All-player hand and graveyard library shuffles
+
+`ShuffleHandsAndGraveyardsIntoLibraries(PlayerSet)` selects current hands and
+graveyards at resolution. All selected zone moves finish before events, and
+all shuffles finish before a later instruction. It sends per-card zone events
+and one graveyard-departure batch per affected player. Hand movement is not
+discard. The player zone services preserve ownership and clone isolation.
+Empty sets of cards still cause a library shuffle (CR 701.24c-e).
+
+`ShuffleHandsIntoLibrariesAndDraw(PlayerSet)` shuffles hands only, then draws
+the number each player moved. Its count map belongs to one invocation and
+cannot be changed by another instance, copy, clone, or later hand change.
+Draws occur individually through the existing replacement pipeline, with the
+active player completing all draws first (CR 121.2, 608.2c/e/f). The typed
+player collection is checked by definition validation. Nil collections fail
+before execution. These APIs create no general saved-count binding.
+
+The retained `ShuffleHandAndGraveyardIntoLibraryAndDraw(n)` constructor uses
+the same shuffle service followed by `DrawEach`. This fixes its former early
+draw and seating-order behavior while preserving its public signature.
+Source departure, return, phasing, or control change does not alter an
+all-player instruction already on the stack. The resolving spell remains on
+the stack until its instructions finish (CR 608.2n).
+
+Evidence: engine `TestLibraryRecycleBatch`, `EmptyAndDeclaration`,
+`LegacyOrder`; RON `TestRONLibraryRecycleCards`, `Declarations`,
+`ReplacementsAndEmpty`, `CountsBeforeDraws`, and `Contexts`.
+
 ## RON fixed draw and activation life cost adapters
 
 RON symbol `DrawACard` uses `DrawFor(player, Fixed(1))`. Typed player targets

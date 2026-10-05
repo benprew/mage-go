@@ -17582,3 +17582,162 @@ No Go definitions, generators, startup callers or DSL functions were removed:
 complete loading, gameplay, runtime wiring and caller-audit removal gates remain
 unmet. Commit only after required checks pass. Report its hash in the final
 response. No second slice is started.
+
+
+## Run 2026-10-05: ALL-PLAYER-LIBRARY-RECYCLE
+
+Status: complete engine and compiler slice. Stop after this slice. Initial
+user changes to `.gitignore`, the execution design and this progress file,
+and the untracked completed ledger, are preserved. Only this appended entry
+is staged from the already modified progress file.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Loader and inventory inspection exited 1 for collection rejection, not a
+build/test failure: **1,580 compiled / 865 rejected records**, **582 accepted /
+404 rejected unique names**. Inventory: 2,445 records, 986 unique names,
+72,951 nodes, 8,540 signatures, 9,809 unknown-role occurrences. The design,
+ledger, vocabulary snapshot, engine reference, selected compiler/engine code,
+API/rules contracts and complete candidate records were inspected. Relevant
+rules: CR 101.4, 121.2/4/6, 608.2c/e/f/n and 701.24a-e. Local `data/LEA.json`
+and `data/LEG.json` confirm the two selected cards' complete Oracle text.
+
+| Candidate | Distinct affected cards and estimated full-card unlocks | Other blockers and downstream reuse | Effort |
+| --- | --- | --- | --- |
+| All-player library recycling, selected | Timetwister and Winds of Change: **2** full-card unlocks, six records. | Engine needs simultaneous movement/event visibility and all shuffles before APNAP draws. Winds also needs per-player moved counts. Its count must not be a global last-action value. Enables reusable shuffle operations, exact per-player count continuation and retained legacy shuffle/draw callers. | Medium: one shared engine service, two exact RON shapes, declaration and real gameplay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Gaea's Avenger: **0 adapter-only / 5 credible full-card unlocks** after the prerequisite. | All-zone characteristic evaluation, owner/controller count context and CDA/copy layers. Avenger has the deferred wrong-player artifact-count source defect. Enables characteristics in library, hand, graveyard and exile. | High: engine characteristic service plus adapters and zone/layer/copy gameplay contracts. |
+| Chosen-source one-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; Dark Sphere, Jade Monolith, Reverse Damage, Eye for an Eye: **0 adapter-only / 7 credible unlocks** for the six Circles and Realm after the prerequisite. | Typed source choice, retained spell/permanent source identity and one-event lifetime. Sphere adds fractional prevention, Monolith adds redirection, Reverse Damage adds actual prevented results, Eye adds continuation/reflection context. Enables concrete source-choice consumers and later replacement operations. | High: source-choice/identity and one-event shield contracts, replacement ordering, then adapters and gameplay evidence. |
+
+Selection: two complete consumers have a smaller coherent prerequisite than
+the larger CDA and chosen-source families. Full nested records established
+the estimate; first-error frequency did not supply it. The selected contract,
+reuse boundary and acceptance cases were stated before editing. The
+`implement-engine` skill supplied the engine workflow. No Go card definitions,
+removed card skills, card-name executor, fallback or production subset registry
+were used. Compilation and gameplay coverage remain separate.
+
+### Exact signatures, contexts, dependencies and engine reuse
+
+Engine APIs:
+
+- `ShuffleHandsAndGraveyardsIntoLibraries(subjects PlayerSet) ResolvingEffect`.
+  Selects current hands and graveyards and moves them into their own libraries.
+  All selected players' moves finish before per-card zone events and one
+  graveyard-departure batch per player. All shuffles finish before a later
+  instruction. Empty hands/libraries still shuffle. The typed collection is
+  checked by definition validation; nil declarations reject before execution.
+- `ShuffleHandsIntoLibrariesAndDraw(subjects PlayerSet) ResolvingEffect`.
+  Moves hands only, then draws each player's moved count. The UUID-keyed count
+  map is private to one invocation. Counts are captured before draws, survive
+  later hand changes, and are separate across invocations, copies and clones.
+  No general result binding or shared mutable declaration is introduced.
+
+RON resolving action-list shapes:
+
+- `EachPlayerAction(AnyPlayer, ShuffleHandAndGraveyardIntoLibrary)`.
+  Lowers to the first API with `mage.EachPlayer`. Later fixed draw instructions
+  remain separate and use the existing `DrawEach` service.
+- The adjacent pair `EachPlayerAction(AnyPlayer, ShuffleHandIntoLibrary)`,
+  `EachPlayerAction(AnyPlayer, DrawNumberCards(NumCardsShuffledIntoLibraryThisWay))`.
+  Lowers to the second API. The result is scoped to this pair and is not
+  available to another mode, branch, or action. Missing/nonadjacent consumers,
+  other player collections, tuple symbols, wrong arity, incompatible producers
+  and standalone result reads reject the declaration. Other result consumers
+  remain unsupported. Existing activation/modal action lists use this shape.
+
+`ron` owns spelling, exact pair validation, producer dominance and lowering.
+The fused engine action owns per-player execution and local counts. Each
+factory builds fresh immutable effects and ability instances. The shared
+service reuses `PlayerSet`, player zone mutations/ownership checks, clone-safe
+`ShuffleLibrary`, existing zone/graveyard event types, and `DrawCards`/`DrawEach`
+with the native draw replacement pipeline. It delays events until all moves
+finish; the older per-player graveyard helper sends events too early for this
+simultaneous operation. Movement is not discard, so discard replacements do
+not apply. No parallel zone store, RNG, targeting or replacement system exists.
+Draws use active-player order; source departure, return, control changes and
+phasing do not change an all-player instruction already on the stack.
+
+The retained `ShuffleHandAndGraveyardIntoLibraryAndDraw(n)` signature now uses
+the same shuffle service and `DrawEach`. Its previous implementation let the
+first seated player draw before the other player shuffled. A failing test
+confirmed both the sequencing and draw-order defect before this fix. Existing
+callers remain. No Go card definitions or DSL functions were removed because
+complete loading, gameplay, runtime wiring and removal gates remain unmet.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for the two missing constructors. RON gameplay then
+failed for unsupported `ShuffleHandAndGraveyardIntoLibrary` and
+`ShuffleHandIntoLibrary`. The retained-helper order test failed for early draw
+and seating-order behavior. All three expected failures were confirmed before
+their respective implementations. A former rejection test now rejects the
+malformed tuple form of the newly supported bare symbol. Other invalid forms
+remain rejected. Exact inventory assertions increased to 1,586/859.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Timetwister, all five complete reprints | `TestRONLibraryRecycleCards`: native casting/payment rollback, both active players, all shuffles before draw through shared service, seven draws, graveyard inclusion, resolving spell exclusion/destination, owners, copied spells and pending cloned resolution. `ReplacementsAndEmpty`: prevented draws and both players' empty-library loss after resolution. |
+| Winds of Change, complete LEG record | `TestRONLibraryRecycleCards`: unequal hands, unchanged graveyards, per-player counts, native casting/rollback, owners, copies and pending clones. `ReplacementsAndEmpty`: prevented draws and empty hands with no attempted draw. `CountsBeforeDraws`: an earlier draw adds cards to the other hand but does not change that player's saved amount. |
+| Declaration and scope | `TestRONLibraryRecycleDeclarations`: malformed symbols/arity, unsupported player sets, wrong/absent/nonadjacent producers and consumers, standalone count reads, factory isolation and strict invalid-collection rejection. |
+| Source and copied abilities | `TestRONLibraryRecycleContexts`: nonmodal and modal activations, source departure/return, phasing/control changes, copied abilities and cloned pending resolution. |
+| Engine batch/identity | `TestLibraryRecycleBatch`: all zone moves before events, one graveyard departure batch per player, no discard, all shuffles before draws, unequal amounts and both active-player orders. `EmptyAndDeclaration`: empty shuffles, nil collections. `CloneAndReplacement`: independent cloned zones and replacements, unchanged per-player amounts, repeated invocations, exact card IDs and owners with no duplication/loss. `LegacyOrder`: retained helper uses the same sequencing and APNAP order. |
+| Retained behavior | `TestRONEachPlayer*`, `TestLibrarySearch*`, `TestInventory*` and required whole-repository suites. Draw replacement selection/rechecks retain the existing pipeline; this slice adds no new replacement ordering path. |
+
+The empty-library fixture originally checked `DrewFromEmpty` after native
+resolution. State-based actions clear that flag when applying loss. It now
+checks both players' actual survival/loss. No gameplay assertion was weakened.
+This slice adds two complete unique-card behavior mappings; collection-wide
+engine-validation and behavior totals remain null. Nonbattlefield targets,
+LKI-dependent information and costs are not introduced by these all-player
+instructions. Source identity changes and cost rollback use existing contracts.
+
+### Final measurements, source defects and validation
+
+Actual gain matches the estimate: **2 unique names / 6 records**, exactly
+Timetwister (five records) and Winds of Change (one). No accepted names are
+lost. Strict loader: **1,586 compiled / 859 rejected records**, **584 accepted /
+402 rejected unique names**. Loader and inventory exit 1, returning no
+production registry. Inventory stays **72,951 nodes / 8,540 signatures / 9,809
+unknown-role occurrences**. All twelve RON hashes match the vocabulary
+snapshot. No RON source or source semantics changed; no snapshot refresh is
+needed. Avenger and the other deferred source defects remain recorded.
+Fresh representative diagnostics: Animate Dead `EnchantGraveyardCard`;
+Circle of Protection: Black `ChooseADamageSource`; Nightmare `CDA_Power`.
+
+Lint first found a test variable that shadowed Go's built-in `copy`; it was
+renamed. Final lint reports zero issues. Its automatic import spacing and
+formatting edits were reviewed. No environment or pre-existing check blocker
+remains.
+
+| Command | Final result |
+| --- | --- |
+| Baseline short engine tests and `make build` | PASS. |
+| Engine constructors, real RON gameplay, retained helper before implementation | Expected failures confirmed. |
+| `go test ./pkg/mage -run 'TestLibraryRecycle|TestLibrarySearch' -count=1` | PASS after final lint. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONLibraryRecycle|TestRONEachPlayer|TestInventory' -count=1` | PASS after final lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS (engine skill's extra check). |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic edits reviewed. |
+| `git diff --check` | PASS, including final ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,586 compiled / 859 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts and hashes as above. |
+
+Ranked next candidates for fresh reassessment:
+
+1. Chosen damage-source identity and one-event shield prerequisite: seven
+   concrete full-card consumers after adapters, four more with explicit blockers.
+2. All-zone count CDA prerequisite: five credible complete consumers, with the
+   deferred Avenger source correction handled with its own opponent-count work.
+3. Remaining shared static permanent-rule contexts and dynamic optional mana
+   payments; inspect complete consumers before estimating their unlocks.
+
+Changed files: new engine `library_recycle.go` and tests, retained
+`effect_cards.go`, `doc.go`; RON `each_player.go`, `optional_payment.go`, new
+`library_recycle_test.go`, retained `each_player_test.go`, exact
+`inventory_test.go` counts; API/rules docs and this appended ledger entry.
+Only this slice is committed after final checks. Initial user changes remain
+unstaged. The final response reports the commit hash. No second slice starts.
