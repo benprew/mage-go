@@ -306,7 +306,7 @@ func TestRONDamageScopeInvalid(t *testing.T) {
 		`SpellActions(Targeted([AnyTarget],ActionList([SpellDealsDamage(ThisSpell,Integer(1),Ref_AnyTarget())])))`,
 		`SpellActions(Modal_ChooseOne([Targeted([AnyTarget],ActionList([SpellDealsDamage(ThisSpell,Integer(1),Ref_AnyTarget)])),ActionList([SpellDealsDamage(ThisSpell,Integer(1),Ref_AnyTarget)])]))`,
 		`SpellActions(Targeted([AnyTarget()],ActionList([])))`,
-		`SpellActions(Targeted([AnyTarget],ActionList([CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(Integer(1),Ref_AnyTarget),[PreventThatDamage])])))`,
+		`SpellActions(Targeted([AnyTarget],ActionList([CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(Integer(1),Ref_AnyTarget()),[PreventThatDamage])])))`,
 	} {
 		nodes, err := Parse(strings.NewReader(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[`+rule+`])`), "invalid.ron")
 		if err != nil {

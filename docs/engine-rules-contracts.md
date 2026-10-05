@@ -3362,3 +3362,31 @@ assignment, "bands with other", or the old lethal-order policy for other combat
 paths. Outgoing aggregation and shared trample/deathtouch handling remain open
 migration prerequisites. The RON compiler accepts no new shape in this slice;
 finite `CreateFuturePreventDamage` declarations remain rejected.
+
+## RON finite recipient shields
+
+The RON compiler now enables the fixed/X recipient-shield action documented in
+[dsl-reference.md](dsl-reference.md#ron-finite-recipient-prevention). This
+supersedes the earlier finite-shield prerequisite's statement that all
+`CreateFuturePreventDamage` actions are rejected. No engine signature or
+replacement policy changes. `PreventNextDamage` reads the typed recipient and
+amount at resolution, then uses `AddPreventionShield`. Spells, mode targets,
+activations, triggers and delayed bodies retain their existing scoped bindings.
+
+`TestRONFinitePreventionModes` covers both complete Healing Salve and Alabaster
+Potion modes, X including zero, payment rollback, player/permanent recipients,
+resolution timing and pending clones. `Activations` covers eight complete
+records, mana/tap/sickness legality, source departure, control and copies,
+independent shield capacity, clones and native cleanup. `ActivationTargets`
+covers current target restrictions and resolution rechecks. `Identity` covers
+shroud, return, phase cycles, control and unpreventable damage. `RetargetAndInstances`
+covers separate factory/copy recipients. `RakaliteDelay` covers multiple
+one-shot delays, owner return, phasing, changed control, new incarnations and
+pending clones. `BatchAndCombat` covers native non-band combat, allocation,
+retained lifelink and both replacement orders. `ResolvingContexts` covers
+trigger controllers and delayed X/recipient capture. Invalid declarations and
+semantic inventory roles are tested separately.
+
+This is compiler and RON gameplay evidence for the listed contracts. The
+outgoing attacking-band assignment gap remains. Collection-wide gameplay,
+production loading and runtime cutover are not established by these tests.

@@ -3076,3 +3076,27 @@ Only incoming damage to ordinary attacking bands has this new contract.
 Outgoing band aggregation remains a migration prerequisite. See
 [engine-rules-contracts.md](engine-rules-contracts.md) for signatures and tests.
 No additional RON declaration is accepted.
+
+## RON finite recipient prevention
+
+The resolving action
+`CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(amount, recipient), [PreventThatDamage])`
+now lowers to `mage.PreventNextDamage`. `amount` is `Integer(n)` with a
+nonnegative literal, or bound bare `ValueX`. Zero installs no effective shield.
+`recipient` uses existing typed `Permanent(reference)`, `Player(reference)`, or
+bound bare `Ref_AnyTarget`. Targets must be declared in the enclosing action
+scope. Spell modes keep separate target bindings. Resolving activations,
+triggers and delayed bodies use the same adapter and their existing scopes.
+
+Resolution captures the recipient and reads the amount once. The engine owns
+shield consumption, incarnation checks, phasing, simultaneous allocation,
+replacement choices, game cloning and cleanup. Unbound or incompatible
+references, wrong arity, extra operations, source-specific events, and negative
+literal amounts remain compile errors. This action grants no activated modes,
+player permissions or additional prevention operations. Guardian Angel and
+Balm of Restoration still fail complete-record compilation.
+
+Evidence: `TestRONFinitePrevention*` uses complete records for ten cards and
+synthetic scope declarations. The outgoing attacking-band source assignment
+limitation remains recorded in the engine contract; these adapters do not
+establish that separate combat behavior.

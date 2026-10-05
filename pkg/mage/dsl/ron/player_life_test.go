@@ -198,20 +198,11 @@ func TestRONPlayerLifeRealModalClauses(t *testing.T) {
 			}
 			count++
 			t.Run(filepath.Base(path)+"/"+name, func(t *testing.T) {
-				// The unsupported prevention mode must still reject the complete record.
-				if _, err := Compile(record); err == nil {
-					t.Fatal("unsupported complete modal record accepted")
-				}
-				rules := record.Fields["Rules"]
-				spell := rules.Args[0]
-				spell.Args = []Node{spell.Args[0].Args[0].Args[0]}
-				rules.Args = []Node{spell}
-				record.Fields["Rules"] = rules
 				factory, err := Compile(record)
 				if err != nil {
 					t.Fatal(err)
 				}
-				g, a, b := ronGame()
+				g, a, b := ronModalGame(0)
 				card := factory()
 				if err := mage.ValidateCardDefinition(card.Name(), card); err != nil {
 					t.Fatal(err)

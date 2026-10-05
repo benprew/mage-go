@@ -16785,3 +16785,163 @@ No pre-existing or environment validation blocker remains. No new complete-card
 unlock is claimed. Only this slice is committed; its hash is reported in the
 final response. User ledger relocation, design edits, `.gitignore` edits and
 the untracked completed-slices document remain outside the commit.
+
+## Run 2026-10-05: FINITE-RECIPIENT-ADAPTER
+
+Status: completed compiler slice. Stop after this slice. Runtime cutover and
+removal gates remain unmet.
+
+### Fresh evidence, comparison and selection
+
+Initial user changes: `.gitignore`, the execution design and this progress
+ledger; `mtgish-ron-completed.md` was untracked. Preserve all four, including
+ledger restructuring. This commit stages only this appended entry against the
+committed ledger; it does not stage the user's restructuring or history file.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot, progress
+ledger, selected compiler/engine services, API/rules contracts, and complete
+candidate RON records. Requirements came from RON, not Go card definitions.
+Relevant rules: CR 400.7, 615.3/4/6/7/12 and 616.1/1f. This adapter uses existing
+engine contracts; no engine skill or removed card/set skill was needed.
+
+Fresh baseline compiler tests, short engine tests and `go build ./...` passed.
+Strict loader and semantic inventory exited 1 for collection rejection:
+**1,547 compiled / 898 rejected records**, **569 accepted / 417 rejected unique
+names**, from 2,445 records and 986 names. Inventory: 72,951 nodes, 8,540
+signatures and 10,181 unknown-role occurrences. Collection rejection is not a
+build/test failure. Reprints count once in the comparison.
+
+| Candidate | Distinct names and estimated full-record unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Fixed/X finite recipient adapter, selected | Samite Healer, Healing Salve, Conservator, Alabaster Potion, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Kei Takahashi, Rakalite: **10**. | Allocation and incoming-band source identity prerequisites now exist. Complete records need any-target/typed recipients, modes, mana/tap costs, X, and Rakalite's supported delayed owner return. Reuse the shared shield service. Balm of Restoration still needs activated modes; Guardian Angel needs a player permission; source-specific shields need separate contracts. Outgoing attacking-band attribution remains an independent engine gameplay gap. | Low/medium: bounded adapter and inventory roles, strict declarations, ten-card gameplay, identity/payment/copy/batch and delay tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **0 adapter-only / 5 after prerequisite**. | Complete records need zone-aware characteristic values, owner/controller and named counts, CDA/copy/layer contracts. Gaea's Avenger and Wood Elemental have further arithmetic/source-data or entry-result blockers. Enables characteristics outside the battlefield. | High: engine service plus compiler and all-zone gameplay. |
+| Target alternatives | Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace, Magical Hack, Sleight of Mind: **0 adapter-only / 7 downstream**. | Complete nested records need spell/permanent alternatives and permanent/spell color or text operations. The text consumers also need word choices. Enables a shared alternative-target declaration, copy and retargeting boundary. | Medium/high: target prerequisite followed by color/text services and gameplay. |
+
+Selection favors ten complete-record gains through exact existing services,
+with less work than either unimplemented engine/target prerequisite. Nested
+forms and complete records, rather than first-error frequency, supplied the
+estimate. The contract, reuse boundary and acceptance cases were stated before
+editing. No fallback, card-name executor, game-time declaration panic, partial
+production registry or global action-result slot was introduced.
+
+### Exact shapes, contexts and dependencies
+
+New resolving action:
+`CreateFuturePreventDamage(NextAmountOfDamageThatWouldBeDealtThisTurnToRecipient(amount, recipient), [PreventThatDamage])/2`.
+The event is an exact two-argument tuple. `amount` is exact `Integer(n)/1` with a
+nonnegative integer literal, or bound bare `ValueX`. Zero is legal. Values are
+read once at resolution through `mage.ValueAtResolution`. Other values remain
+rejected in this shape.
+
+Recipients reuse `compileDamagePacketRecipient`: `Permanent(typed-reference)`,
+`Player(typed-reference)`, or bound bare `Ref_AnyTarget`. The enclosing scope must
+supply each reference. Actions do not create targets. Permanent/player/any-target
+bindings are built per factory instance. Spells, separate spell modes,
+activations, triggers and delayed resolving bodies use their existing scopes.
+Static rules, costs, entry operations and replacement operations gain no new
+context. Activated modes, extra operations, source-specific events, malformed
+arity, tuple `PreventThatDamage()`, incompatible/unbound references and negative
+literals remain compile errors.
+
+Lowering uses `mage.PreventNextDamage`, existing typed references and
+`instanceBindings`. The engine owns captured recipient incarnations, control
+and phasing, shield installation/consumption, amount capture, replacement
+ordering/rechecks, simultaneous source allocation, source LKI, lifelink, cost
+transactions, copied stack objects, pending clones and native cleanup. Rakalite
+reuses `CreateFutureTrigger` -> `mage.AtNext` and the existing owner-return action.
+No engine behavior or public signature changes. No duplicate prevention service.
+
+Inventory now identifies the event's value and recipient roles and the action's
+prevention event/operation roles, including children of rejected records. The
+syntax snapshot remains unchanged because no RON source changed.
+
+### TDD, gameplay and card-to-test mappings
+
+Tests first had one fixture API compile error (`AddCardType` rather than
+`AddType`). After that correction, the new complete-card tests failed for
+`unsupported action (CreateFuturePreventDamage)`. The adapter then passed the
+initial matrix. Expanded fixtures were corrected without weakening contracts:
+retarget choices belong to the copy controller, replacement labels use generic
+engine labels (the fixture selects the installed redirect by index), and a
+creature-type removal cannot test marked damage on a noncreature. The final
+type-recheck case instead removes artifact identity from a still-creature target.
+The retained-source case returns the same physical card under a new controller.
+
+Existing damage-scope rejection coverage now tests malformed `Ref_AnyTarget()`
+in the supported action. Existing life-mode tests now compile and execute the
+complete modal records for all seven reprints, rather than extracting only the
+life branch and requiring complete-record rejection. Exact inventory assertions
+move to the freshly measured counts. No unsupported context is enabled by these
+fixture migrations.
+
+| Card/contract | Tests and evidence |
+| --- | --- |
+| Healing Salve (complete LEB record; six reprints) | `TestRONFinitePreventionModes`: both modes, player/permanent recipients, rollback, payment, timing, finite consumption and pending clones. `Identity`: target legality, shroud before/after, departure/return before/after installation, phasing before/after, control and unpreventable damage preserving capacity. `RetargetAndInstances`: copied mode/recipient, separate pending factory recipients and clone isolation. `BatchAndCombat`: simultaneous allocation, native non-band combat, retained source/controller/lifelink and both replacement orders. `TestRONPlayerLifeRealModalClauses`: all reprinted full records, life mode. |
+| Alabaster Potion (complete LEG record) | `Modes`: both modes with X=4 and X=0, casting payment/rollback, correct player and permanent shields, capture and clone isolation. Same real-modal life regression. |
+| Samite Healer (complete LEB; six reprints) | `Activations` and `ActivationTargets`: tap/sickness/rollback, any-target players/creatures, illegal lands/shroud, phase resolution, source departure/control, copied capacity and cleanup. |
+| Conservator (complete LEB; six reprints) | `Activations`: 3 plus tap, controller recipient despite source control/departure, distinct copied controller, expiry and pending clones. |
+| Oasis (complete ARN), Kei Takahashi (complete LEG) | `Activations`, `ActivationTargets`: creature-only targets, tap cost (sickness only for Kei), resolution phase recheck, source departure/control/copy, clone and cleanup. |
+| Amulet of Kroog (complete ATQ), Combat Medic (complete FEM) | Same activation tests: 2 plus tap versus 1W without tap, any-target scope, payment rollback, repeated/copied shields, source departure/control and cleanup. |
+| Argivian Blacksmith (complete ATQ) | Same activation tests: artifact-creature restriction, failed nonartifact/player/land/shroud choices, artifact identity recheck at resolution, tap/sickness, source departure and cloned shields. |
+| Rakalite (complete ATQ) | Same activation tests: 2 without tap and any target. `RakaliteDelay`: multiple independent one-shot delays, shield accumulation, owner return after control change, phasing at the end step, returned incarnation immunity, pending clones and no repeated return. |
+| Other resolving scopes | `ResolvingContexts`: trigger controller, delayed X and distinct captured recipients. `InvalidAndInventory`: malformed declarations, amounts, incompatible and unbound scopes, rejected source events/extra operations, complete semantic roles. Retained `TestRONPreventionAllocationKeepsDeclarationsStrict` still rejects its unbound declarations. |
+
+Ten newly accepted unique cards now have RON gameplay mappings for their listed
+rules. Compilation and gameplay remain separate: this does not establish every
+interaction for these cards or collection-wide behavior totals. In particular,
+outgoing attacking-band source assignments remain below their engine completion
+gate. Existing finite allocation/incoming-band contract regressions remain in
+the full suite.
+
+### Source evidence, actual gain and remaining gates
+
+Local authoritative `data/*.json` Oracle text agrees with the ten complete
+records' costs, target restrictions, prevention amounts and Rakalite's return.
+No source defect was corrected. All twelve source hashes match the baseline;
+no vocabulary syntax refresh is needed. Known unrelated defects remain open.
+
+Actual gain matches the estimate: **10 unique names / 25 records**. Exactly the
+ten selected names leave the rejection set; no previously accepted name is lost.
+Strict loader: **1,572 compiled / 873 rejected records**, **579 accepted / 407
+rejected unique names**. Semantic inventory: **72,951 nodes / 8,540 signatures /
+9,856 unknown-role occurrences**. Loader and inspection exit 1 and publish no
+partial registry. Guardian Angel's first diagnostic now reaches
+`unsupported action (CreatePlayerEffectUntil)`; Balm of Restoration still reports
+`unsupported action list (Modal_ChooseOne)`. Compilation removes the first finite
+action blocker without accepting their unsupported complete records.
+
+No Go definitions, startup callers, generators or DSL functions are removed.
+Complete loading, gameplay and startup integration remain below removal gates.
+No whole-repository caller audit authorizes DSL deletion in this adapter slice.
+API/rules documentation describes only the new adapter and tested contracts.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Outgoing attacking-band per-source assignments: close the recorded damage,
+   finite allocation and lifelink gameplay gap through the shared combat batch.
+2. All-zone count CDA prerequisite for the five complete consumers above.
+3. Target alternatives for the seven color/text consumers above.
+
+### Validation
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler tests, short engine tests, `go build ./...` | PASS. |
+| New tests before implementation | Expected unsupported finite-action failures confirmed after correcting one fixture API call. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS, including migrated rejection/count fixtures. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONFinitePrevention\|TestRONPlayerLifeRealModalClauses\|TestInventory\|TestRONDamageScopeInvalid\|TestRONPreventionAllocation' -count=1` | PASS after final lint and retained-source assertion. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated on final post-lint code. |
+| `make test` | PASS, repeated on final post-lint code. |
+| `make build` | PASS, repeated on final post-lint code. |
+| `go vet ./...` | PASS, repeated on final post-lint code. |
+| `make lint` | PASS, zero issues on final run. First run found a new test variable shadowing builtin `copy`; renamed to `copied`. Automatic import/function formatting reviewed. |
+| `git diff --check` | PASS, including the completed ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,572 compiled / 873 rejected; post-lint diagnostics identical. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same loader counts, 407 rejected names; final role counts above. Source hashes unchanged. |
+
+No remaining environment or validation blocker. This slice is committed only
+after required checks pass; the final response reports its hash. Changed files:
+`pkg/mage/dsl/ron/finite_prevention.go`, `finite_prevention_test.go`,
+`compiler.go`, `inventory.go`, `inventory_test.go`, `damage_scope_test.go`,
+`player_life_test.go`; API/rules docs and this ledger entry. The user's initial
+changes remain unstaged. No second slice starts.
