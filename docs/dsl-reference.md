@@ -2961,3 +2961,29 @@ forms with existing coin and source-combat triggers. Evidence:
 `Invalid` and `InventoryAndReprints`. False Orders, Imprison and Disharmony gain
 shared prerequisites but retain other compiler gaps; no full-card support is
 claimed for those records.
+
+## RON announced X activation payments
+
+`Activated/2` and `ActivatedWithModifiers/3` accept the cost
+`PayManaX(manaSymbols, ValueX)/2`. The first operand is a mana list with at
+least one bare `ManaCostX`; fixed generic and colored symbols can share the
+list. The second operand must be bare `ValueX`. Multiple X symbols and X
+costs use the same announced value. Non-X `PayMana/1` costs can compose with
+these costs through `And([costs])/1`.
+
+The activation declares X for its action and target scope. A
+`NumberTargetPermanents(ValueX, filter)/2` target requires that declaration.
+`UntapEachPermanent(Ref_TargetPermanents)/1` reads that instance's typed target
+collection and lowers to `mage.UntapEach`. Existing filter-based untap forms
+keep their behavior. Undeclared, malformed, singular and out-of-scope collection
+reads fail compilation.
+
+Payments lower to `mage.ManaCostPayment`. The shared transaction substitutes
+announced X before applying an activation cost reduction, then plans and pays
+mana and nonmana costs atomically. The stack object retains X even if another
+action changes the game's announcement state. Reductions do not change the
+number of X targets or the effect's X value. Optional resolution-time payments,
+defined-X modifiers, and rounded-half values still require separate adapters.
+
+Evidence: `TestRONXActivation*` and `TestXActivationPayment*`. The complete
+Candelabra of Tawnos record has native casting, activation and resolution tests.

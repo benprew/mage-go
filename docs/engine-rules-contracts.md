@@ -3177,3 +3177,30 @@ controller. An uncounterable spell can qualify but `Counter` cannot remove it.
 Tests: `TestSpellTargetTargetingControlledPermanent`, its `Identity` test,
 and the RON `TestRONControlledPermanentCounter*` tests. Relevant rules:
 CR 115.9b, 400.7, 601.2c, 608.2b and 702.26b/d.
+
+## Announced X activation mana and reductions
+
+The activation payment transaction substitutes its announced X into a
+`ManaCostPayment` before applying the existing activation cost reduction.
+Multiple X symbols multiply that value; generic and colored components retain
+their payment requirements. The reduction changes the locked mana payment,
+not the saved stack X or target count (CR 107.3a/i, 601.2b/f, 602.2b).
+The existing reduction's minimum-total-mana restriction still applies.
+
+`TestXActivationPaymentReduction` covers zero, single and double X, colored and
+fixed components, reduction ordering, exact payment and retained effect values.
+`TestXActivationPaymentAggregateReduction` checks composed costs and existing
+`XManaCost` callers. `TestXActivationPaymentNegativeRollback` checks rejection
+without live cost or stack changes. Existing total-payment and target-dependent
+mana regressions remain in force.
+
+RON `PayManaX(manaSymbols, ValueX)` supplies the typed activation's declaration;
+`UntapEachPermanent(Ref_TargetPermanents)` uses the existing typed set service.
+`TestRONXActivationCandelabra`, `AutotapAndReduction`, and `InstancesAndCopies`
+cover actual casting/activation payment, rollback, announcement target bounds,
+partial/all-illegal resolution, source departure/control/phasing, target return
+and phasing, legal phase cycles, automatic mana planning, inactive-turn timing,
+retargeted copies, independent factories and cloned pending abilities. Identity
+and phasing use CR 400.7, 608.2b and 702.26b/d. Absent targets are not actions
+on LKI. This slice adds no replacement ordering or simultaneous-operation rule;
+existing mana and untap services supply those operations.

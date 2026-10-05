@@ -385,6 +385,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "cost":
+		if n.Name == "PayManaX" && len(n.Args) == 2 {
+			return []string{"metadata", "announcement_value"}[index]
+		}
 		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
 			return "counter_removal_instruction"
 		}

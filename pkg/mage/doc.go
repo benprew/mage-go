@@ -166,6 +166,10 @@
 // historically sole-blocked attackers unblocked. [CantBlock] with [Until]
 // restricts later blocks and keeps its captured incarnation until cleanup.
 //
+// Use [ManaCostPayment] for announced X activation mana. The payment
+// transaction substitutes X before an activation cost reduction. The stack
+// keeps the announced value for target counts and resolution.
+//
 // Use [GrantLandPlays] to add to a player's land allowance for this turn.
 // Grants accumulate and remain separate in cloned games. The action does not
 // play a land or change land timing. Explore grants the allowance before drawing.

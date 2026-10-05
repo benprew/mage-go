@@ -8,6 +8,9 @@ func compileNumberedPermanentTarget(n Node, ctx scope) (targetFactory, string, e
 	}
 	count := n.Args[0]
 	usesX := count.Kind == Symbol && count.Name == "ValueX"
+	if usesX && !ctx.x {
+		return nil, "", problem(count, "unbound ValueX")
+	}
 	amount := 0
 	if !usesX {
 		if count.Name != "Integer" {

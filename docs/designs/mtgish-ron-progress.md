@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **564 accepted / 422 rejected unique card
-names** (986 total), and **1,538 compiled / 907 rejected records** (2,445 total).
+The latest recorded inventory reports **565 accepted / 421 rejected unique card
+names** (986 total), and **1,539 compiled / 906 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`SPELL-TARGET-CONTROLLED-PERMANENT` slice and its validation evidence are recorded
+`ANNOUNCED-X-ACTIVATION` slice and its validation evidence are recorded
 below. Its next candidates and remaining gates are recorded at the end of the entry.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -15903,3 +15903,163 @@ Slice files: `pkg/mage/composable_actions.go`, `doc.go`,
 `spell_target_permanent_test.go`; compiler `compiler.go`, `spell_scope.go`,
 `inventory.go`, `inventory_test.go`, `spell_target_permanent_test.go`; API/rules
 contracts and this ledger. This run starts no second slice.
+
+## 2026-10-05: announced X activation payments and typed untap targets
+
+Status: completed slice `ANNOUNCED-X-ACTIVATION`. This run stops after this
+slice. Initial user changes to `.gitignore`, the execution design, the progress
+ledger reorganization and the untracked completed-history document are preserved.
+Only this entry and its current-status update are staged from the ledger.
+
+### Fresh evidence and candidate selection
+
+Baseline compiler tests, `go test ./pkg/mage/... -short -count=1` and
+`make build` passed. Strict loader and semantic inventory exited 1 for collection
+rejection, not a build/test failure: 2,445 records, 1,538 compiled, 907 rejected;
+564 accepted and 422 rejected unique names. Inventory: 72,951 nodes, 8,540
+signatures, 10,271 unknown-role occurrences. Complete candidate records and
+nested forms, compiler/engine code, API/rules contracts, the execution design,
+current ledger and vocabulary snapshot were read. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Announced X activation payments, selected | Candelabra of Tawnos, Banshee, Nebuchadnezzar, Clockwork Avian, Clockwork Beast, Aladdin's Lamp, Illusionary Mask, Reflecting Mirror, Voodoo Doll; **1** immediate full-card unlock, Candelabra. | Candelabra also needs its typed target-set untap adapter. Banshee needs rounded halves; Nebuchadnezzar needs name choices and random reveal/discard. Clockworks need end-combat events and bounded counters; Lamp needs a positive-X modifier and draw replacement; Mask needs sorcery timing, payment-color capture and face-down lifecycle; Mirror and Doll need defined-X modifiers and their other effects/events. Establishes a shared announcement/payment prerequisite for nine names. | Low/medium: existing X target and payment services, two adapters, one reduction-order repair, real gameplay and declaration/identity/payment tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion; **4** after allocation work, **0** adapter-only gains. | Full records have supported costs, modes, recipients and X. CR 615.7 allocation across simultaneous damage sources remains an engine prerequisite. Enables other finite-shield consumers. | Medium/high: shared allocation choices, shield consumption, replacement rechecks and damage batches. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats; **4** after the characteristic prerequisite. | Zone-aware characteristics, owner/controller count context, named counts and CDA layer/copy behavior remain prerequisites. Gaea's Avenger and Wood Elemental have other blockers. | High: zone queries, characteristics, layering and complete gameplay matrix. |
+
+Selection favors the smaller shared prerequisite for nine activation consumers
+and one complete card. The four-card alternatives require larger engine changes.
+First-error frequency was not an unlock estimate. Complete nested records exposed
+Candelabra's target-collection untap gap and the other cards' later blockers.
+All fourteen distinct `PayManaX` consumers were inspected, including the separate
+resolution-payment consumers Power Sink, In the Eye of Chaos, Invoke Prejudice,
+Transmute Artifact and Primordial Ooze. Those contexts remain unsupported.
+The contract, reuse boundary and acceptance cases were stated before edits.
+The `implement-engine` skill supplied the workflow for the reduction-order gap.
+No removed card skill, Go definition requirement, fallback, card-name branch,
+global last-action result, or production subset registry was used.
+
+### Exact signatures, contexts and dependencies
+
+RON activation cost: `PayManaX(manaSymbols, ValueX)/2`, directly or within
+nested `And([costs])/1` in `Activated/2` or `ActivatedWithModifiers/3`.
+`manaSymbols` is the existing validated list grammar, with at least one bare
+`ManaCostX`; fixed generic and colored symbols can share the list. The second
+operand must be bare `ValueX`. Multiple X symbols or separate X cost components
+use the same announced value (CR 107.3i). No new engine constructor is needed.
+The adapter returns fresh `mage.ManaCostPayment` costs and declares X in that
+activation's copied scope. Unbound action and target values, wrong arity,
+malformed mana, a list without X, tuple bindings, defined-X expressions and
+optional resolution payments are compile errors. X cannot leak between abilities.
+
+`NumberTargetPermanents(ValueX, permanentFilter)/2` now checks that scope's X
+declaration. Fixed counts retain their behavior. Resolving
+`UntapEachPermanent(Ref_TargetPermanents)/1` uses the bound typed collection,
+including fixed-count declarations, in existing spell/mode/activation/trigger
+contexts. It lowers to `mage.UntapEach` and preserves each chosen incarnation.
+Undeclared, malformed, singular and delayed collection reads remain errors;
+existing filter-based untap forms are unchanged. Inventory walks PayManaX's
+mana list as metadata and its amount as an announcement value, even below a
+rejected parent. Reporting does not imply support for those parent contexts.
+
+Engine prerequisite: `prepareActionPaymentTransaction` materializes each
+`ManaCostPayment`'s announced X before applying the existing activation reduction.
+`prepareActionCosts` already aggregates ordinary mana components. The saved
+stack X remains unchanged by reductions or subsequent announcements. The existing
+minimum-total-mana restriction is retained; colored costs remain colored.
+Existing legacy `XManaCost` callers are preserved. Cost validation/planning and
+commit remain on the shared isolated transaction. No new payment, target, zone,
+untap, replacement or simultaneous-operation service is introduced.
+
+`instanceBindings`, `DeclareXPermanentTargets`, `UntapEach`, stack X capture,
+source/target incarnations, legality rechecks, mana planning, copying and cloning
+supply execution. Target return creates a new object; phase cycles keep identity
+(CR 400.7, 702.26b/d). Illegal targets are excluded at resolution, and all-illegal
+abilities do not resolve (CR 608.2b). Source departure, control or phasing does
+not redirect the saved targets. Untapping does not act on absent-object LKI.
+Activation at instant timing and zero X use existing permissions (CR 107.3a,
+601.2b/f, 602.2b). No new replacement-order or simultaneous-batch contract applies.
+
+### TDD and card-to-test mappings
+
+RON tests first failed for unsupported `PayManaX`, and inventory tests failed
+for its unknown amount role. Engine reduction tests initially had a missing
+`core.ParseManaCost` qualifier; after fixing that fixture, four cases failed
+because X had not been substituted before reduction. After implementation,
+focused tests passed. Additional aggregate-cost and negative-X tests confirmed
+existing invariants and needed no new engine change. The first compiler suite
+failed only for the two exact inventory assertions, which were updated from
+1,538/907 to 1,539/906. No behavior assertion was weakened.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Candelabra of Tawnos, complete ATQ record | `TestRONXActivationCandelabra`: native one-mana artifact cast and entry timing; two-mana/tap activation, zero X, illegal counts/duplicates/nonlands, shroud, underpayment, wrong controller, source phasing/departure/control, target shroud/departure/return/phasing/cycle, partial/all-illegal resolution, copies, cloned pending state and unrelated-object exclusion. `AutotapAndReduction`: current-turn combat timing, inactive-controller permission, automatic mana-source tap, legal untapped target and reduction without target-count change. `InstancesAndCopies`: two factory instances/controllers and different X values, independent groups, retargeted copy and cloned pending abilities. `Registry`: strict full-record fixture load. |
+| Activation value/payment contract | `TestRONXActivationPayment`: single/double X, fixed and colored components, separate X costs, exact payment, underpayment rollback, resolution uses saved X after another announcement. `ModifiersAndScope`: existing once-per-turn modifier, failed repeated-payment rollback and ability-local X declarations. |
+| Invalid declarations and reporting | `TestRONXActivationInvalid`: malformed arity/list/mana/binding, missing X symbol, unbound effect/target values and unsupported optional-payment context. `Inventory`: nested amount role below an unsupported body; strict inspection still rejects. Existing `TestRONNumberedTargets*` and `TestInventory*` retain their contracts. |
+| Shared engine reduction | `TestXActivationPaymentReduction`: zero/single/double X, colored/fixed components, exact reduced payment and retained effect X. `AggregateReduction`: composed and legacy costs. `NegativeRollback`: no live cost or stack changes. Existing `TestActivationTargetMana*` and payment regressions pass. |
+| Other eight activation consumers | Shared payment prerequisite only; no full-card gameplay claim. Banshee now rejects `HalfRoundedDown`; Nebuchadnezzar now rejects `ChooseACardName`. Other complete-record blockers remain above. |
+
+One complete-card gameplay mapping is added. Compilation and gameplay coverage
+remain separate; aggregate `engine_validated` and `behavior_verified` totals
+remain null. Local `data/ATQ.json` Oracle text agrees with Candelabra's full
+record. No source defect was found or corrected. All twelve source hashes match
+the vocabulary snapshot, so no source snapshot refresh is needed. Previously
+recorded source defects remain unresolved.
+
+### Final measurements and validation
+
+Actual gain matches the estimate: **1 unique card / 1 record**, Candelabra of
+Tawnos, with no previously accepted name lost. Strict loader and inventory report
+**1,539 compiled / 906 rejected records**, **565 accepted / 421 rejected names**.
+Semantic totals: **72,951 nodes / 8,540 signatures / 10,186 unknown-role
+occurrences**. Both loader modes exit 1 for remaining unsupported declarations
+and install no partial registry.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine tests and `make build` | PASS. |
+| New RON and engine reduction tests before implementation | Expected unsupported-cost/unknown-role and payment-order failures confirmed. |
+| Focused engine/RON/numbered-target/payment/inventory tests, `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS; engine-skill check. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues after test-slice preallocation fix. |
+| `git diff --check` | PASS; repeated before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,539/906. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; totals above. |
+| Source hash audit | PASS, all twelve files unchanged. |
+
+All required checks pass after the final isolation and modifier assertions.
+Automatic lint changes only formatted this slice's test imports and functions;
+these were reviewed. The first lint run found a test-slice preallocation issue,
+which was fixed before the successful rerun. Short engine tests, full tests,
+build, vet and focused tests passed again. No environment or pre-existing
+validation blocker remains.
+
+Fresh remaining diagnostics include:
+
+- Banshee: `DRK.lines.ron:6:331: unsupported value (HalfRoundedDown)`.
+- Nebuchadnezzar: `LEG.lines.ron:180:316: unsupported action (ChooseACardName)`.
+- Chaoslace: `2ED.lines.ron:32:133: unsupported action list (Targeted_Modal)`.
+
+No Go definitions, runtime callers, generators or DSL functions are removed.
+Complete loading, collection gameplay and native startup remain below the removal
+gates. No caller audit authorizes DSL deletion in this slice. API/rules docs
+state only established behavior. Only this slice is committed after checks pass;
+the commit hash is reported in the final response.
+
+Ranked next candidates to reassess with fresh evidence and complete records:
+
+1. Finite recipient allocation prerequisite and its four complete consumers.
+2. All-zone count CDA prerequisite and its four complete consumers.
+3. `Targeted_Modal` alternatives for Chaoslace, Deathlace, Lifelace, Purelace,
+   Thoughtlace, Magical Hack and Sleight of Mind; color/text operations remain
+   later blockers. Defer Banshee's remaining rounded-half values while useful
+   multi-card work remains.
+
+Slice files: engine `payment_transaction.go`, `x_activation_payment_test.go`,
+`doc.go`; compiler `compiler.go`, `numbered_targets.go`, `inventory.go`,
+`inventory_test.go`, `x_activation_test.go`; API/rules contracts and this ledger.
+No second slice is started.

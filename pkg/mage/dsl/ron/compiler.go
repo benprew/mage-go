@@ -567,8 +567,12 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 		}
 		value := amount.Args[0].Integer
 		return []costFactory{func() mage.Cost { return mage.LifePayCost(value) }}, false, nil
-	case "PayMana":
-		if err := arity(n, 1); err != nil {
+	case "PayMana", "PayManaX":
+		count := 1
+		if n.Name == "PayManaX" {
+			count = 2
+		}
+		if err := arity(n, count); err != nil {
 			return nil, false, err
 		}
 		cost, err := manaCost(n.Args[0])
@@ -576,10 +580,17 @@ func compileCosts(n Node) ([]costFactory, bool, error) {
 			return nil, false, err
 		}
 		parsed := core.ParseManaCost(cost)
-		if parsed.HasX {
+		if n.Name == "PayManaX" {
+			if n.Args[1].Kind != Symbol || n.Args[1].Name != "ValueX" {
+				return nil, false, unsupported(n.Args[1], "announced X payment binding")
+			}
+			if !parsed.HasX {
+				return nil, false, problem(n, "PayManaX requires an X mana symbol")
+			}
+		} else if parsed.HasX {
 			return nil, false, problem(n, "X payment requires PayManaX binding")
 		}
-		return []costFactory{func() mage.Cost { return PayMana(parsed) }}, false, nil
+		return []costFactory{func() mage.Cost { return PayMana(parsed) }}, parsed.HasX, nil
 	case "TapPermanent", "SacrificePermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, false, err
@@ -1097,6 +1108,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	case "UntapEachPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
+		}
+		if n.Args[0].Name == "Ref_TargetPermanents" {
+			collection, err := compilePermanentTargetsRef(n.Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.UntapEach(bindings.permanentSets[collection])
+			})
 		}
 		var controller *playerReferencePlan
 		filter, err := compileCountFilter(n.Args[0], ctx, &controller)
