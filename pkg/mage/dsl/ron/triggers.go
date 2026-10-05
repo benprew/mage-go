@@ -35,7 +35,15 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 		}
 		permanents := trigger.Args[0]
 		if permanents.Name != "SinglePermanent" {
-			return nil, unsupported(permanents, "trigger subject")
+			if trigger.Name != "WhenAPermanentDies" {
+				return nil, unsupported(permanents, "trigger subject")
+			}
+			var err error
+			buildTrigger, err = compileCreatureDeathTrigger(permanents)
+			if err != nil {
+				return nil, err
+			}
+			break
 		}
 		if err := arity(permanents, 1); err != nil {
 			return nil, err

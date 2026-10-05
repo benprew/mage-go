@@ -651,6 +651,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "WasDealtDamageByPermanentThisTurn" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if (n.Name == "IsSupertype" || n.Name == "IsNonSupertype") && len(n.Args) == 1 {
 			return "supertype"
 		}

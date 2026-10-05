@@ -9625,3 +9625,161 @@ Changed slice files: `pkg/mage/composable_information.go` and its tests,
 All required checks passed. These 15 slice files form one descriptive commit;
 its hash is reported in the final response. The two initial user changes remain
 unstaged. Migration completion criteria remain unmet.
+
+## Run 2026-10-05: CREATURE-DEATH-FILTERS
+
+Status: complete compiler-adapter slice for ordinary creature-death triggers.
+This run stops after this slice. Runtime cutover and removal gates remain open.
+
+### Baseline and candidate selection
+
+The working tree began with user changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`; both remain outside this slice. Read
+`AGENTS.md`, `pkg/mage/doc.go`, the execution design, vocabulary snapshot and
+ledger, selected compiler/event/cost code, API/rules contracts, and CR 400.7,
+603.2c/g, 603.3a/b, 603.6c, 603.10a, 608.2b/c, 700.4 and 702.26b/d.
+Fresh baseline focused tests, engine short tests and build passed. Strict and
+nested inventory loaders exited 1 for collection rejection, with **1,363 compiled
+/ 1,082 rejected records**, **478 accepted / 508 rejected unique names**. No
+baseline build, test or environment failure occurred.
+
+Compared three dependency-ready candidates using complete records and nested
+inventory. Reprints count once:
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream benefit and estimated effort |
+| --- | --- | --- | --- |
+| Creature-death filter adapters (selected) | Soul Net, Sengir Vampire, Axelrod Gunnarson; Runesword has the damage-history spelling in separate unsupported contexts | 2 names / 12 records. Axelrod retains its player-or-planeswalker target declaration. Runesword needs delayed departure, temporary collection rules and zone replacement contexts; it is not a death-trigger consumer. | Shared ordinary death detection and source-incarnation history for multiple bodies. Small adapter, medium gameplay-test effort; exact engine events and costs already exist. |
+| Finite simultaneous prevention allocation | Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Kei Takahashi, Oasis, Samite Healer; Guardian Angel, Rakalite, Healing Salve, Alabaster Potion are further consumers | 0 for the engine prerequisite alone; then 7 ready activation consumers. Guardian Angel retains instant-time payments, Rakalite retains its future end-step trigger, Salve/Potion retain targeted life-mode lowering. | Shared finite shields across simultaneous sources, then prevention modes and payments. High engine decision/replacement/test effort before adapters; `PreventNextDamage` alone does not prove allocation. |
+| Filtered bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 once both filtered combat and static grant contracts exist. Existing ordinary banding is insufficient. | Shared attacking-band membership and damage-assignment permissions. High combat/layer/test effort. |
+
+The two immediate death consumers give the largest credible full-card gain for
+this bounded effort: the engine already implements both exact event contracts.
+The other candidates require new shared rules before their adapter gains. This
+is shared multi-card work; the single blocked Axelrod target adapter was not
+added. The contract, reuse boundary and acceptance cases were stated before
+editing. All selected reprints were read in full. Nested source-history uses
+under unsupported Runesword parents were also inspected in its complete DRK
+record and remain outside the accepted context.
+
+### Exact signatures and ownership
+
+New private compiler adapter:
+
+```go
+compileCreatureDeathTrigger(Node) (func(mage.Effect) *mage.GenericTriggered, error)
+```
+
+Supported RON contexts/signatures:
+
+```ron
+TriggerA(WhenAPermanentDies(IsCardtype(Creature)), actions)
+TriggerA(WhenAPermanentDies(And([
+    IsCardtype(Creature),
+    WasDealtDamageByPermanentThisTurn(ThisPermanent),
+])), actions)
+```
+
+`TriggerA/2` is an ordinary permanent rule; `WhenAPermanentDies/1`,
+`IsCardtype/1`, `And/1` with a two-element list, and
+`WasDealtDamageByPermanentThisTurn/1` require the exact shown tuple/symbol
+shapes. The two `And` elements may be reversed. Actions use existing ordinary
+trigger action lowering, including optional payment and source counters. No
+new event permanent/player binding is declared. Other types, source references,
+conjunctions, disjunctions, delayed/replacement/static contexts remain errors.
+Existing self-death and self-entry callers keep their adapters.
+
+RON owns spelling, argument checks, error positions and factory lowering.
+`compileTriggerRule` selects the new adapter only for non-singleton death filters.
+Each factory builds a fresh trigger with the complete action sequence; there is
+no game-time declaration panic, mutable compiler state, card-name branch,
+Go-card fallback or partial production registry. Inventory now reports the
+source-history operand as `permanent_reference` within a known permanent filter.
+Reporting under unknown parent contracts remains unknown.
+
+Engine reuse: `CreatureDies()` and `.DamagedByThisTurn()`, before-departure
+characteristics, typed damage-source/recipient incarnation history, shared
+zone batches and trigger scheduling, `WhenEvent`, transactional casting,
+`IfPaid`/`Costs`, life replacements, source counter actions, stack copies and
+`Game.Clone`. No missing engine contract was found and no engine execution API
+changed. No new LKI, cost, replacement-order or simultaneous-operation service
+was implemented. The rules-contract documentation describes the accepted RON
+context and tested reuse only. No DSL function or Go definition was removed;
+complete loading, startup wiring and test migration removal gates are unmet.
+
+### TDD and card-to-test mapping
+
+The gameplay/declaration/reprint tests were written before the adapter. Initial
+fixtures used two unavailable helper names; these were corrected before the
+expected failures were confirmed: Sengir reported unsupported trigger subject
+`And`, and Soul Net reported unsupported trigger subject `IsCardtype`.
+The inventory-role test then failed with `damage-history source role=unknown`
+before the reporting adapter was added. No existing test was weakened; existing
+inventory expected compilation totals were updated to the measured gain.
+
+Test integration also corrected fixture ownership before destruction and a clone
+expectation: `Game.Clone` wraps players in `SearchPlayer`, whose existing policy
+declines optional mana payments. The test now checks live accepted payments and
+independent cloned declines, including unchanged original life and mana. This
+required no engine or player-policy change.
+
+| Unique card or contract | Test and evidence |
+| --- | --- |
+| Sengir Vampire | `TestRONCreatureDeathSengir`: flying / 4/4 metadata, source-specific actual damage; prevention and cleanup; source/victim return; source phasing, victim phase cycle; ability loss; control changes; source return/phasing after detection; copied trigger and clone isolation; two simultaneous victims; simultaneous source/victim death; counter timing and layered power. |
+| Soul Net | `TestRONCreatureDeathSoulNet`: optional pay/decline/unaffordable at resolution, tokens, animated artifacts using pre-death characteristics, sacrifice; no trigger for exile/bounce/regeneration/noncreature/phasing; source phase/departure, control change after detection; multiple simultaneous deaths and source death; copied controller payment; clone decline and resource isolation. |
+| Both names, all 12 records | `TestRONCreatureDeathReprintsAndCasting`: complete LEA/LEB/2ED/3ED/CED/CEI records; definition validation, native casting, cost/timing rollback, wrong-color creature cost, independent source history. |
+| Both names, all 12 records | `TestRONCreatureDeathInventoryAndRegistry`: nested typed role, canonical two-name registry, strict atomic rejection of an unsupported additional record. |
+| Declaration contracts | `TestRONCreatureDeathDeclarations`: wrong roles, kinds, arities, types, list sizes, duplicates, source scope and undeclared event references. `TestRONCreatureDeathFilterOrder`: reordered conjunction executes through the engine. |
+| Soul Net / shared replacement pipeline | `TestRONCreatureDeathLifeReplacementOrder`: real triggered optional payment with life replacements in both affected-player orders; correct payment and gain. |
+| Retained engine and RON | `TestCreatureDiesDamagedByThisTurn*`, existing RON death-history, self-death, optional-payment and inventory tests are included in focused/package/full checks. |
+
+Gameplay evidence expands by two complete-card mappings. Compilation progress
+remains separate from collection-wide behavior verification. Aggregate
+engine-validation and behavior totals remain null in reporting.
+
+### Fresh outcomes and next slices
+
+Actual gain matches the estimate: **12 records / 2 unique names**, six reprints
+each for Sengir Vampire and Soul Net. Strict/inventory results are **1,375
+compiled / 1,070 rejected records**, **480 accepted / 506 rejected unique names**.
+No previously accepted record regressed. Axelrod Gunnarson's one diagnostic
+advanced from its death filter to
+`LEG.lines.ron:21:323: expected 1 positional arguments (TargetPlayerOrPermanent)`.
+Every other surviving diagnostic is unchanged. Strict and inventory issue arrays
+agree exactly.
+
+Inventory retains 72,938 nodes and 8,528 context/shape signatures; unknown-role
+occurrences fall from 12,502 to 12,495. All 12 RON source hashes match baseline
+and the vocabulary snapshot. No RON source changed, so no vocabulary rewrite
+was needed. No source defect was corrected. Existing confirmed Gaea's Avenger,
+and recorded Gaea's Liege/Fastbond concerns, remain open. No environment failure
+or required-check blocker occurred.
+
+Ranked next candidates for a fresh reassessment:
+1. Finite prevention allocation prerequisite, then seven activation consumers.
+2. Filtered bands-with-others combat prerequisite and static grant adapter for
+   the five Legends lands.
+3. All-zone CDA P/T and controller counts for Nightmare, Dakkon Blackblade,
+   Keldon Warlord, Gaea's Avenger and Plague Rats, including the recorded Avenger
+   source correction. The single-card Axelrod target adapter remains lower
+   priority while shared multi-card capabilities remain.
+
+### Validation
+
+| Final command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONCreatureDeath -count=1` | PASS after the final tests were added. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, including the post-lint rerun. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; reviewed final code and diff, no unrelated automatic changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records / 1,375 compiled / 1,070 rejected; final report equals the earlier post-slice report. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict issue arrays agree; all nodes walked. |
+| Diagnostic/source audit | 12 records / 2 names gained; zero regressions; one advanced diagnostic; all 12 source hashes match vocabulary. |
+
+All required checks passed. The seven slice files form one descriptive commit;
+its hash is reported in the final response. Changed slice files: `pkg/mage/dsl/ron/creature_death.go`, `creature_death_test.go`, `triggers.go`,
+`inventory.go`, `inventory_test.go`, `docs/engine-rules-contracts.md`, and this
+ledger. The initial two user changes remain unstaged. No second slice was begun.

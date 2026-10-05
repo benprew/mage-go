@@ -2054,3 +2054,38 @@ action; failed destruction still permits the life instruction. Divine Offering
 permits regeneration and gains life for the resolving controller. Psychic Venom
 reads the captured land's current or last controller when the trigger resolves,
 not a new attachment's controller or the land's controller at event time.
+
+## RON creature-death filters
+
+`TriggerA(WhenAPermanentDies(IsCardtype(Creature)), actions)` uses
+`CreatureDies()`. The exact `And([IsCardtype(Creature),
+WasDealtDamageByPermanentThisTurn(ThisPermanent)])` filter uses
+`CreatureDies().DamagedByThisTurn()`. Either order of the two conditions is valid.
+These adapters work in ordinary permanent triggered abilities. Other type,
+source, composition, delayed-trigger and replacement forms remain rejected.
+These events do not declare `Trigger_ThatPermanent` or `Trigger_ThatPlayer`.
+
+The existing engine event and damage-history contracts apply. Death means
+battlefield to graveyard (CR 700.4); creature status is checked before departure
+(CR 603.10a), including animated artifacts and tokens. Phasing, exile, bounce and
+regeneration are not death. The damage condition checks actual damage this turn
+from the source incarnation to the dying incarnation. Prevention, cleanup and
+leave-and-return can prevent a match; a phase cycle retains history. Each death
+in a simultaneous batch can trigger separately, including when the source dies
+in that batch (CR 603.2c). A pending source counter action cannot affect a returned
+source or a currently phased source. Control changes do not change that identity.
+
+Soul Net payments occur at resolution and use the trigger controller. Decline or
+failed affordability consumes no mana and gives no life. A copied trigger uses
+its copy controller for this payment. Life gain still uses the replacement
+pipeline and the affected player's ordering choice. Search clones make their own
+optional decisions through the existing `SearchPlayer` policy; cloning does not
+copy an interactive player's future decisions.
+
+Evidence: `TestRONCreatureDeathSengir`, `SoulNet`, `Declarations`,
+`ReprintsAndCasting`, `InventoryAndRegistry`, `FilterOrder`, and
+`LifeReplacementOrder`. These tests execute complete RON records for Sengir
+Vampire and Soul Net, including all six reprints, cost/timing rollback,
+incarnation history, simultaneous deaths, copied triggers and clone isolation.
+The existing `TestCreatureDiesDamagedByThisTurn*` engine tests retain their
+contracts. No engine execution API changed in this slice.
