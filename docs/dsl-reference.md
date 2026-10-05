@@ -1373,6 +1373,19 @@ trigger action lists. Numbered references, multiple target groups, target unions
 with other filters, and future prevention remain unsupported shapes. Evidence:
 `TestRONDamageScope*` and the migration ledger's P0-TYPED-DAMAGE-RECIPIENT entry.
 
+## RON typed permanent damage recipients
+
+RON damage actions also accept `Permanent(Ref_TargetPermanent)` as the recipient
+in `SpellDealsDamage(ThisSpell, value, recipient)` and
+`PermanentDealsDamage(ThisPermanent, value, recipient)`. The enclosing action
+must declare its own single `TargetPermanent`. Spell, mode, activation and
+supported trigger action lists use that declaration's fresh
+`mage.PermanentTargetBinding` with `mage.DealDamageFrom`.
+The wrapper does not select a new target or bypass the target filter at
+resolution. Unbound, numbered, player, source and host operands remain rejected
+in this shape. Existing fixed and announced-X values retain their contracts.
+Evidence: `TestRONPermanentDamage*`.
+
 ## RON targeted temporary blocking restriction
 
 `CreatePermanentRuleEffectUntil(Ref_TargetPermanent, [CantBeBlocked],

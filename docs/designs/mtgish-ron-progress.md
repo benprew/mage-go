@@ -5149,3 +5149,132 @@ Ranked next candidates to reassess from fresh evidence:
 Complete RON gameplay, application startup loading, Go-card/generator removal,
 DSL cleanup and native startup smoke tests remain unfinished. No second slice
 began.
+
+## Run 2026-10-04: TYPED-PERMANENT-DAMAGE
+
+Status: complete single-target permanent damage recipient adapter slice.
+This run stops after this capability. The user changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain outside the slice commit. No
+unrelated untracked files were present at the start.
+
+### Fresh evidence and selection
+
+Baseline RON tests, `go test ./pkg/mage/... -short -count=1` and `make build`
+passed. Strict and semantic loader rejection is an expected collection gap:
+2,445 records, 986 unique names, **1,143 compiled / 1,302 rejected records**,
+395 accepted / 591 rejected names. The fresh AST inventory walks all 72,938
+occurrences and 8,528 context/shape signatures; 14,381 occurrences have an
+unknown role. The vocabulary snapshot was read as syntax evidence only.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Blockers, downstream benefit and effort |
+| --- | --- | ---: | --- |
+| Typed permanent damage recipient, selected | Crimson Manticore, D'Avenant Archer, Grapeshot Catapult, Lady Caleria, Tor Wauki | 5 | Small adapter, moderate lifecycle/legality tests; exact engine behavior exists. Also supplies the recipient prerequisite for Desert (end-of-combat activation timing), Tracker (power values, target damage source and source recipient), Simulacrum (controller filter and turn damage history). Earthbind's host-recipient/intervening-if/sticky ability forms remain separate. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi | 0 for prerequisite; 7 after adapter | Missing CR 615.7 simultaneous amount-shield allocation. Large damage/replacement/decision test effort, with concrete seven-card downstream benefit. Other nested consumers need modes, X, choice, entry or payment contracts. |
+| Bands with other legendary creatures | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 | Missing filtered band formation and combat damage assignment. Moderate-to-large engine/layer/combat tests. Master of the Hunt also needs named band members and token support; removal consumers still need the family. |
+
+The selected adapter has the largest credible gain for its effort. All five
+selected cards and both competing groups had their complete RON records read
+before editing. AST recipient contexts, including nested unsupported parents,
+were inspected. Complete records for Desert, Tracker and Simulacrum show why
+the shared recipient alone cannot unlock them. Earthbind's complete record
+confirms its distinct host context. Reprints count once. Contract, reuse boundary
+and acceptance cases were stated before editing; this is implementation work,
+with no card-name branch, fallback or partial production registry.
+
+### Exact shape, dependencies and reuse
+
+`Permanent(Ref_TargetPermanent)/1` is supported as the third argument of
+`SpellDealsDamage(ThisSpell, value, recipient)/3` and
+`PermanentDealsDamage(ThisPermanent, value, recipient)/3`. The reference must
+be a symbol bound to a single local `TargetPermanent`. Supported resolving
+contexts are spells, spell modes, activations and existing supported triggers.
+Values keep the existing fixed/announced-X contract. Other sources, recipients,
+numbered groups, source/host operands, static rules and costs are not added.
+
+`ron` validates wrapper arity, reference kind, lexical binding and context,
+then lowers to `mage.DealDamageFrom(mage.This, permanentTargetBinding,
+mage.ValueAtResolution(value))`. Existing `compilePermanentRef` and per-factory
+`instanceBindings.permanents` supply typed identities. Engine definition
+validation can detect a removed target declaration. No engine implementation
+or public API changed. Existing announcement, transactional payment, target
+filter recheck, incarnation, source LKI, damage, replacement, stack-copy and
+clone services own execution. Inventory assigns the wrapper operand the
+`permanent_reference` role in known recipient contexts without claiming that
+all enclosing contexts compile. No new simultaneous action service is needed
+for this single-recipient instruction; CR 615.7 remains an independent gap.
+
+Rules read: CR 115.1–3, 608.2b/c/h, 113.7a, 400.7 and 702.26b. Existing
+API/rules-contract docs were read and extended only for the adapter evidence.
+This is a missing compiler adapter, not a missing engine contract. No new source
+defect or environmental failure was found. Gaea's Liege and Fastbond concerns
+remain open. All twelve RON hashes match the vocabulary snapshot; no source
+change or vocabulary source refresh is needed.
+
+### TDD and card-to-test mappings
+
+The new declaration and real-card tests first failed with the expected
+`unbound or incompatible target reference (Permanent)` compiler diagnostic.
+An initial fixture compile error used a nonexistent `Card.HasAttr` method;
+it was corrected to the permanent's `HasKeyword` before the semantic failing
+run. The replacement-order fixture initially used a player-only half-damage
+shield on a permanent. Reading that service's contract showed the mismatch;
+the fixture now uses the exact creature redirection service with an amount
+shield and verifies both recipient choices. Assertions were not weakened.
+
+| Cards / contracts | Tests |
+| --- | --- |
+| Crimson Manticore, D'Avenant Archer, Lady Caleria, Tor Wauki | `TestRONPermanentDamageRealCards`: full records and definition validation; attacking/blocking versus idle targets, exact 1/1/3/2 damage, creature/player/land legality, sickness and tap costs; Crimson Manticore's printed flying, red payment and rollback; combat status recheck, shroud, control changes, target return and phasing, phase-in identity, source departure/return with lifelink LKI, source phasing, amount prevention, copied abilities and clones. |
+| Grapeshot Catapult | Same real-card matrix: exact 1 damage, artifact creature metadata, flying creature restriction at announcement and resolution, combat status independence, plus the shared lifecycle/cost/clone cases. |
+| Spell/mode/trigger contexts | `TestRONPermanentDamageSpellAndTriggerBindings`: synthetic RON engine gameplay, retained local target declarations, trigger source departure, retargeted copies, two simultaneous factory instances and independent recipient frames. |
+| Replacement ordering | `TestRONPermanentDamageReplacementOrder`: recipient controller chooses redirection before prevention (4 player damage) or prevention before redirection (3 player damage); no damage remains on the original permanent. |
+| Declaration and inventory contracts | `TestRONPermanentDamageDeclarations`, `TestRONPermanentDamageInvalid`: fresh targets, definition validation rejects a removed declaration, nested operand role, invalid kind/arity, unbound/incompatible/numbered/source/host references, mode scope and static/cost contexts. |
+| Existing accepted behavior | All RON package tests and `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged`; existing `TestRONDamageScope*` retains fixed/X and shared damage pipeline evidence. |
+
+### Measurements and validation
+
+Actual gain equals estimate: **5 unique cards / 5 records**. Strict and semantic
+loaders exit 1 with identical issue arrays: **1,148 compiled / 1,297 rejected
+records**, 400 accepted / 586 rejected names. Exactly the five selected records
+leave the issue list. No accepted card regresses and no remaining first
+diagnostic changes. Parsed occurrences and context signatures remain 72,938
+and 8,528; unknown-role occurrences decrease to 14,361. Collection engine-
+validation and behavior-verification totals remain null. Five new full-record
+behavior mappings do not establish collection gameplay completion.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, engine short tests and `make build` | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,143 compiled / 1,302 rejected |
+| New focused tests before implementation | Expected semantic failure at recipient wrapper |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after adapter and fixture corrections |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues after renaming test variable `copy` to `copied`; formatting reviewed |
+| Strict/semantic loaders and accepted-record audit | Expected exit 1: 1,148 compiled / 1,297 rejected; no regressions, issue arrays agree |
+| Twelve source hashes versus fresh inventory and vocabulary | PASS, unchanged |
+| Post-lint focused tests, engine short tests, `make test`, `make build`, `go vet ./...` | PASS |
+| `git diff --check` | PASS |
+| Final strict loader after lint | Expected exit 1; identical counts and diagnostics |
+
+No required check remains blocked. All final checks pass; loader rejection is
+collection rejection, not build/test failure. Lint changed no unrelated file.
+
+Changed slice files: compiler.go, inventory.go, inventory_test.go, new
+permanent_damage_test.go; docs/dsl-reference.md, docs/engine-rules-contracts.md
+and this ledger. Automatic lint changes were reviewed before commit. No Go card
+definition or DSL function was removed. Complete loading, test migration and
+runtime startup gates remain unmet; no deletion caller audit is claimed.
+
+Ranked next candidates to reassess:
+1. CR 615.7 simultaneous amount-shield allocation and recipient prevention:
+   seven concrete otherwise-ready cards after the shared prerequisite.
+2. Filtered bands with other legendary creatures: five otherwise-ready lands,
+   requiring exact combat formation and damage-assignment contracts.
+3. Scoped `ControlledByAPlayer` resolution filters: inspect all nineteen first-
+   error consumers and nested action/timing/payment blockers before estimating
+   unlocks. Shared player reference and target services already exist.
+
+Complete RON gameplay, runtime loading, Go-card/generator deletion, DSL cleanup
+and native startup validation remain unfinished. No second slice began.

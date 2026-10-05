@@ -515,6 +515,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Player" && len(n.Args) == 1 {
 			return "player_reference"
 		}
+		if n.Name == "Permanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "player_reference":
 		if n.Name == "ControllerOfSpell" && len(n.Args) == 1 {
 			return "spell_reference"

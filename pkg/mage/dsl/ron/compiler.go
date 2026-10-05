@@ -840,6 +840,21 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if err != nil {
 			return nil, err
 		}
+		if n.Args[2].Name == "Permanent" {
+			if err := arity(n.Args[2], 1); err != nil {
+				return nil, err
+			}
+			recipient, err := compilePermanentRef(n.Args[2].Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			if recipient.kind != permanentTarget {
+				return nil, unsupported(n.Args[2].Args[0], "targeted damage recipient")
+			}
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.DealDamageFrom(mage.This, bindings.permanents[recipient.target], mage.ValueAtResolution(amount))
+			})
+		}
 		if n.Name == "PermanentDealsDamage" && n.Args[2].Name == "Player" {
 			if err := arity(n.Args[2], 1); err != nil {
 				return nil, err

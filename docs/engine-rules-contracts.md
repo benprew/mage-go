@@ -1150,6 +1150,20 @@ This does not establish a simultaneous shared-shield allocation contract.
 The migration ledger records the CR 615.7 gap in `DamageSystem` that must be
 resolved before RON future recipient prevention can be accepted.
 
+`Permanent(Ref_TargetPermanent)` in RON single damage actions uses the local
+`PermanentTargetBinding` as a `DamageRecipientRef`. `DealDamageFrom` retains
+the target's incarnation and uses the shared source-LKI and replacement services.
+`TestRONPermanentDamageRealCards` covers all rules of Crimson Manticore,
+D'Avenant Archer, Grapeshot Catapult, Lady Caleria and Tor Wauki: exact damage,
+combat/flying filters at announcement and resolution, tap/sickness/mana costs,
+rollback, target return/phasing/control, source LKI with lifelink, prevention,
+copies and clones. `TestRONPermanentDamageSpellAndTriggerBindings` covers
+spell/mode/trigger targets, source departure, retargeted copies and independent
+factory instances. `TestRONPermanentDamageReplacementOrder` verifies the
+recipient controller's choice between redirection and amount prevention.
+Declaration tests require a typed read and reject mode-scope leaks.
+This adapter changes no engine execution contract and adds no damage batch.
+
 ## RON fixed-power targeting and temporary unblockability
 
 RON lowers fixed `PowerIs` comparisons to `HasPowerLTE`, `HasPowerGTE` and
