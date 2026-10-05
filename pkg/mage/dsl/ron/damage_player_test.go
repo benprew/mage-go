@@ -132,7 +132,7 @@ func TestRONDamagePlayerCards(t *testing.T) {
 }
 
 func TestRONDamagePlayerInvalid(t *testing.T) {
-	for _, event := range []string{`WhenAPermanentDealsDamageToAPlayer`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent))`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent())`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),AnyPlayer)`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(HostPermanent),Opponent)`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(Ref_TargetPermanent),Opponent)`, `WhenAPermanentDealsDamageToAPlayer(IsCardtype(Creature),Opponent)`} {
+	for _, event := range []string{`WhenAPermanentDealsDamageToAPlayer`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent))`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),Opponent())`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),AnyPlayer())`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(HostPermanent),Opponent)`, `WhenAPermanentDealsDamageToAPlayer(SinglePermanent(Ref_TargetPermanent),Opponent)`, `WhenAPermanentDealsDamageToAPlayer(IsCardtype(Creature),Opponent)`} {
 		src := `Card(Name:"Bad",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),CardPT:(Power:1,Toughness:1),Rules:[TriggerA(` + event + `,ActionList([PlayerAction(Trigger_ThatPlayer,DiscardHand)]))])`
 		nodes, err := Parse(strings.NewReader(src), "bad.ron")
 		if err != nil {

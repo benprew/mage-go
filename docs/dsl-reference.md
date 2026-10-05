@@ -1221,7 +1221,8 @@ optional options are omitted. Each action builds a fresh effect; the engine's
 immutable token definition contains no chosen state.
 
 See [the supported shapes and card tests](designs/mtgish-ron-token-creation.md).
-Token abilities, supertype options, copying, creation modifiers and saved token
+Token source damage-to-player triggers are supported as described below. Other
+token abilities, supertype options, copying, creation modifiers and saved token
 results remain unsupported by this adapter.
 
 ### RON sacrifice payment values
@@ -2742,3 +2743,37 @@ entry, static or replacement-operation context.
 `DiscardReplacement`, `HandBatch`, `Invalid` and `Inventory` cover complete
 Hypnotic Specter and Nicol Bolas records. `TestRONUpkeepPaymentRealCards`
 also covers Nicol Bolas's complete upkeep payment and sacrifice rule.
+
+## RON player poison counters and token damage triggers
+
+`PutCounters([ACounterOfTypeOnPlayer(PoisonCounter, player)])` places one counter.
+`NumberCountersOfTypeOnPlayer(Integer(n), PoisonCounter, player)` places a fixed,
+nonnegative amount, including zero. The list must contain one instruction.
+These resolving actions accept existing typed player references, including
+`You`, declared player targets and event-local `Trigger_ThatPlayer`. Other player
+counter types, dynamic amounts, costs and entry operations remain unsupported.
+They use `mage.AddPoisonFor(subject PlayerRef, amount ResolutionValue)`; the
+engine resolves the player and amount in the current frame and adds positive
+amounts through the existing player poison state. Nil or unbound declarations
+fail definition validation. Absent references and nonpositive amounts do nothing.
+Poison placement is separate from damage and life loss.
+
+`TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),
+AnyPlayer), body)` extends the existing source/opponent form. It uses
+`DealsDamageToPlayer(This, binding)`, captures the actual damaged player, and
+permits damage to the source controller. It supplies no amount or permanent
+binding. Other source and player filters remain unsupported.
+
+The ability list of `TokenWithPT/6` and `NamedTokenWithPT/7` can contain this
+source damage-player `TriggerA/2` with bare `AnyPlayer` or `Opponent`, alongside
+existing keywords. The token trigger body uses existing resolving action forms
+in a fresh permanent scope. It cannot read targets, X, payment results or event
+bindings from the creating ability. Each card factory builds a fresh immutable
+token declaration with fresh trigger bindings; `TokenAbilities` gives created
+tokens separate runtime ability identities. Token creation and copying of the
+creating stack ability retain their existing controller and batch contracts.
+
+Evidence: `TestAddPoisonFor*`, `TestRONPoisonCards`, `CastingAndCombat`,
+`GeneratorPaymentAndCopies`, `FactoryInstances`, `TokenScope`, `PlacementAndLoss`,
+`Invalid` and `Inventory` in their poison test files. The complete RON card
+mappings are Marsh Viper, Pit Scorpion and Serpent Generator.

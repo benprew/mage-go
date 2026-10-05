@@ -475,7 +475,7 @@ func TestRONCounterPlacementInvalid(t *testing.T) {
 		`PutCounters([ACounterOfTypeOnPermanent(PTCounter(1), ThisPermanent)])`, `PutCounters([ACounterOfTypeOnPermanent(PTCounter(Integer(1), 1), ThisPermanent)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(PTCounter(2, 2), ThisPermanent)])`,
 		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Ref_TargetPermanent)])`, `PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, HostPermanent)])`,
-		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Trigger_ThatPermanent)])`, `PutCounters([ACounterOfTypeOnPlayer(PoisonCounter, You)])`,
+		`PutCounters([ACounterOfTypeOnPermanent(ChargeCounter, Trigger_ThatPermanent)])`, `PutCounters([ACounterOfTypeOnPlayer(ChargeCounter, You)])`,
 		`PutCounters([NumberCountersOfTypeOnPermanent(ValueX, ChargeCounter, ThisPermanent)])`,
 		`PutCounters([NumberCountersOfTypeOnPermanent(Integer(1), ChargeCounter)])`, `PutCounters([NumberCountersOfTypeOnPermanent(ManaValueOfPermanent(ThisPermanent), ChargeCounter, ThisPermanent)])`,
 	} {

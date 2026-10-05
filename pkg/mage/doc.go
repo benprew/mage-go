@@ -237,6 +237,11 @@
 // [DiscardMatchingHand] moves all matching hand cards before discard events.
 // [CountMatchingHand] reads the current count without reveal history or LKI.
 //
+// Use [AddPoisonFor] with a typed player reference to add poison counters.
+// Nonpositive amounts make no change. The existing state check handles loss
+// at ten poison counters. [TokenAbilities] gives each token its own ability
+// identity; event bindings keep their values in the resolution frame.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -14502,3 +14502,167 @@ Ranked next candidates to reassess:
 
 Only this slice is committed. The hash is in the final response. Existing user
 changes remain unstaged. No second implementation slice is started.
+
+## 2026-10-05: player poison counters and token damage triggers
+
+Status: completed slice `PLAYER-POISON-TOKEN-TRIGGER`. These measurements
+supersede all earlier current-status figures. This run stops after this slice.
+
+### Evidence and candidate selection
+
+Initial user changes: `.gitignore`, execution design, progress ledger, and
+untracked `mtgish-ron-completed.md`. These are preserved. The slice commit adds
+only this entry to the committed ledger; the user's ledger reorganization stays
+unstaged. No card source, Go definition, generator or startup caller is changed.
+
+Read AGENTS.md, engine reference, execution design, vocabulary and ledger;
+selected compiler, counter, player, damage-event, token and clone services;
+complete candidate RON records and related API/rules contracts. Local Oracle
+records in `data/DRK.json` and `data/LEG.json` confirm the three poison cards.
+CR 111.2–111.3, 120, 122.1f and 603.2–603.3 establish token characteristics,
+actual damage, poison loss, deferred triggers and separate event occurrences.
+The [implement-engine skill](../../.agents/skills/implement-engine/SKILL.md)
+supplied the typed engine-action workflow. No removed card/set skill was used.
+
+Fresh baseline short engine tests and `make build` passed. Strict loader exited
+1 for collection rejection: **1,512 compiled / 933 rejected records**;
+**546 accepted / 440 rejected unique names**. The complete candidate records,
+including nested token abilities, supplied the unlock estimates. The final AST
+inventory refresh confirms unchanged syntax totals and source hashes.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Player poison and source damage-player triggers, selected | Marsh Viper, Pit Scorpion, Serpent Generator: **3** full cards / **3** records. | Typed player poison action is the engine prerequisite; AnyPlayer and token-local trigger lowering are compiler gaps. Existing damage events, poison state, token ability cloning and payment transactions are reusable. Enables player counter consumers and source damage events inside token declarations. Nafs Asp also uses AnyPlayer but still needs its future payment-trigger procedure; Backfire needs a host/filter/amount/permanent event contract. Neither is an estimated unlock. | Low/medium: one small typed engine action, reusable trigger factory, token scope, real gameplay and invalid declaration tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full-card unlocks after prerequisite; **0** adapter-only gains. | Full records use targets, modes, tap/mana payments and X. CR 615.7 simultaneous-source allocation still needs a shared engine decision contract. Enables further finite shields and prevention consumers. | Medium/high: allocation decisions, shield consumption, competing replacements and simultaneous packets. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after prerequisite. | Complete records require controller/subtype/name counts, zone-aware characteristics and CDA lowering. Gaea's Avenger and Wood Elemental have further gaps and are excluded. Enables zone-aware characteristics and later copy/layer consumers. | High: all-zone evaluation, count contexts, copy/layer and controller interactions. |
+
+Selection: the three poison cards offer the strongest credible gain for the
+smaller effort. The engine already has exact damage-player capture and token
+runtime isolation. The only new engine execution behavior is a typed route to
+existing poison state. The contract, reuse boundary and acceptance cases were
+stated before implementation. Reprints count once; these cards have one record
+each. First-error frequency was not an unlock estimate.
+
+### Exact supported shapes and reuse
+
+Engine API: `AddPoisonFor(subject PlayerRef, amount ResolutionValue)
+ResolvingEffect`. Resolve the player, then read the amount in the current
+resolution frame. Positive amounts use `Player.AddPoisonCounters`; absent
+references and nonpositive amounts make no change. Definition validation checks
+nil and unbound declarations. This instruction does not deal damage, lose life
+or run state-based actions. Existing checks cause loss at ten poison counters.
+Dynamic engine values are supported and tested with event-local `FromNumber`.
+No new generic player-counter replacement contract is claimed.
+
+RON resolving `PutCounters/1` accepts a one-element list containing
+`ACounterOfTypeOnPlayer(PoisonCounter, player)` or
+`NumberCountersOfTypeOnPlayer(Integer(n), PoisonCounter, player)`, where n is a
+nonnegative integer literal. Existing typed player references are supported.
+Other counter types, dynamic RON amounts, plural lists, costs and entry contexts
+remain rejected. Permanent-counter placement keeps its existing behavior.
+
+RON event: `TriggerA(WhenAPermanentDealsDamageToAPlayer(
+SinglePermanent(ThisPermanent), AnyPlayer), body)`. Bare AnyPlayer extends the
+existing bare Opponent shape. Reuse `DealsDamageToPlayer(This, binding)` and
+`DealsDamageToOpponent(This, binding)` respectively. Only the source permanent
+is supported. The body gains bare player reference `Trigger_ThatPlayer`; no
+amount/permanent binding is fabricated. The private lexical plan creates a
+fresh `PlayerBinding` per ability factory and uses existing `instanceBindings`.
+
+Token context: the ability list of `TokenWithPT/6` or `NamedTokenWithPT/7` accepts
+this source damage-player `TriggerA/2` with bare AnyPlayer or Opponent, together
+with existing keywords. Compile each body in a fresh permanent scope. The
+creator's targets, X, payments and event bindings cannot enter that scope.
+Supported body actions reuse the existing resolving compiler. Each card/effect
+factory builds a fresh immutable `DefineToken` declaration with `TokenAbilities`;
+engine token cloning supplies distinct runtime IDs and sources. Other token
+trigger families and token supertypes remain rejected.
+
+RON owns spelling, positioned errors, lexical scope, typed lowering and nested
+inventory roles. Engine reuse: player resolution frames, number values,
+actual-damage events, prevention pipeline, LKI event facts, deferred/APNAP
+triggers, stack copies, token batches, token ability cloning, payment rollback,
+phasing and game/player cloning. No card-name executor, global last-action slot,
+Go fallback, partial production registry or new reflection dispatch is added.
+No permanent information read needs LKI: the damaged player is already saved
+at event time. Prevented events produce no trigger; partial damage produces
+one fixed poison instruction regardless of the amount dealt.
+
+### TDD and card-to-test mapping
+
+The initial engine test failed because `AddPoisonFor` was missing. Two fixture
+API mistakes were corrected before confirming that isolated expected failure.
+The first real-card tests failed on AnyPlayer for Marsh Viper and Pit Scorpion,
+and on token TriggerA for Serpent Generator. Later fixture corrections used the
+actual registry and phasing signatures; no gameplay assertion was weakened.
+
+| Card/contract | Test evidence |
+| --- | --- |
+| Marsh Viper, full DRK record; Pit Scorpion, full LEG record; Serpent Generator, full LEG record including complete token | `TestRONPoisonCards`: factory definition validation, token characteristics, noncombat and self damage, wrong source, zero/full/partial prevention, separate events, departure/return/phasing, event-time control, ability removal, copied recipient and pending clone isolation. |
+| All three cards | `TestRONPoisonCastingAndCombat`: actual colored/generic casting, payment rollback, entry, token activation, native attacking/blocking/combat damage, blocked-permanent exclusion and fixed poison amounts. |
+| All three independent factory instances | `TestRONPoisonFactoryInstances`: two calls to the same compiled real-card factory, opposite controllers, phase cycle, simultaneous damage, source controller change, permanent-damage exclusion and separate token runtime ability IDs. |
+| Serpent Generator activation and token lifecycle | `TestRONPoisonGeneratorPaymentAndCopies`: insufficient mana rollback, tap/mana payment, tapped-source rejection, creation delay, copied creation with a different controller, departed creator, clone isolation, simultaneous token damage and different event recipients. |
+| Poison resolution/state checks | `TestRONPoisonPlacementAndLoss`: both exact player instruction forms, zero amount, explicit You and native ten-poison loss only after resolution. `TestAddPoisonFor`, `Validation`, `EventValues`: nil/unbound rejection, absent references, nonpositive/fixed/dynamic values, independent player/number event facts, copies and clones. |
+| Declaration and semantic inventory | `TestRONPoisonInvalid`, `TokenScope`, `Inventory`: wrong kinds/arities/types, negative/dynamic RON amounts, incompatible references, plural instructions, unsupported filters/events, outer target/X borrowing, unavailable event amount and nested token/player counter roles. |
+
+Two prior unsupported-declaration fixtures were updated to reject malformed
+AnyPlayer and invalid player counter types, with positive gameplay coverage for
+the newly supported forms. Exact inventory counts were updated; other assertions
+remain. Previously accepted damage-player, token and permanent-counter suites
+pass. Collection compilation and gameplay evidence remain distinct; global
+engine-validated and behavior-verified inventory fields remain null.
+
+### Validation, measurements and remaining work
+
+Actual gain matches the estimate: **3 unique names / 3 records**, exactly Marsh
+Viper, Pit Scorpion and Serpent Generator. No previously accepted name was lost.
+Final strict loader: **1,515 compiled / 930 rejected records**;
+**549 accepted / 437 rejected unique names**, out of 2,445 records / 986 names.
+The loader still exits 1 and installs no partial production registry.
+Semantic inventory: **72,951 occurrences / 8,540 signatures / 10,624 unknown-role
+occurrences**. Nested player-counter and token-trigger roles now have explicit
+reporting. All 12 source hashes match the vocabulary snapshot; no source defect
+or source correction was found, so no syntax snapshot refresh is required.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestAddPoisonFor\|TestRONPoison\|TestRONDamagePlayer\|TestRONTokenCreation\|TestRONCounterPlacement\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS, including the staged slice. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; counts above. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts above. |
+
+No environmental or pre-existing check failure was found. Automatic lint
+changes were reviewed: import spacing in the new test file only. Focused and
+required engine/repository/build/vet checks were repeated after final coverage
+and formatting changes. The final lint pass also passes with zero issues.
+
+Changed files: new engine poison action and its tests; RON poison tests;
+`counter_placement.go`, `damage_player.go`, `token_creation.go`, `inventory.go`
+and their affected declaration/count tests; `pkg/mage/doc.go`, DSL reference,
+engine rules-contract reference and this ledger entry. No DSL function is
+removed, so no deletion is justified by a caller audit. Complete collection
+loading, complete gameplay mappings, embedded runtime cutover, Go-card deletion,
+generator retirement and obsolete DSL cleanup remain gated and unfinished.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Finite prevention allocation prerequisite and exact adapters for the four
+   full-card consumers listed above.
+2. All-zone count CDAs for the four full-card consumers listed above.
+3. Shared temporary creature/land keyword lowering in targeted modes; compare
+   the complete Targeted_Modal consumers before estimating additional unlocks.
+
+Leading diagnostics remain CastEffect (18 unique names / 54 records),
+ChooseADamageSource (11 / 46), Targeted_Modal (7 / 42),
+CreateFuturePreventDamage (12 / 32), HostPermanent (11 / 30),
+EachPlayerEffect (8 / 28) and PlayerEffect (8 / 23). These are first errors,
+not complete-card unlock estimates. Nafs Asp advances to its future payment
+trigger error and remains unsupported; Backfire remains unsupported.
+
+Only this slice is committed. The hash is in the final response. Existing user
+changes remain unstaged, and no second implementation slice is started.

@@ -393,10 +393,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"value", "token_definition"}[index]
 		}
 		if n.Name == "TokenWithPT" && len(n.Args) == 6 {
-			return []string{"token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_keyword"}[index]
+			return []string{"token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_rule"}[index]
 		}
 		if n.Name == "NamedTokenWithPT" && len(n.Args) == 7 {
-			return []string{"token_name", "token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_keyword"}[index]
+			return []string{"token_name", "token_pt", "token_colors", "token_supertype", "token_card_type", "token_subtypes", "token_rule"}[index]
+		}
+	case "token_rule":
+		if n.Name == "TriggerA" && len(n.Args) == 2 {
+			return []string{"event", "actions"}[index]
 		}
 	case "token_pt":
 		if n.Name == "PT" && len(n.Args) == 2 {
@@ -564,6 +568,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		}
 	case "counter_instruction":
+		if n.Name == "ACounterOfTypeOnPlayer" && len(n.Args) == 2 {
+			return []string{"player_counter_type", "player_reference"}[index]
+		}
+		if n.Name == "NumberCountersOfTypeOnPlayer" && len(n.Args) == 3 {
+			return []string{"value", "player_counter_type", "player_reference"}[index]
+		}
 		if n.Name == "ACounterOfTypeOnPermanent" && len(n.Args) == 2 {
 			return []string{"permanent_counter_type", "permanent_reference"}[index]
 		}

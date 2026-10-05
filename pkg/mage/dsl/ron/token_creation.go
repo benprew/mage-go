@@ -43,11 +43,11 @@ func compileTokenCreation(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.CreateTokenCopies(mage.You, count(bindings), token)
+		return mage.CreateTokenCopies(mage.You, count(bindings), token())
 	}, nil
 }
 
-func compileCreatureToken(n Node) (mage.TokenDefinition, error) {
+func compileCreatureToken(n Node) (func() mage.TokenDefinition, error) {
 	name := ""
 	switch n.Name {
 	case "NamedTokenWithPT":
@@ -162,7 +162,22 @@ func compileCreatureToken(n Node) (mage.TokenDefinition, error) {
 		return nil, err
 	}
 	var attrs []core.Attr
+	var abilities []func() mage.Ability
 	for _, entry := range entries {
+		if entry.Name == "TriggerA" {
+			if err := arity(entry, 2); err != nil {
+				return nil, err
+			}
+			if entry.Args[0].Name != "WhenAPermanentDealsDamageToAPlayer" {
+				return nil, unsupported(entry.Args[0], "token trigger")
+			}
+			ability, err := compileDamagePlayerAbility(entry.Args[0], entry.Args[1], scope{permanent: true})
+			if err != nil {
+				return nil, err
+			}
+			abilities = append(abilities, ability)
+			continue
+		}
 		attr, ok := keywords[entry.Name]
 		if entry.Kind != Symbol || !ok {
 			return nil, unsupported(entry, "token keyword")
@@ -182,5 +197,11 @@ func compileCreatureToken(n Node) (mage.TokenDefinition, error) {
 	if len(attrs) > 0 {
 		options = append(options, mage.TokenKeywords(attrs...))
 	}
-	return mage.DefineToken(name, options...), nil
+	return func() mage.TokenDefinition {
+		instanceOptions := slices.Clone(options)
+		for _, ability := range abilities {
+			instanceOptions = append(instanceOptions, mage.TokenAbilities(ability()))
+		}
+		return mage.DefineToken(name, instanceOptions...)
+	}, nil
 }

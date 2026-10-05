@@ -2906,3 +2906,38 @@ departure/return/phasing, ability removal, copies and pending clones.
 visibility. `Casting`, `Combat` and `TestRONUpkeepPaymentRealCards` complete the
 Hypnotic Specter and Nicol Bolas gameplay mappings. `Invalid` and `Inventory`
 cover declaration rejection and semantic roles. No engine contract is changed.
+
+## Typed player poison placement and RON token triggers
+
+`AddPoisonFor(PlayerRef, ResolutionValue)` uses the existing typed resolution
+frame, player poison state and clone service. It resolves a player first, then
+reads the amount without changing targets. An absent player reference or a
+nonpositive amount causes no change. Definition validation rejects nil subjects,
+nil values and unbound reads. It does not deal damage, change life, or run
+state-based actions during the instruction. Ten poison counters cause loss at
+the existing state-based action check (CR 122.1f, 704.5c). No new player-counter
+replacement family is introduced.
+
+RON source damage-player events with bare `AnyPlayer` reuse
+`DealsDamageToPlayer(This, binding)`. Zero and fully prevented damage cannot
+trigger; partial prevention changes damage but does not scale the fixed poison
+amount (CR 603.2g). Separate events retain separate players. Source departure,
+return, phasing and control changes cannot redirect a queued trigger. Copies
+retain the player even when their resolving controller changes.
+
+RON token damage-player triggers use a fresh lexical permanent scope. They
+cannot borrow the creator's targets, announced X or saved results. Token
+characteristics and abilities are printed characteristics (CR 111.3). Each
+factory creates a fresh `DefineToken` declaration with `TokenAbilities`;
+existing engine cloning gives each token a distinct runtime ability ID and
+source while immutable binding declarations use per-resolution values.
+Token owners/controllers use the resolving creation controller (CR 111.2).
+Payment rollback, copied creation, simultaneous damage, APNAP placement and
+pending clone isolation reuse existing engine services.
+
+Evidence: `TestAddPoisonFor`, `Validation` and `EventValues`; the RON
+`TestRONPoison*` suite covers the three complete cards, real casting/combat,
+prevention and self damage, source/recipient identity, phase cycles, ability
+removal, independent factory/token instances, copies/clones, payment rollback,
+poison loss, invalid declarations and nested inventory roles. No static, entry,
+cost or new replacement-operation adapter is established.
