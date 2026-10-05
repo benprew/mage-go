@@ -1741,3 +1741,23 @@ current controller in layer 2, not a player saved when the spell was cast.
 and other control contexts remain unsupported. Control Magic and Steal Artifact
 are covered by `TestRONStaticControl*`; their creature/artifact enchant filters
 still govern casting and attachment legality. Collection loading remains strict.
+
+## Static basic land type prerequisite
+
+The existing engine constructors `BecomesBasicLandsEffect(filter, subtypes...)`
+and `BecomesBasicLandAttachedEffect(subtypes...)` are available for fixed basic
+land types. The collection effect now detects layer-4 selection dependencies;
+the shared executor reevaluates remaining dependencies after each application.
+The attachment effect requires the host incarnation saved by `Game.Attach`.
+Do not construct attachments by setting `AttachedTo` alone.
+
+Each new basic type supplies its intrinsic mana ability. The change removes old
+land types and printed rules-text abilities, retains other subtype families and
+supertypes, and permits separately granted abilities. Details and test evidence
+are in [the engine contract](engine-rules-contracts.md#static-basic-land-types-dependency-and-attachment-identity).
+
+RON `SetLandType/1` and `SetLandTypeVariable/1` remain unsupported. This prerequisite
+adds no compiler spelling, reference scope, entry choice, or duration adapter.
+Conversion and Evil Presence need static lowering; Blood Moon also needs the
+nonbasic-supertype filter. Their complete records must pass RON gameplay tests
+before the loader can accept them.

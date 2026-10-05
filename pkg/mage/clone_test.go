@@ -417,8 +417,6 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 	auraCard := NewAura("Effect Aura", "{W}")
 	auraCard.SetOwner(pA.PlayerID())
 	aura := NewPermanent(auraCard, pA.PlayerID())
-	aura.AttachedTo = target.ID()
-	target.Attachments = append(target.Attachments, aura.ID())
 
 	copyTargetCard := NewCreature("Copy Target", "{3}{W}", 4, 4, WithKeyword(Flying))
 	copyTargetCard.SetOwner(pA.PlayerID())
@@ -429,6 +427,7 @@ func TestCloneContinuousEffectsDoNotLeakAcrossBranches(t *testing.T) {
 	doppel := NewPermanent(doppelCard, pA.PlayerID())
 
 	g.AddToBattlefield(source, target, land, aura, copyTarget, doppel)
+	g.Attach(aura.ID(), target.ID())
 
 	landOnly := NewPermanentFilter("test land", func(p *Permanent, _ *Game) bool {
 		return p.ID() == land.ID()

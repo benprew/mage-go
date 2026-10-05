@@ -7190,3 +7190,185 @@ Changed files: `pkg/mage/dsl/ron/layers.go`, `static_control_test.go`,
 `inventory.go`, `inventory_test.go`; `pkg/mage/effect_control.go`,
 `attached_control_identity_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger.
+
+## Slice: Static basic land type engine prerequisite (2026-10-04)
+
+Status: complete engine prerequisite; stop after this slice. No RON land-type
+adapter is added. Initial user changes to `.gitignore` and
+`mtgish-ron-execution.md` are preserved and excluded from the commit.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary and progress,
+selected compiler/layer/inventory code, shared continuous-effect, attachment,
+clone and dependency services, API/rules contracts, and CR 305.6–8, 400.7,
+611.3, 613.1d/f, 613.7–8 and the existing phasing contracts. Requirements came
+from complete RON records. Local Scryfall data supplied the Oracle text for
+Conversion, Evil Presence and Blood Moon. The implement-engine skill was used;
+its reference to the removed card schema is missing. Observable requirements
+were derived directly; no removed skill or schema was recreated.
+
+### Fresh inventory, candidate comparison and selection
+
+Baseline focused RON/CLI tests and `make build` passed. Strict loader returned
+expected exit 1: **1,233 compiled / 1,212 rejected records**, 434 accepted / 552
+rejected unique names. Semantic inventory: 12 files, 2,445 records, 986 names,
+72,938 node occurrences, 8,528 signatures and 14,047 unknown-role occurrences.
+Collection rejection is separate from build/test success.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Blockers, downstream benefit and effort |
+| --- | --- | ---: | --- |
+| Static basic land type prerequisite, selected | Conversion; Evil Presence; Blood Moon | 0 now; 2 after static lowering, 3 with the nonbasic filter | Existing CR 305.7 execution lacked selection dependencies, dynamic ordering and generic attachment incarnation checks. Moderate engine/test effort. Establishes the shared layer-4 contract for those three cards and fixes attachment identity used by 22 accepted Aura cards. |
+| Finite prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite; up to 7 after lowering | Complete records have supported target/payment forms. Shared simultaneous finite-shield allocation and replacement ordering are missing. High engine/decision/test effort. Modes and other payment forms block adjacent consumers and are excluded. |
+| Filtered bands with others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after lowering | Complete records share supported legendary/color/controller filters, but band formation and combat damage assignment need a reusable filtered contract. High combat/test effort. |
+
+Nested inventory contexts and complete candidate records were inspected; reprints
+count once as cards. The selected prerequisite has a smaller complete execution
+boundary, three concrete downstream consumers, and an immediate identity repair
+for accepted cards. This gives the largest credible benefit for the effort.
+First-error frequency was not used as an unlock estimate. The pre-edit contract
+and acceptance cases were stated in commentary. Missing engine contracts won
+over adding an adapter that would expose incomplete behavior.
+
+All static and resolving `SetLandType` consumers were inspected in full:
+Conversion, Evil Presence, Blood Moon, Cyclopean Tomb, Gaea's Liege and
+Thelonite Monk. Phantasmal Terrain's complete variable-type/entry-choice record
+was also read. The latter four have linked counters/durations, dynamic values,
+conditions or entry choices; they are not included in the three-card estimate.
+No RON data defect was corrected. The prior Gaea's Liege source concern remains
+open; this slice does not establish its attacking condition.
+
+The full records of all 33 inventory names with static or temporary host-layer
+references were read. The 22 accepted direct-static Aura consumers of generic
+attachment effects are Black Ward, Blue Ward, Burrowing, Divine Transformation,
+Eternal Warrior, Fear, Fishliver Oil, Flight, Giant Strength, Green Ward,
+Holy Armor, Holy Strength, Immolation, Lance, Red Ward, The Brute,
+Thrull Retainer, Unholy Strength, Unstable Mutation, Weakness, Web and White Ward.
+Control Magic and Steal Artifact use the separate already-fixed control effect.
+Blessing and Firebreathing use resolving modifications, not this static service.
+Tangle Kelp's complete RON record was read when its retained Go test fixture
+needed the attachment API. No Go card implementation supplied requirements.
+
+### Exact contract, dependencies and reuse boundary
+
+Public engine signatures remain:
+
+```go
+BecomesBasicLandsEffect(filter PermanentFilter, subtypes ...string) ContinuousEffect
+BecomesBasicLandAttachedEffect(subtypes ...string) ContinuousEffect
+AttachedEffect(layer Layer, apply AttachedApplyFunc) ContinuousEffect
+```
+
+The collection effect supports a pure filter and a fixed nonempty list drawn
+from Plains, Island, Swamp, Mountain and Forest. It selects current unphased
+lands once per application. Input subtype slices are copied. Existing
+`applyBecomesBasicLand`/`applySetSubtypes` execute CR 305.7: replace the land
+subtype family and printed/copied rules-text abilities, retain other types,
+supertypes and subtype families, and supply intrinsic mana. Separate grants
+remain. Existing invalid constructor declarations still fail at construction;
+no game-time declaration panic is added.
+
+Private `basicLandSetEffect.selection(*Game) []uuid.UUID` orders live membership
+for comparison. `DependsOn(ContinuousEffect, *Game) bool` probes the other
+layer-4 effect on a clone and detects membership changes. The existing printed
+ability wrapper also detects source-rule suppression in layer 4.
+`probeContinuousEffect(ContinuousEffect, *Game) *Game` initializes separate
+transient animation membership and uses the existing stateful-effect clone
+contract. It performs no live writes. Pure filters and effect callbacks must
+keep writes in their supplied game, as required by existing effect services.
+
+The shared layer 3–6 executor reevaluates dependency order after each applied
+effect and drops effects whose abilities no longer exist. The dependency graph
+ignores only edges within the same strongly connected loop; dependent effects
+outside the loop still wait. Original timestamp order remains the tie-breaker.
+Index-based ordering avoids requiring comparable effect implementations.
+No new CDA or layer-7 reevaluation contract is claimed.
+
+Generic `AttachedEffect` checks the source's saved host incarnation in activity
+and application. A host that leaves and returns cannot receive the old effect.
+A new `Game.Attach` records the new incarnation. Phasing retains that identity;
+a directly phased source suspends its static effect. Static effects use live
+objects and do not substitute LKI for an absent host.
+
+RON spelling, scopes and compiler plans are unchanged. `SetLandType/1` and
+`SetLandTypeVariable/1` remain errors in every context. The next adapter must
+lower static host and global forms to these services, then provide complete
+RON gameplay coverage. No card-name branch, Go-card fallback, global result
+slot, runtime registry cutover, new payment/replacement service, or DSL removal
+is introduced. Simultaneous damage, replacement ordering and cost rollback
+remain with existing services; this slice does not add those operations.
+
+### TDD and evidence
+
+Initial fixture issues (color/supertype names, Aura land filter, player getter)
+were corrected. The first engine suite then failed on the intended missing
+dependency detector, wrong timestamp result, stale remaining order and returned
+host identity. The printed-effect existence test also failed before its repair.
+A later loop-dependent test failed before the graph repair. The original loop
+fixture had only one matching subtype and did not form a loop; it was corrected
+to contain both subtypes. No behavior assertion was weakened.
+
+A broad check exposed a dependency trial panic because `Game.Clone` omits the
+transient animation map; the probe now supplies a separate map. The grant test
+fixture also needed its normal absent-target check during phasing. Two retained
+fixtures assigned `AttachedTo` without the saved incarnation: engine clone and
+Tangle Kelp. Their setup now calls `Game.Attach`; assertions and scenarios stay.
+These were implementation/fixture failures, not environment failures.
+
+| Card / context | Tests and established evidence |
+| --- | --- |
+| Synthetic collection type rules | `TestBasicLandDependencyOverridesTimestamps`, `TestBasicLandDependencyAddsMembersAndKeepsProbePure`: both timestamp orders, newly added members, pure repeated probes, source departure, rules-text loss and clone isolation. |
+| Synthetic dependency graphs | `TestBasicLandDependencyLoopUsesTimestamps`, `TestBasicLandDependencyRechecksRemainingEffects`, `TestBasicLandDependencyWaitsForLoop`: actual loop timestamp fallback, changed remaining dependencies, external dependencies on loops. |
+| Synthetic printed source | `TestBasicLandDependencyTracksPrintedEffectExistence`: changing a land source's type removes its printed rule before application. |
+| Synthetic Aura type rule | `TestBasicLandAttachedKeepsHostIncarnation`: host return, explicit new attachment, host/source phasing, source ability removal in a later layer and clones. |
+| Synthetic declaration and lifecycle | `TestBasicLandSetDeclarationIsolation`, `TestBasicLandDependencyLifetimeAndMana`: immutable type lists, invalid declarations, multiple intrinsic mana colors, other subtype families/supertypes, separate grants, control and phase changes. |
+| Forest; Tropical Island; Savannah | `TestRONLandDependencyPrerequisite`: real RON factory validation, final intrinsic mana and payment, current membership, restoration and clone isolation under synthetic engine type rules. This is not RON land-type adapter coverage. |
+| Holy Strength; Flight; Grizzly Bears | `TestRONAttachedEffectsRejectReturnedHost`: real RON Aura casting/payment rejection, legal resolution, boost/keyword host identity, return, new attachment and clone isolation. |
+| Conversion; Evil Presence; Blood Moon | `TestRONStaticLandTypePrerequisiteKeepsStrictLoading`: complete records still reject; invalid scope/type/arity declarations reject; strict subset loading rejects. No gameplay claim for these three. |
+| Retained engine and Go-card scenarios | `TestCloneContinuousEffectsDoNotLeakAcrossBranches`, `TestTangleKelp`: native attachment setup and original regression assertions preserved. |
+
+### Validation, actual gain and remaining gates
+
+Actual compilation gain is **zero**, as estimated for the engine prerequisite.
+Strict loader remains **1,233 compiled / 1,212 rejected**, 434 accepted / 552
+rejected unique names. Before/after JSON objects, including every diagnostic,
+are identical. Semantic inventory is also unchanged. All twelve source hashes
+match the vocabulary snapshot, so no source refresh is needed. Aggregate
+engine-validation and full-card gameplay totals remain null. New RON regression
+mappings cover six already-accepted names, not six newly complete cards.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine dependency/basic/clone tests with `-count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| `go test ./cards/thedark -run TestTangleKelp -count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `go test ./... -short -count=1` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues; automatic formatting reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1; unchanged strict rejection |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; unchanged inventory and source hashes |
+
+No environment or pre-existing validation blocker remains. The slice is committed
+alone; its hash is reported in the final response. The two original user changes
+remain outside that commit.
+
+Ranked next candidates to reassess:
+1. Static `SetLandType/1` lowering for Conversion and Evil Presence; add the
+   nonbasic-supertype filter for Blood Moon if dependency-ready. Estimated 2–3
+   complete names; test their full RON rules and combinations through the engine.
+2. Finite simultaneous prevention allocation prerequisite for the seven consumers
+   in the comparison table.
+3. Filtered bands-with-others combat contract for the five lands.
+
+Complete RON compilation/gameplay, startup integration, Go-card deletion and DSL
+cleanup gates remain open. No card definitions, generators or DSL functions are
+removed, and no removal caller audit or completion claim is made. This run stops
+at the engine prerequisite.
+
+Changed files: `pkg/mage/basic_land_set_effect.go`,
+`basic_land_dependency_test.go`, `continuous_effects.go`, `effect_manager.go`,
+`clone_test.go`; `pkg/mage/dsl/ron/land_dependency_prerequisite_test.go`;
+`cards/thedark/enchantments_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.

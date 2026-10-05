@@ -1624,3 +1624,43 @@ and ability removal across repeated layer computations.
 `TestRONStaticControlFactories` exercise these services through both real RON
 Aura definitions, including current controller, competing timestamps,
 can't-change-control restrictions, payment rollback and target legality.
+
+## Static basic land types: dependency and attachment identity
+
+`BecomesBasicLandsEffect(filter PermanentFilter, subtypes ...string) ContinuousEffect`
+uses current, unphased lands selected by a pure filter. It replaces only the land
+subtype family, suppresses printed and copied rules-text abilities, and supplies
+intrinsic mana for each new basic type (CR 305.6–8). Other card types, supertypes,
+creature subtypes, and abilities granted by separate effects remain. Each
+application starts from printed characteristics. Constructor inputs are copied;
+empty lists and nonbasic subtype declarations retain their declaration-time
+rejection. The public signature is unchanged.
+
+In layer 4, this effect depends on an effect that changes its selected lands.
+A printed layer-4 effect also depends on a type effect that removes its source's
+printed ability. Dependency trials apply an isolated effect to a cloned game;
+they do not change live permanent state, chosen objects, mana, or transient
+animation membership. Stateful effects use their existing clone contract.
+Filters and effect callbacks must keep their writes in the supplied game.
+
+The shared layer 3–6 executor reevaluates remaining dependencies after each
+application (CR 613.8c). Independent effects use timestamp order. Dependencies
+inside a strongly connected loop use timestamp order, while dependencies from
+outside that loop still wait for it (CR 613.8a–b). This slice does not establish
+CDA ordering or new layer-7 dependency behavior.
+
+`AttachedEffect(layer Layer, apply AttachedApplyFunc) ContinuousEffect` now
+requires the source's saved attachment incarnation in both its activity query
+and its apply method. A departed and returned host cannot receive an old effect,
+even before state-based actions remove its Aura. `Game.Attach` records a new
+legal attachment. Direct source phasing suspends the static effect; indirect
+phasing preserves the attachment. These static effects use live objects, not LKI.
+
+Evidence: `TestBasicLandDependency*`, `TestBasicLandSetDeclarationIsolation`,
+`TestBasicLandAttachedKeepsHostIncarnation`, and the retained basic-land-type,
+attachment-timestamp, dependency, and clone tests. RON-backed regression evidence
+is `TestRONLandDependencyPrerequisite` (Forest, Tropical Island, Savannah) and
+`TestRONAttachedEffectsRejectReturnedHost` (Holy Strength, Flight, Grizzly Bears).
+These tests do not compile Conversion, Evil Presence, or Blood Moon; their RON
+adapters remain strict errors. No replacement, payment, or batch-operation API
+is added by this contract.

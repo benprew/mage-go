@@ -307,8 +307,7 @@ func TestTangleKelp(t *testing.T) {
 
 	permA := g.FindPermanentByName("Tangle Kelp", g.GetPlayer(gametest.PlayerA).PlayerID())
 	permB := g.FindPermanentByName("Grizzly Bears", g.GetPlayer(gametest.PlayerB).PlayerID())
-	permA.AttachedTo = permB.ID()
-	permB.Attachments = append(permB.Attachments, permA.ID())
+	g.Attach(permA.ID(), permB.ID())
 
 	// Turn 2 is Player B's turn. Bears untaps, attacks.
 	g.Attack(2, gametest.PlayerB, "Grizzly Bears")

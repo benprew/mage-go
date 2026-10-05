@@ -56,6 +56,12 @@ func (e *printedAbilityContinuousEffect) DependsOn(other ContinuousEffect, g *Ga
 		source := g.FindPermanent(e.SourceID())
 		return source != nil && removal.matches(source, g)
 	}
+	if e.GetLayer() == LayerType && other.GetLayer() == LayerType {
+		probe := probeContinuousEffect(other, g)
+		if probe != nil && e.IsActive(g) != e.IsActive(probe) {
+			return true
+		}
+	}
 	if detector, ok := e.ContinuousEffect.(DependencyDetector); ok {
 		return detector.DependsOn(other, g)
 	}
@@ -188,7 +194,8 @@ type attachedEffect struct {
 }
 
 // AttachedEffect creates a ContinuousEffect that applies while the source is
-// attached to another permanent. The apply function receives both source and target.
+// attached to the same permanent incarnation. The apply function receives both
+// source and target.
 func AttachedEffect(layer Layer, apply AttachedApplyFunc) ContinuousEffect {
 	return &attachedEffect{
 		layer:    layer,
@@ -210,7 +217,11 @@ func (e *attachedEffect) GetDuration() Duration { return WhileOnBattlefield }
 
 func (e *attachedEffect) IsActive(g *Game) bool {
 	src := g.FindPermanent(e.sourceID)
-	return src != nil && src.IsAttached()
+	if src == nil || !src.IsAttached() {
+		return false
+	}
+	target := g.FindPermanent(src.AttachedTo)
+	return target != nil && target.incarnationID == src.attachedIncarnation
 }
 
 func (e *attachedEffect) ApplyContinuous(ctx *EffectContext) error {
@@ -220,7 +231,7 @@ func (e *attachedEffect) ApplyContinuous(ctx *EffectContext) error {
 		return nil
 	}
 	target := g.MutablePermanent(src.AttachedTo)
-	if target == nil {
+	if target == nil || target.incarnationID != src.attachedIncarnation {
 		return nil
 	}
 	return e.apply(g, src, target)
@@ -692,8 +703,15 @@ func (em *EffectManager) Apply(g *Game) {
 				layerEffects = append(layerEffects, e)
 			}
 		}
-		layerEffects = orderEffectsByDependency(layerEffects, g)
-		for _, e := range layerEffects {
+		// An applied effect can change the order of the remaining effects.
+		for len(layerEffects) > 0 {
+			layerEffects = slices.DeleteFunc(layerEffects, func(e ContinuousEffect) bool { return !e.IsActive(g) })
+			if len(layerEffects) == 0 {
+				break
+			}
+			next := effectDependencyOrder(layerEffects, g)[0]
+			e := layerEffects[next]
+			layerEffects = slices.Delete(layerEffects, next, next+1)
 			if !e.IsActive(g) {
 				continue
 			}
@@ -1066,9 +1084,22 @@ func getEffectSublayer(e ContinuousEffect) SublayerPT {
 }
 
 func orderEffectsByDependency(effects []ContinuousEffect, g *Game) []ContinuousEffect {
+	order := effectDependencyOrder(effects, g)
+	result := make([]ContinuousEffect, len(effects))
+	for i, index := range order {
+		result[i] = effects[index]
+	}
+	return result
+}
+
+func effectDependencyOrder(effects []ContinuousEffect, g *Game) []int {
 	n := len(effects)
+	original := make([]int, n)
+	for i := range original {
+		original[i] = i
+	}
 	if n <= 1 {
-		return effects
+		return original
 	}
 
 	dependsOn := make([][]bool, n)
@@ -1089,41 +1120,24 @@ func orderEffectsByDependency(effects []ContinuousEffect, g *Game) []ContinuousE
 	}
 
 	if !hasAnyDep {
-		return effects
+		return original
 	}
 
-	inCycle := make(map[int]bool)
-	visited := make([]int, n)
-	var checkCycle func(u int, path []int)
-	checkCycle = func(u int, path []int) {
-		visited[u] = 1
-		path = append(path, u)
-		for v := range n {
-			if dependsOn[u][v] {
-				if visited[v] == 1 {
-					for _, p := range slices.Backward(path) {
-						inCycle[p] = true
-						if p == v {
-							break
-						}
-					}
-				} else if visited[v] == 0 {
-					checkCycle(v, path)
-				}
+	paths := make([][]bool, n)
+	for i := range paths {
+		paths[i] = slices.Clone(dependsOn[i])
+	}
+	for via := range n {
+		for from := range n {
+			for to := range n {
+				paths[from][to] = paths[from][to] || paths[from][via] && paths[via][to]
 			}
 		}
-		visited[u] = 2
 	}
-	for i := range n {
-		if visited[i] == 0 {
-			checkCycle(i, nil)
-		}
-	}
-
-	for u := range n {
-		for v := range n {
-			if inCycle[u] || inCycle[v] {
-				dependsOn[u][v] = false
+	for from := range n {
+		for to := range n {
+			if paths[from][to] && paths[to][from] {
+				dependsOn[from][to] = false
 			}
 		}
 	}
@@ -1137,7 +1151,7 @@ func orderEffectsByDependency(effects []ContinuousEffect, g *Game) []ContinuousE
 		}
 	}
 
-	result := make([]ContinuousEffect, 0, n)
+	result := make([]int, 0, n)
 	applied := make([]bool, n)
 
 	for len(result) < n {
@@ -1157,7 +1171,7 @@ func orderEffectsByDependency(effects []ContinuousEffect, g *Game) []ContinuousE
 			}
 		}
 		applied[next] = true
-		result = append(result, effects[next])
+		result = append(result, next)
 		for i := range n {
 			if dependsOn[i][next] {
 				dependsOn[i][next] = false

@@ -788,20 +788,11 @@ func BecomesBasicLandTargetEffect(targetID uuid.UUID, duration Duration, subtype
 }
 
 // BecomesBasicLandsEffect applies a basic-land-type change to every permanent
-// matching filter in layer 4.
+// matching filter in layer 4. A change to its selection takes precedence over
+// timestamp order. The effect uses current land types on each application.
 func BecomesBasicLandsEffect(filter PermanentFilter, subtypes ...string) ContinuousEffect {
 	validateBasicLandSubtypes("BecomesBasicLandsEffect", subtypes)
-	return FuncContinuousEffect(LayerType, WhileOnBattlefield, func(g *Game, _ uuid.UUID) error {
-		for _, permanent := range g.zones.battlefield {
-			if filter.Match(permanent, g) {
-				permanent = g.MutablePermanent(permanent.ID())
-				if permanent != nil {
-					applyBecomesBasicLand(g, permanent, subtypes)
-				}
-			}
-		}
-		return nil
-	})
+	return &basicLandSetEffect{filter: filter, subtypes: slices.Clone(subtypes)}
 }
 
 func validateBasicLandSubtypes(name string, subtypes []string) {
