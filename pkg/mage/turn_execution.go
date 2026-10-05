@@ -180,6 +180,8 @@ func (g *Game) doUpkeepActions() {
 
 	// Expire "until your next upkeep" effects for the active player.
 	g.effects.RemoveUntilYourNextTurn(g, active.PlayerID())
+	// Upkeep triggers must see characteristics after duration expiry.
+	g.ApplyContinuousEffects()
 
 	g.FireEvent(GameEvent{
 		Type:     EvtUpkeep,

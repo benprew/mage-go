@@ -1511,7 +1511,39 @@ Giant, Hunding Gjornersen, Marhault Elsdragon and Wolverine Pack.
 `TestRONRampageNativeCombat` checks declared-blocker legality, flying and trample.
 Chromium also uses the shared `TestRONUpkeepPayment*` lifecycle tests.
 
-## RON tapped-source continuous duration
+## RON resolving continuous durations
+
+### Next-upkeep duration
+
+`CreatePermanentLayerEffectUntil(subject, modifications, UntilNextUpkeep(You))`
+accepts the existing singular permanent references and temporary modifications.
+It applies in resolving action bodies, including spells, activations, supported
+triggers, and supported delayed actions. The duration operand must be bare `You`;
+other players and malformed declarations are rejected. Collection modifications,
+static operations, costs, and control changes gain no new support.
+
+The adapter uses
+`mage.UntilNextUpkeep(player mage.PlayerRef, modifications ...mage.ContinuousModification)`.
+The engine supports validated typed player references, saves the player at
+resolution, and captures the existing modification subjects and values. An absent
+player starts no effect. Changes to the source or recipient controller do not
+change the saved player. Source departure, return, ability removal, and phasing
+do not end the duration. Recipient departure breaks the captured identity;
+recipient phasing suspends application but does not postpone expiry.
+
+The effect ends as the next actual upkeep of the saved player begins, before
+upkeep event detection and priority. It lasts through cleanup and other players'
+upkeeps. A skipped upkeep does not expire it; an extra upkeep can expire it in
+the same turn. This operation creates no delayed trigger or stack object.
+`Until(UntilYourNextTurn, ...)` remains an invalid declaration; the explicit
+player adapter supplies the lifetime policy.
+
+Erhnam Djinn uses this duration with its controller-upkeep trigger and opposing
+non-Wall creature target. Xenic Poltergeist still needs `SetCardtypes` and
+`SetPowerAndToughnessBoth` adapters. Halfdane remains rejected for `ManualPT`;
+its source duration also differs from local Oracle text (end of next upkeep).
+
+### Tapped-source duration
 
 `CreatePermanentLayerEffectUntil(subject, modifications,
 ForAsLongAsPermanentRemainsTapped(ThisPermanent))` supports the existing typed

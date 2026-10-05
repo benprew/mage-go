@@ -467,6 +467,7 @@ type composedLayerEffect struct {
 	expired           bool
 	sourceIncarnation uuid.UUID
 	grantID           uuid.UUID
+	upkeepPlayer      uuid.UUID
 }
 
 func (e *composedLayerEffect) Text() string { return "continuous modification" }
@@ -555,6 +556,12 @@ type untilEffect struct {
 	modifications []ContinuousModification
 	sourceBound   bool
 	sourceTapped  bool
+	upkeepPlayer  PlayerRef
+}
+
+// UntilNextUpkeep saves the player so source changes cannot change the duration.
+func UntilNextUpkeep(player PlayerRef, modifications ...ContinuousModification) ResolvingEffect {
+	return &untilEffect{duration: UntilYourNextTurn, upkeepPlayer: player, modifications: append([]ContinuousModification(nil), modifications...)}
 }
 
 // Until captures subjects and values at resolution and installs all layers together.
@@ -593,6 +600,8 @@ func (e *untilEffect) Text() string {
 		return body + " until end of turn"
 	case EndOfCombat:
 		return body + " until end of combat"
+	case UntilYourNextTurn:
+		return body + " until the selected player's next upkeep"
 	default:
 		return body + " indefinitely"
 	}
@@ -681,7 +690,11 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 		n.problem = "supply at least one modification"
 	}
 	if e.duration != EndOfTurn && e.duration != EndOfCombat && e.duration != Indefinite {
-		n.problem = "duration requires an adapter with an explicit lifetime policy"
+		if e.duration == UntilYourNextTurn && !nilDefinition(e.upkeepPlayer) {
+			n.children = append(n.children, definitionEdge{"upkeep-player", e.upkeepPlayer})
+		} else {
+			n.problem = "duration requires an adapter with an explicit lifetime policy"
+		}
 	}
 	for i, m := range e.modifications {
 		n.children = append(n.children, definitionEdge{fmt.Sprintf("modifications[%d]", i), m})
@@ -692,6 +705,14 @@ func (e *untilEffect) inspectDefinition() definitionNode {
 	return n
 }
 func (e *untilEffect) Apply(ctx *EffectContext) error {
+	var upkeepPlayer uuid.UUID
+	if e.duration == UntilYourNextTurn {
+		var ok bool
+		upkeepPlayer, ok = e.upkeepPlayer.resolvePlayer(ctx)
+		if !ok {
+			return nil
+		}
+	}
 	var sourceIncarnation uuid.UUID
 	if e.sourceBound {
 		source := ctx.Game.FindPermanentIncludingPhased(ctx.SourceID)
@@ -741,6 +762,7 @@ func (e *untilEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	for _, entry := range effects {
+		entry.upkeepPlayer = upkeepPlayer
 		ctx.Game.effects.Add(entry)
 	}
 	ctx.Game.ApplyContinuousEffects()

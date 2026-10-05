@@ -1,5 +1,45 @@
 # Engine rules contracts
 
+## Captured next-upkeep continuous duration
+
+`UntilNextUpkeep(PlayerRef, ...ContinuousModification)` establishes an explicit
+player lifetime policy for resolving continuous modifications. It saves the
+selected player and each modification's subjects/values at resolution. The
+existing layer service installs all layers together and retains incarnation
+identity (CR 611.2a, 611.2c–d). Player references participate in definition
+validation; missing players start no duration. Nil/empty modifications, unbound
+player or permanent references, and unsupported control durations are rejected.
+
+Each installed composed layer effect holds the saved player UUID. Both source
+removal and layer pruning honor its existing `survivesSourceExit` contract.
+Source departure, return, control changes, ability removal, and phasing cannot
+redirect expiry. Recipient departure makes the captured modification inapplicable;
+phasing suspends application without changing the endpoint. Clones copy the
+saved player with each installed effect; expiry in one game changes no other game.
+
+At the start of an actual upkeep, `RemoveUntilYourNextTurn` removes composed
+effects for the saved player. Layers are applied again before `EvtUpkeep`, so
+upkeep conditions see expired characteristics (CR 500.4 and 500.6). There is no
+delayed trigger, priority window, or replacement operation for expiry. Cleanup,
+untap, and another player's upkeep do not expire this duration. Skipped upkeeps
+do not execute this hook; extra upkeeps do, even within the same turn.
+
+Existing noncomposed `UntilYourNextTurn` callers retain their source-controller
+policy. `Until(UntilYourNextTurn, ...)` remains invalid because it has no explicit
+player policy. Existing transactional costs, targeting, trigger ownership
+(CR 109.5), copies, and layer ordering supply their usual contracts. This slice
+adds no LKI read, action result, simultaneous operation, or replacement ordering.
+
+`TestUntilNextUpkeep*` covers identity, validation, independent players, explicit
+player selection, absent players, cloning, expiry before intervening-if event
+detection, cleanup/untap timing, phasing, and skipped/extra upkeeps.
+`TestRONNextUpkeep*` maps the full Erhnam Djinn record to casting/payment rollback,
+target legality, forestwalk queries, native upkeep execution, source departure,
+control changes, phased/returned targets, copies, and cloned pending effects.
+Xenic Poltergeist's modifications remain unsupported. Halfdane's `ManualPT`
+remains unsupported and its RON duration needs a separate source correction:
+`data/LEG.json` specifies the end of the next upkeep, unlike its current RON.
+
 ## Printed basic land types: intrinsic mana
 
 CR 305.6 grants the corresponding tap-for-mana ability to an object with the

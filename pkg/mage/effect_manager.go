@@ -523,13 +523,18 @@ func (em *EffectManager) RemoveEndOfCombat() {
 	em.replacements = replacements
 }
 
-// RemoveUntilYourNextTurn removes all effects with UntilYourNextTurn duration
-// whose source is controlled by the given player. Called at the beginning of
-// each player's upkeep to expire "until your next upkeep" effects.
+// RemoveUntilYourNextTurn uses a saved player when the effect supplies one.
+// Other callers keep the source controller as their duration policy.
 func (em *EffectManager) RemoveUntilYourNextTurn(g *Game, controllerID uuid.UUID) {
 	filtered := em.effects[:0]
 	for _, e := range em.effects {
 		if e.GetDuration() == UntilYourNextTurn {
+			if captured, ok := e.(*composedLayerEffect); ok && captured.upkeepPlayer != uuid.Nil {
+				if captured.upkeepPlayer != controllerID {
+					filtered = append(filtered, e)
+				}
+				continue
+			}
 			src := g.FindPermanent(e.SourceID())
 			if src != nil && src.ControllerID() == controllerID {
 				continue // remove this effect
@@ -657,7 +662,8 @@ func (em *EffectManager) Apply(g *Game) {
 	active := em.effects[:0]
 	for _, e := range em.effects {
 		dur := e.GetDuration()
-		if dur == EndOfTurn || dur == EndOfCombat || dur == Indefinite || g.FindPermanentIncludingPhased(e.SourceID()) != nil {
+		independent, ok := e.(interface{ survivesSourceExit() bool })
+		if dur == EndOfTurn || dur == EndOfCombat || dur == Indefinite || (ok && independent.survivesSourceExit()) || g.FindPermanentIncludingPhased(e.SourceID()) != nil {
 			active = append(active, e)
 		}
 	}

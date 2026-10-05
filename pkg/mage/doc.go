@@ -202,6 +202,11 @@
 // current subject with [While]. Use [GrantKeywordModification] with
 // AttrCanAttack to permit attacks through defender.
 //
+// Use [UntilNextUpkeep] to save the duration player at resolution.
+// The effect ends before that player's next upkeep triggers are detected.
+// Source control changes, departure, and phasing do not change this duration.
+// Subject references keep their captured incarnations.
+//
 // Use [SourceTappedStateWithLKI] for a source tapped-state check that needs
 // departure information at resolution. Live-only state conditions remain
 // available for static membership checks. Draw-step events are detected before

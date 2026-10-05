@@ -6,6 +6,17 @@ import (
 )
 
 func compileTemporaryDuration(n Node, ctx scope) (func([]mage.ContinuousModification) mage.Effect, error) {
+	if n.Name == "UntilNextUpkeep" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "You" {
+			return nil, unsupported(n.Args[0], "next upkeep player")
+		}
+		return func(values []mage.ContinuousModification) mage.Effect {
+			return mage.UntilNextUpkeep(mage.You, values...)
+		}, nil
+	}
 	if n.Kind == Symbol && n.Name == "UntilEndOfTurn" {
 		return func(values []mage.ContinuousModification) mage.Effect { return mage.Until(core.EndOfTurn, values...) }, nil
 	}

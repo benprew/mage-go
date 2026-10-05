@@ -13420,3 +13420,172 @@ Complete loading, complete-card gameplay and startup wiring remain below the
 removal gate. Go definitions, generators and DSL functions are retained; no
 caller audit was used to authorize deletion. Cutover authoring instructions
 remain deferred to cutover. This run does not start a second slice.
+
+
+## 2026-10-05: captured next-upkeep continuous duration
+
+Status: completed slice `CAPTURED-NEXT-UPKEEP`; general durations remain partial.
+This run stops after this slice. Initial user changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from staging.
+The initial working tree contained no unrelated untracked files.
+
+### Fresh baseline and candidate comparison
+
+Baseline RON tests, short engine tests, and `make build` passed. Fresh strict
+loading exited 1 for collection rejection: 2,445 records, 1,489 compiled and 956
+rejected; 534 accepted and 452 rejected names. The vocabulary snapshot, semantic
+inventory implementation, compiler, engine reference, design, and existing ledger
+were read. Full records and nested forms were inspected for the candidates below;
+reprints count once. Candidate estimates include dependencies, not just adapters.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream value | Effort |
+| --- | --- | --- | --- |
+| Captured next-upkeep duration, selected | Erhnam Djinn, Xenic Poltergeist, Halfdane; nested inventory also identifies Gabriel Angelfire. **1** immediate full-card unlock: Erhnam Djinn. | Exact engine lifetime policy is missing: legacy expiry follows current source controller and drops absent sources. Xenic needs `SetCardtypes` and `SetPowerAndToughnessBoth`; Gabriel needs `ChooseAnAbility` and `AddAbilityVariable`. Halfdane needs `ManualPT` and a different end-of-upkeep duration; exclude it from verified downstream gains. The shared prerequisite serves three distinct cards after their adapters/choices. | Small/medium: one explicit player service, shared lifecycle integration, one duration adapter, identity/timing/instance tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full-card unlocks after the allocation contract; **0** safe adapter-only gains. | Full records use targets, modes, explicit players, X and existing costs. Finite shield allocation among simultaneous sources remains missing (CR 615.7). Additional prevention consumers depend on modes and explicit player-effect forms. | Medium/high: shared damage batch decisions and replacement ordering plus adapters and allocation/identity/clone matrix. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after the all-zone contract. | Need zone-aware characteristics, owner/controller count context, named counts and CDA layers. Gaea's Avenger's source audit and Wood Elemental's entry results are excluded. Enables shared characteristic queries in every zone and copying/layer interactions. | High: engine characteristics contract, compiler values and adapters, zone/controller/copy/layer test matrix. |
+
+Selection rationale: a small shared lifetime prerequisite has a concrete
+multi-card dependency benefit and one immediate complete card, while the larger
+four-card candidates each require a substantially broader engine contract.
+First-error frequency is not the unlock estimate. This is a duration slice,
+not a separate single-card implementation. The initial duration inspection found
+three records; the final nested inventory audit identified Gabriel Angelfire
+behind an earlier unsupported choice, and its full record was then inspected.
+That fourth consumer changes downstream inventory, not the immediate estimate.
+
+The contract, reuse boundary and acceptance cases were stated before editing.
+The `implement-engine` skill was used for the reusable engine gap. No removed
+card skill, Go card definition, Go fallback, or card-name branch was used.
+
+### Supported signatures, contexts and dependencies
+
+Engine signature:
+`UntilNextUpkeep(player PlayerRef, modifications ...ContinuousModification) ResolvingEffect`.
+The typed player reference is validated with the modifications. At resolution the
+engine saves its UUID and captures the existing subject incarnations and values.
+Absent players start no effect. Nil/empty modifications, unbound player or subject
+references, and control modifications outside the established end-of-turn policy
+remain invalid. Direct `Until(UntilYourNextTurn, ...)` remains invalid.
+
+RON signature/context:
+`CreatePermanentLayerEffectUntil(subject, modifications, UntilNextUpkeep(You))`.
+`You` must be a bare symbol. Existing singular permanent references and supported
+temporary modifications are reused in resolving spell, activation, supported
+trigger, and supported delayed-action bodies. Collection operations, static
+contexts, cost operations, other duration players, new modification forms, and
+end-of-upkeep durations gain no support. `compileTemporaryDuration` owns spelling
+and validation. Its immutable factory uses `mage.You`; each resolution captures
+its own player and modification data. No mutable scope or global action slot is
+added. Inventory preserves the operand's player-reference role even below a
+rejected modification or earlier unsupported action.
+
+The existing `untilEffect`, `composedLayerEffect`, layer capture/application,
+`EffectManager.Remove`, `RemoveUntilYourNextTurn`, and turn scheduling supply
+execution. Composed effects carry the saved player UUID. Both explicit removal
+and layer pruning honor the existing source-independence contract. Legacy
+noncomposed duration callers retain the current source-controller policy.
+
+CR 109.5 fixes `You` to the resolving ability controller. Source control changes,
+departure, return, ability removal and phasing do not change this duration.
+Recipient control changes preserve it; departure breaks incarnation identity.
+Recipient phasing suspends application but cannot postpone expiry. Effects end
+before the captured player's next actual upkeep event detection and priority
+(CR 500.4/500.6); layers are applied again before that event. Cleanup, untap and
+other players' upkeeps do not expire them. Skipped upkeeps do not run the expiry
+hook; an extra upkeep can expire them in the same turn. No delayed trigger or
+stack object is added. Existing targeting, copy, transactional costs and layers
+remain responsible for their contracts. No new LKI read, replacement ordering,
+simultaneous operation or optional payment result is introduced.
+
+### TDD and gameplay mappings
+
+Initial engine tests failed for the missing `UntilNextUpkeep` constructor after
+a fixture import correction. Every Erhnam scenario failed with `unsupported
+duration (UntilNextUpkeep)`. After initial implementation, source departure tests
+exposed layer pruning that ignored the source-independence contract; that path
+was fixed, not bypassed. Fixtures were corrected to use a declared activation
+for typed target bindings, `At` for a turn-step trigger, `EndStep`, and
+`HasLandwalkEvasion` for the defending-player landwalk query. Phase-in assertions
+apply layers before inspecting computed attributes. These are fixture/API
+corrections, not weakened behavior requirements or environment blockers.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Erhnam Djinn, complete ARN record | `TestRONNextUpkeepErhnam`: 3G casting, payment rollback, printed 4/5 values, trigger versus resolution timing, source departure/control, target control/return/phasing, copied triggers and cloned pending stacks. |
+| Erhnam Djinn target and forestwalk rules | `TestRONNextUpkeepErhnamTargetsAndCombat`: opponent upkeep exclusion, non-Wall opposing creature filter, source/own creature/land/Wall/shroud exclusions, Forest-dependent evasion and expiry. `TestRONNextUpkeepNative`: actual upkeep execution, cleanup, source departure, opponent upkeep, untap and next own upkeep. |
+| Activation bindings and costs | `TestRONNextUpkeepActivationInstances`: two factory instances, two controllers/targets, unpaid activation rollback, simultaneous pending resolutions, separate duration players, P/T plus keyword modifications and clone isolation. |
+| Spell and delayed contexts | `TestRONNextUpkeepSpellAndDelayed`: typed target, paid cast, immediate versus delayed resolution, departed spell source, recipient versus resolving-controller upkeeps. |
+| Invalid RON and inventory | `TestRONNextUpkeepInvalid`: missing/extra/malformed duration operands, opponent/host/unbound player references. `TestRONNextUpkeepInventory`: nested player role under a rejected modification. Collection inventory tests update exact compiled/rejected counts and keep strict registry rejection. |
+| Shared engine | `TestUntilNextUpkeepIdentity`: source control/departure/return/phasing and recipient control/return/phasing, multiple layers, original incarnation and clone isolation. `Declarations`: nil player/modification, empty modification list, unbound player/permanent, unsupported control duration and direct raw duration. `Timing`: expiry before intervening-if detection, cleanup/untap and phased expiry. `IndependentPlayers`: separate players, explicit ActivePlayer capture and absent player. `SkippedAndExtraStep`: shared scheduler skip and extra upkeep in the same turn. |
+
+One full-card gameplay mapping is added. Compilation and collection-wide gameplay
+coverage remain separate. Engine-validation and behavior totals remain null.
+Xenic Poltergeist, Gabriel Angelfire and Halfdane have no complete-gameplay claim.
+
+### Source defect
+
+`cards/mtgish/LEG.lines.ron`, Halfdane, line 113:
+`CreatePermanentLayerEffectUntil(..., UntilNextUpkeep(You))` conflicts with
+`data/LEG.json` Oracle text: "until the end of your next upkeep". This operation
+ends at the beginning instead (CR 500.4; end-of-step expiry is CR 500.5).
+Only one Halfdane record occurs in the collection. It remains rejected for
+`ManualPT`. Its duration requires a separate source correction and end-of-upkeep
+engine contract; it is excluded from this slice's credible downstream gains.
+No RON source is changed in this slice. All 12 hashes match the vocabulary
+snapshot, so no syntax snapshot refresh is needed.
+
+### Final measurements and validation
+
+Actual immediate gain matches the estimate: **1 unique name / 1 record**, exactly
+Erhnam Djinn, with no accepted-name regressions. Strict/semantic loading reports
+**1,490 compiled / 955 rejected records**, **535 accepted / 451 rejected names**.
+Semantic inventory remains **72,938 nodes / 8,530 signatures**. Unknown-role
+occurrences fall from 10,827 to **10,823**. Xenic now fails on `SetCardtypes`,
+Halfdane on `ManualPT`; Gabriel still fails on `ChooseAnAbility`. The strict
+loader exits 1 for unsupported collection records and installs no partial
+registry. This is distinct from successful build/test validation.
+
+All final checks below passed. No Go definitions,
+generators or DSL functions are removed: complete loading, gameplay and startup
+wiring remain below the removal gate. There was no caller audit authorizing
+function deletion. Authoring cutover remains deferred. API/rules documentation
+adds only the behavior established by this slice.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient prevention allocation, then the four complete prevention
+   records; preserve simultaneous-source choices and replacement ordering.
+2. All-zone CDA values for Dakkon Blackblade, Keldon Warlord, Nightmare and Plague
+   Rats; keep Gaea's Avenger and Wood Elemental's other prerequisites separate.
+3. Plural keyword/damage/destruction operations; inspect Part Water, Winter Blast
+   and Volcanic Eruption against actual results, X and source-data defects.
+
+Xenic's paired type/base-value adapter, Gabriel's ability choice and Halfdane's
+source/end-of-upkeep work remain dependent candidates to reassess alongside the
+multi-card work. No second slice is started in this run.
+
+
+| Command | Final result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, short engine tests, `make build` | PASS. |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestUntilNextUpkeep&#124;TestRONNextUpkeep&#124;TestInventory' -count=1` | PASS, including final spell/delayed and scheduler cases. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final tests and lint. |
+| `go test ./... -short -count=1` | PASS, repeated after final tests and lint; implement-engine verification. |
+| `make test` | PASS, repeated after final tests and lint. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, zero issues in both runs. Automatic edits were test import/formatting and wrapping the duration factory; reviewed. |
+| `git diff --check` | PASS after lint and before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,490 compiled / 955 rejected records; repeated after final tests and lint. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 451 rejected names, 10,823 unknown-role nodes; all 12 source hashes unchanged. |
+
+There is no environment or pre-existing validation blocker. Earlier new-fixture
+failures were corrected before all final checks. No required check was weakened.
+Only this slice is committed; the descriptive commit hash is reported in the
+final response.
+
+Slice files: `pkg/mage/composable_continuous.go`, `effect_manager.go`,
+`turn_execution.go`, `next_upkeep_duration_test.go`, `doc.go`;
+`pkg/mage/dsl/ron/source_tapped_duration.go`, `next_upkeep_duration_test.go`,
+`inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
