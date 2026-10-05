@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	actionPlayer     *playerActionsPlan
 	damageRecipient  *playerReferencePlan
 	activation       bool
 	castingCondition mage.StateCondition
@@ -814,6 +815,13 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 		}
 		return filter, nil
 	case "HasAbility", "DoesntHaveAbility":
+		if n.Args[0].Kind == Symbol && n.Args[0].Name == "ManaAbility" {
+			filter := mage.HasManaAbility
+			if n.Name == "DoesntHaveAbility" {
+				filter = mage.Not(filter)
+			}
+			return filter, nil
+		}
 		keyword, ok := keywords[n.Args[0].Name]
 		if n.Args[0].Kind != Symbol || !ok {
 			return mage.PermanentFilter{}, unsupported(n.Args[0], "keyword filter")
@@ -1149,11 +1157,17 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			}
 			return one(func(bindings instanceBindings) mage.Effect { return mage.TapEach(bindings.permanentSets[collection]) })
 		}
-		filter, err := compileFilter(n.Args[0])
+		var controller *playerReferencePlan
+		filter, err := compileCountFilter(n.Args[0], ctx, &controller)
 		if err != nil {
 			return nil, err
 		}
-		return one(func(instanceBindings) mage.Effect { return mage.TapEach(mage.MatchingPermanents(filter)) })
+		return one(func(bindings instanceBindings) mage.Effect {
+			if controller != nil {
+				return mage.TapEach(mage.PermanentsControlledBy(controller.build(bindings), filter))
+			}
+			return mage.TapEach(mage.MatchingPermanents(filter))
+		})
 	case "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 		if err := arity(n, 1); err != nil {
 			return nil, err
@@ -1168,6 +1182,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(func(bindings instanceBindings) mage.Effect { return DestroyEachPermanentNoRegen(filter) })
 	case "EachPlayerAction":
 		return compileEachPlayerAction(n)
+	case "PlayerActions":
+		build, err := compilePlayerActions(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PlayerAction":
 		if err := arity(n, 2); err != nil {
 			return nil, err
@@ -1178,7 +1198,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
+	case "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
@@ -1347,6 +1367,14 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "LoseUnspentMana" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "LoseUnspentMana requires a symbol")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.LoseUnspentManaFor(ctx.player.build(bindings))
+		}}, nil
+	}
 	if n.Name == "RevealHand" || n.Name == "DiscardCards" || n.Name == "DiscardHand" {
 		return compileHandPlayerAction(n, ctx)
 	}

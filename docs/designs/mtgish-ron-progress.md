@@ -17920,3 +17920,175 @@ Slice files: new `pkg/mage/resolution_mana.go` and tests; `stack.go`, `clone.go`
 `docs/engine-rules-contracts.md` and this appended ledger entry. One descriptive
 commit contains only this slice; its hash is reported in the final response.
 No second slice begins.
+
+## Run 2026-10-05: PLAYER-SCOPED-MANA-DENIAL
+
+Status: completed implementation slice. Stop after this slice. Full collection
+loading, gameplay, runtime cutover and removal gates remain unmet.
+
+### Fresh baseline and candidate comparison
+
+Initial user changes were `.gitignore`, the execution design and this ledger;
+`mtgish-ron-completed.md` was already untracked. All are preserved. Only this
+entry is staged from the ledger; its prior reorganization stays unstaged.
+Read AGENTS.md, the engine reference, execution design, vocabulary and ledger,
+selected compiler/engine services, full candidate RON records and relevant
+API/rules contracts. CR 106.4, 605.1–5, 608.2b–h and 609.7 distinguish mana
+loss, ability classification, ordered instructions, LKI and the deferred source
+choice prerequisite. The implement-engine skill supplies the engine workflow.
+No removed card skill, Go card requirement or Go stub is used.
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Loader and semantic inventory exited 1 for collection rejection: 2,445 records,
+1,587 compiled / 858 rejected, 585 accepted / 401 rejected unique names.
+Inventory: 72,951 nodes, 8,540 signatures, 9,806 unknown-role occurrences.
+Each candidate was checked through complete records and nested forms. Reprints
+count once; first-error frequency is not an unlock estimate.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Player-scoped mana denial, selected | Mana Short and Power Sink: **2** complete names, **12** records. PlayerActions also occurs on Petra Sphinx, with **0** complete unlocks for that card. | Existing announced-X payment is ready. Missing local player snapshot adapter, controller-qualified tap selection, mana-ability query, typed mana loss and spell-controller information after countering. Petra needs card-name/reveal/result choices. Enables local player bodies for future decisions and collection operations. | Low/medium: reuse typed refs, snapshots, controlled collections, payment and simultaneous tapping; small engine queries/action, real casting and scope tests. |
+| Chosen damage source and next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** credible consumers after prerequisites. Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere share the producer but have additional operations. | CR 609.7a requires more than battlefield/stack selection: referenced departed objects, waiting replacements/delays and face-up command objects; permanent spells must retain the subsequent permanent relation. Source identity, property rechecks and one-event prevention are missing. Four additional consumers need redirection, prevented-damage results, reflection or rounded partial prevention. Source-choice adapter alone unlocks **0**. | High: engine source-choice universe/identity service, binding and replacement lifecycle, ordering, simultaneous damage, then adapters and seven full-card tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** credible consumers. Gaea's Avenger and Wood Elemental are separate blocked consumers. | Requires characteristics in all applicable zones, CDA layer/copy rules, owner/controller context and named/non-Wall counts. Avenger's controller text needs a separate source audit; Wood Elemental needs entry sacrifice results. Enables shared all-zone characteristic queries. | High: engine zone-aware CDA contract and compiler values/filters, copy/layer/control/zone tests before full consumers. |
+
+Selection rationale: two complete consumers have a smaller coherent prerequisite
+set and credible higher gain per effort. The seven-card source family is valuable
+but its source-choice service cannot be replaced with a battlefield-only shortcut.
+The CDA count includes the complete People of the Woods record, which the prior
+four-card suggestion omitted. Contract, reuse boundary and acceptance cases were
+stated before edits. No second slice is started.
+
+### Established signatures, contexts and ownership
+
+Engine APIs:
+
+- `LoseUnspentManaFor(player PlayerRef) ResolvingEffect`: clears one current
+  pool through `ManaPool.Clear`, including restricted mana, without life loss,
+  production, payment or loss of production history. Nil/unbound/incompatible
+  declarations fail engine validation.
+- `HasManaAbility PermanentFilter`: current runtime classification through
+  `IsActivatedManaAbility` and the shared triggered classifier. Tap state,
+  unavailable costs and empty current output do not remove the ability.
+  Ability loss and grants change membership. Immediate tapped-for-mana trigger
+  resolution reuses the extracted classifier.
+- `ControllerOfSpellWithLKI(spell StackObjectRef) PlayerRef`: current controller
+  while present; exact stack-object departure controller otherwise. Stack pop,
+  ID/source removal and ante removal save information. Clones own their maps.
+  A recast cannot replace an earlier stack object's information. The old
+  live-only `ControllerOfSpell` and spell-mana-value callers retain behavior.
+
+RON resolving actions:
+
+- `PlayerActions(player-reference, [actions])` saves the player once, then runs
+  an ordered sequence. Its bare `ActionPlayer` read is body-local. Supported
+  body actions are nested PlayerActions, explicit PlayerAction, TapEachPermanent,
+  LoseUnspentMana and the existing draw/life/discard/hand-reveal player forms.
+  Unsupported actions remain declaration errors. Nested scopes preserve outer
+  bindings; siblings cannot use a finished body's ActionPlayer. Factory calls
+  allocate fresh engine bindings. RON owns lexical plans and spelling; engine
+  SnapshotPlayer/Sequence own state and execution.
+- `LoseUnspentMana` is a symbol in a resolving list, explicit PlayerAction or
+  scoped body. Tuple spelling is rejected. Implicit player actions use the
+  selected body's player; You remains the resolving controller.
+- `TapEachPermanent(filter)` uses one
+  `ControlledByAPlayer(SinglePlayer(typed-player-reference))`, directly or in
+  nested And. Existing filters compose with that restriction. Duplicate
+  controllers, controller predicates inside Or and unbound refs are rejected.
+  Existing target-group tapping stays supported. `HasAbility(ManaAbility)` and
+  `DoesntHaveAbility(ManaAbility)` use the new runtime query.
+- Spells, activations, triggers and delayed resolving lists use these adapters.
+  No cost, entry or static PlayerActions context is introduced. RON player
+  information reads use the retained spell-controller query; that does not
+  permit actions on departed spells or make illegal targets legal.
+
+Reused engine services: instanceBindings, player/stack target declarations,
+SnapshotPlayer, Sequence, PermanentsControlledBy, MatchingPermanents, TapEach,
+optional resolution payments and their transaction, stack identity/information,
+copy/retarget, cloning, phasing and target legality. Taps remain simultaneous;
+tapping an effect-selected land does not activate its mana ability. Power Sink
+continues unpaid instructions if countering fails, but all-illegal targets stop
+resolution. No parallel zone/cost/target/replacement system, last-action slot,
+card-name branch, fallback or partial production registry is introduced.
+
+### Failing tests and card-to-test mappings
+
+Engine tests first failed for missing mana-loss/filter/retained-controller APIs.
+An incorrect restricted-mana type was corrected before confirming only missing
+API errors. Real RON tests first failed at ControlledByAPlayer (Mana Short) and
+PlayerActions (Power Sink). A target fixture needed stack-object IDs, a supposedly
+unaffordable fixture could pay through its Forest, and a granted-ability fixture
+needed an explicit recipient. Corrected setup retained the behavior assertions.
+An unaffordable payment makes no acceptance choice; tests assert zero offers.
+Fresh whole-suite failures were the two exact inventory count assertions; they
+were updated from measured 1,587 to 1,599. No test was weakened.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Mana Short, all six complete LEA/LEB/2ED/3ED/CED/CEI records | TestRONManaDenialManaShort: 2U casting, unpaid/invalid-target rollback, announcement timing, all controlled lands including lands without mana abilities, nonland/opponent exclusions, explicit target, pool loss and clone isolation. Membership covers current control, phasing/cycle, returned objects, lost/gained abilities and late entry. CopiesAndInstances covers distinct factories, retargeted copies and pending clones. |
+| Power Sink, all six complete records | TestRONManaDenialPowerSink: XU announcement/rollback, paid/declined/unaffordable and zero-X acceptance/decline, countered spell departure, uncounterable continuation, ability-qualified lands, exclusions, pool loss and all-illegal spell departure. Membership covers current control, phasing/cycle, return, ability loss/grants and late entry. PowerSinkCopy covers different targeted spells/payers, copy controller, retargeting and pending clone resolution. |
+| Scope and other resolving contexts | TestRONManaDenialScopes: nested/outer/sibling identity, implicit versus explicit player and clone isolation. TriggerAndDelayedContexts: upkeep and delayed bodies, resolution timing, departed delayed source and cloned bindings. |
+| Invalid declarations and inventory | TestRONManaDenialInvalidAndInventory: arity/kind, unavailable/incompatible refs, scope escape, duplicate/nondominating/Or controller forms, malformed ability class, unsupported body and strict collection rejection. Inventory classifies nested actions, ActionPlayer and ManaAbility even in rejected records. Existing inventory tests retain full-collection assertions. |
+| Engine primitives and spell information | TestLoseUnspentManaFor: typed target, restricted pool loss, other pool/life/history, clone and invalid declarations. TestHasManaAbilityFilter: fixed/conditional/triggered abilities, empty output, nonmana/targeted exclusions and removal. TestSpellControllerWithLKIDeparture/RemovalPaths: changed controller, exact object, four removal paths, recast, saved-event/typed target refs, clones and live-only compatibility. |
+| Shared contracts | Existing TestTapEachTransitionsTogether, TestTapEachCloneAndDeclaration, TestTappedForManaTrigger*, TestSpellManaValue* and TestRONResolutionMana* pass. Payment rollback, batch events and engine rules remain shared. No new damage/replacement ordering behavior is claimed. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay are
+separate; collection-wide engine-validation and behavior totals remain null.
+
+### Source audit, final inventory and checks
+
+Mana Short and Power Sink each have six byte-identical full records. Local
+`data/LEA.json` Oracle text confirms Mana Short taps all controlled lands and
+Power Sink taps only controlled lands with mana abilities after nonpayment.
+There is no selected source defect or RON edit. All twelve file hashes match the
+vocabulary snapshot; source refresh is unnecessary. Earlier recorded source
+issues remain outside this slice.
+
+Actual gains exactly match estimates: **2 unique names / 12 records**, Mana
+Short and Power Sink. No accepted name is lost. Final loader/inventory:
+**1,599 compiled / 846 rejected records**, **587 accepted / 399 rejected names**.
+Semantic inventory: **72,951 nodes / 8,540 signatures / 9,724 unknown-role
+occurrences**. Both CLI modes exit 1 and publish no partial registry. Petra
+Sphinx now reports unsupported scoped ChooseACardName; Circle of Protection:
+Black still reports ChooseADamageSource; Nightmare still reports CDA_Power.
+
+All required checks passed after final fixes. Lint first found two preallocation
+hints and two variables named copy; these slice-local issues were fixed. Its
+automatic import/format edits were reviewed, then checks were repeated. There
+is no environment or pre-existing validation blocker.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine tests and make build | PASS. |
+| Focused engine/compiler/CLI tests with -count=1 | PASS, including gameplay, scopes, declaration/inventory, payment and information compatibility. |
+| go test ./pkg/mage/... -short -count=1 | PASS after final lint. |
+| make test | PASS after final lint. |
+| make build | PASS after final lint. |
+| go vet ./... | PASS after final lint. |
+| make lint | PASS, zero issues after the slice-local fixes. |
+| go test ./... -short -count=1 | PASS; additional engine-skill validation. |
+| git diff --check and staged diff check | PASS. |
+| go run ./cmd/loadcards -json | Expected exit 1: 1,599/846 records. |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1: same counts, 399 rejected names, inventory totals above. |
+| Accepted-name and source-hash audits | Exactly two gained, none lost; all twelve hashes unchanged. |
+
+No Go definitions, generators, startup wiring or DSL functions are removed.
+Collection loading/gameplay and runtime gates remain unmet; no whole-repository
+caller audit authorizes deletion. Only established behavior is added to API and
+rules-contract documentation. One descriptive commit stages only this slice;
+its hash is reported in the final response. Initial user changes remain unstaged.
+
+Ranked next candidates for fresh reassessment:
+
+1. Chosen-source identity/universe and next-event prevention prerequisite for
+   the seven Circle/Realm consumers; implement the full CR 609.7a contract.
+2. All-zone count CDAs for five consumers, with Avenger and Wood Elemental's
+   additional blockers kept separate.
+3. Targeted_Modal alternative-target prerequisite for Chaoslace, Deathlace,
+   Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind; color and
+   text-change effects are separate dependencies, so the adapter alone yields
+   zero full-card unlocks.
+
+Slice files: new engine player_mana_denial.go and tests; stack.go, clone.go,
+game.go, composable_actions.go, doc.go; new compiler player_actions.go and
+player_mana_denial_test.go; compiler.go, player_scope.go, inventory.go and
+inventory_test.go; API/rules contracts and this ledger entry. No second slice.

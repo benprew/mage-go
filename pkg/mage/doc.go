@@ -299,6 +299,11 @@
 // All moves finish before zone events, and all shuffles finish before draws.
 // Counts stay local to each resolution. Empty hands still cause a shuffle.
 //
+// Use [LoseUnspentManaFor] to clear one selected player's mana pool.
+// Use [HasManaAbility] to check current abilities without testing payment
+// or current output. [ControllerOfSpellWithLKI] keeps departure control
+// for instructions that run after a spell is countered.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -3609,3 +3609,44 @@ live changes, all removal paths, recasting and cloned departure information.
 `TestRONResolutionMana*` checks lowering, typed event/target identity and actual
 RON gameplay. This slice adds no replacement or simultaneous-operation service;
 those paths retain the shared payment and mana contracts.
+
+### Player-scoped mana denial and retained spell controllers
+
+`LoseUnspentManaFor` clears the selected player's current pool (CR 106.4),
+including restricted mana. It causes no life loss, mana activation, mana
+production or change to another pool. `ManaPool.Clear` owns the operation;
+production history remains available. Typed player reads and engine definition
+validation retain the existing declaration rules.
+
+`HasManaAbility` reads current runtime abilities. It reuses
+`IsActivatedManaAbility` and the triggered classification shared with immediate
+mana-trigger resolution (CR 605.1–2). It does not test whether a cost can be
+paid or whether the ability currently produces mana. Ability removal and grants
+change membership; controlled battlefield collections exclude phased objects.
+
+`ControllerOfSpellWithLKI` reads current stack control, then saved departure
+control (CR 608.2h). Stack removal records the controller under the unique stack
+object ID; pop, ID removal, source removal and ante removal share that service.
+A recast uses another ID. Cloned stacks own separate departure maps. The existing
+`ControllerOfSpell` still fails to read an absent spell. Retained information
+does not grant permission to counter an absent spell or make an illegal target
+legal.
+
+RON `PlayerActions` lowers to `SnapshotPlayer` and an ordered `Sequence` with
+per-instance, nested player bindings. Its player reads cannot escape the body.
+Tap collections use `PermanentsControlledBy`, `MatchingPermanents` and `TapEach`;
+all selected taps finish before their events (CR 608.2f). Tapping this way does
+not activate mana abilities. Power Sink's unpaid sequence continues after an
+unsuccessful counter attempt (CR 608.2c); an all-illegal target prevents the
+entire spell from resolving (CR 608.2b). Its X and optional payment retain the
+existing announced value and payment transaction.
+
+Evidence: `TestLoseUnspentManaFor`, `TestHasManaAbilityFilter`,
+`TestSpellControllerWithLKIDeparture`, `TestSpellControllerWithLKIRemovalPaths`
+and `TestRONManaDenial*` cover typed declarations, pool scope and history,
+current membership, restrictions, payment branches, departure information,
+recasts, phasing, copies, clones and real RON casting. Existing
+`TestTapEachTransitionsTogether`, `TestTapEachCloneAndDeclaration`,
+`TestTappedForManaTrigger*` and `TestSpellManaValue*` retain shared batch,
+classification and compatibility evidence. No new replacement or damage
+contract is established here.

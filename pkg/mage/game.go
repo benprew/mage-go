@@ -1912,7 +1912,7 @@ func (g *Game) resolveTappedForManaTriggers(pendingBefore int) {
 	var immediate []*pendingTrigger
 	for _, pt := range pending[pendingBefore:] {
 		gt, ok := pt.ability.(*GenericTriggered)
-		if ok && len(gt.Modes()) == 0 && canProduceMana(gt.Effects(), gt.Targets()) {
+		if ok && isTriggeredManaAbility(gt) {
 			immediate = append(immediate, pt)
 		} else {
 			ordinary = append(ordinary, pt)

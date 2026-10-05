@@ -4042,7 +4042,10 @@ func (b *SpellTargetBinding) inspectDefinition() definitionNode {
 	return targetReadNode(b.targetDeclaration, "stack-object-ref")
 }
 
-type spellControllerRef struct{ spell StackObjectRef }
+type spellControllerRef struct {
+	spell   StackObjectRef
+	withLKI bool
+}
 
 type spellManaValue struct {
 	spell   StackObjectRef
@@ -4064,21 +4067,30 @@ func (v spellManaValue) resolveValue(ctx *EffectContext) int {
 		if !v.withLKI {
 			return 0
 		}
-		var id uuid.UUID
-		switch ref := v.spell.(type) {
-		case savedSpellRef:
-			id = ctx.Game.resolution.spellBindings[ref.binding]
-		case *SpellTargetBinding:
-			if value, found := firstTargetValue(ctx.targetBindings[ref.targetDeclaration]); found {
-				id = value.id
-			}
-		}
+		id := spellReferenceID(v.spell, ctx)
 		return ctx.Game.stack.spellManaValues[id]
 	}
 	return stackSpellManaValue(spell)
 }
 func (v spellManaValue) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolution-value", Text: v.Text(), children: []definitionEdge{{"spell", v.spell}}}
+}
+
+func spellReferenceID(spell StackObjectRef, ctx *EffectContext) uuid.UUID {
+	switch ref := spell.(type) {
+	case savedSpellRef:
+		return ctx.Game.resolution.spellBindings[ref.binding]
+	case *SpellTargetBinding:
+		if value, found := firstTargetValue(ctx.targetBindings[ref.targetDeclaration]); found {
+			return value.id
+		}
+	}
+	return uuid.Nil
+}
+
+// ControllerOfSpellWithLKI reads the controller saved when the spell left the stack.
+func ControllerOfSpellWithLKI(spell StackObjectRef) PlayerRef {
+	return spellControllerRef{spell: spell, withLKI: true}
 }
 
 // ControllerOfSpell reads the current controller of the referenced spell.
@@ -4088,6 +4100,10 @@ func (spellControllerRef) damageRecipient()            {}
 func (r spellControllerRef) resolvePlayer(ctx *EffectContext) (uuid.UUID, bool) {
 	spell, ok := r.spell.resolveStackObject(ctx)
 	if !ok {
+		if r.withLKI {
+			id := ctx.Game.stack.spellControllers[spellReferenceID(r.spell, ctx)]
+			return id, ctx.Game.GetPlayer(id) != nil
+		}
 		return uuid.Nil, false
 	}
 	return spell.Controller, ctx.Game.GetPlayer(spell.Controller) != nil

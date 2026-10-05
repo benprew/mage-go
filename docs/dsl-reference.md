@@ -3238,3 +3238,41 @@ mana value by stack object ID. A recast card does not replace this information.
 explicit casters, source lifetime, spell departure, payments, copies, clones,
 multiple targets, declaration errors and inventory roles. Power Sink still
 requires its unpaid `PlayerActions` body and is not a complete supported card.
+
+### Player-scoped mana loss and tap collections
+
+`LoseUnspentManaFor(player PlayerRef) ResolvingEffect` removes all mana from that
+player's pool, including restricted mana. It preserves life, mana-production
+history and other players' pools. Supply a typed player reference; definition
+validation rejects missing targets and bindings.
+
+`HasManaAbility PermanentFilter` checks current runtime abilities with the shared
+activated and triggered mana classifiers. Tapped state, payment availability and
+current production do not change the classification. Ability removal and grants
+do change the result.
+
+`ControllerOfSpellWithLKI(spell StackObjectRef) PlayerRef` reads the live spell's
+controller or the controller saved at departure. It uses the stack object's
+identity, so a later cast of the same card cannot replace that information.
+`ControllerOfSpell` remains a live-only query.
+
+RON resolving `PlayerActions(player, [actions])` captures its player once with
+`SnapshotPlayer`. `ActionPlayer` is available only in that body. Nested bodies
+have separate bindings; a sibling action keeps its prior scope. This slice
+supports nested `PlayerActions`, explicit `PlayerAction`, `TapEachPermanent`,
+`LoseUnspentMana`, and the existing draw, life, discard and hand-reveal player
+actions. Other body actions remain compile errors. Spells, activations, triggers
+and delayed resolving lists use the same adapter; costs, static declarations
+and entry operations do not.
+
+`TapEachPermanent(filter)` accepts one `ControlledByAPlayer(SinglePlayer(ref))`
+restriction, directly or within nested `And` filters, through the existing
+controlled collection service. Controller restrictions inside `Or`, duplicate
+controller restrictions and unbound player reads remain errors.
+`HasAbility(ManaAbility)` and `DoesntHaveAbility(ManaAbility)` use the current
+mana-ability filter. `LoseUnspentMana` must be a bare symbol, either in a player
+body, an explicit `PlayerAction`, or a resolving list for its controller.
+
+Mana Short and Power Sink use these shared forms. Their complete RON records
+are tested for all six reprints by `TestRONManaDenial*`. Compilation and complete
+collection gameplay remain separate measurements.

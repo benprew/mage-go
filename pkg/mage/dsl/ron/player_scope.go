@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	action          *playerActionsPlan
 	damageRecipient *damageRecipientPlayerPlan
 	damagePlayer    *damagePlayerPlan
 	permanent       *permanentReferencePlan
@@ -27,6 +28,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	actionPlayers        map[*playerActionsPlan]*mage.PlayerBinding
 	damageRecipients     map[*damageRecipientPlayerPlan]*mage.PlayerBinding
 	damagePlayers        map[*damagePlayerPlan]*mage.PlayerBinding
 	damageAmounts        map[*damageAmountPlan]*mage.NumberBinding
@@ -87,6 +89,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 			if ctx.graveyardEvent != nil {
 				return playerReferencePlan{deathController: ctx.graveyardEvent}, nil
 			}
+		case "ActionPlayer":
+			if ctx.actionPlayer != nil {
+				return playerReferencePlan{action: ctx.actionPlayer}, nil
+			}
 		case "You":
 			return playerReferencePlan{}, nil
 		case "ControllerOfTargetSpell":
@@ -103,6 +109,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.action != nil {
+		return mage.FromPlayer(bindings.actionPlayers[p.action])
+	}
 	if p.damageRecipient != nil {
 		return mage.FromPlayer(bindings.damageRecipients[p.damageRecipient])
 	}
@@ -128,7 +137,7 @@ func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
 		return mage.FromPlayer(bindings.events[p.event].caster)
 	}
 	if p.spell != nil {
-		return mage.ControllerOfSpell(p.spell.build(bindings))
+		return mage.ControllerOfSpellWithLKI(p.spell.build(bindings))
 	}
 	if p.target == nil {
 		return mage.You

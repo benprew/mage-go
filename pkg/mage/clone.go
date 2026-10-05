@@ -235,7 +235,7 @@ func cloneStack(s *Stack) *Stack {
 	if s == nil {
 		return NewStack()
 	}
-	clone := &Stack{spellManaValues: maps.Clone(s.spellManaValues)}
+	clone := &Stack{spellManaValues: maps.Clone(s.spellManaValues), spellControllers: maps.Clone(s.spellControllers)}
 	if len(s.objects) > 0 {
 		clone.objects = make([]*StackObject, len(s.objects))
 		for i, obj := range s.objects {

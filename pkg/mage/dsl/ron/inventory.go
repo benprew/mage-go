@@ -603,6 +603,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"player_filter", "player_action"}[index]
 			}
+		case "PlayerActions":
+			if len(n.Args) == 2 {
+				return []string{"player_reference", "action"}[index]
+			}
 		case "PlayerAction":
 			if len(n.Args) == 2 {
 				return []string{"player_reference", "player_action"}[index]
@@ -858,6 +862,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "power_comparison"
 		}
 		if (n.Name == "HasAbility" || n.Name == "DoesntHaveAbility") && len(n.Args) == 1 {
+			if n.Args[0].Kind == Symbol && n.Args[0].Name == "ManaAbility" {
+				return "ability_class"
+			}
 			return "keyword"
 		}
 		if (n.Name == "IsCreatureType" || n.Name == "IsNonCreatureType") && len(n.Args) == 1 {

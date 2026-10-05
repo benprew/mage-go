@@ -191,8 +191,9 @@ func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
 
 // Stack represents the game stack.
 type Stack struct {
-	objects         []*StackObject
-	spellManaValues map[uuid.UUID]int
+	objects          []*StackObject
+	spellManaValues  map[uuid.UUID]int
+	spellControllers map[uuid.UUID]uuid.UUID
 }
 
 func NewStack() *Stack {
@@ -262,6 +263,10 @@ func (s *Stack) saveSpellManaValue(obj *StackObject) {
 		s.spellManaValues = make(map[uuid.UUID]int)
 	}
 	s.spellManaValues[obj.ID] = stackSpellManaValue(obj)
+	if s.spellControllers == nil {
+		s.spellControllers = make(map[uuid.UUID]uuid.UUID)
+	}
+	s.spellControllers[obj.ID] = obj.Controller
 }
 
 func stackSpellManaValue(obj *StackObject) int {
