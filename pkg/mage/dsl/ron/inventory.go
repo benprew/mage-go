@@ -799,7 +799,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "ManaValueOfSpell" && len(n.Args) == 1 {
 			return "spell_reference"
 		}
-		if n.Name == "Twice" && len(n.Args) == 1 {
+		if (n.Name == "Twice" || n.Name == "HalfRoundedDown" || n.Name == "HalfRoundedUp") && len(n.Args) == 1 {
 			return "value"
 		}
 		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {

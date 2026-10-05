@@ -151,6 +151,9 @@
 // Use [DealDamageEachPlayer] for amounts that depend on each selected player.
 // Its player binding is local to the amount. All amounts are read before one
 // simultaneous damage batch. Replacement effects do not recalculate them.
+// Use [DivideRoundDown] and [DivideRoundUp] with [Fixed] of two for half values.
+// [DeclareOpponentOrPlaneswalkerTarget] excludes the controller only from
+// the player targets. A copied spell checks against its own controller.
 //
 // [PreventNextDamage] permits allocation across simultaneous damage sources.
 // The affected player or recipient controller chooses within legal bounds.

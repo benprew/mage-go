@@ -16,7 +16,7 @@ func compilePlayerPlaneswalkerTarget(n Node, ctx scope) (targetFactory, string, 
 		return nil, "", err
 	}
 	player := n.Args[0]
-	if player.Kind != Symbol || player.Name != "AnyPlayer" {
+	if player.Kind != Symbol || (player.Name != "AnyPlayer" && player.Name != "Opponent") {
 		return nil, "", unsupported(player, "player-or-planeswalker player filter")
 	}
 	permanent := n.Args[1]
@@ -30,6 +30,9 @@ func compilePlayerPlaneswalkerTarget(n Node, ctx scope) (targetFactory, string, 
 		return nil, "", unsupported(permanent.Args[0], "player-or-planeswalker permanent type")
 	}
 	return func() mage.Target {
+		if player.Name == "Opponent" {
+			return mage.DeclareOpponentOrPlaneswalkerTarget(ctx.targetNamespace + "Ref_TargetPlayerOrPermanent")
+		}
 		return mage.DeclarePlayerOrPlaneswalkerTarget(ctx.targetNamespace + "Ref_TargetPlayerOrPermanent")
 	}, "Ref_TargetPlayerOrPermanent", nil
 }

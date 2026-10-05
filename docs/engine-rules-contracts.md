@@ -3991,3 +3991,38 @@ fixed variants. `GrantRemoval` covers legendary static grants and temporary
 grant/removal expiry through native cleanup. Existing replacement ordering and
 simultaneous-operation contracts are reused; this slice establishes no new
 ordering or batching behavior. Legendary blocking overrides remain rejected.
+
+## Opponent-or-planeswalker targets and rounded RON damage
+
+`DeclareOpponentOrPlaneswalkerTarget(name string) *DamageTargetBinding` is a
+single typed damage target. Its player candidates exclude the action's current
+controller. Its permanent candidates include either player's planeswalkers,
+subject to existing targeting restrictions and phasing. A creature qualifies
+only if it is also a planeswalker. Existing `DeclarePlayerOrPlaneswalkerTarget`
+continues to include both players. Empty labels and missing target declarations
+fail definition validation. No new player or permanent reference type is added.
+
+Announcement and resolution use the same candidate service. Copies with a new
+controller recheck retained player targets against that controller; choosing new
+targets also uses that controller. Permanent control changes do not invalidate
+the planeswalker branch. Target return invalidates the saved incarnation, while
+a completed phase cycle preserves it. A sole illegal target suppresses the
+whole action, including its nontargeted self damage (CR 400.7, 608.2b).
+
+RON `HalfRoundedDown(value)` and `HalfRoundedUp(value)` lower recursive resolving
+values through `DivideRoundDown(value, Fixed(2))` and `DivideRoundUp(value,
+Fixed(2))`. Existing arithmetic handles signed values; nonpositive damage has
+no event (CR 107.1, 120.8). This establishes no static, entry, cost or replacement
+value adapter. Existing `DealDamagePackets` captures all amounts and recipients
+before its simultaneous batch. Existing announcement X, source LKI, prevention,
+lifelink, target binding, transactional payment and clone services still own
+execution. No new replacement ordering or damage batching rule is introduced.
+
+Evidence: `TestOpponentOrPlaneswalkerTarget` and `CastingAndCopies` establish
+the engine declaration, legal candidates, rollback, copies and clones.
+`TestRONRoundedDamageCards`, `EternalFlameResolutionCounts`, `TargetIdentity`,
+`BansheeSourceAndCopies`, `EternalFlameCopies`, `Rollback`, `BansheeLKI`,
+`IndependentInstances`, `Invalid`, `NestedValues` and `Inventory` execute the
+complete Banshee and Eternal Flame records and the shared value shapes.
+The existing `TestDivideValues*`, `TestDamagePackets*` and `TestRONDamagePackets*`
+retain arithmetic validation and replacement/batch contracts.

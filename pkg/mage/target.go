@@ -736,6 +736,7 @@ func (t *DamageAnyTarget) Choose(controller uuid.UUID, _ Card, g *Game, chosen [
 // player or planeswalker" damage).
 type PlayerOrPlaneswalkerTarget struct {
 	BaseTarget
+	opponentOnly bool
 }
 
 // TargetPlayerOrPlaneswalker creates a target that selects a player or planeswalker.
@@ -753,6 +754,9 @@ func (t *PlayerOrPlaneswalkerTarget) Possible(controller uuid.UUID, sourceCard C
 		}
 	}
 	for _, p := range g.players {
+		if t.opponentOnly && p.PlayerID() == controller {
+			continue
+		}
 		result = append(result, p.PlayerID())
 	}
 	return result

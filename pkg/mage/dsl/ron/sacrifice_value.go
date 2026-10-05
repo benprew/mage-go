@@ -15,6 +15,21 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "HalfRoundedDown" || n.Name == "HalfRoundedUp" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		value, err := compileInstanceValue(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			if n.Name == "HalfRoundedDown" {
+				return mage.DivideRoundDown(value(bindings), mage.Fixed(2))
+			}
+			return mage.DivideRoundUp(value(bindings), mage.Fixed(2))
+		}, nil
+	}
 	if n.Name == "Trigger_AmountOfDamageDealt" {
 		if n.Kind != Symbol || ctx.damageAmount == nil {
 			return nil, problem(n, "unbound or incompatible damage event amount")

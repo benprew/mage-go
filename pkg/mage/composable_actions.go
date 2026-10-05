@@ -3164,6 +3164,13 @@ func DeclareDamageTarget(name string) *DamageTargetBinding {
 func DeclarePlayerOrPlaneswalkerTarget(name string) *DamageTargetBinding {
 	return &DamageTargetBinding{&targetDeclaration{name: name, spec: TargetPlayerOrPlaneswalker()}}
 }
+
+// DeclareOpponentOrPlaneswalkerTarget permits any planeswalker but excludes the controller as a player target.
+func DeclareOpponentOrPlaneswalkerTarget(name string) *DamageTargetBinding {
+	return &DamageTargetBinding{&targetDeclaration{name: name, spec: &PlayerOrPlaneswalkerTarget{
+		BaseTarget: BaseTarget{min: 1, max: 1}, opponentOnly: true,
+	}}}
+}
 func (*DamageTargetBinding) damageRecipient() {}
 func (b *DamageTargetBinding) resolveRecipient(ctx *EffectContext) (uuid.UUID, bool) {
 	values := ctx.targetBindings[b.targetDeclaration]

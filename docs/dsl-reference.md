@@ -1475,8 +1475,12 @@ with arbitrary filters remain unsupported shapes. Evidence:
 
 `TargetPlayerOrPermanent(AnyPlayer, IsCardtype(Planeswalker))` in the same
 single-target form builds `mage.DeclarePlayerOrPlaneswalkerTarget`.
+`TargetPlayerOrPermanent(Opponent, IsCardtype(Planeswalker))` instead builds
+`mage.DeclareOpponentOrPlaneswalkerTarget`. Only the player branch excludes the
+resolving controller; either player's planeswalker can be selected. Copies
+check the player restriction against their own controller.
 `Ref_TargetPlayerOrPermanent` reads that declaration as a damage recipient.
-Either player or either player's planeswalker can be selected. A creature that
+In the `AnyPlayer` form, either player or either player's planeswalker can be selected. A creature that
 is also a planeswalker qualifies; a creature without that type does not.
 This exact shape works in supported spells, choose-one spell modes, activations
 and triggers, including damage packets. The reference is not a singular player
@@ -3524,3 +3528,21 @@ record, including first strike. `TestRONFixedLandwalkAssassin`,
 full record with live keyword legality, source and target identity, phasing,
 regeneration, costs, copies and clone isolation. `Filters`, `GrantRemoval`,
 `Invalid` and `Inventory` cover the shared shapes and semantic roles.
+
+## RON rounded resolving values
+
+`HalfRoundedDown(value)` and `HalfRoundedUp(value)` each require one supported
+resolving value. They can nest around announced `ValueX`, battlefield counts,
+supported captured results, characteristic reads and existing arithmetic.
+Bindings remain local to the enclosing action and must exist before the read.
+The compiler lowers these forms through the shared engine division services
+with a fixed divisor of two. These forms are supported by the consumers of
+`compileInstanceValue`, including damage packets. Static layer, entry, cost and
+replacement value contexts do not gain support from this adapter.
+
+Banshee uses the announced activation X for half-down targeted damage and
+half-up self damage. Eternal Flame uses the resolving controller's current
+Mountain count for full targeted damage and half-up self damage. Both use one
+simultaneous damage instruction. The corrected Eternal Flame source matches
+`data/DRK.json`; it previously halved targeted damage and rounded self damage
+down. Evidence: `TestRONRoundedDamage*` and `TestOpponentOrPlaneswalkerTarget*`.

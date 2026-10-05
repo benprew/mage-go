@@ -37,7 +37,7 @@ func TestRONPlayerPlaneswalkerDeclarations(t *testing.T) {
 		`TargetPlayerOrPermanent`, `TargetPlayerOrPermanent()`, `TargetPlayerOrPermanent(AnyPlayer)`,
 		`TargetPlayerOrPermanent(AnyPlayer,IsCardtype(Planeswalker),AnyPlayer)`,
 		`TargetPlayerOrPermanent(AnyPlayer(),IsCardtype(Planeswalker))`,
-		`TargetPlayerOrPermanent(Opponent,IsCardtype(Planeswalker))`,
+		`TargetPlayerOrPermanent(Opponent(),IsCardtype(Planeswalker))`,
 		`TargetPlayerOrPermanent(Ref_TargetPlayer,IsCardtype(Planeswalker))`,
 		`TargetPlayerOrPermanent(AnyPlayer,IsCardtype(Creature))`,
 		`TargetPlayerOrPermanent(AnyPlayer,IsCardtype(Planeswalker()))`,

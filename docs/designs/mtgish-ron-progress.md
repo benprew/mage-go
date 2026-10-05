@@ -19803,3 +19803,164 @@ Slice files: compiler `compiler.go`, `landwalk_rule.go`, `inventory.go`,
 `inventory_test.go`, `static_landwalk_test.go`, new `fixed_landwalk_test.go`; API/rules-contract documents
 and this ledger entry. One descriptive commit contains only the slice; its hash
 is reported in the final reply. This run does not begin another slice.
+
+## Slice: rounded split damage and opponent-or-planeswalker targets (2026-10-05)
+
+Capability ID: `ROUNDED-SPLIT-DAMAGE`. Status: implemented, declaration validated
+and behavior tested. This run stops after this slice.
+
+### Fresh evidence and candidate comparison
+
+Initial user changes in `.gitignore`, the execution design and this ledger, and
+untracked `mtgish-ron-completed.md`, are preserved. Only this new ledger entry
+is staged; the user's ledger reorganization remains unstaged.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot, progress
+ledger, selected compiler, target, arithmetic, damage, payment, copy and count
+services, API/rules contracts and complete affected RON records. The engine
+extension uses the `implement-engine` skill. RON supplied card requirements;
+local `data/DRK.json` supplied Oracle evidence. Relevant rules: CR 107.1,
+400.7, 601.2, 602.2, 608.2b/f/h and existing damage/prevention contracts.
+
+Fresh compiler tests, short engine tests, `make test` and `make build` passed.
+Strict loading and semantic inspection exited 1 for unsupported collection
+records: **1,645 compiled / 800 rejected records**, **613 accepted / 373 rejected
+names**. Inventory: 72,951 nodes / 8,540 signatures / 8,417 unknown-role
+occurrences. Reprints count once. Nested forms and full records, rather than
+first-error frequency, supplied the estimates below.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Rounded split damage, selected | Banshee; Eternal Flame: **2** complete names / **2** records, including an Oracle-backed Eternal Flame source correction. | Existing announced X, count, division and damage packet services cover both complete bodies. Missing opponent player branch is a small reusable target prerequisite. Rounding also occurs in Aspect of Wolf, Personal Incarnation, Shahrazad, Dark Sphere and Backdraft; static layers, ownership/redirection, subgames, chosen sources and historical spell choices remain blockers, so none is counted. | Low implementation effort; moderate declaration, timing, legality, identity, rollback, LKI, copy, clone and simultaneous gameplay testing. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential complete names. | Full records need public-zone source choices, saved source identity and next-event consumption. CR 609.7a includes absent referenced objects and face-up command-zone objects, beyond the existing simple chooser. Enables source-selective prevention and later redirection; other first-error consumers have additional blockers. | High: shared choice/identity and shield lifecycle contracts, replacement rechecks, adapters and gameplay. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods: **5** potential complete names. | Needs all-zone characteristic evaluation, owner/controller context, named counts and CDA/copy/layer contracts. Gaea's Avenger, Gaea's Liege and Wood Elemental have further arithmetic, data, combat or entry prerequisites and are excluded. Enables off-battlefield characteristics and copying. | High: engine zone/layer contracts and zone/control/copy tests. |
+
+Selection rationale: two complete consumers reuse exact shared execution for
+substantially less implementation effort than either larger family. This is
+shared multi-card work, including the required small target prerequisite. The
+contract, reuse boundary, acceptance cases and source defect were stated before
+implementation edits. The actual two-card gain matches the estimate.
+
+### Exact signatures, contexts, dependencies and reuse
+
+Engine API: `DeclareOpponentOrPlaneswalkerTarget(name string)
+*DamageTargetBinding`. It reuses `PlayerOrPlaneswalkerTarget` with a private
+player-only opponent restriction. Both controllers' planeswalkers remain legal.
+Existing `DeclarePlayerOrPlaneswalkerTarget` and all its callers keep their
+behavior. Candidate enumeration, announcement and resolution use the same engine
+legality path. A copied spell uses its controller for player legality and
+retargeting. Empty labels and undeclared bindings fail definition validation.
+
+RON target shape: `TargetPlayerOrPermanent(Opponent,
+IsCardtype(Planeswalker))`, with `Ref_TargetPlayerOrPermanent` in existing
+single-target spell, mode, activation and trigger contexts. Existing `AnyPlayer`
+is retained. Arbitrary player filters, other permanent filters, callable symbols
+and incompatible reference roles remain rejected. Each factory builds a fresh
+target binding; no compiled declaration stores chosen targets.
+
+RON value shapes: `HalfRoundedDown(value)` and `HalfRoundedUp(value)` each take
+exactly one recursively supported `compileInstanceValue` expression. They lower
+to `DivideRoundDown(value, Fixed(2))` and `DivideRoundUp(value, Fixed(2))`.
+Supported resolving consumers include damage packets and existing instance-value
+consumers. Nested X, battlefield count, characteristic, captured-result and
+arithmetic reads retain their existing scope contracts. No static, entry, cost
+or replacement value context gains support. Invalid or unbound inner reads
+remain errors. Inventory classifies each half expression's argument as `value`,
+including nested forms, without accepting unsupported parents.
+
+RON owns spelling, arity, roles, scope and lowering. The engine owns division,
+announced X, typed identity, LKI, target rechecks, transactions, cloning/copies,
+resolution-time counts, simultaneous `DealDamagePackets` and replacement
+execution. All packet amounts and recipients are read before one damage batch;
+replacement effects do not recalculate the Mountain count. A sole illegal target
+suppresses both targeted and self damage. Source return cannot substitute a new
+incarnation or controller for retained LKI. No card-name branch, Go fallback,
+skipped rule, declaration panic, global result slot or partial registry is added.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed because the typed opponent-or-planeswalker declaration
+was missing. RON tests first failed on unsupported half values and the opponent
+target filter. After these adapters, Eternal Flame gameplay failed on the exact
+source-data error; correcting its record made the Oracle expectations pass.
+Test fixture corrections used `core` enums and a safe base P/T for the synthetic
+face-down planeswalker. This preserves the test for target type changes. The
+stale invalid `Opponent` fixture now rejects callable `Opponent()`; positive
+engine and full-card tests cover the supported symbol. Inventory assertions now
+require the exact new counts and retain registry isolation and Lightning Bolt
+execution. No gameplay requirement was weakened.
+
+| Card or contract | Tests and evidence |
+| --- | --- |
+| Banshee, full DRK record | `TestRONRoundedDamageCards`: X 0/1/2/3/5/6, opponents and both controllers' planeswalkers, exact rounding and simultaneous callbacks. `BansheeCasting`: native casting, 0/1 Spirit, cost and summoning sickness. `BansheeSourceAndCopies`: source departure, return, phasing, control, copied controller, self-target packet merging and prevention. `BansheeLKI`: departed, returned and phased source retains lifelink/controller. `IndependentInstances`: separate target bindings and announced X values. |
+| Eternal Flame, corrected full DRK record | `Cards`: full count to target and half-up to caster, including zero and odd/even values. `EternalFlameResolutionCounts`: late land entry, phasing, control, return and callback changes. `EternalFlameCopies`: independent resolving controller's Mountain count, retargeting and rounding. |
+| Shared legality, identity and payments | `TargetIdentity`: shroud, return, phasing, completed phase cycle, control and loss of planeswalker type through a synthetic face-down fixture. An illegal sole target suppresses self damage. `Rollback`: unpaid costs, invalid/phased targets, wrong controller, tapped source and summoning sickness preserve mana, tap state, stack and life. Clones retain separate pending resolutions. |
+| Engine target declaration | `TestOpponentOrPlaneswalkerTarget`: both controllers, creature exclusion, any planeswalker control, shroud, phasing and invalid definitions. `CastingAndCopies`: failed targeting rollback, copied controller recheck, retargeting and clone isolation. |
+| Values and inventory | `TestRONRoundedDamageNestedValues`, `Invalid`, `Inventory`: nested rounding/arithmetic, signed nonpositive damage, malformed arities and unbound inner reads. Nested unsupported parents remain visible and rejected. Existing `TestDivideValues*`, `TestDamagePackets*`, `TestRONDamagePackets*`, `TestRONPlayerPlaneswalker*` and inventory suites retain broader shared contracts. |
+
+Two complete-card gameplay mappings are added. Collection-wide behavior and
+engine-validation totals remain null; compilation does not establish full
+collection gameplay. This slice adds no replacement ordering or batch algorithm;
+existing services and regression suites retain those contracts.
+
+### Source defect, measurements, validation and remaining gates
+
+`cards/mtgish/DRK.lines.ron:33`, Eternal Flame, previously used half-up damage to
+the target and half-down damage to the caster. Local `data/DRK.json` Oracle text
+requires the full number of controlled Mountains to the target opponent or
+planeswalker and half that number, rounded up, to the caster. Both packet
+amounts are corrected. This name has exactly one RON record; no identical
+reprint is omitted. Banshee agrees with its local Oracle record. No other RON
+source changes are made.
+
+The vocabulary snapshot is refreshed through a complete positioned parser AST
+walk. It retains 2,445 records / 986 names / 600 tuple signatures / 51 top-level
+rule names; updates file hashes, occurrences, example positions and all loader
+first diagnostics. It remains syntax evidence rather than a support claim.
+
+Final strict and semantic loading: **1,647 compiled / 798 rejected records**,
+**615 accepted / 371 rejected names**. Exactly Banshee and Eternal Flame are
+newly accepted; no accepted name is lost. Inventory: **72,950 nodes / 8,539
+signatures / 8,393 unknown-role occurrences**. The one removed node/signature
+comes from the redundant half wrapper removed from Eternal Flame. Unknown-role
+reductions come from nested half-value classification. Both loaders exit 1 and
+publish no partial registry. Remaining first diagnostics include
+`ChooseADamageSource`, `CDA_Power`, `Targeted_Modal` and independent nested gaps.
+
+| Command | Final result |
+| --- | --- |
+| Focused RON rounded damage, target, packet and inventory tests with `-count=1` | PASS after lint. |
+| Focused engine opponent target, player/planeswalker target, division and packet tests with `-count=1` | PASS after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, 0 issues; test preallocation and built-in-name style findings were fixed, then lint was rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,647 compiled / 798 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 615 accepted / 371 rejected names; 72,950 nodes / 8,539 signatures / 8,393 unknown-role occurrences. |
+| Vocabulary verification | Fresh positioned AST walk; final file hashes and loader snapshot match. |
+
+The first broader test runs found stale collection-count assertions; they were
+updated to the measured values. Automatic lint changes are reviewed. No
+pre-existing or environmental check failure remains. Go definitions, startup
+consumers, generators and DSL functions are retained because complete loading,
+full gameplay and runtime cutover remain below the design's removal gates. No
+DSL function is deleted without a caller audit. No second slice is started.
+
+Ranked next candidates, to reassess against fresh full records:
+
+1. Shared chosen-source choice/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+2. All-zone battlefield-count CDAs for the five direct consumers.
+3. Exile payment and captured paid-object prerequisites: Feldon's Cane, City of
+   Shadows, Necropolis and Night Soil have distinct source/selection/result
+   contexts; full-card unlocks require their nested consumers too.
+
+Slice files: `pkg/mage/target.go`, `composable_actions.go`, `doc.go`, new
+`opponent_planeswalker_target_test.go`; compiler `damage_scope.go`,
+`sacrifice_value.go`, `inventory.go`, `inventory_test.go`,
+`player_planeswalker_target_test.go`, new `rounded_damage_test.go`;
+`cards/mtgish/DRK.lines.ron`; API/rules-contract docs; vocabulary snapshot and
+this ledger entry. One descriptive commit contains only this slice; its hash is
+reported in the final response. User changes remain outside that commit.
