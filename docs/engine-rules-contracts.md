@@ -2885,3 +2885,24 @@ players and blockers. `Casting` and `AuraTargetLegality` cover payment rollback,
 attachment and resolution target legality. `Invalid` rejects malformed subjects,
 amount tuples, cross-event amount reads and unavailable player bindings.
 These tests map the complete El-Hajjâj and Spirit Link RON records.
+
+
+## RON opponent-damage event lowering
+
+The exact RON source/opponent shape documented in `docs/dsl-reference.md`
+uses `DealsDamageToOpponent(This, binding)`. RON adds no event rule. The engine
+checks the event-time source controller, saves the damaged player before stack
+placement, and retains separate facts for separate events (CR 603.2c/g,
+603.3a/b). The player is not a target. Each RON factory has its own typed binding.
+Copied triggers retain the captured player even when their controller changes.
+
+Bare `PlayerAction(player, DiscardHand)` reuses the zero-filter
+`DiscardMatchingHand` contract above. The hand is selected at resolution;
+all moves precede discard events. Existing discard replacements remain active.
+`TestRONDamagePlayerCards` covers prevention, opponent identity, control,
+departure/return/phasing, ability removal, copies and pending clones.
+`Instances` covers simultaneous damage from independent factories/controllers.
+`DiscardReplacement` and `HandBatch` cover replacement and complete-batch event
+visibility. `Casting`, `Combat` and `TestRONUpkeepPaymentRealCards` complete the
+Hypnotic Specter and Nicol Bolas gameplay mappings. `Invalid` and `Inventory`
+cover declaration rejection and semantic roles. No engine contract is changed.

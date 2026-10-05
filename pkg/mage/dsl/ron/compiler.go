@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	damagePlayer     *damagePlayerPlan
 	damageAmount     *damageAmountPlan
 	delayedStep      bool
 	sourceAttack     bool
@@ -1248,7 +1249,7 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
-	if n.Name == "RevealHand" || n.Name == "DiscardCards" {
+	if n.Name == "RevealHand" || n.Name == "DiscardCards" || n.Name == "DiscardHand" {
 		return compileHandPlayerAction(n, ctx)
 	}
 	if n.Name == "AddMana" {

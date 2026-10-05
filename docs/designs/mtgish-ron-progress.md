@@ -14359,3 +14359,146 @@ Other leading diagnostics remain CastEffect (17 unique names),
 CreateFuturePreventDamage (12), ChooseADamageSource (11), If (8), PlayerEffect (8),
 CreateTriggerUntil (8), Targeted_Modal (7) and EachPlayerEffect (7).
 This run stops after committing this slice. The commit hash is in the final reply.
+
+## 2026-10-05: captured opponent-damage player triggers
+
+Status: completed slice `OPPONENT-DAMAGE-PLAYER`. This entry supersedes older
+current-status measurements. This run implements only this slice.
+
+### Fresh evidence and candidate selection
+
+Initial user work: `.gitignore`, execution design and progress ledger, plus
+untracked `mtgish-ron-completed.md`. Preserve these changes. The slice commit
+adds this entry to the committed ledger without staging the user's rearrangement.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary and current ledger;
+selected compiler, event/binding, discard, optional-payment and inventory code;
+complete RON records and relevant API/rules contracts. CR 603.1–603.3 establishes
+actual events, deferred triggers, event-time control and distinct occurrences.
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loader and semantic inventory exited 1 for collection rejection:
+1,505 compiled / 940 rejected records; 544 accepted / 442 rejected unique names.
+Inventory: 72,951 occurrences, 8,540 signatures, 10,674 unknown-role occurrences.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Opponent-damage player triggers, selected | Hypnotic Specter, Nicol Bolas: **2** full cards / **7** records. | Missing compiler event/player adapters and bare player-action DiscardHand. Engine contracts already exist. Enables event-recipient resolving actions and current-hand discards. | Low: typed per-factory capture, invalid declarations, complete-card casting/combat/upkeep and lifecycle tests. |
+| Finite prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full cards after prerequisite; **0** adapter-only gains. | Full records contain targets, modes, mana/tap costs and X. CR 615.7 simultaneous-source shield allocation remains missing. Enables additional finite shield consumers. | Medium/high: allocation decisions, finite consumption, replacement ordering and batches. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full cards after prerequisite. | Full records require controller, subtype and named counts plus CDA lowering. Zone-aware characteristics and copy/layer contracts remain prerequisites; Gaea's Avenger and Wood Elemental have further gaps. | High: characteristics outside battlefield, owner/controller counts, copy/layer tests. |
+
+The selected two-card adapter gives the strongest credible gain for its small
+effort and reuses complete engine behavior. Full nested records, not first-error
+frequency, supplied the estimate. Contract, reuse boundary and acceptance cases
+were stated before editing. No engine service or skill was needed.
+
+Every other complete damage-player record was inspected: Marsh Viper and Pit
+Scorpion need player poison-counter actions; Serpent Generator has the same gap
+inside its complete token record; Nafs Asp needs the future payment-trigger
+procedure; Backfire needs a distinct Aura-host/controller-filter event with
+amount and permanent bindings. They are not estimated unlocks. Complete
+DiscardHand consumers outside this player-action context were also inspected:
+Wheel of Fortune needs EachPlayerAction batching; Contract from Below needs
+ante/deck rules; Knowledge Vault needs linked face-down exile, payment results
+and leaves triggers. These remain rejected.
+
+### Exact supported contract and reuse
+
+RON event:
+`TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),
+Opponent), body)`. Both arguments have exact kind/arity checks. Only source
+permanents and bare Opponent are supported. Host/target subjects, collections,
+AnyPlayer and SinglePlayer filters remain rejected. This shape produces only
+bare `Trigger_ThatPlayer` in its resolving body; it does not produce an amount
+or permanent binding. Cost, entry, static and replacement contexts are not added.
+
+`damagePlayerPlan` has lexical identity. Each factory call creates its own
+`PlayerBinding`, stored in `instanceBindings.damagePlayers` and read with
+`FromPlayer`. RON owns validation, spelling, lexical scope, lowering and nested
+inventory roles. Engine reuse: `DealsDamageToOpponent(This, binding)`,
+`WhenEvent`, `Sequence`, typed reference/target services, event capture,
+resolution frames, pending-trigger clone and stack-copy services, actual damage,
+prevention and combat. No new event system, game-time declaration panic,
+card-name branch, global last-action slot or fallback registry.
+
+The engine checks the opponent of the source controller at event time. Combat
+and noncombat actual damage trigger; zero and fully prevented damage do not.
+Each event keeps its own player. Source departure, return, phasing, control
+changes and copied-trigger controller changes cannot redirect that player.
+No permanent LKI read is needed by this adapter: facts are already captured.
+
+`PlayerAction(player, DiscardHand)` requires a bare action symbol and an existing
+typed player reference. It is supported in existing resolving player-action
+scopes, using `DiscardMatchingHand(player, CardFilter{})`. Select the current
+hand at resolution. The existing simultaneous discard service prepares all
+replacements before moves and sends events after all moves. This is not a
+bare action or EachPlayerAction adapter and does not add a cost context.
+Random discard reuses existing `DiscardAtRandom` without a new random service.
+
+### TDD and complete-card evidence
+
+The new gameplay tests first failed on unsupported
+`WhenAPermanentDealsDamageToAPlayer` for both complete cards. An initial fixture
+used nonexistent `WithKeywords`; it was corrected to `WithKeyword` before the
+missing-adapter failure was confirmed. No assertion or requirement was weakened.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Hypnotic Specter, all six identical RON reprints; Nicol Bolas, full LEG record | `TestRONDamagePlayerCards`: definition validation, flying, self/permanent/other/zero exclusion, partial/full prevention, separate events, random selection, empty hands, event-time control, departure/return/phasing, ability removal, copied-trigger recipient and pending-clone isolation. |
+| Both complete cards | `TestRONDamagePlayerCasting`: exact colored/generic payment, failed-payment resource/hand/stack rollback, permanent entry and real deferred damage/discard. `Combat`: native attacks/blocks/damage, flying blockers, opponent damage versus blocked permanent damage. |
+| Both independent factory instances | `TestRONDamagePlayerInstances`: two calls to the same compiled real-card factory, opposite controllers, simultaneous damage, per-event recipients, late hand entry and pending clone. |
+| Nicol Bolas upkeep and interactions | Added to `TestRONUpkeepPaymentRealCards`: opponent-upkeep exclusion, pay/decline/unaffordable/wrong colors, mana sources and rollback, departure/return/phasing/control, original payer/incarnation and sacrifice. Existing `OtherRules` also checks flying. |
+| Nicol Bolas hand operation | `TestRONDamagePlayerDiscardReplacement`: all cards redirected to library through existing replacement and discard tracker. `HandBatch`: late current-hand card, all four moves visible at each discard event. |
+| Declaration/inventory | `TestRONDamagePlayerInvalid`: wrong kinds/arities, unsupported source/filter, unbound/incompatible or tuple player reference, tuple DiscardHand, unavailable amount and cross-context player read. `Inventory`: valid compilation and nested permanent/player filter/reference/action roles. Exact repository inventory assertions refreshed. |
+
+Local authoritative `data/LEA.json` and `data/LEG.json` Oracle text agrees with
+both complete records, including opponent restrictions. No source defect or
+source change. All source hashes match the vocabulary snapshot; no refresh
+of that syntax snapshot is required. Compilation and gameplay evidence are
+separate: collection engine-validation and behavior totals remain null.
+
+### Validation and measurements
+
+Actual gain matches the estimate: **2 unique names / 7 records**, exactly
+Hypnotic Specter and Nicol Bolas. No previously accepted name was lost.
+Final strict loader: **1,512 compiled / 933 rejected records**;
+**546 accepted / 440 rejected unique names**. Inventory remains **72,951
+occurrences / 8,540 signatures**, with **10,640 unknown-role occurrences**.
+The loader exits 1 and installs no partial production registry.
+
+Leading rejection diagnostics remain CastEffect (53 records), ChooseADamageSource
+(46), Targeted_Modal (42), CreateFuturePreventDamage (32), and PlayerEffect (23).
+These are first errors, not complete unlock estimates. No environment failure
+or pre-existing build/test failure was found. Lint changes were reviewed;
+formatting adjusted import spacing only. The final factory-isolation fixture
+was strengthened to use two calls to the same compiled factory, then affected
+checks were repeated.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestRONDamagePlayer\|TestRONUpkeepPayment\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. |
+| `git diff --check` | PASS, including staged slice. |
+| `go run ./cmd/loadcards -json` | Expected exit 1; 1,512 compiled / 933 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; inventory totals above. |
+
+Changed files: new `ron/damage_player.go` and tests; compiler, hand operations,
+player scopes, triggers and inventory; exact-count and upkeep-payment tests;
+DSL reference, engine rules-contract reference and this ledger entry.
+No Go card, startup, generator, DSL alias or engine service is removed. Full
+loading, complete gameplay and runtime gates remain unmet. No removal caller
+audit was used because nothing was removed.
+
+Ranked next candidates to reassess:
+
+1. Finite recipient prevention allocation prerequisite and adapters for the
+   four listed full-card consumers.
+2. Shared player poison-counter actions and AnyPlayer damage event lowering
+   for Marsh Viper, Pit Scorpion and Serpent Generator; inspect token prerequisites.
+3. All-zone count CDAs for the four listed consumers.
+
+Only this slice is committed. The hash is in the final response. Existing user
+changes remain unstaged. No second implementation slice is started.

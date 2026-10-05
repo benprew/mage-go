@@ -62,6 +62,14 @@ func compileHandCardFilter(n Node) (mage.CardFilter, error) {
 }
 
 func compileHandPlayerAction(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "DiscardHand" {
+		if n.Kind != Symbol {
+			return nil, problem(n, "DiscardHand requires a symbol")
+		}
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.DiscardMatchingHand(ctx.player.build(bindings), mage.CardFilter{})
+		}}, nil
+	}
 	if n.Name == "RevealHand" {
 		if n.Kind != Symbol {
 			return nil, problem(n, "RevealHand requires a symbol")

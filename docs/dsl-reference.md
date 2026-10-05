@@ -2709,10 +2709,36 @@ body. Each factory call creates a number binding. The value is the actual damage
 after prevention, for combat or noncombat damage to a player or permanent.
 Zero and fully prevented damage do not trigger. Each event keeps its own amount.
 The body has no damaged-player or damaged-permanent binding in this shape.
-Other source collections and damage-to-player events remain unsupported.
+Other source collections remain unsupported. Opponent-damage events use the
+separate shape below.
 
 The engine captures the event before stack placement. Later source departure,
 phasing, control changes, or attachment changes do not change the saved amount.
 The trigger keeps its controller; a copied trigger uses its copy controller for
 `You`. `TestRONDamageAmountCards`, `BatchAndInstances`, `Combat`, `Casting`,
 `AuraTargetLegality`, `Invalid`, and `Inventory` provide the RON evidence.
+
+
+## RON opponent-damage player triggers
+
+`TriggerA(WhenAPermanentDealsDamageToAPlayer(SinglePermanent(ThisPermanent),
+Opponent), body)` uses `DealsDamageToOpponent(This, player)`. Each factory
+creates a separate player binding. Bare `Trigger_ThatPlayer` reads the damaged
+opponent in the event body's resolving scopes. It is not a target. The event
+checks the source controller when actual combat or noncombat damage occurs.
+Zero or fully prevented damage does not trigger. Later source control changes,
+departure, return or phasing cannot redirect the captured player. Pending
+triggers, copies and clones use the existing resolution frame services.
+This shape supplies no amount or permanent binding. Other source references
+and player filters remain unsupported.
+
+`PlayerAction(player, DiscardHand)` requires a bare action symbol and a bound
+player reference. It uses `DiscardMatchingHand(player, CardFilter{})` to select
+all cards in that player's current hand at resolution. Replacements prepare all
+moves before discard events. This adds no bare action, EachPlayerAction, cost,
+entry, static or replacement-operation context.
+
+`TestRONDamagePlayerCards`, `Casting`, `Combat`, `Instances`,
+`DiscardReplacement`, `HandBatch`, `Invalid` and `Inventory` cover complete
+Hypnotic Specter and Nicol Bolas records. `TestRONUpkeepPaymentRealCards`
+also covers Nicol Bolas's complete upkeep payment and sacrifice rule.
