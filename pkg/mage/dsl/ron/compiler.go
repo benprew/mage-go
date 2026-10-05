@@ -911,6 +911,12 @@ func requireRef(n Node, name string, ctx scope) error {
 func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
+	case "SearchLibrary":
+		build, err := compileLibrarySearch(n)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "RemoveCreatureFromCombat", "RemoveCreatureFromCombatAndUnblockBlockers":
 		if err := arity(n, 1); err != nil {
 			return nil, err

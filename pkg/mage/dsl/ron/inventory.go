@@ -369,6 +369,23 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "integer_literal"
 		}
+	case "search_instruction":
+		if n.Name == "FindACardOfType" && len(n.Args) == 1 {
+			return "library_card_filter"
+		}
+		if n.Name == "PutFoundCardsOntoBattlefield" && len(n.Args) == 1 {
+			return "search_entry_operation"
+		}
+	case "library_card_filter":
+		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "IsSupertype" && len(n.Args) == 1 {
+			return "supertype"
+		}
+		if n.Name == "IsCardtype" && len(n.Args) == 1 {
+			return "card_type"
+		}
 	case "card_filter":
 		if n.Name == "IsColor" || n.Name == "IsNonColor" {
 			if len(n.Args) == 1 {
@@ -517,6 +534,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return []string{"token_instruction", "token_creation_modifier"}[index]
 			}
 
+		case "SearchLibrary":
+			if len(n.Args) == 1 {
+				return "search_instruction"
+			}
 		case "PutCounters":
 			if len(n.Args) == 1 {
 				return "counter_instruction"

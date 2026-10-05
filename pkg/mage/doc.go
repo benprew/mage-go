@@ -271,6 +271,12 @@
 // [DiscardMatchingHand] moves all matching hand cards before discard events.
 // [CountMatchingHand] reads the current count without reveal history or LKI.
 //
+// Use [SearchLibraryToHand] for a required single-card search, followed by
+// a shuffle. Use [SearchLibraryToBattlefield] with a card filter for a search
+// that can find no card. A zero filter requires a card when one is available.
+// The destination move occurs before the shuffle. A prohibited battlefield
+// entry keeps the card in the library. These searches do not reveal hand cards.
+//
 // Use [AddPoisonFor] with a typed player reference to add poison counters.
 // Nonpositive amounts make no change. The existing state check handles loss
 // at ten poison counters. [TokenAbilities] gives each token its own ability

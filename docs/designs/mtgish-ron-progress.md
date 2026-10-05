@@ -16945,3 +16945,160 @@ after required checks pass; the final response reports its hash. Changed files:
 `compiler.go`, `inventory.go`, `inventory_test.go`, `damage_scope_test.go`,
 `player_life_test.go`; API/rules docs and this ledger entry. The user's initial
 changes remain unstaged. No second slice starts.
+
+
+## Run 2026-10-05: SINGLE-CARD-LIBRARY-SEARCH
+
+Status: completed supported slice, with final validation recorded below.
+This entry supersedes the older summary counts at the top of the working ledger.
+The initial user changes to `.gitignore`, the execution design and this ledger,
+and the untracked `mtgish-ron-completed.md`, are preserved. Only this entry is
+staged from this already modified ledger. No second slice starts.
+
+### Fresh evidence, candidate comparison and selection
+
+Fresh baseline `go test ./pkg/mage/... -short -count=1` and `go build ./...`
+passed. Strict loading and semantic inspection exited 1 for collection
+rejection, not build failure: **1,572 compiled / 873 rejected records**,
+**579 accepted / 407 rejected unique names**. The collection has 2,445 records,
+986 names, 72,951 syntax nodes, 8,540 signatures and 9,856 unknown-role
+occurrences. All descendants were inventoried through the positioned parser.
+The design, progress ledger, vocabulary snapshot, engine reference, relevant
+compiler/engine implementations, complete candidate records and local Oracle
+data were inspected. CR 701.23 and 701.24 supplied search contracts; CR 608.2c
+supplies instruction order. First-error frequency was not treated as an unlock
+estimate. Reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Single-card library searches, selected | Demonic Tutor, Untamed Wilds: **2** after engine search repairs. | Existing services allow failure in an unqualified search, accept foreign decisions, and perform shuffle before destination movement. The adapter needs strict complete instruction sequences. Enables resolution-time hidden-zone choices and normal entry through shared services; Land Tax still needs its intervening condition, plural search, reveal and optional action. | Low/medium: two bounded shapes, shared service repairs, invalid declarations, all reprints, entry/choice/controller/copy/clone and rollback tests. |
+| Activated modes | Balm of Restoration, Pyramids, Triassic Egg: **1 now / 3 after further dependencies**. | Complete Balm uses mana/tap/self-sacrifice and finite prevention, which exist. Pyramids needs an attached-land Aura filter and destruction replacement. Triassic Egg needs a source-counter activation condition and hand entry; its two modes are identically transcribed, an unresolved source defect. Enables mode-local targets through `NewModalActivated`. | Medium: mode scope/factory reuse plus target/payment/copy tests; remaining consumers need separate slices. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **0 adapter-only / 5 after prerequisite**. | Complete records need owner/controller-aware characteristics in all zones, named/subtype counts, CDA/copy/layer contracts. Existing resolving battlefield counts cannot supply all-zone characteristics. Enables reusable characteristic values and future CDA consumers. | High: engine characteristic service, scoped compiler values, all-zone/controller/copy/layer gameplay. |
+
+Selection: two complete consumers have the largest credible immediate gain for
+this bounded effort. Activated modes have concrete multi-card downstream use,
+but only one full-card gain now. CDAs offer a larger eventual gain with a much
+larger engine prerequisite. The exact contract, reuse boundary and acceptance
+cases were stated before edits. The initial commentary incorrectly counted eight
+records; the complete source set contains six Tutor reprints and one Wilds record.
+The estimated **two unique cards** matches the actual gain.
+
+### Exact signatures, contexts and dependencies
+
+Resolving actions:
+
+- `SearchLibrary([FindAGenericCard, PutFoundCardsIntoHand, Shuffle])/1`.
+- `SearchLibrary([FindACardOfType(And([IsSupertype(Basic), IsCardtype(Land)])),
+  PutFoundCardsOntoBattlefield([EntersNormally]), Shuffle])/1`.
+
+`And` accepts the two basic/land operands in either order, each once. These are
+complete supported instruction sequences, not arbitrary search pipelines.
+Wrong arity, extra/missing/reordered instructions, tuple spellings for bare
+symbols, other destinations, modifiers, filters and plural searches are rejected.
+Existing resolving spell, activation, trigger and delayed bodies can use the
+actions. Static rules, costs, entry instructions and explicit player actions gain
+no new context. No target, saved object, result or loop binding is produced.
+The resolution controller is retained; the action does not follow the source's
+later control, departure, phasing or returned incarnation.
+
+The RON adapter owns spelling and shape checks. It lowers to existing
+`mage.SearchLibraryToHand` and `mage.SearchLibraryToBattlefield`. The engine owns
+choices, candidate legality, hidden zones, destination movement, normal entry,
+shuffling and clones. Factories create fresh effects with no mutable choice
+state. No Go-card fallback, name branch, global result slot, partial production
+registry, declaration panic or alternate zone/entry service is added.
+
+The `implement-engine` skill was used for shared engine repairs. Existing public
+signatures and callers remain. Unqualified searches require a canonical candidate
+when the library is nonempty; nil/foreign decisions use the first candidate.
+Qualified searches may find no card. Candidates are validated by ID and the
+canonical object is used. Empty searches do not prompt. Both services shuffle
+once after destination movement, including empty/declined searches. A failed
+normal entry restores the card to its library before shuffle. The existing
+`PutOnBattlefieldBy` pipeline retains tapped entry and counter replacements.
+No new search-restriction or general zone-replacement contract is claimed.
+
+Inventory roles now describe search instructions, library card filters and
+normal entry operations, even below rejected parents. Reporting does not change
+strict loading. The source snapshot is unchanged, so no vocabulary refresh is
+needed. No DSL function or Go definition is removed: complete loading, gameplay
+and startup remain below the removal gates, and no caller audit authorizes deletion.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for shuffle-before-movement, nil/foreign required
+choices, missing empty-search shuffles and foreign qualified choices. The
+prohibited-entry test separately failed for removal of a library card when it
+could not enter. Repairs passed each contract. RON tests initially had two fixture
+method-call errors (`ControllerID` instead of `ControllerID()`); after correction,
+expected `unsupported action (SearchLibrary)` and unknown inventory-role failures
+were confirmed before the adapter. An added entry fixture used a temporary rule
+that the normal layer pass clears; it was corrected to a printed `EntersTapped`
+ability, retaining the tapped-entry assertion and counter replacement assertion.
+No test contract was weakened.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Demonic Tutor, complete LEA/LEB/2ED/3ED/CED/CEI records | `TestRONLibrarySearchCards`: metadata validation, exact casting costs, unpaid rollback, resolution-time library membership, required finding, empty library, private hand destination, shuffle order, spell disposal and pending-clone isolation. `CopiesAndEntry`: copied controllers, two distinct libraries and independently resolved clones. |
+| Untamed Wilds, complete LEG record | Same tests: basic versus nonbasic Forest candidates, optional failure to find, empty/no-match libraries, no target or cast-time choice, normal untapped entry under controller, exact payment and disposal. `NormalEntryRules`: synthetic basic creature land with printed tapped entry and doubled entry counters before shuffle. |
+| Shared engine search legality/order | `TestLibrarySearchRequiredFindAndOrder`: both destinations, valid/nil/foreign/empty decisions, canonical destination before exactly one shuffle. `QualifiedCanFail`: filtered candidates, decline, invalid candidate and no match. `ProhibitedEntryKeepsCard`: persistent entry prohibition retains library card and still shuffles. |
+| Resolving activation controller and identity | `TestRONLibrarySearchActivationKeepsController`: source departure, returned incarnation under opponent, phasing and control change keep original controller's library. |
+| Strict declarations / semantic inventory | `TestRONLibrarySearchInvalid`: arity, symbol shape, order, unsupported instructions, filters, entry modifiers and contexts. `Inventory`: full nested roles below an unrelated unsupported action, with continued rejection. Existing whole-collection inventory count tests refreshed to measured results. |
+
+Two additional unique cards have complete-record gameplay mappings. Compilation
+and gameplay are recorded separately; these tests do not certify all collection
+interactions. LKI, target legality, simultaneous selections and payment-result
+bindings are not introduced by these untargeted single-card actions.
+
+### Measurements, source evidence, validation and next work
+
+Local `data/LEA.json` and `data/LEG.json` Oracle text agrees with both complete
+records: destination movement precedes shuffle, Tutor searches for an unrestricted
+card, and Wilds searches for a basic land. No source data was changed or defect
+corrected. Local `data/LEG.json` confirms that Triassic Egg's second Oracle mode
+returns a target creature card from your graveyard, whereas both RON modes put
+a creature from hand onto the battlefield. That source defect and its graveyard
+target/movement dependencies remain outside this slice.
+
+Actual gain: **2 unique cards / 7 records**. Exactly Demonic Tutor and Untamed
+Wilds leave the rejected-name set, and no previously accepted name is lost.
+Strict loading now reports **1,579 compiled / 866 rejected records**, **581
+accepted / 405 rejected unique names**. Semantic inspection reports **72,951
+nodes / 8,540 signatures / 9,809 unknown-role occurrences**. Twelve file hashes
+match the baseline. Both loader commands exit 1 and publish no partial registry.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`, `go build ./...` | PASS. |
+| New engine and RON tests before implementation | Expected contract and unsupported-adapter failures confirmed, after fixture method corrections. |
+| `go test ./pkg/mage -run TestLibrarySearch -count=1` | PASS, including prohibited entry. |
+| `go test ./pkg/mage/dsl/ron -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONLibrarySearch\|TestInventory' -count=1` | PASS; final focused matrix also passed after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Automatic formatting reviewed; no unrelated Go edits or semantic changes. |
+| `go test ./... -short -count=1` | PASS after lint; additional skill verification. |
+| `git diff --check` | PASS, including the final ledger and staged patch. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,579 compiled / 866 rejected. Final post-lint diagnostics identical to initial post-adapter diagnostics. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same loader counts, 405 rejected names and 9,809 unknown-role occurrences; source hashes unchanged. |
+
+No environment or check blocker remains. Remaining diagnostics include
+`Animate Artifact` (conditional static `AddCardtype`), `Animate Dead`
+(`EnchantGraveyardCard`) and `Ankh of Mishra` (trigger subject `IsCardtype`).
+The registry remains unpublished for the rejected collection. This slice is
+committed after required checks pass; its hash is reported in the final response.
+
+Ranked next candidates to reassess:
+
+1. All-zone count CDA prerequisite: five complete consumers after the shared
+   characteristic contract, with broader downstream value.
+2. Activated modal scopes: Balm now; Pyramids and Triassic Egg after explicit
+   filter/replacement/entry prerequisites and the source-data investigation.
+3. Outgoing attacking-band per-source assignments: close the recorded combat,
+   finite shield allocation and lifelink gap for accepted RON consumers.
+
+Changed files: `pkg/mage/effect_cards.go`, `library_search_test.go`, `doc.go`;
+`pkg/mage/dsl/ron/library_search.go`, `library_search_test.go`, `compiler.go`,
+`inventory.go`, `inventory_test.go`; API/rules docs and this ledger entry.

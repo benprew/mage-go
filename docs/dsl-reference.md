@@ -3100,3 +3100,32 @@ Evidence: `TestRONFinitePrevention*` uses complete records for ten cards and
 synthetic scope declarations. The outgoing attacking-band source assignment
 limitation remains recorded in the engine contract; these adapters do not
 establish that separate combat behavior.
+
+## RON single-card library searches
+
+The resolving action compiler accepts these complete sequences:
+
+```ron
+SearchLibrary([FindAGenericCard, PutFoundCardsIntoHand, Shuffle])
+SearchLibrary([FindACardOfType(And([IsSupertype(Basic), IsCardtype(Land)])),
+               PutFoundCardsOntoBattlefield([EntersNormally]), Shuffle])
+```
+
+The basic/land conjunction permits either operand order. No other filter,
+number of found cards, destination, reveal instruction, entry modifier, or
+instruction order is enabled. Symbols must be bare symbols. Declarations fail
+at compilation for malformed or unsupported sequences. Searches are resolving
+actions in the existing spell, activation, trigger and delayed action scopes;
+they are not costs, static rules, entry operations or explicit player actions.
+They use the resolving object's controller and do not produce a result binding.
+
+Lowering reuses `SearchLibraryToHand` and `SearchLibraryToBattlefield`. The engine
+chooses at resolution from that controller's current library. An unqualified
+search must find a card if one exists; a search for a basic land may find none.
+The library is shuffled even if nothing is found. Hand movement and normal
+battlefield entry precede the shuffle. Normal entry restrictions and counter
+replacements still apply. A prohibited entry leaves the card in the library.
+Neither shape reveals a card moved to hand. Complete Demonic Tutor and Untamed
+Wilds records have gameplay tests in `TestRONLibrarySearchCards` and
+`TestRONLibrarySearchCopiesAndEntry`; declaration, inventory, source-controller
+and entry contracts have separate tests in the same file.

@@ -3390,3 +3390,35 @@ semantic inventory roles are tested separately.
 This is compiler and RON gameplay evidence for the listed contracts. The
 outgoing attacking-band assignment gap remains. Collection-wide gameplay,
 production loading and runtime cutover are not established by these tests.
+
+## Single-card library search ordering and legality
+
+`SearchLibraryToHand` requires a card from a nonempty library (CR 701.23d).
+`SearchLibraryToBattlefield` permits failure to find with a nonzero quality
+filter (CR 701.23b); its zero filter requires a card. Both validate the returned
+choice against candidates by ID and use the canonical candidate object. A nil
+or foreign choice uses the first candidate for a required search and finds
+nothing for a qualified search. Empty libraries do not prompt for a card.
+
+Both services shuffle once even if they find nothing. A found card moves to
+hand or enters the battlefield before the shuffle. This ordering implements
+the instruction sequence of the supported RON records (CR 608.2c). A failed
+`PutOnBattlefieldBy` restores the library card before shuffling, so an entry
+prohibition cannot remove it from the game. Normal entry uses the shared entry
+pipeline, including tapped entry and counter replacement. The search does not
+cast or play the found card and does not use the land-play allowance. No hand
+reveal is added (CR 701.23e).
+
+`TestLibrarySearchRequiredFindAndOrder`, `TestLibrarySearchQualifiedCanFail` and
+`TestLibrarySearchProhibitedEntryKeepsCard` cover required/optional selection,
+foreign decisions, empty libraries, both destinations and shuffle order.
+`TestRONLibrarySearchCards` executes all six Demonic Tutor reprints and the
+complete Untamed Wilds record, including payment, hidden information and
+resolution-time library membership. `TestRONLibrarySearchCopiesAndEntry`
+covers copied controllers and pending clones. `NormalEntryRules` combines
+tapped entry and doubled entry counters before shuffle. `ActivationKeepsController`
+checks departure, return, phasing and control changes after activation.
+
+These services do not establish multiple-card searches, reveal/result bindings,
+restricted search zones or new replacement types. Strict collection loading,
+collection-wide gameplay coverage and runtime cutover remain unfinished.

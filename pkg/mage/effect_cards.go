@@ -613,14 +613,11 @@ func (*searchLibraryEffect) Apply(ctx *EffectContext) error {
 		return ErrPlayerNotFound
 	}
 	lib := p.Library()
-	if len(lib) == 0 {
-		return nil
-	}
-	card := p.ChooseCardFromLibrary(lib, "search", ctx.Game)
+	card := chooseLibrarySearchCard(p, lib, "search", ctx.Game, true)
 	if card == nil {
+		p.ShuffleLibrary()
 		return nil
 	}
-	// Remove the chosen card from library
 	newLib := make([]Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != card.ID() {
@@ -628,8 +625,8 @@ func (*searchLibraryEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	p.SetLibrary(newLib)
-	p.ShuffleLibrary()
 	p.AddToHand(card)
+	p.ShuffleLibrary()
 	return nil
 }
 
@@ -730,12 +727,11 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		p.ShuffleLibrary()
 		return nil
 	}
-	card := p.ChooseCardFromLibrary(candidates, "search to battlefield", ctx.Game)
+	card := chooseLibrarySearchCard(p, candidates, "search to battlefield", ctx.Game, e.filter.IsZero())
 	if card == nil {
 		p.ShuffleLibrary()
 		return nil
 	}
-	// Remove from library
 	newLib := make([]Card, 0, len(lib)-1)
 	for _, c := range lib {
 		if c.ID() != card.ID() {
@@ -743,8 +739,29 @@ func (e *searchLibraryToBattlefieldEffect) Apply(ctx *EffectContext) error {
 		}
 	}
 	p.SetLibrary(newLib)
+	if ctx.Game.PutOnBattlefieldBy(card, ctx.Controller, ctx.Controller) == nil {
+		p.SetLibrary(lib)
+	}
 	p.ShuffleLibrary()
-	ctx.Game.PutOnBattlefieldBy(card, ctx.Controller, ctx.Controller)
+	return nil
+}
+
+func chooseLibrarySearchCard(p Player, candidates []Card, reason string, g GameReader, required bool) Card {
+	if len(candidates) == 0 {
+		return nil
+	}
+	chosen := p.ChooseCardFromLibrary(candidates, reason, g)
+	if chosen != nil {
+		for _, candidate := range candidates {
+			if candidate.ID() == chosen.ID() {
+				return candidate
+			}
+		}
+	}
+	// An unqualified search must find a card when the zone is not empty.
+	if required {
+		return candidates[0]
+	}
 	return nil
 }
 
