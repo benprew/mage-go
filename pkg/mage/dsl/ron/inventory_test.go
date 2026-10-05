@@ -95,7 +95,7 @@ func TestInventoryRepositoryCollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Records != 2445 || report.UniqueCards != 986 || report.Compiled != 1460 || len(report.Issues) != 985 {
+	if report.Records != 2445 || report.UniqueCards != 986 || report.Compiled != 1472 || len(report.Issues) != 973 {
 		t.Fatalf("collection counts: %d/%d/%d/%d", report.Records, report.UniqueCards, report.Compiled, len(report.Issues))
 	}
 	nested := false
@@ -113,7 +113,7 @@ func TestInventoryLeavesRealRONGameplayAndRegistryUnchanged(t *testing.T) {
 	old := mage.DefaultRegistry
 	bolt := repositoryCard(t, "LEB", "Lightning Bolt")
 	report, err := InspectFS(os.DirFS("../../../../cards/mtgish"), "*.ron")
-	if err != nil || report.Compiled != 1460 {
+	if err != nil || report.Compiled != 1472 {
 		t.Fatalf("inspection: %v", err)
 	}
 	if mage.DefaultRegistry != old {
@@ -157,5 +157,28 @@ func TestInventoryInvalidFieldsHaveStableDiagnostics(t *testing.T) {
 		if len(report.Issues) != 1 || !strings.Contains(report.Issues[0].Message, "unknown field UnknownA") {
 			t.Fatalf("unstable field diagnostic: %+v", report.Issues)
 		}
+	}
+}
+
+func TestInventoryCombatPair(t *testing.T) {
+	src := `Card(Name:"Nested Pair",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),CardPT:(Power:2,Toughness:4),Rules:[TriggerA(WhenACreatureBlocksACreature(SinglePermanent(ThisPermanent),And([IsCardtype(Creature),IsNonCreatureType(Wall)])),ActionList([UnknownAction(Trigger_ThatOtherCreature)]))])`
+	report, err := InspectFS(fstest.MapFS{"a.ron": {Data: []byte(src)}}, "*.ron")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, entry := range report.Signatures {
+		if entry.Name == "SinglePermanent" {
+			found = true
+			if entry.Role != "permanent_filter" {
+				t.Fatalf("subject role=%s", entry.Role)
+			}
+		}
+		if entry.Name == "IsNonCreatureType" && entry.Role != "permanent_filter" {
+			t.Fatalf("nested filter role=%s", entry.Role)
+		}
+	}
+	if !found || report.Compiled != 0 || len(report.Issues) != 1 {
+		t.Fatal("inventory lost rejected descendants")
 	}
 }

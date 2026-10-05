@@ -2542,3 +2542,28 @@ incarnations, controller changes, ability removal, source damage after sacrifice
 independent X and target frames, captured event players, nesting, countered
 triggers, all-illegal original targets, and invalid declarations. Event spell
 bindings are not captured by the engine and are rejected in delayed RON bodies.
+
+## RON directional combat-pair capture
+
+The RON compiler lowers source-only `WhenACreatureBlocksACreature` and
+`WhenACreatureBecomesBlockedByACreature` to the existing `BlocksCreature(This)`
+and `BecomesBlockedBy(This)` patterns. Their `WithOpponent` and `WithBlocker`
+bindings save each opposing incarnation at detection. Optional `WithoutSubtype`
+checks apply at the event (CR 509.3b, 509.3d, 509.3f). The body and a later
+`AtNext(EachEndOfCombat, ...)` action use that captured identity, without a new
+target or another subtype check (CR 603.7c). Departure of the ability's source
+does not cancel the pending or delayed ability. Destruction still permits
+regeneration, and phased-out or returned subjects keep their existing action
+legality contracts. No event generation, LKI, payment, replacement order, or
+simultaneous-operation service is changed.
+
+`TestRONCombatPairNative` covers complete Cockatrice and Thicket Basilisk RON
+records in both combat directions, Wall exclusions, combat damage, and end of
+combat destruction. `Identity` covers source departure and ability removal,
+opponent return/phasing/control/subtype changes, regeneration, stack copying
+and clone isolation. `IndependentOpponents` and `FactoryBindings` cover multiple
+captured events and fresh factory bindings. `Casting` covers both complete
+records' costs, metadata, flying and failed-payment rollback. `FilterShapes`
+covers both event directions with the bare creature filter, one-element `And`
+and an excluded Goblin subtype. `Invalid` rejects incompatible, unbound and
+out-of-scope declarations. These names have the prefix `TestRONCombatPair`.

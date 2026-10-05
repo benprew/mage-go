@@ -19,6 +19,7 @@ type costFactory func() mage.Cost
 type scope struct {
 	delayedStep     bool
 	sourceAttack    bool
+	combatOpponent  *permanentEventPlan
 	targetNamespace string
 	counterPayment  *counterPaymentPlan
 	sacrificeValue  *sacrificeValuePlan

@@ -2402,3 +2402,26 @@ bindings in this frame. Next upkeep accepts only bare `You`; other players need
 an explicit scheduling contract. `AtNextEndOfCombatThisTurn` is distinct from
 `AtTheNextEndOfCombat` and remains unsupported. This adapter does not add casting
 restrictions, combat events, choices, histories, links, or finite prevention.
+
+### RON directional combat-pair triggers
+
+`TriggerA` accepts `WhenACreatureBlocksACreature(subject, filter)` and
+`WhenACreatureBecomesBlockedByACreature(subject, filter)` with exactly
+`SinglePermanent(ThisPermanent)` as the subject. The filter is
+`IsCardtype(Creature)` or `And([IsCardtype(Creature),
+IsNonCreatureType(subtype)])`, in either order. A one-element `And` is also
+valid. The excluded subtype must pass creature-family validation. Duplicate
+filters, other types, color/history filters and Aura subjects remain errors.
+
+The blocking event provides `Trigger_ThatOtherCreature`; the blocked-by event
+provides `Trigger_TheBlockingCreature`. Each is a typed event binding available
+only in that body's lexical scope, including supported delayed step actions.
+They lower to `BlocksCreature(This).WithOpponent(binding)` and
+`BecomesBlockedBy(This).WithBlocker(binding)`, with `WithoutSubtype` when needed.
+Each factory builds its own binding. Each detected event saves the opposing
+creature's incarnation before trigger placement. The action body does not
+recheck the event filter, and it cannot follow a returned card.
+
+These are per-creature pair events, not once-per-combat block transitions.
+`WhenACreatureBlocks`, event unions, host subjects and the other event-reference
+spellings require separate adapters. No collection record is partially installed.
