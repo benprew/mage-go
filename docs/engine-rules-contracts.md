@@ -2089,3 +2089,34 @@ Vampire and Soul Net, including all six reprints, cost/timing rollback,
 incarnation history, simultaneous deaths, copied triggers and clone isolation.
 The existing `TestCreatureDiesDamagedByThisTurn*` engine tests retain their
 contracts. No engine execution API changed in this slice.
+
+## RON fixed entry counters
+
+RON lowers a single `EntersWithNumberCounters(Integer(n), counter)` entry
+operation on `ThisPermanent` to the existing `EntersWithNCounters` ability.
+`prepareBattlefieldEntry` routes placement through `AddCountersWithReplacement`
+before entry observers run (CR 122.6, 603.6a, 614.1c). The entering controller
+chooses between applicable counter-placement replacements (CR 616.1); the
+adapter adds no replacement service. Phasing retains counters without repeating
+entry (CR 702.26d). A zone return starts a new incarnation with its declared
+entry counters (CR 400.7, 122.2).
+
+Evidence: `TestRONEntryCountersTriskelion` executes the complete ATQ card:
+casting/payment rollback, 4/4 entry, one-counter activation cost, any-target
+player/creature/planeswalker/self damage, controller legality and exhausted costs.
+`TestRONEntryCountersLifecycle` covers source departure, stack/card copies,
+cloned pending abilities, phase cycles, return, independent instances and source
+death before damage resolution. `TestRONEntryCountersTargetRecheckAndPrevention`
+covers target return, shroud, phasing and prevention after payment.
+`TestRONEntryCountersReplacements` verifies add-then-double (8) and
+double-then-add (7) on real Triskelion entry, with the entering controller as
+chooser. `TestRONEntryCountersObserverAndFactoryIsolation` verifies entry
+observation, zero placement and fresh factory ability declarations.
+
+This establishes the fixed-entry compiler adapter, with no engine execution API
+change. It introduces no event or saved-result bindings and no batch operation.
+General entry choices, X, copy-on-entry replacement ordering and token batches
+remain outside this slice. The engine stores counter totals in `uint8`;
+declarations above 255 are rejected here. Unbounded counter totals, including
+replacement-expanded totals beyond that storage, remain an engine limitation;
+the observed collection counts (2–7) and tested replacement totals (7–8) fit.

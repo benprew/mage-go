@@ -9783,3 +9783,165 @@ All required checks passed. The seven slice files form one descriptive commit;
 its hash is reported in the final response. Changed slice files: `pkg/mage/dsl/ron/creature_death.go`, `creature_death_test.go`, `triggers.go`,
 `inventory.go`, `inventory_test.go`, `docs/engine-rules-contracts.md`, and this
 ledger. The initial two user changes remain unstaged. No second slice was begun.
+
+## Run 2026-10-05: FIXED-ENTRY-COUNTERS
+
+Status: complete fixed entry-counter compiler adapter. Stop after this slice;
+production cutover and removal gates remain open.
+
+### Baseline, comparison and selection
+
+Initial user changes in `.gitignore` and `docs/designs/mtgish-ron-execution.md`
+are preserved and excluded from the commit. Read `AGENTS.md`, `pkg/mage/doc.go`,
+execution design, vocabulary snapshot, progress ledger, compiler/entry/counter
+adapters, inventory, engine entry/replacement/counter/casting services, relevant
+API/rules contracts and CR 122.1a/2/6, 400.7, 603.6a, 614.1c, 616.1 and
+702.26b–d. Baseline focused tests, engine short tests and build passed.
+Fresh strict and nested loaders exited 1 for collection rejection:
+**1,375 compiled / 1,070 rejected records**, **480 accepted / 506 rejected
+unique names**. This was not a build/test or environment failure.
+
+Candidate comparison uses nested AST inventory and complete RON records.
+Reprints count once; first-error counts do not estimate full-card unlocks.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream capabilities / effort |
+| --- | --- | --- | --- |
+| Fixed entry counters (selected) | Clockwork Avian, Clockwork Beast, Divine Intervention, Icatian Moneychanger, Merseine, Rasputin Dreamweaver, Tetravus, Triskelion (8 names / 13 records). Rock Hydra uses the separate X shape (1 name / 6 records). | 1 name / 1 record: Triskelion. Avian/Beast retain end-of-combat intervening-if, variable activation payment and bounded counter replenishment; Divine retains resolving removal and last-counter events/game draw; Moneychanger retains entering-source damage binding and sacrificed-counter LKI; Merseine retains counter conditions, host mana-cost payment and host-controller activation; Rasputin retains finite prevention, turn-start state and counter cap; Tetravus retains optional counter payment, linked token creation and exile results. | Shared entry prerequisite for eight distinct bodies and counter types; existing entry and replacement services are exact for observed counts. Small adapter, medium gameplay-test effort. |
+| Finite prevention allocation prerequisite | Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Guardian Angel, Kei Takahashi, Oasis, Rakalite, Samite Healer (9); further modal consumers Healing Salve and Alabaster Potion. | 0 for engine prerequisite alone; seven ready activation consumers after adapters. Guardian Angel retains instant-time payments; Rakalite retains future end-step return; Salve/Potion retain targeted life-mode lowering. | Shared finite shields and simultaneous-source allocation, then modes/payments. High engine decision/replacement/test effort. Existing finite shield API alone does not prove allocation. |
+| All-zone CDA P/T and counts | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats (5) | 0 for all-zone engine prerequisite alone; potentially 5 after count/plus/definition adapters and source repair. Existing battlefield CDA closures are insufficient. Gaea's Avenger retains the recorded controller-count source defect. | Shared all-zone characteristic evaluation, controller counts and arithmetic. High engine/layer/zone/adapter test effort. |
+
+Fixed entry counters give the clearest credible gain for the bounded effort and
+remove a prerequisite from seven other cards. This is shared multi-card work,
+not a Triskelion-specific executor. Filtered Aura-spell target prohibitions were
+also investigated (Bartel Runeaxe, Tetsuo Umezawa, Raiding Party); the engine's
+`AttrCantBeEnchanted` also restricts attachment and is not an exact substitute.
+That capability requires a separate engine targeting contract and was not added.
+The selected contract, reuse boundary and acceptance cases were stated before
+editing. Complete selected records and reprints were inspected; nested X and
+other counter forms under unsupported parents remain visible in inventory.
+
+### Exact signatures, dependencies and ownership
+
+Private adapters:
+
+```go
+compilePermanentEntry(Node) (optionFactory, error)
+compileFixedEntryCounters(Node) (optionFactory, error)
+```
+
+`compilePermanentEntry` replaces the private `compileTappedEntry` name in its
+compiler caller and retains the existing single `EntersTapped` operation.
+New supported context:
+
+```ron
+AsPermanentEnters(ThisPermanent, [
+    EntersWithNumberCounters(Integer(n), counter)
+])
+```
+
+This is an ordinary permanent-card rule. `AsPermanentEnters/2` has the symbol
+`ThisPermanent` and a one-element list. `EntersWithNumberCounters/2` has tuple
+`Integer/1` containing an integer literal in 0–255, and an existing validated
+permanent counter type. Named counter symbols and supported signed
+`PTCounter/2` integer coordinates reuse `compilePermanentCounterType`.
+Wrong kinds, roles, arities, sources, unknown counters, negative/oversized amounts,
+computed/X values and combined operation lists remain positioned compiler errors.
+Instant/sorcery entry rules keep their existing non-spell-rule rejection.
+No runtime declaration panic or card-name branch is introduced.
+
+RON owns spelling, declaration limits, diagnostics and lowering.
+Each option creates a fresh `mage.EntersWithNCounters` ability through
+`mage.WithAbility`. No mutable compiler state, global result slot, new binding,
+Go-card fallback or production registry change exists. Inventory assigns
+`entry_value` and `permanent_counter_type` to the two operands and
+`integer_literal` to the fixed value; support remains unverified reporting.
+
+Engine reuse: `prepareBattlefieldEntry`, transient entering-permanent visibility,
+`AddCountersWithReplacement`, additional-entry-counter and doubling replacements,
+entry event detection, counter P/T, typed any-target/source-incarnation damage,
+transactional casting/activation, stack/card copies, `Game.Clone`, zone return and
+phasing. No execution API or engine rules implementation changed. No new batch
+operation, event binding, saved result, or LKI query is introduced.
+
+A concrete engine limitation was found during adapter review: `Permanent.Counters`
+is `[NumCounters]uint8` and `AddCounter` converts the count to `uint8`.
+An added test first proved that a 256-counter declaration was accepted; the adapter
+now rejects it before execution. Unbounded totals, including replacement-expanded
+totals above 255, remain an engine contract gap. Collection entry counts 2–7 and
+observed replacement totals 7–8 fit. This run does not widen shared counter storage.
+No source-data defect was corrected; the recorded Avenger/Liege/Fastbond concerns
+remain open. No environment failure occurred.
+
+### TDD and card-to-test mapping
+
+Tests preceded implementation. Initial gameplay, entry-clause and zero-count tests
+failed with `unsupported entry operation (EntersWithNumberCounters)`; inventory
+tests failed on missing typed operand roles. The oversized declaration test later
+failed with `accepted EntersWithNumberCounters(Integer(256), PTCounter(1,1))`
+before its rejection was added. No existing test was weakened. Collection
+inventory expectations changed only by the measured one-record gain.
+
+| Card / context | Test and evidence |
+| --- | --- |
+| Triskelion, full ATQ record | `TestRONEntryCountersTriskelion`: definition validation; unpaid-cast rollback; casting and entry timing; 4/4 with three counters; invalid-target rollback; opponent activation rejection; one-counter payment; no tap cost or summoning-sickness restriction; player, creature, planeswalker and self damage; spent-counter rejection. |
+| Triskelion | `TestRONEntryCountersLifecycle`: source departure and return, pending damage source identity, stack copy, clone resolution/isolation, card copy, independent counters, phase cycle, source death before pending damage. |
+| Triskelion | `TestRONEntryCountersReplacements`: entering controller chooses additional-counter/doubler order; 8 versus 7 counters, one choice, other player makes no choice. |
+| Triskelion | `TestRONEntryCountersTargetRecheckAndPrevention`: target shroud, return or phasing after payment; prevention; paid counters remain spent. |
+| Eight fixed-counter names, all 13 records | `TestRONEntryCountersCompleteRecordInventory`: parse complete records, lower actual entry clause, engine validate and execute exact entry count/type. **Entry-only evidence for the seven still-rejected cards**, not complete-card gameplay claims. Six Clockwork Beast reprints are covered. |
+| Declaration contracts | `TestRONEntryCountersDeclarations`: kinds/arities/source/role/scope errors, invalid counter types/coordinates, negative/oversized and X amounts, combined operations; valid zero declarations. |
+| Inventory | `TestRONEntryCountersInventory`: entry values and typed counter operands. |
+| Synthetic entry observer / factories | `TestRONEntryCountersObserverAndFactoryIsolation`: entry trigger sees counters before stack resolution; zero count; fresh factory ability declarations. |
+| Retained callers | `TestRONEntryTapped*`, all existing RON tests, engine entry/replacement/target/cost tests and full repository checks. |
+
+Compilation gains and behavior evidence remain separate. One complete-card test
+mapping is added; entry-only evidence expands to eight names. Aggregate collection
+engine-validation and behavior-verification fields remain null.
+
+### Measurements and remaining gaps
+
+Actual gain matches the estimate: **1 record / 1 unique name**, Triskelion.
+Final strict/nested loader: **1,376 compiled / 1,069 rejected records**,
+**481 accepted / 505 rejected unique names**. No accepted record regressed.
+Twelve remaining fixed-entry records advance to the later blockers above.
+Rock Hydra's six diagnostics now identify its unsupported fixed-entry `ValueX`
+operand. Jihad and Frankenstein's Monster retain their multiple-operation error,
+whose wording now says `entry requires one entry operation`. Other diagnostics
+are unchanged. Strict and inventory issue arrays agree.
+
+Inventory retains **72,938 nodes / 8,528 signatures**. Unknown-role occurrences
+fall **12,495 → 12,414** through the entry operands. All 12 RON hashes remain
+unchanged and match the vocabulary snapshot; no source refresh is needed.
+
+Ranked next candidates, to reassess with fresh evidence:
+1. Finite prevention allocation prerequisite, then seven ready activations.
+2. Shared all-zone CDA P/T/counts for five names, including the Avenger correction.
+3. End-of-combat event/intervening-if and bounded counter replenishment prerequisites
+   for Clockwork Avian/Beast; optional resolving counter payment also enables
+   Tetravus and resolving counter-removal consumers. Reassess complete records.
+
+Runtime still uses Go definitions. Complete RON loading/gameplay, startup wiring,
+native smoke tests, test migration, Go-card/generator deletion and whole-repository
+DSL caller/removal audits remain open. No DSL function was removed and no removal
+gate was reached. Authoring-instruction cutover remains gated. Stop after this slice.
+
+### Validation
+
+| Final command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONEntry(Counters&#124;Tapped)' -count=1` | PASS after the final declaration bound and lifecycle tests. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, including the post-lint rerun. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; reviewed code and automatic formatting; no unrelated automatic changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records / 1,376 compiled / 1,069 rejected; repeated final report unchanged. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict issue arrays agree exactly; all nodes walked. |
+| Source/diagnostic audit | 12/12 source hashes match vocabulary; one unique card/record gained; zero accepted regressions; operand roles refreshed. |
+
+All required checks passed. The eight slice files form one descriptive commit;
+its hash is reported in the final response. Files: `pkg/mage/dsl/ron/compiler.go`,
+`entry_tapped.go`, `entry_counters_test.go`, `inventory.go`, `inventory_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Initial user changes remain unstaged. No second slice was begun.

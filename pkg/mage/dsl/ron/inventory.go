@@ -519,6 +519,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "And" && len(n.Args) == 1 {
 			return "mana_production"
 		}
+	case "entry_operation":
+		if n.Name == "EntersWithNumberCounters" && len(n.Args) == 2 {
+			return []string{"entry_value", "permanent_counter_type"}[index]
+		}
+	case "entry_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 	case "permanent_counter_type":
 		if n.Name == "PTCounter" && len(n.Args) == 2 {
 			return "integer_literal"

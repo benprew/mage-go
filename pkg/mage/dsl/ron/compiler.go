@@ -382,7 +382,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		}
 		return func() mage.CardOption { return mage.WithAbility(mage.RampageTrigger(amount.Integer)) }, nil
 	case "AsPermanentEnters":
-		return compileTappedEntry(n)
+		return compilePermanentEntry(n)
 	case "TriggerA":
 		return compileTriggerRule(n, ctx)
 	case "TriggerI":

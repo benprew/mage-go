@@ -2058,3 +2058,24 @@ no action on a departed or phased incarnation. Larger lists, card subjects,
 collections, face-down modifiers and linked results remain unsupported.
 See [the rules contract](engine-rules-contracts.md#permanent-information-through-typed-references)
 for engine APIs, lifecycle behavior, and test evidence.
+
+## RON fixed entry counters
+
+`AsPermanentEnters(ThisPermanent, [EntersWithNumberCounters(Integer(n), counter)])`
+accepts one entry operation on a permanent card. The source is the symbol
+`ThisPermanent`. The amount is a nonnegative integer literal that fits the
+engine's current counter storage (0–255); larger declarations are rejected.
+`counter` uses the same validated permanent counter types as `PutCounters`,
+including `PTCounter(+1, +0)`, `PTCounter(+1, +1)` and named counters.
+The adapter uses `WithAbility(EntersWithNCounters(counter, n))`, with a fresh
+ability for each card factory invocation. Counters exist before entry triggers
+are detected. Entry is not a stack action; the permanent spell still resolves
+through the stack. X, computed entry values, other source references and combined
+entry-operation lists remain unsupported. Existing `EntersTapped` support remains.
+
+Triskelion's complete ATQ record is exercised by `TestRONEntryCountersTriskelion`,
+`Lifecycle`, `Replacements` and `TargetRecheckAndPrevention` in the RON package.
+`TestRONEntryCountersCompleteRecordInventory` exercises only entry clauses from
+all 13 records of eight fixed-counter names; it does not establish their remaining
+rules. See the [rules contract](engine-rules-contracts.md#ron-fixed-entry-counters)
+and [progress ledger](designs/mtgish-ron-progress.md).
