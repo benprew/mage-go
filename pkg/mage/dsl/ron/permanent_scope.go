@@ -24,6 +24,10 @@ type permanentReferencePlan struct {
 func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "Trigger_ThatCreature":
+			if ctx.sourceAttack {
+				return permanentReferencePlan{kind: permanentSource}, nil
+			}
 		case "ThisPermanent":
 			if ctx.permanent {
 				return permanentReferencePlan{kind: permanentSource}, nil

@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	sourceAttack    bool
 	targetNamespace string
 	counterPayment  *counterPaymentPlan
 	sacrificeValue  *sacrificeValuePlan
@@ -906,7 +907,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if n.Name == "PermanentDealsDamage" {
 			source = "ThisPermanent"
 		}
-		if n.Args[0].Kind != Symbol || n.Args[0].Name != source || (source == "ThisPermanent") != ctx.permanent {
+		if source == "ThisPermanent" {
+			ref, err := compilePermanentRef(n.Args[0], ctx)
+			if err != nil || ref.kind != permanentSource {
+				return nil, unsupported(n.Args[0], "damage source")
+			}
+		} else if n.Args[0].Kind != Symbol || n.Args[0].Name != source || ctx.permanent {
 			return nil, unsupported(n.Args[0], "damage source")
 		}
 		amount, err := compileInstanceValue(n.Args[1], ctx)

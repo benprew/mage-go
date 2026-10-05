@@ -11969,3 +11969,179 @@ Final checks for this slice:
 No environmental or pre-existing check failure blocks the commit. Commit hash
 is reported in the final response. This slice is complete; no further capability
 work is started in this run.
+
+## 2026-10-05: source attack and unblocked attack events
+
+Status: completed `events.source-attack` compiler slice; stop after validation
+and commit. Preserve the user changes to `.gitignore` and the execution design.
+No engine implementation, RON source, production registry, Go card definition,
+generator or DSL export is changed or removed. Cutover/removal gates remain open.
+
+### Fresh evidence and candidate selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot and
+existing ledger. Inspected fresh strict and semantic loaders, compiler scope,
+reference/action/factory plans, optional-payment and duration code, inventory,
+source combat patterns, native and search combat execution, existing source
+capture/copy tests, API/rules contracts, and CR 508.3a/4, 509.1h/3g, 603.3,
+608.2h. Incarnation and phasing reuse CR 400.7 and 702.26 contracts.
+Requirements came from complete RON records and their nested forms. No removed
+implementation skill, Go card requirement, stub, subagent or design-only run was
+used.
+
+Baseline `make build` and `go test ./pkg/mage/... -short -count=1` passed. Both
+loader modes exited 1 for expected collection rejection, not a build failure:
+**1,455 compiled / 990 rejected records**, **510 accepted / 476 rejected unique
+names**, 2,445 records / 986 names. Semantic inventory: 72,938 nodes / 8,530
+context signatures / 12,030 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Estimated complete unlocks; other blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Source attack/unblocked events, selected | Cave People, Hasran Ogress, Merchant Ship, Murk Dwellers, Mijae Djinn, Icatian Skirmishers, Time Elemental, Floral Spuzzem, Farrel's Mantle, Farrel's Zealot, Mindstab Thrull, Necrite; nested delayed consumers Delif's Cone and Delif's Cube; Imprison has a combined host event | 4 unique names / 4 records. Murk Dwellers also needs a combat-duration adapter in this context. Other cards need coin flips, band filters, delayed triggers, host/combined patterns, defending-player targets or non-mana optional payments. | Exact engine patterns and source capture already exist. Low adapter effort, medium gameplay/identity test effort. Removes a prerequisite from seven other unique direct consumers and supports later delayed/host work. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Alabaster Potion, Kei Takahashi, Rakalite, Rasputin Dreamweaver | 0 from allocation prerequisite alone; 9 credible gains after adapters. Guardian Angel needs repeatable optional payments, Rakalite delayed return; Rasputin needs source shields, turn-start history and counter cap. | Concrete multi-card CR 615.7 allocation service and typed recipients/X. High engine/decision/batch effort plus adapters. |
+| All-zone CDA characteristics | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats, People of the Woods | 5 credible gains; Gaea's Avenger retains the controller-filter source concern. All-zone queries and count/arithmetic adapters are prerequisites. | Shared characteristics in all zones and controller context, CDA/set/modify layering. High engine/regression effort, medium adapter effort. |
+
+Complete records for all candidate names were inspected, including reprints and
+nested consumers. First-error counts did not determine the estimate. Source
+combat events provide the largest credible immediate gain for this run's effort.
+The contract, engine reuse boundary and acceptance cases were stated before
+editing. Combat expiry was explicitly added to the selected context before
+implementation; it is part of the source combat-bonus shape, not a second slice.
+Single-card work was deferred.
+
+### Supported signatures, contexts and dependencies
+
+`compileSourceAttackTrigger(event, body Node, ctx scope) (optionFactory, error)`
+lowers these exact event declarations under `TriggerA/2`:
+
+```ron
+WhenACreatureAttacks(SinglePermanent(ThisPermanent))
+WhenACreatureAttacksAndIsntBlocked(SinglePermanent(ThisPermanent))
+```
+
+They use `mage.WhenEvent(mage.Attacks(mage.This), ...)` and
+`mage.WhenEvent(mage.AttacksUnblocked(mage.This), ...)`. The action body uses the
+existing `compileActions` and `actionPlan.build`, so every factory gets fresh
+abilities, targets and effects. The compiler's `scope.sourceAttack` enables
+bare `Trigger_ThatCreature` only inside this body. `compilePermanentRef` returns
+the typed `permanentSource` reference, whose engine value is `mage.This`.
+This is an exact alias for this source-only event context: the engine already
+captures the original source incarnation separately for each pending/stack
+instance. There is no shared mutable event slot. A host or arbitrary creature
+would need a separate event binding; it is not lowered to the source.
+
+`PermanentDealsDamage/3` now validates its source through the typed permanent
+reference compiler. It accepts `Trigger_ThatCreature` in this context and keeps
+rejecting target/host/unbound damage sources. This preserves the existing damage
+pipeline, source LKI and prevention. Existing spell source validation is retained.
+
+`compileTemporaryDuration` accepts bare `UntilEndOfCombat` in source attack
+bodies and uses `mage.Until(core.EndOfCombat, modifications...)`. Existing
+end-of-turn/source-tapped behavior is unchanged. Other contexts still reject
+this new duration. The full supported action-body shape includes existing
+source/target temporary layer modifications, payment continuations and actions;
+unsupported body declarations still fail the entire card.
+
+Inventory now assigns `permanent_filter` and `permanent_reference` roles below
+both combat event constructors, including rejected parents' descendants. Roles
+are syntax evidence, not support claims. Host events, combined events, blocking
+events, `Trigger_DefendingPlayer`, non-mana optional payments, delayed events,
+coin flips and band filters remain rejected. No rules are skipped.
+
+RON owns spelling, kinds/arity, lexical context and lowering. The engine owns
+attack/block legality and timing, APNAP, source/controller capture, clones,
+stack copies, source LKI, damage/prevention, continuous effects/expiry and
+transactional costs. All required contracts already exist. No new engine
+replacement-order or simultaneous-operation contract is claimed. No Go fallback,
+card-name branch, game-time declaration panic or partial production registry is
+introduced. Existing callers remain intact.
+
+### TDD and card-to-test mappings
+
+After correcting two initial test API mistakes (block assignment shape and
+battlefield accessor), the first gameplay tests failed with the expected
+`unsupported trigger` diagnostics for both event names and all four real cards.
+The adapter made the initial gameplay suite pass. An added casting fixture then
+failed because Merchant Ship correctly sacrificed itself without an Island;
+the fixture now supplies a tapped Island. Early broad runs failed on that same
+fixture. A further entry-attacking test initially assumed `ExecuteBlockers`
+leaves triggers queued; inspection showed that this search API resolves them,
+and the test now checks the resolved effects. Assertions were not weakened.
+These were test fixture/build errors, not environment or pre-existing failures.
+
+All test names below have prefix `TestRONSourceAttack`:
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Cave People | `Native`: declaration +1/-2, both blocked/unblocked, bonus survives combat and ends at cleanup. `OtherRules`: unpaid activation preserves tap state, paid tap/mana activation grants an opponent creature mountainwalk, cleanup removes it. `Identity`: source departure/return, phase/phase cycle, control changes, ability removal before/after detection, copies, clones and two factory instances. |
+| Hasran Ogress | `Native`: attack damage before block declaration on both paths. `OtherRules`: resolution-only payment, paid/declined/unaffordable outcomes, mana preservation, prevention, returned source and original trigger controller. Shared engine source-LKI tests remain in use. |
+| Merchant Ship | `Native`: own/defending Islands allow legal attack; life gain only after unblocked declaration. `OtherRules`: no-Island state sacrifice. Existing `TestRONLandDependence*` covers the shared attack restriction and state-trigger lifecycle. |
+| Murk Dwellers | `Native`: no bonus at attack declaration, unblocked +2/+0, no blocked bonus, expiry at end of combat. |
+| All four complete records | `CastingAndRegistry`: engine definition validation, fresh factory abilities, failed casting rollback, successful paid casting/entry, complete isolated test registry of four records. This is not production startup. `NoDeclaration`: entry attacking does not trigger attack declaration; Merchant Ship and Murk Dwellers still trigger when subsequently unblocked. |
+| Invalid declarations | `Invalid`: wrong source/host, tuple source, extra arguments, wrong filter, tuple event reference, wrong event reference, event player without a binding, tuple duration and cross-rule scope leakage. Existing invalid duration/source tests keep passing. |
+| Semantic reporting | `Inventory`: complete real records and both nested combat subjects have correct roles; collection tests retain exact measured counts and accepted Lightning Bolt behavior. |
+
+Compilation and gameplay progress are separate. This adds four complete-record
+behavior mappings; it does not verify the entire collection. Existing accepted
+RON gameplay tests are retained. Costs, targets, replacement ordering and batches
+continue through shared services rather than parallel RON implementations.
+
+### Measured gain, defects and next candidates
+
+Actual gain matches the estimate: **4 unique names / 4 records**, precisely
+Cave People, Hasran Ogress, Merchant Ship and Murk Dwellers. Strict and semantic
+loaders now report **1,459 compiled / 986 rejected records**, **514 accepted /
+472 rejected unique names**. No previously accepted name regresses. Collection
+loading still fails atomically; no production registry is published.
+
+Other direct consumers advance to their next explicit error:
+Mijae Djinn -> `FlipACoin_OnLose`; Icatian Skirmishers -> `BandedWith`;
+Time Elemental -> `CreateFutureTrigger`; Floral Spuzzem -> defending-player
+controller target; Farrel's Mantle -> unsupported host event;
+Farrel's Zealot -> `HavePermanentDealDamage` optional payment;
+Mindstab Thrull -> `SacrificePermanent` optional payment;
+Necrite -> `ControlledByPlayer` target filter. Farrel's Mantle has no source-only
+benefit; the seven other names have a supported event prerequisite.
+
+Inventory retains 72,938 nodes and 8,530 signatures; unknown-role occurrences
+fall to **12,004**. Source hashes are unchanged, so no vocabulary refresh is
+needed. Collection-wide `engine_validated` and `behavior_verified` remain null.
+No source defect was corrected. Gaea's Avenger remains an unverified data concern;
+all prior ledger defects remain open. No environment blocker was observed.
+
+Ranked next candidates to reassess from fresh complete records:
+1. Finite recipient prevention: high-effort shared allocation prerequisite with
+   nine otherwise ready consumers.
+2. Typed delayed-trigger capture: Time Elemental now reaches this gap; compare
+   Stone Giant, Goblin Kites, Rakalite and other nested consumers/prerequisites.
+3. All-zone CDA characteristics for the six names above, with the Avenger data
+   audit before gameplay claims.
+
+Slice files: new `source_attack.go` and `source_attack_test.go`; `compiler.go`,
+`permanent_scope.go`, `triggers.go`, `source_tapped_duration.go`, `inventory.go`
+and `inventory_test.go` in `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. No DSL deletion is attempted
+without the required fresh caller/removal-gate audit. Runtime cutover, complete
+collection gameplay, Go-card/generator deletion and unused DSL cleanup remain
+open. Final command results follow after checks complete; commit hash is
+reported in the final response.
+
+Final validation for this slice:
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'Test(RONSourceAttack\|Inventory)' -count=1` | PASS, after expected TDD failures and the fixture corrections described above. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; formatting/import changes reviewed. Final package/short/full suites, build and vet ran afterward. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, collection rejection: 1,459 compiled / 986 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same counts/issues, unchanged source hashes, 472 rejected unique names. |
+
+No check blocker remains. All earlier broad failures were this slice's corrected
+casting fixture. One descriptive commit contains only the slice files listed
+above; the user's `.gitignore` and execution-design edits remain unstaged.
+No further slice is begun.

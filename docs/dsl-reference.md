@@ -2361,3 +2361,21 @@ and `ControlsA`. The state event accepts only `SinglePlayer(You)`. Actions and
 targets use the existing action compiler and fresh factory declarations.
 Other filters, chosen players, Aura hosts and inverse attack conditions remain
 unsupported in these contexts. The entire collection still fails strict loading.
+
+## RON source attack triggers
+
+`TriggerA(WhenACreatureAttacks(SinglePermanent(ThisPermanent)), actions)`
+uses `mage.Attacks(mage.This)`. Replace the event with
+`WhenACreatureAttacksAndIsntBlocked` to use `mage.AttacksUnblocked(mage.This)`.
+Only the source permanent is supported in these two event contexts.
+`Trigger_ThatCreature` is a typed source reference inside the action body. The
+engine captures the source incarnation for each pending ability. The reference
+is not available in another rule, and it does not select a returned permanent.
+`PermanentDealsDamage` accepts this reference as its source in this context.
+
+Temporary layer modifications in these action bodies accept the bare duration
+`UntilEndOfCombat` as well as the existing `UntilEndOfTurn` and source-tapped
+forms. Combat expiry uses `mage.Until(core.EndOfCombat, modifications...)`.
+Other temporary-modification contexts retain their existing duration support.
+Host events, event defending-player references, delayed events and non-mana
+optional payments need separate adapters. These forms remain rejected.

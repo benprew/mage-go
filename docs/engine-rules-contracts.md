@@ -2475,3 +2475,42 @@ Evidence: `TestRONLandDependenceCards`, `TestRONLandDependenceStateInstances`,
 mappings cover Dandân, Sea Serpent, Pirate Ship, Island Fish Jasconius and
 Vodalian Knights. Seasinger, Merchant Ship and Giant Shark retain other blockers.
 This adapter does not establish general state filters or multiplayer combat.
+
+## RON source attack event lowering
+
+The compiler now lowers source-only `WhenACreatureAttacks/1` and
+`WhenACreatureAttacksAndIsntBlocked/1` to the existing `Attacks(This)` and
+`AttacksUnblocked(This)` patterns. The argument must be
+`SinglePermanent(ThisPermanent)`. Each factory builds fresh abilities, effects
+and target declarations. No new engine event or state service is introduced.
+
+The first event occurs on attacker declaration (CR 508.3a). The second occurs
+when blockers are declared and the attacker is unblocked (CR 509.1h, 509.3g).
+Entry attacking does not constitute an attack declaration (CR 508.4).
+`Trigger_ThatCreature` denotes the ability's captured source incarnation, through
+`mage.This`; it does not use a separate mutable event slot. Pending abilities
+keep their controller and source after control changes or departure (CR 603.3,
+608.2h). A returned permanent has a new incarnation (CR 400.7). Phasing before
+detection disables the source; phasing after detection leaves the pending
+ability but prevents actions on the absent object (CR 702.26).
+
+`UntilEndOfCombat` in a source attack action body reuses the engine's temporary
+continuous effect expiry. It ends as combat ends, after end-of-combat priority,
+while `UntilEndOfTurn` remains until cleanup. Removing a creature from combat
+before this time does not terminate either bonus. Target selection, legality,
+optional mana payment, damage prevention and source LKI retain their existing
+shared contracts; no replacement-order or simultaneous-operation contract is
+changed.
+
+Evidence: `TestRONSourceAttackNative` runs real Cave People, Hasran Ogress,
+Merchant Ship and Murk Dwellers through native attack/block steps, checking both
+blocked and unblocked attacks and both durations. `Identity` checks source
+incarnations, pending control changes, phasing, ability removal, two factories,
+cloned games and copied triggers. `OtherRules` checks Ogress resolution payment,
+decline, affordability, prevention and returned source, Cave People activation
+cost rollback and landwalk cleanup, and Merchant Ship's no-Island state trigger.
+`CastingAndRegistry` checks all four complete declarations, fresh factory
+instances, paid casting and failed payment rollback in an isolated test registry.
+`NoDeclaration`, `Invalid` and `Inventory` cover entry attacking, rejected
+contexts and nested semantic roles. All these names have prefix
+`TestRONSourceAttack`. Collection-wide runtime loading remains incomplete.
