@@ -6,53 +6,21 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// Cross-validation tests against XMage behavior, focused on engine-level
-// banding rules (CR 702.22 / formerly 702.21). XMage reference:
-// ~/src/xmage/Mage/src/main/java/mage/game/combat/CombatGroup.java
-//
-// The mg-oracle banding combat path is in pkg/mage/combat.go:
-//   - doBandedAttackDamage (combat.go:627)
-//   - doBlockingBandDamage (combat.go:550)
-//
-// XMage's CombatGroup.attackerDamage/blockerDamage prompts the controlling
-// player (per attackerAssignsCombatDamage / defenderAssignsCombatDamage) for
-// a free distribution via getMultiAmountWithIndividualConstraints, ignoring
-// the lethal-first ordering required by CR 510.1c.
-
-// TestBandingXVal_AttackerCanFreelyAssignDamageToBlockers exercises CR 702.22:
-// when the attacking band contains a creature with banding, the attacking
-// player chooses how the band's combined combat damage is distributed across
-// blockers, ignoring the assignment-order/lethal-first rule of CR 510.1c.
-//
-// Setup: a 3/3 + 1/1 band (Hill Giant + Benalish Hero, banding) — total power
-// 4 — attacks. Two PlayerB blockers each block one band member: a Camel (0/1)
-// and a Craw Wurm (6/4). The attacker assigns all 4 damage to Craw Wurm.
-//
-// Expected (XMage): Camel takes 0, lives; Craw Wurm takes 4 = lethal, dies.
-// Current (mg-oracle): doBandedAttackDamage greedily fills blockers in order
-// (combat.go:705-722) without consulting CombatDamageAssigner — so Camel
-// takes 1 (lethal), Craw Wurm takes 3 (survives). The scripted assignment
-// is silently ignored.
+// A blocker without banding keeps the choice with the attacking player.
+// Each source can assign all its damage to the same blocker.
 func TestBandingXVal_AttackerCanFreelyAssignDamageToBlockers(t *testing.T) {
 	g := NewTestGame(t)
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Hill Giant")
 	g.AddCard(core.ZoneBattlefield, PlayerA, "Benalish Hero")
-	g.AddCard(core.ZoneBattlefield, PlayerB, "Camel")
+	g.AddCard(core.ZoneBattlefield, PlayerB, "Wall of Wood")
 	g.AddCard(core.ZoneBattlefield, PlayerB, "Craw Wurm")
 	g.FormBand(1, PlayerA, "Hill Giant", "Benalish Hero")
 	g.Attack(1, PlayerA, "Hill Giant", "Benalish Hero")
-	g.Block(1, PlayerB, "Camel", "Hill Giant")
+	g.Block(1, PlayerB, "Wall of Wood", "Hill Giant")
 	g.Block(1, PlayerB, "Craw Wurm", "Benalish Hero")
 
-	// Attacker (controller of the banding band) assigns all 4 damage to Craw
-	// Wurm. Per CR 702.22 this is legal because banding suppresses the
-	// lethal-first ordering for the attacking band's outgoing damage.
-	g.AssignCombatDamage("Hill Giant", map[string]int{
-		"Camel":     0,
-		"Craw Wurm": 4,
-	})
-	// Distribute the blockers' incoming damage among band members so the
-	// step doesn't crash / default. (Hill Giant absorbs all 6 from Craw Wurm.)
+	g.AssignCombatDamage("Hill Giant", map[string]int{"Craw Wurm": 3})
+	g.AssignCombatDamage("Benalish Hero", map[string]int{"Craw Wurm": 1})
 	g.ChooseBandingDistribution(PlayerA, map[string]int{
 		"Hill Giant":    6,
 		"Benalish Hero": 0,
@@ -61,7 +29,7 @@ func TestBandingXVal_AttackerCanFreelyAssignDamageToBlockers(t *testing.T) {
 	g.Execute()
 
 	g.AssertGraveyardCount(PlayerB, "Craw Wurm", 1)
-	g.AssertPermanentCount(PlayerB, "Camel", 1)
+	g.AssertPermanentCount(PlayerB, "Wall of Wood", 1)
 }
 
 // TestBandingXVal_DefenderCanFreelyAssignDamageToAttackers exercises the

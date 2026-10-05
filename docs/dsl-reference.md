@@ -3129,3 +3129,23 @@ Neither shape reveals a card moved to hand. Complete Demonic Tutor and Untamed
 Wilds records have gameplay tests in `TestRONLibrarySearchCards` and
 `TestRONLibrarySearchCopiesAndEntry`; declaration, inventory, source-controller
 and entry contracts have separate tests in the same file.
+
+## Source identity for outgoing damage from an attacking band
+
+Ordinary attacking bands now assign outgoing damage separately for each member.
+The existing `CombatDamageAssigner` receives the member and its own amount.
+When an ordinary banding blocker changes the chooser, `BandingDamageAssigner`
+or `BandingDamageDistributor` receives each attacking source separately.
+Source trample permits an unassigned remainder for the defender only after the
+complete band's assignments supply lethal damage to all blockers. Other members'
+assigned damage and deathtouch can supply lethal damage; they cannot grant trample.
+Invalid maps use a legal default plan. Caller maps remain unchanged.
+
+Every packet keeps its own incarnation and damage information through prevention,
+redirection, source departure, actual damage histories, lifelink and game cloning.
+`TestRONBandOutgoingDamage` maps complete Benalish Hero, Timber Wolves, Mesa
+Pegasus, War Elephant, Icatian Phalanx, War Mammoth and Amulet of Kroog records to
+this native combat interaction. This resolves the outgoing aggregation prerequisite
+listed above. No additional RON declaration is accepted. See
+[engine-rules-contracts.md](engine-rules-contracts.md) for the exact context,
+validation rules and engine tests.

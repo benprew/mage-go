@@ -569,38 +569,6 @@ func mergeBlockerOrder(preferred, original []uuid.UUID) []uuid.UUID {
 	return out
 }
 
-// validateBandedBlockerAssignment is the banding-relaxed counterpart of
-// validateBlockerAssignment. Per CR 702.22, the attacking player may
-// distribute the band's combined damage among the blockers freely, so the
-// lethal-first ordering of CR 510.1c does not apply. Total must equal the
-// attacker's power; with trample, total may be less only if every blocker
-// has been assigned at least lethal damage.
-func validateBandedBlockerAssignment(g *Game, source *Permanent, blockers []*Permanent, assignment map[uuid.UUID]int, totalPower int, hasTrample bool) bool {
-	total := 0
-	allLethal := true
-	for _, blk := range blockers {
-		if blk == nil {
-			continue
-		}
-		dmg := assignment[blk.ID()]
-		if dmg < 0 {
-			return false
-		}
-		total += dmg
-		needed := lethalCombatDamageRequired(source, blk, g)
-		if dmg < needed {
-			allLethal = false
-		}
-	}
-	if total > totalPower {
-		return false
-	}
-	if total < totalPower && (!hasTrample || !allLethal) {
-		return false
-	}
-	return true
-}
-
 // validateBlockerAssignment checks the CR 510.1c constraint: damage is
 // assigned to blockers in order, and a blocker can only be assigned non-lethal
 // damage if every blocker before it in the order has been assigned at least
@@ -765,16 +733,6 @@ func (c *Combat) doBandedAttackDamage(g *Game, plan *combatDamagePlan, bandMembe
 		}
 	}
 
-	// Does the band contain any member with trample?
-	hasTrample := false
-	for _, memberID := range bandMemberIDs {
-		member := g.FindPermanent(memberID)
-		if member != nil && member.HasKeyword(Trample) {
-			hasTrample = true
-			break
-		}
-	}
-
 	if !isBlocked {
 		// Unblocked: each member independently deals its power to the defending player.
 		for _, memberID := range bandMemberIDs {
@@ -799,63 +757,7 @@ func (c *Combat) doBandedAttackDamage(g *Game, plan *combatDamagePlan, bandMembe
 		return
 	}
 
-	// Blocked band.
-
-	// 1. Band's total power (from members that deal damage in this step) goes to blockers.
-	totalBandPower := 0
-	var primaryAttacker *Permanent
-	for _, memberID := range bandMemberIDs {
-		member := g.FindPermanent(memberID)
-		if member == nil {
-			continue
-		}
-		if c.DealsDamageInStep(member, isFirstStrikeStep) {
-			totalBandPower += combatDamageValue(member, g)
-			if primaryAttacker == nil {
-				primaryAttacker = member
-			}
-		}
-	}
-	if primaryAttacker != nil && totalBandPower > 0 {
-		// CR 702.22: the attacking player chooses how the band's combined
-		// damage is distributed among blockers, ignoring the lethal-first
-		// ordering of CR 510.1c. Consult CombatDamageAssigner; if absent or
-		// invalid, fall back to greedy lethal-first.
-		blockerPerms := make([]*Permanent, 0, len(allBlockerIDs))
-		for _, bid := range allBlockerIDs {
-			if blk := g.FindPermanent(bid); blk != nil {
-				blockerPerms = append(blockerPerms, blk)
-			}
-		}
-		attackingPlayer := g.GetPlayer(primaryAttacker.ControllerID())
-		var assignment map[uuid.UUID]int
-		if assigner, ok := attackingPlayer.(CombatDamageAssigner); ok && len(blockerPerms) > 0 {
-			assignment = assigner.GetCombatDamageAssignment(g, primaryAttacker, blockerPerms, totalBandPower)
-			if assignment != nil && !validateBandedBlockerAssignment(g, primaryAttacker, blockerPerms, assignment, totalBandPower, hasTrample) {
-				assignment = nil
-			}
-		}
-
-		var remainingDmg int
-		if assignment != nil {
-			usedDmg := 0
-			for _, blk := range blockerPerms {
-				if dmg := assignment[blk.ID()]; dmg > 0 {
-					plan.permanent(g, blk, dmg, primaryAttacker.ID())
-					usedDmg += dmg
-				}
-			}
-			remainingDmg = totalBandPower - usedDmg
-		} else {
-			remainingDmg = dealDefaultBlockedCombatDamage(g, plan, primaryAttacker, blockerPerms, totalBandPower, hasTrample)
-		}
-		if remainingDmg > 0 && hasTrample {
-			defender := g.GetPlayer(defenderID)
-			if defender != nil {
-				plan.player(g, defender, remainingDmg, primaryAttacker.ID())
-			}
-		}
-	}
+	c.assignOutgoingBandDamage(g, plan, bandMemberIDs, allBlockerIDs, defenderID, isFirstStrikeStep)
 
 	c.assignIncomingBandDamage(g, plan, bandMemberIDs, allBlockerIDs, isFirstStrikeStep)
 }

@@ -17102,3 +17102,178 @@ Ranked next candidates to reassess:
 Changed files: `pkg/mage/effect_cards.go`, `library_search_test.go`, `doc.go`;
 `pkg/mage/dsl/ron/library_search.go`, `library_search_test.go`, `compiler.go`,
 `inventory.go`, `inventory_test.go`; API/rules docs and this ledger entry.
+
+## Run 2026-10-05: OUTGOING-ATTACKING-BAND-SOURCES
+
+Status: completed engine prerequisite; final checks are recorded below.
+The user's initial `.gitignore`, execution-design and progress-ledger edits,
+and untracked `mtgish-ron-completed.md`, are preserved. Only this new entry is
+staged from the already modified ledger. No second slice starts.
+
+### Fresh evidence and candidate selection
+
+Baseline compiler tests (`-count=1`), short engine tests (`-count=1`) and
+`make build` passed. Strict loading exited 1 for collection rejection:
+**1,579 compiled / 866 rejected records**, **581 accepted / 405 rejected unique
+names**. Positioned semantic inspection reports **2,445 records / 986 names /
+72,951 nodes / 8,540 signatures / 9,809 unknown-role occurrences**. Complete
+candidate records, including nested forms and reprints, were inspected; first
+errors were not treated as unlock estimates. The vocabulary snapshot supplies
+syntax evidence only. This run uses fresh loader and inventory evidence.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers; downstream benefit | Effort |
+| --- | --- | --- | --- |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods, Gaea's Avenger; **0 adapter-only / 5 after prerequisite**, Avenger still blocked by data. | Needs owner/controller-aware all-zone characteristic queries, CDA layers, named counts and copiable definitions. Avenger's record counts your artifacts instead of opponents'. Enables all-zone P/T queries for five complete consumers and later CDAs. | High: new engine characteristic contract, compiler values, all-zone/copy/layer tests. |
+| Activated modal scopes | Balm of Restoration, Pyramids, Triassic Egg; **1 now / up to 3 with further work**. | Balm's costs and finite prevention exist. Pyramids still needs attached-land filtering and destruction replacement. Egg needs source-counter conditions, hand entry and corrected graveyard mode/targets. Enables mode-local activated target scopes. | Medium: factory/mode isolation, target choices, payments, copying and legality. |
+| Outgoing attacking-band source assignment, selected | **19** ordinary `Banding` consumers listed below; **0 new compiler unlocks**. Improves a shared gameplay prerequisite for **10 already accepted** consumers and finite shields. | Engine currently attributes combined outgoing damage to one member and shares trample/deathtouch. Existing source capture, incoming assignments and simultaneous damage provide dependencies. Separate outgoing sources enable exact prevention, lifelink, damage histories and shared lethal assignment. | Low/medium: replace one aggregation path, validate source maps, reuse pipeline, synthetic and RON combat evidence. |
+
+Selection rationale: a missing shared engine contract breaks already accepted
+multi-card gameplay, even though syntax compiles. Fixing this bounded path gives
+concrete benefit to ten accepted banding consumers and their prevention
+interactions, with substantially less effort than all-zone characteristics.
+Activated modes immediately unlock only one card. The selected contract, reuse
+boundary and acceptance cases were stated before implementation. Zero estimated
+compiler unlocks matches the actual zero gain. Gameplay and compilation remain
+separate measurements.
+
+Ordinary `Banding` consumers: Ayesha Tanaka, Battering Ram, Benalish Hero, Camel,
+Fortified Area, Helm of Chatzuk, Icatian Infantry, Icatian Phalanx, Icatian
+Skirmishers, Knights of Thorn, Mesa Pegasus, Mishra's War Machine, Nalathni
+Dragon, Pikemen, Timber Wolves, Tolaria, Urza's Avenger, Wall of Caltrops and
+War Elephant. Accepted consumers are Benalish Hero, Fortified Area, Helm of
+Chatzuk, Icatian Infantry, Icatian Phalanx, Knights of Thorn, Mesa Pegasus,
+Pikemen, Timber Wolves and War Elephant. Other consumers retain their existing
+compiler blockers. Full records of War Mammoth, Amulet of Kroog, Hill Giant,
+Craw Wurm and Wall of Wood were also inspected for interaction/regression tests.
+
+### Exact contract, contexts and engine reuse
+
+No compiler adapter or RON shape is added. Existing ordinary `Banding` rules
+and keyword grants use the repaired engine attacking-band outgoing path.
+`CombatDamageAssigner.GetCombatDamageAssignment(g *Game, attacker *Permanent,
+blockers []*Permanent, totalPower int) map[uuid.UUID]int` keeps its signature
+and now receives each attacking source and its own positive damage amount.
+Assignments have no lethal order. A current ordinary banding blocker changes
+the chooser to the defender (CR 702.22j). That chooser uses the existing
+`BandingDamageAssigner.GetBandingDamageAssignment(g *Game, source *Permanent,
+recipients []*Permanent, amount int) map[uuid.UUID]int`, then the existing
+`BandingDamageDistributor.GetBandingDamageDistribution(members []*Permanent)
+map[uuid.UUID]int`, once per outgoing source. Incoming legacy aggregate requests
+keep their prior behavior. No signature or unrelated combat path changes.
+
+Source maps must use eligible blocker IDs, nonnegative amounts and at most the
+source amount. Nontrample sources assign the complete amount. Only a trampling
+source can leave a remainder for the defender. The complete band's assignments
+must supply lethal damage to every blocker before that remainder is legal;
+marked damage, other band members' assignments and assigned deathtouch damage
+count (CR 702.19b). Caller maps are copied. Validation subtracts available
+amounts to avoid overflow. Missing/invalid nontrample defending-band decisions
+use the existing bounded number service. Other invalid complete plans use a
+legal default plan, assigning nontrample sources before trampling sources and
+retaining shared lethal damage. Decisions make no payments or live damage.
+
+Each source keeps its captured ID, incarnation, controller, characteristics and
+keywords. Phasing, departure, return, removal and control changes cannot restore
+old combat membership. Zero/negative sources do not reduce another member's
+damage. First/double strike use `DealsDamageInStep`. A blocked band with no
+blockers deals only its trampling members' own damage to the defender. The
+existing `DamageSource`, `PermanentDamageAssignment`, `PlayerDamageAssignment`,
+`DealSimultaneousDamage`, finite shield allocation, replacement priority/rechecks,
+histories, lifelink and game cloning execute the result. All assignments precede
+one batch, and notifications follow that batch. No parallel damage system,
+global result slot, name branch, factory fallback or partial registry is added.
+
+The `implement-engine` skill supplied the shared-engine workflow. Compiler
+spelling and scope logic remain in `ron`; there is no new binding, cost or target
+plan. No DSL export is removed. The old private band-aggregate validator is
+removed after its only caller is replaced; a repository search found no other
+caller. Complete loading, gameplay/test migration and startup gates remain
+unsatisfied, so Go definitions and generators remain in place.
+
+### TDD and card-to-test mappings
+
+New engine and RON gameplay tests first failed for the expected aggregate source,
+shared trample, invalid totals, chooser and source-history behavior. Initial
+fixture compile errors used a nonexistent card type and the wrong `PhaseIn`
+argument; these were corrected before the expected runtime failures were
+confirmed. Later fixture corrections used live pointers after clone/payment,
+separate damage-step calls, and the established single-use redirection contract.
+No assertion was removed to hide an implementation failure.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Benalish Hero with Timber Wolves, Mesa Pegasus, War Elephant or Icatian Phalanx | `TestRONBandOutgoingDamage`: complete RON casting costs, unpaid rollback, timing, native band combat, separate outgoing histories and pending-clone isolation. |
+| Amulet of Kroog and War Mammoth | Same real RON test: unpaid activation rollback, mana/tap payment, targeted finite shield resolution, allocation across distinct attacking sources, damage totals and clone isolation. |
+| Independent sources, LKI and actual results | `TestBandOutgoingDamageSources`, `IndependentAssignments`, `RetainedSource`, `KeywordsStayWithSource`: separate amounts, reused caller-map isolation, finite shields, source histories, actual lifelink, deathtouch, notifications and replacement-time departure/return. |
+| Legality and assignment chooser | `InvalidAssignments`: nil/empty, under/over, negative, foreign IDs, integer overflow and illegal trample. `BlockingBandChooser`, `LegacyDefendingChoices`: defender priority, per-source requests and legacy-map preservation. |
+| Trample and simultaneous lethal assignment | `TrampleIsPerSource`, `SharedLethal`: trampling versus nontrampling members, missing blockers, normal and deathtouch damage from another member. |
+| Timing, identity, phasing and clones | `Steps`, `IdentityAndClone`: first/double strike, removal, return, phase cycle, control changes, negative source power and independent cloned combat. |
+| Replacement order and capacity | `ReplacementOrder`, `Unpreventable`: single-use redirection versus prevention order, shield allocation, actual lifelink, rechecks and retained unused capacity. |
+| Declarations and retained regression | `TestRONBandOutgoingInvalidDeclarations`: malformed banding and cost/action contexts. Existing incoming-band tests still pass. `TestBandingXVal_AttackerCanFreelyAssignDamageToBlockers` retains lethal Craw Wurm and surviving-other-blocker assertions with separate legal 3+1 assignments. |
+
+The retained regression had two obsolete assumptions exposed by broad tests:
+Hill Giant assigned the whole band's four damage, and the attacking player
+chose despite Camel's banding. CR 702.22j gives that choice to the defender.
+Wall of Wood supplies a blocker without banding; each attacking source now
+assigns its own damage to Craw Wurm. The original outcome assertions remain,
+and new engine tests independently cover the defending banding chooser.
+
+Seven unique complete RON records gain outgoing interaction evidence; this is
+not collection-wide or complete-card certification. Mesa Pegasus and Icatian
+Phalanx gain new native outgoing-combat mappings. Other accepted banding cards
+benefit from the engine contract but still need their own full interaction maps.
+All-zone CDAs, "bands with other", non-band/blocking-band assignment paths and
+the old lethal-order policy on other combat paths remain separate slices.
+
+### Source defects, final evidence and next candidates
+
+Local Oracle data confirms two deferred source defects: `data/ATQ.json` says
+Gaea's Avenger counts opponents' artifacts; its RON CDA counts `You` in both
+power and toughness. `data/LEG.json` says Triassic Egg's second mode returns a
+target creature card from your graveyard; both RON modes currently put a creature
+from hand onto the battlefield. Neither record is changed in this slice.
+Rules evidence for this slice comes from local CR 510.1a/c/e, 510.2/4,
+702.19a/b/d and 702.22e/f/g/h/j/k, plus existing incarnation/phasing contracts.
+No environment failure remains.
+
+Fresh strict loader diagnostics are byte-equivalent JSON to the baseline:
+**1,579 compiled / 866 rejected records**, **581 accepted / 405 rejected names**.
+Inventory remains **72,951 nodes / 8,540 signatures / 9,809 unknown-role
+occurrences**. All twelve source hashes are unchanged, so the vocabulary source
+snapshot needs no refresh. Both loader modes exit 1 and publish no registry.
+Example remaining diagnostics: Animate Artifact (conditional `AddCardtype`),
+Animate Dead (`EnchantGraveyardCard`), Ankh of Mishra (trigger subject `IsCardtype`).
+Behavior reporting still requires explicit test mappings; it is not inferred
+from compiled counts.
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler tests, short engine tests and `make build` | PASS. |
+| New tests before implementation | Expected runtime contract failures confirmed after fixture compile repairs. |
+| Focused engine, RON band tests and retained banding regression, all `-count=1` | PASS; engine and RON focused tests repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS after lint; additional skill verification. |
+| `make test` | PASS. First broad run exposed the obsolete aggregate/Camel fixture; corrected with rules evidence and original outcome assertions retained. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. First run found type-assertion-chain and slice preallocation issues; corrected. Automatic formatting reviewed. |
+| `git diff --check` | PASS, including this ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,579 compiled / 866 rejected; final post-lint diagnostics identical to baseline. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same record/name counts and roles; source hashes unchanged. |
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. All-zone count CDA prerequisite and adapters: five credible complete
+   consumers; investigate Avenger's opponent-count defect together with its
+   eventual adapter and correct all identical source records with evidence.
+2. Activated modal scopes: Balm now, Pyramids and Egg after explicit further
+   dependencies and the Egg source correction.
+3. Current-CR non-band combat assignment and remaining blocking-band decision
+   validation: remove the old lethal-order policy without weakening trample,
+   source identity or simultaneous assignment contracts.
+
+Changed files: `pkg/mage/band_outgoing_damage.go`, `band_outgoing_damage_test.go`,
+`combat.go`, `player.go`, `doc.go`, `gametest/banding_xval_test.go`;
+`pkg/mage/dsl/ron/band_outgoing_damage_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry. Commit only after final
+checks pass; the final response reports its hash. User changes remain unstaged.

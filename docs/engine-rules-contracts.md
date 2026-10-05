@@ -3422,3 +3422,57 @@ checks departure, return, phasing and control changes after activation.
 These services do not establish multiple-card searches, reveal/result bindings,
 restricted search zones or new replacement types. Strict collection loading,
 collection-wide gameplay coverage and runtime cutover remain unfinished.
+
+## Outgoing damage from ordinary attacking bands: separate sources
+
+The outgoing attacking-band path now saves each current member's positive damage
+amount, source incarnation, controller and damage information before replacement
+choices (CR 510.1a, 510.2, 702.22g). Each packet uses that source's own keywords.
+The band does not share trample, deathtouch or lifelink. Returned, phased and
+removed members cannot assign damage; a phase cycle does not restore combat
+membership. First strike and double strike use the existing step service.
+
+`CombatDamageAssigner.GetCombatDamageAssignment` keeps its signature and receives
+one member and that member's amount per call. Outgoing assignments have no lethal
+order (CR 510.1c). A current blocker with ordinary banding instead gives the
+choice to the defending player (CR 702.22j), through `BandingDamageAssigner`,
+then the existing `BandingDamageDistributor`. A missing or invalid nontrample
+blocking-band answer uses bounded number choices. The latter interface now
+receives separate source requests on this path; its signature stays unchanged.
+Incoming aggregate recipient requests retain their prior contract.
+
+An assignment map contains only eligible blocker IDs and nonnegative amounts.
+Validation subtracts from the source amount to prevent integer overflow. A
+nontrample source must assign its complete amount. Only a source with trample
+may leave a remainder for the defender. The complete band assignment must supply
+lethal damage to every blocker before any remainder can go to the defender
+(CR 702.19b). Marked damage and assignments from other band members count;
+positive damage assigned by a source with deathtouch supplies lethal damage.
+Prevention does not change this check. Caller maps are copied before another
+source is queried. Invalid complete plans use a legal default plan: nontrample
+sources first, then trample sources, retaining shared lethal assignments. No
+payment, resource expenditure or live damage occurs during assignment.
+
+A blocked band with no remaining blockers assigns only each trampling member's
+own amount to the defender (CR 510.1c, 702.19d). All outgoing and incoming packets
+join the existing simultaneous combat batch. Prevention allocation, single-use
+redirection, affected-player replacement order, rechecks, actual damage histories,
+lifelink and notifications use the shared damage pipeline. Replacement-time
+source departure and return cannot change captured source information. Pending
+clones retain separate combat and shield state.
+
+Evidence: `TestBandOutgoingDamageSources`, `TrampleIsPerSource`, `SharedLethal`,
+`InvalidAssignments`, `BlockingBandChooser`, `Steps`, `IdentityAndClone`,
+`RetainedSource`, `IndependentAssignments`, `ReplacementOrder`, `Unpreventable`,
+`LegacyDefendingChoices` and `KeywordsStayWithSource`. `TestRONBandOutgoingDamage`
+casts full Benalish Hero records with Timber Wolves, Mesa Pegasus, War Elephant
+or Icatian Phalanx, and activates a full Amulet of Kroog record to protect a
+RON War Mammoth blocker. It checks unpaid rollback, casting/activation timing,
+source histories, finite prevention and native cloned combat. Malformed banding
+rules and incompatible contexts still fail compilation.
+
+This section supersedes the outgoing aggregation gap recorded in the incoming
+band contract above. It establishes the ordinary attacking-band path. The
+separate non-band and blocking-band combat paths, their old lethal-order policy,
+"bands with other", and multi-blocker damage choices outside this path are not
+changed. No new RON syntax is accepted and no collection loading gate changes.

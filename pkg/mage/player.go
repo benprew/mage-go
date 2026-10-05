@@ -24,9 +24,10 @@ type BandingDamageDistributor interface {
 	GetBandingDamageDistribution(members []*Permanent) map[uuid.UUID]int
 }
 
-// BandingDamageAssigner permits separate assignments for each blocking source.
-// The engine checks the full amount before it adds damage to the batch.
-// A nil or invalid assignment uses bounded number choices instead.
+// BandingDamageAssigner permits separate source assignments in band combat.
+// Incoming assignments must use the full amount. Outgoing trample assignments
+// can leave damage for the defender after shared lethal damage checks.
+// A nil or invalid incoming assignment uses bounded number choices instead.
 type BandingDamageAssigner interface {
 	GetBandingDamageAssignment(g *Game, source *Permanent, recipients []*Permanent, amount int) map[uuid.UUID]int
 }
@@ -37,6 +38,9 @@ type BandingDamageAssigner interface {
 // "lethal damage to each blocker before the next" constraint. Returning a
 // nil order or distribution falls back to the engine default (BlockerIDs
 // order, lethal-first greedy).
+// For an attacking band, the engine asks once for each source. Its assignments
+// have no lethal order. Only a source with trample can leave damage for the
+// defender, and all blockers must receive lethal damage in the complete plan.
 type CombatDamageAssigner interface {
 	GetBlockerOrder(g *Game, attacker *Permanent, blockers []*Permanent, totalPower int) []uuid.UUID
 	GetCombatDamageAssignment(g *Game, attacker *Permanent, blockers []*Permanent, totalPower int) map[uuid.UUID]int
