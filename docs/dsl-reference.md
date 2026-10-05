@@ -82,6 +82,16 @@ other durations remain unsupported. The tapped-source duration below also
 accepts these modifications. Evidence is in
 `TestRONTemporaryKeyword*` and `TestRONTemporaryLayersDeclareTypedReads`.
 
+Temporary `CreatePermanentLayerEffectUntil/3` also accepts
+`SetPower(Integer(n))` for any integer literal. It sets base power in layer 7b
+through `SetBasePower` and preserves base toughness. Bonuses and counters still
+apply in layer 7c. Existing typed subjects and durations apply. Dynamic values
+and static `SetPower` remain unsupported. Island of Wak-Wak requires a flying
+creature target; Singing Tree requires an attacking creature target. The engine
+checks these restrictions at announcement and resolution. After resolution,
+losing flying or leaving combat does not end the effect. Evidence:
+`TestRONTemporaryPower*`.
+
 Run the full collection check with:
 
 ```sh

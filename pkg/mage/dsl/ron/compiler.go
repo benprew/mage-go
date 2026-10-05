@@ -1103,6 +1103,14 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		var modifications []func(instanceBindings) mage.ContinuousModification
 		for _, part := range parts {
+			if part.Name == "SetPower" {
+				build, err := compileTemporaryPower(part, subject)
+				if err != nil {
+					return nil, err
+				}
+				modifications = append(modifications, build)
+				continue
+			}
 			if part.Name == "LosesAbility" {
 				build, err := compileTemporaryKeywordRemoval(part, subject)
 				if err != nil {

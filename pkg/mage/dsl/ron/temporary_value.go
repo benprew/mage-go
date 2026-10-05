@@ -4,6 +4,26 @@ import "github.com/benprew/mage-go/pkg/mage"
 
 type resolutionValueFactory func(instanceBindings) mage.ResolutionValue
 
+func compileTemporaryPower(n Node, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	value := n.Args[0]
+	if value.Name != "Integer" {
+		return nil, unsupported(value, "temporary base power value")
+	}
+	if err := arity(value, 1); err != nil {
+		return nil, err
+	}
+	if value.Args[0].Kind != IntegerNode {
+		return nil, problem(value.Args[0], "expected integer")
+	}
+	power := value.Args[0].Integer
+	return func(bindings instanceBindings) mage.ContinuousModification {
+		return mage.SetBasePower(subject.build(bindings), mage.Fixed(power))
+	}, nil
+}
+
 func compileTemporaryPTX(n Node, ctx scope, subject permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error) {
 	if err := arity(n, 3); err != nil {
 		return nil, err

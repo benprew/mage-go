@@ -2264,3 +2264,25 @@ including repeated and simultaneous damage, Aura departure/phasing, source
 return, ability removal, combat damage, protection from white and spell damage.
 `TestRONEnchantedFilterReplacementOrder` verifies affected-player ordering and
 recipient rechecks. No finite prevention allocation contract is added.
+
+## RON temporary base power
+
+RON `SetPower(Integer(n))` in `CreatePermanentLayerEffectUntil/3` lowers to
+`SetBasePower(PermanentRef, ResolutionValue) ContinuousModification`. This uses
+the existing layer 7b service (CR 613.4b); base toughness stays unchanged, and
+layer 7c bonuses and counters still apply. The compiler creates a typed subject
+for each factory instance. Existing spell, activation and trigger action lists
+and temporary durations apply. Dynamic and static values remain unsupported.
+
+Island of Wak-Wak and Singing Tree use the existing tap cost and target
+services. Flying or attacking status is checked again at resolution (CR 608.2b).
+Phasing and controller changes remove a creature from combat (CR 506.4), so
+Singing Tree cannot resolve on that creature after either operation. Once the
+effect starts, later combat removal, control changes or a phase cycle do not
+end it (CR 611.2c). Returned objects have new incarnations. Source departure
+does not end the effect; cleanup and cloned games use the existing independent
+lifecycle. No new LKI, payment, replacement or batch-operation contract is
+introduced. Evidence: `TestRONTemporaryPowerDeclarations`,
+`TestRONTemporaryPowerRealCards`, `TestRONTemporaryPowerLegality`,
+`TestRONTemporaryPowerStrictLoadAndNativeGame`,
+`TestRONTemporaryPowerSharedContexts` and `TestRONTemporaryPowerSpellAndInventory`.

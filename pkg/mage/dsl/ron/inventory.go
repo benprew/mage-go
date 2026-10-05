@@ -537,6 +537,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "static_modification", "temporary_modification":
 		switch n.Name {
+		case "SetPower":
+			if role == "temporary_modification" && len(n.Args) == 1 {
+				return "value"
+			}
 		case "SetLandType":
 			if role == "static_modification" && len(n.Args) == 1 {
 				return "land_subtype"

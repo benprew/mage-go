@@ -10924,3 +10924,138 @@ Changed slice files: `pkg/mage/dsl/ron/compiler.go`,
 Commit hash is reported in the final response. Complete collection gameplay,
 loading/startup cutover, Go-card/generator deletion and unused DSL cleanup
 remain open. Stop after this slice.
+
+## 2026-10-05: temporary fixed base power
+
+Status: one completed compiler-adapter slice, `temporary-layer.fixed-base-power`.
+Runtime cutover remains blocked. Initial user changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from this commit.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot, ledger,
+selected compiler/reference/inventory code and existing `SetBasePower` engine
+implementation/tests. Read the relevant API/rules-contract documentation and
+CR 506.4, 608.2, 611.2, 613.4 and 702.9. Requirements came from complete RON
+records, including nested forms and identical reprints, rather than Go cards.
+Semantic inventory and per-instance typed reference prerequisites already exist.
+Baseline compiler tests (`go test ./pkg/mage/dsl/ron -count=1`) and `make build`
+passed. Strict and inventory loading exited 1 for collection rejection:
+2,445 records, 986 names, 1,416 compiled / 1,029 rejected records,
+492 accepted / 494 rejected names. Inventory: 72,938 nodes, 8,528 signatures,
+12,268 unknown-role occurrences. This was not a build failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and blockers | Downstream capability / effort |
+| --- | --- | --- | --- |
+| Temporary `SetPower(Integer(n))` (selected) | Island of Wak-Wak, Singing Tree: 2 | 2 names / 2 records; both otherwise use supported filters, targets and tap costs. Shapeshifter uses static dynamic `SetPower(TheChosenNumber)`, a separate context requiring persistent choices. | Shared fixed base-power modification in existing resolving action contexts. Small compiler effort, medium gameplay-test effort; no engine prerequisite. |
+| Toughness comparisons | Stone Giant, Goblin Kites, Blood Lust, Infinite Authority: 4 | 0 now. Stone Giant needs source-relative comparisons and a delayed end-step destruction; Kites needs delayed trigger and coin/sacrifice; Blood Lust needs branch/local value capture and subtraction; Authority needs combat trigger unions and delayed destruction/result bindings. | Shared legality and branch conditions; medium compiler/context effort plus substantial dependent lifecycle tests. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Rasputin Dreamweaver: 12 | Prerequisite alone 0; 9 likely after adapters. Guardian needs repeatable optional payments, Rakalite delayed return, Rasputin source rather than recipient prevention plus untapped-turn history and a counter cap. | CR 615.7 simultaneous allocation prerequisite, typed recipients and X amounts. High engine/decision/batch and gameplay-test effort. |
+
+The selected adapter gives two credible immediate full-card gains for the
+smallest dependency-ready effort. Larger prerequisite work remains valuable,
+but does not improve this slice's gain/effort estimate. First-error frequencies
+were not used as unlock estimates. The contract, reuse boundary and acceptance
+cases were stated before implementation. Single-card dynamic/static extensions
+were not started.
+
+### Exact supported contract and reuse
+
+`SetPower(Integer(n))`, with any signed integer literal, is supported only as a
+modification in existing `CreatePermanentLayerEffectUntil/3` action lists.
+Existing spell, activation and trigger contexts, typed subjects and durations
+apply. The new helper is
+`compileTemporaryPower(Node, permanentReferencePlan) (func(instanceBindings) mage.ContinuousModification, error)`.
+It lowers to `mage.SetBasePower(subject.build(bindings), mage.Fixed(n))`.
+No public API or engine behavior changed. One shared `Until` installation still
+handles all modifications in the action. Layer 7b sets base power; base toughness
+is preserved and layer 7c bonuses/counters still apply. Later layer 7b setters
+use timestamp order. The value and subject are constructed per factory call.
+
+Island targets a flying creature; Tree targets an attacking creature controlled
+by either player. Existing legality checks run at announcement and resolution.
+A creature phased out and in, or with a changed controller, leaves combat and
+is no longer a legal Tree target. Once installed, the effect persists through
+combat removal, control changes and phase cycles until cleanup. Source departure
+does not cancel the queued ability or installed modification. Returned targets
+have new incarnations and do not inherit it. Clones and copies retain their
+own resolution state. Invalid activation leaves costs and stack unchanged.
+
+Symbol/empty/multiple-argument `SetPower`, bare values, malformed `Integer`,
+`ValueX`, chosen-number and power-query values are rejected before gameplay.
+Static `SetPower` and dynamic values remain separate unsupported contexts.
+Existing invalid reference and duration checks remain in the shared compiler.
+No card-name branch, fallback, global action slot, declaration panic, partial
+production registry, parallel rules system or mutable shared binding was added.
+Semantic inventory now reports the temporary value child, including descendants
+of unsupported parents; it does not claim gameplay support from syntax.
+
+This was a missing compiler adapter. No source or environment defect was found
+or corrected. All twelve RON hashes match the vocabulary snapshot, so no source
+refresh was needed. Known Avenger/Liege/Fastbond concerns remain open. Removal
+gates are not met; no Go cards, generators or DSL functions were removed and no
+caller-removal audit is claimed.
+
+### TDD and card-to-test mappings
+
+After correcting a test compilation error (the registry returns a card and an
+error), focused tests failed at the expected unsupported `SetPower` diagnostics
+for ARN lines 40 and 72. The adapter then passed the focused suite. Two initial
+expectations were corrected to follow CR 506.4: Tree targets cease attacking
+when phased or when control changes before resolution. A synthetic creature
+fixture was corrected to supply its required CardPT. No existing assertion was
+weakened or removed.
+
+| Card / context | Test evidence |
+| --- | --- |
+| Island of Wak-Wak, complete ARN record | `TestRONTemporaryPowerRealCards`: tap payment, timing, source departure, target departure/return, phasing, loss of flying, control change, ability copy, clone isolation, preserved toughness, counters/bonuses, later base setter and native cleanup. `TestRONTemporaryPowerLegality`: plain/noncreature/shroud/phased targets, wrong controller and tapped source; failed activation leaves stack and source state unchanged. `TestRONTemporaryPowerStrictLoadAndNativeGame`: actual strict record loading/factory validation, native land play, activation, attack, zero combat damage and cleanup. Full-card gameplay mapping. |
+| Singing Tree, complete ARN record | Same real-card tests with attacking target legality, loss of combat status, phasing/control removal from combat, departure and installed effect lifecycle. Legality test also checks summoning sickness. Strict/native test checks failed unpaid casting, paid casting and 0/3 metadata. Full-card gameplay mapping. |
+| Shared declaration and contexts | `TestRONTemporaryPowerDeclarations`: signed literals, factory target isolation, engine validation and malformed/unsupported values. `TestRONTemporaryPowerSharedContexts`: actual activation and entry-trigger resolution with negative, zero and positive values, combined P/T bonus and installed control change. `TestRONTemporaryPowerSpellAndInventory`: native synthetic spell resolution and semantic inventory value role. Existing `TestRONTemporaryLayers*` remains passing for typed binding/identity, attachment, copy retargeting, invalid scopes and duration checks. |
+| Strict collection rejection / accepted records | Strict/native test rejects an invalid collection with no published registry. `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged` continues to check accepted Lightning Bolt gameplay and production registry isolation. |
+
+Two unique cards gain complete RON gameplay mappings, separately from the two
+compiled record gains. Collection `engine_validated` and `behavior_verified`
+remain null; complete collection gameplay has not been proved. No new LKI,
+replacement ordering or simultaneous-operation service was needed or claimed.
+
+### Validation and actual gain
+
+Actual gain matches the estimate: **2 names / 2 records**. Strict and inventory
+reports agree: **1,418 compiled / 1,027 rejected records**, **494 accepted /
+492 rejected names**, of 2,445 records / 986 names. Only the two selected first
+issues disappeared:
+`ARN.lines.ron:40:284` (Island of Wak-Wak) and
+`ARN.lines.ron:72:324` (Singing Tree), both formerly unsupported temporary
+`SetPower`. Every remaining diagnostic is unchanged; no accepted record
+regressed. Inventory remains 72,938 nodes / 8,528 signatures; unknown-role
+occurrences decreased from 12,268 to **12,266**. Source hashes before/after
+and vocabulary hashes agree for all twelve files.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONTemporaryPower -count=1` | Expected TDD failure, then PASS after implementation and fixture/expectation corrections. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONTemporaryPower\|TestRONTemporaryLayers' -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after lint formatting. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; reviewed automatic formatting, no unrelated changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,418 compiled / 1,027 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; issues match strict loader, hashes unchanged, all nodes walked. |
+
+Ranked next candidates to reassess:
+1. Finite recipient-prevention allocation prerequisite, followed by adapters for
+   the nine otherwise-ready names above.
+2. All-zone CDA characteristics for Keldon Warlord, Nightmare, Plague Rats,
+   Gaea's Avenger, Dakkon Blackblade and People of the Woods; retain the Avenger
+   source audit as a separate blocker.
+3. End-of-combat/intervening-if and bounded counter replenishment prerequisites
+   shared by Clockwork Avian and Clockwork Beast.
+
+Changed slice files: `pkg/mage/dsl/ron/compiler.go`, `temporary_value.go`,
+`temporary_power_test.go`, `inventory.go`, `inventory_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Commit hash is reported in the final response. Complete collection gameplay,
+runtime/startup cutover, Go-card/generator deletion and unused DSL cleanup
+remain open. Stop after this one slice.
