@@ -11,9 +11,17 @@ type cardTargetPlan struct {
 	creatureOnly bool
 }
 
-type cardReferencePlan struct{ target *cardTargetPlan }
+type deathCardPlan struct{ name string }
+
+type cardReferencePlan struct {
+	target *cardTargetPlan
+	death  *deathCardPlan
+}
 
 func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
+	if n.Kind == Symbol && ctx.deathCard != nil && n.Name == ctx.deathCard.name {
+		return cardReferencePlan{death: ctx.deathCard}, nil
+	}
 	if n.Kind == Symbol && ctx.cardTarget != nil && n.Name == ctx.cardTarget.name {
 		return cardReferencePlan{target: ctx.cardTarget}, nil
 	}
@@ -21,6 +29,9 @@ func compileCardRef(n Node, ctx scope) (cardReferencePlan, error) {
 }
 
 func (p cardReferencePlan) build(bindings instanceBindings) mage.CardRef {
+	if p.death != nil {
+		return mage.FromCard(bindings.deathCards[p.death])
+	}
 	return bindings.cards[p.target]
 }
 
@@ -107,7 +118,7 @@ func compileGraveyardReturn(n Node, ctx scope) (effectFactory, error) {
 	if count == 1 {
 		return func(bindings instanceBindings) mage.Effect { return mage.ReturnCardToHand(card.build(bindings)) }, nil
 	}
-	if !card.target.creatureOnly {
+	if card.target == nil || !card.target.creatureOnly {
 		return nil, problem(n, "battlefield return requires a creature card target")
 	}
 	entries, err := list(n.Args[1])

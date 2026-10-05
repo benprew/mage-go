@@ -19520,3 +19520,150 @@ Slice files: engine `target_numeric.go`, `target_mana_x_test.go`, `target.go`,
 `inventory.go`, `inventory_test.go`; API/rules contracts and this ledger entry.
 One descriptive commit contains only this slice; its hash is reported in the
 final reply. This run stops after this slice.
+
+## Slice: singular graveyard exile and source-death card binding (2026-10-05)
+
+Capability IDs: `graveyard-exile/singular` and `event/source-death-card`.
+Status: implemented, declaration validated and behavior tested in the contexts
+below. This run stops after this slice.
+
+### Fresh baseline and candidate comparison
+
+Initial user changes were present in `.gitignore`, the execution design and
+this progress ledger; `mtgish-ron-completed.md` was untracked. Those changes are
+preserved and excluded from this slice's commit. The ledger entry is staged
+independently of the user's ledger reorganization.
+
+Read AGENTS.md, engine API documentation, the current execution design, syntax
+snapshot, progress ledger, selected compiler/event/reference/zone services, API
+and rules contracts, and all selected complete RON records. Local DRK and LEG
+Oracle data agrees with Grave Robbers and Cyclopean Mummy. CR 400.7e, 603.6c,
+608.2b and 701.13a establish first destination visits, death snapshots, target
+rechecks and exile. Source-death consumers and complete candidate records were
+also inspected; no Go card definition supplied requirements.
+
+Baseline engine short tests and build passed. Strict and semantic loading
+exited 1: **1,641 compiled / 804 rejected records**, **609 accepted / 377
+rejected unique names**. This was unsupported collection rejection, not a
+build or environment failure. Semantic inventory contained 72,951 nodes /
+8,540 signatures / 8,421 unknown-role occurrences.
+
+| Candidate | Distinct cards and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Singular graveyard exile and source-death card capture, selected | Grave Robbers; Cyclopean Mummy: **2** full cards / **2** records. | Artifact graveyard targets, transactional tap/mana costs, life actions and death destination captures exist. Missing resolving exile action and RON death-card environment. Enables typed graveyard exile after targets/events and use of captured death cards by existing hand-return actions. Tormod's Crypt needs a separate simultaneous collection shape and is excluded. | Small engine action and adapters; moderate gameplay, visit, copy, clone, event and rollback tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential full cards. | Complete records require source choices across public zones, saved source identity, characteristic checks and next-event consumption. Enables shared source-selective prevention and redirection. | High: choice, identity and replacement/timing contracts, then adapters and gameplay. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade; Keldon Warlord; Nightmare; Plague Rats; People of the Woods: **5** direct potential full cards. | Needs all-zone characteristic evaluation, owner/controller context, named counts and CDA layer behavior. Gaea's Avenger also needs arithmetic and source correction; Wood Elemental needs entry payments. Both are excluded. Enables zone characteristic queries and copying. | High: engine characteristic/layer contracts, adapters and zone/controller/copy tests. |
+
+Selection rationale: two complete consumers reuse exact targets, payments and
+death capture services with substantially smaller prerequisites than the
+larger families. Nested complete records show no additional blocker for either
+selected card. First-error counts alone were not used to estimate unlocks.
+Selection, contract, reuse boundary and acceptance cases were stated before
+implementation. The implement-engine skill supplied the engine workflow.
+
+### Supported signatures, contexts and reuse boundary
+
+Engine API: `ExileGraveyardCard(card CardRef) ResolvingEffect`.
+It moves only a card in a graveyard whose typed reference remains valid.
+It preserves the owner, puts the card in face-up exile, and attributes
+`ExiledBy` to the resolving source. Nil/unbound references fail declaration
+validation. A stale visit or reference to a card in hand/exile causes no move.
+
+RON action: `Exile([CardInGraveyards(ref)], [])`, exactly one subject, no
+modifiers. `ref` is a declared `Ref_TargetGraveyardCard` or the symbol
+`Trigger_ThatGraveyardCard` inside
+`WhenAPermanentDies(SinglePermanent(ThisPermanent))`.
+The existing action-list contexts can lower the target form; real activation
+and death-trigger gameplay and engine targeted spell gameplay are tested.
+Malformed arity, callable/unbound/incompatible references, plural subjects and
+face-down modifiers reject at compilation.
+
+A typed `deathCardPlan` enters the source-death body only. Factories create fresh
+`CardBinding` instances; `PermanentDies().WithCard` and `EventSourceIsSelf`
+save the first graveyard visit before trigger placement. Existing
+`PutGraveyardCardIntoHand` can use the same typed reference, with a synthetic
+integration test. Battlefield return still requires a creature card target.
+Entry, host-death and general filtered death bodies do not receive this binding.
+
+Reuse: `CardRef`, `CardTargetBinding`, `FromCard`, graveyard visit identity,
+`PermanentDies.WithCard`, departure ability/controller snapshots,
+`MoveFromAnyGraveyard`, `Game.ExileCard`, zone/departure events, target
+legality, stack copying, clone isolation and transactional activation costs.
+RON owns syntax, role validation and per-instance plans. The engine owns zone
+moves and references. No new replacement ordering or simultaneous move
+contract is claimed; simultaneous deaths use the existing destruction service.
+No card-name branch, fallback, skipped rule, declaration panic, global result
+slot or partial production registry is added.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for missing `ExileGraveyardCard`. RON tests then
+failed with unsupported `CardInGraveyards` subjects on both complete records.
+Fixtures were corrected without weakening assertions: PhaseIn takes a list;
+synthetic creatures need CardPT; saved engine bindings require an initialized
+map and direct effect application within that frame; copied graveyard targets
+must use the engine's retarget service to capture the new visit. Both strict
+inventory assertions were updated after fresh loading confirmed the gain.
+
+| Card or contract | Evidence |
+| --- | --- |
+| Grave Robbers, complete DRK record | `TestRONGraveRobbersExile`: either graveyard, announcement/payment timing, owner, source departure/control/phasing, stale visits, copies and clone isolation. `TestRONGraveRobbersRollback`: unpaid, sick, tapped, phased, wrong type, absent and excess targets preserve live resources. `TestRONGraveRobbersRetargetedCopy`: copy chooses another graveyard card through the shared retarget service; controller and original target remain independent. |
+| Cyclopean Mummy, complete LEG record | `TestRONCyclopeanMummyDeathCard`: actual source death, different owner/controller, first visit before trigger placement, return/reentry, phase cycle, copied trigger, ability removal, replaced death and unrelated death. `TestRONGraveyardExileIndependentDeaths`: simultaneous deaths of two factories preserve separate cards and cloned pending captures. `TestRONDeathCardSeparateVisits` checks two deaths of the same physical card: a copied old trigger cannot follow the later visit. |
+| Engine exile | `TestExileGraveyardCardVisit`: live/stale visits, absent cards, hand/exile rejection, owner/source attribution and cloned frames. `TestExileGraveyardCardDeclarations`: nil/unbound versus valid typed target. `TestExileGraveyardCardDepartureEvents`: actual targeted spell, departure count, player attribution and pending trigger timing. |
+| Declaration, registry and inventory | `TestRONGraveyardExileInvalid`, `TestRONDeathCardScope`, `TestRONGraveyardExileRegistryAndInventory`: malformed/unbound contexts, complete source loading/validation, card-reference roles and atomic rejection. Existing inventory tests retain Lightning Bolt gameplay and production registry isolation. `TestRONDeathCardReturnUsesFirstVisit` verifies the reuse boundary for existing hand return. |
+
+This adds **two** complete-card gameplay mappings. Collection-wide
+engine-validation and behavior-verification totals remain null; compilation
+does not imply gameplay coverage for the rest of the collection.
+
+### Actual gain, source findings and validation
+
+Actual gain matches the estimate: **2 names / 2 records**, exactly Grave Robbers
+and Cyclopean Mummy. No previously accepted name is lost. Final loading reports
+**1,643 compiled / 802 rejected records**, **611 accepted / 375 rejected names**.
+Inventory remains 72,951 nodes / 8,540 signatures; unknown-role occurrences
+fall to 8,418. Strict loading exits 1 and publishes no partial registry.
+Remaining diagnostics include chosen damage sources, CDA rules, and singular
+versus collection exile consumers such as Tormod's Crypt.
+
+No source defect was found in the selected records; RON source and vocabulary
+hashes remain unchanged. The historical vocabulary loader snapshot is not a
+support claim. Existing source defects remain deferred.
+
+| Command | Final result |
+| --- | --- |
+| Focused engine and RON exile/death/registry/inventory tests, `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS; additional skill verification. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, 0 issues. First run found a test variable that shadowed the builtin copy; renamed and rerun. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,643 compiled / 802 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same records; 611 accepted / 375 rejected names; 72,951 nodes / 8,540 signatures / 8,418 unknown-role occurrences. |
+
+Automatic lint/format changes were reviewed; only this slice changed. Final
+focused, broad engine, make test, build, vet and lint checks pass. No environment
+or pre-existing blocker remains. Initial fixture errors and stale inventory
+expectations were corrected without weakening behavior checks.
+
+The runtime cutover and removal gates remain unmet. No Go card definitions,
+startup consumers, generators or DSL functions are removed. Engine services used
+by RON remain. No caller audit supports a deletion in this slice.
+
+Ranked next candidates to reassess with fresh complete-record evidence:
+
+1. Chosen-source choice/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+2. All-zone battlefield-count CDAs for five direct consumers.
+3. Restricted mana and sacrifice-value activation/solver contracts for
+   Metamorphosis and Priest of Yawgmoth.
+
+Slice files: engine `graveyard_exile.go`, `graveyard_exile_test.go` and
+`doc.go`; compiler `compiler.go`, `graveyard_return.go`,
+`permanent_exile.go`, `player_scope.go`, `triggers.go`,
+`inventory.go`, `inventory_test.go` and `graveyard_exile_test.go`;
+API/rules-contract documentation and this ledger entry. One descriptive commit
+contains this slice; its hash is reported in the final reply. No second slice
+is started.

@@ -28,6 +28,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	deathCards           map[*deathCardPlan]*mage.CardBinding
 	actionPlayers        map[*playerActionsPlan]*mage.PlayerBinding
 	damageRecipients     map[*damageRecipientPlayerPlan]*mage.PlayerBinding
 	damagePlayers        map[*damagePlayerPlan]*mage.PlayerBinding

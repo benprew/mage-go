@@ -3481,3 +3481,25 @@ ManaValueIs(EqualTo(ValueX))]))` and
 The compiler requires announced X in the scope. Other comparisons, static
 filters, disjunctions and combined spell mana value/permanent-target restrictions
 remain unsupported. Detonate and Spell Blast have complete RON gameplay tests.
+
+## RON singular graveyard exile and source-death cards
+
+`Exile([CardInGraveyards(ref)], [])` lowers to
+`mage.ExileGraveyardCard(CardRef) ResolvingEffect`. It accepts one declared
+graveyard target or `Trigger_ThatGraveyardCard` in the body of
+`WhenAPermanentDies(SinglePermanent(ThisPermanent))`. Modifiers, plural subjects,
+unbound references and callable reference symbols are rejected.
+
+The death body receives a fresh card binding per factory. Detection saves the
+first graveyard visit through `PermanentDies().WithCard(binding)`, restricted by
+`EventSourceIsSelf`. Copies retain the captured visit; a card that leaves and
+returns is a new object. Existing `PutGraveyardCardIntoHand` can also read this
+typed binding. Battlefield return still requires a creature card target.
+Host death and general filtered death-card bindings remain unsupported.
+
+Grave Robbers uses the existing any-graveyard artifact target, mana and tap
+payment, and life action. An illegal sole target prevents both exile and life
+gain. Cyclopean Mummy uses its captured death card without a target. Phasing
+does not cause a death event. See `TestRONGraveRobbers*`,
+`TestRONCyclopeanMummyDeathCard`, `TestRONGraveyardExile*` and
+`TestRONDeathCard*`.

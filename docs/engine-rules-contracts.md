@@ -3945,3 +3945,27 @@ Evidence: `TestTargetManaValueXQueries`, `AnnouncementAndCopy`,
 `TestRONDetonateManaValueX`, `TestRONSpellBlastManaValueX`,
 `TestRONManaValueXRetargetAndInstances`, `IndependentPendingCounters`,
 `Declarations`, and `StrictLoadAndInventory`.
+
+## Singular typed graveyard exile
+
+`ExileGraveyardCard(CardRef) ResolvingEffect` resolves the supplied reference and
+moves that card from its graveyard to face-up exile. It uses
+`MoveFromAnyGraveyard` and `Game.ExileCard`, preserves the owner, and records the
+effect source as `ExiledBy`. Target and saved-card references retain their
+graveyard visit. Absent cards, later visits, and references to hand or exile
+cards cause no move. Definition validation rejects nil and unbound references.
+Graveyard departure events use the existing player attribution and count of one.
+This action adds no batch or replacement ordering contract.
+
+RON source-death bodies use the existing destination capture in
+`PermanentDies().WithCard` with `EventSourceIsSelf`. This retains the first
+graveyard visit before trigger placement and uses departure abilities and
+controller information. Pending triggers, copied abilities and cloned games
+retain independent captures. Phasing and a replaced graveyard destination do
+not produce death triggers. Rules: CR 400.7e, 603.6c, 608.2b and 701.13a.
+
+Evidence: `TestExileGraveyardCardVisit`,
+`TestExileGraveyardCardDeclarations`, `TestExileGraveyardCardDepartureEvents`,
+`TestRONGraveRobbersExile`, `TestRONGraveRobbersRollback`,
+`TestRONGraveRobbersRetargetedCopy`, `TestRONCyclopeanMummyDeathCard`,
+`TestRONGraveyardExileIndependentDeaths` and `TestRONDeathCardReturnUsesFirstVisit`.

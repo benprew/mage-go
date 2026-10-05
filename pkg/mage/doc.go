@@ -119,6 +119,12 @@
 // The library owner can order cards that move together to the graveyard.
 // All order choices precede the moves. Payment queries make no choices.
 //
+// Use [ExileGraveyardCard] with a typed card target or [FromCard] for exile
+// from a graveyard. A saved visit prevents the effect from moving a returned
+// card. [PermanentDies] with WithCard saves the first graveyard visit before
+// trigger placement. RON source-death bodies use this capture with
+// [EventSourceIsSelf]; the capture stays separate for each pending event.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

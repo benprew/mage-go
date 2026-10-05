@@ -76,7 +76,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 				return mage.WhenEvent(mage.Enters(mage.This), effect).(*mage.GenericTriggered)
 			}
 		} else {
-			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.DiesTrigger(effect, false) }
+			return compileSourceDeathCardTrigger(n.Args[1], ctx)
 		}
 	case "AtTheBeginningOfAPlayersUpkeep":
 		return compileBoundStepTrigger(trigger, n.Args[1], ctx, mage.EachUpkeep, mage.YourUpkeep, "upkeep")
@@ -121,6 +121,22 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	return func() mage.CardOption {
 		actions := plan.build()
 		trigger := buildTrigger(mage.Sequence(actions.effects...))
+		actions.effects = nil
+		return mage.WithAbility(TriggerA(trigger, actions))
+	}, nil
+}
+
+func compileSourceDeathCardTrigger(body Node, ctx scope) (optionFactory, error) {
+	ctx.deathCard = &deathCardPlan{name: "Trigger_ThatGraveyardCard"}
+	plan, err := compileActions(body, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return func() mage.CardOption {
+		card := mage.BindCard(ctx.deathCard.name)
+		actions := plan.buildWithBindings(instanceBindings{deathCards: map[*deathCardPlan]*mage.CardBinding{ctx.deathCard: card}})
+		trigger := mage.WhenEvent(mage.PermanentDies().WithCard(card), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		trigger.AndConditionData(mage.EventSourceIsSelf{})
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

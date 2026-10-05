@@ -42,6 +42,7 @@ type scope struct {
 	permanentTargets *permanentTargetsPlan
 	spellTarget      *spellTargetPlan
 	cardTarget       *cardTargetPlan
+	deathCard        *deathCardPlan
 	damageTarget     *damageTargetPlan
 	castEvent        *castEventPlan
 	stepEvent        *stepEventPlan

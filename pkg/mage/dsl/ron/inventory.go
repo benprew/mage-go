@@ -509,6 +509,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "exile_subject":
+		if n.Name == "CardInGraveyards" && len(n.Args) == 1 {
+			return "card_reference"
+		}
 		if n.Name == "EachPermanent" && len(n.Args) == 1 {
 			return "permanent_collection_reference"
 		}
