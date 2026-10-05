@@ -1254,7 +1254,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
+	case "MillNumberCards", "LoseUnspentMana", "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		if n.Name == "AddMana" && len(n.Args) == 1 && n.Args[0].Name == "Trigger_AnyManaTypeProduced" {
@@ -1433,6 +1433,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "MillNumberCards" {
+		return compileMillAction(n, ctx)
+	}
 	if n.Name == "LoseUnspentMana" {
 		if n.Kind != Symbol {
 			return nil, problem(n, "LoseUnspentMana requires a symbol")

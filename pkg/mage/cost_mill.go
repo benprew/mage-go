@@ -2,6 +2,7 @@ package mage
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/google/uuid"
 )
@@ -70,11 +71,25 @@ func (g *Game) millCards(playerID uuid.UUID, amount int) {
 	if p == nil || amount <= 0 {
 		return
 	}
-	lib := p.Library()
-	for i := 0; i < amount && len(lib) > 0; i++ {
-		card := lib[0]
-		lib = lib[1:]
+	library := slices.Clone(p.Library())
+	count := min(amount, len(library))
+	remaining := slices.Clone(library[:count])
+	ordered := make([]Card, 0, count)
+	for len(remaining) > 1 {
+		snapshots := make([]Card, len(remaining))
+		for i, card := range remaining {
+			snapshots[i] = card.Copy()
+			snapshots[i].SetID(card.ID())
+		}
+		chosen := p.ChooseCardFromLibrary(snapshots, "choose the next card for your graveyard", g)
+		index := max(0, slices.IndexFunc(remaining, func(card Card) bool { return chosen != nil && card.ID() == chosen.ID() }))
+		ordered = append(ordered, remaining[index])
+		remaining = slices.Delete(remaining, index, index+1)
+	}
+	ordered = append(ordered, remaining...)
+	// All choices precede the moves so the player sees one complete batch.
+	p.SetLibrary(library[count:])
+	for _, card := range ordered {
 		p.AddToGraveyard(card)
 	}
-	p.SetLibrary(lib)
 }

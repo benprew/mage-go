@@ -3874,3 +3874,44 @@ interface and shuffle callers remain valid. Evidence: engine
 `SorceryTiming`; interactive `TestHumanLibraryInspectionAndOrder`.
 `TestLibraryInspectionOrderValidation` also covers duplicate, missing, extra,
 and unknown IDs without loss of library cards.
+
+## Fixed RON mill actions and resolution costs
+
+`MillNumberCards(Integer(n))` lowers to `Mill(player, Fixed(n))` in resolving
+player scopes. Its optional resolution-cost context lowers to `MillCost(n)`
+inside `IfPaid` or `UnlessPaid`. The compiler checks arity, integer shape, scope,
+nonnegative action counts and positive declared cost counts before factories
+run. No announced X, action-result, all-player or activation-cost mill adapter
+is established here.
+
+CR 701.17a-b distinguishes milling as much as possible from full cost payment.
+CR 118.3 and 118.12a require a complete optional payment at resolution. Existing
+mill modifiers adjust the count before affordability and execution. A modified
+zero cost can be accepted without moving cards. Independent adjacent payment
+continuations retain separate outcomes. The legacy modifier service retains
+its registration order; this slice adds no CR 616 replacement-choice policy.
+
+CR 404.3 permits the owner to order cards placed together into their graveyard.
+The shared `millCards` service now selects the full top-of-library batch, asks
+`ChooseCardFromLibrary` for each next graveyard card, then removes the complete
+batch from the library before appending the chosen order. Prior graveyard cards
+retain their order. Candidate cards are copies that keep their IDs. Nil or
+foreign selections use the first remaining card. The existing player interface
+supports native human choices; `BasePlayer` retains library order. Pure
+`CanPay` queries and isolated payment validation do not call the live chooser.
+Commit checks affordability again before resources or order choices are used.
+
+CR 603.3a keeps Deep Spawn's original trigger controller as payer. A copied
+trigger uses the copy controller. CR 701.21a prevents the old controller from
+sacrificing a source whose control changed. CR 400.7 and 702.26 preserve the
+existing source-incarnation and phasing rules. Its other ability adds temporary
+shroud, suppresses its next controller untap, then taps the source at resolution.
+
+Evidence: engine `TestMillOwnerOrderAndBatch`,
+`TestMillCostOrderQueriesAndRollback`, `TestMillCostOrderStaleRecheck`; RON
+`TestRONMillstone`, `TestRONDeepSpawnPayment`, `TestRONDeepSpawnUnpaidIdentity`,
+`TestRONDeepSpawnShroudUntap`, `TestRONMillModifiersAndPaymentFrames`,
+`TestRONDeepSpawnNativeUpkeep`, `TestRONMillRealCardOwnerOrder`,
+`TestRONMillDeclarations`, `TestRONMillScopesAndInstances`, and
+`TestRONMillStrictLoadAndInventory`. Existing mill modifier, payment, source
+lifetime, target and untap regressions remain in the required suites.

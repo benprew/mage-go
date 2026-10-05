@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **605 accepted / 381 rejected unique card
-names** (986 total), and **1,631 compiled / 814 rejected records** (2,445 total).
+The latest recorded inventory reports **607 accepted / 379 rejected unique card
+names** (986 total), and **1,634 compiled / 811 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`ADDITIONAL-SACRIFICE-SPELL` slice and its validation evidence are recorded
+`FIXED-MILL-ACTION-AND-PAYMENT` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -19201,3 +19201,153 @@ Slice files: compiler `additional_sacrifice.go`, `additional_sacrifice_test.go`,
 `compiler.go`, `counter_payment.go`, `inventory.go`, `inventory_test.go`; API
 reference, rules contracts and this ledger. One descriptive commit contains
 only this slice. Its hash is reported in the final reply.
+
+## Run 2026-10-05: FIXED-MILL-ACTION-AND-PAYMENT
+
+Status: complete milling slice. This run stops after this slice.
+
+### Baseline, candidates and selection
+
+Initial user changes: `.gitignore`, execution design, progress ledger, and
+untracked `mtgish-ron-completed.md`. These are preserved and excluded from the
+slice commit. The ledger commit includes only new measurements and this entry;
+the user's move of older history remains unstaged.
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary, progress ledger,
+selected compiler/action/payment/mill/player/clone code, API and rules contracts,
+complete RON records and identical reprints, and local ATQ/FEM Oracle JSON.
+Read CR 118.3/12a, 404.3, 603.3a, 608.2b/c/h, 701.17a-b and 701.21a using the
+Comprehensive Rules index. Requirements came from RON, not Go definitions.
+The implement-engine skill supplied the shared engine prerequisite workflow;
+no removed card/set skill or Go stub was used.
+
+Fresh baseline: `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict and semantic loaders exited 1 with 1,631 compiled / 814 rejected records,
+605 accepted / 381 rejected names. Inventory: 2,445 records, 986 names,
+72,951 nodes, 8,540 signatures, 8,440 unknown-role occurrences. Rejection is
+unsupported collection syntax, not build or environment failure.
+
+| Candidate | Unique names and estimated complete-card gains | Other blockers and downstream benefit | Estimated effort |
+| --- | --- | --- | --- |
+| Fixed milling, selected | Millstone, Deep Spawn: **2** full names / **3** records. | Deep Spawn's other trample, shroud, tap and next-untap rules already compile. Typed player scopes and optional payments exist. Shared milling enables player actions and full resolution payments without new result slots. CR 404.3 additionally requires an owner-order choice in the shared service. | Small adapters, moderate engine prerequisite and tests for order, payment, timing, identity, scopes and clones. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential full cards. | Requires public-zone damage-source choice, saved source identity and next-event consumption, with source-property rechecks. Broader arithmetic/redirection consumers remain excluded. | High: source-choice and prevention contracts, adapters, timing and replacement tests. |
+| Battlefield count CDAs in all zones | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** direct potential full cards. Gaea's Avenger is a sixth contingent consumer. | All-zone characteristics, controller/owner count context and CDA layers remain prerequisites. Gaea's Avenger also needs arithmetic and its previously recorded opponent-count source correction. Enables later characteristic readers and copying. | High: zone-aware characteristic contract, adapters and layer/copy/controller tests. |
+
+Fixed milling gives two full consumers with much smaller dependencies than the
+other families. Complete records, including nested optional cost and all other
+Deep Spawn rules, support the estimate. First-error frequency is not the estimate.
+The contract and acceptance cases were stated before edits. During rule inspection,
+CR 404.3 exposed an engine prerequisite: the previous mill executor forced library
+order. This prerequisite is implemented within the same milling capability.
+The earlier ledger's four-card CDA estimate omitted People of the Woods; fresh
+complete-record inspection gives five direct consumers. No second slice started.
+
+### Shapes, contracts and engine reuse
+
+Supported resolving shape: `MillNumberCards(Integer(n))`, with nonnegative fixed
+`n`, in action lists, `PlayerAction(player, ...)`, or `PlayerActions` lists.
+The existing typed player scope supplies the subject. Bare actions use the
+ability controller; nested `ActionPlayer` reads use the existing local snapshot.
+
+Supported payment shape: `MayCost(MillNumberCards(Integer(n)))` or
+`PlayerMayCost(player, MillNumberCards(Integer(n)))`, with positive fixed `n`
+and an adjacent `If`/`Unless` on `CostWasPaid`/`CostWasntPaid`. Each factory
+constructs separate costs, effects and typed target bindings. Dynamic counts,
+zero declared costs, malformed declarations, unbound/incompatible references,
+all-player milling and activation-cost milling remain rejected.
+
+RON owns spelling, shapes, contexts, diagnostics and lowering. Engine reuse:
+`Mill`, `MillCost`, `Fixed`, typed player/target bindings, `SnapshotPlayer`,
+`IfPaid`/`UnlessPaid`, payment transactions, source-incarnation and clone services,
+native step execution, `Until`, `GrantKeywordModification`, `SkipNextUntap`, and
+mill modifiers. No new public engine API or last-action slot is introduced.
+
+Shared `millCards` now offers the library owner the existing
+`ChooseCardFromLibrary` choice with a graveyard-order reason. Candidate cards
+are copies with retained IDs. All choices precede moves; then the complete batch
+leaves the library and enters the graveyard in the chosen order. Invalid choices
+use the first remaining card. Prior graveyard cards retain order. Zero/one-card
+batches need no choice. `BasePlayer` keeps library order; native human players
+can select another order. Queries and payment validation do not call the live
+chooser. Commit affordability checks precede resources and choices.
+
+An action mills as many cards as available. A cost requires the complete adjusted
+count; modified zero can be accepted. Optional results stay with their own
+continuation. Legacy mill modifiers retain their existing registration order;
+this slice does not establish CR 616 replacement-choice semantics or a new
+zone-event/replacement subsystem. Source incarnation, phasing and sacrifice
+control checks use existing services, including LKI where those services require it.
+
+### TDD and card-to-test mapping
+
+The new RON tests first failed with `unsupported player action (MillNumberCards)`
+and `unsupported optional payment cost (MillNumberCards)`. Initial loader test
+fixture code used three returns for two-return `LoadFS`; this was fixed before
+confirming the expected adapter failure. Engine tests then failed because no
+owner-order choice occurred. Implementations followed those failures.
+
+Fixture fixes: a synthetic modifier needed an owner before destruction. The
+unpaid control-change expectation was corrected against CR 701.21a: the original
+controller cannot sacrifice the opponent's permanent. Assertions were retained.
+
+| Card or contract | Behavior tests |
+| --- | --- |
+| Millstone, ATQ and identical 3ED record | `TestRONMillstone`: self/opponent targets, empty/short/full libraries, top-card identity/order, mana/tap timing and rollback, invalid target, source departure/return/control/phasing, copied controller retaining the explicit target, clone isolation. `TestRONMillRealCardOwnerOrder`: real owner order, distinct source controller. |
+| Deep Spawn, complete FEM record | `TestRONDeepSpawnPayment`: own upkeep, delayed payment, full/short library, accept/decline, adjusted zero/double/insufficient count, source return/departure/control/phasing, copy payer, owner-directed sacrifice. `TestRONDeepSpawnUnpaidIdentity`: returned/phased source exclusion, phase cycle and control restriction. `TestRONDeepSpawnShroudUntap`: trample metadata, blue payment rollback, ordered shroud/tap, cleanup, one skipped untap and clone isolation. `TestRONDeepSpawnNativeUpkeep`: actual step execution. `TestRONMillRealCardOwnerOrder`: paid real trigger order. |
+| Shared RON declarations and scopes | `TestRONMillDeclarations`: malformed shape, fixed counts, incompatible/unbound reads and unsupported contexts. `TestRONMillScopesAndInstances`: fresh targets, nested player binding and zero action. `TestRONMillExplicitPayer`: targeted payer and separate continuation player. `TestRONMillModifiersAndPaymentFrames`: existing modifier composition, partial action, independent payment outcomes and full-cost failure. |
+| Shared engine | `TestMillOwnerOrderAndBatch`: owner order, legal defaults, complete batch before moves, prior graveyard order, zero/short library and clones. `TestMillCostOrderQueriesAndRollback`: pure queries, insufficient-payment rollback and live order choice only at commit. `TestMillCostOrderStaleRecheck`: changed library rejects before payment or choice. |
+| Loading and inventory | `TestRONMillStrictLoadAndInventory`: all three full source records load and validate, reprint consistency, invalid sibling rejects without registry, semantic cost/action roles. Updated repository inventory assertions retain strict collection counts and Lightning Bolt gameplay/registry identity. |
+
+### Actual gain, source findings and validation
+
+Actual gain matches the estimate: **2 unique names / 3 records**, exactly
+Millstone and Deep Spawn. No previously accepted name is lost. Fresh strict and
+semantic reports: **1,634 compiled / 811 rejected records**, **607 accepted / 379
+rejected names**. Inventory remains 72,951 nodes / 8,540 signatures; unknown-role
+occurrences fall to 8,437. The full loader exits 1 and publishes no partial
+registry. Remaining diagnostics include `ChooseADamageSource` on Circle cards,
+`CDA_Power` on count creatures, and sacrifice-value activation mana on Priest
+of Yawgmoth. Collection engine-validation and behavior totals remain null;
+this slice adds two complete-card gameplay mappings, not collection coverage.
+
+Local Oracle data agrees with the selected complete RON records. No RON source
+changed; all source hashes and the syntax vocabulary snapshot remain valid.
+Previously recorded source defects, including Gaea's Avenger, remain deferred.
+No environment or pre-existing validation failure was found.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine tests and `make build` | PASS. |
+| RON TDD `go test ./pkg/mage/dsl/ron -run 'TestRONMill\|TestRONDeepSpawn' -count=1` | Expected adapter failures, then PASS. |
+| Engine TDD `go test ./pkg/mage -run 'TestMillOwnerOrderAndBatch\|TestMillCostOrder' -count=1` | Expected missing order-choice failures, then PASS. |
+| Focused RON milling/inventory/untap/upkeep and engine mill/payment suites, `-count=1` | PASS; rerun after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including final rerun. |
+| `go test ./... -short -count=1` | PASS. |
+| `make test` | PASS, including final rerun. |
+| `make build` | PASS, including final rerun. |
+| `go vet ./...` | PASS, including final rerun. |
+| `make lint` | Initial test variable `real` shadowed a builtin. Renamed it to `records`; final run PASS with 0 issues. Formatting changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,634 compiled / 811 rejected records; final rerun agrees. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 607 accepted / 379 rejected names. |
+
+All automatic formatting/lint edits are reviewed and affected tests rerun.
+No old Go definitions, generation tools or DSL exports are removed: full loading,
+gameplay coverage and startup cutover remain below their removal gates. No caller
+audit justifies a DSL deletion in this slice. Existing engine mill services are
+retained and reused.
+
+Ranked next candidates to reassess from fresh evidence:
+
+1. Chosen-source identity/choice plus next-event prevention for the seven
+   Circle/Realm consumers.
+2. All-zone count CDAs for five direct consumers; keep Gaea's Avenger's source
+   correction and arithmetic as explicit additional dependencies.
+3. Restricted mana and sacrifice-value activation/solver contracts for
+   Metamorphosis and Priest of Yawgmoth.
+
+Slice files: `ron/mill.go`, `ron/mill_test.go`, `ron/compiler.go`,
+`ron/optional_payment.go`, `ron/player_actions.go`, `ron/inventory.go`,
+`ron/inventory_test.go`, engine `cost_mill.go`, `mill_order_test.go`, `doc.go`,
+API reference, rules contracts and this ledger. One descriptive commit contains
+only this slice; its hash is reported in the final reply.

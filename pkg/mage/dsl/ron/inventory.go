@@ -456,7 +456,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "PayMana" && len(n.Args) == 1 {
 			return "metadata"
 		}
-		if n.Name == "PayLife" && len(n.Args) == 1 {
+		if (n.Name == "PayLife" || n.Name == "MillNumberCards") && len(n.Args) == 1 {
 			return "value"
 		}
 	case "token_instruction", "token_definition":
@@ -668,7 +668,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "value", "recipient"}[index]
 			}
-		case "DrawNumberCards", "DiscardNumberCards", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
+		case "MillNumberCards", "DrawNumberCards", "DiscardNumberCards", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
 			if len(n.Args) == 1 {
 				return "value"
 			}
@@ -821,7 +821,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "AddMana" && len(n.Args) == 1 {
 			return "mana_production"
 		}
-		if (n.Name == "DrawNumberCards" || n.Name == "DiscardNumberCards" || n.Name == "DiscardNumberCardsAtRandom" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
+		if (n.Name == "MillNumberCards" || n.Name == "DrawNumberCards" || n.Name == "DiscardNumberCards" || n.Name == "DiscardNumberCardsAtRandom" || n.Name == "GainLife" || n.Name == "LoseLife") && len(n.Args) == 1 {
 			return "value"
 		}
 	case "damage_packet":

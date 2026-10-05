@@ -3443,3 +3443,26 @@ Both APIs validate their player references. Negative inspection counts fail
 card-definition validation. Missing players perform no actions or choices.
 HumanPlayer displays private cards and supplies ordering choices through its
 own choice channels. The Player interface remains unchanged.
+
+## RON fixed milling
+
+`MillNumberCards(Integer(n))` supports a nonnegative fixed count in resolving
+player actions, including `PlayerAction(player, ...)` and `PlayerActions`.
+The enclosing player scope supplies the subject. A bare action uses the ability
+controller. Typed player targets and local `ActionPlayer` bindings remain
+separate between instances and copies. Dynamic counts and all-player milling
+are not supported by this adapter.
+
+`MayCost(MillNumberCards(Integer(n)))` and
+`PlayerMayCost(player, MillNumberCards(Integer(n)))` require a positive fixed
+count and an adjacent `If` or `Unless` payment continuation. They use `MillCost`
+through the existing optional payment transaction. A mill action moves as many
+cards as possible; a mill cost requires its complete adjusted count. Millstone
+and Deep Spawn use these contexts.
+
+`Mill` and `MillCost` use `ChooseCardFromLibrary` to let the library owner order
+cards that move together to the graveyard. The choice reason identifies the
+graveyard operation. All order choices precede the moves. An invalid selection
+uses the first remaining card; zero or one card needs no order choice. Payment
+queries and transaction validation make no live order choices. Existing library
+order remains the default for `BasePlayer` and cloned players.

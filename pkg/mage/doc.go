@@ -115,6 +115,10 @@
 // Recipient ability removal does not remove a separate Aura's rule.
 // Use [CantAttack] for the same live subject attack restriction.
 //
+// Use [Mill] for a player action and [MillCost] for a full payment.
+// The library owner can order cards that move together to the graveyard.
+// All order choices precede the moves. Payment queries make no choices.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

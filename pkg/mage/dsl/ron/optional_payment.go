@@ -65,7 +65,11 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 	var mana core.ManaCost
 	var costs []costFactory
 	var err error
-	if cost.Name == "PayManaX" {
+	if cost.Name == "MillNumberCards" {
+		var amount int
+		amount, err = compileMillCount(cost, true)
+		costs = []costFactory{func() mage.Cost { return mage.MillCost(amount) }}
+	} else if cost.Name == "PayManaX" {
 		mana, dynamic, err = compileResolutionManaCost(cost, ctx)
 	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" && cost.Name != "SacrificeNumberPermanents" {
 		return nil, unsupported(cost, "optional payment cost")
