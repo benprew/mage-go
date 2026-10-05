@@ -88,10 +88,14 @@ func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
 		if err != nil {
 			return nil, err
 		}
-		if n.Args[1].Kind != Symbol || n.Args[1].Name != "IsUntapped" {
-			return nil, unsupported(n.Args[1], "static permanent condition")
+		if n.Args[1].Kind == Symbol && n.Args[1].Name == "IsUntapped" {
+			return mage.PermanentIsUntapped(subject), nil
 		}
-		return mage.PermanentIsUntapped(subject), nil
+		filter, err := compileStaticConditionFilter(n.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		return mage.PermanentMatchesFilter(subject, filter), nil
 	default:
 		return nil, unsupported(n, "static condition")
 	}

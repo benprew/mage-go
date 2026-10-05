@@ -2774,3 +2774,32 @@ Evidence: `TestConditionalMana`, `TestConditionalManaInvalid`, and
 Plant and Urza's Tower exercise current land subtypes, rather than card names.
 This contract does not establish general conditional resolving actions,
 choice-based or restricted mana, extra costs, or conditions changed by tap costs.
+
+## Live source and attachment filter conditions
+
+`PermanentMatchesFilter(PermanentRef, PermanentFilter) StateCondition` accepts
+`This` or `AttachedPermanent`. Definition validation rejects nil, target and
+saved references for this static context. The zero filter matches any live
+subject. Execution checks the source incarnation from `StateContext` when one
+is supplied, then the attachment incarnation for an attached subject. Absent,
+phased or returned subjects cannot satisfy the old reference (CR 400.7,
+702.26b). There is no departure LKI fallback.
+
+The condition uses the shared `FilterBattlefield` query and has no mutable
+chosen state. Attachment and characteristic changes update the condition;
+control changes preserve subject identity. `While` and the existing layer
+service apply static membership again on each pass (CR 611.3a–c). Type and color
+changes precede layer 7c bonuses, while layer 6 ability removal disables the
+source rule (CR 613.1d–g, 613.4c). This primitive adds no target, replacement,
+transactional cost, event, or simultaneous-operation service.
+
+Evidence: `TestPermanentMatchesFilterIdentity` and
+`TestPermanentMatchesFilterDeclarationsAndLayers` cover identity, missing/stale
+references, source and host phasing, changing attachments, control, return,
+clone isolation, declaration rejection, color changes, ability removal and
+source destruction. `TestRONPermanentFilterGoblinCaves`, `Invalid` and
+`SourceInstances` add RON scope validation, actual Aura casting, cost and target
+legality, basic versus nonbasic Mountains, prior-layer type changes, both
+players' Goblins, later entries, recipient subtype changes and independent
+factory instances. The RON adapter retains its existing restricted static
+filter and conditional body grammars.

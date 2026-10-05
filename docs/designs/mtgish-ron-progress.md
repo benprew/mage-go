@@ -13589,3 +13589,151 @@ Slice files: `pkg/mage/composable_continuous.go`, `effect_manager.go`,
 `pkg/mage/dsl/ron/source_tapped_duration.go`, `next_upkeep_duration_test.go`,
 `inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger.
+
+## 2026-10-05: live source and attachment filter conditions
+
+Status: completed slice `LIVE-PERMANENT-FILTER-CONDITION`; static conditions and
+conditional bodies remain partial. This run stops after this slice. Initial
+user edits to `.gitignore` and `docs/designs/mtgish-ron-execution.md` are preserved
+and excluded from staging. No unrelated untracked files were present initially.
+
+### Fresh evidence and candidate selection
+
+Baseline compiler tests, short engine tests and `make build` passed. Strict
+loading exited 1 for collection rejection, not a build/test failure: 2,445
+records, 1,490 compiled, 955 rejected; 535 accepted and 451 rejected unique
+names. The fresh semantic inventory has 72,938 nodes, 8,530 signatures and
+10,823 unknown-role occurrences. The design, ledger, syntax snapshot, engine
+reference and selected compiler/engine code were inspected. Candidate estimates
+use complete records and nested forms, with reprints counted once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Live source/attachment filter conditions, selected | Goblin Caves, Goblin Shrine; **1** immediate full-card unlock, Goblin Caves. | Exact generic source/attachment predicate is missing. Goblin Shrine also needs `WhenAPermanentLeavesTheBattlefield`; its static rule alone is not a complete card. The shared service supplies both cards' basic-Mountain condition and reusable source/host type, color and membership conditions. | Small: one typed engine condition, reuse existing filter/body adapters, identity/layer/clone contracts and real Aura casting tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion; **4** credible unlocks after the complete allocation contract, **0** safe adapter-only gains. | Full records use supported targets, costs, modes, explicit players and X. Missing finite shield allocation among simultaneous sources (CR 615.7) requires engine work before adapters. Enables other finite prevention consumers. | Medium/high: damage batch decisions, allocation, competing replacements, identity, clone and timing matrix. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats; **4** credible unlocks after the all-zone characteristic contract. | Zone-aware characteristics, owner/controller count context, named counts and CDA layering remain prerequisites. Gaea's Avenger and Wood Elemental have separate source/entry blockers and are excluded. | High: zone characteristics, count adapters, copy/controller/layer tests. |
+
+Selection rationale: the source/host predicate is a small missing shared engine
+contract with two concrete consumers and one immediate full record. It is a
+shared prerequisite rather than a separate card implementation. The two
+four-card alternatives require much larger engine contracts. The first-error
+frequency was not used as the unlock estimate. Numeric toughness filters were
+also inspected: Goblin Kites still needs coin actions, Stone Giant needs a
+source-power comparison, and Infinite Authority/Blood Lust have independent
+trigger/branch/result gaps. Pendelhaven alone would not justify that alternative
+while shared work remains.
+
+The contract, reuse boundary and acceptance cases were stated before editing.
+The `implement-engine` skill was used for the reusable engine gap. No removed
+card skill, Go definition as a requirement, Go fallback, card-name branch,
+production allowlist or global result slot was used.
+
+### Exact signatures, contexts and dependencies
+
+Engine: `PermanentMatchesFilter(subject PermanentRef, filter PermanentFilter)
+StateCondition`. Supported references are `This` and `AttachedPermanent`.
+Definition validation rejects nil, target and saved references. The zero filter
+matches a live subject. The declaration is immutable and has no chosen state.
+Execution checks the current source and any supplied source incarnation, then
+the current attachment and its saved incarnation. Shared `FilterBattlefield`
+queries evaluate the filter on the same live subject. Absent, phased and returned
+objects fail; departure never uses LKI. Attachment changes select the new host;
+control changes preserve identity. Source/host phase cycles restore a qualifying
+condition without creating a new object (CR 400.7, 702.26b).
+
+RON: `If(PermanentPassesFilter(subject, filter), [supported-static-body...])`.
+The subject must be bare `ThisPermanent` in a permanent rule or bare
+`HostPermanent` in an Aura rule. Bare `IsUntapped` retains its existing adapter.
+All other supported filters lower through `compileStaticConditionFilter` and the
+new engine service. The reused grammar accepts nonempty nested `And`/`Or`,
+`IsNonToken`, permanent type/subtype, color/supertype, tapped-state and combat
+membership predicates with existing exact shapes. Ability/P/T queries remain
+rejected to keep conditions independent of the characteristics their body changes.
+Target, event, saved and malformed references remain compile errors. Existing
+layer-6 keyword or layer-7c P/T conditional bodies are unchanged. Resolving
+branches, entry/cost contexts and other conditional body forms gain no support.
+
+`While`, `Static`, typed references, `FilterBattlefield`, static permanent sets,
+`ModifyEachPT`, definition validation and the shared layer service provide
+execution. Static conditions and recipient membership remain live on each pass
+(CR 611.3a–c). Layer-4 subtype and layer-5 color changes precede layer-7c bonuses;
+layer-6 source ability removal disables the static rule (CR 613.1d–g, 613.4c).
+Factories and cloned games hold no shared mutable condition state. Aura casting,
+target legality and cost rollback reuse existing services. No new replacement,
+event-player, APNAP, simultaneous-operation, decision or LKI service is introduced.
+
+### TDD, source checks and card-to-test mappings
+
+Initial engine tests failed for the undefined `PermanentMatchesFilter`
+constructor. Every real Goblin Caves case failed with `unsupported static
+permanent condition (And)`. After implementation, one engine fixture needed an
+owner before destruction and a synthetic Creature record needed `CardPT`.
+Those fixtures were repaired. The old `IsTapped` rejection case became the
+positive source-instance test because this slice supports that declaration;
+all other rejection cases remain. No behavior assertion was weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Goblin Caves, complete DRK record | `TestRONPermanentFilterGoblinCaves`: 1RR Aura cast, payment and illegal-target rollback, no premature effect, departure/phasing before resolution, enchant-land legality, basic Mountain versus nonbasic Mountain and Forest, current attachment, layer-4 host subtype changes, both players' Goblins, non-Goblin exclusion, later entries, recipient subtype changes, source phasing/control/ability removal, host departure/return and clone isolation. |
+| Independent RON source conditions | `TestRONPermanentFilterSourceInstances`: valid typed static `IsTapped` declaration, two factory instances/controllers, separate source states, live tap/untap and clone isolation. |
+| Invalid RON declarations | `TestRONPermanentFilterInvalid` and retained `TestRONConditionalStaticInvalid`: unbound/event/target/host-outside-Aura references, malformed subjects and supertype operands, empty conjunction, wrong arity and unsupported ability/P/T conditions. |
+| Engine identity and execution | `TestPermanentMatchesFilterIdentity`: This/AttachedPermanent, zero filter, control, source/host phasing, current attachment, stale attachment/source incarnations, missing source, departure/return and clone isolation. `TestPermanentMatchesFilterDeclarationsAndLayers`: invalid refs, valid definition, layer-5 color changes, layer-6 ability removal, cleanup and source destruction. |
+| Existing collection behavior | Updated `TestInventoryRepositoryCollection` and `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged` counts; strict loading still rejects the collection and keeps the production registry unchanged. Existing accepted records and prior conditional-static tests pass. |
+| Goblin Shrine | Static condition prerequisite established; no full-card gameplay claim. Fresh diagnostic is `DRK.lines.ron:51:400: unsupported trigger (WhenAPermanentLeavesTheBattlefield)`. |
+
+Local `data/DRK.json` Oracle text agrees with both complete RON records:
+Goblin Caves requires a basic Mountain and gives Goblin creatures +0/+2;
+Goblin Shrine shares that condition for +1/+0 and separately deals damage when
+it leaves. No source defect was found or corrected. All 12 source hashes still
+match the vocabulary snapshot, so it needs no source refresh. Existing recorded
+source defects remain unresolved.
+
+### Final measurements, validation and next candidates
+
+Actual gain matches the estimate: **1 unique name / 1 record**, Goblin Caves,
+with one new complete-card gameplay mapping. No previously accepted name is
+lost. Strict and semantic loading report **1,491 compiled / 954 rejected records**,
+**536 accepted / 450 rejected names**. Semantic totals remain **72,938 nodes /
+8,530 signatures / 10,823 unknown-role occurrences**. Compilation and gameplay
+coverage remain separate; aggregate engine-validation and behavior totals remain
+null. The strict loader exits 1 and publishes no partial registry.
+
+No Go definitions, generators or DSL exports are removed. Complete loading,
+collection gameplay and runtime wiring remain below the removal gate; no fresh
+caller audit authorizes DSL deletion. API and rules documentation describe only
+this new live predicate contract. User changes remain unstaged.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestPermanentMatchesFilter&#124;TestRONPermanentFilter&#124;TestRONConditionalStatic&#124;TestInventory' -count=1` | PASS after the final assertions and lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic formatting was reviewed and made no substantive code changes. |
+| `git diff --check` | PASS after lint and final ledger updates. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,491 compiled / 954 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 450 rejected names; unchanged inventory and source hashes. |
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient prevention allocation and the four full prevention records;
+   keep simultaneous-source allocation and competing replacement order exact.
+2. All-zone count CDAs for Dakkon Blackblade, Keldon Warlord, Nightmare and Plague
+   Rats; separate Gaea's Avenger and Wood Elemental's prerequisites.
+3. `Targeted_Modal` target-alternative prerequisite: Chaoslace, Deathlace,
+   Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind. The five
+   laces need spell/permanent color effects; the other two also need word choices
+   and text changes. An adapter alone would unlock zero complete cards.
+
+Goblin Shrine's leave trigger remains a dependent single-card candidate to defer
+while useful multi-card work remains. No second slice is started. All required checks pass. No environment or pre-existing validation blocker
+remains. Only this slice is committed; its hash is reported in the final response.
+
+Slice files: `pkg/mage/permanent_filter_condition.go`,
+`permanent_filter_condition_test.go`, `doc.go`;
+`pkg/mage/dsl/ron/conditional_static.go`, `conditional_static_test.go`,
+`permanent_filter_condition_test.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.

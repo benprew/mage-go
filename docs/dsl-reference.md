@@ -2585,3 +2585,32 @@ amounts, bound references and other condition forms remain unsupported.
 Factories create fresh `ManaAbility` instances and use the shared engine
 `NewConditionalManaAbility` service. General `IfElse` action support is still a
 gap. Tests: `TestRONConditionalMana*`; engine contract: `TestConditionalMana*`.
+
+## RON source and attachment filter conditions
+
+`PermanentPassesFilter(subject, filter)` in a static `If` accepts bare
+`ThisPermanent`, or bare `HostPermanent` on an Aura. It lowers to
+`mage.PermanentMatchesFilter(PermanentRef, PermanentFilter) StateCondition`.
+The existing `IsUntapped` form retains `PermanentIsUntapped`.
+
+The filter uses the existing static condition grammar: nonempty nested
+`And([filters])`/`Or([filters])`, `IsNonToken`, permanent type/subtype,
+color/supertype predicates, tapped state, and combat membership. Operands must
+have the existing exact shapes. Ability and P/T filters remain rejected so a
+conditional grant or bonus cannot read the characteristics it changes. Target,
+event, saved and unresolved references remain rejected. No resolving `If` action
+or new conditional body shape is added.
+
+The engine checks the live source incarnation and, for attachments, the live
+attachment incarnation before applying the filter. It uses the shared battlefield
+query service and stores no choices or captured game state. Conditions read the
+current attachment and characteristics on each layer pass. Departure or phasing
+makes the condition false; a phase cycle restores it if the same objects still
+qualify. Control changes alone do not end the condition. No LKI is read.
+
+`TestPermanentMatchesFilter*` covers the engine contract.
+`TestRONPermanentFilter*` covers complete Goblin Caves gameplay, Aura legality
+and costs, attachment/type changes, source and recipient membership, phasing,
+ability removal, independent factory instances and clone isolation. Goblin
+Shrine shares the condition but remains rejected for its leave-battlefield
+trigger; its complete gameplay is not verified.
