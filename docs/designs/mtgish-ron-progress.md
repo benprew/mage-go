@@ -10280,3 +10280,164 @@ Slice files: `pkg/mage/dsl/ron/compiler.go`, `temporary_animation.go`,
 `docs/engine-rules-contracts.md` and this ledger. Stage only these eleven files
 for one descriptive commit. Initial user changes remain unstaged. The commit
 hash is reported in the final response. Stop after this slice.
+
+## Run 2026-10-05: OPTIONAL-TAP-CHOICE
+
+Status: completed supported slice; stop after validation and one commit. Runtime
+cutover and removal gates remain open.
+
+### Fresh evidence and candidate selection
+
+Preserved user edits to `.gitignore` and the execution design. Read AGENTS.md,
+`pkg/mage/doc.go`, the execution design, vocabulary snapshot, and progress ledger.
+Read the selected action compiler, typed permanent scopes, inventory, loader,
+`MayTapOrUntap`, shared target/copy/clone/cost services and their contract tests.
+Read complete candidate RON records, including nested actions and identical
+reprints; no Go card definition supplied requirements. Reviewed action and
+rules-contract documentation and CR 608.2b–d, 609.3, and 701.26a–b.
+
+Fresh baseline: `go test ./pkg/mage/dsl/ron -count=1` and `go build ./...` passed.
+Strict and inventory loaders exited 1 for unsupported collection rejection:
+2,445 records; **1,383 compiled / 1,062 rejected**, **483 accepted / 503 rejected
+unique names**. This was not a build, test, or environment failure. Inventory
+walked 72,938 nodes and 8,528 signatures, including rejected descendants.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream capabilities and effort |
+| --- | --- | --- | --- |
+| Optional resolving tap/untap (selected) | Twiddle, Hyperion Blacksmith: 2 names / 6 records | 2 names / 6 records. Complete records contain no remaining compiler gaps after this adapter; Hyperion's opponent target already works. Other MayAction bodies remain distinct unsupported shapes. | Shared optional state-choice lowering in spells, activations, triggers, and selected modes. Small adapter/reporting effort; medium gameplay/lifecycle/copy/invalid-declaration test effort. Exact engine service already exists. |
+| Finite recipient-shield allocation prerequisite | Alabaster Potion, Amulet of Kroog, Argivian Blacksmith, Balm of Restoration, Combat Medic, Conservator, Guardian Angel, Healing Salve, Kei Takahashi, Oasis, Rakalite, Samite Healer: 12 names / 32 records | Allocation alone: 0. With recipient adapters: 9 otherwise ready names. Balm retains activated modal lowering; Guardian retains repeated instant-speed mana payments; Rakalite retains delayed return. | Shared finite damage prevention and affected-player simultaneous allocation (CR 615.7); supports later source-bound shields too. High engine decision/replacement/batch test effort before adapters. Nested complete records distinguish ready consumers from blocked ones. |
+| All-zone CDA P/T and battlefield-count prerequisite | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats: 5 names / 20 records | Prerequisite alone: 0. Potential 5 with count/CDA/arithmetic lowering and Avenger source repair. Avenger's RON still counts its controller's artifacts. | Shared all-zone characteristic evaluation and layer 7a. High zone/layer/control/ability-removal test effort; a source defect also needs evidence and correction. |
+
+The selected slice offers the largest credible immediate gain for its effort.
+Finite prevention has more eventual consumers but needs a new engine allocation
+contract; CDA needs broader all-zone work. This is a shared typed adapter, not a
+Twiddle or Hyperion executor. First-error counts did not supply unlock estimates:
+complete nested records established that both selected cards would be supported.
+Selection, supported contract, reuse boundary, and acceptance cases were stated
+before editing. No second slice was begun.
+
+### Exact signatures, contexts, and reuse boundary
+
+```ron
+MayAction(TapOrUntapPermanent(ref))
+```
+
+Both constructors are tuples of arity 1. `ref` must pass the existing typed
+permanent-reference compiler in the current action scope: source
+`ThisPermanent`, attached Aura `HostPermanent`, declared `Ref_TargetPermanent`,
+or event-bound `Trigger_ThatPermanent`. Source/host/event references remain
+illegal outside their scopes. This form works in spell actions, activations,
+trigger bodies, and selected spell modes. Target filters and costs retain their
+existing supported shapes. A bare `TapOrUntapPermanent`, other optional bodies,
+lists, malformed tuples, numbered/unbound references, and sibling-scope reads
+remain rejected at compile time.
+
+Private signature:
+`compileOptionalTapChoice(Node, scope) (effectFactory, error)`.
+`compileEffect` dispatches MayAction to this adapter. It lowers to
+`mage.MayTapOrUntap(subject.build(bindings))`, constructing fresh effects with
+per-instance typed bindings. Inventory assigns an optional action's child the
+action role and the tap/untap subject the permanent-reference role, including
+unsupported optional parents. Reporting still marks syntax support unverified.
+
+The engine already implements the full rule, so there is no engine change or
+new public API. Reused services: `compilePermanentRef`, `instanceBindings`,
+`MayTapOrUntap`, target announcement/revalidation and incarnation capture,
+`TapPermanent`, `UntapPermanent`, stun replacement and tap/untap events,
+transactional cast/activation payment, stack copies and `Game.Clone`.
+The resolving controller chooses whether to change the subject's current state;
+this choice occurs after costs and target announcement. Decline does not stop
+later instructions or refund costs. A source departure/control change does not
+transfer its activation's chooser. Target leave/return invalidates its old
+incarnation; phasing makes it absent and a phase cycle preserves identity.
+Copies have their own controller and target. Clone SearchPlayer defaults decline
+independently of live scripted choices. Replacement and event execution use the
+shared engine operations. No LKI information read, replacement ordering,
+finite-prevention, or simultaneous-operation contract was added.
+
+RON owns spelling, shape validation, scope, diagnostics and lowering. No game
+state or choice was moved into the compiler. No card-name branch, fallback,
+partial production registry, skipped rule, global last-action slot, or game-time
+declaration panic was introduced. No source defect or environment failure was
+needed to implement the slice. Avenger/Liege/Fastbond concerns remain open.
+
+### TDD and card-to-test mapping
+
+The first fixture build used an incorrect keyword helper. After correcting the
+fixture to the existing permanent attribute API, tests failed for the expected
+`unsupported action (MayAction)` diagnostics on both real records. The adapter
+made the focused tests pass. Added context tests initially used an unsupported
+invented entry-trigger spelling; replaced it with the existing actual RON
+`WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent))` form.
+No test assertion was weakened.
+
+| Card or context | Test mapping |
+| --- | --- |
+| Twiddle, full LEB record; identical LEA, 2ED, CED, CEI reprints | `TestRONTapChoiceRealCards` and `TargetFiltersAndRollback`: native casting, one blue mana, failed unpaid cast and illegal-target rollback, artifacts/creatures/lands for either controller, rejection of enchantments/shroud/phased targets, decline/tap/untap, resolution-time state changes, stun replacement, leave/return, phase cycle, control, clone state and choice isolation. Full-card gameplay mapping. Strict loader validates reprint identity. |
+| Hyperion Blacksmith, complete LEG record | Same suites: summoning sickness, tap payment, legal opposing artifact only, own artifact/nonartifact rejection, no declaration choices, optional resolution, source departure/return/phasing/control, target control revalidation and lifecycle, stun replacement, clone isolation. `CopiesAndInstances` also tests copied-controller legality. Full-card gameplay mapping. |
+| Both real cards, copies and instances | `TestRONTapChoiceCopiesAndInstances`: independent factory effects, copied controller's choice, retained illegal opponent target versus retargeted legal target, original binding and decline remain separate, clone decline and independent state. |
+| Shared action contexts | `TestRONTapChoiceContexts`: valid source, Aura host, tapped-event reference, targeted entry trigger, selected spell mode; factory definition validation. |
+| Shared sequence and real RON Spirit Shackle observer | `TestRONTapChoiceSequenceAndEvents`: two optional operations with an independent life-gain instruction between them; second operation reads updated state; decline still gains life; tap/untap event path queues one real Spirit Shackle trigger and applies its counter. Spirit Shackle keeps its previous full-card mapping. |
+| Invalid declarations | `TestRONTapChoiceInvalid`: wrong kinds/arities, unsupported optional bodies, bare tap/untap choice, wrong typed refs, source/host/event misuse, numbered/unbound refs, sibling target scope leakage. |
+| Nested reporting | `TestRONTapChoiceInventory`: action and typed-reference roles under optional syntax. Repository inventory assertions use the fresh measured counts and still assert registry isolation. |
+
+Existing `TestComposableTapChoice*` tests retain native engine contract evidence.
+Two unique cards gain complete RON gameplay mappings; this is separate from the
+six compiled-record gain. Collection-wide engine_validated and behavior_verified
+fields remain null; no collection-wide gameplay coverage is claimed.
+
+### Final measurements, validation, and next candidates
+
+Actual unlock equals estimate: **2 unique names / 6 records**. Final strict and
+inventory reports: **1,389 compiled / 1,056 rejected records**, **485 accepted /
+501 rejected unique names**. No accepted-record regression and no new rejected
+record. Five Twiddle errors and one Hyperion error disappear. Goblin Wizard's
+first diagnostic advances from unsupported MayAction to unsupported optional
+action PutACardFromHandOnBattlefield; it remains rejected. Every other rejected
+record retains its first diagnostic. Strict and inventory issue arrays agree.
+
+All 12 source hashes match the vocabulary snapshot. No RON source changed, so no
+snapshot refresh is needed. Inventory stays at **72,938 nodes / 8,528 signatures**;
+unknown-role occurrences decrease from 12,414 to **12,385** as optional children
+receive semantic roles. This reporting gain does not imply support for other
+optional action shapes.
+
+Initial broad tests failed only because a second inventory regression assertion
+still expected 1,383 compiled records. Both measured-count assertions now expect
+1,389; gameplay and registry assertions remain intact. The first lint run found
+S1038 in a new test diagnostic; changed it to `t.Fatalf`, then reran lint. Automatic
+formatting was reviewed; no unrelated file was changed by lint. Final results:
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONTapChoice -count=1` | PASS after final code and lint fixes. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after measured-count correction. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final code and lint fixes. |
+| `make test` | PASS after final code and lint fixes. |
+| `make build` | PASS after final code and lint fixes. |
+| `go vet ./...` | PASS after final code and lint fixes. |
+| `make lint` | PASS, zero issues after diagnostic fix. |
+| `git diff --check` | PASS after final code and lint fixes. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records / 1,389 compiled / 1,056 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict diagnostics agree and all nodes are walked. |
+| Source and diagnostic audit | PASS: 12 hashes match; six gained records, two gained names, one advanced diagnostic, no accepted regression. |
+
+Ranked next candidates, to reassess with fresh evidence:
+1. Finite recipient-prevention allocation engine prerequisite, then shield
+   adapters for nine otherwise ready unique cards. Include Balm's activated
+   modes, Guardian's repeat payments, and Rakalite's delayed return as blockers.
+2. All-zone CDA P/T/count contracts and adapters for five unique names, with
+   evidence-based Avenger source correction.
+3. End-of-combat/intervening-if and bounded counter replenishment prerequisites
+   shared by Clockwork Avian and Clockwork Beast.
+
+Complete RON loading/gameplay, runtime wiring, test migration, native startup,
+Go-card/generator deletion and unused DSL cleanup remain open. No removal gate
+was reached; no definitions, generators or DSL exports were removed. Existing
+production callers remain available. No second slice was begun.
+
+Slice files: `pkg/mage/dsl/ron/compiler.go`, `tap_choice.go`,
+`tap_choice_test.go`, `inventory.go`, `inventory_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger. Stage only these eight files
+for one descriptive commit after checks pass. The initial user edits remain
+unstaged. The commit hash is reported in the final response.

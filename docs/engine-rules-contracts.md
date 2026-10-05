@@ -2165,3 +2165,26 @@ casts, failed casts, spell copies, source control changes, departure, returned
 incarnations, phasing, independent pending events, copied triggers, and clones.
 The filter is not an intervening-if condition and is not checked again at
 resolution. Counter actions still require the captured source incarnation.
+
+## RON optional tap/untap adapter
+
+`MayAction(TapOrUntapPermanent(ref))` reuses `MayTapOrUntap`; no engine behavior
+changes. The resolving controller makes the optional decision at resolution
+(CR 608.2d). Only untapped permanents can be tapped and only tapped permanents
+can be untapped (CR 701.26a–b), so the current state determines the offered
+operation. Decline affects only this instruction. Shared target checks suppress
+all instructions when every target is illegal (CR 608.2b).
+
+The adapter uses typed instance references and shared tap/untap operations.
+Departure and return invalidate an old incarnation; a phase cycle preserves
+it. Source departure or later source control does not transfer an activation's
+decision. Copies use their own controller and target identity. Game clones
+retain independent targets and state; their SearchPlayer defaults can decline
+independently of the live player. Untap replacement with a stun counter removes
+the counter and keeps the permanent tapped; a declined untap leaves it intact.
+
+`TestRONTapChoiceRealCards`, `TargetFiltersAndRollback`, `CopiesAndInstances`,
+`Contexts`, `SequenceAndEvents`, `Invalid`, and `Inventory` in `dsl/ron` cover
+this adapter. Existing `TestComposableTapChoice*` tests retain the shared engine
+contracts. This slice adds no LKI read, finite prevention, replacement-ordering,
+or simultaneous-operation contract.

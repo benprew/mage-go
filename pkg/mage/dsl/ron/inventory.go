@@ -407,6 +407,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 	case "action":
 		switch n.Name {
+		case "MayAction":
+			if len(n.Args) == 1 {
+				return "action"
+			}
 		case "Exile":
 			if len(n.Args) == 2 {
 				return []string{"exile_subject", "exile_modifier"}[index]
@@ -468,7 +472,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "permanent_filter"
 			}
-		case "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
+		case "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "TapOrUntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 			if len(n.Args) == 1 {
 				return "permanent_reference"
 			}

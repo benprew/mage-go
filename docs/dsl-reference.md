@@ -2121,3 +2121,20 @@ for each pending trigger. Tuple-shaped `Opponent()`, player references used as
 filters, and controller-dependent target disjunctions remain rejected.
 This does not add general opponent player-reference or collection support.
 Evidence: `TestRONOpponent*`, including complete Citanul Druid gameplay.
+
+## RON optional tap or untap
+
+`MayAction(TapOrUntapPermanent(ref))` accepts a typed permanent reference in
+its current action scope: `ThisPermanent`, Aura `HostPermanent`, declared
+`Ref_TargetPermanent`, or bound `Trigger_ThatPermanent`. The nested action must
+have exactly one reference. Other `MayAction` shapes and a bare
+`TapOrUntapPermanent` remain unsupported.
+
+The compiler lowers this pair to `mage.MayTapOrUntap` with fresh instance
+bindings. It works in spell actions, selected spell modes, activations, and
+trigger actions. The resolving controller chooses whether to change the
+permanent's current tapped state. Target choice and costs occur before this
+choice. Decline does not refund costs or stop later instructions. An absent or
+illegal subject receives no choice. Normal tap/untap events and replacements
+still apply. See `TestRONTapChoice*` for complete Twiddle and Hyperion Blacksmith
+RON gameplay and shared scope, copy, clone, event, and rejection evidence.
