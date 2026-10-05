@@ -2120,3 +2120,23 @@ remain outside this slice. The engine stores counter totals in `uint8`;
 declarations above 255 are rejected here. Unbounded counter totals, including
 replacement-expanded totals beyond that storage, remain an engine limitation;
 the observed collection counts (2–7) and tested replacement totals (7–8) fit.
+
+## RON player-target life lowering
+
+The RON life adapter supplies the existing typed `PlayerRef` to `GainLifeFor`
+and `LoseLifeFor`. It does not change engine execution. The player target keeps
+its declaration identity in separate factories, stack copies and game clones.
+The chosen player and announced X are read at resolution. Activation source
+control changes, departure, return and phasing do not redirect the recipient.
+Each explicit `PlayerAction` has a local scope; a sibling `You` read uses the
+resolving action controller. Existing spell-controller references also supply
+their explicit player instead of the action controller.
+
+CR 119.3 and 119.9–10 govern life changes and zero gain; CR 608.2b governs target
+rechecks; CR 608.2c governs instruction order. The shared life action applies
+normal life-gain replacement services. Damage shields do not prevent life loss.
+`TestRONPlayerLifeStreamOfLife`, `ScopesAndCopies`, `TargetRecheckAndReplacement`,
+`ModeLocalTargets`, `SpellController` and `InvalidDeclarations` in the RON package
+provide evidence. `RealModalClauses` covers the life clauses of Healing Salve
+and Alabaster Potion only. No new replacement-order or simultaneous-operation
+contract is established. Spell-cast event life references remain unsupported.

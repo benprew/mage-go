@@ -1184,40 +1184,21 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if (ctx.player.step != nil || ctx.player.permanent != nil) && (n.Name == "GainLife" || n.Name == "LoseLife") {
+	switch n.Name {
+	case "DrawNumberCards":
+		return []effectFactory{func(bindings instanceBindings) mage.Effect {
+			return mage.DrawFor(ctx.player.build(bindings), amount(bindings))
+		}}, nil
+	case "GainLife", "LoseLife":
+		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
+			return nil, unsupported(n, "life action in an event player scope")
+		}
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
 			player := ctx.player.build(bindings)
 			if n.Name == "GainLife" {
 				return mage.GainLifeFor(player, amount(bindings))
 			}
 			return mage.LoseLifeFor(player, amount(bindings))
-		}}, nil
-	}
-
-	switch n.Name {
-	case "DrawNumberCards":
-		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.DrawFor(ctx.player.build(bindings), amount(bindings))
-		}}, nil
-	case "GainLife":
-		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
-			return nil, unsupported(n, "life action in an event player scope")
-		}
-		if ctx.target == "Ref_TargetPlayer" {
-			return nil, unsupported(n, "life action in a player target scope")
-		}
-		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.GainLifeFor(mage.You, amount(bindings))
-		}}, nil
-	case "LoseLife":
-		if ctx.player.event != nil || ctx.player.spell != nil && ctx.player.spell.event != nil {
-			return nil, unsupported(n, "life action in an event player scope")
-		}
-		if ctx.target == "Ref_TargetPlayer" {
-			return nil, unsupported(n, "life action in a player target scope")
-		}
-		return []effectFactory{func(bindings instanceBindings) mage.Effect {
-			return mage.LoseLifeFor(mage.You, amount(bindings))
 		}}, nil
 	default:
 		return nil, unsupported(n, "player action")

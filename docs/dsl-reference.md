@@ -2079,3 +2079,26 @@ Triskelion's complete ATQ record is exercised by `TestRONEntryCountersTriskelion
 all 13 records of eight fixed-counter names; it does not establish their remaining
 rules. See the [rules contract](engine-rules-contracts.md#ron-fixed-entry-counters)
 and [progress ledger](designs/mtgish-ron-progress.md).
+
+## RON player-target life actions
+
+`PlayerAction(Ref_TargetPlayer, GainLife(value))` and
+`PlayerAction(Ref_TargetPlayer, LoseLife(value))` use the declared singular
+`TargetPlayer(AnyPlayer)` binding. `value` uses the existing resolution-value
+compiler, including `Integer(n)` and announced `ValueX`. The target can belong
+to a spell, activation, trigger, or selected spell mode. Each factory creates
+its own target declaration. `PlayerAction(You, ...)` and bare life actions
+still use the action controller, even inside a player-target action list.
+Sibling actions do not inherit an explicit player's scope.
+
+Life actions now also honor existing non-event spell-controller references.
+Step players and permanent-controller LKI reads retain their established
+behavior. Spell-cast event players remain rejected in this slice. Unbound,
+incompatible and mode-external references remain declaration errors.
+The engine executes life changes through `GainLifeFor` and `LoseLifeFor`,
+with its normal replacement and notification services. Life loss does not
+use damage prevention. `TestRONPlayerLife*` covers these contracts.
+
+Stream of Life has complete RON gameplay evidence for all six reprints.
+Healing Salve and Alabaster Potion have life-clause evidence only; their
+complete records remain rejected because finite prevention is unsupported.

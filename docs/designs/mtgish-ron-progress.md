@@ -9945,3 +9945,158 @@ its hash is reported in the final response. Files: `pkg/mage/dsl/ron/compiler.go
 `entry_tapped.go`, `entry_counters_test.go`, `inventory.go`, `inventory_test.go`,
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 Initial user changes remain unstaged. No second slice was begun.
+
+## Run 2026-10-05: PLAYER-TARGET-LIFE
+
+Status: complete compiler adapter slice. Production cutover and removal gates
+remain open. Stop after this slice.
+
+### Baseline, candidate comparison and selection
+
+Preserved the initial user changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`; neither is part of this slice.
+Read `AGENTS.md`, `pkg/mage/doc.go`, execution design, vocabulary, ledger,
+compiler action/target/value lowering, player reference and instance bindings,
+modal lowering, loader/inventory and affected tests. Read complete affected
+RON records, all six Stream of Life and Healing Salve reprints, and complete
+candidate records including nested operations. Reviewed typed life engine
+execution, replacement tests, API/rules contracts and CR 119.3/9/10,
+608.2b/c/h. No Go card definition supplied requirements.
+
+Fresh baseline: RON tests with `-count=1` and `make build` passed.
+Strict and nested loader commands exited 1 for collection rejection:
+**1,376 compiled / 1,069 rejected records; 481 accepted / 505 rejected names**.
+This was not a build, test or environment failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Typed player life actions (selected) | Stream of Life, Healing Salve, Alabaster Potion (3 names / 13 records) | 1 name / 6 records immediately. Salve and Potion retain finite prevention in their second modes. | Completes the life half of two multi-mode spells; reuses target, value, mode and life services. Small compiler change, moderate gameplay-test effort. |
+| Finite prevention allocation prerequisite | Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Guardian Angel, Kei Takahashi, Oasis, Rakalite, Samite Healer (9 names); Salve and Potion are further consumers | 0 for the engine prerequisite alone, then seven ready activation consumers. Guardian Angel still needs instant-time payments; Rakalite still needs future return. | Concrete multi-card shields and allocation dependency. High engine decision, simultaneous-damage, replacement and adapter test effort. |
+| All-zone CDA P/T and counts | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats (5 names) | 0 for engine prerequisite alone; potentially five after count/arithmetic/CDA adapters and Avenger data repair | Shared characteristic evaluation across zones; battlefield-only closures are insufficient. High engine/layer/zone and adapter test effort. |
+
+The selected adapter is a shared prerequisite for three names, with a full
+six-record unlock for the smallest credible effort. It is not a Stream of Life
+executor. Finite prevention has larger eventual gains but requires a separate
+engine allocation contract. CDA also needs substantial engine behavior first.
+First-error frequency was not used as a full-card unlock estimate. The selection,
+reuse boundary, supported contract and acceptance cases were stated before edits.
+
+### Exact contract, ownership and dependencies
+
+Changed private adapter:
+
+```go
+compilePlayerEffect(Node, scope) ([]effectFactory, error)
+```
+
+Supported new shapes in resolving action lists:
+
+```ron
+Targeted([TargetPlayer(AnyPlayer)], ActionList([
+    PlayerAction(Ref_TargetPlayer, GainLife(value)),
+    PlayerAction(Ref_TargetPlayer, LoseLife(value)),
+    PlayerAction(You, GainLife(value))
+]))
+```
+
+`GainLife/1` and `LoseLife/1` take an existing validated resolution value,
+including `Integer/1` and announced symbol `ValueX`. Target declarations are
+singular, and references are symbols. Contexts: spell, activation, trigger and
+selected spell mode. Each factory builds its own player-target declaration and
+read. A sibling explicit `You` or bare life action keeps the resolving action
+controller; it does not inherit another action's player scope.
+The same common lowering now honors existing non-event spell-controller reads
+(`ControllerOfTargetSpell`, `ControllerOfSpell(Ref_TargetSpell)`) instead of
+silently using `You`. Permanent-controller LKI and step-event player behavior
+remain supported. Spell-cast event life reads remain explicitly rejected.
+
+Unbound, incompatible, tuple-shaped and mode-external references, wrong life
+arities and unbound X are declaration errors. No runtime declaration panic,
+new global scratch result, card-name branch, skipped rule, fallback or partial
+production registry is introduced. Complete unsupported modal records still fail.
+
+RON owns spelling, scope and lowering. The engine owns life execution.
+Reuse: `playerReferencePlan.build`, `instanceBindings`, typed player/spell target
+bindings, `compileInstanceValue`, `GainLifeFor`, `LoseLifeFor`, life replacement
+and notification services, transactional payments, target resolution, stack
+copies, `Game.Clone`, controller snapshots and modal target namespaces.
+No engine API or engine behavior changed. No new simultaneous batch or
+replacement-order contract is needed for this singular life adapter.
+Player subjects do not have permanent incarnations or phase state. Source
+phase/departure/control tests cover independence from the activation source;
+existing permanent-controller LKI tests remain in the full suite.
+
+### TDD and card-to-test mapping
+
+After test-harness compile errors were corrected, the new gameplay tests failed
+on the expected `unsupported life action in a player target scope` diagnostics
+for GainLife and LoseLife, including real Stream of Life and modal life clauses.
+Implemented the typed adapter, then expanded scope/context evidence. No existing
+test was weakened. Inventory assertions changed only by the measured six-record
+gain. An extracted Potion clause initially rejected unbound X in its test scope;
+the final clause test compiles the real metadata and mana cost with the life mode
+extracted, so X is declared by the source rather than fabricated at execution.
+
+| Card / context | Test and evidence |
+| --- | --- |
+| Stream of Life, all six complete records | `TestRONPlayerLifeStreamOfLife`: engine definition validation, X=0 and X=4, unpaid-X and illegal-player rollback, announcement versus resolution, opponent life gain, clone isolation, owner graveyard and exact mana payment. |
+| Healing Salve (six records), Alabaster Potion (one record) | `TestRONPlayerLifeRealModalClauses`: inspect complete records, require whole-card rejection, extract only the actual life mode with original metadata/cost, validate and cast through the engine. **Clause-only evidence**, not full modal-card verification. |
+| Synthetic life gain and loss | `TestRONPlayerLifeScopesAndCopies`: fresh factory targets, independently targeted spell instances, copy controller and retargeting, clone bindings, sibling explicit You, damage shields do not prevent life loss. |
+| Synthetic activation | `TestRONPlayerLifeTargetRecheckAndReplacement`: illegal announcement does not tap; departure, source return, phasing and control changes do not redirect life; invalid saved player ID is rechecked; recipient-controlled life doubling applies. The invalid-ID fixture is not a claim of player shroud support. |
+| Synthetic modes | `TestRONPlayerLifeModeLocalTargets`: two distinct mode-local player declarations, only chosen mode targets bind and execute, mode chosen once. |
+| Existing non-event spell references | `TestRONPlayerLifeSpellController`: explicit targeted spell controller receives gain/loss instead of the resolving spell controller. |
+| Synthetic entry trigger | `TestRONPlayerLifeTriggerAndImplicitController`: trigger target chosen on stack placement, no announcement life change, source departure, declared recipient and bare life action controller stay separate. |
+| Declaration rejection | `TestRONPlayerLifeInvalidDeclarations`: missing, incompatible, tuple-shaped and cross-mode player reads, wrong life-action arities. Existing value and scope suites cover unbound X and event reads. |
+
+Compilation gains and gameplay evidence remain separate. Adds one complete-card
+mapping, and life-clause evidence for two further names. Aggregate engine-validated
+and behavior-verified collection fields remain null.
+
+### Measurements, defects and next candidates
+
+Actual gain matches the estimate: **6 records / 1 unique name**, Stream of Life.
+Final strict and nested loader: **1,382 compiled / 1,063 rejected records**,
+**482 accepted / 504 rejected unique names**. Zero accepted-record regressions.
+Seven diagnostics advance from life actions to `CreateFuturePreventDamage`:
+six Healing Salve reprints and one Alabaster Potion. All other diagnostics stay
+unchanged. Strict and inventory issue arrays agree.
+Inventory remains **72,938 nodes / 8,528 signatures**, with **12,414 unknown-role
+occurrences**. Existing inventory already assigns value and player-reference
+roles for these forms; no new syntax or inventory adapter is needed.
+All 12 source hashes remain unchanged and match the vocabulary snapshot; no
+source refresh is needed. No source defect was corrected. Avenger/Liege/Fastbond
+concerns remain recorded. No environment or pre-existing validation failure
+blocked this slice.
+
+Ranked next candidates, to reassess against fresh evidence:
+1. Finite prevention allocation engine prerequisite, then shared activation and
+   modal adapters. Life-mode lowering for Salve/Potion is now ready.
+2. Shared all-zone CDA P/T/counts, with the Avenger source correction.
+3. End-of-combat/intervening-if and bounded counter replenishment prerequisites
+   for Clockwork Avian/Beast, or shared optional resolving counter payments.
+
+Runtime still uses Go definitions. Complete collection loading and gameplay,
+startup wiring, test migration, native smoke tests, Go-card/generator deletion
+and unused DSL removal remain open. No deletion gate was reached; no Go card or
+DSL service was removed. No second slice was begun.
+
+### Validation
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONPlayerLife -count=1` | PASS with the final trigger, source-lifecycle and real-clause cases. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, including the final post-lint rerun. |
+| `go test ./pkg/mage/... -short -count=1` | PASS; repeated after final test additions. |
+| `make test` | PASS; repeated after final test additions. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records, 1,382 compiled, 1,063 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict diagnostics agree, all nodes walked. |
+| Source and diagnostic audit | 12 source hashes match; six gained records, one gained name, no accepted regressions, seven advanced diagnostics. |
+
+Slice files: `pkg/mage/dsl/ron/compiler.go`, `player_life_test.go`,
+`inventory_test.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
+and this ledger. Commit only these six files after final checks. The initial
+user changes remain unstaged. The commit hash is reported in the final response.
