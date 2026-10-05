@@ -8169,3 +8169,147 @@ No environment or pre-existing validation blocker remains. Only the twelve
 listed slice files are committed; the two initial user changes remain unstaged.
 The descriptive commit hash is reported in the final response. This run stops
 here. Runtime cutover and removal gates remain unmet.
+
+## 2026-10-04 — Temporary combat rules
+
+Capability `TEMPORARY-COMBAT-RULES`: complete for the exact additional shapes
+below. This run implements one slice and stops. Initial user edits to
+`.gitignore` and `docs/designs/mtgish-ron-execution.md` are preserved and excluded
+from staging. Read `AGENTS.md`, `pkg/mage/doc.go`, the execution design,
+vocabulary and ledger, compiler/reference/temporary/static combat adapters,
+complete affected RON records, inventory and loader, engine continuous effects,
+attack/block legality, API/rules-contract docs, and relevant CR 302.6, 400.7,
+508–509, 608.2b, 609.4, 611.2c, 613, 514.2 and 702.3/10/26 contracts.
+Local authoritative `data/DRK.json` and `data/LEG.json` Oracle text confirms
+Tower's Wall prohibition and Wall of Wonder's combined +4/-4 and defender
+permission. No Go card definition supplied requirements. No removed skill,
+card stub, fallback, card-name branch or partial production registry was used.
+
+### Fresh evidence and selection
+
+Fresh baseline engine short tests and `make build` passed. Strict loader and
+inspection returned expected exit 1: 2,445 records, 986 unique names,
+**1,281 compiled / 1,164 rejected**, 452 accepted / 534 rejected unique names.
+Inventory: 72,938 occurrences, 8,528 signatures, 13,322 unknown-role occurrences.
+All 12 RON hashes match the source snapshot. No environmental failure was found.
+
+Candidate comparison followed complete-record and nested-form inspection.
+Reprints count once. These are credible unlock estimates, not first-error counts.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream value and effort |
+| --- | --- | --- | --- |
+| Temporary combat rules (selected) | Tower of Coireall; Wall of Wonder. Later consumers: Vodalian War Machine; Raging River. | 2 names / 2 records | Tower's creature target and tap cost are ready; Wall's +4/-4 source action and mana cost are ready. Existing engine blocking/attack services eliminate a new engine prerequisite. War Machine still needs matching tap payments and paid-object history; Raging River needs the complementary except-by operation, attack events, piles, loop identity and an end-of-combat duration. Low implementation / medium test effort. |
+| Finite simultaneous prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite; up to 7 after adapters | Target/cost forms are ready, but finite allocation among simultaneous packets and affected-player replacement ordering need an engine/decision contract. High implementation/test effort; enables these seven consumers and later modal prevention. |
+| Filtered bands-with-others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite; up to 5 after adapters | Color, legendary and controller filters are ready; filtered band formation and damage assignment need an engine combat contract. High implementation/test effort; also enables Master of the Hunt's later tokens, with separate token blockers. |
+| Static permanent characteristic predicates | Goblin Caves; Goblin Shrine; Animate Artifact | 1 immediate (Caves); shared prerequisite for the other 2 | Shrine needs source-leave trigger and collection damage; Animate Artifact needs combined conditional type/set-P/T membership and captured mana value. Small predicate service / medium lifecycle and layer test effort. Enables exact host/source characteristic checks, but less immediate benefit than the selected ready two-card adapter. |
+
+The selected slice has the largest credible gain for the effort among these
+ready small adapters. Broader prevention/banding contracts remain valuable
+multi-card work. Selection, contract, reuse boundary and acceptance cases were
+stated before edits. No single-card capability was selected while ready
+multi-card work remained.
+
+### Exact contract and reuse boundary
+
+`CreatePermanentRuleEffectUntil/3`, in resolving action context, accepts a
+single operation and symbol `UntilEndOfTurn`:
+
+- Symbol `CanAttackAsThoughItDidntHaveDefender`.
+- Symbol `CanAttackAsThoughItHadHaste`.
+- Tuple `CantBeBlockedByDefenders/1` with the existing permanent filter grammar.
+
+The new forms accept symbol `ThisPermanent` on a permanent or a declared,
+typed `Ref_TargetPermanent`. Activation, spell, mode-local and entry-trigger
+resolving bodies are tested. Hosts, event/loop references, unbound or incompatible
+subjects, multi-operation lists, tuple attack spellings, malformed filters and
+other durations stay rejected. The existing `CantBeBlocked` shape retains its
+target-only contract and existing callers/tests. This does not support the
+whole temporary permanent-rule family or change static rules.
+
+RON owns syntax/scope validation and lowering, and constructs modifications
+with each factory's `instanceBindings`. Runtime behavior reuses `mage.Until`,
+`GrantKeywordModification(ref, core.AttrCanAttack)`, `AttackAsThoughHaste(ref)`,
+and `CantBeBlockedExceptBy(ref, Not(filter))`. No engine contract is missing;
+no engine source or broad DSL export is changed. Attack-only haste remains a
+rule permission, not full haste. Each rule captures the subject at resolution.
+Current blocker filters, target legality, control/phase changes, returned-object
+exclusion, payment rollback, cloned games and copied targets use shared services.
+Replacement ordering, simultaneous operations and event LKI are not applicable
+to the added adapters; no new contract for them is claimed.
+
+### TDD and card-to-test mapping
+
+Real RON tests were written first and failed with Tower's unsupported filtered
+operation and Wall's unsupported temporary source reference. A preliminary
+fixture used a nonexistent type-change helper; this was fixed before the
+expected red run. After implementation, fixtures corrected Wall's activation
+index (Defender is a keyword, not an indexed ability), restricted the reprint
+scan to RON files, and supplied CardPT for synthetic creatures. Permission
+assertions use attack legality with controlled tap/sickness/defender state:
+`AttrCanAttack` is also a base creature attribute and cannot alone prove expiry.
+No gameplay assertion was weakened and no unsupported shape was accepted to
+repair a fixture. Existing temporary-blocking tests remain unchanged and pass.
+
+| Card / contract | Test mapping |
+| --- | --- |
+| Tower of Coireall | `TestRONTemporaryCombatRuleCards`: full RON, native casting/payment rollback, tap payment, resolution timing, Wall versus other blockers, current subtype change, clone isolation and cleanup. |
+| Wall of Wonder | `Cards`: full RON, native casting and paid/unpaid activation, +4/-4 and defender retention, permission only at resolution, native attack/tapping and 5 damage, restoration to 1/5 at cleanup. |
+| Both complete cards | `Lifecycle`: phase before resolution and phase cycle, departure/return before and after resolution, control change, source departure, recipient ability removal, expiry during phasing and captured incarnation. |
+| Tower of Coireall | `Legality`: noncreature/shroud announcement rejection with no tap payment; phased, returned and newly noncreature resolution targets get no rule. Type is restored before the final check without expiring the temporary rule. `Copy`: fresh factory target declarations, independent retargeted ability copy and original. |
+| Tower of Coireall | `NativeBlocking`: illegal Wall declaration after resolution, unchanged block declared before resolution, and actual blocked/unblocked native damage. |
+| All selected records | `Reprints`: AST walk of every RON file, both records compile, two fresh factory identities validate, strict selected test-only collection loads, one invalid record prevents publication. |
+| Additional supported attack shapes | `AttackContexts`: source activation and typed spell/mode/trigger targets, both permissions, no early grant, independent defender/sickness restrictions, no haste keyword or sick tap permission, ability removal, phase cycle, cleanup and clone isolation. |
+| Additional filtered contexts | `FilteredContexts`: source activation and spell/mode/trigger targets, engine definition validation, no early rule, resolution and cleanup. |
+| Invalid declarations | `Invalid`: malformed operation arity/kind, malformed filter arity/types/lists, mixed operations, wrong duration, incompatible subjects, instant source and unbound host. Retained `TestRONTemporaryBlockingInvalid` also checks unbound and cross-mode target reads. |
+
+This adds **two complete-card RON gameplay mappings**. Collection-wide
+engine-validation and behavior-verification aggregates remain null. Compilation
+counts and gameplay evidence remain separate.
+
+### Measured gain and remaining work
+
+Post-implementation loader: **1,283 compiled / 1,162 rejected** records,
+454 accepted / 532 rejected unique names. The actual gain equals the estimate:
+Tower of Coireall and Wall of Wonder, each one record and one unique name.
+Inventory still has 72,938 occurrences, 8,528 signatures and 13,322 unknown-role
+occurrences. Existing inventory roles already cover the new operation children.
+Repository inventory count assertions change only to the fresh measurements.
+Strict and inspection issues agree. Final audit and command results follow.
+
+No source defect was found or corrected. RON sources are unchanged, so the
+vocabulary source snapshot needs no refresh. Existing Gaea's Liege/Fastbond
+concerns remain outside this slice. Runtime wiring, full collection gameplay,
+Go-card deletion and DSL cleanup remain open. No removal gate is met; no Go
+card/generator/export removal or caller audit is claimed.
+
+Ranked next candidates for fresh reassessment:
+1. Finite simultaneous prevention allocation for the seven listed consumers.
+2. Filtered bands-with-others for the five listed lands.
+3. Static permanent characteristic predicates for Goblin Caves/Goblin Shrine;
+   keep Shrine's separate departure/damage blockers explicit.
+
+Changed slice files: `pkg/mage/dsl/ron/temporary_blocking.go`, `compiler.go`,
+`temporary_combat_rule_test.go`, `inventory_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger. No next slice is started.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONTemporary(CombatRule\|Blocking)' -count=1` | PASS after lint formatting review |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS; final broad checks also cover both packages after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues. First attempt found one unnecessary `mage.Card(card)` conversion in the new fixture; removed it and reran lint. Automatic import formatting and boolean simplification reviewed; no unrelated changes. |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,283 compiled / 1,162 rejected; no registry publication |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, strict/inspection issues identical |
+| Diagnostic/source audit | Exactly 2 removed diagnostics, zero additions, zero surviving diagnostic changes; all 12 source hashes match vocabulary |
+
+Remaining diagnostics include finite prevention on Samite Healer and the other
+listed consumers, filtered bands-with-others on the five lands, source-leave
+triggers on Goblin Shrine after its predicate blocker, and matching tap payments
+on Vodalian War Machine. No environmental or pre-existing validation blocker
+remains. Only the seven listed slice files are staged and committed; both
+initial user changes remain unstaged. The descriptive commit hash is reported
+in the final response. This run stops after this slice.

@@ -827,7 +827,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		return one(build)
 	case "CreatePermanentRuleEffectUntil":
-		build, err := compileTemporaryBlocking(n, ctx)
+		build, err := compileTemporaryCombatRule(n, ctx)
 		if err != nil {
 			return nil, err
 		}

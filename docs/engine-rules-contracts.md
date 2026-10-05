@@ -1774,3 +1774,33 @@ and `TestRONAttackPermission*`. The latter covers real Aura casting, native
 attacks and combat damage, payment and target rejection, source/host lifecycle,
 and Instill Energy's complete untap activation. No replacement, simultaneous
 action, LKI, or payment service is changed.
+
+## RON temporary combat rule adapters
+
+The temporary combat adapters reuse the established `Until`, typed reference,
+blocking-filter and attack-permission contracts. They add no engine state or
+rules API. The exact RON signatures and contexts are in the temporary combat
+rules section of `docs/dsl-reference.md`.
+
+Resolution captures the selected subject incarnation (CR 400.7, 611.2c).
+Control changes and phase cycles retain that identity; departure and return
+create a new object. A departed activation source cannot transfer a source
+permission to its returned card. A departed Tower does not end a resolved
+restriction on another creature. A phased or otherwise illegal target at
+resolution receives no restriction (CR 608.2b). Cleanup expires the rule even
+while the subject is phased out (CR 514.2, 702.26).
+
+Blocking filters read current blocker characteristics and intersect with other
+combat restrictions (CR 509.1b). A later restriction does not remove a block
+already declared. Defender and attack-only haste permissions apply only to the
+specified attack restriction (CR 609.4, 702.3, 702.10); summoning sickness, tap
+costs and other independent restrictions keep their normal checks.
+
+`TestRONTemporaryCombatRuleCards`, `Lifecycle`, `Legality`, `Copy`,
+`AttackContexts`, `FilteredContexts`, and `NativeBlocking` establish paid native
+casting/activation, effect timing, real combat damage, declared-block retention,
+current subtype changes, independent targets, retargeted stack copies, clone
+isolation, phase/zone/control changes, recipient ability removal and cleanup.
+Wall of Wonder also exercises the shared P/T action before its source permission.
+No replacement, simultaneous-operation, event-LKI or new payment contract is
+introduced by this slice.

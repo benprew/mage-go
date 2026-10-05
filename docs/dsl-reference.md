@@ -1862,3 +1862,31 @@ They do not grant haste or remove defender from the host's characteristics.
 Animate Wall and Instill Energy now compile in all six reprints each. Instill
 Energy's separate zero-mana untap activation uses the existing controller-turn
 and once-per-turn checks. No Go definition or production registry is replaced.
+
+### RON temporary combat rules
+
+`CreatePermanentRuleEffectUntil(subject, [operation], UntilEndOfTurn)` accepts
+exactly one of these additional operations:
+
+- Symbol `CanAttackAsThoughItDidntHaveDefender`.
+- Symbol `CanAttackAsThoughItHadHaste`.
+- Tuple `CantBeBlockedByDefenders(permanent_filter)`.
+
+These forms accept symbol `ThisPermanent` on a permanent or a declared
+`Ref_TargetPermanent`. They work in resolving activation, spell, mode and trigger
+bodies. Aura hosts, event references, multiple operations and other durations
+remain unsupported. The existing symbol `CantBeBlocked` keeps its target-only
+boundary.
+
+RON builds each typed target and effect in the same factory instance. It uses
+`Until(EndOfTurn, ...)` with `GrantKeywordModification(ref, AttrCanAttack)`,
+`AttackAsThoughHaste(ref)`, or `CantBeBlockedExceptBy(ref, Not(filter))`.
+The engine captures the subject incarnation at resolution. A blocking filter
+reads current blocker characteristics at declaration. Each attack permission
+leaves other attack restrictions in force. Attack-only haste does not permit
+summoning-sick tap costs or grant the haste ability.
+
+Tower of Coireall uses the filtered rule with its creature target and tap cost.
+Wall of Wonder uses the source defender permission after its temporary +4/-4.
+`TestRONTemporaryCombatRule*` supplies real-record gameplay, native combat,
+invalid-declaration, payment, target-copy, lifecycle and context evidence.

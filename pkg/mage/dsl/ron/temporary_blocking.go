@@ -36,7 +36,7 @@ func compileFixedPowerFilter(n Node) (mage.PermanentFilter, error) {
 	}
 }
 
-func compileTemporaryBlocking(n Node, ctx scope) (effectFactory, error) {
+func compileTemporaryCombatRule(n Node, ctx scope) (effectFactory, error) {
 	if err := arity(n, 3); err != nil {
 		return nil, err
 	}
@@ -44,8 +44,8 @@ func compileTemporaryBlocking(n Node, ctx scope) (effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if subject.kind != permanentTarget {
-		return nil, unsupported(n.Args[0], "temporary blocking target")
+	if subject.kind != permanentTarget && subject.kind != permanentSource {
+		return nil, unsupported(n.Args[0], "temporary combat rule reference")
 	}
 	operations, err := list(n.Args[1])
 	if err != nil {
@@ -54,13 +54,42 @@ func compileTemporaryBlocking(n Node, ctx scope) (effectFactory, error) {
 	if len(operations) != 1 {
 		return nil, unsupported(n.Args[1], "temporary blocking operations")
 	}
-	if operations[0].Kind != Symbol || operations[0].Name != "CantBeBlocked" {
-		return nil, unsupported(operations[0], "temporary blocking operation")
+	operation := operations[0]
+	var modification func(mage.PermanentRef) mage.ContinuousModification
+	switch operation.Name {
+	case "CantBeBlocked":
+		if operation.Kind != Symbol || subject.kind != permanentTarget {
+			return nil, unsupported(operation, "temporary blocking operation")
+		}
+		modification = mage.CantBeBlocked
+	case "CanAttackAsThoughItDidntHaveDefender", "CanAttackAsThoughItHadHaste":
+		if operation.Kind != Symbol {
+			return nil, unsupported(operation, "temporary attack permission")
+		}
+		modification = mage.AttackAsThoughHaste
+		if operation.Name == "CanAttackAsThoughItDidntHaveDefender" {
+			modification = func(ref mage.PermanentRef) mage.ContinuousModification {
+				return mage.GrantKeywordModification(ref, core.AttrCanAttack)
+			}
+		}
+	case "CantBeBlockedByDefenders":
+		if err := arity(operation, 1); err != nil {
+			return nil, err
+		}
+		filter, err := compileFilter(operation.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		modification = func(ref mage.PermanentRef) mage.ContinuousModification {
+			return mage.CantBeBlockedExceptBy(ref, mage.Not(filter))
+		}
+	default:
+		return nil, unsupported(operation, "temporary blocking operation")
 	}
 	if n.Args[2].Kind != Symbol || n.Args[2].Name != "UntilEndOfTurn" {
 		return nil, unsupported(n.Args[2], "duration")
 	}
 	return func(bindings instanceBindings) mage.Effect {
-		return mage.Until(core.EndOfTurn, mage.CantBeBlocked(subject.build(bindings)))
+		return mage.Until(core.EndOfTurn, modification(subject.build(bindings)))
 	}, nil
 }
