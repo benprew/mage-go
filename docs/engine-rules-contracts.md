@@ -1206,3 +1206,26 @@ existing simultaneous tap contract (`TestTapEachTransitionsTogether`). Source
 entry lowering uses typed events to avoid treating event context as a target;
 source departure, phasing, return and copied triggers are covered by Arena.
 This slice adds no payment, replacement-ordering or optional-choice contract.
+
+## Random discard without result bindings: simultaneous moves
+
+`DiscardAtRandom(subject PlayerRef, amount ResolutionValue)` resolves its player
+and reads the amount once. It selects distinct cards from a local copy of that
+player's hand with the game's random source. Each selected card consumes one
+random value, including the last remaining card. Nonpositive amounts and empty
+hands consume no random values. A short hand limits selection to its size.
+Selection does not invoke the player's hand-choice interface.
+
+The action uses `discardActionsTogether`: prepare effect-caused replacements
+before movement, move the resulting cards, then send discard events. A prevented
+card is not selected again to fill the amount. Other selected cards and later
+instructions still execute. Rechecks and affected-player replacement choices
+stay in the shared replacement service. A discard event sees all destinations
+from this instruction; its graveyard visit is absent for a library destination.
+The local hand copy and random queue remain isolated in game clones.
+The existing API, definition validation and outcome metadata are unchanged.
+This contract does not change random discard costs or legacy random helpers.
+
+Rules: CR 101.3, 608.2b/c/f, 616.1/f and 701.9a/b.
+Evidence: `TestRandomDiscardBatchEventsAndReplacements`, retained
+`TestTypedRandomDiscard*`, and `TestRONRandomDiscard*`.

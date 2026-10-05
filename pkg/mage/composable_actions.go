@@ -3281,7 +3281,7 @@ type randomDiscardSubjectEffect struct {
 }
 
 // DiscardAtRandom makes the selected player discard cards at random.
-// It reads the amount once and uses the game's random queue for each card.
+// Select before movement so each event sees the complete discard.
 func DiscardAtRandom(subject PlayerRef, amount ResolutionValue) ResolvingEffect {
 	return &randomDiscardSubjectEffect{subject, amount}
 }
@@ -3305,14 +3305,14 @@ func (e *randomDiscardSubjectEffect) Apply(ctx *EffectContext) error {
 		return nil
 	}
 	amount := e.amount.resolveValue(ctx)
-	for range max(0, amount) {
-		hand := player.Hand()
-		if len(hand) == 0 {
-			break
-		}
-		card := hand[ctx.Game.RandIntn(len(hand))]
-		ctx.Game.PlayerDiscardByEffect(player, card.ID(), ctx.SourceID)
+	hand := append([]Card(nil), player.Hand()...)
+	var actions []*DiscardAction
+	for range min(max(0, amount), len(hand)) {
+		index := ctx.Game.RandIntn(len(hand))
+		actions = append(actions, NewDiscardAction(ctx.SourceID, id, hand[index].ID()))
+		hand = append(hand[:index], hand[index+1:]...)
 	}
+	ctx.Game.discardActionsTogether(actions, false)
 	return nil
 }
 

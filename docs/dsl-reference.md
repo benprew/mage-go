@@ -1406,3 +1406,24 @@ unsupported by this adapter.
 Source-entry triggers now use `WhenEvent(Enters(This), body)`. An event object is
 not a target declaration. A nontargeted trigger can resolve after its source
 leaves or phases out. See the progress ledger for complete real-card mappings.
+
+### RON random discard actions
+
+In resolving spell, mode, activation and supported trigger action lists,
+`DiscardACardAtRandom` is a bare symbol. `DiscardNumberCardsAtRandom(Integer(n))`
+requires a nonnegative integer; `DiscardNumberCardsAtRandom(ValueX)` requires an
+announced X scope. Other amounts, tuple forms of the singular action, and random
+discard costs remain rejected. These actions lower to `mage.DiscardAtRandom`.
+
+Direct actions affect the resolving controller. `PlayerAction(player, action)`
+uses the existing typed player reference plan: `You`, declared `Ref_TargetPlayer`,
+or an available step/cast event or spell-controller reference. Each factory
+builds its own target/event bindings. A player read without its declaration is
+an error. A target declaration alone does not change the direct action's player.
+Selection occurs at resolution before the shared simultaneous discard batch;
+it does not ask the affected player to choose cards.
+
+Full-record gameplay mappings: Hymn to Tourach, Mind Twist (all six reprints),
+Ring of Renewal and Gwendlyn Di Corci in `TestRONRandomDiscard*`. The engine
+contract is documented in the random-discard section of
+[engine-rules-contracts.md](engine-rules-contracts.md).

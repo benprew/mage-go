@@ -4697,3 +4697,178 @@ Ranked next candidates:
 Complete collection gameplay, runtime loading, Go-card and generator deletion,
 DSL cleanup and native startup validation remain unfinished. This run stops
 after this slice; no second slice began.
+
+## Run 2026-10-04: RANDOM-DISCARD-BATCH
+
+Status: complete random-discard action and simultaneous engine batch slice.
+This run stops here. Runtime cutover and removal gates remain open.
+The initial tree had user changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`; both are preserved and excluded from the
+slice commit. No unrelated untracked files were present.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict and semantic loading each exited 1 for collection rejection:
+**1,122 compiled / 1,323 rejected records**, 379 accepted / 607 rejected unique
+names. All 2,445 records and 986 names were inspected through the AST inventory.
+The report still has 72,938 occurrences and 8,528 context/shape signatures.
+First diagnostics were used to find candidates, not to estimate full unlocks.
+Complete RON records and nested forms were read for the names below.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream capabilities and effort |
+| --- | --- | ---: | --- |
+| Random-discard action plus simultaneous batch, selected | Hymn to Tourach; Mind Twist; Ring of Renewal; Gwendlyn Di Corci; Hypnotic Specter. Related cost/filtered consumers: Coral Helm; Draconian Cylix; Rag Man. | 3 / 8 records: Hymn, Twist, Ring | Gwendlyn was conservatively excluded for its activation modifier; existing turn-only lowering actually makes it ready. Specter needs damage-event player bindings; Helm/Cylix need random cost transactions; Rag Man needs opponent targeting and filtered reveal/discard. Shared action is a prerequisite for damage-event discard. Small compiler adapter and moderate engine batch/interaction tests; existing typed action and discard batch executor substantially reduce effort. |
+| Amount prevention shields | Samite Healer; Conservator; Amulet of Kroog; Argivian Blacksmith; Combat Medic; Oasis; Kei Takahashi; Healing Salve; Alabaster Potion; Balm of Restoration; Rakalite; Guardian Angel | 0 for allocation prerequisite alone; 7 after lowering | Salve/Potion need explicit-player life; Balm needs activation modes; Rakalite needs a delayed return; Guardian needs player payment rules. Shared simultaneous CR 615.7 allocation enables the seven otherwise-ready cards, but needs a larger damage, replacement and player-choice contract with source allocation and actual damage tests. |
+| Bands with other legendary creatures | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel. Related forms: Master of the Hunt; Shelkin Brownie; Tolaria. | 5 lands after engine and adapter support | Existing combat handles ordinary Banding only. Filtered band formation and incoming damage assignment need an exact reusable engine contract; granting ordinary Banding would be wrong. Hunt needs named token support and a different band group; Brownie/Tolaria need ability removal and timing. Moderate-to-large combat and layer implementation/test effort. |
+
+Selection: random discard gives the largest credible immediate gain for the
+smaller effort. The engine already has typed player/amount actions, deterministic
+random queues, clone isolation and a shared discard batch service. The missing
+contract is selection before replacement/movement, followed by complete-batch
+visibility. Prevention and filtered banding remain valuable multi-card work.
+The behavior contract, reuse boundary, acceptance cases and three-candidate
+comparison were stated before editing. The implement-engine skill was applied
+only to the reusable engine prerequisite; no card definitions were changed.
+
+Local Oracle records in data/*.json were checked for all eight random-discard
+consumers. They agree with the source forms. Rules read: CR 101.3, 608.2b/c/f,
+616.1/f and 701.9a/b. No source defect was found or corrected. The previous
+Gaea's Liege/Fastbond concerns remain open.
+
+### Exact signatures, contexts, dependencies and reuse
+
+- Existing `mage.DiscardAtRandom(PlayerRef, ResolutionValue) ResolvingEffect`
+  resolves the player and amount once, then selects distinct cards from a local
+  copy of the current hand using `Game.RandIntn`. Selection consumes one value
+  per card; empty hands and nonpositive amounts consume none. Short hands limit
+  the number selected. A prevented discard does not cause another card to be
+  selected or the same card to be selected again.
+- The action now calls existing `discardActionsTogether(actions, false)`.
+  Effect-caused `DiscardAction` replacements are prepared before any moves;
+  moves finish before discard events. Prevented cards do not stop other cards
+  or later instructions. Shared replacement ordering/rechecks, destination
+  handling, graveyard visits, trackers and event dispatch remain in the engine.
+  The public signature, metadata, definition validation and existing callers
+  are preserved. Legacy random helpers and random discard costs are unchanged.
+- `compileRandomDiscard(Node, scope) ([]effectFactory, error)` accepts bare
+  `DiscardACardAtRandom`, `DiscardNumberCardsAtRandom(Integer(n))/1` for n >= 0,
+  and `DiscardNumberCardsAtRandom(ValueX)/1` in an announced-X scope. Other
+  amounts, singular tuples, malformed declarations and unbound X are rejected.
+- Supported contexts are resolving action lists in spells, selected modes,
+  activations and already-supported triggers. `PlayerAction(player, action)/2`
+  uses `compilePlayerRef`; direct actions keep the resolving controller even
+  when the action list declares a player target. Typed target, spell-controller
+  and available step/cast event reads use the existing instance environment.
+  No new binding kind or mutable compiler state is added.
+- The factory lowers to `mage.DiscardAtRandom(ctx.player.build(bindings), amount)`.
+  Each factory/action build keeps its own target/event bindings. X uses the
+  existing announced resolution value. RON owns spelling, shape rejection and
+  lexical scope; mage owns random selection, replacements and movement.
+- Inventory gives the plural action's child the value role in action and player
+  action contexts, including nested forms under unsupported parents. Reporting
+  does not infer verified support from constructor names.
+
+No LKI characteristic read or permanent target is introduced. Pending source
+abilities retain their resolving controller/target after departure, return,
+control change or phasing through the existing stack/source contracts. Phasing
+is not interpreted as a zone change. Random choices remain resolution work;
+cost affordability and failed payments do not consume random values. No global
+result slot, runtime declaration panic, name branch, fallback or partial
+production registry was introduced.
+
+### TDD, real-card gameplay and acceptance evidence
+
+Before implementation, `TestRandomDiscardBatchEventsAndReplacements` failed
+because events saw partial hands and hand-dependent replacements saw a prior
+card already moved. With the prevention fixture corrected to match effect
+rather than cost discard, it also proved a prevented first card was selected
+again instead of selecting a distinct second card. The corrected fixture was
+rerun and failed before implementation. RON tests failed on unsupported random
+player/direct actions; the inventory test reported an unknown amount role.
+
+Initial gameplay fixtures needed a main step for sorceries and a player that
+accepts the optional library replacement. The two-pending-spell test uses a
+synthetic instant beside real Mind Twist because a second sorcery cannot be cast
+with a nonempty stack. These fixture repairs preserve legality and all behavior
+assertions. Gwendlyn's full-record coverage was added after fresh loading found
+its existing modifier was supported; it needed no further implementation.
+
+| Unique card / contract | Test mapping |
+| --- | --- |
+| Hymn to Tourach (FEM), Mind Twist (LEA/LEB/2ED/3ED/CED/CEI) | `TestRONRandomDiscardSpells`: full records, definition validation, fixed and announced-X amounts including zero, empty/short hands, distinct scripted selection, no hand-choice prompts, announcement versus resolution, graveyard and clone/RNG isolation |
+| Mind Twist | `TestRONRandomDiscardCopyAndInstances`: separate real factory declarations, pending instant/real spell with different X and players, retargeted copy retains X, independent original/clone hands and targets |
+| Ring of Renewal (FEM) | `TestRONRandomDiscardRingLifecycle`: full record, tap/mana timing, random discard before draw, empty-hand continuation without RNG, captured controller after source departure/return/control/phasing, clones |
+| Gwendlyn Di Corci (LEG) | `TestRONRandomDiscardGwendlyn`: full record and legend/P/T metadata, self/opponent target, your-turn restriction in combat, summoning sickness/tap/phasing rejection, new controller, pending source departure/return/control, changed turn at resolution, clones |
+| Mind Twist, Ring of Renewal | `TestRONRandomDiscardRollback`: insufficient mana, invalid target, tapped/phased activation; hand/mana/stack/RNG unchanged on failure |
+| Hymn to Tourach | `TestRONRandomDiscardReplacement`: real target and shared optional library replacement; both destinations visible to every discard event, selected order and RNG preserved |
+| Supported spell/activation/source-entry/step-trigger contexts | `TestRONRandomDiscardContexts`: explicit typed player versus direct controller; event player binding; engine definition validation |
+| Selected modes | `TestRONRandomDiscardModes`: target only for active mode, announcement-time choice, explicit target or controller, inactive body does not execute |
+| Declarations/reporting | `TestRONRandomDiscardInvalid`, `TestRONRandomDiscardInventory`: wrong shapes/values/roles, undeclared player/event/X/payment reads, semantic amount role |
+| Shared batch and replacement rechecks | `TestRandomDiscardBatchEventsAndReplacements`: ordinary/library/prevented/rechecked actions, hand-dependent replacements before movement, complete event visibility, no retry of prevented cards, continuation |
+| Retained shared contracts | `TestTypedRandomDiscard*`: dynamic values read once, absent subject, negative/zero amounts, choices bypassed, replacements, short hand, validation, copies and independent clone random queues; existing selected-discard and payment suites |
+
+### Fresh measurements and validation
+
+Actual gain: **4 unique cards / 9 records**, versus **3 / 8 estimated**.
+The extra card is Gwendlyn Di Corci, whose existing `IsTheirTurn` modifier was
+more complete than the conservative estimate. No second capability was added.
+Final **1,131 compiled / 1,314 rejected records**; **383 accepted / 603 rejected
+unique names**. Exactly the nine records for the four mapped cards leave the
+issue list. No previously accepted record is rejected, and every remaining
+first diagnostic is unchanged. Hypnotic Specter, cost consumers and filtered
+Rag Man remain rejected; their shared downstream value is not a gameplay claim.
+
+Strict and semantic issue arrays agree. AST totals remain 72,938 occurrences /
+8,528 signatures; unknown-role occurrences decrease from 14,405 to 14,398.
+All twelve source hashes still match the vocabulary snapshot, so no source
+snapshot refresh is needed. Engine-validated and behavior-verified collection
+totals remain null/unmeasured. Tests supply full-record mappings for four more
+unique cards; compilation totals are not collection gameplay completion.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1`; `make build` | PASS |
+| Baseline `go run ./cmd/loadcards -json`; `-inventory -json` | Expected exit 1: 1,122 compiled / 1,323 rejected |
+| New engine/RON tests before implementation | Expected semantic failures recorded above |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS |
+| Focused `TestRandomDiscard*`, `TestTypedRandomDiscard*`, `TestRONRandomDiscard*`, `TestInventory*` with `-count=1` | PASS |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `go test ./... -short -count=1` | PASS |
+| `make lint` | PASS, zero issues; automatic import ordering in the new test files reviewed |
+| Post-lint engine short tests and focused tests with `-count=1` | PASS |
+| Post-review copy target-isolation test with `-count=1` | PASS |
+| `git diff --check` | PASS |
+| Final strict and semantic loaders | Expected exit 1: 1,131 compiled / 1,314 rejected; diagnostics agree and are stable |
+| Accepted-record and vocabulary hash audit | PASS, no regressions and no source changes |
+
+No environmental or baseline build/test failure blocked this slice. Collection
+rejection remains expected and is not a validation failure. The new engine
+behavior uses the existing batch service and preserves current API callers.
+No DSL function was removed; no deletion caller audit is claimed. No Go card,
+generator, authoring-instruction cutover or runtime wiring was changed because
+the design's removal gates remain unmet.
+
+Slice files: `pkg/mage/composable_actions.go`, new
+`pkg/mage/random_discard_batch_test.go`; `pkg/mage/dsl/ron/compiler.go`,
+new `random_discard.go` and `random_discard_test.go`, `inventory.go` and
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this ledger. Only these files are included in the slice commit.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Shared CR 615.7 simultaneous shield allocation, then exact prevention lowering
+   for seven otherwise-ready cards; preserve replacement choices and actual
+   damage. This remains the largest concrete multi-card prerequisite.
+2. Filtered bands-with-other engine contract and the five legendary lands;
+   ordinary Banding cannot substitute for it.
+3. Damage-event player/source snapshots and typed trigger reads; enable random
+   discard for Hypnotic Specter and establish the shared event prerequisite for
+   Nicol Bolas, Marsh Viper, Pit Scorpion and Nafs Asp. Inspect each complete
+   record for its remaining discard/counter/delayed-result adapters first.
+
+Complete RON gameplay, whole-collection validation, application startup loading,
+Go-card/generator removal, obsolete DSL cleanup and native startup smoke tests
+remain unfinished. This completed slice does not begin another capability.

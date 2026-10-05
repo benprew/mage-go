@@ -933,7 +933,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		}
 		ctx.player = who
 		return compilePlayerEffect(n.Args[1], ctx)
-	case "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "GainLife", "LoseLife":
+	case "DrawACard", "DrawNumberCards", "DiscardACard", "DiscardNumberCards", "DiscardACardAtRandom", "DiscardNumberCardsAtRandom", "GainLife", "LoseLife":
 		return compilePlayerEffect(n, ctx)
 	case "AddMana", "AddManaRepeated":
 		count := 1
@@ -1069,6 +1069,9 @@ func compilePT(n Node) (power, toughness int, err error) {
 }
 
 func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
+	if n.Name == "DiscardACardAtRandom" || n.Name == "DiscardNumberCardsAtRandom" {
+		return compileRandomDiscard(n, ctx)
+	}
 	if n.Name == "DiscardACard" || n.Name == "DiscardNumberCards" {
 		return compileFixedDiscard(n, ctx)
 	}
