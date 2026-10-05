@@ -2896,3 +2896,21 @@ timestamp order. A later grant can restore the keyword.
 
 Evidence: `TestRemoveEachKeyword*` and `TestRONLastingKeyword*`. The complete
 Gravity Sphere and Elder Land Wurm records have native RON gameplay tests.
+
+## RON batch return to hand
+
+`PutEachPermanentIntoItsOwnersHand(filter)` is a resolving action. Existing
+permanent filters select current battlefield membership. A nonempty `And`
+can contain one `OwnedByAPlayer(SinglePlayer(player-reference))` restriction,
+including nested conjunctions. Player references use the current action scope;
+unbound, malformed, repeated owner restrictions and ownership inside `Or`
+are rejected. Pure disjunctions retain the existing permanent-filter grammar.
+
+The adapter uses `ReturnEachToHand` with `MatchingPermanents` or
+`PermanentsOwnedBy`. Each factory constructs its own typed player bindings.
+Selection occurs at resolution and excludes phased permanents. Ownership,
+rather than control, selects the owner-scoped collection. All selected objects
+return through one engine batch. The action does not target those permanents.
+`TestRONReturnCollection*` covers Hurkyl's Recall, declaration rejection,
+instance/copy/clone isolation and simultaneous returns. Attachment and dynamic
+controller predicates in Remove Enchantments remain unsupported.

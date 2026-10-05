@@ -546,6 +546,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
 			}
+		case "PutEachPermanentIntoItsOwnersHand":
+			if len(n.Args) == 1 {
+				return "permanent_filter"
+			}
 		case "TapEachPermanent", "UntapEachPermanent":
 			if len(n.Args) == 1 {
 				if n.Args[0].Name == "Ref_TargetPermanents" {
@@ -819,7 +823,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Other" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
-		if n.Name == "ControlledByAPlayer" && len(n.Args) == 1 {
+		if (n.Name == "ControlledByAPlayer" || n.Name == "OwnedByAPlayer") && len(n.Args) == 1 {
 			return "player_filter"
 		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {

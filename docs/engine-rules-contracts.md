@@ -3093,3 +3093,20 @@ phasing, control, copied triggers and cloned pending work.
 invalid-target cost rollback, copies, source departure and clones.
 `TestRONLastingKeywordInvalid` checks declaration and context rejection.
 No damage, LKI read, replacement ordering or cost execution service changes.
+
+## RON owner-scoped batch return
+
+`TestRONReturnCollectionRecall` executes Hurkyl's Recall from its complete RON
+record through casting and resolution. It verifies owner/controller separation,
+current resolution membership, late entry, new incarnations, type changes,
+phasing, nontargeted shroud/indestructible recipients, tokens, retargeted copies,
+cost rollback and clone isolation. `TestRONReturnCollectionBatchAndInstances`
+checks independent activation controllers and an observer that must not see an
+intermediate battlefield state during a simultaneous return. Declaration and
+semantic-role tests are `TestRONReturnCollectionInvalid` and `Inventory`.
+
+The adapter reuses `ReturnEachToHand`, `PermanentsOwnedBy`,
+`MatchingPermanents` and `BouncePermanentsToHand`. It changes no engine service.
+Rules: CR 400.3, 400.7, 608.2b/c/f/h and 702.26b–d. Current membership has no
+saved permanent or LKI read. Existing target and zone services retain legality,
+replacement and identity handling. No new replacement ordering is established.

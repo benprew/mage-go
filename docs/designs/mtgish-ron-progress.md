@@ -15435,3 +15435,127 @@ keyword_set_test.go; pkg/mage/dsl/ron/indefinite_type.go, layers.go,
 lasting_keyword_test.go, temporary_keyword_test.go, inventory_test.go;
 docs/dsl-reference.md, docs/engine-rules-contracts.md and this ledger entry.
 Commit hash is reported in the final response. No second slice is started.
+
+## Run 2026-10-05: OWNER-COLLECTION-RETURN
+
+Status: complete dependency-ready adapter slice. Stop after this slice.
+
+### Fresh evidence and selection
+
+Initial user changes to `.gitignore`, execution design and progress ledger, and
+untracked `mtgish-ron-completed.md`, were preserved. The ledger restructuring
+and history file are not staged with this slice; only this entry is committed.
+Baseline compiler tests, short engine tests and build passed. Strict loader and
+semantic inventory exited 1 for collection rejection: 2,445 records, 1,531
+compiled, 914 rejected; 559 accepted and 427 rejected unique names. Inventory:
+72,951 nodes, 8,540 signatures, 10,336 unknown-role occurrences. Architecture,
+ledger/history, vocabulary snapshot, engine reference, selected compiler/engine
+code, API/contracts and CR 400.3/400.7, 608.2 and 702.26 were inspected.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Owner-scoped batch return, selected | Hurkyl's Recall, Remove Enchantments; **1** full-card unlock, Hurkyl's Recall. | Remove Enchantments needs ownership within disjunctions, controller and attachment predicates, plus its subsequent destruction selection. The shared batch action and typed owner conjunction supply its owner-set prerequisite and future owner-selected operations. | Low: reuse exact existing engine batch and owner set, scope adapter, real casting and lifecycle tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion; **4** credible unlocks after allocation, zero safe adapter-only gains. | Simultaneous-source allocation under CR 615.7 remains missing. Complete records also require competing prevention/replacement tests; targets, modes, X and costs are available. Shared finite prevention enables additional consumers. | Medium/high: allocation decisions and batch/replacement contracts before adapters. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats; **4** credible unlocks after zone characteristics. | All-zone CDA execution, owner/controller context, named counts and layer/copy interactions remain prerequisites. Gaea's Avenger and Wood Elemental have separate blockers. Enables further all-zone characteristics. | High: zone-aware characteristics and layered count contracts. |
+
+Selection gives the largest credible gain for the small adapter effort among
+these candidates. It establishes shared execution for two concrete consumers,
+with one immediate full card. The alternatives have larger missing engine
+contracts. Complete selected and alternative RON records, including nested
+forms, were inspected; reprints count once. Hurkyl's Recall has identical ATQ
+and 3ED records. First-error frequency was not used as an unlock estimate.
+Contract, reuse boundary and acceptance cases were stated before editing.
+No removed skills, Go card requirements, fallbacks or card-name branches were used.
+
+### Exact supported shapes and dependencies
+
+Resolving action `PutEachPermanentIntoItsOwnersHand(filter)/1`, in existing
+spell/mode/activation/trigger action contexts. The filter uses the existing
+permanent-filter grammar. A nonempty `And([filters...])/1`, including nested
+conjunctions, may contain exactly one
+`OwnedByAPlayer(SinglePlayer(player-reference))/1`. The player reference uses
+`compilePlayerRef` and the surrounding typed scope. This includes `You` and a
+locally declared `Ref_TargetPlayer`; other existing event/controller references
+retain their existing scope contracts. Unbound/incompatible/malformed reads,
+multiple owner restrictions and owner restrictions inside `Or` are rejected.
+Pure disjunctions reuse existing filters. Entry/cost/static contexts gain no
+support. No declaration is created implicitly and no global result slot is used.
+
+RON owns spelling, validation and lowering. Per-factory `instanceBindings`
+constructs the player refs. Exact shared services: `ReturnEachToHand`,
+`PermanentsOwnedBy`, `MatchingPermanents`, `BouncePermanentsToHand`, targeting,
+transactional mana payment, stack copying and game cloning. No engine code or
+service changes were needed. Selection reads current membership at resolution,
+excluding phasing and without LKI. A returned artifact is a new member of that
+collection rather than an old saved reference. Control does not replace owner.
+Permanents are not targeted; the player target retains native legality checks.
+The return uses one batch, with no intermediate trigger-visible state.
+Inventory now assigns permanent-filter and owner-player roles to these nested
+forms without treating reporting as support proof.
+
+### TDD and behavior mappings
+
+New tests first had fixture API errors (an invented continuous-effect constructor
+and the GameEvent namespace). Those were corrected before confirming the
+expected unsupported-action failure in every real-card case and the generic
+activation test. After implementation the focused suite passed. The final token
+fixture used `mage.CardType` instead of `core.CardType`; this was corrected.
+No behavior assertion was weakened or skipped.
+
+| Card or contract | Tests |
+| --- | --- |
+| Hurkyl's Recall, complete ATQ record; identical 3ED reprint | `TestRONReturnCollectionRecall`: 1U casting, unpaid and invalid-player rollback, announcement timing, owner versus controller, nonartifact exclusion, control changes, phase/phase cycle, departure/return, late entry, current type changes, shroud/indestructible/regeneration independence, tokens, retargeted copy, spell graveyard and clone isolation. `Inventory` validates the 3ED factory and typed roles; reprint equivalence reuses the same gameplay mapping. |
+| Generic instances and simultaneous batch | `TestRONReturnCollectionBatchAndInstances`: fresh factory abilities, two activation controllers, source return, independent owner resolution, generic untargeted batch and state-trigger observer that rejects intermediate removal. Existing engine `TestReturnEachToHand*` and `TestBouncePermanentsToHandSkipsDuplicateAndStaleObjects` remain passing. |
+| Invalid declarations and semantic roles | `TestRONReturnCollectionInvalid`: kind/arity, unbound or wrong-type refs, malformed owner wrappers, empty conjunction, duplicate owners, owner-in-disjunction. `TestRONReturnCollectionInventory`: typed owner read, valid nested conjunction/pure disjunction, definition validation and reprint compilation. |
+| Accepted collection regression | `TestInventory*`, existing return-hand and full compiler suite; fresh counts updated from loader measurements. Strict collection rejection preserves registry atomicity. |
+| Remove Enchantments | Shared batch/owner prerequisite only; no full-card behavior claim. Diagnostic remains `LEG.lines.ron:218:223: unsupported permanent filter (OwnedByAPlayer)` within its disjunction. |
+
+Local `data/ATQ.json` Oracle text agrees with Hurkyl's Recall. No source defect
+was found or corrected. All twelve source hashes remain unchanged; vocabulary
+source refresh is unnecessary. Existing source defects stay unresolved.
+
+### Validation and measured gain
+
+Actual gain matches estimate: **1 unique card / 2 records**, Hurkyl's Recall.
+No accepted name regressed. Final strict loading: **1,533 compiled / 912 rejected
+records**, **560 accepted / 426 rejected unique names**. Semantic inventory:
+72,951 nodes, 8,540 signatures, 10,287 unknown-role occurrences. Compilation and
+gameplay coverage remain separate; engine_validated and behavior_verified totals
+remain null. One complete-card behavior mapping is added. Loader exit 1 remains
+expected collection rejection, with no partial registry installation.
+
+No Go definitions, generators, startup callers or DSL functions were removed.
+Complete loading, gameplay, runtime integration and test migration remain below
+removal gates. No caller audit authorizes DSL deletion. Documentation describes
+only this established adapter over existing engine behavior.
+
+All required checks passed after the final token assertion and lint. Automatic
+lint formatting was reviewed; no unrelated code changed. No environment or
+pre-existing check failure remains. Ranked next candidates:
+
+1. Finite recipient prevention allocation prerequisite: four full consumers.
+2. All-zone count CDA prerequisite: four full consumers.
+3. Typed boolean collection predicates, including owner/controller/attachment
+   selection for Remove Enchantments; compare all complete consumers before selection.
+
+No second slice is started. Slice files: `pkg/mage/dsl/ron/return_collection.go`,
+`return_collection_test.go`, `compiler.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger entry.
+
+| Command | Result |
+| --- | --- |
+| Baseline compiler tests, short engine tests, make build | PASS. |
+| Failing gameplay tests before implementation | Expected unsupported batch-return action after fixture repairs. |
+| Focused new/retained return, batch and inventory tests with -count=1 | PASS after final assertions and lint. |
+| go test ./pkg/mage/... -short -count=1 | PASS, repeated after final assertions and lint. |
+| make test | PASS, repeated after final assertions and lint. |
+| make build | PASS, repeated after final assertions and lint. |
+| go vet ./... | PASS, repeated after final assertions and lint. |
+| make lint | PASS, zero issues; automatic formatting reviewed. |
+| git diff --check | PASS after documentation and staged-entry review. |
+| go run ./cmd/loadcards -json | Expected exit 1 for collection rejection: 1,533 compiled / 912 rejected. |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1; same counts, 560 accepted / 426 rejected names, 72,951 nodes / 8,540 signatures / 10,287 unknown-role occurrences. |
+| Before/after source and accepted-name audit | Twelve hashes unchanged; exactly Hurkyl's Recall gained; no accepted names lost. |
+
+Only this validated slice is committed. The commit hash is reported in the final
+response. User edits and the untracked history document remain unstaged.

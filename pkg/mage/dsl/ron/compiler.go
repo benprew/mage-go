@@ -1078,6 +1078,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return mage.Sacrifice(ref)
 			}
 		})
+	case "PutEachPermanentIntoItsOwnersHand":
+		build, err := compileReturnCollection(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "UntapEachPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
