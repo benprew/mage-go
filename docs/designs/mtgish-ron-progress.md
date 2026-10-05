@@ -13267,3 +13267,156 @@ Slice files: `pkg/mage/combat_pair_matching.go`, `combat_pair_matching_test.go`,
 `docs/engine-rules-contracts.md`, and this ledger. Stage only these eleven files.
 The descriptive commit hash is reported in the final response. Do not start
 another slice in this run.
+
+## 2026-10-05: conditional fixed tap mana
+
+Status: one completed shape, `CONDITIONAL-FIXED-MANA`; general `IfElse` remains
+partial. This run stops after this slice. User changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain untouched and outside the commit.
+No unrelated untracked files existed at the initial status check.
+
+### Fresh baseline, candidate comparison and selection
+
+Baseline RON tests, short engine tests and `make build` passed. Strict loading
+exited 1 for collection rejection, with 2,445 records, 1,486 compiled and 959
+rejected; 531 accepted and 455 rejected unique names. The vocabulary snapshot,
+current inventory code, fresh diagnostics and complete candidate RON records
+were inspected. Reprints count once. Candidate scopes were deliberately narrow:
+
+| Candidate | Distinct affected names and estimated complete-card gains | Dependencies and other blockers | Downstream value and estimated effort |
+| --- | --- | --- | --- |
+| Conditional fixed tap mana (selected) | Urza's Mine, Urza's Power Plant, Urza's Tower: **3** names / **3** records. | Existing dynamic mana and controller battlefield queries are ready. Need a typed conditional production declaration, validation, and RON lowering; no source defects or later rule blockers in these full records. | Shared pure condition/branch selection for solver and activation, with accurate mana metadata. Small engine addition plus adapter; approximately 2 implementation units and 5 test groups. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible names after the prerequisite; **0** safe gains from adapter-only work. | Complete records use existing tap costs, targets, modes, explicit players and X. `PreventNextDamage` exists, but finite allocation among simultaneous sources (CR 615.7) is missing. Must establish that contract before exposing these RON shields. | Shared prevention pipeline prerequisite for additional shield consumers. Medium/high effort: batch replacement/decision integration plus adapter and source/recipient/order/clone matrix. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible names after a shared engine prerequisite. | Complete records need all-zone characteristic evaluation, controller-aware and named count queries, and CDA layers. Gaea's Avenger remains a separate controller/source-data audit; Wood Elemental also needs entry sacrifice results. Those two are excluded from the estimate. | Reusable CDA queries for cards in each zone, copy values and layer ordering. High effort: all-zone engine contract, adapters and zone/controller/copy/layer test matrix. |
+
+Selection rationale, scope, reuse and acceptance cases were stated before edits.
+Three immediate full cards at low implementation cost beat the larger engine
+prerequisites this run. First-error frequency was not used as an unlock count.
+The selected engine gap uses the `implement-engine` skill; no removed card skills
+or Go definitions were used. RON records are unchanged.
+
+### Exact supported contexts and engine reuse
+
+Engine signature:
+`NewConditionalManaAbility(condition StateCondition, whenTrue, whenFalse []ManaProduction) *ManaAbility`.
+Both branches contain nonempty, fixed-color, positive-amount productions with
+no restrictions or choices. Definition metadata validates the condition and
+branches. Input and result slices are copied. The condition must remain unchanged
+by the tap cost because payment queries precede it. It reads current source
+controller and battlefield membership, with no LKI, saved result or game state
+in the declaration. Missing/phased sources produce nothing.
+
+RON signature/context:
+`Activated(TapPermanent(ThisPermanent), ActionList([IfElse(condition, [AddMana(production)], [AddMana(production)])]))`.
+`condition` is `PlayerPassesFilter(You, ControlsA(filter))` or nonempty, nested
+`And` combinations of those `ControlsA` checks under the same player wrapper.
+`filter` permits `AnyPermanent`, card types, positive/negative land or creature
+subtypes, enchantment subtype, positive/negative colors or supertypes, and
+nonempty `And`/`Or` combinations. Tap/combat status filters are rejected.
+Subtype validation follows the existing engine family contract: custom unknown
+subtypes are allowed, known mismatched families are rejected. `production` is
+one concrete `ManaProduce*` symbol or a nonempty `And` of them. Repeated colors
+and multiple fixed colors work. Empty branches, extra actions/costs, modifiers,
+choice/dynamic production, undeclared players and other conditions are rejected.
+
+Private compiler boundaries: `conditionalManaBody(Node) bool`,
+`compileConditionalMana(Node) (optionFactory, error)`,
+`compileManaCondition(Node) (mage.StateCondition, error)`,
+`compileManaControlCondition(Node) (mage.StateCondition, error)`,
+`compileManaControlFilter(Node) (mage.PermanentFilter, error)`, and
+`compileManaBranch(Node) ([]mage.ManaProduction, error)`.
+Factories create separate mana abilities and copied branch slices. Immutable
+condition plans have no binding producers or mutable chosen state. Existing
+`PlayerControls`, `AllConditions`, `PermanentFilter`, `ManaAbility`, `ManaSystem`,
+solver, tap events, mana bonuses and transactional casting handle execution.
+No card-name branches, fallback registry or alternate mana system was added.
+
+Queries and activation read the same production service. Mana resolves without
+a stack object (CR 605.1a/605.3b). Subtypes, not names, identify prerequisite
+lands. Control changes and phasing update membership immediately; a returned
+prerequisite can match the current collection. Clones keep separate battlefield,
+tap and pool state. Bonus mana applies once per tap. Ability removal suppresses
+activation. These rules introduce no target, delayed identity, LKI, replacement
+ordering or simultaneous damage contract. Existing engine services retain those
+contracts; there is no new reference or global action-result slot.
+
+Inventory now preserves roles for `IfElse/3` branches, resolving
+`PlayerPassesFilter/2`, and nested static-player `And/1`, even below rejected
+bodies. Reporting does not imply general `IfElse` gameplay support.
+
+### TDD and card-to-test mappings
+
+Initial real RON tests failed with `unsupported action (IfElse)` for all three
+full records. After test fixture API corrections (phase-in list and control
+effects), engine tests failed only for the missing constructor. The inventory
+test failed on unknown descendant roles before its role adapters were added.
+
+Two further fixture assumptions were corrected: production may have several
+same-color entries, and the payment solver may preserve Tower and tap Mine/Plant
+or produce one excess mana. Assertions now check the total production and exact
+pool balance for the chosen taps. Unknown custom subtypes are permitted by the
+existing engine validator; the invalid family test uses Aura instead. A colored
+branch test exposed an incorrect color enum bound in the new code; the bound
+now permits Colorless through Green and rejects AnyColor and invalid values.
+No required check or behavioral assertion was removed.
+
+| Card or contract | Tests |
+| --- | --- |
+| All three complete ATQ land records | `TestRONConditionalManaCards`: real land play, all four prerequisite-control combinations for each card, ownership distinct from control, pure repeated queries, fresh factories, immediate activation, tapped-cost rejection and clone isolation. |
+| All three records, bonus and ability membership | `TestRONConditionalManaBonusesAndRemoval`: complete RON Mana Flare, bonus once per tap, no stack, and ability removal with unchanged resources on rejection. |
+| Tower and the other two full records | `TestRONConditionalManaCurrentState`: phased/returned prerequisite, current subtype/control changes, source control, missing Urza's subtype, same name without subtypes, and clone isolation. |
+| Full RON lands with full RON Tawnos's Wand | `TestRONConditionalManaPayment`: successful automatic casting and exact mana balance; insufficient-mana rollback preserves hand, stack, pool and tap state. |
+| Supported synthetic shapes and invalid declarations | `TestRONConditionalManaShapes`, `Invalid`, `Malformed`: standalone/nested conjunctions, mixed fixed colors, alternate names, empty/extra/dynamic/choice branches, incorrect player/source/cost/condition/filter forms. |
+| Semantic reporting | `TestRONConditionalManaInventory`: nested role assertions. Existing collection tests retain exact counts and registry immutability; expected compiled/rejected counts updated to 1,489/956. |
+| Shared engine | `TestConditionalMana`, `TestConditionalManaInvalid`: copied input/result slices, controller/phasing/departure, cloned queries, immediate activation, missing context, invalid condition/branches/player references/colors/amounts. |
+
+Three full-card behavior mappings are added; compilation and whole-collection
+behavior remain separate. Engine-validation and behavior report totals remain
+null. This run makes no all-card gameplay claim.
+
+### Results and next work
+
+Actual gains match the estimate: exactly **3 unique names / 3 records**.
+Fresh strict and semantic loading reports **1,489 compiled / 956 rejected
+records**, **534 accepted / 452 rejected names**, with no accepted-name
+regressions. Semantic inventory remains **72,938 nodes / 8,530 signatures**;
+unknown-role occurrences fall from the prior report's 11,019 to **10,827**.
+All 12 source hashes are unchanged. No source defect was corrected and no
+vocabulary snapshot refresh is required.
+
+| Command | Final result |
+| --- | --- |
+| Baseline RON tests, short engine tests, `make build` | PASS. |
+| `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'Test(RON)?ConditionalMana&#124;TestInventory' -count=1` | PASS; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS; repeated after lint. |
+| `go test ./... -short -count=1` | PASS; implement-engine skill check. |
+| `make test` | PASS. |
+| `make build` | PASS; repeated after lint. |
+| `go vet ./...` | PASS; repeated after lint. |
+| `make lint` | PASS, zero issues. Automatic changes were import formatting in the four new files and an equivalent switch for subtype-family selection; reviewed. |
+| `git diff --check` | PASS before and after lint, and before commit. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for collection rejection: 1,489 compiled / 956 rejected. Repeated after lint. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; identical collection counts and 452 rejected names; all source hashes match the vocabulary snapshot. |
+
+No environment or pre-existing failure blocked this slice. Post-lint affected
+checks passed. The strict loader still installs no partial registry. Native
+application cutover is not part of this slice.
+
+Remaining diagnostics include Samite Healer's `CreateFuturePreventDamage`,
+Dakkon Blackblade's `CDA_Power` and Blood Lust's resolving `IfElse`. General
+branches, mana choices, variable production and additional activation costs
+remain separate slices.
+
+Ranked next candidates to reassess:
+
+1. Finite recipient shield allocation, then the four complete prevention cards.
+2. All-zone CDA values for the four unblocked count cards; keep Avenger's source
+   audit and Wood's entry results separate.
+3. Plural keyword/damage/destruction operations: inspect Part Water, Winter Blast
+   and Volcanic Eruption against X targets, actual destruction results and the
+   Winter Blast source audit before estimating complete unlocks.
+
+Complete loading, complete-card gameplay and startup wiring remain below the
+removal gate. Go definitions, generators and DSL functions are retained; no
+caller audit was used to authorize deletion. Cutover authoring instructions
+remain deferred to cutover. This run does not start a second slice.

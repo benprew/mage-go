@@ -45,6 +45,7 @@ type ManaAbility struct {
 	BaseAbility
 	Productions        []ManaProduction
 	dynamicProductions ManaProductionFunc
+	conditional        *conditionalManaPlan
 	postProduction     []Effect
 }
 
@@ -157,6 +158,9 @@ func NewDynamicManaAbility(productions ManaProductionFunc, afterProduction ...Ef
 }
 
 func (ma *ManaAbility) currentProductions(g GameReader, sourceID uuid.UUID) []ManaProduction {
+	if ma.conditional != nil {
+		return ma.conditional.productions(g, sourceID)
+	}
 	if ma.dynamicProductions != nil {
 		productions := ma.dynamicProductions(g, sourceID)
 		if productions == nil {

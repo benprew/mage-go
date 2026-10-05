@@ -274,6 +274,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return []string{"permanent_reference", "static_modification"}[index]
 			}
 		}
+	case "condition":
+		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
+			return []string{"player_reference", "static_player_filter"}[index]
+		}
 	case "static_condition":
 		if n.Name == "APlayerPassesFilter" && len(n.Args) == 2 {
 			return []string{"player_filter", "static_player_filter"}[index]
@@ -285,6 +289,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
 	case "static_player_filter":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "static_player_filter"
+		}
 		if (n.Name == "ControlsA" || n.Name == "ControlsNo") && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
@@ -480,6 +487,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		case "Unless", "If":
 			if len(n.Args) == 2 {
 				return []string{"condition", "action"}[index]
+			}
+		case "IfElse":
+			if len(n.Args) == 3 {
+				return []string{"condition", "action", "action"}[index]
 			}
 		case "CreateEachPermanentLayerEffectUntil":
 			if len(n.Args) == 3 {

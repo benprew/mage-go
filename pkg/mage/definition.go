@@ -118,6 +118,10 @@ func describeDefinition(v any) definitionNode {
 		}
 	}
 	switch e := v.(type) {
+	case *ManaAbility:
+		if e.conditional != nil {
+			n.children = append(n.children, definitionEdge{"conditional", e.conditional})
+		}
 	case *StaticAbilityHolder:
 		for i, effect := range e.Effects {
 			n.children = append(n.children, definitionEdge{fmt.Sprintf("rules[%d]", i), effect})

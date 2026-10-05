@@ -219,6 +219,10 @@
 // saves the opposing incarnation before trigger placement. Later attachment
 // and characteristic changes do not change that saved object.
 //
+// Use [NewConditionalManaAbility] for fixed mana branches with one tap cost.
+// Payment queries and activation use the same current-state condition.
+// The condition must stay the same when the source taps.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

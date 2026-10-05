@@ -2703,3 +2703,34 @@ creatures, rollback and X=0/1/3. `Batch` checks simultaneous exile and tap.
 retargeting. `FixedZero` checks empty fixed groups and continued resolution.
 `Invalid` and `Inventory` check declarations and nested roles under rejected
 parents. All test names have the prefix `TestRONNumberedTargets`.
+
+## Conditional fixed mana production
+
+`NewConditionalManaAbility(condition StateCondition, whenTrue, whenFalse []ManaProduction) *ManaAbility`
+provides a source tap mana ability with two fixed production branches. Both
+branches require at least one production, concrete colors, positive amounts,
+and no restrictions or color choices. Definition validation checks these
+requirements and the condition, including invalid or undeclared player reads.
+The constructor copies branch slices; production queries return fresh slices.
+
+The condition reads the current source controller and battlefield at each query
+and activation. It must remain unchanged by the source tap cost: payment queries
+precede that cost. The RON adapter therefore excludes tap and combat status
+filters. A missing or phased source has no production. A phased prerequisite
+is absent from battlefield membership; a returned prerequisite is a new object
+that can satisfy the current collection condition. There is no LKI or saved
+condition result. Queries do not tap, add mana, choose, or consume randomness.
+
+The existing `ManaAbility`, `ManaSystem`, mana solver and transactional casting
+paths consume the same production service. Activation resolves immediately
+without a stack object (CR 605.1a, 605.3a–b). Bonus mana applies once per tap,
+regardless of the number of production entries. Ability removal suppresses
+activation through existing ability membership. Failed payments keep live
+resources unchanged. Conditions and branch declarations hold no game state;
+cloned games query their own battlefield and mana pools.
+
+Evidence: `TestConditionalMana`, `TestConditionalManaInvalid`, and
+`TestRONConditionalMana*`. The complete ATQ records for Urza's Mine, Urza's Power
+Plant and Urza's Tower exercise current land subtypes, rather than card names.
+This contract does not establish general conditional resolving actions,
+choice-based or restricted mana, extra costs, or conditions changed by tap costs.

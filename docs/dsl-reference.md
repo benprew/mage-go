@@ -2521,3 +2521,35 @@ The adapters use `DeclarePermanentTargets`, `DeclareXPermanentTargets`,
 `TapEach` and `ExileEach`. Zero targets permit resolution; if a nonempty group
 has no legal targets, the spell does not resolve. Factory calls and spell copies
 keep separate chosen targets and announced values.
+
+## RON conditional fixed mana
+
+The supported context is an unmodified `Activated` rule with the sole cost
+`TapPermanent(ThisPermanent)` and the sole action:
+
+```ron
+IfElse(
+    PlayerPassesFilter(You, And([
+        ControlsA(And([IsLandType(Urzas), IsLandType(Mine)])),
+        ControlsA(And([IsLandType(Urzas), IsLandType(PowerPlant)])),
+    ])),
+    [AddMana(And([ManaProduceC, ManaProduceC, ManaProduceC]))],
+    [AddMana(ManaProduceC)],
+)
+```
+
+`ControlsA(filter)` may stand alone or occur in nonempty, nested `And` conditions.
+Its permanent filter accepts nonempty `And`/`Or` combinations of `AnyPermanent`,
+card types, positive/negative land or creature subtypes, Aura subtype,
+positive/negative colors, and positive/negative supertypes. Subtype validation
+uses the engine family contract, which permits custom unknown subtypes and
+rejects known family mismatches. Tap and combat status filters are rejected
+because solver queries precede the tap cost.
+
+Each branch has exactly one `AddMana`, with a concrete mana symbol or a nonempty
+`And` of concrete symbols. Repeated colors and multiple fixed colors are valid.
+Empty branches, additional actions or costs, modifiers, player choices, dynamic
+amounts, bound references and other condition forms remain unsupported.
+Factories create fresh `ManaAbility` instances and use the shared engine
+`NewConditionalManaAbility` service. General `IfElse` action support is still a
+gap. Tests: `TestRONConditionalMana*`; engine contract: `TestConditionalMana*`.

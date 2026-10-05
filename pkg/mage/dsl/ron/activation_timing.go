@@ -15,6 +15,9 @@ func compileActivatedRule(n Node, ctx scope) (optionFactory, error) {
 	if err := arity(n, count); err != nil {
 		return nil, err
 	}
+	if conditionalManaBody(n.Args[1]) {
+		return compileConditionalMana(n)
+	}
 	var timing []mage.ActionOption
 	if count == 3 {
 		var err error
