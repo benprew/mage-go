@@ -6698,3 +6698,158 @@ Slice files: `pkg/mage/composable_continuous.go`, `clone.go`, `doc.go`, new
 `inventory_test.go`, new `filtered_blocking.go` and `filtered_blocking_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
 Stop after this slice; do not start another capability.
+
+## Slice: Aura host-controller upkeep (2026-10-04)
+
+Completed one compiler slice. Existing user changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain outside this slice. Read `AGENTS.md`,
+`pkg/mage/doc.go`, the execution design, vocabulary snapshot, this ledger,
+selected compiler and event/attachment APIs, API/rules-contract documentation,
+and CR 503.1a/603.2b/603.3a. Complete selected records and candidate nested forms
+were inspected from RON; no Go card definitions supplied requirements.
+
+### Fresh evidence and selection
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict and semantic loaders returned expected collection-rejection exit 1:
+2,445 records, **1,192 compiled / 1,253 rejected**, 424 accepted / 562 rejected
+unique names. Semantic inventory: 72,938 occurrences, 8,528 signatures, 14,071
+unknown-role occurrences. Reprints count once in card estimates.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream value, effort |
+| --- | --- | ---: | --- |
+| Aura host-controller upkeep, selected | Cursed Land, Feedback, Wanderlust, Warp Artifact, Unstable Mutation; Curse Artifact, Erosion, Power Leak, Takklemaggot downstream | 5 unique / 26 records | Existing event capture, typed player bindings, damage, counter placement and Aura layers cover the five complete records. Curse Artifact needs resolving host-controller payment/sacrifice; Erosion adds alternative mana/life payments; Power Leak needs variable payment results and damage reduction; Takklemaggot needs host death, graveyard return and attachment lifecycle. Small adapter; moderate gameplay/lifetime tests. |
+| Static collection attack restriction | Moat, Evil Eye of Orms-by-Gore, Akron Legionnaire | 1 with current filters; up to 3 with shared contextual filter support | Moat's creature/nonflying filter exists. Evil Eye also needs current source-controller collection filtering; Akron adds named-card and exclusion forms. Shared combat restrictions can serve all three after these adapters. Moderate static layer, membership, combat, clone and filter tests. |
+| Finite recipient prevention | Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Kei Takahashi, Oasis, Samite Healer; Healing Salve, Guardian Angel, Rakalite downstream | 0 for shared prerequisite; then 7 with finite-shield adapter | Finite simultaneous shield allocation needs the CR 615.7 engine/decision contract. Seven complete consumers otherwise have supported targets and costs. Healing Salve also needs its player-target life adapter; Guardian Angel adds X and repeated instant-speed payment; Rakalite adds a next-end-step return. Larger engine/replacement/decision test effort. |
+
+The selected slice has the largest credible immediate gain for its cost and
+reuses exact existing engine behavior. The previous ledger's prevention
+suggestion was reassessed. The five selected names occur in 26 records: the four
+damage Auras each have six reprints; Unstable Mutation has ARN and 3ED. An initial
+test-fixture expectation of 31 was corrected by the reprint audit before final
+validation; no gameplay assertion was weakened.
+
+Pre-edit contract and acceptance cases were stated before implementation:
+Aura-only host-controller upkeep, detection-time event player, resolution-time
+host attachment, fresh per-factory bindings, invalid declarations, all reprints,
+control/attachment/zone/phase/ability changes, pending event isolation, copies,
+clones, native casting and native upkeep. RON owns spelling/context validation
+and lowering; mage owns detection, captures, LKI, identity and resolution.
+
+### Supported signature and reuse boundary
+
+`TriggerA/2` accepts
+`AtTheBeginningOfAPlayersUpkeep/1(SinglePlayer/1(HostController))` on an Aura.
+The event, selector and outer rule are positional tuples; `HostController` is
+a bare symbol. The body uses the existing action-list/target compiler with a
+local `stepEventPlan`. `Trigger_ThatPlayer` resolves through that plan's fresh
+`PlayerBinding`. Sibling abilities cannot read the event binding.
+
+The changed function is
+`compileBoundStepTrigger(Node, Node, scope, mage.TurnStepPattern,
+ mage.TurnStepPattern, string) (optionFactory, error)` in `end_step.go`.
+Existing AnyPlayer/You upkeep and end-step callers remain supported. The new
+branch is limited to the upkeep label and Aura context. Each factory invocation
+constructs `AttachedControllerUpkeep(BindPermanent("upkeep host"), player)`.
+The event's internal host capture is not exposed as `Trigger_ThatPermanent` and
+does not override `HostPermanent` in the body.
+
+Engine reuse: `AttachedControllerUpkeep`, native event matching,
+`TurnStepBegins`, `BindPermanent`, `BindPlayer`, `FromPlayer`, pending trigger
+captures, stack copying, `AttachedPermanent` and attachment LKI, permanent
+incarnations, `DealDamageFrom`, prevention, `AddCountersTo`, Aura static P/T
+layers, transactional casting/target services, and native upkeep priority.
+No new engine API, parallel execution service, card-name branch, mutable chosen
+state shared by factories, global last-action slot, fallback or partial
+production registry was added.
+
+The host controller is checked at detection; the event player then remains
+fixed. Host control and Aura control are distinct. A counter instruction on
+`HostPermanent` reads the current attachment at resolution. The departed source
+uses its last attachment; a returned Aura or host cannot substitute its new
+incarnation. Phased hosts receive no counter, while a phase cycle retains
+identity. Source ability removal before detection suppresses the trigger;
+removal after detection does not cancel it. Damage retains the captured player
+and goes through prevention after source departure.
+
+Gap classification: missing compiler adapter only. No engine prerequisite,
+source-data defect or environment failure was found. Resolving `HostController`,
+host-controller end-step, host-death events, host intervening-if and optional
+payments remain unsupported. The earlier Gaea's Liege/Fastbond source concerns
+remain open. All twelve RON hashes are unchanged; the vocabulary source snapshot
+needs no refresh.
+
+### TDD and card-to-test mappings
+
+The first complete-record/gameplay/native-casting tests failed with
+`unsupported upkeep player reference (HostController)`. After implementation,
+the reprint subset fixture exposed strict rejection of empty files; empty files
+were removed from that test collection. The production loader was unchanged.
+The existing exact inventory-count tests then failed with the new measured
+counts and were updated from 1,192/1,253 to 1,218/1,227. No rule check was removed.
+
+All test names below have the prefix `TestRONHostUpkeep` in
+`pkg/mage/dsl/ron/host_upkeep_test.go`.
+
+| Card / contract | Evidence |
+| --- | --- |
+| Cursed Land, Feedback, Wanderlust, Warp Artifact | `Reprints` compiles/validates all 24 complete reprints and strictly loads canonical names. `Gameplay` checks each Aura's exact enchant type, wrong player/step, detection versus resolution, control before/after, reattachment, source control/departure/return, host return, phase before/after/cycle, ability removal before/after, absent attachment, copies, pending clones and isolation. Damage always goes to the captured event player. `NativeStep` resolves each record through native upkeep. |
+| Unstable Mutation | `Reprints` validates ARN/3ED complete records. `Gameplay` verifies +3/+3, actual -1/-1 counters, current attachment after movement, attachment LKI, returned-host exclusion, phasing, ability removal, copies and clones. `NativeStep` proves counter application and final 6/10 on a 4/8 host after one upkeep. |
+| Native Aura casting, legality, cost rollback and trigger timing | `NativeCast` casts full-record Wanderlust: unpaid and invalid-target casts preserve hand/stack/mana; successful payment attaches; upkeep creates a nontargeted trigger and damage waits for resolution. |
+| Per-instance bindings and multiple pending events | `IndependentBindings` compiles one complete Wanderlust factory, creates two separate Auras on different players' hosts, queues both players' events before stack placement, and resolves original/pending clone independently without binding collisions. |
+| Damage/prevention | `DamagePrevention` uses full-record Wanderlust and the shared finite one-point shield; damage is prevented once, and the next upkeep deals damage. This is not new simultaneous shield-allocation support. |
+| Declaration rejection | `Invalid` rejects non-Aura context, malformed symbol/selector, wrong arity, host-controller end-step, incompatible event reference and sibling ability binding leakage. |
+
+Compilation and gameplay are tracked separately: five unique cards gain complete
+RON behavior mappings. Collection-wide engine-validation and gameplay totals
+remain null. This slice introduces no optional payment, replacement ordering,
+LKI engine change or simultaneous-operation contract. Existing transactional
+cast rollback and damage prevention are exercised through native services.
+
+### Actual gain and validation
+
+Actual gain matches the corrected estimate: **5 unique names / 26 records**.
+Final strict and semantic loaders report **1,218 compiled / 1,227 rejected**,
+429 accepted / 557 rejected unique names. The removed diagnostics are exactly
+the selected 26 records; there are no newly rejected names or records. Nine
+surviving diagnostics advance: Power Leak's six reprints now report the bare
+`PayAnyAmountOfMana` argument shape; Curse Artifact and Erosion report unbound
+resolving `HostController`; Takklemaggot reports unsupported host-death reference.
+All other surviving diagnostics are identical. No previously accepted record
+regressed. Inventory still has 72,938 occurrences / 8,528 signatures / 14,071
+unknown-role occurrences; compiled-record occurrence metadata advances.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline mage short tests and `make build` | PASS |
+| Baseline strict and semantic loaders | Expected exit 1, collection rejection: 1,192/1,253 |
+| New RON tests before adapter | Expected unsupported HostController failures |
+| Focused `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after fixture and measured-count updates |
+| Focused `go test ./pkg/mage/dsl/ron -run TestRONHostUpkeep -count=1` | PASS after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after lint and added acceptance cases |
+| `make test` | PASS, repeated after lint and added acceptance cases |
+| `make build` | PASS, repeated after lint |
+| `go vet ./...` | PASS, repeated after lint |
+| `make lint` | PASS, zero issues; automatic import formatting reviewed |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json`, semantic inventory | Expected exit 1: unsupported collection stays rejected |
+| Diagnostic/name comparison and twelve RON hashes | PASS: exact 26 removals, nine expected advances, no regressions; source hashes unchanged |
+
+The commit hash is reported in the final response. Only slice files are staged.
+No Go definitions/generators or DSL functions are removed: complete loading,
+gameplay, runtime wiring and removal gates are still unmet. No deletion caller
+audit or migration completion is claimed.
+
+Ranked next candidates to reassess with fresh evidence:
+1. Finite simultaneous prevention allocation prerequisite, then the seven
+   otherwise supported consumers. Healing Salve needs its separate player-life
+   adapter before it can join them.
+2. Shared current-controller collection filters and static attack restrictions
+   for Moat, Evil Eye of Orms-by-Gore and Akron Legionnaire.
+3. Filtered bands-with-others engine contracts and the five legendary-creature
+   lands, or entry opponent choice for Black Vise/The Rack/Cursed Rack after
+   comparing their complete nested records.
+
+Changed files: `pkg/mage/dsl/ron/end_step.go`, `host_upkeep_test.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this ledger. Stop after this slice.

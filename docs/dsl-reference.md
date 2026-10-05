@@ -1683,3 +1683,21 @@ cycle, and expires at cleanup. A returned card does not inherit the restriction.
 This run adds only the static RON spelling, not new temporary RON operations.
 Existing source and target constructors remain available. Evidence:
 `TestFilteredBlocking*` and `TestRONFilteredBlocking*`.
+
+### RON Aura host-controller upkeep
+
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(HostController)), body)`
+is supported on Auras. It uses `AttachedControllerUpkeep` with fresh event
+bindings in each factory instance. `Trigger_ThatPlayer` is the player whose
+upkeep caused the trigger. This binding is available only inside `body`.
+A later control or attachment change does not change that player.
+
+`HostPermanent` keeps its existing resolution-time attachment reference. Thus
+Unstable Mutation puts its counter on the creature enchanted at resolution.
+The event's internal host capture does not replace that reference. A departed
+Aura uses the existing attachment LKI and cannot follow its new incarnation.
+
+Complete-record tests cover Cursed Land, Feedback, Wanderlust, Warp Artifact,
+and Unstable Mutation. This adapter does not add a resolving `HostController`
+reference, optional payments, host-death triggers, or a host-controller end-step
+pattern. Unsupported declarations remain errors.

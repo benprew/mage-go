@@ -14,6 +14,7 @@ func compileBoundStepTrigger(event, body Node, ctx scope, each, your mage.TurnSt
 	}
 	players := event.Args[0]
 	var step mage.TurnStepPattern
+	attached := false
 	if players.Kind == Symbol && players.Name == "AnyPlayer" {
 		step = each
 	} else {
@@ -24,7 +25,9 @@ func compileBoundStepTrigger(event, body Node, ctx scope, each, your mage.TurnSt
 			return nil, err
 		}
 		player := players.Args[0]
-		if player.Kind != Symbol || player.Name != "You" {
+		if player.Kind == Symbol && player.Name == "HostController" && label == "upkeep" && ctx.aura {
+			attached = true
+		} else if player.Kind != Symbol || player.Name != "You" {
 			return nil, unsupported(player, label+" player reference")
 		}
 		step = your
@@ -38,7 +41,11 @@ func compileBoundStepTrigger(event, body Node, ctx scope, each, your mage.TurnSt
 		player := mage.BindPlayer(ctx.stepEvent.playerName)
 		bindings := instanceBindings{steps: map[*stepEventPlan]*mage.PlayerBinding{ctx.stepEvent: player}}
 		actions := plan.buildWithBindings(bindings)
-		trigger := mage.WhenEvent(mage.TurnStepBegins(step, player), mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		var pattern mage.EventPattern = mage.TurnStepBegins(step, player)
+		if attached {
+			pattern = mage.AttachedControllerUpkeep(mage.BindPermanent("upkeep host"), player)
+		}
+		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

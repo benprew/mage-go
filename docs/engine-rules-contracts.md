@@ -1545,3 +1545,30 @@ subjects and a valid typed target. `TestRONFilteredBlockingRealCards`,
 Seeker and Elven Riders records, current filters, static lifetime, casting
 rollback, native block declaration/combat, existing-block finality and separate
 factory instances. Existing combat services still own declaration execution.
+
+## RON Aura host-controller upkeep
+
+The RON adapter reuses `AttachedControllerUpkeep`, `BindPermanent`, `BindPlayer`,
+`FromPlayer`, `DealDamageFrom`, `AttachedPermanent`, and `AddCountersTo`. No
+engine API or rule changes. The trigger checks the current attachment and its
+controller when upkeep begins (CR 503.1a, 603.2b). It saves the event player
+before stack placement. Its controller is the Aura's controller at detection
+(CR 603.3a); subsequent control, attachment, phase, and zone changes do not
+redirect the captured player. Copies keep that event player. Factory instances,
+pending events, and clones keep separate binding state.
+
+The resolving `HostPermanent` reference remains distinct from the internal
+event host capture. It reads the current attachment, or the departed source's
+attachment LKI. It cannot follow a returned source or returned host incarnation
+(CR 400.7, 608.2h). A phased host is absent to the counter action; a phase cycle
+retains its identity. Ability removal before detection prevents the trigger;
+removal after detection does not cancel it (CR 113.7a). Damage uses the shared
+source LKI and prevention services.
+
+`TestRONHostUpkeepGameplay`, `IndependentBindings`, `DamagePrevention`,
+`NativeCast`, `NativeStep`, `Reprints`, and `Invalid` in `pkg/mage/dsl/ron`
+verify these contracts through complete RON records. The supported event is
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(HostController)), body)`
+on an Aura. Resolving `HostController`, optional payments, host-death events,
+intervening-if host conditions, and host-controller end-step events remain
+separate compiler work.
