@@ -1849,3 +1849,38 @@ first cancels the packet, while redirection first moves it outside the recipient
 filter. Rules: CR 113.6, 400.7, 609.7b–c, 615.1/615.2/615.6, 616.1/616.1f,
 and 702.26b–d. Full-card tests also cover Pixies' blocking restriction and
 Nomads' landwalk with the existing combat services.
+
+## RON mixed-recipient damage execution
+
+RON `MultipleRecipients([EachPermanent(filter), EachPlayer(AnyPlayer)])`, in
+either list order, uses the existing `DamageRecipients` and `DealDamageEach`
+services. The engine selects current recipients when the action resolves
+(CR 608.2h). Flying changes, later entries, and returned creatures affect this
+selection. Phased permanents are absent. Shroud does not exclude a recipient
+because this instruction does not target. Source and amount use the existing
+resolving-context contracts; copies keep announced X and their source identity.
+
+One shared batch prepares replacement/prevention actions, applies damage
+results, then sends damage notifications. Notification observers see the whole
+batch (CR 120.4). Recipient replacement choices retain the shared recheck
+contract (CR 616.1). Nonpositive amounts produce no damage event (CR 120.8).
+Damage is not life loss: prevention, redirection, source lifelink, marked damage,
+and damage notifications still apply. Lethal creatures remain present during
+batch notifications; stack resolution then performs state-based actions
+(CR 120.5, 704.3/704.5g). Death triggers resolve separately.
+
+Permanent-source abilities keep their original incarnation and LKI after source
+return or phasing (CR 113.7a, 400.7, 608.2h). A returned source can produce its
+own entry trigger; it cannot replace the old ability's source or lifelink
+beneficiary. Clones and copied abilities retain independent execution state.
+The RON adapter introduces no new damage engine, allocation decision, saved
+result, replacement priority, cost, or zone contract.
+
+Evidence: `TestRONMixedDamageCards`, `TestRONMixedDamageResolutionMembership`,
+`TestRONMixedDamageXCopiesAndRollback`, `TestRONMixedDamageReplacementOrder`,
+`TestRONMixedDamageAbilitySourceIdentity`, and
+`TestRONMixedDamageSimultaneousLethal`. Invalid declarations, strict reprint
+loading, factory identity, and nested inventory roles have separate tests in
+that file. Finite shields across simultaneous packets from multiple sources,
+history filters, singular/overlapping recipient unions, and multiple damage
+amounts remain separate capabilities.

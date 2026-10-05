@@ -8664,3 +8664,193 @@ No environmental or required-validation blocker remains. The AI landwalk helper
 gap is explicitly recorded above. The eight listed slice files are staged and
 committed; the initial user files remain unstaged. The descriptive commit hash
 is reported in the final response. No next slice is started.
+
+## 2026-10-04 — Mixed-recipient simultaneous damage
+
+Capability `RON-MIXED-DAMAGE`: complete for one permanent set plus all players
+at one damage amount. The broader recipient/damage family remains partial.
+This run implements one slice and stops. Initial changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from the commit.
+
+### Selection and fresh prerequisites
+
+Read the project instructions, engine API reference, execution design, syntax
+snapshot, previous ledger entries, compiler damage/value/filter lowering,
+semantic inventory, typed scopes, shared damage recipient/action/source/batch
+services, stack resolution, and relevant API/rules contracts. Read CR 120,
+608.2, and the design's removal gates. The tests exercise the existing CR 616.1
+replacement order contract; no replacement implementation changes are made.
+Requirements come from complete RON records and nested AST inventory signatures,
+not Go card definitions. No removed card skill or Go stub generator was used.
+
+Baseline focused compiler tests and `make build` pass. Fresh strict loader:
+2,445 records, 986 names, **1,286 compiled / 1,159 rejected**, 457 accepted and
+529 rejected unique names. Exit 1 is expected collection rejection, separate
+from build/test results. Fresh semantic inventory: 72,938 node occurrences,
+8,528 signatures, 13,225 unknown-role occurrences. The compiler's first error
+alone did not select this slice.
+
+| Candidate | Distinct affected cards | Estimated full-card unlocks | Other blockers, downstream benefit, effort |
+| --- | --- | ---: | --- |
+| Mixed-recipient damage, selected | Earthquake; Hurricane; Inferno; Pestilence; Volcanic Eruption; Cyclone; Ifh-Bíff Efreet; Sorrow's Path; The Fallen | 3 names / 13 records | Engine `DamageRecipients` and `DealDamageEach` already provide the required contract. Remaining blockers: Pestilence's end-step intervening-if; Volcanic Eruption's X targets and destruction-result count; Cyclone's per-counter payment and paid branch; Efreet's other-player activation; Sorrow's Path's target groups, combat reassignment, event source and singular union; The Fallen's damage-history filters. Low adapter effort, medium gameplay/identity/batch test effort. Enables their shared damage instruction when those prerequisites are complete. |
+| Finite simultaneous prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for prerequisite, then up to 7 | Full records have ready costs and targets. CR 615.7 source-packet allocation needs an engine decision contract, then `CreateFuturePreventDamage` adapters. High engine/test effort. Also enables later Healing Salve and Alabaster Potion modes. |
+| Filtered bands-with-others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for prerequisite, then up to 5 | Recipient color/legendary/controller filters already compile. Existing banding handles the general keyword only, not filtered band formation and damage assignment. High engine/combat test effort plus later layer adapter; shared five-card prerequisite. |
+| Static permanent characteristic predicates | Goblin Caves; Goblin Shrine; Animate Artifact | 1 | Caves needs a basic-Mountain host condition. Shrine also needs departure events and collection damage. Animate Artifact needs condition membership across type/P/T layers and mana-value base values. Low adapter/medium layer testing; prerequisite for the other two. |
+
+Complete distinct candidate records were inspected; reprints count once.
+The selected adapter has the largest credible immediate multi-card benefit for
+its effort. A phase-9 adapter is dependency-ready because its earlier shared
+engine contracts already exist. The prior suggested engine prerequisites remain
+valuable but need much more work. Contract, reuse boundary, and acceptance cases
+were stated before editing.
+
+### Exact supported shape, contexts, and reuse
+
+Private compiler signature:
+`compileMixedDamageRecipients(Node) (func() mage.DamageRecipientSet, error)`.
+
+```ron
+SpellDealsDamage(ThisSpell, amount,
+    MultipleRecipients([EachPermanent(filter), EachPlayer(AnyPlayer)]))
+PermanentDealsDamage(ThisPermanent, amount,
+    MultipleRecipients([EachPermanent(filter), EachPlayer(AnyPlayer)]))
+```
+
+The two list members may appear in either order. Each member has arity one;
+there must be exactly one of each. `filter` uses existing `compileFilter`
+context-free permanent forms, including nested `And`/`Or` and flying tests.
+`AnyPlayer` must be a symbol. No single player/permanent members, duplicate or
+empty sets, player-history filters, nested unions, or unbound local/event/target
+filters are admitted. Existing `compileInstanceValue` amount forms and source
+checks remain in force. The damage action can appear in already-supported spell,
+mode, activation, and trigger action builders; this slice adds no new envelope.
+Real cards cover spell context; synthetic RON covers activation and entry-trigger
+context with reversed member order. Unsupported static/cost contexts remain
+errors through the existing role compilers.
+
+RON owns spelling, shape validation, positioned diagnostics, and lowering.
+Each effect build creates `DamageRecipients(EachPlayer,
+MatchingPermanents(filter))`, passed to `DealDamageEach(This, recipients,
+amount(bindings))`. The immutable filter carries no chosen game state. Existing
+instance bindings supply values; no new target, result binding, global scratch
+slot, card-name branch, Go fallback, or partial production registry is used.
+
+The engine selects current recipients at resolution, captures their identities,
+and processes one shared batch. Later entries and returned creatures qualify;
+phased creatures do not. Current flying status supplies membership. Shroud does
+not restrict a nontargeted collection. Damage still uses protection, prevention,
+redirection, marked damage, player damage, and lifelink. Nonpositive amounts
+produce no damage event. Notifications see the complete batch, and lethal
+creatures leave at the state-based check after resolution. Death abilities then
+resolve separately. Copied spells keep X; ability copies and game clones keep
+original source incarnation/LKI and independent execution state.
+
+Engine reuse: `DamageRecipients`, `EachPlayer`, `MatchingPermanents`,
+`DealDamageEach`, `This`, existing resolution values, damage-source capture,
+replacement/prevention pipeline, simultaneous damage outcomes, notification
+batching, stack copies, transactional casting/activation, clone service, and
+state-based actions. No missing engine contract was found for this exact shape.
+Finite prevention across multiple source packets remains a separate contract.
+
+Inventory assigns `MultipleRecipients/1` children in recipient context to
+`recipient_set`, then `EachPermanent/1` to `permanent_filter` and `EachPlayer/1`
+to `player_filter`. It walks rejected descendants without claiming support.
+API/rules docs describe only the established adapter and inherited execution.
+
+### TDD and card-to-test mapping
+
+New meaningful tests were written first. After correcting a test's AST field
+name (`Position`, not `Pos`), the first executable red run failed on the expected
+`unbound or incompatible target reference (MultipleRecipients)` for all three
+real cards and the strict 13-record reprint collection. Invalid shapes remained
+rejected. The adapter then made those records executable.
+
+Fixture corrections after implementation did not change production semantics:
+`CastSpellByID` ignores surplus target arguments for nontargeted declarations,
+so the test verifies the declaration has zero targets rather than inventing an
+API rejection rule. A returned synthetic source queues its own entry trigger;
+its additional damage is checked separately from old-source lifelink. Finally,
+`ResolveStack` resolves death triggers after its deferred state-based check;
+`ResolveTopOfStack` separates the damage/SBA observation from trigger resolution.
+A supplemental protection fixture was corrected to use the existing
+`WithAbility(ProtectionFromColor(...))` constructor. No assertion of supported
+rules was removed to hide an implementation failure.
+
+| Card / contract | Test evidence |
+| --- | --- |
+| Earthquake; Hurricane; Inferno | `TestRONMixedDamageCards`: complete real RON, engine validation, payment and resolution timing, ground/flying selection across controllers, unaffected land/phased creature, shroud, noncombat source attribution, complete batch seen by every callback, final graveyard. |
+| Earthquake; Hurricane | `TestRONMixedDamageResolutionMembership`: flying granted while pending, later entry, departed/returned creature, control change on return, phase-out and phase-in before resolution. |
+| Earthquake; Hurricane | `TestRONMixedDamageXCopiesAndRollback`: insufficient X payment leaves hand/mana/stack intact, no target declarations, copies keep X under another controller, clone isolation, X=0 pays the colored cost without damage notifications. |
+| Inferno | `TestRONMixedDamageReplacementOrder`: partial player prevention, creature-to-player redirection versus creature prevention in both affected-player orders, actual damage and one decision. |
+| All three real cards | `TestRONMixedDamageProtection`: matching source-color protection prevents creature damage but permits damage to both players. |
+| Inferno; Onulet interaction | `TestRONMixedDamageSimultaneousLethal`: both recipients have lethal damage during notifications, post-resolution simultaneous deaths, correct death-trigger controllers and later gains. Onulet was already accepted; this is added interaction evidence. |
+| Synthetic activation / trigger | `TestRONMixedDamageAbilitySourceIdentity`: reversed set order, source departure/return/phasing, original lifelink/controller/LKI, copies under another controller, independent game clones, new returned-source entry event. |
+| Declaration rejection | `TestRONMixedDamageInvalid`: wrong kind/arity, empty/missing/duplicate sets, extra members, bad player symbol, singular member, unbound target and history filter. |
+| All reprints / instance / reporting | `TestRONMixedDamageStrictReprintsAndInventory`: 13 actual records load as 3 names, distinct factory card/ability identity, nested role metadata, whole collection rejected when an unsupported record is added. |
+
+Existing compiler/gameplay and loader tests remain enabled. The two collection
+count assertions in `inventory_test.go` are updated to the fresh exact totals;
+strict rejection and Lightning Bolt gameplay assertions remain intact.
+These are three new complete-card rule mappings, not collection-wide gameplay
+certification. No new optional costs, event bindings, target allocations, or
+replacement operations are claimed.
+
+### Fresh outcome, defects, and remaining gates
+
+Actual gain matches the estimate: **13 records / 3 unique names** (Earthquake
+6, Hurricane 6, Inferno 1). Final strict loader and inspection: **1,299 compiled /
+1,146 rejected**, 460 accepted and 526 rejected names. No accepted record became
+rejected. The Fallen's diagnostic becomes the more precise
+`unsupported damage player set filter (WasDealtDamageByPermanentThisGame)`;
+all other surviving first diagnostics remain unchanged. Strict and inspection
+issue arrays agree. Collection engine-validation and behavior-verification
+aggregates remain null; real-card definition and gameplay evidence is above.
+
+Inventory retains 72,938 node occurrences and 8,528 signatures; unknown-role
+occurrences fall from 13,225 to 13,026. No RON data changed, no source defect was
+corrected, and all 12 source hashes match the vocabulary snapshot. No source
+snapshot refresh is required. Gaea's Liege/Fastbond observations remain open.
+There is no new engine or environment blocker for this slice.
+
+Go production definitions, generators, runtime loading, and broad DSL functions
+remain in place because their removal gates are not met. No deletion or fresh
+whole-repository DSL caller audit is claimed. Authoring cutover instructions and
+native startup migration remain future work. No asset/runtime changes require
+an additional WASM check in this slice.
+
+Ranked next candidates for fresh reassessment:
+1. Finite simultaneous prevention allocation engine prerequisite, with the seven
+   ready consumers and later modal prevention cards listed above.
+2. Filtered bands-with-others engine prerequisite for the five lands above.
+3. Variable recipient packet adapter (`PermanentDealsMultipleDamage` and
+   `DamageToRecipients`) for Brothers of Fire, Orcish Artillery, and Psionic
+   Entity; inspect whether an exact reusable different-amount batch action exists
+   before lowering. Do not use sequential damage actions.
+4. End-step intervening-if with current no-creature membership for Pestilence;
+   its mass damage adapter is now ready, but reassess multi-card event consumers.
+
+Changed slice files: `pkg/mage/dsl/ron/mixed_damage.go`,
+`mixed_damage_test.go`, `compiler.go`, `inventory.go`, `inventory_test.go`,
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Final validation and commit outcome follow below.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONMixedDamage -count=1` | PASS after lint review |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS; earlier count-regression failures corrected to measured totals |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final code/lint changes |
+| `make test` | PASS after final code/lint changes |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic formatting reviewed, no unrelated files changed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,299 compiled / 1,146 rejected |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same strict diagnostics, nested reporting retained |
+| Diagnostic audit | Exactly 13 records / 3 names unlocked; no regression; one surviving first error becomes more precise |
+| Source audit | All 12 hashes match vocabulary; no RON changes |
+
+No required check or environment blocker remains. The eight slice files are
+committed in one descriptive commit; its hash is reported in the final response.
+The original two user changes remain unstaged. This run starts no next slice.
+Full collection gameplay, runtime cutover, Go-card deletion, and unused DSL
+removal remain unfinished.

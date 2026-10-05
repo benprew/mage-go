@@ -575,11 +575,21 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "recipient":
+		if n.Name == "MultipleRecipients" && len(n.Args) == 1 {
+			return "recipient_set"
+		}
 		if n.Name == "Player" && len(n.Args) == 1 {
 			return "player_reference"
 		}
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
+		}
+	case "recipient_set":
+		if n.Name == "EachPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
+		if n.Name == "EachPlayer" && len(n.Args) == 1 {
+			return "player_filter"
 		}
 	case "player_reference":
 		if n.Name == "ControllerOfSpell" && len(n.Args) == 1 {

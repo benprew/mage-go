@@ -1930,3 +1930,32 @@ Tests: `TestRONStaticPreventionCards`, `TestRONStaticPreventionLifecycle`,
 `TestRONStaticPreventionNativeLandwalk`, `TestRONStaticPreventionStrictLoadAndInstances`
 and `TestRONStaticPreventionInvalid`. These execute the complete Argothian Pixies,
 Desert Nomads and Uncle Istvan records, including their other rules.
+
+## RON mixed-recipient damage
+
+In resolving action lists, the existing `SpellDealsDamage(ThisSpell, amount,
+recipient)` and `PermanentDealsDamage(ThisPermanent, amount, recipient)` now
+accept this recipient shape:
+
+```ron
+MultipleRecipients([
+    EachPermanent(And([IsCardtype(Creature), DoesntHaveAbility(Flying)])),
+    EachPlayer(AnyPlayer)
+])
+```
+
+Supply exactly one `EachPermanent/1` and one `EachPlayer/1`, in either order.
+The permanent operand uses the existing context-free permanent filter grammar;
+the player operand must be symbol `AnyPlayer`. Duplicate sets, singular members,
+empty lists, player-history filters, and unbound references are rejected during
+compilation. This does not add multiple damage amounts or target groups.
+
+The adapter builds `mage.DamageRecipients(mage.EachPlayer,
+mage.MatchingPermanents(filter))` and passes it to
+`mage.DealDamageEach(mage.This, recipients, amount)`. Each card factory builds
+fresh effects. Existing amount forms, action contexts, and source restrictions
+remain in force. The engine selects recipients at resolution and deals the
+same amount to all of them in one simultaneous batch. No target declaration is
+created. Earthquake, Hurricane, and Inferno use this complete shape.
+
+Evidence: `TestRONMixedDamage*` in `pkg/mage/dsl/ron/mixed_damage_test.go`.
