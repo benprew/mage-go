@@ -51,6 +51,9 @@
 // before its temporary source bonus resolves.
 // Fallen Angel uses [SacrificeMatchingIncludingSourceCost] with [IsCreature].
 // The source can pay this cost. The bonus uses its original incarnation.
+// Use [OpponentControls] with [While] for a static condition that reads
+// the current opponent's permanents. Combine [Not] and [IsToken] to exclude
+// tokens. Control changes and phasing change this condition immediately.
 // Use a typed target with [WithTargets] for a targeted bonus.
 // Dwarven Lieutenant combines [IsCreature] with [HasSubType] for its Dwarf target.
 // Either player's Dwarf creature can be the target, including the source.

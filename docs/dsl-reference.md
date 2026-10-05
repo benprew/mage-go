@@ -1779,21 +1779,34 @@ changes and entry choices remain unsupported.
 static filter adapter, including controller selection and source exclusion.
 
 Conditions accept `PlayerPassesFilter(You, ControlsA(filter))`,
-`PlayerPassesFilter(You, ControlsNo(filter))`, or
+`PlayerPassesFilter(You, ControlsNo(filter))`,
+`APlayerPassesFilter(Opponent, ControlsA(filter))`, or
 `PermanentPassesFilter(subject, IsUntapped)`. Controller filters accept existing
 card-type, subtype, color, supertype, tap/combat-state and `AnyPermanent` filters,
-with nonempty recursive `And`/`Or`. They reject ability and P/T queries.
+with nonempty recursive `And`/`Or`. Symbol `IsNonToken` is supported in these
+static condition filters and lowers to `Not(IsToken)`. They reject ability and
+P/T queries. `Opponent` is a player filter here, not a player reference. Only
+`ControlsA` is supported on this opponent form.
 
 Modifications accept fixed `AdjustPT(power, toughness)` or nonempty
 `AddAbility([keyword...])` with existing basic keywords and supported landwalk
 forms. One `If` body must use only layer 6 grants or only layer 7c bonuses.
 Nested conditions, other body rules, mixed layers, chosen/event/target references,
-counters, opponent conditions, type/base-value changes and replacements remain
+counters, other player conditions, type/base-value changes and replacements remain
 errors. No resolving `If` action support is implied.
 
-The adapter reuses `PlayerControls`, `ControlsNone`, `PermanentIsUntapped`,
+The adapter reuses `PlayerControls`, `OpponentControls`, `ControlsNone`, `PermanentIsUntapped`,
 `While`, `Static`, typed source/attachment references, permanent sets and
 continuous modifications. Conditions and membership are live at each layer pass.
 Factories create separate static rules and modifications without chosen state.
 `TestRONConditionalStatic*` covers Kird Ape, Sedge Troll, Giant Tortoise,
 Spectral Cloak and Angelic Voices, their reprints and invalid declarations.
+`TestRONOpponentStatic*` covers Water Wurm, Beasts of Bogardan and Ivory
+Guardians, including token exclusion, current colors, named recipients on both
+battlefields, cumulative bonuses, protection and layer ordering.
+
+`mage.OpponentControls(PermanentFilter) StateCondition` is a pure condition for
+`While`, `IfState` and other state-condition consumers. It uses the context
+controller's current opponent and current unphased battlefield membership.
+An absent or unknown controller does not satisfy the condition. The declaration
+holds no chosen state and is safe to reuse across factories and cloned games.

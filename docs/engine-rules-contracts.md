@@ -1693,9 +1693,33 @@ type changes affect controller conditions before bonuses apply. P/T counters
 remain separate from bonuses. Source phasing suspends grants, phase return
 restores them, and a returned host cannot inherit an old attachment's grant.
 The RON adapter rejects mixed layers until a shared membership contract supports
-those bodies. It adds no engine execution or replacement service.
+those bodies. Static layer execution and replacement services are unchanged.
 
 `TestRONConditionalStatic*` verifies real casting and target legality, failed
 payment rollback, current controller/membership and tap changes, regeneration,
 layer ordering with Blood Moon and ability removal, attachment changes and
 returned host identity, phasing, independent factories and cloned games.
+
+`OpponentControls(PermanentFilter) StateCondition` checks the current opponent
+of the condition context's controller (CR 102.2), not the active player or card
+owner. The controller must identify a player in the game. The condition uses
+the same opponent lookup and unphased battlefield query as
+`WhileOpponentControls`; it holds no source, target or chosen game state.
+`TestOpponentControlsState` and `TestOpponentControlsDefinition` establish
+current control, absent/invalid controller rejection, phasing, departure and
+return without LKI, clone isolation, definition inspection and resolution use.
+
+RON `APlayerPassesFilter(Opponent, ControlsA(filter))` lowers to this condition.
+Symbol `IsNonToken` in static condition filters uses `Not(IsToken)` and can
+occur inside nonempty recursive `And`/`Or`. It reads token status, not the
+card's name or characteristics (CR 111.6). Earlier type/color effects apply
+before conditional bonuses; removing the source ability stops those bonuses.
+Named collection recipients remain live and include either player's matching
+creatures. Each source contributes a separate bonus.
+`TestRONOpponentStatic*` verifies the complete RON records for Water Wurm,
+Beasts of Bogardan and Ivory Guardians, protection legality/prevention,
+transactional illegal-target rejection, tokens, multicolor noncreature
+qualifiers, live source/qualifier control, phase cycles, source departure,
+returned source identity, colors, ability removal, Blood Moon layer ordering,
+independent factory instances and clones. No delayed binding, optional payment,
+replacement ordering or simultaneous-operation contract is added.

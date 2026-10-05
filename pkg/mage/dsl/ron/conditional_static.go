@@ -48,6 +48,22 @@ func compileStaticCondition(n Node, ctx scope) (mage.StateCondition, error) {
 		return nil, err
 	}
 	switch n.Name {
+	case "APlayerPassesFilter":
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Opponent" {
+			return nil, unsupported(n.Args[0], "static condition player filter")
+		}
+		selector := n.Args[1]
+		if selector.Name != "ControlsA" {
+			return nil, unsupported(selector, "static opponent condition")
+		}
+		if err := arity(selector, 1); err != nil {
+			return nil, err
+		}
+		filter, err := compileStaticConditionFilter(selector.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return mage.OpponentControls(filter), nil
 	case "PlayerPassesFilter":
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != "You" {
 			return nil, unsupported(n.Args[0], "static condition player")
@@ -173,6 +189,11 @@ func compileConditionalModifications(n Node, ctx scope) ([]func() mage.Continuou
 
 func compileStaticConditionFilter(n Node) (mage.PermanentFilter, error) {
 	switch n.Name {
+	case "IsNonToken":
+		if n.Kind != Symbol {
+			return mage.PermanentFilter{}, unsupported(n, "static condition filter")
+		}
+		return mage.Not(mage.IsToken), nil
 	case "And", "Or":
 		if err := arity(n, 1); err != nil {
 			return mage.PermanentFilter{}, err
@@ -184,11 +205,17 @@ func compileStaticConditionFilter(n Node) (mage.PermanentFilter, error) {
 		if len(parts) == 0 {
 			return mage.PermanentFilter{}, problem(n, "static condition filter must not be empty")
 		}
-		for _, part := range parts {
-			if _, err := compileStaticConditionFilter(part); err != nil {
+		filters := make([]mage.PermanentFilter, len(parts))
+		for i, part := range parts {
+			filters[i], err = compileStaticConditionFilter(part)
+			if err != nil {
 				return mage.PermanentFilter{}, err
 			}
 		}
+		if n.Name == "And" {
+			return mage.And(filters...), nil
+		}
+		return mage.Or(filters...), nil
 	case "AnyPermanent", "IsTapped", "IsUntapped", "IsAttacking", "IsBlocking",
 		"IsCardtype", "IsNonCardtype", "IsCreatureType", "IsNonCreatureType",
 		"IsLandType", "IsNonLandType", "IsEnchantmentType", "IsColor", "IsNonColor",

@@ -586,6 +586,30 @@ func (c playerControlsCondition) inspectDefinition() definitionNode {
 	return n
 }
 
+type opponentControlsCondition struct{ filter PermanentFilter }
+
+// OpponentControls checks permanents that the controller's opponent controls.
+func OpponentControls(filter PermanentFilter) StateCondition {
+	return opponentControlsCondition{filter: filter}
+}
+
+func (opponentControlsCondition) stateCondition() {}
+
+func (c opponentControlsCondition) checkState(g GameReader, ctx StateContext) bool {
+	if g.GetPlayer(ctx.ControllerID) == nil {
+		return false
+	}
+	opponent := g.GetOpponent(ctx.ControllerID)
+	if opponent == nil {
+		return false
+	}
+	return g.AnyBattlefield(And(ControlledBy(opponent.PlayerID()), c.filter))
+}
+
+func (opponentControlsCondition) inspectDefinition() definitionNode {
+	return definitionNode{Role: "state-condition", Text: "opponent controls matching permanent"}
+}
+
 // --- from composable_positive_branch.go ---
 // IfPositive runs the body when the resolved value is greater than zero.
 func IfPositive(value ResolutionValue, body ResolvingEffect) ResolvingEffect {

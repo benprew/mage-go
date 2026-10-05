@@ -7671,3 +7671,158 @@ conditional bodies; Water Wurm rejects opponent existence. No environment or
 pre-existing validation failure blocks this slice. The eight slice files are
 committed; the two initial user modifications remain outside the commit. The
 commit hash is reported in the final response.
+
+## Slice: opponent-dependent static RON bonuses (2026-10-04)
+
+Status: implementation complete; final checks recorded below. Initial user changes
+in `.gitignore` and `mtgish-ron-execution.md` are preserved outside this slice.
+Read AGENTS.md, mage/doc.go, migration design, vocabulary and ledger, semantic
+inventory/compiler/static-layer/reference services, complete candidate RON
+records and all identical reprints, API/rules contracts, and CR 102.2, 111.6,
+201.1–2, 604.1–2/4/7, 611.3, 613.1/4 and 702.16b–f. The implement-engine skill
+was used for the shared condition prerequisite; no removed skill, Go card
+requirements or generated stubs were used.
+
+### Fresh candidate comparison
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `go build ./...` passed.
+Strict loader and semantic inventory both returned expected exit 1:
+**1,257 compiled / 1,188 rejected records**, 442 accepted / 544 rejected unique
+names. Inspection reports nested forms even below unsupported constructors.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream benefit, implementation/test effort |
+| --- | --- | ---: | --- |
+| Opponent-dependent static bonuses, selected | Water Wurm; Beasts of Bogardan; Ivory Guardians | 3 | Missing typed opponent `StateCondition` and static-condition `IsNonToken` adapter. Named global recipients and protection already work. Low/moderate effort. Shared live opponent condition supports later state/resolution consumers; nontoken condition is a prerequisite for chosen-player Jihad. |
+| Finite prevention allocation | Amulet of Kroog; Argivian Blacksmith; Combat Medic; Conservator; Kei Takahashi; Oasis; Samite Healer | 0 for engine prerequisite; up to 7 after adapter | Nested finite-recipient shields need shared simultaneous allocation and replacement-ordering contracts. Existing target and transactional cost forms suffice for these records. High engine/decision/gameplay effort; enables finite shields and later modal prevention. |
+| Filtered bands with others | Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel | 0 for engine prerequisite; up to 5 after adapter | Existing static controller/color/supertype filters suffice; filtered band formation and damage assignment need engine contracts before keyword grants. High combat-contract/test effort. Also enables token bands for Master of the Hunt, which retains a token-ability adapter blocker. |
+
+The selected slice gives three credible full-card unlocks for much less effort.
+Complete records, not first-error frequency, establish those estimates; reprints
+count once. Goblin Caves/Goblin Shrine remain a separate host-filter candidate;
+Shrine also needs departure-trigger collection damage. All `APlayerPassesFilter`
+occurrences were inspected: the three selected static conditions, Ghazbán Ogre's
+life/trigger condition, and Land Tax's intervening-if count comparison. Those
+trigger contexts remain unsupported. The complete Jihad record was inspected;
+chosen player/color entry and state-trigger behavior remain its blockers.
+The contract, reuse boundary and acceptance cases were stated before editing.
+
+### Exact supported shapes and engine reuse
+
+Capability `STATIC-OPPONENT-CONTROLS`: permanent rule
+`If(APlayerPassesFilter(Opponent, ControlsA(filter)), [layer_rules...])`.
+`APlayerPassesFilter/2` requires symbol `Opponent` and `ControlsA/1`.
+`Opponent` has role `player_filter`, not `player_reference`; the other argument
+has role `static_player_filter`. Nested filter descendants have role
+`permanent_filter`. No opponent binding or mutable choice is introduced.
+
+Static condition permanent filters add symbol `IsNonToken`, lowered to
+`mage.Not(mage.IsToken)`. Nonempty recursive `And/1(list)` and `Or/1(list)`
+now build these filters in the static-condition adapter. This also applies to
+existing controller `ControlsA`/`ControlsNo` conditions. General target,
+collection and resolving-action filter support is unchanged. Existing card-type,
+subtype, color, supertype and tap/combat predicates retain their syntax limits;
+ability/P/T queries stay rejected. Other player selectors, target/event/chosen
+reads, invalid arities, tuple `IsNonToken()`, empty conjunctions, `ControlsNo`
+on the opponent form and unsupported body/mixed-layer shapes remain errors.
+
+Bodies reuse the complete existing single-layer contract: fixed `AdjustPT/2` or
+nonempty `AddAbility/1` with existing supported keywords, on source/Aura host
+or existing static collections. Ivory Guardians reuses
+`IsNamed(NamedCard("Ivory Guardians"))` without a controller restriction.
+No game-time declaration panic, card-name execution branch or fallback exists.
+
+New shared API: `mage.OpponentControls(mage.PermanentFilter) mage.StateCondition`.
+It uses the context controller's current opponent, requires a valid controller,
+and reads unphased current battlefield membership. It uses the same
+`GetOpponent`, `AnyBattlefield`, `And` and `ControlledBy` services as the existing
+`WhileOpponentControls` source condition. It works with `While`, `IfState` and
+other state-condition consumers and holds only an immutable filter. No engine
+state, global result slot or alternate layer implementation is introduced.
+
+Reuse: `While`, `Static`, `ModifyPT`, `ModifyEachPT`, `GrantKeywordModification`,
+`MatchingPermanents`, `Named`, typed `This`, permanent incarnation and existing
+protection/zone/control/layer/clone services. Each factory creates fresh static
+rules/modifications. Layer 2 control, layer 4 types and layer 5 colors precede
+bonuses in layer 7c. Ability removal in layer 6 disables the source bonus.
+Membership remains live and uses no LKI. Phasing suspends the source/qualifier;
+returning a card supplies its new controller and incarnation.
+No payment, replacement-ordering or simultaneous-operation contract is changed.
+
+### TDD and card-to-test mapping
+
+Engine tests were written first. After fixing a test-only composite literal,
+they failed on missing `OpponentControls`. After implementing the shared
+condition, all engine cases passed. RON tests were written before adapters;
+after fixing test-only helper names they failed at unsupported
+`APlayerPassesFilter` for all three real records and missing nested inventory
+roles. Adding the adapters made them pass. The previous rejection fixture for
+the now-supported condition is replaced by unsupported opponent `ControlsNo`;
+positive tests cover the newly supported form. No gameplay assertions were
+weakened. Two broad inventory tests initially failed on old exact totals;
+those snapshots are updated to the measured gain.
+
+| Card / contract | Tests and evidence |
+| --- | --- |
+| All three cards | `TestRONOpponentStaticCards`: native casting/payment, no pre-resolution entry, full source stats, own versus opponent control/ownership, qualifier and source control changes, qualifier phase cycles, departure/return, clone isolation. |
+| Beasts of Bogardan; Ivory Guardians | `TestRONOpponentStaticNonTokenAndColor`: native created colored tokens excluded; noncreature multicolor qualifiers after layer 5; source ability removal and cleanup. `TestRONOpponentStaticProtection`: red damage prevention, red spell/Aura targeting rejection, failed target payment rollback, red blocking prohibition, blue damage/blocking allowed. |
+| Ivory Guardians | `TestRONOpponentStaticIvoryMembershipAndInstances`: recipients on both battlefields, unrelated-name exclusion, later entries, multiple same-controller sources stack, opposing sources evaluate their own opponent, source phase/departure and fresh entry. |
+| Water Wurm | `TestRONOpponentStaticLayersAndFactories`: Blood Moon removes a nonbasic Island subtype before the conditional bonus, restoration, returned source uses new controller/incarnation, independent factory-created static keyword instances with recursive And/Or, clone isolation. |
+| All three records / reprints | `TestRONOpponentStaticStrictCollection`: AST scan finds all 3 records (no reprints), two factories each validate, selected test collection loads; an invalid added declaration prevents publication. No partial production registry is installed. |
+| Declaration and reporting contracts | `TestRONOpponentStaticInvalid`, `TestRONOpponentStaticInventory`: rejected references/selectors/arity/filter shapes and independent nested semantic roles. Existing conditional tests retain unsupported body boundaries. |
+| Shared engine condition | `TestOpponentControlsState`, `TestOpponentControlsDefinition`: pure current membership independent of active turn/owner; absent and unknown controller rejection; phasing, clone isolation, departure/return without LKI; definition validation/inspection, static and resolving-action contexts. |
+
+This adds three complete-card gameplay mappings separately from compiler totals.
+Collection-wide engine-validation and behavior-verification aggregates remain
+null. Existing accepted cards retain their RON regression suite.
+
+### Measured gain and remaining work
+
+Actual gain exactly matches the estimate: **3 records / 3 unique names**.
+Strict loader: **1,260 compiled / 1,185 rejected records**, 445 accepted / 541
+rejected unique names. Exactly the selected three diagnostics disappear;
+zero new rejected records and zero changed surviving diagnostics. Inspection
+issues equal strict loader issues. Semantic inventory: 12 files, 2,445 records,
+986 unique names, 72,938 occurrences, 8,528 signatures, 13,405 unknown-role
+occurrences (15 fewer). All twelve source hashes equal the vocabulary snapshot.
+RON source is unchanged; no vocabulary source refresh or source correction is
+needed. Existing Gaea's Liege/Fastbond source-defect findings remain unresolved.
+
+Ranked next candidates to reassess:
+1. Finite simultaneous prevention allocation engine prerequisite for seven consumers.
+2. Filtered bands-with-others engine contract for five land grants and later tokens.
+3. Generic static source/host characteristic predicates for Goblin Caves and
+   Goblin Shrine; compare other nested static conditions and Shrine's separate
+   departure-damage blocker before choosing the exact scope.
+
+Runtime loading, full-collection gameplay, Go-card deletion and DSL cleanup
+remain open. Removal gates are unmet, so no Go definitions, generators or DSL
+functions are removed and no removal caller audit is claimed. This run stops
+after the opponent-dependent static slice.
+
+Changed files: `pkg/mage/composable_conditions.go`, `opponent_controls_test.go`,
+`doc.go`; `pkg/mage/dsl/ron/conditional_static.go`, `conditional_static_test.go`,
+`opponent_static_test.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Final validation results follow after all commands complete.
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage -run TestOpponentControls -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron -run 'TestRON(OpponentStatic\|ConditionalStatic)' -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after inventory totals update |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final lint |
+| `go test ./... -short -count=1` | PASS after final lint |
+| `make test` | PASS after final lint |
+| `make build` | PASS after final lint |
+| `go vet ./...` | PASS after final lint |
+| `make lint` | PASS, zero issues; no automatic changes outside the slice |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,260 compiled / 1,185 rejected; no registry publication |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; issues equal final strict diagnostics |
+| Diagnostic / source audit | 3 selected removals, no added or changed surviving issues; all 12 source hashes match vocabulary |
+
+Examples of remaining diagnostics: Animate Artifact rejects its noncreature host
+condition; Animate Dead rejects `EnchantGraveyardCard`; Goblin Caves rejects its
+host basic-Mountain condition. There is no environment or pre-existing check
+blocker. Only the eleven slice files are committed; the two initial user changes
+remain unstaged. The descriptive commit hash is reported in the final response.
