@@ -328,6 +328,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "action"
 		}
 	case "target":
+		if n.Name == "NumberTargetPermanents" && len(n.Args) == 2 {
+			return []string{"announcement_value", "permanent_filter"}[index]
+		}
 		if len(n.Args) == 1 {
 			switch n.Name {
 			case "TargetPermanent", "OneOrMoreTargetPermanents":
@@ -339,6 +342,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			case "TargetSpell":
 				return "spell_filter"
 			}
+		}
+	case "announcement_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
 		}
 	case "card_filter":
 		if n.Name == "And" && len(n.Args) == 1 {
@@ -409,6 +416,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_reference"
 		}
 	case "exile_subject":
+		if n.Name == "EachPermanent" && len(n.Args) == 1 {
+			return "permanent_collection_reference"
+		}
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
@@ -492,6 +502,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "TapEachPermanent":
 			if len(n.Args) == 1 {
+				if n.Args[0].Name == "Ref_TargetPermanents" {
+					return "permanent_collection_reference"
+				}
 				return "permanent_filter"
 			}
 		case "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "TapOrUntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":

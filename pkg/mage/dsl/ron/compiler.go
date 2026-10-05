@@ -635,6 +635,9 @@ func compileActions(n Node, ctx scope) (actionPlan, error) {
 }
 
 func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
+	if n.Name == "NumberTargetPermanents" {
+		return compileNumberedPermanentTarget(n, ctx)
+	}
 	if n.Kind == Symbol && n.Name == "AnyTarget" {
 		return func() mage.Target { return mage.DeclareDamageTarget(ctx.targetNamespace + "Ref_AnyTarget") }, "Ref_AnyTarget", nil
 	}
@@ -1038,6 +1041,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	case "TapEachPermanent":
 		if err := arity(n, 1); err != nil {
 			return nil, err
+		}
+		if n.Args[0].Name == "Ref_TargetPermanents" {
+			collection, err := compilePermanentTargetsRef(n.Args[0], ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(func(bindings instanceBindings) mage.Effect { return mage.TapEach(bindings.permanentSets[collection]) })
 		}
 		filter, err := compileFilter(n.Args[0])
 		if err != nil {

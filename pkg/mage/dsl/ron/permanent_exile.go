@@ -14,6 +14,23 @@ func compilePermanentExile(n Node, ctx scope) (effectFactory, error) {
 		return nil, problem(n.Args[0], "exile requires one permanent subject")
 	}
 	subject := subjects[0]
+	if subject.Name == "EachPermanent" {
+		if err := arity(subject, 1); err != nil {
+			return nil, err
+		}
+		collection, err := compilePermanentTargetsRef(subject.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		modifiers, err := list(n.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		if len(modifiers) != 0 {
+			return nil, unsupported(n.Args[1], "exile modifiers")
+		}
+		return func(bindings instanceBindings) mage.Effect { return mage.ExileEach(bindings.permanentSets[collection]) }, nil
+	}
 	if subject.Name != "Permanent" {
 		return nil, unsupported(subject, "exile subject")
 	}

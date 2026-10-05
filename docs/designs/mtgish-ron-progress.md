@@ -12936,3 +12936,159 @@ Slice files: `pkg/mage/dsl/ron/plural_color.go`, `plural_color_test.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
 and this ledger. Stage only these ten files. The descriptive commit hash is
 reported in the final response. Stop after this slice.
+
+## 2026-10-05: exact fixed/X permanent targets with batch exile and tap
+
+Status: completed `targets.numbered-batch` compiler slice. One slice only.
+User changes to `.gitignore` and the execution design stay unstaged.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current ledger, typed target/compiler/scope/inventory code, shared target,
+exile/tap batch services and their regression tests, relevant API/rules
+contracts, and CR 115, 400.7 and 608.2b–f. Complete RON records supply card
+requirements. No Go card definition, removed skill, generator, fallback or
+subagent was used. Baseline focused RON tests, short engine tests and build
+passed. The loader exited 1 for collection rejection, not a build failure:
+2,445 records / 986 names; 1,481 compiled / 964 rejected records;
+526 accepted / 460 rejected names. Semantic inventory: 72,938 nodes,
+8,530 context signatures, 11,095 unknown-role occurrences.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream value and effort |
+| --- | --- | --- | --- |
+| Exact fixed/X targets and batch exile/tap, selected | Ashes to Ashes, Dust to Dust, Word of Binding, Part Water, Winter Blast, Volcanic Eruption, Candelabra of Tawnos | 3 names / 3 records. Part Water needs plural landwalk grants; Winter Blast needs collection damage and an unresolved source-text audit; Volcanic Eruption needs plural destruction and actual graveyard results; Candelabra needs activation-X payment and plural untap. | Shared announcement-count and collection-action prerequisite for four more cards. Low adapter effort, moderate declaration/gameplay/identity/batch test effort; exact engine services already exist. |
+| All-zone CDA values | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, People of the Woods, Plague Rats, Wood Elemental | 5 credible gains. Avenger's controller source concern and Wood's entry-sacrifice results remain independent blockers. | All-zone values and CDA layers enable later characteristic forms. High engine/regression effort and medium adapter effort. |
+| Combat-event unions and bindings | Abomination, Venom, Giant Shark, Infernal Medusa, Wall of Dust, Infinite Authority | 2 credible gains, Abomination and Venom. Shark needs history filtering; Medusa has incompatible references/direction concerns; Wall needs next-turn duration; Infinite Authority needs success results and nested delayed bindings. | Shared host/event union and captured opponent references. Medium/high compiler and engine-contract effort. |
+
+Selection rationale, exact contract, reuse boundary and acceptance cases were
+stated before editing. The selected work offers three immediate full-card gains
+and concrete downstream prerequisites at lower effort than the alternatives.
+First-error frequency was not used as the unlock estimate. Reprints count once.
+Missing compiler adapters are the only selected prerequisites. No missing engine
+contract, selected source defect or environment failure was found.
+
+### Supported signatures and contexts
+
+`compileNumberedPermanentTarget(n Node, ctx scope)
+(targetFactory, string, error)` accepts the sole target group of `Targeted`:
+
+- `NumberTargetPermanents(Integer(n), filter)` for a nonnegative literal `n`,
+  lowered to `DeclarePermanentTargets(name, n, n, filter, options...)`.
+- `NumberTargetPermanents(ValueX, filter)`, lowered to
+  `DeclareXPermanentTargets(name, filter, options...)`.
+
+Both produce the existing typed `permanentTargetsPlan` binding named
+`Ref_TargetPermanents`. Existing target filter/options, factory-local
+`instanceBindings.permanentSets`, mode namespaces and clone/copy services are
+reused. No game state is captured by the compiled factory. X target bounds read
+the announced X, not a later global value. Activation-X payment remains an
+independent unsupported cost; declaring X targets does not implement that cost.
+
+`compilePermanentTargetsRef(n Node, ctx scope)
+(*permanentTargetsPlan, error)` checks a symbol against its typed lexical plan.
+It rejects singular, unbound, malformed and delayed-context collection reads.
+`TapEachPermanent(Ref_TargetPermanents)` lowers to `TapEach(binding)`.
+`Exile([EachPermanent(Ref_TargetPermanents)], [])` lowers to `ExileEach(binding)`.
+Exile requires exactly one subject and an empty modifier list. These actions
+support spell, mode, activation and trigger bodies, and can also read the
+existing one-or-more target form. Fixed declaration tests cover all four
+contexts; real Word of Binding and independent-instance/copy tests cover X
+spell execution. No claim is made for activation-X payments or additional
+number-expression shapes. Existing filter-based tap and singular exile callers
+keep their contracts.
+
+The engine retains ownership of announcement, legality, target incarnations,
+transactions, X, cloning, retargeting and simultaneous transitions. Exile uses
+one zone-change batch; tapping completes all member transitions before tap
+events. The compiler does not add a loop or a parallel rules system. Illegal
+members are excluded at resolution; an all-illegal nonempty group stops the
+whole spell. Zero target groups permit later instructions. Return creates a new
+incarnation; phased targets are excluded while phased, and a phase cycle keeps
+identity. Collection actions cannot use LKI to act on departed objects. No new
+LKI read, replacement-order service, duration or payment contract is introduced.
+Ashes to Ashes reuses ordinary spell damage and prevention after exile.
+
+Semantic inventory reports announcement counts, their integer descendants,
+permanent filters, exile collection subjects and tap collection references even
+under rejected parent actions. `engine_validated` and `behavior_verified` stay
+null: inventory is not gameplay proof.
+
+### TDD and complete-card mappings
+
+The initial test fixture used an unavailable player accessor; it was repaired
+before confirming the intended failure. All three real-card tests then failed
+at the missing two-argument `NumberTargetPermanents` adapter. The nested inventory
+test failed at the incorrect collection-reference role. Both failures were
+resolved by adapters, without weakening assertions. Later artifact-creature
+fixtures were repaired to use the existing `WithCardType` API. No production
+engine change was required.
+
+All test names below have the prefix `TestRONNumberedTargets`:
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Ashes to Ashes | `RealCards/Ashes_to_Ashes`: complete DRK record, exact two nonartifact creatures of either controller, mana, simultaneous exile and five damage to the caster. `Announcement` rejects artifact creatures. `Legality` covers partial/all-illegal targets, preventable damage and copied-spell controller. |
+| Dust to Dust | `RealCards/Dust_to_Dust`: complete DRK record, exactly two artifacts, mana, exile of either controller and unselected objects. `Batch/Dust_to_Dust` detects intermediate exile states. |
+| Word of Binding | `RealCards/Word_of_Binding`: complete DRK record, announced X, mana, both controllers, resolution timing and unselected objects. `Announcement` adds X=0/1/3. `Batch/Word_of_Binding` checks both tap transitions precede tap events. |
+| Shared legality/identity | `Legality` runs all three cards through shroud, all-illegal targets, leave/return, phasing, phase cycle, control changes, copies and pending clones. `RealCards` also proves live resolution does not mutate the pending clone. |
+| Shared declaration/payment | `Announcement` runs all three through too few/many, zero, duplicate, wrong-type, shroud and phased targets; rejected casts retain mana/hand/stack. `RealCards` checks unpaid casts. |
+| Shared scope/copy/context | `Contexts` covers fixed-count mode, activation with source departure and trigger actions for both exile and tap. `InstancesAndCopy` compiles once, constructs two X spells with different targets/counts and retargets a copy. `FixedZero` checks empty fixed groups do not select objects or stop later life gain. |
+| Invalid declarations/reporting | `Invalid` covers arities, negative/nonliteral/unsupported counts, unbound/singular/malformed references, modifiers, multiple exile subjects, mode leakage and delayed contexts. `Inventory` checks nested roles under an unsupported action. |
+
+Three complete-card behavior mappings are added. Compilation and gameplay
+coverage remain separate; no collection-wide gameplay claim is made.
+
+### Final measurements and validation
+
+Actual gain matches the estimate: **3 unique names / 3 records**. Strict and
+semantic loaders report **1,484 compiled / 961 rejected records**, **529 accepted /
+457 rejected names**. The rejected-name comparison shows exactly the three
+selected gains and no accepted-name regression. Nodes/signatures remain
+72,938 / 8,530; unknown-role occurrences fall to **11,059**. All file hashes are
+unchanged. No RON source or vocabulary source refresh is needed. Strict loading
+still exits 1 and publishes no partial registry.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONNumberedTargets -count=1` | PASS, including final zero-group and artifact-creature cases; intended TDD failures recorded above. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS on final tests, including updated 1,484/961 collection assertions. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on final tests. |
+| `make test` | PASS; final rerun after the last test addition. |
+| `make build` | PASS; final rerun after lint. |
+| `go vet ./...` | PASS; final rerun after lint. |
+| `make lint` | PASS, zero issues. Automatic edits reviewed; no unrelated changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for strict collection rejection, 1,484 compiled / 961 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same counts/issues; 457 rejected names, 11,059 unknown-role occurrences, unchanged hashes. |
+
+No selected source defect was found or corrected. Existing source concerns,
+including Gaea's Avenger, Infernal Medusa and Winter Blast, remain unverified
+blockers; the compiler was not changed to hide them. Remaining diagnostics:
+Part Water now rejects `AddAbility` in the plural layer action; Winter Blast
+rejects `EachPermanent` as a damage recipient; Volcanic Eruption rejects the
+plural destruction reference; Candelabra still rejects `PayManaX`.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient prevention allocation: a shared engine prerequisite for
+   Samite Healer, Healing Salve, Conservator, Alabaster Potion and other shields;
+   inspect optional activated modes and Guardian Angel's later player effect
+   before counting further unlocks.
+2. All-zone CDA values: five credible immediate gains after the shared engine
+   contract, with the source audits and Wood's entry results kept distinct.
+3. Plural collection keyword grants and damage/destruction results: the new
+   fixed/X bindings are ready, but reassess full-card gains and Winter Blast's
+   source data before selecting a batch-action slice. Part Water's landwalk
+   alone remains a single-card capability.
+
+No Go definitions, generators or DSL functions are removed. Complete loading,
+all-card gameplay and startup wiring do not meet the removal gates. No fresh
+caller audit authorizes deletion. Authoring cutover instructions stay deferred
+until cutover. API/rules docs describe only behavior established here.
+
+Slice files: `pkg/mage/dsl/ron/numbered_targets.go`,
+`numbered_targets_test.go`, `compiler.go`, `permanent_exile.go`, `inventory.go`,
+`inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`,
+and this ledger. Stage only these nine files. The descriptive commit hash is
+reported in the final response. This run stops after this slice.

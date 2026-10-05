@@ -2649,3 +2649,33 @@ separate copy choices. `Contexts` checks modes, activation source departure,
 trigger placement, and an empty color list. `Invalid` and `Inventory` check
 rejected declarations, mode scope, and nested semantic roles. All test names
 have the prefix `TestRONPluralColor`.
+
+### RON fixed/X target batch adapters
+
+`NumberTargetPermanents(Integer(n), filter)` uses equal minimum and maximum
+bounds in `DeclarePermanentTargets`; `ValueX` uses `DeclareXPermanentTargets`.
+Announcement fixes X and the selected incarnations (CR 115, 601.2b–c).
+At resolution, the engine removes illegal targets from the bound collection;
+all-illegal nonempty groups prevent the whole spell from resolving (CR 608.2b).
+An empty zero-count group does not stop other instructions.
+
+`TapEachPermanent(Ref_TargetPermanents)` uses `TapEach`.
+`Exile([EachPermanent(Ref_TargetPermanents)], [])` uses `ExileEach`.
+The existing engine batches prevent triggers from observing an intermediate
+member transition (CR 608.2f). Departure and return do not preserve the target
+incarnation (CR 400.7); phasing excludes a target while phased but preserves
+its identity across a phase cycle. Collection actions require live legal
+objects and do not use LKI to act on absent objects. Existing damage prevention
+applies to Ashes to Ashes after the exile instruction.
+
+`TestRONNumberedTargetsRealCards` covers complete Ashes to Ashes, Dust to Dust,
+and Word of Binding records, payments, resolution timing, both controllers,
+unselected objects and pending clones. `Legality` covers partial/all-illegal
+resolution, departure, phasing, control, copies and preventable damage.
+`Announcement` covers exact bounds, duplicate/illegal targets, artifact
+creatures, rollback and X=0/1/3. `Batch` checks simultaneous exile and tap.
+`Contexts` checks mode, activation with source departure, and trigger actions.
+`InstancesAndCopy` checks independent factory calls, separate X values and copy
+retargeting. `FixedZero` checks empty fixed groups and continued resolution.
+`Invalid` and `Inventory` check declarations and nested roles under rejected
+parents. All test names have the prefix `TestRONNumberedTargets`.

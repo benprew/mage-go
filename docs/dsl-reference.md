@@ -2489,3 +2489,24 @@ The adapter uses `DeclarePermanentTargets`, `SetEachColors`, and `Until`.
 Targets are chosen at announcement. The color effect captures each legal
 incarnation at resolution and ends at cleanup. The compiler creates fresh target
 bindings for every factory call.
+
+### RON fixed and X permanent target collections
+
+`NumberTargetPermanents(Integer(n), filter)` declares exactly `n` targets.
+The integer must be nonnegative. `NumberTargetPermanents(ValueX, filter)`
+declares exactly the announced X targets. Both use the sole target group of
+`Targeted` and bind the typed collection `Ref_TargetPermanents`. Spell, mode,
+activation and trigger bodies share this declaration adapter. X payment remains
+an independent cost contract; this adapter does not add activation-X costs.
+
+`TapEachPermanent(Ref_TargetPermanents)` taps the legal group in one engine
+operation. `Exile([EachPermanent(Ref_TargetPermanents)], [])` exiles the legal
+group in one zone-change batch. The exile form requires one subject and no
+modifiers. These actions also accept existing one-or-more target declarations.
+They reject singular, unbound and delayed-context collection reads. Existing
+filter-based tap and singular exile forms keep their contracts.
+
+The adapters use `DeclarePermanentTargets`, `DeclareXPermanentTargets`,
+`TapEach` and `ExileEach`. Zero targets permit resolution; if a nonempty group
+has no legal targets, the spell does not resolve. Factory calls and spell copies
+keep separate chosen targets and announced values.
