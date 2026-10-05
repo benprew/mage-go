@@ -352,7 +352,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "token_subtype"
 		}
 	case "prevention_event":
+		if n.Name == "Or" && len(n.Args) == 1 {
+			return "prevention_event"
+		}
+		if n.Name == "CombatDamageWouldBeDealtToRecipient" && len(n.Args) == 1 {
+			return "prevention_recipient"
+		}
 		if n.Name == "CombatDamageWouldBeDealtByCreature" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+	case "prevention_recipient":
+		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "action":

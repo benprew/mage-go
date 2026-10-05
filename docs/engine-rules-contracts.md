@@ -1454,3 +1454,39 @@ controllers, source departure/control changes, opponent copies and clone
 isolation. Opponent/owner expressions and controller restrictions inside `Or`
 remain unsupported. This adapter adds no replacement or simultaneous-operation
 contract.
+
+## Captured combat prevention to and by one permanent
+
+`PreventCombatDamageToAndBy(PermanentRef)` and
+`Game.PreventCombatDamageToAndBy(uuid.UUID)` retain their signatures and
+end-of-turn duration. Installation requires a current subject. A departed
+subject cannot install a shield on a returned incarnation. This existing typed
+reference rule is retained.
+
+`creatureCombatDamagePreventionReplacement.Matches` now checks the captured
+`DamageSource` ID and incarnation for outgoing combat damage. It no longer
+requires that damage source to remain on the battlefield. Incoming combat
+damage instead requires the live recipient's captured incarnation. A shield
+on a returned permanent cannot match an old source packet with the same UUID;
+an old shield cannot protect the returned recipient (CR 400.7, 609.7, 615.1–4).
+A captured damage packet retains its source after departure, phasing and LKI
+cleanup. This uses the existing damage snapshot service; no new history or
+parallel damage pipeline is introduced.
+
+The shield prevents combat damage to and by its subject until cleanup, including
+later combats. It permits noncombat damage and does not change combat membership
+(CR 506.4b). Control and a phase cycle preserve identity (CR 702.26); phasing
+before resolution still makes an attacking target illegal. Prevented damage
+produces no damage outcome or lifelink gain. Simultaneous packets retain
+independent source/recipient checks. Existing affected-player choice and
+replacement rechecks apply with redirection, and unpreventable damage passes
+through (CR 615.6, 615.12, 616.1/1f).
+
+Evidence: `TestCombatPreventionToAndByCapturedSource`,
+`TestCombatPreventionToAndByRejectsOldSourceForNewShield`,
+`TestCombatPreventionToAndByDepartedSubjectAtInstallation`,
+`TestCombatPreventionToAndBySimultaneousPackets`, retained typed combat tests,
+and `TestRONTargetCombatPrevention*`. The RON tests cover complete records for
+Maze of Ith, Ebony Horse and Elvish Scout plus scoped spell/mode/trigger probes,
+copy retargeting and fresh factory bindings. CR 615.7 finite-shield allocation
+remains open; this unbounded shield introduces no allocation decision.

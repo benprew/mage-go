@@ -244,17 +244,27 @@ func (r *combatSourcePreventionReplacement) Clone() ReplacementEffect   { c := *
 func (*combatSourcePreventionReplacement) IsPreventionEffect() bool     { return true }
 
 func (r *creatureCombatDamagePreventionReplacement) Matches(a Action, g GameReader) bool {
-	p := g.FindPermanent(r.creatureID)
-	if p == nil || p.incarnationID != r.incarnation {
-		return false
-	}
+	var source DamageSource
 	switch act := a.(type) {
 	case *DamageToPlayerAction:
-		return act.IsCombatDamage() && act.ActionSource() == r.creatureID
+		if !act.IsCombatDamage() {
+			return false
+		}
+		source = act.DamageSource()
 	case *DamageToCreatureAction:
-		return act.IsCombatDamage() && (act.ActionSource() == r.creatureID || act.PermanentID() == r.creatureID)
+		if !act.IsCombatDamage() {
+			return false
+		}
+		if act.PermanentID() == r.creatureID {
+			if p := g.FindPermanent(r.creatureID); p != nil && p.incarnationID == r.incarnation {
+				return true
+			}
+		}
+		source = act.DamageSource()
+	default:
+		return false
 	}
-	return false
+	return source.ID() == r.creatureID && source.Incarnation() == r.incarnation
 }
 
 func (r *creatureCombatDamagePreventionReplacement) Replace(a Action, _ *Game) Action {

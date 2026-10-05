@@ -1591,3 +1591,43 @@ other player references, ownership restrictions and disjunctions containing
 controller restrictions remain errors. Static and collection filters retain
 their separate adapters. Ashnod's Battle Gear uses this target restriction with
 the existing source-tapped duration and optional untap services.
+
+## RON combat prevention to and by one permanent
+
+The resolving action has this exact form:
+
+```ron
+CreatePreventDamageUntil(
+    Or([
+        CombatDamageWouldBeDealtToRecipient(Permanent(Ref_TargetPermanent)),
+        CombatDamageWouldBeDealtByCreature(Ref_TargetPermanent),
+    ]),
+    [PreventThatDamage],
+    UntilEndOfTurn,
+)
+```
+
+`Or/1` takes a list with exactly one recipient event and one source event,
+in either order. Both events require one argument. The recipient uses the
+`Permanent/1` wrapper. Both references must identify the same lexical permanent
+plan. Supported references are the existing scoped `Ref_TargetPermanent`,
+`ThisPermanent`, `HostPermanent`, and bound `Trigger_ThatPermanent` forms.
+Unbound, numbered, player, different-subject, duplicate-event, additional-event,
+wrong-operation and wrong-duration declarations fail compilation.
+
+This action is available in supported spells, modes, activations and trigger
+bodies. It is not a cost, layer modification or static `PreventDamage` rule.
+The compiler builds `mage.PreventCombatDamageToAndBy(PermanentRef)` with fresh
+instance bindings. The engine owns incarnation capture, replacement selection,
+source snapshots and cleanup. This is a union of two events for one object;
+it does not introduce a general event-union executor.
+
+Real RON tests cover every rule of Maze of Ith, Ebony Horse (ARN and 3ED), and
+Elvish Scout. They retain attacking-creature target checks, the controller
+restriction for Horse and Scout, costs, untap and prevention. Untap does not
+remove an attacker from combat. Failure to untap due to a stun counter does not
+stop prevention. Neither source departure nor later recipient control changes
+end installed prevention. Returned permanents have new incarnations.
+
+Finite shields, static Aura prevention (including Gaseous Form), different
+source/recipient unions and other durations remain separate gaps.

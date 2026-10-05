@@ -6209,3 +6209,167 @@ for the descriptive slice commit. The final report supplies its commit hash.
 Final repeat after the stronger exclusion assertion: `make lint` (zero issues),
 RON/CLI tests with `-count=1`, `make test` and `git diff --check` pass. The
 post-lint strict loader still exits 1 with the same 1,173/1,272 counts.
+
+## Run 2026-10-04: TARGET-COMBAT-PREVENTION
+
+Status: one complete three-card slice, including its reusable engine prerequisite.
+Stop after validation and the slice commit. Initial changes to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from staging.
+There were no unrelated untracked files. Read AGENTS.md, mage/doc.go, execution
+architecture/removal gates, vocabulary, current ledger, compiler/instance/event
+code, engine prevention/damage code, API/contracts and CR 400.7, 506.4b, 609.7,
+615, 616 and 702.26. The `implement-engine` skill was used for the engine repair;
+no removed card/set skill or Go card requirement was used.
+
+### Fresh evidence and candidate selection
+
+Baseline RON/CLI tests with `-count=1` and `make build` passed. Strict and semantic
+loaders exited 1 for collection rejection: **1,173 compiled / 1,272 rejected
+records**, 415 accepted / 571 rejected unique names. No partial registry was
+published. The semantic AST inventory included nested forms under rejected
+parents. Complete records for all names below were read. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream value, effort |
+| --- | --- | ---: | --- |
+| Combat prevention to and by one permanent, selected | Maze of Ith, Ebony Horse, Elvish Scout | 3 names / 4 records | Their remaining rules already compile, including controller restrictions. Existing replacement has captured-source departure/incarnation defects. Small engine repair and compiler adapter; moderate identity/legality/gameplay tests. Establishes the reusable captured to-and-by contract for later Aura prevention, including Gaseous Form. |
+| Finite recipient prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve, Guardian Angel | 0 for allocation prerequisite; 8 after adapter | CR 615.7 simultaneous finite-shield allocation remains absent. Large shared damage/decision/replacement test effort. First eight have otherwise supported costs, recipients and modes. Guardian Angel also needs X shields and a player effect permitting repeated instant-speed payments. Personal Incarnation has a related replacement event, but separate owner, activation and life-value blockers; it is not a finite prevention unlock. |
+| Legendary filtered banding | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel; downstream Master of the Hunt | 5 after contracts and adapter | Shared band membership and damage assignment contracts plus supertype/filter lowering remain missing. Moderate-to-large combat/layer test effort. Master of the Hunt also needs named membership and its token keyword. |
+
+The selected slice gives the largest credible immediate gain for its effort.
+It repairs a concrete shared engine defect rather than adding an adapter on
+incorrect behavior. The finite-shield candidate has more consumers but a larger
+missing prerequisite; banding has broader contracts. Gaseous Form and Demonic
+Torment were also read as downstream static prevention consumers. Their static
+`PreventDamage` context is separate; Demonic Torment also needs `CantAttack`.
+Telekinesis retains its future untap blocker. None is claimed as an unlock.
+
+The pre-edit contract and acceptance cases were: the exact two-event union for
+one typed permanent until cleanup; attacking/controller legality and native
+costs; untap without removal from combat; prevention in both directions;
+noncombat damage; first/double-strike and later combat; source/recipient
+incarnations, departure, phasing and controller changes; copying, clone isolation,
+rollback, unpreventable damage and replacement rechecks. RON owns declarations
+and binding identity. The engine owns damage source snapshots and rules.
+
+### Supported signatures, contexts and implementation
+
+Exact action:
+`CreatePreventDamageUntil(Or([CombatDamageWouldBeDealtToRecipient(Permanent(r)),
+CombatDamageWouldBeDealtByCreature(r)]), [PreventThatDamage], UntilEndOfTurn)`.
+`CreatePreventDamageUntil/3`, `Or/1`, both event constructors `/1` and
+`Permanent/1` require positional tuples. `Or` takes exactly two list elements,
+one event of each kind, in either order. Both event references must identify
+the same `permanentReferencePlan`, including its lexical target/event identity.
+Existing scoped symbols `Ref_TargetPermanent`, `ThisPermanent`, `HostPermanent`
+and `Trigger_ThatPermanent` can be reused. The latter two require an Aura/event
+scope. Different references, duplicate events, other unions, malformed wrappers,
+player/numbered/unbound reads, other operations and durations remain errors.
+
+Supported resolving contexts are existing single-target spells, modes,
+activations and trigger bodies, including source/host and saved host-tap event
+references. Cost, static layer and static `PreventDamage` contexts remain errors.
+`compileCombatPreventionUnion(Node, scope) (permanentReferencePlan, error)` is
+private to `ron`. It creates no game state. `compileCombatPrevention` builds
+`mage.PreventCombatDamageToAndBy(PermanentRef)` through fresh instance bindings.
+The inventory now assigns union descendants prevention-event/recipient/reference
+roles; support and behavior fields remain unverified/report-only.
+
+Engine reuse: native `Game.PreventCombatDamageToAndBy`, typed references,
+`DamageSource`, damage batches, target declarations and controller restrictions,
+transactional payment, untap/stun replacements, stack copying, event snapshots,
+cloning, replacement ordering and cleanup. No public API signature changed.
+`creatureCombatDamagePreventionReplacement.Matches` now matches outgoing packets
+by captured source ID **and incarnation**, without requiring a live source.
+Incoming packets still require the live protected recipient incarnation. This
+also stops a shield on a new incarnation from matching damage from the old one.
+The existing installation-time typed subject check already prevents a departed
+source from installing a shield on a returned permanent; a regression test
+confirms it and no extra installation implementation was needed.
+
+Gap classification: missing compiler adapter plus an engine source-identity
+contract defect. No data defect or environment failure was found. RON sources
+are unchanged; all twelve hashes match the vocabulary snapshot, so no source
+snapshot refresh is needed. Gaea's Liege/Fastbond source concerns remain open.
+No Go fallback, card-name branch, global action slot, declaration panic or
+partial production registry was added. Existing callers and duration remain.
+
+### TDD and card-to-test mappings
+
+Engine tests failed before the repair: captured combat packets lost prevention
+after departure, return, phasing and LKI cleanup; a new shield wrongly prevented
+an old-source packet. Real card tests failed at `unsupported combat prevention
+event (Or)`. Inventory reference-role acceptance failed at `role=unknown`.
+Initial test harness errors (counter API and mode parentheses) were corrected;
+red semantic failures were confirmed. Later assertions were corrected to compare
+actual pending clone tap state after return and life totals after a new source's
+lifelink gain. No rule assertion was removed or weakened.
+
+| Unique card / context | Test mapping and evidence |
+| --- | --- |
+| Maze of Ith, Ebony Horse (ARN and 3ED), Elvish Scout | `TestRONTargetCombatPreventionCards`: complete real records, definition validation, mana/tap costs, summoning sickness, invalid target/payment rollback, opponent restrictions, ownership distinct from control, attacking status at resolution, shroud, departure/return, phasing, source departure/control, untap and stun independence, two directions of combat prevention, double strike/trample/lifelink, simultaneous combat, unrelated damage, later combat, cleanup and pending clone isolation. |
+| Maze of Ith | `TestRONTargetCombatPreventionCopyRetarget`: copied activation independently retargets and resolves, original and pending clone keep their own targets. `TestRONTargetCombatPreventionReplacementOrder`: both affected-player redirection/prevention orders, rechecks, damage to protected attacker, unpreventable damage. |
+| Spell/mode/entry-trigger contexts | `TestRONTargetCombatPreventionInstancesAndContexts`: same compiled factory produces independent target declarations, concurrent chosen objects, separate pending clones and native definition validation. |
+| Source/host/event references | `TestRONTargetCombatPreventionReferenceReuse`: source and Aura host subjects, reversed event order, typed definition validation. `TestRONTargetCombatPreventionEventReference`: saved host-tap subject survives reattachment, pending clone stays independent. |
+| Invalid declarations and roles | `TestRONTargetCombatPreventionDeclarations`: malformed event/wrapper, wrong/different/unbound reference, duplicate/missing event, wrong operation/duration, cross-rule binding leak, static context rejection, nested inventory roles. Existing global/source prevention declaration tests retain common arity/operation coverage. |
+| Shared engine source identity | `TestCombatPreventionToAndByCapturedSource`: departure/return/phasing/LKI cleanup, players and permanent recipients, noncombat, lifelink and clone cleanup. `TestCombatPreventionToAndByRejectsOldSourceForNewShield`: old packet/new shield distinction. `TestCombatPreventionToAndByDepartedSubjectAtInstallation`: absent subject installs no shield on returned card. `TestCombatPreventionToAndBySimultaneousPackets`: independent protected/unprotected packet outcomes. Retained typed combat prevention tests cover control, phase cycle and lifetime. |
+
+Compilation and gameplay coverage stay separate. Three unique cards gain complete
+record behavior mappings; the rest of the collection still lacks full gameplay
+proof. Collection-wide engine-validation and behavior-verification totals remain
+null. The real-record tests include Ebony Horse's identical reprint separately.
+
+### Measurements and validation
+
+Actual gain matches the estimate: **3 unique names / 4 records**. Strict and
+semantic loaders now report **1,177 compiled / 1,268 rejected records**,
+418 accepted / 568 rejected unique names. No previously accepted name regressed;
+remaining diagnostic arrays are unchanged except removal of these four records.
+Strict and semantic issue arrays agree. Inventory remains 72,938 AST occurrences
+and 8,528 signatures; unknown-role occurrences fall from 14,162 to 14,138.
+Reporting these roles does not assert general event-union execution support.
+
+Most frequent remaining first diagnostics: `If` (53 records), non-spell
+`CastEffect` (53), `ChooseADamageSource` (46), `Targeted_Modal` (42), host self-untap
+source (39), host-controller upkeep reference (35), self-untap operations (34),
+graveyard target (26). These are first failures, not full unlock estimates.
+
+Runtime cutover, complete collection loading/gameplay, Go-card/generator deletion
+and unused DSL cleanup gates remain unmet. No functions or definitions were
+deleted and no deletion caller audit is claimed. Authoring instruction cutover
+remains for that phase. Ranked next candidates to reassess:
+
+1. CR 615.7 simultaneous finite-shield allocation prerequisite, then the eight
+   complete finite prevention consumers listed above.
+2. Legendary filtered banding for five lands, with shared combat contracts first.
+3. Static host combat prevention: Gaseous Form and Demonic Torment; establish
+   source lifetime/ability removal and host membership before the adapter.
+
+Slice files: `pkg/mage/replacement.go`, new
+`pkg/mage/combat_prevention_identity_test.go`,
+`pkg/mage/dsl/ron/combat_prevention.go`, `inventory.go`, `inventory_test.go`, new
+`target_combat_prevention_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Stage only these files. The
+final report supplies the commit hash. No second slice is started.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline RON/CLI tests `-count=1`, `make build` | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,173 compiled / 1,272 rejected |
+| Pre-implementation engine and real RON tests | Expected captured-source identity and unsupported `Or` failures |
+| Focused engine and `TestRONTargetCombatPrevention*` tests `-count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including final reference/copy/event probes |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; new test import grouping reviewed, no unrelated changes |
+| Post-lint focused engine and RON/CLI tests `-count=1` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1: 1,177 compiled / 1,268 rejected; incomplete collection remains atomic rejection |
+| Full diagnostic/accepted-name comparison | PASS: only the four unlocked records removed; all remaining diagnostics identical; strict/semantic arrays agree |
+| Twelve source hashes | PASS: all match vocabulary snapshot |
+| `git diff --check` | PASS |
+
+All required build, test, vet and lint checks pass. There is no environmental or
+pre-existing check blocker. Remaining collection rejection is expected and does
+not assert collection-wide gameplay or runtime cutover. One descriptive slice
+commit is authorized; unrelated user edits remain outside it.
