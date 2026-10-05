@@ -3650,3 +3650,51 @@ recasts, phasing, copies, clones and real RON casting. Existing
 `TestTappedForManaTrigger*` and `TestSpellManaValue*` retain shared batch,
 classification and compatibility evidence. No new replacement or damage
 contract is established here.
+
+## Live static combat prevention and subject attack restriction
+
+`PreventCombatDamageFrom(subject PermanentRef) StaticRule` prevents outgoing
+combat damage to any recipient. `PreventCombatDamageTo(subject PermanentRef,
+from PermanentFilter) StaticRule` prevents incoming matching combat damage.
+A zero source filter permits all sources. Both use the current subject under
+the static ability's source context. `This` and `AttachedPermanent` have no
+announcement choices. Nil and undeclared references fail definition validation.
+
+Each ability instance installs its own cycle replacement. Each proposed event
+checks the current source incarnation and resolves its current subject again.
+This check is required because phasing need not start another layer cycle.
+No previous attachment, returned source, or returned host can replace that
+identity. Static prevention stops while its source is absent or phased out and
+returns with its active ability. Recipient ability removal cannot erase an
+Aura's separate rule. Source ability removal does erase that rule. Source
+filters reuse current/LKI damage-source matching. `DamageSourceIsEnchanted()`
+reads current Aura status while the source is live, and the saved `Enchanted`
+fact from `PermanentLKI` after departure or phasing. Snapshot capture uses the
+same Aura query as the unchanged live `IsEnchanted` filter. A returned source
+uses its own current status; it cannot overwrite the earlier incarnation.
+The shared pipeline handles simultaneous packets, affected-player replacement
+choices, rechecks after redirection, and damage that cannot be prevented.
+There is no shield consumption and no noncombat prevention.
+
+`CantAttack(subject PermanentRef) StaticRule` lowers to `CantAttackEach` through
+the shared single-reference set. It checks current subject identity at attack
+declaration, remains separate from recipient abilities, and does not remove
+existing attackers. Existing collection callers retain their behavior.
+
+RON owns spelling, arity, static contexts and source/host reference restrictions.
+Its union requires one incoming and one outgoing event for the same subject.
+The filtered incoming event additionally requires a creature damage source.
+Demonic Torment, Gaseous Form and Enchanted Being are complete RON consumers.
+`TestStaticCombatPreventionLiveHost`, `TestStaticCombatPreventionFilterAndDeclarations`
+`TestStaticCombatPreventionEnchantedSourceInformation`
+and `TestStaticCombatPreventionSimultaneousAndUnpreventable` establish engine
+identity, live filters, source/host ability removal, phasing, clones, repeated
+and simultaneous packets, noncombat exclusions and invalid declarations.
+`TestRONStaticCombatPreventionCards`, `Casting`, `Lifecycle`, `Invalid`,
+`Ordering`, `StrictInventory` and `IllegalAuraResolution` (with the common
+`TestRONStaticCombatPrevention` prefix) establish complete record behavior,
+casting costs and rollback, target legality, attachment changes, native combat,
+factory/clone separation and strict loading.
+Rules: CR 120.2, 400.7, 508.1, 611.3a–b, 615.1–6, 615.12, 616.1/616.1f,
+609.7c, and 702.26b–i. No timing, payment, damage allocation or replacement ordering
+algorithm is changed.

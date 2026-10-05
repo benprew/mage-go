@@ -140,6 +140,7 @@ type PermanentLKI struct {
 	Toughness       int
 	IsToken         bool
 	Attacking       bool
+	Enchanted       bool
 	combatOpponents []capturedPermanent
 
 	// Snapshot is a frozen *Permanent capturing controller, types,

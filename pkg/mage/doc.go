@@ -100,6 +100,13 @@
 // Absent, returned and phased-out targets do not qualify. Copies use their own
 // stack identity and controller. Combine card filters to restrict the spell type.
 //
+// Use [PreventCombatDamageFrom] and [PreventCombatDamageTo] with [Static]
+// for live combat prevention. [AttachedPermanent] follows the current host.
+// The rule checks source presence and incarnation for each damage event.
+// [DamageSourceIsEnchanted] uses the saved Aura status for absent sources.
+// Recipient ability removal does not remove a separate Aura's rule.
+// Use [CantAttack] for the same live subject attack restriction.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

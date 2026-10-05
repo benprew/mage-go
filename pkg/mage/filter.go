@@ -230,6 +230,10 @@ var IsUntapped = NewPermanentFilter("untapped", func(p *Permanent, _ *Game) bool
 
 // IsEnchanted matches permanents with an Aura attached to them.
 var IsEnchanted = NewPermanentFilter("enchanted", func(p *Permanent, g *Game) bool {
+	return permanentIsEnchanted(p, g)
+})
+
+func permanentIsEnchanted(p *Permanent, g GameReader) bool {
 	for _, attachmentID := range p.Attachments {
 		attachment := g.FindPermanent(attachmentID)
 		if attachment != nil && attachment.HasType(TypeEnchantment) && attachment.HasSubType("Aura") {
@@ -237,7 +241,7 @@ var IsEnchanted = NewPermanentFilter("enchanted", func(p *Permanent, g *Game) bo
 		}
 	}
 	return false
-})
+}
 
 // IsAttacking matches creatures currently declared as attackers.
 var IsAttacking = NewPermanentFilter("attacking", func(p *Permanent, g *Game) bool {

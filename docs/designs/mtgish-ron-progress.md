@@ -18092,3 +18092,163 @@ Slice files: new engine player_mana_denial.go and tests; stack.go, clone.go,
 game.go, composable_actions.go, doc.go; new compiler player_actions.go and
 player_mana_denial_test.go; compiler.go, player_scope.go, inventory.go and
 inventory_test.go; API/rules contracts and this ledger entry. No second slice.
+
+## Run 2026-10-05: LIVE-STATIC-COMBAT-PREVENTION
+
+Status: completed implementation slice. Full migration remains incomplete.
+
+### Baseline, candidates and selection
+
+Initial user changes: `.gitignore`, this ledger and the execution design;
+`mtgish-ron-completed.md` was untracked. Preserve all of them. Stage only this
+appended entry from this ledger. Read AGENTS.md, pkg/mage/doc.go, the execution
+design, vocabulary snapshot, ledger, selected compiler/engine code, complete
+candidate RON records and relevant API/rules contracts. The implement-engine
+skill supplies the missing engine-contract workflow. No removed card skill,
+Go-card requirement, stub or subagent is used.
+
+Fresh baseline short engine tests and make build passed. Strict loader and
+semantic inventory exited 1 for collection rejection, not build failure:
+2,445 records, 1,599 compiled / 846 rejected; 587 accepted / 399 rejected names.
+Inventory: 72,951 nodes, 8,540 signatures, 9,724 unknown-role occurrences.
+Candidate estimates use complete records and nested forms; reprints count once.
+
+| Candidate | Distinct affected names; estimated full unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Live static combat prevention, selected | Demonic Torment, Gaseous Form, Enchanted Being: **3 names / 3 records** | Missing live typed static prevention, combat-event adapters and Demonic Torment's host CantAttack adapter. The replacement, source identity, attachment, attack restriction and enchanted-filter services exist. An enchanted-source LKI fact is needed. Enables static outgoing/incoming prevention and same-subject unions without timed shields. | Low/medium: small engine service and compiler adapter; native combat, source/host lifecycle, information, legality and replacement-order tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** credible full consumers. Gaea's Avenger and Wood Elemental are additional blocked consumers. | All-zone owner/controller context, CDA/copy/layer rules and named/non-Wall counts. Avenger has arithmetic and a previously recorded controller/source audit; Wood Elemental needs entry sacrifice results. Enables shared characteristic queries in each applicable zone. | High: reusable zone-aware characteristic contract, compiler values/filters and copy/layer/zone/control tests. |
+| Chosen damage source and next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** eventual full consumers. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage share the producer. | CR 609.7a source universe, incarnation and permanent-spell relation, result binding, next-event prevention and lifecycle are missing. The four further consumers need rounding, reflection, redirection or actual prevented-damage results. Source-choice prerequisite alone unlocks **0**. Enables a concrete seven-card family. | High: engine choice universe/identity and replacement lifetime, then adapters and full gameplay tests. |
+
+Select the three-card shared capability for its smaller dependency set and
+credible gain per effort. State contract, ownership and acceptance before edits.
+Keep unrelated aura attack payments, damage-source choices, general static
+replacements and all-zone CDAs outside this slice. No second slice begins.
+
+### Established shapes, contexts and dependencies
+
+Engine:
+
+- `PreventCombatDamageFrom(subject PermanentRef) StaticRule` prevents repeated
+  outgoing combat damage to any recipient.
+- `PreventCombatDamageTo(subject PermanentRef, from PermanentFilter) StaticRule`
+  prevents repeated matching incoming combat damage. A zero filter permits all
+  sources. Both read the current subject in the static source context.
+- `DamageSourceIsEnchanted() PermanentFilter` reads current Aura status while
+  live and retained `PermanentLKI.Enchanted` after departure/phasing. Capture
+  reuses the same pure Aura query as the unchanged live IsEnchanted filter.
+  Later casts/incarnations cannot replace saved information. Clones retain it.
+- `CantAttack(subject PermanentRef) StaticRule` reuses CantAttackEach and the
+  existing singleton reference set. It remains separate from host abilities.
+
+The engine installs per-ability cycle replacements. Each proposed event checks
+current source presence/incarnation and current subject identity. This is needed
+because phasing need not start another layer cycle. RON owns spelling, scope,
+arity, reference compatibility and lowering. It does not own parallel damage,
+zone, replacement, cost or layer execution.
+
+Permanent top-level `PreventDamage(event, [PreventThatDamage])` now accepts:
+`CombatDamageWouldBeDealtByCreature(reference)`,
+`CombatDamageWouldBeDealtToRecipient(Permanent(reference))`,
+`CombatDamageWouldBeDealtByACreatureToRecipient(filter, Permanent(reference))`,
+and `Or([incoming-event, outgoing-event])` in either order for the same subject.
+References are ThisPermanent, or HostPermanent on an Aura. The union has exactly
+one event of each direction. Its shared parser is reused from timed prevention.
+Source filters accept And/Or, type/subtype, color/supertype, AnyPermanent,
+IsTapped/IsUntapped, IsEnchanted/IsntEnchanted and IsAttacking. Enchanted and
+attacking damage filters retain departure/phasing information. IsBlocking,
+other relational/numeric filters, target/event refs, players, finite amounts,
+mismatched unions and extra operations remain declaration errors in this context.
+`PermanentRuleEffect(reference, [CantAttack])` uses the same reference boundary.
+
+Reuse: StaticAbilityHolder and printed-ability lifecycle, definition validation,
+PermanentRef/AttachedPermanent, damage-source incarnation/LKI, shared replacement
+matching/order/rechecks, simultaneous damage, cloning, phasing, CantAttackEach,
+source combat prevention union and current permanent filters. No card-name
+branch, fallback, global last-action slot or partial production registry.
+
+Rules: CR 120.2, 400.7, 508.1, 609.7c, 611.3a–b, 615.1–6/615.12,
+616.1/616.1f and 702.26b–i. Source and host ability removal have separate effects.
+Static rules read current attachment; they do not lock the host at entry.
+
+### Tests and full-card mappings
+
+Tests first failed at missing static engine APIs and the selected real RON
+compiler errors (HostPermanent, Or and the filtered combat event). The later
+LKI test first failed at the missing DamageSourceIsEnchanted API. No test was
+weakened. One reattachment fixture initially used the new protected host as its
+incoming damage source; a neutral third source corrected that setup. Lifecycle
+fixtures needed fresh permanent pointers after ApplyEffect; refreshing them
+preserved the assertions. Exact inventory count tests were updated from fresh
+measurement, 1,599/846 to 1,602/843.
+
+| Card/contract | Test mapping |
+| --- | --- |
+| Demonic Torment, complete LEG record | TestRONStaticCombatPreventionCards: enchanted host cannot attack, can block, prevents outgoing combat damage, allows incoming and noncombat damage. Casting/Lifecycle/IllegalAuraResolution: full mana cost, enchant restriction, rollback, announcement/resolution timing, removal/phasing/control, host changes and recipient ability loss. |
+| Gaseous Form, complete LEG record | Same Cards/Casting/Lifecycle/IllegalAuraResolution tests: incoming and outgoing combat prevention, noncombat exclusion, native combat, attachment, source versus recipient ability loss and current identity. StrictInventory: independent real factories, outgoing damage to players and clone state. |
+| Enchanted Being, complete LEG record | Same Cards/Casting/Lifecycle tests: printed P/T and full casting, enchanted versus plain attackers, noncombat exclusion, live Aura membership, source ability removal/phasing/control. Ordering: affected-player choice between redirection and prevention, then recheck. |
+| Engine live subjects | TestStaticCombatPreventionLiveHost: current host, reattachment, source departure/phasing/cycle, host return, control, separate source/host ability removal, source identity, noncombat exclusion and clone separation. |
+| Engine source information and packets | TestStaticCombatPreventionFilterAndDeclarations: live Aura membership/phasing, repetition and invalid refs. EnchantedSourceInformation: departed/phased/returned sources, live Aura departure, retained incarnations and cloned information. SimultaneousAndUnpreventable: separate permanent/player packets, repeated prevention and unpreventable damage. These names share the TestStaticCombatPrevention prefix. |
+| Compiler/loader | TestRONStaticCombatPreventionInvalid: arity/kind, unsupported scopes, incompatible refs/recipients, empty lists, mismatched union and unsupported source predicates. SubjectShapes: standalone source/recipient and reversed union. StrictInventory: complete records through strict loading, no partial registry after rejection and nested permanent-filter classification. |
+
+Three complete-card gameplay mappings are added. Compilation gains and gameplay
+coverage are separate. Collection-wide engine-validation and behavior totals
+remain null; this slice does not claim all accepted cards are behavior verified.
+
+### Source audit, final evidence and next work
+
+Local data/LEG.json Oracle text agrees with the complete selected records.
+No selected data defect or RON edit. All twelve file hashes match the vocabulary
+snapshot; no source snapshot refresh is required. Earlier source defects remain
+explicit, outside this slice.
+
+Actual gains equal estimates: **3 unique names / 3 records**. Exactly Demonic
+Torment, Gaseous Form and Enchanted Being are gained; no accepted name is lost.
+Final strict loader: **1,602 compiled / 843 rejected records**;
+**590 accepted / 396 rejected unique names**. Inventory: **72,951 nodes /
+8,540 signatures / 9,714 unknown-role occurrences**. Both CLI modes exit 1
+and publish no partial registry. Circle of Protection: Black still reports
+unsupported ChooseADamageSource; Nightmare reports unsupported CDA_Power.
+
+All required checks passed. Lint's automatic changes only sorted new-file imports;
+they were reviewed. There is no environment or pre-existing validation blocker.
+Final added shape tests cover standalone incoming/outgoing subjects and a
+reversed union; focused tests were rerun with -count=1. Lifecycle tests assert
+that only the expected departed/phased subject can be absent.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine tests and make build | PASS. |
+| Focused engine/compiler tests with -count=1 | PASS, including live source/host, LKI, declaration, casting, native combat, replacement ordering, shapes, strict loading and inventory. |
+| go test ./pkg/mage/... -short -count=1 | PASS. |
+| make test | PASS. |
+| make build | PASS. |
+| go vet ./... | PASS. |
+| make lint | PASS, zero issues; automatic imports reviewed. |
+| go test ./... -short -count=1 | PASS, additional engine-skill validation. |
+| git diff --check and staged diff check | PASS. |
+| go run ./cmd/loadcards -json | Expected exit 1: 1,602 compiled / 843 rejected records. |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1; same counts, 396 rejected names and inventory totals above. |
+| Accepted-name and source-hash audit | Exactly three gained, none lost; all twelve source hashes unchanged. |
+
+No production Go definition, generator, startup wiring or DSL function is
+removed. The complete loading/gameplay and runtime cutover gates remain unmet.
+No deletion is authorized by a whole-repository caller audit in this slice.
+Only established behavior is added to API/rules-contract documentation.
+One descriptive commit stages this slice and only the new entry from this
+ledger; initial user changes remain unstaged. Its hash is in the final response.
+
+Ranked next candidates for fresh reassessment:
+
+1. Chosen-source identity/universe and next-event prevention prerequisite:
+   seven Circle/Realm consumers; preserve the full CR 609.7a choice contract.
+2. All-zone battlefield-count CDAs: five credible full consumers; keep
+   Avenger's arithmetic/source audit and Wood Elemental's entry costs separate.
+3. Targeted_Modal alternative-target prerequisite: Chaoslace, Deathlace,
+   Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind. Color/text
+   changes remain separate blockers, so this prerequisite alone unlocks zero.
+
+Slice files: new engine static_combat_prevention.go and tests;
+attack_matching.go, filter.go, lki.go, zone_system.go, doc.go; new compiler
+static_combat_prevention.go and tests; static_prevention.go, filtered_blocking.go,
+inventory.go/inventory_test.go; API/rules contracts and this ledger entry.
+No second slice.

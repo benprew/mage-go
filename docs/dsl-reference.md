@@ -2024,8 +2024,9 @@ PreventDamage(
 `source_filter` uses the existing permanent filter grammar. The recipient is
 only the source of the static ability. The operation list must contain exactly
 the symbol `PreventThatDamage`. Player recipients, Aura hosts, event or target
-references, general damage sources, combat-only events, finite amounts and
-additional operations remain unsupported in this context. These declarations
+references, general damage sources, finite amounts and additional operations
+remain unsupported in this shape. Static combat events have the separate
+contract below. These declarations
 fail compilation before a factory is returned.
 
 Each factory builds a fresh static ability using `PreventDamageFromTo` and
@@ -3276,3 +3277,39 @@ body, an explicit `PlayerAction`, or a resolving list for its controller.
 Mana Short and Power Sink use these shared forms. Their complete RON records
 are tested for all six reprints by `TestRONManaDenial*`. Compilation and complete
 collection gameplay remain separate measurements.
+
+## RON live static combat prevention
+
+Top-level `PreventDamage(event, [PreventThatDamage])` on permanents accepts:
+
+- `CombatDamageWouldBeDealtByCreature(reference)`.
+- `CombatDamageWouldBeDealtToRecipient(Permanent(reference))`.
+- `CombatDamageWouldBeDealtByACreatureToRecipient(filter, Permanent(reference))`.
+- `Or([CombatDamageWouldBeDealtToRecipient(Permanent(reference)),
+  CombatDamageWouldBeDealtByCreature(reference)])`, in either order, with
+  exactly the same reference in both events.
+
+References are `ThisPermanent` and, on an Aura, `HostPermanent`. Source filters accept `And`/`Or`, type/subtype,
+color and supertype filters, `AnyPermanent`, `IsTapped`, `IsUntapped`,
+`IsEnchanted`, `IsntEnchanted` and `IsAttacking`. The filtered source event
+also requires a creature. `IsBlocking` and other relational/numeric source
+filters remain declaration errors. Enchanted and attacking sources use retained
+incarnation information after departure or phasing; live sources use current
+state.
+Target/event references, player recipients, mismatched unions, finite amounts,
+and additional operations fail compilation. Resolving prevention retains its
+separate duration contract.
+
+These adapters use `Static(PreventCombatDamageFrom(PermanentRef))` and
+`Static(PreventCombatDamageTo(PermanentRef, PermanentFilter))`. They read the
+current subject for every proposed event and prevent repeated combat packets.
+They do not prevent noncombat damage. Source phasing or departure suspends the
+rule; changing an Aura's host redirects its rule. No subject is saved at entry.
+The engine replacement pipeline owns ordering, rechecks, and unpreventable
+packets. `PermanentRuleEffect(reference, [CantAttack])` uses
+`Static(CantAttack(PermanentRef))` with the same reference restrictions. This
+attack rule remains separate from the host's abilities and does not remove a
+creature already in combat.
+
+Evidence: `TestStaticCombatPrevention*` and `TestRONStaticCombatPrevention*`.
+Complete RON records: Demonic Torment, Gaseous Form, Enchanted Being.

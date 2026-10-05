@@ -14,6 +14,12 @@ func CantAttackEach(subjects PermanentSet) StaticRule {
 	return cantAttackEachRule{subjects: subjects}
 }
 
+// CantAttack prevents the current subject from attacking.
+// The rule remains separate from the subject's abilities.
+func CantAttack(subject PermanentRef) StaticRule {
+	return CantAttackEach(grantRecipientSet{subject: subject})
+}
+
 func (cantAttackEachRule) staticRule() {}
 
 func (r cantAttackEachRule) inspectDefinition() definitionNode {

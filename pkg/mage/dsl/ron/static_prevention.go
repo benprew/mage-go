@@ -7,6 +7,20 @@ func compileStaticPrevention(n Node, ctx scope) (optionFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "Or" || event.Name == "CombatDamageWouldBeDealtByCreature" || event.Name == "CombatDamageWouldBeDealtToRecipient" || event.Name == "CombatDamageWouldBeDealtByACreatureToRecipient" {
+		operations, err := list(n.Args[1])
+		if err != nil {
+			return nil, err
+		}
+		if len(operations) != 1 || operations[0].Kind != Symbol || operations[0].Name != "PreventThatDamage" {
+			return nil, problem(n.Args[1], "static prevention requires the symbol PreventThatDamage")
+		}
+		build, err := compileStaticCombatPrevention(event, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption { return mage.WithAbility(mage.Static(build()...)) }, nil
+	}
 	if event.Name != "DamageWouldBeDealtByAPermanentToRecipient" {
 		return nil, unsupported(event, "static prevention event")
 	}

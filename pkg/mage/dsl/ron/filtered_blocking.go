@@ -15,6 +15,20 @@ func compilePermanentBlockingRule(n Node, ctx scope) (optionFactory, error) {
 	}
 	operation := operations[0]
 	switch operation.Name {
+	case "CantAttack":
+		if _, err := symbol(operation); err != nil {
+			return nil, err
+		}
+		subject, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		if subject.kind != permanentSource && subject.kind != permanentHost {
+			return nil, unsupported(n.Args[0], "static attack reference")
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.Static(mage.CantAttack(subject.build(instanceBindings{}))))
+		}, nil
 	case "CantAttackUnlessDefendingPlayer":
 		return compileDefendingLandRule(n, operation, ctx)
 	case "CanAttackAsThoughItDidntHaveDefender", "CanAttackAsThoughItHadHaste":
