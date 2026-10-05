@@ -3152,3 +3152,28 @@ incarnations. A returned source or opponent cannot replace a saved object.
 and opponent return, opponent phasing and cloned departure information. Existing
 Abu Ja'far regressions pass without a Go card-definition change. This establishes
 compatibility, not RON compilation or full behavior coverage for Abu Ja'far.
+
+## Spell targets that target a controlled permanent
+
+`DeclareSpellTargetTargetingControlledPermanent(name, filters...)` declares one
+spell target. Optional card filters restrict its current card characteristics.
+The selected stack object must target at least one permanent controlled by the
+player who chooses this spell target. Abilities and objects without spell cards
+are excluded. Existing `DeclareSpellTarget` callers keep their behavior.
+
+The check uses the selected stack object's target zones and captured permanent
+incarnations, plus each permanent's current controller. It runs at announcement
+and resolution through the normal target service. CR 115.9b permits a matching
+permanent whose target legality has changed, such as one that gained shroud.
+Absent, returned and phased-out targets do not qualify. A phase cycle preserves
+identity. Departure information is not used. Another matching target can keep
+the spell eligible when one target departs. Each copy is checked by its own stack
+identity and current target list. A counter copy uses its own controller.
+
+The declaration uses existing definition validation, target bindings, stack
+copying, game cloning, transactional costs, resolution checks and `Counter`.
+Source departure, phasing or control changes do not change a pending ability's
+controller. An uncounterable spell can qualify but `Counter` cannot remove it.
+Tests: `TestSpellTargetTargetingControlledPermanent`, its `Identity` test,
+and the RON `TestRONControlledPermanentCounter*` tests. Relevant rules:
+CR 115.9b, 400.7, 601.2c, 608.2b and 702.26b/d.

@@ -4019,6 +4019,13 @@ func DeclareSpellTarget(name string, filters ...CardFilter) *SpellTargetBinding 
 	return &SpellTargetBinding{&targetDeclaration{name: name, spec: spec}}
 }
 
+// DeclareSpellTargetTargetingControlledPermanent requires a current permanent
+// target controlled by the player who chooses this spell target.
+func DeclareSpellTargetTargetingControlledPermanent(name string, filters ...CardFilter) *SpellTargetBinding {
+	spec := &typedSpellTarget{BaseTarget: BaseTarget{min: 1, max: 1}, filters: slices.Clone(filters), targetsControlledPermanent: true}
+	return &SpellTargetBinding{&targetDeclaration{name: name, spec: spec}}
+}
+
 func (*SpellTargetBinding) stackObjectRef() {}
 func (b *SpellTargetBinding) resolveStackObject(ctx *EffectContext) (*StackObject, bool) {
 	value, ok := firstTargetValue(ctx.targetBindings[b.targetDeclaration])
@@ -4074,13 +4081,17 @@ func (r spellControllerRef) inspectDefinition() definitionNode {
 
 type typedSpellTarget struct {
 	BaseTarget
-	filters []CardFilter
+	filters                    []CardFilter
+	targetsControlledPermanent bool
 }
 
-func (t *typedSpellTarget) Possible(_ uuid.UUID, _ Card, g *Game) []uuid.UUID {
+func (t *typedSpellTarget) Possible(controller uuid.UUID, _ Card, g *Game) []uuid.UUID {
 	var result []uuid.UUID
 	for _, obj := range g.stack.Objects() {
 		if obj.IsAbility || obj.Card == nil {
+			continue
+		}
+		if t.targetsControlledPermanent && !obj.targetsPermanentControlledBy(g, controller) {
 			continue
 		}
 		matches := true
@@ -4095,6 +4106,20 @@ func (t *typedSpellTarget) Possible(_ uuid.UUID, _ Card, g *Game) []uuid.UUID {
 		}
 	}
 	return result
+}
+
+func (obj *StackObject) targetsPermanentControlledBy(g *Game, controller uuid.UUID) bool {
+	for _, id := range obj.Targets {
+		if obj.TargetZones[id] != ZoneBattlefield {
+			continue
+		}
+		p := g.FindPermanent(id)
+		// CR 115.9b needs current information, even if the original target is illegal.
+		if p != nil && !p.PhasedOut && p.incarnationID == obj.targetIncarnations[id] && p.ControllerID() == controller {
+			return true
+		}
+	}
+	return false
 }
 
 func (t *typedSpellTarget) Choose(uuid.UUID, Card, *Game, []uuid.UUID) error { return nil }

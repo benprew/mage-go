@@ -698,11 +698,7 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	case "TargetGraveyardCard":
 		return compileGraveyardTarget(n, ctx)
 	case "TargetSpell":
-		filter, err := compileSpellFilter(n.Args[0])
-		if err != nil {
-			return nil, "", err
-		}
-		return func() mage.Target { return mage.DeclareSpellTarget(ctx.targetNamespace+"Ref_TargetSpell", filter) }, "Ref_TargetSpell", nil
+		return compileSpellTarget(n.Args[0], ctx)
 	default:
 		return nil, "", unsupported(n, "target")
 	}

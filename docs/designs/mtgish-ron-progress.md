@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **562 accepted / 424 rejected unique card
-names** (986 total), and **1,536 compiled / 909 rejected records** (2,445 total).
+The latest recorded inventory reports **564 accepted / 422 rejected unique card
+names** (986 total), and **1,538 compiled / 907 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`COMBAT-EXIT-AND-BLOCK-PROHIBITION` slice and its validation evidence are recorded
+`SPELL-TARGET-CONTROLLED-PERMANENT` slice and its validation evidence are recorded
 below. Its next candidates and remaining gates are recorded at the end of the entry.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -15748,3 +15748,158 @@ Slice files: `pkg/mage/combat.go`, `clone.go`, `composable_actions.go`,
 `inventory.go`, `inventory_test.go`, `combat_exit_test.go`; API/rules contracts
 and this ledger. Only this validated slice is committed. Its commit hash is
 reported in the final response. No second slice is started.
+
+## 2026-10-05: spell targets that target a controlled permanent
+
+Status: completed implementation slice `SPELL-TARGET-CONTROLLED-PERMANENT`.
+This run stops after this slice. User changes to `.gitignore`, the execution
+design, the ledger reorganization, and the untracked completed-history document
+are preserved. Only this entry and its current-status update are staged from the
+ledger; the user's reorganization remains unstaged.
+
+### Fresh evidence and candidate comparison
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading and semantic inventory exited 1 for unsupported declarations:
+2,445 records, 1,536 compiled, 909 rejected; 562 accepted and 424 rejected
+unique names. Inventory: 72,951 nodes, 8,540 signatures, 10,277 unknown-role
+occurrences. The design, current and completed ledgers, vocabulary snapshot,
+engine API, selected compiler/engine files, complete candidate RON records,
+API/rules contracts and CR 115.9b, 400.7, 601.2c, 608.2b and 702.26b/d were
+inspected. Local `data/LEG.json` Oracle text agrees with both selected records.
+Neither selected card has a reprint in this collection. First-error frequencies
+were used to locate candidates, not to estimate complete-card gains.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Controlled-permanent spell targets, selected | Avoid Fate, Ring of Immortals: **2**. | Complete records need an Aura spell-card filter and a current stack-target predicate. Costs, typed spell binding and countering already work. Enables shared target-history restrictions in spell, mode, activation and trigger declarations. | Low/medium: one typed target contract, two adapters, identity/control/copy/clone/legality/payment tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** after the prerequisite, **0** safe adapter-only gains. | Complete records use supported targets, costs, modes and X. Shared allocation of finite prevention among simultaneous sources under CR 615.7 remains missing. Enables further finite-shield consumers. | Medium/high: allocation decisions, shield consumption, competing replacements and damage batches. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** after the prerequisite. | Complete records require all-zone characteristic evaluation, controller/owner context, named counts and CDA layer/copy contracts. Other CDA consumers have further blockers. Enables zone-aware characteristics and later CDA consumers. | High: shared zone queries, count lowering and CDA/copy/layer contracts. |
+
+Selection gives two credible full-card gains for a smaller shared change than
+both four-card alternatives. Complete nested records establish the estimates.
+The contract, reuse boundary and acceptance cases were stated before editing.
+The `implement-engine` skill supplied the shared engine workflow; no removed
+card skills, Go stubs or Go card definitions supplied requirements.
+
+### Exact signatures, contexts and ownership
+
+Engine API:
+`DeclareSpellTargetTargetingControlledPermanent(name string, filters ...CardFilter)
+*SpellTargetBinding`. It declares one spell target with optional intrinsic card
+filters. A selected spell must currently target at least one permanent controlled
+by the player who chooses this spell target. The normal target service checks
+this at announcement and resolution. Stack abilities and nil-card objects are
+excluded. Each factory gets a fresh declaration.
+
+RON intrinsic filter `IsEnchantmentType(Aura)/1` requires the enchantment card
+type and Aura subtype. Only the symbol `Aura` is supported. It composes with
+existing card-type/color filters and recursive nonempty intrinsic `And`/`Or`.
+
+RON target filter:
+`TargetsAPermanent(ControlledByAPlayer(SinglePlayer(You)))/1`, alone or once in
+a top-level `And([spellFilters])/1` for `TargetSpell(filter)/1`. Other conjuncts
+can use recursive intrinsic spell filters. The selected shape works in existing
+spell, mode, activation and trigger target declarations. `Ref_TargetSpell`
+retains its existing per-instance binding. Duplicate history predicates,
+history predicates below nested logical operators, other permanent predicates,
+other players, malformed constructors and unbound/incompatible references are
+compile errors. Inventory follows the operand into permanent-filter,
+player-filter and player-reference roles; inspection is not proof of support.
+
+RON owns spelling, shape checks and lowering. The engine reads each selected
+stack object's target zones and captured permanent incarnations, and checks
+current battlefield presence and control. CR 115.9b permits a target that gained
+shroud to qualify even though it became illegal for the original spell.
+Departure information is not used. Returned and phased-out objects do not
+qualify; a phase cycle retains identity. Multiple targets need only one matching
+permanent. Copies keep distinct stack identity and use their own current target
+lists and controllers. Source departure, phasing and control changes do not
+change a pending ability's controller.
+
+Existing definition validation, typed target binding, cost transactions, stack
+copying, clone isolation, target rechecks, native casting/activation, cleanup and
+`Counter` execute the behavior. Uncounterable spells can be selected, but remain
+on the stack after countering is attempted. No new damage, simultaneous-action,
+replacement-order, LKI or payment service is needed. No card-name branch,
+global last-action slot, fallback or partial production registry was added.
+Existing `DeclareSpellTarget` callers keep their behavior.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for the missing typed constructor. RON gameplay tests
+first failed for the missing Aura filter. The initial Aura fixture attempted a
+sorcery-speed cast by the inactive player; this was corrected before confirming
+the compiler failure in every case. Engine implementation checks caught and
+corrected an accessor spelling error. A synthetic mode fixture used an
+unsupported draw spelling; it now uses the existing life-gain form. These were
+fixture/compiler errors, not skipped rules or weakened assertions.
+
+| Card or contract | Tests |
+| --- | --- |
+| Avoid Fate, complete LEG record | `TestRONControlledPermanentCounters`: native G casting, failed-payment rollback, instant and Aura counters and graveyard movement. `Rechecks`: shroud, control, departure/return, phasing/cycle, changed target lists, copied counters with a different controller, victim copies, uncounterable spells and cloned pending objects. `Announcement`: illegal target types, players, empty targets, opponent-controlled permanents, abilities and missing stack objects with cost/hand rollback. `RetargetCopy`: independent copied-counter retargeting and clone isolation. |
+| Ring of Immortals, complete LEG record | The same native and legality tests; native five-mana artifact casting, three-mana/tap activation, failed activation rollback, instant/Aura counters, pending source departure/control/phasing and clone isolation. |
+| Shared engine target contract | `TestSpellTargetTargetingControlledPermanent`: current control, illegal original target, departed/returned/phased/cycled targets, one surviving matching target, pending resolution and clones. `Identity`: same-card distinct stack objects, spell copies, ability exclusion and no departure reads. `Declarations`: named/unnamed and declared/undeclared bindings. |
+| Compiler validation and reporting | `TestRONControlledPermanentCounterInvalid`: wrong shapes, subtype, predicates, players, duplicate/nested history and unbound reads. `IntrinsicComposition`: standalone and conjunctive filters with real Jump resolution. `SharedContexts`: spell/mode/activation/trigger definition validation. `RegistryAndInventory`: strict full-record fixture loading, fresh factory targets, nested roles and rejection without a partial registry. Existing spell-scope and inventory regressions retain their checks. |
+
+Two complete-card gameplay mappings are added. Collection-wide
+`engine_validated` and `behavior_verified` totals remain null; compilation and
+gameplay coverage remain separate. No source defect was found or corrected.
+All twelve RON source hashes still match the vocabulary snapshot, so a source
+snapshot refresh is unnecessary. Previously recorded source defects remain open.
+
+### Validation and measured gain
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly Avoid
+Fate and Ring of Immortals, with no accepted-name regressions. Strict loading
+and inventory report **1,538 compiled / 907 rejected records**, **564 accepted /
+422 rejected unique names**. Inventory still has **72,951 nodes / 8,540
+signatures**, with **10,271 unknown-role occurrences** after operand reporting.
+Both CLI modes exit 1 for the remaining unsupported collection and install no
+partial registry.
+
+The first broad short/full runs failed only because two inventory regressions
+still expected 1,536 compiled / 909 rejected. Their exact assertions now require
+1,538 / 907. Subsequent checks pass. The first lint run rejected a test variable that
+shadowed the built-in `copy`; it was renamed and lint passed with zero issues.
+Automatic lint import spacing was reviewed;
+no unrelated source file changed.
+
+| Command | Result |
+| --- | --- |
+| Baseline engine short tests and `make build` | PASS. |
+| New engine and RON tests before implementation | Expected missing-constructor and unsupported-Aura-filter failures confirmed. |
+| Focused engine/RON/spell-scope/inventory tests with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after exact inventory-count update. |
+| `make test` | PASS after exact inventory-count update. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues after renaming a test variable that shadowed `copy`. |
+| `go test ./... -short -count=1` | PASS; engine-skill check. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected rejection, exit 1: 1,538 compiled / 907 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected rejection, exit 1; counts and role totals above. |
+
+Fresh remaining first diagnostics include:
+
+- Conservator: `2ED.lines.ron:42:221: unsupported action (CreateFuturePreventDamage)`.
+- Nightmare: `2ED.lines.ron:174:165: unsupported rule (CDA_Power)`.
+- Chaoslace: `2ED.lines.ron:32:133: unsupported action list (Targeted_Modal)`.
+
+No Go card definitions, runtime callers, generators or DSL functions were
+removed. Complete loading, collection gameplay and native startup remain below
+the removal gates. No caller audit authorizes an unused-DSL deletion in this
+slice. API/rules documentation describes only the established target contract.
+
+Ranked next candidates to reassess with fresh inventory and complete records:
+
+1. Finite recipient prevention allocation prerequisite and its four consumers.
+2. All-zone count CDA prerequisite and its four consumers.
+3. `Targeted_Modal` target alternatives for Chaoslace, Deathlace, Lifelace,
+   Magical Hack, Purelace, Sleight of Mind and Thoughtlace; later color/text
+   operations still need a complete-record comparison.
+
+Slice files: `pkg/mage/composable_actions.go`, `doc.go`,
+`spell_target_permanent_test.go`; compiler `compiler.go`, `spell_scope.go`,
+`inventory.go`, `inventory_test.go`, `spell_target_permanent_test.go`; API/rules
+contracts and this ledger. This run starts no second slice.

@@ -89,6 +89,12 @@
 // keeps its captured identity. Target departure does not remove a source's
 // separate choice to remain tapped during its untap step.
 //
+// Use [DeclareSpellTargetTargetingControlledPermanent] for a spell that targets
+// a permanent you control. It checks current control and the saved incarnation
+// at announcement and resolution. A target that gained shroud can still qualify.
+// Absent, returned and phased-out targets do not qualify. Copies use their own
+// stack identity and controller. Combine card filters to restrict the spell type.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
 type spellTargetPlan struct{ name string }
@@ -42,6 +43,13 @@ func compileSpellFilter(n Node) (mage.CardFilter, error) {
 		return mage.CardFilter{}, err
 	}
 	switch n.Name {
+	case "IsEnchantmentType":
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Aura" {
+			return mage.CardFilter{}, unsupported(n.Args[0], "spell enchantment subtype")
+		}
+		return mage.NewCardFilter("Aura spell", func(card mage.Card) bool {
+			return card.HasType(core.TypeEnchantment) && card.HasSubType("Aura")
+		}), nil
 	case "IsCardtype":
 		kind, err := cardType(n.Args[0])
 		if err != nil {
@@ -78,4 +86,63 @@ func compileSpellFilter(n Node) (mage.CardFilter, error) {
 	default:
 		return mage.CardFilter{}, unsupported(n, "spell target filter")
 	}
+}
+
+func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
+	parts := []Node{n}
+	if n.Name == "And" {
+		if err := arity(n, 1); err != nil {
+			return nil, "", err
+		}
+		var err error
+		parts, err = list(n.Args[0])
+		if err != nil {
+			return nil, "", err
+		}
+		if len(parts) == 0 {
+			return nil, "", problem(n, "spell filter requires at least one operand")
+		}
+	}
+	controlled := false
+	var filters []mage.CardFilter
+	for _, part := range parts {
+		if part.Name == "TargetsAPermanent" {
+			if controlled {
+				return nil, "", problem(part, "supply one permanent target restriction")
+			}
+			if err := compileControlledPermanentSpellRestriction(part); err != nil {
+				return nil, "", err
+			}
+			controlled = true
+			continue
+		}
+		filter, err := compileSpellFilter(part)
+		if err != nil {
+			return nil, "", err
+		}
+		filters = append(filters, filter)
+	}
+	return func() mage.Target {
+		name := ctx.targetNamespace + "Ref_TargetSpell"
+		if controlled {
+			return mage.DeclareSpellTargetTargetingControlledPermanent(name, filters...)
+		}
+		return mage.DeclareSpellTarget(name, filters...)
+	}, "Ref_TargetSpell", nil
+}
+
+func compileControlledPermanentSpellRestriction(n Node) error {
+	for _, name := range []string{"TargetsAPermanent", "ControlledByAPlayer", "SinglePlayer"} {
+		if n.Name != name {
+			return unsupported(n, "controlled permanent spell restriction")
+		}
+		if err := arity(n, 1); err != nil {
+			return err
+		}
+		n = n.Args[0]
+	}
+	if n.Kind != Symbol || n.Name != "You" {
+		return unsupported(n, "spell target permanent controller")
+	}
+	return nil
 }

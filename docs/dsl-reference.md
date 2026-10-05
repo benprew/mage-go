@@ -916,13 +916,29 @@ No production caller changes. Spell-source identity, recipient identity, typed
 `Targeted([TargetSpell(filter)], ActionList([CounterSpell(Ref_TargetSpell)]))`
 uses a typed declaration local to the rule. Each factory creates a fresh target
 binding. Supported filters are `AnySpell`, `IsCardtype(type)`, `IsColor(color)`,
-and recursive nonempty `And([filters])` and `Or([filters])`. Filters match spell
-cards on the stack and exclude abilities. The engine checks legality at both
+`IsEnchantmentType(Aura)`, and recursive nonempty `And([filters])` and
+`Or([filters])`. Filters match spell cards on the stack and exclude abilities. The engine checks legality at both
 announcement and resolution. Countering uses the selected stack object and puts
 its card in its owner's graveyard, unless it cannot be countered. Copies and
 clones keep separate target choices. Undeclared, incompatible, malformed and
-cross-rule reads fail compilation. Controller, mana-value and target-history
-filters, modes and multiple spell target groups remain unsupported.
+cross-rule reads fail compilation.
+
+`TargetsAPermanent(ControlledByAPlayer(SinglePlayer(You)))` is supported alone
+or once in a top-level `And([filters])` for `TargetSpell`. Other conjuncts can
+use recursive intrinsic spell filters. It uses
+`mage.DeclareSpellTargetTargetingControlledPermanent` with the same per-factory
+binding as `Ref_TargetSpell`. The selected spell must currently target a
+permanent you control. A target that gained shroud can still qualify; absent,
+returned and phased-out targets cannot. Checks run at announcement and
+resolution. Copies use their own controllers and stack identities. This form
+works in existing spell, mode, activation and trigger target declarations.
+
+Other permanent predicates, players, duplicate target-history predicates and
+history predicates nested inside logical operators remain compile errors.
+Other enchantment subtypes, controller and mana-value spell filters remain
+unsupported. No new modes or multiple spell target groups are added.
+Contract: [controlled permanent spell targets](engine-rules-contracts.md#spell-targets-that-target-a-controlled-permanent).
+Tests: `TestRONControlledPermanentCounter*`.
 
 Contract and card tests: [RON spell scopes](designs/mtgish-ron-spell-scopes.md).
 

@@ -771,6 +771,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "spell_reference"
 		}
 	case "spell_filter":
+		if n.Name == "TargetsAPermanent" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
