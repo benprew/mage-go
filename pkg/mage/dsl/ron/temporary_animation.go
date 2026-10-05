@@ -56,6 +56,9 @@ func compilePermanentTargetFilter(n Node, ctx scope) (mage.PermanentFilter, []ma
 			return mage.PermanentFilter{}, nil, err
 		}
 		player := n.Args[0]
+		if player.Kind == Symbol && player.Name == "Opponent" {
+			return mage.AnyPermanent, []mage.PermanentTargetOption{mage.TargetOpponentControls()}, nil
+		}
 		if player.Name != "SinglePlayer" {
 			return mage.PermanentFilter{}, nil, unsupported(player, "permanent target controller")
 		}

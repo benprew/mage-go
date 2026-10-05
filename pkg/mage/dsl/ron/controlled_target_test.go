@@ -208,7 +208,7 @@ func TestRONControlledTargetDeclarationsAndInstances(t *testing.T) {
 			t.Fatal("first instance lost target")
 		}
 	}
-	for _, filter := range []string{`ControlledByAPlayer`, `ControlledByAPlayer()`, `ControlledByAPlayer(SinglePlayer(You),Opponent)`, `ControlledByAPlayer(You)`, `ControlledByAPlayer(SinglePlayer(You()))`, `ControlledByAPlayer(SinglePlayer(Ref_TargetPlayer))`, `ControlledByAPlayer(Opponent)`, `Or([IsCardtype(Creature),` + restriction + `])`} {
+	for _, filter := range []string{`ControlledByAPlayer`, `ControlledByAPlayer()`, `ControlledByAPlayer(SinglePlayer(You),Opponent)`, `ControlledByAPlayer(You)`, `ControlledByAPlayer(SinglePlayer(You()))`, `ControlledByAPlayer(SinglePlayer(Ref_TargetPlayer))`, `ControlledByAPlayer(Opponent())`, `Or([IsCardtype(Creature),` + restriction + `])`} {
 		src := `Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Instant],Subtypes:[]),Rules:[SpellActions(Targeted([TargetPermanent(` + filter + `)],ActionList([TapPermanent(Ref_TargetPermanent)])))])`
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")
 		if err != nil {

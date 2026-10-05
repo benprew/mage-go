@@ -1036,8 +1036,8 @@ See [the exact shape and gameplay report](designs/mtgish-ron-fixed-draw.md).
 ## RON spell-cast life triggers and paid bodies
 
 `TriggerA(WhenAPlayerCastsASpell(AnyPlayer, filter), actions)` uses the existing
-spell filters and `WheneverSpellCastTrigger`. Other caster scopes and event
-references remain rejected. An adjacent fixed-mana MayCost or PlayerMayCost
+spell filters and `SpellCast`. The opponent scope and event references have
+separate contracts below. An adjacent fixed-mana MayCost or PlayerMayCost
 followed by `If(CostWasPaid, [actions])` uses `IfPaid`. Each nonempty body has
 its own payment result, including nested pairs. Payment is offered at resolution
 to the stored ability controller or explicit typed payer. X and nonmana
@@ -2102,3 +2102,22 @@ use damage prevention. `TestRONPlayerLife*` covers these contracts.
 Stream of Life has complete RON gameplay evidence for all six reprints.
 Healing Salve and Alabaster Potion have life-clause evidence only; their
 complete records remain rejected because finite prevention is unsupported.
+
+## RON opponent targets and spell-cast events
+
+The symbol `Opponent` is supported in `TargetPlayer(Opponent)`,
+`TargetPermanent(ControlledByAPlayer(Opponent))`, and
+`WhenAPlayerCastsASpell(Opponent, spellFilter)`. Permanent target filters can
+combine the controller restriction with other supported filters in nested
+`And` lists. These target forms work in spells, activations, triggers, and
+selected spell modes. Each factory creates separate typed target declarations.
+
+Targets use the spell or ability controller at announcement and resolution.
+An opponent-controlled copy that keeps its controller as its target cannot
+resolve. Source control changes or departure do not change a pending ability's
+controller. Spell-cast events use `SpellCast().ByOpponent()` to check the source
+controller at the event. The existing spell and caster bindings stay separate
+for each pending trigger. Tuple-shaped `Opponent()`, player references used as
+filters, and controller-dependent target disjunctions remain rejected.
+This does not add general opponent player-reference or collection support.
+Evidence: `TestRONOpponent*`, including complete Citanul Druid gameplay.

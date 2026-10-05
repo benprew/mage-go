@@ -10100,3 +10100,183 @@ Slice files: `pkg/mage/dsl/ron/compiler.go`, `player_life_test.go`,
 `inventory_test.go`, `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
 and this ledger. Commit only these six files after final checks. The initial
 user changes remain unstaged. The commit hash is reported in the final response.
+
+## Run 2026-10-05: OPPONENT-TARGETS-AND-CAST-EVENTS
+
+Status: complete dependency-ready slice. Runtime cutover and removal gates stay
+open. Stop after this slice.
+
+### Fresh evidence and candidate comparison
+
+Preserved initial user edits to `.gitignore` and the execution design; neither
+is staged. Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary and
+ledger; selected compiler target/action/event lowering, instance bindings,
+static/target filter boundaries, inventory and strict loader; target declarations,
+copying, player references, stack resolution and related engine tests. Read
+complete unique RON records and their reprints for the candidates below. No Go
+card definition supplied requirements. Reviewed relevant target and event API
+and rules-contract sections, CR 102.2, 109.5, 603.2/3a and 608.2b. Used the
+implement-engine skill for the discovered engine prerequisite; no cards changed.
+
+Fresh baseline: `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict and semantic inventory loaders exited 1 for collection rejection:
+**2,445 records, 1,382 compiled / 1,063 rejected; 482 accepted / 504 rejected
+unique names**. This was not a build, test or environment failure. Inventory
+walked 72,938 nodes / 8,528 context signatures, including unsupported parents.
+
+| Candidate | Distinct affected names | Estimated complete-card gains and blockers | Downstream capabilities and effort |
+| --- | --- | --- | --- |
+| Opponent targets and cast events (selected) | Citanul Druid, Invoke Prejudice, Erhnam Djinn, Hyperion Blacksmith, Dwarven Catapult, Jovial Evil, Mana Clash, Mirror Universe, Rag Man, Word of Command; nested consumers Nebuchadnezzar, Tempest Efreet, Gauntlets of Chaos, Witch Hunter (14 names / 18 records) | 1 name / 1 record: Citanul Druid. Invoke retains color-sharing spell filters and optional X payment; Erhnam retains next-upkeep duration; Hyperion optional tap/untap; Catapult divided rounded damage and target-controller collections; Jovial twice/count/collections; Mana Clash repeated coin/player loops; Mirror life exchange; Rag Man hand reveal and filtered random discard; Word controlled-player casting decisions. Nested consumers retain earlier blockers: Nebuchadnezzar X payment/name/reveal, Tempest ante/ownership/optional life, Gauntlets plural targets/exchange/result scope, Witch Hunter player-or-planeswalker target arity. | Shared typed target and event selectors unblock multiple independent downstream families. Small adapters, medium lifecycle/copy/context test effort. A target-resolution defect raised engine effort by one small reusable fix. |
+| Finite prevention allocation prerequisite | Alabaster Potion, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Guardian Angel, Healing Salve, Kei Takahashi, Oasis, Rakalite, Rasputin Dreamweaver, Samite Healer (12 names) | 0 for allocation alone; 9 ready recipient-shield consumers after adapters. Guardian retains repeated instant-speed payments; Rakalite delayed return; Rasputin has source-bound finite prevention, turn-start condition and counter cap. | Highest eventual multi-card gain; shared CR 615.7 simultaneous finite-shield allocation needs engine decisions and replacement tests. High implementation/test effort. |
+| All-zone CDA P/T and count prerequisite | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats (5 names) | 0 for prerequisite alone; potentially 5 after count/CDA/arithmetic adapters and Avenger correction. Existing battlefield-only closures do not prove all-zone characteristics. | Shared counts and layer 7a evaluation. High zone/layer/engine/adapter test effort; Avenger has recorded source defect. |
+
+The selected family supplies complete opponent-selector contexts through exact
+existing services, with the smallest credible implementation cost. It is not a
+Citanul executor or a card-name special case. Nine names advance diagnostics; four further nested consumers gain the same
+prerequisite behind earlier rejected parents. Larger prevention/CDA gains need substantially more engine work.
+First-error frequency was not an unlock estimate; nested complete records
+established the other blockers. Selection, contract, reuse boundary and
+acceptance cases were stated before edits.
+
+### Exact supported signatures, contexts and dependencies
+
+Private adapter contexts established:
+
+```ron
+Targeted([TargetPlayer(Opponent)], actions)
+Targeted([TargetPermanent(ControlledByAPlayer(Opponent))], actions)
+Targeted([TargetPermanent(And([filter, ControlledByAPlayer(Opponent)]))], actions)
+TriggerA(WhenAPlayerCastsASpell(Opponent, spellFilter), actions)
+```
+
+Opponent is a symbol, not a singular resolving player reference. Target forms
+work in spells, activations, triggers, and selected spell modes. Permanent
+controller restrictions compose in nested And lists with existing filters.
+Source-dependent Or filters still reject. Spell filters/actions retain their
+existing supported shapes. Cast matching uses source control at event time;
+queued trigger control and captured caster/spell identities do not follow later
+control changes. Targets use the stack controller at resolution, including
+copies. Source departure does not change the ability controller.
+
+Changed private functions: `compileTarget(Node, scope)`,
+`compilePermanentTargetFilter(Node, scope)`, `compileTriggerRule(Node, scope)`.
+Engine prerequisite: `(*Game).isTargetStillLegal(uuid.UUID, Card, uuid.UUID,
+Zone, Target) bool` now applies the target specification to an existing player,
+instead of returning true before checking it. A nil specification keeps the
+existing player-existence behavior. All-illegal objects resolve no instruction,
+including untargeted sibling effects. No public API changes.
+
+RON owns syntax, arities, scopes, lowering and per-factory declarations. Reuse:
+`DeclarePlayerTarget`, `TargetOpponentOnly`, `DeclarePermanentTarget`,
+`TargetOpponentControls`, `SpellCast().ByOpponent().WithSpell().WithCaster()`,
+existing spell card filters, player/permanent instance bindings, shared stack
+legality and target snapshots, counter placement/replacement services, copying,
+transactional payment and Game.Clone. No wrapper or second legality system was
+added. No global result slot, game-time declaration panic, fallback, partial
+production registry, skipped rule or card-name branch.
+
+The initial working hypothesis that RON dropped an effect wrapper was disproved
+by inspecting `Spell` and `ActionDefinition`. The actual defect was the shared
+resolver's early player return. Existing typed drain-copy tests passed because
+loss and gain to the same copied controller canceled. New tests isolate loss
+and verify that an independent draw also cannot run. This is an engine contract
+fix, not a source defect. No new LKI information read, simultaneous operation,
+replacement ordering or optional payment contract is introduced. Permanent
+identity, phase and control behavior use the existing target/counter services.
+
+### TDD and card-to-test mappings
+
+After fixture type errors were fixed, RON tests failed for the expected
+unsupported spell-cast player, player-target and permanent-controller filters.
+Adapter changes exposed failing native copy gameplay. After fixing the engine
+fixture's draw subject, the engine test failed with life=18 and hand=1 where an
+all-illegal opponent target requires life=20 and hand=0. The resolver fix made
+both focused suites pass. Sorcery timing in artifact-cast fixtures was corrected;
+multiple-event evidence uses real artifact casts separated by resolution while
+retaining the first pending trigger. Tests were not weakened. The former
+Opponent invalid case was replaced with malformed Opponent(), with valid-form
+coverage in the new suite. Inventory expectations track the measured gain.
+
+| Card / context | Test evidence |
+| --- | --- |
+| Citanul Druid, complete ATQ record | `TestRONOpponentCitanulDruid`: definition validation, opponent artifact cast, own cast/nonartifact rejection, unpaid cast rollback, copied spell emits no cast event, source controller at event, new controller's opponent, later source control, departure/return incarnation, phase before/after event and phase cycle, +1/+1 counter/P/T, independent pending casts, copied triggers, clone isolation. Full-card gameplay mapping. |
+| Opponent player targets, synthetic RON spell/activation/entry trigger/mode | `TestRONOpponentPlayerTargets`: self-target rejection, mana/tap rollback, target at announcement versus effect at resolution, source control/departure, opponent-controlled copy retaining illegal target, clone bindings and ability instances. |
+| Opponent permanent targets, synthetic RON nested And activation | `TestRONOpponentPermanentTargets`: own/noncreature rejection without tap payment, target control at resolution, source control/departure independence, target leave/return, phase and phase cycle, copied-controller legality, clone isolation. Existing controller-target suites retain spell, trigger and modal common-lowering evidence. |
+| Player copy retargeting, synthetic RON | `TestRONOpponentCopyRetarget`: copy selects its own legal opponent, original target remains separate, live and cloned resolution affect the correct players. |
+| Invalid declarations | `TestRONOpponentInvalidDeclarations`: malformed tuples, wrong arities, SinglePlayer(Opponent), source-dependent Or and resolving player-reference misuse reject at compilation. |
+| Shared engine player legality | `TestPlayerTargetResolutionChecksSpecification`: typed/legacy, any-player/opponent-only, original/copied controller combinations; illegal targets suppress all instructions; clone isolation. Existing `TestTypedOpponentTarget*` still passes. |
+
+The other thirteen affected unique cards remain whole-record rejected, with their
+new diagnostics below; this run claims no full-card gameplay for them. Adds one
+complete-card mapping. Collection-wide engine_validated and behavior_verified
+fields remain null. Compilation and gameplay evidence stay separate.
+
+### Fresh measurements, source defects and next candidates
+
+Actual gain equals the estimate: **1 unique name / 1 record**, Citanul Druid.
+Final strict and nested reports: **1,383 compiled / 1,062 rejected records**,
+**483 accepted / 503 rejected unique names**. Zero accepted-record regressions.
+The final nested-signature audit also identified Nebuchadnezzar, Tempest Efreet,
+Gauntlets of Chaos and Witch Hunter behind earlier parent errors. Read their
+complete records and retained their whole-card rejection; their first diagnostics
+do not advance. This expands the original ten-name comparison to fourteen
+without changing the one-card unlock estimate or implementation scope.
+
+Fourteen old issues change: one disappears and thirteen advance (Word of
+Command has five identical records). New diagnostics by distinct name:
+
+- Erhnam Djinn: unsupported duration UntilNextUpkeep.
+- Hyperion Blacksmith: unsupported action MayAction.
+- Dwarven Catapult: SpellDealsDamageDividedAmongRecipientsRoundedDown.
+- Jovial Evil: unsupported value Twice.
+- Mana Clash: unsupported action RepeatableActions.
+- Mirror Universe: unsupported action ExchangeLifeTotalWithPlayer.
+- Rag Man: unsupported value IsCardtype in its filtered reveal/discard action.
+- Word of Command: LookAtPlayersHandAndChooseACardForPlayerToPlayControllingThemToDoSo.
+- Invoke Prejudice: unsupported spell target filter ExceptFor.
+
+Inventory remains 72,938 nodes / 8,528 signatures / 12,414 unknown-role
+occurrences. Strict and semantic issue arrays agree. All 12 source hashes match
+the vocabulary snapshot, so no source refresh is required. No source defect
+was corrected; Avenger, Liege and Fastbond concerns remain recorded. No engine
+or environmental blocker remains. No second slice was begun.
+
+Ranked next candidates, to reassess with fresh evidence:
+1. Finite prevention allocation engine prerequisite, then recipient-shield
+   adapters for the nine otherwise ready activation/modal consumers.
+2. Shared resolution choices/optional tap-or-untap for Twiddle and Hyperion
+   Blacksmith, now that Hyperion's opponent target is ready. Both complete
+   records retain MayAction; decline and paid activation semantics need tests.
+3. All-zone CDA P/T/count prerequisite for five names, with Avenger source repair.
+
+Complete collection loading/gameplay, runtime wiring, test migration, native
+startup, Go-card/generator deletion and unused DSL removal remain open. No
+removal gate was reached. No definitions, generators or DSL exports were removed.
+
+### Validation
+
+Final results are recorded after all code/test edits and lint review:
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONOpponent -count=1` | PASS with final retarget and new-controller-opponent cases. |
+| `go test ./pkg/mage -run 'TestPlayerTargetResolutionChecksSpecification\|TestTypedOpponentTarget' -count=1` | PASS. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final test additions and lint. |
+| `go test ./... -short -count=1` | PASS after final test additions and lint. |
+| `make test` | PASS, repeated after final test additions and lint. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, zero issues. First run found an explicit redundant Target variable type in a new test; fixed it, reviewed automatic formatting/declaration change, reran lint and affected/full checks. No unrelated automatic changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for unsupported collection: 2,445 records / 1,383 compiled / 1,062 rejected. Repeated final report unchanged. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same issue array; all nodes walked. |
+| Source/diagnostic audit | Twelve hashes match; one accepted gain, thirteen advanced issues, no accepted regressions. |
+
+Slice files: `pkg/mage/dsl/ron/compiler.go`, `temporary_animation.go`,
+`triggers.go`, `opponent_scope_test.go`, `controlled_target_test.go`,
+`inventory_test.go`, `pkg/mage/stack_resolver.go`,
+`player_target_legality_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger. Stage only these eleven files
+for one descriptive commit. Initial user changes remain unstaged. The commit
+hash is reported in the final response. Stop after this slice.

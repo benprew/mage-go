@@ -2140,3 +2140,28 @@ normal life-gain replacement services. Damage shields do not prevent life loss.
 provide evidence. `RealModalClauses` covers the life clauses of Healing Salve
 and Alabaster Potion only. No new replacement-order or simultaneous-operation
 contract is established. Spell-cast event life references remain unsupported.
+
+## Player target specification checks at resolution
+
+`Game.isTargetStillLegal` checks an existing player against the target
+specification's `Possible` query before resolution (CR 102.2, 109.5, 608.2b).
+The query uses the stack object's controller. If an opponent-controlled copy
+keeps that player as its target, an opponent-only specification makes the
+player illegal. When all targets are illegal, no instruction runs, including
+an independent draw. Targets with no specification retain their existing
+player-existence check. Typed and legacy player target declarations use the
+same check. No target API changes.
+
+`TestPlayerTargetResolutionChecksSpecification` covers typed and legacy
+specifications, any-player and opponent-only targets, both controllers,
+all-illegal resolution, and clone isolation. The earlier drain-copy test had
+opposing life instructions that could cancel and hide incorrect resolution.
+`TestRONOpponentPlayerTargets` adds separate life-loss evidence through native
+RON spells, activations, entry triggers, and selected modes.
+
+RON cast-event `Opponent` lowering uses the existing `SpellCast().ByOpponent()`
+event-time check (CR 603.2, 603.3a). `TestRONOpponentCitanulDruid` covers artifact
+casts, failed casts, spell copies, source control changes, departure, returned
+incarnations, phasing, independent pending events, copied triggers, and clones.
+The filter is not an intervening-if condition and is not checked again at
+resolution. Counter actions still require the captured source incarnation.

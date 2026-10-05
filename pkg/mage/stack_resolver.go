@@ -121,7 +121,7 @@ func (g *Game) pushStack(obj *StackObject) {
 // resolutions.
 func (g *Game) isTargetStillLegal(targetID uuid.UUID, sourceCard Card, controller uuid.UUID, expectedZone Zone, spec Target) bool {
 	if g.GetPlayer(targetID) != nil {
-		return true
+		return spec == nil || slices.Contains(spec.Possible(controller, sourceCard, g), targetID)
 	}
 	// CR 608.2b: "A target that's no longer in the zone it was in when it was
 	// targeted is illegal."

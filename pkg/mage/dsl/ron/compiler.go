@@ -631,10 +631,17 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 			return mage.DeclarePermanentTarget(ctx.targetNamespace+"Ref_TargetPermanent", filter, options...)
 		}, "Ref_TargetPermanent", nil
 	case "TargetPlayer":
-		if n.Args[0].Kind != Symbol || n.Args[0].Name != "AnyPlayer" {
-			return nil, "", unsupported(n.Args[0], "player target filter")
+		players := n.Args[0]
+		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent") {
+			return nil, "", unsupported(players, "player target filter")
 		}
-		return func() mage.Target { return mage.DeclarePlayerTarget(ctx.targetNamespace + "Ref_TargetPlayer") }, "Ref_TargetPlayer", nil
+		return func() mage.Target {
+			var options []mage.PlayerTargetOption
+			if players.Name == "Opponent" {
+				options = append(options, mage.TargetOpponentOnly())
+			}
+			return mage.DeclarePlayerTarget(ctx.targetNamespace+"Ref_TargetPlayer", options...)
+		}, "Ref_TargetPlayer", nil
 	case "TargetGraveyardCard":
 		return compileGraveyardTarget(n, ctx)
 	case "TargetSpell":
