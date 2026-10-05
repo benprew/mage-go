@@ -401,8 +401,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "exile_subject":
+		if n.Name == "Permanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 	case "action":
 		switch n.Name {
+		case "Exile":
+			if len(n.Args) == 2 {
+				return []string{"exile_subject", "exile_modifier"}[index]
+			}
 		case "PutGraveyardCardIntoHand":
 			if len(n.Args) == 1 {
 				return "card_reference"
@@ -595,7 +603,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "NumCreaturesOrPlaneswalkersThatDiedThisTurn" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}
-		if n.Name == "ManaValueOfPermanent" && len(n.Args) == 1 {
+		if (n.Name == "ManaValueOfPermanent" || n.Name == "PowerOfPermanent") && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "player_action":
@@ -624,6 +632,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_filter"
 		}
 	case "player_reference":
+		if n.Name == "ControllerOfPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
 		if n.Name == "ControllerOfSpell" && len(n.Args) == 1 {
 			return "spell_reference"
 		}

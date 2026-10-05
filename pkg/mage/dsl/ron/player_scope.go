@@ -7,10 +7,11 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
-	target *playerTargetPlan
-	spell  *spellReferencePlan
-	event  *castEventPlan
-	step   *stepEventPlan
+	permanent *permanentReferencePlan
+	target    *playerTargetPlan
+	spell     *spellReferencePlan
+	event     *castEventPlan
+	step      *stepEventPlan
 }
 
 type castEventPlan struct{ spellName, casterName string }
@@ -34,6 +35,13 @@ type instanceBindings struct {
 }
 
 func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
+	if n.Name == "ControllerOfPermanent" {
+		if err := arity(n, 1); err != nil {
+			return playerReferencePlan{}, err
+		}
+		permanent, err := compilePermanentRef(n.Args[0], ctx)
+		return playerReferencePlan{permanent: &permanent}, err
+	}
 	if n.Name == "ControllerOfSpell" {
 		if err := arity(n, 1); err != nil {
 			return playerReferencePlan{}, err
@@ -66,6 +74,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.permanent != nil {
+		return mage.ControllerOfWithLKI(p.permanent.build(bindings))
+	}
 	if p.step != nil {
 		return mage.FromPlayer(bindings.steps[p.step])
 	}

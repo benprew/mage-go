@@ -9432,3 +9432,196 @@ Slice files: `pkg/mage/dsl/ron/graveyard_return.go`, its test, `compiler.go`,
 All required checks passed. These nine slice files form one descriptive commit;
 its hash is reported in the final response. The two initial user changes remain
 unstaged. Migration completion criteria remain unmet.
+
+## Run 2026-10-05: P1-PERMANENT-INFORMATION
+
+Status: one complete engine prerequisite and compiler/gameplay slice. Initial
+user edits to `.gitignore` and `mtgish-ron-execution.md` remain outside the slice.
+No RON record, production Go card, startup registry, generator or DSL export was
+changed. Removal gates remain unmet; no deletion or caller-audit claim is made.
+
+### Fresh inventory and selection
+
+Read AGENTS.md, mage/doc.go, execution design, vocabulary, progress ledger,
+selected compiler/engine implementations and complete affected RON records,
+including reprints. Local `data/LEA.json` and `data/ATQ.json` supply Oracle text
+for the selected rules; they match the selected RON behavior. Read the relevant
+API/rules contracts and local CR 400.7, 608.2b/c/h and 702.26b/d/f/g.
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Strict loader and nested inventory exited 1 for collection rejection:
+**1,348 compiled / 1,097 rejected records**, **474 accepted / 512 rejected unique
+names**. This was not a test or build failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Permanent information and singular exile | Swords to Plowshares, Crumble, Psychic Venom, Artifact Possession; Divine Offering found during fresh outcome audit | Initially 3. Artifact Possession retains its non-tap ability-activation trigger. Divine Offering adds a fourth full consumer of the same mana-value read. Tracker needs a typed non-source damage source and recipient. Safe Haven needs optional sacrifice and linked exile; Coffin needs simultaneous collections, notes and links. | Exact-incarnation information after actions and from captured events, later damage and linked-object work. Medium engine/adapter/test effort; reference identity, retained snapshots and zone actions already exist. |
+| Finite prevention allocation | Amulet of Kroog, Argivian Blacksmith, Combat Medic, Conservator, Kei Takahashi, Oasis, Samite Healer; Guardian Angel and Rakalite are additional blocked consumers | 0 for allocation prerequisite, then 7 full consumers. Guardian Angel needs instant-time player payments; Rakalite needs a future trigger. | CR 615.7 multi-source allocation, later Healing Salve and Alabaster Potion modes. High shared decision/replacement and adapter/test effort. |
+| Filtered bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 after filtered band formation/damage contracts and layer adapter. Ordinary banding is not a substitute. | Shared combat membership and damage-assignment rules. High engine and combat-test effort. |
+| Controller-scoped counts and CDA P/T | Nightmare, Dakkon Blackblade, Keldon Warlord, Gaea's Avenger, Plague Rats | Up to 5, contingent on all-zone CDA contracts and a source correction; 4 source-correct candidates. Gaea's Avenger counts your artifacts in RON but opponents' artifacts in local Oracle data. | Current controller counts and layer 7a / other-zone characteristics. High engine/context test effort; battlefield-only P/T would be incomplete. |
+
+Complete nested records were inspected, rather than estimating from first-error
+frequency. Reprints count once. Selected permanent information for the largest
+credible gain per bounded effort among these dependency-ready candidates. The
+contract, boundaries and acceptance cases were stated before editing. The
+missing engine contract was implemented in this slice, then exact adapters.
+The actual gain is **4 names / 15 records**, versus the initial estimate of
+**3 names / 14 records**: Divine Offering has no other blocker and uses the same
+post-destruction mana-value query. Its complete LEG record received gameplay
+coverage before validation. No second slice was started.
+
+### Exact signatures, ownership and contexts
+
+New engine APIs:
+
+```go
+ControllerOfWithLKI(PermanentRef) PlayerRef
+PowerOfWithLKI(PermanentRef) ResolutionValue
+ManaValueOfWithLKI(PermanentRef) ResolutionValue
+```
+
+Supported engine subjects: `This`, `AttachedPermanent`, `From(PermanentBinding)`
+and singular `PermanentTargetBinding`. A private typed information-reference
+interface obtains identity from the existing source context, target declarations,
+saved permanent bindings or attachment service. Current phased-in information
+wins; otherwise retained information must match both UUID and incarnation.
+Power uses the saved final layered value. Unknown subjects yield no player or
+zero number. Reads are pure and do not make an action reference live.
+The existing live-only queries and mutation references keep their behavior.
+
+`ZoneSystem` retains ownership of snapshots. Departure information reuses
+`LKIByIncarnation`; phase information uses the same snapshot builder with a
+separate map and lifecycle, cloned independently. This separation preserves
+existing damage-source and subtype-condition contracts. `Game.PhaseOut` saves
+the whole direct/indirect group before any member becomes absent. Phase-in
+removes those snapshots. Indirect phase-in now gets mutable attachment pointers
+so a clone's phase status cannot change. No zone-change event is created.
+
+RON spellings and scope remain in `ron`:
+
+```ron
+ControllerOfPermanent(permanentRef)
+PowerOfPermanent(permanentRef)
+ManaValueOfPermanent(permanentRef)
+PlayerAction(ControllerOfPermanent(permanentRef), GainLife(value))
+PlayerAction(ControllerOfPermanent(permanentRef), LoseLife(value))
+Exile([Permanent(permanentRef)], [])
+```
+
+Permanent refs are the correctly bound source, Aura host, local target or
+captured permanent event. `compilePlayerRef` builds `ControllerOfWithLKI`;
+`compileInstanceValue` builds the numeric queries; permanent-controller life
+contexts use the indicated player's `GainLifeFor` / `LoseLifeFor` service.
+`compilePermanentExile(Node, scope) (effectFactory, error)` validates the exact
+single-permanent, empty-modifier form and lowers it to `mage.Exile`. Bodies work
+in spells, modes, activations and ordinary triggers. Other exile lists, subjects,
+modifiers, linked results and replacement contexts remain rejected. Existing
+player-target life support limits remain unchanged. There are no card-name
+branches, Go fallbacks, declaration panics or global last-action slots.
+
+Dependencies/reuse: typed per-instance target/event bindings; source and
+attachment incarnation context; shared definition/dominance validation;
+ZoneSystem snapshots and copy-on-write storage; target legality and native
+announcement; transactional mana costs; destruction/regeneration/indestructible
+rules; singular exile; life and damage actions; replacement rechecks and
+recipient choices; stack copying, modal scopes and cloned resolution frames.
+No new cost, event scheduler, replacement order or simultaneous zone operation
+was added. API/rules documentation records only this established behavior.
+
+### TDD and card-to-test mapping
+
+The initial engine test failed because the three APIs did not exist. After the
+information queries were added, phase cases failed because there was no saved
+phase information. RON fixtures initially used nonexistent `WithTypes` and
+`BoostTarget` helpers; these were corrected before confirming compilation
+failures for Exile / ControllerOfPermanent. A regeneration fixture used
+`HasRegenerationShield` after its permanent had left; that live-only API cannot
+inspect an absent permanent. The corrected test asserts the required destruction
+and owner-graveyard destination, including the regeneration case.
+
+The first broad engine and repository runs exposed two regressions when phase
+information used the departure tables: `TestDamageSourceOfAbsentPhasedAndDeclaration`
+and `TestPermanentSubtypeBranchEntryAndDeparture/phased_aura`. No existing test
+was weakened. Separate phase storage fixed both. A new clone assertion then
+failed because existing indirect phase-in mutated a shared attachment pointer;
+mutable access fixed that lifecycle integration. Final focused and required
+checks below include these original regression tests.
+
+| Complete card or contract | Test mapping |
+| --- | --- |
+| Swords to Plowshares; Crumble | `TestRONPermanentInformationSpells`: real RON definition validation/casting/payment/timing; live controller and layered power; negative power; indestructible; regeneration restrictions; absent/returned/phased/shrouded targets; phase cycle; owner destinations; cloned resolution. |
+| Swords to Plowshares; Crumble | `TestRONPermanentInformationCopiesAndRollback`: unpaid and wrong-target announcements preserve resources; native retargeted copies retain independent information; factory target isolation. |
+| Psychic Venom | `TestRONPermanentInformationVenom`: captured host identity, current/last controller, departure/return/second departure, phasing, new attachment, departed Aura, copied and repeated triggers, clones. |
+| Psychic Venom | `TestRONPermanentInformationVenomCasting`: native Aura casting/attachment, land restriction, shroud and invalidation rollback, real triggered damage and exact payment. |
+| Divine Offering | `TestRONPermanentInformationDivineOffering`: mana value after destruction or failed destruction, regeneration permitted, indestructible, illegal target, copied resolving controller, clone isolation. |
+| Crumble and shared life actions | `TestRONPermanentInformationReplacementOrder`: life replacements in both affected-player orders; exact post-destruction life amount and one choice. |
+| All four names / 15 records | `TestRONPermanentInformationReprintsAndInventory`: compile complete reprints, engine definition validation, canonical registry, semantic inventory roles, strict atomic rejection after unsupported input. |
+| Shared compiler contexts | `TestRONPermanentInformationContexts`, `Invalid`: spells/modes/activations/triggers, wrong roles/arities/modifiers/list sizes, unbound refs and mode/ability leakage. |
+| Shared engine information | `TestPermanentInformationLifecycle`, `Declaration`, `PhaseSnapshotAndClone`, `AttachmentDepartureAndUnboundSource`, `CloneAfterPhaseIn`: typed target/saved/source/attachment identity, controller/layered power/mana value, unknown/no-capture reads, retained LKI after transient cleanup, second departure, frozen phase layers and independent clone group status. |
+
+These are four additional complete-card mappings. Compilation totals are not
+collection-wide gameplay coverage. Ordinary targeting/payment/trigger scheduling
+continues through existing engine contracts; no new APNAP order is claimed.
+
+### Fresh outcomes, defects and next candidates
+
+Strict and inventory loaders: **1,363 compiled / 1,082 rejected records**, **478
+accepted / 508 rejected unique names**. Exactly 15 previously rejected records
+compile: Swords to Plowshares (6), Psychic Venom (6), Crumble (2), Divine Offering
+(1). No previously accepted record regressed. Ten surviving first diagnostics
+advanced: Artifact Possession (ability-activation trigger), Tracker (non-source
+damage source), Safe Haven (optional sacrifice), All Hallow's Eve, Cyclopean
+Mummy, Grave Robbers, Knowledge Vault, Martyr's Cry, Tormod's Crypt (different
+exile subjects), and Tawnos's Coffin (multi-subject exile). Remaining diagnostics
+are unchanged. Strict and inventory issue arrays agree.
+
+Inventory: 72,938 nodes / 8,528 signatures, unknown-role occurrences fall from
+12,635 to 12,502. Exile descendants distinguish `exile_subject` and
+`exile_modifier`; permanent-controller and power operands have typed permanent
+reference roles. Support labels remain unverified; aggregate engine-validation
+and behavior totals remain null. All 12 source hashes match baseline and the
+vocabulary source hashes. No RON source changed; vocabulary was not rewritten.
+
+New confirmed out-of-slice source defect: `ATQ.lines.ron` Gaea's Avenger
+CDA_Power and CDA_Toughness count `ControlledByAPlayer(SinglePlayer(You))`.
+Local `data/ATQ.json` Oracle text says "artifacts your opponents control".
+No source correction was made because CDA/count behavior is a later slice.
+Previously recorded Gaea's Liege/Fastbond defects remain open. No environment
+failure or required-check blocker remains.
+
+Ranked next candidates for reassessment:
+1. Finite simultaneous prevention allocation engine prerequisite, then the seven
+   ready prevention consumers and later modal Healing Salve / Alabaster Potion.
+2. Filtered bands-with-others combat prerequisite and layer adapter for the five
+   Legends lands listed above.
+3. All-zone CDA P/T and controller counts for the five candidates above, with
+   an evidence-based Gaea's Avenger source correction across identical records.
+
+Runtime cutover, complete RON gameplay, Go-card/generator deletion and unused
+DSL cleanup remain unfinished. This run stops after this slice.
+
+### Validation
+
+| Final command / audit | Result |
+| --- | --- |
+| `go test ./pkg/mage -run 'TestPermanentInformation|TestDamageSourceOfAbsentPhasedAndDeclaration|TestPermanentSubtypeBranchEntryAndDeparture' -count=1` | PASS; new contracts and original regressions. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after final edits and lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final code/lint review. |
+| `make test` | PASS after final code/lint review. |
+| `make build` | PASS after final code/lint review. |
+| `go vet ./...` | PASS after final code/lint review. |
+| `make lint` | PASS, zero issues; reviewed formatting and the whole diff, with no unrelated automatic changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records / 1,363 compiled / 1,082 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; complete nested inventory agrees with strict diagnostics. |
+| `go test ./... -short -count=1` | PASS; additional engine-skill check. |
+| Source / diagnostic audit | 15 records / 4 names gained, zero regressions, ten advanced surviving diagnostics, 12 unchanged RON hashes. |
+
+Changed slice files: `pkg/mage/composable_information.go` and its tests,
+`pkg/mage/game.go`, `zone_system.go`, `doc.go`; `pkg/mage/dsl/ron/permanent_exile.go`,
+`permanent_information_test.go`, `compiler.go`, `player_scope.go`,
+`sacrifice_value.go`, `inventory.go`, `inventory_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger.
+
+All required checks passed. These 15 slice files form one descriptive commit;
+its hash is reported in the final response. The two initial user changes remain
+unstaged. Migration completion criteria remain unmet.

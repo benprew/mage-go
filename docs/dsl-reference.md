@@ -2038,3 +2038,23 @@ it requires a live phased-in source. With a captured incarnation, it reads that
 object's current tapped state or its departure snapshot. Existing
 `PermanentIsTapped`, `PermanentIsUntapped`, `SourceTappedCondition` and
 `SourceUntappedCondition` keep their live-only semantics.
+
+## RON permanent information and singular exile
+
+In supported resolving action bodies, `ControllerOfPermanent(ref)` is a typed
+player reference. `PowerOfPermanent(ref)` and `ManaValueOfPermanent(ref)` are
+resolution values. They read the exact incarnation's current information, or
+its saved departure/phase information. `ref` can be the local permanent target,
+a captured `Trigger_ThatPermanent`, `ThisPermanent` on a permanent, or
+`HostPermanent` on an Aura. An unbound or wrong-role reference fails compilation.
+Each factory builds reads against its own declarations; modes and abilities
+cannot share a target scope.
+
+`PlayerAction(ControllerOfPermanent(ref), GainLife(value))` and its `LoseLife`
+form use the indicated player. Other player contexts retain their existing
+support limits. `Exile([Permanent(ref)], [])` supports one permanent with no
+modifiers in spell, modal, activation and ordinary trigger bodies. It performs
+no action on a departed or phased incarnation. Larger lists, card subjects,
+collections, face-down modifiers and linked results remain unsupported.
+See [the rules contract](engine-rules-contracts.md#permanent-information-through-typed-references)
+for engine APIs, lifecycle behavior, and test evidence.

@@ -858,6 +858,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			return nil, err
 		}
 		return one(build)
+	case "Exile":
+		build, err := compilePermanentExile(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
 	case "PutCounters":
 		build, err := compileCounterPlacement(n, ctx)
 		if err != nil {
@@ -1178,7 +1184,7 @@ func compilePlayerEffect(n Node, ctx scope) ([]effectFactory, error) {
 	if err != nil {
 		return nil, err
 	}
-	if ctx.player.step != nil && (n.Name == "GainLife" || n.Name == "LoseLife") {
+	if (ctx.player.step != nil || ctx.player.permanent != nil) && (n.Name == "GainLife" || n.Name == "LoseLife") {
 		return []effectFactory{func(bindings instanceBindings) mage.Effect {
 			player := ctx.player.build(bindings)
 			if n.Name == "GainLife" {

@@ -1998,3 +1998,59 @@ Evidence: `TestRONGraveyardReturnCards`, `AnnouncementRollback`,
 records compile and validate. Gameplay evidence covers seven return cards and
 Hell's Caretaker's upkeep, tap, sacrifice, and target contracts. No engine
 execution rule, simultaneous batch, replacement order, or LKI service changes.
+
+## Permanent information through typed references
+
+`ControllerOfWithLKI(PermanentRef) PlayerRef`,
+`PowerOfWithLKI(PermanentRef) ResolutionValue`, and
+`ManaValueOfWithLKI(PermanentRef) ResolutionValue` read information about an
+exact battlefield incarnation (CR 400.7, 608.2h). Supported subjects are `This`,
+`AttachedPermanent`, `From(PermanentBinding)`, and a singular
+`PermanentTargetBinding`. Definitions reject nil or unsupported subjects, and
+retain target and snapshot dominance checks.
+
+While phased in, a matching incarnation supplies its current controller,
+layered power, or mana value. After departure, the incarnation-indexed retained
+snapshot supplies controller and mana value; the saved final power supplies
+power. A returned card and its later departure cannot overwrite the old
+information. Unknown identities supply no player and zero for numeric reads.
+An uncaptured `This` can read only the live source. A departed source's
+attachment retains its last host incarnation.
+
+Before direct and indirect phase-out, `Game.PhaseOut` saves each member's
+information with the existing `PermanentLKI` snapshot builder. `ZoneSystem`
+owns a separate incarnation-indexed phase-information map; this map does not
+publish a departure to existing LKI readers. These explicit information queries
+use the saved phase information while the object is absent (CR 702.26b/d/f/g).
+Phase-in discards it and restores live reads. Phase snapshots and group status
+remain isolated in clones. Indirect phase-in obtains mutable attachment pointers
+before changing their status. Phasing creates no zone-change events.
+
+These queries never make a departed or phased object available for an action.
+Existing `ControllerOf`, `PowerOf`, `ManaValueOf`, mutation references, subtype
+conditions, and typed damage-source queries retain their contracts. No new
+payment, replacement order, event scheduling or simultaneous zone operation is
+introduced. Evidence: `TestPermanentInformationLifecycle`,
+`TestPermanentInformationDeclaration`, `TestPermanentInformationPhaseSnapshotAndClone`,
+`TestPermanentInformationAttachmentDepartureAndUnboundSource`,
+`TestPermanentInformationCloneAfterPhaseIn`, and the existing
+`TestDamageSourceOfAbsentPhasedAndDeclaration` and
+`TestPermanentSubtypeBranchEntryAndDeparture` regressions.
+
+The RON compiler lowers `ControllerOfPermanent(ref)`, `PowerOfPermanent(ref)`,
+and `ManaValueOfPermanent(ref)` to these services. References remain local to
+their source, Aura, target, mode or captured permanent event. Life actions with
+an explicit permanent-controller player use `GainLifeFor` / `LoseLifeFor`.
+`Exile([Permanent(ref)], [])` lowers one live subject to `Exile`; other subject
+lists and modifiers remain rejected. The declaration works in spell, modal,
+activation and ordinary trigger action bodies. It does not establish graveyard
+exile, collections, links, exile results, or replacement-context operations.
+
+Evidence: `TestRONPermanentInformationSpells`, `Venom`, `VenomCasting`,
+`DivineOffering`, `CopiesAndRollback`, `Contexts`, `Invalid`, `ReplacementOrder`,
+and `ReprintsAndInventory` (all names have the `TestRONPermanentInformation`
+prefix). Real Swords to Plowshares and Crumble read information after the zone
+action; failed destruction still permits the life instruction. Divine Offering
+permits regeneration and gains life for the resolving controller. Psychic Venom
+reads the captured land's current or last controller when the trigger resolves,
+not a new attachment's controller or the land's controller at event time.

@@ -15,6 +15,22 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "PowerOfPermanent" || n.Name == "ManaValueOfPermanent" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		permanent, err := compilePermanentRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			ref := permanent.build(bindings)
+			if n.Name == "PowerOfPermanent" {
+				return mage.PowerOfWithLKI(ref)
+			}
+			return mage.ManaValueOfWithLKI(ref)
+		}, nil
+	}
 	if n.Name == "TheNumberOfCardsInPlayersHand" {
 		if err := arity(n, 1); err != nil {
 			return nil, err

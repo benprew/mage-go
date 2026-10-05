@@ -203,6 +203,15 @@ func (g *Game) FindPermanent(id uuid.UUID) *Permanent {
 // out — the permanent followed by its attachments — so the caller can later
 // phase exactly that set back in with PhaseIn.
 func (g *Game) PhaseOut(id uuid.UUID) []uuid.UUID {
+	// Information queries need the state before the group becomes absent.
+	if source := g.FindPermanent(id); source != nil {
+		g.zones.capturePhaseInformation(source, g)
+		for _, p := range g.zones.battlefield {
+			if !p.PhasedOut && p.AttachedTo == id && (p.HasSubType("Aura") || p.HasSubType("Equipment")) {
+				g.zones.capturePhaseInformation(p, g)
+			}
+		}
+	}
 	phased := g.zones.PhaseOut(id)
 	expired := false
 	for _, permanentID := range phased {

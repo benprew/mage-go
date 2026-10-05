@@ -20,6 +20,7 @@ type ZoneSystem struct {
 	enteringPermanent      *Permanent
 	lki                    map[uuid.UUID]*PermanentLKI
 	damageSourceLKI        map[uuid.UUID]*PermanentLKI
+	phaseInformation       map[uuid.UUID]*PermanentLKI
 	// Delayed abilities can read an old attachment after turn cleanup.
 	departedAttachments      map[uuid.UUID]capturedPermanent
 	departedCounters         map[uuid.UUID][core.NumCounters]uint8
@@ -74,6 +75,9 @@ func (zs *ZoneSystem) Clone() ZoneSystem {
 	if len(zs.lki) > 0 {
 		clone.lki = make(map[uuid.UUID]*PermanentLKI, len(zs.lki))
 		maps.Copy(clone.lki, zs.lki)
+	}
+	if len(zs.phaseInformation) > 0 {
+		clone.phaseInformation = maps.Clone(zs.phaseInformation)
 	}
 	if len(zs.damageSourceLKI) > 0 {
 		clone.damageSourceLKI = maps.Clone(zs.damageSourceLKI)
@@ -343,9 +347,12 @@ func (zs *ZoneSystem) PhaseIn(ids []uuid.UUID) {
 		perm := zs.MutablePermanentIncludingPhased(id)
 		if perm != nil && perm.PhasedOut {
 			perm.PhasedOut = false
+			delete(zs.phaseInformation, perm.incarnationID)
 			for _, p := range zs.battlefield {
 				if p.PhasedOut && p.AttachedTo == id {
-					p.PhasedOut = false
+					attachment := zs.MutablePermanentIncludingPhased(p.ID())
+					attachment.PhasedOut = false
+					delete(zs.phaseInformation, attachment.incarnationID)
 				}
 			}
 		}
@@ -537,6 +544,15 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 		}
 		zs.departedAttachments[p.incarnationID] = host
 	}
+	lki := snapshotPermanentInformation(p, g)
+	zs.lki[p.ID()] = lki
+	if zs.damageSourceLKI == nil {
+		zs.damageSourceLKI = make(map[uuid.UUID]*PermanentLKI)
+	}
+	zs.damageSourceLKI[p.incarnationID] = lki
+}
+
+func snapshotPermanentInformation(p *Permanent, g GameReader) *PermanentLKI {
 	isToken := p.IsToken
 	owner := p.Card.Owner()
 	if owner == uuid.Nil {
@@ -544,7 +560,7 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 	}
 	snap := &Permanent{}
 	clonePermanentInto(snap, p)
-	lki := &PermanentLKI{
+	return &PermanentLKI{
 		ID:        p.ID(),
 		Name:      p.Name(),
 		Owner:     owner,
@@ -553,11 +569,13 @@ func (zs *ZoneSystem) CaptureLKI(p *Permanent, g GameReader) {
 		IsToken:   isToken,
 		Snapshot:  snap,
 	}
-	zs.lki[p.ID()] = lki
-	if zs.damageSourceLKI == nil {
-		zs.damageSourceLKI = make(map[uuid.UUID]*PermanentLKI)
+}
+
+func (zs *ZoneSystem) capturePhaseInformation(p *Permanent, g GameReader) {
+	if zs.phaseInformation == nil {
+		zs.phaseInformation = make(map[uuid.UUID]*PermanentLKI)
 	}
-	zs.damageSourceLKI[p.incarnationID] = lki
+	zs.phaseInformation[p.incarnationID] = snapshotPermanentInformation(p, g)
 }
 
 func (zs *ZoneSystem) LKIByIncarnation(incarnation uuid.UUID) *PermanentLKI {

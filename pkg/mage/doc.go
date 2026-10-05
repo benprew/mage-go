@@ -204,6 +204,12 @@
 // available for static membership checks. Draw-step events are detected before
 // the normal draw; pending triggers go on the stack after that draw.
 //
+// Use [ControllerOfWithLKI], [PowerOfWithLKI], and [ManaValueOfWithLKI]
+// when an information read must survive departure. They use the exact source,
+// attachment, saved permanent, or singular target incarnation. Phase information
+// remains separate from departure information. These reads do not permit actions
+// on absent objects. The existing live-only queries keep their behavior.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:
