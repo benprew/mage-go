@@ -2379,3 +2379,26 @@ forms. Combat expiry uses `mage.Until(core.EndOfCombat, modifications...)`.
 Other temporary-modification contexts retain their existing duration support.
 Host events, event defending-player references, delayed events and non-mana
 optional payments need separate adapters. These forms remain rejected.
+
+### RON one-shot delayed step actions
+
+`CreateFutureTrigger(event, ActionList([...]))` accepts bare
+`AtTheBeginningOfTheNextEndStep`, bare `AtTheNextEndOfCombat`, and
+`AtTheBeginningOfPlayersNextUpkeep(You)`. It lowers to `mage.AtNext` with
+`EachEndStep`, `EachEndOfCombat`, or `YourUpkeep`. The nonempty body uses the
+existing action compiler and may schedule another supported delayed action.
+
+The body can read existing typed target declarations, source references, saved
+number/permanent/player bindings, and announced X. Each scheduling resolution
+captures its own frame. The delayed body declares no new targets. A captured
+permanent reference keeps its original incarnation and does not repeat the
+original target filter. Source departure and ability removal do not cancel a
+schedule. Actions still require a present, phased-in subject; information reads
+use their existing LKI contracts.
+
+Other events, new target declarations or modes in the delayed body, and event
+spell reads remain compiler errors. The engine does not yet save event spell
+bindings in this frame. Next upkeep accepts only bare `You`; other players need
+an explicit scheduling contract. `AtNextEndOfCombatThisTurn` is distinct from
+`AtTheNextEndOfCombat` and remains unsupported. This adapter does not add casting
+restrictions, combat events, choices, histories, links, or finite prevention.

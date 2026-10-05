@@ -2514,3 +2514,31 @@ instances, paid casting and failed payment rollback in an isolated test registry
 `NoDeclaration`, `Invalid` and `Inventory` cover entry attacking, rejected
 contexts and nested semantic roles. All these names have prefix
 `TestRONSourceAttack`. Collection-wide runtime loading remains incomplete.
+
+### RON delayed step capture
+
+The RON adapter for `CreateFutureTrigger/2` uses the existing `AtNext` contract.
+It creates a schedule on resolution (CR 603.7a), consumes it at the next matching
+step (CR 603.7b), and retains the source incarnation and resolving controller
+(CR 603.7c–e, 400.7). A schedule created after a step has begun waits for the
+next matching step; cleanup does not consume an end-step schedule (CR 513.2).
+Detection queues the trigger for the next priority opportunity. The body does
+not run at registration or detection.
+
+The adapter preserves captured typed permanent targets without a new target
+choice at placement. Incarnation and phasing checks still apply to actions.
+Sacrifice requires the original ability controller to control the subject when
+it resolves; a later control change can prevent sacrifice without cancelling
+an independent damage instruction. The existing damage pipeline uses source
+LKI after sacrifice and applies prevention. Clone and stack-copy execution use
+the shared capture services. No replacement ordering or simultaneous-operation
+engine contract changes in this slice.
+
+`TestRONDelayedStepRukhEgg` covers real RON casting, death, token characteristics,
+next-step timing, cleanup, and clones. `TestRONDelayedStepRukhEggNonDeathsAndCopies`
+covers exile, bounce, phasing, regeneration, copies, and distinct death
+controllers. The other `TestRONDelayedStep*` tests cover source and target
+incarnations, controller changes, ability removal, source damage after sacrifice,
+independent X and target frames, captured event players, nesting, countered
+triggers, all-illegal original targets, and invalid declarations. Event spell
+bindings are not captured by the engine and are rejected in delayed RON bodies.

@@ -412,8 +412,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
+	case "delayed_step_event":
+		if n.Name == "AtTheBeginningOfPlayersNextUpkeep" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 	case "action":
 		switch n.Name {
+		case "CreateFutureTrigger":
+			if len(n.Args) == 2 {
+				return []string{"delayed_step_event", "actions"}[index]
+			}
 		case "MayAction":
 			if len(n.Args) == 1 {
 				return "action"

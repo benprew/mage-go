@@ -12145,3 +12145,175 @@ No check blocker remains. All earlier broad failures were this slice's corrected
 casting fixture. One descriptive commit contains only the slice files listed
 above; the user's `.gitignore` and execution-design edits remain unstaged.
 No further slice is begun.
+
+## 2026-10-05: one-shot delayed step capture
+
+Status: completed `actions.delayed-step` compiler slice. Stop after validation
+and commit. Preserve the user edits to `.gitignore` and the execution design.
+No engine service, RON source, Go card definition, generator, production registry
+or DSL export is changed or removed. The cutover and removal gates remain open.
+
+### Evidence, comparison and selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, syntax snapshot and
+existing ledger. Refreshed strict and semantic loaders and read compiler scopes,
+reference plans, action construction, optional payments, source attack triggers,
+token creation, step patterns, `AtNext`, captured delayed bodies, trigger
+registration/placement/cloning, related regression tests and API/rules contracts.
+Read CR 603.7a–e and 513.2; reused incarnation, phasing, priority, targeting,
+sacrifice and source-LKI contracts. Complete RON records supplied requirements;
+no Go card requirements, removed skill, generated stub or subagent was used.
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `go build ./...` passed.
+Strict and inventory loaders exited 1 for collection rejection, not build
+failure: **1,459 compiled / 986 rejected records**, **514 accepted / 472 rejected
+unique names**. There are 2,445 records / 986 names, 72,938 AST nodes / 8,530
+context signatures, and 12,004 unknown-role occurrences. The AST inventory,
+complete canonical records and all matching identical reprints were inspected.
+
+| Candidate | Distinct affected names | Estimated full-card gains and remaining blockers | Downstream capabilities; effort |
+| --- | --- | --- | --- |
+| One-shot delayed steps, selected | Abomination, Battering Ram, Berserk, Cockatrice, Dragon Whelp, Farrelite Priest, Giant Slug, Glyph of Destruction, Goblin Kites, Hazezon Tamar, Infernal Medusa, Infinite Authority, Initiates of the Ebon Hand, Nalathni Dragon, Nettling Imp, Rainbow Vale, Rakalite, Rocket Launcher, Rukh Egg, Siren's Call, Stone Giant, Thicket Basilisk, Time Elemental, Venom | 1 unique / 1 record: Rukh Egg. Combat consumers need block events and typed opposing-creature bindings; Whelp/Priest/Initiates/Nalathni need resolution-count conditions; Slug/Vale need choices; Kites/Giant need numeric target filters (Kites also coin flips); Hazezon needs source departure; Rakalite needs finite prevention; Launcher needs activation control history; Berserk/Call/Imp need casting/activation conditions and histories; Glyph of Destruction needs combat duration and unrestricted prevention. | Shared schedules and per-resolution source/controller/target/X capture for 23 further unique consumers. Low adapter effort, medium identity/timing/gameplay test effort. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Alabaster Potion, Kei Takahashi, Rakalite, Rasputin Dreamweaver | Allocation prerequisite alone 0; 9 credible gains after adapters. Angel needs repeatable optional payments; Rakalite needs delayed return; Rasputin needs source prevention, untapped-turn history and counter cap. | Shared CR 615.7 allocation across simultaneous damage packets, typed recipients and X. High engine/decision/batch effort before adapters. |
+| All-zone CDA characteristics | Dakkon Blackblade, Gaea's Avenger, Keldon Warlord, Nightmare, Plague Rats, People of the Woods | 5 credible gains; Avenger retains the controller-filter source concern. All-zone characteristic queries and count/arithmetic adapters are prerequisites. | Shared characteristic evaluation and controller context in all zones, CDA/set/modify ordering. High engine/regression effort and medium adapter effort. |
+
+Delayed steps win as a dependency-ready multi-card prerequisite with exact
+engine reuse and a bounded implementation. First-error frequency did not imply
+23 unlocks: nested blockers keep those cards rejected. This is shared scheduling
+work, not a single-card branch. Initial commentary counted 23 affected names;
+the full AST inventory added promo Nalathni Dragon, giving 24. Scope, engine
+boundary and acceptance cases were stated before edits. Next upkeep was narrowed
+before editing to bare `You`, which matches both collection consumers and the
+existing `YourUpkeep` engine pattern.
+
+### Exact supported shapes and reuse boundary
+
+`compileDelayedStep(n Node, ctx scope) (effectFactory, error)` implements:
+
+```ron
+CreateFutureTrigger(AtTheBeginningOfTheNextEndStep, ActionList([...]))
+CreateFutureTrigger(AtTheNextEndOfCombat, ActionList([...]))
+CreateFutureTrigger(AtTheBeginningOfPlayersNextUpkeep(You), ActionList([...]))
+```
+
+The two bare events require symbols; upkeep requires exactly one bare `You`.
+The body must be a nonempty `ActionList/1`. Existing action shapes in spell,
+activation or supported trigger resolution can be used in that body, including
+nested schedules and existing optional-payment continuations. New targets and
+modes inside the delayed body remain errors. Inherited declarations retain their
+per-factory typed identities; `compileActionSequence` builds fresh body effects
+with that factory's `instanceBindings`. No declaration is constructed at game
+time, and no global last-action slot is used.
+
+RON owns syntax, arity, lexical binding checks and lowering. `mage.AtNext` owns
+scheduling and capture with `EachEndStep`, `EachEndOfCombat` or `YourUpkeep`.
+The shared engine saves source incarnation, controller, permanent/player/number
+bindings, created-token bindings, typed target frames and X per scheduling
+resolution. Nested schedules capture their current frame. Actions read captured
+incarnations; information reads keep their existing LKI semantics. An inherited
+target is not a new target of the delayed ability. The original target filter is
+not checked again by a later untargeted action. An all-illegal original spell
+never schedules its body. Source departure, control changes and ability removal
+do not remove the schedule. Sacrifice still requires the resolving controller
+to control the source; independent damage still resolves through prevention/LKI.
+
+A tested capture limit was found: `AtNext` does not save event spell bindings.
+The new `scope.delayedStep` flag makes `compileSpellRef` reject those reads in
+this body. Captured event players remain available with their existing supported
+actions. This is an explicit unsupported context, not a new engine contract.
+Other players' next upkeeps, next main phase, `AtNextEndOfCombatThisTurn`, departure
+and combined events, new delayed targets, histories, choices and links remain
+unsupported. No card rule is skipped. No replacement ordering or simultaneous
+operation contract is changed; damage and payments still use their shared services.
+
+Semantic reporting assigns `delayed_step_event` and `actions` to descendants of
+`CreateFutureTrigger/2`, and `player_reference` beneath next upkeep, even when
+the enclosing record is rejected. Syntax roles and counts are not support claims.
+
+### TDD and gameplay mappings
+
+Initial test compilation exposed incorrect battlefield/token accessor names;
+those fixtures were corrected before the expected failing run. The gameplay
+suite then failed on `unsupported action (CreateFutureTrigger)` for Rukh Egg
+and each synthetic contract. Inventory tests failed on missing nested roles
+before those roles were added. A further failing test proved event spell reads
+were incorrectly accepted before the explicit scope restriction was added.
+
+Two early runtime assertions were corrected using engine evidence: flat stack
+`Targets` has a legacy nil placeholder; `TargetSpecs` determines new target
+declarations. A control-changed source cannot be sacrificed by the original
+trigger controller, although independent damage still resolves. A later event
+player fixture used life gain, which that existing event-player compiler scope
+rejects; it now uses supported draw actions and checks separate hands. No
+production support was added to hide fixture errors and no assertion was weakened.
+
+All test names below have the prefix `TestRONDelayedStep`:
+
+| Card or contract | Mapping |
+| --- | --- |
+| Rukh Egg, complete real record | `RukhEgg`: real mana-paid casting/entry, death-trigger resolution, one red 4/4 Bird token with flying, next end step for either player, creation during an already-started end step, cleanup, one-shot expiry, clone isolation. `RukhEggNonDeathsAndCopies`: exile/bounce/phasing/regeneration do not create death schedules; copied death triggers and two factory instances retain their death controllers separately from owners. |
+| Target frame and legality | `TargetCapture`: fresh factory target declarations, source spell leaves stack, unchanged/returned/phased/phase-cycled/control-changed subjects, priority placement, no new target specs, delayed stack copies and clones. `IllegalBeforeCreation`: return/phasing makes the original spell all-illegal and prevents registration. |
+| Source frame and LKI | `SourceCapture`: failed activation payment leaves no schedule, source return before/after installation, phase cycle, absent phased subject, control change, ability removal, sacrifice followed by independent damage through a prevention shield, original controller, one-shot execution. `AttackEventAndCounter`: source-only `Trigger_ThatCreature` capture in the Time Elemental attack shape; countered delayed triggers remain consumed. This is a synthetic contract, not a full Time Elemental mapping. |
+| Independent values and nesting | `XAndIndependentTargets`: two spell factories schedule distinct targets with X=2 and X=3; boosts apply at the delayed step and expire at cleanup. `UpkeepAndNested`: two resolutions, opponent upkeep rejection, original controller after source departure, next-upkeep and nested next-end-step frames. `CapturedEventPlayer`: two cast events keep separate caster player bindings after watcher departure. |
+| Invalid declarations | `Invalid`: event kind/arity, unsupported current-turn duration event, other/tuple upkeep player, empty body, new delayed targets, unbound permanent/event reads, extra duration argument. `RejectUnsavedSpellEvent`: event spell binding cannot escape into delayed execution. |
+| Inventory/regression | `Inventory`: nested roles below a rejected record. Collection count tests are updated to the fresh measured count; accepted Lightning Bolt and all prior RON gameplay tests remain intact. |
+
+Compilation and gameplay coverage remain separate. This adds one complete-card
+behavior mapping and shared synthetic contracts. It does not verify 985 rejected
+records or all 515 accepted names. Collection-wide `engine_validated` and
+`behavior_verified` fields remain null.
+
+### Measurements, gaps and next candidates
+
+Actual gain matches the estimate: **1 unique name / 1 record, Rukh Egg**.
+Strict and semantic loading now report **1,460 compiled / 985 rejected records**,
+**515 accepted / 471 rejected unique names**. No previously accepted name
+regresses. AST nodes and context signatures remain 72,938 / 8,530;
+unknown-role occurrences fall from 12,004 to **11,466**. Source hashes are
+unchanged, so the syntax snapshot is not refreshed. Reprints remain identical.
+
+Fresh first diagnostics advance Rainbow Vale to `ChooseAPlayer`, Giant Slug to
+`ChooseABasicLandType`, Hazezon Tamar to `WhenAPermanentLeavesTheBattlefield`,
+and Time Elemental to `WhenACreatureBlocks`. Glyph of Doom still needs the
+separate `AtNextEndOfCombatThisTurn` lifetime; Mana Drain still needs next main
+phase and mana-value capture. Neither is counted as a supported selected event.
+No source defect was corrected. The prior Gaea's Avenger and other source
+concerns remain open. No environment or pre-existing failure was observed.
+
+Ranked next candidates to reassess from fresh complete records:
+1. Source block/departure event adapters: Time Elemental and Hazezon Tamar now
+   reach these exact gaps; compare Ydwen Efreet, Spitting Slug, Elder Land Wurm
+   and other consumers, including coin/combat-filter dependencies.
+2. Finite recipient prevention allocation, followed by the nine ready adapters;
+   Rakalite's delayed-return prerequisite now has compiler support.
+3. All-zone CDA characteristics for the six names in the comparison, with the
+   Avenger source audit before any gameplay claim.
+
+Slice files: `pkg/mage/dsl/ron/delayed_step.go`, `delayed_step_test.go`,
+`compiler.go`, `spell_scope.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+No DSL export deletion is attempted without the required caller audit and
+removal gates. Runtime cutover, complete collection gameplay, Go-card/generator
+removal and unused DSL cleanup remain open. Final validation results follow.
+
+Final validation:
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run 'Test(RONDelayedStep\|Inventory)' -count=1` | PASS after final lint review. Expected TDD failures and corrected test fixture assumptions are recorded above. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues. Formatting/import changes reviewed; final lint added no further implementation changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 for collection rejection: 1,460 compiled / 985 rejected records, 471 rejected unique names. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1, same counts/issues, unchanged source hashes; 11,466 unknown-role occurrences. |
+
+No environment or pre-existing validation blocker remains. Earlier failures
+were the expected unsupported adapter/scope/inventory tests and the corrected
+fixture assumptions described above. One descriptive commit contains only the
+nine slice files listed above. The user's `.gitignore` and execution-design
+edits remain unstaged. The commit hash is reported in the final response.
+No additional capability slice is started.
