@@ -2566,7 +2566,7 @@ func (g *Game) castSpellByName(playerID uuid.UUID, name string, targets []uuid.U
 		return fmt.Errorf("card %s not found in hand", name)
 	}
 
-	if err := g.checkSpellStep(card); err != nil {
+	if err := g.checkSpellTiming(card, playerID); err != nil {
 		return err
 	}
 
@@ -2850,7 +2850,7 @@ func (g *Game) GetCastableSpells(playerID uuid.UUID) []Card {
 		if card.HasType(TypeLand) {
 			continue
 		}
-		if g.checkSpellStep(card) != nil {
+		if g.checkSpellTiming(card, playerID) != nil {
 			continue
 		}
 		// CR 702.8 — Flash lets a spell be cast any time you could cast an instant,

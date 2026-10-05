@@ -14666,3 +14666,168 @@ trigger error and remains unsupported; Backfire remains unsupported.
 
 Only this slice is committed. The hash is in the final response. Existing user
 changes remain unstaged, and no second implementation slice is started.
+
+## Run 2026-10-05: CASTING-WINDOWS
+
+Status: completed single slice, including the prerequisites needed for Reset.
+Stop after this slice. Initial user changes to `.gitignore`, execution design,
+progress-ledger restructuring, and untracked `mtgish-ron-completed.md` are
+preserved. Only this appended entry is staged from the progress ledger.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot and
+progress ledger; selected compiler, casting, definition validation, turn, cloning,
+collection and untap services; complete candidate RON records. Requirements came
+from RON, not Go card definitions. Local data/LEG.json and data/DRK.json confirm
+Reset, Teleport and Festival Oracle text. Relevant contracts: CR 117, 500,
+503.1–503.2, 508, 509, 601.2–601.3, 608 and 707.10. The engine skill used was
+[implement-engine](../../.agents/skills/implement-engine/SKILL.md); no removed
+card/set skill was used.
+
+Fresh baseline compiler/CLI tests (`-count=1`) and `go build ./...` passed.
+Strict loader and semantic inspection exited 1 for collection rejection:
+**1,515 compiled / 930 rejected records**, **549 accepted / 437 rejected unique
+names**, out of 2,445 records / 986 names. There was no build/environment failure.
+Semantic inventory: 72,951 nodes, 8,540 signatures, 10,624 unknown-role occurrences.
+
+| Candidate | Distinct names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Casting windows, selected | Reset, Teleport: **2** estimated full-card unlocks. Festival, Camouflage and False Orders share the selected windows but remain blocked. | Missing caster-relative casting-condition gate. Festival needs temporary collection attack prohibition; Camouflage needs random combat assignments; False Orders needs defending-player targets and combat choices. Reset also needs filtered collection untapping; that adapter was missed in the initial estimate and found by its failing gameplay test. Other complete timing consumers inspected: Berserk, Blaze of Glory, Disharmony, Glyph of Reincarnation, Rapid Fire and Siren's Call; their other timing/action forms are excluded. Enables shared casting predicates before announcement/payment. | Medium: reuse pure condition and casting gates; turn history for repeated upkeeps; small untap adapter; real-card, path, identity, clone and declaration tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full-card unlocks after allocation prerequisite, **0** adapter-only gains. | Complete records require finite shields, any-target/player modes and X. Missing CR 615.7 allocation across simultaneous damage sources; shared prerequisite benefits further shields. | Medium/high: allocation decisions, shield consumption, competing replacements and simultaneous packets. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after zone-aware characteristic prerequisite. | Complete records require land/non-Wall/named counts and owner/controller contexts. Gaea's Avenger and Wood Elemental have further blockers and are excluded. Enables all-zone characteristics and later copy/layer consumers. | High: all-zone count contexts, CDA layers, copy/controller interactions and gameplay. |
+
+Selection rationale: two full consumers plus concrete shared casting prerequisites
+for three additional names offer a smaller coherent change than allocation or
+all-zone characteristics. Reprints count once. Nested complete records supplied
+the estimates; first-error frequency was not an unlock estimate. Contract and
+acceptance cases were stated before edits. The extra untap adapter and CR 503.2
+history prerequisite raised effort, but stayed within this one slice.
+
+### Exact signatures, contexts and reuse boundary
+
+Engine APIs:
+`WithCastingCondition(condition StateCondition) ActionOption` for `ActionSpell`;
+`IsDuringSteps(steps ...PhaseStep) StateCondition`;
+`AfterFirstUpkeep() StateCondition`. TurnReader now exposes `GetStep() PhaseStep`
+and `UpkeepHasEnded() bool`; all repository callers build. This is an added
+interface requirement for outside implementations. Conditions run with the
+casting card ID and caster ID before choices and payment. Definition validation
+rejects nil/invalid trees, unavailable target/payment bindings, battlefield-source
+reads and casting conditions on activations. Multiple conditions are conjunctive.
+Input step slices are copied. Queries are pure and grant no priority or sorcery
+permission. Conditions do not run again when copying or resolving a stack spell;
+casting a card copy does run them.
+
+TurnSystem owns first-upkeep completion and the stored step's turn identity.
+Native upkeep completion and direct same-turn SetStep departure record it.
+Later upkeep steps remain permitted (CR 503.2). Turn changes clear history;
+clone state is independent. A skipped upkeep does not produce completion.
+A late extra upkeep can become the first actual upkeep. New turns cannot inherit
+history from an old turn ending during upkeep. The first step-index prototype
+failed the new real Reset second-upkeep test; it was replaced by this history
+contract before acceptance. The external rules check agrees with local CR 503.2:
+[Wizards Comprehensive Rules](https://media.wizards.com/2024/downloads/MagicCompRules%2004102024.pdf).
+The skipped-upkeep behavior follows CR 500.11 and the actual-completion contract.
+
+RON supports one top-level `CastEffect(CantBeCastUnless(condition))/1` on a
+nonmodal instant/sorcery, independent of its order beside SpellActions.
+Conditions: nonempty nested `And/1` lists; `IsAPlayersTurn/1` or `IsPlayersTurn/1`
+with bare You or Opponent; bare IsDuringUpkeep, IsDuringDeclareAttackersStep,
+IsDuringDeclareBlockersStep, IsAfterUpkeep. The last uses AfterFirstUpkeep,
+not a numeric step comparison. RON owns spelling, arity, scope and diagnostics.
+Other predicates/operations, duplicates, permanents, modal spells and nested
+CastEffect actions remain rejected. No synthetic targets or event values exist.
+
+Resolving `UntapEachPermanent(filter)/1` uses existing pure permanent filters,
+And composition, and at most one
+`ControlledByAPlayer(SinglePlayer(typed-player-reference))/1` restriction.
+Reuse compileCountFilter, typed instanceBindings, MatchingPermanents,
+PermanentsControlledBy and UntapEach. Selection occurs at resolution, excluding
+phased objects. Plural-target and chosen-payment collections remain rejected.
+Complete other consumers read: Candelabra of Tawnos (PayManaX and targeted
+collection blockers), Magnetic Mountain and Thelon's Curse (payment-choice
+collections); none is an estimated unlock.
+
+Existing services retain casting transactions, target identity/legality,
+copy retargeting, native priority, duration/cleanup, simultaneous untap batches,
+stun replacements and clone behavior. The shared gate covers hand, free and
+alternate-cost zone casting, cast copies and castability queries. No card-name
+branch, Go fallback, game-time declaration panic, mutable global result slot,
+partial production registry or second rule system was added.
+
+### TDD and card-to-test evidence
+
+Initial engine tests failed for missing WithCastingCondition; real RON tests
+then failed at CastEffect. After that lowering, Reset failed at UntapEachPermanent.
+The repeated-upkeep test failed under the step-only prototype and the engine
+history test failed for missing AfterFirstUpkeep. A subsequent test exposed
+old-upkeep state leaking across a turn change; stored step turn identity fixed it.
+Fixture corrections used actual owner assertions and CanBlock, rather than
+nonexistent unblockability attributes. No gameplay requirement was weakened.
+
+| Card/contract | Tests |
+| --- | --- |
+| Reset, full LEG record | TestRONCastingWindows: all steps and both casters; first-upkeep rejection, post-upkeep acceptance and timing rollback. WindowGameplay: UU payment, controller-only lands, late entry, creature/phased exclusion, clone isolation, resolution after timing changes and graveyard destination. WindowStackCopies: copy controller's lands and original controller. WindowResetExtraUpkeep: real native first completion permits second upkeep; clone remains blocked. |
+| Teleport, full LEG record | Windows: all steps and both casters. WindowGameplay: UUU payment/rollback, creature target, restriction at resolution and cleanup. WindowTeleportIdentity: shroud, return, phasing, phase cycle, control and clone isolation. WindowStackCopies: distinct retargeted copy and original frames, resolution outside casting window. |
+| Declaration, scope and inventory | TestRONCastingWindowInvalid, OrderScopeAndInstances, Inventory: malformed arity/kinds, unknown predicates/players, duplicate restrictions, permanent/modal/nested contexts, both rule orders, independent factory actions, nested conditions, selected step/turn matrices, unbound untap player refs and unsupported collection contexts. |
+| Shared casting contract | TestSpellCastingConditionPaths, CopiesAndValidation, TestSpellCastingStepsAndConjunction, TestSpellCastingForeignController: normal/free/alternate/cast-copy paths, both players, own/opponent restrictions, step conjunction, queries, resources, copies/clones, immutable step input, invalid declarations/bindings and no sorcery permission. Retained TestSpellStep regressions pass. |
+| Turn history and simultaneous untap reuse | TestSpellAfterFirstUpkeep: first/repeated/late and skipped upkeeps, native completion, direct transitions, clones, IncrementTurn/SetTurn resets and stale-step protection. Existing TestUntapEachBatchAndStun, IdentityCloneAndDeclaration and TargetGroupKeepsAnnouncementIncarnation cover batches, replacement, incarnation identity and cloning. |
+
+Two complete-card RON behavior mappings are added. LKI is not used by the casting
+predicate: it reads the current turn and caster. Teleport keeps its established
+captured target incarnation. Collection-wide engine-validation and gameplay
+counts remain unmeasured/null, separate from compilation.
+
+### Final measurements and validation
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly Reset
+and Teleport; no accepted name is lost. Final loader: **1,517 compiled / 928
+rejected records**, **551 accepted / 435 rejected names**. It exits 1 and installs
+no partial registry. Inventory: **72,951 nodes / 8,540 signatures / 10,460 unknown
+roles**. AST role reporting now walks casting predicates and untap filters.
+All twelve source hashes match the vocabulary snapshot. No RON source changed,
+no source defect was corrected, and no syntax snapshot refresh is needed.
+
+| Command | Final result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestSpellCasting\|TestSpellStep\|TestSpellAfterFirstUpkeep\|TestRONCastingWindow\|TestUntapEach\|TestTurnSystem\|TestInventory' -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after final code and lint. |
+| `make test` | PASS after final code and lint. |
+| `make build` | PASS after final code and lint. |
+| `go vet ./...` | PASS after final code and lint. |
+| `go test ./... -short -count=1` | PASS; engine-skill final check. |
+| `make lint` | PASS, zero issues. Final automatic changes reviewed. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,517 compiled / 928 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; counts and roles above. |
+| Source snapshot audit | PASS; all twelve hashes unchanged. |
+
+The initial full suites failed only on two old inventory-count expectations;
+these were updated to the measured values, with all other assertions retained.
+Initial lint reported two new test-style issues (preallocation and a builtin-name
+shadow); both were fixed. No environment or pre-existing validation blocker
+remains. Automatic lint edits are reviewed; final checks use the final source.
+
+Files changed: new engine spell_condition.go/tests; ActionDefinition and definition
+validation; hand/zone/stack casting gates; TurnReader, TurnSystem and turn driver;
+RON casting_window.go/tests, compiler, modal-context guard, inventory and count
+tests; engine API reference, DSL/rules contracts and this ledger entry.
+Existing callers and Go cards remain. No DSL function was removed; no unused
+function deletion is justified without the gated whole-repository audit.
+Complete collection loading/gameplay, runtime cutover, Go-card/generator deletion
+and obsolete DSL cleanup remain unfinished.
+
+Ranked next candidates to reassess:
+
+1. Finite prevention allocation prerequisite and its four complete consumers.
+2. All-zone count CDAs and their four complete consumers.
+3. Temporary collection CantAttack lowering now makes Festival a low-effort
+   single-card consumer; defer it while useful multi-card work remains. Also
+   reassess numeric P/T target prerequisites (Stone Giant, Pendelhaven; Goblin
+   Kites and Infinite Authority have further blockers).
+
+Leading fresh first errors remain ChooseADamageSource, CreateFuturePreventDamage,
+CastEffect operations/windows outside this shape, Targeted_Modal, PlayerEffect,
+EachPlayerEffect and CreateTriggerUntil. They are not full-card estimates.
+Only this slice is committed; the hash is in the final response.

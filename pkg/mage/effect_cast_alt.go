@@ -168,7 +168,7 @@ func (g *Game) castCardFromZoneOptsWithCosts(playerID, cardID uuid.UUID, zone Zo
 		return fmt.Errorf("card %s not found in %s", cardID, zone)
 	}
 
-	if err := g.checkSpellStep(card); err != nil {
+	if err := g.checkSpellTiming(card, playerID); err != nil {
 		return err
 	}
 

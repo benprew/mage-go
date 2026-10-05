@@ -40,6 +40,7 @@ func (g *Game) RunStepWithPriority(step PhaseStep) {
 		}
 	}
 	g.turns.SetStep(step)
+	defer g.turns.finishStep(step)
 
 	// CR 500.5: any unspent mana empties as the step/phase ends.
 	defer g.emptyManaPools()

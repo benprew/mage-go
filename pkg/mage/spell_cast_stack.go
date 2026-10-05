@@ -66,7 +66,7 @@ func (g *Game) pushCastSpellObject(opts castStackObjectOptions) (*StackObject, e
 		return nil, ErrPlayerNotFound
 	}
 
-	if err := g.checkSpellStep(card); err != nil {
+	if err := g.checkSpellTiming(card, opts.Controller); err != nil {
 		return nil, err
 	}
 
@@ -240,7 +240,10 @@ func (g *Game) recordSpellCast(card Card, playerID uuid.UUID) {
 	}
 }
 
-func (g *Game) checkSpellStep(card Card) error {
+func (g *Game) checkSpellTiming(card Card, caster uuid.UUID) error {
+	if err := g.checkSpellCastingConditions(card, caster); err != nil {
+		return err
+	}
 	for _, ability := range card.Abilities() {
 		if action, ok := UnwrapAbility(ability).(*ActionDefinition); ok && action.kind == ActionSpell && action.timing == TimingStepOnly && !action.allowsStep(g.turns.Step()) {
 			return fmt.Errorf("can only cast %s during %s", card.Name(), (spellStepDefinition{action.stepOnly, actionStepExtras(action)}).inspectDefinition().Text)

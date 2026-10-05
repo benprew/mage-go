@@ -13,6 +13,8 @@ import (
 // extra turns queue, turn step scheduling and skips (CR 500.7–500.11), and
 // per-permanent untap skipping.
 type TurnSystem struct {
+	stepTurn             int
+	firstUpkeepEnded     bool
 	pendingStepLifeGains []LifeGainAction
 	turn                 int
 	step                 PhaseStep
@@ -39,6 +41,8 @@ func NewTurnSystem() TurnSystem {
 // Clone creates an independent deep copy of TurnSystem.
 func (ts TurnSystem) Clone() TurnSystem {
 	clone := TurnSystem{
+		stepTurn:             ts.stepTurn,
+		firstUpkeepEnded:     ts.firstUpkeepEnded,
 		pendingStepLifeGains: slices.Clone(ts.pendingStepLifeGains),
 		turn:                 ts.turn,
 		step:                 ts.step,
@@ -63,11 +67,15 @@ func (ts *TurnSystem) Turn() int {
 
 // SetTurn overrides the current turn number.
 func (ts *TurnSystem) SetTurn(n int) {
+	if ts.turn != n {
+		ts.firstUpkeepEnded = false
+	}
 	ts.turn = n
 }
 
 // IncrementTurn advances the turn number by 1.
 func (ts *TurnSystem) IncrementTurn() {
+	ts.firstUpkeepEnded = false
 	ts.turn++
 }
 
@@ -78,7 +86,11 @@ func (ts *TurnSystem) Step() PhaseStep {
 
 // SetStep sets the current phase or step.
 func (ts *TurnSystem) SetStep(s PhaseStep) {
+	if ts.stepTurn == ts.turn && ts.step == Upkeep && ts.step != s {
+		ts.firstUpkeepEnded = true
+	}
 	ts.step = s
+	ts.stepTurn = ts.turn
 }
 
 // ActivePlayerIndex returns the index of the active player in Game.players.
@@ -241,4 +253,10 @@ func (ts *TurnSystem) consumeCapturedUntap(playerID uuid.UUID) map[uuid.UUID]boo
 		delete(ts.capturedUntap, key)
 	}
 	return blocked
+}
+
+func (ts *TurnSystem) finishStep(step PhaseStep) {
+	if ts.stepTurn == ts.turn && step == Upkeep {
+		ts.firstUpkeepEnded = true
+	}
 }

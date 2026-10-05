@@ -43,6 +43,8 @@ type ResolutionReader interface {
 
 // TurnReader provides read-only queries for turn and active player progression.
 type TurnReader interface {
+	UpkeepHasEnded() bool
+	GetStep() PhaseStep
 	CurrentTurn() int
 	ActivePlayerIndex() int
 }
@@ -1119,3 +1121,6 @@ func (g *Game) PutOnBattlefieldForSetup(card Card, controller uuid.UUID) *Perman
 	defer func() { g.triggers.stateChecksPaused = paused }()
 	return g.PutOnBattlefield(card, controller)
 }
+
+// UpkeepHasEnded reports whether an upkeep has ended in this turn.
+func (g *Game) UpkeepHasEnded() bool { return g.turns.firstUpkeepEnded }

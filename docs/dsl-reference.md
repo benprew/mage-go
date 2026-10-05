@@ -2777,3 +2777,32 @@ Evidence: `TestAddPoisonFor*`, `TestRONPoisonCards`, `CastingAndCombat`,
 `GeneratorPaymentAndCopies`, `FactoryInstances`, `TokenScope`, `PlacementAndLoss`,
 `Invalid` and `Inventory` in their poison test files. The complete RON card
 mappings are Marsh Viper, Pit Scorpion and Serpent Generator.
+
+## RON casting windows
+
+Nonmodal instant and sorcery records can declare one
+`CastEffect(CantBeCastUnless(condition))` beside `SpellActions`. Rule order does
+not change the restriction. Conditions support nonempty nested `And` lists,
+`IsAPlayersTurn(You|Opponent)` and `IsPlayersTurn(You|Opponent)`, and bare
+`IsDuringUpkeep`, `IsDuringDeclareAttackersStep`, `IsDuringDeclareBlockersStep`
+and `IsAfterUpkeep`. The last form checks whether the first upkeep in this turn has ended.
+It permits later upkeep steps (CR 503.2); it does not infer history from a step
+number. A skipped upkeep does not supply a completed upkeep. Turn references use the caster, not the card owner.
+
+Lowering uses `WithCastingCondition(StateCondition)` with `IsDuringSteps`,
+`AfterFirstUpkeep`, `IsYourTurn`, `NotCondition` and `AllConditions`. The condition is checked before
+casting choices and payment on each casting path. It grants no priority or
+sorcery timing permission. Copying a spell on the stack and resolving it do not
+repeat this check. Casting a copy of a card does repeat it. Modal spells,
+permanent cards, other CastEffect operations, other predicates and duplicate
+CastEffect declarations remain errors.
+
+Resolving `UntapEachPermanent(filter)` uses `UntapEach` and the existing typed
+collection services. Filters support the existing pure permanent filters and
+controller restrictions expressed as
+`ControlledByAPlayer(SinglePlayer(player-reference))` inside `And`. One
+controller restriction is allowed. Selection occurs at resolution and excludes
+phased permanents. Declared player targets and event players use their own
+instance bindings. Chosen-payment and plural-target collections remain errors
+in this action context. Reset combines this adapter with its casting window;
+Teleport combines its window with the existing temporary blocking restriction.

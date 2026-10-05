@@ -2941,3 +2941,48 @@ prevention and self damage, source/recipient identity, phase cycles, ability
 removal, independent factory/token instances, copies/clones, payment rollback,
 poison loss, invalid declarations and nested inventory roles. No static, entry,
 cost or new replacement-operation adapter is established.
+
+## Casting conditions before announcement
+
+`WithCastingCondition(condition StateCondition) ActionOption` adds a pure
+casting restriction to an `ActionSpell`. Multiple conditions all must pass.
+The condition receives the casting card ID and the caster ID in `StateContext`.
+Definition inspection visits these conditions before target declarations and
+payment captures. Nil conditions, invalid condition trees, unavailable bindings,
+battlefield-source reads and casting conditions on activated actions fail
+validation. This service supplies no game-time choices or mutable result slots.
+
+`IsDuringSteps(steps ...PhaseStep) StateCondition` reads `TurnReader.GetStep`.
+The declaration copies its input slice. Empty lists and invalid enum values
+fail definition validation. Immutable conditions remain safe in copied cards,
+stack objects and cloned games. Existing `IsYourTurn` reads the current active
+player relative to the caster. These APIs impose restrictions; they do not
+supply priority or casting permission (CR 117, 601.2, 601.3).
+
+The shared `checkSpellTiming` gate applies conditions and the retained step
+restrictions before modes, target acquisition and payment. Its callers include
+hand casting, free and alternate-cost zone casting, cast copies and castability
+queries. A foreign-owned card uses its caster. Ordinary sorcery timing still
+applies on the hand path. Existing zone-casting permissions keep their behavior.
+Copying an existing stack spell is not casting (CR 707.10), and resolution does
+not repeat the condition (CR 608).
+
+Tests: `TestSpellCastingConditionPaths`, `CopiesAndValidation`,
+`TestSpellCastingStepsAndConjunction`, and the retained `TestSpellStep*` suite.
+RON evidence: `TestRONCastingWindows`, `WindowGameplay`,
+`WindowTeleportIdentity`, `WindowOrderScopeAndInstances`, `WindowStackCopies`,
+`WindowInvalid` and `WindowInventory`. Reset's collection action reuses
+`UntapEach`; existing `TestUntapEachBatchAndStun`, `IdentityCloneAndDeclaration`
+and `TargetGroupKeepsAnnouncementIncarnation` retain the simultaneous operation,
+stun replacement, identity and clone contracts. No new untap rule is established.
+
+`AfterFirstUpkeep() StateCondition` uses turn-owned completion state (CR 503.2).
+The state becomes true when an actual upkeep finishes. It stays true through
+later upkeep steps, extra phases and repeated cleanup steps in that turn.
+Turn changes clear it. Cloning copies it without sharing mutable state.
+Skipped upkeeps do not complete an upkeep. `SetStep` records departure from an
+upkeep in the same turn for direct engine/harness callers; `RunStepWithPriority`
+records completion even when the next step is another upkeep. The stored step's
+turn identity prevents a new turn from inheriting the old turn's final step.
+`TurnReader.UpkeepHasEnded` supplies the pure history query. Tests:
+`TestSpellAfterFirstUpkeep` and `TestRONCastingWindowResetExtraUpkeep`.

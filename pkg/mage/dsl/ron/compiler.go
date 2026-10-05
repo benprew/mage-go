@@ -17,6 +17,7 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	castingCondition mage.StateCondition
 	damagePlayer     *damagePlayerPlan
 	damageAmount     *damageAmountPlan
 	delayedStep      bool
@@ -259,6 +260,24 @@ func Compile(n Node) (mage.CardFactory, error) {
 			return nil, err
 		}
 		for _, rule := range rules {
+			if rule.Name != "CastEffect" {
+				continue
+			}
+			if permanent {
+				return nil, unsupported(rule, "casting window on a permanent")
+			}
+			if ctx.castingCondition != nil {
+				return nil, problem(rule, "duplicate CastEffect rule")
+			}
+			ctx.castingCondition, err = compileCastingWindow(rule)
+			if err != nil {
+				return nil, err
+			}
+		}
+		for _, rule := range rules {
+			if rule.Name == "CastEffect" {
+				continue
+			}
 			if rule.Name == "SpellActions" {
 				spellCount++
 			}
@@ -417,7 +436,13 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		if err != nil {
 			return nil, err
 		}
-		return func() mage.CardOption { return mage.WithAbility(SpellActions(plan.build())) }, nil
+		return func() mage.CardOption {
+			options := actionOptions(plan.build())
+			if ctx.castingCondition != nil {
+				options = append(options, mage.WithCastingCondition(ctx.castingCondition))
+			}
+			return mage.WithAbility(mage.NewAction(mage.ActionSpell, options...))
+		}, nil
 	case "Activated", "ActivatedWithModifiers":
 		return compileActivatedRule(n, ctx)
 	case "EnchantPermanent":
@@ -1039,6 +1064,21 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 			default:
 				return mage.Sacrifice(ref)
 			}
+		})
+	case "UntapEachPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		var controller *playerReferencePlan
+		filter, err := compileCountFilter(n.Args[0], ctx, &controller)
+		if err != nil {
+			return nil, err
+		}
+		return one(func(bindings instanceBindings) mage.Effect {
+			if controller != nil {
+				return mage.UntapEach(mage.PermanentsControlledBy(controller.build(bindings), filter))
+			}
+			return mage.UntapEach(mage.MatchingPermanents(filter))
 		})
 	case "TapEachPermanent":
 		if err := arity(n, 1); err != nil {

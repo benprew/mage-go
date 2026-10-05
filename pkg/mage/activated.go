@@ -199,6 +199,7 @@ type ActionDefinition struct {
 	activationsThisTurn int  // Counts activations for MaxActivationsPerTurn
 	staticGrant         bool
 	activationConds     []ActivationCondition
+	castingConditions   []StateCondition
 	dslRestrictions     []activationRestriction
 	dslCaptures         []activationCapture
 	aiHints             []AIHint

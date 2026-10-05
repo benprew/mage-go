@@ -233,6 +233,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "integer_literal"
 			}
+		case "CastEffect":
+			if len(n.Args) == 1 {
+				return "casting_restriction"
+			}
 		case "SpellActions":
 			if len(n.Args) == 1 {
 				return "actions"
@@ -323,6 +327,17 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "activation_condition":
 		if n.Name == "PlayerPassesFilter" && len(n.Args) == 2 {
 			return []string{"player_reference", "activation_player_filter"}[index]
+		}
+	case "casting_restriction":
+		if n.Name == "CantBeCastUnless" && len(n.Args) == 1 {
+			return "casting_condition"
+		}
+	case "casting_condition":
+		if n.Name == "And" && len(n.Args) == 1 {
+			return "casting_condition"
+		}
+		if (n.Name == "IsAPlayersTurn" || n.Name == "IsPlayersTurn") && len(n.Args) == 1 {
+			return "player_reference"
 		}
 	case "actions":
 		if n.Name == "Modal_ChooseOne" && len(n.Args) == 1 {
@@ -523,7 +538,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
 			}
-		case "TapEachPermanent":
+		case "TapEachPermanent", "UntapEachPermanent":
 			if len(n.Args) == 1 {
 				if n.Args[0].Name == "Ref_TargetPermanents" {
 					return "permanent_collection_reference"

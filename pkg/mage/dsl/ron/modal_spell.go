@@ -8,6 +8,9 @@ import (
 )
 
 func compileModalSpell(n Node, ctx scope) (optionFactory, error) {
+	if ctx.castingCondition != nil {
+		return nil, unsupported(n, "casting window on a modal spell")
+	}
 	if ctx.permanent {
 		return nil, unsupported(n, "modal spell on a permanent")
 	}

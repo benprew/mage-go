@@ -135,6 +135,12 @@ func describeDefinition(v any) definitionNode {
 		if e.groupedTargets && len(e.targets) == 0 {
 			n.problem = "grouped targets require declarations"
 		}
+		if len(e.castingConditions) > 0 && e.kind != ActionSpell {
+			n.problem = "casting conditions require a spell action"
+		}
+		for i, condition := range e.castingConditions {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("castingConditions[%d]", i), castingConditionDefinition{condition}})
+		}
 		for i, restriction := range e.dslRestrictions {
 			if e.kind == ActionSpell {
 				n.children = append(n.children, definitionEdge{fmt.Sprintf("restrictions[%d]", i), spellStepDefinition{restriction.step, restriction.moreSteps}})

@@ -35,6 +35,10 @@
 // Spell definitions can use OnlyDuring to restrict casting to one or more turn steps.
 // Game checks the restriction before choices and payment. Copies of stack spells
 // and spell resolution do not repeat the casting check.
+// Use [WithCastingCondition] for a pure restriction before casting choices
+// and payment. Conditions read the caster. [IsDuringSteps] reads the current
+// step through [TurnReader]. [AfterFirstUpkeep] permits later upkeeps after
+// the first upkeep ends. A restriction does not grant casting permission.
 //
 // Use [SetBasePowerToughness] with [Until] to set captured base values.
 // Combine [AddCardType] and [AddSubtypeFamily] with these base values for
