@@ -361,6 +361,15 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		return func() mage.CardOption { return mage.WithKeyword(kw) }, nil
 	}
 	switch n.Name {
+	case "Rampage":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		amount := n.Args[0]
+		if amount.Kind != IntegerNode || amount.Integer < 0 {
+			return nil, problem(amount, "rampage requires a nonnegative integer literal")
+		}
+		return func() mage.CardOption { return mage.WithAbility(mage.RampageTrigger(amount.Integer)) }, nil
 	case "AsPermanentEnters":
 		return compileTappedEntry(n)
 	case "TriggerA":

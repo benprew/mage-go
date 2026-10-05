@@ -1229,3 +1229,28 @@ This contract does not change random discard costs or legacy random helpers.
 Rules: CR 101.3, 608.2b/c/f, 616.1/f and 701.9a/b.
 Evidence: `TestRandomDiscardBatchEventsAndReplacements`, retained
 `TestTypedRandomDiscard*`, and `TestRONRandomDiscard*`.
+
+## Rampage: blocked transition and original source
+
+`RampageTrigger(int) *GenericTriggered` listens to the source's transition to
+blocked, including a creature entering as a blocker (CR 509.3c, 702.23a).
+Adding another blocker to an already blocked attacker does not trigger it again.
+Each printed instance has its own trigger. A single blocker still triggers the
+ability, but supplies no bonus.
+
+`RampageEffect(int) Effect` keeps its existing representation for current callers
+and rampage detection. It reads the current combat group when the ability
+resolves (CR 702.23b), then uses `Until(EndOfTurn, ModifyPT(This, ...))` to retain
+the original source incarnation. Blockers removed before resolution do not
+count; later changes do not alter the resolved bonus. A source removed from
+combat has no group. A departed, returned, or phased source cannot receive the
+pending bonus. A resolved bonus survives a phase cycle and expires at cleanup;
+it cannot follow a leave-and-return cycle. Changing control removes an attacker
+from combat, so its pending rampage has no blockers to count. Ability removal
+does not cancel an already pending trigger or a resolved bonus.
+
+The shared trigger, copy, clone, source-reference and continuous-effect services
+own identity and lifecycle. Evidence: `TestRampageBlockedTransition`,
+`TestRampageOriginalIncarnation`, `TestRampagePendingLifecycle`,
+`TestRONRampageRealCards`, and `TestRONRampageNativeCombat`. The existing API
+signatures and `RampageEffectData` remain available; a standalone blocker-declaration event no longer substitutes for a becomes-blocked transition.

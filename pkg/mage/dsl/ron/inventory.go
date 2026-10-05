@@ -222,6 +222,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "entry_operation"}[index]
 			}
+		case "Rampage":
+			if len(n.Args) == 1 {
+				return "integer_literal"
+			}
 		case "SpellActions":
 			if len(n.Args) == 1 {
 				return "actions"

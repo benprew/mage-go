@@ -538,9 +538,9 @@ func WhenAttachedBecomesTappedTrigger(effect Effect, optional bool) *GenericTrig
 
 // RampageTrigger creates a triggered ability for Rampage N.
 func RampageTrigger(n int) *GenericTriggered {
-	return NewTriggered(EvtBlockersDecl, false,
+	return NewTriggered(EvtCreatureBecomesBlocked, false,
 		RampageEffect(n),
-	).SetConditionData(SourceIsBlockedAttacker{})
+	).SetConditionData(EventSourceIsSelf{})
 }
 
 // WheneverYouGainLifeTrigger fires whenever the controller gains life

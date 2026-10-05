@@ -1427,3 +1427,19 @@ Full-record gameplay mappings: Hymn to Tourach, Mind Twist (all six reprints),
 Ring of Renewal and Gwendlyn Di Corci in `TestRONRandomDiscard*`. The engine
 contract is documented in the random-discard section of
 [engine-rules-contracts.md](engine-rules-contracts.md).
+
+### RON printed rampage
+
+A permanent's top-level `Rules` list accepts `Rampage(n)` with one nonnegative
+integer literal. It lowers to `mage.RampageTrigger(n)` with a fresh ability per
+factory construction. Zero is legal and still creates the trigger. Bare symbols,
+negative values, `Integer(n)`, X, extra arguments, and resolving-action uses are
+rejected during compilation. `AddAbility([Rampage(n)])` and selected ability
+choices remain unsupported contexts.
+
+Rampage counts blockers at resolution and grants its fixed bonus until cleanup.
+Its source remains the original incarnation. Full-record gameplay mappings:
+`TestRONRampageRealCards` covers Aerathi Berserker, Chromium, Craw Giant, Frost
+Giant, Hunding Gjornersen, Marhault Elsdragon and Wolverine Pack.
+`TestRONRampageNativeCombat` checks declared-blocker legality, flying and trample.
+Chromium also uses the shared `TestRONUpkeepPayment*` lifecycle tests.

@@ -632,15 +632,15 @@ func (e *RampageEffectData) Text() string {
 func (e *RampageEffectData) Properties() EffectProperties { return EffectProperties{} }
 
 func (e *RampageEffectData) Apply(ctx *EffectContext) error {
+	if _, ok := This.resolvePermanent(ctx); !ok {
+		return nil
+	}
 	group := ctx.Game.CombatGroupFor(ctx.SourceID)
 	if group == nil || len(group.BlockerIDs) <= 1 {
 		return nil
 	}
 	bonus := e.N * (len(group.BlockerIDs) - 1)
-	ce := TemporaryBoost(ctx.SourceID, bonus, bonus)
-	ce.SetSourceID(ctx.SourceID)
-	ctx.Game.AddContinuousEffect(ce)
-	return nil
+	return Until(EndOfTurn, ModifyPT(This, Fixed(bonus), Fixed(bonus))).Apply(ctx)
 }
 
 // TargetHasRampageCond is true when the resolving spell or ability's first

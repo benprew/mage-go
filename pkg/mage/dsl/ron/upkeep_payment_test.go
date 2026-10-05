@@ -20,6 +20,7 @@ var upkeepPaymentCards = []struct {
 	{"LEB", "Phantasmal Forces", []core.Color{core.Blue}},
 	{"ARN", "Junún Efreet", []core.Color{core.Black, core.Black}},
 	{"DRK", "Sunken City", []core.Color{core.Blue, core.Blue}},
+	{"LEG", "Chromium", []core.Color{core.White, core.Blue, core.Black}},
 	{"LEG", "Palladia-Mors", []core.Color{core.Red, core.Green, core.White}},
 	{"LEG", "Vaevictis Asmadi", []core.Color{core.Black, core.Red, core.Green}},
 }

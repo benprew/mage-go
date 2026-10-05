@@ -4872,3 +4872,128 @@ Ranked next candidates to reassess with fresh evidence:
 Complete RON gameplay, whole-collection validation, application startup loading,
 Go-card/generator removal, obsolete DSL cleanup and native startup smoke tests
 remain unfinished. This completed slice does not begin another capability.
+
+## Run 2026-10-04: PRINTED-RAMPAGE
+
+Status: complete printed rampage adapter and shared engine contract repair.
+This run stops after this slice. User changes in `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` are preserved and excluded from the commit.
+No unrelated untracked files were present at the start.
+
+### Fresh inventory and selection
+
+Baseline focused RON/CLI tests, `go test ./pkg/mage/... -short -count=1`, and
+`make build` passed. Strict and semantic loaders exited 1 for collection
+rejection: **1,131 compiled / 1,314 rejected records**, 383 accepted / 603
+rejected unique names. Semantic inventory covers all 2,445 records / 986 names,
+including nested forms under unsupported parents. Complete RON records were
+read for every name in this comparison. Reprints count once.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Remaining blockers, downstream benefit, effort |
+| --- | --- | ---: | --- |
+| Printed Rampage, selected | Aerathi Berserker, Chromium, Craw Giant, Frost Giant, Hunding Gjornersen, Marhault Elsdragon, Wolverine Pack. Related nested consumers: Gabriel Angelfire, Rapid Fire. | 7 / 7 records | Seven complete records otherwise use supported rules, including Chromium's optional upkeep payment. Gabriel needs ability choices and next-upkeep duration; Rapid Fire needs cast timing, ability detection and conditional temporary grants. Small adapter; moderate event/identity and combat regression tests. Shared engine repair also benefits existing Go callers and future temporary rampage. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve, Alabaster Potion, Balm of Restoration, Rakalite, Guardian Angel | 0 for shield-allocation prerequisite; 7 after complete lowering | Salve/Potion need explicit-player life; Balm needs activation modes; Rakalite needs delayed return; Guardian needs player payment rules. Shared CR 615.7 allocation unlocks seven otherwise-ready cards. Large damage/replacement/choice test effort. Source-specific Rasputin Dreamweaver and Rock Hydra forms remain separate shapes with counter/entry prerequisites. |
+| Bands with other legendary creatures | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel. Related consumers: Master of the Hunt, Shelkin Brownie, Tolaria. | 5 lands | Exact filtered band formation and damage assignment are missing engine contracts. Hunt needs named group support; Brownie/Tolaria need ability removal and timing adapters. Moderate-to-large combat/layer work; ordinary Banding is not equivalent. |
+
+Rampage has the largest credible immediate gain for the effort. It requires no
+new payment, choice or binding system. Contract, reuse boundary, comparison and
+acceptance cases were stated before editing. The implement-engine skill was
+used for reusable engine behavior; no card definition was modified. Local
+Oracle data agrees with all nine Rampage consumers. Rules read: CR 509.1–3 and
+702.23a–c; existing source identity contracts cover CR 400.7 and 113.7a.
+
+### Exact supported shape, reuse and defects
+
+`Rampage(integer literal)/1` in a permanent's top-level `Rules` accepts n >= 0.
+RON rejects symbols, wrong arity, negative/nonliteral values and action contexts.
+Nested ability choices and `AddAbility` grants remain rejected. Inventory assigns
+only this rule's argument the `integer_literal` role; nested shapes still report
+their existing roles without a support claim. Factories build fresh abilities.
+
+The adapter calls existing `mage.RampageTrigger(int) *GenericTriggered`.
+The engine contract needed two repairs: listen to `EvtCreatureBecomesBlocked`
+with `EventSourceIsSelf`, rather than the general `EvtBlockersDecl`; and use
+`This` plus `Until(EndOfTurn, ModifyPT(...))` instead of an uncaptured UUID boost.
+`RampageEffect(int) Effect` and `RampageEffectData` are retained for callers and
+ability detection. Existing combat transitions, blocker membership, typed source
+incarnations, generic stack/copy/clone services and continuous layers are reused.
+Blockers are counted at resolution, as CR 702.23b requires, not at trigger time.
+A control change removes the source from combat and thus removes its group.
+
+These are separate missing compiler-adapter and engine-contract gaps. There is
+no source-data defect or environment failure in this slice. Gaea's Liege and
+Fastbond concerns remain open. No RON source changed; all twelve hashes still
+match the vocabulary snapshot, so no source snapshot refresh is needed.
+No global action slot, named-card branch, fallback or production registry was
+added. No new replacement ordering or simultaneous-operation service is needed;
+blocker declaration uses the existing complete-batch event boundary. No costs
+are added; Chromium reuses existing transactional payment and rollback tests.
+
+### TDD and card-to-test mappings
+
+New tests were written and run before implementation. After fixture API repairs,
+they failed semantically: becomes-blocked transitions queued zero rampage
+triggers, and real records rejected `Rampage`. After the event repair alone,
+`TestRampageOriginalIncarnation` failed because the old trigger boosted a returned
+source. The typed boost repair makes it pass. Additional fixture corrections
+use `CurrentPower`, phase in before reading a phased permanent, and expect a
+control change to remove combat membership. Assertions were retained.
+
+| Cards / contracts | Tests |
+| --- | --- |
+| All seven selected cards | `TestRONRampageRealCards`: full records, definition validation, zero/one/two/three blockers, trigger timing, exact P/T, clone isolation, cleanup; Chromium flying and Craw Giant trample retained |
+| Aerathi Berserker, Craw Giant, Chromium | `TestRONRampageNativeCombat`: engine blocker declaration and combat damage, illegal nonflying blockers against Chromium, trample damage |
+| Chromium | Added to shared `TestRONUpkeepPayment*` table: payment/decline/unaffordable/wrong color, mana sources, source departure/return/control/phasing, prevention, clones and existing rollback/instance contracts |
+| Shared engine | `TestRampageBlockedTransition`: transition via declarations/entry, one trigger per instance, later blockers counted at resolution, no retrigger, independent clones, fixed bonus and cleanup |
+| Shared engine identity | `TestRampageOriginalIncarnation`: returned source re-enters combat; pending old ability cannot boost it |
+| Shared engine lifecycle | `TestRampagePendingLifecycle`: blocker/source combat removal, phase before/after resolution, ability removal, control change, leave/return after bonus, copied trigger with different controller |
+| RON declarations and factory instances | `TestRONRampageInvalid`, `TestRONRampageZeroAndInstances`, `TestRONRampageInventory`: strict invalid shape/context rejection, legal zero, multiple printed instances, separate concurrent sources, factory isolation, integer role |
+
+### Measurements and validation
+
+Actual gain matches estimate: **7 unique cards / 7 records**. Final strict and
+semantic loaders reject the same remaining records: **1,138 compiled / 1,307
+rejected**, 390 accepted / 596 rejected unique names. Exactly the seven selected
+LEG records leave the issue list. No newly rejected record or changed remaining
+first diagnostic occurs. Gabriel Angelfire and Rapid Fire remain rejected.
+Unknown-role occurrences drop from 14,398 to 14,391. Parsed occurrences remain
+72,938; context/shape signatures remain 8,528. Collection engine-validation and
+behavior-verification totals remain null; seven full-record test mappings are
+added, but compilation progress does not prove collection gameplay completion.
+
+| Command | Result |
+| --- | --- |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestRampage\|TestRONRampage\|TestRONUpkeepPayment\|TestInventory' -count=1` | PASS before and after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS baseline, final and after lint |
+| `make test` | PASS final and after lint |
+| `make build` | PASS baseline, final and after lint |
+| `go vet ./...` | PASS final and after lint |
+| `make lint` | PASS, zero issues; only new test import ordering changed, reviewed |
+| `git diff --check` | PASS |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,138 compiled / 1,307 rejected; unchanged after lint |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; diagnostics equal strict loader |
+| Accepted-record and twelve-source-hash audit | PASS: no regressions, no changed remaining errors, no source changes |
+
+No required check is blocked. Loader rejection is a collection gap, not a
+build/test failure. The seven-card gain matches the estimate. Leading record
+first diagnostics remain rule If (53), non-spell CastEffect (53),
+ChooseADamageSource (46) and Targeted_Modal (42); these are not full unlock
+estimates. The slice is committed separately from the two user changes.
+
+Changed slice files: compiler.go, inventory.go, inventory_test.go, new
+ron/rampage_test.go, upkeep_payment_test.go; triggered.go, effect_pipeline_ext.go,
+new mage/rampage_contract_test.go; docs/dsl-reference.md,
+docs/engine-rules-contracts.md and this ledger. No Go definitions or DSL functions
+were deleted. Complete loading, test migration and runtime startup gates remain
+unmet; no deletion caller audit or runtime cutover is claimed.
+
+Ranked next candidates to reassess:
+1. Simultaneous amount-shield allocation and recipient prevention: seven concrete
+   otherwise-ready unique cards, with explicit ordering/allocation evidence.
+2. Filtered bands with other legendary creatures: five otherwise-ready lands.
+3. Damage-event player/source snapshots: prerequisite for Hypnotic Specter,
+   Nicol Bolas, Marsh Viper, Pit Scorpion and Nafs Asp; inspect discard/counter/
+   delayed-result blockers before estimating full unlocks.
+
+Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
+and native startup validation remain unfinished. No second slice began.
