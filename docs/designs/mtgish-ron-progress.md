@@ -13737,3 +13737,186 @@ Slice files: `pkg/mage/permanent_filter_condition.go`,
 `pkg/mage/dsl/ron/conditional_static.go`, `conditional_static_test.go`,
 `permanent_filter_condition_test.go`, `inventory_test.go`;
 `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+
+## 2026-10-05: unlimited prevention for captured recipients
+
+Status: completed implementation slice `UNLIMITED-RECIPIENT-PREVENTION`.
+This run stops after this slice. The initial user edits to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain unstaged. No unrelated untracked
+files were present initially.
+
+### Fresh evidence and candidate comparison
+
+Baseline compiler tests, short engine tests, and `make build` passed. Strict
+loading and semantic inspection exited 1 for unsupported collection records,
+not a build/test failure: 2,445 records, 1,491 compiled, 954 rejected;
+536 accepted and 450 rejected distinct names. Inventory contained 72,938 nodes,
+8,530 signatures, and 10,823 unknown-role occurrences. The execution design,
+ledger, vocabulary snapshot, engine reference, selected compiler/engine files,
+complete candidate records, relevant API/rules contracts, and CR 400.7, 506.4,
+514.2, 608.2h, 609.7, 615 and 616 were inspected. Reprints count once.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Unlimited recipient prevention, selected | Indestructible Aura, Scarecrow, Al-abara's Carpet: **3** full cards after source corrections and the attacking-source information prerequisite. | Two source records omit Oracle restrictions. Missing typed recipient installation and retained attacking-state query. Enables repeated, unlimited prevention with player/permanent identity and source-property rechecks. Glyph of Destruction shares a nested recipient event but needs its additional replacement operations, which are excluded. | Medium: reuse replacement/filter services, add captured recipient and attack-status read, two source corrections, identity/timing/copy/clone/batch and gameplay tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full-card unlocks after the allocation prerequisite, **0** adapter-only gains. | Complete records use targets, tap/mana costs, modes, players and X. CR 615.7 allocation among simultaneous sources is missing. Other first-error consumers have additional blockers and are excluded. Enables finite prevention consumers through shared damage batches. | Medium/high: recipient allocation choices, competing replacements, finite consumption, transaction and batch tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after the all-zone characteristic prerequisite. | Zone-aware characteristic evaluation, owner/controller count context, named counts and CDA layers are missing. Gaea's Avenger and Wood Elemental have other prerequisites and are excluded. Enables characteristics outside the battlefield and future CDA consumers. | High: zone queries, count lowering, CDA/copy/layer/controller contracts and gameplay tests. |
+
+Selection rationale: three complete consumers can use existing exact replacement
+and source-characteristic behavior, with a smaller engine addition than finite
+allocation or all-zone CDAs. Complete records revealed the source defects before
+implementation. First-error counts were not used as unlock estimates. The
+contract, reuse boundary, acceptance cases and expected three-card gain were
+stated before edits. The `implement-engine` skill supplied the engine workflow;
+no removed card skill, Go card requirement, card-name executor, fallback,
+production subset registry, or global last-action slot was used.
+
+### Signatures, contexts, dependencies and engine reuse
+
+Engine API:
+
+- `PreventDamageThisTurn(recipient DamageRecipientRef, from PermanentFilter)
+  ResolvingEffect`. A zero filter means any source. Definition validation checks
+  the typed recipient, including nil and unbound target reads. Resolution uses
+  the existing reference service; absent/phased recipients install no rule.
+  Players keep their resolved identity. Permanents keep ID and incarnation.
+  Control changes and phase cycles preserve installed rules; returned objects
+  do not inherit them. Each replacement has end-of-turn duration and survives
+  the source's departure, phasing and ability removal.
+- `DamageSourceIsAttacking() PermanentFilter`. Live queries check the source's
+  current combat incarnation. Departed or phased sources use the attacking state
+  captured by `snapshotPermanentInformation` in `PermanentLKI.Attacking`.
+  Existing departure and phase maps supply separate immutable information.
+  Phase-in restores live queries and does not restore attacking status. A
+  returned card cannot replace the original source's combat information.
+
+RON resolving actions:
+`CreatePreventDamageUntil(DamageWouldBeDealtToRecipient(recipient),
+[PreventThatDamage], UntilEndOfTurn)` and
+`CreatePreventDamageUntil(DamageWouldBeDealtByAPermanentToRecipient(filter,
+recipient), [PreventThatDamage], UntilEndOfTurn)`.
+Recipients reuse `compileDamagePacketRecipient`: `Permanent(typed-reference)`,
+`Player(typed-reference)`, or bound bare `Ref_AnyTarget`. Existing resolving
+spell/mode/activation/trigger/delayed scopes retain their own bindings. No static,
+entry, cost or replacement-operation context is added. No target declaration is
+created by the action itself. Source filters reuse exact supported type/subtype,
+supertype/color/keyword/token/tapped predicates and nonempty nested `And`/`Or`.
+Bare `IsAttacking` lowers to the new retained-state query. `IsBlocking` and
+`PowerIs` remain explicitly rejected in this source context. Wrong arity,
+malformed or unbound recipients, extra operations, tuple operations, empty
+logical filters, and other durations remain compile errors.
+
+`damagePreventionRuleReplacement`, `damageFilterSource`, typed target references,
+`instanceBindings`, the replacement choice/recheck pipeline, simultaneous damage,
+source LKI, transaction payment, stack copying and native cleanup are reused.
+No parallel prevention, zone, targeting, timing or damage service is introduced.
+Unlimited rules do not consume finite amounts and need no CR 615.7 allocation.
+They apply to combat and noncombat packets, with affected-player ordering and
+recipient rechecks after redirection. Existing unpreventable damage bypasses
+prevention. The normal battlefield `IsAttacking` filter is unchanged.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for the missing `PreventDamageThisTurn` constructor.
+A test fixture passed player IDs instead of players to `PlayerDamageAssignment`;
+that was corrected and the missing-constructor failure was confirmed alone.
+RON gameplay first failed for unsupported `DamageWouldBeDealtToRecipient`.
+After adapter lowering, the original Scarecrow/Carpet records failed source
+restriction assertions, demonstrating their defects. The additional attacking
+source test failed for the missing `DamageSourceIsAttacking` prerequisite before
+that service was implemented.
+
+Fixture corrections preserved behavior requirements: cleanup removes
+replacements through `ClearReplacementsEndOfTurn` or native cleanup, not merely
+`RemoveEndOfTurn`; combat fixtures must record incarnations and remove summoning
+sickness; the flying fixture must not add flying twice; copy-on-write assertions
+must read the current permanent. An early commentary overstated focused success
+and was corrected. These were test setup/API errors, not environment blockers
+or weakened assertions.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Indestructible Aura, complete LEG record | `TestRONRecipientPreventionAura`: W casting, unpaid/illegal rollback, creature-only targets, pre-resolution timing, shroud, departure, phasing, control, return, repeated simultaneous and nonpermanent-source damage, clone/copy and native cleanup. `Combat`: prevention to a blocker, outgoing damage and actual lifelink. `CopyRetarget`: distinct copy target, original binding and clone isolation. |
+| Scarecrow, complete DRK record | `TestRONRecipientPreventionArtifacts`: 2/2 artifact creature metadata, 6 plus tap payment, sickness, rollback, source departure/control, copied activation controller, live flying changes, noncreature exclusion, recipient scope, duration and cleanup. `ArtifactCasting`: 5 casting cost, unpaid rollback and entry timing. `Combat`: flying-source combat prevention and actual lifelink. |
+| Al-abara's Carpet, complete LEG record | Same `Artifacts` and `ArtifactCasting` tests: 5 casting cost, 5 plus tap payment, noncreature tap permission, attacking and flying source combinations, repeated noncombat damage from attacking sources, source departure/control/copy, recipient capture and cleanup. `Combat`: grounded attacking-source prevention and actual lifelink. |
+| RON declarations and instance isolation | `TestRONRecipientPreventionInvalidAndInventory`: malformed declarations, out-of-scope/incompatible refs, operation/duration/filter restrictions, complete AST roles. `Instances`: two factories/controllers and targets, typed permanent/player/any-target scopes, concurrent pending resolutions and game cloning. |
+| Engine recipient contract | `TestPreventDamageThisTurnIdentity`: live/control/phase/return/absence, installation legality, recipient scope, repeated damage, expiry and independent clones. `Declarations`: nil recipient rejection and valid zero source filter. |
+| Engine source, batch and ordering | `TestPreventDamageThisTurnSourceAndBatch`: current flying change, original source departure/return/phasing, simultaneous player/permanent packets and unlimited reuse. `AttackingSourceLKI`: live removal, departure, return, phasing, phase-in and cloned retained information. `ReplacementOrder`: both affected-player choices, redirect recipient recheck, and unpreventable damage. Existing `TestDamageSourceFilter*` regressions pass. |
+
+Three complete-card gameplay mappings are added. Compilation and gameplay
+coverage remain separate; collection-wide engine-validation and behavior totals
+remain null. Other contexts reuse established references; these tests do not
+claim collection-wide gameplay or support for additional prevention operations.
+
+### Source defects and snapshot refresh
+
+Local `data/DRK.json` Oracle text for Scarecrow requires prevention from creatures
+with flying. `DRK.lines.ron:90` omitted that condition. Local `data/LEG.json` Oracle
+text for Al-abara's Carpet requires attacking creatures without flying;
+`LEG.lines.ron:9` omitted both conditions. Each name has exactly one record in the
+collection; there are no other reprints to correct. Both now use the existing
+`DamageWouldBeDealtByAPermanentToRecipient` syntax with exact source filters.
+Indestructible Aura's complete record agrees with local Oracle text.
+The source property checks use CR 609.7b; no predicate was inverted globally.
+
+The vocabulary snapshot is refreshed with an AST walk through `ron.Parse`:
+file hashes, all occurrence counts/examples, top-level counts and fresh loader
+errors. It keeps the existing schema and compact row layout. There are still
+600 constructor signatures and 51 top-level rule names. Only DRK and LEG hashes
+change. Existing unrelated source defects remain unresolved.
+
+### Final measurements and validation
+
+Actual gain matches the estimate: **3 unique names / 3 records**, exactly
+Indestructible Aura, Scarecrow and Al-abara's Carpet. No previously accepted
+name is lost. Strict loading reports **1,494 compiled / 951 rejected records**,
+**539 accepted / 447 rejected names**. Semantic inventory has **72,951 nodes /
+8,540 signatures / 10,817 unknown-role occurrences**. The extra nodes come from
+restored source restrictions. The loader exits 1 for remaining unsupported
+records and publishes no partial registry.
+
+No Go definitions, generators, startup callers or DSL functions are removed.
+Complete loading, collection gameplay and runtime wiring remain below the
+removal gate. No fresh whole-repository caller audit authorizes DSL deletion.
+API and rules documentation describe only this slice's established behavior.
+Initial user changes remain unstaged.
+
+All required checks passed. No environment or pre-existing validation blocker
+remains. Automatic lint edits changed import spacing and function formatting;
+they were reviewed. The strengthened copy-controller assertion passed, then the
+short engine suite, full tests, build and vet passed again after lint.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestPreventDamageThisTurn\|TestRONRecipientPrevention\|TestInventory\|TestRONCombatPrevention\|TestRONTargetCombatPrevention\|TestDamageSourceFilter' -count=1` | PASS. Additional combat/retarget tests and final copy-controller assertions passed with `-count=1`. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, including the final tests after lint. |
+| `go test ./... -short -count=1` | PASS; additional implement-engine verification. |
+| `make test` | PASS, repeated after final tests and lint. |
+| `make build` | PASS, repeated after lint. |
+| `go vet ./...` | PASS, repeated after lint. |
+| `make lint` | PASS, zero issues in both runs. Automatic edits reviewed. |
+| `git diff --check` | PASS after lint and ledger completion. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,494 compiled / 951 rejected; repeated after lint. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts, 447 rejected names; 72,951 nodes / 8,540 signatures / 10,817 unknown-role occurrences. |
+| Snapshot audit | All 12 hashes and the refreshed loader diagnostic array exactly match the final files and measurements. |
+
+Only this slice is committed; its descriptive commit hash is reported in the
+final response. User changes remain unstaged.
+
+Ranked next candidates to reassess with fresh evidence:
+
+1. Finite recipient prevention allocation, followed by Samite Healer, Healing
+   Salve, Conservator and Alabaster Potion; preserve simultaneous-source choices
+   and competing replacement ordering.
+2. All-zone count CDAs for Dakkon Blackblade, Keldon Warlord, Nightmare and Plague
+   Rats; keep Gaea's Avenger and Wood Elemental's other blockers separate.
+3. `Targeted_Modal` target-alternative prerequisite for Chaoslace, Deathlace,
+   Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind. The laces
+   also need spell/permanent color effects; the other two need word choices and
+   text changes. An adapter alone unlocks zero complete cards.
+
+No second slice is started. Slice files: engine `recipient_prevention.go` and
+its tests, `lki.go`, `zone_system.go`, `doc.go`; compiler `recipient_prevention.go`
+and its tests, `combat_prevention.go`, `inventory.go`, `inventory_test.go`;
+DRK and LEG RON records; vocabulary snapshot; API/rules contracts and this ledger.

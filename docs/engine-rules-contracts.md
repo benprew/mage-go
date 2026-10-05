@@ -2803,3 +2803,38 @@ legality, basic versus nonbasic Mountains, prior-layer type changes, both
 players' Goblins, later entries, recipient subtype changes and independent
 factory instances. The RON adapter retains its existing restricted static
 filter and conditional body grammars.
+
+## Unlimited prevention for a captured recipient
+
+`PreventDamageThisTurn(recipient DamageRecipientRef, from PermanentFilter)`
+installs an unlimited end-of-turn prevention rule through the existing
+`damagePreventionRuleReplacement`. The recipient is resolved when the effect
+resolves. Player references keep that player; permanent references keep the
+selected incarnation. Control changes and a phase cycle preserve that identity.
+A departed, returned, or phased recipient cannot receive a new rule from an old
+reference. A rule already installed resumes after its recipient phases in.
+Source departure or ability removal does not remove the installed rule.
+Cleanup removes it (CR 400.7, 514.2, 615.3–4, 702.26).
+
+A zero source filter permits any source, including spells. Nonzero permanent
+filters use the existing `damageFilterSource` live/departure/phasing views.
+They recheck properties when damage would occur (CR 608.2h, 609.7b).
+`DamageSourceIsAttacking()` reads the current source incarnation's combat status,
+or the status saved in `PermanentLKI.Attacking` before departure or phasing.
+It does not read the combat status of a returned card. Phasing in returns to
+live queries; it does not restore combat membership. The normal `IsAttacking`
+filter keeps its live battlefield behavior. Blocking and numeric source filters
+have no new retained-information contract.
+
+Both combat and noncombat damage use the shared replacement pipeline. Each
+simultaneous packet can be fully prevented without consuming the rule. Finite
+shield allocation remains separate (CR 615.7). Redirection and prevention use
+the affected player's choice and recheck the new recipient (CR 616.1). Existing
+unpreventable-damage handling remains responsible for bypassing prevention.
+Declarations reject missing or unbound recipients before execution. Instances,
+stack copies, and game clones keep their own bindings and replacement state.
+
+Evidence: `TestPreventDamageThisTurnIdentity`, `SourceAndBatch`, `Declarations`,
+`AttackingSourceLKI`, and `ReplacementOrder` under the same test prefix;
+`TestRONRecipientPreventionAura`, `Artifacts`, `ArtifactCasting`, `Combat`,
+`Instances`, `CopyRetarget`, and `InvalidAndInventory`.

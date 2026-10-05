@@ -567,6 +567,7 @@ func snapshotPermanentInformation(p *Permanent, g GameReader) *PermanentLKI {
 		Power:     p.CurrentPower(g),
 		Toughness: p.CurrentToughness(g),
 		IsToken:   isToken,
+		Attacking: g.IsAttackingIncarnation(p.ID(), p.incarnationID),
 		Snapshot:  snap,
 	}
 }

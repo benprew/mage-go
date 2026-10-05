@@ -412,13 +412,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "Or" && len(n.Args) == 1 {
 			return "prevention_event"
 		}
-		if n.Name == "CombatDamageWouldBeDealtToRecipient" && len(n.Args) == 1 {
+		if (n.Name == "CombatDamageWouldBeDealtToRecipient" || n.Name == "DamageWouldBeDealtToRecipient") && len(n.Args) == 1 {
 			return "prevention_recipient"
 		}
 		if n.Name == "CombatDamageWouldBeDealtByCreature" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}
 	case "prevention_recipient":
+		if n.Name == "Player" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "Permanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

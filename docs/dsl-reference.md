@@ -2614,3 +2614,45 @@ and costs, attachment/type changes, source and recipient membership, phasing,
 ability removal, independent factory instances and clone isolation. Goblin
 Shrine shares the condition but remains rejected for its leave-battlefield
 trigger; its complete gameplay is not verified.
+
+## RON unlimited recipient prevention
+
+Resolving actions accept these two complete forms:
+
+```ron
+CreatePreventDamageUntil(
+    DamageWouldBeDealtToRecipient(Permanent(Ref_TargetPermanent)),
+    [PreventThatDamage], UntilEndOfTurn)
+CreatePreventDamageUntil(
+    DamageWouldBeDealtByAPermanentToRecipient(
+        And([IsCardtype(Creature), HasAbility(Flying)]), Player(You)),
+    [PreventThatDamage], UntilEndOfTurn)
+```
+
+Recipients reuse typed damage-packet references: `Permanent(reference)`,
+`Player(reference)`, or a bound `Ref_AnyTarget`. Existing source, Aura attachment,
+event, saved, and singular target scopes apply. Unbound or incompatible reads
+are compile errors. Each factory builds references with its own bindings.
+These actions work in the existing resolving spell, mode, activation, trigger,
+and delayed-action contexts; they add no static or replacement-operation scope.
+The operation list must contain exactly one bare `PreventThatDamage`, and the
+only supported duration is bare `UntilEndOfTurn`.
+
+Source filters reuse supported type, subtype, supertype, color, keyword, token,
+and tapped-state filters with nonempty nested `And`/`Or`. Bare `IsAttacking`
+uses `DamageSourceIsAttacking()` so absent sources use saved combat information.
+`IsBlocking` and `PowerIs` remain rejected in this context. A zero engine filter
+means any source; RON uses the first form to express that choice. The second form
+requires a permanent source and does not match a spell source.
+
+The engine API is `PreventDamageThisTurn(DamageRecipientRef, PermanentFilter)`.
+It captures the recipient at resolution, preserves permanent incarnation,
+rechecks source properties at damage time, and expires at cleanup. It prevents
+combat and noncombat damage without consuming a finite shield. It does not
+prevent damage dealt by the recipient to other objects or players.
+
+Complete gameplay evidence covers Indestructible Aura, Scarecrow, and
+Al-abara's Carpet. The latter two records include their Oracle source
+restrictions: flying creatures, and attacking creatures without flying,
+respectively. Other finite, chosen-source, redirection, and additional-operation
+prevention declarations remain unsupported.

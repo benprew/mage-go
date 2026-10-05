@@ -7,6 +7,9 @@ func compileCombatPrevention(n Node, ctx scope) (effectFactory, error) {
 		return nil, err
 	}
 	event := n.Args[0]
+	if event.Name == "DamageWouldBeDealtToRecipient" || event.Name == "DamageWouldBeDealtByAPermanentToRecipient" {
+		return compileRecipientPrevention(n, ctx)
+	}
 	var source *permanentReferencePlan
 	var toAndBy *permanentReferencePlan
 	if event.Name == "CombatDamageWouldBeDealtByCreature" {

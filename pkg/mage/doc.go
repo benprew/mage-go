@@ -97,6 +97,9 @@
 // Use [ChooseRandomPermanent] with [MatchingPermanents] to save a random
 // battlefield reference. Use [TapSubject] with [From] to tap that reference.
 // An empty collection does not consume a random value.
+// Use [PreventDamageThisTurn] with a typed recipient for unlimited prevention.
+// A zero source filter permits all sources. [DamageSourceIsAttacking] reads
+// current combat status or the saved departure or phasing status of the source.
 // Use [Until] with [GrantKeywordModification] and CantRegenerate for a
 // prohibition that lasts until end of turn, even after its source leaves.
 //
