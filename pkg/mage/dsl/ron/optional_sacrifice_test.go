@@ -350,7 +350,7 @@ func TestRONOptionalSacrificeInventory(t *testing.T) {
 	if err != nil || report.Compiled != 1 {
 		t.Fatalf("inventory: %v", err)
 	}
-	for name, role := range map[string]string{"SacrificeAPermanent": "cost", "IsCardtype": "permanent_filter", "CostWasntPaid": "condition"} {
+	for name, role := range map[string]string{"SacrificeAPermanent": "resolution_cost", "IsCardtype": "permanent_filter", "CostWasntPaid": "condition"} {
 		found := false
 		for _, signature := range report.Signatures {
 			if signature.Name == name && signature.Role == role {

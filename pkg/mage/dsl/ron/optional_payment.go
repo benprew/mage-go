@@ -1,6 +1,9 @@
 package ron
 
-import "github.com/benprew/mage-go/pkg/mage"
+import (
+	"github.com/benprew/mage-go/pkg/mage"
+	"github.com/benprew/mage-go/pkg/mage/core"
+)
 
 func compileActionSequence(parts []Node, ctx scope) ([]effectFactory, error) {
 	var effects []effectFactory
@@ -58,10 +61,17 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		}
 		cost = payment.Args[1]
 	}
-	if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" {
+	var dynamic valueFactory
+	var mana core.ManaCost
+	var costs []costFactory
+	var err error
+	if cost.Name == "PayManaX" {
+		mana, dynamic, err = compileResolutionManaCost(cost, ctx)
+	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" {
 		return nil, unsupported(cost, "optional payment cost")
+	} else {
+		costs, _, err = compileCosts(cost)
 	}
-	costs, _, err := compileCosts(cost)
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +106,50 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		for i, build := range body {
 			effects[i] = build(bindings)
 		}
+		if dynamic != nil {
+			if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
+				return mage.IfManaPaid(player.build(bindings), mana, dynamic(bindings), mage.Sequence(effects...))
+			}
+			return mage.UnlessManaPaid(player.build(bindings), mana, dynamic(bindings), mage.Sequence(effects...))
+		}
 		if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
 			return mage.IfPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 		}
 		return mage.UnlessPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 	}, nil
+}
+
+func compileResolutionManaCost(n Node, ctx scope) (core.ManaCost, valueFactory, error) {
+	if err := arity(n, 2); err != nil {
+		return core.ManaCost{}, nil, err
+	}
+	text, err := manaCost(n.Args[0])
+	if err != nil {
+		return core.ManaCost{}, nil, err
+	}
+	cost := core.ParseManaCost(text)
+	if !cost.HasX {
+		return core.ManaCost{}, nil, problem(n, "PayManaX requires an X mana symbol")
+	}
+	amount := n.Args[1]
+	if amount.Name == "ManaValueOfSpell" {
+		if err := arity(amount, 1); err != nil {
+			return core.ManaCost{}, nil, err
+		}
+		spell, err := compileSpellRef(amount.Args[0], ctx)
+		if err != nil {
+			return core.ManaCost{}, nil, err
+		}
+		return cost, func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.ManaValueOfSpellWithLKI(spell.build(bindings))
+		}, nil
+	}
+	value, err := compileValue(amount, ctx)
+	if err != nil {
+		return core.ManaCost{}, nil, err
+	}
+	if amount.Name == "Integer" && amount.Args[0].Integer < 0 {
+		return core.ManaCost{}, nil, problem(amount, "mana payment requires a nonnegative integer")
+	}
+	return cost, func(instanceBindings) mage.ResolutionValue { return mage.ValueAtResolution(value) }, nil
 }

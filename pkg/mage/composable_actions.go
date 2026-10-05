@@ -4044,18 +4044,38 @@ func (b *SpellTargetBinding) inspectDefinition() definitionNode {
 
 type spellControllerRef struct{ spell StackObjectRef }
 
-type spellManaValue struct{ spell StackObjectRef }
+type spellManaValue struct {
+	spell   StackObjectRef
+	withLKI bool
+}
 
 // ManaValueOfSpell reads the referenced spell's mana value on the stack.
 func ManaValueOfSpell(spell StackObjectRef) ResolutionValue { return spellManaValue{spell: spell} }
-func (v spellManaValue) Text() string                       { return "mana value of spell" }
+
+// ManaValueOfSpellWithLKI retains departure information because the effect can
+// need the value after the spell leaves the stack.
+func ManaValueOfSpellWithLKI(spell StackObjectRef) ResolutionValue {
+	return spellManaValue{spell: spell, withLKI: true}
+}
+func (v spellManaValue) Text() string { return "mana value of spell" }
 func (v spellManaValue) resolveValue(ctx *EffectContext) int {
 	spell, ok := v.spell.resolveStackObject(ctx)
 	if !ok {
-		return 0
+		if !v.withLKI {
+			return 0
+		}
+		var id uuid.UUID
+		switch ref := v.spell.(type) {
+		case savedSpellRef:
+			id = ctx.Game.resolution.spellBindings[ref.binding]
+		case *SpellTargetBinding:
+			if value, found := firstTargetValue(ctx.targetBindings[ref.targetDeclaration]); found {
+				id = value.id
+			}
+		}
+		return ctx.Game.stack.spellManaValues[id]
 	}
-	cost := spell.Card.ManaCost()
-	return cost.CMC() + cost.XCount*spell.XValue
+	return stackSpellManaValue(spell)
 }
 func (v spellManaValue) inspectDefinition() definitionNode {
 	return definitionNode{Role: "resolution-value", Text: v.Text(), children: []definitionEdge{{"spell", v.spell}}}

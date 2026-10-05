@@ -401,8 +401,11 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if n.Name == "InAPlayersGraveyard" && len(n.Args) == 1 {
 			return "player_filter"
 		}
-	case "cost":
+	case "cost", "resolution_cost":
 		if n.Name == "PayManaX" && len(n.Args) == 2 {
+			if role == "resolution_cost" {
+				return []string{"metadata", "value"}[index]
+			}
 			return []string{"metadata", "announcement_value"}[index]
 		}
 		if n.Name == "RemoveCounters" && len(n.Args) == 1 {
@@ -544,11 +547,11 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			}
 		case "MayCost":
 			if len(n.Args) == 1 {
-				return "cost"
+				return "resolution_cost"
 			}
 		case "PlayerMayCost":
 			if len(n.Args) == 2 {
-				return []string{"player_reference", "cost"}[index]
+				return []string{"player_reference", "resolution_cost"}[index]
 			}
 		case "Unless", "If":
 			if len(n.Args) == 2 {
@@ -742,6 +745,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "value":
+		if n.Name == "ManaValueOfSpell" && len(n.Args) == 1 {
+			return "spell_reference"
+		}
 		if n.Name == "Twice" && len(n.Args) == 1 {
 			return "value"
 		}

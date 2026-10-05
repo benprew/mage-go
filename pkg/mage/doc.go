@@ -35,6 +35,11 @@
 // Spell definitions can use OnlyDuring to restrict casting to one or more turn steps.
 // Game checks the restriction before choices and payment. Copies of stack spells
 // and spell resolution do not repeat the casting check.
+// Use [UnlessManaPaid] or [IfManaPaid] for a mana payment during resolution.
+// Supply a mana cost with X and a [ResolutionValue]. The amount is read once
+// before the payment choice. Activation cost reductions do not change it.
+// [ManaValueOfSpellWithLKI] retains the value when a spell leaves the stack.
+// A later cast of the same card cannot replace that information.
 // Use [WithCastingCondition] for a pure restriction before casting choices
 // and payment. Conditions read the caster. [IsDuringSteps] reads the current
 // step through [TurnReader]. [AfterFirstUpkeep] permits later upkeeps after

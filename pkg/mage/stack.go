@@ -191,7 +191,8 @@ func (ctx *CastContext) RevealedSubtypeAtCast(subtype string) bool {
 
 // Stack represents the game stack.
 type Stack struct {
-	objects []*StackObject
+	objects         []*StackObject
+	spellManaValues map[uuid.UUID]int
 }
 
 func NewStack() *Stack {
@@ -207,6 +208,7 @@ func (s *Stack) Pop() *StackObject {
 		return nil
 	}
 	top := s.objects[len(s.objects)-1]
+	s.saveSpellManaValue(top)
 	s.objects = s.objects[:len(s.objects)-1]
 	return top
 }
@@ -231,6 +233,7 @@ func (s *Stack) Peek() *StackObject {
 func (s *Stack) RemoveBySourceID(sourceID uuid.UUID) *StackObject {
 	for i, obj := range s.objects {
 		if obj.SourceID == sourceID {
+			s.saveSpellManaValue(obj)
 			s.objects = append(s.objects[:i], s.objects[i+1:]...)
 			return obj
 		}
@@ -243,11 +246,27 @@ func (s *Stack) RemoveBySourceID(sourceID uuid.UUID) *StackObject {
 func (s *Stack) RemoveByID(id uuid.UUID) *StackObject {
 	for i, obj := range s.objects {
 		if obj.ID == id {
+			s.saveSpellManaValue(obj)
 			s.objects = append(s.objects[:i], s.objects[i+1:]...)
 			return obj
 		}
 	}
 	return nil
+}
+
+func (s *Stack) saveSpellManaValue(obj *StackObject) {
+	if obj.IsAbility || obj.Card == nil {
+		return
+	}
+	if s.spellManaValues == nil {
+		s.spellManaValues = make(map[uuid.UUID]int)
+	}
+	s.spellManaValues[obj.ID] = stackSpellManaValue(obj)
+}
+
+func stackSpellManaValue(obj *StackObject) int {
+	cost := obj.Card.ManaCost()
+	return cost.CMC() + cost.XCount*obj.XValue
 }
 
 // FindByID finds a stack object by its ID without removing it.

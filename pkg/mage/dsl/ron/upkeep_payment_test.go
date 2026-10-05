@@ -168,7 +168,7 @@ func TestRONUpkeepPaymentInventory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	roles := map[string]string{"PayMana": "cost", "Player": "recipient", "You": "player_reference"}
+	roles := map[string]string{"PayMana": "resolution_cost", "Player": "recipient", "You": "player_reference"}
 	for name, role := range roles {
 		found := false
 		for _, sig := range report.Signatures {

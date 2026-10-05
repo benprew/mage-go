@@ -17741,3 +17741,182 @@ Changed files: new engine `library_recycle.go` and tests, retained
 `inventory_test.go` counts; API/rules docs and this appended ledger entry.
 Only this slice is committed after final checks. Initial user changes remain
 unstaged. The final response reports the commit hash. No second slice starts.
+
+## Run 2026-10-05: RESOLUTION-VARIABLE-MANA
+
+Status: completed shared prerequisite and adapter slice. Stop after this slice.
+Initial user edits to `.gitignore`, the execution design, and the ledger's
+history restructuring are preserved. The unrelated untracked completed-history
+file is preserved. Only this appended ledger entry is staged; the prior ledger
+restructuring is excluded from the commit.
+
+### Fresh evidence and candidate comparison
+
+Baseline compiler tests, short engine tests and build passed. Strict loading and
+semantic inventory exited 1 for unsupported records, not build/test failure:
+2,445 records, 1,586 compiled, 859 rejected; 584 accepted and 402 rejected unique
+names. Inventory: 72,951 nodes, 8,540 signatures, 9,809 unknown-role occurrences.
+The design, ledger, vocabulary, engine reference, selected compiler/engine files,
+complete candidate records, API/rules contracts, and CR 118, 202.3 and 608.2d–h
+were inspected. Reprints count once.
+
+| Candidate | Distinct affected names and credible full-card unlocks | Other blockers and downstream reuse | Effort |
+| --- | --- | --- | --- |
+| Resolution-time `PayManaX`, selected | In the Eye of Chaos and Power Sink: **1** immediate full-card unlock, In the Eye of Chaos. | Existing optional payments need a resolution value rather than announcement-only X. Spell departure mana-value information is also required. Power Sink still needs `PlayerActions`, its local player binding, filtered land tap and mana clearing. The shared payment shape supplies both consumers and permits fixed/X/typed spell-value taxes in existing action contexts. | Medium/small: one engine payment wrapper, explicit spell-information query, stack removal/clone integration, adapter and focused transaction/identity/gameplay tests. |
+| Chosen-source one-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** credible full-card unlocks after choice/identity/shield contracts. Jade Monolith, Reverse Damage, Eye for an Eye and Dark Sphere also use the choice prerequisite but do not count as immediate unlocks. | Choice from eligible damage sources, per-instance chosen-source identity and one-event shield lifetime are prerequisites. The four other records need redirection, actual-prevented results, replacement damage context or partial prevention. Enables eleven named choice consumers. | High: typed source choice and filters, permanent/spell/ability identity, recipient lifetime, one-event consumption and competing replacement/batch matrix before adapters. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after the all-zone contract. Gaea's Avenger and Wood Elemental are excluded. | Zone-aware characteristics, owner/controller count context, named counts and CDA layering are prerequisites. Avenger's recorded source defect and opponent count remain separate; Wood Elemental needs entry sacrifices and paid-result values. | High: zone characteristics, CDA/copy/layer/owner-controller contracts and count adapters. |
+
+Selection rationale: the payment shape is a small shared prerequisite with two
+concrete consumers, one complete card, and substantial reuse of established
+transactions and typed event/target declarations. The alternatives have larger
+identity/replacement or all-zone characteristic contracts. It is not a standalone
+single-card executor. Complete nested records, rather than first-error frequency,
+establish the estimates. All six Power Sink reprints and the complete Eye record
+were read. The contract, reuse boundary and acceptance cases were stated before
+editing. The `implement-engine` skill supplied the engine workflow. No removed
+card skill, Go-card requirement, fallback, card-name branch, partial production
+registry, global action-result slot or sub-agent was used.
+
+### Exact signatures, contexts and engine reuse
+
+Engine APIs:
+
+- `UnlessManaPaid(player PlayerRef, cost ManaCost, amount ResolutionValue,
+  body ResolvingEffect) ResolvingEffect` and `IfManaPaid`.
+- `ManaValueOfSpellWithLKI(spell StackObjectRef) ResolutionValue`.
+
+The mana template must contain X and nonnegative components. Each X uses the
+same amount, read once before choices or mana production; nonpositive dynamic
+amounts count as zero. Declaration validation rejects nil operands, invalid
+mana templates and undeclared typed bindings. Hybrid symbol storage is copied.
+The wrapper lowers to existing `unlessPaidEffect` with a fixed `ManaCostPayment`.
+Its shared affordability check now excludes activation reductions, matching the
+existing transaction's locked resolution cost. Zero payment needs acceptance;
+unavailable payment offers no choice; decline or failed payment spends no cost
+resources. Each call keeps its own conditional outcome. Existing fixed optional
+payments retain their APIs and pass regression tests.
+
+`ManaValueOfSpellWithLKI` reads current mana cost plus announced X while live.
+The stack saves departure mana value by stack object ID on pop, removal by ID
+or source, and stack-to-ante removal. Clone copies the value map. A returned
+physical card uses a new stack ID and cannot replace old information. Saved
+information does not restore membership or permit countering a departed spell.
+The old `ManaValueOfSpell` keeps its live-only, zero-on-departure contract. No
+saved spell controller, general spell LKI or delayed event-spell support is added.
+
+RON resolving pairs:
+`MayCost(PayManaX(mana-list, amount))/1` or
+`PlayerMayCost(player-reference, PayManaX(mana-list, amount))/2`, followed by
+`If(condition, [nonempty-actions])/2` or `Unless(condition, [nonempty-actions])/2`.
+`condition` is bare `CostWasPaid` or `CostWasntPaid`. `mana-list` uses the existing
+mana grammar, requires X, and permits fixed generic/colored symbols and repeated
+X. `amount` is `Integer(n)` with n >= 0, a bound bare `ValueX`, or
+`ManaValueOfSpell(spell-reference)/1`. Spell references use the scope's typed
+`Ref_TargetSpell` or cast-event `Trigger_ThatSpell`. Player references reuse
+`compilePlayerRef`; omitted payer uses resolving `You`. Factory-local bindings
+are built with the actions and their declarations.
+
+Supported contexts are existing spell/mode, activation, trigger and delayed
+resolving lists. No casting/activation additional-cost, static, entry or
+replacement-operation shape is added. Existing delayed event-spell reads remain
+errors. Missing/nonadjacent continuation, malformed arity/symbols, negative
+literal, X-free template and unbound/incompatible refs remain errors. Inventory
+now distinguishes `resolution_cost` from announcement costs and classifies
+nested spell-value reads even inside rejected records.
+
+Existing typed references, `instanceBindings`, `SpellCast` captures, stack and
+turn resolution, `IfPaid`/`UnlessPaid`, mana solver and total-cost transaction own
+execution. The slice introduces no zone, target, damage, replacement, APNAP or
+simultaneous-operation system. Source changes do not redirect the captured
+caster. Cleanup is not a payment lifetime; each pair runs once on resolution.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for missing payment constructors. Fixture corrections
+removed an incorrect mana-ability constructor, a nonexistent mana-cost setter,
+a wrong supertype name, sorcery-speed setup and an incorrect delayed-step symbol.
+Real Eye gameplay then failed for unsupported optional `PayManaX`. Additional
+failing tests proved lost departure information and an activation reduction in
+resolution affordability before those prerequisites were implemented.
+
+The broader short suite found two existing live-only spell-value regressions.
+They were corrected with a distinct `ManaValueOfSpellWithLKI` API; existing
+expectations were retained. Three inventory test mappings now require the more
+precise resolution-cost role. No gameplay test or accepted-card requirement was
+weakened. Earlier fixture/implementation failures are not environment blockers.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| In the Eye of Chaos, complete LEG record | `TestRONResolutionManaEye`: actual 2U cast and rollback, entry timing, World metadata, either player's instant cast, noninstant exclusion, announced X in spell mana value, explicit caster, zero acceptance/decline, unaffordable/declined payment, mana-source payment, source departure/return/phasing/control/ability loss, spell departure, uncounterable spell, copied triggers and pending cloned resolution. |
+| Power Sink, six complete records | Payment prerequisite only. Loader now rejects `PlayerActions`; no full-card gameplay claim. `TestRONResolutionManaAnnouncedX` verifies the shared announced-spell-X payment shape without its unsupported unpaid body. |
+| Typed target/factory isolation | `TestRONResolutionManaSpellTargets`: two independently built taxes and distinct target mana values, correct payer, unaffordable and paid branches, pending clone isolation. |
+| Supported action contexts and outcomes | `TestRONResolutionManaContextsAndInstances`: spell, activation, upkeep trigger and delayed lists, separate controllers, two X symbols plus colored/fixed mana, paid/unpaid conditions and clones. |
+| Invalid RON and collection contract | `TestRONResolutionManaInvalid`: malformed arity, X-free/negative templates, unbound X/event/target and incompatible refs. `Inventory`: resolution-cost/value/spell-reference roles and strict invalid-collection rejection. Existing optional-payment rejection/identity tests remain passing. |
+| Engine payment/definition contract | `TestResolutionManaPayment`: exact colored/multiple X amounts, zero/negative dynamic amounts, acceptance/decline/availability, mana-source payment and clones. `BindingsAndDeclarations`: invalid operands/templates/bindings and independent outcomes. `DoesNotReduce`: activation reduction exclusion. `CaptureAndRollback`: amount captured before choice and failed transaction without payment consumption. |
+| Engine spell information and compatibility | `TestSpellManaValueDeparture`: live X, changed departure X, recast identity, cloned information, typed target information and retained zero-on-departure APIs. `RemovalPaths`: pop, ID/source removal, stack-to-ante and independent cloned maps. Existing `TestSpellCastBindingAbsentStackObject` and `TestManaValueOfSpellStackXAndIdentity` pass unchanged. |
+
+One complete unique-card gameplay mapping is added. Compilation and gameplay
+coverage remain separate; collection-wide engine-validation and behavior totals
+remain null. Payment rollback uses the shared transaction. Replacement ordering
+and simultaneous operations retain existing services; no new path claims those
+contracts. Target identity and phasing retain engine legality services.
+
+### Source checks, final measurements and validation
+
+Local `data/LEG.json` Eye Oracle text agrees with its complete RON record: the
+caster may pay the instant's mana value. Local `data/LEA.json` Power Sink text
+confirms its separate unpaid land-tap/mana-clear behavior, which remains rejected.
+No new source defect is found or corrected. Existing recorded defects remain.
+All twelve RON hashes match the vocabulary snapshot, so no source refresh is
+needed. No RON file changes.
+
+Actual gain matches the estimate: **1 unique name / 1 record**, exactly In the
+Eye of Chaos, with no previously accepted-name regression. Strict loading:
+**1,587 compiled / 858 rejected records**, **585 accepted / 401 rejected names**.
+Semantic inventory: **72,951 nodes / 8,540 signatures / 9,806 unknown-role
+occurrences**. Loader/inventory exit 1 for unsupported records and publish no
+partial registry. Fresh diagnostics: Power Sink `PlayerActions`, Circle of
+Protection: Black `ChooseADamageSource`, Nightmare `CDA_Power`, Animate Dead
+`EnchantGraveyardCard`.
+
+All required checks passed after final fixes and lint. Automatic lint changes
+were formatting/import spacing and were reviewed. No environment or pre-existing
+validation blocker remains.
+
+| Command | Final result |
+| --- | --- |
+| Baseline compiler tests, short engine tests and `make build` | PASS. |
+| Focused engine/compiler, spell-information compatibility and inventory tests with `-count=1` | PASS after final lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues; automatic edits reviewed. |
+| `go test ./... -short -count=1` | PASS, additional engine-skill check. |
+| `git diff --check` and staged diff check | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,587 compiled / 858 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; same counts and inventory totals above. |
+| Snapshot and accepted-name audit | All twelve source hashes unchanged; exactly Eye gained, no accepted names lost. |
+
+Complete loading, collection-wide gameplay, runtime wiring and removal gates
+remain unmet. No Go card definition, generator, DSL function or startup caller
+is removed. No whole-repository deletion audit is claimed. Only established
+behavior is added to API/rules documentation. Initial user changes stay unstaged.
+
+Ranked next candidates for fresh reassessment:
+
+1. Chosen damage-source identity and one-event prevention: seven credible full
+   consumers plus four with explicit additional blockers.
+2. All-zone count CDAs: four credible consumers; keep Avenger's source/opponent
+   prerequisites and Wood Elemental's entry payments separate.
+3. Shared resolving `PlayerActions` and player-local permanent filters. Power
+   Sink's payment is ready; inspect all other consumers before selecting scope.
+
+Slice files: new `pkg/mage/resolution_mana.go` and tests; `stack.go`, `clone.go`,
+`ante.go`, `composable_actions.go`, `composable_costs.go`, `doc.go`; compiler
+`optional_payment.go`, new `resolution_mana_test.go`, `inventory.go`,
+`inventory_test.go`, and inventory role assertions in `optional_payment_test.go`,
+`optional_sacrifice_test.go`, `upkeep_payment_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this appended ledger entry. One descriptive
+commit contains only this slice; its hash is reported in the final response.
+No second slice begins.

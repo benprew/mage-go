@@ -183,7 +183,7 @@ func TestRONOptionalPaymentInventoryRoles(t *testing.T) {
 	for name, role := range map[string]string{
 		"ControllerOfSpell": "player_reference",
 		"Ref_TargetSpell":   "spell_reference",
-		"PayMana":           "cost",
+		"PayMana":           "resolution_cost",
 		"CostWasPaid":       "condition",
 		"CounterSpell":      "action",
 	} {

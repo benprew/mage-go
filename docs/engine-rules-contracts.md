@@ -3576,3 +3576,36 @@ Pyramids still needs its destruction replacement; its attached-land filter
 is already supported.
 Triassic Egg still needs entry/graveyard operations, its counter condition and
 correction of its second mode. Neither card gains complete behavior coverage.
+
+## Resolution mana payment and spell mana-value information
+
+`UnlessManaPaid(player PlayerRef, cost ManaCost, amount ResolutionValue,
+body ResolvingEffect)` and `IfManaPaid` offer a complete mana payment at
+resolution. Definition validation requires all typed operands and a nonnegative
+mana template containing X. Each X uses the same amount, evaluated once before
+payment choices or mana abilities; nonpositive dynamic amounts count as zero.
+The immutable declaration copies hybrid symbols. Existing `unlessPaidEffect`
+and the total-cost transaction own the choice, affordability, mana solver,
+payment and conditional body. Decline or failed payment spends no resources;
+zero mana requires acknowledgment (CR 118.3, 118.5, 118.12, 608.2g–h).
+An absent player has no effect. Activation reductions do not apply to resolution
+payments, including existing fixed `IfPaid` and `UnlessPaid` mana payments.
+Their affordability check now agrees with the transaction's locked cost.
+
+`ManaValueOfSpellWithLKI` reads current stack mana cost and announced X (CR 202.3).
+For a departed typed target or captured spell it reads the value retained by
+stack object ID (CR 608.2h). Pop, counter/removal by ID or source, and stack-to-ante
+removal all save the departure value. Retained information does not restore
+stack membership or allow countering the departed spell. A new cast uses a new
+stack object ID. The stack's value map is cloned independently. This contract
+adds mana-value information only. The existing `ManaValueOfSpell` keeps its
+zero-on-departure contract. This does not add general spell LKI, a saved
+controller query, or delayed spell-event bindings.
+
+Evidence: `TestResolutionManaPayment*` checks costs, colored/multiple X,
+zero acceptance, affordability, mana production, independent outcomes, clone
+isolation, amount capture and transaction rollback. `TestSpellManaValue*` checks
+live changes, all removal paths, recasting and cloned departure information.
+`TestRONResolutionMana*` checks lowering, typed event/target identity and actual
+RON gameplay. This slice adds no replacement or simultaneous-operation service;
+those paths retain the shared payment and mana contracts.

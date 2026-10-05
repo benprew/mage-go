@@ -3209,3 +3209,32 @@ Source sacrifice does not stop resolution. Target legality and incarnation
 checks still apply. Finite shields start at resolution and expire at cleanup.
 Balm of Restoration has RON gameplay evidence for both modes, casting, costs,
 rollback, copies, clones, recipient identity and simultaneous damage.
+
+## RON resolution-time variable mana payments
+
+`MayCost(PayManaX(mana, amount))` and
+`PlayerMayCost(player, PayManaX(mana, amount))` require an adjacent nonempty
+`If` or `Unless` body testing bare `CostWasPaid` or `CostWasntPaid`. `mana` is
+an existing mana-symbol list containing at least one X. Fixed colored/generic
+symbols and multiple X symbols retain their normal payment requirements.
+`amount` is `Integer(n)` with n >= 0, a bound bare `ValueX`, or
+`ManaValueOfSpell(typed-spell-reference)`. Spell references can be the current
+scope's `Ref_TargetSpell` or cast event's `Trigger_ThatSpell`. They are built
+with the current factory's target/event declarations. Other values, missing
+continuations and unbound/incompatible references reject compilation.
+
+These resolving forms work in supported spell, activation, trigger and delayed
+lists; delayed cast-event spell reads remain rejected. They do not announce X
+or add a cost to casting/activation. The engine reads the amount once at the
+payment action, then uses `IfManaPaid`/`UnlessManaPaid` and the shared cost
+transaction. An unavailable cost offers no choice. A zero cost still requires
+acceptance. Each adjacent pair keeps its own outcome. Activation-cost reductions
+do not apply. RON `ManaValueOfSpell` uses `ManaValueOfSpellWithLKI` in the engine.
+It includes the referenced spell's announced X,
+uses current information while it is on the stack, and retains its departure
+mana value by stack object ID. A recast card does not replace this information.
+
+`TestRONResolutionMana*` covers the complete In the Eye of Chaos record,
+explicit casters, source lifetime, spell departure, payments, copies, clones,
+multiple targets, declaration errors and inventory roles. Power Sink still
+requires its unpaid `PlayerActions` body and is not a complete supported card.
