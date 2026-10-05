@@ -298,7 +298,7 @@ func TestRONEndStepInvalidDeclarations(t *testing.T) {
 		`TriggerA(AtTheBeginningOfAPlayersEndStep(AnyPlayer),ActionList([PlayerAction(Trigger_ThatPlayer(),GainLife(Integer(1)))]))`,
 		`TriggerA(AtTheBeginningOfAPlayersEndStep(AnyPlayer),ActionList([TapPermanent(Trigger_ThatPlayer)]))`,
 		`TriggerA(AtTheBeginningOfAPlayersEndStep(AnyPlayer),ActionList([PlayerAction(ControllerOfSpell(Trigger_ThatSpell),GainLife(Integer(1)))]))`,
-		`TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),ActionList([PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))]))`,
+		`TriggerA(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)),ActionList([PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))]))`,
 		`TriggerA(AtTheBeginningOfAPlayersEndStep(AnyPlayer),ActionList([GainLife(Integer(1))])),Activated(PayMana([]),ActionList([PlayerAction(Trigger_ThatPlayer,GainLife(Integer(1)))]))`,
 		`TriggerI(AtTheBeginningOfAPlayersEndStep(AnyPlayer),PermanentPassesFilter(ThisPermanent,IsTapped),ActionList([GainLife(Integer(1))]))`,
 	} {

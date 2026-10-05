@@ -1490,3 +1490,25 @@ and `TestRONTargetCombatPrevention*`. The RON tests cover complete records for
 Maze of Ith, Ebony Horse and Elvish Scout plus scoped spell/mode/trigger probes,
 copy retargeting and fresh factory bindings. CR 615.7 finite-shield allocation
 remains open; this unbounded shield introduces no allocation decision.
+
+## RON hand-size upkeep execution
+
+The adapter uses `HandSizeOf`, `SubtractValues`, `EachUpkeep`, `YourUpkeep`,
+`TurnStepBegins`, `BindPlayer`, `FromPlayer`, and `DealDamageFrom`. No engine
+rule or public API changes. Upkeep detection saves the event player and the
+ability controller separately (CR 603.2b, 603.3a). Source control changes,
+departure and phasing after detection do not redirect the pending event.
+Copies keep the event player while `You` uses the copy's controller. Clones
+keep separate pending resolution state.
+
+Hand size is read at the instruction's resolution, after prior instructions
+(CR 608.2c, 608.2h). Subtraction retains signed intermediate values; final
+nonpositive life and damage amounts have no effect (CR 107.1b). Damage uses
+native source LKI, prevention and lifelink. A returned source cannot replace
+the captured source incarnation (CR 400.7, 608.2h).
+
+`TestRONHandSize*` verifies full records for Ivory Tower, Storm World and Copper
+Tablet, invalid declarations, lexical isolation, independent factory instances
+and events, resolution-time hand changes, signed arithmetic, native boundaries,
+source lifecycle, copies, clones, and prevention. Chosen entry players and
+intervening-if upkeep conditions remain separate capabilities.

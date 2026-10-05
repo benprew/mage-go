@@ -6373,3 +6373,160 @@ All required build, test, vet and lint checks pass. There is no environmental or
 pre-existing check blocker. Remaining collection rejection is expected and does
 not assert collection-wide gameplay or runtime cutover. One descriptive slice
 commit is authorized; unrelated user edits remain outside it.
+
+## Run 2026-10-04: HAND-SIZE-UPKEEP
+
+Status: one complete compiler slice. User edits to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md` remain untouched and outside the commit.
+No unrelated untracked files were present. Read AGENTS.md, mage/doc.go, the
+execution design, vocabulary and prior ledger; selected compiler/binding,
+value, event and damage services; API/rules contracts; CR 107.1b, 400.7,
+503, 603.2b/603.3a and 608.2c/608.2h. No removed skill, Go card requirement,
+Go fallback or partial production registry was used.
+
+### Fresh evidence and selection
+
+Baseline RON tests `-count=1` and `make build` passed. Strict and semantic
+loaders exited 1 for collection rejection: 2,445 records, **1,177 compiled /
+1,268 rejected**, 418 accepted / 568 rejected unique names. Nested semantic
+inventory, not first-error counts alone, guided the comparison. Complete RON
+records for the compared consumers and their later blockers were inspected.
+
+| Candidate | Distinct affected names | Estimated complete unlocks | Other blockers, downstream value, effort |
+| --- | --- | ---: | --- |
+| Hand-size upkeep values and saved-player damage, selected | Ivory Tower, Storm World; downstream Black Vise, The Rack, Storm Seeker | 2 unique / 3 records in the initial estimate | Existing engine hand-size, subtraction, event and damage contracts make this an adapter task. Black Vise/The Rack need entry choice and persistent chosen-player bindings; Storm Seeker needs `DealsDamage_ThatPlayer` recipient scope. Small implementation, moderate timing/identity/declaration tests. Also enables event-player damage for Copper Tablet, found during the post-change unlock audit. |
+| Finite recipient prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi, Healing Salve; Guardian Angel downstream | 0 for prerequisite, then 8 | CR 615.7 simultaneous finite-shield allocation is still missing. Large shared damage/decision/replacement contract effort. Guardian Angel also needs X and its repeated-payment player effect. Larger eventual gain but a substantially larger prerequisite. |
+| Filtered bands with others | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel; Master of the Hunt downstream | 5 after combat contracts | Legendary permanent filter already exists; band membership and damage assignment plus layer/token adapters remain missing. Moderate-to-large engine and gameplay effort. Master of the Hunt also needs named membership and token keyword support. |
+
+The selected slice has the largest credible immediate gain for the smaller
+adapter effort. Pre-edit acceptance contract: resolution-time hand size, signed
+subtraction, own/any-player upkeep events with per-instance saved event players,
+and typed player damage. Cover malformed/unbound references, delayed hand
+changes, nonpositive amounts, lifecycle, copies and clone isolation. RON owns
+syntax and lexical plans; engine services own execution. No engine repair was
+needed, and no engine implementation skill was invoked.
+
+### Exact signatures, contexts and reuse
+
+- `TheNumberOfCardsInPlayersHand/1`: positional tuple with an existing valid
+  `playerReferencePlan`. Uses `HandSizeOf(player.build(bindings))`.
+- `Minus/2`: positional tuple of recursively supported resolution values.
+  Uses `SubtractValues`; intermediate negative results are retained.
+- Both values use `compileInstanceValue(Node, scope) (valueFactory, error)`.
+  Contexts are its existing resolving life/draw/damage/token-count consumers.
+  This does not add static/cost values or general temporary P/T support.
+- `TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer), body)` and
+  `SinglePlayer(You)` share
+  `compileBoundStepTrigger(Node, Node, scope, mage.TurnStepPattern,
+  mage.TurnStepPattern, string) (optionFactory, error)` with end-step events.
+  Uses `EachUpkeep`/`YourUpkeep`, `TurnStepBegins`, `WhenEvent`, `BindPlayer`,
+  and the existing `stepEventPlan`/per-instance bindings. `Trigger_ThatPlayer`
+  exists only in that rule's event scope. `You` uses the resolving controller.
+- `SpellDealsDamage/3` and `PermanentDealsDamage/3` now lower their supported
+  amount through `compileInstanceValue` and all accepted recipients through
+  `DealDamageFrom`. `Player/1` uses a valid `compilePlayerRef`. Existing bare
+  target references, any-target bindings and targeted `Permanent/1` remain.
+  Source declarations still require the correct `ThisSpell`/`ThisPermanent`.
+  Other source/recipient contexts retain their existing rejection.
+
+Each factory constructs separate event and target bindings. Shared services
+supply damage-source incarnation/LKI, life, prevention, lifelink, target legality,
+transactional costs, copies and clone isolation. No public engine API changed.
+Existing callers, Go definitions and generators remain because removal gates
+are unmet. No function removal or unused-caller audit is claimed.
+
+Malformed arity/kind, unbound or incompatible player references, cross-rule
+leaks, unsupported upkeep selectors and `DealsDamage_ThatPlayer` remain errors.
+Inventory descendants of `Minus` get value roles and hand-size arguments get
+player-reference roles; role reporting does not claim gameplay verification.
+
+### TDD and full-record gameplay mapping
+
+Initial test compilation found a nonexistent player attribute helper; the
+fixture was corrected to exercise actual invalid-target announcement. Tests
+then failed for the expected unsupported `Minus` and any-player upkeep forms.
+No implementation preceded these red failures. Two prior rejection fixtures
+used upkeep events that now legitimately supply player bindings. They now use
+source-entry events without a player binding, preserving the intended invalid
+scope and cross-rule leak assertions. Inventory count assertions were updated
+to measured results; no rule assertion was removed or weakened.
+
+| Unique card or contract | Tests |
+| --- | --- |
+| Ivory Tower (ATQ, 3ED) | `TestRONHandSizeIvoryTower`: full records, validation, ownership distinct from control, own/opponent upkeep, empty/below/equal/above-four hands, changes after detection, source departure, clones. `TestRONHandSizeIvoryCopyController`: each copy's `You` and current hand. |
+| Storm World (LEG) | `TestRONHandSizeStormWorld`: full record, World metadata, saved opponent event player despite active-step changes, controller change before placement, source departure/return and phasing, copies, pending clones, large-hand zero damage, prevention, captured lifelink LKI. |
+| Copper Tablet (LEA, LEB, 2ED, CED, CEI) | `TestRONHandSizeCopperTabletNative`: every complete reprint, validation, native own/opponent upkeep, entry after boundary and cleanup do not repeat damage. Local `data/LEA.json` Oracle text confirms damage to that player. |
+| Separate instances/events | `TestRONHandSizeIndependentEvents`: two factory instances, two queued event players, distinct amounts; no shared last-event state. |
+| Typed target, arithmetic, sequencing | `TestRONHandSizeTargetAndSequence`: invalid permanent-as-player announcement, nested subtraction and legal player damage. `TestRONHandSizeSignedIntermediateAndOrder`: negative intermediate remains signed; hand read occurs after draw. `TestRONHandSizeSpellPlayer`: instant source, wrapped typed player, delayed hand change, payment rollback, prevention and graveyard placement. |
+| Declarations/inventory/loader | `TestRONHandSizeInvalidDeclarations`: arity, symbol/tuple, wrong/unbound/result references, malformed recipients and selectors, target/event scope leaks. `TestRONHandSizeInventoryRoles`: recursive value and player roles. `TestRONHandSizeAcceptedRecordsLoad`: all eight complete records strictly load and validate in an explicit test registry with three canonical names. Existing RON regression suites cover retained damage targets and end-step behavior. |
+
+Compilation and gameplay remain separate. Three unique names gain complete-record
+behavior mappings, not collection-wide gameplay proof. Engine-validation and
+behavior-verification collection totals remain null. No source defect was
+corrected. Local ATQ/LEG Oracle records agree with Ivory Tower and Storm World.
+Storm Seeker's unbound damage-recipient player is a separate scope prerequisite;
+no speculative data correction or global alias was added. Prior Gaea's Liege
+and Fastbond source concerns remain open.
+
+### Fresh measurements, checks and remaining work
+
+Actual gain: **3 unique names / 8 records**, versus initial estimate 2 / 3.
+The extra name is Copper Tablet and its five identical reprints, whose saved
+upkeep-player damage uses exactly the selected contract. The initial estimate
+missed this consumer; no second capability was started to unlock it.
+
+Final strict and semantic counts: **1,185 compiled / 1,260 rejected records**,
+421 accepted / 565 rejected unique names. No previously accepted name regressed.
+Eight rejected names move to later first diagnostics without unlocking:
+Artifact Possession/Psychic Venom (permanent-controller player references),
+Karma (player-controlled permanent counts), Power Surge (beginning-of-turn
+history counts), Magnetic Mountain/Thelon's Curse (plural chosen payments),
+Storm Seeker (damage-recipient player), The Abyss (opponent-chosen target).
+Their complete records were read; none receives a gameplay-support claim.
+
+Inventory remains 72,938 AST occurrences / 8,528 signatures. Unknown-role
+occurrences fall from 14,138 to 14,102. All twelve RON hashes still match the
+vocabulary snapshot; source files are unchanged, so no source snapshot refresh
+is required. Most frequent first errors remain `If` (53), non-spell `CastEffect`
+(53), `ChooseADamageSource` (46), `Targeted_Modal` (42), host self-untap (39),
+host-controller upkeep (35), self-untap operations (34), graveyard targets (26).
+These counts are not unlock estimates.
+
+Ranked next candidates to reassess from fresh records:
+1. Finite simultaneous prevention allocation prerequisite, then its eight
+   otherwise supported consumers.
+2. Filtered bands-with-others engine contracts, then the five lands.
+3. Entry opponent choice and durable chosen-player binding for Black Vise/The
+   Rack, reusing this slice's hand-size/subtraction and saved-player damage.
+
+Runtime cutover, complete collection execution/gameplay, embedded startup,
+Go-card/generator deletion and unused DSL removal remain open. Stop after this
+slice's validation and descriptive commit.
+
+| Command / audit | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `make build` | PASS |
+| Baseline strict and semantic loaders | Expected exit 1: 1,177 / 1,268 |
+| Pre-implementation `TestRONHandSize* -count=1` | Expected unsupported `Minus` and any-player upkeep failures |
+| Final focused `TestRONHandSize* -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS, repeated after lint |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated after final test additions and lint |
+| `make test` | PASS, repeated after final test additions and lint |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and `-inventory -json` | Expected exit 1: 1,185 / 1,260; atomic collection rejection remains |
+| Strict/semantic issue arrays and accepted-name comparison | PASS: arrays agree, exactly three unlocked names, zero regressions |
+| RON source hashes | PASS: all twelve match vocabulary snapshot |
+
+Automatic lint edits changed the new record-selection loop to `strings.SplitSeq`;
+reviewed and retained. No unrelated automatic edits occurred. Final checks
+have no build, test or environment blocker. The loader's nonzero status is
+collection rejection, not a build failure.
+
+Slice files: `pkg/mage/dsl/ron/compiler.go`, `end_step.go`, `end_step_test.go`,
+`inventory.go`, `inventory_test.go`, `sacrifice_value.go`,
+`spell_cast_reference_test.go`, `triggers.go`, new `hand_size_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Stage only these files. The final response supplies the commit hash.

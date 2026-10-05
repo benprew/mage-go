@@ -523,6 +523,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "value":
+		if n.Name == "Minus" && len(n.Args) == 2 {
+			return "value"
+		}
+		if n.Name == "TheNumberOfCardsInPlayersHand" && len(n.Args) == 1 {
+			return "player_reference"
+		}
 		if n.Name == "NumCreaturesOrPlaneswalkersThatDiedThisTurn" && len(n.Args) == 1 {
 			return "permanent_filter"
 		}

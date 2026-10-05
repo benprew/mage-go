@@ -15,6 +15,34 @@ type boundCostFactory func(instanceBindings) mage.Cost
 type valueFactory func(instanceBindings) mage.ResolutionValue
 
 func compileInstanceValue(n Node, ctx scope) (valueFactory, error) {
+	if n.Name == "TheNumberOfCardsInPlayersHand" {
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		player, err := compilePlayerRef(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.HandSizeOf(player.build(bindings))
+		}, nil
+	}
+	if n.Name == "Minus" {
+		if err := arity(n, 2); err != nil {
+			return nil, err
+		}
+		left, err := compileInstanceValue(n.Args[0], ctx)
+		if err != nil {
+			return nil, err
+		}
+		right, err := compileInstanceValue(n.Args[1], ctx)
+		if err != nil {
+			return nil, err
+		}
+		return func(bindings instanceBindings) mage.ResolutionValue {
+			return mage.SubtractValues(left(bindings), right(bindings))
+		}, nil
+	}
 	if n.Name == "TheNumberOfCountersRemovedThisWay" {
 		if n.Kind != Symbol || ctx.counterPayment == nil {
 			return nil, problem(n, "unbound or incompatible counter payment value")

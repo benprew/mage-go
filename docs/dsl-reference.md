@@ -1631,3 +1631,30 @@ end installed prevention. Returned permanents have new incarnations.
 
 Finite shields, static Aura prevention (including Gaseous Form), different
 source/recipient unions and other durations remain separate gaps.
+
+## RON hand-size values and ordinary upkeep events
+
+`TheNumberOfCardsInPlayersHand(player)` reads the selected player's current hand
+when the action resolves. It accepts the existing typed player references,
+including `You`, declared `Ref_TargetPlayer`, and `Trigger_ThatPlayer` in a
+matching event scope. `Minus(left, right)` subtracts two supported resolution
+values recursively. Intermediate results retain their sign; life and damage
+services treat nonpositive final amounts as zero.
+
+These values are supported where `compileInstanceValue` is used: resolving
+life, draw, damage and existing token-count actions. They do not establish
+static values, casting costs, chosen-player references, damage-result players,
+or arbitrary temporary P/T value support. Unbound reads remain errors.
+
+`TriggerA(AtTheBeginningOfAPlayersUpkeep(AnyPlayer), body)` and the
+`SinglePlayer(You)` form use the same per-instance player-binding service as
+ordinary end-step events. `Trigger_ThatPlayer` saves the player whose upkeep
+began; `You` remains the resolving ability's controller. Other player filters
+and intervening-if upkeep declarations retain their separate adapters.
+
+`SpellDealsDamage` and `PermanentDealsDamage` now build typed damage actions
+with resolution values. `Player(player)` accepts a valid typed player reference;
+existing bare target recipients and targeted `Permanent(...)` remain supported.
+The shared engine supplies target checks, source snapshots and prevention.
+Full-record evidence: Ivory Tower (ATQ/3ED), Storm World (LEG), and Copper Tablet
+(LEA/LEB/2ED/CED/CEI) in `TestRONHandSize*`.

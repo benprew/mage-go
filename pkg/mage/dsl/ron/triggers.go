@@ -51,20 +51,7 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.DiesTrigger(effect, false) }
 		}
 	case "AtTheBeginningOfAPlayersUpkeep":
-		if err := arity(trigger, 1); err != nil {
-			return nil, err
-		}
-		players := trigger.Args[0]
-		if players.Name != "SinglePlayer" {
-			return nil, unsupported(players, "upkeep player filter")
-		}
-		if err := arity(players, 1); err != nil {
-			return nil, err
-		}
-		if players.Args[0].Kind != Symbol || players.Args[0].Name != "You" {
-			return nil, unsupported(players.Args[0], "upkeep player reference")
-		}
-		buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.BeginningOfUpkeepTrigger(effect, false) }
+		return compileBoundStepTrigger(trigger, n.Args[1], ctx, mage.EachUpkeep, mage.YourUpkeep, "upkeep")
 	case "AtTheBeginningOfAPlayersEndStep":
 		return compileEndStepTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPlayerCastsASpell":

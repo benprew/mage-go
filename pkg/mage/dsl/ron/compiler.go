@@ -839,7 +839,7 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		if n.Args[0].Kind != Symbol || n.Args[0].Name != source || (source == "ThisPermanent") != ctx.permanent {
 			return nil, unsupported(n.Args[0], "damage source")
 		}
-		amount, err := compileValue(n.Args[1], ctx)
+		amount, err := compileInstanceValue(n.Args[1], ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -855,22 +855,19 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, unsupported(n.Args[2].Args[0], "targeted damage recipient")
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageFrom(mage.This, bindings.permanents[recipient.target], mage.ValueAtResolution(amount))
+				return mage.DealDamageFrom(mage.This, bindings.permanents[recipient.target], amount(bindings))
 			})
 		}
-		if n.Name == "PermanentDealsDamage" && n.Args[2].Name == "Player" {
+		if n.Args[2].Name == "Player" {
 			if err := arity(n.Args[2], 1); err != nil {
 				return nil, err
-			}
-			if n.Args[2].Args[0].Kind != Symbol || n.Args[2].Args[0].Name != "You" {
-				return nil, unsupported(n.Args[2].Args[0], "damage player reference")
 			}
 			player, err := compilePlayerRef(n.Args[2].Args[0], ctx)
 			if err != nil {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageFrom(mage.This, player.build(bindings), mage.ValueAtResolution(amount))
+				return mage.DealDamageFrom(mage.This, player.build(bindings), amount(bindings))
 			})
 		}
 		if err := requireRef(n.Args[2], ctx.target, ctx); err != nil {
@@ -885,13 +882,17 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return nil, err
 			}
 			return one(func(bindings instanceBindings) mage.Effect {
-				return mage.DealDamageFrom(mage.This, bindings.recipients[recipient], mage.ValueAtResolution(amount))
+				return mage.DealDamageFrom(mage.This, bindings.recipients[recipient], amount(bindings))
 			})
 		}
-		if n.Name == "SpellDealsDamage" {
-			return one(func(bindings instanceBindings) mage.Effect { return SpellDealsDamage(amount) })
+		if ctx.target == "Ref_TargetPlayer" {
+			return one(func(bindings instanceBindings) mage.Effect {
+				return mage.DealDamageFrom(mage.This, bindings.players[ctx.playerTarget], amount(bindings))
+			})
 		}
-		return one(func(bindings instanceBindings) mage.Effect { return PermanentDealsDamage(amount) })
+		return one(func(bindings instanceBindings) mage.Effect {
+			return mage.DealDamageFrom(mage.This, bindings.permanents[ctx.permanentTarget], amount(bindings))
+		})
 	case "PutPermanentIntoItsOwnersHand", "DestroyPermanent", "DestroyPermanentNoRegen", "CounterSpell", "TapPermanent", "UntapPermanent", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 		if err := arity(n, 1); err != nil {
 			return nil, err

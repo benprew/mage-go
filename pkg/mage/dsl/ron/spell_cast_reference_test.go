@@ -189,7 +189,7 @@ func TestRONSpellCastReferenceInvalid(t *testing.T) {
 		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer,AnySpell),ActionList([CounterSpell(Trigger_ThatSpell())]))`,
 		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer,AnySpell),ActionList([CounterSpell(Trigger_ThatPlayer)]))`,
 		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer,AnySpell),ActionList([PlayerAction(Trigger_ThatSpell,DrawACard)]))`,
-		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer,AnySpell),ActionList([])),TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)),ActionList([PlayerAction(Trigger_ThatPlayer,DrawACard)]))`,
+		`TriggerA(WhenAPlayerCastsASpell(AnyPlayer,AnySpell),ActionList([])),TriggerA(WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent)),ActionList([PlayerAction(Trigger_ThatPlayer,DrawACard)]))`,
 	} {
 		nodes, err := Parse(strings.NewReader(fmt.Sprintf(`Card(Name:"Invalid",Typeline:(Supertypes:[],Cardtypes:[Artifact],Subtypes:[]),Rules:[%s])`, rule)), "invalid.ron")
 		if err != nil {
