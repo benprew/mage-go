@@ -11358,3 +11358,138 @@ Changed slice files: `end_step.go`, `end_step_intervening.go`,
 `docs/engine-rules-contracts.md`, and this ledger. Commit hash is reported in
 the final response. Complete collection gameplay, runtime/startup cutover,
 Go-card/generator deletion and unused DSL cleanup remain open. Stop here.
+
+## 2026-10-05: optional sacrifice payments and local branch polarity
+
+Status: completed compiler-adapter slice, `payment.optional-sacrifice`.
+The initial `.gitignore` and execution-design changes are user work and are
+excluded. This run stops after this slice. No engine, RON source, runtime
+registry, Go-card definition, generator or broad DSL function changed.
+
+### Fresh evidence and selection
+
+Read AGENTS.md, `pkg/mage/doc.go`, execution design, vocabulary snapshot,
+ledger, compiler costs/actions/scopes, optional-payment and sacrifice adapters,
+engine payment and sacrifice services, API/rules-contract docs, and CR 118.10–12a,
+603.3a/5, 608.2c/h, 701.21a and 702.26b. Requirements came from complete RON
+records. Local Oracle text in `data/LEG.json` and `data/ATQ.json` agrees with
+Elder Spawn and Yawgmoth Demon; no source correction is needed.
+
+Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` and `make build`
+passed. Fresh strict and semantic inventory commands exited 1 for expected
+collection rejection: 2,445 records, 986 names, **1,432 compiled / 1,013 rejected**,
+498 accepted / 488 rejected names. There were 72,938 nodes, 8,530 semantic
+signatures and 12,197 unknown-role occurrences. No baseline build or environment
+failure was found. Typed scopes and instance factories already exist.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks / other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| Optional sacrifice (selected) | Elder Spawn, Yawgmoth Demon | 2 names / 2 records. Existing adapters cover the blocking restriction, flying, first strike, upkeep event, tap/sacrifice actions and source damage. Need optional `SacrificeAPermanent` lowering and `CostWasntPaid` polarity only. Mana Vortex contains the same optional cost but retains FromStack, mandatory player sacrifice and no-land event blockers. | Reuses exact total-cost transaction, matching sacrifice and local paid/unpaid continuations. Enables the optional-cost component of Mana Vortex and later payment adapters. Low implementation / medium gameplay-test effort. |
+| Random-discard cost prerequisite | Coral Helm, Draconian Cylix | 0 for the transaction prerequisite alone; 2 after the adapter. Complete records otherwise have supported temporary boosts, regeneration, targeting and mana/tap costs. Random costs still need game randomness, cost-discard replacements, ordering after deterministic payments and rollback. | Shared random-cost transaction; medium/high engine and payment-test effort plus compiler adapter. |
+| Artifact tap and non-tap activation events | Haunting Wind, Powerleech; related artifact-activation consumer: Artifact Possession | 2 after both event contexts and the tapped/activated permanent binding are supported; 0 for tap-filter wiring alone. Haunting Wind needs the event permanent's controller read and the non-tap artifact activation trigger. Powerleech needs the same activation trigger with opponent filtering. Artifact Possession retains its activation event despite its accepted host-tap component. | Shared typed artifact-event environment and activation facts, source LKI, opponent/current-controller matching. Medium adapter/engine audit and high event/payment/rollback-test effort. |
+
+The selected slice gives two immediate full-card gains with the smallest exact
+reuse boundary. The ledger's random-cost suggestion was reassessed, not followed
+as a fixed order. Complete candidate records and nested forms were inspected,
+including all `SacrificeAPermanent` inventory contexts; first diagnostics were
+not treated as unlock counts. Related complete records inspected: Mana Vortex,
+Lord of the Pit, Transmute Artifact, Metamorphosis, Sacrifice, Goblin Grenade,
+Goblin Caves, Goblin Shrine, Clockwork Avian, Clockwork Beast, Avoid Fate and
+Ring of Immortals. These related inspections do not claim new support.
+Contract and acceptance cases were stated before implementation.
+
+### Exact contract and engine reuse
+
+In existing spell, activation and trigger action sequences:
+`MayCost(SacrificeAPermanent(filter))/1` and
+`PlayerMayCost(player, SacrificeAPermanent(filter))/2` require an adjacent
+`If(condition, [actions])/2` or `Unless(condition, [actions])/2` with a nonempty
+body. The player uses existing typed references. MayCost retains the resolving
+controller. The filter uses the existing activation-sacrifice grammar through
+`compileSacrificeCostFilter`, including nonempty recursive `And/Or`.
+Conditions are symbols `CostWasPaid` or `CostWasntPaid`.
+If/Paid and Unless/NotPaid run on successful payment; Unless/Paid and
+If/NotPaid run on failed or declined payment. Both polarities also apply to the
+existing fixed `PayMana` shape. Other optional costs remain rejected.
+
+The unchanged private signature is
+`compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactory, error)`.
+RON owns syntax, arity, branch polarity and adjacency. It lowers the complete
+pair to `IfPaid` or `UnlessPaid`, using fresh cost/effect objects per factory.
+`compileCosts` reuses `SacrificeMatchingIncludingSourceCost`, so one current,
+unphased matching permanent controlled by the payer can pay, including the
+source. Costs are prepared and committed through the engine transaction;
+invalid/stale selections consume no payment object. The card goes to its owner.
+Regeneration does not replace sacrifice. Each pair has a local result, with
+no new global last-action state or saved-result reader.
+
+Existing engine services retain controller capture, source incarnation/LKI,
+phasing, copying/cloning, ordered source sacrifice and damage, prevention and
+combat rules. A copied Elder Spawn trigger cannot sacrifice a source its new
+controller does not control; its independent damage still affects that copy's
+controller. A returned source does not receive old tap/sacrifice instructions.
+No new simultaneous-operation or replacement-order contract is introduced.
+No engine prerequisite or source defect was hidden behind the adapter.
+
+### TDD and complete-card mappings
+
+After removing one unused test import, initial tests failed at the expected
+unsupported optional `SacrificeAPermanent` diagnostic for both complete cards,
+branch contexts and strict native loading. Implementation is three condition
+changes in `optional_payment.go`. Later fixture corrections use Sol Ring
+(Ornithopter is absent from LEB), existing ExecuteAttackers/ExecuteBlockers APIs,
+and CR 701.21a for a copy's sacrifice permission. Lint required renaming a local
+`copy` variable. These fixture repairs did not weaken gameplay assertions.
+
+| Card/context | Tests and evidence |
+| --- | --- |
+| Elder Spawn, complete LEG record; Yawgmoth Demon, complete ATQ record | `TestRONOptionalSacrificeCards`: paid/declined/unavailable, wrong type/controller, phased candidates, invalid/stale choices and rollback, owner graveyard, regeneration exclusion, deferred resolution, source departure/return/phasing/control with paid and unpaid branches, prevention and ability removal. |
+| Both complete cards | `TestRONOptionalSacrificeInstancesCopiesAndClones`: two factories, independent payments/results, one available resource, copy controller and source permission, clone decline and resource isolation. `TestRONOptionalSacrificeDetectionAndCurrentFilters`: phased source does not trigger, phase-in, controller before detection, payment candidates entering after detection, removal after detection, live recursive filter checks. |
+| All remaining rules of both cards | `TestRONOptionalSacrificeOtherCardRules`: Elder Spawn red blocking restriction and removal/clone lifecycle; Yawgmoth Demon flying legality and actual first-strike combat killing a blocker before it deals normal damage. `TestRONOptionalSacrificeNativeLoad`: strict loading, engine validation, unpaid/paid native casting and upkeep execution for both full records. |
+| Shared shape/context | `TestRONOptionalSacrificeBranchesAndScope`: four branch polarities, acceptance/decline, self-sacrifice and invalid declarations. `ExplicitPlayerAndNestedResults`: explicit targeted player, nested and adjacent pair isolation. `Inventory`: exact semantic roles. `PolarityRetainsManaPayments`: four polarities on retained fixed-mana payment. All use the `TestRONOptionalSacrifice` prefix. |
+
+The broader suite initially failed only because `TestRONSacrificeCostInvalid`
+asserted rejection of the now-supported adjacent optional sacrifice shape.
+It now rejects a nonadjacent payment continuation; positive execution and scope
+coverage moved to the new tests. The other invalid assertions are retained.
+Inventory tests now assert fresh counts and retain real Lightning Bolt gameplay.
+
+### Validation and actual gain
+
+Actual gain matches the estimate: **2 unique names / 2 records**.
+Fresh strict and inventory loaders: **1,434 compiled / 1,011 rejected records**,
+**500 accepted / 486 rejected names**. Only Elder Spawn and Yawgmoth Demon
+issues disappear. All other issue messages are byte-for-byte unchanged and
+no accepted record regresses. Semantic inventory remains 72,938 nodes /
+8,530 signatures / 12,197 unknown-role occurrences. Compilation and gameplay
+are separate: this run adds complete behavior mappings for two unique cards;
+collection-wide `engine_validated` and `behavior_verified` remain null.
+RON hashes match the vocabulary snapshot; no source refresh is needed.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONOptionalSacrifice -count=1` | Expected TDD failure, then PASS. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after the obsolete rejection fixture update. |
+| `make test` | PASS after the same fixture update. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS after renaming the local built-in identifier; reviewed automatic formatting/import changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1, 1,434 compiled / 1,011 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; matching strict counts/issues, unchanged semantic counts and source hashes. |
+
+Ranked next candidates to reassess with fresh evidence:
+1. Random-discard cost transaction prerequisite for Coral Helm and Draconian
+   Cylix; keep deterministic costs first and prove replacements/rollback.
+2. Artifact tap/activation events for Haunting Wind and Powerleech, with typed
+   event permanent/controller reads and activation facts.
+3. Finite recipient-prevention allocation prerequisite, then the otherwise-ready
+   multi-card adapters identified in prior runs.
+
+Changed slice files: `optional_payment.go`, new `optional_sacrifice_test.go`,
+`sacrifice_cost_test.go`, `inventory_test.go` under `pkg/mage/dsl/ron`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Commit hash is reported in the final response. Full collection gameplay,
+runtime startup, Go-card/generator deletion and whole-repository DSL removal
+gates remain open. No deletion audit is claimed and no second slice is begun.

@@ -727,6 +727,29 @@ prevention instead of applying life loss. Tests cover departure, return,
 phasing, control changes and damage-event identity. This adds compiler support
 for existing engine contracts. See the [shape and test report](designs/mtgish-ron-upkeep-payment.md).
 
+## RON optional sacrifice payment adapter
+
+RON optional `SacrificeAPermanent(filter)` payments use the same transaction
+with `SacrificeMatchingIncludingSourceCost`. The current payer controls the
+chosen permanent; its owner receives the card (CR 701.21a). An unavailable cost
+offers no choice. Decline or an invalid/stale selection runs the unpaid body
+without consuming a payment permanent. Regeneration does not replace sacrifice.
+No payment result is read from global resolution state. Adjacent `If`/`Unless`
+branches support both `CostWasPaid` and `CostWasntPaid` (CR 118.10–12a).
+
+The trigger's stored controller remains the payer and the damage recipient
+after source control changes. Copies use their own controller. Unpaid actions
+use the original source incarnation. A returned source is not tapped or
+sacrificed by the old trigger; independent damage still uses source LKI
+(CR 400.7, 608.2c/h). Phasing prevents detection but does not cancel a pending
+payment. Phased payment candidates are unavailable (CR 702.26b).
+Elder Spawn's sacrifice and damage are separate ordered instructions.
+This adapter adds no engine API or replacement-order contract.
+Evidence: `TestRONOptionalSacrificeCards`, `BranchesAndScope`,
+`InstancesCopiesAndClones`, `ExplicitPlayerAndNestedResults`,
+`DetectionAndCurrentFilters`, `OtherCardRules`, `Inventory` and `NativeLoad`
+under the same `TestRONOptionalSacrifice` prefix.
+
 ## RON fixed draw and activation life cost adapters
 
 RON symbol `DrawACard` uses `DrawFor(player, Fixed(1))`. Typed player targets

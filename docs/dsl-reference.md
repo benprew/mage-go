@@ -1006,8 +1006,34 @@ An adjacent `PlayerMayCost(player, PayMana([...]))` and
 Each pair keeps its own result, including nested unpaid bodies. Payment uses
 the engine's total-cost transaction during resolution. Spell-controller payer
 references use the current controller of the declared stack target.
-Variable, alternative and nonmana payments remain rejected.
+Variable and alternative payments remain rejected. Optional sacrifice payments
+use the adapter below; other nonmana payments remain rejected.
 Contract and tests: [RON optional payments](designs/mtgish-ron-optional-payment.md).
+
+### RON optional sacrifice payments and branch polarity
+
+In supported spell, activation and trigger action sequences,
+`MayCost(SacrificeAPermanent(filter))` uses the resolving controller as payer.
+`PlayerMayCost(player, SacrificeAPermanent(filter))` uses the existing typed
+player-reference grammar. The filter uses the activation sacrifice-cost grammar,
+including nonempty recursive `And`/`Or`. It selects one current, unphased
+matching permanent the payer controls, including the source if it matches.
+The selected card moves to its owner's graveyard. Regeneration does not apply.
+
+Each payment must have an adjacent `If(condition, [actions])` or
+`Unless(condition, [actions])`, with a nonempty action body. Symbol
+`CostWasPaid` or `CostWasntPaid` supplies the condition. `If(CostWasPaid, ...)`
+and `Unless(CostWasntPaid, ...)` run after successful payment;
+`If(CostWasntPaid, ...)` and `Unless(CostWasPaid, ...)` run after decline or
+failed payment. Both conditions also work with the existing fixed mana costs.
+The payment result stays local to this pair, including nested pairs.
+Detached result reads, plural sacrifice costs and other optional costs remain
+errors. This does not add a general resolving `If` adapter.
+
+The adapter uses `SacrificeMatchingIncludingSourceCost`, `IfPaid`, `UnlessPaid`
+and the shared cost transaction. `TestRONOptionalSacrifice*` covers complete
+Elder Spawn and Yawgmoth Demon records, declaration rejection, payment choices,
+source identity, phasing, copies, clones, nested results and native loading.
 
 ## RON static animation
 
@@ -1050,8 +1076,9 @@ spell filters and `SpellCast`. The opponent scope and event references have
 separate contracts below. An adjacent fixed-mana MayCost or PlayerMayCost
 followed by `If(CostWasPaid, [actions])` uses `IfPaid`. Each nonempty body has
 its own payment result, including nested pairs. Payment is offered at resolution
-to the stored ability controller or explicit typed payer. X and nonmana
-payments remain separate shapes. See [the contract and tests](designs/mtgish-ron-spell-cast-life.md).
+to the stored ability controller or explicit typed payer. X and other nonmana
+payments remain separate shapes; optional sacrifice support is described above.
+See [the contract and tests](designs/mtgish-ron-spell-cast-life.md).
 
 ## RON fixed selected discard
 

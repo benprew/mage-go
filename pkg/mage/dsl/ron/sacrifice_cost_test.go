@@ -227,7 +227,7 @@ func TestRONSacrificeCostInvalid(t *testing.T) {
 			}
 		})
 	}
-	for _, rule := range []string{`SpellActions(ActionList([SacrificeAPermanent(IsCardtype(Creature))]))`, `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), ActionList([MayCost(SacrificeAPermanent(IsCardtype(Creature))), If(CostWasPaid, [GainLife(Integer(1))])]))`, `Activated(SacrificeAPermanent(IsCardtype(Artifact)), ActionList([GainLife(ToughnessOfTheSacrificedCreature)]))`} {
+	for _, rule := range []string{`SpellActions(ActionList([SacrificeAPermanent(IsCardtype(Creature))]))`, `TriggerA(AtTheBeginningOfAPlayersUpkeep(SinglePlayer(You)), ActionList([MayCost(SacrificeAPermanent(IsCardtype(Creature))), GainLife(Integer(1)), If(CostWasPaid, [GainLife(Integer(1))])]))`, `Activated(SacrificeAPermanent(IsCardtype(Artifact)), ActionList([GainLife(ToughnessOfTheSacrificedCreature)]))`} {
 		nodes, err := Parse(strings.NewReader(fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [%s])`, rule)), "invalid.ron")
 		if err != nil {
 			t.Fatal(err)

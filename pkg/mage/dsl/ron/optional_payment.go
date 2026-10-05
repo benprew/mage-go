@@ -46,7 +46,7 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		}
 		cost = payment.Args[1]
 	}
-	if cost.Name != "PayMana" {
+	if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" {
 		return nil, unsupported(cost, "optional payment cost")
 	}
 	costs, _, err := compileCosts(cost)
@@ -60,7 +60,7 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		return nil, err
 	}
 	condition := continuation.Args[0]
-	if condition.Kind != Symbol || condition.Name != "CostWasPaid" {
+	if condition.Kind != Symbol || (condition.Name != "CostWasPaid" && condition.Name != "CostWasntPaid") {
 		return nil, unsupported(condition, "payment condition")
 	}
 	parts, err := list(continuation.Args[1])
@@ -84,7 +84,7 @@ func compileOptionalPayment(payment, continuation Node, ctx scope) (effectFactor
 		for i, build := range body {
 			effects[i] = build(bindings)
 		}
-		if continuation.Name == "If" {
+		if (continuation.Name == "If") == (condition.Name == "CostWasPaid") {
 			return mage.IfPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 		}
 		return mage.UnlessPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
