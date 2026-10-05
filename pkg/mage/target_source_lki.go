@@ -6,10 +6,12 @@ import (
 	"github.com/benprew/mage-go/pkg/mage/core"
 )
 
-// A returned card must not supply colors for its previous battlefield visit.
+// A returned card must not supply characteristics for its previous battlefield visit.
 type targetSourceLKI struct {
 	Card
-	colors []core.Color
+	colors     []core.Color
+	power      int
+	powerKnown bool
 }
 
 func (g *Game) resolutionTargetSource(obj *StackObject) Card {
@@ -30,12 +32,16 @@ func (g *Game) resolutionTargetSource(obj *StackObject) Card {
 	}
 	if p := g.FindPermanentIncludingPhased(obj.SourceID); p != nil && p.incarnationID == obj.sourceIncarnation {
 		if p.PhasedOut {
-			return targetSourceLKI{Card: damageSourceCardFromPermanent(p), colors: p.Colors()}
+			power := p.CurrentPower(g)
+			if lki := g.zones.phaseInformation[obj.sourceIncarnation]; lki != nil {
+				power = lki.Power
+			}
+			return targetSourceLKI{Card: damageSourceCardFromPermanent(p), colors: p.Colors(), power: power, powerKnown: true}
 		}
 		return card
 	}
 	if lki := g.zones.LKIByIncarnation(obj.sourceIncarnation); lki != nil && lki.Snapshot != nil && lki.ID == obj.SourceID {
-		return targetSourceLKI{Card: damageSourceCardFromPermanent(lki.Snapshot), colors: lki.Snapshot.Colors()}
+		return targetSourceLKI{Card: damageSourceCardFromPermanent(lki.Snapshot), colors: lki.Snapshot.Colors(), power: lki.Power, powerKnown: true}
 	}
 	return card
 }

@@ -765,6 +765,10 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			filter = mage.Not(filter)
 		}
 		return filter, nil
+	case "PowerAndToughnessIsEqualTo":
+		return compileFixedPTFilter(n)
+	case "ToughnessIs":
+		return compileFixedToughnessFilter(n)
 	case "PowerIs":
 		return compileFixedPowerFilter(n)
 	case "IsCardtype", "IsNonCardtype":

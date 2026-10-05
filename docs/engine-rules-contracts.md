@@ -2986,3 +2986,29 @@ records completion even when the next step is another upkeep. The stored step's
 turn identity prevents a new turn from inheriting the old turn's final step.
 `TurnReader.UpkeepHasEnded` supplies the pure history query. Tests:
 `TestSpellAfterFirstUpkeep` and `TestRONCastingWindowResetExtraUpkeep`.
+
+## Numeric permanent target restrictions
+
+`TargetToughnessLessThanSourcePower()` composes with typed permanent target
+filters and controller restrictions. It reads current target toughness and
+source power at announcement and resolution (CR 601.2c, 602.2b, 608.2b).
+Equal values are illegal. A departed source supplies retained incarnation power,
+including continuous bonuses at departure. A returned source cannot replace it.
+A phased source supplies phase-time power; phase-in restores current queries.
+The existing target-source information service owns this data (CR 400.7,
+608.2h, 702.26b). Copies retain the source but use their own ability controller.
+Missing source information permits no targets. The option adds no target state.
+
+RON `PowerAndToughnessIsEqualTo(PT(p,t))` checks both current characteristics.
+`ToughnessIs(EqualTo(Integer(n)))`, `LessThanOrEqualTo`, and
+`GreaterThanOrEqualTo` reuse exact engine filters, including negative values.
+Only permanent target contexts support
+`ToughnessIs(LessThan(PowerOfPermanent(ThisPermanent)))`; the source reference
+must be available in that scope. Other comparisons and references are rejected.
+Stone Giant's later destruction uses the existing delayed captured reference;
+changes to target toughness, controller or shroud do not repeat targeting.
+Departure/return and phasing retain their existing delayed identity contracts.
+
+Evidence: `TestTargetToughnessBelowSourcePower`, `LayerLKI`, and
+`TestRONNumericTargetsCards`, `Legality`, `MetadataAndPayment`,
+`DelayedIdentity`, `Instances`, `Invalid`, `FixedQueries`, `Inventory`.

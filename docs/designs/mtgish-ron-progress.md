@@ -14831,3 +14831,146 @@ Leading fresh first errors remain ChooseADamageSource, CreateFuturePreventDamage
 CastEffect operations/windows outside this shape, Targeted_Modal, PlayerEffect,
 EachPlayerEffect and CreateTriggerUntil. They are not full-card estimates.
 Only this slice is committed; the hash is in the final response.
+
+## Run 2026-10-05: NUMERIC-PERMANENT-TARGETS
+
+Status: complete single slice. Stop after this slice. Initial user changes to
+`.gitignore`, execution design, progress-ledger restructuring, and the untracked
+`mtgish-ron-completed.md` are preserved. Only this appended ledger entry is
+staged; the existing restructuring is not included in the commit.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, execution design, vocabulary snapshot, ledger,
+selected target/compiler/LKI/filter/delayed/clone services, API/rules contracts,
+and complete candidate RON records, including all numeric-filter consumers and
+Stone Giant reprints. Requirements came from RON. Local data/LEA.json and
+LEG.json confirm Stone Giant and Pendelhaven Oracle text. Rules: CR 400.7,
+601.2c, 602.2b, 608.2b/h/k, 702.26 and existing delayed-step contracts.
+The implement-engine skill supplied the reusable engine workflow. No removed
+card/set skill, Go-card requirement or delegated agent was used.
+
+Fresh baseline compiler tests, short engine suite and make build passed.
+Loader and inventory exited 1 for collection rejection: 1,517 compiled / 928
+rejected records; 551 accepted / 435 rejected names (2,445 records, 986 names).
+Semantic inventory: 72,951 nodes, 8,540 signatures, 10,460 unknown roles.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Numeric permanent target filters, selected | Stone Giant and Pendelhaven: **2** full cards. Goblin Kites, Infinite Authority and Blood Lust also contain toughness filters but are excluded from the unlock estimate. | Source-relative target legality needs a shared engine option and retained power. Stone Giant's flying and delayed destruction are already supported. Goblin Kites needs coin actions; Infinite Authority needs its event/conditional cost/delayed result scopes; Blood Lust needs branching and dynamic toughness arithmetic. Enables exact P/T, fixed toughness and source-power target constraints without new zone or resolution systems. | Low/medium: small target option and existing LKI extension, compiler adapters, real-card and engine identity/timing tests. |
+| Finite recipient prevention | Samite Healer, Healing Salve, Conservator, Alabaster Potion: **4** credible full-card unlocks after allocation; **0** adapter-only gains. | Complete records include targets, modes, X and payments. Missing CR 615.7 simultaneous-source allocation; shared service benefits further shields. | Medium/high: allocation choices, finite consumption, replacement ordering, rollback and simultaneous damage. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible full-card unlocks after all-zone characteristics. | Complete records need controller-relative land/Swamp/non-Wall and named battlefield counts. Gaea's Avenger and Wood Elemental have additional prerequisites. Enables all-zone characteristic and copy/layer consumers. | High: zone contexts, CDA layers, count lowering, controller/copy/layer tests. |
+
+Selection: numeric targets offer two complete consumers with the largest credible
+gain for the smaller effort. Useful multi-card work wins over the single-card
+Festival candidate. Counts use unique names, not first errors or reprint totals.
+The contract, reuse boundary and acceptance cases were stated before edits.
+
+### Signatures, contexts, dependencies and reuse
+
+Engine API: `TargetToughnessLessThanSourcePower() PermanentTargetOption`, used
+with typed singular/plural permanent target declarations. Strict comparison
+reads current target toughness and current source power at announcement and
+resolution. Missing source information permits no targets. Departure uses
+retained incarnation power; return cannot substitute another source. Phasing
+uses the existing phase-information snapshot's power; phase-in restores live
+queries. Retained power includes continuous bonuses and counters. Copies keep
+the source and independently use the copy controller's other restrictions.
+The option adds no mutable binding or chosen state.
+
+RON supported forms:
+
+- `PowerAndToughnessIsEqualTo(PT(p,t))/1`, with two signed integer literals.
+  Uses HasPowerEqual and HasToughnessEqual on current characteristics in
+  existing permanent-filter contexts.
+- `ToughnessIs(EqualTo(Integer(n)))/1`, `LessThanOrEqualTo`, or
+  `GreaterThanOrEqualTo`, with a signed fixed integer. Uses engine equality/GTE,
+  Or and Not, without arithmetic overflow or a parallel characteristic query.
+- In permanent target contexts only:
+  `ToughnessIs(LessThan(PowerOfPermanent(ThisPermanent)))/1`.
+  The permanent source must be available in that lexical scope. Nested And
+  composes with existing controller/type restrictions. Source comparisons under
+  disjunctions and non-target contexts remain rejected. Unsupported comparisons,
+  X, host/target references, bad shapes, and unbound spell sources are rejected.
+
+Reuse: DeclarePermanentTarget(s), per-instance target declarations, target
+announcement/resolution validation, transactional activation/casting, current
+P/T filters, resolutionTargetSource, incarnation/phase LKI, stack copies,
+Game.Clone, continuous modifications, AtNext and captured delayed references.
+RON owns spelling and scopes; the engine owns source-relative target legality.
+No card-name branch, Go fallback, skipped rule, partial production registry,
+global last-action slot, or game-time declaration panic was added.
+Delayed destruction does not repeat target filters. Return makes a new object;
+phasing at the next end step can consume the one-shot delay without destruction.
+Indestructible retains existing destroy semantics. Simultaneous operations and
+replacement ordering are unchanged; this slice introduces no batches or costs.
+
+### TDD and card-to-test mapping
+
+Engine tests failed for the missing target option. Initial fixture/API mistakes
+were corrected before confirming that missing-option failure alone. Complete
+RON tests failed at PowerAndToughnessIsEqualTo and ToughnessIs. No test was
+weakened. A copy expectation was corrected: Pendelhaven's copied bonus makes
+the original target cease to be 1/1, so the original fails legality. A synthetic
+layer fixture used static ability index 0; the activation is index 1.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Pendelhaven, complete LEG record | TestRONNumericTargetsCards: exact bonus/timing/expiry and clone independence. Legality: changed P/T, source departure/return/phasing, target return/phasing/cycle, shroud, foreign controller and copied ability recheck. MetadataAndPayment: legendary land and immediate G mana ability. Instances: independent pending targets. |
+| Stone Giant, all six identical records | Cards: full factory validation, controller restriction, flying then delayed next-end-step destruction after source departure. Legality: source/target counters, source departure/return/phasing, target identity/phase/shroud/control, stack copies and later shroud/large toughness not repeated as targeting. MetadataAndPayment: 2RR casting, unpaid rollback, Giant 3/4 metadata and tap sickness. DelayedIdentity: return, phasing/cycle, control, indestructible and consumed one-shot delay. |
+| Engine source-relative legality | TestTargetToughnessBelowSourcePower: strict equality rejection before payment, rollback, negative power, live updates, source departure/return/phase/cycle, copied controller and pending clone isolation. LayerLKI: continuous source bonuses survive departure/phase with exact retained power and do not follow a returned source. Existing TestTargetLegality*Source regressions pass. |
+| Compiler and inventory | Invalid: malformed kinds/arity, unbound or incompatible source reads, unsupported values/comparisons and spell source. FixedQueries: negative current values and counter changes. Instances: fresh declarations and two independent pending frames. Inventory: nested P/T/comparison/source roles. Existing repository inventory and delayed-step tests pass. |
+
+Two complete-card behavior mappings are added; this does not establish
+collection-wide gameplay coverage. Engine-validated and behavior-verified
+collection totals remain null. The new layer test confirms retained computed
+power, rather than printed power from a copied card.
+
+### Final measurements and validation
+
+Actual gain matches estimate: **2 names / 7 records**, exactly Pendelhaven and
+Stone Giant. No accepted name is lost. Loader: **1,524 compiled / 921 rejected
+records**, **553 accepted / 433 rejected names**. Expected exit 1 remains atomic
+collection rejection. Inventory: **72,951 nodes / 8,540 signatures / 10,433
+unknown-role occurrences**. Numeric descendant reporting reduces unknown roles.
+All twelve source hashes match the vocabulary snapshot; no RON source changed,
+so no syntax snapshot refresh is needed. No source defect was found or changed.
+The absent data/2ED.json was a lookup-path error; data/LEA.json supplied Stone
+Giant Oracle text. It did not block validation.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/dsl/ron -count=1, short engine suite, make build | PASS. |
+| Focused go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestTargetToughnessBelow\|TestRONNumeric\|TestInventory\|TestTargetLegality.*Source\|TestRONDelayedStep' -count=1 | PASS. |
+| go test ./pkg/mage/... -short -count=1 | PASS on final code after lint. |
+| make test | PASS on final code after lint. |
+| make build | PASS on final code after lint. |
+| go vet ./... | PASS on final code after lint. |
+| go test ./... -short -count=1 | PASS; additional engine-skill check. |
+| make lint | PASS, zero issues; import spacing/function formatting reviewed. |
+| git diff --check | PASS, including final ledger. |
+| go run ./cmd/loadcards -json | Expected exit 1: 1,524 / 921; fresh diagnostics in inventory. |
+| go run ./cmd/loadcards -inventory -json | Expected exit 1: counts above; nested roles inspected. |
+| Source snapshot audit | PASS: all twelve unchanged hashes. |
+
+No environmental or pre-existing check blocker remains. No Go definitions,
+generators, startup callers or DSL functions were removed. Complete loading,
+collection gameplay and runtime cutover remain below the removal gate. No fresh
+whole-repository caller audit authorizes DSL deletion. API/rules documentation
+records only this slice. Slice files: engine target_numeric.go/tests, target.go,
+target_source_lki.go, doc.go; RON numeric_target.go/tests, compiler.go,
+temporary_animation.go, inventory.go/tests; DSL/rules references and this entry.
+The commit hash is reported in the final response. Initial user edits remain
+unstaged; no second slice is started.
+
+Ranked next candidates to reassess:
+
+1. Finite prevention allocation prerequisite for Samite Healer, Healing Salve,
+   Conservator and Alabaster Potion.
+2. All-zone count CDAs for Dakkon Blackblade, Keldon Warlord, Nightmare and
+   Plague Rats.
+3. Targeted_Modal target-alternative prerequisite for Chaoslace, Deathlace,
+   Lifelace, Purelace, Thoughtlace, Magical Hack and Sleight of Mind. Laces need
+   color effects; the other two need word choices/text changes. Adapter-only
+   full-card gain is zero. Goblin Kites' coin action also merits reassessment
+   alongside other complete coin consumers; its numeric target blocker is gone.

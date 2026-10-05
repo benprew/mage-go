@@ -798,8 +798,9 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
-	excludeSource            bool
-	attachedToControllerOnly bool
+	excludeSource                bool
+	attachedToControllerOnly     bool
+	toughnessLessThanSourcePower bool
 	BaseTarget
 	controllerOnly  bool
 	controllerOwned bool
@@ -865,6 +866,12 @@ func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Gam
 	for _, p := range g.zones.battlefield {
 		if t.excludeSource && sourceCard != nil && p.ID() == sourceCard.ID() {
 			continue
+		}
+		if t.toughnessLessThanSourcePower {
+			power, ok := targetSourcePower(sourceCard, g)
+			if !ok || p.CurrentToughness(g) >= power {
+				continue
+			}
 		}
 		if t.attachedToControllerOnly {
 			host := g.FindPermanent(p.AttachedTo)

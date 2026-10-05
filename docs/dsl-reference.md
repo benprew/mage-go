@@ -2806,3 +2806,16 @@ phased permanents. Declared player targets and event players use their own
 instance bindings. Chosen-payment and plural-target collections remain errors
 in this action context. Reset combines this adapter with its casting window;
 Teleport combines its window with the existing temporary blocking restriction.
+
+### Numeric RON permanent targets
+
+Use `PowerAndToughnessIsEqualTo(PT(p,t))` for exact current P/T.
+Use `ToughnessIs(EqualTo(Integer(n)))`, `LessThanOrEqualTo`, or
+`GreaterThanOrEqualTo` for a fixed current toughness comparison.
+In permanent target declarations, use
+`ToughnessIs(LessThan(PowerOfPermanent(ThisPermanent)))` for a strict source
+power comparison. The compiler requires a permanent source scope and composes
+this restriction with `And` filters and controller restrictions. The engine
+checks it at announcement and resolution with retained source information.
+The Go API is `TargetToughnessLessThanSourcePower()` in
+`DeclarePermanentTarget` or `DeclarePermanentTargets`.

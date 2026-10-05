@@ -40,6 +40,11 @@
 // step through [TurnReader]. [AfterFirstUpkeep] permits later upkeeps after
 // the first upkeep ends. A restriction does not grant casting permission.
 //
+// Use [TargetToughnessLessThanSourcePower] on typed permanent targets for
+// a strict current toughness comparison. Source departure uses retained power;
+// a returned source cannot replace that information. Combine [HasPowerEqual]
+// and [HasToughnessEqual] for exact current P/T targets.
+//
 // Use [SetBasePowerToughness] with [Until] to set captured base values.
 // Combine [AddCardType] and [AddSubtypeFamily] with these base values for
 // temporary animation. The added types permit the subtype checks in one effect.

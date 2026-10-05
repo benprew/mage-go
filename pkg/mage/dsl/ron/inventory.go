@@ -762,6 +762,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
+	case "toughness_comparison":
+		if len(n.Args) == 1 {
+			return "value"
+		}
 	case "power_comparison":
 		if len(n.Args) == 1 && (n.Name == "LessThanOrEqualTo" || n.Name == "GreaterThanOrEqualTo" || n.Name == "EqualTo") {
 			return "value"
@@ -788,6 +792,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if n.Name == "IsNamed" && len(n.Args) == 1 {
 			return "card_name"
+		}
+		if n.Name == "PowerAndToughnessIsEqualTo" && len(n.Args) == 1 {
+			return "fixed_pt"
+		}
+		if n.Name == "ToughnessIs" && len(n.Args) == 1 {
+			return "toughness_comparison"
 		}
 		if n.Name == "PowerIs" && len(n.Args) == 1 {
 			return "power_comparison"
