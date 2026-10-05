@@ -1325,3 +1325,22 @@ Tawnos's Weaponry, Spirit Shield and Zelyon Sword:
 `TestRONSourceTappedDurationUntapChoiceAndInstances`,
 `TestRONSourceTappedDurationInvalidAndInventory`, and
 `TestRONSourceTappedDurationTriggerAndDefinition`.
+
+## RON opponent-land tap event adapter
+
+The RON compiler now lowers the exact land-subtype/opponent conjunction in
+`WhenAPermanentBecomesTapped` to the existing
+`OpponentLandBecomesTapped().OfSubtype(...)` event pattern. It validates the
+subtype against the same engine event declaration contract before returning a
+factory. No engine event, timing, replacement or identity behavior changes.
+
+CR 603.2e and 701.26a require an untapped-to-tapped transition on the
+battlefield. CR 603.3a fixes the trigger controller at the event. The RON tests
+verify these rules through real Lifetap and Lifeblood definitions, including
+pending source/land departure, control changes, phasing, trigger copies and
+clone isolation. Mana payment tests distinguish successful taps from failed
+transactional casts. `TapEach` tests retain the existing simultaneous tap
+service and queue one trigger per matching land.
+
+Evidence: `TestRONOpponentLandTap*`, with retained engine tests
+`TestOpponentLandBecomesTapped*` and `TestTapEachTransitionsTogether`.

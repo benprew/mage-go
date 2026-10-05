@@ -1497,3 +1497,27 @@ Tawnos's Weaponry, Spirit Shield and Zelyon Sword use this duration with their
 printed mana/tap costs and P/T bonuses. Their separate permission to remain
 tapped during untap still permits the choice after the target leaves.
 Evidence: `TestRONSourceTappedDuration*` and `TestUntilSourceUntaps*`.
+
+## RON opponent-land tap triggers
+
+`TriggerA(WhenAPermanentBecomesTapped(And([IsLandType(subtype),
+ControlledByAPlayer(Opponent)])), actions)` uses
+`mage.OpponentLandBecomesTapped().OfSubtype(subtype)`. The conjunction must
+contain exactly these two filters, in either order. The subtype must be a symbol
+that the engine accepts as a land subtype. Existing subtype spelling conversion
+applies, including `Urzas` and `PowerPlant`. Extra filters, disjunctions,
+source/host selectors, other controller selectors and event-result reads remain
+unsupported in this context. The existing trigger action compiler supplies
+per-instance actions and local targets; this event does not declare a
+`Trigger_ThatPermanent` or `Trigger_ThatPlayer` binding.
+
+Matching uses the land's type, subtype and controller when it becomes tapped.
+The pending trigger retains its controller. Mana tapping and other tap operations
+can trigger it; entry tapped and tapping an already tapped land cannot. Source
+or land departure and later control changes do not erase a pending trigger.
+Phased sources do not trigger. Copies use the copy controller for `You`.
+
+Real RON evidence: Lifetap (all six reprints) and Lifeblood in
+`TestRONOpponentLandTapRealCards` and `TestRONOpponentLandTapPaymentAndBatch`.
+Declaration and syntax evidence: `TestRONOpponentLandTapInvalidAndInventory`
+and `TestRONOpponentLandTapSubtypeAndOrder`.

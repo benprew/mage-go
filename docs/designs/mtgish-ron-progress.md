@@ -5443,3 +5443,155 @@ Ranked next candidates to reassess from fresh evidence:
 
 Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
 and native startup validation remain unfinished. No second slice began.
+
+## Run 2026-10-04: OPPONENT-LAND-TAP
+
+Status: complete opponent-land tap event adapter slice. This run stops here.
+Initial user changes in `.gitignore` and `mtgish-ron-execution.md` are preserved
+and excluded from the slice. No unrelated untracked files were present.
+
+### Fresh evidence and candidate selection
+
+Baseline RON/CLI tests with `-count=1` and `make build` passed. Fresh semantic
+inventory used the strict loader and exited 1 for collection rejection:
+**1,151 compiled / 1,294 rejected records**, 403 accepted / 583 rejected unique
+names, among 2,445 records / 986 names. There were 72,938 AST occurrences,
+8,528 context/shape signatures and 14,356 unknown-role occurrences.
+
+The entire design, latest progress, engine API reference and relevant compiler
+code were read. The vocabulary snapshot was inspected for nested tap-event
+signatures; fresh AST inventory supplied roles, shapes, contexts and distinct
+names. Complete records were read for all ten first-error tap-event consumers,
+all seven recipient-prevention candidates, all five banding lands, and the
+controller-filter candidates. All seven selected source records were inspected.
+Reprints count once in the following comparison.
+
+| Candidate | Distinct affected names | Estimated full unlocks | Other blockers, downstream benefit and effort |
+| --- | --- | ---: | --- |
+| Opponent-land tap events, selected | Lifetap, Lifeblood | 2 | No missing engine contract or later card blocker. One small compiler adapter and inventory role change; moderate test effort for event timing, transactions, control, phasing and clones. Establishes the tap-event filter context for later typed source/host tap-event adapters. |
+| Recipient amount prevention | Samite Healer, Conservator, Amulet of Kroog, Argivian Blacksmith, Combat Medic, Oasis, Kei Takahashi | 0 for prerequisite; 7 after adapter | Missing CR 615.7 simultaneous shield allocation. Large damage/replacement/decision test effort. Enables all seven complete otherwise-ready records; Guardian Angel and Rakalite still have variable-payment/future-trigger blockers. |
+| Filtered bands with other legendary creatures | Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel | 5 | Requires filtered combat formation and damage assignment. Moderate-to-large engine and combat/layer test effort; Master of the Hunt also needs named-member and token contracts. |
+| Scoped controller filters | Alchor's Tomb, Ashnod's Battle Gear, Cocoon, Delif's Cone, Delif's Cube, Ebony Horse, Elvish Scout, Energy Tap, Erhnam Djinn, Glyph of Destruction, Goblin Kites, Hyperion Blacksmith, Kry Shield, Mana Short, Relic Bind, Safe Haven, Simulacrum, Stone Giant, Tourach's Gate; Goblin Artisans in spell-filter context | 1 for controller-target adapter alone | Ashnod's Battle Gear is otherwise ready after the last duration slice. Other records need prevention, timing/delayed triggers, optional actions/costs, queries/results, linked exile, attachment conditions or spell-filter/coin contracts. Useful shared prerequisite, but less immediate gain than the selected two-card adapter for similar scope. |
+
+The selected shape has the best credible gain for the small implementation
+needed: two complete cards with exact engine behavior already available.
+First-error tap counts alone would incorrectly suggest ten unlocks. Kudzu needs
+reattachment choices; Artifact Possession, Haunting Wind and Powerleech need
+activation events; Psychic Venom needs host/event bindings and controller reads;
+City of Brass, Blight and Spirit Shackle need source/host/event bindings. Their
+nested forms remain rejected. No second capability was implemented.
+
+### Exact contract, reuse and boundaries
+
+Supported event signature/context:
+`TriggerA(WhenAPermanentBecomesTapped(And([IsLandType(subtype),
+ControlledByAPlayer(Opponent)])), actions)` on a permanent.
+`WhenAPermanentBecomesTapped/1`, `And/1` with a two-element list,
+`IsLandType/1` with a symbol, and `ControlledByAPlayer/1` with symbol `Opponent`
+are required. The two conjunction elements can appear in either order. Only
+known engine land subtypes are accepted, with existing `subtypeName` conversion.
+Duplicate, absent or additional filters, unknown/incorrect subtype families,
+wrong argument kinds/arity, `Or`, different controller selectors and
+`SinglePermanent` forms remain errors. Static, cost and spell-rule contexts
+retain their existing rejection behavior.
+
+`ron.compileOpponentLandTap(Node)` returns
+`(func(mage.Effect) *mage.GenericTriggered, error)`. RON owns syntax and context
+validation. It reuses `ValidateSubtypeFamily` and the existing event definition
+validator to reject invalid event subtypes at compilation. The temporary
+validation object is discarded; it is not registered or used for execution.
+The returned plan captures only an immutable subtype string. Each card factory
+builds a new event pattern and the existing per-instance trigger action plan.
+There is no Go-card fallback, mutable shared target state, card-name branch,
+game-time declaration panic, global action-result slot or partial registry.
+
+Engine reuse: `OpponentLandBecomesTapped().OfSubtype`, `WhenEvent`, `Sequence`,
+existing trigger action/target builders, APNAP queueing, clone/copy services,
+transactional casting, mana taps and simultaneous `TapEach`. `GainLife` retains
+the resolving trigger controller. Event matching uses current land type,
+subtype and controller; pending triggers retain their event controller.
+Departure/return and later control changes cannot redirect the gain. Phased
+sources/lands cannot produce a matching event. No event permanent/player
+binding is declared, so unbound `Trigger_ThatPermanent`/`Trigger_ThatPlayer`
+reads remain errors. No permanent characteristic LKI read, replacement-order
+change or new batch operation is introduced. Existing engine services own
+those contracts. Rules read: CR 603.1–603.3, 603.2e and 701.26a/b.
+
+This is a missing compiler adapter, not a missing engine service. No source-data
+defect or environment failure was found. Gaea's Liege and Fastbond observations
+remain open. No RON source changed; all twelve source hashes remain unchanged.
+The vocabulary source snapshot therefore requires no refresh.
+
+### TDD and card-to-test mappings
+
+The initial test fixture used a nonexistent `WithEntersTapped` constructor.
+It was corrected to `WithKeyword(core.EntersTapped)` before the semantic red run.
+Real RON tests then failed with the expected
+`unsupported trigger (WhenAPermanentBecomesTapped)` diagnostic, and inventory
+failed to classify nested event filters. Tests were written before the adapter.
+After implementation, all focused tests pass. Collection count assertions were
+changed only after fresh inventory proved the seven-record gain.
+
+| Cards / contracts | Tests and evidence |
+| --- | --- |
+| Lifetap: LEA, LEB, 2ED, 3ED, CED, CEI; Lifeblood: LEG | `TestRONOpponentLandTapRealCards`: complete RON records and engine definition validation; exact one-life gain, controller versus owner, opposing/own lands, subtype/type restrictions, dual lands, retap and untap-retap, entry tapped, before/after-event control and source/land departure/return, source/land phasing and phase cycles, ability removal, trigger copies and independent cloned resolution. |
+| Lifetap, Lifeblood | `TestRONOpponentLandTapPaymentAndBatch`: mana tap queues a normal trigger without immediate gain; successful cast taps its mana land; failed cast leaves land/hand/mana and trigger queue unchanged; simultaneous tap batches yield one gain per opposing matching land; multiple source instances produce independent triggers and opposing instances do not match their own land. |
+| Declarations / semantic inventory | `TestRONOpponentLandTapInvalidAndInventory`: exact kinds/arity, extra/duplicate/missing filters, incompatible/unknown subtype, unsupported host/filter contexts, unbound event permanent/player reads, nested permanent/player filter roles. |
+| Shared parameterized shape | `TestRONOpponentLandTapSubtypeAndOrder`: both filter orders; five basic land types, Desert, Gate, Urzas and PowerPlant; existing spelling conversion; independent action amount and valid engine definitions. |
+| Previously accepted RON behavior | Full RON package tests, including `TestInventoryLeavesRealRONGameplayAndRegistryUnchanged`. Existing engine event/batch/cost contracts pass in the required engine and whole-repository runs. |
+
+Two unique real cards gain full-record gameplay mappings. This is separate from
+compilation progress; collection engine-validation and behavior-verification
+totals remain null. No collection-wide gameplay completion is claimed.
+
+### Actual gain and validation
+
+Actual gain equals estimate: **2 unique cards / 7 records**. Fresh strict and
+semantic loaders report **1,158 compiled / 1,287 rejected records**, 405 accepted
+/ 581 rejected names. Only Lifetap and Lifeblood leave the issue list; no accepted
+name regresses. Eighteen remaining record diagnostics, for Kudzu, Psychic Venom,
+City of Brass, Artifact Possession, Haunting Wind, Powerleech, Blight and Spirit
+Shackle, now identify the unsupported subject/filter inside the tap event.
+Inventory remains 72,938 occurrences and 8,528 signatures; unknown roles fall to
+14,279. This role gain reports semantics and does not claim those other cards
+execute. Source hashes match the baseline and vocabulary.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1`, `make build` | PASS |
+| Baseline `go run ./cmd/loadcards -inventory -json` | Expected exit 1, collection rejection: 1,151 compiled / 1,294 rejected |
+| New `TestRONOpponentLandTap*` before implementation | Expected unsupported-trigger / inventory-role failure |
+| `go test ./pkg/mage/dsl/ron -run TestRONOpponentLandTap -count=1` | PASS |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after measured count updates |
+| `go test ./pkg/mage/... -short -count=1` | PASS |
+| `make test` | PASS |
+| `make build` | PASS |
+| `go vet ./...` | PASS |
+| `make lint` | PASS, zero issues; automatic formatting reviewed; no unrelated files changed |
+| Post-lint RON/CLI focused tests | PASS |
+| `git diff --check` | PASS |
+| Final `go run ./cmd/loadcards -json` and semantic inventory comparison | Expected exit 1: 1,158 compiled / 1,287 rejected; identical issue arrays |
+
+Required checks have no build/test/environment blocker. Loader rejection remains
+an incomplete-collection result. No runtime loading, WASM or platform code
+changed; no new startup or WASM claim is made.
+
+Slice files: new `pkg/mage/dsl/ron/opponent_land_tap.go` and
+`opponent_land_tap_test.go`; `triggers.go`, `inventory.go`, `inventory_test.go`;
+`docs/dsl-reference.md`, `docs/engine-rules-contracts.md`, and this ledger.
+Only these files are staged for the descriptive slice commit.
+
+Ranked next candidates to reassess:
+1. Typed source/host tap-event bindings: City of Brass, Blight, Spirit Shackle
+   and Psychic Venom have concrete nearby paths; inspect source/controller
+   identity and LKI semantics before estimating full unlocks. Existing
+   `BecomesTapped`, `AttachedBecomesTapped`, `PermanentBecomesTapped`, typed
+   bindings and controller queries are available for reuse.
+2. CR 615.7 simultaneous shield allocation followed by recipient prevention:
+   seven concrete otherwise-ready records after the prerequisite.
+3. Filtered legendary banding: five lands, with engine combat contracts needed.
+
+Complete collection gameplay, runtime loading, Go-card/generator deletion,
+DSL cleanup and native startup validation remain open. No definitions or DSL
+functions were removed because their removal gates are not met. No whole-repo
+DSL deletion audit or authoring cutover is claimed. Migration is incomplete.

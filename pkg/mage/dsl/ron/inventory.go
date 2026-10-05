@@ -559,7 +559,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		}
 		if len(n.Args) == 1 {
 			switch n.Name {
-			case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies":
+			case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies", "WhenAPermanentBecomesTapped":
 				return "permanent_filter"
 			case "AtTheBeginningOfAPlayersUpkeep", "AtTheBeginningOfAPlayersEndStep":
 				return "player_filter"

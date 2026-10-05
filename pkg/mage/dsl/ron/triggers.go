@@ -20,6 +20,12 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAPermanentBecomesTapped":
+		var err error
+		buildTrigger, err = compileOpponentLandTap(trigger)
+		if err != nil {
+			return nil, err
+		}
 	case "WhenAPermanentEntersTheBattlefield", "WhenAPermanentDies":
 		if err := arity(trigger, 1); err != nil {
 			return nil, err
