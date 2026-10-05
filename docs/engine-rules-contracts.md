@@ -2316,3 +2316,36 @@ Evidence: `TestRONGraveyardEventDingusEgg`, `TestRONGraveyardEventTablet`,
 `TestRONGraveyardEventNativeLoad`. The local Oracle data requires Dingus Egg
 to damage the last controller, not the graveyard owner; all six RON reprints
 now use the separate controller binding.
+
+## RON end-step intervening-if adapters
+
+End-step `TriggerI` uses `TurnStepBegins`, `EachEndStep`/`YourEndStep`,
+`BindPlayer`, `WhenEvent` and `WithInterveningIf`. Battlefield absence lowers
+to `BattlefieldHasNone`; source damage-to-opponent history lowers to
+`SourceDamagedOpponentThisTurnCondition`. No engine service changes.
+CR 603.4 and 608.2a require checks at detection and resolution. CR 603.3b
+supplies APNAP placement. Current battlefield queries exclude phased objects
+(CR 702.26b). Captured source incarnations prevent a returned card from
+receiving counters or paying the original trigger's sacrifice (CR 400.7).
+A phase cycle retains damage history; a new incarnation does not. The pending
+trigger retains its controller, so source control changes cannot change the
+opponent used by its condition. Sacrifice can fail after a source control
+change because the trigger controller no longer controls it (CR 701.21a).
+
+`TestRONEndStepInterveningPestilence` proves both condition checks, phasing,
+source return, sacrifice permission, copies and clone isolation.
+`TestRONEndStepInterveningPestilenceDamage` proves native paid activation,
+failed payment, source departure/control/phasing, black protection, finite
+player prevention and simultaneous creature/player damage visibility.
+`TestRONEndStepInterveningDervish` proves actual damage history, cleanup,
+source identity, control changes, copies and phasing.
+`TestRONEndStepInterveningDervishProtectionAndInstances` proves black damage,
+blocking, spell and Aura protection, plus per-instance history. It proves one
+counter per end step regardless of
+the number of damage events. `TestRONEndStepInterveningAPNAPAndAbilityRemoval`
+proves separate factories, APNAP and retained pending triggers.
+`TestRONEndStepInterveningDeclarations`, `TestRONEndStepInterveningInventory`
+and `TestRONEndStepInterveningNativeLoad` prove declaration errors, event scope,
+semantic roles, strict reprint loading, unpaid casting rejection and native
+execution. These adapters establish no new LKI, payment, damage, replacement
+or history service.

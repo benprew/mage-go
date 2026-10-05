@@ -289,6 +289,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "permanent_filter"
 		}
 	case "trigger_condition":
+		if n.Name == "NoPermanentsPassFilter" && len(n.Args) == 2 {
+			return []string{"permanent_filter", "zone"}[index]
+		}
 		if n.Name == "PermanentPassesFilter" && len(n.Args) == 2 {
 			return []string{"permanent_reference", "permanent_filter"}[index]
 		}
@@ -676,6 +679,9 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "DealtDamageToAnyPlayerThisTurn" && len(n.Args) == 1 {
+			return "player_filter"
+		}
 		if n.Name == "WasDealtDamageByPermanentThisTurn" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

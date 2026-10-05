@@ -11212,3 +11212,149 @@ snapshot and this ledger. Stage only these seventeen files. The commit hash is
 reported in the final response. Complete collection gameplay, runtime/startup
 cutover, Go-card/generator deletion and unused DSL cleanup remain open. Stop
 here after this slice.
+
+## 2026-10-05: end-step intervening-if absence and damage history
+
+Status: completed compiler-adapter slice, `end-step.intervening-absence-damage`.
+Preserve the initial `.gitignore` and execution-design changes. Neither belongs
+to this commit. Runtime cutover, Go-card removal and DSL removal gates remain open.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+ledger, selected compiler/event/scope/inventory code, engine condition and
+intervening-if services, API/rules-contract docs and CR 400.7, 603.3b, 603.4,
+608.2a, 701.21a and 702.26b. Requirements came from complete RON records.
+Pestilence's six identical records and Whirling Dervish's LEG record match
+local Oracle text in `data/LEA.json` and `data/LEG.json`. Also inspected complete
+records and nested forms for the candidates and related rejected end-step
+cards, including both Erg Raiders records. No source correction is needed.
+Existing semantic inventory and typed per-instance scopes satisfy prerequisites.
+
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed. Fresh
+strict and inventory loaders exited 1 for collection rejection: 2,445 records,
+986 names, 1,425 compiled / 1,020 rejected records, 496 accepted / 490 rejected
+names. Inventory had 72,938 nodes, 8,530 semantic signatures and 12,210
+unknown-role occurrences. This was not a compiler or environment failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream capability and effort |
+| --- | --- | --- | --- |
+| End-step intervening-if (selected) | Pestilence, Whirling Dervish. Related rejected conditions: Erg Raiders, Osai Vultures, Voodoo Doll | 2 names / 7 records. All other rules of the selected two cards are supported. Erg needs attack/control history and Unless; Osai needs a typed death-history state condition; Voodoo needs tapped LKI, counter information across destruction and constrained X payment. These conditions remain rejected. | Reuses bound step events and engine conditions for detection/resolution checks. Enables later end-step condition adapters with the same event scope. Small implementation and medium gameplay-test effort. |
+| Mandatory random-discard transaction prerequisite | Coral Helm, Draconian Cylix | 0 names immediately, 2 after the cost adapter. Complete records otherwise use supported boosts/regeneration and mana/tap costs. Existing cost uses process randomness and bypasses cost-discard replacements; validation substitutes a chosen discard. Needs deterministic random payments after nonrandom payments, shared batch replacements and rollback under CR 601.2h. | Shared random cost transactions. Medium/high engine effort plus adapter and gameplay tests. |
+| Finite recipient prevention | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Rasputin Dreamweaver | 0 for allocation prerequisite alone; 9 likely after adapters. Guardian needs repeatable optional payments, Rakalite delayed return, Rasputin source-related prevention, untapped-turn history and a counter cap. | Shared simultaneous prevention allocation, typed recipients and X values. High engine/decision/batch and gameplay-test effort. |
+| All-zone CDA characteristics | Keldon Warlord, Nightmare, Plague Rats, Gaea's Avenger, Dakkon Blackblade, People of the Woods | 0 before all-zone engine characteristics; 5 likely after adapters. Avenger still needs a controller/source-data audit. Complete records need battlefield counts, controller filters and name filters; Avenger also needs addition. | Reusable all-zone power/toughness queries and CDA layer ordering. High engine and cross-zone test effort. |
+
+The selected shared adapter gives the same immediate two-card gain as random
+cost wiring with substantially less effort and no missing engine contract.
+It therefore wins over the previous ledger suggestion. First-error frequency
+was not an unlock estimate. Contract, reuse boundary and acceptance cases were
+stated before editing. No second slice was begun.
+
+### Supported shapes, reuse and dependencies
+
+On permanent cards, support:
+`TriggerI(AtTheBeginningOfAPlayersEndStep(players), condition, actions)`.
+`players` is symbol `AnyPlayer` or `SinglePlayer(You)`. Conditions are:
+
+- `NoPermanentsPassFilter(filter, OnTheBattlefield)`, with the existing supported
+  permanent-filter grammar. This reads both players' current battlefield.
+- `PermanentPassesFilter(ThisPermanent,
+  DealtDamageToAnyPlayerThisTurn(Opponent))`, with exactly that source and player.
+
+New private signatures:
+`compileEndStepIntervening(Node, scope) (optionFactory, error)`;
+`compileEndStepCondition(Node) (mage.StateCondition, error)`;
+`compileBoundStepTriggerWithCondition(event, body Node, ctx scope,
+  each, your mage.TurnStepPattern, label string,
+  condition mage.StateCondition) (optionFactory, error)`.
+The existing bound-step compiler calls the last function with no condition.
+All existing callers retain their behavior. The existing TriggerI dispatcher
+validates three arguments before the new adapter can read them.
+
+RON owns spelling, arity, scope and lowering. The engine retains
+`BattlefieldHasNone`, `SourceDamagedOpponentThisTurnCondition`,
+`TurnStepBegins`, `EachEndStep`, `YourEndStep`, `BindPlayer`, `WhenEvent`,
+`WithInterveningIf`, APNAP, source incarnations, damage history, sacrifice,
+protection, batch damage and transactional payments. No engine API changed.
+The event-player binding is built with the effects per factory; pending events
+and copies keep their own values. Conditions contain no chosen mutable state.
+No fallback, card-name branch, partial production registry, new declaration
+panic, global last-action slot or parallel rules executor was added.
+
+Source phasing prevents detection; phased creatures do not count for absence.
+Both conditions are checked again at resolution. A source phase cycle keeps
+history, while departure/return makes a new incarnation. A pending Dervish
+trigger keeps its original controller for the opponent check. A copy uses its
+own controller. A pending Pestilence trigger cannot sacrifice its source after
+another player gains control of it (CR 701.21a). Removing the source ability
+after detection does not remove the pending trigger. No new LKI contract is
+claimed; absent-source actions use the existing exact incarnation services.
+
+### TDD and gameplay mappings
+
+The initial test build exposed a fixture typo (`Node.Text` instead of
+`Node.String`). After that correction, the suite failed at the expected
+unsupported intervening-if end-step diagnostic for both complete cards and
+all seven strictly loaded records, before implementation. Later fixture fixes
+set the synthetic victim's owner, select Pestilence's activated ability at
+index 1 (index 0 is its trigger), and use the existing two-argument shield API.
+The control-change expectation was corrected using CR 701.21a. These changes
+did not weaken an existing behavior test. Inventory-count assertions now use
+fresh measurements; existing Lightning Bolt gameplay still passes.
+
+| Card / context | Tests and coverage |
+| --- | --- |
+| Pestilence, six full records | `TestRONEndStepInterveningPestilence`: absent/present creatures at detection and resolution, phased creatures, source phase before/after, source return, control change, copied trigger and clone isolation. `TestRONEndStepInterveningPestilenceDamage`: native paid/unpaid activation, no damage before resolution, simultaneous creature/player results, source departure/control/phasing, phased recipient, black protection and player prevention. |
+| Whirling Dervish, full LEG record | `TestRONEndStepInterveningDervish`: actual opponent/self/zero/prevented damage, damage too late to trigger, controller changes before/after detection, new incarnations before/after detection, phase cycle, copies with original/opponent controller, cleanup and clone isolation. `TestRONEndStepInterveningDervishProtectionAndInstances`: black damage/blocking/targeted spell/Aura protection, separate factory histories, multiple hits produce one counter, both players' end steps. |
+| Shared event contract | `TestRONEndStepInterveningAPNAPAndAbilityRemoval`: APNAP, two source factories, sequential resolution, removal before detection and after detection. `TestRONEndStepInterveningDeclarations`: arities, zone kinds, incompatible source/player refs, unsupported conditions; own-step timing and saved event player after control change. `TestRONEndStepInterveningInventory`: nested semantic roles, tuple player rejection, restricted player rejection and out-of-scope event player. |
+| Strict native loading and casting | `TestRONEndStepInterveningNativeLoad`: all seven complete records, canonical reprints, engine definition validation, unpaid casting rejection, paid native casting and engine execution of both loaded cards together. This is an explicit test registry; production strict loading still rejects the incomplete collection. |
+
+Compilation and gameplay evidence remain separate: two unique cards gain
+complete gameplay mappings, seven records gain compilation. Collection-wide
+`engine_validated` and `behavior_verified` remain null. No Go card, generator
+or DSL function was removed; removal gates are not met and no removal caller
+audit is claimed.
+
+### Validation and actual gains
+
+Actual gain matches the estimate: **2 unique names / 7 records**.
+Fresh strict and inventory reports: **1,432 compiled / 1,013 rejected records**,
+**498 accepted / 488 rejected names**. No previously accepted record regressed.
+The six Pestilence issues and Whirling Dervish issue disappear. Four still
+rejected records now report later condition errors: both Erg Raiders records
+(`DidntAttackThisTurn`), Osai Vultures (`ACreatureOrPlaneswalkerDiedThisTurn`),
+and Voodoo Doll (`IsUntapped`). All other rejection diagnostics are unchanged.
+Inventory: **72,938 nodes / 8,530 semantic signatures / 12,197 unknown-role
+occurrences**. New role labels report battlefield filter/zone descendants and
+the damage-history player argument. RON files and all file hashes are unchanged;
+no vocabulary source-snapshot refresh is required. No environment blocker was
+found; the known separate source concerns remain open.
+
+| Command | Result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONEndStepIntervening -count=1` | Expected TDD failure, then PASS. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, rerun with the final test cases after lint. |
+| `make test` | PASS, rerun with the final test cases after lint. |
+| `make build` | PASS, rerun after lint. |
+| `go vet ./...` | PASS, rerun after lint. |
+| `make lint` | PASS twice, zero issues; reviewed automatic formatting, no unrelated changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,432 compiled / 1,013 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; matching compilation/issues and unchanged source hashes. |
+
+Ranked next candidates to reassess:
+1. Random-discard cost transaction prerequisite for Coral Helm and Draconian
+   Cylix, then the adapter. Keep random payments after deterministic payments
+   and prove replacement handling and rollback.
+2. Finite recipient-prevention allocation and adapters for the nine otherwise
+   ready names, retaining the three separate blockers.
+3. All-zone CDA characteristics for the six names above, with the Avenger
+   source audit separate.
+
+Changed slice files: `end_step.go`, `end_step_intervening.go`,
+`end_step_intervening_test.go`, `storage_land.go`, `inventory.go`,
+`inventory_test.go` under `pkg/mage/dsl/ron`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger. Commit hash is reported in
+the final response. Complete collection gameplay, runtime/startup cutover,
+Go-card/generator deletion and unused DSL cleanup remain open. Stop here.

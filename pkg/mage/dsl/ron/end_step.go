@@ -9,6 +9,10 @@ func compileEndStepTrigger(event, body Node, ctx scope) (optionFactory, error) {
 }
 
 func compileBoundStepTrigger(event, body Node, ctx scope, each, your mage.TurnStepPattern, label string) (optionFactory, error) {
+	return compileBoundStepTriggerWithCondition(event, body, ctx, each, your, label, nil)
+}
+
+func compileBoundStepTriggerWithCondition(event, body Node, ctx scope, each, your mage.TurnStepPattern, label string, condition mage.StateCondition) (optionFactory, error) {
 	if err := arity(event, 1); err != nil {
 		return nil, err
 	}
@@ -45,7 +49,11 @@ func compileBoundStepTrigger(event, body Node, ctx scope, each, your mage.TurnSt
 		if attached {
 			pattern = mage.AttachedControllerUpkeep(mage.BindPermanent("upkeep host"), player)
 		}
-		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
+		var options []mage.TriggerOption
+		if condition != nil {
+			options = append(options, mage.WithInterveningIf(condition))
+		}
+		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...), options...).(*mage.GenericTriggered)
 		actions.effects = nil
 		return mage.WithAbility(TriggerA(trigger, actions))
 	}, nil

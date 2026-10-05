@@ -2248,3 +2248,26 @@ local Oracle text in `data/LEA.json`. Tablet of Epityr uses the existing optiona
 payment action. Full-card evidence is in `TestRONGraveyardEvent*`, including
 strict loading and native casting. This does not establish support for Lich,
 Cyclopean Tomb or Urza's Miter.
+
+### RON end-step intervening-if triggers
+
+`TriggerI(AtTheBeginningOfAPlayersEndStep(players), condition, actions)` accepts
+`AnyPlayer` or `SinglePlayer(You)`. The actions can read the captured
+`Trigger_ThatPlayer`; that binding belongs to this trigger and this factory.
+Supported conditions are:
+
+- `NoPermanentsPassFilter(filter, OnTheBattlefield)`, with an existing permanent
+  filter. The query includes both players and excludes phased permanents.
+- `PermanentPassesFilter(ThisPermanent,
+  DealtDamageToAnyPlayerThisTurn(Opponent))`. Damage history belongs to the
+  source incarnation. Zero damage and prevented damage do not satisfy it.
+
+The engine checks the condition at the event and at resolution. A false event
+condition creates no trigger. A false resolution condition performs no actions.
+The pending trigger keeps its controller and event player after a control
+change. Source actions cannot affect a returned incarnation. Sacrifice still
+requires the trigger controller to control the permanent. History and counters
+remain separate between factories and cloned games. Other end-step conditions,
+including tapped state, death history and attack history, remain unsupported.
+Evidence: `TestRONEndStepIntervening*` covers the complete Pestilence and
+Whirling Dervish records, reprints, native casting and engine gameplay.
