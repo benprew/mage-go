@@ -10441,3 +10441,169 @@ Slice files: `pkg/mage/dsl/ron/compiler.go`, `tap_choice.go`,
 `docs/engine-rules-contracts.md`, and this ledger. Stage only these eight files
 for one descriptive commit after checks pass. The initial user edits remain
 unstaged. The commit hash is reported in the final response.
+
+## Run 2026-10-05: RESOLUTION-BATTLEFIELD-COUNT
+
+Status: completed supported slice; stop after validation and one commit. Runtime
+cutover and removal gates remain open.
+
+### Baseline, candidates, and selection
+
+Preserved initial user edits to `.gitignore` and
+`docs/designs/mtgish-ron-execution.md`. Read AGENTS.md, `pkg/mage/doc.go`, the
+execution design, vocabulary snapshot and current progress. Read the selected
+instance-value, filter, player/event/target-binding, inventory and loader code,
+shared count/control-set/multiplication services and their contract tests.
+Reviewed relevant API and rules-contract docs, CR 603.2b/603.3a, 608.2b/c/h,
+and 702.26b/d. Complete RON records and identical reprints supplied requirements;
+Go card definitions did not.
+
+Fresh baseline: `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict and inventory loaders exited 1 for unsupported collection rejection:
+2,445 records, **1,389 compiled / 1,056 rejected**, **485 accepted / 501 rejected
+unique names**. Inventory walked 72,938 nodes / 8,528 signatures, including
+rejected descendants. This was not a build, test or environment failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks and other blockers | Downstream benefit and effort |
+| --- | --- | --- | --- |
+| Resolution-time battlefield counts and `Twice` (selected) | Immediate: Karma, Jovial Evil, 2 names / 7 records. Nested count consumers: Aspect of Wolf, Gaea's Liege, Keldon Warlord, Nightmare, Plague Rats, Gaea's Avenger, Angry Mob, Eternal Flame, Nameless Race, People of the Woods, Psychic Allergy, Dakkon Blackblade, Hazezon Tamar, Land Equilibrium, Rabid Wombat, Typhoon. Other `Twice` consumers: Reverse Polarity, Reflecting Mirror. | 2 names / 7 records. Karma's ordinary any-player upkeep and Jovial Evil's opponent target/damage already work. Typhoon needs recipient-local player binding; Reverse Polarity needs damage history. Other records need static/CDA/entry/choice/replacement/delayed-trigger contracts, arithmetic/rounding or filter extensions. Power Surge's beginning-of-turn historical count is a distinct form. | Shared typed count/set lowering for resolving life/damage/draw/token/counter consumers. Concrete later dynamic P/T and Hazezon token count consumers; static and CDA evaluation remain separate. Small compiler/reporting change, medium gameplay/scope/lifecycle test effort. Exact engine primitives exist. |
+| Finite recipient-shield allocation prerequisite | Conservator, Guardian Angel, Healing Salve, Samite Healer, Oasis, Amulet of Kroog, Argivian Blacksmith, Rakalite, Combat Medic, Alabaster Potion, Kei Takahashi, Balm of Restoration: 12 names / 32 records | Allocation alone: 0. With recipient adapters: 9 otherwise ready names. Balm still needs activated modes; Guardian needs repeat instant-speed mana payment; Rakalite needs delayed return. Source-bound Rasputin is a distinct downstream context with additional counter-cap and intervening-if gaps. | CR 615.7 affected-player allocation and shared finite prevention. High engine decision/replacement/batch test effort before adapters. |
+| All-zone CDA P/T/count contracts | Keldon Warlord, Nightmare, Plague Rats, Gaea's Avenger, Dakkon Blackblade, People of the Woods: 6 names / 21 records | Prerequisite alone: 0. Potential 6 with count/CDA, name filtering and addition; Avenger's RON counts its controller's artifacts and requires evidence-based repair. | All-zone characteristic evaluation and layer 7a; shared creature-stat support. High zone/layer/controller/ability-removal test effort, plus source-defect investigation. |
+
+Complete nested records, not first-error frequency, supplied these estimates.
+The selected shared adapter offers two immediate card unlocks and a reusable
+count dependency with much less effort than finite allocation or all-zone CDA.
+Selection, contract, reuse boundary and acceptance cases were stated before
+editing. No second slice was begun.
+
+### Exact supported shapes and reuse boundary
+
+```ron
+TheNumberOfPermanentsOnTheBattlefield(filter)
+Twice(value)
+ControlledByAPlayer(SinglePlayer(player))
+```
+
+The value constructors and controller wrappers are tuples of arity 1. `filter`
+accepts existing source-independent permanent filters. Nested `And([...])`
+can include at most one controller clause. Without it, `MatchingPermanents`
+selects the global current collection. With it, `PermanentsControlledBy` uses a
+player compiled by `compilePlayerRef`, including the current `You`, declared
+`Ref_TargetPlayer`, event-bound `Trigger_ThatPlayer`, and existing typed controller
+reads in their valid scopes. Collection players, controller clauses inside `Or`,
+multiple controller clauses, numbered/unbound refs and sibling scope leaks remain
+compile-time errors. Source/host/event reference restrictions remain unchanged.
+
+`Twice` recursively compiles its operand with `compileInstanceValue` and lowers
+to `MultiplyValues(Fixed(2), operand)`. Signed intermediates remain signed;
+nonpositive final life/damage amounts use existing engine behavior. These values
+work only in action consumers of `compileInstanceValue`, including resolving
+spells, activations, triggers and selected spell modes. They do not establish
+static/CDA/entry/cost values, temporary P/T values, recipient-loop bindings,
+beginning-of-turn history or damage history.
+
+Private signatures:
+- `compileBattlefieldCount(Node, scope) (valueFactory, error)`.
+- `compileCountFilter(Node, scope, **playerReferencePlan) (mage.PermanentFilter, error)`.
+
+The count-filter helper extracts one immutable typed controller plan and combines
+pure filters. It performs no runtime query. Factory construction supplies fresh
+instance bindings. The resulting value uses shared `CountPermanents`,
+`MatchingPermanents`, `PermanentsControlledBy`, and typed `PlayerRef` services.
+No engine/public API change. Membership, characteristics and control are read
+when each instruction uses the value; ownership does not select membership.
+Phased permanents are absent. Tokens and returned objects can join the current
+collection. Prior zone actions change the count for later instructions.
+
+Shared target legality/payment rollback, event-player snapshots, source LKI,
+stack-copy/retargeting, clone isolation, native damage/prevention/lifelink and
+zone operations remain in the engine. RON owns spelling, shape/scope validation,
+diagnostics and lowering. No fallback, card-name branch, game-time declaration
+panic, skipped rule, global last-action slot or partial production registry.
+No new replacement ordering or simultaneous-operation contract was needed.
+
+Inventory assigns `Twice`'s child the value role and the battlefield count's child
+the permanent-filter role, including descendants of rejected records. Existing
+controller/player role reporting then exposes the typed player reference.
+Reporting support remains unverified; this does not claim support for unknown
+nested parents.
+
+### TDD and card-to-test mappings
+
+Tests were written before the adapter. An initial fixture used nonexistent
+`ManaPool.Total`; corrected it to the existing `TotalMana` API, then confirmed
+expected failures for unsupported battlefield count on Karma, unsupported
+`Twice` on Jovial Evil, and seven strict-loader reprint errors. Implementing the
+adapter made the initial suite pass. Added boundary probes exposed fixture
+issues: a token omitted `TokenTypes(Creature)` and two synthetic RON strings had
+extra parentheses. These were corrected without weakening assertions. Broad
+checks started before those fixture corrections failed only on the same new
+fixtures; all required checks were rerun successfully after correction.
+
+| Card or context | Test mapping |
+| --- | --- |
+| Karma, complete LEB record and six identical reprints | `TestRONBattlefieldCountKarma`: any-player upkeep event, resolution-time added Swamp, controller versus owner, member control/return/phasing, source control/departure/return/phasing before and after event, copied event player, clone-dependent membership, native prevention and lifelink. `ReprintsAndNativeUpkeep`: strict loading validates all seven selected records; each Karma reprint is cast through the engine with paid mana and runs both native upkeep boundaries. Full-card gameplay mapping. |
+| Jovial Evil, complete LEG record | `TestRONBattlefieldCountJovialEvil`: native casting, unpaid and own-player-target rollback, opponent-only target, resolution-time entries, white creature intersection, exclusion of white noncreature and green creature, ownership/control separation, current color changes, tokens, phase/phase-cycle/return/control, retargeted copy versus retained illegal copy, independent original target, native prevention and doubled amount. Full-card gameplay mapping. |
+| Activation and instruction order | `TestRONBattlefieldCountSequenceAndContexts`: nested conjunction, own artifact count, sacrifice source between two counts, second instruction recounts, spell/mode declaration validation. |
+| Typed factory bindings, zero and sign | `TestRONBattlefieldCountBindingsAndSignedValues`: separate factory target declarations, definition validator sees nested count target dependency, independent targets through real casting, empty set returns zero, nested signed multiplication. |
+| Invalid declarations | `TestRONBattlefieldCountInvalid`: wrong kind/arity, malformed list/filter/controller wrappers, multiple controllers, controller under disjunction, wrong typed player, unbound target/event/damage-loop refs, malformed `Twice`, sibling target/event leakage and illegal spell source. |
+| Nested inventory | `TestRONBattlefieldCountInventory`: exact nested value/filter/player/reference roles. Repository inventory tests use measured 1,396/1,049 counts and retain production-registry isolation assertions. |
+
+Existing `TestCountPermanents*` and `TestPermanentsControlledBy*` provide retained
+engine contract evidence. Two unique cards gain complete RON gameplay mappings;
+this is separate from seven newly compiled records. Collection-wide
+`engine_validated` and `behavior_verified` report fields remain null. No
+collection-wide gameplay verification is claimed.
+
+### Final measurements, checks and next work
+
+Actual gain matches estimate: **2 unique names / 7 records**. Final strict and
+inventory reports: **1,396 compiled / 1,049 rejected records**, **487 accepted /
+499 rejected unique names**. The six Karma errors and one Jovial Evil error
+vanish; no accepted record regresses. Exactly three remaining diagnostics advance:
+- Typhoon: `LEG.lines.ron:277:287: unbound or incompatible player reference (DealsDamage_ThatPlayer)`.
+- Reverse Polarity (3ED): `3ED.lines.ron:209:178: unsupported value (DamageDealtToPlayerThisTurnByPermanents)`.
+- Reverse Polarity (ATQ): `ATQ.lines.ron:58:178: unsupported value (DamageDealtToPlayerThisTurnByPermanents)`.
+
+Strict and inventory issue arrays agree. Inventory retains **72,938 nodes /
+8,528 signatures**; unknown-role occurrences drop from 12,385 to **12,326**.
+All twelve source hashes match the vocabulary snapshot. No RON source changed,
+so no vocabulary snapshot refresh was needed. No source defect was corrected.
+Known Avenger/Liege/Fastbond concerns remain open; they were not prerequisites
+for these supported records. No environment or pre-existing failure blocked work.
+
+| Command | Final result |
+| --- | --- |
+| `go test ./pkg/mage/dsl/ron -run TestRONBattlefieldCount -count=1` | PASS after final fixture changes. |
+| `go test ./pkg/mage/dsl/ron ./cmd/loadcards -count=1` | PASS after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS after lint. |
+| `make test` | PASS after lint. |
+| `make build` | PASS after lint. |
+| `go vet ./...` | PASS after lint. |
+| `make lint` | PASS, zero issues. Reviewed formatting/modernize output and final diff; no unrelated automatic changes. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 2,445 records / 1,396 compiled / 1,049 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1; strict diagnostics agree and all nodes are walked. |
+| Source and diagnostic audit | PASS: 12 hashes match, 7 gained records, 2 gained names, 3 advanced diagnostics, no accepted regression. |
+
+Ranked next candidates, to reassess from fresh evidence:
+1. Finite recipient-prevention allocation prerequisite, followed by adapters for
+   nine otherwise-ready names; retain Balm/Guardian/Rakalite blockers.
+2. All-zone CDA P/T contracts for six names; counts now have resolving evidence,
+   but static/all-zone evaluation, name filtering, addition and Avenger source
+   repair still need their own contracts.
+3. End-of-combat/intervening-if and bounded counter replenishment prerequisites
+   shared by Clockwork Avian and Clockwork Beast.
+
+Typhoon's recipient-local scope and Reverse Polarity's damage history remain
+explicit gaps, deferred while broader multi-card prerequisites remain useful.
+Complete collection loading/gameplay, runtime cutover, Go-card/generator deletion,
+native startup and unused DSL cleanup remain open. No removal gate was reached;
+no production definitions, generators, DSL exports or engine services were
+removed. Existing production callers remain available. Stop after this slice.
+
+Slice files: `pkg/mage/dsl/ron/battlefield_count.go`, `battlefield_count_test.go`,
+`sacrifice_value.go`, `inventory.go`, `inventory_test.go`, `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger. Stage only these eight files.
+Initial user edits remain unstaged. The commit hash is reported in the final
+response.

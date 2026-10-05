@@ -606,6 +606,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "value"
 		}
 	case "value":
+		if n.Name == "Twice" && len(n.Args) == 1 {
+			return "value"
+		}
+		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
+			return "permanent_filter"
+		}
 		if n.Name == "Minus" && len(n.Args) == 2 {
 			return "value"
 		}

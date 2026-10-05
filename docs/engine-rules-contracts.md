@@ -2188,3 +2188,30 @@ the counter and keeps the permanent tapped; a declined untap leaves it intact.
 this adapter. Existing `TestComposableTapChoice*` tests retain the shared engine
 contracts. This slice adds no LKI read, finite prevention, replacement-ordering,
 or simultaneous-operation contract.
+
+## RON resolution-time battlefield counts
+
+`TestRONBattlefieldCount*` establishes RON lowering to the existing
+`CountPermanents`, `MatchingPermanents`, `PermanentsControlledBy`, and
+`MultiplyValues` services. No engine rule or public API changes.
+
+Counts read current battlefield membership and final characteristics when an
+instruction resolves (CR 608.2c, 608.2h). Later instructions recount after prior
+zone actions. Control and ownership remain separate; phased members are absent
+(CR 702.26b/d). A returned permanent is a new object but can join a current
+collection (CR 400.7). This count is not a historical snapshot.
+
+Karma retains its upkeep event player and pending controller through source
+control changes, departure and phasing (CR 603.2b, 603.3a). Copies preserve the
+event player. Jovial Evil checks opponent target legality at announcement and
+resolution (CR 608.2b); a copy can select its own opponent without changing the
+original target binding. Native damage retains prevention and source LKI,
+including lifelink. Counts in a cloned game use that game's members. Definition
+validation still detects undeclared targets nested inside the count.
+
+The tests cover full RON records, reprints, paid casting, rollback, current color
+and type filters, tokens, empty counts, signed multiplication, native upkeep,
+source and member lifecycle, copies, clones, declaration errors, and action
+sequencing. All-zone CDA, historical counts and recipient-local damage counts
+remain separate contracts. No new replacement ordering or simultaneous-operation
+contract is established by this adapter.

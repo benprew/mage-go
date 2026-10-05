@@ -2138,3 +2138,26 @@ choice. Decline does not refund costs or stop later instructions. An absent or
 illegal subject receives no choice. Normal tap/untap events and replacements
 still apply. See `TestRONTapChoice*` for complete Twiddle and Hyperion Blacksmith
 RON gameplay and shared scope, copy, clone, event, and rejection evidence.
+
+## RON resolution-time battlefield counts
+
+`TheNumberOfPermanentsOnTheBattlefield(filter)` supplies a resolution value.
+The filter accepts the existing source-independent permanent filters. Nested
+`And([...])` can include one `ControlledByAPlayer(SinglePlayer(player))` clause.
+The player uses the current typed reference scope, including `You`, a declared
+`Ref_TargetPlayer`, or an event-bound `Trigger_ThatPlayer`. Controller clauses
+inside `Or`, multiple controller clauses, collection players, unbound references,
+and damage-loop players remain rejected.
+
+`Twice(value)` multiplies any supported instance resolution value by two.
+It composes with counts and subtraction and retains signed intermediate values.
+These forms work in the resolving action consumers of `compileInstanceValue`;
+they do not add static, CDA, entry, cost, beginning-of-turn, or temporary P/T
+value support. Each instruction reads current collection membership. Phased
+permanents are absent; tokens and returned permanents can be current members.
+Ownership does not determine control.
+
+The adapter uses `CountPermanents`, `MatchingPermanents`,
+`PermanentsControlledBy`, and `MultiplyValues`. Typed references keep factory,
+copy, event, and target bindings separate. Full-card evidence is Karma
+(LEA/LEB/2ED/3ED/CED/CEI) and Jovial Evil (LEG), in `TestRONBattlefieldCount*`.
