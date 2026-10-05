@@ -4521,3 +4521,179 @@ Ranked next candidates:
 
 Complete RON gameplay, runtime loading, Go-card/generator removal, DSL cleanup
 and native startup validation remain unfinished. No second slice began.
+
+## Run 2026-10-04: P7-COLLECTION-UNTAP-DECISION
+
+Status: one complete collection untap restriction shape, with the selectors and
+collection tap action needed for Arena of the Ancients. Initial user changes to
+`.gitignore` and `docs/designs/mtgish-ron-execution.md` are preserved and excluded
+from staging. No unrelated untracked files existed at baseline. No delegation,
+removed skills, generated Go cards or Go-card requirements were used.
+
+### Fresh inventory and candidate comparison
+
+Read AGENTS.md, pkg/mage/doc.go, the execution design, vocabulary snapshot and
+progress ledger. Read selected compiler, inventory, trigger, filter, effect,
+turn, layer, clone and simultaneous tap services and relevant API/rules contract
+documentation. Read complete RON records and nested forms for the candidates,
+including all Meekstone reprints and the downstream collection tap records.
+Local Oracle data in data/LEA.json, LEG.json and DRK.json agrees with the four
+completed cards. Rules read: CR 502.1-4 and 613.1-6; existing source identity,
+phasing and target contracts are reused. Applied the implement-engine skill
+only to the reusable engine prerequisite; RON adapters remain in ron.
+
+Fresh baseline engine short tests and make build passed. Strict loading and
+semantic inventory exited 1 as expected: 1,113 compiled and 1,332 rejected
+records, with 375 accepted and 611 rejected unique names. This is collection
+rejection, not a build or environment failure.
+
+| Candidate | Distinct affected names | Estimated full-card unlocks | Other blockers, downstream capabilities, effort |
+| --- | --- | ---: | --- |
+| Collection untap decision plus Arena selectors, selected | Meekstone; Arena of the Ancients; Magnetic Mountain; Thelon's Curse. Shared legendary selector also reaches Karakas, Livonya Silone, Adventurers' Guildhouse, Cathedral of Serra, Mountain Stronghold, Seafarer's Quay, Unholy Citadel, Willow Satyr. Collection tap reaches Riptide, Mana Short, Power Sink, Feint, Spore Cloud, Word of Binding, Winter Blast, Rohgahh of Kher Keep, Arena. | 3 / 8 records: Meekstone, Arena of the Ancients, Karakas | Mountain/Curse need upkeep event players, payment choices and chosen collections. The five lands need BandsWithOthers; Livonya needs legendary landwalk; Willow needs control duration. Tap consumers need controlled-player collections, plural targets, combat relations, prevention or action results. Small adapters plus a moderate engine timing contract and lifecycle/gameplay tests. Riptide was not included in the initial estimate; it was found ready during fresh post-change loading. |
+| Standalone permanent supertype adapter | Karakas; Livonya Silone; Arena of the Ancients; Adventurers' Guildhouse; Cathedral of Serra; Mountain Stronghold; Seafarer's Quay; Unholy Citadel; Willow Satyr; Gaea's Touch; Goblin Caves; Goblin Shrine; Land Tax; Untamed Wilds | 1 | Karakas ready; Arena also needs collection untap/tap; Livonya needs landwalk lowering; lands need banding grants; others need control, entry choice, conditions, intervening-if or search. Small adapter, moderate legality tests. Fold the Legendary permanent shape into the selected dependent slice; Basic and other roles remain rejected. |
+| Explicit-player life | Stream of Life; Healing Salve; Alabaster Potion; Relic Bind; Spiritual Sanctuary; Swords to Plowshares; Crumble; Personal Incarnation; Nafs Asp; Psychic Purge; Shahrazad | 1 | Stream ready. Salve/Potion need shared prevention allocation; Relic needs tapped events, opponent filters, trigger modes and target unions; Sanctuary needs intervening-if; Swords/Crumble need snapshots and zone actions; others need events, replacements, delayed/source-zone or subgame services. Small adapter, moderate player/X/copy tests. |
+| Shared simultaneous prevention allocation | Samite Healer; Conservator; Amulet of Kroog; Argivian Blacksmith; Combat Medic; Oasis; Kei Takahashi; Healing Salve; Alabaster Potion; Balm of Restoration; Rakalite; Guardian Angel | 0 immediately; 7 after lowering | The prior ledger identifies seven otherwise-ready unique cards / 17 records. Others need life, activation modes, delayed triggers or player payment actions. Shared CR 615.7 engine allocation enables these cards, but requires substantially larger damage/choice/replacement contract work. |
+
+Selection rationale: complete two related collection rules and their required
+selectors for more immediate unique-card gain than standalone filters or life.
+The engine prerequisite also enables the same exact untap rule on Mountain and
+Curse, without pretending their payment paths work. The larger prevention
+prerequisite remains valuable. First-error frequency was not an unlock estimate.
+The contract, engine/RON boundary and acceptance cases were stated before edits.
+
+### Exact signatures, supported contexts and dependencies
+
+- `PreventUntapDuringStepForMatching(PermanentFilter) ContinuousEffect` is a
+  reusable engine static rule. It stores an immutable filter declaration, not
+  selected game objects. `matchingUntapRestrictions() map[uuid.UUID]bool` creates
+  a local snapshot after phasing and layer evaluation, before the untap loop.
+  Active printed-source checks use the existing effect wrapper; final layered
+  characteristics use the existing filters. Other untap effects remain legal.
+  Recipient ability removal does not erase this restriction. Source departure,
+  phasing and ability removal disable it. Source return builds a new instance.
+  The existing `PreventUntapForMatching` API and callers remain unchanged.
+- `compileCollectionPermanentRule(Node) (optionFactory, error)` accepts
+  `EachPermanentRuleEffect(filter, [DoesntUntapDuringControllersUntap])` in
+  permanent Rules, with one bare operation and a supported source-independent
+  permanent filter. The established landwalk blocking shape delegates to its
+  existing adapter. Mixed/empty operation lists, operation tuples, bound/result
+  selectors and source-dependent controller collections remain rejected.
+- `compileFilter` accepts `IsSupertype(Legendary)` for permanent filters,
+  including nested And/Or, using `mage.IsLegendary`. Basic/Snow/World and
+  card/spell filter roles remain unsupported. No new supertype engine semantics
+  are invented.
+- `compileEffect` accepts `TapEachPermanent(filter)` in resolving spell, mode,
+  activation and trigger action lists, using
+  `mage.TapEach(mage.MatchingPermanents(filter))`. Filters are the supported
+  source-independent permanent forms. Target collections, choice results,
+  loop bindings and player-dependent selections are not accepted. Selection
+  occurs at resolution and uses existing incarnation, phasing and simultaneous
+  tap/event services.
+- Source-only `WhenAPermanentEntersTheBattlefield(SinglePermanent(ThisPermanent))`
+  now lowers to `mage.WhenEvent(mage.Enters(mage.This), body)`. The typed event
+  path keeps event context separate from target declarations. It preserves
+  source departure, phasing, return and copies without legacy auto-target fizzle.
+- The layer reset now includes `ptSwitched` in its reset condition. The new
+  final-power untap test exposed inconsistent repeated switch evaluation.
+- Inventory assigns the TapEachPermanent child its permanent_filter role.
+  Reporting still marks signature support unverified; no support claim is
+  inferred from a signature name.
+
+RON owns syntax and validation; mage owns rule execution. Factory calls build
+fresh abilities/effects. Costs, targets, source LKI, incarnation checks, cloning,
+continuous layers and tap batches reuse shared engine services. The local untap
+snapshot cannot leak into another game or overwrite another binding. No new
+payment, replacement, optional-choice or global last-action contract is added.
+No Go fallback, card-name dispatch, partial registry or runtime declaration
+panic was added.
+
+### TDD and card-to-test mappings
+
+| Card / contract | Tests |
+| --- | --- |
+| Meekstone: all LEA/LEB/2ED/3ED/CED/CEI records | TestRONCollectionUntapMeekstone: definition validation, either player's creatures, final boosted power, other untap effect, source departure |
+| Arena of the Ancients: LEG | TestRONCollectionUntapArena: full record, definition validation, entry trigger timing, current resolution membership, legendary creature selection, nonlegendary/land exclusion, phased recipients, source departure/return/phasing/control, copies and clone isolation |
+| Karakas: LEG | TestRONCollectionUntapKarakas: full record, both abilities, immediate white mana and metadata, tap cost timing, either player's legend, owner hand destination, nonlegendary/noncreature/phased target rollback, leave/return legality, copied ability and clones |
+| Riptide: DRK | TestRONCollectionTapRiptide: full record, cast/resolution timing, both players' blue creatures, land/nonblue/phased exclusion, simultaneous tap visibility before events, clone isolation |
+| Shared final-characteristic rule | TestMatchingUntapDecision: boost/reduction/switch, source abilities, recipient abilities, source phase/departure/return, recipient phase-in, current control, inactive player exclusion, clone source removal, other untap effects |
+| Decision timing | TestMatchingUntapDecisionSnapshot: source untaps first but cannot change the current restricted set; the next step refreshes membership |
+| Declarations and syntax | TestRONCollectionUntapInvalid; TestRONCollectionUntapDeclarationsAndInventory: invalid operation shapes, mixed/empty lists, unbound and wrong-role selectors, unsupported supertype forms, fresh factories, engine validation, nested semantic roles |
+| Retained interactions | Existing RON source-entry, landwalk, static untap, typed target and registry tests; TestTapEachTransitionsTogether and engine layer/clone tests |
+
+Confirmed baseline semantic failures with the existing matching untap service:
+boosted/reduced power, source ability removal and recipient ability removal.
+The first synthetic fixture omitted an owner for its destroyed artifact; the
+fixture was corrected before recording the full semantic failure evidence.
+RON tests failed at unsupported untap operations and IsSupertype. Riptide was
+also confirmed to fail with the TapEachPermanent adapter absent. No gameplay
+assertions were weakened. The late-entry Arena fixture used a different legendary
+creature after the original duplicate-name fixture correctly invoked the legend
+rule. Numeric collection inventory assertions were updated to the fresh counts.
+
+### Measurements and validation
+
+Actual gain: **4 unique cards / 9 records**, versus the estimate of **3 / 8**.
+Riptide accounts for the additional gain through the required collection tap
+adapter; its complete RON gameplay mapping was added before counting it.
+Final compiled/rejected records: **1,122 / 1,323** of 2,445. Accepted/rejected
+unique names: **379 / 607** of 986. Zero accepted-record regressions. Only the
+nine records for the four completed cards leave the issue list.
+
+Seventeen records receive later diagnostics: Mana Short (six controlled-player
+filter errors); Magnetic Mountain (two) and Thelon's Curse (one) now reach
+unsupported upkeep AnyPlayer; Spore Cloud reaches prevention; Feint reaches
+IsBlockingAttacker; five legendary lands reach BandsWithOthers; Willow Satyr
+reaches control duration. These are still rejected, not full-card unlocks.
+Strict and semantic issues agree. Inventory retains **72,938 occurrences /
+8,528 signatures**; unknown-role occurrences fall from **14,466 to 14,405**.
+All twelve source hashes are unchanged, so no vocabulary source refresh is needed.
+Engine-validated and behavior-verified collection totals remain null/unmeasured;
+this run supplies full real-RON mappings for four additional unique cards.
+Compilation and collection gameplay completion remain separate.
+
+| Command | Result |
+| --- | --- |
+| Baseline go test ./pkg/mage/... -short -count=1; make build | PASS |
+| Baseline strict and semantic loaders | Expected exit 1, 1,113 compiled / 1,332 rejected |
+| New engine/real-RON tests against missing contracts | Expected semantic FAIL, described above |
+| Focused go test ./pkg/mage ./pkg/mage/dsl/ron ./cmd/loadcards -run 'TestMatchingUntapDecision\|TestRONCollection\|TestInventory' -count=1 | PASS |
+| go test ./pkg/mage/... -short -count=1 | PASS |
+| make test | PASS |
+| make build | PASS |
+| go vet ./... | PASS |
+| make lint | PASS, zero issues; automatic import formatting reviewed |
+| git diff --check | PASS |
+| Final go run ./cmd/loadcards -json; -inventory -json | Expected exit 1, 1,122 compiled / 1,323 rejected; strict and semantic diagnostics agree |
+| Accepted-record and source-hash comparison | PASS, zero regressions and unchanged sources |
+| Post-lint focused tests with -count=1 | PASS |
+| Post-lint go test ./... -short -count=1 | PASS |
+| Post-lint strict loader | Expected exit 1; identical 1,122 / 1,323 report |
+
+No source defect or environment blocker occurred in this slice. Prior
+Gaea's Liege/Fastbond questions remain open. Leading first diagnostics remain
+rule If (53 records), non-spell CastEffect (53), ChooseADamageSource (46),
+Targeted_Modal (42), host self-untap (39), upkeep HostController (35),
+ControlledByAPlayer (35), other self-untap operations (34), graveyard targets
+(26), tapped events (25), and CreateFuturePreventDamage (24). These are record
+first-error counts, not unlock estimates.
+
+Changed files: new engine untap_matching.go/test; turn_execution.go,
+effect_manager.go and doc.go; new ron collection_untap.go/test; compiler.go,
+triggers.go, inventory.go/test; dsl-reference.md, engine-rules-contracts.md and
+this ledger. No Go definitions, generators, startup wiring or DSL exports were
+removed; the removal gates are not met. No deletion caller audit is claimed.
+
+Ranked next candidates:
+1. Shared CR 615.7 simultaneous shield allocation, then exact prevention lowering
+   for the seven otherwise-ready unique cards. Preserve replacement ordering,
+   source allocation, actual damage, lifelink/deathtouch and clone contracts.
+2. Banding-with-other legendary creatures: five lands now pass their complete
+   static selection but stop at BandsWithOthers. Audit existing combat services
+   before claiming an adapter-only task; the whole five-card benefit is concrete.
+3. Explicit-player life: Stream of Life is ready; Salve/Potion still require
+   prevention. Controlled-player collection selectors may instead win after a
+   fresh comparison for Mana Short and downstream payment/combat collections.
+
+Complete collection gameplay, runtime loading, Go-card and generator deletion,
+DSL cleanup and native startup validation remain unfinished. This run stops
+after this slice; no second slice began.

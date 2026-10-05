@@ -368,7 +368,7 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 	case "TriggerI":
 		return compileTappedUpkeep(n, ctx)
 	case "EachPermanentRuleEffect":
-		return compileLandwalkBlockingRule(n)
+		return compileCollectionPermanentRule(n)
 	case "PermanentRuleEffect":
 		return compileSelfUntapRule(n)
 	case "PermanentLayerEffect", "EachPermanentLayerEffect":
@@ -663,6 +663,11 @@ func compileFilter(n Node) (mage.PermanentFilter, error) {
 			return mage.And(filters...), nil
 		}
 		return mage.Or(filters...), nil
+	case "IsSupertype":
+		if n.Args[0].Kind != Symbol || n.Args[0].Name != "Legendary" {
+			return mage.PermanentFilter{}, unsupported(n.Args[0], "permanent supertype")
+		}
+		return mage.IsLegendary, nil
 	case "PowerIs":
 		return compileFixedPowerFilter(n)
 	case "IsCardtype", "IsNonCardtype":
@@ -897,6 +902,15 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 				return mage.Sacrifice(ref)
 			}
 		})
+	case "TapEachPermanent":
+		if err := arity(n, 1); err != nil {
+			return nil, err
+		}
+		filter, err := compileFilter(n.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return one(func(instanceBindings) mage.Effect { return mage.TapEach(mage.MatchingPermanents(filter)) })
 	case "DestroyEachPermanent", "DestroyEachPermanentNoRegen":
 		if err := arity(n, 1); err != nil {
 			return nil, err

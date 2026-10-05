@@ -90,6 +90,7 @@ func (g *Game) doUntap() {
 		g.effects.Apply(g)
 	}
 
+	matchingUntap := g.matchingUntapRestrictions()
 	capturedUntap := g.turns.consumeCapturedUntap(active.PlayerID())
 	// Island Sanctuary: clear protection at the start of the player's turn
 	g.effects.Rules.ClearSanctuary(active.PlayerID())
@@ -114,7 +115,7 @@ func (g *Game) doUntap() {
 
 	for _, p := range g.zones.battlefield {
 		if p.ControllerID() == active.PlayerID() {
-			if g.turns.ConsumeSkipNextUntap(p.ID()) || capturedUntap[p.ID()] || p.HasAttr(AttrDoesNotUntap) {
+			if g.turns.ConsumeSkipNextUntap(p.ID()) || capturedUntap[p.ID()] || matchingUntap[p.ID()] || p.HasAttr(AttrDoesNotUntap) {
 				// The restriction expires even when no untap is possible.
 			} else if p.Tapped && p.HasAttr(AttrMayNotUntap) {
 				// Player may choose not to untap, but only when staying tapped

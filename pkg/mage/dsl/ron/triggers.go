@@ -35,7 +35,9 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 			return nil, unsupported(permanents.Args[0], "trigger reference")
 		}
 		if trigger.Name == "WhenAPermanentEntersTheBattlefield" {
-			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.EntersBattlefieldTrigger(effect, false) }
+			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered {
+				return mage.WhenEvent(mage.Enters(mage.This), effect).(*mage.GenericTriggered)
+			}
 		} else {
 			buildTrigger = func(effect mage.Effect) *mage.GenericTriggered { return mage.DiesTrigger(effect, false) }
 		}

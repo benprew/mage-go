@@ -1178,3 +1178,31 @@ trigger lowering; `TestRONFixedPowerFilters` checks signed bounds and changing
 layered power. Invalid declarations and nested inventory roles have separate
 tests. These tests establish adapter reuse of existing engine rules, not new
 replacement or simultaneous-operation behavior.
+
+## Matching untap restrictions at the turn-based decision
+
+`PreventUntapDuringStepForMatching(PermanentFilter) ContinuousEffect` keeps a
+static restriction separate from a granted ability. `Game.doUntap` selects the
+restricted battlefield objects after phasing in and layer evaluation, before
+any object untaps (CR 502.1, 502.3, 613.5). All matching restrictions contribute
+to one local decision snapshot. A change during the untap operation does not
+change that snapshot. The next untap decision uses current membership.
+
+The check uses final power, including bonuses, reductions and switching. The
+layer reset includes switched P/T state, so repeated evaluations give the same
+result. An active printed source must remain on the battlefield, phased in,
+and retain its abilities. Recipient ability removal does not remove this rule.
+Changing control changes which player's untap step affects the object. Source
+return creates a new active instance. Other untap effects remain permitted.
+The decision snapshot belongs to the current call; it stores no shared game or
+factory state. Existing `PreventUntapForMatching` callers retain their behavior.
+
+Evidence: `TestMatchingUntapDecision` and `TestMatchingUntapDecisionSnapshot`.
+Real-RON evidence: `TestRONCollectionUntapMeekstone` (all six reprints),
+`TestRONCollectionUntapArena`, `TestRONCollectionUntapKarakas`,
+`TestRONCollectionTapRiptide`, `TestRONCollectionUntapInvalid` and
+`TestRONCollectionUntapDeclarationsAndInventory`. Collection taps reuse the
+existing simultaneous tap contract (`TestTapEachTransitionsTogether`). Source
+entry lowering uses typed events to avoid treating event context as a target;
+source departure, phasing, return and copied triggers are covered by Arena.
+This slice adds no payment, replacement-ordering or optional-choice contract.

@@ -1381,3 +1381,28 @@ same blocking restriction. Target legality is checked at announcement and
 resolution. A later power change does not end a resolved restriction. The
 restriction follows the captured incarnation until cleanup and survives source
 departure, ability removal and a phase cycle. It does not follow a returned card.
+
+## RON collection untap restrictions and tap actions
+
+`EachPermanentRuleEffect(filter, [DoesntUntapDuringControllersUntap])` accepts
+one bare restriction operation and a supported, source-independent permanent
+filter. The compiler uses `PreventUntapDuringStepForMatching`. The engine checks
+final characteristics after phasing and before the untap operation. It does not
+grant an ability to the selected permanents. Other untap effects remain legal.
+The rule stops when its source leaves, phases out, or loses its abilities.
+Membership is selected again at each untap decision.
+
+`IsSupertype(Legendary)` is supported in permanent filters, including nested
+`And` and `Or`. Other supertypes and card/spell filter contexts remain unsupported.
+The filter uses `IsLegendary`.
+
+`TapEachPermanent(filter)` accepts a supported, source-independent permanent
+filter in resolving spell, mode, activation and trigger action lists. It lowers
+to `TapEach(MatchingPermanents(filter))`. Selection occurs at resolution, excludes
+phased permanents, and taps the selected permanents together before tap events.
+Target-group, chosen-result and player-dependent collection selectors remain
+unsupported by this adapter.
+
+Source-entry triggers now use `WhenEvent(Enters(This), body)`. An event object is
+not a target declaration. A nontargeted trigger can resolve after its source
+leaves or phases out. See the progress ledger for complete real-card mappings.

@@ -566,6 +566,7 @@ func (em *EffectManager) Apply(g *Game) {
 			len(p.SubTypeAdditions) > 0 ||
 			p.hasSubtypeFamilyEffects() ||
 			p.printedAbilitiesSuppressed ||
+			p.ptSwitched ||
 			p.BasePTOverride != nil ||
 			p.ColorOverride != nil ||
 			p.powerBonus != 0 ||

@@ -390,6 +390,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "temporary_modification", "duration"}[index]
 			}
+		case "TapEachPermanent":
+			if len(n.Args) == 1 {
+				return "permanent_filter"
+			}
 		case "PutPermanentIntoItsOwnersHand", "TapPermanent", "UntapPermanent", "DestroyPermanent", "DestroyPermanentNoRegen", "RegeneratePermanent", "SacrificePermanent", "PermanentDoesntUntapDuringControllersNextUntap":
 			if len(n.Args) == 1 {
 				return "permanent_reference"
