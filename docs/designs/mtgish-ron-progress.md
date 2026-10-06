@@ -2,14 +2,14 @@
 
 ## Current status
 
-The latest recorded inventory reports **620 accepted / 366 rejected unique card
-names** (986 total), and **1,652 compiled / 793 rejected records** (2,445 total).
+The latest recorded inventory reports **625 accepted / 361 rejected unique card
+names** (986 total), and **1,682 compiled / 763 rejected records** (2,445 total).
 Compilation does not establish complete gameplay validation. The strict loader
 rejects the collection and installs no partial registry.
 
 Complete collection loading, collection gameplay validation, runtime integration
 and removal of the old definitions remain unfinished. The completed
-`COMBAT-TIMING-HISTORY` slice and its validation evidence are recorded
+`SPELL-PERMANENT-COLOR` slice and its validation evidence are recorded
 at the end of this ledger, with next candidates and remaining gates.
 
 ## Run 2026-10-03: P0-INVENTORY
@@ -20273,3 +20273,161 @@ turn_schedule.go, turn.go, game_mutator.go and doc.go; compiler casting_window.g
 activation_timing.go, new combat_timing_test.go, casting_window_test.go and
 inventory_test.go; API/rules-contract docs and this ledger. One descriptive
 commit includes only this slice; the final response reports its hash.
+
+## Slice: spell-or-permanent color changes (2026-10-05)
+
+Capability ID: `SPELL-PERMANENT-COLOR`. Status: implemented and behavior tested.
+This run stops after this one slice.
+
+### Baseline and candidate selection
+
+Initial user edits to `.gitignore`, the execution design and progress ledger,
+and untracked `mtgish-ron-completed.md`, are preserved. The ledger's archive
+reorganization is not staged. AGENTS.md, the complete engine reference, execution
+design, vocabulary snapshot and current ledger were read. The selected compiler,
+reference, target, definition-validation, color, clone and stack-resolution code,
+complete candidate records and identical reprints, relevant API/rules contracts,
+and CR 400.7a, 608.2b and 611.2 were inspected. Requirements come from RON and
+local Oracle data (`data/4ED.json`), not Go card definitions. The
+[implement-engine skill](../../.agents/skills/implement-engine/SKILL.md) supplied
+the reusable engine workflow; no removed card/set skill was invoked.
+
+Fresh baseline short engine tests and `make build` passed. Strict loading and
+semantic inspection exited 1 for collection rejection: **1,652 compiled / 793
+rejected records**, **620 accepted / 366 rejected unique names**, out of 2,445
+records / 986 names. The AST inventory contained 72,950 nodes, 8,539 signatures
+and 8,348 unknown-role occurrences. Nested descendants were inspected.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Spell/permanent color union, selected | Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace: **5** full-card unlocks / **30** records. Magical Hack and Sleight of Mind share the target alternatives but add **0** unlocks. | Existing exact color service handles spell-to-permanent carry, duration and layers. Missing typed union declaration/action and RON adapter. Text-changing consumers need choices and text-layer operations. The union declaration enables cross-category copies without a false modal restriction. | Low/medium: small engine boundary plus exact compiler shape; five-card, 30-reprint gameplay and identity/legality/copy/clone/order tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation: **7** potential full-card unlocks, **0** adapter-only gains. | Public-zone and absent referenced-source choices, captured identity, next-event consumption and replacement rechecks remain prerequisites. Dark Sphere, Eye for an Eye, Jade Monolith and Reverse Damage have different nested replacement/result needs and do not count as unlocks. Enables source-selective prevention/redirection. | High: source-choice service, binding and shield lifetime with replacement, copy and zone tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** potential full-card unlocks, **0** adapter-only gains. | All-zone characteristic evaluation, owner/controller contexts, name counts and CDA/copy/layer contracts remain prerequisites. Gaea's Avenger has additional value shapes and does not count. | High: characteristic service, count lowering, all-zone/control/layer/copy tests. |
+| Ability-resolution counts and conditional delayed sacrifice | Dragon Whelp, Nalathni Dragon, Farrelite Priest, Initiates of the Ebon Hand: **4** potential complete-card unlocks, **0** adapter-only gains. | Per-source/per-ability resolution history, conditional bodies and next-end-step sacrifice capture are needed. The two mana abilities need solver and synchronous-resolution integration. Other If consumers have different predicates and bodies. Enables count-conditioned resolution and delayed source actions. | Medium/high: resolution tracker and mana/stack integration with turn, incarnation, copy, payment and delayed-trigger tests. |
+
+Selection rationale: the five laces give the same credible gain as CDAs with
+substantially less new rules state. Existing color behavior supplies most of the
+contract. Prevention has a larger eventual gain but needs several new services.
+Complete records, not first-error counts, establish the five-card estimate.
+The contract, reuse boundary and acceptance cases were stated before edits.
+An initial true-modal lowering was replaced during contract testing because
+Oracle permits copies to retarget across spell/permanent categories. The final
+supported shape uses one union target and no mode selection. Actual gain is
+**five unique names / 30 records**, exactly matching the estimate; no previously
+accepted name is lost.
+
+### Exact supported shapes, ownership and dependencies
+
+Engine additions:
+
+- `DeclareSpellOrPermanentTarget(name string) *SpellOrPermanentTargetBinding`:
+  one shared target category across stack and battlefield. Stack candidates use
+  stack object IDs, not physical card IDs; abilities and players are excluded.
+  Each factory constructs a fresh declaration. It contains no choices.
+- `SetObjectColor(object *SpellOrPermanentTargetBinding, color core.Color)
+  ResolvingEffect`: reads the frame-local target capture. Definition validation
+  rejects nil/undeclared bindings, empty declaration names and nonactual colors.
+  Application checks the captured incarnation for permanents and the exact stack
+  ID for spells, then reuses `Game.ChangeObjectColor`. Missing objects produce
+  no action; a later cast or returned permanent cannot replace the old object.
+
+RON supports only `SpellActions(Targeted_Modal([spellBranch, permanentBranch]))`
+on an instant or sorcery without casting modifiers. Branch order is free.
+Each branch must be `Targeted([target], ActionList([action]))` with exactly one
+unfiltered `TargetSpell(AnySpell)` / `TargetPermanent(AnyPermanent)` target.
+Actions are respectively `CreateSpellEffect(Ref_TargetSpell, [SetColor(colors)])`
+and `CreatePermanentLayerEffect(Ref_TargetPermanent, [SetColor(colors)])`.
+`colors` is `SimpleColorList([color])` with the same single White, Blue, Black,
+Red or Green in both branches. Other target filters, actions, contexts, counts,
+colors, references and modifications remain rejected. General Targeted_Modal,
+CreateSpellEffect and indefinite color families remain partial.
+
+The compiler validates each lexical branch, then builds one typed target and
+one reusable engine action together per factory. The final engine action has
+no RON spelling. The alternatives are not actual modes; copies can retarget in
+either direction. Existing source-independent color services own duration,
+layer-5 timestamps, effective-color/protection queries, copy characteristics,
+spell-to-permanent carry, phasing and clone isolation. Native target services
+own announcement/resolution legality, captured incarnation, frame bindings and
+copy retargeting. Native casting payments own rollback. Color replaces the
+current colors and preserves mana symbols. Cleanup, control changes and phasing
+retain the installed effect; later zone changes end it. No new LKI, replacement
+ordering, simultaneous-operation or cost service is needed for this one-object
+characteristic action.
+
+Reporting now assigns nested Targeted_Modal bodies, CreateSpellEffect references
+and resolving SetColor arguments their correct semantic roles, even for rejected
+text-changing records. It does not claim family-wide support. Production loading
+still rejects the entire unsupported collection and installs no partial registry.
+No Go fallback, card-name branch, skipped rule, global last-action slot or
+runtime declaration panic is introduced.
+
+### TDD and card-to-test mappings
+
+The first gameplay tests failed at unsupported Targeted_Modal for all five names;
+the first engine tests failed for the missing typed API. Fixture mistakes
+(SpellOption type, cleanup method, protection identifier and active-player
+casting timing) were corrected and affected checks rerun. The typed union's
+first stack-target test exposed the legacy union service's physical card IDs;
+the new declaration composes existing typed spell and permanent candidate
+services to preserve exact stack identity. No old caller changed. All intended
+failures were observed before completing the relevant implementation.
+
+| Card/contract | Evidence |
+| --- | --- |
+| Chaoslace, Deathlace, Lifelace, Purelace, Thoughtlace; all six complete RON reprints per name | `TestRONLaceCards`: native colored mana payment, both target categories, actual color replacement (including a nonblue victim for Thoughtlace), spell-to-permanent carry, unchanged mana symbols, pending clone isolation, cleanup, phasing and exile/return. |
+| Union identity, copies and current legality | `TestRONLaceRetargetedCopy`: both cross-category directions, different copy controller, separate original/copy targets and cloned pending frames. `TestRONLaceLegality`: phased/returned/shrouded/protected targets, controller changes, unpaid/duplicate/player/ability/physical-stack-card target rejection and rollback. |
+| Layers, damage/protection interaction | `TestRONLaceOrderingAndProtection`: two color spells in stack order, later temporary layer, cleanup restoration and a recolored Lightning Bolt rendered illegal by White Knight's protection from black. Existing native object-color/copy/protection tests preserve noncopiable colors and color-based damage behavior. |
+| Invalid declarations and scope | `TestRONLaceInvalid` and `ShapeBoundaries`: malformed tuples, cross-category/unbound reads, wrong context, duplicate categories, differing/empty/plural/colorless colors, filtered targets and extra actions; reversed branches and sorcery context validate. `TestSetObjectColorDefinition`: nil/unbound/empty-name binding and invalid colors. |
+| Reusable rules boundary | `TestSetObjectColorIdentity`: live/gone/recast exact stack identity, ability copy, pending clone, color carry. Existing `TestChangeColorEffectChangesSpellAndCarriesToPermanent`, `TestSpellColorOverrideCloneAndCopyIsolation`, `TestPermanentColorOverrideCloneIsolation`, `TestProtectionUses*` cover the reused service. |
+| Loading, factories and semantic inventory | `TestRONLaceRegistryAndInventory`: all 30 complete records, five canonical names, independent factory declarations, engine validation, nested roles, rejection without registry publication and retained accepted registry. Updated whole-collection inventory tests retain real Lightning Bolt gameplay and registry isolation. |
+
+Five complete-card gameplay mappings are added. Collection-wide engine-validated
+and behavior-verified totals remain null; compilation counts are separate from
+gameplay coverage. No source-data defect or correction was needed. RON files and
+vocabulary source hashes are unchanged. Local DRK Oracle text also confirms the
+candidate Eater of the Dead's tapped/exile/untap condition; no correction is made.
+
+### Final checks and measurements
+
+Strict loading: **1,682 compiled / 763 rejected records**.
+Semantic inspection: **625 accepted / 361 rejected unique names**, **72,950
+nodes / 8,539 signatures / 7,260 unknown-role occurrences**. Both commands exit
+1 for remaining unsupported records. Newly accepted names are exactly the five
+laces. Remaining diagnostics include ChooseADamageSource, CDA_Power, resolving
+If and the two text-changing Targeted_Modal consumers. No environment or
+pre-existing build/test blocker was found.
+
+| Command | Result |
+| --- | --- |
+| Focused new engine/RON tests and reused object-color/copy/protection tests with `-count=1` | PASS. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `go test ./... -short -count=1` | PASS (engine skill check). |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, 0 issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,682 compiled / 763 rejected records. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 625 accepted / 361 rejected names; counts above. |
+
+The first lint run found a target-slice preallocation issue in the new test
+fixture. It was corrected; the final lint run passed with 0 issues. Automatic
+import formatting changes were reviewed, and all affected checks were rerun.
+Go card definitions, startup wiring, generators and DSL functions remain below
+the removal gates. No DSL function is removed without a fresh caller audit.
+API/rules-contract docs describe only this slice's supported behavior.
+
+Ranked next candidates, to reassess from fresh complete records:
+
+1. Chosen-source choice/identity and next-event prevention: seven complete
+   Circle/Realm consumers; largest identified complete-card opportunity.
+2. All-zone battlefield-count CDAs: five direct complete consumers.
+3. Ability-resolution count and conditional delayed-sacrifice services: four
+   direct consumers, including two synchronous mana abilities.
+
+Slice files: new engine `spell_color.go` and tests; engine reference `doc.go`;
+compiler `spell_color.go`, `lace_test.go`, `compiler.go`, semantic inventory and
+count tests; API/rules-contract docs and this ledger entry. One descriptive
+commit includes only this slice; user archive edits remain unstaged. Its hash
+is reported in the final response. No second slice is started.

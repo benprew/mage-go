@@ -367,7 +367,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "player_reference"
 		}
 	case "actions":
-		if n.Name == "Modal_ChooseOne" && len(n.Args) == 1 {
+		if (n.Name == "Modal_ChooseOne" || n.Name == "Targeted_Modal") && len(n.Args) == 1 {
 			return "actions"
 		}
 		if n.Name == "Targeted" && len(n.Args) == 2 {
@@ -620,6 +620,10 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 3 {
 				return []string{"permanent_reference", "permanent_rule_operation", "duration"}[index]
 			}
+		case "CreateSpellEffect":
+			if len(n.Args) == 2 {
+				return []string{"spell_reference", "resolving_modification"}[index]
+			}
 		case "CreatePermanentLayerEffect":
 			if len(n.Args) == 2 {
 				return []string{"permanent_reference", "resolving_modification"}[index]
@@ -743,7 +747,7 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 				return "creature_subtype"
 			}
 		case "SetColor":
-			if (role == "static_modification" || role == "temporary_modification") && len(n.Args) == 1 {
+			if len(n.Args) == 1 {
 				return "color_list"
 			}
 		case "AdjustPTX":

@@ -449,6 +449,9 @@ func compileRule(n Node, ctx scope) (optionFactory, error) {
 		if err := arity(n, 1); err != nil {
 			return nil, err
 		}
+		if n.Args[0].Name == "Targeted_Modal" {
+			return compileTargetedColor(n.Args[0], ctx)
+		}
 		if n.Args[0].Name == "Modal_ChooseOne" {
 			if ctx.castingCost != nil {
 				return nil, unsupported(n.Args[0], "additional sacrifice cost on a modal spell")

@@ -135,6 +135,11 @@
 // Target phasing preserves a valid duration; source phasing ends it.
 // The separate permission to remain tapped stays optional after target departure.
 //
+// Use [DeclareSpellOrPermanentTarget] with [WithTargets] for one target across
+// the stack and battlefield. Copies can change the target category.
+// [SetObjectColor] uses this declaration to keep the original object identity.
+// A permanent spell keeps its changed color on entry. Later zone changes end it.
+//
 // # Engine Principles & Invariants
 //
 //   - Pure Queries: Readers and query methods never mutate game state or consume RNG.

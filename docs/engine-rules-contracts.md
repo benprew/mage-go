@@ -4100,3 +4100,31 @@ SkippedFirstThenExtraCombat, NativeDamageSteps and SkippedBeginningStep;
 TestRONCombatTimingCasting, ExtraCombat, Invalid, Angus and AngusLifetime.
 The existing casting-window and global-combat-prevention suites retain their
 identity, target legality, copy, clone, damage and cleanup contracts.
+
+## Typed spell-or-permanent color targets
+
+`DeclareSpellOrPermanentTarget` declares one target that can be either a spell
+on the stack or a permanent on the battlefield. Spell candidates use stack
+object IDs; abilities, players and physical spell-card IDs are excluded.
+The declaration keeps no chosen state. `WithTargets` captures choices in each
+stack frame. Native target validation checks zone, incarnation, phasing, shroud,
+hexproof and protection at announcement and resolution. Copies can retarget
+across both categories without a mode choice.
+
+`SetObjectColor` reads that typed declaration and calls the existing
+`Game.ChangeObjectColor` service only for its current legal object. A missing
+stack object is not replaced by a later cast of the same physical card.
+A permanent requires its captured incarnation and must be phased in when the
+change starts. The installed color change follows that incarnation through
+control changes and phasing and persists after cleanup or source departure.
+CR 400.7a carries a permanent spell's changed color to its resolved permanent;
+other zone changes end the change. CR 611.2a and 613 layer-5 timestamps retain
+indefinite duration and order later color changes. Mana symbols and other
+copiable characteristics do not change. Copies of a changed spell use their
+copiable colors. No damage or replacement ordering service changes.
+
+Evidence: `TestSetObjectColorDefinition`, `TestSetObjectColorIdentity`, existing
+`TestChangeColorEffectChangesSpellAndCarriesToPermanent`,
+`TestSpellColorOverrideCloneAndCopyIsolation`, and RON `TestRONLaceCards`,
+`RetargetedCopy`, `Legality`, `OrderingAndProtection`, `Invalid`, and
+`RegistryAndInventory`. The RON tests cover all five lace names and 30 records.

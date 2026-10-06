@@ -3591,3 +3591,33 @@ permission after the target leaves. Thrull Champion's global Thrull bonus uses
 the existing static creature layer. Tests: `TestRONSourceControlCards`,
 `RollbackAndCasting`, `UntapAndInstances`, `CopiesAndContexts`, `Invalid`, and
 `Inventory`. Compilation counts remain separate from gameplay coverage.
+
+## RON spell-or-permanent color changes
+
+On a nonpermanent spell, `SpellActions(Targeted_Modal(branches))` supports
+exactly two `Targeted` branches for this shape: one `TargetSpell(AnySpell)`
+with `CreateSpellEffect(Ref_TargetSpell, [SetColor(SimpleColorList([color]))])`,
+and one `TargetPermanent(AnyPermanent)` with
+`CreatePermanentLayerEffect(Ref_TargetPermanent, [SetColor(SimpleColorList([color]))])`.
+Each branch has one target and one action in its `ActionList`. Both branches
+must use the same single actual color. Branch order is free. Extra actions,
+filters, unbound or cross-category references, different colors, empty or plural
+colors, casting modifiers and permanent-card contexts remain errors.
+
+These alternatives lower to one union target, not a modal spell. No mode choice
+occurs. A copied spell can choose a permanent in place of a spell, or a spell in
+place of a permanent. Each factory creates its own declaration. This shape
+covers Chaoslace, Deathlace, Lifelace, Purelace and Thoughtlace, including all
+six reprints. `TestRONLace*` covers their complete records. Text-changing
+`Targeted_Modal` consumers remain unsupported.
+
+The engine API is `DeclareSpellOrPermanentTarget(name string)
+*SpellOrPermanentTargetBinding` and `SetObjectColor(object
+*SpellOrPermanentTargetBinding, color core.Color) ResolvingEffect`, with
+`WithTargets(object)`. Declaration validation requires a declared nonnil binding
+and one of White, Blue, Black, Red or Green. The target uses stack object IDs
+and battlefield incarnation IDs. Resolution reuses `Game.ChangeObjectColor`.
+The color replaces existing colors without changing mana symbols. It lasts
+through cleanup, control changes and phasing, and carries from a permanent
+spell to the permanent it becomes. Later zone changes end it. Color changes
+are not copiable values. Existing layer timestamps and protection checks apply.
