@@ -44,6 +44,9 @@ func compilePermanentRef(n Node, ctx scope) (permanentReferencePlan, error) {
 				return permanentReferencePlan{kind: permanentHost}, nil
 			}
 		case "Trigger_ThatPermanent":
+			if ctx.counterStateSource {
+				return permanentReferencePlan{kind: permanentSource}, nil
+			}
 			if ctx.permanentEvent != nil {
 				return permanentReferencePlan{kind: permanentEvent, event: ctx.permanentEvent}, nil
 			}

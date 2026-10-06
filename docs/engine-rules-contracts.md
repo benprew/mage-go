@@ -4281,8 +4281,49 @@ Evidence in `pkg/mage/dsl/ron/singular_entry_counter_test.go`:
 - `Declarations` rejects malformed shapes, incompatible counter types, subjects
   and contexts; factory declarations stay separate. `CompleteRecords` executes
   exact entry clauses for all three consumers and retains complete-record
-  rejection for Homarid and Tidal Influence. `Inventory` checks descendant roles.
+  rejection for Tidal Influence. Homarid now compiles with the source counter-state
+  adapter below. `Inventory` checks descendant roles.
 
 No new target, LKI, simultaneous-operation or cost contract is introduced.
 General entry choices, multiple operations and counter-state triggers remain
 outside this adapter. Existing counter storage limits remain unchanged.
+
+## RON source counter-state cycles
+
+The source-only `WhenAPermanentHasNumberCountersOfType` form lowers to
+`WhenState(SourceHasCounters(counter, minimum), body)`. It uses the existing
+per-source, per-ability, per-incarnation arming key. One instance can be pending
+or on the stack at a time. Countering or resolving permits another trigger if
+the condition still holds (CR 603.8). The condition checks current counters;
+phased sources and sources without the ability cannot queue new instances.
+It is not an intervening-if condition (CR 603.4).
+
+For this source-only shape, `Trigger_ThatPermanent` uses `This` and the original
+source reference captured by the engine when the trigger queues. Control changes
+cannot redirect it. Departure and return cannot substitute a new incarnation
+(CR 400.7). Reset does not use LKI counters: an absent or phased subject is not
+modified. A phase cycle before resolution retains the original incarnation.
+Copied abilities retain that source even when their controller differs.
+
+`AllCountersOfTypeFromPermanent` lowers to `RemoveAllCounters` on the compiler's
+typed permanent reference. Its count is read at resolution, including counters
+added after the trigger queued. Different counter kinds remain. Ordinary target
+legality and Aura attachment reference contracts still apply. No new payment,
+replacement, simultaneous-operation or zone service is introduced. Entry
+counter replacements can satisfy the state condition before entry observers.
+
+Evidence in `counter_state_test.go`:
+
+- `Homarid`: complete real RON casting, payment rollback, entry, exact P/T states,
+  own versus opponent upkeep and two native counter cycles.
+- `Instances`, `Inactive`: pending/stack arming, countered/resolved rearming,
+  changed counts, control, departure, return, phasing, copy and clone isolation,
+  independent factories and APNAP source identity.
+- `PermanentSpellCopy`: native copied permanent entry, static bonus isolation
+  and counter reset without changing the original permanent.
+- `TidalClause`: the exact source reset clause; the complete card still rejects
+  its casting restriction. This is not full-card coverage.
+- `ResetTarget`, `ResetHost`, `EntryReplacements`: legality, current and last
+  attachment, incarnation, phasing and replaced entry counts.
+- `Declarations`, `Inventory`: scope, type, arity and threshold rejection;
+  supported comparison/value/counter/reference descendant roles.

@@ -126,7 +126,11 @@ func TestRONStaticCounterRealClauses(t *testing.T) {
 			if record.Fields == nil {
 				t.Fatal("missing complete record")
 			}
-			if _, err := Compile(record); err == nil {
+			_, compileErr := Compile(record)
+			if name == "Homarid" && compileErr != nil {
+				t.Fatal(compileErr)
+			}
+			if name != "Homarid" && compileErr == nil {
 				t.Fatal("incomplete card became accepted")
 			}
 			g, a, b := ronGame()

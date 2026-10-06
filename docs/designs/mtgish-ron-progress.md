@@ -21233,3 +21233,157 @@ Ranked next candidates to reassess with fresh full records:
 Changed files: RON `entry_tapped.go`, `inventory.go`, `inventory_test.go`,
 `singular_entry_counter_test.go`; `docs/dsl-reference.md`,
 `docs/engine-rules-contracts.md`, and this ledger entry. No second slice starts.
+
+## 2026-10-05: source counter-state cycles
+
+Status: completed slice `SOURCE-COUNTER-STATE-CYCLE`. This run stops after this
+slice. Initial user edits to `.gitignore`, the execution design and this ledger,
+plus untracked `mtgish-ron-completed.md`, remain unstaged. Only this new ledger
+entry is staged; the user's ledger reorganization is preserved.
+
+### Fresh baseline and candidate selection
+
+Baseline RON tests, short engine tests and `make build` passed. Strict loading
+exited 1: **2,445 records, 1,703 compiled, 742 rejected; 631 accepted and 355
+rejected unique names**. Semantic inspection visited **72,950 nodes / 8,539
+signatures**, with **6,889 unknown-role occurrences**. Collection rejection is
+expected and is separate from build/test failure.
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot and
+ledger, selected RON compiler and engine state/counter/reference code, relevant
+API/rules contracts and CR 122, 400.7 and 603.8. Read complete records and nested
+forms for all candidate names below. The local FEM Oracle records agree with
+Homarid and Tidal Influence. No RON source defect needs correction in this slice.
+
+| Candidate | Distinct affected cards and estimated complete unlocks | Other blockers and downstream use | Effort |
+| --- | --- | --- | --- |
+| Source counter-state cycle, selected | Homarid, Tidal Influence; **1** immediate unlock, Homarid | Existing entry counters, upkeep placement and exact-count static layers already work. Tidal Influence retains its independent named-permanent casting restriction. Supplies both cards' reset lifecycle. | Low: strict source threshold adapter plus typed all-counter reset, arming, identity and native gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** eventual unlocks, **0** adapter-only gains | Source choice enumeration, retained identity, property rechecks and next-event consumption need shared contracts. All seven full records require the choice and matching prevention body. | High: engine decisions and source binding, replacement order, simultaneous damage and consumption tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** eventual unlocks, **0** battlefield-only gains | All-zone characteristic evaluation, owner/controller context, copiable CDA declarations and exact count filters remain prerequisites. Gaea's Avenger is another affected name with a separate recorded controller defect and arithmetic; excluded from the estimate. | High: reusable zone characteristics, layers, copies, counts and control tests. |
+
+The selected slice is a complete shared prerequisite with a credible immediate
+full-card gain and existing engine execution contracts. It has the best gain
+for the effort among these candidates. First-error frequency alone did not
+select it. The exact contract, reuse boundary and acceptance cases were stated
+before editing. No removed card/set skill, Go-card requirement, card-name branch,
+Go fallback, partial production registry or agent delegation was used.
+
+### Exact shapes, dependencies and reuse boundary
+
+- Trigger rule: `TriggerA(WhenAPermanentHasNumberCountersOfType(
+  SinglePermanent(ThisPermanent), GreaterThanOrEqualTo(Integer(n)), counter),
+  body)`, with a nonnegative literal `n` and a validated permanent counter kind.
+  Bare `ThisPermanent` must be in permanent scope. Host subjects, collections,
+  other comparisons and dynamic thresholds reject at declaration time.
+- The trigger body alone binds `Trigger_ThatPermanent` to the typed original
+  source reference. `counterStateSource` records this lexical source-only
+  context; it stores no game state. `This` reads the engine's saved trigger
+  source incarnation, including on copies. No mutable event binding is needed
+  because this supported event can only name its source.
+- Resolving action: `RemoveCounters([AllCountersOfTypeFromPermanent(counter,
+  subject)])`, exactly one instruction. `compilePermanentRef` validates source,
+  Aura host, declared target and existing permanent-event references. The action
+  reads the count at resolution. Other removal shapes remain unsupported in
+  actions; existing cost forms remain unchanged.
+- Engine reuse: `WhenState`, `SourceHasCounters`, `RemoveAllCounters`, `This`,
+  `AttachedPermanent`, typed target/event bindings, `TriggerA`, `Sequence`,
+  native trigger arming and source capture, entry/counter replacement services,
+  transactional casting and native copy/clone services. Factories create fresh
+  abilities and effects. No engine API or new execution system is introduced.
+- Arming is per source/ability/incarnation. Threshold checks are state-trigger
+  checks, not intervening-if checks. A changed count does not cancel an already
+  queued reset. Missing/phased subjects are not changed; no LKI counter fallback
+  applies. Zone return cannot redirect old triggers. Phase cycles keep identity.
+- Inventory classifies nested event, comparison, literal, counter and removal
+  reference roles even in rejected records. Classification is not support
+  evidence for other contexts.
+
+### TDD and card-to-test mappings
+
+New tests first failed with `unsupported trigger
+(WhenAPermanentHasNumberCountersOfType)` on Homarid and the exact Tidal Influence
+clause, and `unsupported action (RemoveCounters)` on resolving reset fixtures.
+The implementation then passed focused tests. No gameplay assertion was removed
+or weakened. Existing tests that required Homarid rejection now require its
+successful compilation; inventory counts use the measured gain.
+
+Fixture corrections: native casting required the main phase and turn; an Aura
+needed its subtype before compilation; phased objects cannot use the ordinary
+mutable battlefield lookup; ability removal had to precede the threshold state
+to avoid a valid already-pending trigger. A raw `Card.Copy()` fixture shared
+static declarations and caused a duplicate conditional bonus. This fixture was
+replaced with separate factories and a separate native permanent-spell-copy
+scenario, which passes entry, static isolation and reset assertions. The raw
+helper is not used by the supported native copy path and was not changed.
+Initial lint rejected a test variable named `copy`; it was renamed to
+`spellCopy`, and lint and affected checks were rerun. Automatic formatting
+changed only import grouping.
+
+| Card or contract | Evidence in `counter_state_test.go` |
+| --- | --- |
+| Homarid, complete FEM record | `TestRONCounterStateHomarid`: native casting/payment rollback, one entry counter, exact P/T at 0/1/2/3 counters, opponent versus own upkeep and two native reset cycles. |
+| Tidal Influence | `TidalClause`: exact parsed reset clause executes at eight tide counters. Its full record must still reject the casting restriction. Entry/static clauses retain their previous mappings. No complete-card claim. |
+| Arming, binding and identity | `Instances`: one pending/stack instance, countered/resolved rearming, lower/higher live counts, other counter kinds, source control/departure/return/phasing/phase cycle, ability copies, pending and stack clones, independent factory instances and APNAP identity. |
+| Inactive sources | `Inactive`: phased sources and sources without the ability queue no new reset. |
+| Native permanent copying | `PermanentSpellCopy`: copied Homarid spell enters as a token with its own counter and static state; its reset does not change the original. |
+| Entry replacements | `EntryReplacements`: replaced entry with four counters queues the state trigger before later resolution. |
+| Resolving references | `ResetTarget`: target return, phasing and shroud rechecks. `ResetHost`: current reattachment and last attachment after departure/return. |
+| Invalid declarations and semantic roles | `Declarations`: wrong subject/type/comparison/threshold/arity/context, cross-rule reads and plural instructions reject; 0 and 256 thresholds validate without narrowing. `Inventory`: supported real shape compiles and descendants have exact roles. |
+| Regressions | Existing `TestRONStaticCounter*`, `TestRONSingularEntryCounter*`, `TestInventory*` and all repository tests pass. |
+
+This slice adds **one complete unique-card gameplay mapping**, Homarid, and a
+reset-clause mapping for Tidal Influence. Compilation and gameplay remain
+separate; collection-wide engine-validation and behavior-verification totals
+remain null. No all-card gameplay total is inferred from compiler counts.
+
+### Final measurements and validation
+
+Actual gain equals the estimate: **1 unique card / 1 record**, Homarid. Strict
+loading remains rejected with exit 1: **1,704 compiled / 741 rejected records;
+632 accepted / 354 rejected unique names**. No previously accepted name is lost.
+Inspection still visits **72,950 nodes / 8,539 signatures**; unknown-role
+occurrences decrease **6,889 to 6,797**. The role change includes other nested
+removal forms and does not claim their support.
+
+Tidal Influence's diagnostic remains:
+`FEM.lines.ron:95:150: unsupported casting window on a permanent (CastEffect)`.
+All 12 source hashes match the baseline and vocabulary snapshot. No RON source
+changed, so no vocabulary-source refresh is required. Previously recorded source
+defects, including Gaea's Avenger, remain separate.
+
+| Command | Result |
+| --- | --- |
+| Baseline RON tests, short engine tests, `make build` | PASS. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONCounterState\|TestRONStaticCounter\|TestRONSingularEntryCounter\|TestInventory' -count=1` | PASS; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; automatic edits reviewed. |
+| `git diff --check` | PASS, including the ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,704 compiled / 741 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts; 6,797 unknown-role occurrences. |
+| Accepted-name/source-hash audit | No lost accepted name; all source hashes unchanged. |
+
+There is no validation or environment blocker. Go definitions, startup consumers
+and generators remain because the cutover gate is unmet. No DSL export is
+removed without a caller audit; this slice needs no deletion. API/rules docs
+state only the supported adapters and reused contracts.
+
+Ranked next candidates to reassess using fresh records and loader evidence:
+
+1. Shared chosen-source enumeration, retained identity and property rechecks
+   for the seven Circle/Realm next-event prevention cards.
+2. All-zone battlefield-count CDA evaluation for the five direct consumers;
+   keep Gaea's Avenger's source correction separate and evidence-based.
+3. Bound draw-step triggers and their intervening-if context: Howling Mine and
+   Mana Vault have direct consumers; Armageddon Clock and Sylvan Library have
+   further amount/payment blockers. Tidal Influence's single-card casting
+   restriction stays deferred while useful shared multi-card work remains.
+
+Changed files: new RON `counter_state.go`, `counter_state_test.go`; compiler
+scope/action dispatch, trigger dispatch, permanent references, semantic inventory
+and inventory/static-counter/singular-entry regressions; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this ledger entry. One descriptive commit
+contains only this slice. Its hash is reported in the final response. No second
+slice starts.

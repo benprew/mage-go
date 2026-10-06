@@ -20,6 +20,8 @@ func compileTriggerRule(n Node, ctx scope) (optionFactory, error) {
 	trigger := n.Args[0]
 	var buildTrigger func(mage.Effect) *mage.GenericTriggered
 	switch trigger.Name {
+	case "WhenAPermanentHasNumberCountersOfType":
+		return compileCounterStateTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentDealsDamageToAPlayer":
 		return compileDamagePlayerTrigger(trigger, n.Args[1], ctx)
 	case "WhenAPermanentDealsDamage":

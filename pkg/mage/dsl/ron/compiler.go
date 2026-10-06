@@ -17,6 +17,8 @@ type targetFactory func() mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
+	counterStateSource bool
+
 	activationHistory *activationHistoryPlan
 	enteringSource    bool
 	actionPlayer      *playerActionsPlan
@@ -1078,6 +1080,12 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 		return one(build)
 	case "PutCounters":
 		build, err := compileCounterPlacement(n, ctx)
+		if err != nil {
+			return nil, err
+		}
+		return one(build)
+	case "RemoveCounters":
+		build, err := compileAllCounterRemoval(n, ctx)
 		if err != nil {
 			return nil, err
 		}

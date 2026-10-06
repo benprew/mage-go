@@ -272,10 +272,10 @@ func TestRONSingularEntryCounterCompleteRecords(t *testing.T) {
 			}
 		}
 		_, err := Compile(n)
-		if name == "Icatian Javelineers" && err != nil {
+		if (name == "Icatian Javelineers" || name == "Homarid") && err != nil {
 			t.Fatal(err)
 		}
-		if name != "Icatian Javelineers" && err == nil {
+		if name == "Tidal Influence" && err == nil {
 			t.Fatalf("incomplete %s accepted", name)
 		}
 	}

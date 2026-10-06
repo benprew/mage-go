@@ -3742,6 +3742,34 @@ symbol. Additional operations, other subjects and resolving-action contexts
 remain rejected. Entry and counter replacements use the existing engine service.
 
 `TestRONSingularEntryCounter*` executes the complete Icatian Javelineers record
-and the exact entry clauses of Homarid and Tidal Influence. The latter two
-complete records still reject their independent unsupported rules. See the
+and the exact entry clauses of Homarid and Tidal Influence. Homarid now has
+complete counter-cycle coverage. Tidal Influence still rejects its independent casting restriction. See the
 [rules contract](engine-rules-contracts.md#ron-singular-entry-counters).
+
+## RON source counter-state cycles
+
+`TriggerA(WhenAPermanentHasNumberCountersOfType(SinglePermanent(ThisPermanent),
+GreaterThanOrEqualTo(Integer(n)), counter), body)` supports a nonnegative literal
+threshold and the validated permanent counter kinds. Other comparisons, dynamic
+thresholds, host subjects and collections remain declaration errors. The body
+can read `Trigger_ThatPermanent` as the original source through the engine's
+typed source reference. The read is local to this trigger; other rules cannot
+use it. Each factory creates a fresh state-trigger ability.
+
+`RemoveCounters([AllCountersOfTypeFromPermanent(counter, subject)])` supports
+one resolving instruction with a typed source, Aura host, declared permanent
+target or bound permanent event reference. It uses `RemoveAllCounters`, reads
+the live count at resolution and removes only that kind. It is not a payment.
+Plural instruction lists and other removal shapes remain rejected in actions;
+existing counter payment forms remain available in costs.
+
+`WhenState` and `SourceHasCounters` supply arming and the native stack lifecycle.
+The threshold is not an intervening-if condition. Reducing the count after the
+trigger queues does not cancel its reset. A returned source cannot replace the
+original source; phasing makes it absent for the action. Native ability copies,
+permanent-spell copies and game clones retain separate execution state.
+
+Evidence: `TestRONCounterState*` in `counter_state_test.go`; full Homarid gameplay,
+exact Tidal Influence reset clause, declaration rejection, inventory roles,
+entry replacements, targets, hosts, state arming and instance identity. See the
+[rules contract](engine-rules-contracts.md#ron-source-counter-state-cycles).
