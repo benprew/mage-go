@@ -75,6 +75,10 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 		costs = []costFactory{func() mage.Cost { return mage.MillCost(amount) }}
 	} else if cost.Name == "PayManaX" {
 		mana, dynamic, err = compileResolutionManaCost(cost, ctx)
+	} else if cost.Name == "Or" || cost.Name == "PayLife" {
+		var build costFactory
+		build, err = compileFixedResolutionAlternative(cost)
+		costs = []costFactory{build}
 	} else if cost.Name != "PayMana" && cost.Name != "SacrificeAPermanent" && cost.Name != "SacrificeNumberPermanents" {
 		return nil, unsupported(cost, "optional payment cost")
 	} else {
@@ -130,6 +134,46 @@ func compileResolutionPayment(payment, continuation Node, ctx scope) (effectFact
 			return mage.IfPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
 		}
 		return mage.UnlessPaid(player.build(bindings), mage.Costs(values...), mage.Sequence(effects...))
+	}, nil
+}
+
+func compileFixedResolutionAlternative(n Node) (costFactory, error) {
+	if n.Name != "Or" {
+		if n.Name != "PayMana" && n.Name != "PayLife" {
+			return nil, unsupported(n, "fixed resolution alternative")
+		}
+		costs, hasX, err := compileCosts(n)
+		if err != nil {
+			return nil, err
+		}
+		if hasX {
+			return nil, problem(n, "resolution alternatives require fixed costs")
+		}
+		return costs[0], nil
+	}
+	if err := arity(n, 1); err != nil {
+		return nil, err
+	}
+	parts, err := list(n.Args[0])
+	if err != nil {
+		return nil, err
+	}
+	if len(parts) < 2 {
+		return nil, problem(n, "supply at least two resolution cost alternatives")
+	}
+	options := make([]costFactory, len(parts))
+	for i, part := range parts {
+		options[i], err = compileFixedResolutionAlternative(part)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return func() mage.Cost {
+		costs := make([]mage.Cost, len(options))
+		for i, build := range options {
+			costs[i] = build()
+		}
+		return mage.EitherCost(costs...)
 	}, nil
 }
 

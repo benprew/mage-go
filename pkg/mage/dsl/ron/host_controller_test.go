@@ -356,8 +356,12 @@ func TestRONHostControllerCurseDamageClause(t *testing.T) {
 		t.Fatalf("full card blocker: %v", err)
 	}
 	erosion := hostUntapRecord(t, "DRK", "Erosion")
-	if _, err := Compile(erosion); err == nil || !strings.Contains(err.Error(), "optional payment cost (Or)") {
-		t.Fatalf("alternative payment blocker: %v", err)
+	erosionFactory, err := Compile(erosion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Erosion", erosionFactory()); err != nil {
+		t.Fatal(err)
 	}
 	fields := maps.Clone(n.Fields)
 	rules := fields["Rules"]

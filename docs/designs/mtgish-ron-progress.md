@@ -21909,3 +21909,169 @@ Changed files: RON `player_scope.go`, new `host_controller_test.go`,
 `inventory_test.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md`
 and this ledger entry. One descriptive commit contains only this slice.
 No second slice is started.
+
+
+## 2026-10-05: fixed alternative resolution payments
+
+Status: completed implementation slice `FIXED-RESOLUTION-ALTERNATIVES`. Stop
+after this slice. Initial user changes in `.gitignore`, the execution design
+and this ledger, and untracked `mtgish-ron-completed.md`, are preserved. Only
+this appended entry is staged from the ledger. Its existing reorganization
+is excluded from this slice's commit.
+
+### Fresh evidence and candidate comparison
+
+Read AGENTS.md, mage/doc.go, execution design, vocabulary, ledger, compiler,
+typed player/permanent/spell scopes, inventory and payment code, relevant API
+and rules contracts, and CR 118, 608.2 and 701.21. Used `implement-engine` for
+the shared engine prerequisite; no removed card/set skill, delegation or Go
+card definition was used as requirements. Fresh short engine tests and build
+passed. Loader and inventory exited 1 because the collection remains
+unsupported: 2,445 parsed records, 1,712 compiled / 733 rejected, 635 accepted /
+351 rejected unique names. Baseline semantic inventory: 72,950 nodes, 8,539
+signatures, 6,794 unknown-role occurrences. Complete candidate records and
+nested forms were inspected; reprints count once.
+
+| Candidate | Distinct names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Fixed mana/life alternatives at resolution, selected | Erosion, Thrull Wizard; **2 immediate**. Fixed-life clauses also affect Season of the Witch, Bronze Tablet, Tempest Efreet and Wand of Ith. | Shared affordability must ignore activation reductions through nested options. Other life consumers retain end-step history, ante/ownership, choice/results, dynamic payment or branch-shape blockers. Reuses the current payment transaction and typed payer services. | Low to medium: narrow compiler adapter, small shared policy fix, meaningful engine tests and complete RON gameplay/lifecycle tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **0 adapter-only**, 7 eventual. | Shared source enumeration, saved identity/properties, choice and next-event shields remain prerequisites. Enables seven complete prevention consumers, with broader choices serving Dark Sphere, Jade Monolith, Eye for an Eye and Reverse Damage. | High: new source and replacement contracts, simultaneous damage and property rechecks. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **0 battlefield-only**, 5 eventual. | Needs nonbattlefield characteristic evaluation, owner/controller context and copy/layer contracts. Gaea's Avenger retains its separate source defect. | High: all-zone characteristic service and count/filter adapters, copying and zone gameplay tests. |
+
+Selection rationale: fixed alternatives complete two unique cards with an
+already available transaction and scoped-reference architecture. This yields
+the largest credible immediate multi-card benefit for the effort. Fresh nested
+inventory revealed Thrull Wizard as a second complete consumer; the prior
+ledger's host-sacrifice suggestion is not a fixed priority. Optional typed
+sacrifice can follow separately for Curse Artifact and other consumers. The
+contract, reuse boundary and acceptance cases were stated before editing.
+
+### Exact supported shapes and engine boundary
+
+In supported spell, activation and trigger action lists, `MayCost(cost)` and
+`PlayerMayCost(player, cost)` accept `PayLife(Integer(n))` with a nonnegative
+integer literal, and `Or([cost, cost, ...])` with at least two alternatives.
+Every alternative is fixed `PayMana([...])`, fixed `PayLife(Integer(n))`, or
+another such `Or`. X, dynamic values, `And`, sacrifice/tap and other alternative
+cost leaves remain rejected. Activation/additional casting costs do not gain
+this RON grammar. Each payment still requires one adjacent nonempty `If` or
+`Unless` body and symbol `CostWasPaid` or `CostWasntPaid`.
+
+RON owns spelling, shape validation, scope and fresh factory construction.
+It lowers alternatives to `EitherCost`, life to `LifePayCost`, and the pair
+to existing `IfPaid`/`UnlessPaid`. Outcomes remain local to each pair. Typed
+host-controller, spell-controller, source and attachment identities remain in
+their existing plans and engine services. Nested `Or` descendants are now
+inventoried as `resolution_cost`; labels remain unverified.
+
+The engine prerequisite fixes recursive alternative affordability and option
+locking to use the action transaction's mana policy. Resolution payments check
+raw mana costs, including inside nested alternatives. Activation transactions
+retain reductions; casting and legacy locking callers retain their policies.
+Choices occur only after acceptance. One payable option needs no mode choice.
+Mana abilities supply resolution mana through the shared service. Total-cost
+validation and commit remain atomic. A failed selected payment does not spend
+live mana or life. No global last-payment slot or new exported authoring API
+is added. Replacement ordering and simultaneous operations have no new
+contract in this slice; damage, destruction, regeneration, phasing, LKI,
+countering and copy behavior reuse existing services.
+
+### TDD, gameplay evidence and card mapping
+
+Initial full-record RON tests failed on `unsupported optional payment cost
+(Or)` for both Erosion and Thrull Wizard. New rejection cases passed. Engine
+regression tests first failed when a partial mana pool appeared payable only
+through an activation reduction: the wrong option was offered and an available
+life payment failed. The fix changes shared policy checks, not card behavior
+by name. The nested test fixture clears the helper's extra casting mana before
+resolution. Three old rejection tests now reject dynamic `PayLife(ValueX)`;
+fixed-life acceptance has explicit positive tests. Erosion's old blocker
+assertion now requires compilation and definition validation. No gameplay
+assertion or required behavior was weakened.
+
+Tests in `pkg/mage/dsl/ron/alternative_payment_test.go` use prefix
+`TestRONAlternativePayment`:
+
+| Card or contract | Test mapping and evidence |
+| --- | --- |
+| Erosion, complete DRK record | `Erosion`: definition validation, real casting and rollback, land-only legality, attachment, correct upkeep, payment timing, mana/life choice, decline, inability, mana abilities, payer control/attachment changes, source departure/return, host return, source/host phasing, ability removal, changed-controller trigger copy, clone isolation, destruction and regeneration. `NativeUpkeepAndLifeClause`: real untap/upkeep resolution and payer life payment. |
+| Thrull Wizard, complete FEM record | `ThrullWizard`: definition validation, real activation and rollback, black spell legality, black versus three generic mana, decline/unaffordable, mana abilities, source departure/phasing, current spell-controller payer, absent target, uncounterable spell, changed-controller copy and clone isolation. `InstancesAndRetarget`: distinct factory declarations, retargeted copy, independent targets/payments, shared-resource exhaustion and clone isolation. |
+| Season of the Witch, exact upkeep clause only | `NativeUpkeepAndLifeClause`: AST retains the complete record's exact upkeep rule in an explicit clause fixture; pay two life or sacrifice the source. The complete record still rejects `DidntAttackThisTurn`. No complete gameplay claim for this card. |
+| Grammar, result scope and inventory | `Declarations`: malformed, empty/single-option alternatives, X/dynamic/negative values and unsupported leaves reject. `NestedAndInventory`: recursive alternatives, consecutive and nested outcomes, fixed life and zero life, complete nested inventory role labels. `PolarityAndZero`: all four paid/unpaid branch polarities and explicit acceptance/decline of zero alternatives. |
+| Shared engine payment policy | `TestResolutionAlternativeManaPolicy` in `pkg/mage/resolution_alternative_test.go`: mana/life/both/neither, choices, decline, nested options, mana abilities, combined-cost rollback and false affordability from reductions. `TestResolutionAlternativeKeepsActivationPolicy`: existing activation reductions and clone isolation. Existing optional/X/activation/payment regressions remain passing. |
+
+Coverage gain: **two complete unique-card behavior mappings**, plus one exact
+Season of the Witch clause mapping. Compilation and gameplay remain separate;
+collection-wide engine-validation and behavior-verification totals remain null.
+No collection-wide gameplay support is claimed.
+
+### Actual gains and remaining gaps
+
+Actual gain matches the estimate: **Erosion and Thrull Wizard only, 2 unique
+names / 2 records**. No accepted name is lost. Strict loading still exits 1,
+installs no partial registry and reports **1,714 compiled / 731 rejected
+records; 637 accepted / 349 rejected unique names**. All 2,445 records parse.
+Inventory retains 72,950 nodes / 8,539 signatures; unknown-role occurrences
+fall from 6,794 to **6,779** through nested alternative-cost classification.
+
+Fresh remaining diagnostics include:
+
+- Curse Artifact: `DRK.lines.ron:21:317: unsupported optional payment cost (SacrificePermanent)`.
+- Season of the Witch: `DRK.lines.ron:95:449: unsupported permanent filter (DidntAttackThisTurn)`.
+- Wand of Ith: `DRK.lines.ron:112:301: expected 1 positional arguments (RevealACardFromHandAtRandom)`.
+- Bronze Tablet: `ATQ.lines.ron:15:134: unsupported rule (DeckConstruction)`.
+- Tempest Efreet: `LEG.lines.ron:259:174: unsupported rule (DeckConstruction)`.
+- Safe Haven: `DRK.lines.ron:88:410: unsupported optional payment cost (SacrificePermanent)`.
+- Mindstab Thrull: `FEM.lines.ron:62:261: unsupported optional payment cost (SacrificePermanent)`.
+- Necrite: `FEM.lines.ron:63:286: unsupported permanent filter (ControlledByPlayer)`.
+
+These remain compiler or engine capability gaps. No new source-data defect or
+environment failure was found. No RON source changes; all vocabulary source
+hashes remain valid, so no syntax snapshot refresh is required.
+
+### Validation
+
+All required checks pass; no pre-existing or environmental blocker remains.
+Lint reports zero issues. Automatic formatting was reviewed and no unrelated
+file changed. Focused checks were repeated with `-count=1` after lint.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/... -short -count=1` and `make build` | PASS. |
+| `go test ./pkg/mage -run 'TestResolutionAlternative\|TestResolutionMana\|TestXActivationPayment' -count=1` | PASS, repeated after lint. |
+| `go test ./pkg/mage/dsl/ron -run 'TestRONAlternativePayment\|TestRONHostController\|TestRONOptionalPayment\|TestInventory' -count=1` | PASS after implementation and obsolete rejection updates; repeated after lint. |
+| `go test ./pkg/mage/dsl/ron -count=1` | Initial post-implementation run identified stale fixed-life rejection expectations and old loader counts; all corrected under the new positive contracts. The later full short suite passes this package. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `go test ./... -short -count=1` | PASS, additional engine-skill check. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; zero issues. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,714 compiled / 731 rejected records, repeated after lint. Collection rejection is not a build failure. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: 637 accepted / 349 rejected names; semantic totals recorded above. |
+| Accepted-name, source-hash and user-ledger audit | Only Erosion and Thrull Wizard newly accepted; no losses. All 12 source hashes match vocabulary. User's pre-existing ledger content remains intact. |
+
+Changed files: engine `composable_costs.go`, `payment_transaction.go`,
+`spell_payment.go` and new `resolution_alternative_test.go`; RON
+`optional_payment.go`, `inventory.go`, new `alternative_payment_test.go`,
+`inventory_test.go`, `host_controller_test.go`, `fixed_draw_test.go`,
+`spell_cast_life_test.go`, `upkeep_payment_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md` and this appended ledger entry.
+
+Complete collection loading, all-card gameplay and startup cutover gates remain
+unmet. No Go card definition, generator, existing production caller or DSL
+export is removed. No removal is attempted without a fresh caller audit.
+
+Ranked next candidates to reassess:
+
+1. Shared optional typed sacrifice payment, for Curse Artifact, Mindstab Thrull,
+   Necrite and Safe Haven. Remaining event/filter/linked-card blockers must be
+   inspected; preserve exact subjects, payer control, rollback and replacement
+   processing.
+2. Chosen-source enumeration/identity/property and next-event prevention for
+   seven Circle/Realm consumers.
+3. All-zone count CDA service for the five direct count consumers; keep
+   Gaea's Avenger's source defect separate.
+
+One descriptive commit contains only this slice. No second slice is started.

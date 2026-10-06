@@ -805,14 +805,7 @@ func (e *unlessPaidEffect) Apply(ctx *EffectContext) error {
 	paid := false
 	available := true
 	for _, cost := range costs {
-		var canPay bool
-		if mana, ok := cost.(*ManaCostPayment); ok {
-			// Activation reductions do not change a payment during resolution.
-			canPay = ctx.Game.CanAfford(id, mana.MC, nil)
-		} else {
-			canPay = cost.CanPay(ctx.SourceID, id, ctx.Game)
-		}
-		if !canPay {
+		if !canPayWithManaPolicy(cost, ctx.SourceID, id, ctx.Game, false) {
 			available = false
 			break
 		}

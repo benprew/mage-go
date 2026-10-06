@@ -143,7 +143,7 @@ func TestRONUpkeepPaymentInvalid(t *testing.T) {
 		`MayCost`, `MayCost(PayMana([]), You)`, `MayCost(PayMana([]))`,
 		`MayCost(PayMana([])), GainLife(Integer(1)), Unless(CostWasPaid, [GainLife(Integer(1))])`,
 		`MayCost(PayMana([ManaCostX])), Unless(CostWasPaid, [GainLife(Integer(1))])`,
-		`MayCost(PayLife(Integer(1))), Unless(CostWasPaid, [GainLife(Integer(1))])`,
+		`MayCost(PayLife(ValueX)), Unless(CostWasPaid, [GainLife(Integer(1))])`,
 		`MayCost(PayMana([])), If(CostWasPaid, [GainLife(Integer(1))]), If(CostWasPaid, [GainLife(Integer(1))])`,
 		`MayCost(PayMana([])), Unless(CostWasPaid(), [GainLife(Integer(1))])`,
 		`MayCost(PayMana([])), Unless(CostWasPaid, [])`,

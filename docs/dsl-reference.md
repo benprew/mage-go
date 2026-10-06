@@ -1022,8 +1022,10 @@ An adjacent `PlayerMayCost(player, PayMana([...]))` and
 Each pair keeps its own result, including nested unpaid bodies. Payment uses
 the engine's total-cost transaction during resolution. Spell-controller payer
 references use the current controller of the declared stack target.
-Variable and alternative payments remain rejected. Optional sacrifice payments
-use the adapter below; other nonmana payments remain rejected.
+Variable mana payments use the separate adapter documented below. Fixed
+mana/life alternatives and fixed life payments use the adapter at the end of
+this document. Optional sacrifice payments use the adapter below; other
+nonmana payments remain rejected.
 Contract and tests: [RON optional payments](designs/mtgish-ron-optional-payment.md).
 
 ### RON optional sacrifice payments and branch polarity
@@ -1081,7 +1083,8 @@ Symbol `DrawACard` draws one card in supported action contexts. In
 `PlayerAction(player, DrawACard)`, the typed player reference selects the player;
 otherwise the resolving controller draws. Activation cost
 `PayLife(Integer(n))` accepts a nonnegative fixed integer and uses the existing
-atomic total-cost payment. Optional and dynamic life costs remain rejected.
+atomic total-cost payment. Optional fixed life costs use the resolution adapter
+at the end of this document. Dynamic life costs remain rejected.
 Fixed `AnyManaColor` production asks for one color for the complete amount.
 See [the exact shape and gameplay report](designs/mtgish-ron-fixed-draw.md).
 
@@ -3834,3 +3837,37 @@ Payment remains optional even when the host is already untapped or absent.
 Curse Artifact still rejects optional `SacrificePermanent(HostPermanent)`;
 Erosion still rejects alternative `Or` mana/life costs. Neither full card is
 claimed supported. Evidence: `TestRONHostController*` in `pkg/mage/dsl/ron`.
+
+
+## RON fixed alternative resolution payments
+
+In supported spell, activation and trigger action lists, `MayCost(cost)` or
+`PlayerMayCost(player, cost)` accepts `PayLife(Integer(n))`, with a nonnegative
+integer literal, and `Or([cost, cost, ...])`. Every alternative must be fixed
+`PayMana([...])`, fixed `PayLife(Integer(n))`, or another `Or` of those costs.
+Each `Or` requires at least two alternatives. X, dynamic values, conjunctions,
+other cost types and malformed declarations remain rejected in this context.
+Activation costs and spell additional costs do not gain this RON grammar.
+
+The adjacent nonempty `If` or `Unless` continuation uses symbol `CostWasPaid`
+or `CostWasntPaid`. Its result belongs to that payment, including nested and
+consecutive pairs. Zero payments still require acceptance. After acceptance,
+the engine offers payable alternatives to the resolving payer; one payable
+option needs no mode choice. Mana abilities can fund mana options. Only the
+selected option is paid, through the existing total-cost transaction. Resolution
+payments ignore activation cost reductions during affordability and locking.
+
+`Or` lowers to fresh `EitherCost` declarations, and life payment lowers to
+`LifePayCost`. Existing `IfPaid`/`UnlessPaid`, typed player and spell references,
+attachment information, countering, destruction, phasing and copying services
+keep their ownership. The engine's private mana-policy check is shared by
+resolution affordability and payment locking. Existing casting and activation
+callers retain their policies.
+
+Full-record behavior mappings: `TestRONAlternativePaymentErosion`,
+`ThrullWizard`, `InstancesAndRetarget`, and `NativeUpkeepAndLifeClause` in
+`pkg/mage/dsl/ron/alternative_payment_test.go`. The last test covers only the
+exact upkeep clause of Season of the Witch; its full record remains rejected
+for the independent end-step history filter. `Declarations`,
+`NestedAndInventory`, and `PolarityAndZero` establish grammar, scope, result and
+zero-payment contracts. Inventory role labels do not assert gameplay support.

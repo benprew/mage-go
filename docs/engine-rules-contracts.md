@@ -4435,3 +4435,33 @@ Curse Artifact with current-controller reads, LKI, prevention, copies and clone
 isolation; the full card remains rejected for its optional sacrifice cost.
 Erosion remains rejected for its alternative mana/life cost. `Activation` and
 `Declarations` verify shared action context and declaration rejection.
+
+
+## Fixed alternatives in resolution payments
+
+`IfPaid` and `UnlessPaid` can use `EitherCost` with fixed mana/life options,
+including nested alternatives. CR 118.2, 118.3, 118.5, 118.10 and 118.12a require
+resolution-time mana ability access, full payment, explicit acceptance of a
+zero cost, separate outcomes and an unpaid continuation after decline. CR
+608.2c-d places the payment and option choice at resolution. These are payments
+during resolution, so an activation cost reduction cannot reduce a mana option.
+
+The shared private affordability function recursively checks alternatives with
+the transaction's mana policy. Resolution checks and option locking use raw
+mana costs; activation transactions retain activation reductions. Casting and
+legacy locking callers retain their current behavior. Option locking precedes
+the existing atomic total-cost validation and commit. Failed validation spends
+no live mana or life and runs the unpaid branch. Independent payments cannot
+consume each other's outcomes. No new global payment-result state is added.
+
+`TestResolutionAlternativeManaPolicy` covers mana-only, life-only, both options,
+choice, decline, neither option, nested alternatives, mana abilities, combined
+cost rollback and false affordability caused by activation reductions.
+`TestResolutionAlternativeKeepsActivationPolicy` covers unchanged activation
+reductions and clone isolation. RON `TestRONAlternativePayment*` covers complete
+Erosion and Thrull Wizard records through casting, activation, native upkeep,
+target legality, payer control changes, pending source departure, return and
+phasing, changed-controller and retargeted copies, prevention of countering,
+regeneration, clone isolation and declaration rejection. Existing exact
+attachment/LKI and stack identities determine recipients; these changes add
+no new identity, replacement-order or simultaneous-operation rule.

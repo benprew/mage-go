@@ -176,6 +176,28 @@ func flattenManaCost(cost ManaCost) ManaCost {
 }
 
 func lockPaymentCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uuid.UUID, xValue int, validation *Game, chooser Player) ([]Cost, map[uuid.UUID]bool, error) {
+	return lockPaymentCostsWithManaPolicy(costs, sourceID, controller, targets, xValue, validation, chooser, true)
+}
+
+func canPayWithManaPolicy(cost Cost, sourceID, controller uuid.UUID, g *Game, reduceActivation bool) bool {
+	if mana, ok := cost.(*ManaCostPayment); ok && !reduceActivation {
+		return g.CanAfford(controller, mana.MC, nil)
+	}
+	if either, ok := cost.(*eitherCost); ok {
+		if either.locked {
+			return either.selected >= 0 && either.selected < len(either.options) && canPayWithManaPolicy(either.options[either.selected], sourceID, controller, g, reduceActivation)
+		}
+		for _, option := range either.options {
+			if canPayWithManaPolicy(option, sourceID, controller, g, reduceActivation) {
+				return true
+			}
+		}
+		return false
+	}
+	return cost.CanPay(sourceID, controller, g)
+}
+
+func lockPaymentCostsWithManaPolicy(costs []Cost, sourceID, controller uuid.UUID, targets []uuid.UUID, xValue int, validation *Game, chooser Player, reduceActivation bool) ([]Cost, map[uuid.UUID]bool, error) {
 	var locked []Cost
 	outcomes := make(map[uuid.UUID]bool)
 	var lock func(Cost) error
@@ -185,7 +207,7 @@ func lockPaymentCosts(costs []Cost, sourceID, controller uuid.UUID, targets []uu
 			var payable []Cost
 			var labels []string
 			for _, option := range choice.options {
-				if option.CanPay(sourceID, controller, validation) {
+				if canPayWithManaPolicy(option, sourceID, controller, validation, reduceActivation) {
 					payable = append(payable, option)
 					labels = append(labels, option.Text())
 				}

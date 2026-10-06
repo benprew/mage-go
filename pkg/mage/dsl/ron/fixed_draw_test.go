@@ -287,7 +287,7 @@ func TestRONFixedDrawInvalidDeclarations(t *testing.T) {
 		`Activated(PayLife(2), ActionList([DrawACard]))`,
 		`Activated(PayLife(Integer()), ActionList([DrawACard]))`,
 		`Activated(PayLife(Integer(1), Integer(2)), ActionList([DrawACard]))`,
-		`Activated(PayMana([]), ActionList([MayCost(PayLife(Integer(1))), Unless(CostWasPaid, [DrawACard])]))`,
+		`Activated(PayMana([]), ActionList([MayCost(PayLife(ValueX)), Unless(CostWasPaid, [DrawACard])]))`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [%s])`, rule)
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")

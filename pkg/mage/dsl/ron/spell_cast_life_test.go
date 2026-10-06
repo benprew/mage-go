@@ -195,7 +195,7 @@ func TestRONSpellCastLifeInvalid(t *testing.T) {
 		`Activated(PayMana([]), ActionList([MayCost(PayMana([])), If(CostWasPaid, [])]))`,
 		`Activated(PayMana([]), ActionList([MayCost(PayMana([])), GainLife(Integer(1)), If(CostWasPaid, [GainLife(Integer(1))])]))`,
 		`Activated(PayMana([]), ActionList([MayCost(PayMana([ManaCostX])), If(CostWasPaid, [GainLife(Integer(1))])]))`,
-		`Activated(PayMana([]), ActionList([MayCost(PayLife(Integer(1))), If(CostWasPaid, [GainLife(Integer(1))])]))`,
+		`Activated(PayMana([]), ActionList([MayCost(PayLife(ValueX)), If(CostWasPaid, [GainLife(Integer(1))])]))`,
 	} {
 		src := fmt.Sprintf(`Card(Name: "Invalid", Typeline: (Supertypes: [], Cardtypes: [Artifact], Subtypes: []), Rules: [%s])`, rule)
 		nodes, err := Parse(strings.NewReader(src), "invalid.ron")
