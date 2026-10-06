@@ -918,6 +918,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 		if (n.Name == "And" || n.Name == "Or") && len(n.Args) == 1 {
 			return role
 		}
+	case "static_counter_comparison":
+		if n.Name == "EqualTo" && len(n.Args) == 1 {
+			return "static_counter_value"
+		}
+	case "static_counter_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
 	case "mana_value_comparison":
 		if n.Name == "EqualTo" && len(n.Args) == 1 {
 			return "value"
@@ -935,6 +943,12 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "HasACounterOfType" && len(n.Args) == 1 {
+			return "permanent_counter_type"
+		}
+		if n.Name == "HasNumberCountersOfType" && len(n.Args) == 2 {
+			return []string{"static_counter_comparison", "permanent_counter_type"}[index]
+		}
 		if n.Name == "AttachedToPermanent" && len(n.Args) == 1 {
 			return "permanent_reference"
 		}

@@ -20944,3 +20944,166 @@ suite with `-count=1`, `go test ./... -short -count=1` (skill verification),
 Automatic lint edits were reviewed; they only adjusted import separation and
 formatting. Post-lint strict/inventory loader counts are unchanged, and all
 12 file hashes match the baseline. No accepted record regresses.
+
+## Run 2026-10-05: STATIC-COUNTER-PREDICATES
+
+Status: complete shared prerequisite slice. Stop after this slice. Complete
+collection support, gameplay coverage, startup cutover and removal gates remain
+unfinished.
+
+### Fresh evidence and candidate selection
+
+Initial user changes were `.gitignore`, the execution design, the progress
+ledger, and untracked `mtgish-ron-completed.md`. These are preserved. Only this
+new ledger entry is staged; the user's archive/reorganization is not staged.
+Baseline compiler tests, short engine tests and build passed. Strict loader and
+inventory inspection exited 1 for collection rejection: 2,445 records, 1,702
+compiled / 743 rejected, 630 accepted / 356 rejected unique names (986 total).
+Inventory visited 72,950 nodes / 8,539 signatures, including 6,911 unknown-role
+occurrences. First errors do not establish full-card unlock estimates.
+
+The execution design, vocabulary snapshot, current ledger, `pkg/mage/doc.go`,
+compiler/engine files, complete selected records, existing API/rules contracts,
+and CR 122.1–2, 611.3a–c, 613.4c–d and 702.26 were inspected. Local FEM and LEG
+Oracle data agree with the selected predicates. No source defect was found or
+corrected. RON files are unchanged; no source vocabulary refresh is needed.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Static counter predicates, selected | Homarid, Tidal Influence, Merseine, Venarian Gold: **0** complete cards immediately; a shared prerequisite for all four. | Homarid and Tidal Influence still need singular entry counters, counter-state triggers and reset actions; Tidal Influence also needs its casting restriction. Merseine needs conditional untap bodies, host mana-cost payment and host-controller activation. Venarian Gold needs conditional untap bodies and host counter removal. Enables exact-count static bonuses and presence-gated Aura rules without any new identity/layer subsystem. | Low: two pure reusable filters, strict adapters, semantic descendant roles and source/host/instance tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** credible eventual unlocks, **0** enumeration-only gains. | Source choice enumeration, retained identity for permanent and spell sources, property rechecks, binding producer and next-event installation remain prerequisites. Other ChooseADamageSource consumers have additional replacement operations and are excluded. | High: choice legality, identity/LKI, stack copies, source filters, ordering and simultaneous-event tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats: **4** credible eventual unlocks, **0** battlefield-only gains. Gaea's Avenger is a fifth affected name with a separate source-controller defect. | Existing layer-7a setters are battlefield services; characteristics in other zones, owner/controller context, copiable CDA declarations and exact filters remain prerequisites. | High: reusable all-zone characteristic evaluation and copy/layer/zone tests. |
+
+Selection rationale: the counter predicate slice is a small complete prerequisite
+with concrete downstream use in four distinct cards. It can reuse established
+live-reference and static-membership behavior. The other candidates require
+larger missing subsystem contracts before adapters can be correct. The zero
+immediate gain was stated before editing; no partial card support was presented
+as an unlock. Single-card adapters were deferred.
+
+### Established shapes, context and reuse boundary
+
+Engine APIs:
+
+- `HasCounter(core.CounterType) PermanentFilter`: one or more counters of one
+  kind on a supplied nonnil permanent.
+- `CounterCountEquals(core.CounterType, int) PermanentFilter`: exact live count.
+  The stored count is widened to int. Negative and above-storage-range counts
+  cannot wrap into a match. Nil does not match exact zero.
+
+RON static condition filters:
+
+- `HasACounterOfType(counter)`.
+- `HasNumberCountersOfType(EqualTo(Integer(n)), counter)`, where `n` is a
+  nonnegative integer literal. All existing permanent-counter types and supported
+  P/T pairs reuse `compilePermanentCounterType`.
+- These filters compose with existing nonempty `And`/`Or`. They work in
+  `PermanentPassesFilter(ThisPermanent, filter)` and Aura `HostPermanent`, plus
+  the existing static player `ControlsA`/`ControlsNo` contexts.
+- Wrong arities/kinds, unknown/player counter types, unsupported P/T pairs,
+  negative/dynamic thresholds, other comparisons and unbound/incompatible
+  references remain errors. Resolving conditions, entry operations, replacement
+  predicates, activation timing and counter-dependent durations are not added.
+  Conditional bodies retain their existing restrictions; `PermanentRuleEffect`
+  bodies still reject.
+
+`PermanentMatchesFilter`, `PlayerControls`, `OpponentControls`, `ControlsNone`,
+`FilterBattlefield`, `Static`, `While`, typed source/attachment references and
+the existing layer service supply execution. Each factory owns its ability and
+effect state; filters capture only immutable counter kind/count. No choice,
+saved-action slot, new replacement, cost or simultaneous-operation service is
+introduced. Presence/incarnation/phasing checks belong to the shared selectors,
+not the raw counter filter. There is no LKI fallback for live static queries.
+The `implement-engine` skill was applied to the reusable filters. No removed
+card/set skill, Go card requirements, fallback or production subset registry was
+used.
+
+### TDD and gameplay evidence
+
+Engine tests first failed for missing `HasCounter` and `CounterCountEquals`.
+An initial player-access fixture error was corrected and the missing APIs were
+confirmed as the only build failure. RON tests failed on unsupported counter
+predicates; after implementation they passed with the existing engine services.
+Additional test fixtures needed explicit permanent scope, an actual Aura
+subtype for attachment, the correct activation index, and a layer refresh
+before reading runtime keywords. A new player-condition fixture initially
+declared a creature without CardPT; it was corrected to an artifact. An early
+commentary said all focused cases passed before this last case completed; the
+failure and correction were reported, and final focused and required checks
+were rerun. No behavior assertion was removed or skipped.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Homarid | `TestRONStaticCounterRealClauses/Homarid` executes both exact parsed static P/T rules at 0, 1, 2, 3 and 4 tide counters. The complete record is separately required to remain rejected. Entry/upkeep/reset behavior is not verified by this slice. |
+| Tidal Influence | `TestRONStaticCounterRealClauses/Tidal_Influence` executes both exact parsed static collection bonuses against an opposing blue creature at all counter states. Complete-record rejection is retained. Casting/entry/upkeep/reset behavior remains unverified. |
+| Merseine, Venarian Gold | Their `RealClauses` cases compile the exact parsed source-net or host-sleep predicate and execute it with a test-only keyword body. Untap/payment/removal bodies are not substituted in production and remain rejected. No full-card coverage claim is made. |
+| Typed static subjects | `TestRONStaticCounterLiveSubjects`: current source/host counters, unrelated counter kinds, control changes, source phasing, source ability removal and cleanup, reattachment, departure/return, distinct factories and clone isolation. |
+| Timing, copy and payment reuse | `TestRONStaticCounterResolutionTiming`: failed mana payment, no early predicate change, independent game clone, copied activation, one versus two native counter resolutions and subsequent layer evaluation. |
+| Declarations and combinations | `Invalid`: malformed declarations, wrong counter kinds, invalid values/comparisons and out-of-scope refs. `CompositionAndBounds`: exact zero, 255/256 and nested type/color/counter And/Or. `PlayerConditions`: own ControlsA/ControlsNo and opponent exact-count conditions. |
+| Engine predicates | `TestCounterFilters`: kinds, pure count reads, nil/zero, negative and storage-range bounds. `TestCounterFilterConditionIdentity`: source/host phasing, absence, stale incarnation, return and independent clone. Existing `TestPermanentMatchesFilter*` regressions remain passing. |
+| Semantic reporting | `TestRONStaticCounterInventory` maps counter type, exact comparison, static value and literal descendants and requires successful compilation of its valid test declaration. Existing `TestInventory*` regressions remain passing. |
+
+Compilation and full-card gameplay remain separate. This slice adds four
+clause/predicate mappings and **zero** complete unique-card gameplay mappings.
+Collection engine-validated and behavior-verified totals remain null.
+
+### Final measurement, validation and next work
+
+Actual gain matches the estimate: **0 unique cards / 0 records**. No accepted
+name regresses. Final strict loading remains **1,702 compiled / 743 rejected**,
+**630 accepted / 356 rejected unique names**. Inspection still visits **72,950
+nodes / 8,539 signatures**; unknown-role occurrences decrease **6,911 to 6,892**
+through classification of 19 nested counter occurrences. Classification is not
+support evidence for unsupported surrounding contexts. The strict loader
+continues to exit 1 and publishes no partial registry.
+
+All required checks passed on the final code. There is no environment or
+pre-existing validation blocker. Lint edits were reviewed; only import grouping
+and formatting changed. The final tests include all fixture corrections.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`, `go test ./pkg/mage/... -short -count=1`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestCounterFilter\|TestRONStaticCounter\|TestPermanentMatchesFilter\|TestRONPermanentFilter\|TestInventory' -count=1` | PASS; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS on final code. |
+| `go test ./... -short -count=1` | PASS; additional skill verification. |
+| `make test` | PASS on final code. |
+| `make build` | PASS before and after lint. |
+| `go vet ./...` | PASS before and after lint. |
+| `make lint` | PASS, zero issues. Automatic edits reviewed. |
+| `git diff --check` | PASS, including the final ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1 after lint: 1,702 compiled / 743 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1 after lint: same counts; 6,892 unknown-role occurrences. |
+| Accepted-name and source-hash audit | No lost accepted name; all 12 vocabulary file hashes still match. |
+
+Final first diagnostics for the selected complete records:
+
+- Homarid: `FEM.lines.ron:44:180: unsupported entry operation (EntersWithACounter)`.
+- Tidal Influence: `FEM.lines.ron:95:150: unsupported casting window on a permanent (CastEffect)`.
+- Merseine: `FEM.lines.ron:61:357: unsupported conditional static body (PermanentRuleEffect)`.
+- Venarian Gold: `LEG.lines.ron:286:475: unsupported conditional static body (PermanentRuleEffect)`.
+
+Merseine and Venarian Gold now reach their next independent body blocker;
+Homarid and Tidal Influence retain earlier blockers. This is measured compiler
+progress inside records, not an accepted-card gain.
+
+No Go definitions, startup callers, generators or DSL exports are removed.
+Removal gates remain unmet, and no fresh caller audit authorizes DSL deletion.
+API and rules documentation describe only this slice's behavior. The source
+files and vocabulary source hashes remain unchanged. User edits remain unstaged.
+
+Ranked next candidates to reassess with fresh full records:
+
+1. Counter-state cycle prerequisites shared by Homarid and Tidal Influence:
+   singular entry counters, properly armed state triggers and typed counter
+   reset actions; keep Tidal Influence's casting restriction separate.
+2. Chosen-source enumeration/identity/property rechecks for the seven
+   Circle/Realm next-event prevention cards.
+3. All-zone battlefield-count CDAs for the four cards above; investigate and
+   correct Gaea's Avenger's controller data separately with Oracle evidence.
+
+Changed files: engine `counter_filter.go`, `counter_filter_test.go`, `doc.go`;
+RON `static_counter.go`, `static_counter_test.go`, `conditional_static.go`,
+`inventory.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and
+this ledger entry. One descriptive commit stages only this slice. Its hash is
+reported in the final response. No second slice starts.

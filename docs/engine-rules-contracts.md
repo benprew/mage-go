@@ -2855,6 +2855,22 @@ choice-based or restricted mana, extra costs, or conditions changed by tap costs
 
 ## Live source and attachment filter conditions
 
+`HasCounter(core.CounterType) PermanentFilter` checks for one or more counters
+of one kind. `CounterCountEquals(core.CounterType, int) PermanentFilter` checks
+the exact count. Nil permanents never match, including an exact zero query.
+Negative or greater-than-storage-range counts never match. Both queries are
+pure and read the supplied permanent; zone presence and identity remain the
+responsibility of the selector or `PermanentMatchesFilter`.
+
+The counter predicates do not use departure LKI. They reuse current counter
+storage (CR 122.1), live static membership (CR 611.3a), and the existing
+incarnation and phasing checks. A returned permanent cannot satisfy an old
+condition, even if it has the same count. A phase cycle retains counters.
+No new replacement, counter-placement, cost, trigger, or batch service is added.
+`TestCounterFilters` covers independent counter kinds, zero, storage boundaries,
+and nil. `TestCounterFilterConditionIdentity` covers source/host absence,
+phasing, return, stale source incarnations and clone isolation.
+
 `PermanentMatchesFilter(PermanentRef, PermanentFilter) StateCondition` accepts
 `This` or `AttachedPermanent`. Definition validation rejects nil, target and
 saved references for this static context. The zero filter matches any live

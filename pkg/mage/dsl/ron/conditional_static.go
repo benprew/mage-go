@@ -193,6 +193,8 @@ func compileConditionalModifications(n Node, ctx scope) ([]func() mage.Continuou
 
 func compileStaticConditionFilter(n Node) (mage.PermanentFilter, error) {
 	switch n.Name {
+	case "HasACounterOfType", "HasNumberCountersOfType":
+		return compileStaticCounterFilter(n)
 	case "IsNonToken":
 		if n.Kind != Symbol {
 			return mage.PermanentFilter{}, unsupported(n, "static condition filter")

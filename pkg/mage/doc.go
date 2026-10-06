@@ -87,6 +87,8 @@
 // tokens. Control changes and phasing change this condition immediately.
 // Use [PermanentMatchesFilter] with [This] or [AttachedPermanent] for a
 // live static condition. A returned permanent cannot satisfy an old reference.
+// Use [HasCounter] or [CounterCountEquals] for a live counter condition.
+// These filters read one counter kind. Exact counts do not use a narrow cast.
 // Use a typed target with [WithTargets] for a targeted bonus.
 // Dwarven Lieutenant combines [IsCreature] with [HasSubType] for its Dwarf target.
 // Either player's Dwarf creature can be the target, including the source.

@@ -1941,7 +1941,7 @@ Modifications accept fixed `AdjustPT(power, toughness)` or nonempty
 `AddAbility([keyword...])` with existing basic keywords and supported landwalk
 forms. One `If` body must use only layer 6 grants or only layer 7c bonuses.
 Nested conditions, other body rules, mixed layers, chosen/event/target references,
-counters, other player conditions, type/base-value changes and replacements remain
+counter modifications, other player conditions, type/base-value changes and replacements remain
 errors. No resolving `If` action support is implied.
 
 The adapter reuses `PlayerControls`, `OpponentControls`, `ControlsNone`, `PermanentIsUntapped`,
@@ -2670,6 +2670,24 @@ gap. Tests: `TestRONConditionalMana*`; engine contract: `TestConditionalMana*`.
 `ThisPermanent`, or bare `HostPermanent` on an Aura. It lowers to
 `mage.PermanentMatchesFilter(PermanentRef, PermanentFilter) StateCondition`.
 The existing `IsUntapped` form retains `PermanentIsUntapped`.
+
+Static condition filters also accept `HasACounterOfType(counter)` and
+`HasNumberCountersOfType(EqualTo(Integer(n)), counter)`, where `n` is a
+nonnegative integer literal. They use `mage.HasCounter` and
+`mage.CounterCountEquals`. Counter types use the existing permanent-counter
+grammar, including supported P/T pairs. Counts above 255 remain integer
+comparisons; they do not wrap to the engine's counter storage type.
+These filters compose with nonempty `And`/`Or` and also work in the existing
+`ControlsA`/`ControlsNo` static player conditions. Dynamic thresholds, other
+comparisons, resolving conditions and counter-dependent durations are not added.
+Conditional body restrictions remain unchanged, including rejection of
+`PermanentRuleEffect` bodies.
+
+`TestRONStaticCounter*` covers the predicate contract and the exact Homarid
+and Tidal Influence static P/T clauses. Merseine and Venarian Gold use their
+exact parsed predicates with test-only keyword bodies. These four complete
+records still reject other unsupported rules; none is a full-card gameplay
+coverage claim.
 
 The filter uses the existing static condition grammar: nonempty nested
 `And([filters])`/`Or([filters])`, `IsNonToken`, permanent type/subtype,
