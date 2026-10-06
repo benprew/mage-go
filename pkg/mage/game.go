@@ -2027,6 +2027,7 @@ func (g *Game) PutTriggersOnStack() {
 		targetSource := g.FindCardAnywhere(pt.sourceID)
 		obj := &StackObject{
 			stateKey:          pt.stateKey,
+			capturedPlayers:   capturedTriggerTargetPlayers(pt),
 			sourceIncarnation: pt.sourceIncarnation,
 			ID:                uuid.New(),
 			Controller:        pt.controller,
@@ -2066,7 +2067,7 @@ func (g *Game) PutTriggersOnStack() {
 			for i, mode := range modes {
 				legal := true
 				for _, target := range mode.Targets {
-					if len(uniqueTargetCandidates(target.Possible(pt.controller, targetSource, g))) < target.Min() {
+					if len(uniqueTargetCandidates(target.Possible(pt.controller, targetSource, g.targetPlayerQuery(obj.capturedPlayers)))) < target.Min() {
 						legal = false
 						break
 					}
@@ -2275,6 +2276,7 @@ func (g *Game) PutTriggersOnStack() {
 // chooseTriggerTargets returns false when a required target group cannot be chosen.
 // CR 603.3d removes such a trigger before a player receives priority.
 func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uuid.UUID, []Target, bool) {
+	query := g.targetPlayerQuery(capturedTriggerTargetPlayers(pt))
 	controller := g.GetPlayer(pt.controller)
 	sourceCard := g.FindCardAnywhere(pt.sourceID)
 	var out []uuid.UUID
@@ -2292,7 +2294,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 			continue
 		}
 		if random, ok := randomTargetSpec(t); ok {
-			chosen := g.chooseRandomTargets(pt.controller, sourceCard, random, 0)
+			chosen := g.chooseRandomTargetsWithQuery(pt.controller, sourceCard, random, 0, query)
 			if len(chosen) < t.Min() {
 				return nil, nil, false
 			}
@@ -2303,7 +2305,7 @@ func (g *Game) chooseTriggerTargets(pt *pendingTrigger, declared []Target) ([]uu
 			continue
 		}
 		t.Reset()
-		possible := t.Possible(pt.controller, sourceCard, g)
+		possible := t.Possible(pt.controller, sourceCard, query)
 		if len(possible) < t.Min() {
 			return nil, nil, false
 		}

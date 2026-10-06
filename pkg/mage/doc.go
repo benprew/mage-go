@@ -200,6 +200,11 @@
 // Returned and phased permanents cannot pay. Zone replacements can change
 // the destination without changing successful payment.
 //
+// Use [TargetControlledBy] with [You] or [FromPlayer] of an event binding.
+// Target selection and later checks read the saved event player. Source
+// control changes and copies do not change that player. [AttacksUnblocked]
+// with WithDefendingPlayer saves the player before target selection.
+//
 // Use [IfRequiredPaid] or [UnlessRequiredPaid] for a mandatory matching
 // sacrifice payment during resolution. The branch keeps its own result.
 // Source exclusion uses the original incarnation, so a returned source can pay.

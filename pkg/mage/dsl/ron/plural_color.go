@@ -14,7 +14,7 @@ func compilePluralPermanentTarget(n Node, ctx scope) (targetFactory, string, err
 	if err != nil {
 		return nil, "", err
 	}
-	return func() mage.Target {
+	return func(instanceBindings) mage.Target {
 		return mage.DeclarePermanentTargets(ctx.targetNamespace+"Ref_TargetPermanents", 1, math.MaxInt, filter, options...)
 	}, "Ref_TargetPermanents", nil
 }

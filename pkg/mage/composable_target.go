@@ -198,6 +198,11 @@ func declaredTargetNodes(targets []Target, grouped ...bool) []definitionEdge {
 }
 func (b *targetDeclaration) inspectDefinition() definitionNode {
 	n := definitionNode{Role: "target-binding", Text: b.name, targetDeclaration: b}
+	if spec, ok := b.spec.(*PermanentTarget); ok {
+		for i, player := range spec.controllerRefs {
+			n.children = append(n.children, definitionEdge{fmt.Sprintf("controllerRefs[%d]", i), targetControlledByOption{player}})
+		}
+	}
 	if b.optionalGraveyardCount > 1 {
 		n.problem = "supply up to one graveyard option once"
 	}

@@ -22228,3 +22228,156 @@ Ranked next candidates to reassess:
    separate source defect.
 
 One descriptive commit includes only this slice. No second slice is started.
+
+
+## 2026-10-05: captured defending players and player-relative targets
+
+Status: completed slice `DEFENDING-PLAYER-TARGETS`. This run stops here.
+The pre-existing `.gitignore`, design and ledger edits, and untracked
+`mtgish-ron-completed.md`, are preserved. Only this appended ledger entry is
+staged from the ledger; its prior user edits remain unstaged.
+
+### Evidence and candidate selection
+
+Read AGENTS.md, mage/doc.go, the execution design, vocabulary and ledger, the
+selected compiler/event/target/payment code, API and rules contracts, CR 509,
+603.3 and 608.2, and complete candidate RON records. Local `data/FEM.json`
+confirms both cards' Oracle text. No Go card definition supplied requirements.
+Baseline `go test ./pkg/mage/dsl/ron -count=1` and `make build` passed.
+Strict loader and semantic inventory exited 1 for collection rejection, not
+build failure: 2,445 records, 1,715 compiled / 730 rejected; 638 accepted / 348
+rejected unique names. Inventory had 72,950 nodes, 8,537 signatures and 6,779
+unknown-role occurrences. Reprints count once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capability | Effort |
+| --- | --- | --- | --- |
+| Captured defending player and singular target restriction, selected | Mindstab Thrull, Necrite; **2** | The preceding typed optional sacrifice slice supplies payment. The engine already has `WithDefendingPlayer`, but saved players were unavailable at target selection and legality checks. This also establishes early event-player query frames for later targeted events. | Medium: typed RON adapter, shared target restriction, stack/copy/query integration and native combat, identity, payment and declaration tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation; **0 adapter-only / 7 eventual** | Complete records also need source enumeration/choice, captured damage-source identity and next-event shields. Enables related prevention consumers, with their additional operations still blocked. | High: source-choice plus replacement/event contracts and simultaneous damage tests. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **0 battlefield-only / 5 eventual** | Full records need characteristic evaluation in all zones, owner/controller context, named counts and copy/layer contracts. Gaea's Avenger has a separate recorded source predicate defect and arithmetic requirement. | High: reusable all-zone characteristic services, then count/filter adapters and zone/copy/layer gameplay. |
+
+The selected slice has two immediate complete consumers and a reusable event
+query prerequisite at lower effort. All nested forms and complete records were
+inspected; first errors alone did not determine estimates. The contract,
+reuse boundary and acceptance cases were stated before edits. Used the
+implement-engine skill for reusable engine work; no removed card/set skill or
+agent delegation was used.
+
+### Supported signatures and reuse boundary
+
+New engine API: `TargetControlledBy(PlayerRef) PermanentTargetOption`.
+Supported references are `You` and `FromPlayer` of a saved event binding.
+Definition validation rejects nil, missing and unsupported references and
+visits event producers before target restrictions. The shared target query
+reads current permanent control against the saved player. Existing event
+capture instructions supply player values without executing effects or costs.
+Each stack object retains its own player map for legality and retargeting;
+copies and game clones copy this map. Separate pending events do not overwrite
+one another. Candidate queries use a private game query frame. Random target
+selection still consumes the live random stream after enumeration.
+
+RON source-only `WhenACreatureAttacks/1` and
+`WhenACreatureAttacksAndIsntBlocked/1`, with
+`SinglePermanent(ThisPermanent)`, now expose `Trigger_DefendingPlayer` in their
+action bodies. Both lower to existing source combat event patterns with a
+fresh `PlayerBinding` per factory. Blocks, other events and independent
+abilities do not gain this reference. Existing `Trigger_ThatCreature` keeps
+source incarnation identity.
+
+Singular `TargetPermanent/1` accepts `ControlledByPlayer/1` with the bound
+`Trigger_DefendingPlayer` or `You`, alone or inside nested `And/1` lists with
+existing target restrictions. Other player expressions, disjunctions and plural
+contexts remain rejected. Target factories now receive `instanceBindings` so
+restrictions and actions share the same fresh declarations. RON owns spelling,
+lexical scope and lowering; mage owns queries, player snapshots, stack state,
+legality, choices, costs and zones.
+
+Reused services: `Attacks`, `AttacksUnblocked`, `WithDefendingPlayer`,
+`BindPlayer`, `FromPlayer`, `DeclarePermanentTarget`, `WithTargets`, trigger
+ordering and capture, stack incarnation checks, copies, clones,
+`IfSacrificePaid`, discard and `DestroyWithoutRegeneration`. No parallel combat,
+cost, zone or replacement system was added. This slice does not change
+replacement ordering, simultaneous-operation rules or the runtime registry.
+
+### TDD and gameplay evidence
+
+Engine tests first failed with undefined `TargetControlledBy`. RON tests then
+failed on Mindstab Thrull's unbound `Trigger_DefendingPlayer` and Necrite's
+unsupported `ControlledByPlayer`. After implementation the tests passed.
+Fixture corrections used the existing exile replacement API and supplied
+CardPT for a synthetic creature. An old rejection test now rejects the
+reference in a block event, while positive attack/unblocked tests establish the
+new support. The prior Mindstab clause blocker assertion now compiles and
+validates the complete record. Inventory assertions use freshly measured
+counts. No gameplay assertion was removed or weakened.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Mindstab Thrull, complete FEM record | `TestRONDefendingPlayerNative`: paid/unpaid real casting, rollback, attack/blocker timing, blocked and unblocked combat, payment/decline and discard count/player. `Pending`: current empty/short/late hands, source control, absence/return, phasing/cycles, ability removal, copies, optional payment, exile replacement and clone isolation. |
+| Necrite, complete FEM record | `Native`: casting, native attack/blockers, target availability before payment and decline. `Pending`: current control, target return/phasing/cycles/shroud, source identity/control, inactive source, regeneration prohibition, indestructibility, copied payment, replacement and clone isolation. `InstancesAndCopy`: fresh factories, copied targets retarget independently, the source cannot pay twice and the second instance remains independent. |
+| RON binding and syntax | `TestRONDefendingPlayerScopeAndInventory`: both attack event spellings, changed-controller copies, source return, clone isolation, complete-record test registry and semantic roles. `Declarations`: malformed/wrong-role/unbound/out-of-scope refs and unsupported disjunction. `ControllerFilter`: `You`, nested conjunction, target legality and activation rollback. Existing `TestRONTypedSacrificeUnblockedSourceClause` retains its synthetic payment contract. |
+| Engine target service | `TestTargetPlayerReferenceEvent`: target selection, legality/control, return/phasing/cycles/shroud, source return, changed-controller copies and clone isolation. `Definition`: missing/nil/unsupported player refs and valid `You`. `SnapshotsAndQueries`: two step events with the same declaration retain independent player values; private query frames and live random consumption; clones. Existing source combat, target and payment regressions remain passing. |
+
+### Final measurements, validation and remaining gates
+
+Actual gain matches the estimate: **2 unique names / 2 records**, Mindstab
+Thrull and Necrite. No accepted name is lost. Complete-card gameplay mappings
+gain two. Collection-wide engine-validation and gameplay totals remain null;
+compilation totals do not claim collection gameplay coverage.
+
+Strict loading remains atomic and exits 1 for **1,717 compiled / 728 rejected
+records; 640 accepted / 346 rejected unique names**. All 2,445 records parse.
+Final inventory has 72,950 nodes / 8,537 signatures / 6,772 unknown-role
+occurrences. Classifying the child of `ControlledByPlayer` as a player reference
+accounts for seven fewer unknown occurrences. RON source is unchanged; syntax
+snapshot hashes remain valid and no vocabulary refresh is needed.
+
+Fresh diagnostics include Circle of Protection: Black at
+`2ED.lines.ron:33:215`, unsupported `ChooseADamageSource`; Dakkon Blackblade at
+`LEG.lines.ron:58:205`, unsupported `CDA_Power`; Safe Haven at
+`DRK.lines.ron:88:463`, unsupported `PutEachExiledCardOntoTheBattlefield`; and
+Blaze of Glory at `2ED.lines.ron:21:290`, unsupported `SpellDefendingPlayer`.
+These are remaining capability gaps. No new source defect was found.
+
+All final required checks pass. Initial lint reported preallocation and a
+builtin-name shadow in new code; both were fixed. Automatic formatting was
+reviewed, no unrelated file changed, and affected tests were rerun with
+`-count=1`. No environment or pre-existing validation failure remains.
+
+| Command | Result |
+| --- | --- |
+| Baseline `go test ./pkg/mage/dsl/ron -count=1`; `make build` | PASS. |
+| Focused `go test ./pkg/mage -run 'TestTargetPlayerReference\|TestUnblockedAttack\|TestRandomTarget' -count=1` | PASS after expected TDD failures; repeated after formatting. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONDefendingPlayer\|TestRONSourceAttack\|TestRONTypedSacrifice\|TestInventory' -count=1` | PASS after expected TDD failures and stale blocker/count updates; repeated after formatting. |
+| `go test ./pkg/mage/... -short -count=1` | PASS, repeated for final code. |
+| `make test` | PASS, repeated for final code. |
+| `make build` | PASS, repeated for final code. |
+| `go vet ./...` | PASS, repeated for final code. |
+| `make lint` | PASS, zero issues on final run. |
+| Additional skill check `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `go run ./cmd/loadcards -inventory -json` | Expected exit 1, repeated for final code: 1,717 compiled / 728 rejected, 640 accepted / 346 rejected unique names. |
+| Source hash / accepted-name audit | All 12 vocabulary source hashes match; only the two selected names gain acceptance; no losses. |
+
+Changed files: new engine `target_player_reference.go` and its tests;
+`target.go`, `composable_target.go`, definition validation, stack, trigger
+placement, resolution, clone and copy integration; RON compiler target
+factories and source/player scopes, new `player_relative_target.go` and
+`defending_player_test.go`, semantic inventory and affected regression tests;
+`mage/doc.go`, API/rules-contract documentation and this ledger entry.
+
+Fresh shared-service caller search found 78 code/docs/fixture files and 36 DSL
+dot-import callers. Existing DSL exports and engine services still have callers;
+this slice makes none obsolete. No Go card, generator or DSL export is removed.
+Full collection loading, complete gameplay, application cutover, old-definition
+removal and DSL cleanup gates remain unmet.
+
+Ranked next candidates to reassess:
+
+1. Chosen-source enumeration/identity/property and next-event prevention, with
+   seven Circle/Realm consumers.
+2. All-zone count CDA prerequisite, with five direct consumers; keep the
+   separate Gaea's Avenger source defect explicit.
+3. Shared linked exile/return service for Safe Haven and related consumers;
+   inspect full records and linked-object lifetimes before estimating unlocks.
+
+One descriptive commit contains only this slice. No second slice is started.

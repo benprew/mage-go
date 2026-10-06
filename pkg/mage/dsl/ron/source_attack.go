@@ -2,6 +2,8 @@ package ron
 
 import "github.com/benprew/mage-go/pkg/mage"
 
+type sourceCombatPlayerPlan struct{ name string }
+
 func compileSourceCombatTrigger(event, body Node, ctx scope) (optionFactory, error) {
 	if err := arity(event, 1); err != nil {
 		return nil, err
@@ -22,18 +24,29 @@ func compileSourceCombatTrigger(event, body Node, ctx scope) (optionFactory, err
 	}
 	ctx.sourceAttack = event.Name != "WhenACreatureBlocks"
 	ctx.sourceBlock = event.Name == "WhenACreatureBlocks"
+	if ctx.sourceAttack {
+		ctx.defendingPlayer = &sourceCombatPlayerPlan{name: "Trigger_DefendingPlayer"}
+	}
 	plan, err := compileActions(body, ctx)
 	if err != nil {
 		return nil, err
 	}
 	return func() mage.CardOption {
-		actions := plan.build()
+		bindings := instanceBindings{}
+		var defender *mage.PlayerBinding
+		if ctx.defendingPlayer != nil {
+			defender = mage.BindPlayer(ctx.defendingPlayer.name)
+			bindings.defenders = map[*sourceCombatPlayerPlan]*mage.PlayerBinding{ctx.defendingPlayer: defender}
+		}
+		actions := plan.buildWithBindings(bindings)
 		var pattern mage.EventPattern = mage.Attacks(mage.This)
 		switch event.Name {
 		case "WhenACreatureBlocks":
 			pattern = mage.Blocks(mage.This)
 		case "WhenACreatureAttacksAndIsntBlocked":
-			pattern = mage.AttacksUnblocked(mage.This)
+			pattern = mage.AttacksUnblocked(mage.This).WithDefendingPlayer(defender)
+		case "WhenACreatureAttacks":
+			pattern = mage.Attacks(mage.This).WithDefendingPlayer(defender)
 		}
 		trigger := mage.WhenEvent(pattern, mage.Sequence(actions.effects...)).(*mage.GenericTriggered)
 		actions.effects = nil

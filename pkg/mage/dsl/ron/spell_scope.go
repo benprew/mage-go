@@ -136,7 +136,7 @@ func compileSpellTarget(n Node, ctx scope) (targetFactory, string, error) {
 	if controlled && manaValueX {
 		return nil, "", problem(n, "combined spell mana value and permanent target restrictions are not supported")
 	}
-	return func() mage.Target {
+	return func(instanceBindings) mage.Target {
 		name := ctx.targetNamespace + "Ref_TargetSpell"
 		if manaValueX {
 			return mage.DeclareSpellTargetManaValueX(name, filters...)

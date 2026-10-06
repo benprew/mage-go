@@ -7,6 +7,7 @@ type playerTargetPlan struct {
 }
 
 type playerReferencePlan struct {
+	defender        *sourceCombatPlayerPlan
 	action          *playerActionsPlan
 	damageRecipient *damageRecipientPlayerPlan
 	damagePlayer    *damagePlayerPlan
@@ -29,6 +30,7 @@ type castEventBindings struct {
 }
 
 type instanceBindings struct {
+	defenders            map[*sourceCombatPlayerPlan]*mage.PlayerBinding
 	activationHistory    *mage.ActivationHistoryBinding
 	deathCards           map[*deathCardPlan]*mage.CardBinding
 	actionPlayers        map[*playerActionsPlan]*mage.PlayerBinding
@@ -69,6 +71,10 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 	}
 	if n.Kind == Symbol {
 		switch n.Name {
+		case "Trigger_DefendingPlayer":
+			if ctx.defendingPlayer != nil {
+				return playerReferencePlan{defender: ctx.defendingPlayer}, nil
+			}
 		case "HostController":
 			if ctx.aura {
 				return playerReferencePlan{permanent: &permanentReferencePlan{kind: permanentHost}}, nil
@@ -120,6 +126,9 @@ func compilePlayerRef(n Node, ctx scope) (playerReferencePlan, error) {
 }
 
 func (p playerReferencePlan) build(bindings instanceBindings) mage.PlayerRef {
+	if p.defender != nil {
+		return mage.FromPlayer(bindings.defenders[p.defender])
+	}
 	if p.action != nil {
 		return mage.FromPlayer(bindings.actionPlayers[p.action])
 	}

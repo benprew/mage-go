@@ -244,14 +244,18 @@ func TestRONTypedSacrificeNativeUpkeep(t *testing.T) {
 
 func TestRONTypedSacrificeUnblockedSourceClause(t *testing.T) {
 	n := hostUntapRecord(t, "FEM", "Mindstab Thrull")
-	if _, err := Compile(n); err == nil || !strings.Contains(err.Error(), "Trigger_DefendingPlayer") {
-		t.Fatalf("remaining player binding: %v", err)
+	factory, err := Compile(n)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mage.ValidateCardDefinition("Mindstab Thrull", factory()); err != nil {
+		t.Fatal(err)
 	}
 	nodes, err := Parse(strings.NewReader(`Card(Name:"Source event contract",Typeline:(Supertypes:[],Cardtypes:[Creature],Subtypes:[]),CardPT:(Power:2,Toughness:2),Rules:[TriggerA(WhenACreatureAttacksAndIsntBlocked(SinglePermanent(ThisPermanent)),ActionList([MayCost(SacrificePermanent(Trigger_ThatCreature)),If(CostWasPaid,[GainLife(Integer(3))])]))])`), "source-event.ron")
 	if err != nil {
 		t.Fatal(err)
 	}
-	factory, err := Compile(nodes[0])
+	factory, err = Compile(nodes[0])
 	if err != nil {
 		t.Fatal(err)
 	}

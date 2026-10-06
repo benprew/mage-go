@@ -28,7 +28,7 @@ func compileNumberedPermanentTarget(n Node, ctx scope) (targetFactory, string, e
 	if err != nil {
 		return nil, "", err
 	}
-	return func() mage.Target {
+	return func(instanceBindings) mage.Target {
 		name := ctx.targetNamespace + "Ref_TargetPermanents"
 		if usesX {
 			return mage.DeclareXPermanentTargets(name, filter, options...)

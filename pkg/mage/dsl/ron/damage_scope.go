@@ -29,7 +29,7 @@ func compilePlayerPlaneswalkerTarget(n Node, ctx scope) (targetFactory, string, 
 	if permanent.Args[0].Kind != Symbol || permanent.Args[0].Name != "Planeswalker" {
 		return nil, "", unsupported(permanent.Args[0], "player-or-planeswalker permanent type")
 	}
-	return func() mage.Target {
+	return func(instanceBindings) mage.Target {
 		if player.Name == "Opponent" {
 			return mage.DeclareOpponentOrPlaneswalkerTarget(ctx.targetNamespace + "Ref_TargetPlayerOrPermanent")
 		}

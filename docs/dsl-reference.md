@@ -3895,4 +3895,42 @@ references because its Oracle text refers to that artifact and player. Its
 complete record is covered by `TestRONTypedSacrificeCurseArtifact` and
 `TestRONTypedSacrificeNativeUpkeep`. The remaining `TestRONTypedSacrifice*` tests
 cover rejection, independent targets, copies, nested results and the source
-unblocked-event clause. Mindstab Thrull still lacks its defending-player binding.
+unblocked-event clause. Mindstab Thrull's defending-player binding is supported
+by the contract below.
+
+## RON defending-player references and singular targets
+
+`WhenACreatureAttacks(SinglePermanent(ThisPermanent))` and
+`WhenACreatureAttacksAndIsntBlocked(SinglePermanent(ThisPermanent))` expose
+`Trigger_DefendingPlayer` in their action bodies. The compiler lowers this
+reference to a fresh `PlayerBinding` supplied to `WithDefendingPlayer`. It
+retains the event player after source departure, return, control changes,
+ability removal and copies. Other events and separate abilities cannot read it.
+
+`TargetPermanent(ControlledByPlayer(Trigger_DefendingPlayer))` selects a permanent
+that this saved player currently controls. The restriction can appear inside
+nested `And` filters with existing restrictions. `ControlledByPlayer(You)` uses
+the ability controller. Other player expressions, `Or` combinations and plural
+target contexts remain unsupported by this adapter. Each target factory receives
+its instance's bindings before it constructs the declaration.
+
+The engine API `TargetControlledBy(PlayerRef) PermanentTargetOption` accepts
+`You` and `FromPlayer` of a saved event binding. Definition validation checks
+the event producer before checking target reads and rejects missing or invalid
+references. Trigger target selection reads a private query frame made from the
+existing event captures, without running effects or offering payment. The stack
+object retains those player values for legality checks and retargeting copies.
+Clones and copies have separate maps. Random target choices consume the live
+random stream; candidate queries leave the live resolution frame unchanged.
+
+Mindstab Thrull and Necrite use their complete FEM records. Targets are chosen
+when Necrite's trigger goes on the stack; sacrifice is offered at resolution.
+If its target becomes illegal, the ability fails to resolve and no sacrifice is
+offered. Mindstab Thrull discards from the saved defender's current hand only
+after payment. Source return or loss of control prevents payment of the old
+source. Existing zone replacements can exile a sacrificed source. Necrite's
+destruction forbids regeneration and still respects indestructibility.
+
+Evidence: `TestRONDefendingPlayerNative`, `Pending`, `InstancesAndCopy`,
+`ScopeAndInventory` and `Declarations` in `pkg/mage/dsl/ron`, and
+`TestTargetPlayerReferenceEvent`, `Definition` and `SnapshotsAndQueries` in mage.

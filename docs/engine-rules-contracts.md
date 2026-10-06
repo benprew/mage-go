@@ -4491,3 +4491,50 @@ replacement-ordering service.
 payment polarity, legality, decline, control, owner destination, absence,
 leave/return, phasing, stale payment, replacements, cloning and invalid inputs.
 RON gameplay and target/copy/result contracts map to `TestRONTypedSacrifice*`.
+
+## Event player references in permanent target restrictions
+
+`TargetControlledBy(PlayerRef) PermanentTargetOption` accepts `You` or
+`FromPlayer` of a saved event binding. It compares current permanent control
+with that player at target selection and resolution (CR 603.3d, 608.2b).
+Generic trigger validation visits the event declaration before target
+restrictions, so a saved player read must have its producer in the same ability.
+Nil, unbound and unsupported references fail definition validation.
+
+Target queries collect player values from the existing immutable event capture
+instructions. They do not execute an ability or its costs. Separate pending
+events retain separate maps, even with the same binding declaration. Stack
+copies preserve these values when their controller changes, and retargeting
+uses the captured player with current permanent control and ordinary legality.
+Copies and game clones copy the maps. Query frames do not change live resolution
+bindings or consume randomness. Random target selection consumes the live
+random stream after candidate enumeration. Other event data, damage batches,
+cost transactions, replacement ordering and APNAP ordering retain their existing
+services.
+
+The RON source attack and unblocked attack events now expose
+`Trigger_DefendingPlayer`. These preserve declaration/blocker timing
+(CR 508.3a, 509.1h, 509.3g). Entry attacking is not an attack declaration.
+Only singular `TargetPermanent` filters accept `ControlledByPlayer` with this
+binding or `You`, alone or in nested `And` filters. Other contexts remain errors.
+`Trigger_ThatCreature` still reads the original source incarnation. A returned
+source cannot pay sacrifice (CR 400.7, 701.21a); a phased source is absent for
+payment. A phase cycle preserves its identity. Source departure or control
+changes do not change the pending ability's controller or saved defender.
+
+Mindstab Thrull offers source sacrifice at resolution and, on success, makes
+the saved defender discard three cards from their current hand. Fewer than
+three cards means discarding the available cards. Necrite chooses a defending
+player's creature before offering payment. An illegal target prevents resolution
+and payment. Its destruction forbids regeneration but does not override
+indestructibility. Existing sacrifice replacements can change the source's
+destination while payment succeeds. A copy cannot sacrifice the same source
+twice. Copies with a different controller retain the defender but must still
+control the source to sacrifice it.
+
+Engine evidence: `TestTargetPlayerReferenceEvent`, `Definition` and
+`SnapshotsAndQueries`. Complete-card RON evidence:
+`TestRONDefendingPlayerNative`, `Pending`, `InstancesAndCopy`,
+`ScopeAndInventory` and `Declarations`. These also cover target control,
+return/phasing/shroud, inactive sources, ability removal, casting rollback,
+source payment identity, current hand size, copies, clone isolation and syntax.

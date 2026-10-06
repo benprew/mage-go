@@ -220,7 +220,6 @@ func describeDefinition(v any) definitionNode {
 			addEffects(e.effects)
 		}
 	case *GenericTriggered:
-		n.children = append(n.children, declaredTargetNodes(e.targets, true)...)
 		if e.eventDefinition != nil {
 			n.Role = "event-trigger"
 			n.children = append(n.children, definitionEdge{"event", e.eventDefinition})
@@ -229,6 +228,7 @@ func describeDefinition(v any) definitionNode {
 			n.Role = "step-trigger"
 			n.children = append(n.children, definitionEdge{"step", e.stepDefinition})
 		}
+		n.children = append(n.children, declaredTargetNodes(e.targets, true)...)
 		if e.dslState {
 			n.Role = "state-trigger"
 			n.battlefieldSource = true

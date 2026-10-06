@@ -40,7 +40,7 @@ func compileGraveyardTarget(n Node, ctx scope) (targetFactory, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	return func() mage.Target {
+	return func(instanceBindings) mage.Target {
 		options := make([]mage.GraveyardTargetOption, 0, len(filters)+1)
 		for _, filter := range filters {
 			options = append(options, mage.GraveyardCardFilter(filter))

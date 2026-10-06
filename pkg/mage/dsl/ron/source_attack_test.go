@@ -259,7 +259,7 @@ func TestRONSourceAttackInvalid(t *testing.T) {
 		strings.Replace(valid, "Trigger_ThatCreature", "Trigger_ThatCreature()", 1),
 		strings.Replace(valid, "Trigger_ThatCreature", "Trigger_ThatPermanent", 1),
 		strings.Replace(valid, "UntilEndOfTurn", "UntilEndOfCombat()", 1),
-		strings.Replace(valid, "CreatePermanentLayerEffectUntil(Trigger_ThatCreature,[AdjustPT(1,0)],UntilEndOfTurn)", "PlayerAction(Trigger_DefendingPlayer,GainLife(Integer(1)))", 1),
+		`TriggerA(WhenACreatureBlocks(SinglePermanent(ThisPermanent)),ActionList([PlayerAction(Trigger_DefendingPlayer,GainLife(Integer(1)))]))`,
 		valid + `,Activated(PayMana([]),ActionList([TapPermanent(Trigger_ThatCreature)]))`,
 		strings.Replace(valid, "WhenACreatureAttacks(SinglePermanent(ThisPermanent))", "WhenACreatureAttacksAndIsntBlocked(SinglePermanent(ThisPermanent),You)", 1),
 	} {

@@ -13,7 +13,7 @@ import (
 
 type optionFactory func() mage.CardOption
 type effectFactory func(instanceBindings) mage.Effect
-type targetFactory func() mage.Target
+type targetFactory func(instanceBindings) mage.Target
 type costFactory func() mage.Cost
 
 type scope struct {
@@ -31,6 +31,7 @@ type scope struct {
 	delayedStep       bool
 	sourceAttack      bool
 	sourceBlock       bool
+	defendingPlayer   *sourceCombatPlayerPlan
 	combatOpponent    *permanentEventPlan
 	targetNamespace   string
 	counterPayment    *counterPaymentPlan
@@ -88,7 +89,7 @@ func (p actionPlan) buildWithBindings(bindings instanceBindings) Actions {
 	bindings.recipients = make(map[*damageTargetPlan]*mage.DamageTargetBinding)
 	var declared []mage.TargetBinding
 	for i, makeTarget := range p.targets {
-		targets[i] = makeTarget()
+		targets[i] = makeTarget(bindings)
 		if target, ok := targets[i].(*mage.PermanentTargetBinding); ok {
 			bindings.permanents[p.permanentTarget] = target
 		}
@@ -742,7 +743,9 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 		return compileNumberedPermanentTarget(n, ctx)
 	}
 	if n.Kind == Symbol && n.Name == "AnyTarget" {
-		return func() mage.Target { return mage.DeclareDamageTarget(ctx.targetNamespace + "Ref_AnyTarget") }, "Ref_AnyTarget", nil
+		return func(instanceBindings) mage.Target {
+			return mage.DeclareDamageTarget(ctx.targetNamespace + "Ref_AnyTarget")
+		}, "Ref_AnyTarget", nil
 	}
 	if err := arity(n, 1); err != nil {
 		return nil, "", err
@@ -751,19 +754,19 @@ func compileTarget(n Node, ctx scope) (targetFactory, string, error) {
 	case "OneOrMoreTargetPermanents":
 		return compilePluralPermanentTarget(n, ctx)
 	case "TargetPermanent":
-		filter, options, err := compilePermanentTargetFilter(n.Args[0], ctx)
+		filter, options, err := compilePlayerRelativeTargetFilter(n.Args[0], ctx)
 		if err != nil {
 			return nil, "", err
 		}
-		return func() mage.Target {
-			return mage.DeclarePermanentTarget(ctx.targetNamespace+"Ref_TargetPermanent", filter, options...)
+		return func(bindings instanceBindings) mage.Target {
+			return mage.DeclarePermanentTarget(ctx.targetNamespace+"Ref_TargetPermanent", filter, options(bindings)...)
 		}, "Ref_TargetPermanent", nil
 	case "TargetPlayer":
 		players := n.Args[0]
 		if players.Kind != Symbol || (players.Name != "AnyPlayer" && players.Name != "Opponent") {
 			return nil, "", unsupported(players, "player target filter")
 		}
-		return func() mage.Target {
+		return func(instanceBindings) mage.Target {
 			var options []mage.PlayerTargetOption
 			if players.Name == "Opponent" {
 				options = append(options, mage.TargetOpponentOnly())

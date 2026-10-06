@@ -64,6 +64,7 @@ func (g *Game) copyStackObject(original *StackObject, controller uuid.UUID, mayC
 		TargetSource:       copiedCard,
 		sourceIncarnation:  original.sourceIncarnation,
 		capturedNumbers:    maps.Clone(original.capturedNumbers),
+		capturedPlayers:    maps.Clone(original.capturedPlayers),
 		capturedCards:      maps.Clone(original.capturedCards),
 		capturedCardSets:   cloneCardsBindings(original.capturedCardSets),
 		capturedPermanents: maps.Clone(original.capturedPermanents),
@@ -196,7 +197,7 @@ func (g *Game) retargetCopyGroups(obj *StackObject, card Card, declarations []Ta
 			continue
 		}
 		old := obj.Targets[offset : offset+count]
-		possible := g.possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
+		possible := g.targetPlayerQuery(obj.capturedPlayers).possibleTargetsWithX(spec, obj.Controller, card, obj.XValue)
 		chosen := g.GetPlayer(obj.Controller).ChooseTargets(possible, count, count, g)
 		valid := len(chosen) == count
 		seen := make(map[uuid.UUID]bool, count)

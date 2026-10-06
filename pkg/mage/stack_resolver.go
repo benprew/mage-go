@@ -183,6 +183,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 	// in place (illegal ones nulled) so effects that read targets by index
 	// (e.g. Hungry Flames) stay aligned.
 	resolvedTargets := make([]uuid.UUID, len(obj.Targets))
+	targetQuery := g.targetPlayerQuery(obj.capturedPlayers)
 	sourceCard := g.resolutionTargetSource(obj)
 	hasRealTarget := false
 	anyLegal := false
@@ -202,7 +203,7 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 					incarnationLegal = p != nil && p.incarnationID == incarnation
 				}
 			}
-			if incarnationLegal && g.isTargetStillLegalWithX(t, sourceCard, obj.Controller, obj.TargetZones[t], spec, obj.XValue) {
+			if incarnationLegal && targetQuery.isTargetStillLegalWithX(t, sourceCard, obj.Controller, obj.TargetZones[t], spec, obj.XValue) {
 				resolvedTargets[i] = t
 				anyLegal = true
 				continue

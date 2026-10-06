@@ -153,10 +153,14 @@ func uniqueTargetCandidates(ids []uuid.UUID) []uuid.UUID {
 
 // Choices belong to the announcement, because declarations can be shared by games.
 func (g *Game) chooseRandomTargets(controller uuid.UUID, sourceCard Card, target *randomTarget, x int) []uuid.UUID {
+	return g.chooseRandomTargetsWithQuery(controller, sourceCard, target, x, g)
+}
+
+func (g *Game) chooseRandomTargetsWithQuery(controller uuid.UUID, sourceCard Card, target *randomTarget, x int, query *Game) []uuid.UUID {
 	if target == nil {
 		return nil
 	}
-	candidates := uniqueTargetCandidates(g.possibleTargetsWithX(target, controller, sourceCard, x))
+	candidates := uniqueTargetCandidates(query.possibleTargetsWithX(target, controller, sourceCard, x))
 	minimum, maximum := TargetBounds(target, x)
 	maximum = min(maximum, len(candidates))
 	if maximum < minimum {
@@ -802,6 +806,7 @@ func (t *ControlledCreatureTarget) Choose(controller uuid.UUID, _ Card, g *Game,
 
 // PermanentTarget targets any permanent on the battlefield with optional filters.
 type PermanentTarget struct {
+	controllerRefs               []PlayerRef
 	manaValueEqualX              bool
 	excludeSource                bool
 	attachedToControllerOnly     bool
@@ -867,8 +872,23 @@ func TargetUpToOnePermanent(filters ...PermanentFilter) Target {
 }
 
 func (t *PermanentTarget) Possible(controller uuid.UUID, sourceCard Card, g *Game) []uuid.UUID {
+	var controllers []uuid.UUID
+	ctx := &EffectContext{Game: g, Controller: controller}
+	for _, ref := range t.controllerRefs {
+		if nilDefinition(ref) {
+			return nil
+		}
+		id, ok := ref.resolvePlayer(ctx)
+		if !ok {
+			return nil
+		}
+		controllers = append(controllers, id)
+	}
 	var result []uuid.UUID
 	for _, p := range g.zones.battlefield {
+		if slices.ContainsFunc(controllers, func(id uuid.UUID) bool { return p.ControllerID() != id }) {
+			continue
+		}
 		if t.manaValueEqualX && p.Card.ManaCost().CMC() != g.resolution.X() {
 			continue
 		}
