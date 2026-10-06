@@ -4200,3 +4200,44 @@ Evidence: `TestRequiredPayment`, `NestedAndClone`, `Definition`,
 `AllReprintsAndNativeCasting`, `InvalidChoice`, and `InventoryAndStrictLoad`.
 These establish the mandatory matching-sacrifice context, not general mandatory
 mana, destruction, tap payments, or saved resolution-payment values.
+
+## RON live static P/T values and permanent spell copies
+
+`PermanentLayerEffect(subject, [AdjustPTXY(PlusX, PlusY, x, y)])` and
+`PermanentLayerEffect(subject, [AdjustPTForEach(power, toughness, count)])`
+now lower to `Static(While(condition, ModifyPT(...)))`. The subject is the
+current source or a declared Aura host. Each layer pass reads current battlefield
+membership and the source's current controller (CR 611.3a, 611.3c).
+Values support integer constants, `Twice`, signed half rounding, and battlefield
+counts with type, subtype, color, supertype and combat/tap filters. A conjunction
+can restrict the count to `ControlledByAPlayer(SinglePlayer(You))`.
+The exact conjunction of `IsEnchantmentType(Aura)` and
+`AttachedToPermanent(source-or-host)` uses `AttachedAuras` and keeps the current
+host incarnation. Equipment and phased objects are excluded. Static P/T reads,
+announced X, event results, collection modifications and combined operation lists
+remain rejected by this adapter.
+
+The bonus applies in layer 7c, after base values and before switching P/T.
+Counters remain additive. Removing the source's abilities in layer 6 suppresses
+its bonus. Removing the host's abilities does not remove a separate Aura's
+bonus. Control, attachment and phase changes cause a fresh count; returned
+objects do not keep old attachments. These static queries do not use LKI.
+`TestRONStaticValue*` maps the complete Aspect of Wolf and Rabid Wombat records,
+including reprints, casting rollback, resolution legality, controller changes,
+phasing, attachment changes, clones, copied Auras and native combat.
+
+`CopySpellOnStack` now uses `Card.CastTargets()` for nonmodal retargeting, so
+Aura casting targets use the same target-group and incarnation checks as other
+spells. Permanent spell copies enter through the normal battlefield path as
+token permanents (CR 608.3f, 707.10f). Token status is visible before entry
+replacements and events. Entry uses zero colors spent to cast the copy; the
+original cast facts are preserved. No token-creation operation is invoked.
+The token keeps the copied spell's characteristics and controller/owner, with
+separate ability identities and static effect source state. Shared stack card
+definitions are not changed, including when a cloned game resolves first.
+Illegal or countered copies cease to exist; instant, sorcery and ability copies
+keep their existing resolution behavior. `TestPermanentSpellCopy*` covers token
+entry, Aura retargeting, original bindings, return/phasing/shroud legality,
+countering, clone isolation, token departure, cast and entry facts, entry
+counter replacements and prohibited entry. No new replacement ordering or
+simultaneous-operation service is added.

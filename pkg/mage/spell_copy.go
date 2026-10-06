@@ -15,16 +15,14 @@ import (
 // copy is allowed to choose new targets, each target the original spell has
 // is reconsidered, and the controller may keep it or pick a legal new one.
 //
-// Per CR 707.10, a copy of a spell ceases to exist as it resolves or is
-// countered. ResolveStackObject honors StackObject.IsCopy to skip the
-// to-graveyard / to-battlefield steps.
+// A permanent spell copy enters as a token under CR 707.10f.
+// Other spell copies cease to exist after resolution or countering.
 
 // CopySpellOnStack copies a spell currently on the stack (CR 706). The
-// originalSourceID is the SourceID of the StackObject to copy (matching the
-// card ID for spells). controller is the player who controls the copy
-// (CR 706.10c). If mayChooseNewTargets is true, each Target on the spell's
-// SpellAbility is re-prompted on the controller of the copy; otherwise the
-// original targets are carried over verbatim (CR 706.10c).
+// originalSourceID identifies the stack object by its source card.
+// controller controls the copy. If mayChooseNewTargets is true, the copy
+// can choose new legal targets from its casting declarations (CR 707.10c).
+// Otherwise, the copy keeps the original targets.
 //
 // Returns the new StackObject (already pushed on top of the stack), or nil
 // if the original spell was not on the stack.
@@ -176,17 +174,8 @@ func (g *Game) repromptTargetsForCopy(copyObj *StackObject, card Card) {
 		return
 	}
 
-	for _, a := range card.Abilities() {
-		sa, ok := a.(*SpellAbility)
-		if !ok {
-			continue
-		}
-		if len(sa.Targets()) == 0 {
-			continue
-		}
-		newTargets := g.retargetCopyGroups(copyObj, card, sa.Targets())
-		copyObj.Targets = newTargets
-		return
+	if declarations := card.CastTargets(); len(declarations) > 0 {
+		copyObj.Targets = g.retargetCopyGroups(copyObj, card, declarations)
 	}
 }
 

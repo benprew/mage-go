@@ -761,6 +761,14 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			if len(n.Args) == 1 {
 				return "color_list"
 			}
+		case "AdjustPTXY":
+			if role == "static_modification" && len(n.Args) == 4 {
+				return []string{"pt_coordinate", "pt_coordinate", "static_value", "static_value"}[index]
+			}
+		case "AdjustPTForEach":
+			if role == "static_modification" && len(n.Args) == 3 {
+				return []string{"integer_literal", "integer_literal", "static_value"}[index]
+			}
 		case "AdjustPTX":
 			if len(n.Args) == 3 {
 				return []string{"pt_coordinate", "pt_coordinate", "value"}[index]
@@ -823,6 +831,16 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 	case "pt_coordinate":
 		if n.Name == "Integer" && len(n.Args) == 1 {
 			return "value"
+		}
+	case "static_value":
+		if n.Name == "Integer" && len(n.Args) == 1 {
+			return "integer_literal"
+		}
+		if (n.Name == "HalfRoundedDown" || n.Name == "HalfRoundedUp" || n.Name == "Twice") && len(n.Args) == 1 {
+			return role
+		}
+		if n.Name == "TheNumberOfPermanentsOnTheBattlefield" && len(n.Args) == 1 {
+			return "permanent_filter"
 		}
 	case "value":
 		if n.Name == "ManaValueOfSpell" && len(n.Args) == 1 {
@@ -917,6 +935,15 @@ func inventoryArgumentRole(n Node, role string, index int) string {
 			return "metadata"
 		}
 	case "permanent_filter":
+		if n.Name == "AttachedToPermanent" && len(n.Args) == 1 {
+			return "permanent_reference"
+		}
+		if n.Name == "IsEnchantmentType" && len(n.Args) == 1 {
+			return "enchantment_subtype"
+		}
+		if (n.Name == "IsLandType" || n.Name == "IsNonLandType") && len(n.Args) == 1 {
+			return "land_subtype"
+		}
 		if n.Name == "ManaValueIs" && len(n.Args) == 1 {
 			return "mana_value_comparison"
 		}

@@ -372,6 +372,11 @@
 // [DeclareSpellTargetManaValueX] includes the target spell's own X in its value.
 // Target checks use the action's announced X before resolution begins.
 //
+// Use [ModifyPT] with [While] for live static P/T values.
+// [CountPermanents] and [AttachedAuras] read current membership on each layer pass.
+// [CopySpellOnStack] can retarget Aura casting declarations. Permanent spell
+// copies enter as tokens with separate ability and static effect state.
+//
 // # Further Documentation
 //
 // For specialized guides and comprehensive specifications, refer to:

@@ -222,17 +222,23 @@ func (g *Game) resolveStackObject(obj *StackObject) (produced int, colors []Colo
 	}
 	g.resolution.ClearDistributions()
 
-	// Copies of spells cease to exist as they resolve (CR 707.10) — no
-	// graveyard, no battlefield, no exile. The effects already ran above.
-	if obj.IsCopy {
+	// Permanent spell copies must use the normal entry path (CR 707.10f).
+	permanentSpell := obj.Card != nil && !obj.IsAbility && (obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) || obj.Card.HasType(TypeLand))
+	if obj.IsCopy && !permanentSpell {
 		return
 	}
 
 	// If this was a spell (not an ability), put the card in the graveyard
 	if obj.Card != nil && !obj.IsAbility {
 		// Permanents go to the battlefield instead
-		if obj.Card.HasType(TypeCreature) || obj.Card.HasType(TypeArtifact) || obj.Card.HasType(TypeEnchantment) || obj.Card.HasType(TypePlaneswalker) {
-			perm := g.putOnBattlefield(obj.Card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID, obj.CastContext.DistinctColorsSpent())
+		if permanentSpell {
+			card := obj.Card
+			colorsSpent := obj.CastContext.DistinctColorsSpent()
+			if obj.IsCopy {
+				card = newPermanentSpellCopyCard(card)
+				colorsSpent = 0
+			}
+			perm := g.putOnBattlefield(card, obj.Controller, obj.Controller, obj.ColorOverride, obj.SourceID, colorsSpent)
 
 			// Handle aura attachment (only for Aura subtype, not all enchantments)
 			if perm != nil && obj.Card.HasType(TypeEnchantment) && len(resolvedTargets) > 0 && resolvedTargets[0] != uuid.Nil {

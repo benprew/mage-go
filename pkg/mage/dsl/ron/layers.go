@@ -13,6 +13,11 @@ func compileStaticLayer(n Node, ctx scope) (optionFactory, error) {
 	if err != nil {
 		return nil, err
 	}
+	for _, part := range parts {
+		if part.Name == "AdjustPTXY" || part.Name == "AdjustPTForEach" {
+			return compileStaticValueLayer(n, parts, ctx)
+		}
+	}
 	global := n.Name == "EachPermanentLayerEffect"
 	var subjects staticPermanentFilterPlan
 	var general bool

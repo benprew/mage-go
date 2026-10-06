@@ -20764,3 +20764,183 @@ Ranked next candidates, to reassess with fresh complete records:
 The slice commit contains only its implementation, tests, documentation and this
 entry. Its hash is reported in the final response. User ledger/archive/design
 changes remain unstaged. No second slice starts.
+
+## Slice: live static P/T count bonuses (2026-10-05)
+
+Status: completed slice `LIVE-STATIC-PT-COUNTS`, including the permanent-spell-copy
+prerequisite found by its acceptance tests. Stop after this slice. Migration
+completion and production removal gates remain unmet.
+
+### Fresh evidence and candidate selection
+
+Initial user changes to `.gitignore`, `mtgish-ron-execution.md`, and this ledger,
+plus untracked `mtgish-ron-completed.md`, are preserved. Only this appended entry
+is staged against the committed ledger; the user's archive/reorganization is
+not staged. No Go card definition was read as a requirement.
+
+Fresh compiler tests, short engine tests and `make build` passed. Strict loading
+and inventory exited 1 for unsupported collection records: 2,445 records,
+986 unique names, 1,695 compiled / 750 rejected records, 628 accepted /
+358 rejected names. Inventory visited 72,950 nodes, with 8,539 signatures and
+7,168 unknown-role occurrences. An early read of the output file before the
+fresh command finished showed 1,689; the completed commands and baseline below
+use 1,695. Collection rejection was not a build/test failure.
+
+The design, vocabulary snapshot, current progress, engine API reference,
+relevant compiler and engine code, API/rules contracts, local Oracle data and
+CR 303.4, 400.7, 608.3, 611.3, 613.1/613.4, 702.20, 702.26 and 707.10 were read.
+Complete records and nested forms were inspected for these candidates, including
+all six Aspect of Wolf reprints. Reprints count once in the unlock estimates.
+
+| Candidate | Distinct affected names and estimated full-card unlocks | Other blockers and downstream capabilities | Estimated effort |
+| --- | --- | --- | --- |
+| Live static P/T count bonuses, selected | Aspect of Wolf; Rabid Wombat: **2** names / **7** records. | Existing live battlefield counts, signed half rounding, attached-Aura incarnation checks and layer modifications are ready. Missing compiler contexts for singular XY and per-member static bonuses. Supplies a live-value boundary for later static numeric modifications; all-zone CDAs still need their own zone contract. | Low/medium adapter and gameplay work initially; medium after native spell-copy prerequisites were found. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** eventual full cards, **0** adapter-only gains. | Source enumeration omits retained/referred-to and command-zone objects; next-event shields need incarnation identity and source-property rechecks. Resolution choices and the complete future-prevention body are required. Shared choice/identity services also serve later redirection and damage-result consumers. | High engine and compiler work, with source lifecycle, allocation and replacement-order tests. |
+| Untapped costed mana conversion with history | Farrelite Priest; Initiates of the Ebon Hand: **2** eventual full cards, **0** adapter-only gains. | Existing activation-history and delayed-sacrifice bodies are ready. The complete records still require recursive conversion planning, repeated untapped activations, immediate branch execution and transaction rollback. Enables paid mana-conversion abilities in the shared solver. | Medium/high engine and solver work, plus payment and recursion tests. |
+
+Selection rationale: the selected two complete cards share existing exact engine
+services and require less new rules work than either alternative. This is not a
+single-card spelling patch, and first-error frequencies were not used as unlock
+estimates. Contract, reuse boundary and acceptance cases were stated before
+editing: live counts on each layer pass, typed source/Aura host, current source
+controller, rounding, attachments, phasing, return identity, clones, layer order,
+casting legality/rollback and invalid declarations. The initial commentary
+incorrectly said eight records; the six reprints plus one Wombat record total
+seven, as shown by both inventory and the final gain.
+
+### Exact signatures, contexts and dependencies
+
+RON static rules now accept exactly one operation:
+
+- `PermanentLayerEffect(subject, [AdjustPTXY(PlusX, PlusY, x, y)])`.
+- `PermanentLayerEffect(subject, [AdjustPTForEach(power, toughness, count)])`,
+  where the multipliers are signed integer literals.
+- `subject` is `ThisPermanent` or `HostPermanent` with an Aura declaration.
+  Targets, event refs, loop refs and absent host declarations are rejected.
+- Static values accept `Integer(integer)`, recursive `Twice(value)`,
+  `HalfRoundedDown(value)`, `HalfRoundedUp(value)`, and
+  `TheNumberOfPermanentsOnTheBattlefield(filter)`.
+- Counts reuse nonempty conjunctions, existing type/subtype/color/supertype and
+  tap/combat filters, and `ControlledByAPlayer(SinglePlayer(You))` in conjunctions.
+  Controller reads use the current source controller, not its owner or host.
+- The exact two-member conjunction of `IsEnchantmentType(Aura)` and
+  `AttachedToPermanent(source-or-host)` lowers to `CountPermanents(AttachedAuras(...))`.
+  Either member order is accepted. Extra conditions, duplicate/missing members
+  and incompatible refs remain errors.
+- Announced X, P/T characteristic reads, event/payment results, combined operation
+  lists and collection subjects remain rejected in this context. Resolving and
+  temporary value adapters retain their existing signatures and behavior.
+
+The compiler uses existing `Static`, `While`, `ModifyPT`, `CountPermanents`,
+`MatchingPermanents`, `PermanentsControlledBy`, `AttachedAuras`, `MultiplyValues`,
+`DivideRoundDown` and `DivideRoundUp`. It does not use `ValueAtResolution` for
+these live values. Each factory creates its own ability/effect state. Static
+queries read current objects, with no LKI or mutation. Bonuses use layer 7c;
+base values, counters, switching and layer-6 ability removal use the existing
+layer service. No parallel count, attachment or layer implementation was added.
+
+The Aura spell copy acceptance case exposed native engine gaps. The
+`implement-engine` skill was used for this prerequisite without card wiring or
+removed card skills. `CopySpellOnStack` now retargets nonmodal casting targets
+through `Card.CastTargets()` and the existing target-group service. Copies of
+permanent spells use the normal entry path and become token permanents under
+CR 608.3f/707.10f. A token-card wrapper preserves the stack definition and makes
+token status visible to entry replacements/events. Each resolution clones token
+abilities and static effect source state, using existing token ability and
+stateful effect cloning services; otherwise stateless effect structs get a
+separate source identity. Copies use zero entry colors spent to cast, while
+original cast facts stay intact. This does not invoke token creation.
+No new public constructor is added. Instant/sorcery/ability copies and current
+callers retain their behavior. No new replacement ordering, simultaneous batch,
+APNAP or mana-payment service is introduced.
+
+### TDD and card-to-test mappings
+
+Real RON tests first failed on unsupported `AdjustPTXY` and the unsupported
+`ThisPermanent` static subject for Rabid Wombat. Inventory tests then failed on
+unknown descendant roles. After adapter support, the copy test failed because
+native Aura casting targets were not retargeted. Synthetic engine tests confirmed
+that failure and the missing permanent-copy token entry. Independent static
+effect state was required to stop the copy's controller/count from replacing
+the original Aura's count. All assertions now pass.
+
+Fixture corrections used `GetEffects().RemoveEndOfTurn`, `RevokeBaseAttr` and
+`GetCombat`, plus a main-phase setup in the native copy tests. Web was replaced
+by Regeneration as the neutral RON attachment because Web adds its own toughness
+bonus. Directly changing a copied stack object's raw target IDs was replaced by
+the native retarget choice; the original is temporarily phased to give that
+choice exactly one legal new host. No rule assertion was removed or skipped.
+
+| Card/contract | Test mapping and evidence |
+| --- | --- |
+| Aspect of Wolf, full LEA/LEB/2ED/3ED/CED/CEI records | `TestRONStaticValueAspect`: 1G casting, unpaid and illegal-target rollback, no bonus before resolution, odd/even/empty counts, opponent/non-Forest exclusion, dual-land Forest types, current source control, land control, member/source phasing, reattachment, ability removal and departure. `TestRONStaticValueAspectResolutionAndCopies`: shroud, departure, return and phasing at resolution; independently retargeted token Aura copies with different controller counts; clone isolation. |
+| Rabid Wombat, full LEG record | `TestRONStaticValueWombat`: 2GG casting/rollback and entry timing, 0/1 and vigilance, either player's Auras, Equipment exclusion, two independent Wombats, multiple Auras, reattachment, Aura/source phase cycles, control changes, clone isolation, source return, counters/base-set/modify/switch ordering, ability removal, native vigilance attack and actual combat damage. |
+| Numeric and declaration contract | `TestRONStaticValueSignedAndLiveCounts`: negative half rounding, signed per-member multiplication, twice a live count, current controller, distinct factories and later entries. `TestRONStaticValueInvalid`: wrong arities/kinds, unbound/incompatible refs, invalid coordinates, X, P/T reads, malformed attachment counts, extra operations and unsupported collection contexts. |
+| Inventory and atomic registry | `TestRONStaticValueInventoryAndStrictLoad`: static-value descendant roles, valid reprints, factory identity, strict failure and unchanged registry. Existing `TestInventory*` regressions pass with fresh exact collection counts. |
+| Engine copy prerequisite | `TestPermanentSpellCopyEntersAsToken`: creature/artifact/enchantment characteristics, controller/owner, token departure, clone-first resolution and unchanged original stack/card facts. `TestPermanentSpellCopyAuraRetarget`: legal and kept-illegal choices, original binding, return/phasing/shroud, countering, token Aura attachment/bonus and independent clones. `TestPermanentSpellCopyEntryContracts`: no copy cast event, token identity at entry, zero copied cast-mana facts, original paid colors, entry counter replacements and prohibited entry. Existing `TestCopySpellOnStack*` regressions pass. |
+
+Two complete unique-card RON gameplay mappings are added. Compilation and
+collection-wide gameplay remain separate: engine-validated/behavior-verified
+collection totals remain null. LKI is inapplicable to these live static reads.
+No new simultaneous-operation or replacement-order behavior is claimed.
+
+### Final measurements, source data and validation
+
+Actual gain equals the estimate: **2 unique names / 7 records**, exactly Aspect
+of Wolf and Rabid Wombat, with no previously accepted name lost. Final strict
+loader and inventory: **1,702 compiled / 743 rejected records**, **630 accepted /
+356 rejected unique names**, out of 2,445 records and 986 names. The loader
+continues to exit 1 and publishes no partial registry. Inventory still visits
+72,950 nodes / 8,539 signatures; unknown-role occurrences fall from 7,168 to
+6,911 after static-value and filter descendant classification.
+
+Local `data/LEA.json` and `data/LEG.json` confirm the full selected Oracle text.
+No source defect was found or corrected in these cards. RON files and hashes
+are unchanged, so no vocabulary source snapshot refresh is needed. Source
+problems in other candidates remain separate, including Gaea's Avenger and
+Gaea's Liege. No environment or pre-existing validation blocker remains.
+
+Commands and results on the final code:
+
+- Baseline `go test ./pkg/mage/dsl/ron -count=1`,
+  `go test ./pkg/mage/... -short -count=1`, `make build`: PASS.
+- Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run
+  'TestPermanentSpellCopy|TestCopySpellOnStack|TestRONStaticValue|TestInventory'
+  -count=1`: PASS after the copy prerequisite.
+- `go test ./pkg/mage/... -short -count=1`: PASS.
+- `make test`: PASS.
+- `make build`: PASS.
+- `go vet ./...`: PASS.
+- `make lint`: PASS, zero issues.
+- `git diff --check`: PASS after lint and ledger updates.
+- `go run ./cmd/loadcards -json` and `go run ./cmd/loadcards -inventory -json`:
+  expected exit 1 before and after lint; final counts above.
+
+The only exact-count regression assertions changed from 1,695/750 to 1,702/743;
+registry and gameplay assertions are retained. No Go card definition, startup
+caller, generator or DSL function was removed. Collection support, runtime
+loading and test migration remain below the removal gate, and no caller audit
+permits DSL deletion. Changed implementation files: RON `static_value.go`,
+`layers.go`, semantic inventory and tests; native permanent-spell-copy helpers,
+`spell_copy.go`, `stack_resolver.go` and tests. API/rules docs and this entry
+record only the established behavior.
+
+Ranked next candidates to reassess with fresh complete records:
+
+1. Chosen-source enumeration/identity and property rechecks for the seven
+   Circle/Realm next-event prevention consumers.
+2. All-zone battlefield-count CDAs for Dakkon Blackblade, Keldon Warlord,
+   Nightmare and Plague Rats, then Gaea's Avenger with its Oracle-backed
+   controller correction. The live static adapter is not an all-zone CDA.
+3. Untapped paid mana-conversion planning for Farrelite Priest and Initiates
+   of the Ebon Hand, reusing completed history and delayed-sacrifice bodies.
+
+One descriptive commit stages only this slice, including this entry. User
+archive/design/ledger edits remain unstaged. No second slice starts.
+
+Final post-lint checks passed: focused tests with `-count=1`, the short engine
+suite with `-count=1`, `go test ./... -short -count=1` (skill verification),
+`make test`, `make build`, `go vet ./...`, and `git diff --check`.
+Automatic lint edits were reviewed; they only adjusted import separation and
+formatting. Post-lint strict/inventory loader counts are unchanged, and all
+12 file hashes match the baseline. No accepted record regresses.

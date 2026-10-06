@@ -3692,3 +3692,23 @@ replace sacrifice.
 Evidence: `TestRequiredPayment*` and `TestRONRequiredPayment*`. The complete RON
 Lord of the Pit records use this adapter; Transmute Artifact still requires
 search and saved-payment-value support.
+
+## RON live static P/T bonuses
+
+The RON compiler supports singular static `AdjustPTXY(PlusX, PlusY, x, y)` and
+`AdjustPTForEach(power, toughness, count)` on `ThisPermanent` or a declared
+`HostPermanent`. The per-member multipliers are signed integer literals. Values
+use integer constants, `Twice`, `HalfRoundedDown`, `HalfRoundedUp`, and supported
+battlefield counts. The exact Aura/attachment count uses `AttachedAuras`.
+
+These adapters reuse `Static`, `While`, `ModifyPT`, `CountPermanents`,
+`PermanentsControlledBy`, `MatchingPermanents`, `AttachedAuras`, `MultiplyValues`,
+`DivideRoundDown` and `DivideRoundUp`. Values are live on each layer pass; they
+are not wrapped in `ValueAtResolution`. P/T-dependent values, X and event
+results are rejected in this static context. Combined modification lists and
+collection subjects remain separate contexts.
+
+Native `CopySpellOnStack` can retarget Aura casting declarations. A permanent
+spell copy enters as a token with separate ability and static-effect state.
+The normal entry path applies replacements and events; the copy has no mana
+spent to cast it. Illegal and countered copies leave no card in another zone.
