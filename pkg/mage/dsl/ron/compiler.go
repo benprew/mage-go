@@ -984,6 +984,13 @@ func compileEffect(n Node, ctx scope) ([]effectFactory, error) {
 	one := func(build effectFactory) ([]effectFactory, error) { return []effectFactory{build}, nil }
 	switch n.Name {
 	case "If":
+		if len(n.Args) > 0 && n.Args[0].Name == "PermanentPassesFilter" {
+			build, err := compileResolvingPermanentBranch(n, ctx)
+			if err != nil {
+				return nil, err
+			}
+			return one(build)
+		}
 		build, err := compileActivationHistoryBranch(n, ctx)
 		if err != nil {
 			return nil, err

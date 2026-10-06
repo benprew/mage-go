@@ -4563,6 +4563,45 @@ Evidence: `TestTargetCombatRelation`, `TestTargetCombatRelationDefinition`, and
 `TestTargetCombatRelationBandsAndMultiplePairs`. RON evidence:
 `TestRONCombatTargetRealDeclarations`, `TestRONCombatTargetDeclarations`, and
 `TestRONCombatTargetNativeFactories`. The real-record tests cover only the target
-clauses of Lesser Werewolf and Sentinel. Their complete records remain rejected.
+clauses of Lesser Werewolf and Sentinel. The resolving property branch below
+completes Lesser Werewolf; Sentinel still has an unsupported toughness effect.
 Costs, replacement ordering, simultaneous actions, and event ordering use the
 existing services without changes.
+
+### Resolving permanent property branch
+
+`IfPermanentMatches(subject PermanentRef, filter PermanentFilter,
+body ResolvingEffect) ResolvingEffect` evaluates a pure property predicate when
+its instruction resolves (CR 608.2c/h). It reuses `readPermanentInformation`:
+current information for the exact live incarnation, the retained phase snapshot
+for a phased object, or departure LKI for the original incarnation. Missing
+information makes the condition false, including a zero filter. A returned
+object cannot supply information for the original. Phase-in restores current
+information. The predicate receives the retained object's properties and the
+current game; queries of live combat relations or unrelated game state are not
+historical queries. RON uses the separate live combat branch APIs for membership.
+
+Source, attachment, saved-permanent and singular-target information references
+are supported. Definition validation rejects nil or unsupported references,
+unbound targets and nil bodies. The body runs once through the existing executor
+only when the predicate matches. The body retains its controller and reference
+bindings. Information does not permit mutation of absent, phased or returned
+objects. Target legality is checked by the normal stack resolution service before
+the branch executes; an illegal target does not become valid through LKI.
+
+No cost, event, replacement, simultaneous-operation or static-state service is
+changed. Those operations inside a body keep their existing contracts. Properties
+and definition children propagate through the branch for copying and validation.
+`PermanentMatchesFilter` remains the distinct static condition API. RON rejects
+conditional mana production in activation branches until classification and
+solver planning have a matching condition contract.
+
+Evidence: `TestIfPermanentMatchesInformation` tests source/target/saved/host,
+current power and keywords, control, departure/return, phasing, unknown identity
+and clones. `TestIfPermanentMatchesSequenceAndSnapshot` tests sequential timing,
+effective power retained after cleanup and return, and action identity.
+`TestIfPermanentMatchesDeclaration` tests invalid definitions.
+`TestRONResolvingConditionWerewolf`, `RepeatedWerewolf`, `Eater`,
+`RollbackAndCasting`, `InstancesAndRetarget`, `CombatAndInventory`, `Inventory`
+and `Invalid` establish the RON adapter and complete Lesser Werewolf and Eater of
+the Dead gameplay mappings. Sewers of Estark has condition-clause evidence only.

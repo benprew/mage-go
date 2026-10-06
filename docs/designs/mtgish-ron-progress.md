@@ -22537,3 +22537,196 @@ Ranked next candidates to reassess:
 
 One descriptive commit contains only this slice after all checks pass.
 No second slice is started.
+
+## 2026-10-05: resolving permanent property conditions
+
+Status: completed slice `RESOLVING-PERMANENT-PROPERTY`. This run stops after
+this slice. Initial user edits to `.gitignore`, the execution design and this
+ledger, and untracked `mtgish-ron-completed.md`, are preserved. Only this appended
+entry is staged from the ledger; the existing user edits are excluded.
+
+### Fresh evidence and candidate selection
+
+Baseline `go test ./pkg/mage/... -short -count=1`, `make test` and `make build`
+passed. Strict loading and semantic inventory exited 1 for collection rejection,
+not build/test failure: 2,445 parsed records, 1,717 compiled / 728 rejected;
+640 accepted / 346 rejected unique names. Inventory: 72,950 nodes,
+8,537 signatures and 6,761 unknown-role occurrences. All complete candidate
+records and their nested forms were inspected. Reprints count once.
+The engine reference, design, ledger, vocabulary, selected compiler/engine code,
+API and rules contracts, and CR 608.2b/c/h were read. Existing incarnation,
+phasing and combat contracts supply the CR 400.7/506.4 behavior.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream benefit | Effort |
+| --- | --- | --- | --- |
+| Resolving permanent-property branches, selected | Lesser Werewolf, Eater of the Dead: **2** complete cards. Blood Lust, Rapid Fire and Sewers of Estark share the condition family. | Blood Lust also needs `IfElse` and dynamic toughness arithmetic; Rapid Fire needs `AnyRampage` and a parameterized rampage grant; Sewers needs combat-relation source collections and combat-end prevention. A small reusable information branch supports object-property conditions across spell, activation and trigger bodies. History and counter predicates remain separate gaps. | Low/medium: existing information snapshots, filters, typed references, combat branches and action executor provide the rules; add the reusable branch, adapter, declaration and gameplay tests. |
+| Chosen-source next-event prevention | Circle of Protection: Black, Blue, Green, Red, White, Artifacts; Greater Realm of Preservation: **7** eventual complete cards; **0** without prerequisites. | Complete records require legal source enumeration, a typed chosen-source binding, source identity/property checks and next-event consumption. Other prevention consumers have independent damage-result/redirection blockers. Enables shared choice and prevention services. | High: stack/zone source identity, decision scope, source-property rechecks, replacement ordering and next-event lifecycle. |
+| All-zone count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods: **5** eventual complete cards; **0** without prerequisites. | Requires characteristic evaluation outside the battlefield, owner/controller context, named counts and CDA layers. Gaea's Avenger has a recorded source defect; Wood Elemental also needs entry payment results. Enables cross-zone characteristics and future copy consumers. | High: zones, CDA/set/modify layers, ability removal, copies, control and count queries. |
+
+The selected slice has the largest credible immediate gain for bounded effort.
+It completes a shared condition context and reuses exact services rather than
+starting either larger subsystem. The contract, reuse boundary and acceptance
+cases were stated before editing. First-error frequency did not establish the
+unlock estimate. The `implement-engine` skill supplied the engine workflow;
+its card-wiring restriction is superseded by the user's explicit RON scope.
+No removed skill, Go-card requirement, stub generation, card-name executor,
+fallback, partial production registry or global last-action state was used.
+
+Additional complete records inspected for the resolving condition inventory:
+Berserk and Nettling Imp need historical attack predicates; Fasting needs a
+counter-count predicate and a draw-step replacement; Tourach's Gate needs
+controller filters, counter conditions and host activation payment/restriction;
+Erg Raiders needs its intervening history condition and `Unless`. None is
+included in the two-card estimate or claimed supported by this slice.
+
+### Exact signatures, contexts and dependencies
+
+Engine API:
+`IfPermanentMatches(subject PermanentRef, filter PermanentFilter,
+body ResolvingEffect) ResolvingEffect`. It reuses `readPermanentInformation`,
+including exact incarnation identity and phase/departure snapshots. It evaluates
+at the instruction's position in the resolving sequence. Absent information is
+false even for the zero filter. The predicate receives the current permanent or
+its retained snapshot and the current game; this is a property query, not a
+historical query of unrelated game state. Information reads cannot make an
+absent/phased/returned object available for an action. Definition validation
+rejects nil/unsupported references, unbound targets and nil bodies. Properties
+and definition children propagate for the existing copy/validation services.
+`PermanentMatchesFilter` remains unchanged as a static condition.
+
+RON resolving actions support exactly
+`If(PermanentPassesFilter(subject, filter), [nonempty actions])`.
+`subject` uses the existing `compilePermanentRef` scope: bare `ThisPermanent`,
+Aura `HostPermanent`, declared `Ref_TargetPermanent`, or the event reference
+supplied by that event context. Factory-local bindings retain each declaration's
+identity. Spell/mode/activation/trigger/delayed bodies use their existing scope;
+the branch does not declare targets or make an unbound reference valid.
+
+Pure property filters accept bare `AnyPermanent`, `IsTapped`, `IsUntapped`;
+existing `IsSupertype`/`IsNonSupertype`, card-type, creature/land/enchantment
+subtype, color and keyword predicates supported by `compileFilter`;
+`PowerIs` and `ToughnessIs` with `EqualTo`, `LessThanOrEqualTo` or
+`GreaterThanOrEqualTo` applied to `Integer(integer literal)`;
+`PowerAndToughnessIsEqualTo(PT(integer, integer))`; and nonempty nested
+`And([filters])` / `Or([filters])`. Existing supertype/color/keyword validation
+remains in force. Unknown keywords and parameterized rampage are still errors.
+Controller, counter, attachment, enchantment-status, historical and combat-pair
+predicates are not added to property filters.
+
+Bare `IsAttacking` and `IsBlocking` are supported as the entire filter through
+`IfPermanentAttacking` and `IfPermanentBlocking`. They check current combat
+membership and never restore it from LKI; property conjunctions/disjunctions
+cannot contain them. Static `If`, intervening-if, activation restrictions,
+`IfElse` and non-payment `Unless` do not gain support. Malformed arities,
+wrong-role/unbound refs, empty logical filters and empty bodies are rejected.
+The body reuses `compileActionSequence`, including nested branches and adjacent
+payment continuations, with the same instance environment. Conditional mana production in activation
+branches is rejected until classification and solver planning support the same
+condition; spell and trigger mana actions keep their existing execution context.
+
+Reusable rules stay in `mage`; spelling, shape and scope validation stay in
+`ron`. The information service, existing filters, live combat branches, stack
+legality/copy traversal, cost transactions, native layer/counter/zone actions,
+cloning and cleanup remain their shared services. No new simultaneous-operation,
+replacement, cost, event or static-state service is introduced. Bodies retain
+those services' existing contracts. Inventory now classifies condition children
+as permanent references/filters even under unsupported parents; this does not
+claim those parent contexts are executable.
+
+### TDD and card-to-test mappings
+
+Engine tests first failed for undefined `IfPermanentMatches`. An invalid test
+fixture referred to a nonexistent `Each` symbol; it was removed and the missing
+constructor failure was confirmed alone. RON gameplay first failed on the actual
+`PermanentPassesFilter` clauses in both complete records. The new tests then
+passed after implementation. Fixture corrections used `GrantBaseAttr(Shroud)`
+and recognized that control changes remove blocking pairs; the Werewolf control
+case now asserts target rejection at resolution. No rule assertion was weakened.
+The previous target-clause regression now requires Werewolf compilation while
+retaining Sentinel's remaining-blocker assertion. Inventory assertions use fresh
+counts. Lint found a test variable shadowing builtin `copy`; it was renamed.
+Automatic formatting/import changes were reviewed. Final review found that
+conditional mana activation bodies need classification/solver planning: a new
+negative test first failed because compilation accepted them, then passed after
+explicit rejection. This guard changes no collection acceptance count.
+
+| Card or contract | Test mapping |
+| --- | --- |
+| Lesser Werewolf, complete LEG record | `TestRONResolvingConditionWerewolf`: native attack/blocking pairs, paid activation, resolution timing, zero/changed power, source/target departure, source return, phasing/cycles, control change, shroud, pending ability after ability removal, copied controller, clone isolation, duration and permanent counters. `RepeatedWerewolf`: three paid pending activations, exactly two successful power reductions/counters, third condition false at resolution. `RollbackAndCasting`: paid/unpaid real casting, entry timing, activation mana rollback, pre-blocker/wrong-step/type/shroud/phase rejection. |
+| Eater of the Dead, complete DRK record | `TestRONResolvingConditionEater`: zero-cost activation without tap or sickness payment, tapped/untapped and changes after announcement, graveyard creature exile, sequential untap, target departure/return, source departure/return/phasing, tapped LKI, original action identity, copies and independent clones. `RollbackAndCasting`: paid/unpaid real casting, entry timing and noncreature graveyard rejection. |
+| Sewers of Estark condition clauses | `TestRONResolvingConditionCombatAndInventory`: reads the complete PROMOS record and executes both actual condition ASTs in synthetic RON spells with native attackers/blockers and post-announcement combat exit. This is clause evidence only; the full card remains rejected for its prevention body. |
+| RON scope, identity and diagnostics | `TestRONResolvingConditionInstancesAndRetarget`: fresh factories, real spell casting, typed target condition, retargeted changed-controller copy, distinct original target, current power and clone isolation. `Invalid`: malformed arity/type, unbound/wrong-context refs, empty logical filters, unsupported property/history shapes. `RejectsConditionalManaActivation` rejects
+activation mana bodies, including nested branches. `Inventory`: complete compiled synthetic record with condition/reference/filter roles. |
+| Engine information and declaration | `TestIfPermanentMatchesInformation`: source/target/saved/host refs, current power and flying, control, departure/return, phase snapshots/cycles, unknown incarnation and clones. `SequenceAndSnapshot`: ordered instructions, retained effective P/T and tapped state after cleanup/return, no action on the new object. `Declaration`: nil reference/body and unbound target rejection. |
+| Reused contracts | Existing `TestPermanentInformation*`, `TestCombatStateBranch*`, source-combat target, inventory and whole engine/repository regressions remain passing. |
+
+Two complete-card gameplay mappings are added. Compilation and gameplay totals
+remain separate; collection-wide engine-validation and behavior-verification
+counts remain null. This entry claims no complete gameplay for other consumers.
+
+### Final measurements, validation and gates
+
+Actual gain matches the estimate: **2 unique names / 2 records**, exactly Lesser
+Werewolf and Eater of the Dead. No accepted name is lost. Strict loading remains
+atomic and exits 1 for **1,719 compiled / 726 rejected records; 642 accepted /
+344 rejected unique names**, all 2,445 records parsed. Final semantic inventory:
+72,950 nodes / 8,537 signatures / 6,684 unknown-role occurrences. The reduction
+of 77 unknown-role occurrences comes from classifying the children of resolving
+permanent conditions, including rejected descendants. RON source is unchanged;
+all 12 source hashes match the vocabulary snapshot, so no snapshot refresh is
+required. Local `data/LEG.json` and `data/DRK.json` Oracle text agrees with both
+selected records. No new source defect or environment blocker was found.
+
+Fresh remaining diagnostics:
+
+- Rapid Fire, `LEG.lines.ron:210:435`: unsupported temporary keyword `AnyRampage`.
+- Sewers of Estark, `PROMOS.lines.ron:3:467`: unsupported combat prevention event
+  `CombatDamageWouldBeDealtByACreature`.
+- Blood Lust, `LEG.lines.ron:33:216`: unsupported action `IfElse`.
+- Fasting, `DRK.lines.ron:35:306`: unsupported resolving property filter
+  `HasNumberCountersOfType`.
+- Tourach's Gate, `FEM.lines.ron:97:204`: unsupported permanent filter
+  `ControlledByAPlayer`.
+
+All final required checks pass. The initial lint failure was the test variable
+name described above, and was corrected; it is not an environment blocker.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine suite, `make test`, `make build` | PASS. |
+| Focused `go test ./pkg/mage ./pkg/mage/dsl/ron -run 'TestIfPermanentMatches\|TestRONResolvingCondition\|TestRONCombatTarget\|TestInventory\|TestPermanentInformation\|TestCombatStateBranch' -count=1` | PASS after expected TDD failures; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS, zero issues on final run; automatic edits reviewed. |
+| Additional skill check `go test ./... -short -count=1` | PASS. |
+| `git diff --check` | PASS. |
+| `go run ./cmd/loadcards -json`; `go run ./cmd/loadcards -inventory -json` | Expected exit 1: final counts and diagnostics above; no partial registry. |
+| Accepted-name/source-hash audit | Exactly two gains, no losses; all source hashes match. |
+
+Changed files: engine `resolution_permanent_filter.go` and tests; RON
+`resolving_condition.go` and tests, `compiler.go`, `inventory.go`, inventory and
+combat-target regressions; `mage/doc.go`, API/rules contracts and this entry.
+A fresh repository caller search across code, tests, generators, docs and
+fixtures found 460 matching files for DSL imports and related engine services.
+Existing callers and exports remain in use; this additive adapter makes no DSL
+function obsolete. No Go definition, generator or DSL function is removed.
+Complete RON loading/gameplay, startup cutover and removal gates remain unmet.
+
+Ranked next candidates to reassess from fresh full-record evidence:
+
+1. Combat-relation collections and prevention filters: Feint and Sewers of
+   Estark share live source/target relation queries; Wall of Vapor uses the
+   static prevention context. Keep Wall of Shadows' target-only restrictions
+   and combat-end duration separate when estimating full-card gains.
+2. Chosen-source enumeration/identity and next-event prevention for the seven
+   Circle/Realm consumers.
+3. All-zone count CDA prerequisite for the five direct consumers; keep the
+   Gaea's Avenger source defect and Wood Elemental's entry result gap separate.
+4. Numeric `IfElse` and dynamic toughness operations for Blood Lust, and
+   counter-property branches for Fasting/Tourach's Gate. These need reassessment
+   against useful multi-card work before selection.
+
+One descriptive commit contains only this validated slice; its hash is reported
+in the final response. No second slice is started.

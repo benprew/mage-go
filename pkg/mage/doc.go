@@ -89,6 +89,10 @@
 // Use [OpponentControls] with [While] for a static condition that reads
 // the current opponent's permanents. Combine [Not] and [IsToken] to exclude
 // tokens. Control changes and phasing change this condition immediately.
+// Use [IfPermanentMatches] for a resolving property condition. It uses the
+// current object or information saved for its exact incarnation. An information
+// read does not make an absent object available for an action.
+//
 // Use [PermanentMatchesFilter] with [This] or [AttachedPermanent] for a
 // live static condition. A returned permanent cannot satisfy an old reference.
 // Use [HasCounter] or [CounterCountEquals] for a live counter condition.

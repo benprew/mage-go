@@ -3953,6 +3953,39 @@ LKI cannot restore an ended relation. Tapping preserves it; phasing, control
 changes, and combat exit end it. Copies and clones use the existing target services.
 
 Evidence: `TestRONCombatTargetRealDeclarations`, `Declarations`, and
-`NativeFactories`. Lesser Werewolf still requires its conditional resolving
-body; Sentinel still requires indefinite dynamic base toughness. These target
-clauses do not establish full-card gameplay support.
+`NativeFactories`. Lesser Werewolf uses the resolving property branch described
+below. Sentinel still requires indefinite dynamic base toughness. The target
+clauses alone do not establish full-card gameplay support.
+
+### Resolving permanent property conditions
+
+RON resolving action lists support
+`If(PermanentPassesFilter(subject, filter), [actions])`. `subject` uses the
+existing singular permanent references and their lexical scope: source, Aura
+host, declared target, or a supplied event reference. Each factory builds fresh
+bindings. Branch bodies use the existing action sequence compiler, including
+nested branches and adjacent payment continuations. The body must be nonempty.
+
+Pure property filters accept `AnyPermanent`, tapped/untapped, the existing
+supported supertype, card type, subtype, color and keyword predicates, fixed
+power/toughness comparisons and fixed P/T equality. Nonempty `And` and `Or`
+compose these predicates. Numeric limits are fixed integers; their supported
+comparison forms are the existing `compileFilter` forms. Historical, controller,
+attachment and combat-relation filters remain errors in this context.
+`IsAttacking` and `IsBlocking` are supported as bare complete conditions through
+`IfPermanentAttacking` and `IfPermanentBlocking`; they require current combat
+membership and cannot occur inside a property conjunction or disjunction.
+
+Pure properties lower to
+`mage.IfPermanentMatches(PermanentRef, PermanentFilter, ResolvingEffect)
+ResolvingEffect`. The predicate receives current information or the retained
+snapshot for the same incarnation. It evaluates at its position in the resolving
+sequence, rather than at announcement. LKI permits information reads, not actions
+on absent objects. Invalid/unbound references, malformed filters and empty bodies
+are declaration errors. Static `If`, intervening-if, activation restrictions,
+`Unless`, `IfElse` and unsupported historical conditions do not gain support.
+Conditional mana production in activation branches is rejected until mana
+classification and solver planning support the same condition.
+
+Evidence: `TestIfPermanentMatches*`, `TestRONResolvingCondition*` and the existing
+permanent-information, target, combat-state and payment regression tests.

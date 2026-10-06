@@ -44,8 +44,8 @@ func TestRONCombatTargetRealDeclarations(t *testing.T) {
 			if !g.FindPermanent(victim.ID()).Tapped {
 				t.Fatal("real target declaration failed in native combat")
 			}
-			if _, err := Compile(record); err == nil {
-				t.Fatal("remaining full-record blockers disappeared")
+			if _, err := Compile(record); (err == nil) != (name == "Lesser Werewolf") {
+				t.Fatal("unexpected complete-record support")
 			}
 		})
 	}
