@@ -21107,3 +21107,129 @@ RON `static_counter.go`, `static_counter_test.go`, `conditional_static.go`,
 `inventory.go`; `docs/dsl-reference.md`, `docs/engine-rules-contracts.md` and
 this ledger entry. One descriptive commit stages only this slice. Its hash is
 reported in the final response. No second slice starts.
+
+## 2026-10-05: singular entry counter adapter
+
+Status: completed slice `SINGULAR-ENTRY-COUNTER`. This run stops after this
+slice. Initial user changes to `.gitignore`, the execution design and this
+ledger, plus untracked `mtgish-ron-completed.md`, are preserved. Only this new
+ledger entry is staged; the user's ledger reorganization remains unstaged.
+
+### Fresh baseline and selection
+
+Baseline `go test ./pkg/mage/... -short -count=1` and `make build` passed.
+Strict loading rejected the collection with exit 1: **2,445 records, 1,702
+compiled, 743 rejected; 630 accepted and 356 rejected unique names**. Semantic
+inspection reported **72,950 nodes, 8,539 signatures, 6,892 unknown-role
+occurrences**. This is collection rejection, not an environment/build failure.
+
+Read AGENTS.md, `pkg/mage/doc.go`, the execution design, vocabulary snapshot,
+current ledger, selected compiler and engine entry/counter code, entry API and
+rules contracts, and complete candidate RON records including nested forms.
+CR 122.1–2/6, 614.1c and 616.1 establish counter identity, entry and replacement
+order. Existing phasing/incarnation contracts supply lifecycle behavior.
+Candidate estimates count reprints once.
+
+| Candidate | Distinct affected names; estimated full-card unlocks | Other blockers and downstream capabilities | Effort |
+| --- | --- | --- | --- |
+| Singular entry counters, selected | Homarid, Icatian Javelineers, Tidal Influence; **1** immediate complete unlock, Icatian Javelineers | Javelineers' tap/counter cost and any-target damage already lower through exact shared services. Homarid needs counter-state trigger arming and all-counter removal. Tidal Influence also needs its named-permanent casting restriction. Entry support supplies a prerequisite for both counter cycles. | Low: strict adapter and semantic role; native gameplay, declarations, payment, replacement and identity tests. |
+| Chosen-source next-event prevention | Circle of Protection: Artifacts, Black, Blue, Green, Red, White; Greater Realm of Preservation; **7** eventual unlocks, **0** adapter-only gains | Public/retained damage-source choice enumeration, identity binding, property rechecks and next-event consumption remain prerequisites. Other source-choice consumers have additional replacement bodies. Enables shared chosen-source prevention. | High: choices, bindings, retained source identity, replacement ordering and simultaneous-event tests. |
+| All-zone battlefield-count CDAs | Dakkon Blackblade, Keldon Warlord, Nightmare, Plague Rats, People of the Woods; **5** eventual unlocks, **0** battlefield-only gains | All-zone owner/controller characteristics, copiable CDA declarations and layer contracts remain prerequisites. Gaea's Avenger is an additional affected name with a previously recorded source-controller defect and arithmetic; it is excluded from the estimate. Enables Wood Elemental after its entry-sacrifice prerequisite. | High: reusable zone-characteristic service, count adapters and zone/copy/control/layer tests. |
+
+The selected capability is a complete, small shared prerequisite with one
+immediate full-card gain. It beats the larger alternatives on credible gain for
+this run's effort. It was not selected by first-error frequency. Its exact
+contract, reuse boundary and acceptance cases were stated before edits. No
+removed card/set skill, Go-card requirement, fallback, card-name branch or
+partial production registry was used. No engine gap requires a new service.
+
+### Established shape and reuse
+
+RON: `AsPermanentEnters(ThisPermanent, [EntersWithACounter(counter)])`, exactly
+one operation on a permanent card, with a bare source symbol. `counter` uses
+`compilePermanentCounterType`: supported named permanent counters and exact
+supported literal P/T pairs. Wrong arities/kinds, unknown/player counters,
+unsupported P/T pairs, host/target sources, combined operations and action
+contexts remain declaration errors.
+
+Lowering: a fresh `WithAbility(EntersWithNCounters(counter, 1))` per factory.
+`prepareBattlefieldEntry` and `AddCountersWithReplacement` handle entry timing
+and replacement order. Existing native casting, targets, tap/counter costs,
+transactional payment, damage, ability/card copies, game cloning and incarnation
+services supply gameplay. The compiler adds no mutable binding or result slot.
+No new LKI, simultaneous-operation, replacement or payment contract is added.
+Entry counters exist before ETB observers; a phase cycle retains current
+counters, while zone return starts a fresh incarnation with its entry counter.
+
+Inventory classifies the operation's child as `permanent_counter_type` even
+inside rejected records. This role is not proof of support for their other rules.
+Existing fixed entry counters, source scopes and production loading remain strict.
+
+### TDD and card-to-test evidence
+
+The new tests first failed with `unsupported entry operation (EntersWithACounter)`
+on real records and valid synthetic declarations. After the adapter and semantic
+role were added, focused tests passed. No behavior assertion was weakened.
+
+| Card or contract | Test mapping in `singular_entry_counter_test.go` |
+| --- | --- |
+| Icatian Javelineers, complete FEM record | `TestRONSingularEntryCounterJavelineers`: white casting payment/rollback, entry timing and 1/1 characteristics, summoning sickness, controller/target legality, immediate tap/counter costs, exhausted-counter rollback and player/creature/planeswalker/self damage. |
+| Javelineers lifecycle | `Lifecycle`: copied card entry, copied pending ability, clone isolation, departed source damage, phase cycle, new incarnation and independent instances. `TargetRecheck`: target return, phasing, shroud and damage prevention after payment. |
+| Homarid, Tidal Influence | `CompleteRecords` executes each exact parsed entry clause and requires both complete records to remain rejected. This is entry-clause coverage only; no full-card gameplay claim. |
+| Entry replacements and timing | `Replacements`: additional-then-double gives 4; double-then-add gives 3; entering controller chooses. `Observer`: an ETB observer sees the counter before trigger resolution. |
+| Declarations/instances | `Declarations`: malformed shapes, incompatible counters/sources/contexts, supported named and P/T counters, fresh factory abilities and definition validation. `Inventory`: supported compilation plus counter-type descendant role. |
+| Existing behavior | `TestRONEntryCounters*`, `TestRONCounterCost*` and `TestInventory*` pass. Repository inventory assertions use measured final counts; strict registry behavior remains unchanged. |
+
+Local `data/FEM.json` Oracle text agrees with all three complete records.
+No source defect is corrected. All 12 source hashes still match the vocabulary
+snapshot; no RON source or vocabulary-source refresh is needed. The previously
+recorded Gaea's Avenger defect remains separate.
+
+### Final measurements and validation
+
+Actual gain equals the estimate: **1 unique card / 1 record**, Icatian Javelineers,
+and **one new complete-card gameplay mapping**. Strict and semantic loading
+report **1,703 compiled / 742 rejected records; 631 accepted / 355 rejected
+unique names**. No previously accepted name is lost. Inventory remains
+**72,950 nodes / 8,539 signatures**; unknown-role occurrences fall **6,892 to
+6,889**. Compilation and gameplay coverage stay separate; collection-wide
+engine-validation and behavior-verification totals remain null.
+
+Final selected diagnostics:
+
+- Homarid: `FEM.lines.ron:44:689: unsupported trigger (WhenAPermanentHasNumberCountersOfType)`.
+- Tidal Influence: `FEM.lines.ron:95:150: unsupported casting window on a permanent (CastEffect)`.
+
+| Command | Result |
+| --- | --- |
+| Baseline short engine tests and `make build` | PASS. |
+| Focused `go test ./pkg/mage/dsl/ron -run 'TestRONSingularEntryCounter\|TestRONEntryCounters\|TestRONCounterCost\|TestInventory' -count=1` | PASS; repeated after lint. |
+| `go test ./pkg/mage/... -short -count=1` | PASS. |
+| `make test` | PASS. |
+| `make build` | PASS. |
+| `go vet ./...` | PASS. |
+| `make lint` | PASS; automatic changes reviewed. |
+| `git diff --check` | PASS, including this ledger entry. |
+| `go run ./cmd/loadcards -json` | Expected exit 1: 1,703 compiled / 742 rejected. |
+| `go run ./cmd/loadcards -inventory -json` | Expected exit 1: same counts; 6,889 unknown-role occurrences. |
+| Accepted-name/source-hash audit | No lost accepted name; all source hashes unchanged. |
+
+There is no environmental or pre-existing validation blocker. No Go definitions,
+startup callers or generators are removed because the cutover gate is unmet.
+No DSL exports are removed, and no caller audit is used to authorize deletion.
+API and rules documentation describe only this adapter and reused contracts.
+The descriptive commit contains only this slice; its hash is reported in the
+final response. User changes remain unstaged.
+
+Ranked next candidates to reassess with fresh full records:
+
+1. Counter-state trigger arming and typed all-counter reset for Homarid and
+   Tidal Influence; keep the latter's casting restriction separate.
+2. Chosen-source enumeration, identity and property rechecks for the seven
+   Circle/Realm prevention cards.
+3. All-zone battlefield-count CDAs for the five direct consumers above; keep
+   Gaea's Avenger's source-data correction separate and supported by evidence.
+
+Changed files: RON `entry_tapped.go`, `inventory.go`, `inventory_test.go`,
+`singular_entry_counter_test.go`; `docs/dsl-reference.md`,
+`docs/engine-rules-contracts.md`, and this ledger entry. No second slice starts.

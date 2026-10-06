@@ -3730,3 +3730,18 @@ Native `CopySpellOnStack` can retarget Aura casting declarations. A permanent
 spell copy enters as a token with separate ability and static-effect state.
 The normal entry path applies replacements and events; the copy has no mana
 spent to cast it. Illegal and countered copies leave no card in another zone.
+
+## RON singular entry counters
+
+`AsPermanentEnters(ThisPermanent, [EntersWithACounter(counter)])` accepts one
+entry operation on a permanent. It uses the same validated permanent counter
+types as fixed entry counters, including named counters and supported
+`PTCounter` pairs. The operation creates a fresh `EntersWithNCounters(counter,
+1)` ability for each factory call. The source must be the bare `ThisPermanent`
+symbol. Additional operations, other subjects and resolving-action contexts
+remain rejected. Entry and counter replacements use the existing engine service.
+
+`TestRONSingularEntryCounter*` executes the complete Icatian Javelineers record
+and the exact entry clauses of Homarid and Tidal Influence. The latter two
+complete records still reject their independent unsupported rules. See the
+[rules contract](engine-rules-contracts.md#ron-singular-entry-counters).

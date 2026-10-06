@@ -4257,3 +4257,32 @@ entry, Aura retargeting, original bindings, return/phasing/shroud legality,
 countering, clone isolation, token departure, cast and entry facts, entry
 counter replacements and prohibited entry. No new replacement ordering or
 simultaneous-operation service is added.
+
+## RON singular entry counters
+
+`EntersWithACounter(counter)` in a single `AsPermanentEnters(ThisPermanent,
+[operation])` lowers to `EntersWithNCounters(counter, 1)`. The compiler adds no
+engine API or execution state. Entry counters pass through the shared counter
+replacement pipeline before entry observers (CR 122.6, 614.1c). The entering
+controller chooses replacement order (CR 616.1). Phasing keeps counters;
+returning from another zone starts a new incarnation with a new entry counter
+(CR 122.2, 400.7, 702.26d).
+
+Evidence in `pkg/mage/dsl/ron/singular_entry_counter_test.go`:
+
+- `Javelineers` executes its complete RON record: white casting payment, entry
+  timing, summoning sickness, controller and any-target legality, tap/counter
+  payment, rollback, exhaustion and player/creature/planeswalker/self damage.
+- `Lifecycle` covers card copies, copied and cloned pending abilities, source
+  departure, phase cycles, return and independent instances.
+- `TargetRecheck` covers target return, phasing, shroud and damage prevention.
+- `Replacements` checks add-then-double (4) and double-then-add (3), with the
+  entering controller choosing. `Observer` checks counters before entry triggers.
+- `Declarations` rejects malformed shapes, incompatible counter types, subjects
+  and contexts; factory declarations stay separate. `CompleteRecords` executes
+  exact entry clauses for all three consumers and retains complete-record
+  rejection for Homarid and Tidal Influence. `Inventory` checks descendant roles.
+
+No new target, LKI, simultaneous-operation or cost contract is introduced.
+General entry choices, multiple operations and counter-state triggers remain
+outside this adapter. Existing counter storage limits remain unchanged.

@@ -23,6 +23,18 @@ func compilePermanentEntry(n Node) (optionFactory, error) {
 		return nil, problem(n, "entry requires one entry operation")
 	}
 	operation := operations[0]
+	if operation.Name == "EntersWithACounter" {
+		if err := arity(operation, 1); err != nil {
+			return nil, err
+		}
+		counter, err := compilePermanentCounterType(operation.Args[0])
+		if err != nil {
+			return nil, err
+		}
+		return func() mage.CardOption {
+			return mage.WithAbility(mage.EntersWithNCounters(counter, 1))
+		}, nil
+	}
 	if operation.Name == "EntersWithNumberCounters" {
 		return compileFixedEntryCounters(operation)
 	}
